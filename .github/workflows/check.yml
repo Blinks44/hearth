@@ -1,0 +1,38 @@
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - name: Format
+        run: go tool -modfile=tools/go.mod golangci-lint fmt --diff
+      - name: Lint
+        run: go tool -modfile=tools/go.mod golangci-lint run
+      - name: mygo vet
+        run: go tool mygo vet .
+      - name: Test
+        if: runner.os != 'Windows'
+        run: go test -race ./...
+      - name: Test (Windows, no race detector without cgo toolchain)
+        if: runner.os == 'Windows'
+        run: go test ./...

@@ -1,0 +1,23 @@
+# mygo
+/build/
+/.mygo/
+mygo_windows_*.syso
+
+# Go
+*.test
+*.out
+/coverage.*
+
+# Local files of people and agents
+/.local/
+.env
+.env.*
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Personal agent settings
+.claude/settings.local.json
