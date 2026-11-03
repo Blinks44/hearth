@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    # PowerShell splits `-modfile=tools/go.mod` at the dot; Git Bash is available on Windows runners.
+    shell: bash
+
 jobs:
   check:
     name: ${{ matrix.os }}
