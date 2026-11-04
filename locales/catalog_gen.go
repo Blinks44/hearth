@@ -4249,3 +4249,147 @@ func IssueStubTitle(tool string) string { return In(i18n.Locale()).IssueStubTitl
 func (msgs Messages) IssueStubTitle(tool string) string {
 	return Catalog.Format(msgs.locale, "issueStubTitle", map[string]any{"tool": tool})
 }
+
+// JsManagersSubtitle says "npm comes with Node · pnpm and Yarn can use Corepack"
+// in the language the app shows.
+func JsManagersSubtitle() string { return In(i18n.Locale()).JsManagersSubtitle() }
+
+// JsManagersSubtitle says "npm comes with Node · pnpm and Yarn can use Corepack"
+// in the language of msgs.
+func (msgs Messages) JsManagersSubtitle() string {
+	return Catalog.Format(msgs.locale, "jsManagersSubtitle", nil)
+}
+
+// JsManagers says "Managers"
+// in the language the app shows.
+func JsManagers() string { return In(i18n.Locale()).JsManagers() }
+
+// JsManagers says "Managers"
+// in the language of msgs.
+func (msgs Messages) JsManagers() string {
+	return Catalog.Format(msgs.locale, "jsManagers", nil)
+}
+
+// JsCorepackNote says "Corepack downloads project versions on first use and keeps them in its cache. Hearth only reads the local cache and n…"
+// in the language the app shows.
+func JsCorepackNote() string { return In(i18n.Locale()).JsCorepackNote() }
+
+// JsCorepackNote says "Corepack downloads project versions on first use and keeps them in its cache. Hearth only reads the local cache and n…"
+// in the language of msgs.
+func (msgs Messages) JsCorepackNote() string {
+	return Catalog.Format(msgs.locale, "jsCorepackNote", nil)
+}
+
+// JsCorepackShim says "Corepack shim"
+// in the language the app shows.
+func JsCorepackShim() string { return In(i18n.Locale()).JsCorepackShim() }
+
+// JsCorepackShim says "Corepack shim"
+// in the language of msgs.
+func (msgs Messages) JsCorepackShim() string {
+	return Catalog.Format(msgs.locale, "jsCorepackShim", nil)
+}
+
+// JsNoManagers says "No package managers found"
+// in the language the app shows.
+func JsNoManagers() string { return In(i18n.Locale()).JsNoManagers() }
+
+// JsNoManagers says "No package managers found"
+// in the language of msgs.
+func (msgs Messages) JsNoManagers() string {
+	return Catalog.Format(msgs.locale, "jsNoManagers", nil)
+}
+
+// JsCorepackEnabled says "Shims found on the terminal PATH"
+// in the language the app shows.
+func JsCorepackEnabled() string { return In(i18n.Locale()).JsCorepackEnabled() }
+
+// JsCorepackEnabled says "Shims found on the terminal PATH"
+// in the language of msgs.
+func (msgs Messages) JsCorepackEnabled() string {
+	return Catalog.Format(msgs.locale, "jsCorepackEnabled", nil)
+}
+
+// JsCorepackDisabled says "No shims on the terminal PATH"
+// in the language the app shows.
+func JsCorepackDisabled() string { return In(i18n.Locale()).JsCorepackDisabled() }
+
+// JsCorepackDisabled says "No shims on the terminal PATH"
+// in the language of msgs.
+func (msgs Messages) JsCorepackDisabled() string {
+	return Catalog.Format(msgs.locale, "jsCorepackDisabled", nil)
+}
+
+// JsCorepackReadOnly says "Corepack selects a version from packageManager in each project."
+// in the language the app shows.
+func JsCorepackReadOnly() string { return In(i18n.Locale()).JsCorepackReadOnly() }
+
+// JsCorepackReadOnly says "Corepack selects a version from packageManager in each project."
+// in the language of msgs.
+func (msgs Messages) JsCorepackReadOnly() string {
+	return Catalog.Format(msgs.locale, "jsCorepackReadOnly", nil)
+}
+
+// JsProjectManagers says "Projects and their managers"
+// in the language the app shows.
+func JsProjectManagers() string { return In(i18n.Locale()).JsProjectManagers() }
+
+// JsProjectManagers says "Projects and their managers"
+// in the language of msgs.
+func (msgs Messages) JsProjectManagers() string {
+	return Catalog.Format(msgs.locale, "jsProjectManagers", nil)
+}
+
+// JsMultipleLocks says "multiple lockfiles"
+// in the language the app shows.
+func JsMultipleLocks() string { return In(i18n.Locale()).JsMultipleLocks() }
+
+// JsMultipleLocks says "multiple lockfiles"
+// in the language of msgs.
+func (msgs Messages) JsMultipleLocks() string {
+	return Catalog.Format(msgs.locale, "jsMultipleLocks", nil)
+}
+
+// JsManagerUnmet says "{manager} {version}: the terminal version does not meet this requirement"
+// in the language the app shows.
+func JsManagerUnmet(manager string, version string) string {
+	return In(i18n.Locale()).JsManagerUnmet(manager, version)
+}
+
+// JsManagerUnmet says "{manager} {version}: the terminal version does not meet this requirement"
+// in the language of msgs.
+func (msgs Messages) JsManagerUnmet(manager string, version string) string {
+	return Catalog.Format(msgs.locale, "jsManagerUnmet", map[string]any{"manager": manager, "version": version})
+}
+
+// JsFilter says "Filter managers"
+// in the language the app shows.
+func JsFilter() string { return In(i18n.Locale()).JsFilter() }
+
+// JsFilter says "Filter managers"
+// in the language of msgs.
+func (msgs Messages) JsFilter() string {
+	return Catalog.Format(msgs.locale, "jsFilter", nil)
+}
+
+// JsCorepackDownloads says "{manager} {version}: Corepack downloads it on first run in the project"
+// in the language the app shows.
+func JsCorepackDownloads(manager string, version string) string {
+	return In(i18n.Locale()).JsCorepackDownloads(manager, version)
+}
+
+// JsCorepackDownloads says "{manager} {version}: Corepack downloads it on first run in the project"
+// in the language of msgs.
+func (msgs Messages) JsCorepackDownloads(manager string, version string) string {
+	return Catalog.Format(msgs.locale, "jsCorepackDownloads", map[string]any{"manager": manager, "version": version})
+}
+
+// CorepackDownloads says "Corepack downloads on first run"
+// in the language the app shows.
+func CorepackDownloads() string { return In(i18n.Locale()).CorepackDownloads() }
+
+// CorepackDownloads says "Corepack downloads on first run"
+// in the language of msgs.
+func (msgs Messages) CorepackDownloads() string {
+	return Catalog.Format(msgs.locale, "corepackDownloads", nil)
+}

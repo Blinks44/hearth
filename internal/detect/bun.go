@@ -109,20 +109,28 @@ func bunGlobals(install string) []inventory.Package {
 // command into the package, which the real path shows; on Windows it
 // writes a script beside the global node_modules.
 func npmPackage(path, real, name string) string {
+	if dir := linkedPackage(real, name); dir != "" {
+		return dir
+	}
+	if dir := filepath.Join(filepath.Dir(path), "node_modules", name); exists(filepath.Join(dir, "package.json")) {
+		return dir
+	}
+	return ""
+}
+
+// linkedPackage returns the folder of the npm package name that the real
+// path lies in, or "" when it lies in none.
+func linkedPackage(real, name string) string {
 	for dir := filepath.Dir(real); ; {
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			break
+			return ""
 		}
 		if filepath.Base(dir) == name && filepath.Base(parent) == "node_modules" {
 			return dir
 		}
 		dir = parent
 	}
-	if dir := filepath.Join(filepath.Dir(path), "node_modules", name); exists(filepath.Join(dir, "package.json")) {
-		return dir
-	}
-	return ""
 }
 
 // startupFileWith returns the first shell startup file in home that

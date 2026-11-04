@@ -1760,5 +1760,19 @@
         "example": "Python"
       }
     }
-  }
+  },
+  "jsManagersSubtitle": "npm comes with Node · pnpm and Yarn can use Corepack",
+  "jsManagers": "Managers",
+  "jsCorepackNote": "Corepack downloads project versions on first use and keeps them in its cache. Hearth only reads the local cache and never runs these shims.",
+  "jsCorepackShim": "Corepack shim",
+  "jsNoManagers": "No package managers found",
+  "jsCorepackEnabled": "Shims found on the terminal PATH",
+  "jsCorepackDisabled": "No shims on the terminal PATH",
+  "jsCorepackReadOnly": "Corepack selects a version from packageManager in each project.",
+  "jsProjectManagers": "Projects and their managers",
+  "jsMultipleLocks": "multiple lockfiles",
+  "jsManagerUnmet": "{manager} {version}: the terminal version does not meet this requirement",
+  "jsFilter": "Filter managers",
+  "jsCorepackDownloads": "{manager} {version}: Corepack downloads it on first run in the project",
+  "corepackDownloads": "Corepack downloads on first run"
 }

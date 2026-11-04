@@ -198,6 +198,9 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 		shown = ts.Installations[active]
 	}
 	name, path := toolTitle(ts.Tool), ""
+	if jsTool(ts.Tool) {
+		path = "/tools/jspm"
+	}
 	for _, l := range languages {
 		if l.id == ts.Tool {
 			name, path = l.title(), l.path

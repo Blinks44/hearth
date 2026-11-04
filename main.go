@@ -104,6 +104,7 @@ func main() {
 		}
 		fetchVersions := func() {
 			fetchList(win, lists, versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
+			fetchList(win, lists, versions.FetchJSManagers, &a.JSVersions, &a.JSVersionsErr)
 			fetchList(win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
 			fetchList(win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
 			fetchList(win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)

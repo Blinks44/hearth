@@ -377,6 +377,8 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 				switch {
 				case !st.Checked:
 					runCaption = ""
+				case st.Downloads:
+					run, runCaption = versionText(st.Terminal.Version), locales.CorepackDownloads()
 				case st.Terminal != nil:
 					run, runCaption = versionText(st.Terminal.Version), sourceName(st.Terminal.Source)
 				}

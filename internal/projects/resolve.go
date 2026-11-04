@@ -20,6 +20,9 @@ type Status struct {
 	// Terminal is the copy the terminal runs in the project folder; nil
 	// when there is none.
 	Terminal *inventory.Installation
+	// Downloads reports that Terminal is not installed: Corepack
+	// downloads that packageManager version on first use in the project.
+	Downloads bool
 	// Installations are the tool's copies the scan found.
 	Installations []inventory.Installation
 	Checks        []Check
@@ -73,7 +76,7 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 		}
 		st.Checked = true
 		st.Installations = ts.Installations
-		st.Terminal = terminal(ts, st.Checks, lines)
+		st.Terminal, st.Downloads = terminal(ts, st.Checks, lines)
 		for j := range st.Checks {
 			c := &st.Checks[j]
 			match, err := matcher(st.Tool, c.Want, lines)
@@ -92,8 +95,32 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 // version manager that switches on cd picks by the project's files, or
 // else the first one on PATH. A manager that finds no copy of the version
 // asked says so and leaves the one in use, as fnm and nvm's hook do.
-func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Line) *inventory.Installation {
+// Corepack runs only the packageManager version: the cached copy, or, when
+// none is cached, the version it downloads on first use, reported by the
+// second result. With a version Hearth cannot read, no known copy runs.
+func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Line) (*inventory.Installation, bool) {
 	for _, m := range ts.Managers {
+		if m.Name == "corepack" {
+			for _, c := range checks {
+				if c.Key != "packageManager" {
+					continue
+				}
+				match, err := matcher(ts.Tool, c.Want, lines)
+				if err != nil {
+					return nil, false
+				}
+				if in := newest(ts.Installations, func(in inventory.Installation) bool {
+					return in.Source.Manager == "corepack" && !in.Source.Shim && match(in)
+				}); in != nil {
+					return in, false
+				}
+				if _, err := semver.StrictNewVersion(c.Want); err != nil {
+					return nil, false
+				}
+				return &inventory.Installation{Tool: ts.Tool, Version: c.Want, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "corepack"}}, true
+			}
+		}
+
 		if !m.SwitchOnCD {
 			continue
 		}
@@ -108,7 +135,7 @@ func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Lin
 			if in := newest(ts.Installations, func(in inventory.Installation) bool {
 				return in.Source.Manager == m.Name && !in.Source.Shim && match(in)
 			}); in != nil {
-				return in
+				return in, false
 			}
 			break
 		}
@@ -120,15 +147,15 @@ func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Lin
 		}
 	}
 	if first == nil || !first.Source.Shim {
-		return first
+		return first, false
 	}
 	// A shim with no project file to go by runs its manager's default.
 	for i, in := range ts.Installations {
 		if in.Default && in.Source.Manager == first.Source.Manager && !in.Source.Shim {
-			return &ts.Installations[i]
+			return &ts.Installations[i], false
 		}
 	}
-	return nil
+	return nil, false
 }
 
 // reads reports that the version manager m picks the version by req.

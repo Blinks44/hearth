@@ -28,6 +28,10 @@ type Detector struct {
 var Detectors = []Detector{
 	{"node", detect.Node},
 	{"bun", detect.Bun},
+	{"npm", detect.Npm},
+	{"pnpm", detect.Pnpm},
+	{"yarn", detect.Yarn},
+	{"corepack", detect.Corepack},
 	{"go", detect.Go},
 	{"python", detect.Python},
 }

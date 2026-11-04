@@ -29,6 +29,10 @@ type App struct {
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
 	NodeVersionsErr string
+	// JSVersions holds the latest stable package manager releases; nil
+	// until fetched, with JSVersionsErr explaining a failed request.
+	JSVersions    *versions.JSManagers
+	JSVersionsErr string
 	// BunLatest is Bun's newest stable version, as the npm registry says;
 	// nil until it comes, or when it could not, BunLatestErr says why.
 	BunLatest    *versions.Latest
@@ -63,6 +67,8 @@ type App struct {
 	router        *ui.Router
 	moreOpen      bool    // the languages not found show in the sidebar
 	nodeTab       int     // the tab of the Node.js page shown
+	jspmTab       int     // the tab of the package managers page shown
+	jspmFilter    string  // the package managers table's filter
 	bunTab        int     // the tab of the Bun page shown
 	goTab         int     // the tab of the Go page shown
 	pythonTab     int     // the tab of the Python page shown
@@ -118,6 +124,8 @@ func (a *App) View(c *ui.Context) {
 					switch p.path {
 					case "/tools/node":
 						a.node(c, p)
+					case "/tools/jspm":
+						a.jspm(c, p)
 					case "/tools/bun":
 						a.bun(c, p)
 					case "/tools/go":

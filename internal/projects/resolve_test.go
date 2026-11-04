@@ -196,3 +196,35 @@ func pathOf(in *inventory.Installation) string {
 	}
 	return in.Path
 }
+
+// A project using Corepack picks a cached packageManager version even
+// when the default differs; a version not cached is the one Corepack
+// downloads, never the default.
+func TestResolveCorepack(t *testing.T) {
+	for _, tc := range []struct {
+		name, want, version string
+		downloads           bool
+	}{
+		{"cached", "9.1.0", "9.1.0", false}, {"not downloaded", "10.0.0", "10.0.0", true}, {"not a version", "10", "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := Project{Requirements: []Requirement{{Tool: "pnpm", Want: tc.want, File: "package.json", Key: "packageManager"}}}
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "pnpm", Managers: []inventory.Manager{{Name: "corepack", SwitchOnCD: true}}, Installations: []inventory.Installation{
+				{Tool: "pnpm", OnPath: 1, Source: inventory.Source{Manager: "corepack", Shim: true}},
+				{Tool: "pnpm", Version: "8.0.0", Default: true, Source: inventory.Source{Manager: "corepack"}},
+				{Tool: "pnpm", Version: "9.1.0", Source: inventory.Source{Manager: "corepack"}},
+			}}}}
+			st := Resolve(p, s, nil)[0]
+			got := ""
+			if st.Terminal != nil {
+				got = st.Terminal.Version
+			}
+			if got != tc.version || st.Downloads != tc.downloads {
+				t.Fatalf("terminal %q, downloads %v; want %q, %v", got, st.Downloads, tc.version, tc.downloads)
+			}
+			if st.Checks[0].Met != (tc.version != "") {
+				t.Fatalf("check: %+v", st.Checks[0])
+			}
+		})
+	}
+}

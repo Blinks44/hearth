@@ -294,5 +294,19 @@
   "uvPrefer": "Предпочитать версии uv",
   "uvPreferCaption": "раньше системных и brew",
   "supportUntilYear": "поддержка до {year}",
-  "issueStubTitle": "В PATH заглушка вместо {tool}"
+  "issueStubTitle": "В PATH заглушка вместо {tool}",
+  "jsManagersSubtitle": "npm идёт вместе с Node · pnpm и Yarn могут работать через Corepack",
+  "jsManagers": "Менеджеры",
+  "jsCorepackNote": "Corepack скачивает версии при первом запуске в проекте и хранит их в кэше. Hearth только читает локальный кэш и не запускает эти шимы.",
+  "jsCorepackShim": "шим Corepack",
+  "jsNoManagers": "Менеджеры пакетов не найдены",
+  "jsCorepackEnabled": "Шимы найдены в PATH терминала",
+  "jsCorepackDisabled": "Шимы не найдены в PATH терминала",
+  "jsCorepackReadOnly": "Corepack выбирает версию по packageManager в каждом проекте.",
+  "jsProjectManagers": "Проекты и их менеджер",
+  "jsMultipleLocks": "несколько lockfile",
+  "jsManagerUnmet": "{manager} {version}: версия терминала не соответствует требованию",
+  "jsFilter": "Фильтр менеджеров",
+  "jsCorepackDownloads": "{manager} {version}: Corepack скачает при первом запуске в проекте",
+  "corepackDownloads": "Corepack скачает при первом запуске"
 }

@@ -119,6 +119,8 @@ func issuePage(is issues.Issue) string {
 		return mcpPage
 	case is.Project != "":
 		return projectPath(is.Project)
+	case jsTool(is.Tool):
+		return "/tools/jspm"
 	case is.Tool != "":
 		for _, l := range languages {
 			if l.id == is.Tool {
