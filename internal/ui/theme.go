@@ -36,6 +36,38 @@ func RegisterFonts() error {
 	return nil
 }
 
+// Palette holds the design tokens that ui.Theme has no field for.
+type Palette struct {
+	Sidebar       ui.Color // the sidebar without vibrancy
+	SidebarHover  ui.Color // a sidebar item under the pointer
+	SidebarChosen ui.Color // the sidebar item of the page shown
+	Divider       ui.Color // lines between areas
+	TextFaint     ui.Color // captions, counters, placeholders
+	Shadow        ui.Color // raised elements: chosen item, buttons
+}
+
+// Colors returns the palette that goes with t, light or dark.
+func Colors(t *ui.Theme) Palette {
+	if t.Dark {
+		return Palette{
+			Sidebar:       ui.Hex("#252320"),
+			SidebarHover:  ui.Hex("#2F2C28"),
+			SidebarChosen: ui.Hex("#36332E"),
+			Divider:       ui.Hex("#34312C"),
+			TextFaint:     ui.Hex("#7D776E"),
+			Shadow:        ui.RGBA(0, 0, 0, 0.24),
+		}
+	}
+	return Palette{
+		Sidebar:       ui.Hex("#F4F2EF"),
+		SidebarHover:  ui.Hex("#E8E5E0"),
+		SidebarChosen: ui.Hex("#FFFFFF"),
+		Divider:       ui.Hex("#E8E5E0"),
+		TextFaint:     ui.Hex("#9D988F"),
+		Shadow:        ui.RGBA(0x2A, 0x1E, 0x10, 0.08),
+	}
+}
+
 // Theme returns Hearth's theme on top of base, the window's default theme,
 // so that the system's font size and appearance still apply. Colors come
 // from the token table in docs/design.md.

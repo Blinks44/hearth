@@ -1,65 +1,59 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/sysenv"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
 )
-
-// app is the state the window shows. Its view builds the interface from
-// it, on the main thread, whenever the window needs a frame: after input,
-// after Window.Update, and while something animates.
-type app struct {
-	name  string
-	count int
-}
-
-func (a *app) view(c *ui.Context) {
-	c.SetTheme(hearthui.Theme(c.Theme()))
-	t := c.Theme()
-	ui.Column(c).Fill().Center().Gap(16).Padding(24).Children(func() {
-		ui.Text(c, "Hearth").FontSize(26).Bold()
-		ui.TextInput(c, &a.name).Placeholder("Your name").Label("Name").Width(240)
-		greeting := "Hello!"
-		if a.name != "" {
-			greeting = fmt.Sprintf("Hello, %s!", a.name)
-		}
-		ui.Text(c, greeting).TextColor(t.TextMuted)
-		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-			if ui.Button(c, "−").Width(44).Clicked() {
-				a.count--
-			}
-			ui.Textf(c, "%d", a.count).FontSize(20).Width(48).TextAlign(ui.Center)
-			if ui.PrimaryButton(c, "+").Width(44).Clicked() {
-				a.count++
-			}
-		})
-	})
-}
 
 func main() {
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)
 	}
-	a := &app{}
+	a := hearthui.NewApp()
+	a.Machine = machine()
 	mygo.App.WhenReady(func() {
 		mygo.NewWindow(mygo.WindowOptions{
 			Title:     "Hearth",
-			Width:     480,
-			Height:    360,
-			MinWidth:  320,
-			MinHeight: 280,
+			Width:     1280,
+			Height:    820,
+			MinWidth:  1000,
+			MinHeight: 680,
 			// Opens where the user left it last time.
 			StateKey: "main",
-			// The window shows the interface MyGo draws, not a web page.
-			Content: ui.View(a.view),
+			// The view draws the title bar: the window controls sit over
+			// the sidebar on macOS and over the page's header elsewhere.
+			TitleBarStyle:  mygo.TitleBarHidden,
+			TitleBarHeight: titleBarHeight,
+			// Centered in the sidebar's top row of 52, as in the design.
+			TrafficLightPosition: &mygo.Point{X: 20, Y: 20},
+			// Under the sidebar: a material on macOS, Mica on Windows 11.
+			Vibrancy: mygo.VibrancySidebar,
+			Content:  ui.View(a.View),
 		})
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// machine is the caption under the logo: the computer's name and its OS,
+// as "studio · macOS 15.4".
+func machine() string {
+	var parts []string
+	if host, err := os.Hostname(); err == nil {
+		parts = append(parts, strings.TrimSuffix(host, ".local"))
+	}
+	o, err := sysenv.ReadOS()
+	if err != nil {
+		log.Print(err)
+	}
+	parts = append(parts, strings.TrimSpace(o.Name+" "+o.Version))
+	return strings.Join(parts, " · ")
 }
