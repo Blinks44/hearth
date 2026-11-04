@@ -1,5 +1,6 @@
-// Package store keeps Hearth's files: the last snapshot, so that the
-// window shows it at once on the next start.
+// Package store keeps Hearth's files: the user's settings and projects,
+// and the last snapshot, so that the window shows it at once on the next
+// start.
 package store
 
 import (
@@ -34,19 +35,7 @@ func SaveSnapshot(dir string, s inventory.Snapshot) error {
 	if err != nil {
 		return fmt.Errorf("encode snapshot: %w", err)
 	}
-	f, err := os.CreateTemp(dir, snapshotFile+".*")
-	if err != nil {
-		return fmt.Errorf("save snapshot: %w", err)
-	}
-	_, err = f.Write(data)
-	if cerr := f.Close(); err == nil {
-		err = cerr
-	}
-	if err == nil {
-		err = os.Rename(f.Name(), filepath.Join(dir, snapshotFile))
-	}
-	if err != nil {
-		_ = os.Remove(f.Name())
+	if err := writeFile(dir, snapshotFile, data); err != nil {
 		return fmt.Errorf("save snapshot: %w", err)
 	}
 	return nil
