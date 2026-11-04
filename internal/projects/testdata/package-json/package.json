@@ -1,0 +1,10 @@
+{
+  "name": "shop",
+  "engines": {"node": ">=18 <21", "pnpm": "^9"},
+  "volta": {"node": "20.11.0"},
+  "packageManager": "pnpm@9.12.0+sha512.abc",
+  "devEngines": {
+    "runtime": {"name": "node", "version": "^20.10"},
+    "packageManager": [{"name": "pnpm", "version": "9.x"}]
+  }
+}

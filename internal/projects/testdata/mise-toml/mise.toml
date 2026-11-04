@@ -1,0 +1,8 @@
+[env]
+NODE_ENV = "development"
+
+[tools]
+python = ["3.12", "3.11"]
+node = "22"
+terraform = "1.9"
+rust = { version = "1.80", profile = "minimal" }
