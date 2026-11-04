@@ -35,6 +35,16 @@ const (
 	PathCurrentDir Kind = "path-current-dir"
 	// PathMissing is a PATH entry naming a directory that is not there.
 	PathMissing Kind = "path-missing"
+	// SkillCopies is a skill copied to several folders of the user's or of
+	// one project, the same files in each: an edit to one misses the others.
+	SkillCopies Kind = "skill-copies"
+	// SkillDiffers is several folders of the user's or of one project
+	// holding a skill by one name, with different files: agents may get
+	// different versions of it.
+	SkillDiffers Kind = "skill-differs"
+	// MCPMissing is a command MCP servers start that is not there: the
+	// agents cannot start them.
+	MCPMissing Kind = "mcp-missing"
 )
 
 // Severity is how much an issue matters.
@@ -47,8 +57,9 @@ const (
 	Warning
 )
 
-// Issue is one thing that needs attention. The page it lives on follows
-// from Project, then Tool; an issue with neither is about the PATH.
+// Issue is one thing that needs attention. A skill's issue lives on the
+// skills page, an MCP server's on the MCP page; the page of another follows from Project, then Tool, and
+// an issue with neither is about the PATH.
 type Issue struct {
 	Kind     Kind
 	Severity Severity
@@ -65,10 +76,15 @@ type Issue struct {
 	Check projects.Check
 	// Dirs are the PATH entries a PATH issue is about, each once.
 	Dirs []string
+	// Skills are the copies a skill's issue is about, in the order found.
+	Skills []inventory.Skill
+	// MCP are the servers an MCP issue is about, in the order found.
+	MCP []inventory.MCPServer
 }
 
 // Find returns the issues of the scan s and the projects ps, the PATH's
-// and the tools' first, then the projects'. node is what nodejs.org says
+// and the tools' first, then the user's skills' and MCP servers', then the
+// projects'. node is what nodejs.org says
 // of Node's versions, nil when not known: without it no version counts as
 // out of support, and lts/* meets nothing. now is the time support is
 // judged at.
@@ -91,7 +107,11 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 			out = append(out, unsupported(ts, lines, now)...)
 		}
 	}
+	out = append(out, skillIssues(s.Skills)...)
+	out = append(out, mcpMissing(s.MCP)...)
 	for _, p := range ps {
+		out = append(out, skillIssues(p.Skills)...)
+		out = append(out, mcpMissing(p.MCP)...)
 		for _, st := range projects.Resolve(p, s, lines) {
 			ch, ok := st.Unmet()
 			if !ok {
@@ -193,6 +213,55 @@ func unsupported(ts inventory.ToolState, lines map[int]versions.Line, now time.T
 		return nil
 	}
 	return []Issue{is}
+}
+
+// skillIssues are the copies by one name among one scope's skills. One
+// folder that several paths lead to is no copy, nor is a broken link.
+func skillIssues(skills []inventory.Skill) []Issue {
+	var names []string
+	byName := map[string][]inventory.Skill{}
+	for _, sk := range skills {
+		if sk.Broken {
+			continue
+		}
+		if _, ok := byName[sk.Name]; !ok {
+			names = append(names, sk.Name)
+		}
+		byName[sk.Name] = append(byName[sk.Name], sk)
+	}
+	var out []Issue
+	for _, name := range names {
+		copies := byName[name]
+		if len(copies) < 2 {
+			continue
+		}
+		is := Issue{Kind: SkillCopies, Severity: Info, Project: copies[0].Project, Skills: copies}
+		if slices.ContainsFunc(copies, func(c inventory.Skill) bool { return c.Sum == "" || c.Sum != copies[0].Sum }) {
+			is.Kind, is.Severity = SkillDiffers, Warning
+		}
+		out = append(out, is)
+	}
+	return out
+}
+
+// mcpMissing are the commands of servers that are not there, an issue per
+// command and project, in the order found. A server turned off is none.
+func mcpMissing(servers []inventory.MCPServer) []Issue {
+	var out []Issue
+	for _, sv := range servers {
+		if !sv.Missing || sv.Disabled {
+			continue
+		}
+		i := slices.IndexFunc(out, func(is Issue) bool {
+			return is.Project == sv.Project && is.MCP[0].Command == sv.Command
+		})
+		if i < 0 {
+			out = append(out, Issue{Kind: MCPMissing, Severity: Warning, Project: sv.Project})
+			i = len(out) - 1
+		}
+		out[i].MCP = append(out[i].MCP, sv)
+	}
+	return out
 }
 
 func osDir(dir string) bool {

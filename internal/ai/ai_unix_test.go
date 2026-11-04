@@ -67,3 +67,35 @@ func TestDetectCommands(t *testing.T) {
 		t.Error("found: claude must be, gemini must not")
 	}
 }
+
+// A server's command is found on the terminal's PATH or at its path; the
+// path of one by name is the first on PATH.
+func TestMCPCommands(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := filepath.Join(root, "home")
+	bin := filepath.Join(root, "bin")
+	npx := executable(t, filepath.Join(bin, "npx"))
+	server := executable(t, filepath.Join(root, "opt", "server"))
+	tree(t, home, map[string]string{".cursor/mcp.json": `{"mcpServers": {
+		"byName": {"command": "npx"}, "byPath": {"command": "` + server + `"},
+		"gone": {"command": "` + filepath.Join(root, "opt", "gone") + `"}, "home": {"command": "~/bin/x"}}}`}, nil)
+	got, errs := MCP(sysenv.Env{"HOME=" + home, "PATH=" + bin})
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	type check struct {
+		name, path string
+		missing    bool
+	}
+	var checks []check
+	for _, s := range got {
+		checks = append(checks, check{s.Name, s.CommandPath, s.Missing})
+	}
+	want := []check{{"byName", npx, false}, {"byPath", server, false}, {"gone", "", true}, {"home", "", false}}
+	if !reflect.DeepEqual(checks, want) {
+		t.Errorf("got  %+v\nwant %+v", checks, want)
+	}
+}

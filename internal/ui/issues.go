@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -64,14 +65,54 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			dirs[i] = tilde(d, home)
 		}
 		return locales.IssuePathMissingTitle(), locales.IssuePathMissingExplain(strings.Join(dirs, ", "))
+	case issues.SkillCopies, issues.SkillDiffers:
+		dirs := make([]string, len(is.Skills))
+		for i, sk := range is.Skills {
+			dirs[i] = tilde(sk.Dir, home)
+		}
+		name := is.Skills[0].Name
+		if is.Kind == issues.SkillCopies {
+			return locales.IssueSkillCopiesTitle(name, len(is.Skills)), locales.IssueSkillCopiesExplain(strings.Join(dirs, ", "))
+		}
+		return locales.IssueSkillDiffersTitle(name), locales.IssueSkillDiffersExplain(strings.Join(dirs, ", "))
+	case issues.MCPMissing:
+		// Servers by name, each with the agents declaring it.
+		var names []string
+		agents := map[string][]string{}
+		for _, sv := range is.MCP {
+			if _, ok := agents[sv.Name]; !ok {
+				names = append(names, sv.Name)
+			}
+			if a := agentTitle(sv.Agent); !slices.Contains(agents[sv.Name], a) {
+				agents[sv.Name] = append(agents[sv.Name], a)
+			}
+		}
+		servers := make([]string, len(names))
+		for i, n := range names {
+			servers[i] = n + " (" + strings.Join(agents[n], ", ") + ")"
+		}
+		// The title names the command; the explanation says where it is.
+		command := is.MCP[0].Command
+		return locales.IssueMcpMissingTitle(filepath.Base(command)),
+			locales.IssueMcpMissingExplain(strings.Join(servers, ", "), tilde(command, home))
 	}
 	return "", ""
 }
 
-// issuePage is the path of the page an issue lives on: its project's, its
-// tool's, or the PATH's.
+// skillsPage and mcpPage are where skills' and MCP servers' issues live.
+const (
+	skillsPage = "/ai/skills"
+	mcpPage    = "/ai/mcp"
+)
+
+// issuePage is the path of the page an issue lives on: the skills', its
+// project's, its tool's, or the PATH's.
 func issuePage(is issues.Issue) string {
 	switch {
+	case len(is.Skills) > 0:
+		return skillsPage
+	case len(is.MCP) > 0:
+		return mcpPage
 	case is.Project != "":
 		return projectPath(is.Project)
 	case is.Tool != "":

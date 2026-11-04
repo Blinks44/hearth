@@ -1,1 +1,1 @@
-{"mcpServers":{}}
+{"mcpServers": {"filesystem": {"command": "uvx", "args": ["mcp-fs", "--token=s3cr3t", "Authorization: Bearer s3cr3t", "/work"]}}}

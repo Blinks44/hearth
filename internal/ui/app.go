@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/markdown"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -42,6 +43,10 @@ type App struct {
 	// takes one off the list, leaving the folder be.
 	AddProjects   func(dirs []string)
 	RemoveProject func(dir string)
+	// LoadSkill reads a skill's folder, its files and SKILL.md, in the
+	// background, and gives them to done through Window.Update; nil shows
+	// neither.
+	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
 	router        *ui.Router
 	moreOpen      bool    // the languages not found show in the sidebar
@@ -50,6 +55,15 @@ type App struct {
 	projectFilter string  // the projects page's filter
 	adding        *adding // the folder the add dialog shows; nil when closed
 	addOpen       bool
+
+	// The skills and MCP pages: the agent filtered by, "" for all; the
+	// scope, as scopeSegments; the search; and the key of the one shown.
+	skillAgent, mcpAgent   string
+	skillScope, mcpScope   int
+	skillQuery, mcpQuery   string
+	skillChosen, mcpChosen string
+	skillFolder            skillFolder // what was read of the skill shown
+	markdown               markdown.Options
 }
 
 // NewApp returns the app showing the overview.
@@ -71,6 +85,12 @@ func (a *App) View(c *ui.Context) {
 		a.sidebar(c, vibrant)
 		ui.Box(c).Width(1).Shrink(0).Background(Colors(t).Divider)
 		a.router.View(c, func(r *ui.Route) {
+			if r.Match(agentPage) {
+				id := r.Query("id")
+				r.Title(agentTitle(id))
+				a.agentDetail(c, id)
+				return
+			}
 			if r.Match(projectPage) {
 				dir := r.Query("dir")
 				r.Title(filepath.Base(dir))
@@ -87,6 +107,12 @@ func (a *App) View(c *ui.Context) {
 						a.projectList(c, p)
 					case overview.path:
 						a.overviewPage(c, p)
+					case "/ai/agents":
+						a.agentsPage(c, p)
+					case skillsPage:
+						a.skillsPage(c, p)
+					case mcpPage:
+						a.mcpPageView(c, p)
 					default:
 						a.stub(c, p)
 					}
@@ -194,7 +220,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				for _, s := range sections {
 					sectionTitle(c, s.title())
 					for _, p := range s.pages {
-						a.item(c, p, a.issueCount(c, p))
+						a.item(c, p, a.pageEnd(c, p))
 					}
 				}
 			})
@@ -205,12 +231,30 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 	})
 }
 
-// issueCount shows, on the PATH's item, how many issues the PATH has; nil
-// for other pages.
-func (a *App) issueCount(c *ui.Context, p page) func() {
-	if p.path != pathPage {
+// pageEnd is what an item shows on its right: how many agents, skills or
+// MCP servers were found on the AI pages', and the PATH's issues on its.
+func (a *App) pageEnd(c *ui.Context, p page) func() {
+	n := 0
+	switch p.path {
+	case "/ai/agents":
+		n = len(a.foundAgents())
+	case skillsPage:
+		n = len(a.allSkills())
+	case mcpPage:
+		n = len(a.mcpItems())
+	case pathPage:
+		return a.issueCount(c)
+	}
+	if n == 0 {
 		return nil
 	}
+	return func() {
+		ui.Text(c, strconv.Itoa(n)).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+	}
+}
+
+// issueCount shows how many issues the PATH has; nil for none.
+func (a *App) issueCount(c *ui.Context) func() {
 	n := 0
 	for _, is := range a.issues(c) {
 		if issuePage(is) == pathPage {

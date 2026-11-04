@@ -1,0 +1,265 @@
+package ai
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"go.yaml.in/yaml/v3"
+
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/sysenv"
+)
+
+// skillsRoot is a skills directory with the agents reading it.
+type skillsRoot struct {
+	path   string
+	agents []string
+}
+
+// maxDepth is how deep in a skills directory skills are looked for: Claude
+// Code keeps the synced ones as skills/synced/<account>/<name>.
+const maxDepth = 3
+
+// Skills finds the user's skills in the skills directories of every agent
+// Hearth knows; env gives the home and the agents' settings directories.
+func Skills(env sysenv.Env) []inventory.Skill {
+	home := homeDir(env)
+	var roots []skillsRoot
+	for _, a := range agents {
+		d := dir(a.dir, env, home)
+		for _, s := range a.skills {
+			roots = addRoot(roots, resolve(s, d, home), a.id)
+		}
+	}
+	return readSkills(roots, "")
+}
+
+// ProjectSkills finds the skills in the skills directories of the project
+// in dir.
+func ProjectSkills(dir string) []inventory.Skill {
+	var roots []skillsRoot
+	for _, a := range agents {
+		for _, s := range a.projectSkills {
+			roots = addRoot(roots, filepath.Join(dir, filepath.FromSlash(s)), a.id)
+		}
+	}
+	return readSkills(roots, dir)
+}
+
+// addRoot adds agent as a reader of the skills directory path, the
+// directory once.
+func addRoot(roots []skillsRoot, path, agent string) []skillsRoot {
+	if path == "" {
+		return roots
+	}
+	for i := range roots {
+		if roots[i].path == path {
+			roots[i].agents = append(roots[i].agents, agent)
+			return roots
+		}
+	}
+	return append(roots, skillsRoot{path, []string{agent}})
+}
+
+// readSkills reads the skills in roots, a folder that several paths lead
+// to once, in the order found.
+func readSkills(roots []skillsRoot, project string) []inventory.Skill {
+	var out []inventory.Skill
+	byDir := map[string]int{}
+	for _, r := range roots {
+		info, err := os.Lstat(r.path)
+		if err != nil {
+			continue
+		}
+		var found []foundSkill
+		findSkills(r.path, info.Mode()&fs.ModeSymlink != 0, maxDepth, &found)
+		for _, f := range found {
+			p := inventory.SkillPath{Path: f.path, Link: f.link, Agents: r.agents}
+			if f.broken {
+				out = append(out, brokenSkill(p, project))
+				continue
+			}
+			real, err := filepath.EvalSymlinks(f.path)
+			if err != nil {
+				real = f.path
+			}
+			if i, ok := byDir[real]; ok {
+				out[i].Paths = append(out[i].Paths, p)
+				continue
+			}
+			byDir[real] = len(out)
+			out = append(out, readSkill(real, p, project))
+		}
+	}
+	return out
+}
+
+// foundSkill is a folder with a SKILL.md, or a symlink leading nowhere.
+type foundSkill struct {
+	path         string
+	link, broken bool
+}
+
+// findSkills finds the skills in dir and, depth levels down, in its
+// folders that are not skills; link tells dir is reached by a symlink.
+// Hidden entries are skipped.
+func findSkills(dir string, link bool, depth int, out *[]foundSkill) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
+		p := filepath.Join(dir, e.Name())
+		symlink := e.Type()&fs.ModeSymlink != 0
+		info, err := os.Stat(p)
+		switch {
+		case err != nil:
+			if symlink {
+				*out = append(*out, foundSkill{p, true, true})
+			}
+		case !info.IsDir():
+		case exists(filepath.Join(p, "SKILL.md")):
+			*out = append(*out, foundSkill{p, link || symlink, false})
+		case depth > 1:
+			findSkills(p, link || symlink, depth-1, out)
+		}
+	}
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// brokenSkill is a symlink at p that leads nowhere, named by the link.
+func brokenSkill(p inventory.SkillPath, project string) inventory.Skill {
+	target, _ := os.Readlink(p.Path)
+	if target != "" && !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(p.Path), target)
+	}
+	return inventory.Skill{Name: filepath.Base(p.Path), Dir: target, Project: project,
+		Paths: []inventory.SkillPath{p}, Broken: true}
+}
+
+// readSkill reads the skill in the folder dir, found at p.
+func readSkill(dir string, p inventory.SkillPath, project string) inventory.Skill {
+	s := inventory.Skill{Name: filepath.Base(dir), Dir: dir, Project: project, Paths: []inventory.SkillPath{p}}
+	data, err := os.ReadFile(filepath.Join(dir, "SKILL.md"))
+	if err == nil {
+		var fm frontmatter
+		if fm, err = readFrontmatter(data); err == nil {
+			if fm.Name != "" {
+				s.Name = fm.Name
+			}
+			s.Description = fm.Description
+		}
+	}
+	if err != nil {
+		s.Err = fmt.Errorf("read SKILL.md: %w", err).Error()
+	}
+	s.Sum = sum(dir)
+	return s
+}
+
+type frontmatter struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+}
+
+// readFrontmatter reads the YAML between the "---" lines SKILL.md starts
+// with.
+func readFrontmatter(data []byte) (frontmatter, error) {
+	var fm frontmatter
+	lines := strings.SplitAfter(strings.TrimPrefix(string(data), "\ufeff"), "\n")
+	if strings.TrimSpace(lines[0]) != "---" {
+		return fm, errors.New("no frontmatter")
+	}
+	for i := 1; i < len(lines); i++ {
+		if strings.TrimSpace(lines[i]) == "---" {
+			err := yaml.Unmarshal([]byte(strings.Join(lines[1:i], "")), &fm)
+			return fm, err
+		}
+	}
+	return fm, errors.New("frontmatter not closed")
+}
+
+// sum hashes the names and contents of the files in dir, hidden ones and
+// symlinks skipped, so that copies of a skill compare equal; "" when a
+// file cannot be read.
+func sum(dir string) string {
+	h := sha256.New()
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if path != dir && strings.HasPrefix(d.Name(), ".") {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !d.Type().IsRegular() {
+			return nil
+		}
+		rel, _ := filepath.Rel(dir, path)
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = f.Close() }() // read only
+		h.Write([]byte(filepath.ToSlash(rel) + "\x00"))
+		if _, err := io.Copy(h, f); err != nil {
+			return err
+		}
+		h.Write([]byte{0})
+		return nil
+	})
+	if err != nil {
+		return ""
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// SkillFolder reads the folder of a skill: its entries, hidden ones aside,
+// and the text of its SKILL.md.
+func SkillFolder(dir string) (entries []inventory.Entry, skillMD string, err error) {
+	des, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, "", err
+	}
+	for _, d := range des {
+		if strings.HasPrefix(d.Name(), ".") {
+			continue
+		}
+		info, err := os.Stat(filepath.Join(dir, d.Name()))
+		if err != nil {
+			continue
+		}
+		e := inventory.Entry{Name: d.Name(), Dir: info.IsDir(), Size: info.Size(), Modified: info.ModTime()}
+		if e.Dir {
+			e.Size = 0
+			_ = filepath.WalkDir(filepath.Join(dir, d.Name()), func(_ string, f fs.DirEntry, err error) error {
+				if err == nil && f.Type().IsRegular() && !strings.HasPrefix(f.Name(), ".") {
+					e.Files++
+				}
+				return nil
+			})
+		}
+		entries = append(entries, e)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "SKILL.md"))
+	if err != nil {
+		return entries, "", err
+	}
+	return entries, string(data), nil
+}

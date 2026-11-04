@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -64,6 +65,12 @@ func main() {
 		})
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
+		a.LoadSkill = func(dir string, done func([]inventory.Entry, string, error)) {
+			go func() {
+				entries, text, err := ai.SkillFolder(dir)
+				win.Update(func() { done(entries, text, err) })
+			}()
+		}
 		// Project files and the shells' startup files are followed: a
 		// change reads that project again, or scans again.
 		list.watch = &watch.Service{

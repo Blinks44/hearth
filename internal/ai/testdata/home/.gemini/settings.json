@@ -1,1 +1,1 @@
-{}
+{"theme": "Default", "mcpServers": {"remote": {"httpUrl": "https://user:s3cr3t@example.com/mcp", "headers": {"X-Api-Key": "s3cr3t"}}}}

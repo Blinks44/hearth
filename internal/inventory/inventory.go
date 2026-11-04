@@ -109,6 +109,91 @@ type Snapshot struct {
 	TerminalPath, GUIPath []PathEntry `json:",omitempty"`
 	// Agents are the AI agents Hearth knows, found or not, in its order.
 	Agents []Agent `json:",omitempty"`
+	// Skills are the user's skills, those of projects aside.
+	Skills []Skill `json:",omitempty"`
+	// MCP are the MCP servers in the user's files of the agents, Claude
+	// Code's servers of single projects in ~/.claude.json among them;
+	// MCPErrs say which of those files could not be read.
+	MCP     []MCPServer `json:",omitempty"`
+	MCPErrs []string    `json:",omitempty"`
+}
+
+// MCPServer is an MCP server as one agent's file declares it. Secrets are
+// never kept: of env and headers only the names, and the values in the
+// arguments and the URL that look like secrets are Hidden.
+type MCPServer struct {
+	Name string
+	// Agent is the ID of the agent whose file it is in, as "claude".
+	Agent string
+	File  string
+	// Project is the folder of the project it is for: one with the file,
+	// or one Claude Code keeps servers of in ~/.claude.json; "" for all.
+	Project string `json:",omitempty"`
+	// Transport is "stdio" for a command the agent starts, "http" or "sse"
+	// for a server at URL.
+	Transport string
+	Command   string   `json:",omitempty"`
+	Args      []string `json:",omitempty"`
+	URL       string   `json:",omitempty"`
+	// Env and Headers are the names of the variables and HTTP headers it
+	// gets, in order.
+	Env     []string `json:",omitempty"`
+	Headers []string `json:",omitempty"`
+	// Disabled reports it is declared but turned off.
+	Disabled bool `json:",omitempty"`
+	// CommandPath is where Command is, Missing that it is nowhere; neither
+	// is set when Command was not checked.
+	CommandPath string `json:",omitempty"`
+	Missing     bool   `json:",omitempty"`
+}
+
+// Entry is a file or folder in another folder, as a skill's.
+type Entry struct {
+	Name string
+	Dir  bool
+	// Size is a file's, in bytes; Files counts the files a folder has, in
+	// it and deeper.
+	Size     int64
+	Files    int
+	Modified time.Time
+}
+
+// Hidden stands for a value kept out of the snapshot: a secret, or what
+// may be one.
+const Hidden = "•••"
+
+// Skill is a folder with a SKILL.md, as the agents find it in their
+// skills directories: one folder, under one path or several.
+type Skill struct {
+	// Name and Description are SKILL.md's; Name is the folder's when it
+	// names none.
+	Name, Description string
+	// Dir is the folder, symlinks followed; for a broken link, where it
+	// leads.
+	Dir string
+	// Project is the folder of the project whose skills directories have
+	// it; "" for the user's.
+	Project string `json:",omitempty"`
+	// Paths are where the agents find it, in the order of their skills
+	// directories.
+	Paths []SkillPath
+	// Sum is a hash of its files' names and contents: copies with the same
+	// Sum are the same.
+	Sum string `json:",omitempty"`
+	// Broken reports a symlink that leads nowhere.
+	Broken bool `json:",omitempty"`
+	// Err says why SKILL.md could not be read; empty when it was.
+	Err string `json:",omitempty"`
+}
+
+// SkillPath is a path an agent finds a skill by.
+type SkillPath struct {
+	Path string
+	// Link reports that Path is a symlink, or is in a directory that is.
+	Link bool `json:",omitempty"`
+	// Agents are the IDs of the agents reading the skills directory Path
+	// is in, as "claude", in Hearth's order.
+	Agents []string
 }
 
 // Agent is an AI coding agent as a scan found it.

@@ -78,7 +78,8 @@ func (s *Scanner) Start(done func(inventory.Snapshot)) {
 }
 
 // Run runs the detectors, a few at once, and returns what they found in
-// their order, with the AI agents, found beside them. A detector's error
+// their order, with the AI agents and the user's skills and MCP servers,
+// found beside them. A detector's error
 // leaves the others alone: its tool gets the error and whatever it found
 // before it.
 func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector) inventory.Snapshot {
@@ -86,7 +87,12 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 	sem := make(chan struct{}, parallel)
 	var wg sync.WaitGroup
 	var agents []inventory.Agent
+	var skills []inventory.Skill
+	var mcp []inventory.MCPServer
+	var mcpErrs []string
 	wg.Go(func() { agents = ai.Detect(ctx, r, term, gui) })
+	wg.Go(func() { skills = ai.Skills(term) })
+	wg.Go(func() { mcp, mcpErrs = ai.MCP(term) })
 	for i, d := range ds {
 		wg.Go(func() {
 			sem <- struct{}{}
@@ -100,7 +106,7 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 		})
 	}
 	wg.Wait()
-	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents,
+	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
 		TerminalPath: pathEntries(term), GUIPath: pathEntries(gui)}
 }
 

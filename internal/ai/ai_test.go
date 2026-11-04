@@ -30,7 +30,7 @@ func byID(agents []inventory.Agent) map[string]inventory.Agent {
 }
 
 // Each agent gets its settings directory and those of its files the home
-// has, the shared skills directory included; an agent not installed is
+// has, the skills directories it shares with others included; an agent not installed is
 // not found, though its files are listed.
 func TestDetectFiles(t *testing.T) {
 	home := fixtureHome(t)
@@ -62,9 +62,11 @@ func TestDetectFiles(t *testing.T) {
 		}},
 		{"cursor", p(".cursor"), []inventory.AgentFile{
 			{Path: p(".cursor", "mcp.json"), Kind: mcp}, {Path: p(".agents", "skills"), Kind: skills},
+			{Path: p(".claude", "skills"), Kind: skills},
 		}},
 		{"opencode", p(".config", "opencode"), []inventory.AgentFile{
 			{Path: p(".config", "opencode", "opencode.json"), Kind: settings},
+			{Path: p(".claude", "skills"), Kind: skills}, {Path: p(".agents", "skills"), Kind: skills},
 		}},
 		{"devin", p(".config", "devin"), []inventory.AgentFile{
 			{Path: p(".config", "devin", "mcp_config.json"), Kind: mcp},

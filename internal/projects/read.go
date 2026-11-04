@@ -15,6 +15,9 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+
+	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/inventory"
 )
 
 // Requirement is what one project file asks of a tool.
@@ -40,6 +43,11 @@ type Project struct {
 	// AI are the AI agents' files and folders the project has, as
 	// "CLAUDE.md", ".claude".
 	AI []string
+	// Skills are the skills in the agents' skills directories of the
+	// project.
+	Skills []inventory.Skill
+	// MCP are the MCP servers in the agents' files of the project.
+	MCP []inventory.MCPServer
 	// Errs say which files could not be read; the others still count.
 	Errs []error
 }
@@ -118,6 +126,9 @@ func Read(dir string) Project {
 			p.AI = append(p.AI, name)
 		}
 	}
+	p.Skills = ai.ProjectSkills(dir)
+	mcp, errs := ai.ProjectMCP(dir)
+	p.MCP, p.Errs = mcp, append(p.Errs, errs...)
 	return p
 }
 

@@ -8,6 +8,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/egoist/mygo v0.7.4
+	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/mod v0.42.0
 	golang.org/x/sys v0.48.0
 )

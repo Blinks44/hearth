@@ -33,8 +33,9 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 						a.toolCards(c, found)
 						a.overviewProjects(c)
 					})
-					ui.Column(c).Width(342).Shrink(0).Padding(27, 0, 0, 0).Children(func() {
+					ui.Column(c).Width(342).Shrink(0).Padding(27, 0, 0, 0).Gap(18).Children(func() {
 						a.attention(c, found)
+						a.overviewAgents(c)
 					})
 				})
 			})
@@ -65,7 +66,11 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 			{Color: pal.HeroFrom, At: 0}, {Color: pal.HeroMid, At: 0.55}, {Color: pal.HeroTo, At: 1},
 		}}).BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() {
-			title, text := locales.HeroAllGood(), locales.HeroFound(len(tools))+" "+locales.HeroNoIssues()
+			foundText := locales.HeroFound(len(tools))
+			if n := len(a.foundAgents()); n > 0 {
+				foundText = locales.HeroFoundAll(len(tools), n)
+			}
+			title, text := locales.HeroAllGood(), foundText+" "+locales.HeroNoIssues()
 			switch n := len(found); {
 			case a.firstScan():
 				heroChip(c, pal.Info, pal.Info.Alpha(0.12), pal.Info, locales.ChipChecking())
@@ -78,7 +83,7 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 				if n >= 3 {
 					title = locales.HeroAttention()
 				}
-				text = locales.HeroFound(len(tools)) + " " + locales.HeroSomeIssues(n)
+				text = foundText + " " + locales.HeroSomeIssues(n)
 			}
 			ui.Text(c, title).FontSize(24).FontWeight(600).SingleLine()
 			ui.Text(c, text).FontSize(13).TextColor(t.TextMuted).MaxWidth(380)

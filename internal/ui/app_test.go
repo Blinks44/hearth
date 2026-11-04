@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestSidebarOpensPages(t *testing.T) {
 		if a.router.Path() != p.path || a.router.Title() != p.title() {
 			t.Errorf("clicked %q: page %q titled %q", p.title(), a.router.Path(), a.router.Title())
 		}
-		built := p.path == "/tools/node" || p.path == projectsPage.path || p.path == overview.path
+		built := slices.Contains([]string{"/tools/node", projectsPage.path, overview.path, "/ai/agents", skillsPage, mcpPage}, p.path)
 		if !tt.HasText(p.subtitle()) || !built && !tt.HasText("Coming soon") {
 			t.Errorf("%s: header missing, texts %q", p.title(), tt.Texts())
 		}

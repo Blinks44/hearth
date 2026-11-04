@@ -939,6 +939,74 @@
       }
     }
   },
+  "issueSkillCopiesTitle": "Skill {name}: {count, plural, one {# copy} other {# copies}}",
+  "@issueSkillCopiesTitle": {
+    "description": "Issue title: one skill copied to several folders, the same files in each.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "issueSkillCopiesExplain": "The same files are in {dirs}. An edit to one copy misses the others: keep one and link the rest to it.",
+  "@issueSkillCopiesExplain": {
+    "description": "Issue explanation: identical copies of a skill.",
+    "placeholders": {
+      "dirs": {
+        "type": "String",
+        "example": "~/.claude/skills/pdf, ~/.agents/skills/pdf"
+      }
+    }
+  },
+  "issueSkillDiffersTitle": "Copies of skill {name} differ",
+  "@issueSkillDiffersTitle": {
+    "description": "Issue title: folders holding a skill by one name with different files.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "pdf"
+      }
+    }
+  },
+  "issueSkillDiffersExplain": "{dirs} hold different versions of it, so agents may follow different instructions. Keep the right one and link the rest to it.",
+  "@issueSkillDiffersExplain": {
+    "description": "Issue explanation: copies of a skill that differ.",
+    "placeholders": {
+      "dirs": {
+        "type": "String",
+        "example": "~/.claude/skills/pdf, ~/.agents/skills/pdf"
+      }
+    }
+  },
+  "issueMcpMissingTitle": "MCP: {command} not found",
+  "@issueMcpMissingTitle": {
+    "description": "Issue title: the command MCP servers start is not there.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "docker"
+      }
+    }
+  },
+  "issueMcpMissingExplain": "{servers} start {command}, but it is not there. Until it is installed or the path is fixed, the agents cannot start these servers.",
+  "@issueMcpMissingExplain": {
+    "description": "Issue explanation: servers, each with its agents, whose command is missing.",
+    "placeholders": {
+      "servers": {
+        "type": "String",
+        "example": "github (Claude Code, Cursor)"
+      },
+      "command": {
+        "type": "String",
+        "example": "docker"
+      }
+    }
+  },
   "emptyPathEntry": "an empty entry",
   "@emptyPathEntry": {
     "description": "Issue text: how an empty PATH entry is named."
@@ -1098,5 +1166,395 @@
   "openProject": "Open project",
   "@openProject": {
     "description": "Projects list context menu: open the project's page."
+  },
+  "aiAgentsTitle": "AI agents",
+  "@aiAgentsTitle": {
+    "description": "Agents page and overview card: the title."
+  },
+  "aiAgentsText": "Programs that write code with you. Here is where their settings, instructions, skills and MCP live.",
+  "@aiAgentsText": {
+    "description": "Agents page: what agents are."
+  },
+  "statFound": "found",
+  "@statFound": {
+    "description": "Agents page stat: agents found."
+  },
+  "statSkills": "skills",
+  "@statSkills": {
+    "description": "Stat: skills."
+  },
+  "statTotal": "total",
+  "@statTotal": {
+    "description": "Stat: all of them."
+  },
+  "statProjects": "in projects",
+  "@statProjects": {
+    "description": "Stat: in projects."
+  },
+  "statWithCopies": "with copies",
+  "@statWithCopies": {
+    "description": "Skills stat: skills with copies."
+  },
+  "statServers": "servers",
+  "@statServers": {
+    "description": "MCP stat: servers."
+  },
+  "statProblems": "issues",
+  "@statProblems": {
+    "description": "MCP stat: issues."
+  },
+  "columnAgent": "Agent",
+  "@columnAgent": {
+    "description": "Agents table column."
+  },
+  "columnInstall": "Install",
+  "@columnInstall": {
+    "description": "Agents table column: what installed it."
+  },
+  "columnInstructions": "Instructions",
+  "@columnInstructions": {
+    "description": "Agents table column."
+  },
+  "noInstructions": "no instructions",
+  "@noInstructions": {
+    "description": "Agents table: an agent without instruction files."
+  },
+  "appSource": "app",
+  "@appSource": {
+    "description": "Agents table: installed as a desktop app."
+  },
+  "notFoundHere": "Not found on this computer",
+  "@notFoundHere": {
+    "description": "Agents page: the card of agents not found."
+  },
+  "notFoundWhere": "looked in the terminal's and the apps' PATH",
+  "@notFoundWhere": {
+    "description": "Agents page: where agents were looked for."
+  },
+  "settingsLeft": "settings left in {dir}",
+  "@settingsLeft": {
+    "description": "Agents page: an agent not found whose settings folder is there.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.gemini"
+      }
+    }
+  },
+  "noAgents": "No AI agents found",
+  "@noAgents": {
+    "description": "No agent was found."
+  },
+  "agentInstalledVia": "installed through {source}",
+  "@agentInstalledVia": {
+    "description": "Agent page: how it was installed.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "stateVersion": "Version",
+  "@stateVersion": {
+    "description": "Agent page state card."
+  },
+  "stateInTerminal": "In terminal",
+  "@stateInTerminal": {
+    "description": "Agent page state card."
+  },
+  "stateSettings": "Settings",
+  "@stateSettings": {
+    "description": "Agent page state card."
+  },
+  "filesCount": "{count, plural, one {# file} other {# files}}",
+  "@filesCount": {
+    "description": "A count of files.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "installationCard": "Installation",
+  "@installationCard": {
+    "description": "Agent page card: the copies of its command."
+  },
+  "copyFirst": "first in the terminal's PATH",
+  "@copyFirst": {
+    "description": "Agent page: the copy the terminal runs."
+  },
+  "copyOnPath": "#{rank} in the terminal's PATH",
+  "@copyOnPath": {
+    "description": "Agent page: a copy further down PATH.",
+    "placeholders": {
+      "rank": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "copyGuiOnly": "only apps outside the terminal find it",
+  "@copyGuiOnly": {
+    "description": "Agent page: a copy only the GUI's PATH has."
+  },
+  "settingsCard": "Settings and instructions",
+  "@settingsCard": {
+    "description": "Agent page card: the agent's files."
+  },
+  "fileSettings": "settings",
+  "@fileSettings": {
+    "description": "Agent file kind."
+  },
+  "fileInstructions": "instructions for every project",
+  "@fileInstructions": {
+    "description": "Agent file kind."
+  },
+  "fileMcp": "MCP servers",
+  "@fileMcp": {
+    "description": "Agent file kind."
+  },
+  "fileSkills": "skills folder",
+  "@fileSkills": {
+    "description": "Agent file kind."
+  },
+  "noAgentFiles": "No files of it in the home folder",
+  "@noAgentFiles": {
+    "description": "Agent page: no files."
+  },
+  "noSkillsFor": "No skills it can use",
+  "@noSkillsFor": {
+    "description": "Agent page: no skills."
+  },
+  "noServersFor": "No MCP servers",
+  "@noServersFor": {
+    "description": "Agent page: no MCP servers."
+  },
+  "serversCount": "{count, plural, one {# server} other {# servers}}",
+  "@serversCount": {
+    "description": "A count of MCP servers.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "allInSkills": "all in Skills",
+  "@allInSkills": {
+    "description": "Agent page: link to the skills page."
+  },
+  "agentNotFound": "Hearth knows no such agent",
+  "@agentNotFound": {
+    "description": "Agent page for an unknown ID."
+  },
+  "scopeUser": "User",
+  "@scopeUser": {
+    "description": "Scope: the user's, for every project."
+  },
+  "scopeProject": "Project",
+  "@scopeProject": {
+    "description": "Scope: one project's."
+  },
+  "scopeProjectOf": "Project · {name}",
+  "@scopeProjectOf": {
+    "description": "Scope: the project by its folder's name.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "moduix"
+      }
+    }
+  },
+  "scopeLocal": "local",
+  "@scopeLocal": {
+    "description": "MCP: Claude Code's servers of one project kept in ~/.claude.json."
+  },
+  "skillsText": "Instructions agents load for a task. One skill can serve several agents.",
+  "@skillsText": {
+    "description": "Skills page: what skills are."
+  },
+  "allAgents": "All agents",
+  "@allAgents": {
+    "description": "Agent filter: no filter."
+  },
+  "searchByName": "Search by name and description",
+  "@searchByName": {
+    "description": "Skills and MCP search field."
+  },
+  "tagBroken": "broken link",
+  "@tagBroken": {
+    "description": "Skill tag: a symlink leading nowhere."
+  },
+  "tagSymlink": "symlink",
+  "@tagSymlink": {
+    "description": "Tag: found through a symlink."
+  },
+  "skillsCopiesHint": "{count, plural, one {# skill is} other {# skills are}} copied to several folders. One folder can stay, and the others become symlinks to it.",
+  "@skillsCopiesHint": {
+    "description": "Skills page: a hint about copies.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "noSkills": "No skills found",
+  "@noSkills": {
+    "description": "Skills page: none."
+  },
+  "nothingMatches": "Nothing matches",
+  "@nothingMatches": {
+    "description": "A list filtered to nothing."
+  },
+  "availableToAgents": "Available to agents",
+  "@availableToAgents": {
+    "description": "Skill details section."
+  },
+  "notConnected": "not connected",
+  "@notConnected": {
+    "description": "Skill details: an agent not reading it."
+  },
+  "filesSection": "Files",
+  "@filesSection": {
+    "description": "Skill details section."
+  },
+  "sizeKb": "{size} KB",
+  "@sizeKb": {
+    "description": "A file's size in kilobytes, rounded up.",
+    "placeholders": {
+      "size": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "brokenLink": "The link leads to {target}, and nothing is there.",
+  "@brokenLink": {
+    "description": "Skill details: a broken symlink.",
+    "placeholders": {
+      "target": {
+        "type": "String",
+        "example": "~/skills/gone"
+      }
+    }
+  },
+  "openInEditor": "Open in editor",
+  "@openInEditor": {
+    "description": "Opens a file in its app."
+  },
+  "loading": "Loading…",
+  "@loading": {
+    "description": "Something is being read."
+  },
+  "mcpTitle": "MCP servers",
+  "@mcpTitle": {
+    "description": "MCP page title."
+  },
+  "mcpText": "Give agents access to outside services and data. One server can be declared for several agents.",
+  "@mcpText": {
+    "description": "MCP page: what MCP servers are."
+  },
+  "searchServers": "Search by name and command",
+  "@searchServers": {
+    "description": "MCP search field."
+  },
+  "tagConflict": "conflict",
+  "@tagConflict": {
+    "description": "MCP tag: agents declare it differently."
+  },
+  "tagNoCommand": "no command",
+  "@tagNoCommand": {
+    "description": "MCP tag: its command is missing."
+  },
+  "tagOff": "off",
+  "@tagOff": {
+    "description": "MCP tag: turned off."
+  },
+  "declaredBy": "Declared for {count, plural, one {# agent} other {# agents}}.",
+  "@declaredBy": {
+    "description": "MCP details: how many agents declare it.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "commandsDiffer": "The agents start it differently.",
+  "@commandsDiffer": {
+    "description": "MCP details: a conflict."
+  },
+  "variablesHidden": "Variables · values hidden",
+  "@variablesHidden": {
+    "description": "MCP details section."
+  },
+  "headerCaption": "header",
+  "@headerCaption": {
+    "description": "MCP details: an HTTP header, not a variable."
+  },
+  "noVariables": "No variables",
+  "@noVariables": {
+    "description": "MCP details: none."
+  },
+  "whereDeclared": "Where declared",
+  "@whereDeclared": {
+    "description": "MCP details section."
+  },
+  "notDeclared": "not declared",
+  "@notDeclared": {
+    "description": "MCP details: an agent without it."
+  },
+  "commandMissing": "command not found",
+  "@commandMissing": {
+    "description": "MCP details: a missing command."
+  },
+  "openFile": "Open {file}",
+  "@openFile": {
+    "description": "Opens a file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude.json"
+      }
+    }
+  },
+  "noServers": "No MCP servers found",
+  "@noServers": {
+    "description": "MCP page: none."
+  },
+  "skillsAndMcp": "Skills and MCP",
+  "@skillsAndMcp": {
+    "description": "Overview AI card: link."
+  },
+  "agentCounts": "{skills} skills · {mcp} MCP",
+  "@agentCounts": {
+    "description": "Overview AI card: an agent's skills and servers.",
+    "placeholders": {
+      "skills": {
+        "type": "int",
+        "example": "12"
+      },
+      "mcp": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "heroFoundAll": "Found {tools, plural, one {# tool} other {# tools}} and {agents, plural, one {# AI agent} other {# AI agents}}.",
+  "@heroFoundAll": {
+    "description": "Overview hero: tools and agents found.",
+    "placeholders": {
+      "tools": {
+        "type": "int",
+        "example": "14"
+      },
+      "agents": {
+        "type": "int",
+        "example": "5"
+      }
+    }
   }
 }

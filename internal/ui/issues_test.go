@@ -12,6 +12,8 @@ func TestIssueText(t *testing.T) {
 	brew := inventory.Installation{Version: "23.6.0", Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}
 	fnm := inventory.Installation{Version: "22.12.0", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
 	check := projects.Check{Tool: "node", Want: "18", File: ".nvmrc"}
+	pdf := inventory.Skill{Name: "pdf", Dir: home + "/.claude/skills/pdf"}
+	sharedPDF := inventory.Skill{Name: "pdf", Dir: home + "/.agents/skills/pdf"}
 	tests := []struct {
 		is             issues.Issue
 		title, explain string
@@ -49,6 +51,21 @@ func TestIssueText(t *testing.T) {
 			"PATH lists folders that do not exist",
 			"~/.old/bin, /opt/gone: no such folders. Nothing breaks, but these are usually leftovers of removed programs and can go.",
 			pathPage},
+		{issues.Issue{Kind: issues.SkillCopies, Skills: []inventory.Skill{pdf, sharedPDF}},
+			"Skill pdf: 2 copies",
+			"The same files are in ~/.claude/skills/pdf, ~/.agents/skills/pdf. An edit to one copy misses the others: keep one and link the rest to it.",
+			skillsPage},
+		{issues.Issue{Kind: issues.SkillDiffers, Project: home + "/work/app", Skills: []inventory.Skill{pdf, sharedPDF}},
+			"Copies of skill pdf differ",
+			"~/.claude/skills/pdf, ~/.agents/skills/pdf hold different versions of it, so agents may follow different instructions. Keep the right one and link the rest to it.",
+			skillsPage},
+		{issues.Issue{Kind: issues.MCPMissing, MCP: []inventory.MCPServer{
+			{Name: "github", Agent: "claude", Command: "docker"}, {Name: "github", Agent: "cursor", Command: "docker"},
+			{Name: "sentry", Agent: "codex", Command: "docker"},
+		}},
+			"MCP: docker not found",
+			"github (Claude Code, Cursor), sentry (Codex) start docker, but it is not there. Until it is installed or the path is fixed, the agents cannot start these servers.",
+			mcpPage},
 	}
 	for _, tt := range tests {
 		title, explain := issueText(tt.is, home)

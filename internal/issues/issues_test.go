@@ -116,3 +116,91 @@ func TestFind(t *testing.T) {
 		}
 	}
 }
+
+func TestSkillIssues(t *testing.T) {
+	path := func(p string, agents ...string) inventory.SkillPath {
+		return inventory.SkillPath{Path: p, Agents: agents}
+	}
+	skill := func(name, dir, sum string, paths ...inventory.SkillPath) inventory.Skill {
+		return inventory.Skill{Name: name, Dir: dir, Sum: sum, Paths: paths}
+	}
+	claudePDF := skill("pdf", "/h/.claude/skills/pdf", "a", path("/h/.claude/skills/pdf", "claude"))
+	sharedPDF := skill("pdf", "/h/.agents/skills/pdf", "a", path("/h/.agents/skills/pdf", "codex"))
+	otherPDF := skill("pdf", "/h/.agents/skills/pdf", "b", path("/h/.agents/skills/pdf", "codex"))
+	linked := skill("plan", "/h/.agents/skills/plan", "c",
+		path("/h/.claude/skills/plan", "claude", "cursor"), path("/h/.agents/skills/plan", "codex", "cursor"))
+	broken := inventory.Skill{Name: "pdf", Dir: "/gone", Broken: true, Paths: []inventory.SkillPath{path("/h/.claude/skills/pdf", "claude")}}
+	tests := []struct {
+		name   string
+		skills []inventory.Skill
+		want   []Issue
+	}{
+		{name: "one copy", skills: []inventory.Skill{claudePDF}},
+		{name: "same copies", skills: []inventory.Skill{claudePDF, sharedPDF},
+			want: []Issue{{Kind: SkillCopies, Severity: Info, Skills: []inventory.Skill{claudePDF, sharedPDF}}}},
+		{name: "copies differ", skills: []inventory.Skill{claudePDF, otherPDF},
+			want: []Issue{{Kind: SkillDiffers, Severity: Warning, Skills: []inventory.Skill{claudePDF, otherPDF}}}},
+		{name: "broken link is no copy", skills: []inventory.Skill{claudePDF, broken}},
+		{name: "one folder by two paths", skills: []inventory.Skill{linked}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Find(&inventory.Snapshot{Skills: tt.skills}, nil, nil, now); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got  %+v\nwant %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+// A project's skills are compared among themselves, not with the user's.
+func TestProjectSkillIssues(t *testing.T) {
+	user := inventory.Skill{Name: "pdf", Dir: "/h/.agents/skills/pdf", Sum: "a"}
+	mine := inventory.Skill{Name: "pdf", Dir: "/src/app/.agents/skills/pdf", Sum: "b", Project: "/src/app"}
+	mine2 := inventory.Skill{Name: "pdf", Dir: "/src/app/.claude/skills/pdf", Sum: "b", Project: "/src/app"}
+	snap := &inventory.Snapshot{Skills: []inventory.Skill{user}}
+	if got := Find(snap, []projects.Project{{Dir: "/src/app", Skills: []inventory.Skill{mine}}}, nil, now); len(got) != 0 {
+		t.Errorf("user and project: %+v", got)
+	}
+	got := Find(snap, []projects.Project{{Dir: "/src/app", Skills: []inventory.Skill{mine, mine2}}}, nil, now)
+	want := []Issue{{Kind: SkillCopies, Severity: Info, Project: "/src/app", Skills: []inventory.Skill{mine, mine2}}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got  %+v\nwant %+v", got, want)
+	}
+}
+
+func TestMCPMissing(t *testing.T) {
+	server := func(name, agent, command, project string, missing, disabled bool) inventory.MCPServer {
+		return inventory.MCPServer{Name: name, Agent: agent, Transport: "stdio", Command: command,
+			Project: project, Missing: missing, Disabled: disabled}
+	}
+	found := server("github", "claude", "docker", "", false, false)
+	gone := server("github", "claude", "docker", "", true, false)
+	goneCursor := server("github", "cursor", "docker", "", true, false)
+	goneUvx := server("fs", "codex", "uvx", "", true, false)
+	off := server("pg", "codex", "pg-mcp", "", true, true)
+	inProject := server("tool", "claude", "./bin/tool", "/src/app", true, false)
+	tests := []struct {
+		name    string
+		user    []inventory.MCPServer
+		project []inventory.MCPServer
+		want    []Issue
+	}{
+		{name: "command found", user: []inventory.MCPServer{found}},
+		{name: "turned off", user: []inventory.MCPServer{off}},
+		{name: "one issue a command", user: []inventory.MCPServer{gone, goneUvx, goneCursor},
+			want: []Issue{
+				{Kind: MCPMissing, Severity: Warning, MCP: []inventory.MCPServer{gone, goneCursor}},
+				{Kind: MCPMissing, Severity: Warning, MCP: []inventory.MCPServer{goneUvx}},
+			}},
+		{name: "project", project: []inventory.MCPServer{inProject},
+			want: []Issue{{Kind: MCPMissing, Severity: Warning, Project: "/src/app", MCP: []inventory.MCPServer{inProject}}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ps := []projects.Project{{Dir: "/src/app", MCP: tt.project}}
+			if got := Find(&inventory.Snapshot{MCP: tt.user}, ps, nil, now); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got  %+v\nwant %+v", got, tt.want)
+			}
+		})
+	}
+}

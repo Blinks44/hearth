@@ -1,0 +1,1 @@
+{"mcpServers": {"local-tool": {"command": "./bin/missing-server", "args": ["--secret", "s3cr3t"]}, "db": {"command": "npx", "args": ["db-mcp"], "env": {"DB_PASSWORD": "s3cr3t"}}}}

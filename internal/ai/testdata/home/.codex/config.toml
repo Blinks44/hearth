@@ -1,1 +1,14 @@
 model = "o4"
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp", "--api-key", "s3cr3t"]
+env_vars = ["CONTEXT7_HOME"]
+
+[mcp_servers.context7.env]
+CONTEXT7_TOKEN = "s3cr3t"
+
+[mcp_servers.sentry]
+url = "https://mcp.sentry.dev/mcp"
+bearer_token_env_var = "SENTRY_TOKEN"
+enabled = false

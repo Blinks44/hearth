@@ -2172,6 +2172,104 @@ func (msgs Messages) IssuePathMissingExplain(dirs string) string {
 	return Catalog.Format(msgs.locale, "issuePathMissingExplain", map[string]any{"dirs": dirs})
 }
 
+// IssueSkillCopiesTitle says "Skill {name}: {count, plural, one {# copy} other {# copies}}"
+// in the language the app shows.
+//
+// Issue title: one skill copied to several folders, the same files in each.
+func IssueSkillCopiesTitle(name string, count int) string {
+	return In(i18n.Locale()).IssueSkillCopiesTitle(name, count)
+}
+
+// IssueSkillCopiesTitle says "Skill {name}: {count, plural, one {# copy} other {# copies}}"
+// in the language of msgs.
+//
+// Issue title: one skill copied to several folders, the same files in each.
+func (msgs Messages) IssueSkillCopiesTitle(name string, count int) string {
+	return Catalog.Format(msgs.locale, "issueSkillCopiesTitle", map[string]any{"name": name, "count": count})
+}
+
+// IssueSkillCopiesExplain says "The same files are in {dirs}. An edit to one copy misses the others: keep one and link the rest to it."
+// in the language the app shows.
+//
+// Issue explanation: identical copies of a skill.
+func IssueSkillCopiesExplain(dirs string) string {
+	return In(i18n.Locale()).IssueSkillCopiesExplain(dirs)
+}
+
+// IssueSkillCopiesExplain says "The same files are in {dirs}. An edit to one copy misses the others: keep one and link the rest to it."
+// in the language of msgs.
+//
+// Issue explanation: identical copies of a skill.
+func (msgs Messages) IssueSkillCopiesExplain(dirs string) string {
+	return Catalog.Format(msgs.locale, "issueSkillCopiesExplain", map[string]any{"dirs": dirs})
+}
+
+// IssueSkillDiffersTitle says "Copies of skill {name} differ"
+// in the language the app shows.
+//
+// Issue title: folders holding a skill by one name with different files.
+func IssueSkillDiffersTitle(name string) string {
+	return In(i18n.Locale()).IssueSkillDiffersTitle(name)
+}
+
+// IssueSkillDiffersTitle says "Copies of skill {name} differ"
+// in the language of msgs.
+//
+// Issue title: folders holding a skill by one name with different files.
+func (msgs Messages) IssueSkillDiffersTitle(name string) string {
+	return Catalog.Format(msgs.locale, "issueSkillDiffersTitle", map[string]any{"name": name})
+}
+
+// IssueSkillDiffersExplain says "{dirs} hold different versions of it, so agents may follow different instructions. Keep the right one and link the re…"
+// in the language the app shows.
+//
+// Issue explanation: copies of a skill that differ.
+func IssueSkillDiffersExplain(dirs string) string {
+	return In(i18n.Locale()).IssueSkillDiffersExplain(dirs)
+}
+
+// IssueSkillDiffersExplain says "{dirs} hold different versions of it, so agents may follow different instructions. Keep the right one and link the re…"
+// in the language of msgs.
+//
+// Issue explanation: copies of a skill that differ.
+func (msgs Messages) IssueSkillDiffersExplain(dirs string) string {
+	return Catalog.Format(msgs.locale, "issueSkillDiffersExplain", map[string]any{"dirs": dirs})
+}
+
+// IssueMcpMissingTitle says "MCP: {command} not found"
+// in the language the app shows.
+//
+// Issue title: the command MCP servers start is not there.
+func IssueMcpMissingTitle(command string) string {
+	return In(i18n.Locale()).IssueMcpMissingTitle(command)
+}
+
+// IssueMcpMissingTitle says "MCP: {command} not found"
+// in the language of msgs.
+//
+// Issue title: the command MCP servers start is not there.
+func (msgs Messages) IssueMcpMissingTitle(command string) string {
+	return Catalog.Format(msgs.locale, "issueMcpMissingTitle", map[string]any{"command": command})
+}
+
+// IssueMcpMissingExplain says "{servers} start {command}, but it is not there. Until it is installed or the path is fixed, the agents cannot start t…"
+// in the language the app shows.
+//
+// Issue explanation: servers, each with its agents, whose command is
+// missing.
+func IssueMcpMissingExplain(servers string, command string) string {
+	return In(i18n.Locale()).IssueMcpMissingExplain(servers, command)
+}
+
+// IssueMcpMissingExplain says "{servers} start {command}, but it is not there. Until it is installed or the path is fixed, the agents cannot start t…"
+// in the language of msgs.
+//
+// Issue explanation: servers, each with its agents, whose command is
+// missing.
+func (msgs Messages) IssueMcpMissingExplain(servers string, command string) string {
+	return Catalog.Format(msgs.locale, "issueMcpMissingExplain", map[string]any{"servers": servers, "command": command})
+}
+
 // EmptyPathEntry says "an empty entry"
 // in the language the app shows.
 //
@@ -2590,4 +2688,1068 @@ func OpenProject() string { return In(i18n.Locale()).OpenProject() }
 // Projects list context menu: open the project's page.
 func (msgs Messages) OpenProject() string {
 	return Catalog.Format(msgs.locale, "openProject", nil)
+}
+
+// AiAgentsTitle says "AI agents"
+// in the language the app shows.
+//
+// Agents page and overview card: the title.
+func AiAgentsTitle() string { return In(i18n.Locale()).AiAgentsTitle() }
+
+// AiAgentsTitle says "AI agents"
+// in the language of msgs.
+//
+// Agents page and overview card: the title.
+func (msgs Messages) AiAgentsTitle() string {
+	return Catalog.Format(msgs.locale, "aiAgentsTitle", nil)
+}
+
+// AiAgentsText says "Programs that write code with you. Here is where their settings, instructions, skills and MCP live."
+// in the language the app shows.
+//
+// Agents page: what agents are.
+func AiAgentsText() string { return In(i18n.Locale()).AiAgentsText() }
+
+// AiAgentsText says "Programs that write code with you. Here is where their settings, instructions, skills and MCP live."
+// in the language of msgs.
+//
+// Agents page: what agents are.
+func (msgs Messages) AiAgentsText() string {
+	return Catalog.Format(msgs.locale, "aiAgentsText", nil)
+}
+
+// StatFound says "found"
+// in the language the app shows.
+//
+// Agents page stat: agents found.
+func StatFound() string { return In(i18n.Locale()).StatFound() }
+
+// StatFound says "found"
+// in the language of msgs.
+//
+// Agents page stat: agents found.
+func (msgs Messages) StatFound() string {
+	return Catalog.Format(msgs.locale, "statFound", nil)
+}
+
+// StatSkills says "skills"
+// in the language the app shows.
+//
+// Stat: skills.
+func StatSkills() string { return In(i18n.Locale()).StatSkills() }
+
+// StatSkills says "skills"
+// in the language of msgs.
+//
+// Stat: skills.
+func (msgs Messages) StatSkills() string {
+	return Catalog.Format(msgs.locale, "statSkills", nil)
+}
+
+// StatTotal says "total"
+// in the language the app shows.
+//
+// Stat: all of them.
+func StatTotal() string { return In(i18n.Locale()).StatTotal() }
+
+// StatTotal says "total"
+// in the language of msgs.
+//
+// Stat: all of them.
+func (msgs Messages) StatTotal() string {
+	return Catalog.Format(msgs.locale, "statTotal", nil)
+}
+
+// StatProjects says "in projects"
+// in the language the app shows.
+//
+// Stat: in projects.
+func StatProjects() string { return In(i18n.Locale()).StatProjects() }
+
+// StatProjects says "in projects"
+// in the language of msgs.
+//
+// Stat: in projects.
+func (msgs Messages) StatProjects() string {
+	return Catalog.Format(msgs.locale, "statProjects", nil)
+}
+
+// StatWithCopies says "with copies"
+// in the language the app shows.
+//
+// Skills stat: skills with copies.
+func StatWithCopies() string { return In(i18n.Locale()).StatWithCopies() }
+
+// StatWithCopies says "with copies"
+// in the language of msgs.
+//
+// Skills stat: skills with copies.
+func (msgs Messages) StatWithCopies() string {
+	return Catalog.Format(msgs.locale, "statWithCopies", nil)
+}
+
+// StatServers says "servers"
+// in the language the app shows.
+//
+// MCP stat: servers.
+func StatServers() string { return In(i18n.Locale()).StatServers() }
+
+// StatServers says "servers"
+// in the language of msgs.
+//
+// MCP stat: servers.
+func (msgs Messages) StatServers() string {
+	return Catalog.Format(msgs.locale, "statServers", nil)
+}
+
+// StatProblems says "issues"
+// in the language the app shows.
+//
+// MCP stat: issues.
+func StatProblems() string { return In(i18n.Locale()).StatProblems() }
+
+// StatProblems says "issues"
+// in the language of msgs.
+//
+// MCP stat: issues.
+func (msgs Messages) StatProblems() string {
+	return Catalog.Format(msgs.locale, "statProblems", nil)
+}
+
+// ColumnAgent says "Agent"
+// in the language the app shows.
+//
+// Agents table column.
+func ColumnAgent() string { return In(i18n.Locale()).ColumnAgent() }
+
+// ColumnAgent says "Agent"
+// in the language of msgs.
+//
+// Agents table column.
+func (msgs Messages) ColumnAgent() string {
+	return Catalog.Format(msgs.locale, "columnAgent", nil)
+}
+
+// ColumnInstall says "Install"
+// in the language the app shows.
+//
+// Agents table column: what installed it.
+func ColumnInstall() string { return In(i18n.Locale()).ColumnInstall() }
+
+// ColumnInstall says "Install"
+// in the language of msgs.
+//
+// Agents table column: what installed it.
+func (msgs Messages) ColumnInstall() string {
+	return Catalog.Format(msgs.locale, "columnInstall", nil)
+}
+
+// ColumnInstructions says "Instructions"
+// in the language the app shows.
+//
+// Agents table column.
+func ColumnInstructions() string { return In(i18n.Locale()).ColumnInstructions() }
+
+// ColumnInstructions says "Instructions"
+// in the language of msgs.
+//
+// Agents table column.
+func (msgs Messages) ColumnInstructions() string {
+	return Catalog.Format(msgs.locale, "columnInstructions", nil)
+}
+
+// NoInstructions says "no instructions"
+// in the language the app shows.
+//
+// Agents table: an agent without instruction files.
+func NoInstructions() string { return In(i18n.Locale()).NoInstructions() }
+
+// NoInstructions says "no instructions"
+// in the language of msgs.
+//
+// Agents table: an agent without instruction files.
+func (msgs Messages) NoInstructions() string {
+	return Catalog.Format(msgs.locale, "noInstructions", nil)
+}
+
+// AppSource says "app"
+// in the language the app shows.
+//
+// Agents table: installed as a desktop app.
+func AppSource() string { return In(i18n.Locale()).AppSource() }
+
+// AppSource says "app"
+// in the language of msgs.
+//
+// Agents table: installed as a desktop app.
+func (msgs Messages) AppSource() string {
+	return Catalog.Format(msgs.locale, "appSource", nil)
+}
+
+// NotFoundHere says "Not found on this computer"
+// in the language the app shows.
+//
+// Agents page: the card of agents not found.
+func NotFoundHere() string { return In(i18n.Locale()).NotFoundHere() }
+
+// NotFoundHere says "Not found on this computer"
+// in the language of msgs.
+//
+// Agents page: the card of agents not found.
+func (msgs Messages) NotFoundHere() string {
+	return Catalog.Format(msgs.locale, "notFoundHere", nil)
+}
+
+// NotFoundWhere says "looked in the terminal's and the apps' PATH"
+// in the language the app shows.
+//
+// Agents page: where agents were looked for.
+func NotFoundWhere() string { return In(i18n.Locale()).NotFoundWhere() }
+
+// NotFoundWhere says "looked in the terminal's and the apps' PATH"
+// in the language of msgs.
+//
+// Agents page: where agents were looked for.
+func (msgs Messages) NotFoundWhere() string {
+	return Catalog.Format(msgs.locale, "notFoundWhere", nil)
+}
+
+// SettingsLeft says "settings left in {dir}"
+// in the language the app shows.
+//
+// Agents page: an agent not found whose settings folder is there.
+func SettingsLeft(dir string) string { return In(i18n.Locale()).SettingsLeft(dir) }
+
+// SettingsLeft says "settings left in {dir}"
+// in the language of msgs.
+//
+// Agents page: an agent not found whose settings folder is there.
+func (msgs Messages) SettingsLeft(dir string) string {
+	return Catalog.Format(msgs.locale, "settingsLeft", map[string]any{"dir": dir})
+}
+
+// NoAgents says "No AI agents found"
+// in the language the app shows.
+//
+// No agent was found.
+func NoAgents() string { return In(i18n.Locale()).NoAgents() }
+
+// NoAgents says "No AI agents found"
+// in the language of msgs.
+//
+// No agent was found.
+func (msgs Messages) NoAgents() string {
+	return Catalog.Format(msgs.locale, "noAgents", nil)
+}
+
+// AgentInstalledVia says "installed through {source}"
+// in the language the app shows.
+//
+// Agent page: how it was installed.
+func AgentInstalledVia(source string) string { return In(i18n.Locale()).AgentInstalledVia(source) }
+
+// AgentInstalledVia says "installed through {source}"
+// in the language of msgs.
+//
+// Agent page: how it was installed.
+func (msgs Messages) AgentInstalledVia(source string) string {
+	return Catalog.Format(msgs.locale, "agentInstalledVia", map[string]any{"source": source})
+}
+
+// StateVersion says "Version"
+// in the language the app shows.
+//
+// Agent page state card.
+func StateVersion() string { return In(i18n.Locale()).StateVersion() }
+
+// StateVersion says "Version"
+// in the language of msgs.
+//
+// Agent page state card.
+func (msgs Messages) StateVersion() string {
+	return Catalog.Format(msgs.locale, "stateVersion", nil)
+}
+
+// StateInTerminal says "In terminal"
+// in the language the app shows.
+//
+// Agent page state card.
+func StateInTerminal() string { return In(i18n.Locale()).StateInTerminal() }
+
+// StateInTerminal says "In terminal"
+// in the language of msgs.
+//
+// Agent page state card.
+func (msgs Messages) StateInTerminal() string {
+	return Catalog.Format(msgs.locale, "stateInTerminal", nil)
+}
+
+// StateSettings says "Settings"
+// in the language the app shows.
+//
+// Agent page state card.
+func StateSettings() string { return In(i18n.Locale()).StateSettings() }
+
+// StateSettings says "Settings"
+// in the language of msgs.
+//
+// Agent page state card.
+func (msgs Messages) StateSettings() string {
+	return Catalog.Format(msgs.locale, "stateSettings", nil)
+}
+
+// FilesCount says "{count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+//
+// A count of files.
+func FilesCount(count int) string { return In(i18n.Locale()).FilesCount(count) }
+
+// FilesCount says "{count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+//
+// A count of files.
+func (msgs Messages) FilesCount(count int) string {
+	return Catalog.Format(msgs.locale, "filesCount", map[string]any{"count": count})
+}
+
+// InstallationCard says "Installation"
+// in the language the app shows.
+//
+// Agent page card: the copies of its command.
+func InstallationCard() string { return In(i18n.Locale()).InstallationCard() }
+
+// InstallationCard says "Installation"
+// in the language of msgs.
+//
+// Agent page card: the copies of its command.
+func (msgs Messages) InstallationCard() string {
+	return Catalog.Format(msgs.locale, "installationCard", nil)
+}
+
+// CopyFirst says "first in the terminal's PATH"
+// in the language the app shows.
+//
+// Agent page: the copy the terminal runs.
+func CopyFirst() string { return In(i18n.Locale()).CopyFirst() }
+
+// CopyFirst says "first in the terminal's PATH"
+// in the language of msgs.
+//
+// Agent page: the copy the terminal runs.
+func (msgs Messages) CopyFirst() string {
+	return Catalog.Format(msgs.locale, "copyFirst", nil)
+}
+
+// CopyOnPath says "#{rank} in the terminal's PATH"
+// in the language the app shows.
+//
+// Agent page: a copy further down PATH.
+func CopyOnPath(rank int) string { return In(i18n.Locale()).CopyOnPath(rank) }
+
+// CopyOnPath says "#{rank} in the terminal's PATH"
+// in the language of msgs.
+//
+// Agent page: a copy further down PATH.
+func (msgs Messages) CopyOnPath(rank int) string {
+	return Catalog.Format(msgs.locale, "copyOnPath", map[string]any{"rank": rank})
+}
+
+// CopyGuiOnly says "only apps outside the terminal find it"
+// in the language the app shows.
+//
+// Agent page: a copy only the GUI's PATH has.
+func CopyGuiOnly() string { return In(i18n.Locale()).CopyGuiOnly() }
+
+// CopyGuiOnly says "only apps outside the terminal find it"
+// in the language of msgs.
+//
+// Agent page: a copy only the GUI's PATH has.
+func (msgs Messages) CopyGuiOnly() string {
+	return Catalog.Format(msgs.locale, "copyGuiOnly", nil)
+}
+
+// SettingsCard says "Settings and instructions"
+// in the language the app shows.
+//
+// Agent page card: the agent's files.
+func SettingsCard() string { return In(i18n.Locale()).SettingsCard() }
+
+// SettingsCard says "Settings and instructions"
+// in the language of msgs.
+//
+// Agent page card: the agent's files.
+func (msgs Messages) SettingsCard() string {
+	return Catalog.Format(msgs.locale, "settingsCard", nil)
+}
+
+// FileSettings says "settings"
+// in the language the app shows.
+//
+// Agent file kind.
+func FileSettings() string { return In(i18n.Locale()).FileSettings() }
+
+// FileSettings says "settings"
+// in the language of msgs.
+//
+// Agent file kind.
+func (msgs Messages) FileSettings() string {
+	return Catalog.Format(msgs.locale, "fileSettings", nil)
+}
+
+// FileInstructions says "instructions for every project"
+// in the language the app shows.
+//
+// Agent file kind.
+func FileInstructions() string { return In(i18n.Locale()).FileInstructions() }
+
+// FileInstructions says "instructions for every project"
+// in the language of msgs.
+//
+// Agent file kind.
+func (msgs Messages) FileInstructions() string {
+	return Catalog.Format(msgs.locale, "fileInstructions", nil)
+}
+
+// FileMcp says "MCP servers"
+// in the language the app shows.
+//
+// Agent file kind.
+func FileMcp() string { return In(i18n.Locale()).FileMcp() }
+
+// FileMcp says "MCP servers"
+// in the language of msgs.
+//
+// Agent file kind.
+func (msgs Messages) FileMcp() string {
+	return Catalog.Format(msgs.locale, "fileMcp", nil)
+}
+
+// FileSkills says "skills folder"
+// in the language the app shows.
+//
+// Agent file kind.
+func FileSkills() string { return In(i18n.Locale()).FileSkills() }
+
+// FileSkills says "skills folder"
+// in the language of msgs.
+//
+// Agent file kind.
+func (msgs Messages) FileSkills() string {
+	return Catalog.Format(msgs.locale, "fileSkills", nil)
+}
+
+// NoAgentFiles says "No files of it in the home folder"
+// in the language the app shows.
+//
+// Agent page: no files.
+func NoAgentFiles() string { return In(i18n.Locale()).NoAgentFiles() }
+
+// NoAgentFiles says "No files of it in the home folder"
+// in the language of msgs.
+//
+// Agent page: no files.
+func (msgs Messages) NoAgentFiles() string {
+	return Catalog.Format(msgs.locale, "noAgentFiles", nil)
+}
+
+// NoSkillsFor says "No skills it can use"
+// in the language the app shows.
+//
+// Agent page: no skills.
+func NoSkillsFor() string { return In(i18n.Locale()).NoSkillsFor() }
+
+// NoSkillsFor says "No skills it can use"
+// in the language of msgs.
+//
+// Agent page: no skills.
+func (msgs Messages) NoSkillsFor() string {
+	return Catalog.Format(msgs.locale, "noSkillsFor", nil)
+}
+
+// NoServersFor says "No MCP servers"
+// in the language the app shows.
+//
+// Agent page: no MCP servers.
+func NoServersFor() string { return In(i18n.Locale()).NoServersFor() }
+
+// NoServersFor says "No MCP servers"
+// in the language of msgs.
+//
+// Agent page: no MCP servers.
+func (msgs Messages) NoServersFor() string {
+	return Catalog.Format(msgs.locale, "noServersFor", nil)
+}
+
+// ServersCount says "{count, plural, one {# server} other {# servers}}"
+// in the language the app shows.
+//
+// A count of MCP servers.
+func ServersCount(count int) string { return In(i18n.Locale()).ServersCount(count) }
+
+// ServersCount says "{count, plural, one {# server} other {# servers}}"
+// in the language of msgs.
+//
+// A count of MCP servers.
+func (msgs Messages) ServersCount(count int) string {
+	return Catalog.Format(msgs.locale, "serversCount", map[string]any{"count": count})
+}
+
+// AllInSkills says "all in Skills"
+// in the language the app shows.
+//
+// Agent page: link to the skills page.
+func AllInSkills() string { return In(i18n.Locale()).AllInSkills() }
+
+// AllInSkills says "all in Skills"
+// in the language of msgs.
+//
+// Agent page: link to the skills page.
+func (msgs Messages) AllInSkills() string {
+	return Catalog.Format(msgs.locale, "allInSkills", nil)
+}
+
+// AgentNotFound says "Hearth knows no such agent"
+// in the language the app shows.
+//
+// Agent page for an unknown ID.
+func AgentNotFound() string { return In(i18n.Locale()).AgentNotFound() }
+
+// AgentNotFound says "Hearth knows no such agent"
+// in the language of msgs.
+//
+// Agent page for an unknown ID.
+func (msgs Messages) AgentNotFound() string {
+	return Catalog.Format(msgs.locale, "agentNotFound", nil)
+}
+
+// ScopeUser says "User"
+// in the language the app shows.
+//
+// Scope: the user's, for every project.
+func ScopeUser() string { return In(i18n.Locale()).ScopeUser() }
+
+// ScopeUser says "User"
+// in the language of msgs.
+//
+// Scope: the user's, for every project.
+func (msgs Messages) ScopeUser() string {
+	return Catalog.Format(msgs.locale, "scopeUser", nil)
+}
+
+// ScopeProject says "Project"
+// in the language the app shows.
+//
+// Scope: one project's.
+func ScopeProject() string { return In(i18n.Locale()).ScopeProject() }
+
+// ScopeProject says "Project"
+// in the language of msgs.
+//
+// Scope: one project's.
+func (msgs Messages) ScopeProject() string {
+	return Catalog.Format(msgs.locale, "scopeProject", nil)
+}
+
+// ScopeProjectOf says "Project · {name}"
+// in the language the app shows.
+//
+// Scope: the project by its folder's name.
+func ScopeProjectOf(name string) string { return In(i18n.Locale()).ScopeProjectOf(name) }
+
+// ScopeProjectOf says "Project · {name}"
+// in the language of msgs.
+//
+// Scope: the project by its folder's name.
+func (msgs Messages) ScopeProjectOf(name string) string {
+	return Catalog.Format(msgs.locale, "scopeProjectOf", map[string]any{"name": name})
+}
+
+// ScopeLocal says "local"
+// in the language the app shows.
+//
+// MCP: Claude Code's servers of one project kept in ~/.claude.json.
+func ScopeLocal() string { return In(i18n.Locale()).ScopeLocal() }
+
+// ScopeLocal says "local"
+// in the language of msgs.
+//
+// MCP: Claude Code's servers of one project kept in ~/.claude.json.
+func (msgs Messages) ScopeLocal() string {
+	return Catalog.Format(msgs.locale, "scopeLocal", nil)
+}
+
+// SkillsText says "Instructions agents load for a task. One skill can serve several agents."
+// in the language the app shows.
+//
+// Skills page: what skills are.
+func SkillsText() string { return In(i18n.Locale()).SkillsText() }
+
+// SkillsText says "Instructions agents load for a task. One skill can serve several agents."
+// in the language of msgs.
+//
+// Skills page: what skills are.
+func (msgs Messages) SkillsText() string {
+	return Catalog.Format(msgs.locale, "skillsText", nil)
+}
+
+// AllAgents says "All agents"
+// in the language the app shows.
+//
+// Agent filter: no filter.
+func AllAgents() string { return In(i18n.Locale()).AllAgents() }
+
+// AllAgents says "All agents"
+// in the language of msgs.
+//
+// Agent filter: no filter.
+func (msgs Messages) AllAgents() string {
+	return Catalog.Format(msgs.locale, "allAgents", nil)
+}
+
+// SearchByName says "Search by name and description"
+// in the language the app shows.
+//
+// Skills and MCP search field.
+func SearchByName() string { return In(i18n.Locale()).SearchByName() }
+
+// SearchByName says "Search by name and description"
+// in the language of msgs.
+//
+// Skills and MCP search field.
+func (msgs Messages) SearchByName() string {
+	return Catalog.Format(msgs.locale, "searchByName", nil)
+}
+
+// TagBroken says "broken link"
+// in the language the app shows.
+//
+// Skill tag: a symlink leading nowhere.
+func TagBroken() string { return In(i18n.Locale()).TagBroken() }
+
+// TagBroken says "broken link"
+// in the language of msgs.
+//
+// Skill tag: a symlink leading nowhere.
+func (msgs Messages) TagBroken() string {
+	return Catalog.Format(msgs.locale, "tagBroken", nil)
+}
+
+// TagSymlink says "symlink"
+// in the language the app shows.
+//
+// Tag: found through a symlink.
+func TagSymlink() string { return In(i18n.Locale()).TagSymlink() }
+
+// TagSymlink says "symlink"
+// in the language of msgs.
+//
+// Tag: found through a symlink.
+func (msgs Messages) TagSymlink() string {
+	return Catalog.Format(msgs.locale, "tagSymlink", nil)
+}
+
+// SkillsCopiesHint says "{count, plural, one {# skill is} other {# skills are}} copied to several folders. One folder can stay, and the others…"
+// in the language the app shows.
+//
+// Skills page: a hint about copies.
+func SkillsCopiesHint(count int) string { return In(i18n.Locale()).SkillsCopiesHint(count) }
+
+// SkillsCopiesHint says "{count, plural, one {# skill is} other {# skills are}} copied to several folders. One folder can stay, and the others…"
+// in the language of msgs.
+//
+// Skills page: a hint about copies.
+func (msgs Messages) SkillsCopiesHint(count int) string {
+	return Catalog.Format(msgs.locale, "skillsCopiesHint", map[string]any{"count": count})
+}
+
+// NoSkills says "No skills found"
+// in the language the app shows.
+//
+// Skills page: none.
+func NoSkills() string { return In(i18n.Locale()).NoSkills() }
+
+// NoSkills says "No skills found"
+// in the language of msgs.
+//
+// Skills page: none.
+func (msgs Messages) NoSkills() string {
+	return Catalog.Format(msgs.locale, "noSkills", nil)
+}
+
+// NothingMatches says "Nothing matches"
+// in the language the app shows.
+//
+// A list filtered to nothing.
+func NothingMatches() string { return In(i18n.Locale()).NothingMatches() }
+
+// NothingMatches says "Nothing matches"
+// in the language of msgs.
+//
+// A list filtered to nothing.
+func (msgs Messages) NothingMatches() string {
+	return Catalog.Format(msgs.locale, "nothingMatches", nil)
+}
+
+// AvailableToAgents says "Available to agents"
+// in the language the app shows.
+//
+// Skill details section.
+func AvailableToAgents() string { return In(i18n.Locale()).AvailableToAgents() }
+
+// AvailableToAgents says "Available to agents"
+// in the language of msgs.
+//
+// Skill details section.
+func (msgs Messages) AvailableToAgents() string {
+	return Catalog.Format(msgs.locale, "availableToAgents", nil)
+}
+
+// NotConnected says "not connected"
+// in the language the app shows.
+//
+// Skill details: an agent not reading it.
+func NotConnected() string { return In(i18n.Locale()).NotConnected() }
+
+// NotConnected says "not connected"
+// in the language of msgs.
+//
+// Skill details: an agent not reading it.
+func (msgs Messages) NotConnected() string {
+	return Catalog.Format(msgs.locale, "notConnected", nil)
+}
+
+// FilesSection says "Files"
+// in the language the app shows.
+//
+// Skill details section.
+func FilesSection() string { return In(i18n.Locale()).FilesSection() }
+
+// FilesSection says "Files"
+// in the language of msgs.
+//
+// Skill details section.
+func (msgs Messages) FilesSection() string {
+	return Catalog.Format(msgs.locale, "filesSection", nil)
+}
+
+// SizeKb says "{size} KB"
+// in the language the app shows.
+//
+// A file's size in kilobytes, rounded up.
+func SizeKb(size int) string { return In(i18n.Locale()).SizeKb(size) }
+
+// SizeKb says "{size} KB"
+// in the language of msgs.
+//
+// A file's size in kilobytes, rounded up.
+func (msgs Messages) SizeKb(size int) string {
+	return Catalog.Format(msgs.locale, "sizeKb", map[string]any{"size": size})
+}
+
+// BrokenLink says "The link leads to {target}, and nothing is there."
+// in the language the app shows.
+//
+// Skill details: a broken symlink.
+func BrokenLink(target string) string { return In(i18n.Locale()).BrokenLink(target) }
+
+// BrokenLink says "The link leads to {target}, and nothing is there."
+// in the language of msgs.
+//
+// Skill details: a broken symlink.
+func (msgs Messages) BrokenLink(target string) string {
+	return Catalog.Format(msgs.locale, "brokenLink", map[string]any{"target": target})
+}
+
+// OpenInEditor says "Open in editor"
+// in the language the app shows.
+//
+// Opens a file in its app.
+func OpenInEditor() string { return In(i18n.Locale()).OpenInEditor() }
+
+// OpenInEditor says "Open in editor"
+// in the language of msgs.
+//
+// Opens a file in its app.
+func (msgs Messages) OpenInEditor() string {
+	return Catalog.Format(msgs.locale, "openInEditor", nil)
+}
+
+// Loading says "Loading…"
+// in the language the app shows.
+//
+// Something is being read.
+func Loading() string { return In(i18n.Locale()).Loading() }
+
+// Loading says "Loading…"
+// in the language of msgs.
+//
+// Something is being read.
+func (msgs Messages) Loading() string {
+	return Catalog.Format(msgs.locale, "loading", nil)
+}
+
+// McpTitle says "MCP servers"
+// in the language the app shows.
+//
+// MCP page title.
+func McpTitle() string { return In(i18n.Locale()).McpTitle() }
+
+// McpTitle says "MCP servers"
+// in the language of msgs.
+//
+// MCP page title.
+func (msgs Messages) McpTitle() string {
+	return Catalog.Format(msgs.locale, "mcpTitle", nil)
+}
+
+// McpText says "Give agents access to outside services and data. One server can be declared for several agents."
+// in the language the app shows.
+//
+// MCP page: what MCP servers are.
+func McpText() string { return In(i18n.Locale()).McpText() }
+
+// McpText says "Give agents access to outside services and data. One server can be declared for several agents."
+// in the language of msgs.
+//
+// MCP page: what MCP servers are.
+func (msgs Messages) McpText() string {
+	return Catalog.Format(msgs.locale, "mcpText", nil)
+}
+
+// SearchServers says "Search by name and command"
+// in the language the app shows.
+//
+// MCP search field.
+func SearchServers() string { return In(i18n.Locale()).SearchServers() }
+
+// SearchServers says "Search by name and command"
+// in the language of msgs.
+//
+// MCP search field.
+func (msgs Messages) SearchServers() string {
+	return Catalog.Format(msgs.locale, "searchServers", nil)
+}
+
+// TagConflict says "conflict"
+// in the language the app shows.
+//
+// MCP tag: agents declare it differently.
+func TagConflict() string { return In(i18n.Locale()).TagConflict() }
+
+// TagConflict says "conflict"
+// in the language of msgs.
+//
+// MCP tag: agents declare it differently.
+func (msgs Messages) TagConflict() string {
+	return Catalog.Format(msgs.locale, "tagConflict", nil)
+}
+
+// TagNoCommand says "no command"
+// in the language the app shows.
+//
+// MCP tag: its command is missing.
+func TagNoCommand() string { return In(i18n.Locale()).TagNoCommand() }
+
+// TagNoCommand says "no command"
+// in the language of msgs.
+//
+// MCP tag: its command is missing.
+func (msgs Messages) TagNoCommand() string {
+	return Catalog.Format(msgs.locale, "tagNoCommand", nil)
+}
+
+// TagOff says "off"
+// in the language the app shows.
+//
+// MCP tag: turned off.
+func TagOff() string { return In(i18n.Locale()).TagOff() }
+
+// TagOff says "off"
+// in the language of msgs.
+//
+// MCP tag: turned off.
+func (msgs Messages) TagOff() string {
+	return Catalog.Format(msgs.locale, "tagOff", nil)
+}
+
+// DeclaredBy says "Declared for {count, plural, one {# agent} other {# agents}}."
+// in the language the app shows.
+//
+// MCP details: how many agents declare it.
+func DeclaredBy(count int) string { return In(i18n.Locale()).DeclaredBy(count) }
+
+// DeclaredBy says "Declared for {count, plural, one {# agent} other {# agents}}."
+// in the language of msgs.
+//
+// MCP details: how many agents declare it.
+func (msgs Messages) DeclaredBy(count int) string {
+	return Catalog.Format(msgs.locale, "declaredBy", map[string]any{"count": count})
+}
+
+// CommandsDiffer says "The agents start it differently."
+// in the language the app shows.
+//
+// MCP details: a conflict.
+func CommandsDiffer() string { return In(i18n.Locale()).CommandsDiffer() }
+
+// CommandsDiffer says "The agents start it differently."
+// in the language of msgs.
+//
+// MCP details: a conflict.
+func (msgs Messages) CommandsDiffer() string {
+	return Catalog.Format(msgs.locale, "commandsDiffer", nil)
+}
+
+// VariablesHidden says "Variables · values hidden"
+// in the language the app shows.
+//
+// MCP details section.
+func VariablesHidden() string { return In(i18n.Locale()).VariablesHidden() }
+
+// VariablesHidden says "Variables · values hidden"
+// in the language of msgs.
+//
+// MCP details section.
+func (msgs Messages) VariablesHidden() string {
+	return Catalog.Format(msgs.locale, "variablesHidden", nil)
+}
+
+// HeaderCaption says "header"
+// in the language the app shows.
+//
+// MCP details: an HTTP header, not a variable.
+func HeaderCaption() string { return In(i18n.Locale()).HeaderCaption() }
+
+// HeaderCaption says "header"
+// in the language of msgs.
+//
+// MCP details: an HTTP header, not a variable.
+func (msgs Messages) HeaderCaption() string {
+	return Catalog.Format(msgs.locale, "headerCaption", nil)
+}
+
+// NoVariables says "No variables"
+// in the language the app shows.
+//
+// MCP details: none.
+func NoVariables() string { return In(i18n.Locale()).NoVariables() }
+
+// NoVariables says "No variables"
+// in the language of msgs.
+//
+// MCP details: none.
+func (msgs Messages) NoVariables() string {
+	return Catalog.Format(msgs.locale, "noVariables", nil)
+}
+
+// WhereDeclared says "Where declared"
+// in the language the app shows.
+//
+// MCP details section.
+func WhereDeclared() string { return In(i18n.Locale()).WhereDeclared() }
+
+// WhereDeclared says "Where declared"
+// in the language of msgs.
+//
+// MCP details section.
+func (msgs Messages) WhereDeclared() string {
+	return Catalog.Format(msgs.locale, "whereDeclared", nil)
+}
+
+// NotDeclared says "not declared"
+// in the language the app shows.
+//
+// MCP details: an agent without it.
+func NotDeclared() string { return In(i18n.Locale()).NotDeclared() }
+
+// NotDeclared says "not declared"
+// in the language of msgs.
+//
+// MCP details: an agent without it.
+func (msgs Messages) NotDeclared() string {
+	return Catalog.Format(msgs.locale, "notDeclared", nil)
+}
+
+// CommandMissing says "command not found"
+// in the language the app shows.
+//
+// MCP details: a missing command.
+func CommandMissing() string { return In(i18n.Locale()).CommandMissing() }
+
+// CommandMissing says "command not found"
+// in the language of msgs.
+//
+// MCP details: a missing command.
+func (msgs Messages) CommandMissing() string {
+	return Catalog.Format(msgs.locale, "commandMissing", nil)
+}
+
+// OpenFile says "Open {file}"
+// in the language the app shows.
+//
+// Opens a file.
+func OpenFile(file string) string { return In(i18n.Locale()).OpenFile(file) }
+
+// OpenFile says "Open {file}"
+// in the language of msgs.
+//
+// Opens a file.
+func (msgs Messages) OpenFile(file string) string {
+	return Catalog.Format(msgs.locale, "openFile", map[string]any{"file": file})
+}
+
+// NoServers says "No MCP servers found"
+// in the language the app shows.
+//
+// MCP page: none.
+func NoServers() string { return In(i18n.Locale()).NoServers() }
+
+// NoServers says "No MCP servers found"
+// in the language of msgs.
+//
+// MCP page: none.
+func (msgs Messages) NoServers() string {
+	return Catalog.Format(msgs.locale, "noServers", nil)
+}
+
+// SkillsAndMcp says "Skills and MCP"
+// in the language the app shows.
+//
+// Overview AI card: link.
+func SkillsAndMcp() string { return In(i18n.Locale()).SkillsAndMcp() }
+
+// SkillsAndMcp says "Skills and MCP"
+// in the language of msgs.
+//
+// Overview AI card: link.
+func (msgs Messages) SkillsAndMcp() string {
+	return Catalog.Format(msgs.locale, "skillsAndMcp", nil)
+}
+
+// AgentCounts says "{skills} skills · {mcp} MCP"
+// in the language the app shows.
+//
+// Overview AI card: an agent's skills and servers.
+func AgentCounts(skills int, mcp int) string { return In(i18n.Locale()).AgentCounts(skills, mcp) }
+
+// AgentCounts says "{skills} skills · {mcp} MCP"
+// in the language of msgs.
+//
+// Overview AI card: an agent's skills and servers.
+func (msgs Messages) AgentCounts(skills int, mcp int) string {
+	return Catalog.Format(msgs.locale, "agentCounts", map[string]any{"skills": skills, "mcp": mcp})
+}
+
+// HeroFoundAll says "Found {tools, plural, one {# tool} other {# tools}} and {agents, plural, one {# AI agent} other {# AI agents}}."
+// in the language the app shows.
+//
+// Overview hero: tools and agents found.
+func HeroFoundAll(tools int, agents int) string { return In(i18n.Locale()).HeroFoundAll(tools, agents) }
+
+// HeroFoundAll says "Found {tools, plural, one {# tool} other {# tools}} and {agents, plural, one {# AI agent} other {# AI agents}}."
+// in the language of msgs.
+//
+// Overview hero: tools and agents found.
+func (msgs Messages) HeroFoundAll(tools int, agents int) string {
+	return Catalog.Format(msgs.locale, "heroFoundAll", map[string]any{"tools": tools, "agents": agents})
 }

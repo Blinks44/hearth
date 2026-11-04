@@ -1,6 +1,7 @@
 // Package ai finds the AI coding agents on the computer: their commands
 // and desktop apps, versions, and the user's settings, instructions, MCP
-// and skills files of each. It only reads.
+// and skills files of each; and the skills in the user's and projects'
+// skills directories. It only reads.
 package ai
 
 import (
@@ -28,6 +29,9 @@ type agent struct {
 	dir []string
 	// files are relative to dir, or to the home with "~/".
 	files []file
+	// skills are the skills directories it reads of the user's, as files
+	// are written, and projectSkills those of a project, relative to it.
+	skills, projectSkills []string
 }
 
 type file struct {
@@ -48,37 +52,35 @@ const sharedSkills = "~/.agents/skills"
 // agents are the ones Hearth finds, in the order shown, by detection.md §7.
 var agents = []agent{
 	{"claude", []string{"claude"}, []string{"$CLAUDE_CONFIG_DIR", "~/.claude"}, []file{
-		{"settings.json", settings}, {"CLAUDE.md", instructions}, {"~/.claude.json", mcp}, {"skills", skills},
-	}},
+		{"settings.json", settings}, {"CLAUDE.md", instructions}, {"~/.claude.json", mcp},
+	}, []string{"skills"}, []string{".claude/skills"}},
 	{"codex", []string{"codex"}, []string{"$CODEX_HOME", "~/.codex"}, []file{
-		{"config.toml", settings}, {"AGENTS.md", instructions}, {"AGENTS.override.md", instructions}, {sharedSkills, skills},
-	}},
+		{"config.toml", settings}, {"AGENTS.md", instructions}, {"AGENTS.override.md", instructions},
+	}, []string{sharedSkills}, []string{".agents/skills"}},
 	{"copilot", []string{"copilot"}, []string{"$COPILOT_HOME", "~/.copilot"}, []file{
 		{"settings.json", settings}, {"copilot-instructions.md", instructions}, {"mcp-config.json", mcp},
-		{"skills", skills}, {sharedSkills, skills},
-	}},
+	}, []string{"skills", sharedSkills}, []string{".github/skills", ".claude/skills", ".agents/skills"}},
 	{"gemini", []string{"gemini"}, []string{"~/.gemini"}, []file{
-		{"settings.json", settings}, {"GEMINI.md", instructions}, {"skills", skills}, {sharedSkills, skills},
-	}},
+		{"settings.json", settings}, {"GEMINI.md", instructions},
+	}, []string{"skills", sharedSkills}, []string{".gemini/skills", ".agents/skills"}},
+	// Cursor also reads Claude Code's and Codex's skills directories.
 	{"cursor", []string{"cursor-agent"}, []string{"~/.cursor"}, []file{
-		{"cli-config.json", settings}, {"mcp.json", mcp}, {"skills", skills}, {sharedSkills, skills},
-	}},
+		{"cli-config.json", settings}, {"mcp.json", mcp},
+	}, []string{"skills", sharedSkills, "~/.claude/skills", "~/.codex/skills"},
+		[]string{".cursor/skills", ".agents/skills", ".claude/skills", ".codex/skills"}},
 	{"opencode", []string{"opencode"}, []string{"$OPENCODE_CONFIG_DIR", "$XDG_CONFIG_HOME/opencode", "~/.config/opencode"}, []file{
-		{"opencode.json", settings}, {"AGENTS.md", instructions}, {"skills", skills},
-	}},
+		{"opencode.json", settings}, {"AGENTS.md", instructions},
+	}, []string{"skills", "~/.claude/skills", sharedSkills}, []string{".opencode/skills", ".claude/skills", ".agents/skills"}},
 	{"devin", []string{"devin"}, []string{"$APPDATA/devin", "$XDG_CONFIG_HOME/devin", "~/.config/devin"}, []file{
-		{"mcp_config.json", mcp}, {"AGENTS.md", instructions}, {"skills", skills},
-	}},
+		{"mcp_config.json", mcp}, {"AGENTS.md", instructions},
+	}, []string{"skills"}, []string{".devin/skills", ".agents/skills", ".windsurf/skills"}},
 }
 
 // Detect finds every agent Hearth knows, on the terminal's PATH (term)
 // and the GUI's (gui), with its desktop app and the user's files. The
 // list has every agent, found or not, in Hearth's order.
 func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) []inventory.Agent {
-	home := term.Get("HOME")
-	if home == "" {
-		home = term.Get("USERPROFILE")
-	}
+	home := homeDir(term)
 	out := make([]inventory.Agent, len(agents))
 	var wg sync.WaitGroup
 	for i, a := range agents {
@@ -102,23 +104,43 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 		found.App, found.AppVersion = cursorApp(term, home)
 	}
 	found.Dir = dir(a.dir, term, home)
-	for _, f := range a.files {
-		p := f.path
-		if rest, ok := strings.CutPrefix(p, "~/"); ok {
-			if home == "" {
-				continue
-			}
-			p = filepath.Join(home, filepath.FromSlash(rest))
-		} else if found.Dir != "" {
-			p = filepath.Join(found.Dir, filepath.FromSlash(p))
-		} else {
-			continue
-		}
-		if _, err := os.Stat(p); err == nil {
-			found.Files = append(found.Files, inventory.AgentFile{Path: p, Kind: f.kind})
+	add := func(path string, kind inventory.FileKind) {
+		p := resolve(path, found.Dir, home)
+		if _, err := os.Stat(p); p != "" && err == nil {
+			found.Files = append(found.Files, inventory.AgentFile{Path: p, Kind: kind})
 		}
 	}
+	for _, f := range a.files {
+		add(f.path, f.kind)
+	}
+	for _, s := range a.skills {
+		add(s, skills)
+	}
 	return found
+}
+
+// homeDir is the home of env: HOME, or USERPROFILE on Windows.
+func homeDir(env sysenv.Env) string {
+	if home := env.Get("HOME"); home != "" {
+		return home
+	}
+	return env.Get("USERPROFILE")
+}
+
+// resolve is the path of a file as the agents table writes it: in the
+// home for "~/", else in the agent's directory dir; "" when that is not
+// known.
+func resolve(path, dir, home string) string {
+	if rest, ok := strings.CutPrefix(path, "~/"); ok {
+		if home == "" {
+			return ""
+		}
+		return filepath.Join(home, filepath.FromSlash(rest))
+	}
+	if dir == "" {
+		return ""
+	}
+	return filepath.Join(dir, filepath.FromSlash(path))
 }
 
 // copies are the agent's commands on both PATHs, a copy two paths lead
