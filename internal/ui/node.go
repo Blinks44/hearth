@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -43,7 +44,7 @@ func (a *App) node(c *ui.Context, p page) {
 				case 0:
 					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							versionTable(c, a.NodeVersions, st.Installations, rows, active, a.Home)
+							a.versionTable(c, st.Installations, rows, active)
 							pathCard(c, st.Installations, active, a.Home)
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
@@ -183,7 +184,8 @@ func (a *App) nodeTabs(c *ui.Context, installed int) {
 // versionTable lists the installed versions, rows indexing ins: the
 // version and its channel, the source, the path and chips of its use.
 // The row of the copy the terminal runs, active, stands out.
-func versionTable(c *ui.Context, nv *versions.Node, ins []inventory.Installation, rows []int, active int, home string) {
+func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+	nv, home := a.NodeVersions, a.Home
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
@@ -231,6 +233,7 @@ func versionTable(c *ui.Context, nv *versions.Node, ins []inventory.Installation
 						}
 					})
 				})
+				a.rowActions(c, in)
 			})
 		}
 	})
@@ -516,6 +519,60 @@ func guiWarning(ins []inventory.Installation, active int) string {
 		return locales.GuiRunsOther(sourceName(ins[gui].Source), versionText(ins[gui].Version), versionText(ins[active].Version))
 	}
 	return ""
+}
+
+// rowActions are a version's actions: copy its path, show it in the file
+// manager, and a menu with those and npm's settings.
+func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
+	if a.Shell == nil {
+		return
+	}
+	path := copyPath(in)
+	copyIt := func() {
+		c.WriteClipboard(path)
+		c.Toast(locales.PathCopied())
+	}
+	reveal := func() { a.Shell.ShowItemInFolder(in.RealPath) }
+	ui.Row(c.Key("actions:" + in.RealPath)).Gap(2).Shrink(0).Children(func() {
+		iconButton(c, "copy", locales.CopyPath()).OnClick(copyIt)
+		iconButton(c, "folder-open", showInFolder()).OnClick(reveal)
+		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+			if m.Item(locales.CopyPath()).Chosen() {
+				copyIt()
+			}
+			if m.Item(showInFolder()).Chosen() {
+				reveal()
+			}
+			if a.Home == "" {
+				return
+			}
+			m.Separator()
+			if m.Item(locales.OpenNpmrc()).Chosen() {
+				npmrc := filepath.Join(a.Home, ".npmrc")
+				if err := a.Shell.OpenPath(npmrc); err != nil {
+					c.Toast(locales.OpenFailed(tilde(npmrc, a.Home), err.Error()))
+				}
+			}
+		})
+	})
+}
+
+// iconButton is a small button showing a Lucide icon, named by label.
+func iconButton(c *ui.Context, icon, label string) ui.Element {
+	t := c.Theme()
+	b := ui.ButtonBase(c.Key(label)).Size(24, 24).Radius(6).Center().Label(label).Tooltip(label)
+	if b.Hovered() {
+		b.Background(Colors(t).Muted)
+	}
+	return b.Children(func() {
+		ui.Icon(c, Icon(icon)).Size(14, 14).TextColor(t.TextMuted)
+	})
+}
+
+// copyPath is the path a version's copy action copies: what the table
+// shows, in full.
+func copyPath(in inventory.Installation) string {
+	return displayPath(in, "")
 }
 
 // sourceBadge names what installed a copy: its manager in a badge, or a

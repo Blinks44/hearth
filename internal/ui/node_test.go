@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"errors"
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -352,5 +354,72 @@ func TestNodeNoManager(t *testing.T) {
 	}
 	if tt.HasText("Switch on cd") {
 		t.Error("a manager's settings without a manager")
+	}
+}
+
+// fakeShell records what the page asks the system to show or open.
+type fakeShell struct {
+	revealed, opened []string
+	err              error
+}
+
+func (f *fakeShell) ShowItemInFolder(path string) { f.revealed = append(f.revealed, path) }
+
+func (f *fakeShell) OpenPath(path string) error {
+	f.opened = append(f.opened, path)
+	return f.err
+}
+
+// A row's actions copy its path, with a toast, show it in the file
+// manager and open npm's settings, saying when that fails.
+func TestNodeRowActions(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	a.Snapshot.Tools[0].Installations[0].RealPath = home + "/.local/share/fnm/node-versions/v22.12.0/installation/bin/node"
+	shell := &fakeShell{}
+	a.Shell = shell
+	tt := openNode(t, a)
+
+	if err := tt.Click("Copy path"); err != nil {
+		t.Fatal(err)
+	}
+	if got := tt.Clipboard(); got != home+"/.local/share/fnm/node-versions/v22.12.0" {
+		t.Errorf("clipboard %q", got)
+	}
+	if !tt.HasText("Path copied") {
+		t.Errorf("no toast in %q", tt.Texts())
+	}
+
+	if err := tt.Click(showInFolder()); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{a.Snapshot.Tools[0].Installations[0].RealPath}; !reflect.DeepEqual(shell.revealed, want) {
+		t.Errorf("revealed %q, want %q", shell.revealed, want)
+	}
+
+	shell.err = errors.New("no such file")
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Open npm settings (.npmrc)"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if want := []string{home + "/.npmrc"}; !reflect.DeepEqual(shell.opened, want) {
+		t.Errorf("opened %q, want %q", shell.opened, want)
+	}
+	if !tt.HasText("Could not open ~/.npmrc: no such file") {
+		t.Errorf("no error toast in %q", tt.Texts())
+	}
+}
+
+// The sidebar shows the version the terminal runs beside a language
+// found.
+func TestSidebarVersion(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	tt := ui.NewTester(a.View, 1280, 820)
+	if !tt.HasText("22.12") {
+		t.Errorf("texts %q", tt.Texts())
 	}
 }

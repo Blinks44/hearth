@@ -438,5 +438,51 @@
   "noGlobalPackages": "No global packages",
   "@noGlobalPackages": {
     "description": "Global packages card when there are none."
+  },
+  "copyPath": "Copy path",
+  "@copyPath": {
+    "description": "Versions table action: copy where the version lies."
+  },
+  "pathCopied": "Path copied",
+  "@pathCopied": {
+    "description": "Toast after copying a path."
+  },
+  "showInFinder": "Show in Finder",
+  "@showInFinder": {
+    "description": "Versions table action on macOS: reveal the file in Finder."
+  },
+  "showInExplorer": "Show in Explorer",
+  "@showInExplorer": {
+    "description": "Versions table action on Windows: reveal the file in File Explorer."
+  },
+  "showInFiles": "Show in file manager",
+  "@showInFiles": {
+    "description": "Versions table action on Linux: reveal the file in the file manager."
+  },
+  "moreActions": "More",
+  "@moreActions": {
+    "description": "Accessible name of a button that opens a menu of more actions."
+  },
+  "openNpmrc": "Open npm settings (.npmrc)",
+  "@openNpmrc": {
+    "description": "Versions table menu item: open the user's .npmrc file."
+  },
+  "openFailed": "Could not open {path}: {error}",
+  "@openFailed": {
+    "description": "Toast when a file could not be opened.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/.npmrc"
+      },
+      "error": {
+        "type": "String",
+        "example": "no such file"
+      }
+    }
+  },
+  "notInstalledHint": "Not installed",
+  "@notInstalledHint": {
+    "description": "Sidebar: tooltip of the + beside a language not installed."
   }
 }

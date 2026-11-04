@@ -1115,3 +1115,129 @@ func NoGlobalPackages() string { return In(i18n.Locale()).NoGlobalPackages() }
 func (msgs Messages) NoGlobalPackages() string {
 	return Catalog.Format(msgs.locale, "noGlobalPackages", nil)
 }
+
+// CopyPath says "Copy path"
+// in the language the app shows.
+//
+// Versions table action: copy where the version lies.
+func CopyPath() string { return In(i18n.Locale()).CopyPath() }
+
+// CopyPath says "Copy path"
+// in the language of msgs.
+//
+// Versions table action: copy where the version lies.
+func (msgs Messages) CopyPath() string {
+	return Catalog.Format(msgs.locale, "copyPath", nil)
+}
+
+// PathCopied says "Path copied"
+// in the language the app shows.
+//
+// Toast after copying a path.
+func PathCopied() string { return In(i18n.Locale()).PathCopied() }
+
+// PathCopied says "Path copied"
+// in the language of msgs.
+//
+// Toast after copying a path.
+func (msgs Messages) PathCopied() string {
+	return Catalog.Format(msgs.locale, "pathCopied", nil)
+}
+
+// ShowInFinder says "Show in Finder"
+// in the language the app shows.
+//
+// Versions table action on macOS: reveal the file in Finder.
+func ShowInFinder() string { return In(i18n.Locale()).ShowInFinder() }
+
+// ShowInFinder says "Show in Finder"
+// in the language of msgs.
+//
+// Versions table action on macOS: reveal the file in Finder.
+func (msgs Messages) ShowInFinder() string {
+	return Catalog.Format(msgs.locale, "showInFinder", nil)
+}
+
+// ShowInExplorer says "Show in Explorer"
+// in the language the app shows.
+//
+// Versions table action on Windows: reveal the file in File Explorer.
+func ShowInExplorer() string { return In(i18n.Locale()).ShowInExplorer() }
+
+// ShowInExplorer says "Show in Explorer"
+// in the language of msgs.
+//
+// Versions table action on Windows: reveal the file in File Explorer.
+func (msgs Messages) ShowInExplorer() string {
+	return Catalog.Format(msgs.locale, "showInExplorer", nil)
+}
+
+// ShowInFiles says "Show in file manager"
+// in the language the app shows.
+//
+// Versions table action on Linux: reveal the file in the file manager.
+func ShowInFiles() string { return In(i18n.Locale()).ShowInFiles() }
+
+// ShowInFiles says "Show in file manager"
+// in the language of msgs.
+//
+// Versions table action on Linux: reveal the file in the file manager.
+func (msgs Messages) ShowInFiles() string {
+	return Catalog.Format(msgs.locale, "showInFiles", nil)
+}
+
+// MoreActions says "More"
+// in the language the app shows.
+//
+// Accessible name of a button that opens a menu of more actions.
+func MoreActions() string { return In(i18n.Locale()).MoreActions() }
+
+// MoreActions says "More"
+// in the language of msgs.
+//
+// Accessible name of a button that opens a menu of more actions.
+func (msgs Messages) MoreActions() string {
+	return Catalog.Format(msgs.locale, "moreActions", nil)
+}
+
+// OpenNpmrc says "Open npm settings (.npmrc)"
+// in the language the app shows.
+//
+// Versions table menu item: open the user's .npmrc file.
+func OpenNpmrc() string { return In(i18n.Locale()).OpenNpmrc() }
+
+// OpenNpmrc says "Open npm settings (.npmrc)"
+// in the language of msgs.
+//
+// Versions table menu item: open the user's .npmrc file.
+func (msgs Messages) OpenNpmrc() string {
+	return Catalog.Format(msgs.locale, "openNpmrc", nil)
+}
+
+// OpenFailed says "Could not open {path}: {error}"
+// in the language the app shows.
+//
+// Toast when a file could not be opened.
+func OpenFailed(path string, error string) string { return In(i18n.Locale()).OpenFailed(path, error) }
+
+// OpenFailed says "Could not open {path}: {error}"
+// in the language of msgs.
+//
+// Toast when a file could not be opened.
+func (msgs Messages) OpenFailed(path string, error string) string {
+	return Catalog.Format(msgs.locale, "openFailed", map[string]any{"path": path, "error": error})
+}
+
+// NotInstalledHint says "Not installed"
+// in the language the app shows.
+//
+// Sidebar: tooltip of the + beside a language not installed.
+func NotInstalledHint() string { return In(i18n.Locale()).NotInstalledHint() }
+
+// NotInstalledHint says "Not installed"
+// in the language of msgs.
+//
+// Sidebar: tooltip of the + beside a language not installed.
+func (msgs Messages) NotInstalledHint() string {
+	return Catalog.Format(msgs.locale, "notInstalledHint", nil)
+}

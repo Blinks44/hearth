@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -24,6 +25,8 @@ type App struct {
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
 	NodeVersionsErr string
+	// Shell reveals and opens files; nil hides those actions.
+	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
 	// Window.Update; nil disables scanning.
 	OnScan func()
@@ -130,19 +133,19 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		brand(c, a.Machine)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
-				a.item(c, overview)
-				a.item(c, projects)
+				a.item(c, overview, nil)
+				a.item(c, projects, nil)
 				a.languages(c)
 				for _, s := range sections {
 					sectionTitle(c, s.title())
 					for _, p := range s.pages {
-						a.item(c, p)
+						a.item(c, p, nil)
 					}
 				}
 			})
 		})
 		ui.Box(c).Height(1).Shrink(0).Margin(12, 0, 4, 0).Background(pal.Divider)
-		a.item(c, settings)
+		a.item(c, settings, nil)
 		a.status(c)
 	})
 }
@@ -197,17 +200,25 @@ func checked(c *ui.Context, taken time.Time) string {
 func (a *App) languages(c *ui.Context) {
 	sectionTitle(c, locales.SectionLanguages())
 	var rest []page
+	pal := Colors(c.Theme())
+	plus := func() {
+		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(pal.TextFaint).Tooltip(locales.NotInstalledHint())
+	}
 	for _, l := range languages {
-		if a.found(l.id) || within(a.router.Path(), l.path) {
-			a.item(c, l.page)
-		} else {
+		switch v := a.version(l.id); {
+		case v != "":
+			a.item(c, l.page, func() {
+				ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			})
+		case within(a.router.Path(), l.path):
+			a.item(c, l.page, plus)
+		default:
 			rest = append(rest, l.page)
 		}
 	}
 	if len(rest) == 0 {
 		return
 	}
-	pal := Colors(c.Theme())
 	more := ui.ButtonBase(c.Key("more-languages")).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
 	if more.Hovered() {
 		more.Background(pal.SidebarHover)
@@ -222,22 +233,44 @@ func (a *App) languages(c *ui.Context) {
 	}
 	if a.moreOpen {
 		for _, p := range rest {
-			a.item(c, p)
+			a.item(c, p, plus)
 		}
 	}
 }
 
-// found reports whether the last scan found the tool on this computer.
-func (a *App) found(tool string) bool {
+// version is the sidebar's version of a tool the last scan found, as
+// 22.12: the one the terminal runs, else the first known; "…" when its
+// version is unknown, and "" when the scan did not find it.
+func (a *App) version(tool string) string {
 	if a.Snapshot == nil {
-		return false
+		return ""
 	}
 	st, _ := a.Snapshot.Tool(tool)
-	return len(st.Installations) > 0
+	if len(st.Installations) == 0 {
+		return ""
+	}
+	v := ""
+	if i := terminalIndex(st.Installations); i >= 0 {
+		v = st.Installations[i].Version
+	}
+	for _, in := range st.Installations {
+		if v == "" {
+			v = in.Version
+		}
+	}
+	if v == "" {
+		return "…"
+	}
+	if major, rest, ok := strings.Cut(v, "."); ok {
+		minor, _, _ := strings.Cut(rest, ".")
+		return major + "." + minor
+	}
+	return v
 }
 
-// item is a sidebar entry going to page p; it stands out while p is shown.
-func (a *App) item(c *ui.Context, p page) {
+// item is a sidebar entry going to page p; it stands out while p is
+// shown. end, if not nil, builds what shows on its right.
+func (a *App) item(c *ui.Context, p page, end func()) {
 	t := c.Theme()
 	pal := Colors(t)
 	chosen := within(a.router.Path(), p.path)
@@ -253,6 +286,9 @@ func (a *App) item(c *ui.Context, p page) {
 	e.Children(func() {
 		ui.Icon(c, mustIcon(p.icon)).Size(16, 16).TextColor(iconColor)
 		ui.Text(c, p.title()).FontSize(13).Grow(1).SingleLine()
+		if end != nil {
+			end()
+		}
 	})
 	if e.Clicked() && !chosen {
 		a.router.Push(p.path)

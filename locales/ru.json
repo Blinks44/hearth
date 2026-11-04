@@ -75,5 +75,14 @@
   "noVersionManager": "Менеджер версий не используется: Node установлен из {sources}. Другие версии Hearth поставит через mise.",
   "globalPackages": "Глобальные пакеты",
   "packageCommands": "команды: {commands}",
-  "noGlobalPackages": "Глобальных пакетов нет"
+  "noGlobalPackages": "Глобальных пакетов нет",
+  "copyPath": "Скопировать путь",
+  "pathCopied": "Путь скопирован",
+  "showInFinder": "Показать в Finder",
+  "showInExplorer": "Показать в Проводнике",
+  "showInFiles": "Показать в файловом менеджере",
+  "moreActions": "Ещё",
+  "openNpmrc": "Открыть настройки npm (.npmrc)",
+  "openFailed": "Не удалось открыть {path}: {error}",
+  "notInstalledHint": "Не установлен"
 }
