@@ -52,7 +52,7 @@ func nodeManagers(ins []inventory.Installation, env sysenv.Env, home string) []i
 			// Volta's shims read the project's package.json on every run.
 			m.SwitchOnCD, m.Files = true, []string{"package.json"}
 		case "mise":
-			m.SwitchOnCD, m.Files = true, []string{"mise.toml", ".tool-versions"}
+			m.SwitchOnCD, m.Files = true, miseFiles
 		case "asdf":
 			m.SwitchOnCD, m.Files = true, []string{".tool-versions"}
 		case "nodenv":

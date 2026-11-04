@@ -76,6 +76,9 @@ type Package struct {
 	Name, Version string
 	// Commands are the ones it puts on PATH, like tsc for typescript.
 	Commands []string `json:",omitempty"`
+	// Module is the Go module a command go install built is from, as
+	// golang.org/x/tools/gopls.
+	Module string `json:",omitempty"`
 }
 
 // Manager is a tool's version manager, as it is set up.
@@ -85,6 +88,14 @@ type Manager struct {
 	// terminal enters a folder, by the files named Files there.
 	SwitchOnCD bool
 	Files      []string
+	// Version is the manager's own, when known.
+	Version string `json:",omitempty"`
+	// Activated reports that the shell's startup activates the manager,
+	// as mise activate, which only the terminal sees; Shims and ShimsInGUI
+	// that its shims are on the terminal's PATH and on the apps'.
+	Activated  bool `json:",omitempty"`
+	Shims      bool `json:",omitempty"`
+	ShimsInGUI bool `json:",omitempty"`
 }
 
 // ToolState is what a detector found of one tool.
@@ -96,6 +107,9 @@ type ToolState struct {
 	// Managers are the version managers that keep installations, in their
 	// order.
 	Managers []Manager `json:",omitempty"`
+	// Vars are the tool's settings as it reads them, as Go's GOPATH and
+	// GOTOOLCHAIN.
+	Vars map[string]string `json:",omitempty"`
 	// Err says why the tool could not be checked; empty when it was.
 	Err string `json:",omitempty"`
 }

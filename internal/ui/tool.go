@@ -75,12 +75,13 @@ func toolNote(c *ui.Context, text string) {
 	})
 }
 
-// globalsCard lists packages installed globally, aside saying by what.
-func globalsCard(c *ui.Context, pkgs []inventory.Package, aside string) {
+// globalsCard lists packages installed globally under title, aside saying
+// by what, or says empty without any.
+func globalsCard(c *ui.Context, title, empty string, pkgs []inventory.Package, aside string) {
 	pal := Colors(c.Theme())
-	listCard(c, locales.GlobalPackages(), aside, func() {
+	listCard(c, title, aside, func() {
 		for _, p := range pkgs {
-			caption := ""
+			caption := p.Module
 			if len(p.Commands) > 0 {
 				caption = locales.PackageCommands(strings.Join(p.Commands, ", "))
 			}
@@ -89,7 +90,7 @@ func globalsCard(c *ui.Context, pkgs []inventory.Package, aside string) {
 			})
 		}
 		if len(pkgs) == 0 {
-			cardNote(c, locales.NoGlobalPackages())
+			cardNote(c, empty)
 		}
 	})
 }
@@ -139,9 +140,10 @@ func toolTabs(c *ui.Context, key string, tab *int, installed int) {
 
 // versionTable lists the installed versions, rows indexing ins: the
 // version and its channel, the source, the path and chips of its use.
-// channel tells a version's release channel, and whether its support has
-// ended. The row of the copy the terminal runs, active, stands out.
-func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []int, active int, channel func(version string) (string, bool)) {
+// channel tells a copy's release channel, or how it came, and whether its
+// support has ended. The row of the copy the terminal runs, active, stands
+// out.
+func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []int, active int, channel func(in inventory.Installation) (string, bool)) {
 	home := a.Home
 	t := c.Theme()
 	pal := Colors(t)
@@ -150,7 +152,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 			for _, h := range []struct {
 				title string
 				width float32
-			}{{locales.ColumnVersion(), 112}, {locales.ColumnSource(), 64}, {locales.ColumnPath(), 0}} {
+			}{{locales.ColumnVersion(), 112}, {locales.ColumnSource(), 84}, {locales.ColumnPath(), 0}} {
 				e := ui.Text(c, h.title).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 				if h.width > 0 {
 					e.Width(h.width).Shrink(0)
@@ -159,7 +161,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 		})
 		for _, i := range rows {
 			in := ins[i]
-			ch, ended := channel(in.Version)
+			ch, ended := channel(in)
 			row := ui.Row(c).Gap(12).Padding(12, 12, 12, 16).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
 			if i == active {
@@ -167,12 +169,12 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 			}
 			row.Children(func() {
 				ui.Column(c).Width(112).Shrink(0).Gap(2).Children(func() {
-					ui.Text(c, versionText(in.Version)).Font(FontMono).FontSize(13.5).SingleLine()
+					ui.Text(c, copyVersion(in)).Font(FontMono).FontSize(13.5).SingleLine()
 					if ch != "" {
 						ui.Text(c, ch).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				ui.Row(c).Width(64).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
+				ui.Row(c).Width(84).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
 				ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
 					ui.Text(c, displayPath(in, home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 					ui.Row(c).Gap(5).Wrap().Children(func() {
@@ -194,6 +196,69 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 			})
 		}
 	})
+}
+
+// managerCard shows the version manager that keeps the tool and how it
+// is set up, or that there is none and Hearth will use mise; and the rows
+// extra adds for the copy in use, if any.
+func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, extra func(*ui.Context, inventory.Installation)) {
+	ins := st.Installations
+	var m *inventory.Manager
+	for i := range st.Managers {
+		if m == nil || active >= 0 && st.Managers[i].Name == ins[active].Source.Manager {
+			m = &st.Managers[i]
+		}
+	}
+	title := locales.VersionManager()
+	if m != nil {
+		title += " · " + m.Name
+	}
+	aside := ""
+	if m != nil {
+		aside = m.Version
+	}
+	listCard(c, title, aside, func() {
+		if m == nil {
+			cardNote(c, locales.NoVersionManager(strings.Join(sourceNames(ins, rows, active), ", ")))
+		} else {
+			def := "—"
+			for _, in := range ins {
+				if in.Default && in.Source.Manager == m.Name {
+					def = copyVersion(in)
+				}
+			}
+			listRow(c, locales.DefaultVersion(), false, "", func() {
+				ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
+			})
+			if title, caption := hookup(*m); title != "" {
+				listRow(c, title, false, caption, func() { stateText(c, true) })
+			}
+			caption := locales.SwitchOff()
+			if m.SwitchOnCD {
+				caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
+			}
+			listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
+		}
+		if active >= 0 && extra != nil {
+			extra(c, ins[active])
+		}
+	})
+}
+
+// hookup says how a manager like mise is hooked in and who sees it: its
+// shims, which apps see when they are on their PATH too, or its
+// activation in the shell, which only the terminal sees. "" when neither
+// is known.
+func hookup(m inventory.Manager) (title, caption string) {
+	switch {
+	case m.Shims && m.ShimsInGUI:
+		return locales.HookShims(), locales.SeenEverywhere()
+	case m.Shims:
+		return locales.HookShims(), locales.SeenInTerminal()
+	case m.Activated:
+		return locales.HookActivate(m.Name), locales.SeenInTerminal()
+	}
+	return "", ""
 }
 
 // listCard is a card of rows under a title, with a note on the right of
@@ -272,9 +337,9 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 			}
 			for n, i := range entries {
 				in := ins[i]
-				version := in.Version
+				shown := in
 				if in.Source.Shim && n == 0 && active >= 0 {
-					version = ins[active].Version
+					shown = ins[active]
 				}
 				entry := ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center)
 				color, tag, tagBg, tagText := t.TextMuted, locales.TagShadowed(), pal.Muted, t.TextMuted
@@ -285,8 +350,8 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				entry.Children(func() {
 					ui.Text(c, strconv.Itoa(n+1)).FontSize(11.5).TextColor(pal.TextFaint)
 					ui.Text(c, tilde(in.Path, home)).FontSize(12).TextColor(color).Grow(1).MinWidth(0).SingleLine()
-					if version != "" {
-						ui.Text(c, "v"+version).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+					if shown.Version != "" {
+						ui.Text(c, copyVersion(shown)).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 					}
 					ui.Text(c, tag).Font(FontSans).FontSize(10.5).FontWeight(500).TextColor(tagText).
 						Padding(1, 6).Radius(5).Background(tagBg).SingleLine()
@@ -329,23 +394,25 @@ func guiWarning(command string, ins []inventory.Installation, active int) string
 	case gui < 0:
 		return locales.GuiNotFound(command)
 	case ins[gui].Version != ins[active].Version:
-		return locales.GuiRunsOther(sourceName(ins[gui].Source), versionText(ins[gui].Version), versionText(ins[active].Version))
+		return locales.GuiRunsOther(sourceName(ins[gui].Source), copyVersion(ins[gui]), copyVersion(ins[active]))
 	}
 	return ""
 }
 
 // shadowWarning tells of a copy in the terminal's PATH, entries in its
-// order, that lies unused behind the first and could go; "" for none. A
-// manager's shim first picks among its copies, and they go with it.
+// order, that lies unused behind the first; "" for none. A shim first
+// stands for its manager's copies, which are not unused.
 func shadowWarning(ins []inventory.Installation, entries []int, home string) string {
-	if len(entries) < 2 || ins[entries[0]].Source.Shim {
+	if len(entries) < 2 {
 		return ""
 	}
 	first := ins[entries[0]]
 	for _, i := range entries[1:] {
-		if in := ins[i]; !in.Source.Shim {
-			return locales.CopyShadowed(sourceName(in.Source), versionText(in.Version), tilde(filepath.Dir(first.Path), home))
+		in := ins[i]
+		if in.Source.Shim || first.Source.Shim && in.Source.Manager == first.Source.Manager {
+			continue
 		}
+		return locales.CopyShadowed(sourceName(in.Source), copyVersion(in), tilde(filepath.Dir(first.Path), home))
 	}
 	return ""
 }
@@ -496,4 +563,13 @@ func versionText(v string) string {
 		return locales.UnknownVersion()
 	}
 	return "v" + v
+}
+
+// copyVersion shows a copy's version as its tool does: go1.23.4 for Go,
+// v22.12.0 for the rest.
+func copyVersion(in inventory.Installation) string {
+	if in.Tool == "go" && in.Version != "" {
+		return "go" + in.Version
+	}
+	return versionText(in.Version)
 }

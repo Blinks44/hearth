@@ -59,7 +59,7 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 			in.Default = true
 		}
 	}
-	state.Managers = nodeManagers(state.Installations, term, dirs.Home)
+	state.Managers = withMise(ctx, r, nodeManagers(state.Installations, term, dirs.Home), term, gui, dirs)
 	return state, ctx.Err()
 }
 

@@ -38,8 +38,8 @@ func nodeDefaults(d sources.Dirs, env sysenv.Env, installed map[string][]string)
 			set("volta", platform.Node.Runtime)
 		}
 	}
-	if config := miseConfig(d, env); config != "" {
-		set("mise", miseTool(config, "node"))
+	if v := miseDefault(d, env, "node", installed["mise"]); v != "" {
+		defaults["mise"] = v
 	}
 	if d.Home != "" {
 		set("asdf", toolVersion(filepath.Join(d.Home, ".tool-versions"), "nodejs"))

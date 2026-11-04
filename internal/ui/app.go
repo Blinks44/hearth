@@ -33,6 +33,10 @@ type App struct {
 	// nil until it comes, or when it could not, BunLatestErr says why.
 	BunLatest    *versions.Latest
 	BunLatestErr string
+	// GoVersions are Go's supported releases, as go.dev says; nil until
+	// they come, or when they could not, GoVersionsErr says why.
+	GoVersions    *versions.Go
+	GoVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -56,6 +60,7 @@ type App struct {
 	moreOpen      bool    // the languages not found show in the sidebar
 	nodeTab       int     // the tab of the Node.js page shown
 	bunTab        int     // the tab of the Bun page shown
+	goTab         int     // the tab of the Go page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
 	adding        *adding // the folder the add dialog shows; nil when closed
@@ -110,6 +115,8 @@ func (a *App) View(c *ui.Context) {
 						a.node(c, p)
 					case "/tools/bun":
 						a.bun(c, p)
+					case "/tools/go":
+						a.goPage(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
 					case overview.path:

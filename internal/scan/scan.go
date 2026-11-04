@@ -28,6 +28,7 @@ type Detector struct {
 var Detectors = []Detector{
 	{"node", detect.Node},
 	{"bun", detect.Bun},
+	{"go", detect.Go},
 }
 
 // parallel is how many detectors run at once: each may start commands.

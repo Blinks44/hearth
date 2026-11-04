@@ -272,5 +272,14 @@
   "installScriptTitle": "Установка · скрипт",
   "installFolder": "Папка установки",
   "addedToPath": "Добавлен в PATH",
-  "pathLineIn": "строка в {file}"
+  "pathLineIn": "строка в {file}",
+  "hookShims": "Подключён через шимы",
+  "hookActivate": "Подключён через {manager} activate",
+  "seenEverywhere": "видят и терминал, и приложения (VS Code, IDE)",
+  "seenInTerminal": "видит только терминал, приложения (VS Code, IDE) — нет",
+  "goDownloaded": "скачал сам Go",
+  "goToolchainNote": "Версии с источником go Go скачал сам по строке toolchain в go.mod (GOTOOLCHAIN={mode}): они лежат в кэше модулей и удаляются вместе с ним.",
+  "goTools": "Утилиты",
+  "noGoTools": "Нет команд из go install",
+  "noteNewLine": "новая версия"
 }

@@ -3929,3 +3929,131 @@ func PathLineIn(file string) string { return In(i18n.Locale()).PathLineIn(file) 
 func (msgs Messages) PathLineIn(file string) string {
 	return Catalog.Format(msgs.locale, "pathLineIn", map[string]any{"file": file})
 }
+
+// HookShims says "Connected through shims"
+// in the language the app shows.
+//
+// Version manager card: the manager's shims are on PATH.
+func HookShims() string { return In(i18n.Locale()).HookShims() }
+
+// HookShims says "Connected through shims"
+// in the language of msgs.
+//
+// Version manager card: the manager's shims are on PATH.
+func (msgs Messages) HookShims() string {
+	return Catalog.Format(msgs.locale, "hookShims", nil)
+}
+
+// HookActivate says "Connected through {manager} activate"
+// in the language the app shows.
+//
+// Version manager card: the shell's startup activates the manager.
+func HookActivate(manager string) string { return In(i18n.Locale()).HookActivate(manager) }
+
+// HookActivate says "Connected through {manager} activate"
+// in the language of msgs.
+//
+// Version manager card: the shell's startup activates the manager.
+func (msgs Messages) HookActivate(manager string) string {
+	return Catalog.Format(msgs.locale, "hookActivate", map[string]any{"manager": manager})
+}
+
+// SeenEverywhere says "the terminal and apps (VS Code, IDEs) both see it"
+// in the language the app shows.
+//
+// Caption: both the terminal and apps started outside it find the manager's
+// versions.
+func SeenEverywhere() string { return In(i18n.Locale()).SeenEverywhere() }
+
+// SeenEverywhere says "the terminal and apps (VS Code, IDEs) both see it"
+// in the language of msgs.
+//
+// Caption: both the terminal and apps started outside it find the manager's
+// versions.
+func (msgs Messages) SeenEverywhere() string {
+	return Catalog.Format(msgs.locale, "seenEverywhere", nil)
+}
+
+// SeenInTerminal says "only the terminal sees it; apps (VS Code, IDEs) do not"
+// in the language the app shows.
+//
+// Caption: only the terminal finds the manager's versions.
+func SeenInTerminal() string { return In(i18n.Locale()).SeenInTerminal() }
+
+// SeenInTerminal says "only the terminal sees it; apps (VS Code, IDEs) do not"
+// in the language of msgs.
+//
+// Caption: only the terminal finds the manager's versions.
+func (msgs Messages) SeenInTerminal() string {
+	return Catalog.Format(msgs.locale, "seenInTerminal", nil)
+}
+
+// GoDownloaded says "downloaded by Go"
+// in the language the app shows.
+//
+// Caption of a Go toolchain the go command downloaded itself.
+func GoDownloaded() string { return In(i18n.Locale()).GoDownloaded() }
+
+// GoDownloaded says "downloaded by Go"
+// in the language of msgs.
+//
+// Caption of a Go toolchain the go command downloaded itself.
+func (msgs Messages) GoDownloaded() string {
+	return Catalog.Format(msgs.locale, "goDownloaded", nil)
+}
+
+// GoToolchainNote says "Go downloaded the toolchains marked go itself, for a toolchain line in go.mod (GOTOOLCHAIN={mode}): they live in the …"
+// in the language the app shows.
+//
+// Note under Go's table when Go downloaded toolchains itself.
+func GoToolchainNote(mode string) string { return In(i18n.Locale()).GoToolchainNote(mode) }
+
+// GoToolchainNote says "Go downloaded the toolchains marked go itself, for a toolchain line in go.mod (GOTOOLCHAIN={mode}): they live in the …"
+// in the language of msgs.
+//
+// Note under Go's table when Go downloaded toolchains itself.
+func (msgs Messages) GoToolchainNote(mode string) string {
+	return Catalog.Format(msgs.locale, "goToolchainNote", map[string]any{"mode": mode})
+}
+
+// GoTools says "Utilities"
+// in the language the app shows.
+//
+// Title of the card of commands go install put in GOPATH/bin.
+func GoTools() string { return In(i18n.Locale()).GoTools() }
+
+// GoTools says "Utilities"
+// in the language of msgs.
+//
+// Title of the card of commands go install put in GOPATH/bin.
+func (msgs Messages) GoTools() string {
+	return Catalog.Format(msgs.locale, "goTools", nil)
+}
+
+// NoGoTools says "No commands from go install"
+// in the language the app shows.
+//
+// Utilities card when GOPATH/bin has no Go commands.
+func NoGoTools() string { return In(i18n.Locale()).NoGoTools() }
+
+// NoGoTools says "No commands from go install"
+// in the language of msgs.
+//
+// Utilities card when GOPATH/bin has no Go commands.
+func (msgs Messages) NoGoTools() string {
+	return Catalog.Format(msgs.locale, "noGoTools", nil)
+}
+
+// NoteNewLine says "new version"
+// in the language the app shows.
+//
+// Caption of an available version of a line not installed yet.
+func NoteNewLine() string { return In(i18n.Locale()).NoteNewLine() }
+
+// NoteNewLine says "new version"
+// in the language of msgs.
+//
+// Caption of an available version of a line not installed yet.
+func (msgs Messages) NoteNewLine() string {
+	return Catalog.Format(msgs.locale, "noteNewLine", nil)
+}

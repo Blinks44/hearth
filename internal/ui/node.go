@@ -33,7 +33,7 @@ func (a *App) node(c *ui.Context, p page) {
 		}
 		rows := listed(st.Installations)
 		active := inventory.TerminalCopy(st.Installations)
-		channel := func(v string) (string, bool) { return channel(a.NodeVersions, v, c.Now()) }
+		channel := func(in inventory.Installation) (string, bool) { return channel(a.NodeVersions, in.Version, c.Now()) }
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				nodeHeader(c, a.NodeVersions, st.Installations, rows, active)
@@ -47,7 +47,7 @@ func (a *App) node(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.availableCard(c, st.Installations, rows)
-							managerCard(c, st, rows, active)
+							managerCard(c, st, rows, active, corepackRow)
 							if active >= 0 {
 								nodeGlobals(c, st.Installations[active])
 							}
@@ -129,51 +129,14 @@ func (a *App) availableCard(c *ui.Context, ins []inventory.Installation, rows []
 	})
 }
 
-// managerCard shows the version manager that keeps Node and how it is
-// set up, or that there is none and Hearth will use mise; and whether
-// Corepack is on for the version in use.
-func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int) {
-	ins := st.Installations
-	var m *inventory.Manager
-	for i := range st.Managers {
-		if m == nil || active >= 0 && st.Managers[i].Name == ins[active].Source.Manager {
-			m = &st.Managers[i]
-		}
-	}
-	title := locales.VersionManager()
-	if m != nil {
-		title += " · " + m.Name
-	}
-	listCard(c, title, "", func() {
-		if m == nil {
-			cardNote(c, locales.NoVersionManager(strings.Join(sourceNames(ins, rows, active), ", ")))
-		} else {
-			def := "—"
-			for _, in := range ins {
-				if in.Default && in.Source.Manager == m.Name {
-					def = versionText(in.Version)
-				}
-			}
-			listRow(c, locales.DefaultVersion(), false, "", func() {
-				ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
-			})
-			caption := locales.SwitchOff()
-			if m.SwitchOnCD {
-				caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
-			}
-			listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
-		}
-		if active < 0 {
+// corepackRow says whether Corepack is on for the Node version in use.
+func corepackRow(c *ui.Context, in inventory.Installation) {
+	listRow(c, "Corepack", false, locales.CorepackCaption(), func() {
+		if !hasPackage(in, "corepack") && !in.Corepack {
+			ui.Text(c, locales.CorepackMissing()).FontSize(12).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 			return
 		}
-		in := ins[active]
-		listRow(c, "Corepack", false, locales.CorepackCaption(), func() {
-			if !hasPackage(in, "corepack") && !in.Corepack {
-				ui.Text(c, locales.CorepackMissing()).FontSize(12).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
-				return
-			}
-			stateText(c, in.Corepack)
-		})
+		stateText(c, in.Corepack)
 	})
 }
 
@@ -186,7 +149,7 @@ func nodeGlobals(c *ui.Context, in inventory.Installation) {
 			pkgs = append(pkgs, p)
 		}
 	}
-	globalsCard(c, pkgs, "npm -g · "+versionText(in.Version))
+	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), pkgs, "npm -g · "+versionText(in.Version))
 }
 
 func hasPackage(in inventory.Installation, name string) bool {

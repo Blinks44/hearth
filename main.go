@@ -130,6 +130,19 @@ func main() {
 					a.BunLatest, a.BunLatestErr = &b, ""
 				})
 			}()
+			go func() {
+				g, err := versions.FetchGo(context.Background(), lists)
+				if err != nil {
+					log.Print(err)
+				}
+				win.Update(func() {
+					if err != nil {
+						a.GoVersionsErr = err.Error()
+						return
+					}
+					a.GoVersions, a.GoVersionsErr = &g, ""
+				})
+			}()
 		}
 		a.OnScan = func() {
 			scanner.Start(scanned)

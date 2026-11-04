@@ -1636,5 +1636,53 @@
         "example": "~/.zshrc"
       }
     }
+  },
+  "hookShims": "Connected through shims",
+  "@hookShims": {
+    "description": "Version manager card: the manager's shims are on PATH."
+  },
+  "hookActivate": "Connected through {manager} activate",
+  "@hookActivate": {
+    "description": "Version manager card: the shell's startup activates the manager.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "mise"
+      }
+    }
+  },
+  "seenEverywhere": "the terminal and apps (VS Code, IDEs) both see it",
+  "@seenEverywhere": {
+    "description": "Caption: both the terminal and apps started outside it find the manager's versions."
+  },
+  "seenInTerminal": "only the terminal sees it; apps (VS Code, IDEs) do not",
+  "@seenInTerminal": {
+    "description": "Caption: only the terminal finds the manager's versions."
+  },
+  "goDownloaded": "downloaded by Go",
+  "@goDownloaded": {
+    "description": "Caption of a Go toolchain the go command downloaded itself."
+  },
+  "goToolchainNote": "Go downloaded the toolchains marked go itself, for a toolchain line in go.mod (GOTOOLCHAIN={mode}): they live in the module cache and go away with it.",
+  "@goToolchainNote": {
+    "description": "Note under Go's table when Go downloaded toolchains itself.",
+    "placeholders": {
+      "mode": {
+        "type": "String",
+        "example": "auto"
+      }
+    }
+  },
+  "goTools": "Utilities",
+  "@goTools": {
+    "description": "Title of the card of commands go install put in GOPATH/bin."
+  },
+  "noGoTools": "No commands from go install",
+  "@noGoTools": {
+    "description": "Utilities card when GOPATH/bin has no Go commands."
+  },
+  "noteNewLine": "new version",
+  "@noteNewLine": {
+    "description": "Caption of an available version of a line not installed yet."
   }
 }

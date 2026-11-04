@@ -267,19 +267,24 @@ func (a *App) projectsNeeding(tool string) int {
 	return n
 }
 
-// toolLogo is a tool's logo on a tile of size: Node's in its green, Bun's
-// dark on the same tile, as the design has it.
+// logoColors are the colors of the logos of tools that have a page,
+// shown on Node's tile, as the design has them; a tool without one is
+// dark, as Bun.
+var logoColors = map[string]ui.Color{"node": nodeGreen, "go": ui.Hex("#00ACD7"), "bun": {}}
+
+// toolLogo is a tool's logo on a tile of size: a tool with a page has its
+// brand's color on a tinted tile.
 func toolLogo(c *ui.Context, tool string, size float32) {
 	t := c.Theme()
 	pal := Colors(t)
 	bg, border, color := pal.Subtle, pal.Line, t.TextMuted
-	if tool == "node" || tool == "bun" {
+	if brand, ok := logoColors[tool]; ok {
 		tile := nodeTile[0]
 		if t.Dark {
 			tile = nodeTile[1]
 		}
-		bg, border, color = tile.bg, tile.border, nodeGreen
-		if tool == "bun" {
+		bg, border, color = tile.bg, tile.border, brand
+		if brand == (ui.Color{}) {
 			color = t.Text
 		}
 	}
