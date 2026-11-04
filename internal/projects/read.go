@@ -34,6 +34,9 @@ type Project struct {
 	Dir string
 	// Requirements come in the order of the files, as reader lists them.
 	Requirements []Requirement
+	// Files are the project files Read knows that the folder has, in the
+	// order of the requirements.
+	Files []string
 	// AI are the AI agents' files and folders the project has, as
 	// "CLAUDE.md", ".claude".
 	AI []string
@@ -68,6 +71,7 @@ var readers = []struct {
 	{"rust-toolchain", firstLine("rust")},
 	{"Cargo.toml", readCargoTOML},
 	{"composer.json", readComposerJSON},
+	{"go.mod", readGoMod},
 	{".bun-version", firstLine("bun")},
 	{"bunfig.toml", needs("bun")},
 	{"compose.yaml", needs("docker")},
@@ -78,14 +82,24 @@ var readers = []struct {
 }
 
 // Read reads the project files in dir. A file that is missing is skipped;
-// one that cannot be read or parsed goes to Errs.
+// one that cannot be read or parsed goes to Errs, as does dir when it is
+// gone.
 func Read(dir string) Project {
 	p := Project{Dir: dir}
+	if _, err := os.Stat(dir); err != nil {
+		p.Errs = append(p.Errs, err)
+		return p
+	}
 	for _, r := range readers {
-		data, err := os.ReadFile(filepath.Join(dir, r.file))
+		path := filepath.Join(dir, r.file)
+		data, err := os.ReadFile(path)
 		if errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
+		if info, serr := os.Stat(path); err != nil && serr == nil && info.IsDir() {
+			continue // a folder by that name, as testdata/rust-toolchain
+		}
+		p.Files = append(p.Files, r.file)
 		var reqs []Requirement
 		if err == nil {
 			reqs, err = r.read(data)
@@ -306,6 +320,29 @@ func readCargoTOML(data []byte) ([]Requirement, error) {
 		return nil, err
 	}
 	return []Requirement{{Tool: "rust", Want: cfg.Package.RustVersion, Key: "package.rust-version"}}, nil
+}
+
+// readGoMod reads the go and toolchain lines of go.mod: "go 1.23.2",
+// "toolchain go1.24.0".
+func readGoMod(data []byte) ([]Requirement, error) {
+	var reqs []Requirement
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	for sc.Scan() {
+		fields := strings.Fields(sc.Text())
+		if len(fields) != 2 {
+			continue
+		}
+		switch fields[0] {
+		case "go":
+			reqs = append(reqs, Requirement{Tool: "go", Want: fields[1], Key: "go"})
+		case "toolchain":
+			reqs = append(reqs, Requirement{Tool: "go", Want: strings.TrimPrefix(fields[1], "go"), Key: "toolchain"})
+		}
+	}
+	if len(reqs) == 0 {
+		reqs = []Requirement{{Tool: "go"}}
+	}
+	return reqs, sc.Err()
 }
 
 func readComposerJSON(data []byte) ([]Requirement, error) {

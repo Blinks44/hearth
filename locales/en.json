@@ -484,5 +484,299 @@
   "notInstalledHint": "Not installed",
   "@notInstalledHint": {
     "description": "Sidebar: tooltip of the + beside a language not installed."
+  },
+  "addFolder": "Add folder",
+  "@addFolder": {
+    "description": "Projects page: button choosing a folder to add."
+  },
+  "noProjectsYet": "Add a folder with code: Hearth shows which versions it needs and whether they are installed.",
+  "@noProjectsYet": {
+    "description": "Projects page before any project is added."
+  },
+  "tabAll": "All",
+  "@tabAll": {
+    "description": "Projects page tab: every project."
+  },
+  "tabAttention": "Need attention",
+  "@tabAttention": {
+    "description": "Projects page tab: projects with a problem."
+  },
+  "filterProjects": "Filter projects",
+  "@filterProjects": {
+    "description": "Placeholder of the projects page's filter."
+  },
+  "columnProject": "Project",
+  "@columnProject": {
+    "description": "Projects table column."
+  },
+  "columnProjectTools": "Tools and versions from project files",
+  "@columnProjectTools": {
+    "description": "Projects table column."
+  },
+  "columnState": "State",
+  "@columnState": {
+    "description": "Projects table column."
+  },
+  "noProjectsMatch": "No projects match",
+  "@noProjectsMatch": {
+    "description": "Projects table when the filter or tab leaves none."
+  },
+  "projectsNote": "Versions come from .nvmrc, package.json, .python-version, .tool-versions and other project files. To take a project off the list, use its menu: the folder and its files stay as they are.",
+  "@projectsNote": {
+    "description": "Note under the projects table."
+  },
+  "chipReady": "All set",
+  "@chipReady": {
+    "description": "Chip: the project has everything it needs."
+  },
+  "chipNotReady": "not ready",
+  "@chipNotReady": {
+    "description": "Chip: a tool of the project lacks the version needed."
+  },
+  "chipNotChecked": "not checked",
+  "@chipNotChecked": {
+    "description": "Chip: Hearth does not check the project's tools yet."
+  },
+  "chipReadFailed": "could not read",
+  "@chipReadFailed": {
+    "description": "Chip: a project file or the folder could not be read."
+  },
+  "projectNotAdded": "This folder is not in your projects.",
+  "@projectNotAdded": {
+    "description": "Project page of a folder not added."
+  },
+  "removeFromList": "Remove from list",
+  "@removeFromList": {
+    "description": "Project menu: remove the project from Hearth, keeping the folder."
+  },
+  "needed": "Needed",
+  "@needed": {
+    "description": "Project page card: the tools the project needs."
+  },
+  "toolsCount": "{count, plural, one {# tool} other {# tools}}",
+  "@toolsCount": {
+    "description": "Project page card: how many tools the project needs.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "ready": "Ready",
+  "@ready": {
+    "description": "Project page card: the tools ready for the project."
+  },
+  "readyOf": "{ready} of {total}",
+  "@readyOf": {
+    "description": "Project page card: tools ready of the tools needed.",
+    "placeholders": {
+      "ready": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "noAISettings": "no AI settings",
+  "@noAISettings": {
+    "description": "Project page: the project has no AI agents' files."
+  },
+  "columnTool": "Tool",
+  "@columnTool": {
+    "description": "Project requirements table column."
+  },
+  "columnNeeded": "Project needs",
+  "@columnNeeded": {
+    "description": "Project requirements table column."
+  },
+  "columnInstalled": "Installed",
+  "@columnInstalled": {
+    "description": "Project requirements table column."
+  },
+  "columnRunsHere": "Runs in this folder",
+  "@columnRunsHere": {
+    "description": "Project requirements table column: what the terminal runs in the project folder."
+  },
+  "anyVersion": "any version",
+  "@anyVersion": {
+    "description": "Project needs a tool without naming a version."
+  },
+  "notCheckedYet": "Hearth does not check {tool} yet",
+  "@notCheckedYet": {
+    "description": "Project requirements table: the scan has no detector of the tool.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      }
+    }
+  },
+  "neededMissing": "{want} is not installed",
+  "@neededMissing": {
+    "description": "Project requirements table: the version needed is not among the installed.",
+    "placeholders": {
+      "want": {
+        "type": "String",
+        "example": "18"
+      }
+    }
+  },
+  "projectAI": "Project AI settings",
+  "@projectAI": {
+    "description": "Project page card title."
+  },
+  "projectFiles": "Project files",
+  "@projectFiles": {
+    "description": "Project page card title."
+  },
+  "whereVersionsFrom": "where versions come from",
+  "@whereVersionsFrom": {
+    "description": "Project files card, beside its title."
+  },
+  "noProjectFiles": "No project files Hearth knows",
+  "@noProjectFiles": {
+    "description": "Project files card when there are none."
+  },
+  "addProjectTitle": "Add project",
+  "@addProjectTitle": {
+    "description": "Title of the dialog adding a folder."
+  },
+  "addProjectNote": "Hearth only reads the project's files and changes nothing in the folder.",
+  "@addProjectNote": {
+    "description": "Under the add project dialog's title."
+  },
+  "otherFolder": "Other folder…",
+  "@otherFolder": {
+    "description": "Add project dialog: choose another folder."
+  },
+  "foundInFolder": "Found in the folder",
+  "@foundInFolder": {
+    "description": "Add project dialog section: the project files found."
+  },
+  "nothingFound": "No project files here, but the folder can be added.",
+  "@nothingFound": {
+    "description": "Add project dialog when the folder has no project files."
+  },
+  "nestedProjects": "Nested projects · added separately",
+  "@nestedProjects": {
+    "description": "Add project dialog section: projects in subfolders, as a monorepo's."
+  },
+  "sameVersions": "same versions as the root",
+  "@sameVersions": {
+    "description": "Add project dialog: a nested project without versions of its own."
+  },
+  "ownVersion": "own {file}: {version}",
+  "@ownVersion": {
+    "description": "Add project dialog: a nested project's own version.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "version": {
+        "type": "String",
+        "example": "Node 20"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Dialog button closing it without changes."
+  },
+  "addProjects": "{count, plural, one {Add # project} other {Add # projects}}",
+  "@addProjects": {
+    "description": "Add project dialog's main button.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "problemMissing": "no {tool}",
+  "@problemMissing": {
+    "description": "Project problem: the version needed is not installed.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemTerminal": "terminal runs not {tool}",
+  "@problemTerminal": {
+    "description": "Project problem: installed, but the terminal runs another version in the folder.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemBanner": "The project needs {tool} {want} ({file}). Installed: {installed}. In this folder the terminal runs {run}.",
+  "@problemBanner": {
+    "description": "Project page banner explaining its problem.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node"
+      },
+      "want": {
+        "type": "String",
+        "example": "18"
+      },
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "installed": {
+        "type": "String",
+        "example": "20.18.1, 22.12.0"
+      },
+      "run": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "nothingInstalled": "nothing",
+  "@nothingInstalled": {
+    "description": "Project banner: no version of the tool is installed."
+  },
+  "aiInstructions": "instructions · {agent}",
+  "@aiInstructions": {
+    "description": "Project AI file: instructions for agents.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "aiSettings": "settings · {agent}",
+  "@aiSettings": {
+    "description": "Project AI folder: an agent's settings.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Cursor"
+      }
+    }
+  },
+  "aiMcp": "project MCP servers",
+  "@aiMcp": {
+    "description": "Project AI file .mcp.json."
+  },
+  "aiSkills": "skills for agents",
+  "@aiSkills": {
+    "description": "Project AI folder .agents."
+  },
+  "backToProjects": "Back to projects",
+  "@backToProjects": {
+    "description": "Project page: the button before the title going back to the projects."
   }
 }

@@ -18,10 +18,11 @@ type Status struct {
 	// Terminal and the checks' Installed are empty.
 	Checked bool
 	// Terminal is the copy the terminal runs in the project folder; nil
-	// when there is none, or the version manager would pick a version that
-	// is not installed.
+	// when there is none.
 	Terminal *inventory.Installation
-	Checks   []Check
+	// Installations are the tool's copies the scan found.
+	Installations []inventory.Installation
+	Checks        []Check
 }
 
 // Check is one requirement against what is installed.
@@ -56,6 +57,7 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 			continue
 		}
 		st.Checked = true
+		st.Installations = ts.Installations
 		st.Terminal = terminal(ts, st.Checks, lines)
 		for j := range st.Checks {
 			c := &st.Checks[j]
@@ -73,7 +75,8 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 
 // terminal is the copy the terminal runs in the project folder: the one a
 // version manager that switches on cd picks by the project's files, or
-// else the first one on PATH.
+// else the first one on PATH. A manager that finds no copy of the version
+// asked says so and leaves the one in use, as fnm and nvm's hook do.
 func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Line) *inventory.Installation {
 	for _, m := range ts.Managers {
 		if !m.SwitchOnCD {
@@ -85,11 +88,14 @@ func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Lin
 			}
 			match, err := matcher(ts.Tool, c.Want, lines)
 			if err != nil {
-				return nil
+				break
 			}
-			return newest(ts.Installations, func(in inventory.Installation) bool {
+			if in := newest(ts.Installations, func(in inventory.Installation) bool {
 				return in.Source.Manager == m.Name && !in.Source.Shim && match(in)
-			})
+			}); in != nil {
+				return in
+			}
+			break
 		}
 	}
 	var first *inventory.Installation

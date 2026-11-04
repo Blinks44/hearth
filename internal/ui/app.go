@@ -1,12 +1,15 @@
 package ui
 
 import (
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -30,10 +33,23 @@ type App struct {
 	// OnScan starts a scan, whose snapshot comes back through
 	// Window.Update; nil disables scanning.
 	OnScan func()
+	// Projects are the folders the user added, as last read.
+	Projects []projects.Project
+	// ChooseFolder asks for a folder to add, and shows it with Offer
+	// through Window.Update; nil hides adding.
+	ChooseFolder func()
+	// AddProjects adds the folders to the projects, and RemoveProject
+	// takes one off the list, leaving the folder be.
+	AddProjects   func(dirs []string)
+	RemoveProject func(dir string)
 
-	router   *ui.Router
-	moreOpen bool // the languages not found show in the sidebar
-	nodeTab  int  // the tab of the Node.js page shown
+	router        *ui.Router
+	moreOpen      bool    // the languages not found show in the sidebar
+	nodeTab       int     // the tab of the Node.js page shown
+	projectsTab   int     // all projects, or the ones needing attention
+	projectFilter string  // the projects page's filter
+	adding        *adding // the folder the add dialog shows; nil when closed
+	addOpen       bool
 }
 
 // NewApp returns the app showing the overview.
@@ -55,12 +71,21 @@ func (a *App) View(c *ui.Context) {
 		a.sidebar(c, vibrant)
 		ui.Box(c).Width(1).Shrink(0).Background(Colors(t).Divider)
 		a.router.View(c, func(r *ui.Route) {
+			if r.Match(projectPage) {
+				dir := r.Query("dir")
+				r.Title(filepath.Base(dir))
+				a.project(c, dir)
+				return
+			}
 			for _, p := range pages() {
 				if r.Match(p.path) {
 					r.Title(p.title())
-					if p.path == "/tools/node" {
+					switch p.path {
+					case "/tools/node":
 						a.node(c, p)
-					} else {
+					case projectsPage.path:
+						a.projectList(c, p)
+					default:
 						a.stub(c, p)
 					}
 					return
@@ -95,6 +120,17 @@ func (a *App) stub(c *ui.Context, p page) {
 // its actions. It drags the window, and keeps clear of the window
 // controls on Windows and Linux.
 func (a *App) header(c *ui.Context, title, subtitle string) {
+	a.headerWith(c, title, subtitle, headerExtras{})
+}
+
+// headerExtras are what a page adds to its header: a button going back
+// before the title, and actions before and after Scan.
+type headerExtras struct {
+	back, before, after func()
+}
+
+// headerWith is header with the page's extras.
+func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) {
 	t := c.Theme()
 	right := float32(20)
 	if bar := c.TitleBar(); bar.Right > 0 {
@@ -102,14 +138,26 @@ func (a *App) header(c *ui.Context, title, subtitle string) {
 	}
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(8).Padding(0, right, 0, 28).
 		BorderWidth(0, 0, 1, 0).BorderColor(Colors(t).Divider).DragWindow().Children(func() {
+		if x.back != nil {
+			ui.Button(c.Key("back"), "").Label(locales.BackToProjects()).Tooltip(locales.BackToProjects()).
+				Size(28, 26).Padding(0).Margin(0, 4, 0, 0).OnClick(x.back).Children(func() {
+				ui.Icon(c, Icon("chevron-left")).Size(14, 14).TextColor(t.TextMuted)
+			})
+		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, title).FontSize(15).FontWeight(600).SingleLine()
 			ui.Text(c, subtitle).FontSize(11.5).TextColor(Colors(t).TextFaint).SingleLine()
 		})
+		if x.before != nil {
+			x.before()
+		}
 		ui.Button(c, "").Disabled(a.OnScan == nil || a.Scanning).OnClick(a.scan).Children(func() {
 			ui.Icon(c, Icon("refresh-cw")).Size(14, 14).TextColor(t.TextMuted)
 			ui.Text(c, locales.Scan()).SingleLine()
 		})
+		if x.after != nil {
+			x.after()
+		}
 	})
 }
 
@@ -134,7 +182,11 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)
-				a.item(c, projects, nil)
+				a.item(c, projectsPage, func() {
+					if len(a.Projects) > 0 {
+						ui.Text(c, strconv.Itoa(len(a.Projects))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+					}
+				})
 				a.languages(c)
 				for _, s := range sections {
 					sectionTitle(c, s.title())

@@ -1241,3 +1241,727 @@ func NotInstalledHint() string { return In(i18n.Locale()).NotInstalledHint() }
 func (msgs Messages) NotInstalledHint() string {
 	return Catalog.Format(msgs.locale, "notInstalledHint", nil)
 }
+
+// AddFolder says "Add folder"
+// in the language the app shows.
+//
+// Projects page: button choosing a folder to add.
+func AddFolder() string { return In(i18n.Locale()).AddFolder() }
+
+// AddFolder says "Add folder"
+// in the language of msgs.
+//
+// Projects page: button choosing a folder to add.
+func (msgs Messages) AddFolder() string {
+	return Catalog.Format(msgs.locale, "addFolder", nil)
+}
+
+// NoProjectsYet says "Add a folder with code: Hearth shows which versions it needs and whether they are installed."
+// in the language the app shows.
+//
+// Projects page before any project is added.
+func NoProjectsYet() string { return In(i18n.Locale()).NoProjectsYet() }
+
+// NoProjectsYet says "Add a folder with code: Hearth shows which versions it needs and whether they are installed."
+// in the language of msgs.
+//
+// Projects page before any project is added.
+func (msgs Messages) NoProjectsYet() string {
+	return Catalog.Format(msgs.locale, "noProjectsYet", nil)
+}
+
+// TabAll says "All"
+// in the language the app shows.
+//
+// Projects page tab: every project.
+func TabAll() string { return In(i18n.Locale()).TabAll() }
+
+// TabAll says "All"
+// in the language of msgs.
+//
+// Projects page tab: every project.
+func (msgs Messages) TabAll() string {
+	return Catalog.Format(msgs.locale, "tabAll", nil)
+}
+
+// TabAttention says "Need attention"
+// in the language the app shows.
+//
+// Projects page tab: projects with a problem.
+func TabAttention() string { return In(i18n.Locale()).TabAttention() }
+
+// TabAttention says "Need attention"
+// in the language of msgs.
+//
+// Projects page tab: projects with a problem.
+func (msgs Messages) TabAttention() string {
+	return Catalog.Format(msgs.locale, "tabAttention", nil)
+}
+
+// FilterProjects says "Filter projects"
+// in the language the app shows.
+//
+// Placeholder of the projects page's filter.
+func FilterProjects() string { return In(i18n.Locale()).FilterProjects() }
+
+// FilterProjects says "Filter projects"
+// in the language of msgs.
+//
+// Placeholder of the projects page's filter.
+func (msgs Messages) FilterProjects() string {
+	return Catalog.Format(msgs.locale, "filterProjects", nil)
+}
+
+// ColumnProject says "Project"
+// in the language the app shows.
+//
+// Projects table column.
+func ColumnProject() string { return In(i18n.Locale()).ColumnProject() }
+
+// ColumnProject says "Project"
+// in the language of msgs.
+//
+// Projects table column.
+func (msgs Messages) ColumnProject() string {
+	return Catalog.Format(msgs.locale, "columnProject", nil)
+}
+
+// ColumnProjectTools says "Tools and versions from project files"
+// in the language the app shows.
+//
+// Projects table column.
+func ColumnProjectTools() string { return In(i18n.Locale()).ColumnProjectTools() }
+
+// ColumnProjectTools says "Tools and versions from project files"
+// in the language of msgs.
+//
+// Projects table column.
+func (msgs Messages) ColumnProjectTools() string {
+	return Catalog.Format(msgs.locale, "columnProjectTools", nil)
+}
+
+// ColumnState says "State"
+// in the language the app shows.
+//
+// Projects table column.
+func ColumnState() string { return In(i18n.Locale()).ColumnState() }
+
+// ColumnState says "State"
+// in the language of msgs.
+//
+// Projects table column.
+func (msgs Messages) ColumnState() string {
+	return Catalog.Format(msgs.locale, "columnState", nil)
+}
+
+// NoProjectsMatch says "No projects match"
+// in the language the app shows.
+//
+// Projects table when the filter or tab leaves none.
+func NoProjectsMatch() string { return In(i18n.Locale()).NoProjectsMatch() }
+
+// NoProjectsMatch says "No projects match"
+// in the language of msgs.
+//
+// Projects table when the filter or tab leaves none.
+func (msgs Messages) NoProjectsMatch() string {
+	return Catalog.Format(msgs.locale, "noProjectsMatch", nil)
+}
+
+// ProjectsNote says "Versions come from .nvmrc, package.json, .python-version, .tool-versions and other project files. To take a project o…"
+// in the language the app shows.
+//
+// Note under the projects table.
+func ProjectsNote() string { return In(i18n.Locale()).ProjectsNote() }
+
+// ProjectsNote says "Versions come from .nvmrc, package.json, .python-version, .tool-versions and other project files. To take a project o…"
+// in the language of msgs.
+//
+// Note under the projects table.
+func (msgs Messages) ProjectsNote() string {
+	return Catalog.Format(msgs.locale, "projectsNote", nil)
+}
+
+// ChipReady says "All set"
+// in the language the app shows.
+//
+// Chip: the project has everything it needs.
+func ChipReady() string { return In(i18n.Locale()).ChipReady() }
+
+// ChipReady says "All set"
+// in the language of msgs.
+//
+// Chip: the project has everything it needs.
+func (msgs Messages) ChipReady() string {
+	return Catalog.Format(msgs.locale, "chipReady", nil)
+}
+
+// ChipNotReady says "not ready"
+// in the language the app shows.
+//
+// Chip: a tool of the project lacks the version needed.
+func ChipNotReady() string { return In(i18n.Locale()).ChipNotReady() }
+
+// ChipNotReady says "not ready"
+// in the language of msgs.
+//
+// Chip: a tool of the project lacks the version needed.
+func (msgs Messages) ChipNotReady() string {
+	return Catalog.Format(msgs.locale, "chipNotReady", nil)
+}
+
+// ChipNotChecked says "not checked"
+// in the language the app shows.
+//
+// Chip: Hearth does not check the project's tools yet.
+func ChipNotChecked() string { return In(i18n.Locale()).ChipNotChecked() }
+
+// ChipNotChecked says "not checked"
+// in the language of msgs.
+//
+// Chip: Hearth does not check the project's tools yet.
+func (msgs Messages) ChipNotChecked() string {
+	return Catalog.Format(msgs.locale, "chipNotChecked", nil)
+}
+
+// ChipReadFailed says "could not read"
+// in the language the app shows.
+//
+// Chip: a project file or the folder could not be read.
+func ChipReadFailed() string { return In(i18n.Locale()).ChipReadFailed() }
+
+// ChipReadFailed says "could not read"
+// in the language of msgs.
+//
+// Chip: a project file or the folder could not be read.
+func (msgs Messages) ChipReadFailed() string {
+	return Catalog.Format(msgs.locale, "chipReadFailed", nil)
+}
+
+// ProjectNotAdded says "This folder is not in your projects."
+// in the language the app shows.
+//
+// Project page of a folder not added.
+func ProjectNotAdded() string { return In(i18n.Locale()).ProjectNotAdded() }
+
+// ProjectNotAdded says "This folder is not in your projects."
+// in the language of msgs.
+//
+// Project page of a folder not added.
+func (msgs Messages) ProjectNotAdded() string {
+	return Catalog.Format(msgs.locale, "projectNotAdded", nil)
+}
+
+// RemoveFromList says "Remove from list"
+// in the language the app shows.
+//
+// Project menu: remove the project from Hearth, keeping the folder.
+func RemoveFromList() string { return In(i18n.Locale()).RemoveFromList() }
+
+// RemoveFromList says "Remove from list"
+// in the language of msgs.
+//
+// Project menu: remove the project from Hearth, keeping the folder.
+func (msgs Messages) RemoveFromList() string {
+	return Catalog.Format(msgs.locale, "removeFromList", nil)
+}
+
+// Needed says "Needed"
+// in the language the app shows.
+//
+// Project page card: the tools the project needs.
+func Needed() string { return In(i18n.Locale()).Needed() }
+
+// Needed says "Needed"
+// in the language of msgs.
+//
+// Project page card: the tools the project needs.
+func (msgs Messages) Needed() string {
+	return Catalog.Format(msgs.locale, "needed", nil)
+}
+
+// ToolsCount says "{count, plural, one {# tool} other {# tools}}"
+// in the language the app shows.
+//
+// Project page card: how many tools the project needs.
+func ToolsCount(count int) string { return In(i18n.Locale()).ToolsCount(count) }
+
+// ToolsCount says "{count, plural, one {# tool} other {# tools}}"
+// in the language of msgs.
+//
+// Project page card: how many tools the project needs.
+func (msgs Messages) ToolsCount(count int) string {
+	return Catalog.Format(msgs.locale, "toolsCount", map[string]any{"count": count})
+}
+
+// Ready says "Ready"
+// in the language the app shows.
+//
+// Project page card: the tools ready for the project.
+func Ready() string { return In(i18n.Locale()).Ready() }
+
+// Ready says "Ready"
+// in the language of msgs.
+//
+// Project page card: the tools ready for the project.
+func (msgs Messages) Ready() string {
+	return Catalog.Format(msgs.locale, "ready", nil)
+}
+
+// ReadyOf says "{ready} of {total}"
+// in the language the app shows.
+//
+// Project page card: tools ready of the tools needed.
+func ReadyOf(ready int, total int) string { return In(i18n.Locale()).ReadyOf(ready, total) }
+
+// ReadyOf says "{ready} of {total}"
+// in the language of msgs.
+//
+// Project page card: tools ready of the tools needed.
+func (msgs Messages) ReadyOf(ready int, total int) string {
+	return Catalog.Format(msgs.locale, "readyOf", map[string]any{"ready": ready, "total": total})
+}
+
+// NoAISettings says "no AI settings"
+// in the language the app shows.
+//
+// Project page: the project has no AI agents' files.
+func NoAISettings() string { return In(i18n.Locale()).NoAISettings() }
+
+// NoAISettings says "no AI settings"
+// in the language of msgs.
+//
+// Project page: the project has no AI agents' files.
+func (msgs Messages) NoAISettings() string {
+	return Catalog.Format(msgs.locale, "noAISettings", nil)
+}
+
+// ColumnTool says "Tool"
+// in the language the app shows.
+//
+// Project requirements table column.
+func ColumnTool() string { return In(i18n.Locale()).ColumnTool() }
+
+// ColumnTool says "Tool"
+// in the language of msgs.
+//
+// Project requirements table column.
+func (msgs Messages) ColumnTool() string {
+	return Catalog.Format(msgs.locale, "columnTool", nil)
+}
+
+// ColumnNeeded says "Project needs"
+// in the language the app shows.
+//
+// Project requirements table column.
+func ColumnNeeded() string { return In(i18n.Locale()).ColumnNeeded() }
+
+// ColumnNeeded says "Project needs"
+// in the language of msgs.
+//
+// Project requirements table column.
+func (msgs Messages) ColumnNeeded() string {
+	return Catalog.Format(msgs.locale, "columnNeeded", nil)
+}
+
+// ColumnInstalled says "Installed"
+// in the language the app shows.
+//
+// Project requirements table column.
+func ColumnInstalled() string { return In(i18n.Locale()).ColumnInstalled() }
+
+// ColumnInstalled says "Installed"
+// in the language of msgs.
+//
+// Project requirements table column.
+func (msgs Messages) ColumnInstalled() string {
+	return Catalog.Format(msgs.locale, "columnInstalled", nil)
+}
+
+// ColumnRunsHere says "Runs in this folder"
+// in the language the app shows.
+//
+// Project requirements table column: what the terminal runs in the project
+// folder.
+func ColumnRunsHere() string { return In(i18n.Locale()).ColumnRunsHere() }
+
+// ColumnRunsHere says "Runs in this folder"
+// in the language of msgs.
+//
+// Project requirements table column: what the terminal runs in the project
+// folder.
+func (msgs Messages) ColumnRunsHere() string {
+	return Catalog.Format(msgs.locale, "columnRunsHere", nil)
+}
+
+// AnyVersion says "any version"
+// in the language the app shows.
+//
+// Project needs a tool without naming a version.
+func AnyVersion() string { return In(i18n.Locale()).AnyVersion() }
+
+// AnyVersion says "any version"
+// in the language of msgs.
+//
+// Project needs a tool without naming a version.
+func (msgs Messages) AnyVersion() string {
+	return Catalog.Format(msgs.locale, "anyVersion", nil)
+}
+
+// NotCheckedYet says "Hearth does not check {tool} yet"
+// in the language the app shows.
+//
+// Project requirements table: the scan has no detector of the tool.
+func NotCheckedYet(tool string) string { return In(i18n.Locale()).NotCheckedYet(tool) }
+
+// NotCheckedYet says "Hearth does not check {tool} yet"
+// in the language of msgs.
+//
+// Project requirements table: the scan has no detector of the tool.
+func (msgs Messages) NotCheckedYet(tool string) string {
+	return Catalog.Format(msgs.locale, "notCheckedYet", map[string]any{"tool": tool})
+}
+
+// NeededMissing says "{want} is not installed"
+// in the language the app shows.
+//
+// Project requirements table: the version needed is not among the
+// installed.
+func NeededMissing(want string) string { return In(i18n.Locale()).NeededMissing(want) }
+
+// NeededMissing says "{want} is not installed"
+// in the language of msgs.
+//
+// Project requirements table: the version needed is not among the
+// installed.
+func (msgs Messages) NeededMissing(want string) string {
+	return Catalog.Format(msgs.locale, "neededMissing", map[string]any{"want": want})
+}
+
+// ProjectAI says "Project AI settings"
+// in the language the app shows.
+//
+// Project page card title.
+func ProjectAI() string { return In(i18n.Locale()).ProjectAI() }
+
+// ProjectAI says "Project AI settings"
+// in the language of msgs.
+//
+// Project page card title.
+func (msgs Messages) ProjectAI() string {
+	return Catalog.Format(msgs.locale, "projectAI", nil)
+}
+
+// ProjectFiles says "Project files"
+// in the language the app shows.
+//
+// Project page card title.
+func ProjectFiles() string { return In(i18n.Locale()).ProjectFiles() }
+
+// ProjectFiles says "Project files"
+// in the language of msgs.
+//
+// Project page card title.
+func (msgs Messages) ProjectFiles() string {
+	return Catalog.Format(msgs.locale, "projectFiles", nil)
+}
+
+// WhereVersionsFrom says "where versions come from"
+// in the language the app shows.
+//
+// Project files card, beside its title.
+func WhereVersionsFrom() string { return In(i18n.Locale()).WhereVersionsFrom() }
+
+// WhereVersionsFrom says "where versions come from"
+// in the language of msgs.
+//
+// Project files card, beside its title.
+func (msgs Messages) WhereVersionsFrom() string {
+	return Catalog.Format(msgs.locale, "whereVersionsFrom", nil)
+}
+
+// NoProjectFiles says "No project files Hearth knows"
+// in the language the app shows.
+//
+// Project files card when there are none.
+func NoProjectFiles() string { return In(i18n.Locale()).NoProjectFiles() }
+
+// NoProjectFiles says "No project files Hearth knows"
+// in the language of msgs.
+//
+// Project files card when there are none.
+func (msgs Messages) NoProjectFiles() string {
+	return Catalog.Format(msgs.locale, "noProjectFiles", nil)
+}
+
+// AddProjectTitle says "Add project"
+// in the language the app shows.
+//
+// Title of the dialog adding a folder.
+func AddProjectTitle() string { return In(i18n.Locale()).AddProjectTitle() }
+
+// AddProjectTitle says "Add project"
+// in the language of msgs.
+//
+// Title of the dialog adding a folder.
+func (msgs Messages) AddProjectTitle() string {
+	return Catalog.Format(msgs.locale, "addProjectTitle", nil)
+}
+
+// AddProjectNote says "Hearth only reads the project's files and changes nothing in the folder."
+// in the language the app shows.
+//
+// Under the add project dialog's title.
+func AddProjectNote() string { return In(i18n.Locale()).AddProjectNote() }
+
+// AddProjectNote says "Hearth only reads the project's files and changes nothing in the folder."
+// in the language of msgs.
+//
+// Under the add project dialog's title.
+func (msgs Messages) AddProjectNote() string {
+	return Catalog.Format(msgs.locale, "addProjectNote", nil)
+}
+
+// OtherFolder says "Other folder…"
+// in the language the app shows.
+//
+// Add project dialog: choose another folder.
+func OtherFolder() string { return In(i18n.Locale()).OtherFolder() }
+
+// OtherFolder says "Other folder…"
+// in the language of msgs.
+//
+// Add project dialog: choose another folder.
+func (msgs Messages) OtherFolder() string {
+	return Catalog.Format(msgs.locale, "otherFolder", nil)
+}
+
+// FoundInFolder says "Found in the folder"
+// in the language the app shows.
+//
+// Add project dialog section: the project files found.
+func FoundInFolder() string { return In(i18n.Locale()).FoundInFolder() }
+
+// FoundInFolder says "Found in the folder"
+// in the language of msgs.
+//
+// Add project dialog section: the project files found.
+func (msgs Messages) FoundInFolder() string {
+	return Catalog.Format(msgs.locale, "foundInFolder", nil)
+}
+
+// NothingFound says "No project files here, but the folder can be added."
+// in the language the app shows.
+//
+// Add project dialog when the folder has no project files.
+func NothingFound() string { return In(i18n.Locale()).NothingFound() }
+
+// NothingFound says "No project files here, but the folder can be added."
+// in the language of msgs.
+//
+// Add project dialog when the folder has no project files.
+func (msgs Messages) NothingFound() string {
+	return Catalog.Format(msgs.locale, "nothingFound", nil)
+}
+
+// NestedProjects says "Nested projects · added separately"
+// in the language the app shows.
+//
+// Add project dialog section: projects in subfolders, as a monorepo's.
+func NestedProjects() string { return In(i18n.Locale()).NestedProjects() }
+
+// NestedProjects says "Nested projects · added separately"
+// in the language of msgs.
+//
+// Add project dialog section: projects in subfolders, as a monorepo's.
+func (msgs Messages) NestedProjects() string {
+	return Catalog.Format(msgs.locale, "nestedProjects", nil)
+}
+
+// SameVersions says "same versions as the root"
+// in the language the app shows.
+//
+// Add project dialog: a nested project without versions of its own.
+func SameVersions() string { return In(i18n.Locale()).SameVersions() }
+
+// SameVersions says "same versions as the root"
+// in the language of msgs.
+//
+// Add project dialog: a nested project without versions of its own.
+func (msgs Messages) SameVersions() string {
+	return Catalog.Format(msgs.locale, "sameVersions", nil)
+}
+
+// OwnVersion says "own {file}: {version}"
+// in the language the app shows.
+//
+// Add project dialog: a nested project's own version.
+func OwnVersion(file string, version string) string {
+	return In(i18n.Locale()).OwnVersion(file, version)
+}
+
+// OwnVersion says "own {file}: {version}"
+// in the language of msgs.
+//
+// Add project dialog: a nested project's own version.
+func (msgs Messages) OwnVersion(file string, version string) string {
+	return Catalog.Format(msgs.locale, "ownVersion", map[string]any{"file": file, "version": version})
+}
+
+// Cancel says "Cancel"
+// in the language the app shows.
+//
+// Dialog button closing it without changes.
+func Cancel() string { return In(i18n.Locale()).Cancel() }
+
+// Cancel says "Cancel"
+// in the language of msgs.
+//
+// Dialog button closing it without changes.
+func (msgs Messages) Cancel() string {
+	return Catalog.Format(msgs.locale, "cancel", nil)
+}
+
+// AddProjects says "{count, plural, one {Add # project} other {Add # projects}}"
+// in the language the app shows.
+//
+// Add project dialog's main button.
+func AddProjects(count int) string { return In(i18n.Locale()).AddProjects(count) }
+
+// AddProjects says "{count, plural, one {Add # project} other {Add # projects}}"
+// in the language of msgs.
+//
+// Add project dialog's main button.
+func (msgs Messages) AddProjects(count int) string {
+	return Catalog.Format(msgs.locale, "addProjects", map[string]any{"count": count})
+}
+
+// ProblemMissing says "no {tool}"
+// in the language the app shows.
+//
+// Project problem: the version needed is not installed.
+func ProblemMissing(tool string) string { return In(i18n.Locale()).ProblemMissing(tool) }
+
+// ProblemMissing says "no {tool}"
+// in the language of msgs.
+//
+// Project problem: the version needed is not installed.
+func (msgs Messages) ProblemMissing(tool string) string {
+	return Catalog.Format(msgs.locale, "problemMissing", map[string]any{"tool": tool})
+}
+
+// ProblemTerminal says "terminal runs not {tool}"
+// in the language the app shows.
+//
+// Project problem: installed, but the terminal runs another version in the
+// folder.
+func ProblemTerminal(tool string) string { return In(i18n.Locale()).ProblemTerminal(tool) }
+
+// ProblemTerminal says "terminal runs not {tool}"
+// in the language of msgs.
+//
+// Project problem: installed, but the terminal runs another version in the
+// folder.
+func (msgs Messages) ProblemTerminal(tool string) string {
+	return Catalog.Format(msgs.locale, "problemTerminal", map[string]any{"tool": tool})
+}
+
+// ProblemBanner says "The project needs {tool} {want} ({file}). Installed: {installed}. In this folder the terminal runs {run}."
+// in the language the app shows.
+//
+// Project page banner explaining its problem.
+func ProblemBanner(tool string, want string, file string, installed string, run string) string {
+	return In(i18n.Locale()).ProblemBanner(tool, want, file, installed, run)
+}
+
+// ProblemBanner says "The project needs {tool} {want} ({file}). Installed: {installed}. In this folder the terminal runs {run}."
+// in the language of msgs.
+//
+// Project page banner explaining its problem.
+func (msgs Messages) ProblemBanner(tool string, want string, file string, installed string, run string) string {
+	return Catalog.Format(msgs.locale, "problemBanner", map[string]any{"tool": tool, "want": want, "file": file, "installed": installed, "run": run})
+}
+
+// NothingInstalled says "nothing"
+// in the language the app shows.
+//
+// Project banner: no version of the tool is installed.
+func NothingInstalled() string { return In(i18n.Locale()).NothingInstalled() }
+
+// NothingInstalled says "nothing"
+// in the language of msgs.
+//
+// Project banner: no version of the tool is installed.
+func (msgs Messages) NothingInstalled() string {
+	return Catalog.Format(msgs.locale, "nothingInstalled", nil)
+}
+
+// AiInstructions says "instructions · {agent}"
+// in the language the app shows.
+//
+// Project AI file: instructions for agents.
+func AiInstructions(agent string) string { return In(i18n.Locale()).AiInstructions(agent) }
+
+// AiInstructions says "instructions · {agent}"
+// in the language of msgs.
+//
+// Project AI file: instructions for agents.
+func (msgs Messages) AiInstructions(agent string) string {
+	return Catalog.Format(msgs.locale, "aiInstructions", map[string]any{"agent": agent})
+}
+
+// AiSettings says "settings · {agent}"
+// in the language the app shows.
+//
+// Project AI folder: an agent's settings.
+func AiSettings(agent string) string { return In(i18n.Locale()).AiSettings(agent) }
+
+// AiSettings says "settings · {agent}"
+// in the language of msgs.
+//
+// Project AI folder: an agent's settings.
+func (msgs Messages) AiSettings(agent string) string {
+	return Catalog.Format(msgs.locale, "aiSettings", map[string]any{"agent": agent})
+}
+
+// AiMcp says "project MCP servers"
+// in the language the app shows.
+//
+// Project AI file .mcp.json.
+func AiMcp() string { return In(i18n.Locale()).AiMcp() }
+
+// AiMcp says "project MCP servers"
+// in the language of msgs.
+//
+// Project AI file .mcp.json.
+func (msgs Messages) AiMcp() string {
+	return Catalog.Format(msgs.locale, "aiMcp", nil)
+}
+
+// AiSkills says "skills for agents"
+// in the language the app shows.
+//
+// Project AI folder .agents.
+func AiSkills() string { return In(i18n.Locale()).AiSkills() }
+
+// AiSkills says "skills for agents"
+// in the language of msgs.
+//
+// Project AI folder .agents.
+func (msgs Messages) AiSkills() string {
+	return Catalog.Format(msgs.locale, "aiSkills", nil)
+}
+
+// BackToProjects says "Back to projects"
+// in the language the app shows.
+//
+// Project page: the button before the title going back to the projects.
+func BackToProjects() string { return In(i18n.Locale()).BackToProjects() }
+
+// BackToProjects says "Back to projects"
+// in the language of msgs.
+//
+// Project page: the button before the title going back to the projects.
+func (msgs Messages) BackToProjects() string {
+	return Catalog.Format(msgs.locale, "backToProjects", nil)
+}

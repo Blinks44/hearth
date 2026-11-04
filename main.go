@@ -29,6 +29,16 @@ func main() {
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
+	list := &projectList{app: a}
+	if dir, err := mygo.App.Path(mygo.PathUserData); err != nil {
+		log.Print(err)
+	} else {
+		list.dir = dir
+		// A broken file is kept aside; Hearth starts with the defaults.
+		if list.settings, err = store.LoadSettings(dir); err != nil {
+			log.Print(err)
+		}
+	}
 	mygo.App.WhenReady(func() {
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:     "Hearth",
@@ -48,6 +58,9 @@ func main() {
 			Vibrancy: mygo.VibrancySidebar,
 			Content:  ui.View(a.View),
 		})
+		list.win = win
+		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
+		list.read()
 		cache, err := mygo.App.Path(mygo.PathCache)
 		if err != nil {
 			log.Print(err)
@@ -86,6 +99,7 @@ func main() {
 		a.OnScan = func() {
 			scanner.Start(scanned)
 			fetchVersions()
+			list.read()
 		}
 		// The last snapshot shows at once, until the scan replaces it.
 		if cache != "" {

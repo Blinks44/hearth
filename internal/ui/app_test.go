@@ -32,7 +32,7 @@ func TestSidebarOpensPages(t *testing.T) {
 		if a.router.Path() != p.path || a.router.Title() != p.title() {
 			t.Errorf("clicked %q: page %q titled %q", p.title(), a.router.Path(), a.router.Title())
 		}
-		built := p.path == "/tools/node"
+		built := p.path == "/tools/node" || p.path == projectsPage.path
 		if !tt.HasText(p.subtitle()) || !built && !tt.HasText("Coming soon") {
 			t.Errorf("%s: header missing, texts %q", p.title(), tt.Texts())
 		}
@@ -95,7 +95,7 @@ func TestShellInRussian(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if a.router.Title() != "Проекты" || !tt.HasText("Скоро") {
+	if a.router.Title() != "Проекты" || !tt.HasText("Сканировать") {
 		t.Errorf("title %q, texts %q", a.router.Title(), tt.Texts())
 	}
 }

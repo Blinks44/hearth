@@ -1,0 +1,767 @@
+package ui
+
+import (
+	"net/url"
+	"path/filepath"
+	"slices"
+	"strconv"
+	"strings"
+
+	"github.com/egoist/mygo/ui"
+	"golang.org/x/mod/semver"
+
+	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/versions"
+	"github.com/Blinks44/hearth/locales"
+)
+
+// adding is a folder chosen to add, as projects.Find read it, and which of
+// the projects nested in it are to be added too.
+type adding struct {
+	root   projects.Project
+	nested []projects.Project
+	on     []bool
+}
+
+// Offer shows the dialog adding the folder root.Dir, which projects.Find
+// read, with the projects nested in it; the ones with versions of their
+// own are chosen at first.
+func (a *App) Offer(root projects.Project, nested []projects.Project) {
+	add := &adding{root: root, nested: nested, on: make([]bool, len(nested))}
+	for i, p := range nested {
+		add.on[i] = len(p.Versions()) > 0
+	}
+	a.adding, a.addOpen = add, true
+}
+
+// projectPath is the router's location of the project in dir: the
+// folder goes in the query, as a path has slashes of its own.
+func projectPath(dir string) string { return projectPage + "?dir=" + url.QueryEscape(dir) }
+
+// projectPage is the path of a project's page, under the projects.
+const projectPage = "/projects/project"
+
+// projectList is the projects page: the projects added, by state, with a
+// filter.
+func (a *App) projectList(c *ui.Context, p page) {
+	ui.Column(c).Fill().Children(func() {
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.addButton(c) }})
+		if len(a.Projects) == 0 {
+			a.projectsEmpty(c)
+		} else {
+			ui.Scroll(c).Grow(1).Children(func() {
+				ui.Column(c).Gap(14).Padding(22, 28, 24, 28).Children(func() {
+					a.projectRows(c)
+				})
+			})
+		}
+		a.addDialog(c)
+	})
+}
+
+// addButton asks for a folder to add, when the app can.
+func (a *App) addButton(c *ui.Context) {
+	if a.ChooseFolder == nil {
+		return
+	}
+	ui.PrimaryButton(c, "").OnClick(a.ChooseFolder).Children(func() {
+		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(ui.Hex("#FFFFFF"))
+		ui.Text(c, locales.AddFolder()).TextColor(ui.Hex("#FFFFFF")).SingleLine()
+	})
+}
+
+// projectsEmpty is the page before any project is added.
+func (a *App) projectsEmpty(c *ui.Context) {
+	pal := Colors(c.Theme())
+	ui.Column(c).Grow(1).Center().Gap(10).Padding(0, 28).Children(func() {
+		ui.Icon(c, Icon("folder-git-2")).Size(28, 28).TextColor(pal.TextFaint)
+		ui.Text(c, locales.NoProjectsYet()).TextColor(c.Theme().TextMuted).TextAlign(ui.Center)
+		a.addButton(c)
+	})
+}
+
+// projectRows are the tabs, the filter and the table of projects.
+func (a *App) projectRows(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	lines := a.nodeLines()
+	type row struct {
+		p        projects.Project
+		statuses []projects.Status
+		problem  string
+	}
+	var rows []row
+	attention := 0
+	for _, p := range a.Projects {
+		st := projects.Resolve(p, a.Snapshot, lines)
+		r := row{p, st, projectProblem(st)}
+		if r.problem != "" {
+			attention++
+		}
+		if a.projectsTab == 1 && r.problem == "" {
+			continue
+		}
+		if q := strings.ToLower(strings.TrimSpace(a.projectFilter)); q != "" &&
+			!strings.Contains(strings.ToLower(p.Dir), q) {
+			continue
+		}
+		rows = append(rows, r)
+	}
+	ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+		segments(c, "project-tabs", &a.projectsTab, []segment{
+			{locales.TabAll(), strconv.Itoa(len(a.Projects))},
+			{locales.TabAttention(), strconv.Itoa(attention)},
+		})
+		ui.Box(c).Grow(1)
+		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Placeholder(locales.FilterProjects()).Width(200)
+	})
+	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
+			head := func(title string) ui.Element {
+				return ui.Text(c, title).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+			head(locales.ColumnProject()).Width(260).Shrink(0)
+			head(locales.ColumnProjectTools()).Grow(1).MinWidth(0)
+			head("AI").Width(90).Shrink(0)
+			head(locales.ColumnState()).Width(170).Shrink(0)
+		})
+		if len(rows) == 0 {
+			cardNote(c, locales.NoProjectsMatch())
+		}
+		for _, r := range rows {
+			e := ui.ButtonBase(c.Key("project:"+r.p.Dir)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(r.p.Dir))
+			if e.Hovered() {
+				e.Background(pal.Subtle)
+			}
+			e.Children(func() {
+				ui.Row(c).Width(260).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
+					folderTile(c, 28)
+					ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+						ui.Text(c, filepath.Base(r.p.Dir)).FontSize(13.5).SingleLine()
+						ui.Text(c, tilde(r.p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+					})
+				})
+				ui.Row(c).Grow(1).MinWidth(0).Gap(6).Wrap().Children(func() {
+					for _, st := range r.statuses {
+						toolTag(c, st)
+					}
+				})
+				ui.Row(c).Width(90).Shrink(0).Gap(4).Children(func() {
+					for _, ag := range projectAgents(r.p) {
+						ui.Box(c).Size(20, 20).Radius(10).Center().BorderWidth(1).BorderColor(pal.Line).
+							Tooltip(ag.name).Children(func() {
+							ui.Icon(c, Brand(ag.brand)).Size(12, 12).TextColor(t.TextMuted)
+						})
+					}
+				})
+				ui.Row(c).Width(146).Shrink(0).Children(func() { projectChip(c, r.p, r.statuses, r.problem) })
+				ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
+			})
+			if e.Clicked() {
+				a.router.Push(projectPath(r.p.Dir))
+			}
+		}
+	})
+	ui.Row(c).Gap(8).Padding(0, 4).Children(func() {
+		ui.Icon(c, Icon("info")).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+		ui.Text(c, locales.ProjectsNote()).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+	})
+}
+
+// toolTag is a tool a project needs, as "node 22", in a mono badge.
+func toolTag(c *ui.Context, st projects.Status) {
+	pal := Colors(c.Theme())
+	text := st.Tool
+	if w := statusWant(st); w != "" {
+		text += " " + w
+	}
+	ui.Text(c, text).Font(FontMono).FontSize(11).TextColor(pal.MonoText).SingleLine().
+		Padding(2, 6).Radius(5).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line)
+}
+
+// projectChip is a project's state: its first problem, files it could
+// not read, not checked when the scan checks none of its tools, or else
+// ready.
+func projectChip(c *ui.Context, p projects.Project, statuses []projects.Status, problem string) {
+	t := c.Theme()
+	pal := Colors(t)
+	switch {
+	case problem != "":
+		chip(c, t.Warning, pal.WarningSoft, pal.WarningText, problem)
+	case len(p.Errs) > 0:
+		chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipReadFailed())
+	case !anyChecked(statuses):
+		chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.ChipNotChecked())
+	default:
+		chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ChipReady())
+	}
+}
+
+// project is the page of the project in dir: what it needs against what
+// is installed, its AI settings and its files.
+func (a *App) project(c *ui.Context, dir string) {
+	i := slices.IndexFunc(a.Projects, func(p projects.Project) bool { return p.Dir == dir })
+	name := filepath.Base(dir)
+	ui.Column(c).Fill().Children(func() {
+		a.headerWith(c, name, projectsPage.title()+" · "+tilde(dir, a.Home), headerExtras{
+			back: func() { a.router.Push(projectsPage.path) },
+			before: func() {
+				if i >= 0 {
+					a.projectMenu(c, dir)
+				}
+			},
+		})
+		if i < 0 {
+			ui.Column(c).Grow(1).Center().Gap(8).Children(func() {
+				ui.Text(c, locales.ProjectNotAdded()).TextColor(c.Theme().TextMuted)
+			})
+			return
+		}
+		p := a.Projects[i]
+		statuses := projects.Resolve(p, a.Snapshot, a.nodeLines())
+		ui.Scroll(c).Grow(1).Children(func() {
+			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
+				a.projectHero(c, p, statuses)
+				if text := problemBanner(statuses); text != "" {
+					ui.Row(c).Gap(10).Padding(10, 12).Radius(10).AlignItems(ui.Center).
+						Background(Colors(c.Theme()).WarningSoft).Children(func() {
+						ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
+						ui.Text(c, text).FontSize(12).TextColor(Colors(c.Theme()).WarningText).Grow(1).MinWidth(0)
+					})
+				}
+				if len(statuses) > 0 {
+					a.requirementTable(c, statuses)
+				}
+				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
+					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
+					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { filesCard(c, p) })
+				})
+			})
+		})
+	})
+}
+
+// projectMenu is the project's "…": show its folder, and remove it from
+// the list, which leaves the folder be.
+func (a *App) projectMenu(c *ui.Context, dir string) {
+	ui.Button(c.Key("project-menu"), "").Size(28, 26).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
+		if a.Shell != nil && m.Item(showInFolder()).Chosen() {
+			a.Shell.ShowItemInFolder(dir)
+		}
+		if a.RemoveProject != nil && m.Item(locales.RemoveFromList()).Chosen() {
+			a.RemoveProject(dir)
+			a.router.Replace(projectsPage.path)
+		}
+	}).Children(func() {
+		ui.Icon(c, Icon("ellipsis")).Size(14, 14).TextColor(c.Theme().TextMuted)
+	})
+}
+
+// projectHero is the folder, its name and what it needs, and on the right
+// the cards of where it stands: needed, ready, AI.
+func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects.Status) {
+	t := c.Theme()
+	pal := Colors(t)
+	var needs, files []string
+	ready := 0
+	for _, st := range statuses {
+		needs = append(needs, toolTitle(st.Tool)+withSpace(statusWant(st)))
+		if st.Checked && statusProblem(st) == "" {
+			ready++
+		}
+	}
+	for _, f := range p.Files {
+		if len(files) < 2 {
+			files = append(files, f)
+		}
+	}
+	caption := tilde(p.Dir, a.Home)
+	if len(needs) > 0 {
+		caption += " · " + strings.Join(needs, ", ")
+	}
+	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+		folderTile(c, 48)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			ui.Text(c, filepath.Base(p.Dir)).FontSize(22).FontWeight(600).SingleLine()
+			ui.Text(c, caption).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
+		})
+		ui.Row(c).Gap(8).Shrink(0).Children(func() {
+			stateCard(c, pal.TextFaint, locales.Needed(), locales.ToolsCount(len(statuses)), strings.Join(files, " · "))
+			problem := projectProblem(statuses)
+			dot, readyCaption := t.Success, locales.ChipReady()
+			if problem != "" {
+				dot, readyCaption = t.Warning, problem
+			}
+			stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
+			var names []string
+			for _, ag := range projectAgents(p) {
+				names = append(names, ag.name)
+			}
+			value, aiCaption := "—", locales.NoAISettings()
+			if len(names) > 0 {
+				value, aiCaption = strings.Join(names, ", "), strings.Join(p.AI, " · ")
+			}
+			stateCard(c, Accent, "AI", value, aiCaption)
+		})
+	})
+}
+
+// requirementTable is a row per tool: what the project needs and from
+// which file, what is installed, and what the terminal runs in its folder.
+func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
+			for i, h := range []string{locales.ColumnTool(), locales.ColumnNeeded(), locales.ColumnInstalled(), locales.ColumnRunsHere()} {
+				ui.Text(c, h).FontSize(11.5).TextColor(pal.TextFaint).Grow(columnGrow[i]).Basis(0).MinWidth(0).SingleLine()
+			}
+			ui.Box(c).Width(110).Shrink(0)
+		})
+		for _, st := range statuses {
+			first := st.Checks[0]
+			ui.Row(c).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Row(c).Grow(columnGrow[0]).Basis(0).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, toolIcon(st.Tool)).Size(16, 16).TextColor(t.TextMuted)
+					ui.Text(c, toolTitle(st.Tool)).FontSize(13.5).SingleLine()
+				})
+				want := statusWant(st)
+				if want == "" {
+					want = locales.AnyVersion()
+				}
+				cell(c, columnGrow[1], want, checkSource(first), pal.TextFaint)
+				installed, caption, warn := installedCell(st)
+				color := pal.TextFaint
+				if warn {
+					color = pal.WarningText
+				}
+				cell(c, columnGrow[2], installed, caption, color)
+				run, runCaption := "—", locales.NotInPath()
+				switch {
+				case !st.Checked:
+					runCaption = ""
+				case st.Terminal != nil:
+					run, runCaption = versionText(st.Terminal.Version), sourceName(st.Terminal.Source)
+				}
+				cell(c, columnGrow[3], run, runCaption, pal.TextFaint)
+				ui.Row(c).Width(110).Shrink(0).Justify(ui.End).Children(func() {
+					switch {
+					case !st.Checked:
+						chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.ChipNotChecked())
+					case statusProblem(st) == "":
+						chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ChipReady())
+					default:
+						chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipNotReady())
+					}
+				})
+			})
+		}
+	})
+}
+
+// columnGrow are the shares of the requirement table's columns: the
+// installed versions take the most.
+var columnGrow = [4]float32{0.8, 1, 1.4, 1}
+
+// cell is a table cell taking grow of the row: a value in mono over a
+// caption in color.
+func cell(c *ui.Context, grow float32, value, caption string, color ui.Color) {
+	ui.Column(c).Grow(grow).Basis(0).MinWidth(0).Gap(2).Children(func() {
+		ui.Text(c, value).Font(FontMono).FontSize(13).SingleLine()
+		if caption != "" {
+			ui.Text(c, caption).FontSize(11.5).TextColor(color).SingleLine()
+		}
+	})
+}
+
+// installedCell is what is installed of a tool: its versions, and under
+// them whether the one needed is among them, a warning when it is not.
+func installedCell(st projects.Status) (value, caption string, warn bool) {
+	if !st.Checked {
+		return "—", locales.NotCheckedYet(toolTitle(st.Tool)), false
+	}
+	vs := installedVersions(st)
+	if len(vs) == 0 {
+		return "—", locales.ToolNotInstalled(toolTitle(st.Tool)), true
+	}
+	for _, ch := range st.Checks {
+		if ch.Err == "" && ch.Installed == nil {
+			return strings.Join(vs, " · "), locales.NeededMissing(ch.Want), true
+		}
+	}
+	return strings.Join(vs, " · "), "", false
+}
+
+// installedVersions are the versions of a tool the scan found, each once,
+// oldest first.
+func installedVersions(st projects.Status) []string {
+	var vs []string
+	for _, in := range st.Installations {
+		if in.Version != "" && !slices.Contains(vs, in.Version) {
+			vs = append(vs, in.Version)
+		}
+	}
+	slices.SortFunc(vs, func(a, b string) int { return semver.Compare("v"+a, "v"+b) })
+	return vs
+}
+
+// aiCard lists the project's AI settings: instructions, settings, skills,
+// MCP servers.
+func aiCard(c *ui.Context, p projects.Project) {
+	listCard(c, locales.ProjectAI(), "", func() {
+		if len(p.AI) == 0 {
+			cardNote(c, locales.NoAISettings())
+		}
+		for _, f := range p.AI {
+			listRow(c, f, false, aiFileCaption(f), func() {})
+		}
+	})
+}
+
+// filesCard lists the project files the versions come from, and the ones
+// that could not be read.
+func filesCard(c *ui.Context, p projects.Project) {
+	pal := Colors(c.Theme())
+	listCard(c, locales.ProjectFiles(), locales.WhereVersionsFrom(), func() {
+		if len(p.Files) == 0 && len(p.Errs) == 0 {
+			cardNote(c, locales.NoProjectFiles())
+		}
+		for _, f := range p.Files {
+			fileRow(c, p, f)
+		}
+		for _, err := range p.Errs {
+			ui.Text(c, err.Error()).FontSize(12).TextColor(pal.WarningText).Padding(9, 14).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+		}
+	})
+}
+
+// addDialog shows the folder chosen to add: what was found in it, and the
+// projects nested in it, each to add on its own.
+func (a *App) addDialog(c *ui.Context) {
+	add := a.adding
+	if add == nil {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	ui.DialogBase(c, &a.addOpen, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(520).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		ui.Column(c).Children(func() {
+			ui.Column(c).Gap(4).Padding(20, 20, 14, 20).Children(func() {
+				ui.Text(c, locales.AddProjectTitle()).FontSize(18).FontWeight(600)
+				ui.Text(c, locales.AddProjectNote()).FontSize(12).TextColor(t.TextMuted)
+				ui.Row(c).Gap(8).Margin(10, 0, 0, 0).AlignItems(ui.Center).Children(func() {
+					ui.Row(c).Grow(1).MinWidth(0).Gap(8).Padding(6, 10).Radius(7).AlignItems(ui.Center).
+						BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
+						ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
+						ui.Text(c, tilde(add.root.Dir, a.Home)).FontSize(12.5).SingleLine()
+					})
+					if a.ChooseFolder != nil {
+						ui.Button(c, locales.OtherFolder()).OnClick(a.ChooseFolder)
+					}
+				})
+			})
+			ui.Scroll(c).MaxHeight(380).Children(func() {
+				dialogSection(c, locales.FoundInFolder())
+				if len(add.root.Files) == 0 && len(add.root.AI) == 0 {
+					cardNote(c, locales.NothingFound())
+				}
+				for _, f := range add.root.Files {
+					fileRow(c, add.root, f)
+				}
+				if len(add.root.AI) > 0 {
+					listRow(c, strings.Join(add.root.AI, " · "), false, locales.ProjectAI(), func() {})
+				}
+				if len(add.nested) > 0 {
+					dialogSection(c, locales.NestedProjects())
+				}
+				for i, p := range add.nested {
+					rel, err := filepath.Rel(add.root.Dir, p.Dir)
+					if err != nil {
+						rel = p.Dir
+					}
+					caption := locales.SameVersions()
+					if v := p.Versions(); len(v) > 0 {
+						caption = locales.OwnVersion(v[0].File, toolTitle(v[0].Tool)+" "+v[0].Want)
+					}
+					listRow(c, filepath.ToSlash(rel), false, caption, func() {
+						ui.Switch(c.Key("nested:"+p.Dir), &add.on[i]).Label(filepath.ToSlash(rel))
+					})
+				}
+			})
+			count := 1
+			for _, on := range add.on {
+				if on {
+					count++
+				}
+			}
+			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Button(c, locales.Cancel()).OnClick(func() { a.addOpen = false })
+				ui.PrimaryButton(c, locales.AddProjects(count)).OnClick(func() {
+					dirs := []string{add.root.Dir}
+					for i, p := range add.nested {
+						if add.on[i] {
+							dirs = append(dirs, p.Dir)
+						}
+					}
+					if a.AddProjects != nil {
+						a.AddProjects(dirs)
+					}
+					a.addOpen = false
+				})
+			})
+		})
+	})
+	if !a.addOpen {
+		a.adding = nil
+	}
+}
+
+func dialogSection(c *ui.Context, title string) {
+	pal := Colors(c.Theme())
+	ui.Text(c, title).FontSize(11).FontWeight(500).TextColor(pal.TextFaint).Padding(14, 20, 6, 20).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).SingleLine()
+}
+
+// fileRow is a project file: its name, the fields versions come from, and
+// on the right what it asks, as "node 22 · pnpm 10.4.1".
+func fileRow(c *ui.Context, p projects.Project, file string) {
+	var keys, wants []string
+	for _, r := range p.Requirements {
+		if r.File != file {
+			continue
+		}
+		if r.Key != "" {
+			keys = append(keys, r.Key)
+		}
+		switch {
+		case r.Want != "":
+			wants = append(wants, r.Tool+" "+r.Want)
+		case !slices.Contains(wants, r.Tool):
+			wants = append(wants, r.Tool)
+		}
+	}
+	listRow(c, file, false, strings.Join(keys, " · "), func() {
+		ui.Text(c, strings.Join(wants, " · ")).Font(FontMono).FontSize(11.5).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+	})
+}
+
+// nodeLines are Node's release lines, which lts/* needs; nil until the
+// version list comes.
+func (a *App) nodeLines() map[int]versions.Line {
+	if a.NodeVersions == nil {
+		return nil
+	}
+	return a.NodeVersions.Lines
+}
+
+// statusWant is the version a project wants of a tool, by its first file
+// that names one; "" when none does.
+func statusWant(st projects.Status) string {
+	for _, ch := range st.Checks {
+		if ch.Want != "" {
+			return ch.Want
+		}
+	}
+	return ""
+}
+
+// checkSource is where a requirement comes from, as "package.json ·
+// packageManager".
+func checkSource(ch projects.Check) string {
+	if ch.Key == "" || ch.File == ".tool-versions" {
+		return ch.File
+	}
+	return ch.File + " · " + ch.Key
+}
+
+// statusProblem is what keeps a checked tool from being ready in the
+// project: the needed version is not installed, or the terminal runs
+// another; "" when nothing does.
+func statusProblem(st projects.Status) string {
+	if !st.Checked {
+		return ""
+	}
+	for _, ch := range st.Checks {
+		switch {
+		case ch.Err != "" || ch.Met:
+		case ch.Installed == nil:
+			return locales.ProblemMissing(toolTitle(st.Tool) + withSpace(ch.Want))
+		default:
+			return locales.ProblemTerminal(toolTitle(st.Tool) + withSpace(ch.Want))
+		}
+	}
+	return ""
+}
+
+// projectProblem is a project's first problem, "" when it has none.
+func projectProblem(statuses []projects.Status) string {
+	for _, st := range statuses {
+		if p := statusProblem(st); p != "" {
+			return p
+		}
+	}
+	return ""
+}
+
+// problemBanner explains the project's first problem: what it needs and
+// from which file, what is installed and what the terminal runs.
+func problemBanner(statuses []projects.Status) string {
+	for _, st := range statuses {
+		if statusProblem(st) == "" {
+			continue
+		}
+		for _, ch := range st.Checks {
+			if ch.Err != "" || ch.Met {
+				continue
+			}
+			vs := installedVersions(st)
+			installed := locales.NothingInstalled()
+			if len(vs) > 0 {
+				installed = strings.Join(vs, ", ")
+			}
+			run := "—"
+			if st.Terminal != nil {
+				run = versionText(st.Terminal.Version)
+			}
+			want := ch.Want
+			if want == "" {
+				want = locales.AnyVersion()
+			}
+			return locales.ProblemBanner(toolTitle(st.Tool), want, ch.File, installed, run)
+		}
+	}
+	return ""
+}
+
+// anyChecked reports that the scan checked a tool of the project: until
+// then the project cannot be called ready.
+func anyChecked(statuses []projects.Status) bool {
+	for _, st := range statuses {
+		if st.Checked {
+			return true
+		}
+	}
+	return false
+}
+
+func withSpace(s string) string {
+	if s == "" {
+		return ""
+	}
+	return " " + s
+}
+
+// agent is an AI agent a project has settings for.
+type agent struct{ name, brand string }
+
+// projectAgents are the agents whose files the project has: Claude Code
+// for CLAUDE.md, .claude and .mcp.json; Codex and others for AGENTS.md;
+// Cursor for .cursor.
+func projectAgents(p projects.Project) []agent {
+	var out []agent
+	add := func(a agent) {
+		if !slices.Contains(out, a) {
+			out = append(out, a)
+		}
+	}
+	for _, f := range p.AI {
+		switch f {
+		case "CLAUDE.md", ".claude", ".mcp.json":
+			add(agent{"Claude Code", "claude"})
+		case "AGENTS.md", ".agents":
+			add(agent{"Codex", "openai"})
+		case ".cursor":
+			add(agent{"Cursor", "cursor"})
+		}
+	}
+	return out
+}
+
+// aiFileCaption says what an AI file of a project is.
+func aiFileCaption(f string) string {
+	switch f {
+	case "CLAUDE.md":
+		return locales.AiInstructions("Claude Code")
+	case ".claude":
+		return locales.AiSettings("Claude Code")
+	case ".mcp.json":
+		return locales.AiMcp()
+	case "AGENTS.md":
+		return locales.AiInstructions("Codex, Copilot, Gemini")
+	case ".agents":
+		return locales.AiSkills()
+	case ".cursor":
+		return locales.AiSettings("Cursor")
+	}
+	return ""
+}
+
+// toolTitles are the names of tools projects need, as they are written.
+var toolTitles = map[string]string{
+	"node": "Node", "npm": "npm", "pnpm": "pnpm", "yarn": "Yarn", "bun": "Bun", "deno": "Deno",
+	"python": "Python", "uv": "uv", "rust": "Rust", "go": "Go", "java": "Java", "ruby": "Ruby",
+	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker",
+}
+
+func toolTitle(id string) string {
+	if n, ok := toolTitles[id]; ok {
+		return n
+	}
+	return id
+}
+
+// toolIcon is a tool's logo, or a package for a tool without one.
+func toolIcon(id string) *ui.SVG {
+	for _, l := range languages {
+		if l.id == id {
+			return mustIcon(l.icon)
+		}
+	}
+	switch id {
+	case "npm", "pnpm", "docker":
+		return Brand(map[string]string{"npm": "npm", "pnpm": "pnpm", "docker": "docker"}[id])
+	}
+	return Icon("package")
+}
+
+// folderTile is a project's folder icon on a tile of size.
+func folderTile(c *ui.Context, size float32) {
+	pal := Colors(c.Theme())
+	ui.Box(c).Size(size, size).Shrink(0).Radius(size / 4).Center().Background(pal.Subtle).
+		BorderWidth(1).BorderColor(pal.Line).Children(func() {
+		ui.Icon(c, Icon("folder-git-2")).Size(size/2, size/2).TextColor(c.Theme().TextMuted)
+	})
+}
+
+// segment is a tab of segments: its label and a count after it.
+type segment struct{ label, count string }
+
+// segments are tabs switching *tab, as the Node.js page's.
+func segments(c *ui.Context, key string, tab *int, segs []segment) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c).Children(func() {
+		seg := ui.SegmentedBase(c.Key(key), tab, len(segs))
+		seg.Track.Gap(2).Padding(2).Radius(8).Background(pal.Muted).Children(func() {
+			for i, s := range segs {
+				e := seg.Segment(i).Gap(5).Padding(5, 12).Radius(6).AlignItems(ui.Center).Label(s.label)
+				color := t.TextMuted
+				if i == *tab {
+					e.Background(t.Background).Shadow(0, 1, 2, 0, t.Text.Alpha(0.1))
+					color = t.Text
+				}
+				e.Children(func() {
+					ui.Text(c, s.label).FontSize(12.5).TextColor(color).SingleLine()
+					if s.count != "" {
+						ui.Text(c, s.count).FontSize(11.5).TextColor(pal.TextFaint)
+					}
+				})
+			}
+		})
+	})
+}

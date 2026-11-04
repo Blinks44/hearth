@@ -80,8 +80,8 @@ func TestResolve(t *testing.T) {
 			wantTerminal: "/fnm/20.18.1/bin/node", wantInstalled: []string{"/fnm/20.18.1/bin/node"}, wantMet: []bool{true},
 		},
 		{
-			name: "fnm would switch to a version not installed", tool: fnmOnCD, reqs: []Requirement{nvmrc("18")},
-			wantInstalled: []string{""}, wantMet: []bool{false},
+			name: "fnm without the version leaves the one in use", tool: fnmOnCD, reqs: []Requirement{nvmrc("18")},
+			wantTerminal: "/brew/23.3.0/bin/node", wantInstalled: []string{""}, wantMet: []bool{false},
 		},
 		{
 			name: "engines alone leave the terminal on PATH", tool: fnmOnCD, reqs: []Requirement{engines(">=18 <21")},
@@ -101,7 +101,7 @@ func TestResolve(t *testing.T) {
 		},
 		{
 			name: "lts/* without the release lines meets nothing", tool: fnmOnCD, reqs: []Requirement{nvmrc("lts/*")},
-			wantInstalled: []string{""}, wantMet: []bool{false},
+			wantTerminal: "/brew/23.3.0/bin/node", wantInstalled: []string{""}, wantMet: []bool{false},
 		},
 		{
 			name: "system is a copy no version manager keeps", tool: fnmOnCD, reqs: []Requirement{engines("system")},

@@ -25,9 +25,9 @@ type language struct {
 }
 
 var (
-	overview = page{"/overview", "lucide/layout-dashboard", locales.OverviewTitle, locales.OverviewSubtitle}
-	projects = page{"/projects", "lucide/folder-git-2", locales.ProjectsTitle, locales.ProjectsSubtitle}
-	settings = page{"/settings", "lucide/settings", locales.SettingsTitle, name("Hearth")}
+	overview     = page{"/overview", "lucide/layout-dashboard", locales.OverviewTitle, locales.OverviewSubtitle}
+	projectsPage = page{"/projects", "lucide/folder-git-2", locales.ProjectsTitle, locales.ProjectsSubtitle}
+	settings     = page{"/settings", "lucide/settings", locales.SettingsTitle, name("Hearth")}
 
 	languages = []language{
 		{"node", page{"/tools/node", "brand/nodedotjs", name("Node.js"), locales.SectionLanguagesJavaScript}},
@@ -66,7 +66,7 @@ var (
 
 // pages lists every page, for the router.
 func pages() []page {
-	all := []page{overview, projects}
+	all := []page{overview, projectsPage}
 	for _, l := range languages {
 		all = append(all, l.page)
 	}
