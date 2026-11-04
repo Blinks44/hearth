@@ -1,48 +1,130 @@
 {
   "@@locale": "en",
   "overviewTitle": "Overview",
-  "@overviewTitle": { "description": "Sidebar item and header of the overview page." },
+  "@overviewTitle": {
+    "description": "Sidebar item and header of the overview page."
+  },
   "overviewSubtitle": "Your whole developer environment on this computer",
-  "@overviewSubtitle": { "description": "Under the overview page's title." },
+  "@overviewSubtitle": {
+    "description": "Under the overview page's title."
+  },
   "projectsTitle": "Projects",
-  "@projectsTitle": { "description": "Sidebar item and header of the projects page." },
+  "@projectsTitle": {
+    "description": "Sidebar item and header of the projects page."
+  },
   "projectsSubtitle": "Code folders Hearth checks",
-  "@projectsSubtitle": { "description": "Under the projects page's title." },
+  "@projectsSubtitle": {
+    "description": "Under the projects page's title."
+  },
   "settingsTitle": "Settings",
-  "@settingsTitle": { "description": "Sidebar item and header of the settings page." },
+  "@settingsTitle": {
+    "description": "Sidebar item and header of the settings page."
+  },
   "sectionLanguages": "Languages & runtimes",
-  "@sectionLanguages": { "description": "Sidebar section of programming languages, and the subtitle of their pages." },
+  "@sectionLanguages": {
+    "description": "Sidebar section of programming languages, and the subtitle of their pages."
+  },
   "sectionLanguagesJavaScript": "Languages & runtimes · JavaScript",
-  "@sectionLanguagesJavaScript": { "description": "Subtitle of the Node.js, Bun and Deno pages." },
+  "@sectionLanguagesJavaScript": {
+    "description": "Subtitle of the Node.js, Bun and Deno pages."
+  },
   "sectionTools": "Tools",
-  "@sectionTools": { "description": "Sidebar section of developer tools, and the subtitle of their pages." },
+  "@sectionTools": {
+    "description": "Sidebar section of developer tools, and the subtitle of their pages."
+  },
   "sectionToolsJavaScript": "Tools · JavaScript",
-  "@sectionToolsJavaScript": { "description": "Subtitle of the npm, pnpm and Yarn page." },
+  "@sectionToolsJavaScript": {
+    "description": "Subtitle of the npm, pnpm and Yarn page."
+  },
   "sectionToolsContainers": "Tools · containers",
-  "@sectionToolsContainers": { "description": "Subtitle of the Docker page." },
+  "@sectionToolsContainers": {
+    "description": "Subtitle of the Docker page."
+  },
   "sectionAI": "AI",
-  "@sectionAI": { "description": "Sidebar section of AI agents, skills and MCP servers." },
+  "@sectionAI": {
+    "description": "Sidebar section of AI agents, skills and MCP servers."
+  },
   "sectionSystem": "System",
-  "@sectionSystem": { "description": "Sidebar section of package managers and PATH." },
+  "@sectionSystem": {
+    "description": "Sidebar section of package managers and PATH."
+  },
   "databasesTitle": "Databases",
-  "@databasesTitle": { "description": "Sidebar item and header of the databases page." },
+  "@databasesTitle": {
+    "description": "Sidebar item and header of the databases page."
+  },
   "agentsTitle": "Agents",
-  "@agentsTitle": { "description": "Sidebar item and header of the AI agents page." },
+  "@agentsTitle": {
+    "description": "Sidebar item and header of the AI agents page."
+  },
   "skillsTitle": "Skills",
-  "@skillsTitle": { "description": "Sidebar item and header of the agent skills page." },
+  "@skillsTitle": {
+    "description": "Sidebar item and header of the agent skills page."
+  },
   "packageManagersTitle": "Package managers",
-  "@packageManagersTitle": { "description": "Sidebar item and header of the OS package managers page (Homebrew, winget, apt)." },
+  "@packageManagersTitle": {
+    "description": "Sidebar item and header of the OS package managers page (Homebrew, winget, apt)."
+  },
   "pathTitle": "PATH & variables",
-  "@pathTitle": { "description": "Sidebar item and header of the page of PATH and environment variables." },
+  "@pathTitle": {
+    "description": "Sidebar item and header of the page of PATH and environment variables."
+  },
   "moreLanguages": "{count, plural, one {# more language} other {# more languages}}",
   "@moreLanguages": {
     "description": "Sidebar item that shows the languages not found on this computer.",
-    "placeholders": { "count": { "type": "int", "example": "6" } }
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "6"
+      }
+    }
   },
   "comingSoon": "Coming soon",
-  "@comingSoon": { "description": "A page not built yet." },
+  "@comingSoon": {
+    "description": "A page not built yet."
+  },
   "scan": "Scan",
-  "@scan": { "description": "Header button that checks the computer again." },
+  "@scan": {
+    "description": "Header button that checks the computer again."
+  },
   "notChecked": "Not checked yet",
-  "@notChecked": { "description": "Sidebar footer before the first check of the computer." }
+  "@notChecked": {
+    "description": "Sidebar footer before the first check of the computer."
+  },
+  "checking": "Checking…",
+  "@checking": {
+    "description": "Sidebar footer while a scan is under way."
+  },
+  "checkedJustNow": "Checked just now",
+  "@checkedJustNow": {
+    "description": "Sidebar footer: the last scan ended less than a minute ago."
+  },
+  "checkedMinutesAgo": "Checked {minutes} min ago",
+  "@checkedMinutesAgo": {
+    "description": "Sidebar footer: when the last scan ended.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "checkedHoursAgo": "Checked {hours} h ago",
+  "@checkedHoursAgo": {
+    "description": "Sidebar footer: when the last scan ended.",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "checkedOn": "Checked {date, date, ::MMMd}",
+  "@checkedOn": {
+    "description": "Sidebar footer: the day of the last scan, a day ago or more.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime"
+      }
+    }
+  }
 }

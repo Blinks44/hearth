@@ -2,6 +2,8 @@
 // detectors fill and the UI shows. It does no I/O.
 package inventory
 
+import "time"
+
 // Kind tells what put an installation on the machine.
 type Kind int
 
@@ -68,4 +70,23 @@ type ToolState struct {
 	// Installations come in the terminal's PATH order first, then the GUI's,
 	// then the ones only a manager's directory holds.
 	Installations []Installation
+	// Err says why the tool could not be checked; empty when it was.
+	Err string `json:",omitempty"`
+}
+
+// Snapshot is what one scan found on the computer.
+type Snapshot struct {
+	Taken time.Time
+	Tools []ToolState
+}
+
+// Tool returns the state of the tool by its ID, as "node", and whether the
+// scan checked it.
+func (s *Snapshot) Tool(id string) (ToolState, bool) {
+	for _, t := range s.Tools {
+		if t.Tool == id {
+			return t, true
+		}
+	}
+	return ToolState{}, false
 }

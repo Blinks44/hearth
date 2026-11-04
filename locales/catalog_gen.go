@@ -4,6 +4,7 @@ package locales
 
 import (
 	"embed"
+	"time"
 
 	"github.com/egoist/mygo/i18n"
 )
@@ -327,4 +328,74 @@ func NotChecked() string { return In(i18n.Locale()).NotChecked() }
 // Sidebar footer before the first check of the computer.
 func (msgs Messages) NotChecked() string {
 	return Catalog.Format(msgs.locale, "notChecked", nil)
+}
+
+// Checking says "Checking…"
+// in the language the app shows.
+//
+// Sidebar footer while a scan is under way.
+func Checking() string { return In(i18n.Locale()).Checking() }
+
+// Checking says "Checking…"
+// in the language of msgs.
+//
+// Sidebar footer while a scan is under way.
+func (msgs Messages) Checking() string {
+	return Catalog.Format(msgs.locale, "checking", nil)
+}
+
+// CheckedJustNow says "Checked just now"
+// in the language the app shows.
+//
+// Sidebar footer: the last scan ended less than a minute ago.
+func CheckedJustNow() string { return In(i18n.Locale()).CheckedJustNow() }
+
+// CheckedJustNow says "Checked just now"
+// in the language of msgs.
+//
+// Sidebar footer: the last scan ended less than a minute ago.
+func (msgs Messages) CheckedJustNow() string {
+	return Catalog.Format(msgs.locale, "checkedJustNow", nil)
+}
+
+// CheckedMinutesAgo says "Checked {minutes} min ago"
+// in the language the app shows.
+//
+// Sidebar footer: when the last scan ended.
+func CheckedMinutesAgo(minutes int) string { return In(i18n.Locale()).CheckedMinutesAgo(minutes) }
+
+// CheckedMinutesAgo says "Checked {minutes} min ago"
+// in the language of msgs.
+//
+// Sidebar footer: when the last scan ended.
+func (msgs Messages) CheckedMinutesAgo(minutes int) string {
+	return Catalog.Format(msgs.locale, "checkedMinutesAgo", map[string]any{"minutes": minutes})
+}
+
+// CheckedHoursAgo says "Checked {hours} h ago"
+// in the language the app shows.
+//
+// Sidebar footer: when the last scan ended.
+func CheckedHoursAgo(hours int) string { return In(i18n.Locale()).CheckedHoursAgo(hours) }
+
+// CheckedHoursAgo says "Checked {hours} h ago"
+// in the language of msgs.
+//
+// Sidebar footer: when the last scan ended.
+func (msgs Messages) CheckedHoursAgo(hours int) string {
+	return Catalog.Format(msgs.locale, "checkedHoursAgo", map[string]any{"hours": hours})
+}
+
+// CheckedOn says "Checked {date, date, ::MMMd}"
+// in the language the app shows.
+//
+// Sidebar footer: the day of the last scan, a day ago or more.
+func CheckedOn(date time.Time) string { return In(i18n.Locale()).CheckedOn(date) }
+
+// CheckedOn says "Checked {date, date, ::MMMd}"
+// in the language of msgs.
+//
+// Sidebar footer: the day of the last scan, a day ago or more.
+func (msgs Messages) CheckedOn(date time.Time) string {
+	return Catalog.Format(msgs.locale, "checkedOn", map[string]any{"date": date})
 }

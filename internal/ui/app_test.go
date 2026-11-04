@@ -7,6 +7,7 @@ import (
 	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -14,7 +15,7 @@ import (
 // languages not found wait under "N more languages".
 func TestSidebarOpensPages(t *testing.T) {
 	a := NewApp()
-	a.Languages = []string{"node", "bun", "python", "php"}
+	a.Snapshot = found("node", "bun", "python", "php")
 	// Tall enough for every item without scrolling the sidebar.
 	tt := ui.NewTester(a.View, 1280, 1100)
 	if tt.HasText("Rust") {
@@ -75,9 +76,11 @@ func TestShellInRussian(t *testing.T) {
 	i18n.SetLocaleFunc(func() string { return "ru" })
 	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
 	a := NewApp()
-	a.Languages = []string{"node", "bun", "python", "php"}
+	a.Snapshot = found("node", "bun", "python", "php")
 	tt := ui.NewTester(a.View, 1280, 820)
-	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Ещё 6 языков", "Сканировать", "Ещё не проверено"} {
+	a.Snapshot.Taken = tt.Now().Add(-5 * time.Minute)
+	tt.Frame()
+	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Ещё 6 языков", "Сканировать", "Проверено 5 мин назад"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
@@ -93,5 +96,53 @@ func TestShellInRussian(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.router.Title() != "Проекты" || !tt.HasText("Скоро") {
 		t.Errorf("title %q, texts %q", a.router.Title(), tt.Texts())
+	}
+}
+
+// found is a snapshot that found the tools by their IDs.
+func found(tools ...string) *inventory.Snapshot {
+	s := &inventory.Snapshot{}
+	for _, id := range tools {
+		s.Tools = append(s.Tools, inventory.ToolState{Tool: id, Installations: []inventory.Installation{{Tool: id}}})
+	}
+	return s
+}
+
+// Scan starts one scan at a time, and the footer says it is under way,
+// then how long ago it ended, as the clock goes on.
+func TestScanStatus(t *testing.T) {
+	a := NewApp()
+	scans := 0
+	a.OnScan = func() { scans++ }
+	tt := ui.NewTester(a.View, 1280, 820)
+	if !tt.HasText("Not checked yet") {
+		t.Fatalf("texts %q", tt.Texts())
+	}
+	for range 2 {
+		if err := tt.Click("Scan"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if scans != 1 || !a.Scanning || !tt.HasText("Checking…") {
+		t.Errorf("%d scans, scanning %v, texts %q", scans, a.Scanning, tt.Texts())
+	}
+
+	// The scan's snapshot arrives, as Window.Update gives it.
+	a.Snapshot, a.Scanning = found("node"), false
+	a.Snapshot.Taken = tt.Now().Add(-90 * time.Second)
+	tt.Frame()
+	if !tt.HasText("Checked 1 min ago") || !tt.HasText("Node.js") {
+		t.Errorf("texts %q", tt.Texts())
+	}
+	tt.Advance(time.Minute)
+	if !tt.HasText("Checked 2 min ago") {
+		t.Errorf("a minute on, texts %q", tt.Texts())
+	}
+	tt.Advance(3 * time.Hour)
+	if !tt.HasText("Checked 3 h ago") {
+		t.Errorf("hours on, texts %q", tt.Texts())
+	}
+	if err := tt.Click("Scan"); err != nil || scans != 2 {
+		t.Errorf("scan again: %v, %d scans", err, scans)
 	}
 }

@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -10,10 +13,13 @@ import (
 type App struct {
 	// Machine is the caption under the logo, as "studio · macOS 15.4".
 	Machine string
-	// Languages are the IDs of the languages found on this computer, as
-	// "node": the sidebar lists them and hides the rest under "N more
-	// languages".
-	Languages []string
+	// Snapshot is what the last scan found; nil before the first.
+	Snapshot *inventory.Snapshot
+	// Scanning reports a scan under way.
+	Scanning bool
+	// OnScan starts a scan, whose snapshot comes back through
+	// Window.Update; nil disables scanning.
+	OnScan func()
 
 	router   *ui.Router
 	moreOpen bool // the languages not found show in the sidebar
@@ -51,10 +57,18 @@ func (a *App) View(c *ui.Context) {
 	})
 }
 
+// scan starts a scan from the header or the sidebar.
+func (a *App) scan() {
+	if a.OnScan != nil && !a.Scanning {
+		a.Scanning = true
+		a.OnScan()
+	}
+}
+
 // stub is a page still to be built: its header and "Coming soon".
 func (a *App) stub(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		header(c, p.title(), p.subtitle())
+		a.header(c, p.title(), p.subtitle())
 		ui.Column(c).Grow(1).Center().Gap(8).Children(func() {
 			ui.Icon(c, mustIcon(p.icon)).Size(28, 28).TextColor(Colors(c.Theme()).TextFaint)
 			ui.Text(c, locales.ComingSoon()).TextColor(c.Theme().TextMuted)
@@ -65,7 +79,7 @@ func (a *App) stub(c *ui.Context, p page) {
 // header is the top of a page: its title and subtitle, and on the right
 // its actions. It drags the window, and keeps clear of the window
 // controls on Windows and Linux.
-func header(c *ui.Context, title, subtitle string) {
+func (a *App) header(c *ui.Context, title, subtitle string) {
 	t := c.Theme()
 	right := float32(20)
 	if bar := c.TitleBar(); bar.Right > 0 {
@@ -77,8 +91,7 @@ func header(c *ui.Context, title, subtitle string) {
 			ui.Text(c, title).FontSize(15).FontWeight(600).SingleLine()
 			ui.Text(c, subtitle).FontSize(11.5).TextColor(Colors(t).TextFaint).SingleLine()
 		})
-		// Scanning comes with the snapshot service (S2-05).
-		ui.Button(c, "").Disabled(true).Children(func() {
+		ui.Button(c, "").Disabled(a.OnScan == nil || a.Scanning).OnClick(a.scan).Children(func() {
 			ui.Icon(c, Icon("refresh-cw")).Size(14, 14).TextColor(t.TextMuted)
 			ui.Text(c, locales.Scan()).SingleLine()
 		})
@@ -118,11 +131,52 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		})
 		ui.Box(c).Height(1).Shrink(0).Margin(12, 0, 4, 0).Background(pal.Divider)
 		a.item(c, settings)
-		ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(6, 8, 2, 9).Children(func() {
-			ui.Box(c).Size(6, 6).Radius(3).Background(pal.TextFaint)
-			ui.Text(c, locales.NotChecked()).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		a.status(c)
+	})
+}
+
+// status tells when the computer was last checked, with a button that
+// checks it again.
+func (a *App) status(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	dot, text := pal.TextFaint, locales.NotChecked()
+	switch {
+	case a.Scanning:
+		dot, text = pal.Info, locales.Checking()
+	case a.Snapshot != nil:
+		dot, text = t.Success, checked(c, a.Snapshot.Taken)
+	}
+	ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(2, 2, 0, 9).Children(func() {
+		ui.Box(c).Size(6, 6).Radius(3).Background(dot)
+		ui.Text(c, text).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		again := ui.ButtonBase(c.Key("scan-again")).Size(24, 24).Radius(6).Center().
+			Label(locales.Scan()).Tooltip(locales.Scan()).Disabled(a.OnScan == nil || a.Scanning).OnClick(a.scan)
+		if again.Hovered() {
+			again.Background(pal.SidebarHover)
+		}
+		again.Children(func() {
+			ui.Icon(c, Icon("refresh-cw")).Size(12, 12).TextColor(pal.TextFaint)
 		})
 	})
+}
+
+// checked says how long ago taken was, and asks for a frame when the text
+// would change.
+func checked(c *ui.Context, taken time.Time) string {
+	ago := c.Now().Sub(taken)
+	switch {
+	case ago < time.Minute:
+		c.After(time.Minute - ago)
+		return locales.CheckedJustNow()
+	case ago < time.Hour:
+		c.After(time.Minute - ago%time.Minute)
+		return locales.CheckedMinutesAgo(int(ago / time.Minute))
+	case ago < 24*time.Hour:
+		c.After(time.Hour - ago%time.Hour)
+		return locales.CheckedHoursAgo(int(ago / time.Hour))
+	}
+	return locales.CheckedOn(taken)
 }
 
 // languages is the "Languages & runtimes" section: the languages found,
@@ -130,13 +184,9 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 // languages".
 func (a *App) languages(c *ui.Context) {
 	sectionTitle(c, locales.SectionLanguages())
-	found := map[string]bool{}
-	for _, id := range a.Languages {
-		found[id] = true
-	}
 	var rest []page
 	for _, l := range languages {
-		if found[l.id] || within(a.router.Path(), l.path) {
+		if a.found(l.id) || within(a.router.Path(), l.path) {
 			a.item(c, l.page)
 		} else {
 			rest = append(rest, l.page)
@@ -163,6 +213,15 @@ func (a *App) languages(c *ui.Context) {
 			a.item(c, p)
 		}
 	}
+}
+
+// found reports whether the last scan found the tool on this computer.
+func (a *App) found(tool string) bool {
+	if a.Snapshot == nil {
+		return false
+	}
+	st, _ := a.Snapshot.Tool(tool)
+	return len(st.Installations) > 0
 }
 
 // item is a sidebar entry going to page p; it stands out while p is shown.

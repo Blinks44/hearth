@@ -20,5 +20,10 @@
   "moreLanguages": "{count, plural, one {Ещё # язык} few {Ещё # языка} many {Ещё # языков} other {Ещё # языка}}",
   "comingSoon": "Скоро",
   "scan": "Сканировать",
-  "notChecked": "Ещё не проверено"
+  "notChecked": "Ещё не проверено",
+  "checking": "Проверяется…",
+  "checkedJustNow": "Проверено только что",
+  "checkedMinutesAgo": "Проверено {minutes} мин назад",
+  "checkedHoursAgo": "Проверено {hours} ч назад",
+  "checkedOn": "Проверено {date, date, ::MMMd}"
 }

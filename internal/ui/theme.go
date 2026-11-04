@@ -43,6 +43,7 @@ type Palette struct {
 	SidebarChosen ui.Color // the sidebar item of the page shown
 	Divider       ui.Color // lines between areas
 	TextFaint     ui.Color // captions, counters, placeholders
+	Info          ui.Color // a check under way
 	Shadow        ui.Color // raised elements: chosen item, buttons
 }
 
@@ -55,6 +56,7 @@ func Colors(t *ui.Theme) Palette {
 			SidebarChosen: ui.Hex("#36332E"),
 			Divider:       ui.Hex("#34312C"),
 			TextFaint:     ui.Hex("#7D776E"),
+			Info:          ui.Hex("#5B8EF0"),
 			Shadow:        ui.RGBA(0, 0, 0, 0.24),
 		}
 	}
@@ -64,6 +66,7 @@ func Colors(t *ui.Theme) Palette {
 		SidebarChosen: ui.Hex("#FFFFFF"),
 		Divider:       ui.Hex("#E8E5E0"),
 		TextFaint:     ui.Hex("#9D988F"),
+		Info:          ui.Hex("#3A73DA"),
 		Shadow:        ui.RGBA(0x2A, 0x1E, 0x10, 0.08),
 	}
 }
