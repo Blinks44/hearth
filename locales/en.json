@@ -1556,5 +1556,85 @@
         "example": "5"
       }
     }
+  },
+  "copiesCount": "{count, plural, one {# copy} other {# copies}}",
+  "@copiesCount": {
+    "description": "Tool page card: how many copies of a tool with one version line are installed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "sourceScript": "script",
+  "@sourceScript": {
+    "description": "Source of a copy put in place by the tool's official install script, as Bun's ~/.bun."
+  },
+  "copyShadowed": "The copy from {source} ({version}) is not used: {dir} comes first in PATH.",
+  "@copyShadowed": {
+    "description": "Warning on a tool page: a second copy in the terminal's PATH is never run.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "npm"
+      },
+      "version": {
+        "type": "String",
+        "example": "v1.1.30"
+      },
+      "dir": {
+        "type": "String",
+        "example": "~/.bun/bin"
+      }
+    }
+  },
+  "bunScriptInstalled": "Installed by the official script in {dir}",
+  "@bunScriptInstalled": {
+    "description": "Subtitle of the Bun page when the copy in use came from bun.sh/install.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.bun"
+      }
+    }
+  },
+  "bunUpgradeNote": "Bun updates itself with bun upgrade.",
+  "@bunUpgradeNote": {
+    "description": "Note under Bun's table when a copy came from the install script."
+  },
+  "bunNpmNote": "The copy from npm lives inside a Node.js version: it is removed with npm -g and goes away with that Node version.",
+  "@bunNpmNote": {
+    "description": "Note under Bun's table when a copy came from npm."
+  },
+  "channelStable": "stable",
+  "@channelStable": {
+    "description": "Release channel of a stable Bun version."
+  },
+  "bunCanary": "daily build · bun upgrade --canary",
+  "@bunCanary": {
+    "description": "Caption of Bun's canary channel among the versions available."
+  },
+  "installScriptTitle": "Install · script",
+  "@installScriptTitle": {
+    "description": "Title of the card about a tool installed by its official script."
+  },
+  "installFolder": "Install folder",
+  "@installFolder": {
+    "description": "Row of the install card: where the tool lies."
+  },
+  "addedToPath": "Added to PATH",
+  "@addedToPath": {
+    "description": "Row of the install card: the directory the terminal finds the tool in."
+  },
+  "pathLineIn": "a line in {file}",
+  "@pathLineIn": {
+    "description": "Caption: the startup file whose line adds the directory to PATH.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
   }
 }

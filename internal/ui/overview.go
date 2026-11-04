@@ -267,17 +267,21 @@ func (a *App) projectsNeeding(tool string) int {
 	return n
 }
 
-// toolLogo is a tool's logo on a tile of size: Node's in its green.
+// toolLogo is a tool's logo on a tile of size: Node's in its green, Bun's
+// dark on the same tile, as the design has it.
 func toolLogo(c *ui.Context, tool string, size float32) {
 	t := c.Theme()
 	pal := Colors(t)
 	bg, border, color := pal.Subtle, pal.Line, t.TextMuted
-	if tool == "node" {
+	if tool == "node" || tool == "bun" {
 		tile := nodeTile[0]
 		if t.Dark {
 			tile = nodeTile[1]
 		}
 		bg, border, color = tile.bg, tile.border, nodeGreen
+		if tool == "bun" {
+			color = t.Text
+		}
 	}
 	ui.Box(c).Size(size, size).Shrink(0).Radius(size / 4).Center().Background(bg).
 		BorderWidth(1).BorderColor(border).Children(func() {

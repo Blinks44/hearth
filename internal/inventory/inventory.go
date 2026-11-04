@@ -24,7 +24,8 @@ const (
 // Source is where an installation came from.
 type Source struct {
 	Kind Kind
-	// Manager names the manager: "brew", "fnm", "nvm-windows", ...; empty
+	// Manager names the manager: "brew", "fnm", "nvm-windows", ...;
+	// ScriptInstall for a tool's official install script, as Bun's; empty
 	// for an installer, and for the system until its package is known.
 	Manager string
 	// Root is the directory the manager keeps this installation in, like
@@ -37,6 +38,10 @@ type Source struct {
 	// run, so the path alone does not tell which one.
 	Shim bool
 }
+
+// ScriptInstall is the Manager of a copy the tool's official install
+// script put in its own directory, as ~/.bun.
+const ScriptInstall = "script"
 
 // PathRank is a position in a PATH, counting from 1; 0 is not on it.
 type PathRank int
@@ -60,6 +65,10 @@ type Installation struct {
 	// Corepack reports that Corepack's pnpm and yarn sit next to the copy,
 	// as corepack enable puts them.
 	Corepack bool `json:",omitempty"`
+	// PathFile is the shell startup file that puts the copy's directory on
+	// the terminal's PATH, as ~/.zshrc for Bun's install script; empty when
+	// not known.
+	PathFile string `json:",omitempty"`
 }
 
 // Package is a package by name and version.

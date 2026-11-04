@@ -21,36 +21,8 @@ import (
 // the path names one, else from node --version; a shim's stays unknown,
 // since running one may pick or fetch a version.
 func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
-	state := inventory.ToolState{Tool: "node"}
-	byReal := map[string]int{}
-	add := func(path string) *inventory.Installation {
-		real, err := filepath.EvalSymlinks(path)
-		if err != nil {
-			real = path
-		}
-		if i, ok := byReal[real]; ok {
-			return &state.Installations[i]
-		}
-		byReal[real] = len(state.Installations)
-		state.Installations = append(state.Installations, inventory.Installation{
-			Tool:     "node",
-			Path:     path,
-			RealPath: real,
-			Source:   sources.Classify(path, real, term),
-		})
-		return &state.Installations[len(state.Installations)-1]
-	}
-
-	for i, p := range sysenv.LookPathAll(nodeExe, term) {
-		if in := add(p); in.OnPath == 0 {
-			in.OnPath = inventory.PathRank(i + 1)
-		}
-	}
-	for i, p := range sysenv.LookPathAll(nodeExe, gui) {
-		if in := add(p); in.InGUI == 0 {
-			in.InGUI = inventory.PathRank(i + 1)
-		}
-	}
+	f := newFinder("node", term)
+	f.lookPath(nodeExe, term, gui)
 	dirs := sources.ManagerDirs(term)
 	for _, pattern := range nodeGlobs(dirs) {
 		matches, _ := filepath.Glob(pattern) // only a malformed pattern fails
@@ -58,11 +30,12 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 			// A manager's alias directory, like mise's installs/node/22,
 			// leads to the version's own; name the copy by that.
 			if real, err := filepath.EvalSymlinks(m); err == nil {
-				add(real)
+				f.add(real)
 			}
 		}
 	}
 
+	state := inventory.ToolState{Tool: "node", Installations: f.ins}
 	installed := map[string][]string{}
 	for i := range state.Installations {
 		in := &state.Installations[i]
@@ -71,7 +44,7 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		}
 		in.Version = pathVersion(in.Source.Version)
 		if in.Version == "" {
-			in.Version = nodeVersion(ctx, r, term, in.RealPath)
+			in.Version = versionOf(ctx, r, term, in.RealPath)
 		}
 		in.Packages = globalPackages(nodeModules(in.Path))
 		in.Corepack = corepackEnabled(in.Path, in.RealPath)
@@ -88,6 +61,53 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 	}
 	state.Managers = nodeManagers(state.Installations, term, dirs.Home)
 	return state, ctx.Err()
+}
+
+// finder collects a tool's copies: a copy two paths lead to is one.
+type finder struct {
+	tool   string
+	env    sysenv.Env // gives the home and the managers' directories
+	ins    []inventory.Installation
+	byReal map[string]int
+}
+
+func newFinder(tool string, env sysenv.Env) *finder {
+	return &finder{tool: tool, env: env, byReal: map[string]int{}}
+}
+
+// add returns the copy at path, adding it when no copy so far has its
+// real path.
+func (f *finder) add(path string) *inventory.Installation {
+	real, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		real = path
+	}
+	if i, ok := f.byReal[real]; ok {
+		return &f.ins[i]
+	}
+	f.byReal[real] = len(f.ins)
+	f.ins = append(f.ins, inventory.Installation{
+		Tool:     f.tool,
+		Path:     path,
+		RealPath: real,
+		Source:   sources.Classify(path, real, f.env),
+	})
+	return &f.ins[len(f.ins)-1]
+}
+
+// lookPath adds the copies of exe on the terminal's PATH (term) and the
+// GUI's (gui), with their ranks there.
+func (f *finder) lookPath(exe string, term, gui sysenv.Env) {
+	for i, p := range sysenv.LookPathAll(exe, term) {
+		if in := f.add(p); in.OnPath == 0 {
+			in.OnPath = inventory.PathRank(i + 1)
+		}
+	}
+	for i, p := range sysenv.LookPathAll(exe, gui) {
+		if in := f.add(p); in.InGUI == 0 {
+			in.InGUI = inventory.PathRank(i + 1)
+		}
+	}
 }
 
 // nodeGlobs are where version managers keep Node versions, one match per
@@ -119,8 +139,9 @@ func pathVersion(v string) string {
 	return v
 }
 
-// nodeVersion asks the node at path its version; "" when it cannot tell.
-func nodeVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
+// versionOf asks the program at path its version, by --version, as
+// node's v22.12.0 or bun's 1.2.5; "" when it cannot tell.
+func versionOf(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
 	res, err := r.Run(ctx, run.Cmd{Args: []string{path, "--version"}, Env: env})
 	if err != nil || res.ExitCode != 0 {
 		return ""

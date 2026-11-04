@@ -29,6 +29,10 @@ type App struct {
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
 	NodeVersionsErr string
+	// BunLatest is Bun's newest stable version, as the npm registry says;
+	// nil until it comes, or when it could not, BunLatestErr says why.
+	BunLatest    *versions.Latest
+	BunLatestErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -51,6 +55,7 @@ type App struct {
 	router        *ui.Router
 	moreOpen      bool    // the languages not found show in the sidebar
 	nodeTab       int     // the tab of the Node.js page shown
+	bunTab        int     // the tab of the Bun page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
 	adding        *adding // the folder the add dialog shows; nil when closed
@@ -103,6 +108,8 @@ func (a *App) View(c *ui.Context) {
 					switch p.path {
 					case "/tools/node":
 						a.node(c, p)
+					case "/tools/bun":
+						a.bun(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
 					case overview.path:

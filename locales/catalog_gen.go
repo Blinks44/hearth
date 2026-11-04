@@ -3753,3 +3753,179 @@ func HeroFoundAll(tools int, agents int) string { return In(i18n.Locale()).HeroF
 func (msgs Messages) HeroFoundAll(tools int, agents int) string {
 	return Catalog.Format(msgs.locale, "heroFoundAll", map[string]any{"tools": tools, "agents": agents})
 }
+
+// CopiesCount says "{count, plural, one {# copy} other {# copies}}"
+// in the language the app shows.
+//
+// Tool page card: how many copies of a tool with one version line are
+// installed.
+func CopiesCount(count int) string { return In(i18n.Locale()).CopiesCount(count) }
+
+// CopiesCount says "{count, plural, one {# copy} other {# copies}}"
+// in the language of msgs.
+//
+// Tool page card: how many copies of a tool with one version line are
+// installed.
+func (msgs Messages) CopiesCount(count int) string {
+	return Catalog.Format(msgs.locale, "copiesCount", map[string]any{"count": count})
+}
+
+// SourceScript says "script"
+// in the language the app shows.
+//
+// Source of a copy put in place by the tool's official install script, as
+// Bun's ~/.bun.
+func SourceScript() string { return In(i18n.Locale()).SourceScript() }
+
+// SourceScript says "script"
+// in the language of msgs.
+//
+// Source of a copy put in place by the tool's official install script, as
+// Bun's ~/.bun.
+func (msgs Messages) SourceScript() string {
+	return Catalog.Format(msgs.locale, "sourceScript", nil)
+}
+
+// CopyShadowed says "The copy from {source} ({version}) is not used: {dir} comes first in PATH."
+// in the language the app shows.
+//
+// Warning on a tool page: a second copy in the terminal's PATH is never
+// run.
+func CopyShadowed(source string, version string, dir string) string {
+	return In(i18n.Locale()).CopyShadowed(source, version, dir)
+}
+
+// CopyShadowed says "The copy from {source} ({version}) is not used: {dir} comes first in PATH."
+// in the language of msgs.
+//
+// Warning on a tool page: a second copy in the terminal's PATH is never
+// run.
+func (msgs Messages) CopyShadowed(source string, version string, dir string) string {
+	return Catalog.Format(msgs.locale, "copyShadowed", map[string]any{"source": source, "version": version, "dir": dir})
+}
+
+// BunScriptInstalled says "Installed by the official script in {dir}"
+// in the language the app shows.
+//
+// Subtitle of the Bun page when the copy in use came from bun.sh/install.
+func BunScriptInstalled(dir string) string { return In(i18n.Locale()).BunScriptInstalled(dir) }
+
+// BunScriptInstalled says "Installed by the official script in {dir}"
+// in the language of msgs.
+//
+// Subtitle of the Bun page when the copy in use came from bun.sh/install.
+func (msgs Messages) BunScriptInstalled(dir string) string {
+	return Catalog.Format(msgs.locale, "bunScriptInstalled", map[string]any{"dir": dir})
+}
+
+// BunUpgradeNote says "Bun updates itself with bun upgrade."
+// in the language the app shows.
+//
+// Note under Bun's table when a copy came from the install script.
+func BunUpgradeNote() string { return In(i18n.Locale()).BunUpgradeNote() }
+
+// BunUpgradeNote says "Bun updates itself with bun upgrade."
+// in the language of msgs.
+//
+// Note under Bun's table when a copy came from the install script.
+func (msgs Messages) BunUpgradeNote() string {
+	return Catalog.Format(msgs.locale, "bunUpgradeNote", nil)
+}
+
+// BunNpmNote says "The copy from npm lives inside a Node.js version: it is removed with npm -g and goes away with that Node version."
+// in the language the app shows.
+//
+// Note under Bun's table when a copy came from npm.
+func BunNpmNote() string { return In(i18n.Locale()).BunNpmNote() }
+
+// BunNpmNote says "The copy from npm lives inside a Node.js version: it is removed with npm -g and goes away with that Node version."
+// in the language of msgs.
+//
+// Note under Bun's table when a copy came from npm.
+func (msgs Messages) BunNpmNote() string {
+	return Catalog.Format(msgs.locale, "bunNpmNote", nil)
+}
+
+// ChannelStable says "stable"
+// in the language the app shows.
+//
+// Release channel of a stable Bun version.
+func ChannelStable() string { return In(i18n.Locale()).ChannelStable() }
+
+// ChannelStable says "stable"
+// in the language of msgs.
+//
+// Release channel of a stable Bun version.
+func (msgs Messages) ChannelStable() string {
+	return Catalog.Format(msgs.locale, "channelStable", nil)
+}
+
+// BunCanary says "daily build · bun upgrade --canary"
+// in the language the app shows.
+//
+// Caption of Bun's canary channel among the versions available.
+func BunCanary() string { return In(i18n.Locale()).BunCanary() }
+
+// BunCanary says "daily build · bun upgrade --canary"
+// in the language of msgs.
+//
+// Caption of Bun's canary channel among the versions available.
+func (msgs Messages) BunCanary() string {
+	return Catalog.Format(msgs.locale, "bunCanary", nil)
+}
+
+// InstallScriptTitle says "Install · script"
+// in the language the app shows.
+//
+// Title of the card about a tool installed by its official script.
+func InstallScriptTitle() string { return In(i18n.Locale()).InstallScriptTitle() }
+
+// InstallScriptTitle says "Install · script"
+// in the language of msgs.
+//
+// Title of the card about a tool installed by its official script.
+func (msgs Messages) InstallScriptTitle() string {
+	return Catalog.Format(msgs.locale, "installScriptTitle", nil)
+}
+
+// InstallFolder says "Install folder"
+// in the language the app shows.
+//
+// Row of the install card: where the tool lies.
+func InstallFolder() string { return In(i18n.Locale()).InstallFolder() }
+
+// InstallFolder says "Install folder"
+// in the language of msgs.
+//
+// Row of the install card: where the tool lies.
+func (msgs Messages) InstallFolder() string {
+	return Catalog.Format(msgs.locale, "installFolder", nil)
+}
+
+// AddedToPath says "Added to PATH"
+// in the language the app shows.
+//
+// Row of the install card: the directory the terminal finds the tool in.
+func AddedToPath() string { return In(i18n.Locale()).AddedToPath() }
+
+// AddedToPath says "Added to PATH"
+// in the language of msgs.
+//
+// Row of the install card: the directory the terminal finds the tool in.
+func (msgs Messages) AddedToPath() string {
+	return Catalog.Format(msgs.locale, "addedToPath", nil)
+}
+
+// PathLineIn says "a line in {file}"
+// in the language the app shows.
+//
+// Caption: the startup file whose line adds the directory to PATH.
+func PathLineIn(file string) string { return In(i18n.Locale()).PathLineIn(file) }
+
+// PathLineIn says "a line in {file}"
+// in the language of msgs.
+//
+// Caption: the startup file whose line adds the directory to PATH.
+func (msgs Messages) PathLineIn(file string) string {
+	return Catalog.Format(msgs.locale, "pathLineIn", map[string]any{"file": file})
+}

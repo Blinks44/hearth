@@ -27,6 +27,7 @@ type Detector struct {
 // Detectors are the ones Hearth runs.
 var Detectors = []Detector{
 	{"node", detect.Node},
+	{"bun", detect.Bun},
 }
 
 // parallel is how many detectors run at once: each may start commands.

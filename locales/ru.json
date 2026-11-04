@@ -260,5 +260,17 @@
   "noServers": "MCP-серверы не найдены",
   "skillsAndMcp": "Skills и MCP",
   "agentCounts": "{skills} skills · {mcp} MCP",
-  "heroFoundAll": "Найдено: {tools, plural, one {# инструмент} few {# инструмента} many {# инструментов} other {# инструмента}} и {agents, plural, one {# AI-агент} few {# AI-агента} many {# AI-агентов} other {# AI-агента}}."
+  "heroFoundAll": "Найдено: {tools, plural, one {# инструмент} few {# инструмента} many {# инструментов} other {# инструмента}} и {agents, plural, one {# AI-агент} few {# AI-агента} many {# AI-агентов} other {# AI-агента}}.",
+  "copiesCount": "{count, plural, one {# копия} few {# копии} many {# копий} other {# копии}}",
+  "sourceScript": "скрипт",
+  "copyShadowed": "Копия из {source} ({version}) не используется: {dir} стоит в PATH раньше.",
+  "bunScriptInstalled": "Установлен официальным скриптом в {dir}",
+  "bunUpgradeNote": "Bun обновляется командой bun upgrade.",
+  "bunNpmNote": "Копия из npm лежит внутри версии Node.js: она удаляется через npm -g и пропадёт вместе с этой версией Node.",
+  "channelStable": "stable",
+  "bunCanary": "ежедневная сборка · bun upgrade --canary",
+  "installScriptTitle": "Установка · скрипт",
+  "installFolder": "Папка установки",
+  "addedToPath": "Добавлен в PATH",
+  "pathLineIn": "строка в {file}"
 }

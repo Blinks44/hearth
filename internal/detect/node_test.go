@@ -109,7 +109,7 @@ func symlink(t *testing.T, target, link string) {
 
 func checkInstallations(t *testing.T, got inventory.ToolState, want []inventory.Installation) {
 	t.Helper()
-	if got.Tool != "node" {
+	if len(want) > 0 && got.Tool != want[0].Tool {
 		t.Errorf("Tool = %q", got.Tool)
 	}
 	if len(got.Installations) != len(want) {

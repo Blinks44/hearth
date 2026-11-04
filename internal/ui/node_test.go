@@ -293,7 +293,7 @@ func TestGUIWarning(t *testing.T) {
 		{"not in the terminal", []inventory.Installation{node("22.0.0", 0, 1)}, ""},
 	}
 	for _, tt := range tests {
-		if got := guiWarning(tt.ins, inventory.TerminalCopy(tt.ins)); got != tt.want {
+		if got := guiWarning("node", tt.ins, inventory.TerminalCopy(tt.ins)); got != tt.want {
 			t.Errorf("%s: %q, want %q", tt.name, got, tt.want)
 		}
 	}

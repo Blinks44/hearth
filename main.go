@@ -117,6 +117,19 @@ func main() {
 					a.NodeVersions, a.NodeVersionsErr = &n, ""
 				})
 			}()
+			go func() {
+				b, err := versions.FetchBun(context.Background(), lists)
+				if err != nil {
+					log.Print(err)
+				}
+				win.Update(func() {
+					if err != nil {
+						a.BunLatestErr = err.Error()
+						return
+					}
+					a.BunLatest, a.BunLatestErr = &b, ""
+				})
+			}()
 		}
 		a.OnScan = func() {
 			scanner.Start(scanned)
