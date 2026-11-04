@@ -2577,3 +2577,17 @@ func NoProjectsHeading() string { return In(i18n.Locale()).NoProjectsHeading() }
 func (msgs Messages) NoProjectsHeading() string {
 	return Catalog.Format(msgs.locale, "noProjectsHeading", nil)
 }
+
+// OpenProject says "Open project"
+// in the language the app shows.
+//
+// Projects list context menu: open the project's page.
+func OpenProject() string { return In(i18n.Locale()).OpenProject() }
+
+// OpenProject says "Open project"
+// in the language of msgs.
+//
+// Projects list context menu: open the project's page.
+func (msgs Messages) OpenProject() string {
+	return Catalog.Format(msgs.locale, "openProject", nil)
+}

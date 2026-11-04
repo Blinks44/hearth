@@ -2,6 +2,7 @@ package ui
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -117,13 +118,24 @@ func TestProjectBack(t *testing.T) {
 	}
 }
 
+// removing makes RemoveProject take the project off a.Projects at once,
+// as the app does, and records which it took.
+func removing(a *App) *[]string {
+	var removed []string
+	a.RemoveProject = func(dir string) {
+		removed = append(removed, dir)
+		a.Projects = slices.DeleteFunc(slices.Clone(a.Projects), func(p projects.Project) bool { return p.Dir == dir })
+	}
+	return &removed
+}
+
 // Removing a project from its menu takes it off the list and goes back
-// to the projects.
+// to the projects. The last one is removed: the page must not look it up
+// by its place in the shortened list.
 func TestProjectRemove(t *testing.T) {
 	a := NewApp()
-	var removed string
-	a.RemoveProject = func(dir string) { removed = dir }
-	tt := openProjects(t, a, projectPath(home+"/dev/shop-web"))
+	removed := removing(a)
+	tt := openProjects(t, a, projectPath(home+"/lab/ml-notebooks"))
 	if err := tt.Click("More"); err != nil {
 		t.Fatal(err)
 	}
@@ -132,8 +144,49 @@ func TestProjectRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if removed != home+"/dev/shop-web" || a.router.Path() != "/projects" {
-		t.Errorf("removed %q, page %q", removed, a.router.Path())
+	if !reflect.DeepEqual(*removed, []string{home + "/lab/ml-notebooks"}) || a.router.Path() != "/projects" {
+		t.Errorf("removed %q, page %q", *removed, a.router.Path())
+	}
+	if tt.HasText("ml-notebooks") {
+		t.Errorf("still listed: %q", tt.Texts())
+	}
+}
+
+// On the list, the trash button and the row's context menu remove a
+// project and stay on the list; the menu also opens it.
+func TestProjectListRemove(t *testing.T) {
+	a := NewApp()
+	removed := removing(a)
+	tt := openProjects(t, a, "/projects")
+	r, ok := tt.Find("shop-web")
+	if !ok {
+		t.Fatalf("no shop-web in %q", tt.Texts())
+	}
+	// The first "Remove from list" button is shop-web's.
+	if err := tt.Click("Remove from list"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !reflect.DeepEqual(*removed, []string{home + "/dev/shop-web"}) || a.router.Path() != "/projects" || tt.HasText("shop-web") {
+		t.Errorf("trash: removed %q, page %q, texts %q", *removed, a.router.Path(), tt.Texts())
+	}
+
+	tt.RightClickAt(r.X+r.W/2, r.Y+r.H/2) // now legacy-admin's row
+	if err := tt.ChooseMenuItem("Remove from list"); err != nil {
+		t.Fatalf("%v, menu %q", err, tt.Menu())
+	}
+	tt.Advance(time.Second)
+	if len(*removed) != 2 || (*removed)[1] != home+"/work/legacy-admin" || a.router.Path() != "/projects" {
+		t.Errorf("context menu: removed %q, page %q", *removed, a.router.Path())
+	}
+
+	tt.RightClickAt(r.X+r.W/2, r.Y+r.H/2) // ml-notebooks
+	if err := tt.ChooseMenuItem("Open project"); err != nil {
+		t.Fatalf("%v, menu %q", err, tt.Menu())
+	}
+	tt.Advance(time.Second)
+	if want := projectPath(home + "/lab/ml-notebooks"); a.router.Location() != want {
+		t.Errorf("open: at %q, want %q", a.router.Location(), want)
 	}
 }
 

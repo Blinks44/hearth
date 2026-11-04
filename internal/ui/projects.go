@@ -124,13 +124,18 @@ func (a *App) projectRows(c *ui.Context) {
 			head(locales.ColumnProjectTools()).Grow(1).MinWidth(0)
 			head("AI").Width(90).Shrink(0)
 			head(locales.ColumnState()).Width(170).Shrink(0)
+			if a.RemoveProject != nil {
+				ui.Box(c).Width(36).Shrink(0) // over the remove buttons
+			}
 		})
 		if len(rows) == 0 {
 			cardNote(c, locales.NoProjectsMatch())
 		}
 		for _, r := range rows {
-			e := ui.ButtonBase(c.Key("project:"+r.p.Dir)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(r.p.Dir))
+			dir := r.p.Dir
+			e := ui.ButtonBase(c.Key("project:"+dir)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(dir)).
+				ContextMenu(func(m *ui.Menu) { a.projectItems(m, dir, true) })
 			if e.Hovered() {
 				e.Background(pal.Subtle)
 			}
@@ -156,6 +161,19 @@ func (a *App) projectRows(c *ui.Context) {
 					}
 				})
 				ui.Row(c).Width(146).Shrink(0).Children(func() { projectChip(c, r.p, r.statuses, r.problem) })
+				if a.RemoveProject != nil {
+					rm := ui.ButtonBase(c.Key("remove:"+dir)).Size(24, 24).Shrink(0).Radius(6).Center().
+						Label(locales.RemoveFromList()).Tooltip(locales.RemoveFromList()).
+						OnClick(func() { a.RemoveProject(dir) })
+					color := pal.TextFaint
+					if rm.Hovered() {
+						rm.Background(pal.Muted)
+						color = t.Danger
+					}
+					rm.Children(func() {
+						ui.Icon(c, Icon("trash-2")).Size(14, 14).TextColor(color)
+					})
+				}
 				ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
 			})
 			if e.Clicked() {
@@ -212,6 +230,8 @@ func (a *App) project(c *ui.Context, dir string) {
 				}
 			},
 		})
+		// The header's menu may have just taken the project off the list.
+		i = slices.IndexFunc(a.Projects, func(p projects.Project) bool { return p.Dir == dir })
 		if i < 0 {
 			ui.Column(c).Grow(1).Center().Gap(8).Children(func() {
 				ui.Text(c, locales.ProjectNotAdded()).TextColor(c.Theme().TextMuted)
@@ -246,16 +266,32 @@ func (a *App) project(c *ui.Context, dir string) {
 // the list, which leaves the folder be.
 func (a *App) projectMenu(c *ui.Context, dir string) {
 	ui.Button(c.Key("project-menu"), "").Size(28, 26).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
-		if a.Shell != nil && m.Item(showInFolder()).Chosen() {
-			a.Shell.ShowItemInFolder(dir)
-		}
-		if a.RemoveProject != nil && m.Item(locales.RemoveFromList()).Chosen() {
-			a.RemoveProject(dir)
-			a.router.Replace(projectsPage.path)
-		}
+		a.projectItems(m, dir, false)
 	}).Children(func() {
 		ui.Icon(c, Icon("ellipsis")).Size(14, 14).TextColor(c.Theme().TextMuted)
 	})
+}
+
+// projectItems are the actions on the project in dir, for its menus:
+// open its page when open, show its folder, and remove it from the list,
+// which leaves the folder be and goes back to the projects.
+func (a *App) projectItems(m *ui.Menu, dir string, open bool) {
+	if open && m.Item(locales.OpenProject()).Chosen() {
+		a.router.Push(projectPath(dir))
+	}
+	if a.Shell != nil && m.Item(showInFolder()).Chosen() {
+		a.Shell.ShowItemInFolder(dir)
+	}
+	if a.RemoveProject == nil {
+		return
+	}
+	m.Separator()
+	if m.Item(locales.RemoveFromList()).Chosen() {
+		a.RemoveProject(dir)
+		if a.router.Path() != projectsPage.path {
+			a.router.Replace(projectsPage.path)
+		}
+	}
 }
 
 // projectHero is the folder, its name and what it needs, and on the right

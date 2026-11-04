@@ -94,7 +94,7 @@
   "columnProjectTools": "Инструменты и версии из файлов проекта",
   "columnState": "Состояние",
   "noProjectsMatch": "Подходящих проектов нет",
-  "projectsNote": "Версии берутся из .nvmrc, package.json, .python-version, .tool-versions и других файлов проекта. Убрать проект из списка можно в его меню: папка и файлы останутся как есть.",
+  "projectsNote": "Версии берутся из .nvmrc, package.json, .python-version, .tool-versions и других файлов проекта. Чтобы убрать проект из списка, нажмите корзину или правую кнопку на его строке: папка и её файлы останутся как есть.",
   "chipReady": "Всё готово",
   "chipNotReady": "не готово",
   "chipNotChecked": "не проверено",
@@ -177,5 +177,6 @@
   "noIssuesText": "Hearth проверяет снова при изменении файлов проектов и настроек шелла.",
   "details": "Подробнее",
   "moreIssues": "Ещё {count}: {titles}",
-  "noProjectsHeading": "Проектов пока нет"
+  "noProjectsHeading": "Проектов пока нет",
+  "openProject": "Открыть проект"
 }

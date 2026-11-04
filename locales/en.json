@@ -521,7 +521,7 @@
   "@noProjectsMatch": {
     "description": "Projects table when the filter or tab leaves none."
   },
-  "projectsNote": "Versions come from .nvmrc, package.json, .python-version, .tool-versions and other project files. To take a project off the list, use its menu: the folder and its files stay as they are.",
+  "projectsNote": "Versions come from .nvmrc, package.json, .python-version, .tool-versions and other project files. To take a project off the list, use the trash button or right-click its row: the folder and its files stay as they are.",
   "@projectsNote": {
     "description": "Note under the projects table."
   },
@@ -1094,5 +1094,9 @@
   "noProjectsHeading": "No projects yet",
   "@noProjectsHeading": {
     "description": "Overview projects card before any project is added."
+  },
+  "openProject": "Open project",
+  "@openProject": {
+    "description": "Projects list context menu: open the project's page."
   }
 }
