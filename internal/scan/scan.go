@@ -36,6 +36,7 @@ var Detectors = []Detector{
 	{"python", detect.Python},
 	{"php", detect.PHP},
 	{"composer", detect.Composer},
+	{"rust", detect.Rust},
 }
 
 // parallel is how many detectors run at once: each may start commands.

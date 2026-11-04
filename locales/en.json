@@ -1783,5 +1783,73 @@
   "phpExtensions": "Extensions · {count}",
   "phpCopyExtensions": "Copy extension list",
   "phpExtensionsCopied": "Extension list copied",
-  "phpNoComposerPackages": "No global Composer packages"
+  "phpNoComposerPackages": "No global Composer packages",
+  "rustToolchainsCount": "{count, plural, one {# toolchain} other {# toolchains}}",
+  "@rustToolchainsCount": {
+    "description": "Rust page card: how many rustup toolchains are installed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "rustToolchainNote": "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, then an override, then the default.",
+  "@rustToolchainNote": {
+    "description": "Note under the Rust table: how rustup picks a toolchain."
+  },
+  "rustBetaWeeks": "becomes stable in {weeks, plural, one {# week} other {# weeks}}",
+  "@rustBetaWeeks": {
+    "description": "Caption of the Rust beta channel: when it becomes stable.",
+    "placeholders": {
+      "weeks": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "rustBetaNext": "the next stable release",
+  "@rustBetaNext": {
+    "description": "Caption of the Rust beta channel when its date is unknown."
+  },
+  "rustNightlyNote": "a new build every day",
+  "@rustNightlyNote": {
+    "description": "Caption of the Rust nightly channel."
+  },
+  "rustNightlyInstalled": "installed build of {date}",
+  "@rustNightlyInstalled": {
+    "description": "Caption of the Rust nightly channel when a nightly is installed.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "2025-01-20"
+      }
+    }
+  },
+  "rustTargets": "Targets · {toolchain}",
+  "@rustTargets": {
+    "description": "Title of the card of the active toolchain's targets.",
+    "placeholders": {
+      "toolchain": {
+        "type": "String",
+        "example": "stable"
+      }
+    }
+  },
+  "rustHostTarget": "this computer",
+  "@rustHostTarget": {
+    "description": "Caption of the target of the computer the toolchain runs on."
+  },
+  "rustNoTargets": "rustup lists no targets for this toolchain",
+  "@rustNoTargets": {
+    "description": "Targets card when the toolchain lists none."
+  },
+  "rustCargoTools": "Cargo utilities",
+  "@rustCargoTools": {
+    "description": "Title of the card of commands cargo install put in CARGO_HOME/bin."
+  },
+  "noCargoTools": "No commands from cargo install",
+  "@noCargoTools": {
+    "description": "Cargo utilities card when cargo install put none."
+  }
 }

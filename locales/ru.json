@@ -317,5 +317,16 @@
   "phpExtensions": "Расширения · {count}",
   "phpCopyExtensions": "Скопировать список расширений",
   "phpExtensionsCopied": "Список расширений скопирован",
-  "phpNoComposerPackages": "Нет глобальных пакетов Composer"
+  "phpNoComposerPackages": "Нет глобальных пакетов Composer",
+  "rustToolchainsCount": "{count, plural, one {# toolchain} few {# toolchain} many {# toolchain} other {# toolchain}}",
+  "rustToolchainNote": "Toolchains ставит и удаляет rustup. Какой из них работает в папке, решает rust-toolchain.toml проекта, затем override, затем default.",
+  "rustBetaWeeks": "станет stable через {weeks, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}",
+  "rustBetaNext": "следующий stable",
+  "rustNightlyNote": "новая сборка каждый день",
+  "rustNightlyInstalled": "установлена сборка {date}",
+  "rustTargets": "Targets · {toolchain}",
+  "rustHostTarget": "этот компьютер",
+  "rustNoTargets": "rustup не перечисляет targets этого toolchain",
+  "rustCargoTools": "Утилиты cargo",
+  "noCargoTools": "Нет команд из cargo install"
 }

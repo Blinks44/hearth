@@ -49,6 +49,10 @@ type App struct {
 	// they could not, PHPVersionsErr says why.
 	PHPVersions    *versions.PHP
 	PHPVersionsErr string
+	// RustVersions are Rust's release lines; nil until they come, or when
+	// they could not, RustVersionsErr says why.
+	RustVersions    *versions.Rust
+	RustVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -77,6 +81,7 @@ type App struct {
 	goTab         int     // the tab of the Go page shown
 	phpTab        int     // the tab of the PHP page shown
 	pythonTab     int     // the tab of the Python page shown
+	rustTab       int     // the tab of the Rust page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
 	adding        *adding // the folder the add dialog shows; nil when closed
@@ -139,6 +144,8 @@ func (a *App) View(c *ui.Context) {
 						a.php(c, p)
 					case "/tools/python":
 						a.python(c, p)
+					case "/tools/rust":
+						a.rust(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
 					case overview.path:

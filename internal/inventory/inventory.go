@@ -53,9 +53,21 @@ type PHPConfig struct {
 	Err        string `json:",omitempty"`
 }
 
+// RustToolchain is a toolchain rustup keeps.
+type RustToolchain struct {
+	// Name is rustup's, as stable-aarch64-apple-darwin.
+	Name string
+	// Date is the day its compiler was built, which tells nightlies apart.
+	Date string `json:",omitempty"`
+	// Targets are the ones whose standard library is installed, the host's
+	// among them.
+	Targets []string `json:",omitempty"`
+}
+
 // Installation is one copy of a tool.
 type Installation struct {
-	PHP     *PHPConfig `json:",omitempty"`
+	PHP     *PHPConfig     `json:",omitempty"`
+	Rust    *RustToolchain `json:",omitempty"`
 	Tool    string
 	Version string
 	// Path is where the copy was found; RealPath is Path with symlinks

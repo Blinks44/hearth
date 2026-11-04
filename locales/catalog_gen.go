@@ -4483,3 +4483,157 @@ func PhpNoComposerPackages() string { return In(i18n.Locale()).PhpNoComposerPack
 func (msgs Messages) PhpNoComposerPackages() string {
 	return Catalog.Format(msgs.locale, "phpNoComposerPackages", nil)
 }
+
+// RustToolchainsCount says "{count, plural, one {# toolchain} other {# toolchains}}"
+// in the language the app shows.
+//
+// Rust page card: how many rustup toolchains are installed.
+func RustToolchainsCount(count int) string { return In(i18n.Locale()).RustToolchainsCount(count) }
+
+// RustToolchainsCount says "{count, plural, one {# toolchain} other {# toolchains}}"
+// in the language of msgs.
+//
+// Rust page card: how many rustup toolchains are installed.
+func (msgs Messages) RustToolchainsCount(count int) string {
+	return Catalog.Format(msgs.locale, "rustToolchainsCount", map[string]any{"count": count})
+}
+
+// RustToolchainNote says "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, t…"
+// in the language the app shows.
+//
+// Note under the Rust table: how rustup picks a toolchain.
+func RustToolchainNote() string { return In(i18n.Locale()).RustToolchainNote() }
+
+// RustToolchainNote says "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, t…"
+// in the language of msgs.
+//
+// Note under the Rust table: how rustup picks a toolchain.
+func (msgs Messages) RustToolchainNote() string {
+	return Catalog.Format(msgs.locale, "rustToolchainNote", nil)
+}
+
+// RustBetaWeeks says "becomes stable in {weeks, plural, one {# week} other {# weeks}}"
+// in the language the app shows.
+//
+// Caption of the Rust beta channel: when it becomes stable.
+func RustBetaWeeks(weeks int) string { return In(i18n.Locale()).RustBetaWeeks(weeks) }
+
+// RustBetaWeeks says "becomes stable in {weeks, plural, one {# week} other {# weeks}}"
+// in the language of msgs.
+//
+// Caption of the Rust beta channel: when it becomes stable.
+func (msgs Messages) RustBetaWeeks(weeks int) string {
+	return Catalog.Format(msgs.locale, "rustBetaWeeks", map[string]any{"weeks": weeks})
+}
+
+// RustBetaNext says "the next stable release"
+// in the language the app shows.
+//
+// Caption of the Rust beta channel when its date is unknown.
+func RustBetaNext() string { return In(i18n.Locale()).RustBetaNext() }
+
+// RustBetaNext says "the next stable release"
+// in the language of msgs.
+//
+// Caption of the Rust beta channel when its date is unknown.
+func (msgs Messages) RustBetaNext() string {
+	return Catalog.Format(msgs.locale, "rustBetaNext", nil)
+}
+
+// RustNightlyNote says "a new build every day"
+// in the language the app shows.
+//
+// Caption of the Rust nightly channel.
+func RustNightlyNote() string { return In(i18n.Locale()).RustNightlyNote() }
+
+// RustNightlyNote says "a new build every day"
+// in the language of msgs.
+//
+// Caption of the Rust nightly channel.
+func (msgs Messages) RustNightlyNote() string {
+	return Catalog.Format(msgs.locale, "rustNightlyNote", nil)
+}
+
+// RustNightlyInstalled says "installed build of {date}"
+// in the language the app shows.
+//
+// Caption of the Rust nightly channel when a nightly is installed.
+func RustNightlyInstalled(date string) string { return In(i18n.Locale()).RustNightlyInstalled(date) }
+
+// RustNightlyInstalled says "installed build of {date}"
+// in the language of msgs.
+//
+// Caption of the Rust nightly channel when a nightly is installed.
+func (msgs Messages) RustNightlyInstalled(date string) string {
+	return Catalog.Format(msgs.locale, "rustNightlyInstalled", map[string]any{"date": date})
+}
+
+// RustTargets says "Targets · {toolchain}"
+// in the language the app shows.
+//
+// Title of the card of the active toolchain's targets.
+func RustTargets(toolchain string) string { return In(i18n.Locale()).RustTargets(toolchain) }
+
+// RustTargets says "Targets · {toolchain}"
+// in the language of msgs.
+//
+// Title of the card of the active toolchain's targets.
+func (msgs Messages) RustTargets(toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargets", map[string]any{"toolchain": toolchain})
+}
+
+// RustHostTarget says "this computer"
+// in the language the app shows.
+//
+// Caption of the target of the computer the toolchain runs on.
+func RustHostTarget() string { return In(i18n.Locale()).RustHostTarget() }
+
+// RustHostTarget says "this computer"
+// in the language of msgs.
+//
+// Caption of the target of the computer the toolchain runs on.
+func (msgs Messages) RustHostTarget() string {
+	return Catalog.Format(msgs.locale, "rustHostTarget", nil)
+}
+
+// RustNoTargets says "rustup lists no targets for this toolchain"
+// in the language the app shows.
+//
+// Targets card when the toolchain lists none.
+func RustNoTargets() string { return In(i18n.Locale()).RustNoTargets() }
+
+// RustNoTargets says "rustup lists no targets for this toolchain"
+// in the language of msgs.
+//
+// Targets card when the toolchain lists none.
+func (msgs Messages) RustNoTargets() string {
+	return Catalog.Format(msgs.locale, "rustNoTargets", nil)
+}
+
+// RustCargoTools says "Cargo utilities"
+// in the language the app shows.
+//
+// Title of the card of commands cargo install put in CARGO_HOME/bin.
+func RustCargoTools() string { return In(i18n.Locale()).RustCargoTools() }
+
+// RustCargoTools says "Cargo utilities"
+// in the language of msgs.
+//
+// Title of the card of commands cargo install put in CARGO_HOME/bin.
+func (msgs Messages) RustCargoTools() string {
+	return Catalog.Format(msgs.locale, "rustCargoTools", nil)
+}
+
+// NoCargoTools says "No commands from cargo install"
+// in the language the app shows.
+//
+// Cargo utilities card when cargo install put none.
+func NoCargoTools() string { return In(i18n.Locale()).NoCargoTools() }
+
+// NoCargoTools says "No commands from cargo install"
+// in the language of msgs.
+//
+// Cargo utilities card when cargo install put none.
+func (msgs Messages) NoCargoTools() string {
+	return Catalog.Format(msgs.locale, "noCargoTools", nil)
+}

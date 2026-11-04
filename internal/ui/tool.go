@@ -582,7 +582,8 @@ func versionText(v string) string {
 }
 
 // copyVersion shows a copy's version as its tool does: go1.23.4 for Go,
-// 3.13.1 for Python, v22.12.0 for the rest.
+// 3.13.1 for Python, stable 1.84.0 for a Rust toolchain, v22.12.0 for
+// the rest.
 func copyVersion(in inventory.Installation) string {
 	switch {
 	case in.Version == "":
@@ -590,6 +591,14 @@ func copyVersion(in inventory.Installation) string {
 	case in.Tool == "go":
 		return "go" + in.Version
 	case in.Tool == "python" || in.Tool == "php":
+		return in.Version
+	case in.Tool == "rust":
+		switch ch := rustChannel(in); ch {
+		case "nightly":
+			return ch
+		case "stable", "beta":
+			return ch + " " + in.Version
+		}
 		return in.Version
 	}
 	return versionText(in.Version)
