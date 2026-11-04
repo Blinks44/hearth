@@ -23,12 +23,15 @@ func nodeSnapshot() *inventory.Snapshot {
 	}
 	return &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: []inventory.Installation{
 		{Tool: "node", Version: "22.12.0", Path: home + "/.local/state/fnm_multishells/48121/bin/node",
-			Source: fnm("22.12.0"), OnPath: 1, Default: true},
+			Source: fnm("22.12.0"), OnPath: 1, Default: true, Corepack: true, Packages: []inventory.Package{
+				{Name: "corepack", Version: "0.30.0"}, {Name: "npm", Version: "10.9.0"},
+				{Name: "typescript", Version: "5.7.2", Commands: []string{"tsc", "tsserver"}},
+			}},
 		{Tool: "node", Version: "23.6.0", Path: "/opt/homebrew/bin/node",
 			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew", Root: "/opt/homebrew/Cellar/node/23.6.0"}, OnPath: 2, InGUI: 1},
 		{Tool: "node", Version: "20.18.1", Path: home + "/.local/share/fnm/node-versions/v20.18.1/installation/bin/node",
 			Source: fnm("20.18.1")},
-	}}}}
+	}, Managers: []inventory.Manager{{Name: "fnm", SwitchOnCD: true, Files: []string{".node-version", ".nvmrc"}}}}}}
 }
 
 func openNode(t *testing.T, a *App) *ui.Tester {
@@ -313,5 +316,41 @@ func TestGUIWarning(t *testing.T) {
 		if got := guiWarning(tt.ins, terminalIndex(tt.ins)); got != tt.want {
 			t.Errorf("%s: %q, want %q", tt.name, got, tt.want)
 		}
+	}
+}
+
+// The version manager's card says how fnm is set up, and the globals card
+// lists the packages of the version in use, not those Node ships.
+func TestNodeManager(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	tt := openNode(t, a)
+	for _, s := range []string{"Version manager · fnm", "Default version", "Switch on cd", "reads .node-version, .nvmrc",
+		"Corepack", "Global packages", "npm -g · v22.12.0", "typescript", "commands: tsc, tsserver", "5.7.2"} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q in %q", s, tt.Texts())
+		}
+	}
+	if tt.HasText("10.9.0") || tt.HasText("0.30.0") {
+		t.Error("npm or Corepack listed as a global package")
+	}
+}
+
+// Node only from Homebrew: no version manager, and mise will add versions.
+func TestNodeNoManager(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: []inventory.Installation{
+		{Tool: "node", Version: "24.22.1", Path: "/opt/homebrew/bin/node", OnPath: 1,
+			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
+	}}}}
+	tt := openNode(t, a)
+	for _, s := range []string{"No version manager: Node comes from brew. Hearth will install other versions through mise.",
+		"not bundled", "No global packages"} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q in %q", s, tt.Texts())
+		}
+	}
+	if tt.HasText("Switch on cd") {
+		t.Error("a manager's settings without a manager")
 	}
 }

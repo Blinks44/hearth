@@ -74,6 +74,7 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 			in.Version = nodeVersion(ctx, r, term, in.RealPath)
 		}
 		in.Packages = globalPackages(nodeModules(in.Path))
+		in.Corepack = corepackEnabled(in.Path, in.RealPath)
 		if m := in.Source.Manager; m != "" && in.Version != "" {
 			installed[m] = append(installed[m], in.Version)
 		}
@@ -85,6 +86,7 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 			in.Default = true
 		}
 	}
+	state.Managers = nodeManagers(state.Installations, term, dirs.Home)
 	return state, ctx.Err()
 }
 
@@ -157,12 +159,15 @@ func readPackage(dir string) (inventory.Package, bool) {
 	if err != nil {
 		return inventory.Package{}, false
 	}
-	var p struct{ Name, Version string }
+	var p struct {
+		Name, Version string
+		Bin           any
+	}
 	if json.Unmarshal(data, &p) != nil {
 		return inventory.Package{}, false
 	}
 	if p.Name == "" {
 		p.Name = filepath.Base(dir)
 	}
-	return inventory.Package{Name: p.Name, Version: p.Version}, true
+	return inventory.Package{Name: p.Name, Version: p.Version, Commands: commands(p.Name, p.Bin)}, true
 }

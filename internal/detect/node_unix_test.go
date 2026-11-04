@@ -185,3 +185,18 @@ func TestNodeVersionCommand(t *testing.T) {
 		{Tool: "node", Path: broken, RealPath: broken, OnPath: 2},
 	})
 }
+
+func startupFile(home string) string { return filepath.Join(home, ".zshrc") }
+
+// corepack enable on macOS and Linux links pnpm and yarn to Corepack's
+// scripts.
+func TestCorepackSymlink(t *testing.T) {
+	root := root(t)
+	node := fakeNode(t, filepath.Join(root, "prefix"))
+	script := filepath.Join(root, "prefix", "lib", "node_modules", "corepack", "dist", "yarn.js")
+	writeFile(t, script, "")
+	symlink(t, script, filepath.Join(root, "prefix", "bin", "yarn"))
+	if !corepackEnabled(node, node) {
+		t.Error("yarn linked to Corepack, not enabled")
+	}
+}

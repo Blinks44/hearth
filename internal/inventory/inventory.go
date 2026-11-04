@@ -57,11 +57,25 @@ type Installation struct {
 	// Packages are the ones installed globally with this copy, like npm
 	// next to Node.
 	Packages []Package
+	// Corepack reports that Corepack's pnpm and yarn sit next to the copy,
+	// as corepack enable puts them.
+	Corepack bool `json:",omitempty"`
 }
 
 // Package is a package by name and version.
 type Package struct {
 	Name, Version string
+	// Commands are the ones it puts on PATH, like tsc for typescript.
+	Commands []string `json:",omitempty"`
+}
+
+// Manager is a tool's version manager, as it is set up.
+type Manager struct {
+	Name string
+	// SwitchOnCD reports that the manager switches the version as the
+	// terminal enters a folder, by the files named Files there.
+	SwitchOnCD bool
+	Files      []string
 }
 
 // ToolState is what a detector found of one tool.
@@ -70,6 +84,9 @@ type ToolState struct {
 	// Installations come in the terminal's PATH order first, then the GUI's,
 	// then the ones only a manager's directory holds.
 	Installations []Installation
+	// Managers are the version managers that keep installations, in their
+	// order.
+	Managers []Manager `json:",omitempty"`
 	// Err says why the tool could not be checked; empty when it was.
 	Err string `json:",omitempty"`
 }

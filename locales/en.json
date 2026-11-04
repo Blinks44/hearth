@@ -368,5 +368,75 @@
   "chipSupportEnded": "support ended",
   "@chipSupportEnded": {
     "description": "Chip on an installed version whose release line no longer gets fixes."
+  },
+  "versionManager": "Version manager",
+  "@versionManager": {
+    "description": "Tool page card title, followed by the manager's name, as fnm."
+  },
+  "defaultVersion": "Default version",
+  "@defaultVersion": {
+    "description": "Version manager card: the version a new terminal gets."
+  },
+  "switchOnCd": "Switch on cd",
+  "@switchOnCd": {
+    "description": "Version manager card: the manager picks the version a folder asks for as the terminal enters it."
+  },
+  "readsFiles": "reads {files}",
+  "@readsFiles": {
+    "description": "Version manager card: the files it picks the version by.",
+    "placeholders": {
+      "files": {
+        "type": "String",
+        "example": ".nvmrc, .node-version"
+      }
+    }
+  },
+  "switchOff": "versions change only by command",
+  "@switchOff": {
+    "description": "Version manager card: the manager does not switch on cd."
+  },
+  "corepackCaption": "pnpm and Yarn from packageManager",
+  "@corepackCaption": {
+    "description": "Version manager card: what Corepack does."
+  },
+  "stateOn": "on",
+  "@stateOn": {
+    "description": "A setting that is on."
+  },
+  "stateOff": "off",
+  "@stateOff": {
+    "description": "A setting that is off."
+  },
+  "corepackMissing": "not bundled",
+  "@corepackMissing": {
+    "description": "Corepack row: this Node version does not ship Corepack."
+  },
+  "noVersionManager": "No version manager: Node comes from {sources}. Hearth will install other versions through mise.",
+  "@noVersionManager": {
+    "description": "Version manager card when no version manager keeps Node.",
+    "placeholders": {
+      "sources": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "globalPackages": "Global packages",
+  "@globalPackages": {
+    "description": "Tool page card: packages installed globally with the Node version in use."
+  },
+  "packageCommands": "commands: {commands}",
+  "@packageCommands": {
+    "description": "Global package: the commands it adds.",
+    "placeholders": {
+      "commands": {
+        "type": "String",
+        "example": "tsc, tsserver"
+      }
+    }
+  },
+  "noGlobalPackages": "No global packages",
+  "@noGlobalPackages": {
+    "description": "Global packages card when there are none."
   }
 }

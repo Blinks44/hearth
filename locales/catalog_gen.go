@@ -931,3 +931,187 @@ func ChipSupportEnded() string { return In(i18n.Locale()).ChipSupportEnded() }
 func (msgs Messages) ChipSupportEnded() string {
 	return Catalog.Format(msgs.locale, "chipSupportEnded", nil)
 }
+
+// VersionManager says "Version manager"
+// in the language the app shows.
+//
+// Tool page card title, followed by the manager's name, as fnm.
+func VersionManager() string { return In(i18n.Locale()).VersionManager() }
+
+// VersionManager says "Version manager"
+// in the language of msgs.
+//
+// Tool page card title, followed by the manager's name, as fnm.
+func (msgs Messages) VersionManager() string {
+	return Catalog.Format(msgs.locale, "versionManager", nil)
+}
+
+// DefaultVersion says "Default version"
+// in the language the app shows.
+//
+// Version manager card: the version a new terminal gets.
+func DefaultVersion() string { return In(i18n.Locale()).DefaultVersion() }
+
+// DefaultVersion says "Default version"
+// in the language of msgs.
+//
+// Version manager card: the version a new terminal gets.
+func (msgs Messages) DefaultVersion() string {
+	return Catalog.Format(msgs.locale, "defaultVersion", nil)
+}
+
+// SwitchOnCd says "Switch on cd"
+// in the language the app shows.
+//
+// Version manager card: the manager picks the version a folder asks for as
+// the terminal enters it.
+func SwitchOnCd() string { return In(i18n.Locale()).SwitchOnCd() }
+
+// SwitchOnCd says "Switch on cd"
+// in the language of msgs.
+//
+// Version manager card: the manager picks the version a folder asks for as
+// the terminal enters it.
+func (msgs Messages) SwitchOnCd() string {
+	return Catalog.Format(msgs.locale, "switchOnCd", nil)
+}
+
+// ReadsFiles says "reads {files}"
+// in the language the app shows.
+//
+// Version manager card: the files it picks the version by.
+func ReadsFiles(files string) string { return In(i18n.Locale()).ReadsFiles(files) }
+
+// ReadsFiles says "reads {files}"
+// in the language of msgs.
+//
+// Version manager card: the files it picks the version by.
+func (msgs Messages) ReadsFiles(files string) string {
+	return Catalog.Format(msgs.locale, "readsFiles", map[string]any{"files": files})
+}
+
+// SwitchOff says "versions change only by command"
+// in the language the app shows.
+//
+// Version manager card: the manager does not switch on cd.
+func SwitchOff() string { return In(i18n.Locale()).SwitchOff() }
+
+// SwitchOff says "versions change only by command"
+// in the language of msgs.
+//
+// Version manager card: the manager does not switch on cd.
+func (msgs Messages) SwitchOff() string {
+	return Catalog.Format(msgs.locale, "switchOff", nil)
+}
+
+// CorepackCaption says "pnpm and Yarn from packageManager"
+// in the language the app shows.
+//
+// Version manager card: what Corepack does.
+func CorepackCaption() string { return In(i18n.Locale()).CorepackCaption() }
+
+// CorepackCaption says "pnpm and Yarn from packageManager"
+// in the language of msgs.
+//
+// Version manager card: what Corepack does.
+func (msgs Messages) CorepackCaption() string {
+	return Catalog.Format(msgs.locale, "corepackCaption", nil)
+}
+
+// StateOn says "on"
+// in the language the app shows.
+//
+// A setting that is on.
+func StateOn() string { return In(i18n.Locale()).StateOn() }
+
+// StateOn says "on"
+// in the language of msgs.
+//
+// A setting that is on.
+func (msgs Messages) StateOn() string {
+	return Catalog.Format(msgs.locale, "stateOn", nil)
+}
+
+// StateOff says "off"
+// in the language the app shows.
+//
+// A setting that is off.
+func StateOff() string { return In(i18n.Locale()).StateOff() }
+
+// StateOff says "off"
+// in the language of msgs.
+//
+// A setting that is off.
+func (msgs Messages) StateOff() string {
+	return Catalog.Format(msgs.locale, "stateOff", nil)
+}
+
+// CorepackMissing says "not bundled"
+// in the language the app shows.
+//
+// Corepack row: this Node version does not ship Corepack.
+func CorepackMissing() string { return In(i18n.Locale()).CorepackMissing() }
+
+// CorepackMissing says "not bundled"
+// in the language of msgs.
+//
+// Corepack row: this Node version does not ship Corepack.
+func (msgs Messages) CorepackMissing() string {
+	return Catalog.Format(msgs.locale, "corepackMissing", nil)
+}
+
+// NoVersionManager says "No version manager: Node comes from {sources}. Hearth will install other versions through mise."
+// in the language the app shows.
+//
+// Version manager card when no version manager keeps Node.
+func NoVersionManager(sources string) string { return In(i18n.Locale()).NoVersionManager(sources) }
+
+// NoVersionManager says "No version manager: Node comes from {sources}. Hearth will install other versions through mise."
+// in the language of msgs.
+//
+// Version manager card when no version manager keeps Node.
+func (msgs Messages) NoVersionManager(sources string) string {
+	return Catalog.Format(msgs.locale, "noVersionManager", map[string]any{"sources": sources})
+}
+
+// GlobalPackages says "Global packages"
+// in the language the app shows.
+//
+// Tool page card: packages installed globally with the Node version in use.
+func GlobalPackages() string { return In(i18n.Locale()).GlobalPackages() }
+
+// GlobalPackages says "Global packages"
+// in the language of msgs.
+//
+// Tool page card: packages installed globally with the Node version in use.
+func (msgs Messages) GlobalPackages() string {
+	return Catalog.Format(msgs.locale, "globalPackages", nil)
+}
+
+// PackageCommands says "commands: {commands}"
+// in the language the app shows.
+//
+// Global package: the commands it adds.
+func PackageCommands(commands string) string { return In(i18n.Locale()).PackageCommands(commands) }
+
+// PackageCommands says "commands: {commands}"
+// in the language of msgs.
+//
+// Global package: the commands it adds.
+func (msgs Messages) PackageCommands(commands string) string {
+	return Catalog.Format(msgs.locale, "packageCommands", map[string]any{"commands": commands})
+}
+
+// NoGlobalPackages says "No global packages"
+// in the language the app shows.
+//
+// Global packages card when there are none.
+func NoGlobalPackages() string { return In(i18n.Locale()).NoGlobalPackages() }
+
+// NoGlobalPackages says "No global packages"
+// in the language of msgs.
+//
+// Global packages card when there are none.
+func (msgs Messages) NoGlobalPackages() string {
+	return Catalog.Format(msgs.locale, "noGlobalPackages", nil)
+}

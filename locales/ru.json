@@ -62,5 +62,18 @@
   "noteUpdateFor": "обновление для {version}",
   "noteSupportUntil": "поддержка до {date, date, ::yMMM}",
   "tagRecommended": "рекомендуется",
-  "chipSupportEnded": "поддержка закончилась"
+  "chipSupportEnded": "поддержка закончилась",
+  "versionManager": "Менеджер версий",
+  "defaultVersion": "Версия по умолчанию",
+  "switchOnCd": "Переключать при cd",
+  "readsFiles": "читает {files}",
+  "switchOff": "версии меняются только командой",
+  "corepackCaption": "pnpm и Yarn из packageManager",
+  "stateOn": "вкл",
+  "stateOff": "выкл",
+  "corepackMissing": "нет в поставке",
+  "noVersionManager": "Менеджер версий не используется: Node установлен из {sources}. Другие версии Hearth поставит через mise.",
+  "globalPackages": "Глобальные пакеты",
+  "packageCommands": "команды: {commands}",
+  "noGlobalPackages": "Глобальных пакетов нет"
 }

@@ -46,8 +46,12 @@ func (a *App) node(c *ui.Context, p page) {
 							versionTable(c, a.NodeVersions, st.Installations, rows, active, a.Home)
 							pathCard(c, st.Installations, active, a.Home)
 						})
-						ui.Column(c).Width(342).Shrink(0).Children(func() {
+						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.availableCard(c, st.Installations, rows)
+							managerCard(c, st, rows, active)
+							if active >= 0 {
+								globalsCard(c, st.Installations[active])
+							}
 						})
 					})
 				case 1:
@@ -235,23 +239,19 @@ func versionTable(c *ui.Context, nv *versions.Node, ins []inventory.Installation
 // availableCard lists the newest version of each supported line, as the
 // last version list says, with how each stands to what is installed.
 func (a *App) availableCard(c *ui.Context, ins []inventory.Installation, rows []int) {
-	t := c.Theme()
-	pal := Colors(t)
+	pal := Colors(c.Theme())
 	nv := a.NodeVersions
-	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.AvailableTitle()).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
-			if nv != nil && !nv.Fetched.IsZero() {
-				ui.Text(c, locales.VersionsAsOf(nv.Fetched)).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			}
-		})
+	asOf := ""
+	if nv != nil && !nv.Fetched.IsZero() {
+		asOf = locales.VersionsAsOf(nv.Fetched)
+	}
+	listCard(c, locales.AvailableTitle(), asOf, func() {
 		if nv == nil {
 			text := locales.VersionsLoading()
 			if a.NodeVersionsErr != "" {
 				text = locales.VersionsFailed(a.NodeVersionsErr)
 			}
-			ui.Text(c, text).FontSize(12).TextColor(t.TextMuted).Padding(10, 14, 14, 14).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+			cardNote(c, text)
 			return
 		}
 		now := c.Now()
@@ -265,12 +265,7 @@ func (a *App) availableCard(c *ui.Context, ins []inventory.Installation, rows []
 			if note := releaseNote(r, nv.Lines[versions.Major(r.Version)], installed, now); note != "" {
 				caption += " · " + note
 			}
-			ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-					ui.Text(c, "v"+r.Version).Font(FontMono).FontSize(13).SingleLine()
-					ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-				})
+			listRow(c, "v"+r.Version, true, caption, func() {
 				if r.Version == recommended.Version {
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
@@ -278,6 +273,139 @@ func (a *App) availableCard(c *ui.Context, ins []inventory.Installation, rows []
 			})
 		}
 	})
+}
+
+// managerCard shows the version manager that keeps Node and how it is
+// set up, or that there is none and Hearth will use mise; and whether
+// Corepack is on for the version in use.
+func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
+	var m *inventory.Manager
+	for i := range st.Managers {
+		if m == nil || active >= 0 && st.Managers[i].Name == ins[active].Source.Manager {
+			m = &st.Managers[i]
+		}
+	}
+	title := locales.VersionManager()
+	if m != nil {
+		title += " · " + m.Name
+	}
+	listCard(c, title, "", func() {
+		if m == nil {
+			cardNote(c, locales.NoVersionManager(strings.Join(sourceNames(ins, rows, active), ", ")))
+		} else {
+			def := "—"
+			for _, in := range ins {
+				if in.Default && in.Source.Manager == m.Name {
+					def = versionText(in.Version)
+				}
+			}
+			listRow(c, locales.DefaultVersion(), false, "", func() {
+				ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
+			})
+			caption := locales.SwitchOff()
+			if m.SwitchOnCD {
+				caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
+			}
+			listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
+		}
+		if active < 0 {
+			return
+		}
+		in := ins[active]
+		listRow(c, "Corepack", false, locales.CorepackCaption(), func() {
+			if !hasPackage(in, "corepack") && !in.Corepack {
+				ui.Text(c, locales.CorepackMissing()).FontSize(12).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+				return
+			}
+			stateText(c, in.Corepack)
+		})
+	})
+}
+
+// globalsCard lists the packages installed globally with the Node
+// version in use, but npm and Corepack, which come with it.
+func globalsCard(c *ui.Context, in inventory.Installation) {
+	pal := Colors(c.Theme())
+	listCard(c, locales.GlobalPackages(), "npm -g · "+versionText(in.Version), func() {
+		shown := 0
+		for _, p := range in.Packages {
+			if p.Name == "npm" || p.Name == "corepack" {
+				continue
+			}
+			shown++
+			caption := ""
+			if len(p.Commands) > 0 {
+				caption = locales.PackageCommands(strings.Join(p.Commands, ", "))
+			}
+			listRow(c, p.Name, false, caption, func() {
+				ui.Text(c, p.Version).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			})
+		}
+		if shown == 0 {
+			cardNote(c, locales.NoGlobalPackages())
+		}
+	})
+}
+
+// listCard is a card of rows under a title, with a note on the right of
+// the title when aside is not empty.
+func listCard(c *ui.Context, title, aside string, rows func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, title).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
+			if aside != "" {
+				ui.Text(c, aside).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
+		rows()
+	})
+}
+
+// listRow is a row of a list card: a name, mono for a version, with a
+// caption under it, and what end builds on the right.
+func listRow(c *ui.Context, name string, mono bool, caption string, end func()) {
+	pal := Colors(c.Theme())
+	ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			n := ui.Text(c, name).FontSize(13).SingleLine()
+			if mono {
+				n.Font(FontMono)
+			}
+			if caption != "" {
+				ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
+		end()
+	})
+}
+
+// cardNote is a list card's text in place of rows.
+func cardNote(c *ui.Context, text string) {
+	ui.Text(c, text).FontSize(12).TextColor(c.Theme().TextMuted).Padding(10, 14, 14, 14).
+		BorderWidth(1, 0, 0, 0).BorderColor(Colors(c.Theme()).Line)
+}
+
+// stateText says whether a setting is on.
+func stateText(c *ui.Context, on bool) {
+	pal := Colors(c.Theme())
+	if on {
+		ui.Text(c, locales.StateOn()).FontSize(12).FontWeight(500).TextColor(pal.SuccessText).SingleLine()
+		return
+	}
+	ui.Text(c, locales.StateOff()).FontSize(12).TextColor(pal.TextFaint).SingleLine()
+}
+
+func hasPackage(in inventory.Installation, name string) bool {
+	for _, p := range in.Packages {
+		if p.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func isLTS(nv *versions.Node, version string, now time.Time) bool {

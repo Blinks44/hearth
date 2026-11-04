@@ -38,3 +38,7 @@ func TestNodeNvmWindows(t *testing.T) {
 		{Tool: "node", Version: "20.18.0", Path: v20, RealPath: v20, Source: src("20.18.0")},
 	})
 }
+
+func startupFile(home string) string {
+	return filepath.Join(home, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
+}
