@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/store"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
+	"github.com/Blinks44/hearth/internal/watch"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -22,14 +23,19 @@ type projectList struct {
 	app      *hearthui.App
 	dir      string // where the settings are kept; "" keeps them nowhere
 	settings store.Settings
-	reads    int // the latest read, whose result alone is shown
+	reads    int            // the latest read, whose result alone is shown
+	watch    *watch.Service // follows the project folders; nil follows none
 
 	saving sync.Mutex   // one save at a time
 	saves  atomic.Int64 // the latest save, which an older one does not undo
 }
 
-// read reads every project again and shows them.
+// read reads every project again and shows them, and follows their
+// folders.
 func (l *projectList) read() {
+	if l.watch != nil {
+		l.watch.Projects(l.dirs())
+	}
 	l.reads++
 	gen := l.reads
 	dirs := l.dirs()
@@ -44,6 +50,16 @@ func (l *projectList) read() {
 			}
 		})
 	}()
+}
+
+// update shows p, read again after its files changed, in place of what
+// was read of its folder before.
+func (l *projectList) update(p projects.Project) {
+	ps := slices.Clone(l.app.Projects)
+	if i := slices.IndexFunc(ps, func(old projects.Project) bool { return old.Dir == p.Dir }); i >= 0 {
+		ps[i] = p
+		l.app.Projects = ps
+	}
 }
 
 // choose asks for a folder and offers to add it with the projects nested
@@ -79,6 +95,9 @@ func (l *projectList) add(dirs []string) {
 func (l *projectList) remove(dir string) {
 	l.settings.Projects = slices.DeleteFunc(l.settings.Projects, func(p store.Project) bool { return p.Path == dir })
 	l.app.Projects = slices.DeleteFunc(slices.Clone(l.app.Projects), func(p projects.Project) bool { return p.Dir == dir })
+	if l.watch != nil {
+		l.watch.Projects(l.dirs())
+	}
 	l.save()
 }
 

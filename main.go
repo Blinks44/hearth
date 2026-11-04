@@ -7,17 +7,21 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/scan"
 	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
 	"github.com/Blinks44/hearth/internal/versions"
+	"github.com/Blinks44/hearth/internal/watch"
 )
 
 func main() {
@@ -60,6 +64,17 @@ func main() {
 		})
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
+		// Project files and the shells' startup files are followed: a
+		// change reads that project again, or scans again.
+		list.watch = &watch.Service{
+			Start: func(ctx context.Context, path string) (watch.Watcher, error) {
+				return mygo.WatchFiles(ctx, path, mygo.FileWatchOptions{Debounce: 300 * time.Millisecond})
+			},
+			Project: func(p projects.Project) { win.Update(func() { list.update(p) }) },
+			Shell:   func() { win.Update(a.Scan) },
+			Err:     func(err error) { log.Print(err) },
+		}
+		list.watch.StartupFiles(detect.StartupFiles(sysenv.GUI(), a.Home))
 		list.read()
 		cache, err := mygo.App.Path(mygo.PathCache)
 		if err != nil {

@@ -121,6 +121,16 @@ func Read(dir string) Project {
 	return p
 }
 
+// Names are the names of the files and folders in a project folder that
+// Read reads: the project files and the AI settings.
+func Names() []string {
+	names := make([]string, 0, len(readers)+len(aiFiles))
+	for _, r := range readers {
+		names = append(names, r.file)
+	}
+	return append(names, aiFiles...)
+}
+
 // needs is a file that only tells the tool is needed.
 func needs(tool string) func([]byte) ([]Requirement, error) {
 	return func([]byte) ([]Requirement, error) {

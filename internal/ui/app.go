@@ -97,8 +97,9 @@ func (a *App) View(c *ui.Context) {
 	})
 }
 
-// scan starts a scan from the header or the sidebar.
-func (a *App) scan() {
+// Scan starts a scan, as the header and the sidebar do, unless one is
+// under way. It runs on the UI thread.
+func (a *App) Scan() {
 	if a.OnScan != nil && !a.Scanning {
 		a.Scanning = true
 		a.OnScan()
@@ -151,7 +152,7 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 		if x.before != nil {
 			x.before()
 		}
-		ui.Button(c, "").Disabled(a.OnScan == nil || a.Scanning).OnClick(a.scan).Children(func() {
+		ui.Button(c, "").Disabled(a.OnScan == nil || a.Scanning).OnClick(a.Scan).Children(func() {
 			ui.Icon(c, Icon("refresh-cw")).Size(14, 14).TextColor(t.TextMuted)
 			ui.Text(c, locales.Scan()).SingleLine()
 		})
@@ -218,7 +219,7 @@ func (a *App) status(c *ui.Context) {
 		ui.Box(c).Size(6, 6).Radius(3).Background(dot)
 		ui.Text(c, text).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
 		again := ui.ButtonBase(c.Key("scan-again")).Size(24, 24).Radius(6).Center().
-			Label(locales.Scan()).Tooltip(locales.Scan()).Disabled(a.OnScan == nil || a.Scanning).OnClick(a.scan)
+			Label(locales.Scan()).Tooltip(locales.Scan()).Disabled(a.OnScan == nil || a.Scanning).OnClick(a.Scan)
 		if again.Hovered() {
 			again.Background(pal.SidebarHover)
 		}

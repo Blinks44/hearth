@@ -11,11 +11,21 @@ import (
 // corepackShims are the files corepack enable puts beside node.
 var corepackShims = []string{"pnpm", "yarn"}
 
-// shellStartup returns the text of the shells' startup files in home:
-// zsh's (in ZDOTDIR when set), bash's, sh's and fish's.
+// shellStartup returns the text of the shells' startup files in home.
 func shellStartup(env sysenv.Env, home string) []string {
+	texts := []string{}
+	for _, p := range StartupFiles(env, home) {
+		texts = append(texts, readFile(p))
+	}
+	return texts
+}
+
+// StartupFiles returns the paths of the shells' startup files in home,
+// which change what the terminal finds: zsh's (in ZDOTDIR when set),
+// bash's, sh's and fish's, whether they exist or not.
+func StartupFiles(env sysenv.Env, home string) []string {
 	if home == "" {
-		return []string{}
+		return nil
 	}
 	zdot := env.Get("ZDOTDIR")
 	if zdot == "" {
@@ -27,9 +37,5 @@ func shellStartup(env sysenv.Env, home string) []string {
 		filepath.Join(home, ".config", "fish", "config.fish"),
 	}
 	fish, _ := filepath.Glob(filepath.Join(home, ".config", "fish", "conf.d", "*.fish")) // only a malformed pattern fails
-	texts := []string{}
-	for _, p := range append(paths, fish...) {
-		texts = append(texts, readFile(p))
-	}
-	return texts
+	return append(paths, fish...)
 }
