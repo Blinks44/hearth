@@ -13,6 +13,8 @@ import (
 type App struct {
 	// Machine is the caption under the logo, as "studio · macOS 15.4".
 	Machine string
+	// Home is the user's home directory, which paths show as ~.
+	Home string
 	// Snapshot is what the last scan found; nil before the first.
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
@@ -23,6 +25,7 @@ type App struct {
 
 	router   *ui.Router
 	moreOpen bool // the languages not found show in the sidebar
+	nodeTab  int  // the tab of the Node.js page shown
 }
 
 // NewApp returns the app showing the overview.
@@ -47,7 +50,11 @@ func (a *App) View(c *ui.Context) {
 			for _, p := range pages() {
 				if r.Match(p.path) {
 					r.Title(p.title())
-					a.stub(c, p)
+					if p.path == "/tools/node" {
+						a.node(c, p)
+					} else {
+						a.stub(c, p)
+					}
 					return
 				}
 			}

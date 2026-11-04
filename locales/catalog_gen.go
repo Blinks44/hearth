@@ -399,3 +399,315 @@ func CheckedOn(date time.Time) string { return In(i18n.Locale()).CheckedOn(date)
 func (msgs Messages) CheckedOn(date time.Time) string {
 	return Catalog.Format(msgs.locale, "checkedOn", map[string]any{"date": date})
 }
+
+// Installed says "Installed"
+// in the language the app shows.
+//
+// Tool page: the card of installed copies and the tab listing them.
+func Installed() string { return In(i18n.Locale()).Installed() }
+
+// Installed says "Installed"
+// in the language of msgs.
+//
+// Tool page: the card of installed copies and the tab listing them.
+func (msgs Messages) Installed() string {
+	return Catalog.Format(msgs.locale, "installed", nil)
+}
+
+// InTerminal says "In terminal"
+// in the language the app shows.
+//
+// Tool page card: the version a new terminal runs.
+func InTerminal() string { return In(i18n.Locale()).InTerminal() }
+
+// InTerminal says "In terminal"
+// in the language of msgs.
+//
+// Tool page card: the version a new terminal runs.
+func (msgs Messages) InTerminal() string {
+	return Catalog.Format(msgs.locale, "inTerminal", nil)
+}
+
+// Project says "Project"
+// in the language the app shows.
+//
+// Tool page card: the version a project asks for.
+func Project() string { return In(i18n.Locale()).Project() }
+
+// Project says "Project"
+// in the language of msgs.
+//
+// Tool page card: the version a project asks for.
+func (msgs Messages) Project() string {
+	return Catalog.Format(msgs.locale, "project", nil)
+}
+
+// Available says "Available"
+// in the language the app shows.
+//
+// Tool page tab: versions that can be installed.
+func Available() string { return In(i18n.Locale()).Available() }
+
+// Available says "Available"
+// in the language of msgs.
+//
+// Tool page tab: versions that can be installed.
+func (msgs Messages) Available() string {
+	return Catalog.Format(msgs.locale, "available", nil)
+}
+
+// VersionsCount says "{count, plural, one {# version} other {# versions}}"
+// in the language the app shows.
+//
+// Tool page card: how many copies are installed.
+func VersionsCount(count int) string { return In(i18n.Locale()).VersionsCount(count) }
+
+// VersionsCount says "{count, plural, one {# version} other {# versions}}"
+// in the language of msgs.
+//
+// Tool page card: how many copies are installed.
+func (msgs Messages) VersionsCount(count int) string {
+	return Catalog.Format(msgs.locale, "versionsCount", map[string]any{"count": count})
+}
+
+// NotInPath says "not in PATH"
+// in the language the app shows.
+//
+// Tool page card: the terminal finds no copy of the tool.
+func NotInPath() string { return In(i18n.Locale()).NotInPath() }
+
+// NotInPath says "not in PATH"
+// in the language of msgs.
+//
+// Tool page card: the terminal finds no copy of the tool.
+func (msgs Messages) NotInPath() string {
+	return Catalog.Format(msgs.locale, "notInPath", nil)
+}
+
+// NoProjects says "no projects yet"
+// in the language the app shows.
+//
+// Tool page card: no project added to Hearth asks for the tool.
+func NoProjects() string { return In(i18n.Locale()).NoProjects() }
+
+// NoProjects says "no projects yet"
+// in the language of msgs.
+//
+// Tool page card: no project added to Hearth asks for the tool.
+func (msgs Messages) NoProjects() string {
+	return Catalog.Format(msgs.locale, "noProjects", nil)
+}
+
+// UnknownVersion says "version unknown"
+// in the language the app shows.
+//
+// A copy whose version could not be read.
+func UnknownVersion() string { return In(i18n.Locale()).UnknownVersion() }
+
+// UnknownVersion says "version unknown"
+// in the language of msgs.
+//
+// A copy whose version could not be read.
+func (msgs Messages) UnknownVersion() string {
+	return Catalog.Format(msgs.locale, "unknownVersion", nil)
+}
+
+// ManagedBy says "Versions managed by {manager}"
+// in the language the app shows.
+//
+// Tool page header: the version manager in use, as fnm.
+func ManagedBy(manager string) string { return In(i18n.Locale()).ManagedBy(manager) }
+
+// ManagedBy says "Versions managed by {manager}"
+// in the language of msgs.
+//
+// Tool page header: the version manager in use, as fnm.
+func (msgs Messages) ManagedBy(manager string) string {
+	return Catalog.Format(msgs.locale, "managedBy", map[string]any{"manager": manager})
+}
+
+// AlsoFrom says "also from {sources}"
+// in the language the app shows.
+//
+// Tool page header, after the version manager: where the other copies came
+// from.
+func AlsoFrom(sources string) string { return In(i18n.Locale()).AlsoFrom(sources) }
+
+// AlsoFrom says "also from {sources}"
+// in the language of msgs.
+//
+// Tool page header, after the version manager: where the other copies came
+// from.
+func (msgs Messages) AlsoFrom(sources string) string {
+	return Catalog.Format(msgs.locale, "alsoFrom", map[string]any{"sources": sources})
+}
+
+// InstalledFrom says "Installed from {sources}"
+// in the language the app shows.
+//
+// Tool page header without a version manager: where the copies came from.
+func InstalledFrom(sources string) string { return In(i18n.Locale()).InstalledFrom(sources) }
+
+// InstalledFrom says "Installed from {sources}"
+// in the language of msgs.
+//
+// Tool page header without a version manager: where the copies came from.
+func (msgs Messages) InstalledFrom(sources string) string {
+	return Catalog.Format(msgs.locale, "installedFrom", map[string]any{"sources": sources})
+}
+
+// SourceInstaller says "installer"
+// in the language the app shows.
+//
+// Where a copy came from: an official installer or a copy put by hand.
+func SourceInstaller() string { return In(i18n.Locale()).SourceInstaller() }
+
+// SourceInstaller says "installer"
+// in the language of msgs.
+//
+// Where a copy came from: an official installer or a copy put by hand.
+func (msgs Messages) SourceInstaller() string {
+	return Catalog.Format(msgs.locale, "sourceInstaller", nil)
+}
+
+// SourceSystem says "system"
+// in the language the app shows.
+//
+// Where a copy came from: the operating system.
+func SourceSystem() string { return In(i18n.Locale()).SourceSystem() }
+
+// SourceSystem says "system"
+// in the language of msgs.
+//
+// Where a copy came from: the operating system.
+func (msgs Messages) SourceSystem() string {
+	return Catalog.Format(msgs.locale, "sourceSystem", nil)
+}
+
+// SourceOther says "other"
+// in the language the app shows.
+//
+// Where a copy came from: a place Hearth does not recognize.
+func SourceOther() string { return In(i18n.Locale()).SourceOther() }
+
+// SourceOther says "other"
+// in the language of msgs.
+//
+// Where a copy came from: a place Hearth does not recognize.
+func (msgs Messages) SourceOther() string {
+	return Catalog.Format(msgs.locale, "sourceOther", nil)
+}
+
+// ColumnVersion says "Version"
+// in the language the app shows.
+//
+// Versions table column.
+func ColumnVersion() string { return In(i18n.Locale()).ColumnVersion() }
+
+// ColumnVersion says "Version"
+// in the language of msgs.
+//
+// Versions table column.
+func (msgs Messages) ColumnVersion() string {
+	return Catalog.Format(msgs.locale, "columnVersion", nil)
+}
+
+// ColumnSource says "Source"
+// in the language the app shows.
+//
+// Versions table column: what installed the copy.
+func ColumnSource() string { return In(i18n.Locale()).ColumnSource() }
+
+// ColumnSource says "Source"
+// in the language of msgs.
+//
+// Versions table column: what installed the copy.
+func (msgs Messages) ColumnSource() string {
+	return Catalog.Format(msgs.locale, "columnSource", nil)
+}
+
+// ColumnPath says "Path and use"
+// in the language the app shows.
+//
+// Versions table column: where the copy is and what uses it.
+func ColumnPath() string { return In(i18n.Locale()).ColumnPath() }
+
+// ColumnPath says "Path and use"
+// in the language of msgs.
+//
+// Versions table column: where the copy is and what uses it.
+func (msgs Messages) ColumnPath() string {
+	return Catalog.Format(msgs.locale, "columnPath", nil)
+}
+
+// ChipDefault says "default"
+// in the language the app shows.
+//
+// Chip on a version its manager picks by default.
+func ChipDefault() string { return In(i18n.Locale()).ChipDefault() }
+
+// ChipDefault says "default"
+// in the language of msgs.
+//
+// Chip on a version its manager picks by default.
+func (msgs Messages) ChipDefault() string {
+	return Catalog.Format(msgs.locale, "chipDefault", nil)
+}
+
+// ChipInPath says "in PATH"
+// in the language the app shows.
+//
+// Chip on the copy the terminal runs.
+func ChipInPath() string { return In(i18n.Locale()).ChipInPath() }
+
+// ChipInPath says "in PATH"
+// in the language of msgs.
+//
+// Chip on the copy the terminal runs.
+func (msgs Messages) ChipInPath() string {
+	return Catalog.Format(msgs.locale, "chipInPath", nil)
+}
+
+// ChipDuplicate says "duplicate in PATH"
+// in the language the app shows.
+//
+// Chip on a copy in PATH that another copy before it hides.
+func ChipDuplicate() string { return In(i18n.Locale()).ChipDuplicate() }
+
+// ChipDuplicate says "duplicate in PATH"
+// in the language of msgs.
+//
+// Chip on a copy in PATH that another copy before it hides.
+func (msgs Messages) ChipDuplicate() string {
+	return Catalog.Format(msgs.locale, "chipDuplicate", nil)
+}
+
+// ToolNotInstalled says "{tool} is not installed on this computer"
+// in the language the app shows.
+//
+// Tool page when the scan found no copy.
+func ToolNotInstalled(tool string) string { return In(i18n.Locale()).ToolNotInstalled(tool) }
+
+// ToolNotInstalled says "{tool} is not installed on this computer"
+// in the language of msgs.
+//
+// Tool page when the scan found no copy.
+func (msgs Messages) ToolNotInstalled(tool string) string {
+	return Catalog.Format(msgs.locale, "toolNotInstalled", map[string]any{"tool": tool})
+}
+
+// ToolCheckFailed says "Could not check {tool}: {error}"
+// in the language the app shows.
+//
+// Tool page when its detector failed.
+func ToolCheckFailed(tool string, error string) string {
+	return In(i18n.Locale()).ToolCheckFailed(tool, error)
+}
+
+// ToolCheckFailed says "Could not check {tool}: {error}"
+// in the language of msgs.
+//
+// Tool page when its detector failed.
+func (msgs Messages) ToolCheckFailed(tool string, error string) string {
+	return Catalog.Format(msgs.locale, "toolCheckFailed", map[string]any{"tool": tool, "error": error})
+}

@@ -126,5 +126,133 @@
         "type": "DateTime"
       }
     }
+  },
+  "installed": "Installed",
+  "@installed": {
+    "description": "Tool page: the card of installed copies and the tab listing them."
+  },
+  "inTerminal": "In terminal",
+  "@inTerminal": {
+    "description": "Tool page card: the version a new terminal runs."
+  },
+  "project": "Project",
+  "@project": {
+    "description": "Tool page card: the version a project asks for."
+  },
+  "available": "Available",
+  "@available": {
+    "description": "Tool page tab: versions that can be installed."
+  },
+  "versionsCount": "{count, plural, one {# version} other {# versions}}",
+  "@versionsCount": {
+    "description": "Tool page card: how many copies are installed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notInPath": "not in PATH",
+  "@notInPath": {
+    "description": "Tool page card: the terminal finds no copy of the tool."
+  },
+  "noProjects": "no projects yet",
+  "@noProjects": {
+    "description": "Tool page card: no project added to Hearth asks for the tool."
+  },
+  "unknownVersion": "version unknown",
+  "@unknownVersion": {
+    "description": "A copy whose version could not be read."
+  },
+  "managedBy": "Versions managed by {manager}",
+  "@managedBy": {
+    "description": "Tool page header: the version manager in use, as fnm.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "alsoFrom": "also from {sources}",
+  "@alsoFrom": {
+    "description": "Tool page header, after the version manager: where the other copies came from.",
+    "placeholders": {
+      "sources": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "installedFrom": "Installed from {sources}",
+  "@installedFrom": {
+    "description": "Tool page header without a version manager: where the copies came from.",
+    "placeholders": {
+      "sources": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "sourceInstaller": "installer",
+  "@sourceInstaller": {
+    "description": "Where a copy came from: an official installer or a copy put by hand."
+  },
+  "sourceSystem": "system",
+  "@sourceSystem": {
+    "description": "Where a copy came from: the operating system."
+  },
+  "sourceOther": "other",
+  "@sourceOther": {
+    "description": "Where a copy came from: a place Hearth does not recognize."
+  },
+  "columnVersion": "Version",
+  "@columnVersion": {
+    "description": "Versions table column."
+  },
+  "columnSource": "Source",
+  "@columnSource": {
+    "description": "Versions table column: what installed the copy."
+  },
+  "columnPath": "Path and use",
+  "@columnPath": {
+    "description": "Versions table column: where the copy is and what uses it."
+  },
+  "chipDefault": "default",
+  "@chipDefault": {
+    "description": "Chip on a version its manager picks by default."
+  },
+  "chipInPath": "in PATH",
+  "@chipInPath": {
+    "description": "Chip on the copy the terminal runs."
+  },
+  "chipDuplicate": "duplicate in PATH",
+  "@chipDuplicate": {
+    "description": "Chip on a copy in PATH that another copy before it hides."
+  },
+  "toolNotInstalled": "{tool} is not installed on this computer",
+  "@toolNotInstalled": {
+    "description": "Tool page when the scan found no copy.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      }
+    }
+  },
+  "toolCheckFailed": "Could not check {tool}: {error}",
+  "@toolCheckFailed": {
+    "description": "Tool page when its detector failed.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "error": {
+        "type": "String",
+        "example": "timeout"
+      }
+    }
   }
 }

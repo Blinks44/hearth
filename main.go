@@ -23,6 +23,7 @@ func main() {
 	}
 	a := hearthui.NewApp()
 	a.Machine = machine()
+	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
 	mygo.App.WhenReady(func() {
 		win := mygo.NewWindow(mygo.WindowOptions{

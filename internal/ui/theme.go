@@ -45,6 +45,17 @@ type Palette struct {
 	TextFaint     ui.Color // captions, counters, placeholders
 	Info          ui.Color // a check under way
 	Shadow        ui.Color // raised elements: chosen item, buttons
+
+	Subtle        ui.Color // cards of states, table headers
+	Muted         ui.Color // segmented tracks, neutral chips
+	Line          ui.Color // borders of cards, lines between rows
+	ControlBorder ui.Color // fields and source badges
+	ActiveRow     ui.Color // the table row of the copy in use
+	MonoText      ui.Color // paths, versions, commands
+	SuccessSoft   ui.Color // behind a success chip
+	SuccessText   ui.Color
+	WarningSoft   ui.Color // behind a warning chip
+	WarningText   ui.Color
 }
 
 // Colors returns the palette that goes with t, light or dark.
@@ -58,6 +69,16 @@ func Colors(t *ui.Theme) Palette {
 			TextFaint:     ui.Hex("#7D776E"),
 			Info:          ui.Hex("#5B8EF0"),
 			Shadow:        ui.RGBA(0, 0, 0, 0.24),
+			Subtle:        ui.Hex("#211F1C"),
+			Muted:         ui.Hex("#2C2926"),
+			Line:          ui.Hex("#2E2B27"),
+			ControlBorder: ui.Hex("#3A3631"),
+			ActiveRow:     ui.Hex("#2B211B"),
+			MonoText:      ui.Hex("#CFCAC2"),
+			SuccessSoft:   ui.Hex("#1A2E21"),
+			SuccessText:   ui.Hex("#5FD08E"),
+			WarningSoft:   ui.Hex("#33291A"),
+			WarningText:   ui.Hex("#E3AE4A"),
 		}
 	}
 	return Palette{
@@ -68,6 +89,16 @@ func Colors(t *ui.Theme) Palette {
 		TextFaint:     ui.Hex("#9D988F"),
 		Info:          ui.Hex("#3A73DA"),
 		Shadow:        ui.RGBA(0x2A, 0x1E, 0x10, 0.08),
+		Subtle:        ui.Hex("#FAF9F7"),
+		Muted:         ui.Hex("#F1EFEB"),
+		Line:          ui.Hex("#EEEBE6"),
+		ControlBorder: ui.Hex("#E2DED8"),
+		ActiveRow:     ui.Hex("#FFF8F3"),
+		MonoText:      ui.Hex("#4A4640"),
+		SuccessSoft:   ui.Hex("#E7F5EC"),
+		SuccessText:   ui.Hex("#23794A"),
+		WarningSoft:   ui.Hex("#FBF2DE"),
+		WarningText:   ui.Hex("#9A6300"),
 	}
 }
 
