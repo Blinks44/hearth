@@ -328,5 +328,28 @@
   "rustHostTarget": "этот компьютер",
   "rustNoTargets": "rustup не перечисляет targets этого toolchain",
   "rustCargoTools": "Утилиты cargo",
-  "noCargoTools": "Нет команд из cargo install"
+  "noCargoTools": "Нет команд из cargo install",
+  "javaCount": "{count} JDK",
+  "javaHomeChip": "это JAVA_HOME",
+  "javaHomeNote": "Многие инструменты (Gradle, Maven, IDE) берут Java из JAVA_HOME, а не из PATH.",
+  "javaHomeUnset": "JAVA_HOME не задан. Сборщики могут выбирать JDK самостоятельно.",
+  "javaHomeMismatch": "java и JAVA_HOME указывают на разные JDK. Сборщики могут использовать другую версию, чем терминал.",
+  "javaStubWarning": "/usr/bin/java — заглушка macOS: JDK для неё не найден. Hearth не запускает заглушку.",
+  "javaBuilders": "Сборщики",
+  "javaNoBuilders": "Gradle и Maven не найдены в PATH. В проектах могут быть свои обёртки.",
+  "javaReleaseLine": "JDK {line}",
+  "@javaCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@javaReleaseLine": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  }
 }

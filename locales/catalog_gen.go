@@ -4637,3 +4637,93 @@ func NoCargoTools() string { return In(i18n.Locale()).NoCargoTools() }
 func (msgs Messages) NoCargoTools() string {
 	return Catalog.Format(msgs.locale, "noCargoTools", nil)
 }
+
+// JavaCount says "{count, plural, one {# JDK} other {# JDKs}}"
+// in the language the app shows.
+func JavaCount(count int) string { return In(i18n.Locale()).JavaCount(count) }
+
+// JavaCount says "{count, plural, one {# JDK} other {# JDKs}}"
+// in the language of msgs.
+func (msgs Messages) JavaCount(count int) string {
+	return Catalog.Format(msgs.locale, "javaCount", map[string]any{"count": count})
+}
+
+// JavaHomeChip says "this is JAVA_HOME"
+// in the language the app shows.
+func JavaHomeChip() string { return In(i18n.Locale()).JavaHomeChip() }
+
+// JavaHomeChip says "this is JAVA_HOME"
+// in the language of msgs.
+func (msgs Messages) JavaHomeChip() string {
+	return Catalog.Format(msgs.locale, "javaHomeChip", nil)
+}
+
+// JavaHomeNote says "Many tools (Gradle, Maven, IDEs) use JAVA_HOME rather than PATH."
+// in the language the app shows.
+func JavaHomeNote() string { return In(i18n.Locale()).JavaHomeNote() }
+
+// JavaHomeNote says "Many tools (Gradle, Maven, IDEs) use JAVA_HOME rather than PATH."
+// in the language of msgs.
+func (msgs Messages) JavaHomeNote() string {
+	return Catalog.Format(msgs.locale, "javaHomeNote", nil)
+}
+
+// JavaHomeUnset says "JAVA_HOME is not set. Build tools may choose their own JDK."
+// in the language the app shows.
+func JavaHomeUnset() string { return In(i18n.Locale()).JavaHomeUnset() }
+
+// JavaHomeUnset says "JAVA_HOME is not set. Build tools may choose their own JDK."
+// in the language of msgs.
+func (msgs Messages) JavaHomeUnset() string {
+	return Catalog.Format(msgs.locale, "javaHomeUnset", nil)
+}
+
+// JavaHomeMismatch says "java and JAVA_HOME point to different JDKs. Build tools may use a different version from the terminal."
+// in the language the app shows.
+func JavaHomeMismatch() string { return In(i18n.Locale()).JavaHomeMismatch() }
+
+// JavaHomeMismatch says "java and JAVA_HOME point to different JDKs. Build tools may use a different version from the terminal."
+// in the language of msgs.
+func (msgs Messages) JavaHomeMismatch() string {
+	return Catalog.Format(msgs.locale, "javaHomeMismatch", nil)
+}
+
+// JavaStubWarning says "/usr/bin/java is a macOS launcher; no JDK was found for it. Hearth does not run the launcher."
+// in the language the app shows.
+func JavaStubWarning() string { return In(i18n.Locale()).JavaStubWarning() }
+
+// JavaStubWarning says "/usr/bin/java is a macOS launcher; no JDK was found for it. Hearth does not run the launcher."
+// in the language of msgs.
+func (msgs Messages) JavaStubWarning() string {
+	return Catalog.Format(msgs.locale, "javaStubWarning", nil)
+}
+
+// JavaBuilders says "Build tools"
+// in the language the app shows.
+func JavaBuilders() string { return In(i18n.Locale()).JavaBuilders() }
+
+// JavaBuilders says "Build tools"
+// in the language of msgs.
+func (msgs Messages) JavaBuilders() string {
+	return Catalog.Format(msgs.locale, "javaBuilders", nil)
+}
+
+// JavaNoBuilders says "Gradle and Maven were not found in PATH. Project wrappers may still be available."
+// in the language the app shows.
+func JavaNoBuilders() string { return In(i18n.Locale()).JavaNoBuilders() }
+
+// JavaNoBuilders says "Gradle and Maven were not found in PATH. Project wrappers may still be available."
+// in the language of msgs.
+func (msgs Messages) JavaNoBuilders() string {
+	return Catalog.Format(msgs.locale, "javaNoBuilders", nil)
+}
+
+// JavaReleaseLine says "JDK {line}"
+// in the language the app shows.
+func JavaReleaseLine(line string) string { return In(i18n.Locale()).JavaReleaseLine(line) }
+
+// JavaReleaseLine says "JDK {line}"
+// in the language of msgs.
+func (msgs Messages) JavaReleaseLine(line string) string {
+	return Catalog.Format(msgs.locale, "javaReleaseLine", map[string]any{"line": line})
+}

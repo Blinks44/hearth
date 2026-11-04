@@ -53,6 +53,8 @@ type App struct {
 	// they could not, RustVersionsErr says why.
 	RustVersions    *versions.Rust
 	RustVersionsErr string
+	JavaVersions    *versions.Java
+	JavaVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -81,6 +83,7 @@ type App struct {
 	goTab         int     // the tab of the Go page shown
 	phpTab        int     // the tab of the PHP page shown
 	pythonTab     int     // the tab of the Python page shown
+	javaTab       int     // the tab of the Java page shown
 	rustTab       int     // the tab of the Rust page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
@@ -144,6 +147,8 @@ func (a *App) View(c *ui.Context) {
 						a.php(c, p)
 					case "/tools/python":
 						a.python(c, p)
+					case "/tools/java":
+						a.javaPage(c, p)
 					case "/tools/rust":
 						a.rust(c, p)
 					case projectsPage.path:

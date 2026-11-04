@@ -178,6 +178,9 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 				ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
 					ui.Text(c, displayPath(in, home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 					ui.Row(c).Gap(5).Wrap().Children(func() {
+						if in.Java != nil && in.Java.Home == a.javaHome() {
+							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.JavaHomeChip())
+						}
 						if in.Default {
 							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.ChipDefault())
 						}
@@ -378,11 +381,17 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 			if warning == "" {
 				continue
 			}
-			ui.Row(c).Gap(10).Padding(10, 10, 10, 12).Radius(9).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
-				ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(t.Warning)
-				ui.Text(c, warning).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
-			})
+			warningRow(c, warning)
 		}
+	})
+}
+
+// warningRow is a warning inside a card.
+func warningRow(c *ui.Context, text string) {
+	pal := Colors(c.Theme())
+	ui.Row(c).Gap(10).Padding(10, 10, 10, 12).Radius(9).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
+		ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
+		ui.Text(c, text).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
 	})
 }
 
@@ -590,7 +599,7 @@ func copyVersion(in inventory.Installation) string {
 		return versionText(in.Version)
 	case in.Tool == "go":
 		return "go" + in.Version
-	case in.Tool == "python" || in.Tool == "php":
+	case in.Tool == "python" || in.Tool == "php" || in.Tool == "java":
 		return in.Version
 	case in.Tool == "rust":
 		switch ch := rustChannel(in); ch {
@@ -609,6 +618,9 @@ func copyVersion(in inventory.Installation) string {
 func stubWarning(ins []inventory.Installation, entries []int, home string) string {
 	for _, i := range entries {
 		if in := ins[i]; in.Stub {
+			if in.Tool == "java" {
+				return locales.JavaStubWarning()
+			}
 			if strings.Contains(strings.ToLower(in.Path), `\windowsapps\`) {
 				return locales.StubStoreWarning(tilde(in.Path, home))
 			}

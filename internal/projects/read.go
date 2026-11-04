@@ -72,6 +72,8 @@ var readers = []struct {
 	{".tool-versions", readToolVersions},
 	{"mise.toml", readMiseTOML},
 	{".mise.toml", readMiseTOML},
+	{".java-version", firstLine("java")},
+	{".sdkmanrc", readSDKMAN},
 	{".python-version", firstLine("python")},
 	{"pyproject.toml", readPyproject},
 	{"uv.lock", needs("uv")},
@@ -377,4 +379,18 @@ func readComposerJSON(data []byte) ([]Requirement, error) {
 		{Tool: "php", Want: cfg.Require["php"], Key: "require.php"},
 		{Tool: "composer"},
 	}, nil
+}
+
+// readSDKMAN reads Java's candidate identifier; other SDKs are outside this page.
+func readSDKMAN(data []byte) ([]Requirement, error) {
+	for line := range strings.Lines(string(data)) {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if key, value, ok := strings.Cut(line, "="); ok && strings.TrimSpace(key) == "java" {
+			return []Requirement{{Tool: "java", Want: strings.Trim(strings.TrimSpace(value), `"'`), Key: "java"}}, nil
+		}
+	}
+	return nil, nil
 }

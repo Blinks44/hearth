@@ -33,7 +33,7 @@ func TestSidebarOpensPages(t *testing.T) {
 		if a.router.Path() != p.path || a.router.Title() != p.title() {
 			t.Errorf("clicked %q: page %q titled %q", p.title(), a.router.Path(), a.router.Title())
 		}
-		built := slices.Contains([]string{"/tools/jspm", "/tools/node", "/tools/bun", "/tools/go", "/tools/python", "/tools/php", "/tools/rust", projectsPage.path, overview.path, "/ai/agents", skillsPage, mcpPage}, p.path)
+		built := slices.Contains([]string{"/tools/jspm", "/tools/node", "/tools/bun", "/tools/go", "/tools/python", "/tools/php", "/tools/rust", "/tools/java", projectsPage.path, overview.path, "/ai/agents", skillsPage, mcpPage}, p.path)
 		if !tt.HasText(p.subtitle()) || !built && !tt.HasText("Coming soon") {
 			t.Errorf("%s: header missing, texts %q", p.title(), tt.Texts())
 		}

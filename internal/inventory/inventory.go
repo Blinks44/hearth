@@ -64,8 +64,12 @@ type RustToolchain struct {
 	Targets []string `json:",omitempty"`
 }
 
+// JDK describes a Java installation, from its release file.
+type JDK struct{ Home, Vendor string }
+
 // Installation is one copy of a tool.
 type Installation struct {
+	Java    *JDK           `json:",omitempty"`
 	PHP     *PHPConfig     `json:",omitempty"`
 	Rust    *RustToolchain `json:",omitempty"`
 	Tool    string

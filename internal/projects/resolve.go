@@ -202,6 +202,14 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 	case "", "*", "latest":
 		return all, nil
 	}
+	// A Java pin with a distribution, like SDKMAN's 21.0.5-tem or mise's
+	// temurin-21, names a manager's install directory.
+	if tool == "java" && strings.ContainsAny(want, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_") {
+		return func(in inventory.Installation) bool {
+			v := in.Source.Version
+			return !in.Source.Shim && (v == want || strings.HasPrefix(v, want+"."))
+		}, nil
+	}
 	if tool == "node" {
 		alias := strings.ToLower(want)
 		switch {
