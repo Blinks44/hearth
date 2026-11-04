@@ -6,6 +6,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -19,6 +20,10 @@ type App struct {
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
 	Scanning bool
+	// NodeVersions is what nodejs.org says of Node's versions; nil until
+	// the list comes, or when it could not, NodeVersionsErr says why.
+	NodeVersions    *versions.Node
+	NodeVersionsErr string
 	// OnScan starts a scan, whose snapshot comes back through
 	// Window.Update; nil disables scanning.
 	OnScan func()

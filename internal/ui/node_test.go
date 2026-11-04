@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/versions"
 )
 
 const home = "/Users/dev"
@@ -134,18 +135,109 @@ func TestManagedBy(t *testing.T) {
 		{[]inventory.Installation{brew, src(inventory.KindInstaller, "")}, -1, "Installed from brew, installer"},
 	}
 	for _, tt := range tests {
-		rows := versions(tt.ins)
+		rows := listed(tt.ins)
 		if got := managedBy(tt.ins, rows, tt.active); got != tt.want {
 			t.Errorf("managedBy = %q, want %q", got, tt.want)
 		}
 	}
 }
 
-func TestNodeChannel(t *testing.T) {
-	for v, want := range map[string]string{"22.12.0": "LTS", "23.6.0": "Current", "": "", "x": ""} {
-		if got := nodeChannel(v); got != want {
-			t.Errorf("nodeChannel(%q) = %q, want %q", v, got, want)
+// nodeVersions is a version list as of now: lines 24 and 22 in LTS, 20
+// and 23 ended.
+func nodeVersions(now time.Time) *versions.Node {
+	days := func(n int) time.Time { return now.AddDate(0, 0, n) }
+	return &versions.Node{
+		Fetched: days(-2),
+		Releases: []versions.Release{
+			{Version: "24.1.0", LTS: "Krypton"}, {Version: "23.11.0"},
+			{Version: "22.14.0", LTS: "Jod"}, {Version: "20.19.0", LTS: "Iron"},
+		},
+		Lines: map[int]versions.Line{
+			24: {Start: days(-200), LTS: days(-30), Maintenance: days(300), End: days(900), Codename: "Krypton"},
+			23: {Start: days(-400), Maintenance: days(-200), End: days(-1)},
+			22: {Start: days(-600), LTS: days(-400), Maintenance: days(-30), End: days(200), Codename: "Jod"},
+			20: {Start: days(-900), LTS: days(-800), Maintenance: days(-400), End: days(-1), Codename: "Iron"},
+		},
+	}
+}
+
+func TestChannel(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	nv := nodeVersions(now)
+	nv.Lines[26] = versions.Line{Start: now.AddDate(0, -6, 0), LTS: now.AddDate(0, 0, 7), Codename: "Lithium"}
+	tests := []struct {
+		nv      *versions.Node
+		version string
+		want    string
+		ended   bool
+	}{
+		{nv, "22.12.0", "LTS · Jod", false},
+		{nv, "20.18.1", "LTS · Iron", true},
+		{nv, "23.6.0", "Current", true},
+		{nv, "26.0.0", "Current", false}, // LTS next week
+		{nil, "22.12.0", "LTS", false},
+		{nil, "23.6.0", "Current", false},
+		{nv, "", "", false},
+	}
+	for _, tt := range tests {
+		got, ended := channel(tt.nv, tt.version, now)
+		if got != tt.want || ended != tt.ended {
+			t.Errorf("channel(%q) = %q, %v, want %q, %v", tt.version, got, ended, tt.want, tt.ended)
 		}
+	}
+}
+
+func TestReleaseNote(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	nv := nodeVersions(now)
+	tests := []struct {
+		release   string
+		installed []string
+		want      string
+	}{
+		{"22.14.0", []string{"22.9.0", "22.12.0", "20.18.1"}, "update for v22.12.0"},
+		{"22.14.0", []string{"22.14.0"}, "installed"},
+		{"22.14.0", nil, "support until May 2027"},
+		{"24.1.0", nil, ""},
+	}
+	for _, tt := range tests {
+		r := versions.Release{Version: tt.release}
+		if got := releaseNote(r, nv.Lines[versions.Major(tt.release)], tt.installed, now); got != tt.want {
+			t.Errorf("releaseNote(%s, %q) = %q, want %q", tt.release, tt.installed, got, tt.want)
+		}
+	}
+}
+
+// The list of versions shows beside the table, saying how old it is, and
+// the table takes the lines' names and ends from it.
+func TestNodeAvailable(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	tt := openNode(t, a)
+	if !tt.HasText("Getting the version list…") {
+		t.Errorf("before the list, texts %q", tt.Texts())
+	}
+	a.NodeVersionsErr = "no connection"
+	tt.Frame()
+	if !tt.HasText("Could not get the version list: no connection") {
+		t.Errorf("failed, texts %q", tt.Texts())
+	}
+	a.NodeVersions, a.NodeVersionsErr = nodeVersions(tt.Now()), ""
+	tt.Frame()
+	for _, s := range []string{"Available to install", "v24.1.0", "LTS · Krypton", "recommended",
+		"v22.14.0", "LTS · Jod · update for v22.12.0", "LTS · Jod", "support ended"} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q in %q", s, tt.Texts())
+		}
+	}
+	if tt.HasText("v20.19.0") || tt.HasText("v23.11.0") {
+		t.Error("an ended line offered")
+	}
+	if err := tt.Click("Available"); err != nil {
+		t.Fatal(err)
+	}
+	if !tt.HasText("v24.1.0") || tt.HasText("Path and use") {
+		t.Errorf("Available tab, texts %q", tt.Texts())
 	}
 }
 

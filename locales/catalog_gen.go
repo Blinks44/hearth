@@ -803,3 +803,131 @@ func GuiNotFound(command string) string { return In(i18n.Locale()).GuiNotFound(c
 func (msgs Messages) GuiNotFound(command string) string {
 	return Catalog.Format(msgs.locale, "guiNotFound", map[string]any{"command": command})
 }
+
+// AvailableTitle says "Available to install"
+// in the language the app shows.
+//
+// Tool page card: the newest version of each supported release line.
+func AvailableTitle() string { return In(i18n.Locale()).AvailableTitle() }
+
+// AvailableTitle says "Available to install"
+// in the language of msgs.
+//
+// Tool page card: the newest version of each supported release line.
+func (msgs Messages) AvailableTitle() string {
+	return Catalog.Format(msgs.locale, "availableTitle", nil)
+}
+
+// VersionsAsOf says "as of {date, date, ::MMMd}"
+// in the language the app shows.
+//
+// Tool page card: when the version list was last fetched.
+func VersionsAsOf(date time.Time) string { return In(i18n.Locale()).VersionsAsOf(date) }
+
+// VersionsAsOf says "as of {date, date, ::MMMd}"
+// in the language of msgs.
+//
+// Tool page card: when the version list was last fetched.
+func (msgs Messages) VersionsAsOf(date time.Time) string {
+	return Catalog.Format(msgs.locale, "versionsAsOf", map[string]any{"date": date})
+}
+
+// VersionsLoading says "Getting the version list…"
+// in the language the app shows.
+//
+// Tool page card while the version list downloads.
+func VersionsLoading() string { return In(i18n.Locale()).VersionsLoading() }
+
+// VersionsLoading says "Getting the version list…"
+// in the language of msgs.
+//
+// Tool page card while the version list downloads.
+func (msgs Messages) VersionsLoading() string {
+	return Catalog.Format(msgs.locale, "versionsLoading", nil)
+}
+
+// VersionsFailed says "Could not get the version list: {error}"
+// in the language the app shows.
+//
+// Tool page card when the version list could not be downloaded and none is
+// kept.
+func VersionsFailed(error string) string { return In(i18n.Locale()).VersionsFailed(error) }
+
+// VersionsFailed says "Could not get the version list: {error}"
+// in the language of msgs.
+//
+// Tool page card when the version list could not be downloaded and none is
+// kept.
+func (msgs Messages) VersionsFailed(error string) string {
+	return Catalog.Format(msgs.locale, "versionsFailed", map[string]any{"error": error})
+}
+
+// NoteInstalled says "installed"
+// in the language the app shows.
+//
+// Available version note: this exact version is installed.
+func NoteInstalled() string { return In(i18n.Locale()).NoteInstalled() }
+
+// NoteInstalled says "installed"
+// in the language of msgs.
+//
+// Available version note: this exact version is installed.
+func (msgs Messages) NoteInstalled() string {
+	return Catalog.Format(msgs.locale, "noteInstalled", nil)
+}
+
+// NoteUpdateFor says "update for {version}"
+// in the language the app shows.
+//
+// Available version note: a newer version of an installed line.
+func NoteUpdateFor(version string) string { return In(i18n.Locale()).NoteUpdateFor(version) }
+
+// NoteUpdateFor says "update for {version}"
+// in the language of msgs.
+//
+// Available version note: a newer version of an installed line.
+func (msgs Messages) NoteUpdateFor(version string) string {
+	return Catalog.Format(msgs.locale, "noteUpdateFor", map[string]any{"version": version})
+}
+
+// NoteSupportUntil says "support until {date, date, ::yMMM}"
+// in the language the app shows.
+//
+// Available version note: the line gets only fixes until it ends.
+func NoteSupportUntil(date time.Time) string { return In(i18n.Locale()).NoteSupportUntil(date) }
+
+// NoteSupportUntil says "support until {date, date, ::yMMM}"
+// in the language of msgs.
+//
+// Available version note: the line gets only fixes until it ends.
+func (msgs Messages) NoteSupportUntil(date time.Time) string {
+	return Catalog.Format(msgs.locale, "noteSupportUntil", map[string]any{"date": date})
+}
+
+// TagRecommended says "recommended"
+// in the language the app shows.
+//
+// Tag on the newest LTS version.
+func TagRecommended() string { return In(i18n.Locale()).TagRecommended() }
+
+// TagRecommended says "recommended"
+// in the language of msgs.
+//
+// Tag on the newest LTS version.
+func (msgs Messages) TagRecommended() string {
+	return Catalog.Format(msgs.locale, "tagRecommended", nil)
+}
+
+// ChipSupportEnded says "support ended"
+// in the language the app shows.
+//
+// Chip on an installed version whose release line no longer gets fixes.
+func ChipSupportEnded() string { return In(i18n.Locale()).ChipSupportEnded() }
+
+// ChipSupportEnded says "support ended"
+// in the language of msgs.
+//
+// Chip on an installed version whose release line no longer gets fixes.
+func (msgs Messages) ChipSupportEnded() string {
+	return Catalog.Format(msgs.locale, "chipSupportEnded", nil)
+}

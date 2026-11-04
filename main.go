@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/egoist/mygo"
@@ -15,6 +17,7 @@ import (
 	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
+	"github.com/Blinks44/hearth/internal/versions"
 )
 
 func main() {
@@ -58,7 +61,31 @@ func main() {
 				}()
 			}
 		}
-		a.OnScan = func() { scanner.Start(scanned) }
+		// The version lists, kept a day, come again with every scan.
+		lists := &versions.Cache{Dir: filepath.Join(cache, "versions")}
+		if cache == "" {
+			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
+		}
+		fetchVersions := func() {
+			go func() {
+				n, err := versions.FetchNode(context.Background(), lists)
+				if err != nil {
+					log.Print(err)
+				}
+				win.Update(func() {
+					if err != nil {
+						// A list shown before stays.
+						a.NodeVersionsErr = err.Error()
+						return
+					}
+					a.NodeVersions, a.NodeVersionsErr = &n, ""
+				})
+			}()
+		}
+		a.OnScan = func() {
+			scanner.Start(scanned)
+			fetchVersions()
+		}
 		// The last snapshot shows at once, until the scan replaces it.
 		if cache != "" {
 			go func() {
@@ -77,6 +104,7 @@ func main() {
 		}
 		a.Scanning = true
 		scanner.Start(scanned)
+		fetchVersions()
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)

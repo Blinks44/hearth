@@ -4,10 +4,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
+	"golang.org/x/mod/semver"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -30,16 +33,25 @@ func (a *App) node(c *ui.Context, p page) {
 			a.nodeEmpty(c)
 			return
 		}
-		rows := versions(st.Installations)
+		rows := listed(st.Installations)
 		active := terminalIndex(st.Installations)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				nodeHeader(c, st.Installations, rows, active)
+				nodeHeader(c, a.NodeVersions, st.Installations, rows, active)
 				a.nodeTabs(c, len(rows))
 				switch a.nodeTab {
 				case 0:
-					versionTable(c, st.Installations, rows, active, a.Home)
-					pathCard(c, st.Installations, active, a.Home)
+					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
+						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
+							versionTable(c, a.NodeVersions, st.Installations, rows, active, a.Home)
+							pathCard(c, st.Installations, active, a.Home)
+						})
+						ui.Column(c).Width(342).Shrink(0).Children(func() {
+							a.availableCard(c, st.Installations, rows)
+						})
+					})
+				case 1:
+					a.availableCard(c, st.Installations, rows)
 				case 3:
 					pathCard(c, st.Installations, active, a.Home)
 				default:
@@ -85,7 +97,7 @@ func (a *App) nodeEmpty(c *ui.Context) {
 // nodeHeader is the logo, the name and how the versions are managed, and
 // on the right the cards of where Node stands: installed, in the
 // terminal, in a project.
-func nodeHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func nodeHeader(c *ui.Context, nv *versions.Node, ins []inventory.Installation, rows []int, active int) {
 	t := c.Theme()
 	pal := Colors(t)
 	tile := nodeTile[0]
@@ -100,7 +112,7 @@ func nodeHeader(c *ui.Context, ins []inventory.Installation, rows []int, active 
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, "Node.js").FontSize(22).FontWeight(600).SingleLine()
-				if active >= 0 && nodeChannel(ins[active].Version) == "LTS" {
+				if active >= 0 && isLTS(nv, ins[active].Version, c.Now()) {
 					ui.Text(c, "LTS").FontSize(10.5).FontWeight(600).TextColor(pal.SuccessText).
 						Padding(2, 6).Radius(5).Background(pal.SuccessSoft)
 				}
@@ -167,7 +179,7 @@ func (a *App) nodeTabs(c *ui.Context, installed int) {
 // versionTable lists the installed versions, rows indexing ins: the
 // version and its channel, the source, the path and chips of its use.
 // The row of the copy the terminal runs, active, stands out.
-func versionTable(c *ui.Context, ins []inventory.Installation, rows []int, active int, home string) {
+func versionTable(c *ui.Context, nv *versions.Node, ins []inventory.Installation, rows []int, active int, home string) {
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
@@ -184,6 +196,7 @@ func versionTable(c *ui.Context, ins []inventory.Installation, rows []int, activ
 		})
 		for _, i := range rows {
 			in := ins[i]
+			ch, ended := channel(nv, in.Version, c.Now())
 			row := ui.Row(c).Gap(12).Padding(12, 12, 12, 16).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
 			if i == active {
@@ -192,7 +205,7 @@ func versionTable(c *ui.Context, ins []inventory.Installation, rows []int, activ
 			row.Children(func() {
 				ui.Column(c).Width(112).Shrink(0).Gap(2).Children(func() {
 					ui.Text(c, versionText(in.Version)).Font(FontMono).FontSize(13.5).SingleLine()
-					if ch := nodeChannel(in.Version); ch != "" {
+					if ch != "" {
 						ui.Text(c, ch).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
@@ -209,11 +222,89 @@ func versionTable(c *ui.Context, ins []inventory.Installation, rows []int, activ
 						case in.OnPath > 0:
 							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipDuplicate())
 						}
+						if ended {
+							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipSupportEnded())
+						}
 					})
 				})
 			})
 		}
 	})
+}
+
+// availableCard lists the newest version of each supported line, as the
+// last version list says, with how each stands to what is installed.
+func (a *App) availableCard(c *ui.Context, ins []inventory.Installation, rows []int) {
+	t := c.Theme()
+	pal := Colors(t)
+	nv := a.NodeVersions
+	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.AvailableTitle()).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
+			if nv != nil && !nv.Fetched.IsZero() {
+				ui.Text(c, locales.VersionsAsOf(nv.Fetched)).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
+		if nv == nil {
+			text := locales.VersionsLoading()
+			if a.NodeVersionsErr != "" {
+				text = locales.VersionsFailed(a.NodeVersionsErr)
+			}
+			ui.Text(c, text).FontSize(12).TextColor(t.TextMuted).Padding(10, 14, 14, 14).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+			return
+		}
+		now := c.Now()
+		recommended, _ := nv.Recommended()
+		var installed []string
+		for _, i := range rows {
+			installed = append(installed, ins[i].Version)
+		}
+		for _, r := range nv.Latest(now) {
+			caption, _ := channel(nv, r.Version, now)
+			if note := releaseNote(r, nv.Lines[versions.Major(r.Version)], installed, now); note != "" {
+				caption += " · " + note
+			}
+			ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+					ui.Text(c, "v"+r.Version).Font(FontMono).FontSize(13).SingleLine()
+					ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				})
+				if r.Version == recommended.Version {
+					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
+						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
+				}
+			})
+		}
+	})
+}
+
+func isLTS(nv *versions.Node, version string, now time.Time) bool {
+	ch, _ := channel(nv, version, now)
+	return strings.HasPrefix(ch, "LTS")
+}
+
+// releaseNote says how release r stands to the installed versions: the
+// one installed, an update for an older one of its line, or, for a line
+// in maintenance, until when it is supported.
+func releaseNote(r versions.Release, line versions.Line, installed []string, now time.Time) string {
+	newest := ""
+	for _, v := range installed {
+		switch {
+		case v == r.Version:
+			return locales.NoteInstalled()
+		case versions.Major(v) == versions.Major(r.Version) && (newest == "" || semver.Compare("v"+v, "v"+newest) > 0):
+			newest = v
+		}
+	}
+	switch {
+	case newest != "":
+		return locales.NoteUpdateFor("v" + newest)
+	case !line.Maintenance.IsZero() && !now.Before(line.Maintenance) && !line.End.IsZero():
+		return locales.NoteSupportUntil(line.End)
+	}
+	return ""
 }
 
 // pathCard shows how the terminal finds node: the copies in its PATH in
@@ -319,9 +410,9 @@ func chip(c *ui.Context, dot, bg, text ui.Color, label string) {
 	})
 }
 
-// versions returns the installations the table lists, by index: all but
+// listed returns the installations the table lists, by index: all but
 // the managers' shims, which stand for another copy.
-func versions(ins []inventory.Installation) []int {
+func listed(ins []inventory.Installation) []int {
 	var rows []int
 	for i, in := range ins {
 		if !in.Source.Shim {
@@ -357,19 +448,31 @@ func runIndex(ins []inventory.Installation, rank func(inventory.Installation) in
 	return -1
 }
 
-// nodeChannel tells a Node version's release line: even majors become
-// LTS, odd ones stay Current. An even major is Current for its first six
-// months too, which the release schedule will tell (S3-03).
-func nodeChannel(version string) string {
-	major, _, _ := strings.Cut(version, ".")
-	n, err := strconv.Atoi(major)
-	switch {
-	case err != nil:
-		return ""
-	case n%2 == 0:
-		return "LTS"
+// channel tells a Node version's release line at now, as "LTS · Jod" or
+// "Current", and whether its support has ended, by the release schedule
+// in nv. Without the schedule, even majors are taken for LTS and odd ones
+// for Current, though an even one is Current for its first months.
+func channel(nv *versions.Node, version string, now time.Time) (string, bool) {
+	major := versions.Major(version)
+	if nv != nil {
+		if l, ok := nv.Lines[major]; ok {
+			ended := !l.End.IsZero() && !now.Before(l.End)
+			switch {
+			case !l.LTS.IsZero() && !now.Before(l.LTS) && l.Codename != "":
+				return "LTS · " + l.Codename, ended
+			case !l.LTS.IsZero() && !now.Before(l.LTS):
+				return "LTS", ended
+			}
+			return "Current", ended
+		}
 	}
-	return "Current"
+	switch {
+	case major < 0:
+		return "", false
+	case major%2 == 0:
+		return "LTS", false
+	}
+	return "Current", false
 }
 
 // managedBy says how the versions are managed: by the version manager in

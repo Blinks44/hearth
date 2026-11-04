@@ -46,6 +46,8 @@ type Palette struct {
 	Info          ui.Color // a check under way
 	Shadow        ui.Color // raised elements: chosen item, buttons
 
+	AccentSoft    ui.Color // behind accent tags
+	AccentInk     ui.Color // accent text on AccentSoft
 	Subtle        ui.Color // cards of states, table headers
 	Muted         ui.Color // segmented tracks, neutral chips
 	Line          ui.Color // borders of cards, lines between rows
@@ -69,6 +71,8 @@ func Colors(t *ui.Theme) Palette {
 			TextFaint:     ui.Hex("#7D776E"),
 			Info:          ui.Hex("#5B8EF0"),
 			Shadow:        ui.RGBA(0, 0, 0, 0.24),
+			AccentSoft:    ui.Hex("#3A241B"),
+			AccentInk:     ui.Hex("#FF8A62"),
 			Subtle:        ui.Hex("#211F1C"),
 			Muted:         ui.Hex("#2C2926"),
 			Line:          ui.Hex("#2E2B27"),
@@ -89,6 +93,8 @@ func Colors(t *ui.Theme) Palette {
 		TextFaint:     ui.Hex("#9D988F"),
 		Info:          ui.Hex("#3A73DA"),
 		Shadow:        ui.RGBA(0x2A, 0x1E, 0x10, 0.08),
+		AccentSoft:    ui.Hex("#FDEEE7"),
+		AccentInk:     ui.Hex("#B9441F"),
 		Subtle:        ui.Hex("#FAF9F7"),
 		Muted:         ui.Hex("#F1EFEB"),
 		Line:          ui.Hex("#EEEBE6"),

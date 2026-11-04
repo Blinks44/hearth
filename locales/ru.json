@@ -53,5 +53,14 @@
   "tagShadowed": "перекрыт",
   "pathEmpty": "{command} нет в PATH терминала",
   "guiRunsOther": "В приложениях не из терминала (VS Code, IDE) первым идёт {source} и запускается {gui} вместо {terminal}.",
-  "guiNotFound": "Приложения не из терминала (VS Code, IDE) не находят {command}, хотя терминал находит."
+  "guiNotFound": "Приложения не из терминала (VS Code, IDE) не находят {command}, хотя терминал находит.",
+  "availableTitle": "Доступно для установки",
+  "versionsAsOf": "на {date, date, ::MMMd}",
+  "versionsLoading": "Загружаю список версий…",
+  "versionsFailed": "Не удалось получить список версий: {error}",
+  "noteInstalled": "установлена",
+  "noteUpdateFor": "обновление для {version}",
+  "noteSupportUntil": "поддержка до {date, date, ::yMMM}",
+  "tagRecommended": "рекомендуется",
+  "chipSupportEnded": "поддержка закончилась"
 }

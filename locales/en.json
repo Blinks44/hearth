@@ -310,5 +310,63 @@
         "example": "node"
       }
     }
+  },
+  "availableTitle": "Available to install",
+  "@availableTitle": {
+    "description": "Tool page card: the newest version of each supported release line."
+  },
+  "versionsAsOf": "as of {date, date, ::MMMd}",
+  "@versionsAsOf": {
+    "description": "Tool page card: when the version list was last fetched.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime"
+      }
+    }
+  },
+  "versionsLoading": "Getting the version list…",
+  "@versionsLoading": {
+    "description": "Tool page card while the version list downloads."
+  },
+  "versionsFailed": "Could not get the version list: {error}",
+  "@versionsFailed": {
+    "description": "Tool page card when the version list could not be downloaded and none is kept.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "no connection"
+      }
+    }
+  },
+  "noteInstalled": "installed",
+  "@noteInstalled": {
+    "description": "Available version note: this exact version is installed."
+  },
+  "noteUpdateFor": "update for {version}",
+  "@noteUpdateFor": {
+    "description": "Available version note: a newer version of an installed line.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "noteSupportUntil": "support until {date, date, ::yMMM}",
+  "@noteSupportUntil": {
+    "description": "Available version note: the line gets only fixes until it ends.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime"
+      }
+    }
+  },
+  "tagRecommended": "recommended",
+  "@tagRecommended": {
+    "description": "Tag on the newest LTS version."
+  },
+  "chipSupportEnded": "support ended",
+  "@chipSupportEnded": {
+    "description": "Chip on an installed version whose release line no longer gets fixes."
   }
 }
