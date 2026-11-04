@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/egoist/mygo/ui"
+
+	"github.com/Blinks44/hearth/locales"
 )
 
 // App is the state of Hearth's main window.
@@ -40,12 +40,12 @@ func (a *App) View(c *ui.Context) {
 		a.router.View(c, func(r *ui.Route) {
 			for _, p := range pages() {
 				if r.Match(p.path) {
-					r.Title(p.title)
+					r.Title(p.title())
 					a.stub(c, p)
 					return
 				}
 			}
-			r.Title(overview.title)
+			r.Title(overview.title())
 			a.stub(c, overview)
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
@@ -54,10 +54,10 @@ func (a *App) View(c *ui.Context) {
 // stub is a page still to be built: its header and "Coming soon".
 func (a *App) stub(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		header(c, p.title, p.subtitle)
+		header(c, p.title(), p.subtitle())
 		ui.Column(c).Grow(1).Center().Gap(8).Children(func() {
 			ui.Icon(c, mustIcon(p.icon)).Size(28, 28).TextColor(Colors(c.Theme()).TextFaint)
-			ui.Text(c, "Coming soon").TextColor(c.Theme().TextMuted)
+			ui.Text(c, locales.ComingSoon()).TextColor(c.Theme().TextMuted)
 		})
 	})
 }
@@ -80,7 +80,7 @@ func header(c *ui.Context, title, subtitle string) {
 		// Scanning comes with the snapshot service (S2-05).
 		ui.Button(c, "").Disabled(true).Children(func() {
 			ui.Icon(c, Icon("refresh-cw")).Size(14, 14).TextColor(t.TextMuted)
-			ui.Text(c, "Scan").SingleLine()
+			ui.Text(c, locales.Scan()).SingleLine()
 		})
 	})
 }
@@ -109,7 +109,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				a.item(c, projects)
 				a.languages(c)
 				for _, s := range sections {
-					sectionTitle(c, s.title)
+					sectionTitle(c, s.title())
 					for _, p := range s.pages {
 						a.item(c, p)
 					}
@@ -120,7 +120,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		a.item(c, settings)
 		ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(6, 8, 2, 9).Children(func() {
 			ui.Box(c).Size(6, 6).Radius(3).Background(pal.TextFaint)
-			ui.Text(c, "Not checked yet").FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
+			ui.Text(c, locales.NotChecked()).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
 		})
 	})
 }
@@ -129,7 +129,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 // the page shown if it is another one, and the rest under "N more
 // languages".
 func (a *App) languages(c *ui.Context) {
-	sectionTitle(c, "Languages & runtimes")
+	sectionTitle(c, locales.SectionLanguages())
 	found := map[string]bool{}
 	for _, id := range a.Languages {
 		found[id] = true
@@ -152,7 +152,7 @@ func (a *App) languages(c *ui.Context) {
 	}
 	more.Children(func() {
 		ui.Icon(c, Icon("layers")).Size(16, 16).TextColor(pal.TextFaint)
-		ui.Text(c, fmt.Sprintf("%d more languages", len(rest))).FontSize(13).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		ui.Text(c, locales.MoreLanguages(len(rest))).FontSize(13).TextColor(pal.TextFaint).Grow(1).SingleLine()
 		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(pal.TextFaint)
 	})
 	if more.Clicked() {
@@ -181,7 +181,7 @@ func (a *App) item(c *ui.Context, p page) {
 	}
 	e.Children(func() {
 		ui.Icon(c, mustIcon(p.icon)).Size(16, 16).TextColor(iconColor)
-		ui.Text(c, p.title).FontSize(13).Grow(1).SingleLine()
+		ui.Text(c, p.title()).FontSize(13).Grow(1).SingleLine()
 	})
 	if e.Clicked() && !chosen {
 		a.router.Push(p.path)

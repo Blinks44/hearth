@@ -1,15 +1,23 @@
 package ui
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/Blinks44/hearth/locales"
+)
 
 // page is a section of the app: its path in the router, the icon the
-// sidebar shows, and the title and subtitle of its header.
+// sidebar shows, and the title and subtitle of its header. They are
+// functions, which say them in the language the app shows as it changes.
 type page struct {
 	path, icon      string // icon: "lucide/<name>" or "brand/<slug>"
-	title, subtitle string
+	title, subtitle func() string
 }
 
-// language is a page under "Languages & runtimes", named by its ID in
+// name is a title that stays the same in every language, as a product's.
+func name(s string) func() string { return func() string { return s } }
+
+// language is a page under locales.SectionLanguages, named by its ID in
 // Languages.
 type language struct {
 	id string
@@ -17,41 +25,41 @@ type language struct {
 }
 
 var (
-	overview = page{"/overview", "lucide/layout-dashboard", "Overview", "Your whole developer environment on this computer"}
-	projects = page{"/projects", "lucide/folder-git-2", "Projects", "Code folders Hearth checks"}
-	settings = page{"/settings", "lucide/settings", "Settings", "Hearth"}
+	overview = page{"/overview", "lucide/layout-dashboard", locales.OverviewTitle, locales.OverviewSubtitle}
+	projects = page{"/projects", "lucide/folder-git-2", locales.ProjectsTitle, locales.ProjectsSubtitle}
+	settings = page{"/settings", "lucide/settings", locales.SettingsTitle, name("Hearth")}
 
 	languages = []language{
-		{"node", page{"/tools/node", "brand/nodedotjs", "Node.js", "Languages & runtimes · JavaScript"}},
-		{"bun", page{"/tools/bun", "brand/bun", "Bun", "Languages & runtimes · JavaScript"}},
-		{"python", page{"/tools/python", "brand/python", "Python", "Languages & runtimes"}},
-		{"php", page{"/tools/php", "brand/php", "PHP", "Languages & runtimes"}},
-		{"rust", page{"/tools/rust", "brand/rust", "Rust", "Languages & runtimes"}},
-		{"go", page{"/tools/go", "brand/go", "Go", "Languages & runtimes"}},
-		{"java", page{"/tools/java", "brand/openjdk", "Java", "Languages & runtimes"}},
-		{"ruby", page{"/tools/ruby", "brand/ruby", "Ruby", "Languages & runtimes"}},
-		{"deno", page{"/tools/deno", "brand/deno", "Deno", "Languages & runtimes · JavaScript"}},
-		{"dotnet", page{"/tools/dotnet", "brand/dotnet", ".NET", "Languages & runtimes"}},
+		{"node", page{"/tools/node", "brand/nodedotjs", name("Node.js"), locales.SectionLanguagesJavaScript}},
+		{"bun", page{"/tools/bun", "brand/bun", name("Bun"), locales.SectionLanguagesJavaScript}},
+		{"python", page{"/tools/python", "brand/python", name("Python"), locales.SectionLanguages}},
+		{"php", page{"/tools/php", "brand/php", name("PHP"), locales.SectionLanguages}},
+		{"rust", page{"/tools/rust", "brand/rust", name("Rust"), locales.SectionLanguages}},
+		{"go", page{"/tools/go", "brand/go", name("Go"), locales.SectionLanguages}},
+		{"java", page{"/tools/java", "brand/openjdk", name("Java"), locales.SectionLanguages}},
+		{"ruby", page{"/tools/ruby", "brand/ruby", name("Ruby"), locales.SectionLanguages}},
+		{"deno", page{"/tools/deno", "brand/deno", name("Deno"), locales.SectionLanguagesJavaScript}},
+		{"dotnet", page{"/tools/dotnet", "brand/dotnet", name(".NET"), locales.SectionLanguages}},
 	}
 
 	// sections are the sidebar's titled groups after the languages.
 	sections = []struct {
-		title string
+		title func() string
 		pages []page
 	}{
-		{"Tools", []page{
-			{"/tools/jspm", "brand/pnpm", "npm · pnpm · Yarn", "Tools · JavaScript"},
-			{"/tools/docker", "brand/docker", "Docker", "Tools · containers"},
-			{"/tools/databases", "lucide/database", "Databases", "Tools"},
+		{locales.SectionTools, []page{
+			{"/tools/jspm", "brand/pnpm", name("npm · pnpm · Yarn"), locales.SectionToolsJavaScript},
+			{"/tools/docker", "brand/docker", name("Docker"), locales.SectionToolsContainers},
+			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionTools},
 		}},
-		{"AI", []page{
-			{"/ai/agents", "lucide/bot", "Agents", "AI"},
-			{"/ai/skills", "lucide/puzzle", "Skills", "AI"},
-			{"/ai/mcp", "lucide/plug", "MCP", "AI"},
+		{locales.SectionAI, []page{
+			{"/ai/agents", "lucide/bot", locales.AgentsTitle, locales.SectionAI},
+			{"/ai/skills", "lucide/puzzle", locales.SkillsTitle, locales.SectionAI},
+			{"/ai/mcp", "lucide/plug", name("MCP"), locales.SectionAI},
 		}},
-		{"System", []page{
-			{"/system/packages", "lucide/package", "Package managers", "System"},
-			{"/system/path", "lucide/terminal", "PATH & variables", "System"},
+		{locales.SectionSystem, []page{
+			{"/system/packages", "lucide/package", locales.PackageManagersTitle, locales.SectionSystem},
+			{"/system/path", "lucide/terminal", locales.PathTitle, locales.SectionSystem},
 		}},
 	}
 )

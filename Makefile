@@ -18,8 +18,9 @@ lint:
 fmt:
 	$(LINT) fmt
 
-check: ## everything CI runs: formatting, lint, mygo vet, tests with -race
+check: ## everything CI runs: formatting, lint, mygo vet, catalogs, tests with -race
 	$(LINT) fmt --diff
 	$(LINT) run
 	go tool mygo vet .
+	go tool mygo i18n check
 	go test -race ./...
