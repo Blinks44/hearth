@@ -4057,3 +4057,195 @@ func NoteNewLine() string { return In(i18n.Locale()).NoteNewLine() }
 func (msgs Messages) NoteNewLine() string {
 	return Catalog.Format(msgs.locale, "noteNewLine", nil)
 }
+
+// ChipSystem says "needed by the system"
+// in the language the app shows.
+//
+// Chip of a copy that is part of the OS: Hearth does not remove or update
+// it.
+func ChipSystem() string { return In(i18n.Locale()).ChipSystem() }
+
+// ChipSystem says "needed by the system"
+// in the language of msgs.
+//
+// Chip of a copy that is part of the OS: Hearth does not remove or update
+// it.
+func (msgs Messages) ChipSystem() string {
+	return Catalog.Format(msgs.locale, "chipSystem", nil)
+}
+
+// TagStub says "stub"
+// in the language the app shows.
+//
+// Tag in which -a of a stand-in that does not run the tool.
+func TagStub() string { return In(i18n.Locale()).TagStub() }
+
+// TagStub says "stub"
+// in the language of msgs.
+//
+// Tag in which -a of a stand-in that does not run the tool.
+func (msgs Messages) TagStub() string {
+	return Catalog.Format(msgs.locale, "tagStub", nil)
+}
+
+// StubStoreWarning says "{path} is not Python but a Microsoft Store stub: once the copies before it leave PATH, the command opens the Store in…"
+// in the language the app shows.
+//
+// Warning: Microsoft Store's python.exe stub is in PATH.
+func StubStoreWarning(path string) string { return In(i18n.Locale()).StubStoreWarning(path) }
+
+// StubStoreWarning says "{path} is not Python but a Microsoft Store stub: once the copies before it leave PATH, the command opens the Store in…"
+// in the language of msgs.
+//
+// Warning: Microsoft Store's python.exe stub is in PATH.
+func (msgs Messages) StubStoreWarning(path string) string {
+	return Catalog.Format(msgs.locale, "stubStoreWarning", map[string]any{"path": path})
+}
+
+// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python."
+// in the language the app shows.
+//
+// Warning: macOS's python3 stub is in PATH while the Command Line Tools are
+// missing.
+func StubCltWarning(path string) string { return In(i18n.Locale()).StubCltWarning(path) }
+
+// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python."
+// in the language of msgs.
+//
+// Warning: macOS's python3 stub is in PATH while the Command Line Tools are
+// missing.
+func (msgs Messages) StubCltWarning(path string) string {
+	return Catalog.Format(msgs.locale, "stubCltWarning", map[string]any{"path": path})
+}
+
+// PythonSystemNote says "The system's Python is needed by the OS itself: Hearth does not remove or update it."
+// in the language the app shows.
+//
+// Note under Python's table when a copy is part of the OS.
+func PythonSystemNote() string { return In(i18n.Locale()).PythonSystemNote() }
+
+// PythonSystemNote says "The system's Python is needed by the OS itself: Hearth does not remove or update it."
+// in the language of msgs.
+//
+// Note under Python's table when a copy is part of the OS.
+func (msgs Messages) PythonSystemNote() string {
+	return Catalog.Format(msgs.locale, "pythonSystemNote", nil)
+}
+
+// PythonTools says "Tools"
+// in the language the app shows.
+//
+// Title of the card of commands installed by uv tool and pipx.
+func PythonTools() string { return In(i18n.Locale()).PythonTools() }
+
+// PythonTools says "Tools"
+// in the language of msgs.
+//
+// Title of the card of commands installed by uv tool and pipx.
+func (msgs Messages) PythonTools() string {
+	return Catalog.Format(msgs.locale, "pythonTools", nil)
+}
+
+// NoPythonTools says "No tools from uv tool or pipx"
+// in the language the app shows.
+//
+// Tools card when uv tool and pipx installed nothing.
+func NoPythonTools() string { return In(i18n.Locale()).NoPythonTools() }
+
+// NoPythonTools says "No tools from uv tool or pipx"
+// in the language of msgs.
+//
+// Tools card when uv tool and pipx installed nothing.
+func (msgs Messages) NoPythonTools() string {
+	return Catalog.Format(msgs.locale, "noPythonTools", nil)
+}
+
+// UvDownloads says "Downloads Python itself"
+// in the language the app shows.
+//
+// uv setting python-downloads: whether uv downloads a version a project
+// needs.
+func UvDownloads() string { return In(i18n.Locale()).UvDownloads() }
+
+// UvDownloads says "Downloads Python itself"
+// in the language of msgs.
+//
+// uv setting python-downloads: whether uv downloads a version a project
+// needs.
+func (msgs Messages) UvDownloads() string {
+	return Catalog.Format(msgs.locale, "uvDownloads", nil)
+}
+
+// UvDownloadsCaption says "when a project needs a version not installed"
+// in the language the app shows.
+//
+// Caption of the uv downloads setting.
+func UvDownloadsCaption() string { return In(i18n.Locale()).UvDownloadsCaption() }
+
+// UvDownloadsCaption says "when a project needs a version not installed"
+// in the language of msgs.
+//
+// Caption of the uv downloads setting.
+func (msgs Messages) UvDownloadsCaption() string {
+	return Catalog.Format(msgs.locale, "uvDownloadsCaption", nil)
+}
+
+// UvPrefer says "Prefers its own Pythons"
+// in the language the app shows.
+//
+// uv setting python-preference: whether uv picks the Pythons it installed
+// first.
+func UvPrefer() string { return In(i18n.Locale()).UvPrefer() }
+
+// UvPrefer says "Prefers its own Pythons"
+// in the language of msgs.
+//
+// uv setting python-preference: whether uv picks the Pythons it installed
+// first.
+func (msgs Messages) UvPrefer() string {
+	return Catalog.Format(msgs.locale, "uvPrefer", nil)
+}
+
+// UvPreferCaption says "before the system's and Homebrew's"
+// in the language the app shows.
+//
+// Caption of the uv preference setting.
+func UvPreferCaption() string { return In(i18n.Locale()).UvPreferCaption() }
+
+// UvPreferCaption says "before the system's and Homebrew's"
+// in the language of msgs.
+//
+// Caption of the uv preference setting.
+func (msgs Messages) UvPreferCaption() string {
+	return Catalog.Format(msgs.locale, "uvPreferCaption", nil)
+}
+
+// SupportUntilYear says "supported until {year}"
+// in the language the app shows.
+//
+// Caption of a Python version: the year its line's security fixes end.
+func SupportUntilYear(year string) string { return In(i18n.Locale()).SupportUntilYear(year) }
+
+// SupportUntilYear says "supported until {year}"
+// in the language of msgs.
+//
+// Caption of a Python version: the year its line's security fixes end.
+func (msgs Messages) SupportUntilYear(year string) string {
+	return Catalog.Format(msgs.locale, "supportUntilYear", map[string]any{"year": year})
+}
+
+// IssueStubTitle says "A stub stands in for {tool} in PATH"
+// in the language the app shows.
+//
+// Issue title: a stand-in that does not run the tool is in the terminal's
+// PATH.
+func IssueStubTitle(tool string) string { return In(i18n.Locale()).IssueStubTitle(tool) }
+
+// IssueStubTitle says "A stub stands in for {tool} in PATH"
+// in the language of msgs.
+//
+// Issue title: a stand-in that does not run the tool is in the terminal's
+// PATH.
+func (msgs Messages) IssueStubTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "issueStubTitle", map[string]any{"tool": tool})
+}

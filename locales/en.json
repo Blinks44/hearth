@@ -1684,5 +1684,81 @@
   "noteNewLine": "new version",
   "@noteNewLine": {
     "description": "Caption of an available version of a line not installed yet."
+  },
+  "chipSystem": "needed by the system",
+  "@chipSystem": {
+    "description": "Chip of a copy that is part of the OS: Hearth does not remove or update it."
+  },
+  "tagStub": "stub",
+  "@tagStub": {
+    "description": "Tag in which -a of a stand-in that does not run the tool."
+  },
+  "stubStoreWarning": "{path} is not Python but a Microsoft Store stub: once the copies before it leave PATH, the command opens the Store instead of an error.",
+  "@stubStoreWarning": {
+    "description": "Warning: Microsoft Store's python.exe stub is in PATH.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"
+      }
+    }
+  },
+  "stubCltWarning": "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python.",
+  "@stubCltWarning": {
+    "description": "Warning: macOS's python3 stub is in PATH while the Command Line Tools are missing.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "/usr/bin/python3"
+      }
+    }
+  },
+  "pythonSystemNote": "The system's Python is needed by the OS itself: Hearth does not remove or update it.",
+  "@pythonSystemNote": {
+    "description": "Note under Python's table when a copy is part of the OS."
+  },
+  "pythonTools": "Tools",
+  "@pythonTools": {
+    "description": "Title of the card of commands installed by uv tool and pipx."
+  },
+  "noPythonTools": "No tools from uv tool or pipx",
+  "@noPythonTools": {
+    "description": "Tools card when uv tool and pipx installed nothing."
+  },
+  "uvDownloads": "Downloads Python itself",
+  "@uvDownloads": {
+    "description": "uv setting python-downloads: whether uv downloads a version a project needs."
+  },
+  "uvDownloadsCaption": "when a project needs a version not installed",
+  "@uvDownloadsCaption": {
+    "description": "Caption of the uv downloads setting."
+  },
+  "uvPrefer": "Prefers its own Pythons",
+  "@uvPrefer": {
+    "description": "uv setting python-preference: whether uv picks the Pythons it installed first."
+  },
+  "uvPreferCaption": "before the system's and Homebrew's",
+  "@uvPreferCaption": {
+    "description": "Caption of the uv preference setting."
+  },
+  "supportUntilYear": "supported until {year}",
+  "@supportUntilYear": {
+    "description": "Caption of a Python version: the year its line's security fixes end.",
+    "placeholders": {
+      "year": {
+        "type": "String",
+        "example": "2028"
+      }
+    }
+  },
+  "issueStubTitle": "A stub stands in for {tool} in PATH",
+  "@issueStubTitle": {
+    "description": "Issue title: a stand-in that does not run the tool is in the terminal's PATH.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      }
+    }
   }
 }

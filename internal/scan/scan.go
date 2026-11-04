@@ -29,6 +29,7 @@ var Detectors = []Detector{
 	{"node", detect.Node},
 	{"bun", detect.Bun},
 	{"go", detect.Go},
+	{"python", detect.Python},
 }
 
 // parallel is how many detectors run at once: each may start commands.

@@ -65,6 +65,11 @@ type Installation struct {
 	// Corepack reports that Corepack's pnpm and yarn sit next to the copy,
 	// as corepack enable puts them.
 	Corepack bool `json:",omitempty"`
+	// Stub reports a stand-in that does not run the tool: Microsoft
+	// Store's python.exe, which opens the Store, or macOS's
+	// /usr/bin/python3 without the Command Line Tools, which offers to
+	// install them. Hearth never runs one.
+	Stub bool `json:",omitempty"`
 	// PathFile is the shell startup file that puts the copy's directory on
 	// the terminal's PATH, as ~/.zshrc for Bun's install script; empty when
 	// not known.
@@ -96,6 +101,9 @@ type Manager struct {
 	Activated  bool `json:",omitempty"`
 	Shims      bool `json:",omitempty"`
 	ShimsInGUI bool `json:",omitempty"`
+	// Settings are the manager's settings that change which version runs,
+	// by name as it names them, as uv's python-preference.
+	Settings map[string]string `json:",omitempty"`
 }
 
 // ToolState is what a detector found of one tool.
@@ -269,6 +277,12 @@ func (s *Snapshot) Tool(id string) (ToolState, bool) {
 	return ToolState{}, false
 }
 
+// NeededBySystem reports a copy the OS itself runs, as the system's
+// Python: it is no duplicate to remove, whatever comes before it.
+func NeededBySystem(in Installation) bool {
+	return in.Tool == "python" && in.Source.Kind == KindSystem
+}
+
 // TerminalCopy returns the index of the copy in ins the terminal runs, or
 // -1 for none.
 func TerminalCopy(ins []Installation) int {
@@ -283,10 +297,10 @@ func GUICopy(ins []Installation) int {
 
 // runs returns the copy a PATH runs, by each one's rank in it, or -1 for
 // none: the first, or when that is a shim, the version its manager picks
-// by default.
+// by default; a stub first runs no copy.
 func runs(ins []Installation, rank func(Installation) PathRank) int {
 	for i, in := range ins {
-		if rank(in) != 1 {
+		if rank(in) != 1 || in.Stub {
 			continue
 		}
 		if !in.Source.Shim {

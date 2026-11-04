@@ -45,6 +45,11 @@ const (
 	// MCPMissing is a command MCP servers start that is not there: the
 	// agents cannot start them.
 	MCPMissing Kind = "mcp-missing"
+	// StubOnPath is a stand-in on the terminal's PATH that does not run
+	// the tool, as Microsoft Store's python.exe: a warning when it comes
+	// first, since the command then opens the Store; else it takes over
+	// once the copies before it go.
+	StubOnPath Kind = "stub-on-path"
 )
 
 // Severity is how much an issue matters.
@@ -102,6 +107,7 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 			continue
 		}
 		out = append(out, duplicate(ts)...)
+		out = append(out, stubs(ts)...)
 		out = append(out, guiDiffers(ts)...)
 		if ts.Tool == "node" {
 			out = append(out, unsupported(ts, lines, now)...)
@@ -164,7 +170,9 @@ func pathIssues(s *inventory.Snapshot) []Issue {
 func duplicate(ts inventory.ToolState) []Issue {
 	var on []inventory.Installation
 	for _, in := range ts.Installations {
-		if in.OnPath > 0 {
+		// A stub is no copy of the tool, stubs says of it; one the OS
+		// needs stays.
+		if in.OnPath > 0 && !in.Stub && !inventory.NeededBySystem(in) {
 			on = append(on, in)
 		}
 	}
@@ -173,6 +181,21 @@ func duplicate(ts inventory.ToolState) []Issue {
 	}
 	slices.SortFunc(on, func(a, b inventory.Installation) int { return int(a.OnPath - b.OnPath) })
 	return []Issue{{Kind: Duplicate, Severity: Warning, Tool: ts.Tool, Copies: on}}
+}
+
+// stubs is an issue for each stub on the terminal's PATH.
+func stubs(ts inventory.ToolState) []Issue {
+	var out []Issue
+	for _, in := range ts.Installations {
+		if in.Stub && in.OnPath > 0 {
+			severity := Info
+			if in.OnPath == 1 {
+				severity = Warning
+			}
+			out = append(out, Issue{Kind: StubOnPath, Severity: severity, Tool: ts.Tool, Copies: []inventory.Installation{in}})
+		}
+	}
+	return out
 }
 
 // guiDiffers is an issue when the terminal runs a copy and apps run

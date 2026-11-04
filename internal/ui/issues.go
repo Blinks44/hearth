@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -19,16 +20,16 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		first := is.Copies[0]
 		var others []string
 		for _, in := range is.Copies[1:] {
-			others = append(others, versionText(in.Version)+" ("+sourceName(in.Source)+")")
+			others = append(others, copyVersion(in)+" ("+sourceName(in.Source)+")")
 		}
 		return locales.IssueDuplicateTitle(tool, len(is.Copies)),
-			locales.IssueDuplicateExplain(versionText(first.Version), sourceName(first.Source), strings.Join(others, ", "))
+			locales.IssueDuplicateExplain(copyVersion(first), sourceName(first.Source), strings.Join(others, ", "))
 	case issues.GUIDiffers:
 		if len(is.Copies) < 2 {
 			return locales.IssueGuiTitle(tool), locales.GuiNotFound(is.Tool)
 		}
 		term, gui := is.Copies[0], is.Copies[1]
-		return locales.IssueGuiTitle(tool), locales.GuiRunsOther(sourceName(gui.Source), versionText(gui.Version), versionText(term.Version))
+		return locales.IssueGuiTitle(tool), locales.GuiRunsOther(sourceName(gui.Source), copyVersion(gui), copyVersion(term))
 	case issues.ProjectMissing:
 		want := is.Check.Want
 		if want == "" {
@@ -39,16 +40,19 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 	case issues.ProjectTerminal:
 		run := "—"
 		if len(is.Copies) > 0 {
-			run = versionText(is.Copies[0].Version)
+			run = copyVersion(is.Copies[0])
 		}
 		return locales.IssueProjectTerminalTitle(filepath.Base(is.Project), tool),
 			locales.IssueProjectTerminalExplain(is.Check.File, tool, is.Check.Want, run)
 	case issues.Unsupported:
 		var vs []string
 		for _, in := range is.Copies {
-			vs = append(vs, versionText(in.Version))
+			vs = append(vs, copyVersion(in))
 		}
 		return locales.IssueUnsupportedTitle(tool, strings.Join(vs, ", ")), locales.IssueUnsupportedExplain()
+	case issues.StubOnPath:
+		in := is.Copies[0]
+		return locales.IssueStubTitle(tool), stubWarning([]inventory.Installation{in}, []int{0}, home)
 	case issues.PathCurrentDir:
 		var entries []string
 		for _, d := range is.Dirs {

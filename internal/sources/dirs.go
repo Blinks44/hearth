@@ -16,6 +16,11 @@ type Dirs struct {
 	// versions.
 	Fnm                                           []string
 	Nvm, Volta, Mise, Asdf, Nodenv, N, NvmWindows string
+	// Pyenv is pyenv's directory, or pyenv-win's; Uv is where uv keeps the
+	// Pythons it installs.
+	Pyenv, Uv string
+	// Conda lists the directories conda's installers put it in by default.
+	Conda []string
 }
 
 // ManagerDirs returns the managers' directories in env.
@@ -39,6 +44,13 @@ func ManagerDirs(env sysenv.Env) Dirs {
 	d.Nodenv = or(env.Get("NODENV_ROOT"), "~/.nodenv")
 	d.N = or(env.Get("N_PREFIX"), "/usr/local")
 	d.NvmWindows = or(env.Get("NVM_HOME"), sub(appData, "nvm"))
+	d.Pyenv = or(env.Get("PYENV_ROOT"), env.Get("PYENV"), "~/.pyenv")
+	d.Uv = or(env.Get("UV_PYTHON_INSTALL_DIR"), sub(appData, `uv\python`), sub(xdgData, "uv/python"))
+	for _, name := range []string{"miniconda3", "anaconda3", "miniforge3", "mambaforge"} {
+		if dir := or("~/" + name); dir != "" {
+			d.Conda = append(d.Conda, dir)
+		}
+	}
 	return d
 }
 

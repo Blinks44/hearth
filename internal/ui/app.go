@@ -37,6 +37,10 @@ type App struct {
 	// they come, or when they could not, GoVersionsErr says why.
 	GoVersions    *versions.Go
 	GoVersionsErr string
+	// PythonVersions are Python's release lines; nil until they come, or
+	// when they could not, PythonVersionsErr says why.
+	PythonVersions    *versions.Python
+	PythonVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -61,6 +65,7 @@ type App struct {
 	nodeTab       int     // the tab of the Node.js page shown
 	bunTab        int     // the tab of the Bun page shown
 	goTab         int     // the tab of the Go page shown
+	pythonTab     int     // the tab of the Python page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
 	adding        *adding // the folder the add dialog shows; nil when closed
@@ -117,6 +122,8 @@ func (a *App) View(c *ui.Context) {
 						a.bun(c, p)
 					case "/tools/go":
 						a.goPage(c, p)
+					case "/tools/python":
+						a.python(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
 					case overview.path:

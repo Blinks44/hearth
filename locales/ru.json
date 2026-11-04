@@ -281,5 +281,18 @@
   "goToolchainNote": "Версии с источником go Go скачал сам по строке toolchain в go.mod (GOTOOLCHAIN={mode}): они лежат в кэше модулей и удаляются вместе с ним.",
   "goTools": "Утилиты",
   "noGoTools": "Нет команд из go install",
-  "noteNewLine": "новая версия"
+  "noteNewLine": "новая версия",
+  "chipSystem": "нужен системе",
+  "tagStub": "заглушка",
+  "stubStoreWarning": "{path} — не Python, а заглушка Microsoft Store: если копии перед ней пропадут из PATH, команда откроет Store вместо ошибки.",
+  "stubCltWarning": "{path} — заглушка: без Xcode Command Line Tools она предлагает их установить вместо запуска Python.",
+  "pythonSystemNote": "Системный Python нужен самой ОС: Hearth его не удаляет и не обновляет.",
+  "pythonTools": "Инструменты",
+  "noPythonTools": "Нет инструментов из uv tool или pipx",
+  "uvDownloads": "Скачивать Python сам",
+  "uvDownloadsCaption": "когда проекту нужна версия, которой нет",
+  "uvPrefer": "Предпочитать версии uv",
+  "uvPreferCaption": "раньше системных и brew",
+  "supportUntilYear": "поддержка до {year}",
+  "issueStubTitle": "В PATH заглушка вместо {tool}"
 }

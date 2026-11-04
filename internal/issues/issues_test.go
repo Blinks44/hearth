@@ -204,3 +204,36 @@ func TestMCPMissing(t *testing.T) {
 		})
 	}
 }
+
+// A Store stub on PATH is no duplicate: it is its own issue, a warning
+// when it comes first.
+func TestStubOnPath(t *testing.T) {
+	stub := func(rank inventory.PathRank) inventory.Installation {
+		return inventory.Installation{Tool: "python", Path: `C:\Users\Ann\AppData\Local\Microsoft\WindowsApps\python.exe`, OnPath: rank, Stub: true}
+	}
+	real := inventory.Installation{Tool: "python", Version: "3.13.1", Path: `C:\Python313\python.exe`, OnPath: 1, InGUI: 1}
+	for _, tt := range []struct {
+		name string
+		ins  []inventory.Installation
+		want Severity
+	}{
+		{"behind a Python", []inventory.Installation{real, stub(2)}, Info},
+		{"first", []inventory.Installation{stub(1)}, Warning},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "python", Installations: tt.ins}}}
+			var got []Issue
+			for _, is := range Find(s, nil, nil, now) {
+				if is.Kind == Duplicate {
+					t.Errorf("the stub counts as a duplicate: %+v", is)
+				}
+				if is.Kind == StubOnPath {
+					got = append(got, is)
+				}
+			}
+			if len(got) != 1 || got[0].Severity != tt.want || !got[0].Copies[0].Stub {
+				t.Errorf("got %+v", got)
+			}
+		})
+	}
+}

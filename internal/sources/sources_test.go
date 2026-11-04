@@ -70,6 +70,14 @@ func TestClassify(t *testing.T) {
 			inventory.Source{Kind: vm, Manager: "nodenv", Root: "/Users/ann/.nodenv", Shim: true}},
 		{"nodenv version", macEnv, "/Users/ann/.nodenv/versions/22.11.0/bin/node", "",
 			inventory.Source{Kind: vm, Manager: "nodenv", Root: "/Users/ann/.nodenv/versions/22.11.0", Version: "22.11.0"}},
+		{"pyenv shim", macEnv, "/Users/ann/.pyenv/shims/python3", "",
+			inventory.Source{Kind: vm, Manager: "pyenv", Root: "/Users/ann/.pyenv", Shim: true}},
+		{"pyenv version", macEnv, "/Users/ann/.pyenv/versions/3.12.8/bin/python3", "",
+			inventory.Source{Kind: vm, Manager: "pyenv", Root: "/Users/ann/.pyenv/versions/3.12.8", Version: "3.12.8"}},
+		{"uv python", macEnv, "/Users/ann/.local/bin/python3.12", "/Users/ann/.local/share/uv/python/cpython-3.12.8-macos-aarch64-none/bin/python3.12",
+			inventory.Source{Kind: vm, Manager: "uv", Root: "/Users/ann/.local/share/uv/python/cpython-3.12.8-macos-aarch64-none", Version: "3.12.8"}},
+		{"miniconda", macEnv, "/Users/ann/miniconda3/bin/python3", "",
+			inventory.Source{Kind: pm, Manager: "conda", Root: "/Users/ann/miniconda3"}},
 		{"official pkg", macEnv, "/usr/local/bin/node", "",
 			inventory.Source{Kind: inst, Root: "/usr/local"}},
 		{"go installer", macEnv, "/usr/local/go/bin/go", "",
@@ -100,6 +108,8 @@ func TestClassify(t *testing.T) {
 			inventory.Source{Kind: inst, Root: "/opt"}},
 
 		// Windows
+		{"uv windows", winEnv, `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none\python.exe`, "",
+			inventory.Source{Kind: vm, Manager: "uv", Root: `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none`, Version: "3.12.8"}},
 		{"nvm-windows", winEnv, `C:\nvm4w\nodejs\node.exe`, `C:\Users\Ann\AppData\Roaming\nvm\v22.11.0\node.exe`,
 			inventory.Source{Kind: vm, Manager: "nvm-windows", Root: `C:\Users\Ann\AppData\Roaming\nvm\v22.11.0`, Version: "22.11.0"}},
 		{"nvm-windows NVM_HOME", append(winEnv, `NVM_HOME=D:\nvm`), `C:\Program Files\nodejs\node.exe`, `D:\nvm\v20.18.0\node.exe`,

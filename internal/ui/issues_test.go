@@ -77,3 +77,14 @@ func TestIssueText(t *testing.T) {
 		}
 	}
 }
+
+// A stub's issue says what the stub does instead of running the tool.
+func TestIssueTextStub(t *testing.T) {
+	is := issues.Issue{Kind: issues.StubOnPath, Tool: "python", Copies: []inventory.Installation{
+		{Tool: "python", Path: "/usr/bin/python3", Stub: true, OnPath: 1}}}
+	title, explain := issueText(is, "")
+	if title != "A stub stands in for Python in PATH" ||
+		explain != "/usr/bin/python3 is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python." {
+		t.Errorf("got %q, %q", title, explain)
+	}
+}

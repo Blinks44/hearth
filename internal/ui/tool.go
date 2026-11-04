@@ -152,7 +152,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 			for _, h := range []struct {
 				title string
 				width float32
-			}{{locales.ColumnVersion(), 112}, {locales.ColumnSource(), 84}, {locales.ColumnPath(), 0}} {
+			}{{locales.ColumnVersion(), 132}, {locales.ColumnSource(), 84}, {locales.ColumnPath(), 0}} {
 				e := ui.Text(c, h.title).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 				if h.width > 0 {
 					e.Width(h.width).Shrink(0)
@@ -168,7 +168,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 				row.Background(pal.ActiveRow)
 			}
 			row.Children(func() {
-				ui.Column(c).Width(112).Shrink(0).Gap(2).Children(func() {
+				ui.Column(c).Width(132).Shrink(0).Gap(2).Children(func() {
 					ui.Text(c, copyVersion(in)).Font(FontMono).FontSize(13.5).SingleLine()
 					if ch != "" {
 						ui.Text(c, ch).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
@@ -184,11 +184,14 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 						switch {
 						case i == active:
 							chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ChipInPath())
-						case in.OnPath > 0:
+						case in.OnPath > 0 && !inventory.NeededBySystem(in):
 							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipDuplicate())
 						}
 						if ended {
 							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipSupportEnded())
+						}
+						if inventory.NeededBySystem(in) {
+							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.ChipSystem())
 						}
 					})
 				})
@@ -227,17 +230,27 @@ func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, 
 					def = copyVersion(in)
 				}
 			}
-			listRow(c, locales.DefaultVersion(), false, "", func() {
-				ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
-			})
+			// A manager that keeps no default, as uv, has no row of it.
+			if def != "—" || len(m.Settings) == 0 {
+				listRow(c, locales.DefaultVersion(), false, "", func() {
+					ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
+				})
+			}
 			if title, caption := hookup(*m); title != "" {
 				listRow(c, title, false, caption, func() { stateText(c, true) })
 			}
-			caption := locales.SwitchOff()
-			if m.SwitchOnCD {
-				caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
+			for _, st := range managerSettings(*m) {
+				listRow(c, st.title, false, st.caption, func() { stateText(c, st.on) })
 			}
-			listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
+			// A manager that does not switch at all, as uv, says so by
+			// its settings.
+			if m.SwitchOnCD || len(m.Settings) == 0 {
+				caption := locales.SwitchOff()
+				if m.SwitchOnCD {
+					caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
+				}
+				listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
+			}
 		}
 		if active >= 0 && extra != nil {
 			extra(c, ins[active])
@@ -347,6 +360,9 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 					entry.Background(t.Background)
 					color, tag, tagBg, tagText = t.Text, locales.TagUsed(), pal.SuccessSoft, pal.SuccessText
 				}
+				if in.Stub {
+					tag, tagBg, tagText = locales.TagStub(), pal.WarningSoft, pal.WarningText
+				}
 				entry.Children(func() {
 					ui.Text(c, strconv.Itoa(n+1)).FontSize(11.5).TextColor(pal.TextFaint)
 					ui.Text(c, tilde(in.Path, home)).FontSize(12).TextColor(color).Grow(1).MinWidth(0).SingleLine()
@@ -358,7 +374,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				})
 			}
 		})
-		for _, warning := range []string{guiWarning(command, ins, active), shadowWarning(ins, entries, home)} {
+		for _, warning := range []string{guiWarning(command, ins, active), shadowWarning(ins, entries, home), stubWarning(ins, entries, home)} {
 			if warning == "" {
 				continue
 			}
@@ -409,7 +425,7 @@ func shadowWarning(ins []inventory.Installation, entries []int, home string) str
 	first := ins[entries[0]]
 	for _, i := range entries[1:] {
 		in := ins[i]
-		if in.Source.Shim || first.Source.Shim && in.Source.Manager == first.Source.Manager {
+		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || first.Source.Shim && in.Source.Manager == first.Source.Manager {
 			continue
 		}
 		return locales.CopyShadowed(sourceName(in.Source), copyVersion(in), tilde(filepath.Dir(first.Path), home))
@@ -496,7 +512,7 @@ func chip(c *ui.Context, dot, bg, text ui.Color, label string) {
 func listed(ins []inventory.Installation) []int {
 	var rows []int
 	for i, in := range ins {
-		if !in.Source.Shim {
+		if !in.Source.Shim && !in.Stub {
 			rows = append(rows, i)
 		}
 	}
@@ -566,10 +582,29 @@ func versionText(v string) string {
 }
 
 // copyVersion shows a copy's version as its tool does: go1.23.4 for Go,
-// v22.12.0 for the rest.
+// 3.13.1 for Python, v22.12.0 for the rest.
 func copyVersion(in inventory.Installation) string {
-	if in.Tool == "go" && in.Version != "" {
+	switch {
+	case in.Version == "":
+		return versionText(in.Version)
+	case in.Tool == "go":
 		return "go" + in.Version
+	case in.Tool == "python":
+		return in.Version
 	}
 	return versionText(in.Version)
+}
+
+// stubWarning tells of a stub in the terminal's PATH, entries in its
+// order, that does not run the tool: what it does instead; "" for none.
+func stubWarning(ins []inventory.Installation, entries []int, home string) string {
+	for _, i := range entries {
+		if in := ins[i]; in.Stub {
+			if strings.Contains(strings.ToLower(in.Path), `\windowsapps\`) {
+				return locales.StubStoreWarning(tilde(in.Path, home))
+			}
+			return locales.StubCltWarning(in.Path)
+		}
+	}
+	return ""
 }

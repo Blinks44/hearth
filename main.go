@@ -103,46 +103,10 @@ func main() {
 			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
 		}
 		fetchVersions := func() {
-			go func() {
-				n, err := versions.FetchNode(context.Background(), lists)
-				if err != nil {
-					log.Print(err)
-				}
-				win.Update(func() {
-					if err != nil {
-						// A list shown before stays.
-						a.NodeVersionsErr = err.Error()
-						return
-					}
-					a.NodeVersions, a.NodeVersionsErr = &n, ""
-				})
-			}()
-			go func() {
-				b, err := versions.FetchBun(context.Background(), lists)
-				if err != nil {
-					log.Print(err)
-				}
-				win.Update(func() {
-					if err != nil {
-						a.BunLatestErr = err.Error()
-						return
-					}
-					a.BunLatest, a.BunLatestErr = &b, ""
-				})
-			}()
-			go func() {
-				g, err := versions.FetchGo(context.Background(), lists)
-				if err != nil {
-					log.Print(err)
-				}
-				win.Update(func() {
-					if err != nil {
-						a.GoVersionsErr = err.Error()
-						return
-					}
-					a.GoVersions, a.GoVersionsErr = &g, ""
-				})
-			}()
+			fetchList(win, lists, versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
+			fetchList(win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
+			fetchList(win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
+			fetchList(win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
 		}
 		a.OnScan = func() {
 			scanner.Start(scanned)
@@ -172,6 +136,25 @@ func main() {
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// fetchList gets a version list through lists in the background and
+// puts it in *dst on the UI thread; when it cannot, the list shown before
+// stays and *errText says why.
+func fetchList[T any](win *mygo.Window, lists *versions.Cache, fetch func(context.Context, *versions.Cache) (T, error), dst **T, errText *string) {
+	go func() {
+		list, err := fetch(context.Background(), lists)
+		if err != nil {
+			log.Print(err)
+		}
+		win.Update(func() {
+			if err != nil {
+				*errText = err.Error()
+				return
+			}
+			*dst, *errText = &list, ""
+		})
+	}()
 }
 
 // machine is the caption under the logo: the computer's name and its OS,

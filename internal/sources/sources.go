@@ -77,6 +77,7 @@ func rulesFor(env sysenv.Env) []rule {
 	shim(d.Mise, "shims", "mise")
 	shim(d.Asdf, "shims", "asdf")
 	shim(d.Nodenv, "shims", "nodenv")
+	shim(d.Pyenv, "shims", "pyenv")
 	scoop := or(env.Get("SCOOP"), "~/scoop")
 	scoopGlobal := or(env.Get("SCOOP_GLOBAL"), sub(programData, "scoop"))
 	for _, d := range []string{scoop, scoopGlobal} {
@@ -102,6 +103,11 @@ func rulesFor(env sysenv.Env) []rule {
 	add(d.Mise, "installs/*/@", vm, "mise")
 	add(d.Asdf, "installs/*/@", vm, "asdf")
 	add(d.Nodenv, "versions/@", vm, "nodenv")
+	add(d.Pyenv, "versions/@", vm, "pyenv")
+	add(d.Uv, "@", vm, "uv")
+	for _, conda := range d.Conda {
+		add(conda, "", pm, "conda")
+	}
 	add(d.N, "n/versions/*/@", vm, "n")
 	add(d.NvmWindows, "@", vm, "nvm-windows")
 	add(scoop, "apps/*/@", pm, "scoop")
@@ -198,10 +204,14 @@ func join(dir, rest string) string {
 }
 
 // version turns a version directory's name into a version: "v22.11.0" is
-// "22.11.0".
+// "22.11.0", and uv's "cpython-3.12.8-macos-aarch64-none" is "3.12.8".
 func version(name string) string {
 	if len(name) > 1 && name[0] == 'v' && name[1] >= '0' && name[1] <= '9' {
 		return name[1:]
+	}
+	if rest, ok := strings.CutPrefix(name, "cpython-"); ok {
+		v, _, _ := strings.Cut(rest, "-")
+		return v
 	}
 	return name
 }
