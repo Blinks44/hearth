@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"strings"
 	"testing"
 	"time"
 
@@ -158,6 +159,67 @@ func TestDisplayPath(t *testing.T) {
 	} {
 		if got := displayPath(*in, home); got != want {
 			t.Errorf("displayPath(%q) = %q, want %q", in.Path, got, want)
+		}
+	}
+}
+
+// The terminal's PATH shows in order, the first used; apps outside the
+// terminal that find Homebrew's node first get a warning.
+func TestNodePath(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	tt := openNode(t, a)
+	for _, s := range []string{"How the terminal finds node", "which -a node",
+		"~/.local/state/fnm_multishells/48121/bin/node", "used", "shadowed",
+		"Apps opened outside the terminal (VS Code, IDEs) find brew first and run v23.6.0 instead of v22.12.0."} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q in %q", s, tt.Texts())
+		}
+	}
+
+	// The same version in apps as in the terminal: no warning, on the
+	// PATH tab too.
+	a.Snapshot.Tools[0].Installations[0].InGUI = 1
+	a.Snapshot.Tools[0].Installations[1].InGUI = 2
+	if err := tt.Click("PATH"); err != nil {
+		t.Fatal(err)
+	}
+	if !tt.HasText("which -a node") || tt.HasText("v20.18.1") {
+		t.Errorf("PATH tab, texts %q", tt.Texts())
+	}
+	used, _ := tt.Find("~/.local/state/fnm_multishells/48121/bin/node")
+	shadowed, _ := tt.Find("/opt/homebrew/bin/node")
+	if used.Y >= shadowed.Y {
+		t.Error("PATH entries out of order")
+	}
+	for _, s := range tt.Texts() {
+		if strings.HasPrefix(s, "Apps opened") {
+			t.Errorf("warning without a difference: %q", s)
+		}
+	}
+}
+
+func TestGUIWarning(t *testing.T) {
+	node := func(v string, term, gui inventory.PathRank) inventory.Installation {
+		return inventory.Installation{Version: v, OnPath: term, InGUI: gui,
+			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}
+	}
+	tests := []struct {
+		name string
+		ins  []inventory.Installation
+		want string
+	}{
+		{"same copy", []inventory.Installation{node("22.0.0", 1, 1)}, ""},
+		{"same version elsewhere", []inventory.Installation{node("22.0.0", 1, 0), node("22.0.0", 0, 1)}, ""},
+		{"other version", []inventory.Installation{node("22.0.0", 1, 0), node("20.0.0", 2, 1)},
+			"Apps opened outside the terminal (VS Code, IDEs) find brew first and run v20.0.0 instead of v22.0.0."},
+		{"not found", []inventory.Installation{node("22.0.0", 1, 0)},
+			"Apps opened outside the terminal (VS Code, IDEs) do not find node, though the terminal does."},
+		{"not in the terminal", []inventory.Installation{node("22.0.0", 0, 1)}, ""},
+	}
+	for _, tt := range tests {
+		if got := guiWarning(tt.ins, terminalIndex(tt.ins)); got != tt.want {
+			t.Errorf("%s: %q, want %q", tt.name, got, tt.want)
 		}
 	}
 }

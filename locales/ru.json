@@ -47,5 +47,11 @@
   "chipInPath": "в PATH",
   "chipDuplicate": "дубликат в PATH",
   "toolNotInstalled": "{tool} не установлен на этом компьютере",
-  "toolCheckFailed": "Не удалось проверить {tool}: {error}"
+  "toolCheckFailed": "Не удалось проверить {tool}: {error}",
+  "howTerminalFinds": "Как терминал находит {command}",
+  "tagUsed": "используется",
+  "tagShadowed": "перекрыт",
+  "pathEmpty": "{command} нет в PATH терминала",
+  "guiRunsOther": "В приложениях не из терминала (VS Code, IDE) первым идёт {source} и запускается {gui} вместо {terminal}.",
+  "guiNotFound": "Приложения не из терминала (VS Code, IDE) не находят {command}, хотя терминал находит."
 }

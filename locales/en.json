@@ -254,5 +254,61 @@
         "example": "timeout"
       }
     }
+  },
+  "howTerminalFinds": "How the terminal finds {command}",
+  "@howTerminalFinds": {
+    "description": "Tool page card title: the copies of a command in the terminal's PATH, in order.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "node"
+      }
+    }
+  },
+  "tagUsed": "used",
+  "@tagUsed": {
+    "description": "Tag on the PATH entry the terminal runs."
+  },
+  "tagShadowed": "shadowed",
+  "@tagShadowed": {
+    "description": "Tag on a PATH entry an earlier one hides."
+  },
+  "pathEmpty": "{command} is not in the terminal's PATH",
+  "@pathEmpty": {
+    "description": "Tool page: no copy of the command in the terminal's PATH.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "node"
+      }
+    }
+  },
+  "guiRunsOther": "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}.",
+  "@guiRunsOther": {
+    "description": "Warning: apps started from the Dock or a desktop menu run another version than the terminal.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "brew"
+      },
+      "gui": {
+        "type": "String",
+        "example": "v23.6.0"
+      },
+      "terminal": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "guiNotFound": "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does.",
+  "@guiNotFound": {
+    "description": "Warning: apps started from the Dock or a desktop menu find no copy of the command.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "node"
+      }
+    }
   }
 }

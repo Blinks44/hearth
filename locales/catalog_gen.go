@@ -711,3 +711,95 @@ func ToolCheckFailed(tool string, error string) string {
 func (msgs Messages) ToolCheckFailed(tool string, error string) string {
 	return Catalog.Format(msgs.locale, "toolCheckFailed", map[string]any{"tool": tool, "error": error})
 }
+
+// HowTerminalFinds says "How the terminal finds {command}"
+// in the language the app shows.
+//
+// Tool page card title: the copies of a command in the terminal's PATH, in
+// order.
+func HowTerminalFinds(command string) string { return In(i18n.Locale()).HowTerminalFinds(command) }
+
+// HowTerminalFinds says "How the terminal finds {command}"
+// in the language of msgs.
+//
+// Tool page card title: the copies of a command in the terminal's PATH, in
+// order.
+func (msgs Messages) HowTerminalFinds(command string) string {
+	return Catalog.Format(msgs.locale, "howTerminalFinds", map[string]any{"command": command})
+}
+
+// TagUsed says "used"
+// in the language the app shows.
+//
+// Tag on the PATH entry the terminal runs.
+func TagUsed() string { return In(i18n.Locale()).TagUsed() }
+
+// TagUsed says "used"
+// in the language of msgs.
+//
+// Tag on the PATH entry the terminal runs.
+func (msgs Messages) TagUsed() string {
+	return Catalog.Format(msgs.locale, "tagUsed", nil)
+}
+
+// TagShadowed says "shadowed"
+// in the language the app shows.
+//
+// Tag on a PATH entry an earlier one hides.
+func TagShadowed() string { return In(i18n.Locale()).TagShadowed() }
+
+// TagShadowed says "shadowed"
+// in the language of msgs.
+//
+// Tag on a PATH entry an earlier one hides.
+func (msgs Messages) TagShadowed() string {
+	return Catalog.Format(msgs.locale, "tagShadowed", nil)
+}
+
+// PathEmpty says "{command} is not in the terminal's PATH"
+// in the language the app shows.
+//
+// Tool page: no copy of the command in the terminal's PATH.
+func PathEmpty(command string) string { return In(i18n.Locale()).PathEmpty(command) }
+
+// PathEmpty says "{command} is not in the terminal's PATH"
+// in the language of msgs.
+//
+// Tool page: no copy of the command in the terminal's PATH.
+func (msgs Messages) PathEmpty(command string) string {
+	return Catalog.Format(msgs.locale, "pathEmpty", map[string]any{"command": command})
+}
+
+// GuiRunsOther says "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}."
+// in the language the app shows.
+//
+// Warning: apps started from the Dock or a desktop menu run another version
+// than the terminal.
+func GuiRunsOther(source string, gui string, terminal string) string {
+	return In(i18n.Locale()).GuiRunsOther(source, gui, terminal)
+}
+
+// GuiRunsOther says "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}."
+// in the language of msgs.
+//
+// Warning: apps started from the Dock or a desktop menu run another version
+// than the terminal.
+func (msgs Messages) GuiRunsOther(source string, gui string, terminal string) string {
+	return Catalog.Format(msgs.locale, "guiRunsOther", map[string]any{"source": source, "gui": gui, "terminal": terminal})
+}
+
+// GuiNotFound says "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does."
+// in the language the app shows.
+//
+// Warning: apps started from the Dock or a desktop menu find no copy of the
+// command.
+func GuiNotFound(command string) string { return In(i18n.Locale()).GuiNotFound(command) }
+
+// GuiNotFound says "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does."
+// in the language of msgs.
+//
+// Warning: apps started from the Dock or a desktop menu find no copy of the
+// command.
+func (msgs Messages) GuiNotFound(command string) string {
+	return Catalog.Format(msgs.locale, "guiNotFound", map[string]any{"command": command})
+}

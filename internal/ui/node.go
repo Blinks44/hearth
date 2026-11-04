@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -35,9 +36,13 @@ func (a *App) node(c *ui.Context, p page) {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				nodeHeader(c, st.Installations, rows, active)
 				a.nodeTabs(c, len(rows))
-				if a.nodeTab == 0 {
+				switch a.nodeTab {
+				case 0:
 					versionTable(c, st.Installations, rows, active, a.Home)
-				} else {
+					pathCard(c, st.Installations, active, a.Home)
+				case 3:
+					pathCard(c, st.Installations, active, a.Home)
+				default:
 					ui.Text(c, locales.ComingSoon()).TextColor(c.Theme().TextMuted).Padding(24, 0)
 				}
 			})
@@ -211,6 +216,89 @@ func versionTable(c *ui.Context, ins []inventory.Installation, rows []int, activ
 	})
 }
 
+// pathCard shows how the terminal finds node: the copies in its PATH in
+// order, as which -a lists them, the first used and the rest shadowed;
+// and a warning when apps started outside the terminal run another one.
+func pathCard(c *ui.Context, ins []inventory.Installation, active int, home string) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Gap(10).Padding(14).Radius(12).Background(t.Background).
+		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, Icon("terminal")).Size(15, 15).TextColor(t.TextMuted)
+			ui.Text(c, locales.HowTerminalFinds("node")).FontSize(13.5).FontWeight(600).SingleLine()
+		})
+		entries := pathOrder(ins)
+		ui.Column(c).Gap(2).Padding(10, 6, 6, 6).Radius(9).Background(pal.Subtle).
+			BorderWidth(1).BorderColor(pal.Line).Font(FontMono).Children(func() {
+			ui.Row(c).Gap(6).Padding(0, 0, 4, 10).Children(func() {
+				ui.Text(c, "$").FontSize(12).TextColor(pal.TextFaint)
+				ui.Text(c, "which -a node").FontSize(12)
+			})
+			if len(entries) == 0 {
+				ui.Text(c, locales.PathEmpty("node")).Font(FontSans).FontSize(12).TextColor(t.TextMuted).Padding(7, 10)
+			}
+			for n, i := range entries {
+				in := ins[i]
+				version := in.Version
+				if in.Source.Shim && n == 0 && active >= 0 {
+					version = ins[active].Version
+				}
+				entry := ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center)
+				color, tag, tagBg, tagText := t.TextMuted, locales.TagShadowed(), pal.Muted, t.TextMuted
+				if n == 0 {
+					entry.Background(t.Background)
+					color, tag, tagBg, tagText = t.Text, locales.TagUsed(), pal.SuccessSoft, pal.SuccessText
+				}
+				entry.Children(func() {
+					ui.Text(c, strconv.Itoa(n+1)).FontSize(11.5).TextColor(pal.TextFaint)
+					ui.Text(c, tilde(in.Path, home)).FontSize(12).TextColor(color).Grow(1).MinWidth(0).SingleLine()
+					if version != "" {
+						ui.Text(c, "v"+version).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+					}
+					ui.Text(c, tag).Font(FontSans).FontSize(10.5).FontWeight(500).TextColor(tagText).
+						Padding(1, 6).Radius(5).Background(tagBg).SingleLine()
+				})
+			}
+		})
+		if warning := guiWarning(ins, active); warning != "" {
+			ui.Row(c).Gap(10).Padding(10, 10, 10, 12).Radius(9).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
+				ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(t.Warning)
+				ui.Text(c, warning).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
+			})
+		}
+	})
+}
+
+// pathOrder returns the installations in the terminal's PATH, by index,
+// in its order.
+func pathOrder(ins []inventory.Installation) []int {
+	var order []int
+	for i, in := range ins {
+		if in.OnPath > 0 {
+			order = append(order, i)
+		}
+	}
+	sort.Slice(order, func(a, b int) bool { return ins[order[a]].OnPath < ins[order[b]].OnPath })
+	return order
+}
+
+// guiWarning tells, when apps started outside the terminal run another
+// version of node than the terminal, which one; "" when they agree.
+func guiWarning(ins []inventory.Installation, active int) string {
+	if active < 0 {
+		return ""
+	}
+	gui := runIndex(ins, func(in inventory.Installation) inventory.PathRank { return in.InGUI })
+	switch {
+	case gui < 0:
+		return locales.GuiNotFound("node")
+	case ins[gui].Version != ins[active].Version:
+		return locales.GuiRunsOther(sourceName(ins[gui].Source), versionText(ins[gui].Version), versionText(ins[active].Version))
+	}
+	return ""
+}
+
 // sourceBadge names what installed a copy: its manager in a badge, or a
 // dash when nothing is known.
 func sourceBadge(c *ui.Context, s inventory.Source) {
@@ -244,11 +332,17 @@ func versions(ins []inventory.Installation) []int {
 }
 
 // terminalIndex returns the installation the terminal runs, or -1 for
-// none: the first in PATH, or when that is a shim, the version its
-// manager picks by default.
+// none.
 func terminalIndex(ins []inventory.Installation) int {
+	return runIndex(ins, func(in inventory.Installation) inventory.PathRank { return in.OnPath })
+}
+
+// runIndex returns the installation a PATH runs, by each one's rank in
+// it, or -1 for none: the first, or when that is a shim, the version its
+// manager picks by default.
+func runIndex(ins []inventory.Installation, rank func(inventory.Installation) inventory.PathRank) int {
 	for i, in := range ins {
-		if in.OnPath != 1 {
+		if rank(in) != 1 {
 			continue
 		}
 		if !in.Source.Shim {
@@ -347,6 +441,11 @@ func displayPath(in inventory.Installation, home string) string {
 	if in.Source.Kind == inventory.KindVersionManager && in.Source.Root != "" {
 		p = in.Source.Root
 	}
+	return tilde(p, home)
+}
+
+// tilde shortens home at the start of p to ~.
+func tilde(p, home string) string {
 	if home != "" && (p == home || strings.HasPrefix(p, home+"/") || strings.HasPrefix(p, home+`\`)) {
 		return "~" + p[len(home):]
 	}
