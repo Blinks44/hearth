@@ -942,5 +942,157 @@
   "emptyPathEntry": "an empty entry",
   "@emptyPathEntry": {
     "description": "Issue text: how an empty PATH entry is named."
+  },
+  "chipChecking": "Checking",
+  "@chipChecking": {
+    "description": "Overview hero chip during the first scan."
+  },
+  "chipReadyToWork": "Ready to work",
+  "@chipReadyToWork": {
+    "description": "Overview hero chip without issues."
+  },
+  "chipIssues": "{count, plural, one {# issue} other {# issues}}",
+  "@chipIssues": {
+    "description": "Overview hero chip: how many issues.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "heroFirstScan": "Getting to know this computer",
+  "@heroFirstScan": {
+    "description": "Overview hero title during the first scan."
+  },
+  "heroFirstScanText": "Looking for languages, tools and AI agents. It usually takes a few seconds, and what is found shows at once.",
+  "@heroFirstScanText": {
+    "description": "Overview hero text during the first scan."
+  },
+  "heroAllGood": "Everything is in order",
+  "@heroAllGood": {
+    "description": "Overview hero title without issues."
+  },
+  "heroAlmost": "Almost ready",
+  "@heroAlmost": {
+    "description": "Overview hero title with one or two issues."
+  },
+  "heroAttention": "Needs attention",
+  "@heroAttention": {
+    "description": "Overview hero title with three issues or more."
+  },
+  "heroFound": "Found {count, plural, one {# tool} other {# tools}}.",
+  "@heroFound": {
+    "description": "Overview hero text: how many tools the scan found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "14"
+      }
+    }
+  },
+  "heroNoIssues": "No issues: projects get the versions they need, and copies on PATH do not clash.",
+  "@heroNoIssues": {
+    "description": "Overview hero text without issues."
+  },
+  "heroSomeIssues": "{count, plural, one {One thing is worth fixing} other {# things are worth fixing}}, see Needs attention.",
+  "@heroSomeIssues": {
+    "description": "Overview hero text with issues.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "statOnDisk": "on disk",
+  "@statOnDisk": {
+    "description": "Overview stat caption under Installed."
+  },
+  "statInPath": "In PATH",
+  "@statInPath": {
+    "description": "Overview stat: tools the terminal finds."
+  },
+  "statInPathCaption": "commands in the terminal",
+  "@statInPathCaption": {
+    "description": "Overview stat caption under In PATH."
+  },
+  "statInProjects": "In projects",
+  "@statInProjects": {
+    "description": "Overview stat: tools projects pin versions of."
+  },
+  "statInProjectsCaption": "versions pinned",
+  "@statInProjectsCaption": {
+    "description": "Overview stat caption under In projects."
+  },
+  "statSoFar": "found so far",
+  "@statSoFar": {
+    "description": "Overview stat caption during the first scan."
+  },
+  "chipProjects": "{count, plural, one {# project} other {# projects}}",
+  "@chipProjects": {
+    "description": "Overview tool card chip: projects needing the tool.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "chipCopies": "{count, plural, one {# copy} other {# copies}}",
+  "@chipCopies": {
+    "description": "Overview tool card chip: copies on PATH.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "chipGuiDiffers": "other in apps",
+  "@chipGuiDiffers": {
+    "description": "Overview tool card chip: apps outside the terminal run another version."
+  },
+  "attentionTitle": "Needs attention",
+  "@attentionTitle": {
+    "description": "Overview card of issues."
+  },
+  "issuesAfterScan": "Issues show after the check",
+  "@issuesAfterScan": {
+    "description": "Overview issues card during the first scan."
+  },
+  "issuesAfterScanText": "Hearth compares the projects' versions with what is installed and checks PATH.",
+  "@issuesAfterScanText": {
+    "description": "Overview issues card text during the first scan."
+  },
+  "noIssues": "No issues found",
+  "@noIssues": {
+    "description": "Overview issues card without issues."
+  },
+  "noIssuesText": "Hearth checks again when project files and shell settings change.",
+  "@noIssuesText": {
+    "description": "Overview issues card text without issues."
+  },
+  "details": "Details",
+  "@details": {
+    "description": "Button opening the page an issue lives on."
+  },
+  "moreIssues": "{count} more: {titles}",
+  "@moreIssues": {
+    "description": "Overview issues card: the issues not shown.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "titles": {
+        "type": "String",
+        "example": "Python for ml-notebooks, MCP postgres"
+      }
+    }
+  },
+  "noProjectsHeading": "No projects yet",
+  "@noProjectsHeading": {
+    "description": "Overview projects card before any project is added."
   }
 }

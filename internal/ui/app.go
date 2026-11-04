@@ -85,6 +85,8 @@ func (a *App) View(c *ui.Context) {
 						a.node(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
+					case overview.path:
+						a.overviewPage(c, p)
 					default:
 						a.stub(c, p)
 					}
@@ -92,7 +94,7 @@ func (a *App) View(c *ui.Context) {
 				}
 			}
 			r.Title(overview.title())
-			a.stub(c, overview)
+			a.overviewPage(c, overview)
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
 }
@@ -192,7 +194,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				for _, s := range sections {
 					sectionTitle(c, s.title())
 					for _, p := range s.pages {
-						a.item(c, p, nil)
+						a.item(c, p, a.issueCount(c, p))
 					}
 				}
 			})
@@ -201,6 +203,28 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		a.item(c, settings, nil)
 		a.status(c)
 	})
+}
+
+// issueCount shows, on the PATH's item, how many issues the PATH has; nil
+// for other pages.
+func (a *App) issueCount(c *ui.Context, p page) func() {
+	if p.path != pathPage {
+		return nil
+	}
+	n := 0
+	for _, is := range a.issues(c) {
+		if issuePage(is) == pathPage {
+			n++
+		}
+	}
+	if n == 0 {
+		return nil
+	}
+	return func() {
+		pal := Colors(c.Theme())
+		ui.Text(c, strconv.Itoa(n)).FontSize(10.5).FontWeight(500).TextColor(pal.WarningText).
+			Padding(1, 6).Radius(8).Background(pal.WarningSoft).SingleLine()
+	}
 }
 
 // status tells when the computer was last checked, with a button that

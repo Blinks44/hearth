@@ -58,6 +58,12 @@ type Palette struct {
 	SuccessText   ui.Color
 	WarningSoft   ui.Color // behind a warning chip
 	WarningText   ui.Color
+
+	// The overview's hero: its gradient from the top left, its border and
+	// the background of its counts.
+	HeroFrom, HeroMid, HeroTo ui.Color
+	HeroBorder                ui.Color
+	StatBg                    ui.Color
 }
 
 // Colors returns the palette that goes with t, light or dark.
@@ -83,6 +89,11 @@ func Colors(t *ui.Theme) Palette {
 			SuccessText:   ui.Hex("#5FD08E"),
 			WarningSoft:   ui.Hex("#33291A"),
 			WarningText:   ui.Hex("#E3AE4A"),
+			HeroFrom:      ui.Hex("#2E231C"),
+			HeroMid:       ui.Hex("#26201B"),
+			HeroTo:        ui.Hex("#221F1B"),
+			HeroBorder:    ui.Hex("#3D2E25"),
+			StatBg:        ui.Hex("#2C2926").Alpha(0.8),
 		}
 	}
 	return Palette{
@@ -105,6 +116,11 @@ func Colors(t *ui.Theme) Palette {
 		SuccessText:   ui.Hex("#23794A"),
 		WarningSoft:   ui.Hex("#FBF2DE"),
 		WarningText:   ui.Hex("#9A6300"),
+		HeroFrom:      ui.Hex("#FFF1E6"),
+		HeroMid:       ui.Hex("#FFF9F4"),
+		HeroTo:        ui.Hex("#FAF8F5"),
+		HeroBorder:    ui.Hex("#F0E2D6"),
+		StatBg:        ui.Hex("#FFFFFF").Alpha(0.8),
 	}
 }
 

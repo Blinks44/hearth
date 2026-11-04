@@ -2185,3 +2185,395 @@ func EmptyPathEntry() string { return In(i18n.Locale()).EmptyPathEntry() }
 func (msgs Messages) EmptyPathEntry() string {
 	return Catalog.Format(msgs.locale, "emptyPathEntry", nil)
 }
+
+// ChipChecking says "Checking"
+// in the language the app shows.
+//
+// Overview hero chip during the first scan.
+func ChipChecking() string { return In(i18n.Locale()).ChipChecking() }
+
+// ChipChecking says "Checking"
+// in the language of msgs.
+//
+// Overview hero chip during the first scan.
+func (msgs Messages) ChipChecking() string {
+	return Catalog.Format(msgs.locale, "chipChecking", nil)
+}
+
+// ChipReadyToWork says "Ready to work"
+// in the language the app shows.
+//
+// Overview hero chip without issues.
+func ChipReadyToWork() string { return In(i18n.Locale()).ChipReadyToWork() }
+
+// ChipReadyToWork says "Ready to work"
+// in the language of msgs.
+//
+// Overview hero chip without issues.
+func (msgs Messages) ChipReadyToWork() string {
+	return Catalog.Format(msgs.locale, "chipReadyToWork", nil)
+}
+
+// ChipIssues says "{count, plural, one {# issue} other {# issues}}"
+// in the language the app shows.
+//
+// Overview hero chip: how many issues.
+func ChipIssues(count int) string { return In(i18n.Locale()).ChipIssues(count) }
+
+// ChipIssues says "{count, plural, one {# issue} other {# issues}}"
+// in the language of msgs.
+//
+// Overview hero chip: how many issues.
+func (msgs Messages) ChipIssues(count int) string {
+	return Catalog.Format(msgs.locale, "chipIssues", map[string]any{"count": count})
+}
+
+// HeroFirstScan says "Getting to know this computer"
+// in the language the app shows.
+//
+// Overview hero title during the first scan.
+func HeroFirstScan() string { return In(i18n.Locale()).HeroFirstScan() }
+
+// HeroFirstScan says "Getting to know this computer"
+// in the language of msgs.
+//
+// Overview hero title during the first scan.
+func (msgs Messages) HeroFirstScan() string {
+	return Catalog.Format(msgs.locale, "heroFirstScan", nil)
+}
+
+// HeroFirstScanText says "Looking for languages, tools and AI agents. It usually takes a few seconds, and what is found shows at once."
+// in the language the app shows.
+//
+// Overview hero text during the first scan.
+func HeroFirstScanText() string { return In(i18n.Locale()).HeroFirstScanText() }
+
+// HeroFirstScanText says "Looking for languages, tools and AI agents. It usually takes a few seconds, and what is found shows at once."
+// in the language of msgs.
+//
+// Overview hero text during the first scan.
+func (msgs Messages) HeroFirstScanText() string {
+	return Catalog.Format(msgs.locale, "heroFirstScanText", nil)
+}
+
+// HeroAllGood says "Everything is in order"
+// in the language the app shows.
+//
+// Overview hero title without issues.
+func HeroAllGood() string { return In(i18n.Locale()).HeroAllGood() }
+
+// HeroAllGood says "Everything is in order"
+// in the language of msgs.
+//
+// Overview hero title without issues.
+func (msgs Messages) HeroAllGood() string {
+	return Catalog.Format(msgs.locale, "heroAllGood", nil)
+}
+
+// HeroAlmost says "Almost ready"
+// in the language the app shows.
+//
+// Overview hero title with one or two issues.
+func HeroAlmost() string { return In(i18n.Locale()).HeroAlmost() }
+
+// HeroAlmost says "Almost ready"
+// in the language of msgs.
+//
+// Overview hero title with one or two issues.
+func (msgs Messages) HeroAlmost() string {
+	return Catalog.Format(msgs.locale, "heroAlmost", nil)
+}
+
+// HeroAttention says "Needs attention"
+// in the language the app shows.
+//
+// Overview hero title with three issues or more.
+func HeroAttention() string { return In(i18n.Locale()).HeroAttention() }
+
+// HeroAttention says "Needs attention"
+// in the language of msgs.
+//
+// Overview hero title with three issues or more.
+func (msgs Messages) HeroAttention() string {
+	return Catalog.Format(msgs.locale, "heroAttention", nil)
+}
+
+// HeroFound says "Found {count, plural, one {# tool} other {# tools}}."
+// in the language the app shows.
+//
+// Overview hero text: how many tools the scan found.
+func HeroFound(count int) string { return In(i18n.Locale()).HeroFound(count) }
+
+// HeroFound says "Found {count, plural, one {# tool} other {# tools}}."
+// in the language of msgs.
+//
+// Overview hero text: how many tools the scan found.
+func (msgs Messages) HeroFound(count int) string {
+	return Catalog.Format(msgs.locale, "heroFound", map[string]any{"count": count})
+}
+
+// HeroNoIssues says "No issues: projects get the versions they need, and copies on PATH do not clash."
+// in the language the app shows.
+//
+// Overview hero text without issues.
+func HeroNoIssues() string { return In(i18n.Locale()).HeroNoIssues() }
+
+// HeroNoIssues says "No issues: projects get the versions they need, and copies on PATH do not clash."
+// in the language of msgs.
+//
+// Overview hero text without issues.
+func (msgs Messages) HeroNoIssues() string {
+	return Catalog.Format(msgs.locale, "heroNoIssues", nil)
+}
+
+// HeroSomeIssues says "{count, plural, one {One thing is worth fixing} other {# things are worth fixing}}, see Needs attention."
+// in the language the app shows.
+//
+// Overview hero text with issues.
+func HeroSomeIssues(count int) string { return In(i18n.Locale()).HeroSomeIssues(count) }
+
+// HeroSomeIssues says "{count, plural, one {One thing is worth fixing} other {# things are worth fixing}}, see Needs attention."
+// in the language of msgs.
+//
+// Overview hero text with issues.
+func (msgs Messages) HeroSomeIssues(count int) string {
+	return Catalog.Format(msgs.locale, "heroSomeIssues", map[string]any{"count": count})
+}
+
+// StatOnDisk says "on disk"
+// in the language the app shows.
+//
+// Overview stat caption under Installed.
+func StatOnDisk() string { return In(i18n.Locale()).StatOnDisk() }
+
+// StatOnDisk says "on disk"
+// in the language of msgs.
+//
+// Overview stat caption under Installed.
+func (msgs Messages) StatOnDisk() string {
+	return Catalog.Format(msgs.locale, "statOnDisk", nil)
+}
+
+// StatInPath says "In PATH"
+// in the language the app shows.
+//
+// Overview stat: tools the terminal finds.
+func StatInPath() string { return In(i18n.Locale()).StatInPath() }
+
+// StatInPath says "In PATH"
+// in the language of msgs.
+//
+// Overview stat: tools the terminal finds.
+func (msgs Messages) StatInPath() string {
+	return Catalog.Format(msgs.locale, "statInPath", nil)
+}
+
+// StatInPathCaption says "commands in the terminal"
+// in the language the app shows.
+//
+// Overview stat caption under In PATH.
+func StatInPathCaption() string { return In(i18n.Locale()).StatInPathCaption() }
+
+// StatInPathCaption says "commands in the terminal"
+// in the language of msgs.
+//
+// Overview stat caption under In PATH.
+func (msgs Messages) StatInPathCaption() string {
+	return Catalog.Format(msgs.locale, "statInPathCaption", nil)
+}
+
+// StatInProjects says "In projects"
+// in the language the app shows.
+//
+// Overview stat: tools projects pin versions of.
+func StatInProjects() string { return In(i18n.Locale()).StatInProjects() }
+
+// StatInProjects says "In projects"
+// in the language of msgs.
+//
+// Overview stat: tools projects pin versions of.
+func (msgs Messages) StatInProjects() string {
+	return Catalog.Format(msgs.locale, "statInProjects", nil)
+}
+
+// StatInProjectsCaption says "versions pinned"
+// in the language the app shows.
+//
+// Overview stat caption under In projects.
+func StatInProjectsCaption() string { return In(i18n.Locale()).StatInProjectsCaption() }
+
+// StatInProjectsCaption says "versions pinned"
+// in the language of msgs.
+//
+// Overview stat caption under In projects.
+func (msgs Messages) StatInProjectsCaption() string {
+	return Catalog.Format(msgs.locale, "statInProjectsCaption", nil)
+}
+
+// StatSoFar says "found so far"
+// in the language the app shows.
+//
+// Overview stat caption during the first scan.
+func StatSoFar() string { return In(i18n.Locale()).StatSoFar() }
+
+// StatSoFar says "found so far"
+// in the language of msgs.
+//
+// Overview stat caption during the first scan.
+func (msgs Messages) StatSoFar() string {
+	return Catalog.Format(msgs.locale, "statSoFar", nil)
+}
+
+// ChipProjects says "{count, plural, one {# project} other {# projects}}"
+// in the language the app shows.
+//
+// Overview tool card chip: projects needing the tool.
+func ChipProjects(count int) string { return In(i18n.Locale()).ChipProjects(count) }
+
+// ChipProjects says "{count, plural, one {# project} other {# projects}}"
+// in the language of msgs.
+//
+// Overview tool card chip: projects needing the tool.
+func (msgs Messages) ChipProjects(count int) string {
+	return Catalog.Format(msgs.locale, "chipProjects", map[string]any{"count": count})
+}
+
+// ChipCopies says "{count, plural, one {# copy} other {# copies}}"
+// in the language the app shows.
+//
+// Overview tool card chip: copies on PATH.
+func ChipCopies(count int) string { return In(i18n.Locale()).ChipCopies(count) }
+
+// ChipCopies says "{count, plural, one {# copy} other {# copies}}"
+// in the language of msgs.
+//
+// Overview tool card chip: copies on PATH.
+func (msgs Messages) ChipCopies(count int) string {
+	return Catalog.Format(msgs.locale, "chipCopies", map[string]any{"count": count})
+}
+
+// ChipGuiDiffers says "other in apps"
+// in the language the app shows.
+//
+// Overview tool card chip: apps outside the terminal run another version.
+func ChipGuiDiffers() string { return In(i18n.Locale()).ChipGuiDiffers() }
+
+// ChipGuiDiffers says "other in apps"
+// in the language of msgs.
+//
+// Overview tool card chip: apps outside the terminal run another version.
+func (msgs Messages) ChipGuiDiffers() string {
+	return Catalog.Format(msgs.locale, "chipGuiDiffers", nil)
+}
+
+// AttentionTitle says "Needs attention"
+// in the language the app shows.
+//
+// Overview card of issues.
+func AttentionTitle() string { return In(i18n.Locale()).AttentionTitle() }
+
+// AttentionTitle says "Needs attention"
+// in the language of msgs.
+//
+// Overview card of issues.
+func (msgs Messages) AttentionTitle() string {
+	return Catalog.Format(msgs.locale, "attentionTitle", nil)
+}
+
+// IssuesAfterScan says "Issues show after the check"
+// in the language the app shows.
+//
+// Overview issues card during the first scan.
+func IssuesAfterScan() string { return In(i18n.Locale()).IssuesAfterScan() }
+
+// IssuesAfterScan says "Issues show after the check"
+// in the language of msgs.
+//
+// Overview issues card during the first scan.
+func (msgs Messages) IssuesAfterScan() string {
+	return Catalog.Format(msgs.locale, "issuesAfterScan", nil)
+}
+
+// IssuesAfterScanText says "Hearth compares the projects' versions with what is installed and checks PATH."
+// in the language the app shows.
+//
+// Overview issues card text during the first scan.
+func IssuesAfterScanText() string { return In(i18n.Locale()).IssuesAfterScanText() }
+
+// IssuesAfterScanText says "Hearth compares the projects' versions with what is installed and checks PATH."
+// in the language of msgs.
+//
+// Overview issues card text during the first scan.
+func (msgs Messages) IssuesAfterScanText() string {
+	return Catalog.Format(msgs.locale, "issuesAfterScanText", nil)
+}
+
+// NoIssues says "No issues found"
+// in the language the app shows.
+//
+// Overview issues card without issues.
+func NoIssues() string { return In(i18n.Locale()).NoIssues() }
+
+// NoIssues says "No issues found"
+// in the language of msgs.
+//
+// Overview issues card without issues.
+func (msgs Messages) NoIssues() string {
+	return Catalog.Format(msgs.locale, "noIssues", nil)
+}
+
+// NoIssuesText says "Hearth checks again when project files and shell settings change."
+// in the language the app shows.
+//
+// Overview issues card text without issues.
+func NoIssuesText() string { return In(i18n.Locale()).NoIssuesText() }
+
+// NoIssuesText says "Hearth checks again when project files and shell settings change."
+// in the language of msgs.
+//
+// Overview issues card text without issues.
+func (msgs Messages) NoIssuesText() string {
+	return Catalog.Format(msgs.locale, "noIssuesText", nil)
+}
+
+// Details says "Details"
+// in the language the app shows.
+//
+// Button opening the page an issue lives on.
+func Details() string { return In(i18n.Locale()).Details() }
+
+// Details says "Details"
+// in the language of msgs.
+//
+// Button opening the page an issue lives on.
+func (msgs Messages) Details() string {
+	return Catalog.Format(msgs.locale, "details", nil)
+}
+
+// MoreIssues says "{count} more: {titles}"
+// in the language the app shows.
+//
+// Overview issues card: the issues not shown.
+func MoreIssues(count int, titles string) string { return In(i18n.Locale()).MoreIssues(count, titles) }
+
+// MoreIssues says "{count} more: {titles}"
+// in the language of msgs.
+//
+// Overview issues card: the issues not shown.
+func (msgs Messages) MoreIssues(count int, titles string) string {
+	return Catalog.Format(msgs.locale, "moreIssues", map[string]any{"count": count, "titles": titles})
+}
+
+// NoProjectsHeading says "No projects yet"
+// in the language the app shows.
+//
+// Overview projects card before any project is added.
+func NoProjectsHeading() string { return In(i18n.Locale()).NoProjectsHeading() }
+
+// NoProjectsHeading says "No projects yet"
+// in the language of msgs.
+//
+// Overview projects card before any project is added.
+func (msgs Messages) NoProjectsHeading() string {
+	return Catalog.Format(msgs.locale, "noProjectsHeading", nil)
+}
