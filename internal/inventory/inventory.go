@@ -107,6 +107,44 @@ type Snapshot struct {
 	// TerminalPath and GUIPath are the entries of the terminal's PATH and
 	// of the one apps started from the Dock or a desktop menu get, in order.
 	TerminalPath, GUIPath []PathEntry `json:",omitempty"`
+	// Agents are the AI agents Hearth knows, found or not, in its order.
+	Agents []Agent `json:",omitempty"`
+}
+
+// Agent is an AI coding agent as a scan found it.
+type Agent struct {
+	// ID names the agent: "claude", "codex", "copilot", "gemini",
+	// "cursor", "opencode", "devin".
+	ID string
+	// Installations are the copies of its command, found as a tool's are.
+	Installations []Installation `json:",omitempty"`
+	// App is where its desktop app is, as Cursor's editor, with its
+	// version; "" for none.
+	App, AppVersion string `json:",omitempty"`
+	// Dir is the directory of the user's settings for it, there or not;
+	// Files are the user's files of it that are there.
+	Dir   string      `json:",omitempty"`
+	Files []AgentFile `json:",omitempty"`
+}
+
+// Found reports that the agent is on the computer: its command or its
+// app. Files left by one removed do not count.
+func (a Agent) Found() bool { return len(a.Installations) > 0 || a.App != "" }
+
+// FileKind is what an agent's file holds.
+type FileKind int
+
+const (
+	FileSettings     FileKind = iota // settings, as settings.json
+	FileInstructions                 // instructions, as CLAUDE.md
+	FileMCP                          // MCP servers, as mcp.json
+	FileSkills                       // a directory of skills
+)
+
+// AgentFile is a file or directory of an agent's.
+type AgentFile struct {
+	Path string
+	Kind FileKind
 }
 
 // Tool returns the state of the tool by its ID, as "node", and whether the

@@ -1,0 +1,200 @@
+// Package ai finds the AI coding agents on the computer: their commands
+// and desktop apps, versions, and the user's settings, instructions, MCP
+// and skills files of each. It only reads.
+package ai
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
+
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sources"
+	"github.com/Blinks44/hearth/internal/sysenv"
+)
+
+// agent is what Hearth knows of an agent: its commands, where it keeps
+// the user's settings, and which files there are its own.
+type agent struct {
+	id string
+	// commands are the names it puts on PATH, the main one first.
+	commands []string
+	// dir is its settings directory: the first of these set, "~/" for
+	// the home and "$NAME/" for an environment variable's directory.
+	dir []string
+	// files are relative to dir, or to the home with "~/".
+	files []file
+}
+
+type file struct {
+	path string
+	kind inventory.FileKind
+}
+
+const (
+	settings     = inventory.FileSettings
+	instructions = inventory.FileInstructions
+	mcp          = inventory.FileMCP
+	skills       = inventory.FileSkills
+)
+
+// sharedSkills is the skills directory several agents read.
+const sharedSkills = "~/.agents/skills"
+
+// agents are the ones Hearth finds, in the order shown, by detection.md §7.
+var agents = []agent{
+	{"claude", []string{"claude"}, []string{"$CLAUDE_CONFIG_DIR", "~/.claude"}, []file{
+		{"settings.json", settings}, {"CLAUDE.md", instructions}, {"~/.claude.json", mcp}, {"skills", skills},
+	}},
+	{"codex", []string{"codex"}, []string{"$CODEX_HOME", "~/.codex"}, []file{
+		{"config.toml", settings}, {"AGENTS.md", instructions}, {"AGENTS.override.md", instructions}, {sharedSkills, skills},
+	}},
+	{"copilot", []string{"copilot"}, []string{"$COPILOT_HOME", "~/.copilot"}, []file{
+		{"settings.json", settings}, {"copilot-instructions.md", instructions}, {"mcp-config.json", mcp},
+		{"skills", skills}, {sharedSkills, skills},
+	}},
+	{"gemini", []string{"gemini"}, []string{"~/.gemini"}, []file{
+		{"settings.json", settings}, {"GEMINI.md", instructions}, {"skills", skills}, {sharedSkills, skills},
+	}},
+	{"cursor", []string{"cursor-agent"}, []string{"~/.cursor"}, []file{
+		{"cli-config.json", settings}, {"mcp.json", mcp}, {"skills", skills}, {sharedSkills, skills},
+	}},
+	{"opencode", []string{"opencode"}, []string{"$OPENCODE_CONFIG_DIR", "$XDG_CONFIG_HOME/opencode", "~/.config/opencode"}, []file{
+		{"opencode.json", settings}, {"AGENTS.md", instructions}, {"skills", skills},
+	}},
+	{"devin", []string{"devin"}, []string{"$APPDATA/devin", "$XDG_CONFIG_HOME/devin", "~/.config/devin"}, []file{
+		{"mcp_config.json", mcp}, {"AGENTS.md", instructions}, {"skills", skills},
+	}},
+}
+
+// Detect finds every agent Hearth knows, on the terminal's PATH (term)
+// and the GUI's (gui), with its desktop app and the user's files. The
+// list has every agent, found or not, in Hearth's order.
+func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) []inventory.Agent {
+	home := term.Get("HOME")
+	if home == "" {
+		home = term.Get("USERPROFILE")
+	}
+	out := make([]inventory.Agent, len(agents))
+	var wg sync.WaitGroup
+	for i, a := range agents {
+		// Each may run a command for its version; they run side by side.
+		wg.Go(func() { out[i] = detect(ctx, r, term, gui, home, a) })
+	}
+	wg.Wait()
+	return out
+}
+
+func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string, a agent) inventory.Agent {
+	found := inventory.Agent{ID: a.id, Installations: copies(term, gui, a.commands)}
+	for i := range found.Installations {
+		in := &found.Installations[i]
+		in.Tool = a.id
+		if in.Version = pathVersion(in.RealPath); in.Version == "" {
+			in.Version = runVersion(ctx, r, term, in.RealPath)
+		}
+	}
+	if a.id == "cursor" {
+		found.App, found.AppVersion = cursorApp(term, home)
+	}
+	found.Dir = dir(a.dir, term, home)
+	for _, f := range a.files {
+		p := f.path
+		if rest, ok := strings.CutPrefix(p, "~/"); ok {
+			if home == "" {
+				continue
+			}
+			p = filepath.Join(home, filepath.FromSlash(rest))
+		} else if found.Dir != "" {
+			p = filepath.Join(found.Dir, filepath.FromSlash(p))
+		} else {
+			continue
+		}
+		if _, err := os.Stat(p); err == nil {
+			found.Files = append(found.Files, inventory.AgentFile{Path: p, Kind: f.kind})
+		}
+	}
+	return found
+}
+
+// copies are the agent's commands on both PATHs, a copy two paths lead
+// to once, in the terminal's order, then the GUI's.
+func copies(term, gui sysenv.Env, commands []string) []inventory.Installation {
+	var out []inventory.Installation
+	byReal := map[string]int{}
+	add := func(path string) *inventory.Installation {
+		real, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			real = path
+		}
+		if i, ok := byReal[real]; ok {
+			return &out[i]
+		}
+		byReal[real] = len(out)
+		out = append(out, inventory.Installation{Path: path, RealPath: real, Source: sources.Classify(path, real, term)})
+		return &out[len(out)-1]
+	}
+	for _, name := range commands {
+		for i, p := range sysenv.LookPathAll(name, term) {
+			if in := add(p); in.OnPath == 0 {
+				in.OnPath = inventory.PathRank(i + 1)
+			}
+		}
+		for i, p := range sysenv.LookPathAll(name, gui) {
+			if in := add(p); in.InGUI == 0 {
+				in.InGUI = inventory.PathRank(i + 1)
+			}
+		}
+	}
+	return out
+}
+
+// dir is the first of dirs that is set: an environment variable's, or
+// one in the home; "" when none is.
+func dir(dirs []string, env sysenv.Env, home string) string {
+	for _, d := range dirs {
+		switch {
+		case strings.HasPrefix(d, "$"):
+			name, rest, _ := strings.Cut(d[1:], "/")
+			if v := env.Get(name); v != "" {
+				return filepath.Join(v, filepath.FromSlash(rest))
+			}
+		case strings.HasPrefix(d, "~/") && home != "":
+			return filepath.Join(home, filepath.FromSlash(d[2:]))
+		}
+	}
+	return ""
+}
+
+// version finds a version in a command's output or a path's name, as
+// "1.0.83" in "1.0.83 (Claude Code)" or "codex-cli 0.29.0".
+var version = regexp.MustCompile(`\d+\.\d+(\.\d+)?`)
+
+// versionName is a file or directory named by a version, as the native
+// installs of Claude Code and Cursor's agent keep them.
+var versionName = regexp.MustCompile(`^v?\d+\.\d+\.\d+`)
+
+// pathVersion is the version real's name or its directory's tells, as
+// ~/.local/share/claude/versions/1.0.83; "" when neither does.
+func pathVersion(real string) string {
+	for _, name := range []string{filepath.Base(real), filepath.Base(filepath.Dir(real))} {
+		if versionName.MatchString(name) {
+			return version.FindString(name)
+		}
+	}
+	return ""
+}
+
+// runVersion asks the command at path for its version; "" when it does
+// not tell.
+func runVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
+	res, err := r.Run(ctx, run.Cmd{Args: []string{path, "--version"}, Env: env})
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+	return version.FindString(string(res.Stdout))
+}
