@@ -583,19 +583,14 @@ func checkSource(ch projects.Check) string {
 // project: the needed version is not installed, or the terminal runs
 // another; "" when nothing does.
 func statusProblem(st projects.Status) string {
-	if !st.Checked {
+	ch, ok := st.Unmet()
+	switch {
+	case !ok:
 		return ""
+	case ch.Installed == nil:
+		return locales.ProblemMissing(toolTitle(st.Tool) + withSpace(ch.Want))
 	}
-	for _, ch := range st.Checks {
-		switch {
-		case ch.Err != "" || ch.Met:
-		case ch.Installed == nil:
-			return locales.ProblemMissing(toolTitle(st.Tool) + withSpace(ch.Want))
-		default:
-			return locales.ProblemTerminal(toolTitle(st.Tool) + withSpace(ch.Want))
-		}
-	}
-	return ""
+	return locales.ProblemTerminal(toolTitle(st.Tool) + withSpace(ch.Want))
 }
 
 // projectProblem is a project's first problem, "" when it has none.
@@ -612,28 +607,24 @@ func projectProblem(statuses []projects.Status) string {
 // from which file, what is installed and what the terminal runs.
 func problemBanner(statuses []projects.Status) string {
 	for _, st := range statuses {
-		if statusProblem(st) == "" {
+		ch, ok := st.Unmet()
+		if !ok {
 			continue
 		}
-		for _, ch := range st.Checks {
-			if ch.Err != "" || ch.Met {
-				continue
-			}
-			vs := installedVersions(st)
-			installed := locales.NothingInstalled()
-			if len(vs) > 0 {
-				installed = strings.Join(vs, ", ")
-			}
-			run := "—"
-			if st.Terminal != nil {
-				run = versionText(st.Terminal.Version)
-			}
-			want := ch.Want
-			if want == "" {
-				want = locales.AnyVersion()
-			}
-			return locales.ProblemBanner(toolTitle(st.Tool), want, ch.File, installed, run)
+		vs := installedVersions(st)
+		installed := locales.NothingInstalled()
+		if len(vs) > 0 {
+			installed = strings.Join(vs, ", ")
 		}
+		run := "—"
+		if st.Terminal != nil {
+			run = versionText(st.Terminal.Version)
+		}
+		want := ch.Want
+		if want == "" {
+			want = locales.AnyVersion()
+		}
+		return locales.ProblemBanner(toolTitle(st.Tool), want, ch.File, installed, run)
 	}
 	return ""
 }

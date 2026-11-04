@@ -778,5 +778,169 @@
   "backToProjects": "Back to projects",
   "@backToProjects": {
     "description": "Project page: the button before the title going back to the projects."
+  },
+  "issueDuplicateTitle": "{tool}: {count, plural, one {# copy} other {# copies}} on PATH",
+  "@issueDuplicateTitle": {
+    "description": "Issue title: several copies of a tool on the terminal's PATH.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "issueDuplicateExplain": "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wrong one.",
+  "@issueDuplicateExplain": {
+    "description": "Issue explanation: which copy runs, and that the others never do.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "v23.6.0"
+      },
+      "source": {
+        "type": "String",
+        "example": "brew"
+      },
+      "others": {
+        "type": "String",
+        "example": "v22.12.0 (fnm)"
+      }
+    }
+  },
+  "issueGuiTitle": "{tool} differs outside the terminal",
+  "@issueGuiTitle": {
+    "description": "Issue title: apps started from the Dock or a desktop menu run another version, or none.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      }
+    }
+  },
+  "issueProjectMissingTitle": "{project} needs {tool} {want}",
+  "@issueProjectMissingTitle": {
+    "description": "Issue title: a project needs a version that is not installed.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "legacy-admin"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "want": {
+        "type": "String",
+        "example": "18"
+      }
+    }
+  },
+  "issueProjectMissingExplain": "{file} asks for {tool} {want}, and no installed copy fits. Until it is installed, the project may not build or run.",
+  "@issueProjectMissingExplain": {
+    "description": "Issue explanation: the project's file asks for a version no copy has.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "want": {
+        "type": "String",
+        "example": "18"
+      }
+    }
+  },
+  "issueProjectTerminalTitle": "{project}: the terminal runs another {tool}",
+  "@issueProjectTerminalTitle": {
+    "description": "Issue title: the needed version is installed, but the terminal runs another in the project folder.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "legacy-admin"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      }
+    }
+  },
+  "issueProjectTerminalExplain": "{file} asks for {tool} {want}. It is installed, but in this folder the terminal runs {run}.",
+  "@issueProjectTerminalExplain": {
+    "description": "Issue explanation: the needed version is installed, but not the one run in the project folder.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "want": {
+        "type": "String",
+        "example": "18"
+      },
+      "run": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "issueUnsupportedTitle": "{tool} {versions}: support ended",
+  "@issueUnsupportedTitle": {
+    "description": "Issue title: installed versions whose support has ended.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "versions": {
+        "type": "String",
+        "example": "v18.20.4"
+      }
+    }
+  },
+  "issueUnsupportedExplain": "These versions no longer get security fixes. Move projects to a supported version, then the old one can go.",
+  "@issueUnsupportedExplain": {
+    "description": "Issue explanation: why versions out of support matter."
+  },
+  "issuePathCurrentTitle": "PATH includes the current folder",
+  "@issuePathCurrentTitle": {
+    "description": "Issue title: an empty or relative PATH entry."
+  },
+  "issuePathCurrentExplain": "PATH has {entries}. A command typed in the terminal may then run a file from whatever folder you are in, even a downloaded one.",
+  "@issuePathCurrentExplain": {
+    "description": "Issue explanation: why an empty or relative PATH entry is risky.",
+    "placeholders": {
+      "entries": {
+        "type": "String",
+        "example": "\".\""
+      }
+    }
+  },
+  "issuePathMissingTitle": "PATH lists folders that do not exist",
+  "@issuePathMissingTitle": {
+    "description": "Issue title: PATH entries naming no directory."
+  },
+  "issuePathMissingExplain": "{dirs}: no such folders. Nothing breaks, but these are usually leftovers of removed programs and can go.",
+  "@issuePathMissingExplain": {
+    "description": "Issue explanation: PATH entries naming no directory.",
+    "placeholders": {
+      "dirs": {
+        "type": "String",
+        "example": "/opt/old/bin"
+      }
+    }
+  },
+  "emptyPathEntry": "an empty entry",
+  "@emptyPathEntry": {
+    "description": "Issue text: how an empty PATH entry is named."
   }
 }

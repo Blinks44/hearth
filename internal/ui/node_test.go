@@ -101,29 +101,6 @@ func TestNodeEmpty(t *testing.T) {
 	}
 }
 
-func TestTerminalIndex(t *testing.T) {
-	mise := func(v string, rank inventory.PathRank, def bool) inventory.Installation {
-		return inventory.Installation{Version: v, OnPath: rank, Default: def,
-			Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"}}
-	}
-	shim := inventory.Installation{OnPath: 1, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Shim: true}}
-	tests := []struct {
-		name string
-		ins  []inventory.Installation
-		want int
-	}{
-		{"first in PATH", []inventory.Installation{mise("20", 2, false), mise("22", 1, false)}, 1},
-		{"shim picks the default", []inventory.Installation{shim, mise("20", 0, false), mise("22", 0, true)}, 2},
-		{"shim without a default", []inventory.Installation{shim, mise("22", 0, false)}, -1},
-		{"not in PATH", []inventory.Installation{mise("22", 0, true)}, -1},
-	}
-	for _, tt := range tests {
-		if got := terminalIndex(tt.ins); got != tt.want {
-			t.Errorf("%s: %d, want %d", tt.name, got, tt.want)
-		}
-	}
-}
-
 func TestManagedBy(t *testing.T) {
 	src := func(k inventory.Kind, m string) inventory.Installation {
 		return inventory.Installation{Source: inventory.Source{Kind: k, Manager: m}}
@@ -315,7 +292,7 @@ func TestGUIWarning(t *testing.T) {
 		{"not in the terminal", []inventory.Installation{node("22.0.0", 0, 1)}, ""},
 	}
 	for _, tt := range tests {
-		if got := guiWarning(tt.ins, terminalIndex(tt.ins)); got != tt.want {
+		if got := guiWarning(tt.ins, inventory.TerminalCopy(tt.ins)); got != tt.want {
 			t.Errorf("%s: %q, want %q", tt.name, got, tt.want)
 		}
 	}

@@ -1965,3 +1965,223 @@ func BackToProjects() string { return In(i18n.Locale()).BackToProjects() }
 func (msgs Messages) BackToProjects() string {
 	return Catalog.Format(msgs.locale, "backToProjects", nil)
 }
+
+// IssueDuplicateTitle says "{tool}: {count, plural, one {# copy} other {# copies}} on PATH"
+// in the language the app shows.
+//
+// Issue title: several copies of a tool on the terminal's PATH.
+func IssueDuplicateTitle(tool string, count int) string {
+	return In(i18n.Locale()).IssueDuplicateTitle(tool, count)
+}
+
+// IssueDuplicateTitle says "{tool}: {count, plural, one {# copy} other {# copies}} on PATH"
+// in the language of msgs.
+//
+// Issue title: several copies of a tool on the terminal's PATH.
+func (msgs Messages) IssueDuplicateTitle(tool string, count int) string {
+	return Catalog.Format(msgs.locale, "issueDuplicateTitle", map[string]any{"tool": tool, "count": count})
+}
+
+// IssueDuplicateExplain says "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wro…"
+// in the language the app shows.
+//
+// Issue explanation: which copy runs, and that the others never do.
+func IssueDuplicateExplain(first string, source string, others string) string {
+	return In(i18n.Locale()).IssueDuplicateExplain(first, source, others)
+}
+
+// IssueDuplicateExplain says "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wro…"
+// in the language of msgs.
+//
+// Issue explanation: which copy runs, and that the others never do.
+func (msgs Messages) IssueDuplicateExplain(first string, source string, others string) string {
+	return Catalog.Format(msgs.locale, "issueDuplicateExplain", map[string]any{"first": first, "source": source, "others": others})
+}
+
+// IssueGuiTitle says "{tool} differs outside the terminal"
+// in the language the app shows.
+//
+// Issue title: apps started from the Dock or a desktop menu run another
+// version, or none.
+func IssueGuiTitle(tool string) string { return In(i18n.Locale()).IssueGuiTitle(tool) }
+
+// IssueGuiTitle says "{tool} differs outside the terminal"
+// in the language of msgs.
+//
+// Issue title: apps started from the Dock or a desktop menu run another
+// version, or none.
+func (msgs Messages) IssueGuiTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "issueGuiTitle", map[string]any{"tool": tool})
+}
+
+// IssueProjectMissingTitle says "{project} needs {tool} {want}"
+// in the language the app shows.
+//
+// Issue title: a project needs a version that is not installed.
+func IssueProjectMissingTitle(project string, tool string, want string) string {
+	return In(i18n.Locale()).IssueProjectMissingTitle(project, tool, want)
+}
+
+// IssueProjectMissingTitle says "{project} needs {tool} {want}"
+// in the language of msgs.
+//
+// Issue title: a project needs a version that is not installed.
+func (msgs Messages) IssueProjectMissingTitle(project string, tool string, want string) string {
+	return Catalog.Format(msgs.locale, "issueProjectMissingTitle", map[string]any{"project": project, "tool": tool, "want": want})
+}
+
+// IssueProjectMissingExplain says "{file} asks for {tool} {want}, and no installed copy fits. Until it is installed, the project may not build or run."
+// in the language the app shows.
+//
+// Issue explanation: the project's file asks for a version no copy has.
+func IssueProjectMissingExplain(file string, tool string, want string) string {
+	return In(i18n.Locale()).IssueProjectMissingExplain(file, tool, want)
+}
+
+// IssueProjectMissingExplain says "{file} asks for {tool} {want}, and no installed copy fits. Until it is installed, the project may not build or run."
+// in the language of msgs.
+//
+// Issue explanation: the project's file asks for a version no copy has.
+func (msgs Messages) IssueProjectMissingExplain(file string, tool string, want string) string {
+	return Catalog.Format(msgs.locale, "issueProjectMissingExplain", map[string]any{"file": file, "tool": tool, "want": want})
+}
+
+// IssueProjectTerminalTitle says "{project}: the terminal runs another {tool}"
+// in the language the app shows.
+//
+// Issue title: the needed version is installed, but the terminal runs
+// another in the project folder.
+func IssueProjectTerminalTitle(project string, tool string) string {
+	return In(i18n.Locale()).IssueProjectTerminalTitle(project, tool)
+}
+
+// IssueProjectTerminalTitle says "{project}: the terminal runs another {tool}"
+// in the language of msgs.
+//
+// Issue title: the needed version is installed, but the terminal runs
+// another in the project folder.
+func (msgs Messages) IssueProjectTerminalTitle(project string, tool string) string {
+	return Catalog.Format(msgs.locale, "issueProjectTerminalTitle", map[string]any{"project": project, "tool": tool})
+}
+
+// IssueProjectTerminalExplain says "{file} asks for {tool} {want}. It is installed, but in this folder the terminal runs {run}."
+// in the language the app shows.
+//
+// Issue explanation: the needed version is installed, but not the one run
+// in the project folder.
+func IssueProjectTerminalExplain(file string, tool string, want string, run string) string {
+	return In(i18n.Locale()).IssueProjectTerminalExplain(file, tool, want, run)
+}
+
+// IssueProjectTerminalExplain says "{file} asks for {tool} {want}. It is installed, but in this folder the terminal runs {run}."
+// in the language of msgs.
+//
+// Issue explanation: the needed version is installed, but not the one run
+// in the project folder.
+func (msgs Messages) IssueProjectTerminalExplain(file string, tool string, want string, run string) string {
+	return Catalog.Format(msgs.locale, "issueProjectTerminalExplain", map[string]any{"file": file, "tool": tool, "want": want, "run": run})
+}
+
+// IssueUnsupportedTitle says "{tool} {versions}: support ended"
+// in the language the app shows.
+//
+// Issue title: installed versions whose support has ended.
+func IssueUnsupportedTitle(tool string, versions string) string {
+	return In(i18n.Locale()).IssueUnsupportedTitle(tool, versions)
+}
+
+// IssueUnsupportedTitle says "{tool} {versions}: support ended"
+// in the language of msgs.
+//
+// Issue title: installed versions whose support has ended.
+func (msgs Messages) IssueUnsupportedTitle(tool string, versions string) string {
+	return Catalog.Format(msgs.locale, "issueUnsupportedTitle", map[string]any{"tool": tool, "versions": versions})
+}
+
+// IssueUnsupportedExplain says "These versions no longer get security fixes. Move projects to a supported version, then the old one can go."
+// in the language the app shows.
+//
+// Issue explanation: why versions out of support matter.
+func IssueUnsupportedExplain() string { return In(i18n.Locale()).IssueUnsupportedExplain() }
+
+// IssueUnsupportedExplain says "These versions no longer get security fixes. Move projects to a supported version, then the old one can go."
+// in the language of msgs.
+//
+// Issue explanation: why versions out of support matter.
+func (msgs Messages) IssueUnsupportedExplain() string {
+	return Catalog.Format(msgs.locale, "issueUnsupportedExplain", nil)
+}
+
+// IssuePathCurrentTitle says "PATH includes the current folder"
+// in the language the app shows.
+//
+// Issue title: an empty or relative PATH entry.
+func IssuePathCurrentTitle() string { return In(i18n.Locale()).IssuePathCurrentTitle() }
+
+// IssuePathCurrentTitle says "PATH includes the current folder"
+// in the language of msgs.
+//
+// Issue title: an empty or relative PATH entry.
+func (msgs Messages) IssuePathCurrentTitle() string {
+	return Catalog.Format(msgs.locale, "issuePathCurrentTitle", nil)
+}
+
+// IssuePathCurrentExplain says "PATH has {entries}. A command typed in the terminal may then run a file from whatever folder you are in, even a downl…"
+// in the language the app shows.
+//
+// Issue explanation: why an empty or relative PATH entry is risky.
+func IssuePathCurrentExplain(entries string) string {
+	return In(i18n.Locale()).IssuePathCurrentExplain(entries)
+}
+
+// IssuePathCurrentExplain says "PATH has {entries}. A command typed in the terminal may then run a file from whatever folder you are in, even a downl…"
+// in the language of msgs.
+//
+// Issue explanation: why an empty or relative PATH entry is risky.
+func (msgs Messages) IssuePathCurrentExplain(entries string) string {
+	return Catalog.Format(msgs.locale, "issuePathCurrentExplain", map[string]any{"entries": entries})
+}
+
+// IssuePathMissingTitle says "PATH lists folders that do not exist"
+// in the language the app shows.
+//
+// Issue title: PATH entries naming no directory.
+func IssuePathMissingTitle() string { return In(i18n.Locale()).IssuePathMissingTitle() }
+
+// IssuePathMissingTitle says "PATH lists folders that do not exist"
+// in the language of msgs.
+//
+// Issue title: PATH entries naming no directory.
+func (msgs Messages) IssuePathMissingTitle() string {
+	return Catalog.Format(msgs.locale, "issuePathMissingTitle", nil)
+}
+
+// IssuePathMissingExplain says "{dirs}: no such folders. Nothing breaks, but these are usually leftovers of removed programs and can go."
+// in the language the app shows.
+//
+// Issue explanation: PATH entries naming no directory.
+func IssuePathMissingExplain(dirs string) string {
+	return In(i18n.Locale()).IssuePathMissingExplain(dirs)
+}
+
+// IssuePathMissingExplain says "{dirs}: no such folders. Nothing breaks, but these are usually leftovers of removed programs and can go."
+// in the language of msgs.
+//
+// Issue explanation: PATH entries naming no directory.
+func (msgs Messages) IssuePathMissingExplain(dirs string) string {
+	return Catalog.Format(msgs.locale, "issuePathMissingExplain", map[string]any{"dirs": dirs})
+}
+
+// EmptyPathEntry says "an empty entry"
+// in the language the app shows.
+//
+// Issue text: how an empty PATH entry is named.
+func EmptyPathEntry() string { return In(i18n.Locale()).EmptyPathEntry() }
+
+// EmptyPathEntry says "an empty entry"
+// in the language of msgs.
+//
+// Issue text: how an empty PATH entry is named.
+func (msgs Messages) EmptyPathEntry() string {
+	return Catalog.Format(msgs.locale, "emptyPathEntry", nil)
+}

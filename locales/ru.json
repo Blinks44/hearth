@@ -135,5 +135,19 @@
   "aiSettings": "настройки · {agent}",
   "aiMcp": "MCP-серверы проекта",
   "aiSkills": "скиллы для агентов",
-  "backToProjects": "К проектам"
+  "backToProjects": "К проектам",
+  "issueDuplicateTitle": "{tool}: {count, plural, one {# копия} few {# копии} many {# копий} other {# копии}} в PATH",
+  "issueDuplicateExplain": "Терминал запускает {first} ({source}). Остальные копии в PATH ({others}) не запускаются никогда, и легко обновить не ту.",
+  "issueGuiTitle": "{tool} вне терминала другой",
+  "issueProjectMissingTitle": "{project}: нужен {tool} {want}",
+  "issueProjectMissingExplain": "{file} просит {tool} {want}, а подходящей установленной копии нет. Пока её не установить, проект может не собраться или не запуститься.",
+  "issueProjectTerminalTitle": "{project}: терминал запускает другой {tool}",
+  "issueProjectTerminalExplain": "{file} просит {tool} {want}. Такая версия установлена, но в этой папке терминал запускает {run}.",
+  "issueUnsupportedTitle": "{tool} {versions}: поддержка закончилась",
+  "issueUnsupportedExplain": "Эти версии больше не получают исправлений безопасности. Переведите проекты на поддерживаемую версию, а старую можно убрать.",
+  "issuePathCurrentTitle": "В PATH есть текущая папка",
+  "issuePathCurrentExplain": "В PATH есть {entries}. Тогда команда в терминале может запустить файл из любой папки, где вы находитесь, даже скачанный.",
+  "issuePathMissingTitle": "В PATH есть несуществующие папки",
+  "issuePathMissingExplain": "{dirs}: таких папок нет. Это ничего не ломает, но обычно это остатки удалённых программ, их можно убрать.",
+  "emptyPathEntry": "пустая запись"
 }

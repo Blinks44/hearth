@@ -36,6 +36,11 @@ type Line struct {
 	Codename                     string
 }
 
+// Ended reports that the line's support has ended at now.
+func (l Line) Ended(now time.Time) bool {
+	return !l.End.IsZero() && !now.Before(l.End)
+}
+
 // Node is what nodejs.org says of Node's versions.
 type Node struct {
 	// Releases come newest first, without prereleases.

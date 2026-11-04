@@ -303,7 +303,7 @@ func (a *App) version(tool string) string {
 		return ""
 	}
 	v := ""
-	if i := terminalIndex(st.Installations); i >= 0 {
+	if i := inventory.TerminalCopy(st.Installations); i >= 0 {
 		v = st.Installations[i].Version
 	}
 	for _, in := range st.Installations {

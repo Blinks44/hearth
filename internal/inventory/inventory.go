@@ -91,10 +91,22 @@ type ToolState struct {
 	Err string `json:",omitempty"`
 }
 
+// PathEntry is a directory as a PATH lists it.
+type PathEntry struct {
+	// Dir is as written; an empty or relative one means the working
+	// directory.
+	Dir string
+	// Missing reports that no directory is at Dir.
+	Missing bool `json:",omitempty"`
+}
+
 // Snapshot is what one scan found on the computer.
 type Snapshot struct {
 	Taken time.Time
 	Tools []ToolState
+	// TerminalPath and GUIPath are the entries of the terminal's PATH and
+	// of the one apps started from the Dock or a desktop menu get, in order.
+	TerminalPath, GUIPath []PathEntry `json:",omitempty"`
 }
 
 // Tool returns the state of the tool by its ID, as "node", and whether the
@@ -106,4 +118,36 @@ func (s *Snapshot) Tool(id string) (ToolState, bool) {
 		}
 	}
 	return ToolState{}, false
+}
+
+// TerminalCopy returns the index of the copy in ins the terminal runs, or
+// -1 for none.
+func TerminalCopy(ins []Installation) int {
+	return runs(ins, func(in Installation) PathRank { return in.OnPath })
+}
+
+// GUICopy returns the index of the copy in ins apps started outside the
+// terminal run, or -1 for none.
+func GUICopy(ins []Installation) int {
+	return runs(ins, func(in Installation) PathRank { return in.InGUI })
+}
+
+// runs returns the copy a PATH runs, by each one's rank in it, or -1 for
+// none: the first, or when that is a shim, the version its manager picks
+// by default.
+func runs(ins []Installation, rank func(Installation) PathRank) int {
+	for i, in := range ins {
+		if rank(in) != 1 {
+			continue
+		}
+		if !in.Source.Shim {
+			return i
+		}
+		for j, d := range ins {
+			if d.Default && !d.Source.Shim && d.Source.Manager == in.Source.Manager {
+				return j
+			}
+		}
+	}
+	return -1
 }

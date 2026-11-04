@@ -35,7 +35,7 @@ func (a *App) node(c *ui.Context, p page) {
 			return
 		}
 		rows := listed(st.Installations)
-		active := terminalIndex(st.Installations)
+		active := inventory.TerminalCopy(st.Installations)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				nodeHeader(c, a.NodeVersions, st.Installations, rows, active)
@@ -511,7 +511,7 @@ func guiWarning(ins []inventory.Installation, active int) string {
 	if active < 0 {
 		return ""
 	}
-	gui := runIndex(ins, func(in inventory.Installation) inventory.PathRank { return in.InGUI })
+	gui := inventory.GUICopy(ins)
 	switch {
 	case gui < 0:
 		return locales.GuiNotFound("node")
@@ -607,32 +607,6 @@ func listed(ins []inventory.Installation) []int {
 	return rows
 }
 
-// terminalIndex returns the installation the terminal runs, or -1 for
-// none.
-func terminalIndex(ins []inventory.Installation) int {
-	return runIndex(ins, func(in inventory.Installation) inventory.PathRank { return in.OnPath })
-}
-
-// runIndex returns the installation a PATH runs, by each one's rank in
-// it, or -1 for none: the first, or when that is a shim, the version its
-// manager picks by default.
-func runIndex(ins []inventory.Installation, rank func(inventory.Installation) inventory.PathRank) int {
-	for i, in := range ins {
-		if rank(in) != 1 {
-			continue
-		}
-		if !in.Source.Shim {
-			return i
-		}
-		for j, d := range ins {
-			if d.Default && !d.Source.Shim && d.Source.Manager == in.Source.Manager {
-				return j
-			}
-		}
-	}
-	return -1
-}
-
 // channel tells a Node version's release line at now, as "LTS · Jod" or
 // "Current", and whether its support has ended, by the release schedule
 // in nv. Without the schedule, even majors are taken for LTS and odd ones
@@ -641,7 +615,7 @@ func channel(nv *versions.Node, version string, now time.Time) (string, bool) {
 	major := versions.Major(version)
 	if nv != nil {
 		if l, ok := nv.Lines[major]; ok {
-			ended := !l.End.IsZero() && !now.Before(l.End)
+			ended := l.Ended(now)
 			switch {
 			case !l.LTS.IsZero() && !now.Before(l.LTS) && l.Codename != "":
 				return "LTS · " + l.Codename, ended

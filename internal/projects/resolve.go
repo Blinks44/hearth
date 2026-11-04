@@ -37,6 +37,21 @@ type Check struct {
 	Err string
 }
 
+// Unmet returns the first requirement the terminal does not meet in the
+// project, when the scan checked the tool; one that could not be
+// understood is not counted.
+func (st Status) Unmet() (Check, bool) {
+	if !st.Checked {
+		return Check{}, false
+	}
+	for _, ch := range st.Checks {
+		if ch.Err == "" && !ch.Met {
+			return ch, true
+		}
+	}
+	return Check{}, false
+}
+
 // Resolve checks p's requirements against the scan s, a status per tool in
 // the order the tools first come in p. lines are Node's release lines,
 // which lts/* and lts/<codename> need; without them those meet nothing.

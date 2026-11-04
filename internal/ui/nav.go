@@ -24,6 +24,9 @@ type language struct {
 	page
 }
 
+// pathPage is the PATH's page, where its issues live.
+const pathPage = "/system/path"
+
 var (
 	overview     = page{"/overview", "lucide/layout-dashboard", locales.OverviewTitle, locales.OverviewSubtitle}
 	projectsPage = page{"/projects", "lucide/folder-git-2", locales.ProjectsTitle, locales.ProjectsSubtitle}
@@ -59,7 +62,7 @@ var (
 		}},
 		{locales.SectionSystem, []page{
 			{"/system/packages", "lucide/package", locales.PackageManagersTitle, locales.SectionSystem},
-			{"/system/path", "lucide/terminal", locales.PathTitle, locales.SectionSystem},
+			{pathPage, "lucide/terminal", locales.PathTitle, locales.SectionSystem},
 		}},
 	}
 )

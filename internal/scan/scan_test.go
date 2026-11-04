@@ -3,6 +3,8 @@ package scan
 import (
 	"context"
 	"errors"
+	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -43,6 +45,23 @@ func TestRunKeepsOtherTools(t *testing.T) {
 	}
 	if bun := s.Tools[1]; bun.Err != "bun --version: timed out" || len(bun.Installations) != 1 {
 		t.Errorf("failing tool: %+v", bun)
+	}
+}
+
+// The snapshot lists both PATHs as written, marking the directories that
+// are not there.
+func TestRunListsPath(t *testing.T) {
+	dir := t.TempDir()
+	gone := filepath.Join(dir, "gone")
+	term := sysenv.Env{"PATH=" + dir + string(filepath.ListSeparator) + gone + string(filepath.ListSeparator) + "."}
+	gui := sysenv.Env{"PATH=" + dir}
+	s := Run(context.Background(), &run.Fake{}, term, gui, nil)
+	want := []inventory.PathEntry{{Dir: dir}, {Dir: gone, Missing: true}, {Dir: "."}}
+	if !reflect.DeepEqual(s.TerminalPath, want) {
+		t.Errorf("terminal PATH %+v, want %+v", s.TerminalPath, want)
+	}
+	if want := []inventory.PathEntry{{Dir: dir}}; !reflect.DeepEqual(s.GUIPath, want) {
+		t.Errorf("GUI PATH %+v, want %+v", s.GUIPath, want)
 	}
 }
 
