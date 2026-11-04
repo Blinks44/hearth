@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -71,7 +72,7 @@ func TestOverviewAllGood(t *testing.T) {
 func TestOverviewManyIssues(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = nodeSnapshot()
-	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: "/opt/gone", Missing: true}}
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true}}
 	a.Projects = testProjects()
 	tt := openOverview(t, a)
 	hasTexts(t, tt, "4 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",

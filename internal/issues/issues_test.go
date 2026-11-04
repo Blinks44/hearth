@@ -1,6 +1,7 @@
 package issues
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -9,6 +10,15 @@ import (
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 )
+
+// abs makes a Unix path absolute on this OS too: on Windows it has no
+// volume and would count as relative.
+func abs(p string) string {
+	if filepath.IsAbs(p) {
+		return p
+	}
+	return `C:` + filepath.FromSlash(p)
+}
 
 var now = time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
 
@@ -85,15 +95,15 @@ func TestFind(t *testing.T) {
 		{name: "support not known", snap: nodeSnap(brew("18.20.4", 1, 1))},
 
 		{name: "current folder on PATH",
-			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: "/usr/bin"}, {Dir: "."}, {Dir: ""}}, GUIPath: []inventory.PathEntry{{Dir: "."}}},
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}, {Dir: "."}, {Dir: ""}}, GUIPath: []inventory.PathEntry{{Dir: "."}}},
 			want: []Issue{{Kind: PathCurrentDir, Severity: Warning, Dirs: []string{".", ""}}}},
 		{name: "missing directory on PATH",
-			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: "/usr/bin"}, {Dir: "/opt/gone", Missing: true}}, GUIPath: []inventory.PathEntry{{Dir: "/opt/gone", Missing: true}}},
-			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{"/opt/gone"}}}},
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}, {Dir: abs("/opt/gone"), Missing: true}}, GUIPath: []inventory.PathEntry{{Dir: abs("/opt/gone"), Missing: true}}},
+			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{abs("/opt/gone")}}}},
 		{name: "macOS's own missing directories on PATH", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin", Missing: true},
 			{Dir: "/pkg/env/global/bin", Missing: true}}}},
-		{name: "PATH in order", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: "/usr/bin"}}, GUIPath: []inventory.PathEntry{{Dir: "/usr/bin"}}}},
+		{name: "PATH in order", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}, GUIPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}}},
 
 		{name: "tool that failed to check",
 			snap: &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Err: "timeout",

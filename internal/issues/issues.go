@@ -124,9 +124,10 @@ func pathIssues(s *inventory.Snapshot) []Issue {
 	var current, missing []string
 	for _, e := range slices.Concat(s.TerminalPath, s.GUIPath) {
 		switch {
+		case osDir(e.Dir):
 		case !filepath.IsAbs(e.Dir) && !slices.Contains(current, e.Dir):
 			current = append(current, e.Dir)
-		case e.Missing && !slices.Contains(missing, e.Dir) && !osDir(e.Dir):
+		case e.Missing && !slices.Contains(missing, e.Dir):
 			missing = append(missing, e.Dir)
 		}
 	}

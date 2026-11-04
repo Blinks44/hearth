@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"image/color"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -382,10 +383,11 @@ func TestNodeRowActions(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if want := []string{home + "/.npmrc"}; !reflect.DeepEqual(shell.opened, want) {
+	npmrc := filepath.Join(home, ".npmrc")
+	if want := []string{npmrc}; !reflect.DeepEqual(shell.opened, want) {
 		t.Errorf("opened %q, want %q", shell.opened, want)
 	}
-	if !tt.HasText("Could not open ~/.npmrc: no such file") {
+	if !tt.HasText("Could not open " + tilde(npmrc, home) + ": no such file") {
 		t.Errorf("no error toast in %q", tt.Texts())
 	}
 }
