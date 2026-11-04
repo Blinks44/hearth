@@ -1774,5 +1774,14 @@
   "jsManagerUnmet": "{manager} {version}: the terminal version does not meet this requirement",
   "jsFilter": "Filter managers",
   "jsCorepackDownloads": "{manager} {version}: Corepack downloads it on first run in the project",
-  "corepackDownloads": "Corepack downloads on first run"
+  "corepackDownloads": "Corepack downloads on first run",
+  "phpManagementNote": "Homebrew versions are managed with brew; Herd versions in Herd. This page shows CLI configuration; websites may use another PHP.",
+  "phpConfiguration": "Configuration · {version}",
+  "phpConfigurationFailed": "Could not read the PHP CLI configuration.",
+  "phpNoIni": "No php.ini loaded",
+  "phpOpenIni": "Open configuration file",
+  "phpExtensions": "Extensions · {count}",
+  "phpCopyExtensions": "Copy extension list",
+  "phpExtensionsCopied": "Extension list copied",
+  "phpNoComposerPackages": "No global Composer packages"
 }

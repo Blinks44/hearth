@@ -1,0 +1,67 @@
+package versions
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
+// Cycle is a release line on endoflife.date, as Python's 3.13.
+type Cycle struct {
+	Cycle  string // as "3.13"
+	Latest string // its newest release, as "3.13.1"
+	// Release is when the line came out; End is when its security fixes
+	// end.
+	Release, End time.Time
+}
+
+// Cycles is what is known of a tool's release lines.
+type Cycles struct {
+	// Lines come newest first.
+	Lines []Cycle
+	// Fetched is when the list was last got from the server.
+	Fetched time.Time
+}
+
+// fetchCycles gets the release lines of tool at url through c, cached as
+// file.
+func fetchCycles(ctx context.Context, c *Cache, tool, file, url string) (Cycles, error) {
+	data, fetched, err := c.Get(ctx, file, url)
+	if err != nil {
+		return Cycles{}, err
+	}
+	lines, err := parseCycles(tool, data)
+	if err != nil {
+		return Cycles{}, err
+	}
+	return Cycles{Lines: lines, Fetched: fetched}, nil
+}
+
+// parseCycles reads endoflife.date's list of tool's lines.
+func parseCycles(tool string, data []byte) ([]Cycle, error) {
+	var cycles []struct {
+		Cycle, Latest, ReleaseDate string
+		EOL                        any // a date, or false
+	}
+	if err := json.Unmarshal(data, &cycles); err != nil {
+		return nil, fmt.Errorf("read %s release lines: %w", tool, err)
+	}
+	lines := make([]Cycle, 0, len(cycles))
+	for _, c := range cycles {
+		eol, _ := c.EOL.(string)
+		lines = append(lines, Cycle{Cycle: c.Cycle, Latest: c.Latest, Release: date(c.ReleaseDate), End: date(eol)})
+	}
+	return lines, nil
+}
+
+// Line returns the line of version, as 3.13 of 3.13.1, and whether it is
+// known.
+func (p *Cycles) Line(version string) (Cycle, bool) {
+	for _, l := range p.Lines {
+		if version == l.Cycle || len(version) > len(l.Cycle) && version[:len(l.Cycle)+1] == l.Cycle+"." {
+			return l, true
+		}
+	}
+	return Cycle{}, false
+}

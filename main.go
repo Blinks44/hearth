@@ -108,6 +108,7 @@ func main() {
 			fetchList(win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
 			fetchList(win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
 			fetchList(win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
+			fetchList(win, lists, versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
 		}
 		a.OnScan = func() {
 			scanner.Start(scanned)

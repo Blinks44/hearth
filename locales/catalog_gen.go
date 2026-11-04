@@ -4393,3 +4393,93 @@ func CorepackDownloads() string { return In(i18n.Locale()).CorepackDownloads() }
 func (msgs Messages) CorepackDownloads() string {
 	return Catalog.Format(msgs.locale, "corepackDownloads", nil)
 }
+
+// PhpManagementNote says "Homebrew versions are managed with brew; Herd versions in Herd. This page shows CLI configuration; websites may use a…"
+// in the language the app shows.
+func PhpManagementNote() string { return In(i18n.Locale()).PhpManagementNote() }
+
+// PhpManagementNote says "Homebrew versions are managed with brew; Herd versions in Herd. This page shows CLI configuration; websites may use a…"
+// in the language of msgs.
+func (msgs Messages) PhpManagementNote() string {
+	return Catalog.Format(msgs.locale, "phpManagementNote", nil)
+}
+
+// PhpConfiguration says "Configuration · {version}"
+// in the language the app shows.
+func PhpConfiguration(version string) string { return In(i18n.Locale()).PhpConfiguration(version) }
+
+// PhpConfiguration says "Configuration · {version}"
+// in the language of msgs.
+func (msgs Messages) PhpConfiguration(version string) string {
+	return Catalog.Format(msgs.locale, "phpConfiguration", map[string]any{"version": version})
+}
+
+// PhpConfigurationFailed says "Could not read the PHP CLI configuration."
+// in the language the app shows.
+func PhpConfigurationFailed() string { return In(i18n.Locale()).PhpConfigurationFailed() }
+
+// PhpConfigurationFailed says "Could not read the PHP CLI configuration."
+// in the language of msgs.
+func (msgs Messages) PhpConfigurationFailed() string {
+	return Catalog.Format(msgs.locale, "phpConfigurationFailed", nil)
+}
+
+// PhpNoIni says "No php.ini loaded"
+// in the language the app shows.
+func PhpNoIni() string { return In(i18n.Locale()).PhpNoIni() }
+
+// PhpNoIni says "No php.ini loaded"
+// in the language of msgs.
+func (msgs Messages) PhpNoIni() string {
+	return Catalog.Format(msgs.locale, "phpNoIni", nil)
+}
+
+// PhpOpenIni says "Open configuration file"
+// in the language the app shows.
+func PhpOpenIni() string { return In(i18n.Locale()).PhpOpenIni() }
+
+// PhpOpenIni says "Open configuration file"
+// in the language of msgs.
+func (msgs Messages) PhpOpenIni() string {
+	return Catalog.Format(msgs.locale, "phpOpenIni", nil)
+}
+
+// PhpExtensions says "Extensions · {count}"
+// in the language the app shows.
+func PhpExtensions(count string) string { return In(i18n.Locale()).PhpExtensions(count) }
+
+// PhpExtensions says "Extensions · {count}"
+// in the language of msgs.
+func (msgs Messages) PhpExtensions(count string) string {
+	return Catalog.Format(msgs.locale, "phpExtensions", map[string]any{"count": count})
+}
+
+// PhpCopyExtensions says "Copy extension list"
+// in the language the app shows.
+func PhpCopyExtensions() string { return In(i18n.Locale()).PhpCopyExtensions() }
+
+// PhpCopyExtensions says "Copy extension list"
+// in the language of msgs.
+func (msgs Messages) PhpCopyExtensions() string {
+	return Catalog.Format(msgs.locale, "phpCopyExtensions", nil)
+}
+
+// PhpExtensionsCopied says "Extension list copied"
+// in the language the app shows.
+func PhpExtensionsCopied() string { return In(i18n.Locale()).PhpExtensionsCopied() }
+
+// PhpExtensionsCopied says "Extension list copied"
+// in the language of msgs.
+func (msgs Messages) PhpExtensionsCopied() string {
+	return Catalog.Format(msgs.locale, "phpExtensionsCopied", nil)
+}
+
+// PhpNoComposerPackages says "No global Composer packages"
+// in the language the app shows.
+func PhpNoComposerPackages() string { return In(i18n.Locale()).PhpNoComposerPackages() }
+
+// PhpNoComposerPackages says "No global Composer packages"
+// in the language of msgs.
+func (msgs Messages) PhpNoComposerPackages() string {
+	return Catalog.Format(msgs.locale, "phpNoComposerPackages", nil)
+}

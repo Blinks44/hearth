@@ -308,5 +308,14 @@
   "jsManagerUnmet": "{manager} {version}: версия терминала не соответствует требованию",
   "jsFilter": "Фильтр менеджеров",
   "jsCorepackDownloads": "{manager} {version}: Corepack скачает при первом запуске в проекте",
-  "corepackDownloads": "Corepack скачает при первом запуске"
+  "corepackDownloads": "Corepack скачает при первом запуске",
+  "phpManagementNote": "Версии Homebrew меняются через brew, Herd — в Herd. Здесь конфигурация CLI; сайты могут использовать другой PHP.",
+  "phpConfiguration": "Конфигурация · {version}",
+  "phpConfigurationFailed": "Не удалось прочитать конфигурацию PHP CLI.",
+  "phpNoIni": "php.ini не загружен",
+  "phpOpenIni": "Открыть файл конфигурации",
+  "phpExtensions": "Расширения · {count}",
+  "phpCopyExtensions": "Скопировать список расширений",
+  "phpExtensionsCopied": "Список расширений скопирован",
+  "phpNoComposerPackages": "Нет глобальных пакетов Composer"
 }

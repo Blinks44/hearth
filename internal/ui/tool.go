@@ -589,7 +589,7 @@ func copyVersion(in inventory.Installation) string {
 		return versionText(in.Version)
 	case in.Tool == "go":
 		return "go" + in.Version
-	case in.Tool == "python":
+	case in.Tool == "python" || in.Tool == "php":
 		return in.Version
 	}
 	return versionText(in.Version)

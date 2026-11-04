@@ -46,8 +46,16 @@ const ScriptInstall = "script"
 // PathRank is a position in a PATH, counting from 1; 0 is not on it.
 type PathRank int
 
+// PHPConfig describes a CLI copy under the terminal environment.
+type PHPConfig struct {
+	Files      []string
+	Extensions []string
+	Err        string `json:",omitempty"`
+}
+
 // Installation is one copy of a tool.
 type Installation struct {
+	PHP     *PHPConfig `json:",omitempty"`
 	Tool    string
 	Version string
 	// Path is where the copy was found; RealPath is Path with symlinks

@@ -45,6 +45,10 @@ type App struct {
 	// when they could not, PythonVersionsErr says why.
 	PythonVersions    *versions.Python
 	PythonVersionsErr string
+	// PHPVersions are PHP's release lines; nil until they come, or when
+	// they could not, PHPVersionsErr says why.
+	PHPVersions    *versions.PHP
+	PHPVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -71,6 +75,7 @@ type App struct {
 	jspmFilter    string  // the package managers table's filter
 	bunTab        int     // the tab of the Bun page shown
 	goTab         int     // the tab of the Go page shown
+	phpTab        int     // the tab of the PHP page shown
 	pythonTab     int     // the tab of the Python page shown
 	projectsTab   int     // all projects, or the ones needing attention
 	projectFilter string  // the projects page's filter
@@ -130,6 +135,8 @@ func (a *App) View(c *ui.Context) {
 						a.bun(c, p)
 					case "/tools/go":
 						a.goPage(c, p)
+					case "/tools/php":
+						a.php(c, p)
 					case "/tools/python":
 						a.python(c, p)
 					case projectsPage.path:

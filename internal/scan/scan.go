@@ -34,6 +34,8 @@ var Detectors = []Detector{
 	{"corepack", detect.Corepack},
 	{"go", detect.Go},
 	{"python", detect.Python},
+	{"php", detect.PHP},
+	{"composer", detect.Composer},
 }
 
 // parallel is how many detectors run at once: each may start commands.
