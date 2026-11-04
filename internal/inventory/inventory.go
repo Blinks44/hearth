@@ -110,8 +110,11 @@ type Snapshot struct {
 }
 
 // Tool returns the state of the tool by its ID, as "node", and whether the
-// scan checked it.
+// scan checked it; a nil snapshot, before the first scan, checked none.
 func (s *Snapshot) Tool(id string) (ToolState, bool) {
+	if s == nil {
+		return ToolState{}, false
+	}
 	for _, t := range s.Tools {
 		if t.Tool == id {
 			return t, true

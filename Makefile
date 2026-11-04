@@ -1,6 +1,6 @@
 LINT := go tool -modfile=tools/go.mod golangci-lint
 
-.PHONY: dev build test lint fmt check
+.PHONY: dev build test e2e lint fmt check
 
 dev: ## run the app with live reload
 	go tool mygo dev
@@ -10,6 +10,9 @@ build: ## package the app for this machine into build/
 
 test:
 	go test ./...
+
+e2e: ## build the app with the automation plugin and walk its pages (needs a desktop session)
+	go test -tags e2e -count=1 -v ./e2e
 
 lint:
 	$(LINT) run

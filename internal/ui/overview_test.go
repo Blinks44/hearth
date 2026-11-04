@@ -38,6 +38,13 @@ func TestOverviewFirstScan(t *testing.T) {
 	if tt.HasText("Node.js 22.12") || tt.HasText("v22.12.0") {
 		t.Errorf("a tool before the scan: %q", tt.Texts())
 	}
+	// Projects read before the scan ends show as not checked.
+	a.Projects = testProjects()
+	tt.Frame()
+	hasTexts(t, tt, "legacy-admin", "not checked")
+	a.router.Push(projectsPage.path)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "legacy-admin")
 }
 
 // Without issues the hero is green and the issues card says so; the
