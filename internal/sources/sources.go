@@ -49,41 +49,16 @@ type rule struct {
 }
 
 func rulesFor(env sysenv.Env) []rule {
-	home := env.Get("HOME")
-	if home == "" {
-		home = env.Get("USERPROFILE")
-	}
-	// or returns the first non-empty dir; a "~/" one only when home is
-	// known.
-	or := func(dirs ...string) string {
-		for _, d := range dirs {
-			if rest, ok := strings.CutPrefix(d, "~/"); ok {
-				if home == "" {
-					continue
-				}
-				d = join(home, rest)
-			}
-			if d != "" {
-				return d
-			}
-		}
-		return ""
-	}
-	sub := func(dir, rest string) string {
-		if dir == "" {
-			return ""
-		}
-		return join(dir, rest)
-	}
+	d := ManagerDirs(env)
+	or := d.or
 	const (
 		vm   = inventory.KindVersionManager
 		pm   = inventory.KindPackageManager
 		inst = inventory.KindInstaller
 		sys  = inventory.KindSystem
 	)
-	appData, localAppData := env.Get("APPDATA"), env.Get("LOCALAPPDATA")
+	localAppData := env.Get("LOCALAPPDATA")
 	programData := or(env.Get("ProgramData"), `C:\ProgramData`)
-	xdgData := or(env.Get("XDG_DATA_HOME"), "~/.local/share")
 
 	var rules []rule
 	add := func(dir, pattern string, kind inventory.Kind, manager string) {
@@ -98,14 +73,10 @@ func rulesFor(env sysenv.Env) []rule {
 	}
 
 	// Shims, by the path found.
-	volta := or(env.Get("VOLTA_HOME"), sub(localAppData, "Volta"), "~/.volta")
-	shim(volta, "bin", "volta")
-	mise := or(env.Get("MISE_DATA_DIR"), sub(localAppData, "mise"), sub(xdgData, "mise"))
-	shim(mise, "shims", "mise")
-	asdf := or(env.Get("ASDF_DATA_DIR"), "~/.asdf")
-	shim(asdf, "shims", "asdf")
-	nodenv := or(env.Get("NODENV_ROOT"), "~/.nodenv")
-	shim(nodenv, "shims", "nodenv")
+	shim(d.Volta, "bin", "volta")
+	shim(d.Mise, "shims", "mise")
+	shim(d.Asdf, "shims", "asdf")
+	shim(d.Nodenv, "shims", "nodenv")
 	scoop := or(env.Get("SCOOP"), "~/scoop")
 	scoopGlobal := or(env.Get("SCOOP_GLOBAL"), sub(programData, "scoop"))
 	for _, d := range []string{scoop, scoopGlobal} {
@@ -117,22 +88,22 @@ func rulesFor(env sysenv.Env) []rule {
 	// tells the installation.
 
 	// Installations, by the real path. More specific rules go first.
-	for _, d := range []string{env.Get("HOMEBREW_PREFIX"), "/opt/homebrew", "/usr/local", "/home/linuxbrew/.linuxbrew", "~/.linuxbrew"} {
-		if d = or(d); d != "" {
-			add(d, "Cellar/*/@", pm, "brew")
-			add(d, "Caskroom/*/@", pm, "brew")
+	for _, p := range []string{env.Get("HOMEBREW_PREFIX"), "/opt/homebrew", "/usr/local", "/home/linuxbrew/.linuxbrew", "~/.linuxbrew"} {
+		if p = or(p); p != "" {
+			add(p, "Cellar/*/@", pm, "brew")
+			add(p, "Caskroom/*/@", pm, "brew")
 		}
 	}
-	for _, d := range []string{env.Get("FNM_DIR"), sub(appData, "fnm"), sub(xdgData, "fnm"), or("~/Library/Application Support/fnm"), or("~/.fnm")} {
-		add(d, "node-versions/@", vm, "fnm")
+	for _, fnm := range d.Fnm {
+		add(fnm, "node-versions/@", vm, "fnm")
 	}
-	add(or(env.Get("NVM_DIR"), "~/.nvm"), "versions/node/@", vm, "nvm")
-	add(volta, "tools/image/*/@", vm, "volta")
-	add(mise, "installs/*/@", vm, "mise")
-	add(asdf, "installs/*/@", vm, "asdf")
-	add(nodenv, "versions/@", vm, "nodenv")
-	add(or(env.Get("N_PREFIX"), "/usr/local"), "n/versions/*/@", vm, "n")
-	add(or(env.Get("NVM_HOME"), sub(appData, "nvm")), "@", vm, "nvm-windows")
+	add(d.Nvm, "versions/node/@", vm, "nvm")
+	add(d.Volta, "tools/image/*/@", vm, "volta")
+	add(d.Mise, "installs/*/@", vm, "mise")
+	add(d.Asdf, "installs/*/@", vm, "asdf")
+	add(d.Nodenv, "versions/@", vm, "nodenv")
+	add(d.N, "n/versions/*/@", vm, "n")
+	add(d.NvmWindows, "@", vm, "nvm-windows")
 	add(scoop, "apps/*/@", pm, "scoop")
 	add(scoopGlobal, "apps/*/@", pm, "scoop")
 	add(choco, "lib/*", pm, "choco")

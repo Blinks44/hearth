@@ -6,6 +6,7 @@ tool github.com/egoist/mygo/cmd/mygo
 
 require (
 	github.com/egoist/mygo v0.7.4
+	golang.org/x/mod v0.42.0
 	golang.org/x/sys v0.48.0
 )
 

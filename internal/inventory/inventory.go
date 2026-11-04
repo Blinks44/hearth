@@ -52,4 +52,20 @@ type Installation struct {
 	OnPath, InGUI PathRank
 	// Default reports that the copy's manager picks it by default.
 	Default bool
+	// Packages are the ones installed globally with this copy, like npm
+	// next to Node.
+	Packages []Package
+}
+
+// Package is a package by name and version.
+type Package struct {
+	Name, Version string
+}
+
+// ToolState is what a detector found of one tool.
+type ToolState struct {
+	Tool string
+	// Installations come in the terminal's PATH order first, then the GUI's,
+	// then the ones only a manager's directory holds.
+	Installations []Installation
 }
