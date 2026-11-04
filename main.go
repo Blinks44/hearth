@@ -6,6 +6,8 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+
+	hearthui "github.com/Blinks44/hearth/internal/ui"
 )
 
 // app is the state the window shows. Its view builds the interface from
@@ -17,6 +19,7 @@ type app struct {
 }
 
 func (a *app) view(c *ui.Context) {
+	c.SetTheme(hearthui.Theme(c.Theme()))
 	t := c.Theme()
 	ui.Column(c).Fill().Center().Gap(16).Padding(24).Children(func() {
 		ui.Text(c, "Hearth").FontSize(26).Bold()
@@ -39,6 +42,9 @@ func (a *app) view(c *ui.Context) {
 }
 
 func main() {
+	if err := hearthui.RegisterFonts(); err != nil {
+		log.Fatal(err)
+	}
 	a := &app{}
 	mygo.App.WhenReady(func() {
 		mygo.NewWindow(mygo.WindowOptions{
