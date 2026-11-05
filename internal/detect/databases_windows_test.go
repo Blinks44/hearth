@@ -5,29 +5,56 @@ import (
 	"path/filepath"
 	"testing"
 
+	"golang.org/x/sys/windows"
+
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
+func init() {
+	listWindowsServices = func() ([]winService, error) { return nil, nil }
+}
+
 func TestDatabaseWindowsServices(t *testing.T) {
-	dir := t.TempDir()
-	exe := filepath.Join(dir, "sc.exe")
-	if err := os.WriteFile(exe, []byte("fake"), 0755); err != nil {
+	d := &inventory.DatabaseState{}
+	addDatabaseServices(d, []winService{
+		{"postgresql-x64-17", windows.SERVICE_RUNNING},
+		{"EventLog", windows.SERVICE_RUNNING},
+		{"MySQL80", windows.SERVICE_STOPPED},
+	})
+	if len(d.Servers) != 2 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" {
+		t.Fatal(d)
+	}
+}
+
+// The Service Control Manager lists services without an administrator:
+// the event log's runs on every Windows.
+func TestWindowsServicesReal(t *testing.T) {
+	services, err := windowsServices()
+	if err != nil {
 		t.Fatal(err)
 	}
+	for _, s := range services {
+		if s.name == "EventLog" && s.state == windows.SERVICE_RUNNING {
+			return
+		}
+	}
+	t.Errorf("EventLog not running among %d services", len(services))
+}
+
+func TestDatabaseWindowsListeners(t *testing.T) {
+	dir := t.TempDir()
 	netstat := filepath.Join(dir, "netstat.exe")
 	if err := os.WriteFile(netstat, []byte("fake"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	env := sysenv.Env{"PATH=" + dir, "PATHEXT=.EXE"}
 	r := &run.Fake{}
-	r.Stdout("SERVICE_NAME: postgresql-x64-17\r\n        TYPE               : 10  WIN32_OWN_PROCESS\r\n        STATE              : 4  RUNNING\r\nSERVICE_NAME: MySQL80\r\n        STATE              : 1  STOPPED\r\n", exe, "queryex", "type=", "service", "state=", "all")
 	r.Stdout("  Proto  Local Address          Foreign Address        State           PID\r\n  TCP    127.0.0.1:5432         0.0.0.0:0              ABH\u00d6REN         812\r\n  TCP    127.0.0.1:50000        127.0.0.1:5432         HERGESTELLT     900\r\n", netstat, "-ano", "-p", "tcp")
 	d := &inventory.DatabaseState{}
-	databaseServices(t.Context(), r, env, d)
 	databaseListeners(t.Context(), r, env, d)
-	if len(d.Servers) != 2 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || len(d.Listeners) != 1 {
+	if len(d.Listeners) != 1 {
 		t.Fatal(d)
 	}
 }

@@ -19,3 +19,6 @@ func rubyOSGlobs(env sysenv.Env) []string {
 	}
 	return patterns
 }
+
+// rubyInstallerRoot is RubyInstaller's folder, only on Windows.
+func rubyInstallerRoot(string) string { return "" }

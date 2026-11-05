@@ -41,7 +41,11 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 			if strings.Contains(v, "MariaDB") {
 				kind = "MariaDB"
 			}
-			d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: kind, Version: databaseVersionOf(v), Path: in.RealPath, Source: in.Source.Manager})
+			source := in.Source.Manager
+			if source == "" && in.Source.Kind == inventory.KindInstaller {
+				source = "installer" // as EDB's PostgreSQL in Program Files
+			}
+			d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: kind, Version: databaseVersionOf(v), Path: in.RealPath, Source: source})
 		}
 	}
 	for _, command := range []string{"psql", "mysql", "mariadb", "redis-cli", "sqlite3"} {

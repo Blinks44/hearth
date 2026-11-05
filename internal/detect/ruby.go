@@ -42,6 +42,9 @@ func Ruby(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		if in.Source.Shim {
 			continue
 		}
+		if root := rubyInstallerRoot(in.RealPath); root != "" {
+			in.Source = inventory.Source{Kind: inventory.KindInstaller, Manager: "RubyInstaller", Root: root}
+		}
 		in.Version = rubyVersion.FindString(pathVersion(strings.TrimPrefix(in.Source.Version, "ruby-")))
 		if in.Version == "" {
 			in.Version = firstMatch(rubyCLIVersion, rubyOutput(ctx, r, term, in.RealPath, "--version"))

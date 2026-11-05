@@ -2,8 +2,13 @@ package detect
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -22,30 +27,78 @@ func databaseGlobs(env sysenv.Env, command string) []string {
 	return out
 }
 
-func databaseServices(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {
-	data, ok := databaseRun(ctx, r, env, "sc.exe", "queryex", "type=", "service", "state=", "all")
-	if !ok {
-		d.Warnings = append(d.Warnings, "sc.exe")
+// listWindowsServices is replaced in tests, which must not see the machine's services.
+var listWindowsServices = windowsServices
+
+// databaseServices reads the services from the Service Control Manager,
+// not sc.exe, whose output Windows translates.
+func databaseServices(_ context.Context, _ run.Runner, _ sysenv.Env, d *inventory.DatabaseState) {
+	services, err := listWindowsServices()
+	if err != nil {
+		d.Warnings = append(d.Warnings, "Service Control Manager")
 		return
 	}
-	var name string
-	for line := range strings.Lines(string(data)) {
-		// sc.exe pads its keys: "        STATE              : 4  RUNNING".
-		key, value, _ := strings.Cut(line, ":")
-		key = strings.TrimSpace(key)
-		if key == "SERVICE_NAME" {
-			name = strings.TrimSpace(value)
+	addDatabaseServices(d, services)
+}
+
+// winService is a Windows service's name and state.
+type winService struct {
+	name  string
+	state uint32
+}
+
+// addDatabaseServices adds the services of databases among services.
+func addDatabaseServices(d *inventory.DatabaseState, services []winService) {
+	for _, s := range services {
+		kind := inventory.DatabaseKind(s.name)
+		if kind == "" {
+			continue
 		}
-		if key == "STATE" && inventory.DatabaseKind(name) != "" {
-			status := ""
-			if strings.Contains(value, "RUNNING") {
-				status = "running"
-			} else if strings.Contains(value, "STOPPED") {
-				status = "stopped"
-			}
-			databaseService(d, inventory.DatabaseKind(name), name, "system", status)
+		status := ""
+		switch s.state {
+		case windows.SERVICE_RUNNING:
+			status = "running"
+		case windows.SERVICE_STOPPED:
+			status = "stopped"
 		}
+		databaseService(d, kind, s.name, "system", status)
 	}
+}
+
+// windowsServices lists the services and their states; enumerating them
+// needs no administrator.
+func windowsServices() ([]winService, error) {
+	h, err := windows.OpenSCManager(nil, nil, windows.SC_MANAGER_ENUMERATE_SERVICE)
+	if err != nil {
+		return nil, fmt.Errorf("open service manager: %w", err)
+	}
+	defer windows.CloseServiceHandle(h) //nolint:errcheck // a handle opened for reading only
+	var needed, count uint32
+	var buf []byte
+	for {
+		var p *byte
+		if len(buf) > 0 {
+			p = &buf[0]
+		}
+		err = windows.EnumServicesStatusEx(h, windows.SC_ENUM_PROCESS_INFO, windows.SERVICE_WIN32, windows.SERVICE_STATE_ALL,
+			p, uint32(len(buf)), &needed, &count, nil, nil)
+		if err == nil {
+			break
+		}
+		if !errors.Is(err, windows.ERROR_MORE_DATA) || needed <= uint32(len(buf)) {
+			return nil, fmt.Errorf("list services: %w", err)
+		}
+		buf = make([]byte, needed)
+	}
+	if count == 0 {
+		return nil, nil
+	}
+	entries := unsafe.Slice((*windows.ENUM_SERVICE_STATUS_PROCESS)(unsafe.Pointer(&buf[0])), int(count))
+	services := make([]winService, 0, len(entries))
+	for _, e := range entries {
+		services = append(services, winService{name: windows.UTF16PtrToString(e.ServiceName), state: e.ServiceStatusProcess.CurrentState})
+	}
+	return services, nil
 }
 
 func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {

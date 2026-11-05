@@ -157,11 +157,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					ui.Text(c, title).Font(FontMono).FontSize(12).SingleLine()
 					ui.Text(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 				})
-				source := db.Source
-				if source == "" {
-					source = "—"
-				}
-				ui.Text(c, source).Width(68).FontSize(10.5).TextColor(pal.MonoText)
+				ui.Text(c, databaseSource(db.Source)).Width(68).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 					address := tilde(db.Path, a.Home)
 					if db.Source == "docker" {
@@ -227,11 +223,23 @@ func databaseProjectPort(a *App, port string) bool {
 func databaseSources(servers []inventory.Database) []string {
 	var out []string
 	for _, db := range servers {
-		if db.Source != "" && !slices.Contains(out, db.Source) {
-			out = append(out, db.Source)
+		if s := databaseSource(db.Source); db.Source != "" && !slices.Contains(out, s) {
+			out = append(out, s)
 		}
 	}
 	return out
+}
+
+// databaseSource names a server's source: its manager, or the kind of
+// place for one no manager keeps.
+func databaseSource(source string) string {
+	switch source {
+	case "":
+		return "—"
+	case "installer":
+		return locales.SourceInstaller()
+	}
+	return source
 }
 
 func databaseClientKind(command string) string {
