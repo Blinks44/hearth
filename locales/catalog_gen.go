@@ -6067,3 +6067,283 @@ func EnvPathWarnings() string { return In(i18n.Locale()).EnvPathWarnings() }
 func (msgs Messages) EnvPathWarnings() string {
 	return Catalog.Format(msgs.locale, "envPathWarnings", nil)
 }
+
+// SettingsLocal says "Everything stays on this computer · no account or telemetry"
+// in the language the app shows.
+func SettingsLocal() string { return In(i18n.Locale()).SettingsLocal() }
+
+// SettingsLocal says "Everything stays on this computer · no account or telemetry"
+// in the language of msgs.
+func (msgs Messages) SettingsLocal() string {
+	return Catalog.Format(msgs.locale, "settingsLocal", nil)
+}
+
+// SettingsGeneral says "General"
+// in the language the app shows.
+func SettingsGeneral() string { return In(i18n.Locale()).SettingsGeneral() }
+
+// SettingsGeneral says "General"
+// in the language of msgs.
+func (msgs Messages) SettingsGeneral() string {
+	return Catalog.Format(msgs.locale, "settingsGeneral", nil)
+}
+
+// SettingsLanguage says "Interface language"
+// in the language the app shows.
+func SettingsLanguage() string { return In(i18n.Locale()).SettingsLanguage() }
+
+// SettingsLanguage says "Interface language"
+// in the language of msgs.
+func (msgs Messages) SettingsLanguage() string {
+	return Catalog.Format(msgs.locale, "settingsLanguage", nil)
+}
+
+// SettingsLanguageHint says "English is the source; Russian is a translation"
+// in the language the app shows.
+func SettingsLanguageHint() string { return In(i18n.Locale()).SettingsLanguageHint() }
+
+// SettingsLanguageHint says "English is the source; Russian is a translation"
+// in the language of msgs.
+func (msgs Messages) SettingsLanguageHint() string {
+	return Catalog.Format(msgs.locale, "settingsLanguageHint", nil)
+}
+
+// SettingsTheme says "Theme"
+// in the language the app shows.
+func SettingsTheme() string { return In(i18n.Locale()).SettingsTheme() }
+
+// SettingsTheme says "Theme"
+// in the language of msgs.
+func (msgs Messages) SettingsTheme() string {
+	return Catalog.Format(msgs.locale, "settingsTheme", nil)
+}
+
+// SettingsThemeHint says "Light, dark, or follow the system"
+// in the language the app shows.
+func SettingsThemeHint() string { return In(i18n.Locale()).SettingsThemeHint() }
+
+// SettingsThemeHint says "Light, dark, or follow the system"
+// in the language of msgs.
+func (msgs Messages) SettingsThemeHint() string {
+	return Catalog.Format(msgs.locale, "settingsThemeHint", nil)
+}
+
+// SettingsSystem says "System"
+// in the language the app shows.
+func SettingsSystem() string { return In(i18n.Locale()).SettingsSystem() }
+
+// SettingsSystem says "System"
+// in the language of msgs.
+func (msgs Messages) SettingsSystem() string {
+	return Catalog.Format(msgs.locale, "settingsSystem", nil)
+}
+
+// SettingsLight says "Light"
+// in the language the app shows.
+func SettingsLight() string { return In(i18n.Locale()).SettingsLight() }
+
+// SettingsLight says "Light"
+// in the language of msgs.
+func (msgs Messages) SettingsLight() string {
+	return Catalog.Format(msgs.locale, "settingsLight", nil)
+}
+
+// SettingsDark says "Dark"
+// in the language the app shows.
+func SettingsDark() string { return In(i18n.Locale()).SettingsDark() }
+
+// SettingsDark says "Dark"
+// in the language of msgs.
+func (msgs Messages) SettingsDark() string {
+	return Catalog.Format(msgs.locale, "settingsDark", nil)
+}
+
+// SettingsNetwork says "Network"
+// in the language the app shows.
+func SettingsNetwork() string { return In(i18n.Locale()).SettingsNetwork() }
+
+// SettingsNetwork says "Network"
+// in the language of msgs.
+func (msgs Messages) SettingsNetwork() string {
+	return Catalog.Format(msgs.locale, "settingsNetwork", nil)
+}
+
+// SettingsLists says "Version lists"
+// in the language the app shows.
+func SettingsLists() string { return In(i18n.Locale()).SettingsLists() }
+
+// SettingsLists says "Version lists"
+// in the language of msgs.
+func (msgs Messages) SettingsLists() string {
+	return Catalog.Format(msgs.locale, "settingsLists", nil)
+}
+
+// SettingsListsHint says "Public release sources · no personal data · cached for a day"
+// in the language the app shows.
+func SettingsListsHint() string { return In(i18n.Locale()).SettingsListsHint() }
+
+// SettingsListsHint says "Public release sources · no personal data · cached for a day"
+// in the language of msgs.
+func (msgs Messages) SettingsListsHint() string {
+	return Catalog.Format(msgs.locale, "settingsListsHint", nil)
+}
+
+// SettingsProjects says "Projects"
+// in the language the app shows.
+func SettingsProjects() string { return In(i18n.Locale()).SettingsProjects() }
+
+// SettingsProjects says "Projects"
+// in the language of msgs.
+func (msgs Messages) SettingsProjects() string {
+	return Catalog.Format(msgs.locale, "settingsProjects", nil)
+}
+
+// SettingsProjectHint says "Only folders you add are checked"
+// in the language the app shows.
+func SettingsProjectHint() string { return In(i18n.Locale()).SettingsProjectHint() }
+
+// SettingsProjectHint says "Only folders you add are checked"
+// in the language of msgs.
+func (msgs Messages) SettingsProjectHint() string {
+	return Catalog.Format(msgs.locale, "settingsProjectHint", nil)
+}
+
+// SettingsData says "Data"
+// in the language the app shows.
+func SettingsData() string { return In(i18n.Locale()).SettingsData() }
+
+// SettingsData says "Data"
+// in the language of msgs.
+func (msgs Messages) SettingsData() string {
+	return Catalog.Format(msgs.locale, "settingsData", nil)
+}
+
+// SettingsCache says "Version list cache"
+// in the language the app shows.
+func SettingsCache() string { return In(i18n.Locale()).SettingsCache() }
+
+// SettingsCache says "Version list cache"
+// in the language of msgs.
+func (msgs Messages) SettingsCache() string {
+	return Catalog.Format(msgs.locale, "settingsCache", nil)
+}
+
+// SettingsClear says "Clear cache"
+// in the language the app shows.
+func SettingsClear() string { return In(i18n.Locale()).SettingsClear() }
+
+// SettingsClear says "Clear cache"
+// in the language of msgs.
+func (msgs Messages) SettingsClear() string {
+	return Catalog.Format(msgs.locale, "settingsClear", nil)
+}
+
+// SettingsCleared says "Version list cache cleared"
+// in the language the app shows.
+func SettingsCleared() string { return In(i18n.Locale()).SettingsCleared() }
+
+// SettingsCleared says "Version list cache cleared"
+// in the language of msgs.
+func (msgs Messages) SettingsCleared() string {
+	return Catalog.Format(msgs.locale, "settingsCleared", nil)
+}
+
+// SettingsAbout says "About"
+// in the language the app shows.
+func SettingsAbout() string { return In(i18n.Locale()).SettingsAbout() }
+
+// SettingsAbout says "About"
+// in the language of msgs.
+func (msgs Messages) SettingsAbout() string {
+	return Catalog.Format(msgs.locale, "settingsAbout", nil)
+}
+
+// SettingsVersion says "Version"
+// in the language the app shows.
+func SettingsVersion() string { return In(i18n.Locale()).SettingsVersion() }
+
+// SettingsVersion says "Version"
+// in the language of msgs.
+func (msgs Messages) SettingsVersion() string {
+	return Catalog.Format(msgs.locale, "settingsVersion", nil)
+}
+
+// SettingsDevelopment says "Development build"
+// in the language the app shows.
+func SettingsDevelopment() string { return In(i18n.Locale()).SettingsDevelopment() }
+
+// SettingsDevelopment says "Development build"
+// in the language of msgs.
+func (msgs Messages) SettingsDevelopment() string {
+	return Catalog.Format(msgs.locale, "settingsDevelopment", nil)
+}
+
+// SettingsFree says "Free · local · no telemetry"
+// in the language the app shows.
+func SettingsFree() string { return In(i18n.Locale()).SettingsFree() }
+
+// SettingsFree says "Free · local · no telemetry"
+// in the language of msgs.
+func (msgs Messages) SettingsFree() string {
+	return Catalog.Format(msgs.locale, "settingsFree", nil)
+}
+
+// SettingsError says "Settings could not be saved: {error}"
+// in the language the app shows.
+func SettingsError(error string) string { return In(i18n.Locale()).SettingsError(error) }
+
+// SettingsError says "Settings could not be saved: {error}"
+// in the language of msgs.
+func (msgs Messages) SettingsError(error string) string {
+	return Catalog.Format(msgs.locale, "settingsError", map[string]any{"error": error})
+}
+
+// SettingsCacheError says "Could not clear the cache: {error}"
+// in the language the app shows.
+func SettingsCacheError(error string) string { return In(i18n.Locale()).SettingsCacheError(error) }
+
+// SettingsCacheError says "Could not clear the cache: {error}"
+// in the language of msgs.
+func (msgs Messages) SettingsCacheError(error string) string {
+	return Catalog.Format(msgs.locale, "settingsCacheError", map[string]any{"error": error})
+}
+
+// SettingsAllowLists says "Allow version list downloads"
+// in the language the app shows.
+func SettingsAllowLists() string { return In(i18n.Locale()).SettingsAllowLists() }
+
+// SettingsAllowLists says "Allow version list downloads"
+// in the language of msgs.
+func (msgs Messages) SettingsAllowLists() string {
+	return Catalog.Format(msgs.locale, "settingsAllowLists", nil)
+}
+
+// SettingsChooseTheme says "Choose theme"
+// in the language the app shows.
+func SettingsChooseTheme() string { return In(i18n.Locale()).SettingsChooseTheme() }
+
+// SettingsChooseTheme says "Choose theme"
+// in the language of msgs.
+func (msgs Messages) SettingsChooseTheme() string {
+	return Catalog.Format(msgs.locale, "settingsChooseTheme", nil)
+}
+
+// SettingsChooseLanguage says "Choose interface language"
+// in the language the app shows.
+func SettingsChooseLanguage() string { return In(i18n.Locale()).SettingsChooseLanguage() }
+
+// SettingsChooseLanguage says "Choose interface language"
+// in the language of msgs.
+func (msgs Messages) SettingsChooseLanguage() string {
+	return Catalog.Format(msgs.locale, "settingsChooseLanguage", nil)
+}
+
+// VersionsOffline says "Downloads are turned off in Settings"
+// in the language the app shows.
+func VersionsOffline() string { return In(i18n.Locale()).VersionsOffline() }
+
+// VersionsOffline says "Downloads are turned off in Settings"
+// in the language of msgs.
+func (msgs Messages) VersionsOffline() string {
+	return Catalog.Format(msgs.locale, "versionsOffline", nil)
+}

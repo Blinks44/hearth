@@ -19,6 +19,29 @@ import (
 type App struct {
 	// Machine is the caption under the logo, as "studio · macOS 15.4".
 	Machine string
+	// ThemeMode is the saved appearance: "light", "dark" or "system".
+	ThemeMode string
+	// Locale is the interface language, "en" or "ru".
+	Locale string
+	// VersionLists lets Hearth download the lists of versions; without
+	// it, only the kept copies show.
+	VersionLists bool
+	// AppVersion is the build's version; "" in a development build.
+	AppVersion string
+	// CachePath is where the version lists are kept.
+	CachePath string
+	// CacheBusy is true while the version lists are being cleared.
+	CacheBusy bool
+	// OnSettings saves ThemeMode and VersionLists after the user changed
+	// them; OnLocale shows and keeps another language.
+	OnSettings func()
+	OnLocale   func(string)
+	// ClearCache removes the kept version lists.
+	ClearCache func()
+	// SettingsError says why settings could not be saved or the cache
+	// cleared; SettingsNotice confirms the cache was cleared.
+	SettingsError  string
+	SettingsNotice string
 	// Home is the user's home directory, which paths show as ~.
 	Home string
 	// Snapshot is what the last scan found; nil before the first.
@@ -117,7 +140,7 @@ type App struct {
 
 // NewApp returns the app showing the overview.
 func NewApp() *App {
-	return &App{router: ui.NewRouter(overview.path)}
+	return &App{router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en"}
 }
 
 // View builds the window: the sidebar and the page shown beside it.
@@ -150,6 +173,8 @@ func (a *App) View(c *ui.Context) {
 				if r.Match(p.path) {
 					r.Title(p.title())
 					switch p.path {
+					case settings.path:
+						a.settingsPage(c)
 					case "/tools/node":
 						a.node(c, p)
 					case "/tools/jspm":

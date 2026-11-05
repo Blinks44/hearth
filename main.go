@@ -23,6 +23,7 @@ import (
 	hearthui "github.com/Blinks44/hearth/internal/ui"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/internal/watch"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
-	list := &projectList{app: a}
+	list := &projectList{app: a, settings: store.DefaultSettings()}
 	if dir, err := mygo.App.Path(mygo.PathUserData); err != nil {
 		log.Print(err)
 	} else {
@@ -44,7 +45,14 @@ func main() {
 			log.Print(err)
 		}
 	}
+	a.ThemeMode, a.VersionLists = list.settings.Theme, list.settings.VersionLists
+	// The native parts follow it too: the sidebar's material, the window
+	// controls and the menus.
+	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 	mygo.App.WhenReady(func() {
+		a.Locale = mygo.App.Locale()
+		a.AppVersion = mygo.App.Version()
+		a.OnLocale = mygo.App.SetLocale
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:     "Hearth",
 			Width:     1280,
@@ -119,17 +127,82 @@ func main() {
 		if cache == "" {
 			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
 		}
+		var cancelVersions context.CancelFunc
 		fetchVersions := func() {
-			fetchList(win, lists, versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
-			fetchList(win, lists, versions.FetchJSManagers, &a.JSVersions, &a.JSVersionsErr)
-			fetchList(win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
-			fetchList(win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
-			fetchList(win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
-			fetchList(win, lists, versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
-			fetchList(win, lists, versions.FetchRust, &a.RustVersions, &a.RustVersionsErr)
-			fetchList(win, lists, versions.FetchDotnet, &a.DotnetVersions, &a.DotnetVersionsErr)
-			fetchList(win, lists, versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
-			fetchList(win, lists, versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
+			if cancelVersions != nil {
+				cancelVersions()
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			cancelVersions = cancel
+			lists.SetOffline(!a.VersionLists)
+			fetchList(ctx, win, lists, versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchJSManagers, &a.JSVersions, &a.JSVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
+			fetchList(ctx, win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchRust, &a.RustVersions, &a.RustVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchDotnet, &a.DotnetVersions, &a.DotnetVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
+			fetchList(ctx, win, lists, versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
+		}
+		a.CachePath = lists.Dir
+		win.OnClosed(func() {
+			if cancelVersions != nil {
+				cancelVersions()
+			}
+		})
+		a.OnSettings = func() {
+			onlineChanged := list.settings.VersionLists != a.VersionLists
+			list.settings.Theme, list.settings.VersionLists = a.ThemeMode, a.VersionLists
+			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
+			list.save()
+			if onlineChanged {
+				fetchVersions()
+			}
+		}
+		a.ClearCache = func() {
+			if a.CacheBusy {
+				return
+			}
+			a.CacheBusy = true
+			a.SettingsNotice = ""
+			if cancelVersions != nil {
+				cancelVersions()
+			}
+			go func() {
+				err := lists.Clear()
+				win.Update(func() {
+					a.CacheBusy = false
+					if err != nil {
+						a.SettingsError = locales.SettingsCacheError(err.Error())
+						return
+					}
+					a.NodeVersions = nil
+					a.JSVersions = nil
+					a.BunLatest = nil
+					a.GoVersions = nil
+					a.PythonVersions = nil
+					a.PHPVersions = nil
+					a.RustVersions = nil
+					a.DotnetVersions = nil
+					a.RubyVersions = nil
+					a.JavaVersions = nil
+					a.NodeVersionsErr = ""
+					a.JSVersionsErr = ""
+					a.BunLatestErr = ""
+					a.GoVersionsErr = ""
+					a.PythonVersionsErr = ""
+					a.PHPVersionsErr = ""
+					a.RustVersionsErr = ""
+					a.DotnetVersionsErr = ""
+					a.RubyVersionsErr = ""
+					a.JavaVersionsErr = ""
+					a.SettingsError = ""
+					a.SettingsNotice = locales.SettingsCleared()
+					fetchVersions()
+				})
+			}()
 		}
 		a.OnScan = func() {
 			scanner.Start(scanned)
@@ -164,14 +237,21 @@ func main() {
 // fetchList gets a version list through lists in the background and
 // puts it in *dst on the UI thread; when it cannot, the list shown before
 // stays and *errText says why.
-func fetchList[T any](win *mygo.Window, lists *versions.Cache, fetch func(context.Context, *versions.Cache) (T, error), dst **T, errText *string) {
+func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cache, fetch func(context.Context, *versions.Cache) (T, error), dst **T, errText *string) {
 	go func() {
-		list, err := fetch(context.Background(), lists)
-		if err != nil {
+		list, err := fetch(ctx, lists)
+		if err != nil && !errors.Is(err, versions.ErrOffline) {
 			log.Print(err)
 		}
 		win.Update(func() {
-			if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			switch {
+			case errors.Is(err, versions.ErrOffline):
+				*errText = locales.VersionsOffline()
+				return
+			case err != nil:
 				*errText = err.Error()
 				return
 			}

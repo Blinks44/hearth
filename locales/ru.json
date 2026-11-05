@@ -491,5 +491,47 @@
   "envPathNoMatches": "Подходящих каталогов нет.",
   "envPathUnset": "Не задано",
   "envPathProblems": "Проблемы",
-  "envPathWarnings": "Обратите внимание на повторы, отсутствующие и относительные каталоги."
+  "envPathWarnings": "Обратите внимание на повторы, отсутствующие и относительные каталоги.",
+  "settingsLocal": "Всё хранится на этом компьютере · без аккаунта и телеметрии",
+  "settingsGeneral": "Основное",
+  "settingsLanguage": "Язык интерфейса",
+  "settingsLanguageHint": "English — исходный, русский — перевод",
+  "settingsTheme": "Тема",
+  "settingsThemeHint": "Светлая, тёмная или как в системе",
+  "settingsSystem": "Как в системе",
+  "settingsLight": "Светлая",
+  "settingsDark": "Тёмная",
+  "settingsNetwork": "Сеть",
+  "settingsLists": "Списки версий",
+  "settingsListsHint": "Публичные источники версий · без личных данных · кэш на сутки",
+  "settingsProjects": "Проекты",
+  "settingsProjectHint": "Проверяются только добавленные папки",
+  "settingsData": "Данные",
+  "settingsCache": "Кэш списков версий",
+  "settingsClear": "Очистить кэш",
+  "settingsCleared": "Кэш списков версий очищен",
+  "settingsAbout": "О приложении",
+  "settingsVersion": "Версия",
+  "settingsDevelopment": "Сборка для разработки",
+  "settingsFree": "Бесплатно · локально · без телеметрии",
+  "settingsError": "Не удалось сохранить настройки: {error}",
+  "@settingsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheError": "Не удалось очистить кэш: {error}",
+  "@settingsCacheError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAllowLists": "Разрешить загрузку списков версий",
+  "settingsChooseTheme": "Выбрать тему",
+  "settingsChooseLanguage": "Выбрать язык интерфейса",
+  "versionsOffline": "Загрузка списков отключена в настройках"
 }

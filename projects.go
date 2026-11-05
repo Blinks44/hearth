@@ -116,6 +116,9 @@ func (l *projectList) save() {
 		}
 		if err := store.SaveSettings(l.dir, s); err != nil {
 			log.Print(err)
+			l.win.Update(func() { l.app.SettingsError = locales.SettingsError(err.Error()) })
+		} else {
+			l.win.Update(func() { l.app.SettingsError = "" })
 		}
 	}()
 }

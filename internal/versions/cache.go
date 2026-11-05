@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,7 +28,14 @@ type Cache struct {
 	MaxAge time.Duration
 	// Now tells the time; nil is time.Now.
 	Now func() time.Time
+
+	offline atomic.Bool  // Get asks no server, see SetOffline
+	mu      sync.RWMutex // Clear waits for the Gets in progress
 }
+
+// ErrOffline is why Get has no copy to return while it may not ask a
+// server.
+var ErrOffline = errors.New("version list downloads are turned off")
 
 // meta is what Cache keeps beside a copy.
 type meta struct {
@@ -41,6 +50,11 @@ var defaultClient = &http.Client{Timeout: 30 * time.Second}
 // with one, the copy comes back and the error is dropped, as an offline
 // computer still shows the lists it had.
 func (c *Cache) Get(ctx context.Context, name, url string) ([]byte, time.Time, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if err := ctx.Err(); err != nil {
+		return nil, time.Time{}, err
+	}
 	now := time.Now
 	if c.Now != nil {
 		now = c.Now
@@ -51,6 +65,12 @@ func (c *Cache) Get(ctx context.Context, name, url string) ([]byte, time.Time, e
 	}
 	path := filepath.Join(c.Dir, name)
 	kept, m, keptErr := c.read(path)
+	if c.offline.Load() {
+		if keptErr != nil {
+			return nil, time.Time{}, fmt.Errorf("%s: %w", name, ErrOffline)
+		}
+		return kept, m.Fetched, nil
+	}
 	if keptErr == nil && now().Sub(m.Fetched) < maxAge {
 		return kept, m.Fetched, nil
 	}
@@ -153,3 +173,17 @@ func replace(path string, data []byte) error {
 	}
 	return err
 }
+
+// Clear removes only the version lists, waiting for active reads to finish.
+func (c *Cache) Clear() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := os.RemoveAll(c.Dir); err != nil {
+		return fmt.Errorf("clear version cache: %w", err)
+	}
+	return nil
+}
+
+// SetOffline tells whether Get may ask servers; offline, it returns the
+// kept copies only, however old.
+func (c *Cache) SetOffline(offline bool) { c.offline.Store(offline) }

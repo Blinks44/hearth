@@ -2027,5 +2027,47 @@
   "envPathNoMatches": "No matching directories.",
   "envPathUnset": "Not set",
   "envPathProblems": "Problems",
-  "envPathWarnings": "Repeated, missing or relative directories need attention."
+  "envPathWarnings": "Repeated, missing or relative directories need attention.",
+  "settingsLocal": "Everything stays on this computer · no account or telemetry",
+  "settingsGeneral": "General",
+  "settingsLanguage": "Interface language",
+  "settingsLanguageHint": "English is the source; Russian is a translation",
+  "settingsTheme": "Theme",
+  "settingsThemeHint": "Light, dark, or follow the system",
+  "settingsSystem": "System",
+  "settingsLight": "Light",
+  "settingsDark": "Dark",
+  "settingsNetwork": "Network",
+  "settingsLists": "Version lists",
+  "settingsListsHint": "Public release sources · no personal data · cached for a day",
+  "settingsProjects": "Projects",
+  "settingsProjectHint": "Only folders you add are checked",
+  "settingsData": "Data",
+  "settingsCache": "Version list cache",
+  "settingsClear": "Clear cache",
+  "settingsCleared": "Version list cache cleared",
+  "settingsAbout": "About",
+  "settingsVersion": "Version",
+  "settingsDevelopment": "Development build",
+  "settingsFree": "Free · local · no telemetry",
+  "settingsError": "Settings could not be saved: {error}",
+  "@settingsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheError": "Could not clear the cache: {error}",
+  "@settingsCacheError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAllowLists": "Allow version list downloads",
+  "settingsChooseTheme": "Choose theme",
+  "settingsChooseLanguage": "Choose interface language",
+  "versionsOffline": "Downloads are turned off in Settings"
 }
