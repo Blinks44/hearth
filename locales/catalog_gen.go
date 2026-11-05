@@ -4326,6 +4326,22 @@ func (msgs Messages) IssueStubTitle(tool string) string {
 	return Catalog.Format(msgs.locale, "issueStubTitle", map[string]any{"tool": tool})
 }
 
+// IssueStubBehindTitle says "A {tool} stub is in PATH"
+// in the language the app shows.
+//
+// Issue title: a stand-in that does not run the tool is in the terminal's
+// PATH behind a real copy.
+func IssueStubBehindTitle(tool string) string { return In(i18n.Locale()).IssueStubBehindTitle(tool) }
+
+// IssueStubBehindTitle says "A {tool} stub is in PATH"
+// in the language of msgs.
+//
+// Issue title: a stand-in that does not run the tool is in the terminal's
+// PATH behind a real copy.
+func (msgs Messages) IssueStubBehindTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "issueStubBehindTitle", map[string]any{"tool": tool})
+}
+
 // JsManagersSubtitle says "npm comes with Node · pnpm and Yarn can use Corepack"
 // in the language the app shows.
 func JsManagersSubtitle() string { return In(i18n.Locale()).JsManagersSubtitle() }

@@ -59,7 +59,7 @@ var miseVersionRe = regexp.MustCompile(`\b20\d\d\.\d+\.\d+\b`)
 // miseVersion is the version of the mise at path: from Homebrew's or
 // mise's own directory when the path names it, else from mise --version.
 func miseVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
-	real, err := filepath.EvalSymlinks(path)
+	real, err := sysenv.RealPath(path)
 	if err != nil {
 		real = path
 	}

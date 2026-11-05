@@ -32,7 +32,7 @@ func Python(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 	for _, pattern := range pythonGlobs(dirs, term) {
 		matches, _ := filepath.Glob(pattern) // only a malformed pattern fails
 		for _, m := range matches {
-			if real, err := filepath.EvalSymlinks(m); err == nil {
+			if real, err := sysenv.RealPath(m); err == nil {
 				f.add(real)
 			}
 		}
@@ -43,6 +43,9 @@ func Python(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 	state := inventory.ToolState{Tool: "python", Installations: f.ins}
 	for i := range state.Installations {
 		in := &state.Installations[i]
+		if pythonManagerAlias(in.Path) {
+			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: "pymanager", Shim: true}
+		}
 		if in.Source.Shim {
 			continue
 		}
@@ -63,6 +66,8 @@ func Python(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 	defaults := map[string]string{
 		"pyenv": pickVersion(firstLine(readFile(filepath.Join(dirs.Pyenv, "version"))), installed["pyenv"]),
 		"mise":  miseDefault(dirs, term, "python", installed["mise"]),
+		// Python's install manager prefers its own Pythons to others.
+		"pymanager": pickVersion(pythonManagerTag(term), installed["pymanager"]),
 	}
 	for i := range state.Installations {
 		in := &state.Installations[i]
@@ -119,6 +124,9 @@ func pythonManagers(ctx context.Context, r run.Runner, ins []inventory.Installat
 	if has("mise") {
 		managers = append(managers, miseManager(ctx, r, term, gui, d))
 	}
+	if has("pymanager") {
+		managers = append(managers, inventory.Manager{Name: "pymanager"})
+	}
 	if uv := sysenv.LookPathAll("uv", term); len(uv) > 0 || has("uv") {
 		m := inventory.Manager{Name: "uv", Settings: uvSettings(term, d.Home)}
 		if len(uv) > 0 {
@@ -136,7 +144,7 @@ var uvVersionRe = regexp.MustCompile(`\b0\.\d+\.\d+\b|\b[1-9]\d*\.\d+\.\d+\b`)
 // uvVersion is the version of the uv at path: from Homebrew's directory
 // when the path names it, else from uv --version.
 func uvVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
-	if real, err := filepath.EvalSymlinks(path); err == nil && strings.Contains(real, string(filepath.Separator)+"Cellar"+string(filepath.Separator)) {
+	if real, err := sysenv.RealPath(path); err == nil && strings.Contains(real, string(filepath.Separator)+"Cellar"+string(filepath.Separator)) {
 		if v := uvVersionRe.FindString(real); v != "" {
 			return v
 		}

@@ -110,6 +110,12 @@ func TestClassify(t *testing.T) {
 		// Windows
 		{"uv windows", winEnv, `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none\python.exe`, "",
 			inventory.Source{Kind: vm, Manager: "uv", Root: `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none`, Version: "3.12.8"}},
+		{"python install manager", winEnv, `C:\Users\Ann\AppData\Local\Python\pythoncore-3.14-arm64\python.exe`, "",
+			inventory.Source{Kind: vm, Manager: "pymanager", Root: `C:\Users\Ann\AppData\Local\Python\pythoncore-3.14-arm64`, Version: "pythoncore-3.14-arm64"}},
+		{"python install manager alias", winEnv, `C:\Users\Ann\AppData\Local\Python\bin\python3.14.exe`, "",
+			inventory.Source{Kind: vm, Manager: "pymanager", Root: `C:\Users\Ann\AppData\Local\Python`, Shim: true}},
+		{"python full installer", winEnv, `C:\Users\Ann\AppData\Local\Programs\Python\Python315\python.exe`, "",
+			inventory.Source{Kind: inst, Root: `C:\Users\Ann\AppData\Local\Programs`}},
 		{"nvm-windows", winEnv, `C:\nvm4w\nodejs\node.exe`, `C:\Users\Ann\AppData\Roaming\nvm\v22.11.0\node.exe`,
 			inventory.Source{Kind: vm, Manager: "nvm-windows", Root: `C:\Users\Ann\AppData\Roaming\nvm\v22.11.0`, Version: "22.11.0"}},
 		{"nvm-windows NVM_HOME", append(winEnv, `NVM_HOME=D:\nvm`), `C:\Program Files\nodejs\node.exe`, `D:\nvm\v20.18.0\node.exe`,

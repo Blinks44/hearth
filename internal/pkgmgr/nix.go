@@ -31,7 +31,7 @@ func nixProfiles(m *inventory.PackageManager, env sysenv.Env, probe func(...stri
 	seen := map[string]bool{}
 	profiles := map[string]bool{}
 	for _, profile := range []string{filepath.Join(home, ".nix-profile"), filepath.Join(state, "nix", "profile")} {
-		real, err := filepath.EvalSymlinks(profile)
+		real, err := sysenv.RealPath(profile)
 		if err == nil && profiles[real] {
 			continue
 		}

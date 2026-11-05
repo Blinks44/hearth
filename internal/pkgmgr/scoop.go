@@ -29,7 +29,7 @@ func scoopManagers(env sysenv.Env) []inventory.PackageManager {
 		if !filepath.IsAbs(root) {
 			continue
 		}
-		real, err := filepath.EvalSymlinks(root)
+		real, err := sysenv.RealPath(root)
 		if err != nil || seen[real] {
 			continue
 		}

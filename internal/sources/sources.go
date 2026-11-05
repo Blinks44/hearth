@@ -79,6 +79,7 @@ func rulesFor(env sysenv.Env) []rule {
 	shim(d.Nodenv, "shims", "nodenv")
 	shim(d.Rbenv, "shims", "rbenv")
 	shim(d.Pyenv, "shims", "pyenv")
+	shim(sub(localAppData, "Python"), "bin", "pymanager")
 	scoop := or(env.Get("SCOOP"), "~/scoop")
 	scoopGlobal := or(env.Get("SCOOP_GLOBAL"), sub(programData, "scoop"))
 	for _, d := range []string{scoop, scoopGlobal} {
@@ -110,6 +111,7 @@ func rulesFor(env sysenv.Env) []rule {
 	add("/opt/rubies", "@", vm, "chruby")
 	add(d.Pyenv, "versions/@", vm, "pyenv")
 	add(d.Uv, "@", vm, "uv")
+	add(sub(localAppData, "Python"), "@", vm, "pymanager")
 	for _, conda := range d.Conda {
 		add(conda, "", pm, "conda")
 	}

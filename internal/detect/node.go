@@ -30,7 +30,7 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		for _, m := range matches {
 			// A manager's alias directory, like mise's installs/node/22,
 			// leads to the version's own; name the copy by that.
-			if real, err := filepath.EvalSymlinks(m); err == nil {
+			if real, err := sysenv.RealPath(m); err == nil {
 				f.add(real)
 			}
 		}
@@ -78,11 +78,21 @@ func newFinder(tool string, env sysenv.Env) *finder {
 }
 
 // add returns the copy at path, adding it when no copy so far has its
-// real path.
+// real path. A Scoop shim runs one file, so it stands for that file's
+// copy, as a symlink does.
 func (f *finder) add(path string) *inventory.Installation {
-	real, err := filepath.EvalSymlinks(path)
+	real, err := sysenv.RealPath(path)
 	if err != nil {
 		real = path
+	}
+	source := sources.Classify(path, real, f.env)
+	if source.Shim && source.Manager == "scoop" {
+		if target := scoopShimTarget(path); target != "" {
+			if real, err = sysenv.RealPath(target); err != nil {
+				real = target
+			}
+			source = sources.Classify(real, real, f.env)
+		}
 	}
 	if i, ok := f.byReal[real]; ok {
 		return &f.ins[i]
@@ -92,7 +102,7 @@ func (f *finder) add(path string) *inventory.Installation {
 		Tool:     f.tool,
 		Path:     path,
 		RealPath: real,
-		Source:   sources.Classify(path, real, f.env),
+		Source:   source,
 	})
 	return &f.ins[len(f.ins)-1]
 }

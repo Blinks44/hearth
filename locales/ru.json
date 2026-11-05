@@ -299,6 +299,7 @@
   "uvPrefer": "Предпочитать версии uv",
   "uvPreferCaption": "раньше системных и brew",
   "supportUntilYear": "поддержка до {year}",
+  "issueStubBehindTitle": "В PATH есть заглушка {tool}",
   "issueStubTitle": "В PATH заглушка вместо {tool}",
   "jsManagersSubtitle": "npm идёт вместе с Node · pnpm и Yarn могут работать через Corepack",
   "jsManagers": "Менеджеры",

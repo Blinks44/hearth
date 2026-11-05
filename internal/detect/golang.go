@@ -44,7 +44,7 @@ func Go(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Tool
 	for _, pattern := range globs {
 		matches, _ := filepath.Glob(pattern) // only a malformed pattern fails
 		for _, m := range matches {
-			if real, err := filepath.EvalSymlinks(m); err == nil {
+			if real, err := sysenv.RealPath(m); err == nil {
 				f.add(real)
 			}
 		}

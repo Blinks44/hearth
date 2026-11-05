@@ -56,6 +56,9 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		return locales.IssueUnsupportedTitle(tool, strings.Join(vs, ", ")), locales.IssueUnsupportedExplain()
 	case issues.StubOnPath:
 		in := is.Copies[0]
+		if in.OnPath != 1 {
+			return locales.IssueStubBehindTitle(tool), stubWarning([]inventory.Installation{in}, []int{0}, home)
+		}
 		return locales.IssueStubTitle(tool), stubWarning([]inventory.Installation{in}, []int{0}, home)
 	case issues.PathCurrentDir:
 		var entries []string

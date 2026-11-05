@@ -25,3 +25,11 @@ func pythonOSGlobs(env sysenv.Env) []string {
 	}
 	return globs
 }
+
+// pythonManagerAlias reports Python's install manager alias, which only
+// Windows has.
+func pythonManagerAlias(string) bool { return false }
+
+// pythonManagerTag is the tag Python's install manager runs, only on
+// Windows.
+func pythonManagerTag(sysenv.Env) string { return "" }

@@ -2,6 +2,7 @@ package detect
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
@@ -29,4 +30,26 @@ func StartupFiles(_ sysenv.Env, home string) []string {
 		paths = append(paths, filepath.Join(home, "Documents", dir, "Microsoft.PowerShell_profile.ps1"))
 	}
 	return paths
+}
+
+// scoopShimTarget is the file a Scoop shim runs: path = "..." in the
+// .shim beside an .exe shim, or the first line's @rem of a .cmd one; ""
+// when it names none.
+func scoopShimTarget(path string) string {
+	ext := filepath.Ext(path)
+	if strings.EqualFold(ext, ".exe") {
+		for line := range strings.Lines(readFile(strings.TrimSuffix(path, ext) + ".shim")) {
+			if value, ok := strings.CutPrefix(strings.TrimSpace(line), "path ="); ok {
+				return strings.Trim(strings.TrimSpace(value), `"`)
+			}
+		}
+		return ""
+	}
+	if strings.EqualFold(ext, ".cmd") {
+		first, _, _ := strings.Cut(readFile(path), "\n")
+		if target, ok := strings.CutPrefix(strings.TrimSpace(first), "@rem "); ok && filepath.IsAbs(target) {
+			return target
+		}
+	}
+	return ""
 }

@@ -149,7 +149,7 @@ func copies(term, gui sysenv.Env, commands []string) []inventory.Installation {
 	var out []inventory.Installation
 	byReal := map[string]int{}
 	add := func(path string) *inventory.Installation {
-		real, err := filepath.EvalSymlinks(path)
+		real, err := sysenv.RealPath(path)
 		if err != nil {
 			real = path
 		}

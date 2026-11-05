@@ -73,7 +73,7 @@ func corepackEnabled(dirs ...string) bool {
 	for _, dir := range dirs {
 		for _, name := range corepackShims {
 			p := filepath.Join(dir, name)
-			if real, err := filepath.EvalSymlinks(p); err == nil && strings.Contains(real, "corepack") {
+			if real, err := sysenv.RealPath(p); err == nil && strings.Contains(real, "corepack") {
 				return true
 			}
 			if strings.Contains(readHead(p), "corepack") {

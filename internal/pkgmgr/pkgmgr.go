@@ -6,7 +6,6 @@ package pkgmgr
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -37,7 +36,7 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 		paths = append(paths, standardPaths(s.id, term)...)
 		seen := map[string]bool{}
 		for _, path := range paths {
-			real, err := filepath.EvalSymlinks(path)
+			real, err := sysenv.RealPath(path)
 			if err != nil || seen[real] {
 				continue
 			}

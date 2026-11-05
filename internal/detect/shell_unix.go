@@ -39,3 +39,6 @@ func StartupFiles(env sysenv.Env, home string) []string {
 	fish, _ := filepath.Glob(filepath.Join(home, ".config", "fish", "conf.d", "*.fish")) // only a malformed pattern fails
 	return append(paths, fish...)
 }
+
+// scoopShimTarget is the file a Scoop shim runs, only on Windows.
+func scoopShimTarget(string) string { return "" }

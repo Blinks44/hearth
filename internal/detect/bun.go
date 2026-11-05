@@ -30,12 +30,12 @@ func Bun(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 	if dirs.Mise != "" {
 		matches, _ := filepath.Glob(filepath.Join(dirs.Mise, "installs", "bun", "*", "bin", bunExe)) // only a malformed pattern fails
 		for _, m := range matches {
-			if real, err := filepath.EvalSymlinks(m); err == nil {
+			if real, err := sysenv.RealPath(m); err == nil {
 				f.add(real)
 			}
 		}
 	}
-	realInstall, err := filepath.EvalSymlinks(install)
+	realInstall, err := sysenv.RealPath(install)
 	if err != nil {
 		realInstall = install
 	}

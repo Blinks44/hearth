@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -35,7 +36,12 @@ func (a *App) php(c *ui.Context, p page) {
 					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 							a.versionTable(c, ins, rows, active, a.phpChannel(c))
-							toolNote(c, locales.PhpManagementNote())
+							// Homebrew's and Herd's PHPs change outside Hearth.
+							if slices.ContainsFunc(ins, func(in inventory.Installation) bool {
+								return in.Source.Manager == "brew" || in.Source.Manager == "Herd"
+							}) {
+								toolNote(c, locales.PhpManagementNote())
+							}
 							pathCard(c, "php", ins, active, a.Home)
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {

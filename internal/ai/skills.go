@@ -86,7 +86,7 @@ func readSkills(roots []skillsRoot, project string) []inventory.Skill {
 				out = append(out, brokenSkill(p, project))
 				continue
 			}
-			real, err := filepath.EvalSymlinks(f.path)
+			real, err := sysenv.RealPath(f.path)
 			if err != nil {
 				real = f.path
 			}

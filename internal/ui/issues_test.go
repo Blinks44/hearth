@@ -92,4 +92,8 @@ func TestIssueTextStub(t *testing.T) {
 		explain != "/usr/bin/python3 is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python." {
 		t.Errorf("got %q, %q", title, explain)
 	}
+	is.Copies[0].OnPath = 2
+	if title, _ := issueText(is, ""); title != "A Python stub is in PATH" {
+		t.Errorf("behind a copy: got %q", title)
+	}
 }

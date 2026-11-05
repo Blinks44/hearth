@@ -1803,6 +1803,16 @@
       }
     }
   },
+  "issueStubBehindTitle": "A {tool} stub is in PATH",
+  "@issueStubBehindTitle": {
+    "description": "Issue title: a stand-in that does not run the tool is in the terminal's PATH behind a real copy.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      }
+    }
+  },
   "jsManagersSubtitle": "npm comes with Node · pnpm and Yarn can use Corepack",
   "jsManagers": "Managers",
   "jsCorepackNote": "Corepack downloads project versions on first use and keeps them in its cache. Hearth only reads the local cache and never runs these shims.",

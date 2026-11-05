@@ -63,7 +63,7 @@ func Java(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 	}
 	st := inventory.ToolState{Tool: "java", Installations: f.ins, Vars: map[string]string{"JAVA_HOME": term.Get("JAVA_HOME")}}
 	if home := term.Get("JAVA_HOME"); home != "" {
-		real, err := filepath.EvalSymlinks(home)
+		real, err := sysenv.RealPath(home)
 		if err == nil {
 			st.Vars["JAVA_HOME_REAL"] = real
 		}
@@ -93,7 +93,7 @@ func Java(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		in.Java = &inventory.JDK{Home: root, Vendor: props["IMPLEMENTOR"]}
 		if sdk != "" && within(root, filepath.Join(sdk, "candidates", "java")) {
 			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: "sdkman", Root: root, Version: filepath.Base(root)}
-			current, _ := filepath.EvalSymlinks(filepath.Join(sdk, "candidates", "java", "current"))
+			current, _ := sysenv.RealPath(filepath.Join(sdk, "candidates", "java", "current"))
 			in.Default = current == root
 		}
 	}

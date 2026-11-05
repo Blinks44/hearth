@@ -49,7 +49,7 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 		matches, _ := filepath.Glob(pattern)
 		for _, p := range matches {
 			// As Node does: a manager's alias directory is the version's.
-			if real, err := filepath.EvalSymlinks(p); err == nil {
+			if real, err := sysenv.RealPath(p); err == nil {
 				nodes.add(real)
 			}
 		}

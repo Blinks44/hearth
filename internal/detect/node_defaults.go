@@ -27,7 +27,7 @@ func nodeDefaults(d sources.Dirs, env sysenv.Env, installed map[string][]string)
 	}
 	for _, fnm := range d.Fnm {
 		// fnm's default alias links to node-versions/<v>/installation.
-		if target, err := filepath.EvalSymlinks(filepath.Join(fnm, "aliases", "default")); err == nil {
+		if target, err := sysenv.RealPath(filepath.Join(fnm, "aliases", "default")); err == nil {
 			set("fnm", filepath.Base(filepath.Dir(target)))
 			break
 		}
@@ -49,7 +49,7 @@ func nodeDefaults(d sources.Dirs, env sysenv.Env, installed map[string][]string)
 	}
 	// nvm-windows switches versions by pointing NVM_SYMLINK at one.
 	if link := env.Get("NVM_SYMLINK"); link != "" {
-		if target, err := filepath.EvalSymlinks(link); err == nil {
+		if target, err := sysenv.RealPath(link); err == nil {
 			set("nvm-windows", filepath.Base(target))
 		}
 	}
