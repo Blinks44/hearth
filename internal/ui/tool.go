@@ -207,7 +207,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 // managerCard shows the version manager that keeps the tool and how it
 // is set up, or that there is none and Hearth will use mise; and the rows
 // extra adds for the copy in use, if any.
-func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, extra func(*ui.Context, inventory.Installation)) {
+func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, extra func(*ui.Context, inventory.Installation)) {
 	ins := st.Installations
 	var m *inventory.Manager
 	for i := range st.Managers {
@@ -225,13 +225,21 @@ func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, 
 	}
 	listCard(c, title, aside, func() {
 		if m == nil {
-			cardNote(c, locales.NoVersionManager(strings.Join(sourceNames(ins, rows, active), ", ")))
+			if names := sourceNames(ins, rows, active); len(names) > 0 {
+				cardNote(c, locales.NoVersionManager(toolTitle(st.Tool), strings.Join(names, ", ")))
+			} else {
+				cardNote(c, locales.NoVersionManagerNone(toolTitle(st.Tool)))
+			}
 		} else {
 			def := "—"
 			for _, in := range ins {
 				if in.Default && in.Source.Manager == m.Name {
 					def = copyVersion(in)
 				}
+			}
+			// rbenv and pyenv with no version picked run the system's.
+			if def == "—" && inventory.FallsToSystem(m.Name) {
+				def = "system"
 			}
 			// A manager that keeps no default, as uv, has no row of it.
 			if def != "—" || len(m.Settings) == 0 {
@@ -242,6 +250,9 @@ func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, 
 			if title, caption := hookup(*m); title != "" {
 				listRow(c, title, false, caption, func() { stateText(c, true) })
 			}
+			if m.ConfigPath != "" {
+				listRow(c, locales.ManagerGlobalConfig(), false, tilde(m.ConfigPath, a.Home), func() {})
+			}
 			for _, st := range managerSettings(*m) {
 				listRow(c, st.title, false, st.caption, func() { stateText(c, st.on) })
 			}
@@ -249,6 +260,9 @@ func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, 
 			// its settings.
 			if m.SwitchOnCD || len(m.Settings) == 0 {
 				caption := locales.SwitchOff()
+				if m.Name == "mise" {
+					caption = locales.MiseSwitchUnknown()
+				}
 				if m.SwitchOnCD {
 					caption = locales.ReadsFiles(strings.Join(m.Files, ", "))
 				}
@@ -267,12 +281,18 @@ func managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, 
 // is known.
 func hookup(m inventory.Manager) (title, caption string) {
 	switch {
+	// mise activate may put the shims on the terminal's PATH too; the
+	// activation is what switches there.
+	case m.Activated && m.ShimsInGUI:
+		return locales.HookActivate(m.Name), locales.MiseMixedHook()
+	case m.Activated:
+		return locales.HookActivate(m.Name), locales.SeenInTerminal()
 	case m.Shims && m.ShimsInGUI:
 		return locales.HookShims(), locales.SeenEverywhere()
 	case m.Shims:
 		return locales.HookShims(), locales.SeenInTerminal()
-	case m.Activated:
-		return locales.HookActivate(m.Name), locales.SeenInTerminal()
+	case m.ShimsInGUI:
+		return locales.HookShims(), locales.SeenInApps()
 	}
 	return "", ""
 }
@@ -377,7 +397,12 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				})
 			}
 		})
-		for _, warning := range []string{guiWarning(command, ins, active), shadowWarning(ins, entries, home), stubWarning(ins, entries, home)} {
+		// That apps do not find the command is only worth knowing, as on
+		// the overview.
+		if active >= 0 && inventory.GUICopy(ins) < 0 {
+			toolNote(c, locales.GuiNotFound(command))
+		}
+		for _, warning := range []string{guiWarning(ins, active), shadowWarning(ins, entries, home), stubWarning(ins, entries, home)} {
 			if warning == "" {
 				continue
 			}
@@ -409,15 +434,15 @@ func pathOrder(ins []inventory.Installation) []int {
 }
 
 // guiWarning tells, when apps started outside the terminal run another
-// version of command than the terminal, which one; "" when they agree.
-func guiWarning(command string, ins []inventory.Installation, active int) string {
+// version of command than the terminal, which one; "" when they agree or
+// find none.
+func guiWarning(ins []inventory.Installation, active int) string {
 	if active < 0 {
 		return ""
 	}
 	gui := inventory.GUICopy(ins)
 	switch {
 	case gui < 0:
-		return locales.GuiNotFound(command)
 	case ins[gui].Version != ins[active].Version:
 		return locales.GuiRunsOther(sourceName(ins[gui].Source), copyVersion(ins[gui]), copyVersion(ins[active]))
 	}

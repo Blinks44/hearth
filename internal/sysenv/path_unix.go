@@ -17,6 +17,11 @@ func pathKey(dir string) string { return filepath.Clean(dir) }
 // sh assignments, zsh's path array and fish's set and fish_add_path.
 var pathLine = regexp.MustCompile(`(^|[\s;])(PATH\+?=|path\+?=\()|^set\s.*\s(PATH|fish_user_paths)(\s|$)|^fish_add_path\s`)
 
+// brewShellenv matches the line Homebrew's installer asks for, as
+// eval "$(/opt/homebrew/bin/brew shellenv zsh)": it puts bin and sbin of
+// that prefix on PATH.
+var brewShellenv = regexp.MustCompile(`([^\s"'$(]+)/bin/brew\s+shellenv`)
+
 func pathSources(env Env) map[string][]inventory.PathSource {
 	home := env.Get("HOME")
 	files := []string{"/etc/profile", "/etc/environment", "/etc/paths"}
@@ -75,6 +80,8 @@ func sourceFiles(env Env, files []string) map[string][]inventory.PathSource {
 			var values []string
 			if plain {
 				values = []string{line}
+			} else if m := brewShellenv.FindStringSubmatch(line); m != nil {
+				values = []string{m[1] + "/bin", m[1] + "/sbin"}
 			} else {
 				// A command substitution is computed: its directories stay unknown.
 				if !pathLine.MatchString(line) || strings.Contains(line, "$(") || strings.Contains(line, "`") {

@@ -378,9 +378,9 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 				case !st.Checked:
 					runCaption = ""
 				case st.Downloads:
-					run, runCaption = versionText(st.Terminal.Version), locales.CorepackDownloads()
+					run, runCaption = copyVersion(*st.Terminal), locales.CorepackDownloads()
 				case st.Terminal != nil:
-					run, runCaption = versionText(st.Terminal.Version), sourceName(st.Terminal.Source)
+					run, runCaption = copyVersion(*st.Terminal), sourceName(st.Terminal.Source)
 				}
 				cell(c, columnGrow[3], run, runCaption, pal.TextFaint)
 				ui.Row(c).Width(110).Shrink(0).Justify(ui.End).Children(func() {
@@ -656,7 +656,7 @@ func problemBanner(statuses []projects.Status) string {
 		}
 		run := "—"
 		if st.Terminal != nil {
-			run = versionText(st.Terminal.Version)
+			run = copyVersion(*st.Terminal)
 		}
 		want := ch.Want
 		if want == "" {

@@ -40,7 +40,7 @@ func (a *App) php(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.phpAvailable(c, ins, rows, active)
-							managerCard(c, st, rows, active, nil)
+							a.managerCard(c, st, rows, active, nil)
 							if active >= 0 {
 								a.phpConfig(c, ins[active])
 							}

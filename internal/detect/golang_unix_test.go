@@ -5,6 +5,7 @@ package detect
 import (
 	"debug/buildinfo"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -139,5 +140,22 @@ func TestReadGoEnvFile(t *testing.T) {
 	got := readGoEnvFile(path)
 	if got["GOPROXY"] != "https://proxy.example" || got["GOTOOLCHAIN"] != "go1.24.0+auto" || len(got) != 2 {
 		t.Errorf("got %v", got)
+	}
+}
+
+// GOBIN in GOROOT/bin, as mise sets it, holds go and gofmt: no utilities.
+func TestGoToolsSkipsGo(t *testing.T) {
+	gofmt, err := exec.LookPath("gofmt")
+	if err != nil {
+		t.Skip("no gofmt on PATH")
+	}
+	data, err := os.ReadFile(gofmt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "gofmt"), string(data))
+	if tools := goTools(dir); len(tools) != 0 {
+		t.Fatalf("tools %+v", tools)
 	}
 }

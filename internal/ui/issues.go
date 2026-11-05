@@ -30,7 +30,7 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			locales.IssueDuplicateExplain(copyVersion(first), sourceName(first.Source), strings.Join(others, ", "))
 	case issues.GUIDiffers:
 		if len(is.Copies) < 2 {
-			return locales.IssueGuiTitle(tool), locales.GuiNotFound(is.Tool)
+			return locales.IssueGuiMissingTitle(tool), locales.GuiNotFound(is.Tool)
 		}
 		term, gui := is.Copies[0], is.Copies[1]
 		return locales.IssueGuiTitle(tool), locales.GuiRunsOther(sourceName(gui.Source), copyVersion(gui), copyVersion(term))

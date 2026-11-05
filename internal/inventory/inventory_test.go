@@ -17,6 +17,11 @@ func TestTerminalCopy(t *testing.T) {
 		{"shim picks the default", []Installation{shim, mise("20", 0, false), mise("22", 0, true)}, 2},
 		{"shim without a default", []Installation{shim, mise("22", 0, false)}, -1},
 		{"not in PATH", []Installation{mise("22", 0, true)}, -1},
+		// rbenv's shim with no version picked runs the next ruby: "system".
+		{"rbenv falls to system", []Installation{
+			{OnPath: 1, Source: Source{Kind: KindVersionManager, Manager: "rbenv", Shim: true}},
+			{Version: "3.4.7", Source: Source{Kind: KindVersionManager, Manager: "rbenv"}},
+			{Version: "2.6.10", OnPath: 2, Source: Source{Kind: KindSystem}}}, 2},
 	}
 	for _, tt := range tests {
 		if got := TerminalCopy(tt.ins); got != tt.want {

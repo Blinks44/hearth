@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -315,6 +316,13 @@ func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cac
 				return
 			case err != nil:
 				*errText = err.Error()
+				// A request that got no answer says which server, not Go's
+				// wording of the network error.
+				if uerr, ok := errors.AsType[*url.Error](err); ok {
+					if u, perr := url.Parse(uerr.URL); perr == nil {
+						*errText = locales.VersionsUnreachable(u.Host)
+					}
+				}
 				return
 			}
 			*dst, *errText = &list, ""

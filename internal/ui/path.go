@@ -2,12 +2,14 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -100,7 +102,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.EnvPathOrder()).Width(48).FontSize(11.5)
+			ui.Text(c, locales.EnvPathOrder()).Width(60).SingleLine().FontSize(11.5)
 			ui.Text(c, locales.EnvPathSource()).Width(120).FontSize(11.5)
 			ui.Text(c, locales.EnvPathDirectory()).Grow(1).FontSize(11.5)
 		})
@@ -111,7 +113,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 			}
 			shown++
 			ui.Row(c.Key("path-"+strconv.Itoa(i))).Gap(12).Padding(12, 16).BorderWidth(1).BorderColor(pal.Divider).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, "#"+strconv.Itoa(i+1)).Width(48).Font(FontMono).FontSize(11.5)
+				ui.Text(c, "#"+strconv.Itoa(i+1)).Width(60).Font(FontMono).FontSize(11.5)
 				ui.Column(c).Width(120).Gap(3).Children(func() {
 					if len(entry.Sources) == 0 {
 						ui.Text(c, locales.EnvPathUnknown()).FontSize(10.5).TextColor(pal.TextFaint)
@@ -133,11 +135,18 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 					ui.Row(c).Gap(5).Wrap().Children(func() {
 						for j := range i {
 							if sysenv.SamePath(entries[j].Dir, entry.Dir) {
-								chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.EnvPathDuplicate()+strconv.Itoa(j+1))
+								if systemRepeat(entry) {
+									chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.EnvPathDuplicate()+strconv.Itoa(j+1))
+								} else {
+									chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.EnvPathDuplicate()+strconv.Itoa(j+1))
+								}
 								break
 							}
 						}
-						if entry.Missing {
+						switch {
+						case entry.Missing && issues.OSDir(entry.Dir):
+							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.EnvPathMissing())
+						case entry.Missing:
 							chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.EnvPathMissing())
 						}
 						if !filepath.IsAbs(entry.Dir) {
@@ -211,9 +220,18 @@ func (a *App) pathDifferences(c *ui.Context, term, gui []inventory.PathEntry) {
 func pathProblemCount(entries []inventory.PathEntry) int {
 	count := 0
 	for i, e := range entries {
-		if e.Missing || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) {
+		if e.Missing && !issues.OSDir(e.Dir) || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) && !systemRepeat(e) {
 			count++
 		}
 	}
 	return count
+}
+
+// systemRepeat reports that macOS's path_helper adds e again, from
+// /etc/paths or /etc/paths.d, after a startup file put it first, as
+// Homebrew's brew shellenv does: the later entry is never used, harmless.
+func systemRepeat(e inventory.PathEntry) bool {
+	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool {
+		return s.File == "/etc/paths" || strings.HasPrefix(s.File, "/etc/paths.d/")
+	})
 }

@@ -770,7 +770,7 @@ func (msgs Messages) PathEmpty(command string) string {
 	return Catalog.Format(msgs.locale, "pathEmpty", map[string]any{"command": command})
 }
 
-// GuiRunsOther says "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}."
+// GuiRunsOther says "Apps started outside the terminal find {source} first and run {gui} instead of {terminal}."
 // in the language the app shows.
 //
 // Warning: apps started from the Dock or a desktop menu run another version
@@ -779,7 +779,7 @@ func GuiRunsOther(source string, gui string, terminal string) string {
 	return In(i18n.Locale()).GuiRunsOther(source, gui, terminal)
 }
 
-// GuiRunsOther says "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}."
+// GuiRunsOther says "Apps started outside the terminal find {source} first and run {gui} instead of {terminal}."
 // in the language of msgs.
 //
 // Warning: apps started from the Dock or a desktop menu run another version
@@ -788,14 +788,14 @@ func (msgs Messages) GuiRunsOther(source string, gui string, terminal string) st
 	return Catalog.Format(msgs.locale, "guiRunsOther", map[string]any{"source": source, "gui": gui, "terminal": terminal})
 }
 
-// GuiNotFound says "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does."
+// GuiNotFound says "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrain…"
 // in the language the app shows.
 //
 // Warning: apps started from the Dock or a desktop menu find no copy of the
 // command.
 func GuiNotFound(command string) string { return In(i18n.Locale()).GuiNotFound(command) }
 
-// GuiNotFound says "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does."
+// GuiNotFound says "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrain…"
 // in the language of msgs.
 //
 // Warning: apps started from the Dock or a desktop menu find no copy of the
@@ -1060,18 +1060,34 @@ func (msgs Messages) CorepackMissing() string {
 	return Catalog.Format(msgs.locale, "corepackMissing", nil)
 }
 
-// NoVersionManager says "No version manager: Node comes from {sources}. Hearth will install other versions through mise."
+// NoVersionManager says "No version manager: {tool} comes from {sources}. Hearth will install other versions through mise."
 // in the language the app shows.
 //
-// Version manager card when no version manager keeps Node.
-func NoVersionManager(sources string) string { return In(i18n.Locale()).NoVersionManager(sources) }
+// Version manager card when no version manager keeps the tool.
+func NoVersionManager(tool string, sources string) string {
+	return In(i18n.Locale()).NoVersionManager(tool, sources)
+}
 
-// NoVersionManager says "No version manager: Node comes from {sources}. Hearth will install other versions through mise."
+// NoVersionManager says "No version manager: {tool} comes from {sources}. Hearth will install other versions through mise."
 // in the language of msgs.
 //
-// Version manager card when no version manager keeps Node.
-func (msgs Messages) NoVersionManager(sources string) string {
-	return Catalog.Format(msgs.locale, "noVersionManager", map[string]any{"sources": sources})
+// Version manager card when no version manager keeps the tool.
+func (msgs Messages) NoVersionManager(tool string, sources string) string {
+	return Catalog.Format(msgs.locale, "noVersionManager", map[string]any{"tool": tool, "sources": sources})
+}
+
+// NoVersionManagerNone says "No version manager. Hearth will install {tool} through mise."
+// in the language the app shows.
+//
+// Version manager card when the tool is not installed.
+func NoVersionManagerNone(tool string) string { return In(i18n.Locale()).NoVersionManagerNone(tool) }
+
+// NoVersionManagerNone says "No version manager. Hearth will install {tool} through mise."
+// in the language of msgs.
+//
+// Version manager card when the tool is not installed.
+func (msgs Messages) NoVersionManagerNone(tool string) string {
+	return Catalog.Format(msgs.locale, "noVersionManagerNone", map[string]any{"tool": tool})
 }
 
 // GlobalPackages says "Global packages"
@@ -3958,14 +3974,14 @@ func (msgs Messages) HookActivate(manager string) string {
 	return Catalog.Format(msgs.locale, "hookActivate", map[string]any{"manager": manager})
 }
 
-// SeenEverywhere says "the terminal and apps (VS Code, IDEs) both see it"
+// SeenEverywhere says "the terminal and apps both see it"
 // in the language the app shows.
 //
 // Caption: both the terminal and apps started outside it find the manager's
 // versions.
 func SeenEverywhere() string { return In(i18n.Locale()).SeenEverywhere() }
 
-// SeenEverywhere says "the terminal and apps (VS Code, IDEs) both see it"
+// SeenEverywhere says "the terminal and apps both see it"
 // in the language of msgs.
 //
 // Caption: both the terminal and apps started outside it find the manager's
@@ -3974,13 +3990,13 @@ func (msgs Messages) SeenEverywhere() string {
 	return Catalog.Format(msgs.locale, "seenEverywhere", nil)
 }
 
-// SeenInTerminal says "only the terminal sees it; apps (VS Code, IDEs) do not"
+// SeenInTerminal says "only the terminal sees it"
 // in the language the app shows.
 //
 // Caption: only the terminal finds the manager's versions.
 func SeenInTerminal() string { return In(i18n.Locale()).SeenInTerminal() }
 
-// SeenInTerminal says "only the terminal sees it; apps (VS Code, IDEs) do not"
+// SeenInTerminal says "only the terminal sees it"
 // in the language of msgs.
 //
 // Caption: only the terminal finds the manager's versions.
@@ -6504,4 +6520,102 @@ func SearchLocal() string { return In(i18n.Locale()).SearchLocal() }
 // in the language of msgs.
 func (msgs Messages) SearchLocal() string {
 	return Catalog.Format(msgs.locale, "searchLocal", nil)
+}
+
+// ManagerGlobalConfig says "Global configuration"
+// in the language the app shows.
+func ManagerGlobalConfig() string { return In(i18n.Locale()).ManagerGlobalConfig() }
+
+// ManagerGlobalConfig says "Global configuration"
+// in the language of msgs.
+func (msgs Messages) ManagerGlobalConfig() string {
+	return Catalog.Format(msgs.locale, "managerGlobalConfig", nil)
+}
+
+// MiseMixedHook says "terminal through activate; apps through shims"
+// in the language the app shows.
+func MiseMixedHook() string { return In(i18n.Locale()).MiseMixedHook() }
+
+// MiseMixedHook says "terminal through activate; apps through shims"
+// in the language of msgs.
+func (msgs Messages) MiseMixedHook() string {
+	return Catalog.Format(msgs.locale, "miseMixedHook", nil)
+}
+
+// SeenInApps says "only apps started outside the terminal see it"
+// in the language the app shows.
+func SeenInApps() string { return In(i18n.Locale()).SeenInApps() }
+
+// SeenInApps says "only apps started outside the terminal see it"
+// in the language of msgs.
+func (msgs Messages) SeenInApps() string {
+	return Catalog.Format(msgs.locale, "seenInApps", nil)
+}
+
+// MiseSwitchUnknown says "no terminal activation or shims detected"
+// in the language the app shows.
+func MiseSwitchUnknown() string { return In(i18n.Locale()).MiseSwitchUnknown() }
+
+// MiseSwitchUnknown says "no terminal activation or shims detected"
+// in the language of msgs.
+func (msgs Messages) MiseSwitchUnknown() string {
+	return Catalog.Format(msgs.locale, "miseSwitchUnknown", nil)
+}
+
+// VersionsUnreachable says "no connection to {host}. Hearth will try again on the next scan"
+// in the language the app shows.
+//
+// Version list error when the server did not answer.
+func VersionsUnreachable(host string) string { return In(i18n.Locale()).VersionsUnreachable(host) }
+
+// VersionsUnreachable says "no connection to {host}. Hearth will try again on the next scan"
+// in the language of msgs.
+//
+// Version list error when the server did not answer.
+func (msgs Messages) VersionsUnreachable(host string) string {
+	return Catalog.Format(msgs.locale, "versionsUnreachable", map[string]any{"host": host})
+}
+
+// DatabaseRunningCount says "Running"
+// in the language the app shows.
+func DatabaseRunningCount() string { return In(i18n.Locale()).DatabaseRunningCount() }
+
+// DatabaseRunningCount says "Running"
+// in the language of msgs.
+func (msgs Messages) DatabaseRunningCount() string {
+	return Catalog.Format(msgs.locale, "databaseRunningCount", nil)
+}
+
+// JsNpmMissing says "npm is not on the terminal's PATH"
+// in the language the app shows.
+func JsNpmMissing() string { return In(i18n.Locale()).JsNpmMissing() }
+
+// JsNpmMissing says "npm is not on the terminal's PATH"
+// in the language of msgs.
+func (msgs Messages) JsNpmMissing() string {
+	return Catalog.Format(msgs.locale, "jsNpmMissing", nil)
+}
+
+// IssueGuiMissingTitle says "Apps outside the terminal do not see {tool}"
+// in the language the app shows.
+//
+// Issue title: apps started outside the terminal do not find the tool.
+func IssueGuiMissingTitle(tool string) string { return In(i18n.Locale()).IssueGuiMissingTitle(tool) }
+
+// IssueGuiMissingTitle says "Apps outside the terminal do not see {tool}"
+// in the language of msgs.
+//
+// Issue title: apps started outside the terminal do not find the tool.
+func (msgs Messages) IssueGuiMissingTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "issueGuiMissingTitle", map[string]any{"tool": tool})
+}
+
+// ChipGuiMissing says "not in apps"
+// in the language the app shows.
+func ChipGuiMissing() string { return In(i18n.Locale()).ChipGuiMissing() }
+
+// ChipGuiMissing says "not in apps"
+// in the language of msgs.
+func (msgs Messages) ChipGuiMissing() string {
+	return Catalog.Format(msgs.locale, "chipGuiMissing", nil)
 }

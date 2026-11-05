@@ -15,6 +15,7 @@ func TestPHPIniFiles(t *testing.T) {
 	}{
 		{"loaded and additional", "Configuration File (php.ini) Path: /etc\nLoaded Configuration File: " + ini + "\nScan for additional .ini files in: /etc/conf.d\nAdditional .ini files parsed: " + extra + ",\n" + extra, []string{ini, extra}},
 		{"none", "Loaded Configuration File: (none)\nAdditional .ini files parsed: (none)", nil},
+		{"quoted, as PHP 8.5 prints it", "Configuration File (php.ini) Path: \"/etc\"\nLoaded Configuration File:         \"" + ini + "\"\nAdditional .ini files parsed:      (none)", []string{ini}},
 		{"failure", "PHP Warning: cannot load module", nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

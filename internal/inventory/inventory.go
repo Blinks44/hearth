@@ -126,6 +126,8 @@ type Package struct {
 // Manager is a tool's version manager, as it is set up.
 type Manager struct {
 	Name string
+	// ConfigPath is an existing global configuration file, when found.
+	ConfigPath string `json:",omitempty"`
 	// SwitchOnCD reports that the manager switches the version as the
 	// terminal enters a folder, by the files named Files there.
 	SwitchOnCD bool
@@ -370,6 +372,26 @@ func runs(ins []Installation, rank func(Installation) PathRank) int {
 				return j
 			}
 		}
+		if FallsToSystem(in.Source.Manager) {
+			return next(ins, rank, in.Source.Manager)
+		}
 	}
 	return -1
+}
+
+// FallsToSystem reports that the shims of manager, with no version of its
+// own picked, run the next copy on PATH: rbenv's and pyenv's "system".
+func FallsToSystem(manager string) bool {
+	return manager == "rbenv" || manager == "pyenv"
+}
+
+// next is the copy after manager's on a PATH, -1 for none.
+func next(ins []Installation, rank func(Installation) PathRank, manager string) int {
+	best := -1
+	for i, in := range ins {
+		if rank(in) > 1 && !in.Stub && in.Source.Manager != manager && (best < 0 || rank(in) < rank(ins[best])) {
+			best = i
+		}
+	}
+	return best
 }

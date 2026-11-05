@@ -283,7 +283,7 @@
       }
     }
   },
-  "guiRunsOther": "Apps opened outside the terminal (VS Code, IDEs) find {source} first and run {gui} instead of {terminal}.",
+  "guiRunsOther": "Apps started outside the terminal find {source} first and run {gui} instead of {terminal}.",
   "@guiRunsOther": {
     "description": "Warning: apps started from the Dock or a desktop menu run another version than the terminal.",
     "placeholders": {
@@ -301,7 +301,7 @@
       }
     }
   },
-  "guiNotFound": "Apps opened outside the terminal (VS Code, IDEs) do not find {command}, though the terminal does.",
+  "guiNotFound": "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrains IDEs usually take the terminal's PATH themselves.",
   "@guiNotFound": {
     "description": "Warning: apps started from the Dock or a desktop menu find no copy of the command.",
     "placeholders": {
@@ -411,13 +411,27 @@
   "@corepackMissing": {
     "description": "Corepack row: this Node version does not ship Corepack."
   },
-  "noVersionManager": "No version manager: Node comes from {sources}. Hearth will install other versions through mise.",
+  "noVersionManager": "No version manager: {tool} comes from {sources}. Hearth will install other versions through mise.",
   "@noVersionManager": {
-    "description": "Version manager card when no version manager keeps Node.",
+    "description": "Version manager card when no version manager keeps the tool.",
     "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node"
+      },
       "sources": {
         "type": "String",
         "example": "brew"
+      }
+    }
+  },
+  "noVersionManagerNone": "No version manager. Hearth will install {tool} through mise.",
+  "@noVersionManagerNone": {
+    "description": "Version manager card when the tool is not installed.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
       }
     }
   },
@@ -1651,11 +1665,11 @@
       }
     }
   },
-  "seenEverywhere": "the terminal and apps (VS Code, IDEs) both see it",
+  "seenEverywhere": "the terminal and apps both see it",
   "@seenEverywhere": {
     "description": "Caption: both the terminal and apps started outside it find the manager's versions."
   },
-  "seenInTerminal": "only the terminal sees it; apps (VS Code, IDEs) do not",
+  "seenInTerminal": "only the terminal sees it",
   "@seenInTerminal": {
     "description": "Caption: only the terminal finds the manager's versions."
   },
@@ -2086,5 +2100,16 @@
   "searchClose": "close",
   "@searchCount": {"description": "Number of results shown in the search palette.", "placeholders": {"count": {"type": "int"}}},
   "searchCount": "{count, plural, one {# result} other {# results}}",
-  "searchLocal": "Back to local results"
+  "searchLocal": "Back to local results",
+  "managerGlobalConfig": "Global configuration",
+  "miseMixedHook": "terminal through activate; apps through shims",
+  "seenInApps": "only apps started outside the terminal see it",
+  "miseSwitchUnknown": "no terminal activation or shims detected",
+  "versionsUnreachable": "no connection to {host}. Hearth will try again on the next scan",
+  "@versionsUnreachable": {"description": "Version list error when the server did not answer.", "placeholders": {"host": {"type": "String", "example": "nodejs.org"}}},
+  "databaseRunningCount": "Running",
+  "jsNpmMissing": "npm is not on the terminal's PATH",
+  "issueGuiMissingTitle": "Apps outside the terminal do not see {tool}",
+  "@issueGuiMissingTitle": {"description": "Issue title: apps started outside the terminal do not find the tool.", "placeholders": {"tool": {"type": "String", "example": "Node"}}},
+  "chipGuiMissing": "not in apps"
 }

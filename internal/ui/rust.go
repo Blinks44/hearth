@@ -46,7 +46,7 @@ func (a *App) rust(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.rustAvailable(c, ins, rows, active)
-							managerCard(c, st, rows, active, nil)
+							a.managerCard(c, st, rows, active, nil)
 							if active >= 0 && ins[active].Rust != nil {
 								rustTargets(c, *ins[active].Rust)
 							}

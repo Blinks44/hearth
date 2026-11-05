@@ -96,6 +96,9 @@ func miseConfig(d sources.Dirs, env sysenv.Env) string {
 	if f := env.Get("MISE_GLOBAL_CONFIG_FILE"); f != "" {
 		return f
 	}
+	if dir := env.Get("MISE_CONFIG_DIR"); dir != "" {
+		return filepath.Join(dir, "config.toml")
+	}
 	if xdg := env.Get("XDG_CONFIG_HOME"); xdg != "" {
 		return filepath.Join(xdg, "mise", "config.toml")
 	}

@@ -47,7 +47,7 @@ func (a *App) node(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.availableCard(c, st.Installations, rows)
-							managerCard(c, st, rows, active, corepackRow)
+							a.managerCard(c, st, rows, active, corepackRow)
 							if active >= 0 {
 								nodeGlobals(c, st.Installations[active])
 							}
@@ -143,13 +143,19 @@ func corepackRow(c *ui.Context, in inventory.Installation) {
 // nodeGlobals lists the packages installed globally with the Node
 // version in use, but npm and Corepack, which come with it.
 func nodeGlobals(c *ui.Context, in inventory.Installation) {
+	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), userPackages(in.Packages), "npm -g · "+versionText(in.Version))
+}
+
+// userPackages are the global packages but npm and Corepack, which come
+// with Node.
+func userPackages(all []inventory.Package) []inventory.Package {
 	var pkgs []inventory.Package
-	for _, p := range in.Packages {
+	for _, p := range all {
 		if p.Name != "npm" && p.Name != "corepack" {
 			pkgs = append(pkgs, p)
 		}
 	}
-	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), pkgs, "npm -g · "+versionText(in.Version))
+	return pkgs
 }
 
 func hasPackage(in inventory.Installation, name string) bool {
@@ -228,6 +234,9 @@ func managedBy(ins []inventory.Installation, rows []int, active int) string {
 		}
 	}
 	names := sourceNames(ins, rows, active)
+	if len(names) == 0 {
+		return ""
+	}
 	if vm == "" {
 		return locales.InstalledFrom(strings.Join(names, ", "))
 	}

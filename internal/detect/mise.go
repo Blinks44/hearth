@@ -2,6 +2,7 @@ package detect
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -20,12 +21,20 @@ var miseFiles = []string{"mise.toml", ".tool-versions"}
 // terminal sees, or its shims on the terminal's PATH (term) and the
 // apps' (gui). Either way it picks the version by the folder's files.
 func miseManager(ctx context.Context, r run.Runner, term, gui sysenv.Env, d sources.Dirs) inventory.Manager {
-	m := inventory.Manager{Name: "mise", SwitchOnCD: true, Files: miseFiles}
+	m := inventory.Manager{Name: "mise", Files: miseFiles}
 	if d.Mise != "" {
 		shims := filepath.Join(d.Mise, "shims")
 		m.Shims, m.ShimsInGUI = onPath(term, shims), onPath(gui, shims)
 	}
-	m.Activated = startupRuns(term, d.Home, "mise activate")
+	// mise activate exports MISE_SHELL in the terminal's environment; the
+	// startup files are read too, for an activation that sets it later.
+	m.Activated = term.Get("MISE_SHELL") != "" || startupRuns(term, d.Home, "mise activate")
+	m.SwitchOnCD = m.Activated || m.Shims
+	if path := miseConfig(d, term); path != "" {
+		if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
+			m.ConfigPath = path
+		}
+	}
 	if paths := sysenv.LookPathAll("mise", term); len(paths) > 0 {
 		m.Version = miseVersion(ctx, r, term, paths[0])
 	}

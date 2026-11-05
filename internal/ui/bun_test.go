@@ -52,7 +52,7 @@ func TestBunPage(t *testing.T) {
 		"v1.2.5", "v1.1.30", "stable", "in PATH", "duplicate in PATH",
 		"Bun updates itself with bun upgrade. The copy from npm lives inside a Node.js version: it is removed with npm -g and goes away with that Node version.",
 		"How the terminal finds bun", "which -a bun", "~/.bun/bin/bun", "used", "shadowed",
-		"Apps opened outside the terminal (VS Code, IDEs) do not find bun, though the terminal does.",
+		"Apps started outside the terminal do not find bun, MCP servers in desktop clients for one. VS Code and JetBrains IDEs usually take the terminal's PATH themselves.",
 		"The copy from npm (v1.1.30) is not used: ~/.bun/bin comes first in PATH.",
 		"Available", "v1.2.8", "stable · update for v1.2.5", "recommended", "canary",
 		"Install · script", "bun.sh/install", "Install folder", "BUN_INSTALL", "~/.bun",

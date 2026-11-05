@@ -36,7 +36,7 @@ func (a *App) javaPage(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.javaAvailable(c)
-							managerCard(c, st, rows, active, nil)
+							a.managerCard(c, st, rows, active, nil)
 							listCard(c, locales.JavaBuilders(), "", func() {
 								found := false
 								for _, cmd := range []string{"gradle", "mvn"} {

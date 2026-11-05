@@ -40,7 +40,7 @@ func (a *App) ruby(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.rubyAvailable(c, ins, rows, active)
-							managerCard(c, st, rows, active, nil)
+							a.managerCard(c, st, rows, active, nil)
 							if active >= 0 {
 								globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
 							}

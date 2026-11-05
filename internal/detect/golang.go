@@ -221,7 +221,9 @@ func goTools(dir string) []inventory.Package {
 			continue
 		}
 		info, err := buildinfo.ReadFile(filepath.Join(dir, e.Name()))
-		if err != nil {
+		// Go's own commands, as go and gofmt in GOROOT/bin, belong to no
+		// module: they are there when GOBIN is that folder, as mise sets it.
+		if err != nil || info.Main.Path == "" && strings.HasPrefix(info.Path, "cmd/") {
 			continue
 		}
 		tools = append(tools, inventory.Package{

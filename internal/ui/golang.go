@@ -42,7 +42,7 @@ func (a *App) goPage(c *ui.Context, p page) {
 						})
 						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
 							a.goAvailable(c, ins, rows, active)
-							managerCard(c, st, rows, active, nil)
+							a.managerCard(c, st, rows, active, nil)
 							if active >= 0 {
 								globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
 							}

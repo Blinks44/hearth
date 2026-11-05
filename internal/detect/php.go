@@ -123,7 +123,8 @@ func phpIniFiles(out string) []string {
 			continue
 		}
 		for path := range strings.SplitSeq(line, ",") {
-			if path = strings.TrimSpace(path); filepath.IsAbs(path) && !slices.Contains(files, path) {
+			// PHP 8.5 quotes the loaded file: "/etc/php.ini".
+			if path = strings.Trim(strings.TrimSpace(path), `"`); filepath.IsAbs(path) && !slices.Contains(files, path) {
 				files = append(files, path)
 			}
 		}

@@ -58,7 +58,7 @@ func TestGoPage(t *testing.T) {
 		"How the terminal finds go", "which -a go", "~/.local/share/mise/shims/go",
 		"The copy from installer (go1.21.6) is not used: ~/.local/share/mise/shims comes first in PATH.",
 		"1.24.0", "new version", "1.23.5", "update for go1.23.4", "recommended", "installed",
-		"Version manager · mise", "2025.1.6", "Connected through shims", "the terminal and apps (VS Code, IDEs) both see it",
+		"Version manager · mise", "2025.1.6", "Connected through shims", "the terminal and apps both see it",
 		"reads mise.toml, .tool-versions",
 		"Utilities", "GOPATH/bin", "gopls", "golang.org/x/tools/gopls", "0.17.1",
 	} {
@@ -84,5 +84,36 @@ func TestGoReleaseNote(t *testing.T) {
 		if got != tt.want || update != tt.update {
 			t.Errorf("goReleaseNote(%s) = %q, %v", tt.version, got, update)
 		}
+	}
+}
+
+func TestMiseConnectionCard(t *testing.T) {
+	for _, tc := range []struct {
+		name                  string
+		activated, shims, gui bool
+		caption               string
+	}{
+		{name: "not connected", caption: "no terminal activation or shims detected"},
+		{name: "GUI only", gui: true, caption: "only apps started outside the terminal see it"},
+		{name: "GUI only switch", gui: true, caption: "no terminal activation or shims detected"},
+		{name: "activate with GUI shims", activated: true, gui: true, caption: "terminal through activate; apps through shims"},
+		// mise activate puts its shims on the terminal's PATH too.
+		{name: "activate with terminal shims", activated: true, shims: true, caption: "Connected through mise activate"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := NewApp()
+			a.Snapshot = goSnapshot()
+			m := &a.Snapshot.Tools[0].Managers[0]
+			m.Activated, m.Shims, m.ShimsInGUI = tc.activated, tc.shims, tc.gui
+			m.SwitchOnCD = tc.activated || tc.shims
+			m.ConfigPath = home + "/.config/mise/config.toml"
+			tt := openGo(t, a)
+			for _, text := range []string{tc.caption, "Global configuration", "~/.config/mise/config.toml"} {
+				if !tt.HasText(text) {
+					t.Errorf("missing %q; texts %q", text, tt.Texts())
+				}
+			}
+			screenshot(t, tt, "mise-"+tc.name)
+		})
 	}
 }

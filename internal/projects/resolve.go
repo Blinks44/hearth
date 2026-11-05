@@ -153,11 +153,10 @@ func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Lin
 	if first == nil || !first.Source.Shim {
 		return first, false
 	}
-	// A shim with no project file to go by runs its manager's default.
-	for i, in := range ts.Installations {
-		if in.Default && in.Source.Manager == first.Source.Manager && !in.Source.Shim {
-			return &ts.Installations[i], false
-		}
+	// A shim with no project file to go by runs its manager's default, or
+	// for rbenv and pyenv the next copy on PATH.
+	if i := inventory.TerminalCopy(ts.Installations); i >= 0 {
+		return &ts.Installations[i], false
 	}
 	return nil, false
 }

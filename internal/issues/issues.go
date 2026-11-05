@@ -116,8 +116,11 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 				}
 			}
 		}
-		out = append(out, duplicate(ts)...)
 		out = append(out, stubs(ts)...)
+		if withNode(s, ts) {
+			continue
+		}
+		out = append(out, duplicate(ts)...)
 		out = append(out, guiDiffers(ts)...)
 		if ts.Tool == "node" {
 			out = append(out, unsupported(ts, lines, now)...)
@@ -147,11 +150,14 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 }
 
 // osDirs are PATH entries the OS itself adds that are often not there, as
-// macOS's /etc/paths.d/10-cryptex and 10-pmk-global do: leaving them is
-// right, so they are no issue.
+// macOS's /etc/paths does /usr/local/bin before anything installs there,
+// and /etc/paths.d/10-cryptex and 10-pmk-global theirs: leaving them is
+// right, so they are no issue. Each ends in a slash and covers what is
+// under it.
 var osDirs = []string{
 	"/var/run/com.apple.security.cryptexd/",
-	"/pkg/env/global/bin",
+	"/pkg/env/global/bin/",
+	"/usr/local/bin/",
 }
 
 // pathIssues are the terminal's and the apps' PATH entries that mean the
@@ -160,7 +166,7 @@ func pathIssues(s *inventory.Snapshot) []Issue {
 	var current, missing []string
 	for _, e := range slices.Concat(s.TerminalPath, s.GUIPath) {
 		switch {
-		case osDir(e.Dir):
+		case OSDir(e.Dir):
 		case !filepath.IsAbs(e.Dir) && !slices.Contains(current, e.Dir):
 			current = append(current, e.Dir)
 		case e.Missing && !slices.Contains(missing, e.Dir):
@@ -186,11 +192,27 @@ func duplicate(ts inventory.ToolState) []Issue {
 			on = append(on, in)
 		}
 	}
+	// A manager's shim runs that manager's copies, as its own install
+	// directory beside it on PATH does under mise activate: one copy.
+	on = slices.DeleteFunc(on, func(in inventory.Installation) bool {
+		return in.Source.Shim && slices.ContainsFunc(on, func(o inventory.Installation) bool {
+			return !o.Source.Shim && o.Source.Manager != "" && o.Source.Manager == in.Source.Manager
+		})
+	})
 	if len(on) < 2 {
 		return nil
 	}
 	slices.SortFunc(on, func(a, b inventory.Installation) int { return int(a.OnPath - b.OnPath) })
 	return []Issue{{Kind: Duplicate, Severity: Warning, Tool: ts.Tool, Copies: on}}
+}
+
+// withNode reports that the terminal runs ts from the folder of the node
+// it runs, as npm and corepack come with Node: Node's issues are theirs.
+func withNode(s *inventory.Snapshot, ts inventory.ToolState) bool {
+	node, _ := s.Tool("node")
+	n, t := inventory.TerminalCopy(node.Installations), inventory.TerminalCopy(ts.Installations)
+	return ts.Tool != "node" && n >= 0 && t >= 0 &&
+		filepath.Dir(node.Installations[n].Path) == filepath.Dir(ts.Installations[t].Path)
 }
 
 // stubs is an issue for each stub on the terminal's PATH.
@@ -209,7 +231,9 @@ func stubs(ts inventory.ToolState) []Issue {
 }
 
 // guiDiffers is an issue when the terminal runs a copy and apps run
-// another version or none; the same version elsewhere is no matter.
+// another version, a warning, or none, which is only worth knowing: VS Code
+// and JetBrains IDEs take the terminal's PATH themselves. The same
+// version elsewhere is no matter.
 func guiDiffers(ts inventory.ToolState) []Issue {
 	term := inventory.TerminalCopy(ts.Installations)
 	if term < 0 {
@@ -219,6 +243,7 @@ func guiDiffers(ts inventory.ToolState) []Issue {
 	gui := inventory.GUICopy(ts.Installations)
 	switch {
 	case gui < 0:
+		is.Severity = Info
 	case ts.Installations[gui].Version == ts.Installations[term].Version:
 		return nil
 	default:
@@ -297,6 +322,7 @@ func mcpMissing(servers []inventory.MCPServer) []Issue {
 	return out
 }
 
-func osDir(dir string) bool {
-	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir, p) })
+// OSDir reports that the OS itself puts dir on PATH, there or not.
+func OSDir(dir string) bool {
+	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir+"/", p) })
 }

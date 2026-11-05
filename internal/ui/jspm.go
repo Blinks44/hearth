@@ -79,7 +79,12 @@ func (a *App) jsCount() int {
 	n := 0
 	for _, id := range jsManagers {
 		st, _ := a.Snapshot.Tool(id)
-		n += len(st.Installations)
+		// As the table: Corepack's shims are rows, other shims are not.
+		for _, in := range st.Installations {
+			if !in.Source.Shim || in.Source.Manager == "corepack" {
+				n++
+			}
+		}
 	}
 	return n
 }
@@ -177,10 +182,11 @@ func (a *App) jsCorepack(c *ui.Context) {
 func (a *App) jsGlobals(c *ui.Context) {
 	st, _ := a.Snapshot.Tool("npm")
 	var pkgs []inventory.Package
+	empty := locales.JsNpmMissing()
 	if i := inventory.TerminalCopy(st.Installations); i >= 0 {
-		pkgs = st.Installations[i].Packages
+		pkgs, empty = userPackages(st.Installations[i].Packages), locales.NoGlobalPackages()
 	}
-	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), pkgs, "npm -g")
+	globalsCard(c, locales.GlobalPackages(), empty, pkgs, "npm -g")
 }
 
 func (a *App) jsProjects(c *ui.Context) {

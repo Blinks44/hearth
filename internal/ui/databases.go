@@ -45,7 +45,7 @@ func (a *App) databases(c *ui.Context, p page) {
 						ui.Text(c, locales.DatabaseSubtitle()).FontSize(12.5).TextColor(c.Theme().TextMuted)
 					})
 					stateCard(c, pal.TextFaint, locales.DatabaseServers(), strconv.Itoa(len(servers)), strings.Join(databaseSources(servers), " · "))
-					stateCard(c, c.Theme().Success, locales.DatabaseRunning(), strconv.Itoa(running), "")
+					stateCard(c, c.Theme().Success, locales.DatabaseRunningCount(), strconv.Itoa(running), "")
 					stateCard(c, c.Theme().Warning, locales.DatabaseConflicts(), strconv.Itoa(len(conflicts)), locales.DatabasePorts())
 				})
 				for _, is := range conflicts {

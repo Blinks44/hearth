@@ -63,7 +63,9 @@ func TestJavaEmptyAndStub(t *testing.T) {
 		a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{st}}
 		tt := openJava(a)
 		if stub {
-			if !tt.HasText("no JDK was found") {
+			// A stub is no copy: nothing says where Java came from.
+			if !tt.HasText("no JDK was found") || !tt.HasText("No version manager. Hearth will install Java through mise.") ||
+				tt.HasText("Installed from ") || tt.HasText("Node") || a.version("java") != "" {
 				t.Fatalf("texts %q", tt.Texts())
 			}
 		} else if !tt.HasText("Java is not installed") {

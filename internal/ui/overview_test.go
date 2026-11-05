@@ -101,3 +101,17 @@ func TestOverviewFewIssues(t *testing.T) {
 	tt := openOverview(t, a)
 	hasTexts(t, tt, "1 issue", "Almost ready", "legacy-admin needs Node 18")
 }
+
+// Only warnings ask for attention: tools apps do not find are worth
+// knowing, as a setup through mise activate has for each.
+func TestOverviewInfoIssues(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true}, {Dir: "."}}
+	ts := &a.Snapshot.Tools[0]
+	for i := range ts.Installations {
+		ts.Installations[i].InGUI = 0
+	}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "3 issues", "Almost ready", "not in apps")
+}

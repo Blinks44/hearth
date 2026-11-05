@@ -55,3 +55,17 @@ func TestPathSourceUnknownExpansion(t *testing.T) {
 		}
 	}
 }
+
+// The line Homebrew's installer asks for puts its bin and sbin on PATH.
+func TestPathSourceBrewShellenv(t *testing.T) {
+	file := filepath.Join(t.TempDir(), ".zprofile")
+	if err := os.WriteFile(file, []byte("\neval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	got := sourceFiles(nil, []string{file})
+	for _, dir := range []string{"/opt/homebrew/bin", "/opt/homebrew/sbin"} {
+		if s := got[dir]; len(s) != 1 || s[0].Line != 2 {
+			t.Errorf("%s: %+v", dir, s)
+		}
+	}
+}

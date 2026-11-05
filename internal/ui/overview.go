@@ -80,7 +80,7 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 			default:
 				heroChip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipIssues(n))
 				title = locales.HeroAlmost()
-				if n >= 3 {
+				if warnings := len(slices.DeleteFunc(slices.Clone(found), func(is issues.Issue) bool { return is.Severity == issues.Info })); warnings >= 3 {
 					title = locales.HeroAttention()
 				}
 				text = foundText + " " + locales.HeroSomeIssues(n)
@@ -229,7 +229,11 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 				chip(c, Accent, pal.AccentSoft, pal.AccentInk, locales.ChipProjects(n))
 			}
 			for _, is := range found {
-				if label := toolChip(is, ts.Tool); label != "" {
+				switch label := toolChip(is, ts.Tool); {
+				case label == "":
+				case is.Severity == issues.Info:
+					chip(c, pal.TextFaint, pal.Muted, pal.MonoText, label)
+				default:
 					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, label)
 				}
 			}
@@ -250,6 +254,9 @@ func toolChip(is issues.Issue, tool string) string {
 	case issues.Duplicate:
 		return locales.ChipCopies(len(is.Copies))
 	case issues.GUIDiffers:
+		if len(is.Copies) < 2 {
+			return locales.ChipGuiMissing()
+		}
 		return locales.ChipGuiDiffers()
 	case issues.Unsupported:
 		return locales.ChipSupportEnded()

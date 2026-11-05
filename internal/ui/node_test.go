@@ -246,7 +246,7 @@ func TestNodePath(t *testing.T) {
 	tt := openNode(t, a)
 	for _, s := range []string{"How the terminal finds node", "which -a node",
 		"~/.local/state/fnm_multishells/48121/bin/node", "used", "shadowed",
-		"Apps opened outside the terminal (VS Code, IDEs) find brew first and run v23.6.0 instead of v22.12.0."} {
+		"Apps started outside the terminal find brew first and run v23.6.0 instead of v22.12.0."} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
@@ -287,13 +287,13 @@ func TestGUIWarning(t *testing.T) {
 		{"same copy", []inventory.Installation{node("22.0.0", 1, 1)}, ""},
 		{"same version elsewhere", []inventory.Installation{node("22.0.0", 1, 0), node("22.0.0", 0, 1)}, ""},
 		{"other version", []inventory.Installation{node("22.0.0", 1, 0), node("20.0.0", 2, 1)},
-			"Apps opened outside the terminal (VS Code, IDEs) find brew first and run v20.0.0 instead of v22.0.0."},
-		{"not found", []inventory.Installation{node("22.0.0", 1, 0)},
-			"Apps opened outside the terminal (VS Code, IDEs) do not find node, though the terminal does."},
+			"Apps started outside the terminal find brew first and run v20.0.0 instead of v22.0.0."},
+		// Not found is a note, not a warning: see TestBunPage.
+		{"not found", []inventory.Installation{node("22.0.0", 1, 0)}, ""},
 		{"not in the terminal", []inventory.Installation{node("22.0.0", 0, 1)}, ""},
 	}
 	for _, tt := range tests {
-		if got := guiWarning("node", tt.ins, inventory.TerminalCopy(tt.ins)); got != tt.want {
+		if got := guiWarning(tt.ins, inventory.TerminalCopy(tt.ins)); got != tt.want {
 			t.Errorf("%s: %q, want %q", tt.name, got, tt.want)
 		}
 	}

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -474,13 +475,13 @@ func (a *App) languages(c *ui.Context) {
 
 // version is the sidebar's version of a tool the last scan found, as
 // 22.12: the one the terminal runs, else the first known; "…" when its
-// version is unknown, and "" when the scan did not find it.
+// version is unknown, and "" when the scan found no copy but stubs.
 func (a *App) version(tool string) string {
 	if a.Snapshot == nil {
 		return ""
 	}
 	st, _ := a.Snapshot.Tool(tool)
-	if len(st.Installations) == 0 {
+	if !slices.ContainsFunc(st.Installations, func(in inventory.Installation) bool { return !in.Stub }) {
 		return ""
 	}
 	v := ""

@@ -64,8 +64,9 @@ func TestFind(t *testing.T) {
 		{name: "apps run another version", snap: nodeSnap(fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)),
 			want: []Issue{{Kind: GUIDiffers, Severity: Warning, Tool: "node",
 				Copies: []inventory.Installation{fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)}}}},
+		// VS Code and JetBrains IDEs take the terminal's PATH themselves.
 		{name: "apps do not find it", snap: nodeSnap(fnm("22.12.0", 1, 0)),
-			want: []Issue{{Kind: GUIDiffers, Severity: Warning, Tool: "node",
+			want: []Issue{{Kind: GUIDiffers, Severity: Info, Tool: "node",
 				Copies: []inventory.Installation{fnm("22.12.0", 1, 0)}}}},
 		{name: "apps run the same version elsewhere", snap: nodeSnap(fnm("22.12.0", 1, 0), brew("22.12.0", 0, 1))},
 		{name: "not in the terminal", snap: nodeSnap(brew("22.12.0", 0, 1))},
@@ -102,7 +103,8 @@ func TestFind(t *testing.T) {
 			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{abs("/opt/gone")}}}},
 		{name: "macOS's own missing directories on PATH", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin", Missing: true},
-			{Dir: "/pkg/env/global/bin", Missing: true}}}},
+			{Dir: "/pkg/env/global/bin", Missing: true},
+			{Dir: "/usr/local/bin", Missing: true}}}},
 		{name: "PATH in order", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}, GUIPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}}},
 
 		{name: "tool that failed to check",
@@ -235,5 +237,23 @@ func TestStubOnPath(t *testing.T) {
 				t.Errorf("got %+v", got)
 			}
 		})
+	}
+}
+
+// Under mise activate the terminal finds mise's install folder, then its
+// shims: one copy. npm in the folder of that node has Node's issues only.
+func TestMiseActivateCopies(t *testing.T) {
+	mise := func(tool, path string, term inventory.PathRank, shim bool) inventory.Installation {
+		return inventory.Installation{Tool: tool, Version: "22.23.4", Path: path, OnPath: term,
+			Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Shim: shim}}
+	}
+	bin := "/mise/installs/node/22/bin/"
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "node", Installations: []inventory.Installation{mise("node", bin+"node", 1, false), mise("node", "/mise/shims/node", 2, true)}},
+		{Tool: "npm", Installations: []inventory.Installation{mise("npm", bin+"npm", 1, false), mise("npm", "/mise/shims/npm", 2, true)}},
+	}}
+	got := Find(snap, nil, nil, now)
+	if len(got) != 1 || got[0].Kind != GUIDiffers || got[0].Tool != "node" {
+		t.Fatalf("issues %+v", got)
 	}
 }
