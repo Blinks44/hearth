@@ -533,5 +533,17 @@
   "settingsAllowLists": "Разрешить загрузку списков версий",
   "settingsChooseTheme": "Выбрать тему",
   "settingsChooseLanguage": "Выбрать язык интерфейса",
-  "versionsOffline": "Загрузка списков отключена в настройках"
+  "versionsOffline": "Загрузка списков отключена в настройках",
+  "searchTools": "Инструменты",
+  "searchVersions": "Версии",
+  "searchActions": "Действия",
+  "searchRecent": "Недавние",
+  "searchAvailable": "Искать в доступных версиях",
+  "searchPlaceholder": "Найти инструмент…",
+  "searchNoResults": "Ничего не нашли по запросу «{query}»",
+  "searchOpen": "↵ открыть",
+  "searchKeys": "↑↓ выбрать   ↵ открыть   Esc закрыть",
+  "searchClose": "закрыть",
+  "searchCount": "{count, plural, one {# результат} few {# результата} many {# результатов} other {# результата}}",
+  "searchLocal": "Вернуться к локальным результатам"
 }

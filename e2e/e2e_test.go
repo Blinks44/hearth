@@ -94,6 +94,15 @@ esac
 		c.call(t, "act", map[string]any{"key": step.key, "action": "press"})
 		c.waitFor(t, step.text)
 	}
+	c.call(t, "act", map[string]any{"key": "open-search", "action": "press"})
+	c.waitFor(t, "ACTIONS")
+	c.call(t, "input", map[string]any{"events": []map[string]any{{"type": "text", "text": "node"}}})
+	c.waitFor(t, "VERSIONS")
+	c.call(t, "input", map[string]any{"events": []map[string]any{{"type": "key", "key": "Enter"}}})
+	c.waitFor(t, "Available to install")
+	c.call(t, "act", map[string]any{"key": "open-search", "action": "press"})
+	c.waitFor(t, "RECENT")
+	c.call(t, "input", map[string]any{"events": []map[string]any{{"type": "key", "key": "Escape"}}})
 }
 
 func write(t *testing.T, path, data string, mode os.FileMode) {

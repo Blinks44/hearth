@@ -6347,3 +6347,131 @@ func VersionsOffline() string { return In(i18n.Locale()).VersionsOffline() }
 func (msgs Messages) VersionsOffline() string {
 	return Catalog.Format(msgs.locale, "versionsOffline", nil)
 }
+
+// SearchTools says "Tools"
+// in the language the app shows.
+func SearchTools() string { return In(i18n.Locale()).SearchTools() }
+
+// SearchTools says "Tools"
+// in the language of msgs.
+func (msgs Messages) SearchTools() string {
+	return Catalog.Format(msgs.locale, "searchTools", nil)
+}
+
+// SearchVersions says "Versions"
+// in the language the app shows.
+func SearchVersions() string { return In(i18n.Locale()).SearchVersions() }
+
+// SearchVersions says "Versions"
+// in the language of msgs.
+func (msgs Messages) SearchVersions() string {
+	return Catalog.Format(msgs.locale, "searchVersions", nil)
+}
+
+// SearchActions says "Actions"
+// in the language the app shows.
+func SearchActions() string { return In(i18n.Locale()).SearchActions() }
+
+// SearchActions says "Actions"
+// in the language of msgs.
+func (msgs Messages) SearchActions() string {
+	return Catalog.Format(msgs.locale, "searchActions", nil)
+}
+
+// SearchRecent says "Recent"
+// in the language the app shows.
+func SearchRecent() string { return In(i18n.Locale()).SearchRecent() }
+
+// SearchRecent says "Recent"
+// in the language of msgs.
+func (msgs Messages) SearchRecent() string {
+	return Catalog.Format(msgs.locale, "searchRecent", nil)
+}
+
+// SearchAvailable says "Search available versions"
+// in the language the app shows.
+func SearchAvailable() string { return In(i18n.Locale()).SearchAvailable() }
+
+// SearchAvailable says "Search available versions"
+// in the language of msgs.
+func (msgs Messages) SearchAvailable() string {
+	return Catalog.Format(msgs.locale, "searchAvailable", nil)
+}
+
+// SearchPlaceholder says "Find a tool…"
+// in the language the app shows.
+func SearchPlaceholder() string { return In(i18n.Locale()).SearchPlaceholder() }
+
+// SearchPlaceholder says "Find a tool…"
+// in the language of msgs.
+func (msgs Messages) SearchPlaceholder() string {
+	return Catalog.Format(msgs.locale, "searchPlaceholder", nil)
+}
+
+// SearchNoResults says "No results for “{query}”"
+// in the language the app shows.
+//
+// Search palette: nothing matches the query.
+func SearchNoResults(query string) string { return In(i18n.Locale()).SearchNoResults(query) }
+
+// SearchNoResults says "No results for “{query}”"
+// in the language of msgs.
+//
+// Search palette: nothing matches the query.
+func (msgs Messages) SearchNoResults(query string) string {
+	return Catalog.Format(msgs.locale, "searchNoResults", map[string]any{"query": query})
+}
+
+// SearchOpen says "↵ open"
+// in the language the app shows.
+func SearchOpen() string { return In(i18n.Locale()).SearchOpen() }
+
+// SearchOpen says "↵ open"
+// in the language of msgs.
+func (msgs Messages) SearchOpen() string {
+	return Catalog.Format(msgs.locale, "searchOpen", nil)
+}
+
+// SearchKeys says "↑↓ choose   ↵ open   Esc close"
+// in the language the app shows.
+func SearchKeys() string { return In(i18n.Locale()).SearchKeys() }
+
+// SearchKeys says "↑↓ choose   ↵ open   Esc close"
+// in the language of msgs.
+func (msgs Messages) SearchKeys() string {
+	return Catalog.Format(msgs.locale, "searchKeys", nil)
+}
+
+// SearchClose says "close"
+// in the language the app shows.
+func SearchClose() string { return In(i18n.Locale()).SearchClose() }
+
+// SearchClose says "close"
+// in the language of msgs.
+func (msgs Messages) SearchClose() string {
+	return Catalog.Format(msgs.locale, "searchClose", nil)
+}
+
+// SearchCount says "{count, plural, one {# result} other {# results}}"
+// in the language the app shows.
+//
+// Number of results shown in the search palette.
+func SearchCount(count int) string { return In(i18n.Locale()).SearchCount(count) }
+
+// SearchCount says "{count, plural, one {# result} other {# results}}"
+// in the language of msgs.
+//
+// Number of results shown in the search palette.
+func (msgs Messages) SearchCount(count int) string {
+	return Catalog.Format(msgs.locale, "searchCount", map[string]any{"count": count})
+}
+
+// SearchLocal says "Back to local results"
+// in the language the app shows.
+func SearchLocal() string { return In(i18n.Locale()).SearchLocal() }
+
+// SearchLocal says "Back to local results"
+// in the language of msgs.
+func (msgs Messages) SearchLocal() string {
+	return Catalog.Format(msgs.locale, "searchLocal", nil)
+}

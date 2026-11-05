@@ -1,0 +1,187 @@
+package ui
+
+import (
+	"fmt"
+	"slices"
+	"testing"
+	"time"
+
+	"github.com/egoist/mygo/ui"
+
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/versions"
+)
+
+func searchApp() *App {
+	a := NewApp()
+	a.Snapshot = found("node")
+	a.Snapshot.Tools[0].Installations[0].Version = "22.12.0"
+	a.Snapshot.Tools[0].Installations[0].Path = "/usr/local/bin/node"
+	a.Snapshot.Skills = []inventory.Skill{{Name: "component-workflow", Description: "Reusable components", Paths: []inventory.SkillPath{{Path: "/skills/component-workflow"}}}}
+	a.Snapshot.MCP = []inventory.MCPServer{{Name: "docs-server", Agent: "codex"}}
+	a.Projects = []projects.Project{{Dir: "/work/shop-web", Requirements: []projects.Requirement{{Tool: "node", Want: "22", File: ".nvmrc"}}}}
+	return a
+}
+
+func TestSearchResults(t *testing.T) {
+	a := searchApp()
+	for _, tc := range []struct{ name, query, want string }{
+		{"tool", "NODE", "/tools/node"}, {"version", "node 22", "version:node:"}, {"project requirement", "node .nvmrc", "/projects/project?dir="}, {"skill description", "reusable components", "skill:"}, {"MCP", "docs-server", "mcp:"}, {"all words required", "node nonexistent", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a.search.query = tc.query
+			got := a.searchResults()
+			if tc.want == "" {
+				if len(got) != 0 {
+					t.Fatal(got)
+				}
+				return
+			}
+			if !slices.ContainsFunc(got, func(r searchResult) bool { return len(r.id) >= len(tc.want) && r.id[:len(tc.want)] == tc.want }) {
+				t.Fatalf("missing %s: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSearchKeyboard(t *testing.T) {
+	a := searchApp()
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.Type("node")
+	tt.Frame()
+	if a.search.query != "node" {
+		t.Fatalf("autofocus failed: %q", a.search.query)
+	}
+	screenshot(t, tt, "search-results")
+	tt.Key(0, ui.KeyDown)
+	if a.search.selected != 1 {
+		t.Fatal(a.search.selected)
+	}
+	tt.Key(0, ui.KeyUp)
+	tt.Key(0, ui.KeyEnter)
+	tt.Advance(time.Second)
+	if a.search.open || a.router.Path() != "/tools/node" {
+		t.Fatal("Enter did not open tool")
+	}
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.Frame()
+	if !tt.HasText("RECENT") || !tt.HasText("Node.js") {
+		t.Fatal("missing recent result")
+	}
+	screenshot(t, tt, "search-recent")
+	tt.Key(0, ui.KeyEscape)
+	if a.search.open {
+		t.Fatal("Escape did not close")
+	}
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.Key(ui.Cmd, ui.KeyK)
+	if a.search.open {
+		t.Fatal("shortcut did not toggle")
+	}
+	if err := tt.Click("Find a tool…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Type("zzzzzz")
+	tt.Frame()
+	if !tt.HasText("No results for “zzzzzz”") {
+		t.Fatal(tt.Texts())
+	}
+	screenshot(t, tt, "search-empty")
+	a.NodeVersions = &versions.Node{Releases: []versions.Release{{Version: "99.0.0"}}}
+	tt.Key(ui.Cmd, ui.KeyA)
+	tt.Type("99.0.0")
+	tt.Frame()
+	if err := tt.Click("Search available versions"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("node 99.0.0") {
+		t.Fatal(tt.Texts())
+	}
+	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	if a.search.open || a.nodeTab != 1 || a.router.Path() != "/tools/node" {
+		t.Fatal("available version did not open")
+	}
+}
+
+func TestSearchDetails(t *testing.T) {
+	for _, tc := range []struct{ name, query, path string }{{"skill", "component-workflow", skillsPage}, {"MCP", "docs-server", mcpPage}, {"project", "shop-web", projectPage}} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := searchApp()
+			a.skillQuery = "other"
+			a.mcpQuery = "other"
+			tt := ui.NewTester(a.View, 1280, 820)
+			tt.Key(ui.Cmd, ui.KeyK)
+			tt.Type(tc.query)
+			tt.Frame()
+			tt.Key(0, ui.KeyEnter)
+			tt.Advance(time.Second)
+			if !within(a.router.Path(), tc.path) {
+				t.Fatal(a.router.Path())
+			}
+			if tc.name == "skill" && a.skillChosen != "/skills/component-workflow" {
+				t.Fatal(a.skillChosen)
+			}
+			if tc.name == "MCP" && a.mcpChosen != "\x00docs-server" {
+				t.Fatal(a.mcpChosen)
+			}
+		})
+	}
+}
+
+func TestSearchActionsAndAppearance(t *testing.T) {
+	a := searchApp()
+	scans := 0
+	a.OnScan = func() { scans++ }
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	if scans != 1 || a.search.open {
+		t.Fatal("scan action did not run once")
+	}
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.SetDark(true)
+	tt.Frame()
+	screenshot(t, tt, "search-dark")
+	// Reopening and rebuilding must not duplicate action identities.
+	tt.Frame()
+	tt.Frame()
+	if len(a.search.recent) != 0 {
+		t.Fatal("actions should stay in the actions group")
+	}
+}
+
+func TestSearchScroll(t *testing.T) {
+	a := searchApp()
+	a.NodeVersions = &versions.Node{}
+	for i := range 40 {
+		a.NodeVersions.Releases = append(a.NodeVersions.Releases, versions.Release{Version: fmt.Sprintf("%d.0.0", 40-i)})
+	}
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Key(ui.Cmd, ui.KeyK)
+	a.searchAvailable(true)
+	tt.Frame()
+	top, ok := tt.Find("node 40.0.0")
+	if !ok {
+		t.Fatal(tt.Texts())
+	}
+	// The chosen first row must not hold the list where it is.
+	before, _ := tt.Find("node 35.0.0")
+	tt.Scroll(top.X+10, top.Y+100, 0, 300)
+	tt.Frame()
+	if after, _ := tt.Find("node 35.0.0"); after.Y > before.Y-200 {
+		t.Fatalf("scrolling did not move the results: %v → %v", before, after)
+	}
+	// The keyboard brings its choice into view: the last row, from the first.
+	tt.Key(0, ui.KeyUp)
+	tt.Frame()
+	last, _ := tt.Find("node 1.0.0")
+	footer, _ := tt.Find("40 results")
+	if last.Y < top.Y || last.Y+last.H > footer.Y {
+		t.Fatalf("the chosen row is out of view: %v, footer %v", last, footer)
+	}
+}

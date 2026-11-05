@@ -101,6 +101,7 @@ type App struct {
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
+	search         searchState
 	router         *ui.Router
 	moreOpen       bool    // the languages not found show in the sidebar
 	nodeTab        int     // the tab of the Node.js page shown
@@ -146,6 +147,7 @@ func NewApp() *App {
 // View builds the window: the sidebar and the page shown beside it.
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
+	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	t := c.Theme()
 	// Vibrancy shows wherever the view draws no background: under the
 	// sidebar, which then draws none.
@@ -223,6 +225,7 @@ func (a *App) View(c *ui.Context) {
 			a.overviewPage(c, overview)
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
+	a.searchDialog(c)
 }
 
 // Scan starts a scan, as the header and the sidebar do, unless one is
@@ -308,6 +311,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 			ui.Box(c).Height(14).Shrink(0).DragWindow()
 		}
 		brand(c, a.Machine)
+		a.searchButton(c)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)

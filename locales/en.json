@@ -2069,5 +2069,19 @@
   "settingsAllowLists": "Allow version list downloads",
   "settingsChooseTheme": "Choose theme",
   "settingsChooseLanguage": "Choose interface language",
-  "versionsOffline": "Downloads are turned off in Settings"
+  "versionsOffline": "Downloads are turned off in Settings",
+  "searchTools": "Tools",
+  "searchVersions": "Versions",
+  "searchActions": "Actions",
+  "searchRecent": "Recent",
+  "searchAvailable": "Search available versions",
+  "searchPlaceholder": "Find a tool…",
+  "searchNoResults": "No results for “{query}”",
+  "@searchNoResults": {"description": "Search palette: nothing matches the query.", "placeholders": {"query": {"type": "String"}}},
+  "searchOpen": "↵ open",
+  "searchKeys": "↑↓ choose   ↵ open   Esc close",
+  "searchClose": "close",
+  "@searchCount": {"description": "Number of results shown in the search palette.", "placeholders": {"count": {"type": "int"}}},
+  "searchCount": "{count, plural, one {# result} other {# results}}",
+  "searchLocal": "Back to local results"
 }
