@@ -1,0 +1,1 @@
+{"version":1,"elements":[{"active":true,"storePaths":["/nix/store/00000000000000000000000000000000-hello-2.12.1"],"uri":"github:NixOS/nixpkgs/revision","originalUri":"flake:nixpkgs","attrPath":"legacyPackages.aarch64-darwin.hello"}]}

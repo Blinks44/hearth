@@ -1,0 +1,1 @@
+{"version":3,"elements":{"hello":{"active":true,"priority":5,"storePaths":["/nix/store/00000000000000000000000000000000-hello-2.12.1"],"url":"github:NixOS/nixpkgs/revision","originalUrl":"flake:nixpkgs","attrPath":"legacyPackages.x86_64-linux.hello","outputs":null}}}

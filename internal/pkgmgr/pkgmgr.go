@@ -68,6 +68,8 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 					}
 					m.Settings = append(m.Settings, key+"="+value)
 				}
+			} else if s.id == "nix" && nixProfiles(&m, term, probe) {
+				// Modern profiles are local JSON, not nix-env environments.
 			} else if len(s.installed) == 0 {
 				m.Unlisted = true
 			} else {
