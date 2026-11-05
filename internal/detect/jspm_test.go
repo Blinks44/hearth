@@ -68,7 +68,7 @@ func TestJSNpmManifest(t *testing.T) {
 	writeFile(t, filepath.Join(modules, "typescript", "package.json"), `{"name":"typescript","version":"5.7.2","bin":{"tsc":"bin/tsc"}}`)
 	writeFile(t, filepath.Join(bin, "node_modules", "corepack", "package.json"), `{"name":"corepack","version":"0.30.0"}`)
 	r := &run.Fake{}
-	st, err := Npm(t.Context(), r, sysenv.Env{"PATH=" + bin, "PATHEXT=.CMD;.EXE", "COREPACK_HOME=" + filepath.Join(dir, "cache"), "HOME=" + dir, "USERPROFILE=" + dir}, sysenv.Env{"PATH="})
+	st, err := Npm(t.Context(), r, sysenv.Env{"PATH=" + bin, "PATHEXT=.CMD;.EXE", "COREPACK_HOME=" + filepath.Join(dir, "cache"), "HOME=" + dir, "USERPROFILE=" + dir, "N_PREFIX=" + dir}, sysenv.Env{"PATH="})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func TestCorepackFromNpm(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeFile(t, filepath.Join(prefix, "node_modules", "corepack", "package.json"), `{"name": "corepack", "version": "0.36.0"}`)
-	env := sysenv.Env{"PATH=" + prefix, "PATHEXT=.CMD;.EXE", "HOME=" + dir, "USERPROFILE=" + dir}
+	env := sysenv.Env{"PATH=" + prefix, "PATHEXT=.CMD;.EXE", "HOME=" + dir, "USERPROFILE=" + dir, "N_PREFIX=" + dir}
 	st, err := jsManager(t.Context(), &run.Fake{}, "corepack", env, sysenv.Env{"PATH="})
 	if err != nil {
 		t.Fatal(err)

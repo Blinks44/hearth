@@ -4,6 +4,7 @@ package detect
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -11,6 +12,14 @@ import (
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
+
+// copiesIn are the copies in dir: the others are the machine's, as a
+// runner's Homebrew Ruby, which the detector finds in its fixed places.
+func copiesIn(copies []inventory.Installation, dir string) []inventory.Installation {
+	return slices.DeleteFunc(slices.Clone(copies), func(in inventory.Installation) bool {
+		return !strings.HasPrefix(in.Path, dir)
+	})
+}
 
 func TestRubyDiscovery(t *testing.T) {
 	dir := root(t)
@@ -31,7 +40,7 @@ func TestRubyDiscovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(st.Installations) != 5 {
+	if len(copiesIn(st.Installations, dir)) != 5 {
 		t.Fatalf("installations: %+v", st.Installations)
 	}
 	active := inventory.TerminalCopy(st.Installations)
@@ -57,7 +66,7 @@ func TestRubyProbe(t *testing.T) {
 	r.Stdout("ruby 3.3.6 (2024-11-05 revision abc) [arm64-darwin]\n", path, "--version")
 	env := sysenv.Env{"HOME=" + dir, "PATH=" + filepath.Dir(path), "RUBYOPT=-rmalicious", "RUBYLIB=/unsafe"}
 	st, err := Ruby(t.Context(), r, env, nil)
-	if err != nil || len(st.Installations) != 1 || st.Installations[0].Version != "3.3.6" {
+	if copies := copiesIn(st.Installations, dir); err != nil || len(copies) != 1 || copies[0].Version != "3.3.6" {
 		t.Fatalf("%+v %v", st, err)
 	}
 	for _, call := range r.Calls() {

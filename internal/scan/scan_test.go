@@ -57,6 +57,10 @@ func TestRunListsPath(t *testing.T) {
 	gui := sysenv.Env{"PATH=" + dir}
 	s := Run(context.Background(), &run.Fake{}, term, gui, nil)
 	want := []inventory.PathEntry{{Dir: dir}, {Dir: gone, Missing: true}, {Dir: "."}}
+	// Where entries come from depends on the machine: a runner's registry has ".".
+	for i := range s.TerminalPath {
+		s.TerminalPath[i].Sources = nil
+	}
 	if !reflect.DeepEqual(s.TerminalPath, want) {
 		t.Errorf("terminal PATH %+v, want %+v", s.TerminalPath, want)
 	}

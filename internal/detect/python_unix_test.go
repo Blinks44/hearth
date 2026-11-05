@@ -5,6 +5,7 @@ package detect
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -70,7 +71,9 @@ func TestPython(t *testing.T) {
 			t.Errorf("copy %d = %+v, want %+v", i, gotCopies[i], want[i])
 		}
 	}
-	if calls := r.Calls(); len(calls) != 1 {
+	// The machine's own Pythons, in their fixed places, are asked too.
+	calls := slices.DeleteFunc(r.Calls(), func(c run.Cmd) bool { return !strings.HasPrefix(c.Args[0], root) })
+	if len(calls) != 1 {
 		t.Errorf("ran %v; versions are in the paths, and only uv is asked its own", calls)
 	}
 	wantTools := []inventory.Package{
