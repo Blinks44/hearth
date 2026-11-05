@@ -16,6 +16,8 @@ import (
 func issueText(is issues.Issue, home string) (title, explain string) {
 	tool := toolTitle(is.Tool)
 	switch is.Kind {
+	case issues.DockerUnavailable:
+		return locales.DockerUnavailableTitle(), locales.DockerUnavailableExplain()
 	case issues.Duplicate:
 		first := is.Copies[0]
 		var others []string
@@ -119,6 +121,8 @@ func issuePage(is issues.Issue) string {
 		return mcpPage
 	case is.Project != "":
 		return projectPath(is.Project)
+	case is.Tool == "docker":
+		return "/tools/docker"
 	case jsTool(is.Tool):
 		return "/tools/jspm"
 	case is.Tool != "":

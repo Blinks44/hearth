@@ -4947,3 +4947,335 @@ func DotnetPreview() string { return In(i18n.Locale()).DotnetPreview() }
 func (msgs Messages) DotnetPreview() string {
 	return Catalog.Format(msgs.locale, "DotnetPreview", nil)
 }
+
+// DockerSubtitle says "CLI, contexts and container engines"
+// in the language the app shows.
+func DockerSubtitle() string { return In(i18n.Locale()).DockerSubtitle() }
+
+// DockerSubtitle says "CLI, contexts and container engines"
+// in the language of msgs.
+func (msgs Messages) DockerSubtitle() string {
+	return Catalog.Format(msgs.locale, "dockerSubtitle", nil)
+}
+
+// DockerContexts says "Contexts"
+// in the language the app shows.
+func DockerContexts() string { return In(i18n.Locale()).DockerContexts() }
+
+// DockerContexts says "Contexts"
+// in the language of msgs.
+func (msgs Messages) DockerContexts() string {
+	return Catalog.Format(msgs.locale, "dockerContexts", nil)
+}
+
+// DockerContext says "Context"
+// in the language the app shows.
+func DockerContext() string { return In(i18n.Locale()).DockerContext() }
+
+// DockerContext says "Context"
+// in the language of msgs.
+func (msgs Messages) DockerContext() string {
+	return Catalog.Format(msgs.locale, "dockerContext", nil)
+}
+
+// DockerEngines says "Engines"
+// in the language the app shows.
+func DockerEngines() string { return In(i18n.Locale()).DockerEngines() }
+
+// DockerEngines says "Engines"
+// in the language of msgs.
+func (msgs Messages) DockerEngines() string {
+	return Catalog.Format(msgs.locale, "dockerEngines", nil)
+}
+
+// DockerEngine says "Engine"
+// in the language the app shows.
+func DockerEngine() string { return In(i18n.Locale()).DockerEngine() }
+
+// DockerEngine says "Engine"
+// in the language of msgs.
+func (msgs Messages) DockerEngine() string {
+	return Catalog.Format(msgs.locale, "dockerEngine", nil)
+}
+
+// DockerEndpoint says "Address & status"
+// in the language the app shows.
+func DockerEndpoint() string { return In(i18n.Locale()).DockerEndpoint() }
+
+// DockerEndpoint says "Address & status"
+// in the language of msgs.
+func (msgs Messages) DockerEndpoint() string {
+	return Catalog.Format(msgs.locale, "dockerEndpoint", nil)
+}
+
+// DockerAvailable says "available"
+// in the language the app shows.
+func DockerAvailable() string { return In(i18n.Locale()).DockerAvailable() }
+
+// DockerAvailable says "available"
+// in the language of msgs.
+func (msgs Messages) DockerAvailable() string {
+	return Catalog.Format(msgs.locale, "dockerAvailable", nil)
+}
+
+// DockerUnavailable says "unavailable"
+// in the language the app shows.
+func DockerUnavailable() string { return In(i18n.Locale()).DockerUnavailable() }
+
+// DockerUnavailable says "unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerUnavailable", nil)
+}
+
+// DockerUnchecked says "not checked"
+// in the language the app shows.
+func DockerUnchecked() string { return In(i18n.Locale()).DockerUnchecked() }
+
+// DockerUnchecked says "not checked"
+// in the language of msgs.
+func (msgs Messages) DockerUnchecked() string {
+	return Catalog.Format(msgs.locale, "dockerUnchecked", nil)
+}
+
+// DockerUnavailableTitle says "Docker engine is unavailable"
+// in the language the app shows.
+func DockerUnavailableTitle() string { return In(i18n.Locale()).DockerUnavailableTitle() }
+
+// DockerUnavailableTitle says "Docker engine is unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerUnavailableTitle() string {
+	return Catalog.Format(msgs.locale, "dockerUnavailableTitle", nil)
+}
+
+// DockerUnavailableExplain says "The selected engine did not answer: docker ps and docker compose up will not work. The engine may be stopped, or the …"
+// in the language the app shows.
+func DockerUnavailableExplain() string { return In(i18n.Locale()).DockerUnavailableExplain() }
+
+// DockerUnavailableExplain says "The selected engine did not answer: docker ps and docker compose up will not work. The engine may be stopped, or the …"
+// in the language of msgs.
+func (msgs Messages) DockerUnavailableExplain() string {
+	return Catalog.Format(msgs.locale, "dockerUnavailableExplain", nil)
+}
+
+// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts sta…"
+// in the language the app shows.
+func DockerContextNote() string { return In(i18n.Locale()).DockerContextNote() }
+
+// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts sta…"
+// in the language of msgs.
+func (msgs Messages) DockerContextNote() string {
+	return Catalog.Format(msgs.locale, "dockerContextNote", nil)
+}
+
+// DockerRemoteNote says "Remote endpoint: Hearth does not connect during a scan."
+// in the language the app shows.
+func DockerRemoteNote() string { return In(i18n.Locale()).DockerRemoteNote() }
+
+// DockerRemoteNote says "Remote endpoint: Hearth does not connect during a scan."
+// in the language of msgs.
+func (msgs Messages) DockerRemoteNote() string {
+	return Catalog.Format(msgs.locale, "dockerRemoteNote", nil)
+}
+
+// DockerOverrideNote says "The {variable} environment variable overrides the selected context."
+// in the language the app shows.
+func DockerOverrideNote(variable string) string {
+	return In(i18n.Locale()).DockerOverrideNote(variable)
+}
+
+// DockerOverrideNote says "The {variable} environment variable overrides the selected context."
+// in the language of msgs.
+func (msgs Messages) DockerOverrideNote(variable string) string {
+	return Catalog.Format(msgs.locale, "dockerOverrideNote", map[string]any{"variable": variable})
+}
+
+// DockerConfigError says "Some Docker configuration files could not be read. Context information may be incomplete."
+// in the language the app shows.
+func DockerConfigError() string { return In(i18n.Locale()).DockerConfigError() }
+
+// DockerConfigError says "Some Docker configuration files could not be read. Context information may be incomplete."
+// in the language of msgs.
+func (msgs Messages) DockerConfigError() string {
+	return Catalog.Format(msgs.locale, "dockerConfigError", nil)
+}
+
+// DockerPlugins says "CLI plugins"
+// in the language the app shows.
+func DockerPlugins() string { return In(i18n.Locale()).DockerPlugins() }
+
+// DockerPlugins says "CLI plugins"
+// in the language of msgs.
+func (msgs Messages) DockerPlugins() string {
+	return Catalog.Format(msgs.locale, "dockerPlugins", nil)
+}
+
+// DockerNoPlugins says "No compose or buildx plugin found in the user CLI plugins folder."
+// in the language the app shows.
+func DockerNoPlugins() string { return In(i18n.Locale()).DockerNoPlugins() }
+
+// DockerNoPlugins says "No compose or buildx plugin found in the user CLI plugins folder."
+// in the language of msgs.
+func (msgs Messages) DockerNoPlugins() string {
+	return Catalog.Format(msgs.locale, "dockerNoPlugins", nil)
+}
+
+// DockerNoCli says "Docker CLI is not on the terminal PATH. Engine availability has not been checked."
+// in the language the app shows.
+func DockerNoCli() string { return In(i18n.Locale()).DockerNoCli() }
+
+// DockerNoCli says "Docker CLI is not on the terminal PATH. Engine availability has not been checked."
+// in the language of msgs.
+func (msgs Messages) DockerNoCli() string {
+	return Catalog.Format(msgs.locale, "dockerNoCli", nil)
+}
+
+// DockerNoMatches says "No matching contexts"
+// in the language the app shows.
+func DockerNoMatches() string { return In(i18n.Locale()).DockerNoMatches() }
+
+// DockerNoMatches says "No matching contexts"
+// in the language of msgs.
+func (msgs Messages) DockerNoMatches() string {
+	return Catalog.Format(msgs.locale, "dockerNoMatches", nil)
+}
+
+// DockerNoProjects says "No added projects require Docker."
+// in the language the app shows.
+func DockerNoProjects() string { return In(i18n.Locale()).DockerNoProjects() }
+
+// DockerNoProjects says "No added projects require Docker."
+// in the language of msgs.
+func (msgs Messages) DockerNoProjects() string {
+	return Catalog.Format(msgs.locale, "dockerNoProjects", nil)
+}
+
+// DockerEngineOptions says "Container engines"
+// in the language the app shows.
+func DockerEngineOptions() string { return In(i18n.Locale()).DockerEngineOptions() }
+
+// DockerEngineOptions says "Container engines"
+// in the language of msgs.
+func (msgs Messages) DockerEngineOptions() string {
+	return Catalog.Format(msgs.locale, "dockerEngineOptions", nil)
+}
+
+// DockerInstalled says "installed"
+// in the language the app shows.
+func DockerInstalled() string { return In(i18n.Locale()).DockerInstalled() }
+
+// DockerInstalled says "installed"
+// in the language of msgs.
+func (msgs Messages) DockerInstalled() string {
+	return Catalog.Format(msgs.locale, "dockerInstalled", nil)
+}
+
+// DockerNotInstalled says "not found"
+// in the language the app shows.
+func DockerNotInstalled() string { return In(i18n.Locale()).DockerNotInstalled() }
+
+// DockerNotInstalled says "not found"
+// in the language of msgs.
+func (msgs Messages) DockerNotInstalled() string {
+	return Catalog.Format(msgs.locale, "dockerNotInstalled", nil)
+}
+
+// DockerOrbTerms says "Personal: free · commercial: paid"
+// in the language the app shows.
+func DockerOrbTerms() string { return In(i18n.Locale()).DockerOrbTerms() }
+
+// DockerOrbTerms says "Personal: free · commercial: paid"
+// in the language of msgs.
+func (msgs Messages) DockerOrbTerms() string {
+	return Catalog.Format(msgs.locale, "dockerOrbTerms", nil)
+}
+
+// DockerDesktopTerms says "Business use: check license"
+// in the language the app shows.
+func DockerDesktopTerms() string { return In(i18n.Locale()).DockerDesktopTerms() }
+
+// DockerDesktopTerms says "Business use: check license"
+// in the language of msgs.
+func (msgs Messages) DockerDesktopTerms() string {
+	return Catalog.Format(msgs.locale, "dockerDesktopTerms", nil)
+}
+
+// DockerOpenSource says "Open source"
+// in the language the app shows.
+func DockerOpenSource() string { return In(i18n.Locale()).DockerOpenSource() }
+
+// DockerOpenSource says "Open source"
+// in the language of msgs.
+func (msgs Messages) DockerOpenSource() string {
+	return Catalog.Format(msgs.locale, "dockerOpenSource", nil)
+}
+
+// DockerEngineTerms says "Open source; Linux daemon"
+// in the language the app shows.
+func DockerEngineTerms() string { return In(i18n.Locale()).DockerEngineTerms() }
+
+// DockerEngineTerms says "Open source; Linux daemon"
+// in the language of msgs.
+func (msgs Messages) DockerEngineTerms() string {
+	return Catalog.Format(msgs.locale, "dockerEngineTerms", nil)
+}
+
+// DockerTerms says "Usage terms"
+// in the language the app shows.
+func DockerTerms() string { return In(i18n.Locale()).DockerTerms() }
+
+// DockerTerms says "Usage terms"
+// in the language of msgs.
+func (msgs Messages) DockerTerms() string {
+	return Catalog.Format(msgs.locale, "dockerTerms", nil)
+}
+
+// DockerPlatformMac says "for macOS"
+// in the language the app shows.
+func DockerPlatformMac() string { return In(i18n.Locale()).DockerPlatformMac() }
+
+// DockerPlatformMac says "for macOS"
+// in the language of msgs.
+func (msgs Messages) DockerPlatformMac() string {
+	return Catalog.Format(msgs.locale, "dockerPlatformMac", nil)
+}
+
+// DockerPlatformWindows says "for Windows"
+// in the language the app shows.
+func DockerPlatformWindows() string { return In(i18n.Locale()).DockerPlatformWindows() }
+
+// DockerPlatformWindows says "for Windows"
+// in the language of msgs.
+func (msgs Messages) DockerPlatformWindows() string {
+	return Catalog.Format(msgs.locale, "dockerPlatformWindows", nil)
+}
+
+// DockerPlatformLinux says "for Linux"
+// in the language the app shows.
+func DockerPlatformLinux() string { return In(i18n.Locale()).DockerPlatformLinux() }
+
+// DockerPlatformLinux says "for Linux"
+// in the language of msgs.
+func (msgs Messages) DockerPlatformLinux() string {
+	return Catalog.Format(msgs.locale, "dockerPlatformLinux", nil)
+}
+
+// DockerActive says "active"
+// in the language the app shows.
+func DockerActive() string { return In(i18n.Locale()).DockerActive() }
+
+// DockerActive says "active"
+// in the language of msgs.
+func (msgs Messages) DockerActive() string {
+	return Catalog.Format(msgs.locale, "dockerActive", nil)
+}
+
+// DockerFilter says "Filter contexts"
+// in the language the app shows.
+func DockerFilter() string { return In(i18n.Locale()).DockerFilter() }
+
+// DockerFilter says "Filter contexts"
+// in the language of msgs.
+func (msgs Messages) DockerFilter() string {
+	return Catalog.Format(msgs.locale, "dockerFilter", nil)
+}

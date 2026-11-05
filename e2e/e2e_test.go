@@ -74,6 +74,7 @@ func TestSmoke(t *testing.T) {
 	for _, step := range []struct{ key, text string }{
 		{"/projects", "Code folders Hearth checks"},
 		{"/tools/node", "v" + fakeVersion},
+		{"/tools/docker", "CLI, contexts and container engines"},
 		{"/system/path", "Coming soon"},
 		{"/overview", "Needs attention"},
 	} {

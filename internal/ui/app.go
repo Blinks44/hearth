@@ -83,6 +83,8 @@ type App struct {
 	nodeTab       int     // the tab of the Node.js page shown
 	jspmTab       int     // the tab of the package managers page shown
 	jspmFilter    string  // the package managers table's filter
+	dockerTab     int     // the tab of the Docker page shown
+	dockerFilter  string  // the Docker contexts table's filter
 	bunTab        int     // the tab of the Bun page shown
 	goTab         int     // the tab of the Go page shown
 	phpTab        int     // the tab of the PHP page shown
@@ -145,6 +147,8 @@ func (a *App) View(c *ui.Context) {
 						a.node(c, p)
 					case "/tools/jspm":
 						a.jspm(c, p)
+					case "/tools/docker":
+						a.docker(c, p)
 					case "/tools/bun":
 						a.bun(c, p)
 					case "/tools/go":
@@ -300,6 +304,12 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = len(a.allSkills())
 	case mcpPage:
 		n = len(a.mcpItems())
+	case "/tools/docker":
+		for _, is := range a.issues(c) {
+			if is.Tool == "docker" {
+				return func() { ui.Box(c).Size(6, 6).Radius(3).Background(c.Theme().Warning) }
+			}
+		}
 	case pathPage:
 		return a.issueCount(c)
 	}

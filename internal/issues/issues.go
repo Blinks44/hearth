@@ -17,6 +17,8 @@ import (
 type Kind string
 
 const (
+	// DockerUnavailable is an unsuccessful probe of the selected local engine.
+	DockerUnavailable Kind = "docker-unavailable"
 	// Duplicate is a tool with several copies on the terminal's PATH: the
 	// first runs, the others never do.
 	Duplicate Kind = "duplicate"
@@ -105,6 +107,13 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 	for _, ts := range s.Tools {
 		if ts.Err != "" {
 			continue
+		}
+		if ts.Docker != nil {
+			for _, c := range ts.Docker.Contexts {
+				if c.Name == ts.Docker.Selected && c.Status == "unavailable" {
+					out = append(out, Issue{Kind: DockerUnavailable, Severity: Warning, Tool: "docker"})
+				}
+			}
 		}
 		out = append(out, duplicate(ts)...)
 		out = append(out, stubs(ts)...)

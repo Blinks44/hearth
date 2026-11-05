@@ -40,6 +40,7 @@ var Detectors = []Detector{
 	{"java", detect.Java},
 	{"ruby", detect.Ruby},
 	{"dotnet", detect.Dotnet},
+	{"docker", detect.Docker},
 }
 
 // parallel is how many detectors run at once: each may start commands.

@@ -155,6 +155,8 @@ type ToolState struct {
 	// Vars are the tool's settings as it reads them, as Go's GOPATH and
 	// GOTOOLCHAIN.
 	Vars map[string]string `json:",omitempty"`
+	// Docker is the CLI's contexts and the engines found, for "docker" only.
+	Docker *DockerState `json:",omitempty"`
 	// Err says why the tool could not be checked; empty when it was.
 	Err string `json:",omitempty"`
 }

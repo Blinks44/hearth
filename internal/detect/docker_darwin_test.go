@@ -1,0 +1,24 @@
+package detect
+
+import (
+	"path/filepath"
+	"testing"
+
+	"github.com/Blinks44/hearth/internal/sysenv"
+)
+
+func TestDockerLocationsDarwin(t *testing.T) {
+	home := root(t)
+	dir := filepath.Join(home, "Applications", "Docker.app")
+	exe := filepath.Join(dir, "Contents", "Resources", "bin", "docker")
+	fakeExe(t, exe)
+	orb := filepath.Join(home, "Applications", "OrbStack.app", "Contents", "Info.plist")
+	writeFile(t, orb, "")
+	engines, paths := dockerLocations(sysenv.Env{"PATH="}, home)
+	if engines[0].Path != filepath.Dir(filepath.Dir(orb)) || engines[2].Path != dir {
+		t.Fatalf("%+v", engines)
+	}
+	if paths[len(paths)-1] != exe {
+		t.Fatalf("%v", paths)
+	}
+}
