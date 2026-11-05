@@ -11,6 +11,7 @@ import (
 func TestIssueText(t *testing.T) {
 	brew := inventory.Installation{Version: "23.6.0", Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}
 	fnm := inventory.Installation{Version: "22.12.0", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
+	miseShim := inventory.Installation{Version: "24.22.2", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Shim: true}}
 	check := projects.Check{Tool: "node", Want: "18", File: ".nvmrc"}
 	pdf := inventory.Skill{Name: "pdf", Dir: home + "/.claude/skills/pdf"}
 	sharedPDF := inventory.Skill{Name: "pdf", Dir: home + "/.agents/skills/pdf"}
@@ -22,6 +23,10 @@ func TestIssueText(t *testing.T) {
 		{issues.Issue{Kind: issues.Duplicate, Tool: "node", Copies: []inventory.Installation{brew, fnm}},
 			"Node: 2 copies on PATH",
 			"The terminal runs v23.6.0 (brew). The other copies on PATH (v22.12.0 (fnm)) never run, and it is easy to update the wrong one.",
+			"/tools/node"},
+		{issues.Issue{Kind: issues.Duplicate, Tool: "node", Copies: []inventory.Installation{brew, miseShim}},
+			"Node: 2 copies on PATH",
+			"The terminal runs v23.6.0 (brew). The other copies on PATH (v24.22.2 (mise shim)) never run, and it is easy to update the wrong one.",
 			"/tools/node"},
 		{issues.Issue{Kind: issues.GUIDiffers, Tool: "node", Copies: []inventory.Installation{fnm, brew}},
 			"Node differs outside the terminal",

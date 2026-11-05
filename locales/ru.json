@@ -141,6 +141,7 @@
   "backToProjects": "К проектам",
   "issueDuplicateTitle": "{tool}: {count, plural, one {# копия} few {# копии} many {# копий} other {# копии}} в PATH",
   "issueDuplicateExplain": "Терминал запускает {first} ({source}). Остальные копии в PATH ({others}) не запускаются никогда, и легко обновить не ту.",
+  "shimOf": "шим {manager}",
   "issueGuiTitle": "{tool} вне терминала другой",
   "issueProjectMissingTitle": "{project}: нужен {tool} {want}",
   "issueProjectMissingExplain": "{file} просит {tool} {want}, а подходящей установленной копии нет. Пока её не установить, проект может не собраться или не запуститься.",

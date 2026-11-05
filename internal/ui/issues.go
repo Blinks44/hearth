@@ -24,10 +24,10 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		first := is.Copies[0]
 		var others []string
 		for _, in := range is.Copies[1:] {
-			others = append(others, copyVersion(in)+" ("+sourceName(in.Source)+")")
+			others = append(others, copyVersion(in)+" ("+copySource(in)+")")
 		}
 		return locales.IssueDuplicateTitle(tool, len(is.Copies)),
-			locales.IssueDuplicateExplain(copyVersion(first), sourceName(first.Source), strings.Join(others, ", "))
+			locales.IssueDuplicateExplain(copyVersion(first), copySource(first), strings.Join(others, ", "))
 	case issues.GUIDiffers:
 		if len(is.Copies) < 2 {
 			return locales.IssueGuiMissingTitle(tool), locales.GuiNotFound(is.Tool)
@@ -112,6 +112,14 @@ const (
 	skillsPage = "/ai/skills"
 	mcpPage    = "/ai/mcp"
 )
+
+// copySource is sourceName, a manager's shim named as one.
+func copySource(in inventory.Installation) string {
+	if in.Source.Shim && in.Source.Manager != "" {
+		return locales.ShimOf(in.Source.Manager)
+	}
+	return sourceName(in.Source)
+}
 
 // issuePage is the path of the page an issue lives on: the skills', its
 // project's, its tool's, or the PATH's.

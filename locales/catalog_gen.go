@@ -2044,6 +2044,22 @@ func (msgs Messages) IssueDuplicateExplain(first string, source string, others s
 	return Catalog.Format(msgs.locale, "issueDuplicateExplain", map[string]any{"first": first, "source": source, "others": others})
 }
 
+// ShimOf says "{manager} shim"
+// in the language the app shows.
+//
+// A version manager's shim as the source of a copy on PATH, in an issue
+// explanation.
+func ShimOf(manager string) string { return In(i18n.Locale()).ShimOf(manager) }
+
+// ShimOf says "{manager} shim"
+// in the language of msgs.
+//
+// A version manager's shim as the source of a copy on PATH, in an issue
+// explanation.
+func (msgs Messages) ShimOf(manager string) string {
+	return Catalog.Format(msgs.locale, "shimOf", map[string]any{"manager": manager})
+}
+
 // IssueGuiTitle says "{tool} differs outside the terminal"
 // in the language the app shows.
 //

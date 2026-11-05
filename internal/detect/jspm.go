@@ -48,7 +48,10 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 	for _, pattern := range nodeGlobs(sources.ManagerDirs(term)) {
 		matches, _ := filepath.Glob(pattern)
 		for _, p := range matches {
-			nodes.add(p)
+			// As Node does: a manager's alias directory is the version's.
+			if real, err := filepath.EvalSymlinks(p); err == nil {
+				nodes.add(real)
+			}
 		}
 	}
 	for _, node := range nodes.ins {

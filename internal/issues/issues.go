@@ -202,6 +202,18 @@ func duplicate(ts inventory.ToolState) []Issue {
 	if len(on) < 2 {
 		return nil
 	}
+	// Outside a project a shim runs the version its manager picks by
+	// default.
+	for i, in := range on {
+		if !in.Source.Shim {
+			continue
+		}
+		if d := slices.IndexFunc(ts.Installations, func(o inventory.Installation) bool {
+			return o.Default && !o.Source.Shim && o.Source.Manager == in.Source.Manager
+		}); d >= 0 {
+			on[i].Version = ts.Installations[d].Version
+		}
+	}
 	slices.SortFunc(on, func(a, b inventory.Installation) int { return int(a.OnPath - b.OnPath) })
 	return []Issue{{Kind: Duplicate, Severity: Warning, Tool: ts.Tool, Copies: on}}
 }

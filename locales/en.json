@@ -833,6 +833,16 @@
       }
     }
   },
+  "shimOf": "{manager} shim",
+  "@shimOf": {
+    "description": "A version manager's shim as the source of a copy on PATH, in an issue explanation.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "mise"
+      }
+    }
+  },
   "issueGuiTitle": "{tool} differs outside the terminal",
   "@issueGuiTitle": {
     "description": "Issue title: apps started from the Dock or a desktop menu run another version, or none.",

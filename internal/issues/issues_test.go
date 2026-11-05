@@ -32,6 +32,26 @@ func fnm(v string, term, gui inventory.PathRank) inventory.Installation {
 		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
 }
 
+func installer(v string, term inventory.PathRank) inventory.Installation {
+	return inventory.Installation{Tool: "node", Version: v, Path: `C:\Program Files\nodejs\node.exe`, OnPath: term, InGUI: term,
+		Source: inventory.Source{Kind: inventory.KindInstaller}}
+}
+
+func miseShim(term inventory.PathRank) inventory.Installation {
+	return inventory.Installation{Tool: "node", Path: "/mise/shims/node", OnPath: term, InGUI: term,
+		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Shim: true}}
+}
+
+func mise(v string, def bool) inventory.Installation {
+	return inventory.Installation{Tool: "node", Version: v, Path: "/mise/installs/node/" + v + "/bin/node", Default: def,
+		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"}}
+}
+
+func withVersion(in inventory.Installation, v string) inventory.Installation {
+	in.Version = v
+	return in
+}
+
 func nodeSnap(ins ...inventory.Installation) *inventory.Snapshot {
 	return &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: ins}}}
 }
@@ -59,6 +79,10 @@ func TestFind(t *testing.T) {
 		{name: "duplicate on PATH", snap: nodeSnap(fnm("22.12.0", 2, 0), brew("23.6.0", 1, 1)),
 			want: []Issue{{Kind: Duplicate, Severity: Warning, Tool: "node",
 				Copies: []inventory.Installation{brew("23.6.0", 1, 1), fnm("22.12.0", 2, 0)}}}},
+		{name: "manager's shim behind another copy runs its default",
+			snap: nodeSnap(installer("26.13.0", 1), miseShim(2), mise("24.22.2", true)),
+			want: []Issue{{Kind: Duplicate, Severity: Warning, Tool: "node",
+				Copies: []inventory.Installation{installer("26.13.0", 1), withVersion(miseShim(2), "24.22.2")}}}},
 		{name: "other copy only in a manager's directory", snap: nodeSnap(brew("22.12.0", 1, 1), fnm("20.18.1", 0, 0))},
 
 		{name: "apps run another version", snap: nodeSnap(fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)),
