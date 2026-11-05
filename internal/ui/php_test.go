@@ -47,7 +47,7 @@ func TestPHPPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if tt.HasText("Configuration · 8.4.3") || !tt.HasText("which -a php") {
+	if tt.HasText("Configuration · 8.4.3") || !tt.HasText(whichAllCommand+" php") {
 		t.Fatalf("PATH tab texts %q", tt.Texts())
 	}
 }

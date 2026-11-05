@@ -72,10 +72,10 @@ func TestPythonPage(t *testing.T) {
 	screenshot(t, tt, "python")
 	y := func(n int) string { return "supported until " + tt.Now().AddDate(n, 0, 0).Format("2006") }
 	for _, s := range []string{
-		"Versions managed by uv · also from brew, system", "4 copies", "brew · uv · system", "python3 → brew",
+		"Versions managed by uv · also from brew, system", "4 copies", "brew · uv · system", pythonCommand + " → brew",
 		"3.13.1", "3.12.8", "3.11.11", "3.9.6", y(3), y(2), "support ended", "needed by the system", "in PATH",
 		"The system's Python is needed by the OS itself: Hearth does not remove or update it.",
-		"How the terminal finds python3", "which -a python3",
+		"How the terminal finds " + pythonCommand, whichAllCommand + " " + pythonCommand,
 		"Available to install", "3.14.0", "new version", "3.13.2", "update for 3.13.1", "recommended", "3.12.9", "update for 3.12.8",
 		"Version manager · uv", "0.5.21", "Downloads Python itself", "Prefers its own Pythons",
 		"Tools", "uv tool · pipx", "ruff", "commands: http, https",

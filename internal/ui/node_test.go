@@ -17,6 +17,10 @@ import (
 
 const home = "/Users/dev"
 
+// dirText is how a copy's folder shows: Windows turns the slashes of
+// these Unix paths when it takes the folder.
+func dirText(path string) string { return tilde(filepath.Dir(path), home) }
+
 // nodeSnapshot is fnm with two versions, the default first in PATH, and
 // a Homebrew copy after it.
 func nodeSnapshot() *inventory.Snapshot {
@@ -53,7 +57,7 @@ func TestNodeVersions(t *testing.T) {
 	a.Snapshot = nodeSnapshot()
 	tt := openNode(t, a)
 	for _, s := range []string{
-		"Versions managed by fnm · also from brew", "3 versions", "fnm · brew", "which node → fnm",
+		"Versions managed by fnm · also from brew", "3 versions", "fnm · brew", whichCommand + " node → fnm",
 		"v22.12.0", "v23.6.0", "v20.18.1", "LTS", "Current",
 		"~/.local/share/fnm/node-versions/v22.12.0", "/opt/homebrew/bin/node",
 		"default", "in PATH", "duplicate in PATH",
@@ -244,7 +248,7 @@ func TestNodePath(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = nodeSnapshot()
 	tt := openNode(t, a)
-	for _, s := range []string{"How the terminal finds node", "which -a node",
+	for _, s := range []string{"How the terminal finds node", whichAllCommand + " node",
 		"~/.local/state/fnm_multishells/48121/bin/node", "used", "shadowed",
 		"Apps started outside the terminal find brew first and run v23.6.0 instead of v22.12.0."} {
 		if !tt.HasText(s) {
@@ -259,7 +263,7 @@ func TestNodePath(t *testing.T) {
 	if err := tt.Click("PATH"); err != nil {
 		t.Fatal(err)
 	}
-	if !tt.HasText("which -a node") || tt.HasText("v20.18.1") {
+	if !tt.HasText(whichAllCommand+" node") || tt.HasText("v20.18.1") {
 		t.Errorf("PATH tab, texts %q", tt.Texts())
 	}
 	used, _ := tt.Find("~/.local/state/fnm_multishells/48121/bin/node")

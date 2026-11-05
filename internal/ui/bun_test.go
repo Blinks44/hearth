@@ -48,12 +48,12 @@ func TestBunPage(t *testing.T) {
 	a.BunLatest = &versions.Latest{Version: "1.2.8"}
 	tt := openBun(t, a)
 	for _, s := range []string{
-		"Installed by the official script in ~/.bun · also from npm", "2 copies", "script · npm", "which bun → ~/.bun",
+		"Installed by the official script in ~/.bun · also from npm", "2 copies", "script · npm", whichCommand + " bun → ~/.bun",
 		"v1.2.5", "v1.1.30", "stable", "in PATH", "duplicate in PATH",
 		"Bun updates itself with bun upgrade. The copy from npm lives inside a Node.js version: it is removed with npm -g and goes away with that Node version.",
-		"How the terminal finds bun", "which -a bun", "~/.bun/bin/bun", "used", "shadowed",
+		"How the terminal finds bun", whichAllCommand + " bun", "~/.bun/bin/bun", "used", "shadowed",
 		"Apps started outside the terminal do not find bun, MCP servers in desktop clients for one. VS Code and JetBrains IDEs usually take the terminal's PATH themselves.",
-		"The copy from npm (v1.1.30) is not used: ~/.bun/bin comes first in PATH.",
+		"The copy from npm (v1.1.30) is not used: " + dirText(home+"/.bun/bin/bun") + " comes first in PATH.",
 		"Available", "v1.2.8", "stable · update for v1.2.5", "recommended", "canary",
 		"Install · script", "bun.sh/install", "Install folder", "BUN_INSTALL", "~/.bun",
 		"Added to PATH", "a line in ~/.zshrc", "~/.bun/bin",
@@ -79,7 +79,7 @@ func TestBunBrew(t *testing.T) {
 	}}}}
 	a.BunLatest = &versions.Latest{Version: "1.2.8"}
 	tt := openBun(t, a)
-	for _, s := range []string{"Installed from brew", "1 copy", "which bun → brew", "stable · installed", "No global packages"} {
+	for _, s := range []string{"Installed from brew", "1 copy", whichCommand + " bun → brew", "stable · installed", "No global packages"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q; texts %q", s, tt.Texts())
 		}

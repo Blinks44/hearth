@@ -134,7 +134,7 @@ func TestSkillsPage(t *testing.T) {
 	if err := tt.Click("Open in editor"); err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{home + "/dev/app/.agents/skills/deploy/SKILL.md"}; !reflect.DeepEqual(shell.opened, want) {
+	if want := []string{filepath.Join(home, "dev/app/.agents/skills/deploy/SKILL.md")}; !reflect.DeepEqual(shell.opened, want) {
 		t.Errorf("opened %q, want %q", shell.opened, want)
 	}
 

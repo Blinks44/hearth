@@ -113,3 +113,20 @@ func sourceFiles(env Env, files []string) map[string][]inventory.PathSource {
 	}
 	return out
 }
+
+func expandPath(value string, env Env) string {
+	value = strings.Trim(value, "\"'")
+	if value == "~" {
+		return env.Get("HOME")
+	}
+	if strings.HasPrefix(value, "~/") {
+		value = env.Get("HOME") + value[1:]
+	}
+	return os.Expand(value, func(key string) string {
+		v := env.Get(key)
+		if v == "" {
+			return "$" + key
+		}
+		return v
+	})
+}

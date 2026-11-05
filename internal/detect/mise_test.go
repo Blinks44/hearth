@@ -14,14 +14,14 @@ func TestMiseManager(t *testing.T) {
 	root := root(t)
 	home := filepath.Join(root, "home")
 	bin := filepath.Join(root, "bin")
-	mise := filepath.Join(bin, "mise")
+	mise := filepath.Join(bin, "mise"+dockerSuffix)
 	writeFile(t, mise, "")
 	if err := os.Chmod(mise, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	shims := filepath.Join(home, ".local", "share", "mise", "shims")
 	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "LOCALAPPDATA=" + filepath.Join(home, ".local", "share"),
-		"PATH=" + shims + string(os.PathListSeparator) + bin}
+		"PATH=" + shims + string(os.PathListSeparator) + bin, "PATHEXT=.EXE"}
 	d := sources.ManagerDirs(env)
 	d.Mise = filepath.Join(home, ".local", "share", "mise")
 

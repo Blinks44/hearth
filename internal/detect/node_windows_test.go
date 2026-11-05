@@ -1,8 +1,12 @@
 package detect
 
 import (
+	"errors"
+	"os"
 	"path/filepath"
 	"testing"
+
+	"golang.org/x/sys/windows"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -16,7 +20,11 @@ func TestNodeNvmWindows(t *testing.T) {
 	v22 := fakeNode(t, filepath.Join(nvm, "v22.11.0"))
 	// nvm use points NVM_SYMLINK at the version; the terminal has it on PATH.
 	link := filepath.Join(root, "nodejs")
-	symlink(t, filepath.Dir(v22), link)
+	if err := os.Symlink(filepath.Dir(v22), link); errors.Is(err, windows.ERROR_PRIVILEGE_NOT_HELD) {
+		t.Skip("symlinks need an administrator or Developer Mode")
+	} else if err != nil {
+		t.Fatal(err)
+	}
 	term := sysenv.Env{
 		"USERPROFILE=" + root,
 		"APPDATA=" + filepath.Join(root, "Roaming"),

@@ -10,10 +10,13 @@ import (
 )
 
 func TestPHPWindowsScoop(t *testing.T) {
-	dir := t.TempDir()
+	dir, err := sysenv.RealPath(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	php := filepath.Join(dir, "scoop", "apps", "php", "8.4.3", "php.exe")
 	writeFile(t, php, "")
-	env := sysenv.Env{"USERPROFILE=" + dir, "PATH=", "PATHEXT=.EXE"}
+	env := sysenv.Env{"USERPROFILE=" + dir, "PATH=" + filepath.Dir(php), "PATHEXT=.EXE"}
 	r := &run.Fake{}
 	r.Stdout("Loaded Configuration File: (none)\nAdditional .ini files parsed: (none)", php, "--ini")
 	r.Stdout("[PHP Modules]\nCore\n", php, "-m")
@@ -21,7 +24,7 @@ func TestPHPWindowsScoop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Installations) != 1 || got.Installations[0].Version != "8.4.3" || got.Installations[0].Source.Manager != "scoop" || got.Installations[0].PHP.Err != "" {
+	if len(got.Installations) != 1 || got.Installations[0].Version != "8.4.3" || got.Installations[0].Source.Manager != "scoop" || got.Installations[0].PHP == nil || got.Installations[0].PHP.Err != "" {
 		t.Fatalf("state %+v", got)
 	}
 }

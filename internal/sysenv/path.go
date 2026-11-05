@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 )
@@ -39,23 +38,6 @@ func Variables(term, gui Env) []inventory.EnvironmentVariable {
 		}
 	}
 	return out
-}
-
-func expandPath(value string, env Env) string {
-	value = strings.Trim(value, "\"'")
-	if value == "~" {
-		return env.Get("HOME")
-	}
-	if strings.HasPrefix(value, "~/") {
-		value = env.Get("HOME") + value[1:]
-	}
-	return os.Expand(value, func(key string) string {
-		v := env.Get(key)
-		if v == "" {
-			return "$" + key
-		}
-		return v
-	})
 }
 
 // SamePath compares directory spelling using the platform's path rules.

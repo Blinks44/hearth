@@ -125,16 +125,6 @@ func fakeNode(t *testing.T, dir string) string {
 	return path
 }
 
-func symlink(t *testing.T, target, link string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(target, link); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func checkInstallations(t *testing.T, got inventory.ToolState, want []inventory.Installation) {
 	t.Helper()
 	if len(want) > 0 && got.Tool != want[0].Tool {

@@ -59,7 +59,7 @@ func TestRustPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if tt.HasText("Targets · stable") || !tt.HasText("which -a rustc") {
+	if tt.HasText("Targets · stable") || !tt.HasText(whichAllCommand+" rustc") {
 		t.Fatalf("PATH tab texts %q", tt.Texts())
 	}
 }
