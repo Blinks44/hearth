@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +38,7 @@ func Network(ctx context.Context, c *versions.Cache, r run.Runner, env sysenv.En
 		return strings.Compare(a.Name+"\x00"+a.Version+"\x00"+a.Path+"\x00"+a.Scope+"\x00"+a.Reference, b.Name+"\x00"+b.Version+"\x00"+b.Path+"\x00"+b.Scope+"\x00"+b.Reference)
 	})
 	keyEnv := queryEnv(env)
-	keyData, _ := json.Marshal([]any{2, m.ID, m.Path, m.Prefix, keyEnv, identity})
+	keyData, _ := json.Marshal([]any{3, m.ID, m.Path, m.Prefix, keyEnv, identity})
 	key := fmt.Sprintf("packages-%x.json", sha256.Sum256(keyData))
 	data, fetched, err := c.Query(ctx, key, func(ctx context.Context) ([]byte, error) {
 		packages, e := queryNetwork(ctx, r, env, m)
@@ -46,7 +47,7 @@ func Network(ctx context.Context, c *versions.Cache, r run.Runner, env sysenv.En
 		}
 		result := networkResult{Packages: packages, Complete: e == nil}
 		if e != nil {
-			result.Warning = "some package sources could not be queried"
+			result.Warning = "some package sources could not be queried: " + strings.ReplaceAll(e.Error(), "\n", "; ")
 		}
 		if m.ID == "winget" {
 			for _, local := range m.Packages {
@@ -125,7 +126,7 @@ func queryNetwork(ctx context.Context, r run.Runner, env sysenv.Env, m inventory
 			return res, fmt.Errorf("package query output truncated")
 		}
 		if res.ExitCode != 0 && (m.ID != "choco" || res.ExitCode != 2) {
-			return res, fmt.Errorf("package query exited %d", res.ExitCode)
+			return res, queryExitError(res)
 		}
 		if len(strings.TrimSpace(string(res.Stderr))) > 0 {
 			return res, fmt.Errorf("package query: %s", strings.TrimSpace(string(res.Stderr)))
@@ -157,4 +158,19 @@ func queryNetwork(ctx context.Context, r run.Runner, env sysenv.Env, m inventory
 		return queryNixNetwork(ctx, r, env, m, probe)
 	}
 	return nil, fmt.Errorf("unsupported package query %s", m.ID)
+}
+
+// queryExitError names a failed query by its exit code, in hex for Windows'
+// HRESULTs as WinGet's 0x8a15005e, and by the last line it printed, where
+// WinGet and the others say why.
+func queryExitError(res run.Result) error {
+	code := strconv.Itoa(res.ExitCode)
+	if res.ExitCode < 0 || res.ExitCode > 255 {
+		code = fmt.Sprintf("%#x", uint32(res.ExitCode))
+	}
+	lines := strings.Split(strings.TrimSpace(string(res.Stderr)+"\n"+string(res.Stdout)), "\n")
+	if last := strings.TrimSpace(renderLine(lines[len(lines)-1])); last != "" {
+		return fmt.Errorf("package query exited %s: %s", code, last)
+	}
+	return fmt.Errorf("package query exited %s", code)
 }

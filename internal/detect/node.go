@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -46,8 +47,9 @@ func Node(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		if in.Version == "" {
 			in.Version = versionOf(ctx, r, term, in.RealPath)
 		}
-		in.Packages = globalPackages(nodeModules(in.Path))
-		in.Corepack = corepackEnabled(in.Path, in.RealPath)
+		modules, bin := npmGlobal(in.Path, term)
+		in.Packages = globalPackages(modules)
+		in.Corepack = corepackEnabled(filepath.Dir(in.Path), filepath.Dir(in.RealPath), bin)
 		if m := in.Source.Manager; m != "" && in.Version != "" {
 			installed[m] = append(installed[m], in.Version)
 		}
@@ -147,6 +149,46 @@ func versionOf(ctx context.Context, r run.Runner, env sysenv.Env, path string) s
 		return ""
 	}
 	return strings.TrimPrefix(strings.TrimSpace(string(res.Stdout)), "v")
+}
+
+// npmGlobal is where npm -g of the node at path puts packages and their
+// commands. npm's prefix is found as npm finds it, without running it:
+// npm_config_prefix, ~/.npmrc, then the npmrc npm ships with, where Node's
+// Windows installer sets ${APPDATA}\npm; else it is the node's own prefix.
+func npmGlobal(path string, env sysenv.Env) (modules, bin string) {
+	prefix := env.Get("npm_config_prefix")
+	if prefix == "" {
+		prefix = env.Get("NPM_CONFIG_PREFIX")
+	}
+	home := sources.ManagerDirs(env).Home
+	for _, rc := range []string{filepath.Join(home, ".npmrc"), filepath.Join(nodeModules(path), "npm", "npmrc")} {
+		if prefix == "" {
+			prefix = npmrcPrefix(rc, env)
+		}
+	}
+	if prefix == "" {
+		return nodeModules(path), filepath.Dir(path)
+	}
+	if rest, ok := strings.CutPrefix(prefix, "~"); ok && (rest == "" || os.IsPathSeparator(rest[0])) {
+		prefix = home + rest
+	}
+	return prefixModules(prefix), prefixBin(prefix)
+}
+
+var npmrcVar = regexp.MustCompile(`\$\{([^}]+)\}`)
+
+// npmrcPrefix is the prefix an npmrc file sets, with its ${VAR}s expanded
+// as npm does; "" when it sets none.
+func npmrcPrefix(path string, env sysenv.Env) string {
+	data, _ := os.ReadFile(path) // no file, no prefix
+	prefix := ""
+	for line := range strings.SplitSeq(string(data), "\n") {
+		key, value, ok := strings.Cut(strings.TrimSpace(line), "=")
+		if ok && strings.TrimSpace(key) == "prefix" {
+			prefix = strings.Trim(strings.TrimSpace(value), `"'`)
+		}
+	}
+	return npmrcVar.ReplaceAllStringFunc(prefix, func(m string) string { return env.Get(m[2 : len(m)-1]) })
 }
 
 // globalPackages reads the packages in a node_modules directory, scoped

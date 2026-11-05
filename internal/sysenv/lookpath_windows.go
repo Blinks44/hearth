@@ -30,7 +30,10 @@ func candidates(name string, env Env) []string {
 	return out
 }
 
+// executable rejects only directories, as exec.LookPath does: the app
+// execution aliases in WindowsApps, as python.exe and winget.exe, are
+// reparse points that Stat reports irregular.
 func executable(path string) bool {
 	fi, err := os.Stat(path)
-	return err == nil && fi.Mode().IsRegular()
+	return err == nil && !fi.IsDir()
 }

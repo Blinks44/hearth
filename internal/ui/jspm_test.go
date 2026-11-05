@@ -66,6 +66,44 @@ func TestJSManagersPage(t *testing.T) {
 	}
 }
 
+// Node 25 and later come without Corepack: say how to get it, not what
+// its cache does.
+func TestJSManagersWithoutCorepack(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{}
+	a.router.Push("/tools/jspm")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if !tt.HasText("Corepack is not installed. Since Node 25 it no longer comes with Node and installs separately: npm install -g corepack.") {
+		t.Errorf("texts: %q", tt.Texts())
+	}
+	if tt.HasText("Corepack downloads project versions on first use and keeps them in its cache. Hearth only reads the local cache and never runs these shims.") {
+		t.Error("cache note without Corepack")
+	}
+}
+
+// Corepack's shims with an empty cache, as right after corepack enable:
+// in PATH, the version chosen per project, not "not in PATH".
+func TestJSManagersCorepackShimsOnly(t *testing.T) {
+	a := NewApp()
+	shim := func(tool string) inventory.ToolState {
+		return inventory.ToolState{Tool: tool, Installations: []inventory.Installation{{Tool: tool, Path: `C:\Users\Ann\AppData\Roaming\npm\` + tool + ".cmd", OnPath: 1, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "corepack", Shim: true}}}}
+	}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{shim("pnpm"), shim("yarn")}}
+	a.router.Push("/tools/jspm")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	notInPath := 0 // npm's card alone: there is no npm here
+	for _, s := range tt.Texts() {
+		if s == "not in PATH" {
+			notInPath++
+		}
+	}
+	if !tt.HasText("version from packageManager") || notInPath != 1 {
+		t.Errorf("texts: %q", tt.Texts())
+	}
+}
+
 func TestJSManagersBeforeScan(t *testing.T) {
 	a := NewApp()
 	a.router.Push("/tools/jspm")

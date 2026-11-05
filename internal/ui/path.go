@@ -22,7 +22,7 @@ func (a *App) paths(c *ui.Context, p page) {
 			return
 		}
 		term, gui := a.Snapshot.TerminalPath, a.Snapshot.GUIPath
-		problems := pathProblemCount(term) + pathProblemCount(gui)
+		problems := pathProblemCount(term, gui)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
@@ -217,14 +217,18 @@ func (a *App) pathDifferences(c *ui.Context, term, gui []inventory.PathEntry) {
 	})
 }
 
-func pathProblemCount(entries []inventory.PathEntry) int {
-	count := 0
-	for i, e := range entries {
-		if e.Missing && !issues.OSDir(e.Dir) || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) && !systemRepeat(e) {
-			count++
+// pathProblemCount counts the directories with a problem in the terminal's
+// or the apps' PATH, each once, though both environments usually share it.
+func pathProblemCount(term, gui []inventory.PathEntry) int {
+	var dirs []inventory.PathEntry
+	for _, entries := range [][]inventory.PathEntry{term, gui} {
+		for i, e := range entries {
+			if (e.Missing && !issues.OSDir(e.Dir) || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) && !systemRepeat(e)) && !hasPath(dirs, e.Dir) {
+				dirs = append(dirs, e)
+			}
 		}
 	}
-	return count
+	return len(dirs)
 }
 
 // systemRepeat reports that macOS's path_helper adds e again, from

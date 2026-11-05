@@ -36,10 +36,6 @@ func queryWinget(probe networkProbe) ([]inventory.SystemPackage, error) {
 			failures = append(failures, err)
 			continue
 		}
-		text := strings.TrimSpace(string(res.Stdout))
-		if text == "No installed package found matching input criteria." {
-			continue
-		}
 		packages, err := wingetTable(res.Stdout)
 		if err != nil {
 			failures = append(failures, err)
@@ -61,11 +57,16 @@ func queryWinget(probe networkProbe) ([]inventory.SystemPackage, error) {
 	return out, errors.Join(failures...)
 }
 
+// wingetSourceNames are the sources WinGet itself lists from: an explicit
+// source, as winget-font, is only searched when named.
 func wingetSourceNames(data []byte) ([]string, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	var out []string
 	for {
-		var source struct{ Name string }
+		var source struct {
+			Name     string
+			Explicit bool
+		}
 		err := decoder.Decode(&source)
 		if err == io.EOF {
 			break
@@ -76,7 +77,9 @@ func wingetSourceNames(data []byte) ([]string, error) {
 		if source.Name == "" {
 			return nil, fmt.Errorf("WinGet source has no name")
 		}
-		out = append(out, source.Name)
+		if !source.Explicit {
+			out = append(out, source.Name)
+		}
 	}
 	return out, nil
 }
@@ -84,9 +87,14 @@ func wingetSourceNames(data []byte) ([]string, error) {
 // wingetTable reads one source at a time: the localized table then always has
 // name, id, installed and optionally available columns, without a source column.
 // Column positions are display cells, not UTF-8 bytes; CJK headers are valid.
+// Rows of what the source does not know, MSIX\ and ARP\ ids that WinGet
+// truncates, are no packages of it.
 func wingetTable(data []byte) ([]inventory.SystemPackage, error) {
 	text := terminalEscape.ReplaceAllString(string(data), "")
-	lines := strings.Split(strings.ReplaceAll(text, "\r", ""), "\n")
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
+		lines[i] = renderLine(line)
+	}
 	header := -1
 	for i, line := range lines {
 		if i > 0 && len(strings.TrimSpace(line)) >= 3 && strings.Trim(strings.TrimSpace(line), "-") == "" {
@@ -102,6 +110,11 @@ func wingetTable(data []byte) ([]inventory.SystemPackage, error) {
 		}
 	}
 	if header < 0 {
+		// One line and no table is WinGet's message that nothing is
+		// installed from the source, in the language of Windows.
+		if text := strings.TrimSpace(strings.Join(lines, "\n")); text != "" && !strings.Contains(text, "\n") {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("WinGet table header not found")
 	}
 	cells := displayCells(lines[header])
@@ -130,6 +143,9 @@ func wingetTable(data []byte) ([]inventory.SystemPackage, error) {
 				cols[i] = strings.TrimSpace(string(row[start:end]))
 			}
 		}
+		if strings.HasPrefix(cols[1], `MSIX\`) || strings.HasPrefix(cols[1], `ARP\`) {
+			continue
+		}
 		if cols[1] == "" || cols[2] == "" || strings.Contains(cols[1]+cols[2], "…") || strings.Contains(cols[1]+cols[2], "...") {
 			return nil, fmt.Errorf("incomplete WinGet package row")
 		}
@@ -143,6 +159,29 @@ func wingetTable(data []byte) ([]inventory.SystemPackage, error) {
 		out = append(out, p)
 	}
 	return out, nil
+}
+
+// renderLine is what a terminal shows of line: WinGet's spinner goes back
+// with \r and \b on the line its table header then overwrites.
+func renderLine(line string) string {
+	var out []rune
+	cursor := 0
+	for _, r := range strings.TrimSuffix(line, "\r") {
+		switch r {
+		case '\r':
+			cursor = 0
+		case '\b':
+			cursor = max(cursor-1, 0)
+		default:
+			if cursor < len(out) {
+				out[cursor] = r
+			} else {
+				out = append(out, r)
+			}
+			cursor++
+		}
+	}
+	return string(out)
 }
 
 func displayCells(s string) []rune {

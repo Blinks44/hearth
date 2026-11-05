@@ -13,3 +13,8 @@ const (
 func nodeModules(path string) string {
 	return filepath.Join(filepath.Dir(path), "node_modules")
 }
+
+// prefixModules and prefixBin are where npm -g with prefix puts packages
+// and their commands: prefix\node_modules, and the .cmd files in prefix.
+func prefixModules(prefix string) string { return filepath.Join(prefix, "node_modules") }
+func prefixBin(prefix string) string     { return prefix }

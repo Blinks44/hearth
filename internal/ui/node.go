@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -82,7 +83,7 @@ func nodeHeader(c *ui.Context, nv *versions.Node, ins []inventory.Installation, 
 			strings.Join(sourceNames(ins, rows, -1), " · "))
 		if active >= 0 {
 			in := ins[active]
-			stateCard(c, t.Success, locales.InTerminal(), versionText(in.Version), "which node → "+sourceName(in.Source))
+			stateCard(c, t.Success, locales.InTerminal(), versionText(in.Version), whichCommand+" node → "+sourceName(in.Source))
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}
@@ -141,17 +142,20 @@ func corepackRow(c *ui.Context, in inventory.Installation) {
 }
 
 // nodeGlobals lists the packages installed globally with the Node
-// version in use, but npm and Corepack, which come with it.
+// version in use, but those that come with it.
 func nodeGlobals(c *ui.Context, in inventory.Installation) {
-	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), userPackages(in.Packages), "npm -g · "+versionText(in.Version))
+	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), userPackages(in.Packages, in.Version), "npm -g · "+versionText(in.Version))
 }
 
-// userPackages are the global packages but npm and Corepack, which come
-// with Node.
-func userPackages(all []inventory.Package) []inventory.Package {
+// userPackages are the global packages but those that come with Node
+// version node: npm, and Corepack before Node 25, after which it is one
+// the user installed with npm install -g.
+func userPackages(all []inventory.Package, node string) []inventory.Package {
+	major, _ := strconv.Atoi(strings.SplitN(strings.TrimPrefix(node, "v"), ".", 2)[0])
+	bundledCorepack := major == 0 || major < 25
 	var pkgs []inventory.Package
 	for _, p := range all {
-		if p.Name != "npm" && p.Name != "corepack" {
+		if p.Name != "npm" && (p.Name != "corepack" || !bundledCorepack) {
 			pkgs = append(pkgs, p)
 		}
 	}

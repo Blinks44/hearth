@@ -71,12 +71,6 @@ func parse(format string, data []byte) ([]inventory.SystemPackage, error) {
 				continue
 			}
 			p.Name, p.Version = cols[0], cols[1]
-		case "choco":
-			cols := strings.Split(line, "|")
-			if len(cols) != 2 {
-				continue
-			}
-			p.Name, p.Version = cols[0], cols[1]
 		case "snap":
 			if len(f) < 3 || f[0] == "Name" {
 				continue

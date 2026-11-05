@@ -105,6 +105,8 @@ func TestFind(t *testing.T) {
 			{Dir: "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin", Missing: true},
 			{Dir: "/pkg/env/global/bin", Missing: true},
 			{Dir: "/usr/local/bin", Missing: true}}}},
+		{name: "npm's global prefix before the first global install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+			{Dir: `C:\Users\Ann\AppData\Roaming\npm`, Missing: true}}}},
 		{name: "PATH in order", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}, GUIPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}}},
 
 		{name: "tool that failed to check",

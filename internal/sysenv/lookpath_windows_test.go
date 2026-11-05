@@ -20,6 +20,9 @@ func TestLookPathAll(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if err := os.Mkdir(filepath.Join(b, "node.cmd"), 0o755); err != nil { // a directory: not run
+		t.Fatal(err)
+	}
 	path := a + ";;.;" + b + ";" + a + `\`
 
 	tests := []struct {

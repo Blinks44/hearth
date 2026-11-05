@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 func TestPickVersion(t *testing.T) {
@@ -61,6 +62,33 @@ func TestGlobalPackages(t *testing.T) {
 	}
 	if got := globalPackages(filepath.Join(dir, "missing")); got != nil {
 		t.Errorf("globalPackages(missing) = %+v, want nil", got)
+	}
+}
+
+// npm -g goes where npm's prefix says, found as npm finds it: Node's
+// Windows installer ships an npmrc with ${APPDATA}\npm, ~/.npmrc and
+// npm_config_prefix come before it, and without any it is node's own.
+func TestNpmGlobal(t *testing.T) {
+	dir := t.TempDir()
+	home, appData := filepath.Join(dir, "home"), filepath.Join(dir, "AppData")
+	node := filepath.Join(dir, "nodejs", nodeBin)
+	sep := string(filepath.Separator)
+	writeFile(t, filepath.Join(nodeModules(node), "npm", "npmrc"), "; builtin\r\nprefix=${APPDATA}"+sep+"npm\r\n")
+	env := sysenv.Env{"HOME=" + home, "APPDATA=" + appData}
+
+	modules, bin := npmGlobal(node, env)
+	if want := filepath.Join(appData, "npm"); modules != prefixModules(want) || bin != prefixBin(want) {
+		t.Errorf("builtin npmrc: %s, %s", modules, bin)
+	}
+	writeFile(t, filepath.Join(home, ".npmrc"), "prefix = \"~"+sep+".npm-global\"\n")
+	if modules, _ := npmGlobal(node, env); modules != prefixModules(filepath.Join(home, ".npm-global")) {
+		t.Errorf("~/.npmrc: %s", modules)
+	}
+	if modules, _ := npmGlobal(node, append(env, "npm_config_prefix="+filepath.Join(dir, "env"))); modules != prefixModules(filepath.Join(dir, "env")) {
+		t.Errorf("npm_config_prefix: %s", modules)
+	}
+	if modules, bin := npmGlobal(filepath.Join(dir, "other", nodeBin), sysenv.Env{"HOME=" + filepath.Join(dir, "nobody")}); modules != nodeModules(filepath.Join(dir, "other", nodeBin)) || bin != filepath.Dir(filepath.Join(dir, "other", nodeBin)) {
+		t.Errorf("no prefix: %s, %s", modules, bin)
 	}
 }
 

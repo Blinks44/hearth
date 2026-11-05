@@ -12,7 +12,6 @@ func TestParse(t *testing.T) {
 		{"dnf", "rpm", "Installed Packages\nnodejs.x86_64 1:22.1-1 @fedora\n", "nodejs", "1:22.1-1"},
 		{"pacman update", "pairs", "nodejs 22.1 -> 24.0\n", "nodejs", "24.0"},
 		{"flatpak", "tsv", "org.app.Editor\t2.0\tuser\n", "org.app.Editor", "2.0"},
-		{"choco", "choco", "Chocolatey v2.0\nnodejs|22.1\n", "nodejs", "22.1"},
 		{"snap", "snap", "Name Version Rev Tracking Publisher Notes\nnode 22.1 100 latest/stable publisher -\n", "node", "22.1"},
 		{"apk hyphenated name", "apk", "nodejs-current-22.1.0-r0\n", "nodejs-current", "22.1.0-r0"},
 		{"nix", "nix", `{"key":{"name":"nodejs-22.1","pname":"nodejs","version":"22.1","outputs":{"out":"/nix/store/node"}}}`, "nodejs", "22.1"},

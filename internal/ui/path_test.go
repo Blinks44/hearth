@@ -27,13 +27,18 @@ func TestPathPage(t *testing.T) {
 	tt.Advance(time.Second)
 	screenshot(t, tt, "path")
 	// Only ~/gone/bin counts: macOS lists /usr/local/bin before anything is there.
-	if got := pathProblemCount(a.Snapshot.TerminalPath); got != 2 {
+	if got := pathProblemCount(a.Snapshot.TerminalPath, a.Snapshot.GUIPath); got != 2 {
 		t.Fatalf("problems %d, want the repeat and ~/gone/bin", got)
 	}
 	// path_helper adds /etc/paths.d's entry again after brew shellenv put it first.
 	brew := inventory.PathEntry{Dir: "/opt/homebrew/bin", Sources: []inventory.PathSource{{File: "/etc/paths.d/homebrew", Line: 1}}}
-	if got := pathProblemCount([]inventory.PathEntry{brew, {Dir: "/usr/bin"}, brew}); got != 0 {
+	if got := pathProblemCount([]inventory.PathEntry{brew, {Dir: "/usr/bin"}, brew}, nil); got != 0 {
 		t.Fatalf("system repeat counted: %d", got)
+	}
+	// Both environments share the missing entry, as on Windows they share the registry's Path.
+	gone := []inventory.PathEntry{{Dir: home + "/gone/bin", Missing: true}}
+	if got := pathProblemCount(gone, gone); got != 1 {
+		t.Fatalf("shared problem counted %d times", got)
 	}
 	for _, s := range []string{"Repeats entry #1", "Directory missing", "Terminal only", "Applications only", "JAVA_HOME"} {
 		if !tt.HasText(s) {

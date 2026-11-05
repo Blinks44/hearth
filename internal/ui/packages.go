@@ -34,9 +34,15 @@ func (a *App) packages(c *ui.Context, p page) {
 		} else if !m.UpdatesFetched.IsZero() {
 			updateNote = locales.VersionsAsOf(m.UpdatesFetched)
 		}
-		installedCount := strconv.Itoa(len(m.Packages))
+		// A list some sources did not answer for counts at least what it
+		// holds; an update count not checked differs from none.
+		partial := m.Unlisted && !m.UpdatesFetched.IsZero()
+		installedCount, countNote := strconv.Itoa(len(m.Packages)), locales.PkgCountNote()
 		if m.Unlisted {
-			installedCount = "—"
+			installedCount = atLeast(len(m.Packages))
+		}
+		if partial {
+			countNote = locales.PkgPartialNote()
 		}
 		updates := 0
 		for _, pkg := range m.Packages {
@@ -44,10 +50,11 @@ func (a *App) packages(c *ui.Context, p page) {
 				updates++
 			}
 		}
-		// An update count not checked differs from none.
 		updateCount := "—"
 		if m.UpdatesKnown {
 			updateCount = strconv.Itoa(updates)
+		} else if partial {
+			updateCount = atLeast(updates)
 		}
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -62,8 +69,12 @@ func (a *App) packages(c *ui.Context, p page) {
 						}
 						ui.Text(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted).SingleLine()
 					})
-					stateCard(c, c.Theme().Success, m.Name, m.Version, "")
-					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, locales.PkgCountNote())
+					version := m.Version
+					if version == "" { // Scoop is a PowerShell script Hearth does not run
+						version = locales.UnknownVersion()
+					}
+					stateCard(c, c.Theme().Success, m.Name, version, "")
+					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, countNote)
 					stateCard(c, c.Theme().Warning, locales.PkgUpdateSummary(), updateCount, updateNote)
 				})
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
@@ -73,9 +84,9 @@ func (a *App) packages(c *ui.Context, p page) {
 				})
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-						if m.Unlisted {
+						if m.Unlisted && !partial {
 							toolNote(c, locales.PkgWingetLocal())
-						} else if !m.UpdatesKnown {
+						} else if !m.UpdatesKnown && !partial {
 							toolNote(c, packageUpdatesNote(m.ID, a.VersionLists))
 						}
 						if m.UpdateError != "" {
@@ -246,4 +257,12 @@ func packageUpdatesNote(manager string, online bool) string {
 	default:
 		return locales.PkgUpdatesUnknown()
 	}
+}
+
+// atLeast is a count of an incomplete list, "—" when it holds nothing.
+func atLeast(n int) string {
+	if n == 0 {
+		return "—"
+	}
+	return locales.PkgAtLeast(n)
 }

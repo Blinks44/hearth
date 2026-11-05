@@ -322,7 +322,10 @@ func mcpMissing(servers []inventory.MCPServer) []Issue {
 	return out
 }
 
-// OSDir reports that the OS itself puts dir on PATH, there or not.
+// OSDir reports that the OS itself puts dir on PATH, there or not, or an
+// installer does before anything is in it: Node's Windows installer adds
+// npm's global prefix, %APPDATA%\npm, which the first npm install -g makes.
 func OSDir(dir string) bool {
-	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir+"/", p) })
+	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir+"/", p) }) ||
+		strings.HasSuffix(strings.ToLower(strings.TrimRight(dir, `\`)), `\appdata\roaming\npm`)
 }

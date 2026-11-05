@@ -81,7 +81,7 @@ func (a *App) bunHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 			if in.Source.Manager == inventory.ScriptInstall {
 				where = tilde(in.Source.Root, a.Home)
 			}
-			stateCard(c, t.Success, locales.InTerminal(), versionText(in.Version), "which bun → "+where)
+			stateCard(c, t.Success, locales.InTerminal(), versionText(in.Version), whichCommand+" bun → "+where)
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}

@@ -366,7 +366,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 			BorderWidth(1).BorderColor(pal.Line).Font(FontMono).Children(func() {
 			ui.Row(c).Gap(6).Padding(0, 0, 4, 10).Children(func() {
 				ui.Text(c, "$").FontSize(12).TextColor(pal.TextFaint)
-				ui.Text(c, "which -a "+command).FontSize(12)
+				ui.Text(c, whichAllCommand+" "+command).FontSize(12)
 			})
 			if len(entries) == 0 {
 				ui.Text(c, locales.PathEmpty(command)).Font(FontSans).FontSize(12).TextColor(t.TextMuted).Padding(7, 10)
@@ -651,6 +651,9 @@ func stubWarning(ins []inventory.Installation, entries []int, home string) strin
 				return locales.JavaStubWarning()
 			}
 			if strings.Contains(strings.ToLower(in.Path), `\windowsapps\`) {
+				if in.OnPath == 1 {
+					return locales.StubStoreFirstWarning(tilde(in.Path, home))
+				}
 				return locales.StubStoreWarning(tilde(in.Path, home))
 			}
 			return locales.StubCltWarning(in.Path)

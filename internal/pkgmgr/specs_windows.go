@@ -8,7 +8,7 @@ import (
 func specs() []spec {
 	return []spec{
 		{id: "winget", name: "WinGet", command: "winget"},
-		{id: "choco", name: "Chocolatey", command: "choco", installed: []string{"list", "--limit-output"}, format: "choco"},
+		{id: "choco", name: "Chocolatey", command: "choco"},
 	}
 }
 func standardPaths(_ string, _ sysenv.Env) []string { return nil }

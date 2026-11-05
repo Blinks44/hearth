@@ -1440,6 +1440,36 @@ func (msgs Messages) ChipNotChecked() string {
 	return Catalog.Format(msgs.locale, "chipNotChecked", nil)
 }
 
+// ChipNoVersions says "no versions"
+// in the language the app shows.
+//
+// Chip: the project's files name no tool versions to check.
+func ChipNoVersions() string { return In(i18n.Locale()).ChipNoVersions() }
+
+// ChipNoVersions says "no versions"
+// in the language of msgs.
+//
+// Chip: the project's files name no tool versions to check.
+func (msgs Messages) ChipNoVersions() string {
+	return Catalog.Format(msgs.locale, "chipNoVersions", nil)
+}
+
+// NotInCorepackCache says "not in Corepack's cache yet"
+// in the language the app shows.
+//
+// Installed column: Corepack has not downloaded the version the project
+// wants; it will on first run.
+func NotInCorepackCache() string { return In(i18n.Locale()).NotInCorepackCache() }
+
+// NotInCorepackCache says "not in Corepack's cache yet"
+// in the language of msgs.
+//
+// Installed column: Corepack has not downloaded the version the project
+// wants; it will on first run.
+func (msgs Messages) NotInCorepackCache() string {
+	return Catalog.Format(msgs.locale, "notInCorepackCache", nil)
+}
+
 // ChipReadFailed says "could not read"
 // in the language the app shows.
 //
@@ -4118,6 +4148,20 @@ func (msgs Messages) StubStoreWarning(path string) string {
 	return Catalog.Format(msgs.locale, "stubStoreWarning", map[string]any{"path": path})
 }
 
+// StubStoreFirstWarning says "{path} is not Python but a Microsoft Store stub, and it comes first in PATH: the python command opens the Store."
+// in the language the app shows.
+//
+// Warning: Microsoft Store's python.exe stub is the first python in PATH.
+func StubStoreFirstWarning(path string) string { return In(i18n.Locale()).StubStoreFirstWarning(path) }
+
+// StubStoreFirstWarning says "{path} is not Python but a Microsoft Store stub, and it comes first in PATH: the python command opens the Store."
+// in the language of msgs.
+//
+// Warning: Microsoft Store's python.exe stub is the first python in PATH.
+func (msgs Messages) StubStoreFirstWarning(path string) string {
+	return Catalog.Format(msgs.locale, "stubStoreFirstWarning", map[string]any{"path": path})
+}
+
 // StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python."
 // in the language the app shows.
 //
@@ -4334,6 +4378,26 @@ func JsCorepackDisabled() string { return In(i18n.Locale()).JsCorepackDisabled()
 // in the language of msgs.
 func (msgs Messages) JsCorepackDisabled() string {
 	return Catalog.Format(msgs.locale, "jsCorepackDisabled", nil)
+}
+
+// JsCorepackNotInstalled says "Corepack is not installed. Since Node 25 it no longer comes with Node and installs separately: npm install -g corepack."
+// in the language the app shows.
+func JsCorepackNotInstalled() string { return In(i18n.Locale()).JsCorepackNotInstalled() }
+
+// JsCorepackNotInstalled says "Corepack is not installed. Since Node 25 it no longer comes with Node and installs separately: npm install -g corepack."
+// in the language of msgs.
+func (msgs Messages) JsCorepackNotInstalled() string {
+	return Catalog.Format(msgs.locale, "jsCorepackNotInstalled", nil)
+}
+
+// JsShimVersionCaption says "version from packageManager"
+// in the language the app shows.
+func JsShimVersionCaption() string { return In(i18n.Locale()).JsShimVersionCaption() }
+
+// JsShimVersionCaption says "version from packageManager"
+// in the language of msgs.
+func (msgs Messages) JsShimVersionCaption() string {
+	return Catalog.Format(msgs.locale, "jsShimVersionCaption", nil)
 }
 
 // JsCorepackReadOnly says "Corepack selects a version from packageManager in each project."
@@ -5608,6 +5672,32 @@ func PkgCountNote() string { return In(i18n.Locale()).PkgCountNote() }
 // in the language of msgs.
 func (msgs Messages) PkgCountNote() string {
 	return Catalog.Format(msgs.locale, "pkgCountNote", nil)
+}
+
+// PkgAtLeast says "≥ {count}"
+// in the language the app shows.
+//
+// Package or update count when some sources did not answer: at least this
+// many.
+func PkgAtLeast(count int) string { return In(i18n.Locale()).PkgAtLeast(count) }
+
+// PkgAtLeast says "≥ {count}"
+// in the language of msgs.
+//
+// Package or update count when some sources did not answer: at least this
+// many.
+func (msgs Messages) PkgAtLeast(count int) string {
+	return Catalog.Format(msgs.locale, "pkgAtLeast", map[string]any{"count": count})
+}
+
+// PkgPartialNote says "not all sources answered"
+// in the language the app shows.
+func PkgPartialNote() string { return In(i18n.Locale()).PkgPartialNote() }
+
+// PkgPartialNote says "not all sources answered"
+// in the language of msgs.
+func (msgs Messages) PkgPartialNote() string {
+	return Catalog.Format(msgs.locale, "pkgPartialNote", nil)
 }
 
 // PkgCached says "local metadata"

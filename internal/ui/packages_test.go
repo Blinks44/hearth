@@ -91,3 +91,29 @@ func TestPackagesOnlineOverlay(t *testing.T) {
 		t.Fatal(tt.Texts())
 	}
 }
+
+// msstore did not answer: what winget's source listed counts as at least,
+// and the note on local packages no longer applies.
+func TestPackagesPartialSources(t *testing.T) {
+	a := NewApp()
+	m := inventory.PackageManager{ID: "winget", Name: "WinGet", Path: "/winget", Unlisted: true}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{m}}}}
+	m.UpdatesFetched = time.Date(2026, 11, 5, 12, 0, 0, 0, time.UTC)
+	m.UpdateError = "some package sources could not be queried"
+	m.Packages = []inventory.SystemPackage{{Name: "Microsoft.OneDrive", Version: "22.1", Available: "26.1"}, {Name: "Microsoft.Teams", Version: "26.1"}}
+	a.PackageUpdates = map[string]inventory.PackageManager{"/winget": m}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	for _, s := range []string{"≥ 2", "≥ 1", "not all sources answered"} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q: %q", s, tt.Texts())
+		}
+	}
+	if tt.HasText("Only locally registered portable packages are shown until an online WinGet query succeeds. Sources may require agreements you must accept outside Hearth.") {
+		t.Error("local-only note after an online query")
+	}
+	if tt.HasText("Available updates have not been checked for this manager.") {
+		t.Error("updates of the sources that answered count as unchecked")
+	}
+}

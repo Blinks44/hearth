@@ -23,13 +23,19 @@ type adding struct {
 	on     []bool
 }
 
+// container reports a folder that only holds projects, as ~/code: no
+// project files of its own, so it is not added, only what it holds.
+func (add *adding) container() bool {
+	return len(add.root.Files) == 0 && len(add.root.AI) == 0 && len(add.nested) > 0
+}
+
 // Offer shows the dialog adding the folder root.Dir, which projects.Find
 // read, with the projects nested in it; the ones with versions of their
-// own are chosen at first.
+// own are chosen at first, all of them in a container.
 func (a *App) Offer(root projects.Project, nested []projects.Project) {
 	add := &adding{root: root, nested: nested, on: make([]bool, len(nested))}
 	for i, p := range nested {
-		add.on[i] = len(p.Versions()) > 0
+		add.on[i] = add.container() || len(p.Versions()) > 0
 	}
 	a.adding, a.addOpen = add, true
 }
@@ -199,8 +205,8 @@ func toolTag(c *ui.Context, st projects.Status) {
 }
 
 // projectChip is a project's state: its first problem, files it could
-// not read, not checked when the scan checks none of its tools, or else
-// ready.
+// not read, no versions when its files name none, not checked when the
+// scan checks none of its tools, or else ready.
 func projectChip(c *ui.Context, p projects.Project, statuses []projects.Status, problem string) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -209,6 +215,8 @@ func projectChip(c *ui.Context, p projects.Project, statuses []projects.Status, 
 		chip(c, t.Warning, pal.WarningSoft, pal.WarningText, problem)
 	case len(p.Errs) > 0:
 		chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipReadFailed())
+	case len(statuses) == 0:
+		chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.ChipNoVersions())
 	case !anyChecked(statuses):
 		chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.ChipNotChecked())
 	default:
@@ -420,6 +428,9 @@ func installedCell(st projects.Status) (value, caption string, warn bool) {
 		return "—", locales.NotCheckedYet(toolTitle(st.Tool)), false
 	}
 	vs := installedVersions(st)
+	if len(vs) == 0 && st.Downloads {
+		return "—", locales.NotInCorepackCache(), false
+	}
 	if len(vs) == 0 {
 		return "—", locales.ToolNotInstalled(toolTitle(st.Tool)), true
 	}
@@ -523,6 +534,9 @@ func (a *App) addDialog(c *ui.Context) {
 						rel = p.Dir
 					}
 					caption := locales.SameVersions()
+					if add.container() {
+						caption = strings.Join(p.Files, " · ")
+					}
 					if v := p.Versions(); len(v) > 0 {
 						caption = locales.OwnVersion(v[0].File, toolTitle(v[0].Tool)+" "+v[0].Want)
 					}
@@ -532,6 +546,9 @@ func (a *App) addDialog(c *ui.Context) {
 				}
 			})
 			count := 1
+			if add.container() {
+				count = 0
+			}
 			for _, on := range add.on {
 				if on {
 					count++
@@ -539,8 +556,11 @@ func (a *App) addDialog(c *ui.Context) {
 			}
 			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Button(c, locales.Cancel()).OnClick(func() { a.addOpen = false })
-				ui.PrimaryButton(c, locales.AddProjects(count)).OnClick(func() {
-					dirs := []string{add.root.Dir}
+				ui.PrimaryButton(c, locales.AddProjects(count)).Disabled(count == 0).OnClick(func() {
+					var dirs []string
+					if !add.container() {
+						dirs = append(dirs, add.root.Dir)
+					}
 					for i, p := range add.nested {
 						if add.on[i] {
 							dirs = append(dirs, p.Dir)

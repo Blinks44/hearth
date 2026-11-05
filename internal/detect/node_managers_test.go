@@ -60,11 +60,11 @@ func TestCorepackEnabled(t *testing.T) {
 	dir := t.TempDir()
 	node := filepath.Join(dir, "bin", "node")
 	writeFile(t, node, "")
-	if corepackEnabled(node, node) {
+	if corepackEnabled(filepath.Dir(node)) {
 		t.Error("enabled without its shims")
 	}
 	writeFile(t, filepath.Join(dir, "bin", corepackShims[0]), "#!/bin/sh\nnode \"$basedir/node_modules/corepack/dist/pnpm.js\" \"$@\"\n")
-	if !corepackEnabled(node, node) {
+	if !corepackEnabled(filepath.Dir(node)) {
 		t.Error("not enabled with its shims")
 	}
 }

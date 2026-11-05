@@ -37,6 +37,12 @@ func (a *App) jspm(c *ui.Context, p page) {
 							in := st.Installations[active]
 							value, caption = versionText(in.Version), sourceName(in.Source)
 							dot = c.Theme().Success
+						} else if slices.ContainsFunc(st.Installations, func(in inventory.Installation) bool {
+							return in.OnPath == 1 && in.Source.Shim && in.Source.Manager == "corepack"
+						}) {
+							// Corepack's shim with nothing cached picks the version per project.
+							value, caption = locales.JsCorepackShim(), locales.JsShimVersionCaption()
+							dot = c.Theme().Success
 						}
 						stateCard(c, dot, id, value, caption)
 					}
@@ -53,7 +59,9 @@ func (a *App) jspm(c *ui.Context, p page) {
 						switch a.jspmTab {
 						case 0:
 							a.jsTable(c)
-							toolNote(c, locales.JsCorepackNote())
+							if a.corepackInstalled() {
+								toolNote(c, locales.JsCorepackNote())
+							}
 							a.jsProjects(c)
 						case 1:
 							a.jsGlobals(c)
@@ -161,17 +169,12 @@ func (a *App) jsCorepack(c *ui.Context) {
 		aside = versionText(st.Installations[0].Version)
 	}
 	listCard(c, "Corepack", aside, func() {
-		enabled := false
-		for _, id := range jsManagers {
-			ts, _ := a.Snapshot.Tool(id)
-			for _, in := range ts.Installations {
-				if in.Source.Manager == "corepack" && in.Source.Shim && in.OnPath > 0 {
-					enabled = true
-				}
-			}
+		if !a.corepackInstalled() {
+			cardNote(c, locales.JsCorepackNotInstalled())
+			return
 		}
 		text := locales.JsCorepackDisabled()
-		if enabled {
+		if a.corepackShims() {
 			text = locales.JsCorepackEnabled()
 		}
 		cardNote(c, text)
@@ -179,12 +182,37 @@ func (a *App) jsCorepack(c *ui.Context) {
 	})
 }
 
+// corepackShims reports Corepack's shims on the terminal's PATH.
+func (a *App) corepackShims() bool {
+	for _, id := range jsManagers {
+		ts, _ := a.Snapshot.Tool(id)
+		for _, in := range ts.Installations {
+			if in.Source.Manager == "corepack" && in.Source.Shim && in.OnPath > 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// corepackInstalled reports Corepack itself or its shims: since Node 25 it
+// comes separately, with npm install -g corepack.
+func (a *App) corepackInstalled() bool {
+	st, _ := a.Snapshot.Tool("corepack")
+	return len(st.Installations) > 0 || a.corepackShims()
+}
+
 func (a *App) jsGlobals(c *ui.Context) {
 	st, _ := a.Snapshot.Tool("npm")
 	var pkgs []inventory.Package
 	empty := locales.JsNpmMissing()
 	if i := inventory.TerminalCopy(st.Installations); i >= 0 {
-		pkgs, empty = userPackages(st.Installations[i].Packages), locales.NoGlobalPackages()
+		node, _ := a.Snapshot.Tool("node")
+		version := ""
+		if n := inventory.TerminalCopy(node.Installations); n >= 0 {
+			version = node.Installations[n].Version
+		}
+		pkgs, empty = userPackages(st.Installations[i].Packages, version), locales.NoGlobalPackages()
 	}
 	globalsCard(c, locales.GlobalPackages(), empty, pkgs, "npm -g")
 }

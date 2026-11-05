@@ -11,6 +11,11 @@ import (
 
 func pathKey(dir string) string { return strings.ToLower(filepath.Clean(dir)) }
 
+// pathEntryUsed reports that commands are looked up in dir: cmd, PowerShell
+// and Go's exec.LookPath skip empty entries, as the trailing ";" of a fresh
+// Windows user Path makes, so they do not mean the working directory.
+func pathEntryUsed(dir string) bool { return dir != "" }
+
 func pathSources(Env) map[string][]inventory.PathSource {
 	out := map[string][]inventory.PathSource{}
 	for _, src := range []struct {

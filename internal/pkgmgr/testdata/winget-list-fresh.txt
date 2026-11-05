@@ -1,0 +1,8 @@
+   -    \    |                                                                                                                         Name                                     Id                                        Version             Available
+-----------------------------------------------------------------------------------------------------------------------
+Microsoft Edge                           ARP\Machine\X86\Microsoft Edge            156.0.4314.58
+Microsoft OneDrive                       Microsoft.OneDrive                        22.176.0821.0002    26.183.0920.0005
+Яндекс.Музыка                            MSIX\A025C540.Yandex.Music_4.54.8517.0_x… 4.54.8517.0
+Microsoft .Net Native Runtime Package 2… Microsoft.DotNet.Native.Runtime           2.2.28604.0
+Microsoft .Net Native Runtime Package 2… Microsoft.DotNet.Native.Runtime           2.2.28604.0
+Терминал Windows                         Microsoft.WindowsTerminal                 1.18.10301.0        1.25.2733.0

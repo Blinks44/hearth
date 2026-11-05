@@ -24,7 +24,7 @@ func chocoUpdates(installed []inventory.SystemPackage, data []byte) ([]inventory
 		}
 		matched := false
 		for i := range out {
-			if strings.EqualFold(out[i].Name, cols[0]) && out[i].Version == cols[1] {
+			if strings.EqualFold(out[i].Name, cols[0]) && nugetVersion(out[i].Version) == nugetVersion(cols[1]) {
 				out[i].Available = cols[2]
 				matched = true
 			}

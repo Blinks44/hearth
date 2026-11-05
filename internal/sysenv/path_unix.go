@@ -11,6 +11,10 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
+// pathEntryUsed reports that commands are looked up in dir: on Unix an
+// empty entry is the working directory, so every entry is.
+func pathEntryUsed(string) bool { return true }
+
 func pathKey(dir string) string { return filepath.Clean(dir) }
 
 // pathLine matches a line that sets PATH itself, not MANPATH or PYTHONPATH:

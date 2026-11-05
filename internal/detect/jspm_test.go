@@ -94,3 +94,27 @@ func TestCorepackHome(t *testing.T) {
 		}
 	}
 }
+
+// Since Node 25 Corepack comes with npm install -g: its command and the
+// package lie in npm's prefix, as %APPDATA%\npm on Windows.
+func TestCorepackFromNpm(t *testing.T) {
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "npm")
+	launcher := filepath.Join(prefix, jsLaunchers("corepack")[0])
+	writeFile(t, launcher, "#!/bin/sh\nnode \"$basedir/node_modules/corepack/dist/corepack.js\" \"$@\"\n")
+	if err := os.Chmod(launcher, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(prefix, "node_modules", "corepack", "package.json"), `{"name": "corepack", "version": "0.36.0"}`)
+	env := sysenv.Env{"PATH=" + prefix, "PATHEXT=.CMD;.EXE", "HOME=" + dir, "USERPROFILE=" + dir}
+	st, err := jsManager(t.Context(), &run.Fake{}, "corepack", env, sysenv.Env{"PATH="})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(st.Installations) != 1 {
+		t.Fatalf("installations: %+v", st.Installations)
+	}
+	if in := st.Installations[0]; in.Version != "0.36.0" || in.Source.Manager != "npm" || in.Source.Kind != inventory.KindPackageManager {
+		t.Fatalf("corepack: %+v", in)
+	}
+}

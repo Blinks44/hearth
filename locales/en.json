@@ -551,6 +551,14 @@
   "@chipNotChecked": {
     "description": "Chip: Hearth does not check the project's tools yet."
   },
+  "chipNoVersions": "no versions",
+  "@chipNoVersions": {
+    "description": "Chip: the project's files name no tool versions to check."
+  },
+  "notInCorepackCache": "not in Corepack's cache yet",
+  "@notInCorepackCache": {
+    "description": "Installed column: Corepack has not downloaded the version the project wants; it will on first run."
+  },
   "chipReadFailed": "could not read",
   "@chipReadFailed": {
     "description": "Chip: a project file or the folder could not be read."
@@ -1717,6 +1725,16 @@
       }
     }
   },
+  "stubStoreFirstWarning": "{path} is not Python but a Microsoft Store stub, and it comes first in PATH: the python command opens the Store.",
+  "@stubStoreFirstWarning": {
+    "description": "Warning: Microsoft Store's python.exe stub is the first python in PATH.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"
+      }
+    }
+  },
   "stubCltWarning": "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python.",
   "@stubCltWarning": {
     "description": "Warning: macOS's python3 stub is in PATH while the Command Line Tools are missing.",
@@ -1782,6 +1800,8 @@
   "jsNoManagers": "No package managers found",
   "jsCorepackEnabled": "Shims found on the terminal PATH",
   "jsCorepackDisabled": "No shims on the terminal PATH",
+  "jsCorepackNotInstalled": "Corepack is not installed. Since Node 25 it no longer comes with Node and installs separately: npm install -g corepack.",
+  "jsShimVersionCaption": "version from packageManager",
   "jsCorepackReadOnly": "Corepack selects a version from packageManager in each project.",
   "jsProjectManagers": "Projects and their managers",
   "jsMultipleLocks": "multiple lockfiles",
@@ -1982,6 +2002,17 @@
   "pkgUpdates": "Updates",
   "pkgFilter": "Filter packages",
   "pkgCountNote": "packages",
+  "pkgAtLeast": "≥ {count}",
+  "@pkgAtLeast": {
+    "description": "Package or update count when some sources did not answer: at least this many.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "pkgPartialNote": "not all sources answered",
   "pkgCached": "local metadata",
   "pkgUpdatesUnknown": "Available updates have not been checked for this manager.",
   "pkgReadOnly": "Packages are read only. Installing, updating and removing packages will be available through a change plan.",

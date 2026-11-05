@@ -113,4 +113,9 @@ func TestPythonStub(t *testing.T) {
 	if inventory.TerminalCopy(ins) != -1 {
 		t.Error("the terminal runs the stub")
 	}
+	// First in PATH, as on a fresh Windows: python opens the Store now.
+	tt = openPython(t, a)
+	if s := `C:\Users\Ann\AppData\Local\Microsoft\WindowsApps\python.exe is not Python but a Microsoft Store stub, and it comes first in PATH: the python command opens the Store.`; !tt.HasText(s) {
+		t.Errorf("no %q; texts %q", s, tt.Texts())
+	}
 }

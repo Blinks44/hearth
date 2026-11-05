@@ -60,8 +60,11 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 				}
 				return res.Stdout, nil
 			}
-			if data, err := probe("--version"); err == nil {
-				m.Version = firstLine(string(data))
+			// Chocolatey's version comes with its packages, read from files.
+			if s.id != "choco" {
+				if data, err := probe("--version"); err == nil {
+					m.Version = firstLine(string(data))
+				}
 			}
 			if s.id == "brew" {
 				brew(&m, probe)
@@ -74,18 +77,14 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 				}
 			} else if s.id == "winget" {
 				wingetPackages(&m)
+			} else if s.id == "choco" {
+				chocoLocal(&m)
 			} else if s.id == "nix" && nixProfiles(&m, term, probe) {
 				// Modern profiles are local JSON, not nix-env environments.
 			} else if len(s.installed) == 0 {
 				m.Unlisted = true
 			} else {
-				args := s.installed
-				// Chocolatey before 2.0 lists the remote source unless told
-				// otherwise.
-				if s.id == "choco" && (strings.HasPrefix(m.Version, "0.") || strings.HasPrefix(m.Version, "1.")) {
-					args = append(slices.Clone(args), "--local-only")
-				}
-				data, err := probe(args...)
+				data, err := probe(s.installed...)
 				if err == nil {
 					m.Packages, err = parse(s.format, data)
 				}

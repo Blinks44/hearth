@@ -247,3 +247,31 @@ func TestAddDialog(t *testing.T) {
 		t.Error("the dialog stays open")
 	}
 }
+
+// A folder of projects, as ~/code, is no project itself: only what it
+// holds is added, all of it at first.
+func TestAddDialogContainer(t *testing.T) {
+	a := NewApp()
+	var added []string
+	a.AddProjects = func(dirs []string) { added = dirs }
+	tt := openProjects(t, a, "/projects")
+	nested := []projects.Project{{Dir: home + "/code/yarn-app", Files: []string{"package.json"}}}
+	a.Offer(projects.Project{Dir: home + "/code"}, nested)
+	tt.Frame()
+	if err := tt.Click("Add 1 project"); err != nil {
+		t.Fatalf("%v; texts %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if want := []string{nested[0].Dir}; !reflect.DeepEqual(added, want) {
+		t.Errorf("added %q, want %q", added, want)
+	}
+}
+
+// Corepack downloads the packageManager version on first run: not a
+// warning that the tool is missing.
+func TestInstalledCellCorepackDownloads(t *testing.T) {
+	st := projects.Status{Tool: "yarn", Checked: true, Downloads: true}
+	if value, caption, warn := installedCell(st); value != "—" || caption != "not in Corepack's cache yet" || warn {
+		t.Errorf("%q %q %v", value, caption, warn)
+	}
+}

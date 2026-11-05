@@ -196,7 +196,7 @@ func TestCorepackSymlink(t *testing.T) {
 	script := filepath.Join(root, "prefix", "lib", "node_modules", "corepack", "dist", "yarn.js")
 	writeFile(t, script, "")
 	symlink(t, script, filepath.Join(root, "prefix", "bin", "yarn"))
-	if !corepackEnabled(node, node) {
+	if !corepackEnabled(filepath.Dir(node)) {
 		t.Error("yarn linked to Corepack, not enabled")
 	}
 }

@@ -402,3 +402,13 @@ func TestSidebarVersion(t *testing.T) {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
+
+// Corepack comes with Node before 25; after, npm install -g put it there.
+func TestUserPackages(t *testing.T) {
+	all := []inventory.Package{{Name: "npm"}, {Name: "corepack"}, {Name: "typescript"}}
+	for node, want := range map[string]int{"22.12.0": 1, "24.11.0": 1, "26.13.0": 2, "": 1} {
+		if got := userPackages(all, node); len(got) != want {
+			t.Errorf("Node %q: %+v", node, got)
+		}
+	}
+}

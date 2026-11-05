@@ -15,6 +15,9 @@ func Paths(env Env) []inventory.PathEntry {
 	sources := pathSources(env)
 	var out []inventory.PathEntry
 	for _, dir := range filepath.SplitList(env.Get("PATH")) {
+		if !pathEntryUsed(dir) {
+			continue
+		}
 		e := inventory.PathEntry{Dir: dir, Sources: sources[pathKey(dir)]}
 		if filepath.IsAbs(dir) {
 			info, err := os.Stat(dir)

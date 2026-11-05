@@ -73,7 +73,11 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 		if p, ok := readPackage(pkg); ok && !in.Source.Shim {
 			in.Version = p.Version
 			if name == "npm" {
-				in.Packages = globalPackages(filepath.Dir(pkg))
+				modules, _ := npmGlobal(filepath.Join(filepath.Dir(in.Path), nodeExe), term)
+				in.Packages = globalPackages(modules)
+			} else if in.Source.Kind == inventory.KindUnknown && npmPackage(in.Path, in.RealPath, name) != "" {
+				// npm install -g put it in npm's prefix, as Corepack since Node 25.
+				in.Source = inventory.Source{Kind: inventory.KindPackageManager, Manager: "npm", Root: pkg}
 			}
 		}
 		// Not npmPackage: on Windows the Node folder holds both npm.cmd and

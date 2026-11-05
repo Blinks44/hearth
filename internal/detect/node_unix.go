@@ -15,3 +15,8 @@ const (
 func nodeModules(path string) string {
 	return filepath.Join(filepath.Dir(filepath.Dir(path)), "lib", "node_modules")
 }
+
+// prefixModules and prefixBin are where npm -g with prefix puts packages
+// and their commands: prefix/lib/node_modules and prefix/bin.
+func prefixModules(prefix string) string { return filepath.Join(prefix, "lib", "node_modules") }
+func prefixBin(prefix string) string     { return filepath.Join(prefix, "bin") }

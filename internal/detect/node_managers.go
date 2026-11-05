@@ -66,10 +66,11 @@ func nodeManagers(ins []inventory.Installation, env sysenv.Env, home string) []i
 	return managers
 }
 
-// corepackEnabled reports whether corepack enable put its pnpm or yarn
-// beside the node found at path or the one it leads to.
-func corepackEnabled(path, realPath string) bool {
-	for _, dir := range []string{filepath.Dir(path), filepath.Dir(realPath)} {
+// corepackEnabled reports whether corepack enable put its pnpm or yarn in
+// one of dirs: beside node, or beside npm -g's commands for a Corepack
+// installed with npm, as Node 25 and later need.
+func corepackEnabled(dirs ...string) bool {
+	for _, dir := range dirs {
 		for _, name := range corepackShims {
 			p := filepath.Join(dir, name)
 			if real, err := filepath.EvalSymlinks(p); err == nil && strings.Contains(real, "corepack") {
