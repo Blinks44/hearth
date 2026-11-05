@@ -351,5 +351,15 @@
         "type": "String"
       }
     }
+  },
+  "rubySystemNote": "Системный Ruby нужен самой ОС: для разработки используйте отдельную версию и ставьте гемы в неё.",
+  "rubyGems": "Гемы · {version}",
+  "rubyNoGems": "В установке и GEM_HOME/GEM_PATH гемы не найдены.",
+  "@rubyGems": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   }
 }

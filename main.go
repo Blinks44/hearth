@@ -110,6 +110,7 @@ func main() {
 			fetchList(win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
 			fetchList(win, lists, versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
 			fetchList(win, lists, versions.FetchRust, &a.RustVersions, &a.RustVersionsErr)
+			fetchList(win, lists, versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
 			fetchList(win, lists, versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
 		}
 		a.OnScan = func() {

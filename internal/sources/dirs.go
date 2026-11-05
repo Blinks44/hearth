@@ -19,6 +19,8 @@ type Dirs struct {
 	// Pyenv is pyenv's directory, or pyenv-win's; Uv is where uv keeps the
 	// Pythons it installs.
 	Pyenv, Uv string
+	// Rbenv is rbenv's root; Rvm is RVM's, with its rubies.
+	Rbenv, Rvm string
 	// Conda lists the directories conda's installers put it in by default.
 	Conda []string
 }
@@ -44,6 +46,8 @@ func ManagerDirs(env sysenv.Env) Dirs {
 	d.Nodenv = or(env.Get("NODENV_ROOT"), "~/.nodenv")
 	d.N = or(env.Get("N_PREFIX"), "/usr/local")
 	d.NvmWindows = or(env.Get("NVM_HOME"), sub(appData, "nvm"))
+	d.Rbenv = or(env.Get("RBENV_ROOT"), "~/.rbenv")
+	d.Rvm = or(env.Get("rvm_path"), "~/.rvm")
 	d.Pyenv = or(env.Get("PYENV_ROOT"), env.Get("PYENV"), "~/.pyenv")
 	d.Uv = or(env.Get("UV_PYTHON_INSTALL_DIR"), sub(appData, `uv\python`), sub(xdgData, "uv/python"))
 	for _, name := range []string{"miniconda3", "anaconda3", "miniforge3", "mambaforge"} {

@@ -4727,3 +4727,33 @@ func JavaReleaseLine(line string) string { return In(i18n.Locale()).JavaReleaseL
 func (msgs Messages) JavaReleaseLine(line string) string {
 	return Catalog.Format(msgs.locale, "javaReleaseLine", map[string]any{"line": line})
 }
+
+// RubySystemNote says "The system's Ruby is needed by the OS itself: use a separate version for development and install gems into it."
+// in the language the app shows.
+func RubySystemNote() string { return In(i18n.Locale()).RubySystemNote() }
+
+// RubySystemNote says "The system's Ruby is needed by the OS itself: use a separate version for development and install gems into it."
+// in the language of msgs.
+func (msgs Messages) RubySystemNote() string {
+	return Catalog.Format(msgs.locale, "rubySystemNote", nil)
+}
+
+// RubyGems says "Gems · {version}"
+// in the language the app shows.
+func RubyGems(version string) string { return In(i18n.Locale()).RubyGems(version) }
+
+// RubyGems says "Gems · {version}"
+// in the language of msgs.
+func (msgs Messages) RubyGems(version string) string {
+	return Catalog.Format(msgs.locale, "rubyGems", map[string]any{"version": version})
+}
+
+// RubyNoGems says "No gems found in the installation or GEM_HOME/GEM_PATH."
+// in the language the app shows.
+func RubyNoGems() string { return In(i18n.Locale()).RubyNoGems() }
+
+// RubyNoGems says "No gems found in the installation or GEM_HOME/GEM_PATH."
+// in the language of msgs.
+func (msgs Messages) RubyNoGems() string {
+	return Catalog.Format(msgs.locale, "rubyNoGems", nil)
+}

@@ -599,7 +599,7 @@ func copyVersion(in inventory.Installation) string {
 		return versionText(in.Version)
 	case in.Tool == "go":
 		return "go" + in.Version
-	case in.Tool == "python" || in.Tool == "php" || in.Tool == "java":
+	case in.Tool == "python" || in.Tool == "php" || in.Tool == "java" || in.Tool == "ruby":
 		return in.Version
 	case in.Tool == "rust":
 		switch ch := rustChannel(in); ch {

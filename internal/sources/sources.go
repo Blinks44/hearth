@@ -77,6 +77,7 @@ func rulesFor(env sysenv.Env) []rule {
 	shim(d.Mise, "shims", "mise")
 	shim(d.Asdf, "shims", "asdf")
 	shim(d.Nodenv, "shims", "nodenv")
+	shim(d.Rbenv, "shims", "rbenv")
 	shim(d.Pyenv, "shims", "pyenv")
 	scoop := or(env.Get("SCOOP"), "~/scoop")
 	scoopGlobal := or(env.Get("SCOOP_GLOBAL"), sub(programData, "scoop"))
@@ -103,6 +104,10 @@ func rulesFor(env sysenv.Env) []rule {
 	add(d.Mise, "installs/*/@", vm, "mise")
 	add(d.Asdf, "installs/*/@", vm, "asdf")
 	add(d.Nodenv, "versions/@", vm, "nodenv")
+	add(d.Rbenv, "versions/@", vm, "rbenv")
+	add(d.Rvm, "rubies/@", vm, "rvm")
+	add(or("~/.rubies"), "@", vm, "chruby")
+	add("/opt/rubies", "@", vm, "chruby")
 	add(d.Pyenv, "versions/@", vm, "pyenv")
 	add(d.Uv, "@", vm, "uv")
 	for _, conda := range d.Conda {

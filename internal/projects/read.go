@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -72,6 +73,8 @@ var readers = []struct {
 	{".tool-versions", readToolVersions},
 	{"mise.toml", readMiseTOML},
 	{".mise.toml", readMiseTOML},
+	{".ruby-version", readRubyVersion},
+	{"Gemfile", readGemfile},
 	{".java-version", firstLine("java")},
 	{".sdkmanrc", readSDKMAN},
 	{".python-version", firstLine("python")},
@@ -393,4 +396,54 @@ func readSDKMAN(data []byte) ([]Requirement, error) {
 		}
 	}
 	return nil, nil
+}
+
+// readGemfile recognizes literal Ruby declarations, never evaluating the DSL.
+// Dynamic declarations still say that the project uses Ruby.
+func readGemfile(data []byte) ([]Requirement, error) {
+	req := Requirement{Tool: "ruby"}
+	for line := range strings.Lines(string(data)) {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "ruby ") && !strings.HasPrefix(line, "ruby(") {
+			continue
+		}
+		req.Key = "ruby"
+		rest := strings.TrimSpace(strings.TrimPrefix(line, "ruby"))
+		rest = strings.TrimPrefix(rest, "(")
+		var parts []string
+		for {
+			rest = strings.TrimSpace(rest)
+			m := rubyLiteral.FindStringSubmatch(rest)
+			if m == nil {
+				break
+			}
+			v := m[1]
+			if v == "" {
+				v = m[2]
+			}
+			if strings.Contains(v, "#{") {
+				parts = nil
+				break
+			}
+			parts = append(parts, v)
+			rest = strings.TrimSpace(rest[len(m[0]):])
+			if !strings.HasPrefix(rest, ",") {
+				break
+			}
+			rest = strings.TrimPrefix(rest, ",")
+		}
+		req.Want = strings.Join(parts, ", ")
+		break
+	}
+	return []Requirement{req}, nil
+}
+
+var rubyLiteral = regexp.MustCompile(`^(?:'([^']*)'|"([^"]*)")`)
+
+func readRubyVersion(data []byte) ([]Requirement, error) {
+	reqs, err := firstLine("ruby")(data)
+	for i := range reqs {
+		reqs[i].Want = strings.TrimPrefix(reqs[i].Want, "ruby-")
+	}
+	return reqs, err
 }

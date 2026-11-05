@@ -24,3 +24,17 @@ func TestTerminalCopy(t *testing.T) {
 		}
 	}
 }
+
+func TestSystemRuby(t *testing.T) {
+	for _, tc := range []struct {
+		tool string
+		kind Kind
+		want bool
+	}{
+		{"ruby", KindSystem, true}, {"ruby", KindPackageManager, false}, {"ruby", KindVersionManager, false}, {"node", KindSystem, false},
+	} {
+		if got := NeededBySystem(Installation{Tool: tc.tool, Source: Source{Kind: tc.kind}}); got != tc.want {
+			t.Errorf("%s %v: %v", tc.tool, tc.kind, got)
+		}
+	}
+}

@@ -304,7 +304,7 @@ func (s *Snapshot) Tool(id string) (ToolState, bool) {
 // NeededBySystem reports a copy the OS itself runs, as the system's
 // Python: it is no duplicate to remove, whatever comes before it.
 func NeededBySystem(in Installation) bool {
-	return in.Tool == "python" && in.Source.Kind == KindSystem
+	return (in.Tool == "python" || in.Tool == "ruby") && in.Source.Kind == KindSystem
 }
 
 // TerminalCopy returns the index of the copy in ins the terminal runs, or

@@ -53,6 +53,8 @@ type App struct {
 	// they could not, RustVersionsErr says why.
 	RustVersions    *versions.Rust
 	RustVersionsErr string
+	RubyVersions    *versions.Ruby
+	RubyVersionsErr string
 	JavaVersions    *versions.Java
 	JavaVersionsErr string
 	// Shell reveals and opens files; nil hides those actions.
@@ -83,6 +85,7 @@ type App struct {
 	goTab         int     // the tab of the Go page shown
 	phpTab        int     // the tab of the PHP page shown
 	pythonTab     int     // the tab of the Python page shown
+	rubyTab       int     // the tab of the Ruby page shown
 	javaTab       int     // the tab of the Java page shown
 	rustTab       int     // the tab of the Rust page shown
 	projectsTab   int     // all projects, or the ones needing attention
@@ -147,6 +150,8 @@ func (a *App) View(c *ui.Context) {
 						a.php(c, p)
 					case "/tools/python":
 						a.python(c, p)
+					case "/tools/ruby":
+						a.ruby(c, p)
 					case "/tools/java":
 						a.javaPage(c, p)
 					case "/tools/rust":

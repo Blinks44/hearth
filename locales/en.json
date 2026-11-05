@@ -1874,5 +1874,15 @@
         "type": "String"
       }
     }
+  },
+  "rubySystemNote": "The system's Ruby is needed by the OS itself: use a separate version for development and install gems into it.",
+  "rubyGems": "Gems · {version}",
+  "rubyNoGems": "No gems found in the installation or GEM_HOME/GEM_PATH.",
+  "@rubyGems": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   }
 }
