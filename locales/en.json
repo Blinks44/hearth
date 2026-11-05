@@ -1964,5 +1964,41 @@
   "DatabaseProbeFailed": "Some data could not be checked: {commands}.",
   "DatabaseContainersFailed": "Database containers could not be listed.",
   "DatabaseClient": "client {name}",
-  "DatabaseFilter": "Filter"
+  "DatabaseFilter": "Filter",
+  "pkgUpdates": "Updates",
+  "pkgFilter": "Filter packages",
+  "pkgCountNote": "packages",
+  "pkgCached": "local metadata",
+  "pkgUpdatesUnknown": "Available updates have not been checked for this manager.",
+  "pkgReadOnly": "Packages are read only. Installing, updating and removing packages will be available through a change plan.",
+  "pkgReadOnlyLabel": "read only",
+  "pkgStatus": "Package manager status",
+  "pkgCachedNote": "Repository metadata is not refreshed during a scan. Available updates may be out of date.",
+  "pkgOtherManagers": "Detected managers",
+  "pkgSelected": "selected",
+  "pkgSettings": "Environment settings",
+  "pkgNoTaps": "No additional taps found.",
+  "pkgPackage": "Package",
+  "pkgKind": "Type",
+  "pkgPathUsage": "Path and usage",
+  "pkgAvailable": "available",
+  "pkgNone": "No matching packages found.",
+  "pkgProbeFailed": "Some package data could not be read.",
+  "pkgInstalled": "Installed",
+  "pkgUpdateSummary": "Available updates",
+  "pkgUnlisted": "Packages are not listed for this manager: its list command can refresh sources from the network.",
+  "pkgShown": "Showing {shown} of {total} packages. Narrow the list with the filter.",
+  "@pkgShown": {
+    "description": "Under the package table when only part of the matching packages is shown.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "example": "300"
+      },
+      "total": {
+        "type": "int",
+        "example": "1840"
+      }
+    }
+  }
 }

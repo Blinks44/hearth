@@ -15,6 +15,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
@@ -43,6 +44,7 @@ var Detectors = []Detector{
 	{"dotnet", detect.Dotnet},
 	{"docker", detect.Docker},
 	{"databases", detect.Databases},
+	{"packages", pkgmgr.Detect},
 }
 
 // parallel is how many detectors run at once: each may start commands.

@@ -160,6 +160,9 @@ type ToolState struct {
 	// Databases are the local servers, clients and listeners, for
 	// "databases" only.
 	Databases *DatabaseState `json:",omitempty"`
+	// PackageManagers are the system package managers found, for "packages"
+	// only.
+	PackageManagers []PackageManager `json:",omitempty"`
 	// Err says why the tool could not be checked; empty when it was.
 	Err string `json:",omitempty"`
 }

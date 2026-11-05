@@ -5563,3 +5563,237 @@ func DatabaseFilter() string { return In(i18n.Locale()).DatabaseFilter() }
 func (msgs Messages) DatabaseFilter() string {
 	return Catalog.Format(msgs.locale, "DatabaseFilter", nil)
 }
+
+// PkgUpdates says "Updates"
+// in the language the app shows.
+func PkgUpdates() string { return In(i18n.Locale()).PkgUpdates() }
+
+// PkgUpdates says "Updates"
+// in the language of msgs.
+func (msgs Messages) PkgUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgUpdates", nil)
+}
+
+// PkgFilter says "Filter packages"
+// in the language the app shows.
+func PkgFilter() string { return In(i18n.Locale()).PkgFilter() }
+
+// PkgFilter says "Filter packages"
+// in the language of msgs.
+func (msgs Messages) PkgFilter() string {
+	return Catalog.Format(msgs.locale, "pkgFilter", nil)
+}
+
+// PkgCountNote says "packages"
+// in the language the app shows.
+func PkgCountNote() string { return In(i18n.Locale()).PkgCountNote() }
+
+// PkgCountNote says "packages"
+// in the language of msgs.
+func (msgs Messages) PkgCountNote() string {
+	return Catalog.Format(msgs.locale, "pkgCountNote", nil)
+}
+
+// PkgCached says "local metadata"
+// in the language the app shows.
+func PkgCached() string { return In(i18n.Locale()).PkgCached() }
+
+// PkgCached says "local metadata"
+// in the language of msgs.
+func (msgs Messages) PkgCached() string {
+	return Catalog.Format(msgs.locale, "pkgCached", nil)
+}
+
+// PkgUpdatesUnknown says "Available updates have not been checked for this manager."
+// in the language the app shows.
+func PkgUpdatesUnknown() string { return In(i18n.Locale()).PkgUpdatesUnknown() }
+
+// PkgUpdatesUnknown says "Available updates have not been checked for this manager."
+// in the language of msgs.
+func (msgs Messages) PkgUpdatesUnknown() string {
+	return Catalog.Format(msgs.locale, "pkgUpdatesUnknown", nil)
+}
+
+// PkgReadOnly says "Packages are read only. Installing, updating and removing packages will be available through a change plan."
+// in the language the app shows.
+func PkgReadOnly() string { return In(i18n.Locale()).PkgReadOnly() }
+
+// PkgReadOnly says "Packages are read only. Installing, updating and removing packages will be available through a change plan."
+// in the language of msgs.
+func (msgs Messages) PkgReadOnly() string {
+	return Catalog.Format(msgs.locale, "pkgReadOnly", nil)
+}
+
+// PkgReadOnlyLabel says "read only"
+// in the language the app shows.
+func PkgReadOnlyLabel() string { return In(i18n.Locale()).PkgReadOnlyLabel() }
+
+// PkgReadOnlyLabel says "read only"
+// in the language of msgs.
+func (msgs Messages) PkgReadOnlyLabel() string {
+	return Catalog.Format(msgs.locale, "pkgReadOnlyLabel", nil)
+}
+
+// PkgStatus says "Package manager status"
+// in the language the app shows.
+func PkgStatus() string { return In(i18n.Locale()).PkgStatus() }
+
+// PkgStatus says "Package manager status"
+// in the language of msgs.
+func (msgs Messages) PkgStatus() string {
+	return Catalog.Format(msgs.locale, "pkgStatus", nil)
+}
+
+// PkgCachedNote says "Repository metadata is not refreshed during a scan. Available updates may be out of date."
+// in the language the app shows.
+func PkgCachedNote() string { return In(i18n.Locale()).PkgCachedNote() }
+
+// PkgCachedNote says "Repository metadata is not refreshed during a scan. Available updates may be out of date."
+// in the language of msgs.
+func (msgs Messages) PkgCachedNote() string {
+	return Catalog.Format(msgs.locale, "pkgCachedNote", nil)
+}
+
+// PkgOtherManagers says "Detected managers"
+// in the language the app shows.
+func PkgOtherManagers() string { return In(i18n.Locale()).PkgOtherManagers() }
+
+// PkgOtherManagers says "Detected managers"
+// in the language of msgs.
+func (msgs Messages) PkgOtherManagers() string {
+	return Catalog.Format(msgs.locale, "pkgOtherManagers", nil)
+}
+
+// PkgSelected says "selected"
+// in the language the app shows.
+func PkgSelected() string { return In(i18n.Locale()).PkgSelected() }
+
+// PkgSelected says "selected"
+// in the language of msgs.
+func (msgs Messages) PkgSelected() string {
+	return Catalog.Format(msgs.locale, "pkgSelected", nil)
+}
+
+// PkgSettings says "Environment settings"
+// in the language the app shows.
+func PkgSettings() string { return In(i18n.Locale()).PkgSettings() }
+
+// PkgSettings says "Environment settings"
+// in the language of msgs.
+func (msgs Messages) PkgSettings() string {
+	return Catalog.Format(msgs.locale, "pkgSettings", nil)
+}
+
+// PkgNoTaps says "No additional taps found."
+// in the language the app shows.
+func PkgNoTaps() string { return In(i18n.Locale()).PkgNoTaps() }
+
+// PkgNoTaps says "No additional taps found."
+// in the language of msgs.
+func (msgs Messages) PkgNoTaps() string {
+	return Catalog.Format(msgs.locale, "pkgNoTaps", nil)
+}
+
+// PkgPackage says "Package"
+// in the language the app shows.
+func PkgPackage() string { return In(i18n.Locale()).PkgPackage() }
+
+// PkgPackage says "Package"
+// in the language of msgs.
+func (msgs Messages) PkgPackage() string {
+	return Catalog.Format(msgs.locale, "pkgPackage", nil)
+}
+
+// PkgKind says "Type"
+// in the language the app shows.
+func PkgKind() string { return In(i18n.Locale()).PkgKind() }
+
+// PkgKind says "Type"
+// in the language of msgs.
+func (msgs Messages) PkgKind() string {
+	return Catalog.Format(msgs.locale, "pkgKind", nil)
+}
+
+// PkgPathUsage says "Path and usage"
+// in the language the app shows.
+func PkgPathUsage() string { return In(i18n.Locale()).PkgPathUsage() }
+
+// PkgPathUsage says "Path and usage"
+// in the language of msgs.
+func (msgs Messages) PkgPathUsage() string {
+	return Catalog.Format(msgs.locale, "pkgPathUsage", nil)
+}
+
+// PkgAvailable says "available"
+// in the language the app shows.
+func PkgAvailable() string { return In(i18n.Locale()).PkgAvailable() }
+
+// PkgAvailable says "available"
+// in the language of msgs.
+func (msgs Messages) PkgAvailable() string {
+	return Catalog.Format(msgs.locale, "pkgAvailable", nil)
+}
+
+// PkgNone says "No matching packages found."
+// in the language the app shows.
+func PkgNone() string { return In(i18n.Locale()).PkgNone() }
+
+// PkgNone says "No matching packages found."
+// in the language of msgs.
+func (msgs Messages) PkgNone() string {
+	return Catalog.Format(msgs.locale, "pkgNone", nil)
+}
+
+// PkgProbeFailed says "Some package data could not be read."
+// in the language the app shows.
+func PkgProbeFailed() string { return In(i18n.Locale()).PkgProbeFailed() }
+
+// PkgProbeFailed says "Some package data could not be read."
+// in the language of msgs.
+func (msgs Messages) PkgProbeFailed() string {
+	return Catalog.Format(msgs.locale, "pkgProbeFailed", nil)
+}
+
+// PkgInstalled says "Installed"
+// in the language the app shows.
+func PkgInstalled() string { return In(i18n.Locale()).PkgInstalled() }
+
+// PkgInstalled says "Installed"
+// in the language of msgs.
+func (msgs Messages) PkgInstalled() string {
+	return Catalog.Format(msgs.locale, "pkgInstalled", nil)
+}
+
+// PkgUpdateSummary says "Available updates"
+// in the language the app shows.
+func PkgUpdateSummary() string { return In(i18n.Locale()).PkgUpdateSummary() }
+
+// PkgUpdateSummary says "Available updates"
+// in the language of msgs.
+func (msgs Messages) PkgUpdateSummary() string {
+	return Catalog.Format(msgs.locale, "pkgUpdateSummary", nil)
+}
+
+// PkgUnlisted says "Packages are not listed for this manager: its list command can refresh sources from the network."
+// in the language the app shows.
+func PkgUnlisted() string { return In(i18n.Locale()).PkgUnlisted() }
+
+// PkgUnlisted says "Packages are not listed for this manager: its list command can refresh sources from the network."
+// in the language of msgs.
+func (msgs Messages) PkgUnlisted() string {
+	return Catalog.Format(msgs.locale, "pkgUnlisted", nil)
+}
+
+// PkgShown says "Showing {shown} of {total} packages. Narrow the list with the filter."
+// in the language the app shows.
+//
+// Under the package table when only part of the matching packages is shown.
+func PkgShown(shown int, total int) string { return In(i18n.Locale()).PkgShown(shown, total) }
+
+// PkgShown says "Showing {shown} of {total} packages. Narrow the list with the filter."
+// in the language of msgs.
+//
+// Under the package table when only part of the matching packages is shown.
+func (msgs Messages) PkgShown(shown int, total int) string {
+	return Catalog.Format(msgs.locale, "pkgShown", map[string]any{"shown": shown, "total": total})
+}

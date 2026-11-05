@@ -36,6 +36,15 @@ func TestSmoke(t *testing.T) {
 	bin := filepath.Join(dir, "bin")
 	project := filepath.Join(dir, "e2e-project")
 	write(t, filepath.Join(bin, "node"), "#!/bin/sh\necho v"+fakeVersion+"\n", 0o755)
+	write(t, filepath.Join(bin, "brew"), `#!/bin/sh
+case "$1" in
+  --version) echo 'Homebrew 0.0.0-e2e' ;;
+  --prefix) echo /e2e/brew ;;
+  info) echo '{"formulae":[{"name":"e2e-package","installed":[{"version":"1.0"}]}],"casks":[]}' ;;
+  outdated) echo '{"formulae":[],"casks":[]}' ;;
+  tap) echo e2e/tools ;;
+esac
+`, 0o755)
 	write(t, filepath.Join(project, ".nvmrc"), "99\n", 0o644)
 	// The settings in the home's user data list the project, as adding it
 	// would; the folder dialog cannot be driven.
@@ -76,6 +85,7 @@ func TestSmoke(t *testing.T) {
 		{"/tools/node", "v" + fakeVersion},
 		{"/tools/docker", "CLI, contexts and container engines"},
 		{"/tools/databases", "Database servers and containers"},
+		{"/system/packages", "Package manager status"},
 		{"/system/path", "Coming soon"},
 		{"/overview", "Needs attention"},
 	} {
