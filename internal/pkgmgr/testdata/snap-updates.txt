@@ -1,0 +1,2 @@
+Name         Version    Rev   Size   Publisher   Notes
+example-cli  2.0        200   1MB    example     -

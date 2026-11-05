@@ -1,5 +1,6 @@
-// Package pkgmgr reads installed packages and locally known updates. It never
-// installs packages, refreshes repositories or accepts source agreements.
+// Package pkgmgr reads installed packages and checks availability. Detect is
+// local; Network may refresh manager metadata when allowed. Neither installs
+// packages, changes profiles or accepts source agreements.
 package pkgmgr
 
 import (
@@ -16,9 +17,9 @@ import (
 )
 
 type spec struct {
-	id, name, command  string
-	installed, updates []string
-	format             string
+	id, name, command    string
+	installed, updates   []string
+	format, updateFormat string
 	// updatesExit is an exit code of the updates query that still means
 	// success: dnf's 100 when updates exist, pacman's 1 when none do.
 	updatesExit int
@@ -51,6 +52,9 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 				if res.Truncated {
 					return nil, fmt.Errorf("%s: output truncated", strings.Join(args, " "))
 				}
+				if s.id == "apk" && slices.Equal(args, s.updates) && len(res.Stderr) > 0 {
+					return nil, fmt.Errorf("%s: %s", strings.Join(args, " "), strings.TrimSpace(string(res.Stderr)))
+				}
 				if !s.exitOK(args, res.ExitCode) {
 					return nil, fmt.Errorf("%s: exit %d", strings.Join(args, " "), res.ExitCode)
 				}
@@ -68,6 +72,8 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 					}
 					m.Settings = append(m.Settings, key+"="+value)
 				}
+			} else if s.id == "winget" {
+				wingetPackages(&m)
 			} else if s.id == "nix" && nixProfiles(&m, term, probe) {
 				// Modern profiles are local JSON, not nix-env environments.
 			} else if len(s.installed) == 0 {
@@ -86,10 +92,14 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 				if err != nil {
 					m.Warnings = append(m.Warnings, err.Error())
 				}
-				if len(s.updates) > 0 {
+				if len(s.updates) > 0 && err == nil {
 					data, err = probe(s.updates...)
 					if err == nil {
-						err = applyUpdates(&m, s.format, data)
+						format := s.updateFormat
+						if format == "" {
+							format = s.format
+						}
+						err = applyUpdates(&m, format, data)
 					}
 					if err != nil {
 						m.Warnings = append(m.Warnings, err.Error())
@@ -123,7 +133,7 @@ func applyUpdates(m *inventory.PackageManager, format string, data []byte) error
 	}
 	for _, u := range packages {
 		for i := range m.Packages {
-			if m.Packages[i].Name == u.Name {
+			if m.Packages[i].Name == u.Name && m.Packages[i].Architecture == u.Architecture {
 				m.Packages[i].Available = u.Version
 			}
 		}

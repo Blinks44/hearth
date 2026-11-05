@@ -21,8 +21,8 @@ type Settings struct {
 	Format int `json:"format"`
 	// Theme is "light", "dark" or "system".
 	Theme string `json:"theme"`
-	// VersionLists lets Hearth fetch the lists of versions to install
-	// from the official sites.
+	// VersionLists allows release lists and package-manager availability
+	// queries, which may refresh manager metadata.
 	VersionLists bool      `json:"versionLists"`
 	Projects     []Project `json:"projects"`
 }

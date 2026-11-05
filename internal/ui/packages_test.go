@@ -20,7 +20,7 @@ func TestPackagesPage(t *testing.T) {
 			{Name: "node", Version: "23.6.0", Kind: "formula", Path: "/opt/homebrew/Cellar/node/23.6.0"},
 		}},
 		{ID: "nix", Name: "Nix", Path: "/nix/bin/nix-env", Packages: []inventory.SystemPackage{{Name: "hello", Version: "2.12", Kind: "profile"}}},
-		{ID: "winget", Name: "WinGet", Path: "/winget", Unlisted: true},
+		{ID: "winget", Name: "WinGet", Path: "/winget", Unlisted: true, Packages: []inventory.SystemPackage{{Name: "Example.CLI", Version: "2.0", Kind: "portable"}}},
 	}}}}
 	a.router.Push("/system/packages")
 	tt := ui.NewTester(a.View, 1280, 820)
@@ -43,7 +43,7 @@ func TestPackagesPage(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	// Updates not checked show as unknown, not as none.
-	if !tt.HasText("Available updates have not been checked for this manager.") || !tt.HasText("—") {
+	if !tt.HasText("Online Nix update data is not available yet. Flake versions are evaluated without building packages or changing profiles; configured channels are queried as they are.") || !tt.HasText("—") {
 		t.Fatal(tt.Texts())
 	}
 	a.packageTab = 0
@@ -55,13 +55,39 @@ func TestPackagesPage(t *testing.T) {
 	a.packageManager = "/winget"
 	tt.Frame()
 	tt.Advance(time.Second)
-	if !tt.HasText("Packages are not listed for this manager: its list command can refresh sources from the network.") {
+	if !tt.HasText("Only locally registered portable packages are shown until an online WinGet query succeeds. Sources may require agreements you must accept outside Hearth.") {
 		t.Fatal(tt.Texts())
 	}
+	if !tt.HasText("Example.CLI") || !tt.HasText("—") {
+		t.Fatal(tt.Texts())
+	}
+	screenshot(t, tt, "packages-winget")
 	a.Snapshot.Tools[0].PackageManagers = nil
 	tt.Frame()
 	tt.Advance(time.Second)
 	if tt.HasText("hello") {
+		t.Fatal(tt.Texts())
+	}
+}
+
+func TestPackagesOnlineOverlay(t *testing.T) {
+	a := NewApp()
+	local := inventory.PackageManager{ID: "winget", Name: "WinGet", Path: "/winget", Unlisted: true}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{local}}}}
+	a.PackageUpdates = map[string]inventory.PackageManager{"/winget": {ID: "winget", Name: "WinGet", Path: "/winget", UpdatesKnown: true, UpdatesFetched: time.Date(2026, 11, 5, 12, 0, 0, 0, time.UTC), Packages: []inventory.SystemPackage{{Name: "Example.CLI", Version: "1.0", Available: "2.0"}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if !tt.HasText("Example.CLI") || !tt.HasText("available 2.0") {
+		t.Fatal(tt.Texts())
+	}
+	screenshot(t, tt, "packages-online")
+	// A new local scan must not continue showing a result for its predecessor.
+	a.PackageUpdates = nil
+	a.PackageChecks = map[string]bool{"/winget": true}
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("Example.CLI") || !tt.HasText("Checking…") {
 		t.Fatal(tt.Texts())
 	}
 }

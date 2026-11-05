@@ -1,0 +1,4 @@
+Name                    Id                 Version     Available
+----------------------------------------------------------------
+Example CLI             Example.CLI        1.0         2.0
+Example Editor          Example.Editor     3.0

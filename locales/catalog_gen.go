@@ -5644,11 +5644,11 @@ func (msgs Messages) PkgStatus() string {
 	return Catalog.Format(msgs.locale, "pkgStatus", nil)
 }
 
-// PkgCachedNote says "Repository metadata is not refreshed during a scan. Available updates may be out of date."
+// PkgCachedNote says "Online queries may refresh package-manager metadata. No packages are installed or upgraded. Results are cached for a …"
 // in the language the app shows.
 func PkgCachedNote() string { return In(i18n.Locale()).PkgCachedNote() }
 
-// PkgCachedNote says "Repository metadata is not refreshed during a scan. Available updates may be out of date."
+// PkgCachedNote says "Online queries may refresh package-manager metadata. No packages are installed or upgraded. Results are cached for a …"
 // in the language of msgs.
 func (msgs Messages) PkgCachedNote() string {
 	return Catalog.Format(msgs.locale, "pkgCachedNote", nil)
@@ -5774,14 +5774,44 @@ func (msgs Messages) PkgUpdateSummary() string {
 	return Catalog.Format(msgs.locale, "pkgUpdateSummary", nil)
 }
 
-// PkgUnlisted says "Packages are not listed for this manager: its list command can refresh sources from the network."
+// PkgWingetLocal says "Only locally registered portable packages are shown until an online WinGet query succeeds. Sources may require agreem…"
 // in the language the app shows.
-func PkgUnlisted() string { return In(i18n.Locale()).PkgUnlisted() }
+func PkgWingetLocal() string { return In(i18n.Locale()).PkgWingetLocal() }
 
-// PkgUnlisted says "Packages are not listed for this manager: its list command can refresh sources from the network."
+// PkgWingetLocal says "Only locally registered portable packages are shown until an online WinGet query succeeds. Sources may require agreem…"
 // in the language of msgs.
-func (msgs Messages) PkgUnlisted() string {
-	return Catalog.Format(msgs.locale, "pkgUnlisted", nil)
+func (msgs Messages) PkgWingetLocal() string {
+	return Catalog.Format(msgs.locale, "pkgWingetLocal", nil)
+}
+
+// PkgNetworkUpdates says "Online update data is not available yet. Enable version lists and package update checks in Settings; saved results re…"
+// in the language the app shows.
+func PkgNetworkUpdates() string { return In(i18n.Locale()).PkgNetworkUpdates() }
+
+// PkgNetworkUpdates says "Online update data is not available yet. Enable version lists and package update checks in Settings; saved results re…"
+// in the language of msgs.
+func (msgs Messages) PkgNetworkUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgNetworkUpdates", nil)
+}
+
+// PkgNixUpdates says "Online Nix update data is not available yet. Flake versions are evaluated without building packages or changing profi…"
+// in the language the app shows.
+func PkgNixUpdates() string { return In(i18n.Locale()).PkgNixUpdates() }
+
+// PkgNixUpdates says "Online Nix update data is not available yet. Flake versions are evaluated without building packages or changing profi…"
+// in the language of msgs.
+func (msgs Messages) PkgNixUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgNixUpdates", nil)
+}
+
+// PkgScoopUpdates says "Some Scoop updates could not be checked against local buckets. Updates already identified are shown; the total is unk…"
+// in the language the app shows.
+func PkgScoopUpdates() string { return In(i18n.Locale()).PkgScoopUpdates() }
+
+// PkgScoopUpdates says "Some Scoop updates could not be checked against local buckets. Updates already identified are shown; the total is unk…"
+// in the language of msgs.
+func (msgs Messages) PkgScoopUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgScoopUpdates", nil)
 }
 
 // PkgShown says "Showing {shown} of {total} packages. Narrow the list with the filter."
@@ -6068,11 +6098,11 @@ func (msgs Messages) EnvPathWarnings() string {
 	return Catalog.Format(msgs.locale, "envPathWarnings", nil)
 }
 
-// SettingsLocal says "Everything stays on this computer · no account or telemetry"
+// SettingsLocal says "Local app · no account or Hearth telemetry"
 // in the language the app shows.
 func SettingsLocal() string { return In(i18n.Locale()).SettingsLocal() }
 
-// SettingsLocal says "Everything stays on this computer · no account or telemetry"
+// SettingsLocal says "Local app · no account or Hearth telemetry"
 // in the language of msgs.
 func (msgs Messages) SettingsLocal() string {
 	return Catalog.Format(msgs.locale, "settingsLocal", nil)
@@ -6168,21 +6198,21 @@ func (msgs Messages) SettingsNetwork() string {
 	return Catalog.Format(msgs.locale, "settingsNetwork", nil)
 }
 
-// SettingsLists says "Version lists"
+// SettingsLists says "Version lists and package updates"
 // in the language the app shows.
 func SettingsLists() string { return In(i18n.Locale()).SettingsLists() }
 
-// SettingsLists says "Version lists"
+// SettingsLists says "Version lists and package updates"
 // in the language of msgs.
 func (msgs Messages) SettingsLists() string {
 	return Catalog.Format(msgs.locale, "settingsLists", nil)
 }
 
-// SettingsListsHint says "Public release sources · no personal data · cached for a day"
+// SettingsListsHint says "Manager sources may refresh metadata; no installs · cached for a day"
 // in the language the app shows.
 func SettingsListsHint() string { return In(i18n.Locale()).SettingsListsHint() }
 
-// SettingsListsHint says "Public release sources · no personal data · cached for a day"
+// SettingsListsHint says "Manager sources may refresh metadata; no installs · cached for a day"
 // in the language of msgs.
 func (msgs Messages) SettingsListsHint() string {
 	return Catalog.Format(msgs.locale, "settingsListsHint", nil)
@@ -6218,11 +6248,11 @@ func (msgs Messages) SettingsData() string {
 	return Catalog.Format(msgs.locale, "settingsData", nil)
 }
 
-// SettingsCache says "Version list cache"
+// SettingsCache says "Version and update cache"
 // in the language the app shows.
 func SettingsCache() string { return In(i18n.Locale()).SettingsCache() }
 
-// SettingsCache says "Version list cache"
+// SettingsCache says "Version and update cache"
 // in the language of msgs.
 func (msgs Messages) SettingsCache() string {
 	return Catalog.Format(msgs.locale, "settingsCache", nil)
@@ -6238,11 +6268,11 @@ func (msgs Messages) SettingsClear() string {
 	return Catalog.Format(msgs.locale, "settingsClear", nil)
 }
 
-// SettingsCleared says "Version list cache cleared"
+// SettingsCleared says "Version and update cache cleared"
 // in the language the app shows.
 func SettingsCleared() string { return In(i18n.Locale()).SettingsCleared() }
 
-// SettingsCleared says "Version list cache cleared"
+// SettingsCleared says "Version and update cache cleared"
 // in the language of msgs.
 func (msgs Messages) SettingsCleared() string {
 	return Catalog.Format(msgs.locale, "settingsCleared", nil)
@@ -6308,11 +6338,11 @@ func (msgs Messages) SettingsCacheError(error string) string {
 	return Catalog.Format(msgs.locale, "settingsCacheError", map[string]any{"error": error})
 }
 
-// SettingsAllowLists says "Allow version list downloads"
+// SettingsAllowLists says "Allow version lists and package update checks"
 // in the language the app shows.
 func SettingsAllowLists() string { return In(i18n.Locale()).SettingsAllowLists() }
 
-// SettingsAllowLists says "Allow version list downloads"
+// SettingsAllowLists says "Allow version lists and package update checks"
 // in the language of msgs.
 func (msgs Messages) SettingsAllowLists() string {
 	return Catalog.Format(msgs.locale, "settingsAllowLists", nil)

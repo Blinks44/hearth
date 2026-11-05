@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/scan"
@@ -109,9 +111,13 @@ func main() {
 		if err != nil {
 			log.Print(err)
 		}
+		var fetchPackages func()
 		scanned := func(s inventory.Snapshot) {
 			win.Update(func() {
 				a.Snapshot, a.Scanning = &s, false
+				if fetchPackages != nil {
+					fetchPackages()
+				}
 				list.watch.Docker(&s, scanner.Terminal())
 			})
 			if cache != "" {
@@ -128,6 +134,47 @@ func main() {
 			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
 		}
 		var cancelVersions context.CancelFunc
+		var cancelPackages context.CancelFunc
+		fetchPackages = func() {
+			if cancelPackages != nil {
+				cancelPackages()
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			cancelPackages = cancel
+			a.PackageUpdates = map[string]inventory.PackageManager{}
+			a.PackageChecks = map[string]bool{}
+			st, ok := a.Snapshot.Tool("packages")
+			if !ok {
+				return
+			}
+			managers := slices.Clone(st.PackageManagers)
+			env := slices.Clone(scanner.Terminal())
+			for _, m := range managers {
+				if pkgmgr.HasNetworkQuery(m.ID) {
+					a.PackageChecks[m.Path] = true
+				}
+			}
+			go func() {
+				for _, m := range managers {
+					if ctx.Err() != nil {
+						return
+					}
+					if !pkgmgr.HasNetworkQuery(m.ID) {
+						continue
+					}
+					queryCtx, stop := context.WithTimeout(ctx, 2*time.Minute)
+					result := pkgmgr.Network(queryCtx, lists, run.Exec{}, env, m)
+					stop()
+					win.Update(func() {
+						if ctx.Err() != nil {
+							return
+						}
+						a.PackageUpdates[m.Path] = result
+						delete(a.PackageChecks, m.Path)
+					})
+				}
+			}()
+		}
 		fetchVersions := func() {
 			if cancelVersions != nil {
 				cancelVersions()
@@ -151,6 +198,9 @@ func main() {
 			if cancelVersions != nil {
 				cancelVersions()
 			}
+			if cancelPackages != nil {
+				cancelPackages()
+			}
 		})
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
@@ -159,6 +209,7 @@ func main() {
 			list.save()
 			if onlineChanged {
 				fetchVersions()
+				fetchPackages()
 			}
 		}
 		a.ClearCache = func() {
@@ -166,6 +217,11 @@ func main() {
 				return
 			}
 			a.CacheBusy = true
+			if cancelPackages != nil {
+				cancelPackages()
+			}
+			a.PackageUpdates = nil
+			a.PackageChecks = nil
 			a.SettingsNotice = ""
 			if cancelVersions != nil {
 				cancelVersions()
@@ -201,10 +257,16 @@ func main() {
 					a.SettingsError = ""
 					a.SettingsNotice = locales.SettingsCleared()
 					fetchVersions()
+					fetchPackages()
 				})
 			}()
 		}
 		a.OnScan = func() {
+			if cancelPackages != nil {
+				cancelPackages()
+			}
+			a.PackageChecks = nil
+			a.PackageUpdates = nil
 			scanner.Start(scanned)
 			fetchVersions()
 			list.read()

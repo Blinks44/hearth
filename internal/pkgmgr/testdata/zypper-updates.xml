@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<stream>
+<message type="info">Loading repository data...</message>
+<update-status version="0.6"><update-list>
+<update name="libtest" edition="2.0-1" arch="x86_64" kind="package"><summary>Test</summary><source alias="repo-oss"/></update>
+</update-list></update-status>
+</stream>

@@ -23,7 +23,7 @@ type App struct {
 	ThemeMode string
 	// Locale is the interface language, "en" or "ru".
 	Locale string
-	// VersionLists lets Hearth download the lists of versions; without
+	// VersionLists allows version lists and package-manager availability queries; without
 	// it, only the kept copies show.
 	VersionLists bool
 	// AppVersion is the build's version; "" in a development build.
@@ -48,6 +48,9 @@ type App struct {
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
 	Scanning bool
+	// PackageUpdates overlays immutable local inventory with cached online results.
+	PackageUpdates map[string]inventory.PackageManager
+	PackageChecks  map[string]bool
 	// NodeVersions is what nodejs.org says of Node's versions; nil until
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node

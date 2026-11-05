@@ -27,12 +27,12 @@ func TestSettingsPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "settings")
-	for _, text := range []string{"Interface language", "Theme", "Version lists", "hearth", "Version list cache", "Development build"} {
+	for _, text := range []string{"Interface language", "Theme", "Version lists and package updates", "hearth", "Version and update cache", "Development build"} {
 		if !tt.HasText(text) {
 			t.Fatalf("missing %q: %q", text, tt.Texts())
 		}
 	}
-	if err := tt.Click("Allow version list downloads"); err != nil {
+	if err := tt.Click("Allow version lists and package update checks"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()

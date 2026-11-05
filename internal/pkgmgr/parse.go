@@ -14,6 +14,9 @@ var apkVersion = regexp.MustCompile(`^(.+)-(\d[^\s]*-r\d+)$`)
 
 func parse(format string, data []byte) ([]inventory.SystemPackage, error) {
 	var out []inventory.SystemPackage
+	if format == "flatpak" {
+		return parseFlatpak(data)
+	}
 	if format == "nix" {
 		var entries map[string]struct {
 			Name, Version, Pname string
@@ -31,20 +34,8 @@ func parse(format string, data []byte) ([]inventory.SystemPackage, error) {
 		}
 		return out, nil
 	}
-	if format == "zypper" {
-		var doc struct {
-			Entries []struct {
-				Name    string `xml:"name,attr"`
-				Version string `xml:"edition,attr"`
-			} `xml:"search-result>solvable-list>solvable"`
-		}
-		if err := xml.Unmarshal(data, &doc); err != nil {
-			return nil, fmt.Errorf("zypper installed: %w", err)
-		}
-		for _, e := range doc.Entries {
-			out = append(out, inventory.SystemPackage{Name: e.Name, Version: e.Version, Kind: "package"})
-		}
-		return out, nil
+	if format == "zypper" || format == "zypper-updates" {
+		return parseZypper(format, data)
 	}
 	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
@@ -91,6 +82,18 @@ func parse(format string, data []byte) ([]inventory.SystemPackage, error) {
 				continue
 			}
 			p.Name, p.Version = f[0], f[1]
+		case "apk-updates":
+			if strings.HasPrefix(line, "Installed:") {
+				continue
+			}
+			if len(f) < 3 || f[1] != "<" {
+				return nil, fmt.Errorf("apk updates: invalid row %q", line)
+			}
+			cols := apkVersion.FindStringSubmatch(f[0])
+			if len(cols) != 3 {
+				return nil, fmt.Errorf("apk updates: invalid package %q", f[0])
+			}
+			p.Name, p.Version = cols[1], f[2]
 		case "apk":
 			cols := apkVersion.FindStringSubmatch(line)
 			if len(cols) != 3 {
@@ -103,6 +106,50 @@ func parse(format string, data []byte) ([]inventory.SystemPackage, error) {
 		if p.Name != "" {
 			out = append(out, p)
 		}
+	}
+	return out, nil
+}
+
+// parseZypper keeps the architecture so an x86_64 update cannot be applied
+// to an i586 installation of the same package.
+func parseZypper(format string, data []byte) ([]inventory.SystemPackage, error) {
+	type entry struct {
+		Name    string `xml:"name,attr"`
+		Version string `xml:"edition,attr"`
+		Arch    string `xml:"arch,attr"`
+	}
+	var doc struct {
+		XMLName   xml.Name `xml:"stream"`
+		Installed []entry  `xml:"search-result>solvable-list>solvable"`
+		Updates   *struct {
+			Entries []entry `xml:"update-list>update"`
+		} `xml:"update-status"`
+		Messages []struct {
+			Type string `xml:"type,attr"`
+			Text string `xml:",chardata"`
+		} `xml:"message"`
+	}
+	if err := xml.Unmarshal(data, &doc); err != nil {
+		return nil, fmt.Errorf("zypper packages: %w", err)
+	}
+	entries := doc.Installed
+	if format == "zypper-updates" {
+		if doc.Updates == nil {
+			return nil, fmt.Errorf("zypper updates: missing update-status")
+		}
+		for _, msg := range doc.Messages {
+			if msg.Type == "error" || msg.Type == "warning" {
+				return nil, fmt.Errorf("zypper updates: %s", strings.TrimSpace(msg.Text))
+			}
+		}
+		entries = doc.Updates.Entries
+	}
+	var out []inventory.SystemPackage
+	for _, e := range entries {
+		if e.Name == "" || e.Version == "" {
+			return nil, fmt.Errorf("zypper packages: missing name or edition")
+		}
+		out = append(out, inventory.SystemPackage{Name: e.Name, Version: e.Version, Architecture: e.Arch, Kind: "package"})
 	}
 	return out, nil
 }

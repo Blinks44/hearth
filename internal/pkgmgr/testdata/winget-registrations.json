@@ -1,0 +1,7 @@
+[
+ {"DisplayName":"Unrelated Node.js MSI","DisplayVersion":"24.0","InstallLocation":"C:\\Program Files\\nodejs"},
+ {"WinGetPackageIdentifier":"Example.CLI","WinGetInstallerType":"portable","DisplayVersion":"2.0","InstallLocation":"C:\\WinGet\\CLI"},
+ {"WinGetPackageIdentifier":"example.cli","WinGetInstallerType":"portable","DisplayVersion":"2.0","InstallLocation":"c:\\winget\\cli"},
+ {"WinGetPackageIdentifier":"Example.CLI","DisplayVersion":"1.0","InstallLocation":"C:\\OtherUser\\CLI"},
+ {"WinGetPackageIdentifier":"Example.NotPortable","WinGetInstallerType":"msi","DisplayVersion":"3.0"}
+]

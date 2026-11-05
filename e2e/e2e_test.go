@@ -88,7 +88,7 @@ esac
 		{"/tools/databases", "Database servers and containers"},
 		{"/system/packages", "Package manager status"},
 		{"/system/path", "Where terminals and apps look for commands"},
-		{"/settings", "Everything stays on this computer · no account or telemetry"},
+		{"/settings", "Local app · no account or Hearth telemetry"},
 		{"/overview", "Needs attention"},
 	} {
 		c.call(t, "act", map[string]any{"key": step.key, "action": "press"})

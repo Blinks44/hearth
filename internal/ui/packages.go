@@ -25,6 +25,19 @@ func (a *App) packages(c *ui.Context, p page) {
 			}
 		}
 		m := st.PackageManagers[selected]
+		if checked, ok := a.PackageUpdates[m.Path]; ok {
+			m = checked
+		}
+		updateNote := locales.PkgCached()
+		if a.PackageChecks[m.Path] {
+			updateNote = locales.Checking()
+		} else if !m.UpdatesFetched.IsZero() {
+			updateNote = locales.VersionsAsOf(m.UpdatesFetched)
+		}
+		installedCount := strconv.Itoa(len(m.Packages))
+		if m.Unlisted {
+			installedCount = "—"
+		}
 		updates := 0
 		for _, pkg := range m.Packages {
 			if pkg.Available != "" {
@@ -50,20 +63,23 @@ func (a *App) packages(c *ui.Context, p page) {
 						ui.Text(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted).SingleLine()
 					})
 					stateCard(c, c.Theme().Success, m.Name, m.Version, "")
-					stateCard(c, pal.TextFaint, locales.PkgInstalled(), strconv.Itoa(len(m.Packages)), locales.PkgCountNote())
-					stateCard(c, c.Theme().Warning, locales.PkgUpdateSummary(), updateCount, locales.PkgCached())
+					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, locales.PkgCountNote())
+					stateCard(c, c.Theme().Warning, locales.PkgUpdateSummary(), updateCount, updateNote)
 				})
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					segments(c, "package-tabs", &a.packageTab, []segment{{locales.PkgInstalled(), strconv.Itoa(len(m.Packages))}, {locales.PkgUpdates(), updateCount}})
+					segments(c, "package-tabs", &a.packageTab, []segment{{locales.PkgInstalled(), installedCount}, {locales.PkgUpdates(), updateCount}})
 					ui.Box(c).Grow(1)
 					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Placeholder(locales.PkgFilter()).Width(200)
 				})
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 						if m.Unlisted {
-							toolNote(c, locales.PkgUnlisted())
+							toolNote(c, locales.PkgWingetLocal())
 						} else if !m.UpdatesKnown {
-							toolNote(c, locales.PkgUpdatesUnknown())
+							toolNote(c, packageUpdatesNote(m.ID, a.VersionLists))
+						}
+						if m.UpdateError != "" {
+							warningRow(c, locales.PkgProbeFailed()+" "+m.UpdateError)
 						}
 						for _, warning := range m.Warnings {
 							warningRow(c, locales.PkgProbeFailed()+" "+warning)
@@ -75,6 +91,9 @@ func (a *App) packages(c *ui.Context, p page) {
 								iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
 							})
 							cardNote(c, locales.PkgCachedNote())
+							if !m.UpdatesFetched.IsZero() {
+								cardNote(c, locales.VersionsAsOf(m.UpdatesFetched))
+							}
 						})
 					})
 					ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
@@ -150,6 +169,9 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 				})
 				ui.Text(c, pkg.Kind).Width(64).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
+					if pkg.Reference != "" {
+						ui.Text(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).SingleLine().TextColor(pal.MonoText)
+					}
 					if pkg.Path != "" {
 						ui.Text(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).SingleLine().TextColor(pal.MonoText)
 					}
@@ -208,4 +230,20 @@ func packageTools(snap *inventory.Snapshot, manager string, pkg inventory.System
 		}
 	}
 	return out
+}
+
+func packageUpdatesNote(manager string, online bool) string {
+	switch manager {
+	case "snap", "choco", "flatpak":
+		if online {
+			return locales.PkgUpdatesUnknown()
+		}
+		return locales.PkgNetworkUpdates()
+	case "nix":
+		return locales.PkgNixUpdates()
+	case "scoop":
+		return locales.PkgScoopUpdates()
+	default:
+		return locales.PkgUpdatesUnknown()
+	}
 }

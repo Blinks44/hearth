@@ -23,3 +23,5 @@ func standardPaths(id string, _ sysenv.Env) []string {
 }
 
 func localManagers(_ sysenv.Env) []inventory.PackageManager { return nil }
+
+func wingetPackages(_ *inventory.PackageManager) {}
