@@ -1884,5 +1884,24 @@
         "type": "String"
       }
     }
-  }
+  },
+  "DotnetSubtitle": "SDKs and runtimes live side by side · global.json selects the SDK for a folder",
+  "DotnetSDKCount": "{count} SDKs",
+  "DotnetRuntimeCount": "+ {count} runtimes",
+  "DotnetNote": ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-uninstall-tool — Hearth will show the command.",
+  "DotnetSelection": "Which SDK dotnet selects",
+  "DotnetDefault": "Other folders → newest SDK",
+  "DotnetNoProjects": "No added projects with global.json",
+  "DotnetEnvironment": "Environment",
+  "DotnetTelemetry": ".NET telemetry",
+  "DotnetTelemetryDefault": "DOTNET_CLI_TELEMETRY_OPTOUT is not set",
+  "DotnetTelemetryOn": "enabled",
+  "DotnetTelemetryOff": "disabled",
+  "DotnetRootDefault": "Not set · the host determines the SDK location",
+  "DotnetTools": "Tools",
+  "DotnetNoTools": "No global tools found",
+  "DotnetUnknown": "SDK selection is unknown: {reason}",
+  "DotnetMissing": "No compatible SDK is installed for {project}",
+  "DotnetProbeFailed": "Could not list SDKs or runtimes: {reason}",
+  "DotnetPreview": "preview"
 }

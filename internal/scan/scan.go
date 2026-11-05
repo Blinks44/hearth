@@ -39,6 +39,7 @@ var Detectors = []Detector{
 	{"rust", detect.Rust},
 	{"java", detect.Java},
 	{"ruby", detect.Ruby},
+	{"dotnet", detect.Dotnet},
 }
 
 // parallel is how many detectors run at once: each may start commands.

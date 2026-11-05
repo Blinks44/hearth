@@ -597,6 +597,10 @@ func copyVersion(in inventory.Installation) string {
 	switch {
 	case in.Version == "":
 		return versionText(in.Version)
+	case in.Tool == "dotnet":
+		return "SDK " + in.Version
+	case in.Tool == "dotnet-runtime":
+		return "Runtime " + in.Version
 	case in.Tool == "go":
 		return "go" + in.Version
 	case in.Tool == "python" || in.Tool == "php" || in.Tool == "java" || in.Tool == "ruby":

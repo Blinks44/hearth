@@ -67,8 +67,21 @@ type RustToolchain struct {
 // JDK describes a Java installation, from its release file.
 type JDK struct{ Home, Vendor string }
 
+// DotnetEntry is an SDK or a shared framework next to a dotnet host.
+type DotnetEntry struct {
+	Name, Version, Path string
+}
+
+// Dotnet describes the SDKs and shared frameworks visible to one host.
+// Err records an unsuccessful list probe without hiding the host.
+type Dotnet struct {
+	SDKs, Runtimes []DotnetEntry
+	Err            string
+}
+
 // Installation is one copy of a tool.
 type Installation struct {
+	Dotnet  *Dotnet        `json:",omitempty"`
 	Java    *JDK           `json:",omitempty"`
 	PHP     *PHPConfig     `json:",omitempty"`
 	Rust    *RustToolchain `json:",omitempty"`

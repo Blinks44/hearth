@@ -273,7 +273,7 @@ func (a *App) projectsNeeding(tool string) int {
 // logoColors are the colors of the logos of tools that have a page,
 // shown on Node's tile, as the design has them; a tool without one is
 // dark, as Bun.
-var logoColors = map[string]ui.Color{"node": nodeGreen, "go": ui.Hex("#00ACD7"), "bun": {}, "python": {}, "ruby": ui.Hex("#CC342D")}
+var logoColors = map[string]ui.Color{"node": nodeGreen, "go": ui.Hex("#00ACD7"), "bun": {}, "python": {}, "ruby": ui.Hex("#CC342D"), "dotnet": ui.Hex("#512BD4")}
 
 // toolLogo is a tool's logo on a tile of size: a tool with a page has its
 // brand's color on a tinted tile.

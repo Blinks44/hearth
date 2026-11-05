@@ -4757,3 +4757,193 @@ func RubyNoGems() string { return In(i18n.Locale()).RubyNoGems() }
 func (msgs Messages) RubyNoGems() string {
 	return Catalog.Format(msgs.locale, "rubyNoGems", nil)
 }
+
+// DotnetSubtitle says "SDKs and runtimes live side by side · global.json selects the SDK for a folder"
+// in the language the app shows.
+func DotnetSubtitle() string { return In(i18n.Locale()).DotnetSubtitle() }
+
+// DotnetSubtitle says "SDKs and runtimes live side by side · global.json selects the SDK for a folder"
+// in the language of msgs.
+func (msgs Messages) DotnetSubtitle() string {
+	return Catalog.Format(msgs.locale, "DotnetSubtitle", nil)
+}
+
+// DotnetSDKCount says "{count} SDKs"
+// in the language the app shows.
+func DotnetSDKCount(count string) string { return In(i18n.Locale()).DotnetSDKCount(count) }
+
+// DotnetSDKCount says "{count} SDKs"
+// in the language of msgs.
+func (msgs Messages) DotnetSDKCount(count string) string {
+	return Catalog.Format(msgs.locale, "DotnetSDKCount", map[string]any{"count": count})
+}
+
+// DotnetRuntimeCount says "+ {count} runtimes"
+// in the language the app shows.
+func DotnetRuntimeCount(count string) string { return In(i18n.Locale()).DotnetRuntimeCount(count) }
+
+// DotnetRuntimeCount says "+ {count} runtimes"
+// in the language of msgs.
+func (msgs Messages) DotnetRuntimeCount(count string) string {
+	return Catalog.Format(msgs.locale, "DotnetRuntimeCount", map[string]any{"count": count})
+}
+
+// DotnetNote says ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-un…"
+// in the language the app shows.
+func DotnetNote() string { return In(i18n.Locale()).DotnetNote() }
+
+// DotnetNote says ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-un…"
+// in the language of msgs.
+func (msgs Messages) DotnetNote() string {
+	return Catalog.Format(msgs.locale, "DotnetNote", nil)
+}
+
+// DotnetSelection says "Which SDK dotnet selects"
+// in the language the app shows.
+func DotnetSelection() string { return In(i18n.Locale()).DotnetSelection() }
+
+// DotnetSelection says "Which SDK dotnet selects"
+// in the language of msgs.
+func (msgs Messages) DotnetSelection() string {
+	return Catalog.Format(msgs.locale, "DotnetSelection", nil)
+}
+
+// DotnetDefault says "Other folders → newest SDK"
+// in the language the app shows.
+func DotnetDefault() string { return In(i18n.Locale()).DotnetDefault() }
+
+// DotnetDefault says "Other folders → newest SDK"
+// in the language of msgs.
+func (msgs Messages) DotnetDefault() string {
+	return Catalog.Format(msgs.locale, "DotnetDefault", nil)
+}
+
+// DotnetNoProjects says "No added projects with global.json"
+// in the language the app shows.
+func DotnetNoProjects() string { return In(i18n.Locale()).DotnetNoProjects() }
+
+// DotnetNoProjects says "No added projects with global.json"
+// in the language of msgs.
+func (msgs Messages) DotnetNoProjects() string {
+	return Catalog.Format(msgs.locale, "DotnetNoProjects", nil)
+}
+
+// DotnetEnvironment says "Environment"
+// in the language the app shows.
+func DotnetEnvironment() string { return In(i18n.Locale()).DotnetEnvironment() }
+
+// DotnetEnvironment says "Environment"
+// in the language of msgs.
+func (msgs Messages) DotnetEnvironment() string {
+	return Catalog.Format(msgs.locale, "DotnetEnvironment", nil)
+}
+
+// DotnetTelemetry says ".NET telemetry"
+// in the language the app shows.
+func DotnetTelemetry() string { return In(i18n.Locale()).DotnetTelemetry() }
+
+// DotnetTelemetry says ".NET telemetry"
+// in the language of msgs.
+func (msgs Messages) DotnetTelemetry() string {
+	return Catalog.Format(msgs.locale, "DotnetTelemetry", nil)
+}
+
+// DotnetTelemetryDefault says "DOTNET_CLI_TELEMETRY_OPTOUT is not set"
+// in the language the app shows.
+func DotnetTelemetryDefault() string { return In(i18n.Locale()).DotnetTelemetryDefault() }
+
+// DotnetTelemetryDefault says "DOTNET_CLI_TELEMETRY_OPTOUT is not set"
+// in the language of msgs.
+func (msgs Messages) DotnetTelemetryDefault() string {
+	return Catalog.Format(msgs.locale, "DotnetTelemetryDefault", nil)
+}
+
+// DotnetTelemetryOn says "enabled"
+// in the language the app shows.
+func DotnetTelemetryOn() string { return In(i18n.Locale()).DotnetTelemetryOn() }
+
+// DotnetTelemetryOn says "enabled"
+// in the language of msgs.
+func (msgs Messages) DotnetTelemetryOn() string {
+	return Catalog.Format(msgs.locale, "DotnetTelemetryOn", nil)
+}
+
+// DotnetTelemetryOff says "disabled"
+// in the language the app shows.
+func DotnetTelemetryOff() string { return In(i18n.Locale()).DotnetTelemetryOff() }
+
+// DotnetTelemetryOff says "disabled"
+// in the language of msgs.
+func (msgs Messages) DotnetTelemetryOff() string {
+	return Catalog.Format(msgs.locale, "DotnetTelemetryOff", nil)
+}
+
+// DotnetRootDefault says "Not set · the host determines the SDK location"
+// in the language the app shows.
+func DotnetRootDefault() string { return In(i18n.Locale()).DotnetRootDefault() }
+
+// DotnetRootDefault says "Not set · the host determines the SDK location"
+// in the language of msgs.
+func (msgs Messages) DotnetRootDefault() string {
+	return Catalog.Format(msgs.locale, "DotnetRootDefault", nil)
+}
+
+// DotnetTools says "Tools"
+// in the language the app shows.
+func DotnetTools() string { return In(i18n.Locale()).DotnetTools() }
+
+// DotnetTools says "Tools"
+// in the language of msgs.
+func (msgs Messages) DotnetTools() string {
+	return Catalog.Format(msgs.locale, "DotnetTools", nil)
+}
+
+// DotnetNoTools says "No global tools found"
+// in the language the app shows.
+func DotnetNoTools() string { return In(i18n.Locale()).DotnetNoTools() }
+
+// DotnetNoTools says "No global tools found"
+// in the language of msgs.
+func (msgs Messages) DotnetNoTools() string {
+	return Catalog.Format(msgs.locale, "DotnetNoTools", nil)
+}
+
+// DotnetUnknown says "SDK selection is unknown: {reason}"
+// in the language the app shows.
+func DotnetUnknown(reason string) string { return In(i18n.Locale()).DotnetUnknown(reason) }
+
+// DotnetUnknown says "SDK selection is unknown: {reason}"
+// in the language of msgs.
+func (msgs Messages) DotnetUnknown(reason string) string {
+	return Catalog.Format(msgs.locale, "DotnetUnknown", map[string]any{"reason": reason})
+}
+
+// DotnetMissing says "No compatible SDK is installed for {project}"
+// in the language the app shows.
+func DotnetMissing(project string) string { return In(i18n.Locale()).DotnetMissing(project) }
+
+// DotnetMissing says "No compatible SDK is installed for {project}"
+// in the language of msgs.
+func (msgs Messages) DotnetMissing(project string) string {
+	return Catalog.Format(msgs.locale, "DotnetMissing", map[string]any{"project": project})
+}
+
+// DotnetProbeFailed says "Could not list SDKs or runtimes: {reason}"
+// in the language the app shows.
+func DotnetProbeFailed(reason string) string { return In(i18n.Locale()).DotnetProbeFailed(reason) }
+
+// DotnetProbeFailed says "Could not list SDKs or runtimes: {reason}"
+// in the language of msgs.
+func (msgs Messages) DotnetProbeFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "DotnetProbeFailed", map[string]any{"reason": reason})
+}
+
+// DotnetPreview says "preview"
+// in the language the app shows.
+func DotnetPreview() string { return In(i18n.Locale()).DotnetPreview() }
+
+// DotnetPreview says "preview"
+// in the language of msgs.
+func (msgs Messages) DotnetPreview() string {
+	return Catalog.Format(msgs.locale, "DotnetPreview", nil)
+}

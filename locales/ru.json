@@ -361,5 +361,24 @@
         "type": "String"
       }
     }
-  }
+  },
+  "DotnetSubtitle": "SDK и рантаймы стоят рядом · global.json выбирает SDK для папки",
+  "DotnetSDKCount": "{count} SDK",
+  "DotnetRuntimeCount": "+ {count} рантайма",
+  "DotnetNote": ".NET хранит SDK рядом. Рантайм запускает приложения, для сборки проекта нужен SDK. Удаление — через dotnet-uninstall-tool: Hearth покажет команду.",
+  "DotnetSelection": "Какой SDK выберет dotnet",
+  "DotnetDefault": "Другие папки → самый новый SDK",
+  "DotnetNoProjects": "Среди добавленных проектов нет global.json",
+  "DotnetEnvironment": "Окружение",
+  "DotnetTelemetry": "Телеметрия .NET",
+  "DotnetTelemetryDefault": "DOTNET_CLI_TELEMETRY_OPTOUT не задана",
+  "DotnetTelemetryOn": "включена",
+  "DotnetTelemetryOff": "отключена",
+  "DotnetRootDefault": "Не задан · каталог SDK определяет dotnet",
+  "DotnetTools": "Инструменты",
+  "DotnetNoTools": "Глобальные инструменты не найдены",
+  "DotnetUnknown": "Выбор SDK неизвестен: {reason}",
+  "DotnetMissing": "Для {project} нет подходящего SDK",
+  "DotnetProbeFailed": "Не удалось прочитать SDK или рантаймы: {reason}",
+  "DotnetPreview": "предварительная версия"
 }

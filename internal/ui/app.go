@@ -51,12 +51,14 @@ type App struct {
 	PHPVersionsErr string
 	// RustVersions are Rust's release lines; nil until they come, or when
 	// they could not, RustVersionsErr says why.
-	RustVersions    *versions.Rust
-	RustVersionsErr string
-	RubyVersions    *versions.Ruby
-	RubyVersionsErr string
-	JavaVersions    *versions.Java
-	JavaVersionsErr string
+	RustVersions      *versions.Rust
+	RustVersionsErr   string
+	DotnetVersions    *versions.Dotnet
+	DotnetVersionsErr string
+	RubyVersions      *versions.Ruby
+	RubyVersionsErr   string
+	JavaVersions      *versions.Java
+	JavaVersionsErr   string
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -85,6 +87,7 @@ type App struct {
 	goTab         int     // the tab of the Go page shown
 	phpTab        int     // the tab of the PHP page shown
 	pythonTab     int     // the tab of the Python page shown
+	dotnetTab     int     // the tab of the .NET page shown
 	rubyTab       int     // the tab of the Ruby page shown
 	javaTab       int     // the tab of the Java page shown
 	rustTab       int     // the tab of the Rust page shown
@@ -150,6 +153,8 @@ func (a *App) View(c *ui.Context) {
 						a.php(c, p)
 					case "/tools/python":
 						a.python(c, p)
+					case "/tools/dotnet":
+						a.dotnet(c, p)
 					case "/tools/ruby":
 						a.ruby(c, p)
 					case "/tools/java":

@@ -25,6 +25,8 @@ import (
 type Requirement struct {
 	// Tool is the tool's ID, as "node", "pnpm", "python", "docker".
 	Tool string
+	// SDK is the selection policy of global.json, when present.
+	SDK *SDKPolicy
 	// Want is the version as the file writes it: "22", "lts/*", "^20.10";
 	// empty when the file only tells the tool is needed, as a lockfile.
 	Want string
@@ -85,6 +87,7 @@ var readers = []struct {
 	{"Cargo.toml", readCargoTOML},
 	{"composer.json", readComposerJSON},
 	{"go.mod", readGoMod},
+	{"global.json", readGlobalJSON},
 	{".bun-version", firstLine("bun")},
 	{"bunfig.toml", needs("bun")},
 	{"compose.yaml", needs("docker")},
@@ -126,6 +129,7 @@ func Read(dir string) Project {
 			p.Requirements = append(p.Requirements, req)
 		}
 	}
+	readInheritedGlobalJSON(&p)
 	for _, name := range aiFiles {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
 			p.AI = append(p.AI, name)

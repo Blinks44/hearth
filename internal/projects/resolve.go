@@ -75,6 +75,10 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 			continue
 		}
 		st.Checked = true
+		if st.Tool == "dotnet" {
+			resolveDotnet(st, ts)
+			continue
+		}
 		st.Installations = ts.Installations
 		st.Terminal, st.Downloads = terminal(ts, st.Checks, lines)
 		for j := range st.Checks {
