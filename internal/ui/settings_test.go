@@ -68,6 +68,8 @@ func TestSettingsPage(t *testing.T) {
 	tt.Frame()
 	screenshot(t, tt, "settings-dark")
 	tt.SetDark(false)
+	a.SettingsNotice = "Cache cleared"
+	tt.Frame()
 	if err := tt.Click("Choose interface language"); err != nil {
 		t.Fatal(err)
 	}
@@ -75,8 +77,8 @@ func TestSettingsPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if a.Locale != "ru" {
-		t.Fatal(a.Locale)
+	if a.Locale != "ru" || a.SettingsNotice != "" {
+		t.Fatal(a.Locale, a.SettingsNotice)
 	}
 	if err := tt.Click("Choose theme"); err != nil {
 		t.Fatal(err)

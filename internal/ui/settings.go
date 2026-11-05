@@ -39,6 +39,7 @@ func (a *App) settingsPage(c *ui.Context) {
 									if lang == "Русский" {
 										a.Locale = "ru"
 									}
+									a.SettingsNotice = "" // says it in the language it was shown in
 									if a.OnLocale != nil {
 										a.OnLocale(a.Locale)
 									}
