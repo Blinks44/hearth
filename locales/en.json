@@ -2000,5 +2000,32 @@
         "example": "1840"
       }
     }
-  }
+  },
+  "envPathDescription": "Where terminals and apps look for commands",
+  "envPathTerminal": "Terminal",
+  "envPathApps": "Applications",
+  "envPathVariables": "Variables",
+  "envPathDifferences": "Differences",
+  "envPathEntries": "entries",
+  "envPathFilter": "Find directory",
+  "envPathOrder": "Order",
+  "envPathSource": "Possible source",
+  "envPathDirectory": "Directory",
+  "envPathUnknown": "Source unknown",
+  "envPathDuplicate": "Repeats entry #",
+  "envPathMissing": "Directory missing",
+  "envPathRelative": "Depends on working directory",
+  "envPathTerminalOnly": "Terminal only",
+  "envPathAppsOnly": "Applications only",
+  "envPathOrigins": "Files and registry entries",
+  "envPathOriginNote": "Possible declarations are found by reading files. Shell functions, conditions and sourced scripts are not evaluated; the exact origin may be unknown.",
+  "envPathToolVariables": "Tool variables",
+  "envPathNoVariables": "No known tool variables are set.",
+  "envPathNoDifference": "Both environments have the same directories. Their order may differ.",
+  "envPathReadOnly": "Read only. PATH changes will be available through a confirmed plan.",
+  "envPathEmpty": "No PATH entries in this snapshot.",
+  "envPathNoMatches": "No matching directories.",
+  "envPathUnset": "Not set",
+  "envPathProblems": "Problems",
+  "envPathWarnings": "Repeated, missing or relative directories need attention."
 }

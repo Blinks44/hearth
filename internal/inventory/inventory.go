@@ -167,8 +167,20 @@ type ToolState struct {
 	Err string `json:",omitempty"`
 }
 
-// PathEntry is a directory as a PATH lists it.
+// PathSource is a possible declaration of a PATH directory.
+type PathSource struct {
+	File string
+	Line int `json:",omitempty"`
+}
+
+// EnvironmentVariable is an allowlisted tool setting in both environments.
+type EnvironmentVariable struct {
+	Name, Terminal, GUI string
+}
+
+// PathEntry retains possible declarations without claiming shell evaluation.
 type PathEntry struct {
+	Sources []PathSource `json:",omitempty"`
 	// Dir is as written; an empty or relative one means the working
 	// directory.
 	Dir string
@@ -183,6 +195,8 @@ type Snapshot struct {
 	// TerminalPath and GUIPath are the entries of the terminal's PATH and
 	// of the one apps started from the Dock or a desktop menu get, in order.
 	TerminalPath, GUIPath []PathEntry `json:",omitempty"`
+	// Variables are the tool settings both environments have, by name.
+	Variables []EnvironmentVariable `json:",omitempty"`
 	// Agents are the AI agents Hearth knows, found or not, in its order.
 	Agents []Agent `json:",omitempty"`
 	// Skills are the user's skills, those of projects aside.

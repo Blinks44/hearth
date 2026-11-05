@@ -4,10 +4,7 @@ package scan
 
 import (
 	"context"
-	"errors"
 	"log"
-	"os"
-	"path/filepath"
 	"slices"
 	"sync"
 	"time"
@@ -170,7 +167,7 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 	tools := detectTools(ctx, r, term, gui, ds)
 	wg.Wait()
 	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
-		TerminalPath: pathEntries(term), GUIPath: pathEntries(gui)}
+		TerminalPath: sysenv.Paths(term), GUIPath: sysenv.Paths(gui), Variables: sysenv.Variables(term, gui)}
 }
 
 // detectTools runs the detectors, a few at once, and returns their states
@@ -193,21 +190,6 @@ func detectTools(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []D
 	}
 	wg.Wait()
 	return tools
-}
-
-// pathEntries lists the PATH of env, telling which directories are not
-// there. A relative entry is not looked for: it depends on the folder.
-func pathEntries(env sysenv.Env) []inventory.PathEntry {
-	var out []inventory.PathEntry
-	for _, dir := range filepath.SplitList(env.Get("PATH")) {
-		e := inventory.PathEntry{Dir: dir}
-		if filepath.IsAbs(dir) {
-			_, err := os.Stat(dir)
-			e.Missing = errors.Is(err, os.ErrNotExist)
-		}
-		out = append(out, e)
-	}
-	return out
 }
 
 // systemEnv reads the terminal's environment from the user's shell, and

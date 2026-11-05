@@ -5797,3 +5797,273 @@ func PkgShown(shown int, total int) string { return In(i18n.Locale()).PkgShown(s
 func (msgs Messages) PkgShown(shown int, total int) string {
 	return Catalog.Format(msgs.locale, "pkgShown", map[string]any{"shown": shown, "total": total})
 }
+
+// EnvPathDescription says "Where terminals and apps look for commands"
+// in the language the app shows.
+func EnvPathDescription() string { return In(i18n.Locale()).EnvPathDescription() }
+
+// EnvPathDescription says "Where terminals and apps look for commands"
+// in the language of msgs.
+func (msgs Messages) EnvPathDescription() string {
+	return Catalog.Format(msgs.locale, "envPathDescription", nil)
+}
+
+// EnvPathTerminal says "Terminal"
+// in the language the app shows.
+func EnvPathTerminal() string { return In(i18n.Locale()).EnvPathTerminal() }
+
+// EnvPathTerminal says "Terminal"
+// in the language of msgs.
+func (msgs Messages) EnvPathTerminal() string {
+	return Catalog.Format(msgs.locale, "envPathTerminal", nil)
+}
+
+// EnvPathApps says "Applications"
+// in the language the app shows.
+func EnvPathApps() string { return In(i18n.Locale()).EnvPathApps() }
+
+// EnvPathApps says "Applications"
+// in the language of msgs.
+func (msgs Messages) EnvPathApps() string {
+	return Catalog.Format(msgs.locale, "envPathApps", nil)
+}
+
+// EnvPathVariables says "Variables"
+// in the language the app shows.
+func EnvPathVariables() string { return In(i18n.Locale()).EnvPathVariables() }
+
+// EnvPathVariables says "Variables"
+// in the language of msgs.
+func (msgs Messages) EnvPathVariables() string {
+	return Catalog.Format(msgs.locale, "envPathVariables", nil)
+}
+
+// EnvPathDifferences says "Differences"
+// in the language the app shows.
+func EnvPathDifferences() string { return In(i18n.Locale()).EnvPathDifferences() }
+
+// EnvPathDifferences says "Differences"
+// in the language of msgs.
+func (msgs Messages) EnvPathDifferences() string {
+	return Catalog.Format(msgs.locale, "envPathDifferences", nil)
+}
+
+// EnvPathEntries says "entries"
+// in the language the app shows.
+func EnvPathEntries() string { return In(i18n.Locale()).EnvPathEntries() }
+
+// EnvPathEntries says "entries"
+// in the language of msgs.
+func (msgs Messages) EnvPathEntries() string {
+	return Catalog.Format(msgs.locale, "envPathEntries", nil)
+}
+
+// EnvPathFilter says "Find directory"
+// in the language the app shows.
+func EnvPathFilter() string { return In(i18n.Locale()).EnvPathFilter() }
+
+// EnvPathFilter says "Find directory"
+// in the language of msgs.
+func (msgs Messages) EnvPathFilter() string {
+	return Catalog.Format(msgs.locale, "envPathFilter", nil)
+}
+
+// EnvPathOrder says "Order"
+// in the language the app shows.
+func EnvPathOrder() string { return In(i18n.Locale()).EnvPathOrder() }
+
+// EnvPathOrder says "Order"
+// in the language of msgs.
+func (msgs Messages) EnvPathOrder() string {
+	return Catalog.Format(msgs.locale, "envPathOrder", nil)
+}
+
+// EnvPathSource says "Possible source"
+// in the language the app shows.
+func EnvPathSource() string { return In(i18n.Locale()).EnvPathSource() }
+
+// EnvPathSource says "Possible source"
+// in the language of msgs.
+func (msgs Messages) EnvPathSource() string {
+	return Catalog.Format(msgs.locale, "envPathSource", nil)
+}
+
+// EnvPathDirectory says "Directory"
+// in the language the app shows.
+func EnvPathDirectory() string { return In(i18n.Locale()).EnvPathDirectory() }
+
+// EnvPathDirectory says "Directory"
+// in the language of msgs.
+func (msgs Messages) EnvPathDirectory() string {
+	return Catalog.Format(msgs.locale, "envPathDirectory", nil)
+}
+
+// EnvPathUnknown says "Source unknown"
+// in the language the app shows.
+func EnvPathUnknown() string { return In(i18n.Locale()).EnvPathUnknown() }
+
+// EnvPathUnknown says "Source unknown"
+// in the language of msgs.
+func (msgs Messages) EnvPathUnknown() string {
+	return Catalog.Format(msgs.locale, "envPathUnknown", nil)
+}
+
+// EnvPathDuplicate says "Repeats entry #"
+// in the language the app shows.
+func EnvPathDuplicate() string { return In(i18n.Locale()).EnvPathDuplicate() }
+
+// EnvPathDuplicate says "Repeats entry #"
+// in the language of msgs.
+func (msgs Messages) EnvPathDuplicate() string {
+	return Catalog.Format(msgs.locale, "envPathDuplicate", nil)
+}
+
+// EnvPathMissing says "Directory missing"
+// in the language the app shows.
+func EnvPathMissing() string { return In(i18n.Locale()).EnvPathMissing() }
+
+// EnvPathMissing says "Directory missing"
+// in the language of msgs.
+func (msgs Messages) EnvPathMissing() string {
+	return Catalog.Format(msgs.locale, "envPathMissing", nil)
+}
+
+// EnvPathRelative says "Depends on working directory"
+// in the language the app shows.
+func EnvPathRelative() string { return In(i18n.Locale()).EnvPathRelative() }
+
+// EnvPathRelative says "Depends on working directory"
+// in the language of msgs.
+func (msgs Messages) EnvPathRelative() string {
+	return Catalog.Format(msgs.locale, "envPathRelative", nil)
+}
+
+// EnvPathTerminalOnly says "Terminal only"
+// in the language the app shows.
+func EnvPathTerminalOnly() string { return In(i18n.Locale()).EnvPathTerminalOnly() }
+
+// EnvPathTerminalOnly says "Terminal only"
+// in the language of msgs.
+func (msgs Messages) EnvPathTerminalOnly() string {
+	return Catalog.Format(msgs.locale, "envPathTerminalOnly", nil)
+}
+
+// EnvPathAppsOnly says "Applications only"
+// in the language the app shows.
+func EnvPathAppsOnly() string { return In(i18n.Locale()).EnvPathAppsOnly() }
+
+// EnvPathAppsOnly says "Applications only"
+// in the language of msgs.
+func (msgs Messages) EnvPathAppsOnly() string {
+	return Catalog.Format(msgs.locale, "envPathAppsOnly", nil)
+}
+
+// EnvPathOrigins says "Files and registry entries"
+// in the language the app shows.
+func EnvPathOrigins() string { return In(i18n.Locale()).EnvPathOrigins() }
+
+// EnvPathOrigins says "Files and registry entries"
+// in the language of msgs.
+func (msgs Messages) EnvPathOrigins() string {
+	return Catalog.Format(msgs.locale, "envPathOrigins", nil)
+}
+
+// EnvPathOriginNote says "Possible declarations are found by reading files. Shell functions, conditions and sourced scripts are not evaluated; …"
+// in the language the app shows.
+func EnvPathOriginNote() string { return In(i18n.Locale()).EnvPathOriginNote() }
+
+// EnvPathOriginNote says "Possible declarations are found by reading files. Shell functions, conditions and sourced scripts are not evaluated; …"
+// in the language of msgs.
+func (msgs Messages) EnvPathOriginNote() string {
+	return Catalog.Format(msgs.locale, "envPathOriginNote", nil)
+}
+
+// EnvPathToolVariables says "Tool variables"
+// in the language the app shows.
+func EnvPathToolVariables() string { return In(i18n.Locale()).EnvPathToolVariables() }
+
+// EnvPathToolVariables says "Tool variables"
+// in the language of msgs.
+func (msgs Messages) EnvPathToolVariables() string {
+	return Catalog.Format(msgs.locale, "envPathToolVariables", nil)
+}
+
+// EnvPathNoVariables says "No known tool variables are set."
+// in the language the app shows.
+func EnvPathNoVariables() string { return In(i18n.Locale()).EnvPathNoVariables() }
+
+// EnvPathNoVariables says "No known tool variables are set."
+// in the language of msgs.
+func (msgs Messages) EnvPathNoVariables() string {
+	return Catalog.Format(msgs.locale, "envPathNoVariables", nil)
+}
+
+// EnvPathNoDifference says "Both environments have the same directories. Their order may differ."
+// in the language the app shows.
+func EnvPathNoDifference() string { return In(i18n.Locale()).EnvPathNoDifference() }
+
+// EnvPathNoDifference says "Both environments have the same directories. Their order may differ."
+// in the language of msgs.
+func (msgs Messages) EnvPathNoDifference() string {
+	return Catalog.Format(msgs.locale, "envPathNoDifference", nil)
+}
+
+// EnvPathReadOnly says "Read only. PATH changes will be available through a confirmed plan."
+// in the language the app shows.
+func EnvPathReadOnly() string { return In(i18n.Locale()).EnvPathReadOnly() }
+
+// EnvPathReadOnly says "Read only. PATH changes will be available through a confirmed plan."
+// in the language of msgs.
+func (msgs Messages) EnvPathReadOnly() string {
+	return Catalog.Format(msgs.locale, "envPathReadOnly", nil)
+}
+
+// EnvPathEmpty says "No PATH entries in this snapshot."
+// in the language the app shows.
+func EnvPathEmpty() string { return In(i18n.Locale()).EnvPathEmpty() }
+
+// EnvPathEmpty says "No PATH entries in this snapshot."
+// in the language of msgs.
+func (msgs Messages) EnvPathEmpty() string {
+	return Catalog.Format(msgs.locale, "envPathEmpty", nil)
+}
+
+// EnvPathNoMatches says "No matching directories."
+// in the language the app shows.
+func EnvPathNoMatches() string { return In(i18n.Locale()).EnvPathNoMatches() }
+
+// EnvPathNoMatches says "No matching directories."
+// in the language of msgs.
+func (msgs Messages) EnvPathNoMatches() string {
+	return Catalog.Format(msgs.locale, "envPathNoMatches", nil)
+}
+
+// EnvPathUnset says "Not set"
+// in the language the app shows.
+func EnvPathUnset() string { return In(i18n.Locale()).EnvPathUnset() }
+
+// EnvPathUnset says "Not set"
+// in the language of msgs.
+func (msgs Messages) EnvPathUnset() string {
+	return Catalog.Format(msgs.locale, "envPathUnset", nil)
+}
+
+// EnvPathProblems says "Problems"
+// in the language the app shows.
+func EnvPathProblems() string { return In(i18n.Locale()).EnvPathProblems() }
+
+// EnvPathProblems says "Problems"
+// in the language of msgs.
+func (msgs Messages) EnvPathProblems() string {
+	return Catalog.Format(msgs.locale, "envPathProblems", nil)
+}
+
+// EnvPathWarnings says "Repeated, missing or relative directories need attention."
+// in the language the app shows.
+func EnvPathWarnings() string { return In(i18n.Locale()).EnvPathWarnings() }
+
+// EnvPathWarnings says "Repeated, missing or relative directories need attention."
+// in the language of msgs.
+func (msgs Messages) EnvPathWarnings() string {
+	return Catalog.Format(msgs.locale, "envPathWarnings", nil)
+}

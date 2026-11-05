@@ -1,0 +1,59 @@
+package sysenv
+
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/Blinks44/hearth/internal/inventory"
+)
+
+// Paths reads PATH directories in their original order. Sources are possible
+// declarations, not a trace of shell evaluation; no configuration is executed.
+func Paths(env Env) []inventory.PathEntry {
+	sources := pathSources(env)
+	var out []inventory.PathEntry
+	for _, dir := range filepath.SplitList(env.Get("PATH")) {
+		e := inventory.PathEntry{Dir: dir, Sources: sources[pathKey(dir)]}
+		if filepath.IsAbs(dir) {
+			info, err := os.Stat(dir)
+			e.Missing = errors.Is(err, os.ErrNotExist) || (err == nil && !info.IsDir())
+		}
+		out = append(out, e)
+	}
+	return out
+}
+
+// Variables returns only known tool settings. Arbitrary environment values,
+// credentials and tokens must never enter the snapshot.
+func Variables(term, gui Env) []inventory.EnvironmentVariable {
+	var out []inventory.EnvironmentVariable
+	for _, key := range []string{"JAVA_HOME", "GOPATH", "GOROOT", "GOTOOLCHAIN", "NVM_DIR", "FNM_DIR", "VOLTA_HOME", "MISE_DATA_DIR", "ASDF_DATA_DIR", "BUN_INSTALL", "PNPM_HOME", "COREPACK_HOME", "PYENV_ROOT", "VIRTUAL_ENV", "CONDA_PREFIX", "CARGO_HOME", "RUSTUP_HOME", "GEM_HOME", "GEM_PATH", "RBENV_ROOT", "DOTNET_ROOT"} {
+		t, g := term.Get(key), gui.Get(key)
+		if t != "" || g != "" {
+			out = append(out, inventory.EnvironmentVariable{Name: key, Terminal: t, GUI: g})
+		}
+	}
+	return out
+}
+
+func expandPath(value string, env Env) string {
+	value = strings.Trim(value, "\"'")
+	if value == "~" {
+		return env.Get("HOME")
+	}
+	if strings.HasPrefix(value, "~/") {
+		value = env.Get("HOME") + value[1:]
+	}
+	return os.Expand(value, func(key string) string {
+		v := env.Get(key)
+		if v == "" {
+			return "$" + key
+		}
+		return v
+	})
+}
+
+// SamePath compares directory spelling using the platform's path rules.
+func SamePath(a, b string) bool { return pathKey(a) == pathKey(b) }

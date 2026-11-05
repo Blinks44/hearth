@@ -78,7 +78,8 @@ esac
 	c.waitFor(t, "Your whole developer environment on this computer")
 	// The scan finds the fake node, and the project shows with it.
 	c.waitFor(t, "e2e-project")
-	c.waitFor(t, "Node.js")
+	// Standard manager locations can add probes with 15-second timeouts.
+	c.waitForWithin(t, "Node.js", 90*time.Second)
 
 	for _, step := range []struct{ key, text string }{
 		{"/projects", "Code folders Hearth checks"},
@@ -86,7 +87,7 @@ esac
 		{"/tools/docker", "CLI, contexts and container engines"},
 		{"/tools/databases", "Database servers and containers"},
 		{"/system/packages", "Package manager status"},
-		{"/system/path", "Coming soon"},
+		{"/system/path", "Where terminals and apps look for commands"},
 		{"/overview", "Needs attention"},
 	} {
 		c.call(t, "act", map[string]any{"key": step.key, "action": "press"})
@@ -196,7 +197,12 @@ func (c *client) labels(t *testing.T) []string {
 // and the pages' fades take their time.
 func (c *client) waitFor(t *testing.T, text string) {
 	t.Helper()
-	deadline := time.Now().Add(30 * time.Second)
+	c.waitForWithin(t, text, 30*time.Second)
+}
+
+func (c *client) waitForWithin(t *testing.T, text string, timeout time.Duration) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
 	for {
 		// A window that keeps moving never settles; the tree is read anyway.
 		_, _ = c.try("idle", map[string]any{"timeout": 2000})

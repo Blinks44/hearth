@@ -83,6 +83,8 @@ type App struct {
 	nodeTab        int     // the tab of the Node.js page shown
 	jspmTab        int     // the tab of the package managers page shown
 	jspmFilter     string  // the package managers table's filter
+	pathTab        int     // the tab of the PATH page shown
+	pathFilter     string  // the PATH table's filter
 	packageTab     int     // the tab of the system package managers page shown
 	packageManager string  // the path of the package manager shown
 	packageFilter  string  // the package table's filter
@@ -152,6 +154,8 @@ func (a *App) View(c *ui.Context) {
 						a.node(c, p)
 					case "/tools/jspm":
 						a.jspm(c, p)
+					case pathPage:
+						a.paths(c, p)
 					case "/system/packages":
 						a.packages(c, p)
 					case "/tools/databases":
