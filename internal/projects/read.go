@@ -51,6 +51,8 @@ type Project struct {
 	Skills []inventory.Skill
 	// MCP are the MCP servers in the agents' files of the project.
 	MCP []inventory.MCPServer
+	// Databases are the local databases Compose and .env refer to.
+	Databases []DatabaseReference
 	// Errs say which files could not be read; the others still count.
 	Errs []error
 }
@@ -129,6 +131,7 @@ func Read(dir string) Project {
 			p.Requirements = append(p.Requirements, req)
 		}
 	}
+	readDatabases(&p)
 	readInheritedGlobalJSON(&p)
 	for _, name := range aiFiles {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
@@ -148,7 +151,7 @@ func Names() []string {
 	for _, r := range readers {
 		names = append(names, r.file)
 	}
-	return append(names, aiFiles...)
+	return append(append(names, ".env"), aiFiles...)
 }
 
 // needs is a file that only tells the tool is needed.

@@ -72,14 +72,28 @@ func main() {
 			}()
 		}
 		// Project files and the shells' startup files are followed: a
-		// change reads that project again, or scans again.
+		// change reads that project again, or scans again. A change of the
+		// Docker engine's containers checks Docker and the databases again.
 		list.watch = &watch.Service{
 			Start: func(ctx context.Context, path string) (watch.Watcher, error) {
 				return mygo.WatchFiles(ctx, path, mygo.FileWatchOptions{Debounce: 300 * time.Millisecond})
 			},
 			Project: func(p projects.Project) { win.Update(func() { list.update(p) }) },
 			Shell:   func() { win.Update(a.Scan) },
-			Err:     func(err error) { log.Print(err) },
+			Lines:   run.Lines,
+			Containers: func() {
+				scanner.Refresh([]string{"docker", "databases"}, func(states []inventory.ToolState) {
+					win.Update(func() {
+						if a.Snapshot == nil {
+							return
+						}
+						s := scan.Replace(*a.Snapshot, states)
+						a.Snapshot = &s
+						list.watch.Docker(&s, scanner.Terminal())
+					})
+				})
+			},
+			Err: func(err error) { log.Print(err) },
 		}
 		list.watch.StartupFiles(detect.StartupFiles(sysenv.GUI(), a.Home))
 		list.read()
@@ -88,7 +102,10 @@ func main() {
 			log.Print(err)
 		}
 		scanned := func(s inventory.Snapshot) {
-			win.Update(func() { a.Snapshot, a.Scanning = &s, false })
+			win.Update(func() {
+				a.Snapshot, a.Scanning = &s, false
+				list.watch.Docker(&s, scanner.Terminal())
+			})
 			if cache != "" {
 				go func() {
 					if err := store.SaveSnapshot(cache, s); err != nil {

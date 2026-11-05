@@ -99,3 +99,26 @@ func TestStartDropsOlderScan(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 	}
 }
+
+// A refresh runs only the tools asked for, and Replace puts their states
+// in a copy of the snapshot.
+func TestRefresh(t *testing.T) {
+	s := &Scanner{Runner: &run.Fake{}, Env: noEnv, Detectors: []Detector{
+		{"node", func(context.Context, run.Runner, sysenv.Env, sysenv.Env) (inventory.ToolState, error) {
+			t.Error("node ran")
+			return inventory.ToolState{}, nil
+		}},
+		{"docker", found("/new/docker")},
+	}}
+	got := make(chan []inventory.ToolState, 1)
+	s.Refresh([]string{"docker"}, func(states []inventory.ToolState) { got <- states })
+	states := <-got
+	if len(states) != 1 || states[0].Tool != "docker" {
+		t.Fatalf("%+v", states)
+	}
+	old := inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node"}, {Tool: "docker"}}}
+	snap := Replace(old, states)
+	if snap.Tools[1].Installations[0].Path != "/new/docker" || old.Tools[1].Installations != nil || snap.Tools[0].Tool != "node" {
+		t.Fatalf("%+v %+v", snap, old)
+	}
+}

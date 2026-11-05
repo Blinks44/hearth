@@ -16,6 +16,8 @@ import (
 func issueText(is issues.Issue, home string) (title, explain string) {
 	tool := toolTitle(is.Tool)
 	switch is.Kind {
+	case issues.DatabasePortConflict:
+		return locales.DatabaseConflictTitle(is.Dirs[0]), locales.DatabaseConflictExplain(filepath.Base(is.Project))
 	case issues.DockerUnavailable:
 		return locales.DockerUnavailableTitle(), locales.DockerUnavailableExplain()
 	case issues.Duplicate:
@@ -119,6 +121,8 @@ func issuePage(is issues.Issue) string {
 		return skillsPage
 	case len(is.MCP) > 0:
 		return mcpPage
+	case is.Tool == "databases":
+		return "/tools/databases"
 	case is.Project != "":
 		return projectPath(is.Project)
 	case is.Tool == "docker":

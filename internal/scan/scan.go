@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -41,6 +42,7 @@ var Detectors = []Detector{
 	{"ruby", detect.Ruby},
 	{"dotnet", detect.Dotnet},
 	{"docker", detect.Docker},
+	{"databases", detect.Databases},
 }
 
 // parallel is how many detectors run at once: each may start commands.
@@ -54,9 +56,11 @@ type Scanner struct {
 	// computer's.
 	Env func(ctx context.Context, r run.Runner) (term, gui sysenv.Env)
 
-	mu     sync.Mutex
-	gen    int // counts the scans started, so that an older one is dropped
-	cancel context.CancelFunc
+	mu         sync.Mutex
+	gen        int // counts the scans started, so that an older one is dropped
+	cancel     context.CancelFunc
+	refreshGen int        // counts the refreshes, as gen the scans
+	term, gui  sysenv.Env // of the last scan, for refreshes
 }
 
 // Start cancels the scan under way, if any, and scans again. done gets the
@@ -80,6 +84,9 @@ func (s *Scanner) Start(done func(inventory.Snapshot)) {
 			env = systemEnv
 		}
 		term, gui := env(ctx, s.Runner)
+		s.mu.Lock()
+		s.term, s.gui = term, gui
+		s.mu.Unlock()
 		snap := Run(ctx, s.Runner, term, gui, s.Detectors)
 		// Under the lock, so that a Start meanwhile cannot let this older
 		// snapshot arrive after the newer one.
@@ -91,14 +98,65 @@ func (s *Scanner) Start(done func(inventory.Snapshot)) {
 	}()
 }
 
+// Terminal returns the terminal's environment the last scan read, nil
+// before one did.
+func (s *Scanner) Terminal() sysenv.Env {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.term
+}
+
+// Refresh runs again only the detectors of tools, in the environment of
+// the last scan, and gives done what they found, in the detectors' order:
+// it is for a change one part of the computer reported. done runs on the
+// refresh's goroutine, unless a later Refresh overtook it.
+func (s *Scanner) Refresh(tools []string, done func([]inventory.ToolState)) {
+	s.mu.Lock()
+	s.refreshGen++
+	gen, term, gui := s.refreshGen, s.term, s.gui
+	s.mu.Unlock()
+	go func() {
+		ctx := context.Background()
+		if term == nil {
+			env := s.Env
+			if env == nil {
+				env = systemEnv
+			}
+			term, gui = env(ctx, s.Runner)
+		}
+		var ds []Detector
+		for _, d := range s.Detectors {
+			if slices.Contains(tools, d.Tool) {
+				ds = append(ds, d)
+			}
+		}
+		states := detectTools(ctx, s.Runner, term, gui, ds)
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if gen == s.refreshGen {
+			done(states)
+		}
+	}()
+}
+
+// Replace returns snap with the tools' states replaced by those of
+// states. snap itself is left alone, as another goroutine may read it.
+func Replace(snap inventory.Snapshot, states []inventory.ToolState) inventory.Snapshot {
+	snap.Tools = slices.Clone(snap.Tools)
+	for _, st := range states {
+		if i := slices.IndexFunc(snap.Tools, func(t inventory.ToolState) bool { return t.Tool == st.Tool }); i >= 0 {
+			snap.Tools[i] = st
+		}
+	}
+	return snap
+}
+
 // Run runs the detectors, a few at once, and returns what they found in
 // their order, with the AI agents and the user's skills and MCP servers,
 // found beside them. A detector's error
 // leaves the others alone: its tool gets the error and whatever it found
 // before it.
 func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector) inventory.Snapshot {
-	tools := make([]inventory.ToolState, len(ds))
-	sem := make(chan struct{}, parallel)
 	var wg sync.WaitGroup
 	var agents []inventory.Agent
 	var skills []inventory.Skill
@@ -107,6 +165,18 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 	wg.Go(func() { agents = ai.Detect(ctx, r, term, gui) })
 	wg.Go(func() { skills = ai.Skills(term) })
 	wg.Go(func() { mcp, mcpErrs = ai.MCP(term) })
+	tools := detectTools(ctx, r, term, gui, ds)
+	wg.Wait()
+	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
+		TerminalPath: pathEntries(term), GUIPath: pathEntries(gui)}
+}
+
+// detectTools runs the detectors, a few at once, and returns their states
+// in their order.
+func detectTools(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector) []inventory.ToolState {
+	tools := make([]inventory.ToolState, len(ds))
+	sem := make(chan struct{}, parallel)
+	var wg sync.WaitGroup
 	for i, d := range ds {
 		wg.Go(func() {
 			sem <- struct{}{}
@@ -120,8 +190,7 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 		})
 	}
 	wg.Wait()
-	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
-		TerminalPath: pathEntries(term), GUIPath: pathEntries(gui)}
+	return tools
 }
 
 // pathEntries lists the PATH of env, telling which directories are not

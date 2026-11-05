@@ -5279,3 +5279,287 @@ func DockerFilter() string { return In(i18n.Locale()).DockerFilter() }
 func (msgs Messages) DockerFilter() string {
 	return Catalog.Format(msgs.locale, "dockerFilter", nil)
 }
+
+// DatabaseSubtitle says "Database servers and containers · clients listed separately"
+// in the language the app shows.
+func DatabaseSubtitle() string { return In(i18n.Locale()).DatabaseSubtitle() }
+
+// DatabaseSubtitle says "Database servers and containers · clients listed separately"
+// in the language of msgs.
+func (msgs Messages) DatabaseSubtitle() string {
+	return Catalog.Format(msgs.locale, "DatabaseSubtitle", nil)
+}
+
+// DatabaseServers says "Servers"
+// in the language the app shows.
+func DatabaseServers() string { return In(i18n.Locale()).DatabaseServers() }
+
+// DatabaseServers says "Servers"
+// in the language of msgs.
+func (msgs Messages) DatabaseServers() string {
+	return Catalog.Format(msgs.locale, "DatabaseServers", nil)
+}
+
+// DatabaseRunning says "running"
+// in the language the app shows.
+func DatabaseRunning() string { return In(i18n.Locale()).DatabaseRunning() }
+
+// DatabaseRunning says "running"
+// in the language of msgs.
+func (msgs Messages) DatabaseRunning() string {
+	return Catalog.Format(msgs.locale, "DatabaseRunning", nil)
+}
+
+// DatabaseConflicts says "Conflicts"
+// in the language the app shows.
+func DatabaseConflicts() string { return In(i18n.Locale()).DatabaseConflicts() }
+
+// DatabaseConflicts says "Conflicts"
+// in the language of msgs.
+func (msgs Messages) DatabaseConflicts() string {
+	return Catalog.Format(msgs.locale, "DatabaseConflicts", nil)
+}
+
+// DatabasePorts says "TCP ports"
+// in the language the app shows.
+func DatabasePorts() string { return In(i18n.Locale()).DatabasePorts() }
+
+// DatabasePorts says "TCP ports"
+// in the language of msgs.
+func (msgs Messages) DatabasePorts() string {
+	return Catalog.Format(msgs.locale, "DatabasePorts", nil)
+}
+
+// DatabaseServices says "Services"
+// in the language the app shows.
+func DatabaseServices() string { return In(i18n.Locale()).DatabaseServices() }
+
+// DatabaseServices says "Services"
+// in the language of msgs.
+func (msgs Messages) DatabaseServices() string {
+	return Catalog.Format(msgs.locale, "DatabaseServices", nil)
+}
+
+// DatabaseContainers says "Containers"
+// in the language the app shows.
+func DatabaseContainers() string { return In(i18n.Locale()).DatabaseContainers() }
+
+// DatabaseContainers says "Containers"
+// in the language of msgs.
+func (msgs Messages) DatabaseContainers() string {
+	return Catalog.Format(msgs.locale, "DatabaseContainers", nil)
+}
+
+// DatabaseReadOnly says "Service controls will be available through a reviewed operation plan. Status comes from the service manager; listenin…"
+// in the language the app shows.
+func DatabaseReadOnly() string { return In(i18n.Locale()).DatabaseReadOnly() }
+
+// DatabaseReadOnly says "Service controls will be available through a reviewed operation plan. Status comes from the service manager; listenin…"
+// in the language of msgs.
+func (msgs Messages) DatabaseReadOnly() string {
+	return Catalog.Format(msgs.locale, "DatabaseReadOnly", nil)
+}
+
+// DatabaseListeners says "Database port listeners"
+// in the language the app shows.
+func DatabaseListeners() string { return In(i18n.Locale()).DatabaseListeners() }
+
+// DatabaseListeners says "Database port listeners"
+// in the language of msgs.
+func (msgs Messages) DatabaseListeners() string {
+	return Catalog.Format(msgs.locale, "DatabaseListeners", nil)
+}
+
+// DatabaseObserved says "observed · read only"
+// in the language the app shows.
+func DatabaseObserved() string { return In(i18n.Locale()).DatabaseObserved() }
+
+// DatabaseObserved says "observed · read only"
+// in the language of msgs.
+func (msgs Messages) DatabaseObserved() string {
+	return Catalog.Format(msgs.locale, "DatabaseObserved", nil)
+}
+
+// DatabaseNoListeners says "No listeners observed on database ports."
+// in the language the app shows.
+func DatabaseNoListeners() string { return In(i18n.Locale()).DatabaseNoListeners() }
+
+// DatabaseNoListeners says "No listeners observed on database ports."
+// in the language of msgs.
+func (msgs Messages) DatabaseNoListeners() string {
+	return Catalog.Format(msgs.locale, "DatabaseNoListeners", nil)
+}
+
+// DatabaseClients says "Clients"
+// in the language the app shows.
+func DatabaseClients() string { return In(i18n.Locale()).DatabaseClients() }
+
+// DatabaseClients says "Clients"
+// in the language of msgs.
+func (msgs Messages) DatabaseClients() string {
+	return Catalog.Format(msgs.locale, "DatabaseClients", nil)
+}
+
+// DatabaseNoClients says "No database clients found."
+// in the language the app shows.
+func DatabaseNoClients() string { return In(i18n.Locale()).DatabaseNoClients() }
+
+// DatabaseNoClients says "No database clients found."
+// in the language of msgs.
+func (msgs Messages) DatabaseNoClients() string {
+	return Catalog.Format(msgs.locale, "DatabaseNoClients", nil)
+}
+
+// DatabaseNoServices says "No database services found."
+// in the language the app shows.
+func DatabaseNoServices() string { return In(i18n.Locale()).DatabaseNoServices() }
+
+// DatabaseNoServices says "No database services found."
+// in the language of msgs.
+func (msgs Messages) DatabaseNoServices() string {
+	return Catalog.Format(msgs.locale, "DatabaseNoServices", nil)
+}
+
+// DatabaseStopped says "stopped"
+// in the language the app shows.
+func DatabaseStopped() string { return In(i18n.Locale()).DatabaseStopped() }
+
+// DatabaseStopped says "stopped"
+// in the language of msgs.
+func (msgs Messages) DatabaseStopped() string {
+	return Catalog.Format(msgs.locale, "DatabaseStopped", nil)
+}
+
+// DatabaseUnknown says "status unknown"
+// in the language the app shows.
+func DatabaseUnknown() string { return In(i18n.Locale()).DatabaseUnknown() }
+
+// DatabaseUnknown says "status unknown"
+// in the language of msgs.
+func (msgs Messages) DatabaseUnknown() string {
+	return Catalog.Format(msgs.locale, "DatabaseUnknown", nil)
+}
+
+// DatabaseError says "service error"
+// in the language the app shows.
+func DatabaseError() string { return In(i18n.Locale()).DatabaseError() }
+
+// DatabaseError says "service error"
+// in the language of msgs.
+func (msgs Messages) DatabaseError() string {
+	return Catalog.Format(msgs.locale, "DatabaseError", nil)
+}
+
+// DatabaseServer says "Server"
+// in the language the app shows.
+func DatabaseServer() string { return In(i18n.Locale()).DatabaseServer() }
+
+// DatabaseServer says "Server"
+// in the language of msgs.
+func (msgs Messages) DatabaseServer() string {
+	return Catalog.Format(msgs.locale, "DatabaseServer", nil)
+}
+
+// DatabaseAddress says "Path, ports and status"
+// in the language the app shows.
+func DatabaseAddress() string { return In(i18n.Locale()).DatabaseAddress() }
+
+// DatabaseAddress says "Path, ports and status"
+// in the language of msgs.
+func (msgs Messages) DatabaseAddress() string {
+	return Catalog.Format(msgs.locale, "DatabaseAddress", nil)
+}
+
+// DatabaseNone says "No matching database servers found."
+// in the language the app shows.
+func DatabaseNone() string { return In(i18n.Locale()).DatabaseNone() }
+
+// DatabaseNone says "No matching database servers found."
+// in the language of msgs.
+func (msgs Messages) DatabaseNone() string {
+	return Catalog.Format(msgs.locale, "DatabaseNone", nil)
+}
+
+// DatabaseProjects says "Databases in projects"
+// in the language the app shows.
+func DatabaseProjects() string { return In(i18n.Locale()).DatabaseProjects() }
+
+// DatabaseProjects says "Databases in projects"
+// in the language of msgs.
+func (msgs Messages) DatabaseProjects() string {
+	return Catalog.Format(msgs.locale, "DatabaseProjects", nil)
+}
+
+// DatabaseNoProjects says "No local database references found."
+// in the language the app shows.
+func DatabaseNoProjects() string { return In(i18n.Locale()).DatabaseNoProjects() }
+
+// DatabaseNoProjects says "No local database references found."
+// in the language of msgs.
+func (msgs Messages) DatabaseNoProjects() string {
+	return Catalog.Format(msgs.locale, "DatabaseNoProjects", nil)
+}
+
+// DatabaseConflictTitle says "Port {port} is already in use"
+// in the language the app shows.
+func DatabaseConflictTitle(port string) string { return In(i18n.Locale()).DatabaseConflictTitle(port) }
+
+// DatabaseConflictTitle says "Port {port} is already in use"
+// in the language of msgs.
+func (msgs Messages) DatabaseConflictTitle(port string) string {
+	return Catalog.Format(msgs.locale, "DatabaseConflictTitle", map[string]any{"port": port})
+}
+
+// DatabaseConflictExplain says "A Compose service in {project} requests this port. Check the listener or change the published port."
+// in the language the app shows.
+func DatabaseConflictExplain(project string) string {
+	return In(i18n.Locale()).DatabaseConflictExplain(project)
+}
+
+// DatabaseConflictExplain says "A Compose service in {project} requests this port. Check the listener or change the published port."
+// in the language of msgs.
+func (msgs Messages) DatabaseConflictExplain(project string) string {
+	return Catalog.Format(msgs.locale, "DatabaseConflictExplain", map[string]any{"project": project})
+}
+
+// DatabaseProbeFailed says "Some data could not be checked: {commands}."
+// in the language the app shows.
+func DatabaseProbeFailed(commands string) string {
+	return In(i18n.Locale()).DatabaseProbeFailed(commands)
+}
+
+// DatabaseProbeFailed says "Some data could not be checked: {commands}."
+// in the language of msgs.
+func (msgs Messages) DatabaseProbeFailed(commands string) string {
+	return Catalog.Format(msgs.locale, "DatabaseProbeFailed", map[string]any{"commands": commands})
+}
+
+// DatabaseContainersFailed says "Database containers could not be listed."
+// in the language the app shows.
+func DatabaseContainersFailed() string { return In(i18n.Locale()).DatabaseContainersFailed() }
+
+// DatabaseContainersFailed says "Database containers could not be listed."
+// in the language of msgs.
+func (msgs Messages) DatabaseContainersFailed() string {
+	return Catalog.Format(msgs.locale, "DatabaseContainersFailed", nil)
+}
+
+// DatabaseClient says "client {name}"
+// in the language the app shows.
+func DatabaseClient(name string) string { return In(i18n.Locale()).DatabaseClient(name) }
+
+// DatabaseClient says "client {name}"
+// in the language of msgs.
+func (msgs Messages) DatabaseClient(name string) string {
+	return Catalog.Format(msgs.locale, "DatabaseClient", map[string]any{"name": name})
+}
+
+// DatabaseFilter says "Filter"
+// in the language the app shows.
+func DatabaseFilter() string { return In(i18n.Locale()).DatabaseFilter() }
+
+// DatabaseFilter says "Filter"
+// in the language of msgs.
+func (msgs Messages) DatabaseFilter() string {
+	return Catalog.Format(msgs.locale, "DatabaseFilter", nil)
+}

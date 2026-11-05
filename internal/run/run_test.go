@@ -28,6 +28,9 @@ func TestMain(m *testing.M) {
 	case "sleep":
 		time.Sleep(10 * time.Second)
 		os.Exit(0)
+	case "lines":
+		fmt.Print("one\ntwo\n")
+		os.Exit(0)
 	case "flood":
 		fmt.Print(strings.Repeat("x", 10_000))
 		os.Exit(0)
@@ -146,5 +149,26 @@ func TestFake(t *testing.T) {
 	}
 	if n := len(f.Calls()); n != 2 {
 		t.Errorf("recorded %d calls, want 2", n)
+	}
+}
+
+func TestLines(t *testing.T) {
+	var got []string
+	if err := Lines(t.Context(), helper("lines"), func(l string) { got = append(got, l) }); err != nil || strings.Join(got, ",") != "one,two" {
+		t.Fatalf("%q %v", got, err)
+	}
+	if err := Lines(t.Context(), helper("exit3"), func(string) {}); err == nil {
+		t.Error("exit 3: no error")
+	}
+	c := helper("flood")
+	c.MaxOutput = 100
+	if err := Lines(t.Context(), c, func(string) {}); err == nil {
+		t.Error("long line: no error")
+	}
+	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	if err := Lines(ctx, helper("sleep"), func(string) {}); !errors.Is(err, context.DeadlineExceeded) || time.Since(start) > 5*time.Second {
+		t.Errorf("canceled: %v after %v", err, time.Since(start))
 	}
 }

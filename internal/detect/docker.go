@@ -84,6 +84,7 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 			c.Status = "unavailable"
 			if err == nil && res.ExitCode == 0 && !res.Truncated && json.Unmarshal(res.Stdout, &version) == nil && version.Server != nil && version.Server.Version != "" {
 				c.Status, c.Version = "available", version.Server.Version
+				dockerDatabases(ctx, r, term, exe, c.Endpoint, d)
 			}
 		}
 	}

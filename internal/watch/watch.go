@@ -1,6 +1,7 @@
 // Package watch follows the files that change what Hearth shows: the
 // project files, which it reads again, and the shells' startup files,
-// after which the computer is scanned again.
+// after which the computer is scanned again. It also follows the
+// containers of the Docker engine a scan found answering.
 package watch
 
 import (
@@ -9,10 +10,14 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/egoist/mygo"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // Watcher is a running watch of a file or folder, as mygo.FileWatcher.
@@ -31,6 +36,11 @@ type Service struct {
 	Project func(p projects.Project)
 	// Shell is called after a shell startup file changed.
 	Shell func()
+	// Lines runs docker events; main passes run.Lines.
+	Lines func(ctx context.Context, c run.Cmd, line func(string)) error
+	// Containers is called a moment after the Docker engine's containers
+	// changed, or after it stopped answering.
+	Containers func()
 	// Err is told of a watch that could not start or stopped; nil drops
 	// it.
 	Err func(err error)
@@ -61,6 +71,87 @@ func (s *Service) StartupFiles(paths []string) {
 		}
 		s.run(ctx, p, func([]mygo.FileEvent) { s.Shell() })
 	})
+}
+
+// How long docker events stays quiet before Containers is called, so that
+// compose up starting several containers refreshes once; and the first
+// wait before following the engine again after the stream ended.
+const (
+	dockerSettle = 300 * time.Millisecond
+	dockerRetry  = 5 * time.Second
+)
+
+// Docker follows the containers of the selected local Docker engine snap
+// found answering, by docker events in the terminal's environment env;
+// with no such engine it stops following. When the stream ends, as the
+// engine stops, Containers is called, and the engine followed again after
+// a wait that grows while it keeps failing.
+func (s *Service) Docker(snap *inventory.Snapshot, env sysenv.Env) {
+	var keys []string
+	if exe, endpoint := dockerEngine(snap); exe != "" {
+		keys = []string{exe + "\n" + endpoint}
+	}
+	s.set("docker:", keys, func(ctx context.Context, key string) {
+		exe, endpoint, _ := strings.Cut(key, "\n")
+		cmd := run.Cmd{Args: []string{exe, "--host", endpoint, "events", "--format", "{{.Action}}",
+			"--filter", "type=container", "--filter", "event=create", "--filter", "event=start", "--filter", "event=die",
+			"--filter", "event=destroy", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=rename"},
+			Env: append(slices.Clone(env), "DOCKER_CONTEXT=")}
+		retry := dockerRetry
+		for {
+			start := time.Now()
+			var settle *time.Timer
+			err := s.Lines(ctx, cmd, func(string) {
+				if settle == nil {
+					settle = time.AfterFunc(dockerSettle, s.Containers)
+				} else {
+					settle.Reset(dockerSettle)
+				}
+			})
+			if settle != nil {
+				settle.Stop()
+			}
+			if ctx.Err() != nil {
+				return
+			}
+			if err != nil {
+				s.report(err)
+			}
+			s.Containers()
+			if time.Since(start) > retry {
+				retry = dockerRetry
+			} else {
+				retry = min(2*retry, 5*time.Minute)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(retry):
+			}
+		}
+	})
+}
+
+// dockerEngine returns the Docker CLI and the address of the selected
+// local engine, as the scan probed them, or "" when it did not answer.
+func dockerEngine(snap *inventory.Snapshot) (exe, endpoint string) {
+	if snap == nil {
+		return "", ""
+	}
+	st, ok := snap.Tool("docker")
+	if !ok || st.Docker == nil {
+		return "", ""
+	}
+	active := inventory.TerminalCopy(st.Installations)
+	if active < 0 {
+		return "", ""
+	}
+	for _, c := range st.Docker.Contexts {
+		if c.Name == st.Docker.Selected && c.Local && c.Status == "available" {
+			return st.Installations[active].Path, c.Endpoint
+		}
+	}
+	return "", ""
 }
 
 // Close stops every watch and waits for them.

@@ -70,7 +70,7 @@ func TestDocker(t *testing.T) {
 			}
 			probes := 0
 			for _, call := range r.Calls() {
-				if call.Args[1] == "--host" {
+				if call.Args[1] == "--host" && call.Args[3] == "version" {
 					probes++
 					if call.Timeout == 0 {
 						t.Error("no explicit probe timeout")

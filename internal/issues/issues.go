@@ -104,6 +104,7 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 		lines = node.Lines
 	}
 	out := pathIssues(s)
+	out = append(out, DatabaseConflicts(s, ps)...)
 	for _, ts := range s.Tools {
 		if ts.Err != "" {
 			continue

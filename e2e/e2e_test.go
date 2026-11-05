@@ -75,6 +75,7 @@ func TestSmoke(t *testing.T) {
 		{"/projects", "Code folders Hearth checks"},
 		{"/tools/node", "v" + fakeVersion},
 		{"/tools/docker", "CLI, contexts and container engines"},
+		{"/tools/databases", "Database servers and containers"},
 		{"/system/path", "Coming soon"},
 		{"/overview", "Needs attention"},
 	} {

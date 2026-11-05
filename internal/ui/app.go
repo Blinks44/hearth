@@ -78,25 +78,27 @@ type App struct {
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
-	router        *ui.Router
-	moreOpen      bool    // the languages not found show in the sidebar
-	nodeTab       int     // the tab of the Node.js page shown
-	jspmTab       int     // the tab of the package managers page shown
-	jspmFilter    string  // the package managers table's filter
-	dockerTab     int     // the tab of the Docker page shown
-	dockerFilter  string  // the Docker contexts table's filter
-	bunTab        int     // the tab of the Bun page shown
-	goTab         int     // the tab of the Go page shown
-	phpTab        int     // the tab of the PHP page shown
-	pythonTab     int     // the tab of the Python page shown
-	dotnetTab     int     // the tab of the .NET page shown
-	rubyTab       int     // the tab of the Ruby page shown
-	javaTab       int     // the tab of the Java page shown
-	rustTab       int     // the tab of the Rust page shown
-	projectsTab   int     // all projects, or the ones needing attention
-	projectFilter string  // the projects page's filter
-	adding        *adding // the folder the add dialog shows; nil when closed
-	addOpen       bool
+	router         *ui.Router
+	moreOpen       bool    // the languages not found show in the sidebar
+	nodeTab        int     // the tab of the Node.js page shown
+	jspmTab        int     // the tab of the package managers page shown
+	jspmFilter     string  // the package managers table's filter
+	databaseTab    int     // the tab of the databases page shown
+	databaseFilter string  // the databases table's filter
+	dockerTab      int     // the tab of the Docker page shown
+	dockerFilter   string  // the Docker contexts table's filter
+	bunTab         int     // the tab of the Bun page shown
+	goTab          int     // the tab of the Go page shown
+	phpTab         int     // the tab of the PHP page shown
+	pythonTab      int     // the tab of the Python page shown
+	dotnetTab      int     // the tab of the .NET page shown
+	rubyTab        int     // the tab of the Ruby page shown
+	javaTab        int     // the tab of the Java page shown
+	rustTab        int     // the tab of the Rust page shown
+	projectsTab    int     // all projects, or the ones needing attention
+	projectFilter  string  // the projects page's filter
+	adding         *adding // the folder the add dialog shows; nil when closed
+	addOpen        bool
 
 	// The skills and MCP pages: the agent filtered by, "" for all; the
 	// scope, as scopeSegments; the search; and the key of the one shown.
@@ -147,6 +149,8 @@ func (a *App) View(c *ui.Context) {
 						a.node(c, p)
 					case "/tools/jspm":
 						a.jspm(c, p)
+					case "/tools/databases":
+						a.databases(c, p)
 					case "/tools/docker":
 						a.docker(c, p)
 					case "/tools/bun":
@@ -304,9 +308,9 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = len(a.allSkills())
 	case mcpPage:
 		n = len(a.mcpItems())
-	case "/tools/docker":
+	case "/tools/docker", "/tools/databases":
 		for _, is := range a.issues(c) {
-			if is.Tool == "docker" {
+			if issuePage(is) == p.path {
 				return func() { ui.Box(c).Size(6, 6).Radius(3).Background(c.Theme().Warning) }
 			}
 		}

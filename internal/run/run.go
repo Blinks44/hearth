@@ -5,6 +5,7 @@
 package run
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -103,6 +104,53 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 		return res, fmt.Errorf("run %s: %w", c.Args[0], err)
 	}
 	return res, nil
+}
+
+// Lines runs a command that keeps writing, as docker events does, and
+// gives line every line of its stdout as it comes, on this goroutine. It
+// returns when the command ends, with an error unless it exited with 0,
+// or when ctx does. c.Timeout does not apply; a line longer than
+// c.MaxOutput stops the command with an error.
+func Lines(ctx context.Context, c Cmd, line func(string)) error {
+	if len(c.Args) == 0 {
+		return errors.New("run: empty argv")
+	}
+	limit := c.MaxOutput
+	if limit <= 0 {
+		limit = DefaultMaxOutput
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, c.Args[0], c.Args[1:]...)
+	cmd.Env = c.Env
+	cmd.Dir = c.Dir
+	cmd.WaitDelay = time.Second
+	hideWindow(cmd)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("run %s: %w", c.Args[0], err)
+	}
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("run %s: %w", c.Args[0], err)
+	}
+	sc := bufio.NewScanner(stdout)
+	sc.Buffer(nil, limit)
+	for sc.Scan() {
+		line(sc.Text())
+	}
+	if err := sc.Err(); err != nil {
+		cancel()
+		_ = cmd.Wait() // killed: the line is the error
+		return fmt.Errorf("run %s: %w", c.Args[0], err)
+	}
+	err = cmd.Wait()
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return fmt.Errorf("run %s: %w", c.Args[0], ctxErr)
+	}
+	if err != nil {
+		return fmt.Errorf("run %s: %w", c.Args[0], err)
+	}
+	return nil
 }
 
 // capped keeps the first limit bytes written to it and drops the rest.

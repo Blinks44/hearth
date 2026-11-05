@@ -10,6 +10,10 @@ type DockerState struct {
 	Err       string
 	Engines   []DockerEngine
 	Plugins   []Package
+	// Databases are the database containers of the selected engine, once
+	// it answered; DatabaseErr reports that they could not all be listed.
+	Databases   []Database
+	DatabaseErr bool
 }
 
 // DockerContext is a configured endpoint. Remote addresses are kept only

@@ -10,7 +10,9 @@ import (
 
 	"github.com/egoist/mygo"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/run"
 )
 
 // fakeWatcher gives the batches a test sends it.
@@ -151,5 +153,66 @@ func TestStartupFileChange(t *testing.T) {
 	defer f.mu.Unlock()
 	if f.starts != 1 {
 		t.Errorf("%d watches started, want .zshrc's alone", f.starts)
+	}
+}
+
+// The selected engine's containers are followed: a burst of events
+// refreshes once, and a scan that finds no engine stops following it.
+func TestDocker(t *testing.T) {
+	lines := make(chan string)
+	var mu sync.Mutex
+	var args []string
+	var stopped context.Context
+	changes := make(chan struct{}, 4)
+	s := &Service{
+		Lines: func(ctx context.Context, c run.Cmd, line func(string)) error {
+			mu.Lock()
+			args, stopped = c.Args, ctx
+			mu.Unlock()
+			for {
+				select {
+				case l := <-lines:
+					line(l)
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		},
+		Containers: func() { changes <- struct{}{} },
+	}
+	defer s.Close()
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "docker",
+		Installations: []inventory.Installation{{Path: "/bin/docker", OnPath: 1}},
+		Docker:        &inventory.DockerState{Selected: "local", Contexts: []inventory.DockerContext{{Name: "local", Endpoint: "unix:///docker.sock", Local: true, Status: "available"}}}}}}
+	s.Docker(snap, nil)
+	for _, l := range []string{"create", "start", "start"} {
+		lines <- l
+	}
+	select {
+	case <-changes:
+	case <-time.After(5 * time.Second):
+		t.Fatal("no refresh after the events")
+	}
+	select {
+	case <-changes:
+		t.Error("refreshed for each event")
+	case <-time.After(2 * dockerSettle):
+	}
+	mu.Lock()
+	got, ctx := args, stopped
+	mu.Unlock()
+	if len(got) < 4 || got[0] != "/bin/docker" || got[2] != "unix:///docker.sock" || got[3] != "events" {
+		t.Fatal(got)
+	}
+	s.Docker(snap, nil) // the same engine: the watch goes on
+	if ctx.Err() != nil {
+		t.Fatal("restarted for the same engine")
+	}
+	snap.Tools[0].Docker.Contexts[0].Status = "unavailable"
+	s.Docker(snap, nil)
+	select {
+	case <-ctx.Done():
+	case <-time.After(5 * time.Second):
+		t.Fatal("still following a stopped engine")
 	}
 }

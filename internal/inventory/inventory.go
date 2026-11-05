@@ -157,6 +157,9 @@ type ToolState struct {
 	Vars map[string]string `json:",omitempty"`
 	// Docker is the CLI's contexts and the engines found, for "docker" only.
 	Docker *DockerState `json:",omitempty"`
+	// Databases are the local servers, clients and listeners, for
+	// "databases" only.
+	Databases *DatabaseState `json:",omitempty"`
 	// Err says why the tool could not be checked; empty when it was.
 	Err string `json:",omitempty"`
 }
