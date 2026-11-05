@@ -69,6 +69,10 @@ func PHP(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 	return st, ctx.Err()
 }
 
+// composerPathVersion is a version a path names, as Homebrew's and
+// Scoop's directories do.
+var composerPathVersion = regexp.MustCompile(`^\d+\.\d+\.\d+$`)
+
 var phpExecutable = regexp.MustCompile(`^php(?:[0-9]+(?:\.[0-9]+)*)?(?:\.exe)?$`)
 
 var phpVersion = regexp.MustCompile(`\b\d+\.\d+\.\d+(?:[A-Za-z]+\d*)?\b`)
@@ -151,6 +155,8 @@ func phpModules(out string) []string {
 
 // Composer reads the CLI version and installed global packages. Plugins and
 // scripts are disabled, and no project directory is used to inspect globals.
+// Composer is run only for what its path and COMPOSER_HOME do not tell:
+// Scoop's starts PowerShell, about a second each run.
 func Composer(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
 	f := newFinder("composer", term)
 	f.lookPath("composer", term, gui)
@@ -169,8 +175,15 @@ func Composer(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventor
 			}
 			return strings.TrimSpace(string(res.Stdout))
 		}
-		in.Version = firstMatch(composerVersion, query("--version"))
-		dir := query("config", "--global", "home")
+		if v := pathVersion(in.Source.Version); composerPathVersion.MatchString(v) {
+			in.Version = v
+		} else {
+			in.Version = firstMatch(composerVersion, query("--version"))
+		}
+		dir := term.Get("COMPOSER_HOME")
+		if dir == "" {
+			dir = query("config", "--global", "home")
+		}
 		if filepath.IsAbs(dir) {
 			in.Packages = composerPackages(dir)
 			if in.OnPath == 1 {

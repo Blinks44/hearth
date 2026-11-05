@@ -1,6 +1,7 @@
 package sysenv
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -35,4 +36,23 @@ func pathSources(Env) map[string][]inventory.PathSource {
 		}
 	}
 	return out
+}
+
+// registryPath reads the Path value of a key, expanding %VAR% references.
+func registryPath(root registry.Key, key string) (string, error) {
+	k, err := registry.OpenKey(root, key, registry.QUERY_VALUE)
+	if err != nil {
+		return "", fmt.Errorf("open %s: %w", key, err)
+	}
+	defer k.Close() //nolint:errcheck // a read-only key: nothing to lose on close
+	v, typ, err := k.GetStringValue("Path")
+	if err != nil {
+		return "", fmt.Errorf("read %s\\Path: %w", key, err)
+	}
+	if typ == registry.EXPAND_SZ {
+		if v, err = registry.ExpandString(v); err != nil {
+			return "", fmt.Errorf("expand %s\\Path: %w", key, err)
+		}
+	}
+	return v, nil
 }

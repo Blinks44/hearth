@@ -94,3 +94,27 @@ func TestComposerCommands(t *testing.T) {
 		}
 	}
 }
+
+// A version in the path and COMPOSER_HOME leave nothing to run Composer
+// for.
+func TestComposerWithoutRunning(t *testing.T) {
+	dir := root(t)
+	path := filepath.Join(dir, "opt", "homebrew", "Cellar", "composer", "2.8.5", "bin", "composer")
+	writeFile(t, path, "")
+	if err := os.Chmod(path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	composerHome := filepath.Join(dir, "composer")
+	env := append(homeEnv(dir, filepath.Dir(path)), "HOMEBREW_PREFIX="+filepath.Join(dir, "opt", "homebrew"), "COMPOSER_HOME="+composerHome)
+	r := &run.Fake{}
+	got, err := Composer(t.Context(), r, env, sysenv.Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Installations) != 1 || got.Installations[0].Version != "2.8.5" || got.Vars["COMPOSER_HOME"] != composerHome {
+		t.Fatalf("state %+v", got)
+	}
+	if calls := r.Calls(); len(calls) != 0 {
+		t.Errorf("ran %+v", calls)
+	}
+}
