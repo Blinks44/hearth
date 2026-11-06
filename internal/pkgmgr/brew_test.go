@@ -42,6 +42,11 @@ func TestBrew(t *testing.T) {
 	if p := m.Packages[0]; p.Available != "24.0" || p.Path != filepath.FromSlash("/opt/homebrew/Cellar/node/22.1") || len(p.Dependencies) != 1 {
 		t.Fatalf("%+v", p)
 	}
+	// node was asked for; tool came as a dependency; casks always are
+	// asked for.
+	if !m.ReasonsKnown || m.Packages[0].Dependency || !m.Packages[1].Dependency || m.Packages[3].Dependency {
+		t.Fatalf("reasons: %+v", m.Packages)
+	}
 	// A tap's formula matches by its full name; a formula and a cask of one
 	// name keep their own updates.
 	want := []struct{ name, kind, available string }{

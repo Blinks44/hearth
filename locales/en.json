@@ -2086,6 +2086,48 @@
   "DatabaseContainersFailed": "Database containers could not be listed.",
   "DatabaseClient": "client {name}",
   "DatabaseFilter": "Filter",
+  "pkgAsked": "Installed by you",
+  "@pkgAsked": {
+    "description": "Packages tab: the ones the user asked for."
+  },
+  "pkgDependencies": "Dependencies",
+  "@pkgDependencies": {
+    "description": "Packages tab: the ones other packages pulled in."
+  },
+  "pkgByName": "By name",
+  "@pkgByName": {
+    "description": "Package order: by name."
+  },
+  "pkgByDependents": "Most needed first",
+  "@pkgByDependents": {
+    "description": "Package order: the ones most packages depend on first."
+  },
+  "pkgSort": "Order packages",
+  "@pkgSort": {
+    "description": "Label of the package order menu."
+  },
+  "pkgAskedByYou": "installed by you",
+  "@pkgAskedByYou": {
+    "description": "Package row: the user asked for it."
+  },
+  "pkgNeededBy": "dependency · needed by {count, plural, one {# package} other {# packages}}",
+  "@pkgNeededBy": {
+    "description": "Package row: a dependency and how many installed packages need it.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "pkgNotNeeded": "dependency · nothing needs it any more",
+  "@pkgNotNeeded": {
+    "description": "Package row: a dependency no installed package needs."
+  },
+  "pkgDependency": "dependency",
+  "@pkgDependency": {
+    "description": "Package row: pulled in by another package."
+  },
   "pkgUpdates": "Updates",
   "pkgFilter": "Filter packages",
   "pkgCountNote": "packages",

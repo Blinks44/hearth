@@ -120,6 +120,7 @@ type App struct {
 	packageTab     int     // the tab of the system package managers page shown
 	packageManager string  // the path of the package manager shown
 	packageFilter  string  // the package table's filter
+	packageSort    int     // the package table's order: by name, or by dependents
 	databaseTab    int     // the tab of the databases page shown
 	databaseFilter string  // the databases table's filter
 	dockerTab      int     // the tab of the Docker page shown

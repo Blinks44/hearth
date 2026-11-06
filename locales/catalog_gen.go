@@ -5832,6 +5832,132 @@ func (msgs Messages) DatabaseFilter() string {
 	return Catalog.Format(msgs.locale, "DatabaseFilter", nil)
 }
 
+// PkgAsked says "Installed by you"
+// in the language the app shows.
+//
+// Packages tab: the ones the user asked for.
+func PkgAsked() string { return In(i18n.Locale()).PkgAsked() }
+
+// PkgAsked says "Installed by you"
+// in the language of msgs.
+//
+// Packages tab: the ones the user asked for.
+func (msgs Messages) PkgAsked() string {
+	return Catalog.Format(msgs.locale, "pkgAsked", nil)
+}
+
+// PkgDependencies says "Dependencies"
+// in the language the app shows.
+//
+// Packages tab: the ones other packages pulled in.
+func PkgDependencies() string { return In(i18n.Locale()).PkgDependencies() }
+
+// PkgDependencies says "Dependencies"
+// in the language of msgs.
+//
+// Packages tab: the ones other packages pulled in.
+func (msgs Messages) PkgDependencies() string {
+	return Catalog.Format(msgs.locale, "pkgDependencies", nil)
+}
+
+// PkgByName says "By name"
+// in the language the app shows.
+//
+// Package order: by name.
+func PkgByName() string { return In(i18n.Locale()).PkgByName() }
+
+// PkgByName says "By name"
+// in the language of msgs.
+//
+// Package order: by name.
+func (msgs Messages) PkgByName() string {
+	return Catalog.Format(msgs.locale, "pkgByName", nil)
+}
+
+// PkgByDependents says "Most needed first"
+// in the language the app shows.
+//
+// Package order: the ones most packages depend on first.
+func PkgByDependents() string { return In(i18n.Locale()).PkgByDependents() }
+
+// PkgByDependents says "Most needed first"
+// in the language of msgs.
+//
+// Package order: the ones most packages depend on first.
+func (msgs Messages) PkgByDependents() string {
+	return Catalog.Format(msgs.locale, "pkgByDependents", nil)
+}
+
+// PkgSort says "Order packages"
+// in the language the app shows.
+//
+// Label of the package order menu.
+func PkgSort() string { return In(i18n.Locale()).PkgSort() }
+
+// PkgSort says "Order packages"
+// in the language of msgs.
+//
+// Label of the package order menu.
+func (msgs Messages) PkgSort() string {
+	return Catalog.Format(msgs.locale, "pkgSort", nil)
+}
+
+// PkgAskedByYou says "installed by you"
+// in the language the app shows.
+//
+// Package row: the user asked for it.
+func PkgAskedByYou() string { return In(i18n.Locale()).PkgAskedByYou() }
+
+// PkgAskedByYou says "installed by you"
+// in the language of msgs.
+//
+// Package row: the user asked for it.
+func (msgs Messages) PkgAskedByYou() string {
+	return Catalog.Format(msgs.locale, "pkgAskedByYou", nil)
+}
+
+// PkgNeededBy says "dependency · needed by {count, plural, one {# package} other {# packages}}"
+// in the language the app shows.
+//
+// Package row: a dependency and how many installed packages need it.
+func PkgNeededBy(count int) string { return In(i18n.Locale()).PkgNeededBy(count) }
+
+// PkgNeededBy says "dependency · needed by {count, plural, one {# package} other {# packages}}"
+// in the language of msgs.
+//
+// Package row: a dependency and how many installed packages need it.
+func (msgs Messages) PkgNeededBy(count int) string {
+	return Catalog.Format(msgs.locale, "pkgNeededBy", map[string]any{"count": count})
+}
+
+// PkgNotNeeded says "dependency · nothing needs it any more"
+// in the language the app shows.
+//
+// Package row: a dependency no installed package needs.
+func PkgNotNeeded() string { return In(i18n.Locale()).PkgNotNeeded() }
+
+// PkgNotNeeded says "dependency · nothing needs it any more"
+// in the language of msgs.
+//
+// Package row: a dependency no installed package needs.
+func (msgs Messages) PkgNotNeeded() string {
+	return Catalog.Format(msgs.locale, "pkgNotNeeded", nil)
+}
+
+// PkgDependency says "dependency"
+// in the language the app shows.
+//
+// Package row: pulled in by another package.
+func PkgDependency() string { return In(i18n.Locale()).PkgDependency() }
+
+// PkgDependency says "dependency"
+// in the language of msgs.
+//
+// Package row: pulled in by another package.
+func (msgs Messages) PkgDependency() string {
+	return Catalog.Format(msgs.locale, "pkgDependency", nil)
+}
+
 // PkgUpdates says "Updates"
 // in the language the app shows.
 func PkgUpdates() string { return In(i18n.Locale()).PkgUpdates() }

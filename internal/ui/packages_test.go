@@ -153,3 +153,28 @@ func countText(tt *ui.Tester, s string) int {
 	}
 	return n
 }
+
+// Where the manager knows why a package is there, the page splits what the
+// user installed from dependencies, and says who needs each.
+func TestPackageReasons(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", ReasonsKnown: true, Packages: []inventory.SystemPackage{
+			{Name: "node", Kind: "formula", Dependencies: []string{"icu4c"}},
+			{Name: "icu4c", Kind: "formula", Dependency: true},
+			{Name: "oniguruma", Kind: "formula", Dependency: true},
+		}},
+	}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Installed by you", "installed by you", "dependency · needed by 1 package", "dependency · nothing needs it any more")
+	if err := tt.Click("Dependencies"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if tt.HasText("node") || !tt.HasText("icu4c") {
+		t.Errorf("dependencies tab: %q", tt.Texts())
+	}
+}

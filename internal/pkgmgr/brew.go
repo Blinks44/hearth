@@ -11,9 +11,12 @@ import (
 
 type brewInfo struct {
 	Formulae []struct {
-		Name         string
-		FullName     string `json:"full_name"`
-		Installed    []struct{ Version string }
+		Name      string
+		FullName  string `json:"full_name"`
+		Installed []struct {
+			Version            string
+			InstalledOnRequest bool `json:"installed_on_request"`
+		}
 		Dependencies []string
 	}
 	Casks []struct {
@@ -29,6 +32,7 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	data, err := probe("info", "--json=v2", "--installed")
 	if err == nil {
 		m.Packages, err = parseBrew(data, m.Prefix)
+		m.ReasonsKnown = err == nil
 	}
 	if err != nil {
 		m.Warnings = append(m.Warnings, err.Error())
@@ -69,7 +73,8 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 			if name == "" {
 				name = f.Name
 			}
-			out = append(out, inventory.SystemPackage{Name: name, Version: v.Version, Kind: "formula", Path: path, Dependencies: f.Dependencies})
+			out = append(out, inventory.SystemPackage{Name: name, Version: v.Version, Kind: "formula", Path: path, Dependencies: f.Dependencies,
+				Dependency: !v.InstalledOnRequest})
 		}
 	}
 	for _, c := range info.Casks {

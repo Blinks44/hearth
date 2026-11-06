@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -78,9 +80,36 @@ func (a *App) packages(c *ui.Context, p page) {
 					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, countNote)
 					stateCard(c, c.Theme().Warning, locales.PkgUpdateSummary(), updateCount, updateNote)
 				})
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					segments(c, "package-tabs", &a.packageTab, []segment{{locales.PkgInstalled(), installedCount}, {locales.PkgUpdates(), updateCount}})
-					ui.Box(c).Grow(1)
+				// A narrow window puts the order and the filter under the tabs.
+				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
+					segs := []segment{{locales.PkgInstalled(), installedCount}, {locales.PkgUpdates(), updateCount}}
+					if m.ReasonsKnown {
+						asked := 0
+						for _, pkg := range m.Packages {
+							if !pkg.Dependency {
+								asked++
+							}
+						}
+						segs = []segment{{locales.TabAll(), installedCount}, {locales.PkgAsked(), strconv.Itoa(asked)},
+							{locales.PkgDependencies(), strconv.Itoa(len(m.Packages) - asked)}, {locales.PkgUpdates(), updateCount}}
+					}
+					a.packageTab = min(a.packageTab, len(segs)-1)
+					segments(c, "package-tabs", &a.packageTab, segs)
+					ui.Box(c).Grow(1).Height(1)
+					if m.ReasonsKnown {
+						order := []string{locales.PkgByName(), locales.PkgByDependents()}
+						value := order[a.packageSort]
+						ui.Select(c.Key("package-sort"), &value, order).Label(locales.PkgSort()).Width(170).OnChange(func() {
+							a.packageSort = 0
+							if value == order[1] {
+								a.packageSort = 1
+							}
+						})
+					}
 					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Width(200)
 				})
 				columns(c, 12, func() {
@@ -159,9 +188,25 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 			ui.Text(c, locales.PkgPathUsage()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
 		filter := strings.ToLower(a.packageFilter)
+		dependents := packageDependents(m)
+		order := make([]int, len(m.Packages))
+		for i := range order {
+			order[i] = i
+		}
+		if a.packageSort == 1 && m.ReasonsKnown {
+			slices.SortStableFunc(order, func(x, y int) int {
+				return cmp.Compare(dependents[m.Packages[y].Name], dependents[m.Packages[x].Name])
+			})
+		}
+		updatesTab, askedTab, depsTab := a.packageTab == 1, false, false
+		if m.ReasonsKnown {
+			updatesTab, askedTab, depsTab = a.packageTab == 3, a.packageTab == 1, a.packageTab == 2
+		}
 		shown, total := 0, 0
-		for i, pkg := range m.Packages {
-			if a.packageTab == 1 && pkg.Available == "" || !strings.Contains(strings.ToLower(pkg.Name), filter) {
+		for _, i := range order {
+			pkg := m.Packages[i]
+			if updatesTab && pkg.Available == "" || askedTab && pkg.Dependency || depsTab && !pkg.Dependency ||
+				!strings.Contains(strings.ToLower(pkg.Name), filter) {
 				continue
 			}
 			total++
@@ -180,6 +225,9 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 					if pkg.Reference != "" {
 						clipped(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
+					}
+					if m.ReasonsKnown {
+						ui.Text(c, packageReason(m, pkg, dependents[pkg.Name])).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 					if pkg.Path != "" {
 						clipped(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
@@ -263,4 +311,30 @@ func atLeast(n int) string {
 		return "—"
 	}
 	return locales.PkgAtLeast(n)
+}
+
+// packageDependents counts, by name, the installed packages that depend on
+// each; empty where the manager does not list dependencies.
+func packageDependents(m inventory.PackageManager) map[string]int {
+	out := map[string]int{}
+	for _, pkg := range m.Packages {
+		for _, d := range pkg.Dependencies {
+			out[d]++
+		}
+	}
+	return out
+}
+
+// packageReason says who asked for pkg: the user, or other packages, and
+// how many of them need it where the manager knows.
+func packageReason(m inventory.PackageManager, pkg inventory.SystemPackage, dependents int) string {
+	switch {
+	case !pkg.Dependency:
+		return locales.PkgAskedByYou()
+	case dependents > 0:
+		return locales.PkgNeededBy(dependents)
+	case m.ID == "brew": // brew lists every dependency, so none is none
+		return locales.PkgNotNeeded()
+	}
+	return locales.PkgDependency()
 }
