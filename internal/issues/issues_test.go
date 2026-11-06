@@ -237,7 +237,7 @@ func TestMCPMissing(t *testing.T) {
 }
 
 // A Store stub on PATH is no duplicate: it is its own issue, a warning
-// when it comes first.
+// when it comes first and something needs the tool.
 func TestStubOnPath(t *testing.T) {
 	stub := func(rank inventory.PathRank) inventory.Installation {
 		return inventory.Installation{Tool: "python", Path: `C:\Users\Ann\AppData\Local\Microsoft\WindowsApps\python.exe`, OnPath: rank, Stub: true}
@@ -246,15 +246,18 @@ func TestStubOnPath(t *testing.T) {
 	for _, tt := range []struct {
 		name string
 		ins  []inventory.Installation
+		ps   []projects.Project
 		want Severity
 	}{
-		{"behind a Python", []inventory.Installation{real, stub(2)}, Info},
-		{"first", []inventory.Installation{stub(1)}, Warning},
+		{"behind a Python", []inventory.Installation{real, stub(2)}, nil, Info},
+		{"first, nothing needs it", []inventory.Installation{stub(1)}, nil, Info},
+		{"first, a project needs it", []inventory.Installation{stub(1)}, []projects.Project{{Dir: "/p", Requirements: []projects.Requirement{{Tool: "python", Want: "3.13"}}}}, Warning},
+		{"first, hiding a Python", []inventory.Installation{stub(1), func() inventory.Installation { r := real; r.OnPath = 2; return r }()}, nil, Warning},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "python", Installations: tt.ins}}}
 			var got []Issue
-			for _, is := range Find(s, nil, nil, now) {
+			for _, is := range Find(s, tt.ps, nil, now) {
 				if is.Kind == Duplicate {
 					t.Errorf("the stub counts as a duplicate: %+v", is)
 				}

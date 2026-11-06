@@ -122,7 +122,7 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 				}
 			}
 		}
-		out = append(out, stubs(ts)...)
+		out = append(out, stubs(ts, ps)...)
 		if withNode(s, ts) {
 			continue
 		}
@@ -233,13 +233,20 @@ func withNode(s *inventory.Snapshot, ts inventory.ToolState) bool {
 		filepath.Dir(node.Installations[n].Path) == filepath.Dir(ts.Installations[t].Path)
 }
 
-// stubs is an issue for each stub on the terminal's PATH.
-func stubs(ts inventory.ToolState) []Issue {
+// stubs is an issue for each stub on the terminal's PATH: a warning when
+// it comes first and hides a copy behind it or a project needs the tool,
+// as the command then does not run what was meant; else worth knowing,
+// as the stub macOS keeps for a Java nobody needs.
+func stubs(ts inventory.ToolState, ps []projects.Project) []Issue {
+	needed := slices.ContainsFunc(ts.Installations, func(in inventory.Installation) bool { return !in.Stub && in.OnPath > 0 }) ||
+		slices.ContainsFunc(ps, func(p projects.Project) bool {
+			return slices.ContainsFunc(p.Requirements, func(r projects.Requirement) bool { return r.Tool == ts.Tool })
+		})
 	var out []Issue
 	for _, in := range ts.Installations {
 		if in.Stub && in.OnPath > 0 {
 			severity := Info
-			if in.OnPath == 1 {
+			if in.OnPath == 1 && needed {
 				severity = Warning
 			}
 			out = append(out, Issue{Kind: StubOnPath, Severity: severity, Tool: ts.Tool, Copies: []inventory.Installation{in}})

@@ -34,7 +34,7 @@ func TestOverviewFirstScan(t *testing.T) {
 	a.Scanning = true
 	a.ChooseFolder = func() {}
 	tt := openOverview(t, a)
-	hasTexts(t, tt, "Checking", "Getting to know this computer", "found so far", "no projects yet",
+	hasTexts(t, tt, "Checking", "Getting to know this computer", "worth fixing", "no projects yet",
 		"Issues show after the check", "No projects yet", "Add folder")
 	if tt.HasText("Node.js 22.12") || tt.HasText("v22.12.0") {
 		t.Errorf("a tool before the scan: %q", tt.Texts())
@@ -131,5 +131,22 @@ func TestOverviewNarrow(t *testing.T) {
 	}
 	if issues.Y >= tools.Y {
 		t.Errorf("issues at %v, tools at %v: want issues first", issues, tools)
+	}
+}
+
+// Issues of one kind that only add up, as skills copied to several
+// folders, take one line of the card and count once.
+func TestOverviewGroupsIssues(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	for _, name := range []string{"pdf", "docx", "xlsx"} {
+		for _, dir := range []string{"/Users/dev/.claude/skills/", "/Users/dev/.agents/skills/"} {
+			a.Snapshot.Skills = append(a.Snapshot.Skills, inventory.Skill{Name: name, Dir: dir + name, Sum: name})
+		}
+	}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "1 issue", "3 skills are copied to several folders", "pdf, docx, xlsx")
+	if tt.HasText("Skill pdf: 2 copies") {
+		t.Errorf("a skill's copies show apart from the group: %q", tt.Texts())
 	}
 }

@@ -1106,17 +1106,51 @@
       }
     }
   },
-  "statOnDisk": "on disk",
-  "@statOnDisk": {
-    "description": "Overview stat caption under Installed."
+  "heroProblems": "Issues",
+  "@heroProblems": {
+    "description": "Hero count: issues found."
   },
-  "statInPath": "In PATH",
-  "@statInPath": {
-    "description": "Overview stat: tools the terminal finds."
+  "heroProblemsCaption": "worth fixing",
+  "@heroProblemsCaption": {
+    "description": "Caption under the issue count."
   },
-  "statInPathCaption": "commands in the terminal",
-  "@statInPathCaption": {
-    "description": "Overview stat caption under In PATH."
+  "heroUpdates": "Updates",
+  "@heroUpdates": {
+    "description": "Hero count: package updates available."
+  },
+  "heroUpdatesCaption": "in package managers",
+  "@heroUpdatesCaption": {
+    "description": "Caption under the update count."
+  },
+  "groupSkillCopies": "{count, plural, one {# skill is} other {# skills are}} copied to several folders",
+  "@groupSkillCopies": {
+    "description": "Issues card: several skills, each copied with the same files.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "groupSkillDiffers": "{count, plural, one {# skill has} other {# skills have}} differing copies",
+  "@groupSkillDiffers": {
+    "description": "Issues card: several skills with copies that differ.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "groupMCPMissing": "MCP: {count, plural, one {# command} other {# commands}} not found",
+  "@groupMCPMissing": {
+    "description": "Issues card: several MCP commands that are not there.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   },
   "statInProjects": "In projects",
   "@statInProjects": {
@@ -1125,10 +1159,6 @@
   "statInProjectsCaption": "versions pinned",
   "@statInProjectsCaption": {
     "description": "Overview stat caption under In projects."
-  },
-  "statSoFar": "found so far",
-  "@statSoFar": {
-    "description": "Overview stat caption during the first scan."
   },
   "chipProjects": "{count, plural, one {# project} other {# projects}}",
   "@chipProjects": {

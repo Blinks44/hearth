@@ -2510,46 +2510,102 @@ func (msgs Messages) HeroSomeIssues(count int) string {
 	return Catalog.Format(msgs.locale, "heroSomeIssues", map[string]any{"count": count})
 }
 
-// StatOnDisk says "on disk"
+// HeroProblems says "Issues"
 // in the language the app shows.
 //
-// Overview stat caption under Installed.
-func StatOnDisk() string { return In(i18n.Locale()).StatOnDisk() }
+// Hero count: issues found.
+func HeroProblems() string { return In(i18n.Locale()).HeroProblems() }
 
-// StatOnDisk says "on disk"
+// HeroProblems says "Issues"
 // in the language of msgs.
 //
-// Overview stat caption under Installed.
-func (msgs Messages) StatOnDisk() string {
-	return Catalog.Format(msgs.locale, "statOnDisk", nil)
+// Hero count: issues found.
+func (msgs Messages) HeroProblems() string {
+	return Catalog.Format(msgs.locale, "heroProblems", nil)
 }
 
-// StatInPath says "In PATH"
+// HeroProblemsCaption says "worth fixing"
 // in the language the app shows.
 //
-// Overview stat: tools the terminal finds.
-func StatInPath() string { return In(i18n.Locale()).StatInPath() }
+// Caption under the issue count.
+func HeroProblemsCaption() string { return In(i18n.Locale()).HeroProblemsCaption() }
 
-// StatInPath says "In PATH"
+// HeroProblemsCaption says "worth fixing"
 // in the language of msgs.
 //
-// Overview stat: tools the terminal finds.
-func (msgs Messages) StatInPath() string {
-	return Catalog.Format(msgs.locale, "statInPath", nil)
+// Caption under the issue count.
+func (msgs Messages) HeroProblemsCaption() string {
+	return Catalog.Format(msgs.locale, "heroProblemsCaption", nil)
 }
 
-// StatInPathCaption says "commands in the terminal"
+// HeroUpdates says "Updates"
 // in the language the app shows.
 //
-// Overview stat caption under In PATH.
-func StatInPathCaption() string { return In(i18n.Locale()).StatInPathCaption() }
+// Hero count: package updates available.
+func HeroUpdates() string { return In(i18n.Locale()).HeroUpdates() }
 
-// StatInPathCaption says "commands in the terminal"
+// HeroUpdates says "Updates"
 // in the language of msgs.
 //
-// Overview stat caption under In PATH.
-func (msgs Messages) StatInPathCaption() string {
-	return Catalog.Format(msgs.locale, "statInPathCaption", nil)
+// Hero count: package updates available.
+func (msgs Messages) HeroUpdates() string {
+	return Catalog.Format(msgs.locale, "heroUpdates", nil)
+}
+
+// HeroUpdatesCaption says "in package managers"
+// in the language the app shows.
+//
+// Caption under the update count.
+func HeroUpdatesCaption() string { return In(i18n.Locale()).HeroUpdatesCaption() }
+
+// HeroUpdatesCaption says "in package managers"
+// in the language of msgs.
+//
+// Caption under the update count.
+func (msgs Messages) HeroUpdatesCaption() string {
+	return Catalog.Format(msgs.locale, "heroUpdatesCaption", nil)
+}
+
+// GroupSkillCopies says "{count, plural, one {# skill is} other {# skills are}} copied to several folders"
+// in the language the app shows.
+//
+// Issues card: several skills, each copied with the same files.
+func GroupSkillCopies(count int) string { return In(i18n.Locale()).GroupSkillCopies(count) }
+
+// GroupSkillCopies says "{count, plural, one {# skill is} other {# skills are}} copied to several folders"
+// in the language of msgs.
+//
+// Issues card: several skills, each copied with the same files.
+func (msgs Messages) GroupSkillCopies(count int) string {
+	return Catalog.Format(msgs.locale, "groupSkillCopies", map[string]any{"count": count})
+}
+
+// GroupSkillDiffers says "{count, plural, one {# skill has} other {# skills have}} differing copies"
+// in the language the app shows.
+//
+// Issues card: several skills with copies that differ.
+func GroupSkillDiffers(count int) string { return In(i18n.Locale()).GroupSkillDiffers(count) }
+
+// GroupSkillDiffers says "{count, plural, one {# skill has} other {# skills have}} differing copies"
+// in the language of msgs.
+//
+// Issues card: several skills with copies that differ.
+func (msgs Messages) GroupSkillDiffers(count int) string {
+	return Catalog.Format(msgs.locale, "groupSkillDiffers", map[string]any{"count": count})
+}
+
+// GroupMCPMissing says "MCP: {count, plural, one {# command} other {# commands}} not found"
+// in the language the app shows.
+//
+// Issues card: several MCP commands that are not there.
+func GroupMCPMissing(count int) string { return In(i18n.Locale()).GroupMCPMissing(count) }
+
+// GroupMCPMissing says "MCP: {count, plural, one {# command} other {# commands}} not found"
+// in the language of msgs.
+//
+// Issues card: several MCP commands that are not there.
+func (msgs Messages) GroupMCPMissing(count int) string {
+	return Catalog.Format(msgs.locale, "groupMCPMissing", map[string]any{"count": count})
 }
 
 // StatInProjects says "In projects"
@@ -2578,20 +2634,6 @@ func StatInProjectsCaption() string { return In(i18n.Locale()).StatInProjectsCap
 // Overview stat caption under In projects.
 func (msgs Messages) StatInProjectsCaption() string {
 	return Catalog.Format(msgs.locale, "statInProjectsCaption", nil)
-}
-
-// StatSoFar says "found so far"
-// in the language the app shows.
-//
-// Overview stat caption during the first scan.
-func StatSoFar() string { return In(i18n.Locale()).StatSoFar() }
-
-// StatSoFar says "found so far"
-// in the language of msgs.
-//
-// Overview stat caption during the first scan.
-func (msgs Messages) StatSoFar() string {
-	return Catalog.Format(msgs.locale, "statSoFar", nil)
 }
 
 // ChipProjects says "{count, plural, one {# project} other {# projects}}"

@@ -23,15 +23,16 @@ const shownIssues = 3
 // the projects, and what needs attention.
 func (a *App) overviewPage(c *ui.Context, p page) {
 	found := a.issues(c)
+	items := a.attentionItems(found)
 	ui.Column(c).Fill().Children(func() {
 		a.header(c, p.title(), p.subtitle())
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				a.hero(c, found)
+				a.hero(c, items)
 				// A narrow window has one column: what needs attention
 				// right under the summary, then the rest.
 				if narrow(c) {
-					a.attention(c, found)
+					a.attention(c, items)
 					a.toolCards(c, found)
 					a.overviewProjects(c)
 					a.overviewAgents(c)
@@ -43,7 +44,7 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 						a.overviewProjects(c)
 					})
 					ui.Column(c).Width(342).Shrink(0).Padding(27, 0, 0, 0).Gap(18).Children(func() {
-						a.attention(c, found)
+						a.attention(c, items)
 						a.overviewAgents(c)
 					})
 				})
@@ -67,7 +68,7 @@ func (a *App) firstScan() bool { return a.Snapshot == nil }
 // hero sums the environment up: a chip and a title by the issues, and on
 // the right the counts of tools installed, on PATH and in projects; in a
 // narrow window the counts go under the text.
-func (a *App) hero(c *ui.Context, found []issues.Issue) {
+func (a *App) hero(c *ui.Context, found []attentionItem) {
 	t := c.Theme()
 	pal := Colors(t)
 	tools := a.foundTools()
@@ -96,7 +97,7 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 			default:
 				heroChip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipIssues(n))
 				title = locales.HeroAlmost()
-				if warnings := len(slices.DeleteFunc(slices.Clone(found), func(is issues.Issue) bool { return is.Severity == issues.Info })); warnings >= 3 {
+				if warnings := len(slices.DeleteFunc(slices.Clone(found), func(it attentionItem) bool { return it.severity == issues.Info })); warnings >= 3 {
 					title = locales.HeroAttention()
 				}
 				text = foundText + " " + locales.HeroSomeIssues(n)
@@ -108,19 +109,18 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 			}
 		})
 		ui.Row(c).Gap(10).Shrink(0).Children(func() {
-			inPath, pinned := 0, a.pinnedTools()
-			for _, ts := range tools {
-				if inventory.TerminalCopy(ts.Installations) >= 0 {
-					inPath++
+			problems, dot := "—", pal.TextFaint
+			if !a.firstScan() {
+				problems = strconv.Itoa(len(found))
+				if len(found) > 0 {
+					dot = t.Warning
 				}
 			}
-			installed, onPath := locales.StatOnDisk(), locales.StatInPathCaption()
-			if a.firstScan() {
-				installed, onPath = locales.StatSoFar(), locales.StatSoFar()
-			}
-			stat(c, pal.TextFaint, strconv.Itoa(len(tools)), locales.Installed(), installed)
-			stat(c, t.Success, strconv.Itoa(inPath), locales.StatInPath(), onPath)
-			if len(a.Projects) == 0 {
+			stat(c, dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption())
+			stat(c, pal.Info, a.updateCount(), locales.HeroUpdates(), locales.HeroUpdatesCaption())
+			// The space to free takes this place once sizes are counted
+			// (S6-26).
+			if pinned := a.pinnedTools(); len(a.Projects) == 0 {
 				stat(c, Accent, "—", locales.StatInProjects(), locales.NoProjects())
 			} else {
 				stat(c, Accent, strconv.Itoa(len(pinned)), locales.StatInProjects(), locales.StatInProjectsCaption())
@@ -184,11 +184,23 @@ func (a *App) pinnedTools() []string {
 	return out
 }
 
-// toolCards are the tools found, three in a row; skeletons stand for
-// them until the first scan ends.
+// toolCards are the tools found, three in a row, those with issues first;
+// skeletons stand for them until the first scan ends.
 func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
 	pal := Colors(c.Theme())
 	tools := a.foundTools()
+	hasIssue := func(ts inventory.ToolState) bool {
+		return slices.ContainsFunc(found, func(is issues.Issue) bool { return toolChip(is, ts.Tool) != "" })
+	}
+	slices.SortStableFunc(tools, func(x, y inventory.ToolState) int {
+		switch hx, hy := hasIssue(x), hasIssue(y); {
+		case hx && !hy:
+			return -1
+		case hy && !hx:
+			return 1
+		}
+		return 0
+	})
 	ui.Column(c).Gap(10).Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.SectionTools()).FontSize(14).FontWeight(600).SingleLine()
@@ -461,7 +473,7 @@ func (a *App) noProjects(c *ui.Context) {
 }
 
 // attention lists the first issues, the rest in a line under them.
-func (a *App) attention(c *ui.Context, found []issues.Issue) {
+func (a *App) attention(c *ui.Context, found []attentionItem) {
 	count := ""
 	if !a.firstScan() {
 		count = strconv.Itoa(len(found))
@@ -475,13 +487,13 @@ func (a *App) attention(c *ui.Context, found []issues.Issue) {
 			attentionNote(c, "circle-check", true, locales.NoIssues(), locales.NoIssuesText())
 			return
 		}
-		for _, is := range found[:min(len(found), shownIssues)] {
-			a.issueRow(c, is)
+		for _, it := range found[:min(len(found), shownIssues)] {
+			a.issueRow(c, it)
 		}
 		if rest := found[min(len(found), shownIssues):]; len(rest) > 0 {
 			titles := make([]string, len(rest))
-			for i, is := range rest {
-				titles[i], _ = issueText(is, a.Home)
+			for i, it := range rest {
+				titles[i] = it.title
 			}
 			pal := Colors(c.Theme())
 			ui.Text(c, locales.MoreIssues(len(rest), strings.Join(titles, ", "))).FontSize(12).
@@ -512,12 +524,11 @@ func attentionNote(c *ui.Context, icon string, ok bool, title, text string) {
 
 // issueRow is an issue: its level, what it is and why it matters, and a
 // button to the page it lives on.
-func (a *App) issueRow(c *ui.Context, is issues.Issue) {
+func (a *App) issueRow(c *ui.Context, it attentionItem) {
 	t := c.Theme()
 	pal := Colors(t)
-	title, explain := issueText(is, a.Home)
 	icon, bg, color := "triangle-alert", pal.WarningSoft, t.Warning
-	if is.Severity == issues.Info {
+	if it.severity == issues.Info {
 		icon, bg, color = "info", pal.Muted, t.TextMuted
 	}
 	ui.Row(c).Gap(10).Padding(13, 14).AlignItems(ui.Start).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
@@ -525,15 +536,101 @@ func (a *App) issueRow(c *ui.Context, is issues.Issue) {
 			ui.Icon(c, Icon(icon)).Size(16, 16).TextColor(color)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-			ui.Text(c, title).FontSize(13.5).FontWeight(500)
-			ui.Text(c, explain).FontSize(11.5).TextColor(t.TextMuted)
+			ui.Text(c, it.title).FontSize(13.5).FontWeight(500)
+			// The page tells the rest; the card stays short.
+			ui.Text(c, it.explain).FontSize(11.5).TextColor(t.TextMuted).MaxLines(2).Tooltip(it.explain)
 			ui.Row(c).Padding(5, 0, 0, 0).Children(func() {
-				page := issuePage(is)
-				ui.Button(c.Key("details:"+string(is.Kind)+":"+is.Tool+":"+is.Project), "").Height(24).Padding(0, 10).
-					Label(locales.Details()).OnClick(func() { a.router.Push(page) }).Children(func() {
+				ui.Button(c.Key("details:"+it.key), "").Height(24).Padding(0, 10).
+					Label(locales.Details()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
 					ui.Text(c, locales.Details()).FontSize(12).SingleLine()
 				})
 			})
 		})
 	})
+}
+
+// attentionItem is a line of the issues card: an issue, or several of one
+// kind that only add up, as skills copied to several folders.
+type attentionItem struct {
+	title, explain, page, key string
+	severity                  issues.Severity
+}
+
+// grouped are the kinds whose issues the card shows as one when there are
+// several: each is the same advice about another skill or server.
+var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
+
+// attentionItems are the card's lines for found, in its order, a group
+// where its first issue was.
+func (a *App) attentionItems(found []issues.Issue) []attentionItem {
+	byKind := map[issues.Kind][]issues.Issue{}
+	for _, is := range found {
+		if slices.Contains(grouped, is.Kind) {
+			byKind[is.Kind] = append(byKind[is.Kind], is)
+		}
+	}
+	var out []attentionItem
+	done := map[issues.Kind]bool{}
+	for _, is := range found {
+		group := byKind[is.Kind]
+		if len(group) < 2 {
+			title, explain := issueText(is, a.Home)
+			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity})
+			continue
+		}
+		if done[is.Kind] {
+			continue
+		}
+		done[is.Kind] = true
+		var names []string
+		severity := issues.Info
+		for _, g := range group {
+			severity = max(severity, g.Severity)
+			for _, sk := range g.Skills[:min(len(g.Skills), 1)] {
+				names = append(names, sk.Name)
+			}
+			if len(g.MCP) > 0 {
+				names = append(names, filepath.Base(g.MCP[0].Command))
+			}
+		}
+		var title string
+		switch is.Kind {
+		case issues.SkillCopies:
+			title = locales.GroupSkillCopies(len(group))
+		case issues.SkillDiffers:
+			title = locales.GroupSkillDiffers(len(group))
+		case issues.MCPMissing:
+			title = locales.GroupMCPMissing(len(group))
+		}
+		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity})
+	}
+	return out
+}
+
+// updateCount is how many packages the package managers can update, as
+// last checked; "—" when no manager knows.
+func (a *App) updateCount() string {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok {
+		return "—"
+	}
+	n, known := 0, false
+	for _, m := range st.PackageManagers {
+		if checked, ok := a.PackageUpdates[m.Path]; ok {
+			m = checked
+		}
+		if !m.UpdatesKnown {
+			continue
+		}
+		known = true
+		for _, pkg := range m.Packages {
+			if pkg.Available != "" {
+				n++
+			}
+		}
+	}
+	if !known {
+		return "—"
+	}
+	return strconv.Itoa(n)
 }
