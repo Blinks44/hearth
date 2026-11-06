@@ -41,18 +41,15 @@ func (a *App) node(c *ui.Context, p page) {
 				toolTabs(c, "node-tabs", &a.nodeTab, len(rows))
 				switch a.nodeTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, st.Installations, rows, active, channel)
-							pathCard(c, "node", st.Installations, active, a.Home)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.availableCard(c, st.Installations, rows)
-							a.managerCard(c, st, rows, active, corepackRow)
-							if active >= 0 {
-								nodeGlobals(c, st.Installations[active])
-							}
-						})
+					columns(c, 12, func() {
+						a.versionTable(c, st.Installations, rows, active, channel)
+						pathCard(c, "node", st.Installations, active, a.Home)
+					}, func() {
+						a.availableCard(c, st.Installations, rows)
+						a.managerCard(c, st, rows, active, corepackRow)
+						if active >= 0 {
+							nodeGlobals(c, st.Installations[active])
+						}
 					})
 				case 1:
 					a.availableCard(c, st.Installations, rows)

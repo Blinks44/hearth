@@ -32,21 +32,18 @@ func (a *App) bun(c *ui.Context, p page) {
 				toolTabs(c, "bun-tabs", &a.bunTab, len(rows))
 				switch a.bunTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, func(in inventory.Installation) (string, bool) { return bunChannel(in.Version) })
-							if note := bunNote(ins, rows); note != "" {
-								toolNote(c, note)
-							}
-							pathCard(c, "bun", ins, active, a.Home)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.bunAvailable(c, ins, rows, active)
-							if active >= 0 {
-								a.bunInstall(c, ins[active])
-								globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
-							}
-						})
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, func(in inventory.Installation) (string, bool) { return bunChannel(in.Version) })
+						if note := bunNote(ins, rows); note != "" {
+							toolNote(c, note)
+						}
+						pathCard(c, "bun", ins, active, a.Home)
+					}, func() {
+						a.bunAvailable(c, ins, rows, active)
+						if active >= 0 {
+							a.bunInstall(c, ins[active])
+							globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
+						}
 					})
 				case 1:
 					a.bunAvailable(c, ins, rows, active)

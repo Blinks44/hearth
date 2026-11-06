@@ -28,27 +28,24 @@ func (a *App) javaPage(c *ui.Context, p page) {
 				toolTabs(c, "java-tabs", &a.javaTab, len(rows))
 				switch a.javaTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, javaChannel)
-							toolNote(c, locales.JavaHomeNote())
-							a.javaPath(c, st, active)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.javaAvailable(c)
-							a.managerCard(c, st, rows, active, nil)
-							listCard(c, locales.JavaBuilders(), "", func() {
-								found := false
-								for _, cmd := range []string{"gradle", "mvn"} {
-									if path := st.Vars[cmd]; path != "" {
-										listRow(c, cmd, false, tilde(path, a.Home), func() {})
-										found = true
-									}
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, javaChannel)
+						toolNote(c, locales.JavaHomeNote())
+						a.javaPath(c, st, active)
+					}, func() {
+						a.javaAvailable(c)
+						a.managerCard(c, st, rows, active, nil)
+						listCard(c, locales.JavaBuilders(), "", func() {
+							found := false
+							for _, cmd := range []string{"gradle", "mvn"} {
+								if path := st.Vars[cmd]; path != "" {
+									listRow(c, cmd, false, tilde(path, a.Home), func() {})
+									found = true
 								}
-								if !found {
-									cardNote(c, locales.JavaNoBuilders())
-								}
-							})
+							}
+							if !found {
+								cardNote(c, locales.JavaNoBuilders())
+							}
 						})
 					})
 				case 1:

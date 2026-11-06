@@ -45,31 +45,30 @@ func (a *App) docker(c *ui.Context, p page) {
 						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Placeholder(locales.DockerFilter()).Width(200)
 					}
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-						switch a.dockerTab {
-						case 0:
-							a.dockerContexts(c, d)
-							toolNote(c, locales.DockerContextNote())
-							if d.Override != "" {
-								toolNote(c, locales.DockerOverrideNote(d.Override))
-							}
-							pathCard(c, "docker", st.Installations, active, a.Home)
-						case 1:
-							dockerEngines(c, d.Engines)
-						case 2:
-							a.dockerProjectList(c)
-						case 3:
-							pathCard(c, "docker", st.Installations, active, a.Home)
-						}
-					})
-					if a.dockerTab == 0 {
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							dockerEngines(c, d.Engines)
-							globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
-						})
+				var side func()
+				if a.dockerTab == 0 {
+					side = func() {
+						dockerEngines(c, d.Engines)
+						globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
 					}
-				})
+				}
+				columns(c, 12, func() {
+					switch a.dockerTab {
+					case 0:
+						a.dockerContexts(c, d)
+						toolNote(c, locales.DockerContextNote())
+						if d.Override != "" {
+							toolNote(c, locales.DockerOverrideNote(d.Override))
+						}
+						pathCard(c, "docker", st.Installations, active, a.Home)
+					case 1:
+						dockerEngines(c, d.Engines)
+					case 2:
+						a.dockerProjectList(c)
+					case 3:
+						pathCard(c, "docker", st.Installations, active, a.Home)
+					}
+				}, side)
 			})
 		})
 	})

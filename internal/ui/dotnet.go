@@ -53,34 +53,31 @@ func (a *App) dotnet(c *ui.Context, p page) {
 				toolTabs(c, "dotnet-tabs", &a.dotnetTab, len(rows))
 				switch a.dotnetTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, func(in inventory.Installation) (string, bool) {
-								if in.Tool == "dotnet-runtime" {
-									return in.Dotnet.Runtimes[0].Name, false
-								}
-								for _, l := range a.dotnetLines() {
-									if strings.HasPrefix(in.Version, dotnetLinePrefix(l.Version)+".") {
-										return strings.ToUpper(l.Support), l.Phase == "eol"
-									}
-								}
-								return "", false
-							})
-							toolNote(c, locales.DotnetNote())
-							a.dotnetSelection(c, st)
-							for _, in := range st.Installations {
-								if in.Dotnet != nil && in.Dotnet.Err != "" {
-									toolNote(c, locales.DotnetProbeFailed(in.Dotnet.Err))
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, func(in inventory.Installation) (string, bool) {
+							if in.Tool == "dotnet-runtime" {
+								return in.Dotnet.Runtimes[0].Name, false
+							}
+							for _, l := range a.dotnetLines() {
+								if strings.HasPrefix(in.Version, dotnetLinePrefix(l.Version)+".") {
+									return strings.ToUpper(l.Support), l.Phase == "eol"
 								}
 							}
+							return "", false
 						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.dotnetAvailable(c)
-							dotnetEnvironment(c, st)
-							if i := inventory.TerminalCopy(st.Installations); i >= 0 {
-								globalsCard(c, locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
+						toolNote(c, locales.DotnetNote())
+						a.dotnetSelection(c, st)
+						for _, in := range st.Installations {
+							if in.Dotnet != nil && in.Dotnet.Err != "" {
+								toolNote(c, locales.DotnetProbeFailed(in.Dotnet.Err))
 							}
-						})
+						}
+					}, func() {
+						a.dotnetAvailable(c)
+						dotnetEnvironment(c, st)
+						if i := inventory.TerminalCopy(st.Installations); i >= 0 {
+							globalsCard(c, locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
+						}
 					})
 				case 1:
 					a.dotnetAvailable(c)

@@ -28,6 +28,15 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.hero(c, found)
+				// A narrow window has one column: what needs attention
+				// right under the summary, then the rest.
+				if narrow(c) {
+					a.attention(c, found)
+					a.toolCards(c, found)
+					a.overviewProjects(c)
+					a.overviewAgents(c)
+					return
+				}
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(18).Children(func() {
 						a.toolCards(c, found)
@@ -56,12 +65,19 @@ func (a *App) issues(c *ui.Context) []issues.Issue {
 func (a *App) firstScan() bool { return a.Snapshot == nil }
 
 // hero sums the environment up: a chip and a title by the issues, and on
-// the right the counts of tools installed, on PATH and in projects.
+// the right the counts of tools installed, on PATH and in projects; in a
+// narrow window the counts go under the text.
 func (a *App) hero(c *ui.Context, found []issues.Issue) {
 	t := c.Theme()
 	pal := Colors(t)
 	tools := a.foundTools()
-	ui.Row(c).Gap(24).Padding(22, 22, 22, 26).AlignItems(ui.Center).Radius(14).
+	var box ui.Element
+	if narrow(c) {
+		box = ui.Column(c).Gap(14).Padding(18, 22).AlignItems(ui.Stretch)
+	} else {
+		box = ui.Row(c).Gap(24).Padding(22, 22, 22, 26).AlignItems(ui.Center)
+	}
+	box.Radius(14).
 		LinearGradient(ui.LinearGradient{Angle: 135, Stops: []ui.GradientStop{
 			{Color: pal.HeroFrom, At: 0}, {Color: pal.HeroMid, At: 0.55}, {Color: pal.HeroTo, At: 1},
 		}}).BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
@@ -86,7 +102,10 @@ func (a *App) hero(c *ui.Context, found []issues.Issue) {
 				text = foundText + " " + locales.HeroSomeIssues(n)
 			}
 			ui.Text(c, title).FontSize(24).FontWeight(600).SingleLine()
-			ui.Text(c, text).FontSize(13).TextColor(t.TextMuted).MaxWidth(380)
+			txt := ui.Text(c, text).FontSize(13).TextColor(t.TextMuted)
+			if !narrow(c) {
+				txt.MaxWidth(380)
+			}
 		})
 		ui.Row(c).Gap(10).Shrink(0).Children(func() {
 			inPath, pinned := 0, a.pinnedTools()
@@ -123,7 +142,11 @@ func heroChip(c *ui.Context, dot, bg, text ui.Color, label string) {
 func stat(c *ui.Context, dot ui.Color, value, label, caption string) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.Column(c).MinWidth(158).Gap(4).Padding(14, 16).Radius(10).Background(pal.StatBg).
+	e := ui.Column(c).MinWidth(158).Gap(4).Padding(14, 16)
+	if narrow(c) {
+		e.Grow(1).Padding(10, 14).Gap(2)
+	}
+	e.Radius(10).Background(pal.StatBg).
 		BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
 		ui.Text(c, value).FontSize(26).SingleLine()
 		ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {

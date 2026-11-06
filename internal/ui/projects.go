@@ -324,30 +324,29 @@ func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects
 	if len(needs) > 0 {
 		caption += " · " + strings.Join(needs, ", ")
 	}
-	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+	headRow(c, func() {
 		folderTile(c, 48)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Text(c, filepath.Base(p.Dir)).FontSize(22).FontWeight(600).SingleLine()
 			ui.Text(c, caption).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
 		})
-		ui.Row(c).Gap(8).Shrink(0).Children(func() {
-			stateCard(c, pal.TextFaint, locales.Needed(), locales.ToolsCount(len(statuses)), strings.Join(files, " · "))
-			problem := projectProblem(statuses)
-			dot, readyCaption := t.Success, locales.ChipReady()
-			if problem != "" {
-				dot, readyCaption = t.Warning, problem
-			}
-			stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
-			var names []string
-			for _, ag := range projectAgents(p) {
-				names = append(names, ag.name)
-			}
-			value, aiCaption := "—", locales.NoAISettings()
-			if len(names) > 0 {
-				value, aiCaption = strings.Join(names, ", "), strings.Join(p.AI, " · ")
-			}
-			stateCard(c, Accent, "AI", value, aiCaption)
-		})
+	}, func() {
+		stateCard(c, pal.TextFaint, locales.Needed(), locales.ToolsCount(len(statuses)), strings.Join(files, " · "))
+		problem := projectProblem(statuses)
+		dot, readyCaption := t.Success, locales.ChipReady()
+		if problem != "" {
+			dot, readyCaption = t.Warning, problem
+		}
+		stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
+		var names []string
+		for _, ag := range projectAgents(p) {
+			names = append(names, ag.name)
+		}
+		value, aiCaption := "—", locales.NoAISettings()
+		if len(names) > 0 {
+			value, aiCaption = strings.Join(names, ", "), strings.Join(p.AI, " · ")
+		}
+		stateCard(c, Accent, "AI", value, aiCaption)
 	})
 }
 

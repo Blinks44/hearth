@@ -32,21 +32,18 @@ func (a *App) goPage(c *ui.Context, p page) {
 				toolTabs(c, "go-tabs", &a.goTab, len(rows))
 				switch a.goTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, goChannel)
-							if slices.ContainsFunc(rows, func(i int) bool { return ins[i].Source.Manager == detect.GoToolchain }) {
-								toolNote(c, locales.GoToolchainNote(st.Vars["GOTOOLCHAIN"]))
-							}
-							pathCard(c, "go", ins, active, a.Home)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.goAvailable(c, ins, rows, active)
-							a.managerCard(c, st, rows, active, nil)
-							if active >= 0 {
-								globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
-							}
-						})
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, goChannel)
+						if slices.ContainsFunc(rows, func(i int) bool { return ins[i].Source.Manager == detect.GoToolchain }) {
+							toolNote(c, locales.GoToolchainNote(st.Vars["GOTOOLCHAIN"]))
+						}
+						pathCard(c, "go", ins, active, a.Home)
+					}, func() {
+						a.goAvailable(c, ins, rows, active)
+						a.managerCard(c, st, rows, active, nil)
+						if active >= 0 {
+							globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
+						}
 					})
 				case 1:
 					a.goAvailable(c, ins, rows, active)

@@ -26,12 +26,13 @@ func (a *App) paths(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
-				ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+				headRow(c, func() {
 					ui.Box(c).Size(48, 48).Radius(12).Background(pal.SuccessSoft).Center().Children(func() { ui.Icon(c, Icon("terminal")).Size(24, 24) })
 					ui.Column(c).Grow(1).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
 						ui.Text(c, locales.EnvPathDescription()).FontSize(12).TextColor(c.Theme().TextMuted)
 					})
+				}, func() {
 					stateCard(c, c.Theme().Success, locales.EnvPathTerminal(), strconv.Itoa(len(term)), locales.EnvPathEntries())
 					stateCard(c, pal.TextFaint, locales.EnvPathApps(), strconv.Itoa(len(gui)), locales.EnvPathEntries())
 					stateCard(c, c.Theme().Warning, locales.EnvPathProblems(), strconv.Itoa(problems), "")
@@ -44,44 +45,41 @@ func (a *App) paths(c *ui.Context, p page) {
 					ui.Box(c).Grow(1)
 					ui.SearchField(c.Key("path-filter"), &a.pathFilter).Placeholder(locales.EnvPathFilter()).Width(200)
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(14).Children(func() {
-						switch a.pathTab {
-						case 0:
-							a.pathTable(c, term, gui)
-						case 1:
-							a.pathTable(c, gui, term)
-						case 2:
-							a.pathVariables(c)
-						case 3:
-							a.pathDifferences(c, term, gui)
-						}
-						toolNote(c, locales.EnvPathReadOnly())
-						if a.pathTab != 3 {
-							a.pathDifferences(c, term, gui)
-						}
-					})
-					ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-						if a.pathTab != 2 {
-							a.pathVariables(c)
-						}
-						listCard(c, locales.EnvPathOrigins(), "", func() {
-							cardNote(c, locales.EnvPathOriginNote())
-							seen := map[string]bool{}
-							for _, entry := range term {
-								for _, src := range entry.Sources {
-									if seen[src.File] {
-										continue
-									}
-									seen[src.File] = true
-									listRow(c, tilde(src.File, a.Home), false, "", func() {
-										if src.Line > 0 && a.Shell != nil {
-											iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, src.File) })
-										}
-									})
+				columns(c, 14, func() {
+					switch a.pathTab {
+					case 0:
+						a.pathTable(c, term, gui)
+					case 1:
+						a.pathTable(c, gui, term)
+					case 2:
+						a.pathVariables(c)
+					case 3:
+						a.pathDifferences(c, term, gui)
+					}
+					toolNote(c, locales.EnvPathReadOnly())
+					if a.pathTab != 3 {
+						a.pathDifferences(c, term, gui)
+					}
+				}, func() {
+					if a.pathTab != 2 {
+						a.pathVariables(c)
+					}
+					listCard(c, locales.EnvPathOrigins(), "", func() {
+						cardNote(c, locales.EnvPathOriginNote())
+						seen := map[string]bool{}
+						for _, entry := range term {
+							for _, src := range entry.Sources {
+								if seen[src.File] {
+									continue
 								}
+								seen[src.File] = true
+								listRow(c, tilde(src.File, a.Home), false, "", func() {
+									if src.Line > 0 && a.Shell != nil {
+										iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, src.File) })
+									}
+								})
 							}
-						})
+						}
 					})
 				})
 			})

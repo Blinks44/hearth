@@ -198,7 +198,7 @@ type aiStat struct{ value, label string }
 func aiIntro(c *ui.Context, icon, title, text string, stats []aiStat) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+	headRow(c, func() {
 		ui.Box(c).Size(48, 48).Shrink(0).Radius(12).Center().Background(pal.AccentSoft).
 			BorderWidth(1).BorderColor(Accent.Alpha(0.15)).Children(func() {
 			ui.Icon(c, Icon(icon)).Size(26, 26).TextColor(Accent)
@@ -207,15 +207,18 @@ func aiIntro(c *ui.Context, icon, title, text string, stats []aiStat) {
 			ui.Text(c, title).FontSize(22).FontWeight(600).SingleLine()
 			ui.Text(c, text).FontSize(12.5).TextColor(t.TextMuted).MaxWidth(420)
 		})
-		ui.Row(c).Gap(8).Shrink(0).Children(func() {
-			for _, s := range stats {
-				ui.Column(c).Width(88).Gap(1).Padding(8, 14).Radius(10).Background(pal.Subtle).
-					BorderWidth(1).BorderColor(pal.Line).Children(func() {
-					ui.Text(c, s.value).FontSize(16).SingleLine()
-					ui.Text(c, s.label).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-				})
+	}, func() {
+		for _, s := range stats {
+			e := ui.Column(c).Width(88).Gap(1).Padding(8, 14)
+			if narrow(c) {
+				e.Grow(1).Basis(0)
 			}
-		})
+			e.Radius(10).Background(pal.Subtle).
+				BorderWidth(1).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, s.value).FontSize(16).SingleLine()
+				ui.Text(c, s.label).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+			})
+		}
 	})
 }
 
@@ -349,6 +352,12 @@ func (a *App) agentsPage(c *ui.Context, p page) {
 func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 	t := c.Theme()
 	pal := Colors(t)
+	// Instructions wrap in a narrow window, which leaves the agent's name
+	// and path room.
+	instructions := float32(220)
+	if narrow(c) {
+		instructions = 130
+	}
 	listFrame(c, func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			head := func(title string) ui.Element {
@@ -359,7 +368,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 			head(locales.ColumnInstall()).Width(90).Shrink(0)
 			head("Skills").Width(56).Shrink(0)
 			head("MCP").Width(46).Shrink(0)
-			head(locales.ColumnInstructions()).Width(220).Shrink(0)
+			head(locales.ColumnInstructions()).Width(instructions).Shrink(0)
 			ui.Box(c).Width(14).Shrink(0)
 		})
 		for _, ag := range found {
@@ -404,7 +413,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 				}
 				count(skills)
 				count(servers)
-				ui.Row(c).Width(220).Shrink(0).Gap(6).Wrap().Children(func() {
+				ui.Row(c).Width(instructions).Shrink(0).Gap(6).Wrap().Children(func() {
 					shown := 0
 					for _, f := range ag.Files {
 						if f.Kind == inventory.FileInstructions {
@@ -500,25 +509,24 @@ func (a *App) agentHero(c *ui.Context, ag inventory.Agent) {
 	case ag.App != "":
 		caption = locales.AppSource() + " · " + tilde(ag.App, a.Home)
 	}
-	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+	headRow(c, func() {
 		agentTile(c, ag.ID, 48)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Text(c, agentTitle(ag.ID)).FontSize(22).FontWeight(600).SingleLine()
 			ui.Text(c, caption).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
 		})
-		ui.Row(c).Gap(8).Shrink(0).Children(func() {
-			version := agentVersion(ag)
-			if version == "" {
-				version = "—"
-			}
-			stateCard(c, pal.Info, locales.StateVersion(), version, locales.VersionsCount(len(ag.Installations)))
-			term, termCaption, dot := "—", locales.NotInPath(), pal.TextFaint
-			if i := inventory.TerminalCopy(ag.Installations); i >= 0 {
-				term, termCaption, dot = filepath.Base(ag.Installations[i].Path), sourceName(ag.Installations[i].Source), t.Success
-			}
-			stateCard(c, dot, locales.StateInTerminal(), term, termCaption)
-			stateCard(c, pal.TextFaint, locales.StateSettings(), locales.FilesCount(len(ag.Files)), tilde(ag.Dir, a.Home))
-		})
+	}, func() {
+		version := agentVersion(ag)
+		if version == "" {
+			version = "—"
+		}
+		stateCard(c, pal.Info, locales.StateVersion(), version, locales.VersionsCount(len(ag.Installations)))
+		term, termCaption, dot := "—", locales.NotInPath(), pal.TextFaint
+		if i := inventory.TerminalCopy(ag.Installations); i >= 0 {
+			term, termCaption, dot = filepath.Base(ag.Installations[i].Path), sourceName(ag.Installations[i].Source), t.Success
+		}
+		stateCard(c, dot, locales.StateInTerminal(), term, termCaption)
+		stateCard(c, pal.TextFaint, locales.StateSettings(), locales.FilesCount(len(ag.Files)), tilde(ag.Dir, a.Home))
 	})
 }
 

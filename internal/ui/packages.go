@@ -59,7 +59,7 @@ func (a *App) packages(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
-				ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+				headRow(c, func() {
 					ui.Box(c).Size(48, 48).Radius(12).Background(pal.SuccessSoft).Center().Children(func() { ui.Icon(c, Icon("package")).Size(24, 24).TextColor(pal.MonoText) })
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, m.Name).FontSize(22).FontWeight(600)
@@ -69,6 +69,7 @@ func (a *App) packages(c *ui.Context, p page) {
 						}
 						ui.Text(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted).SingleLine()
 					})
+				}, func() {
 					version := m.Version
 					if version == "" { // Scoop is a PowerShell script Hearth does not run
 						version = locales.UnknownVersion()
@@ -82,70 +83,67 @@ func (a *App) packages(c *ui.Context, p page) {
 					ui.Box(c).Grow(1)
 					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Placeholder(locales.PkgFilter()).Width(200)
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-						if m.Unlisted && !partial {
-							toolNote(c, locales.PkgWingetLocal())
-						} else if !m.UpdatesKnown && !partial {
-							toolNote(c, packageUpdatesNote(m.ID, a.VersionLists))
-						}
-						if m.UpdateError != "" {
-							warningRow(c, locales.PkgProbeFailed()+" "+m.UpdateError)
-						}
-						for _, warning := range m.Warnings {
-							warningRow(c, locales.PkgProbeFailed()+" "+warning)
-						}
-						a.packageTable(c, m)
-						toolNote(c, locales.PkgReadOnly())
-						listCard(c, locales.PkgStatus(), locales.PkgReadOnlyLabel(), func() {
-							listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
-								iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
-							})
-							cardNote(c, locales.PkgCachedNote())
-							if !m.UpdatesFetched.IsZero() {
-								cardNote(c, locales.VersionsAsOf(m.UpdatesFetched))
-							}
+				columns(c, 12, func() {
+					if m.Unlisted && !partial {
+						toolNote(c, locales.PkgWingetLocal())
+					} else if !m.UpdatesKnown && !partial {
+						toolNote(c, packageUpdatesNote(m.ID, a.VersionLists))
+					}
+					if m.UpdateError != "" {
+						warningRow(c, locales.PkgProbeFailed()+" "+m.UpdateError)
+					}
+					for _, warning := range m.Warnings {
+						warningRow(c, locales.PkgProbeFailed()+" "+warning)
+					}
+					a.packageTable(c, m)
+					toolNote(c, locales.PkgReadOnly())
+					listCard(c, locales.PkgStatus(), locales.PkgReadOnlyLabel(), func() {
+						listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
+							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
 						})
+						cardNote(c, locales.PkgCachedNote())
+						if !m.UpdatesFetched.IsZero() {
+							cardNote(c, locales.VersionsAsOf(m.UpdatesFetched))
+						}
 					})
-					ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-						listCard(c, locales.PkgOtherManagers(), "", func() {
-							for _, other := range st.PackageManagers {
-								listRow(c, other.Name, false, tilde(other.Path, a.Home), func() {
-									if other.Path == m.Path {
-										ui.Text(c, locales.PkgSelected()).FontSize(10.5).TextColor(pal.TextFaint)
-									} else {
-										ui.Button(c, locales.Details()).OnClick(func() { a.packageManager = other.Path })
-									}
-								})
-							}
-						})
-						if len(m.Settings) > 0 {
-							listCard(c, locales.PkgSettings(), m.Name, func() {
-								for _, setting := range m.Settings {
-									cardNote(c, setting)
+				}, func() {
+					listCard(c, locales.PkgOtherManagers(), "", func() {
+						for _, other := range st.PackageManagers {
+							listRow(c, other.Name, false, tilde(other.Path, a.Home), func() {
+								if other.Path == m.Path {
+									ui.Text(c, locales.PkgSelected()).FontSize(10.5).TextColor(pal.TextFaint)
+								} else {
+									ui.Button(c, locales.Details()).OnClick(func() { a.packageManager = other.Path })
 								}
-							})
-						}
-						if m.ID == "brew" {
-							listCard(c, "Taps", "brew tap", func() {
-								for _, tap := range m.Taps {
-									listRow(c, tap, false, "", func() {})
-								}
-								if len(m.Taps) == 0 {
-									cardNote(c, locales.PkgNoTaps())
-								}
-							})
-						}
-						if services := packageServices(a.Snapshot, m.ID); len(services) > 0 {
-							listCard(c, locales.DatabaseServices(), "", func() {
-								for _, server := range services {
-									status, _ := databaseStatus(c, server.Status)
-									listRow(c, server.Service, false, status, func() {})
-								}
-								ui.Button(c, locales.DatabasesTitle()).OnClick(func() { a.router.Push("/tools/databases") })
 							})
 						}
 					})
+					if len(m.Settings) > 0 {
+						listCard(c, locales.PkgSettings(), m.Name, func() {
+							for _, setting := range m.Settings {
+								cardNote(c, setting)
+							}
+						})
+					}
+					if m.ID == "brew" {
+						listCard(c, "Taps", "brew tap", func() {
+							for _, tap := range m.Taps {
+								listRow(c, tap, false, "", func() {})
+							}
+							if len(m.Taps) == 0 {
+								cardNote(c, locales.PkgNoTaps())
+							}
+						})
+					}
+					if services := packageServices(a.Snapshot, m.ID); len(services) > 0 {
+						listCard(c, locales.DatabaseServices(), "", func() {
+							for _, server := range services {
+								status, _ := databaseStatus(c, server.Status)
+								listRow(c, server.Service, false, status, func() {})
+							}
+							ui.Button(c, locales.DatabasesTitle()).OnClick(func() { a.router.Push("/tools/databases") })
+						})
+					}
 				})
 			})
 		})

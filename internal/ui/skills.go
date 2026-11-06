@@ -89,7 +89,7 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 							a.copiesHint(c, withCopies)
 						}
 					})
-					ui.Column(c).Width(422).Shrink(0).Children(func() {
+					detailColumn(c).Children(func() {
 						if chosen >= 0 {
 							a.skillDetail(c, shown[chosen])
 						}

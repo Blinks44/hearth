@@ -38,12 +38,13 @@ func (a *App) databases(c *ui.Context, p page) {
 						running++
 					}
 				}
-				ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+				headRow(c, func() {
 					ui.Box(c).Size(48, 48).Radius(12).Background(pal.SuccessSoft).Center().Children(func() { ui.Icon(c, Icon("database")).Size(24, 24).TextColor(pal.MonoText) })
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
 						ui.Text(c, locales.DatabaseSubtitle()).FontSize(12.5).TextColor(c.Theme().TextMuted)
 					})
+				}, func() {
 					stateCard(c, pal.TextFaint, locales.DatabaseServers(), strconv.Itoa(len(servers)), strings.Join(databaseSources(servers), " · "))
 					stateCard(c, c.Theme().Success, locales.DatabaseRunningCount(), strconv.Itoa(running), "")
 					stateCard(c, c.Theme().Warning, locales.DatabaseConflicts(), strconv.Itoa(len(conflicts)), locales.DatabasePorts())
@@ -63,55 +64,52 @@ func (a *App) databases(c *ui.Context, p page) {
 					ui.Box(c).Grow(1)
 					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Placeholder(locales.DatabaseFilter()).Width(200)
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-						if a.databaseTab == 2 {
-							a.databaseProjects(c)
-						} else {
-							a.databaseTable(c, servers, d.Clients)
+				columns(c, 12, func() {
+					if a.databaseTab == 2 {
+						a.databaseProjects(c)
+					} else {
+						a.databaseTable(c, servers, d.Clients)
+					}
+					toolNote(c, locales.DatabaseReadOnly())
+					listCard(c, locales.DatabaseListeners(), locales.DatabaseObserved(), func() {
+						shown := 0
+						for _, l := range d.Listeners {
+							if l.Port != "5432" && l.Port != "3306" && l.Port != "6379" && !databaseProjectPort(a, l.Port) {
+								continue
+							}
+							shown++
+							listRow(c, l.Address+":"+l.Port, true, l.Process, func() { ui.Text(c, l.PID).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint) })
 						}
-						toolNote(c, locales.DatabaseReadOnly())
-						listCard(c, locales.DatabaseListeners(), locales.DatabaseObserved(), func() {
-							shown := 0
-							for _, l := range d.Listeners {
-								if l.Port != "5432" && l.Port != "3306" && l.Port != "6379" && !databaseProjectPort(a, l.Port) {
-									continue
-								}
-								shown++
-								listRow(c, l.Address+":"+l.Port, true, l.Process, func() { ui.Text(c, l.PID).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint) })
-							}
-							if shown == 0 {
-								cardNote(c, locales.DatabaseNoListeners())
-							}
-						})
-					})
-					ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-						listCard(c, locales.DatabaseClients(), "", func() {
-							for _, client := range d.Clients {
-								listRow(c, client.Tool+" "+client.Version, false, tilde(client.Path, a.Home), func() {})
-							}
-							if len(d.Clients) == 0 {
-								cardNote(c, locales.DatabaseNoClients())
-							}
-						})
-						listCard(c, locales.DatabaseServices(), "", func() {
-							shown := 0
-							for _, db := range servers {
-								if db.Service == "" || db.Source == "docker" {
-									continue
-								}
-								shown++
-								text, _ := databaseStatus(c, db.Status)
-								listRow(c, db.Service, false, text, func() {})
-							}
-							if shown == 0 {
-								cardNote(c, locales.DatabaseNoServices())
-							}
-						})
-						if a.databaseTab != 2 {
-							a.databaseProjects(c)
+						if shown == 0 {
+							cardNote(c, locales.DatabaseNoListeners())
 						}
 					})
+				}, func() {
+					listCard(c, locales.DatabaseClients(), "", func() {
+						for _, client := range d.Clients {
+							listRow(c, client.Tool+" "+client.Version, false, tilde(client.Path, a.Home), func() {})
+						}
+						if len(d.Clients) == 0 {
+							cardNote(c, locales.DatabaseNoClients())
+						}
+					})
+					listCard(c, locales.DatabaseServices(), "", func() {
+						shown := 0
+						for _, db := range servers {
+							if db.Service == "" || db.Source == "docker" {
+								continue
+							}
+							shown++
+							text, _ := databaseStatus(c, db.Status)
+							listRow(c, db.Service, false, text, func() {})
+						}
+						if shown == 0 {
+							cardNote(c, locales.DatabaseNoServices())
+						}
+					})
+					if a.databaseTab != 2 {
+						a.databaseProjects(c)
+					}
 				})
 			})
 		})

@@ -48,7 +48,7 @@ func (a *App) toolEmpty(c *ui.Context, id, name string) {
 // badge adds beside it, and subtitle under them; on the right, the cards
 // of where the tool stands.
 func toolHead(c *ui.Context, id, name string, badge func(), subtitle string, cards func()) {
-	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+	headRow(c, func() {
 		toolLogo(c, id, 48)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -57,6 +57,22 @@ func toolHead(c *ui.Context, id, name string, badge func(), subtitle string, car
 			})
 			ui.Text(c, subtitle).FontSize(12.5).TextColor(c.Theme().TextMuted).SingleLine()
 		})
+	}, cards)
+}
+
+// headRow is the top of a page: lead, its tile and title, with the cards
+// of where things stand beside it, or under it across the width in a
+// narrow window.
+func headRow(c *ui.Context, lead, cards func()) {
+	if narrow(c) {
+		ui.Column(c).Gap(14).Children(func() {
+			ui.Row(c).Gap(14).AlignItems(ui.Center).Children(lead)
+			ui.Row(c).Gap(8).Children(cards)
+		})
+		return
+	}
+	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
+		lead()
 		ui.Row(c).Gap(8).Shrink(0).Children(cards)
 	})
 }
@@ -100,7 +116,11 @@ func globalsCard(c *ui.Context, title, empty string, pkgs []inventory.Package, a
 func stateCard(c *ui.Context, dot ui.Color, label, value, caption string) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.Column(c).MinWidth(128).Gap(3).Padding(10, 14).Radius(10).Background(pal.Subtle).
+	e := ui.Column(c).MinWidth(128).Gap(3).Padding(10, 14)
+	if narrow(c) {
+		e.Grow(1).Basis(0)
+	}
+	e.Radius(10).Background(pal.Subtle).
 		BorderWidth(1).BorderColor(pal.Line).Children(func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Box(c).Size(7, 7).Radius(3.5).Background(dot)
@@ -109,6 +129,52 @@ func stateCard(c *ui.Context, dot ui.Color, label, value, caption string) {
 		ui.Text(c, value).Font(FontMono).FontSize(14).SingleLine()
 		ui.Text(c, caption).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 	})
+}
+
+// narrowWidth is the window's width under which a page's side column goes
+// under the main one, which keeps names and paths in the tables whole.
+const narrowWidth = 1180
+
+// narrow reports a window too narrow for a side column.
+func narrow(c *ui.Context) bool {
+	w, _ := c.Size()
+	return w > 0 && w < narrowWidth
+}
+
+// columns lays out a page's main column and its side column of cards:
+// side by side, or one under the other in a narrow window. side may be nil.
+func columns(c *ui.Context, gap float32, main, side func()) {
+	wide := !narrow(c)
+	var outer ui.Element
+	if wide {
+		outer = ui.Row(c).Gap(18).AlignItems(ui.Start)
+	} else {
+		outer = ui.Column(c).Gap(18).AlignItems(ui.Stretch)
+	}
+	outer.Children(func() {
+		m := ui.Column(c).MinWidth(0).Gap(gap)
+		if wide {
+			m.Grow(1)
+		}
+		m.Children(main)
+		if side == nil {
+			return
+		}
+		s := ui.Column(c).Gap(14)
+		if wide {
+			s.Width(342).Shrink(0)
+		}
+		s.Children(side)
+	})
+}
+
+// detailColumn is the column of the item chosen in a list beside it, as
+// on the Skills and MCP pages; in a narrow window the two share the width.
+func detailColumn(c *ui.Context) ui.Element {
+	if narrow(c) {
+		return ui.Column(c).Grow(1).Basis(0).MinWidth(0)
+	}
+	return ui.Column(c).Width(422).Shrink(0)
 }
 
 // toolTabs switches a tool page, *tab, between the installed versions,

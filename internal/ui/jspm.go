@@ -54,30 +54,29 @@ func (a *App) jspm(c *ui.Context, p page) {
 						ui.SearchField(c.Key("jspm-filter"), &a.jspmFilter).Placeholder(locales.JsFilter()).Width(200)
 					}
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-						switch a.jspmTab {
-						case 0:
-							a.jsTable(c)
-							if a.corepackInstalled() {
-								toolNote(c, locales.JsCorepackNote())
-							}
-							a.jsProjects(c)
-						case 1:
-							a.jsGlobals(c)
-						case 2:
-							a.jsProjects(c)
-						case 3:
-							for _, id := range jsManagers {
-								st, _ := a.Snapshot.Tool(id)
-								pathCard(c, id, st.Installations, inventory.TerminalCopy(st.Installations), a.Home)
-							}
+				var side func()
+				if a.jspmTab == 0 {
+					side = func() { a.jsUpdates(c); a.jsCorepack(c); a.jsGlobals(c) }
+				}
+				columns(c, 12, func() {
+					switch a.jspmTab {
+					case 0:
+						a.jsTable(c)
+						if a.corepackInstalled() {
+							toolNote(c, locales.JsCorepackNote())
 						}
-					})
-					if a.jspmTab == 0 {
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() { a.jsUpdates(c); a.jsCorepack(c); a.jsGlobals(c) })
+						a.jsProjects(c)
+					case 1:
+						a.jsGlobals(c)
+					case 2:
+						a.jsProjects(c)
+					case 3:
+						for _, id := range jsManagers {
+							st, _ := a.Snapshot.Tool(id)
+							pathCard(c, id, st.Installations, inventory.TerminalCopy(st.Installations), a.Home)
+						}
 					}
-				})
+				}, side)
 			})
 		})
 	})

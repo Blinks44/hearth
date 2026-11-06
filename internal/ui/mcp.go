@@ -142,7 +142,7 @@ func (a *App) mcpPageView(c *ui.Context, p page) {
 						a.mcpList(c, shown, chosen)
 						a.mcpProblems(c, found)
 					})
-					ui.Column(c).Width(422).Shrink(0).Children(func() {
+					detailColumn(c).Children(func() {
 						if chosen >= 0 {
 							a.mcpDetail(c, shown[chosen])
 						}

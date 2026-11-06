@@ -416,3 +416,27 @@ func TestUserPackages(t *testing.T) {
 		}
 	}
 }
+
+// A narrow window puts the side column under the table, where the table
+// keeps the width it needs; a wide one keeps it beside.
+func TestNodeNarrow(t *testing.T) {
+	for _, tc := range []struct {
+		width, height int
+		under         bool
+	}{{1280, 820, false}, {1000, 680, true}} {
+		a := NewApp()
+		a.Home = home
+		a.Snapshot = nodeSnapshot()
+		a.router.Push("/tools/node")
+		tt := ui.NewTester(a.View, tc.width, tc.height)
+		tt.Advance(time.Second)
+		table, ok := tt.Find("Version")
+		manager, ok2 := tt.Find("Version manager · fnm")
+		if !ok || !ok2 {
+			t.Fatalf("%d: no table or manager card: %q", tc.width, tt.Texts())
+		}
+		if under := manager.Y > table.Y && manager.X <= table.X+1; under != tc.under {
+			t.Errorf("%d: manager card at %v, table at %v; under = %v, want %v", tc.width, manager, table, under, tc.under)
+		}
+	}
+}

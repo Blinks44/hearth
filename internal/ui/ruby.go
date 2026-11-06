@@ -30,21 +30,18 @@ func (a *App) ruby(c *ui.Context, p page) {
 				toolTabs(c, "ruby-tabs", &a.rubyTab, len(rows))
 				switch a.rubyTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, a.rubyChannel(c))
-							if slices.ContainsFunc(rows, func(i int) bool { return inventory.NeededBySystem(ins[i]) }) {
-								toolNote(c, locales.RubySystemNote())
-							}
-							pathCard(c, "ruby", ins, active, a.Home)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.rubyAvailable(c, ins, rows, active)
-							a.managerCard(c, st, rows, active, nil)
-							if active >= 0 {
-								globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
-							}
-						})
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, a.rubyChannel(c))
+						if slices.ContainsFunc(rows, func(i int) bool { return inventory.NeededBySystem(ins[i]) }) {
+							toolNote(c, locales.RubySystemNote())
+						}
+						pathCard(c, "ruby", ins, active, a.Home)
+					}, func() {
+						a.rubyAvailable(c, ins, rows, active)
+						a.managerCard(c, st, rows, active, nil)
+						if active >= 0 {
+							globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
+						}
 					})
 				case 1:
 					a.rubyAvailable(c, ins, rows, active)

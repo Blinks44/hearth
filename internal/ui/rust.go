@@ -36,24 +36,21 @@ func (a *App) rust(c *ui.Context, p page) {
 				toolTabs(c, "rust-tabs", &a.rustTab, len(rows))
 				switch a.rustTab {
 				case 0:
-					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-							a.versionTable(c, ins, rows, active, rustBuild)
-							if rustToolchains(ins, rows) > 0 {
-								toolNote(c, locales.RustToolchainNote())
-							}
-							pathCard(c, "rustc", ins, active, a.Home)
-						})
-						ui.Column(c).Width(342).Shrink(0).Gap(14).Children(func() {
-							a.rustAvailable(c, ins, rows, active)
-							a.managerCard(c, st, rows, active, nil)
-							if active >= 0 && ins[active].Rust != nil {
-								rustTargets(c, *ins[active].Rust)
-							}
-							if active >= 0 {
-								globalsCard(c, locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
-							}
-						})
+					columns(c, 12, func() {
+						a.versionTable(c, ins, rows, active, rustBuild)
+						if rustToolchains(ins, rows) > 0 {
+							toolNote(c, locales.RustToolchainNote())
+						}
+						pathCard(c, "rustc", ins, active, a.Home)
+					}, func() {
+						a.rustAvailable(c, ins, rows, active)
+						a.managerCard(c, st, rows, active, nil)
+						if active >= 0 && ins[active].Rust != nil {
+							rustTargets(c, *ins[active].Rust)
+						}
+						if active >= 0 {
+							globalsCard(c, locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
+						}
 					})
 				case 1:
 					a.rustAvailable(c, ins, rows, active)

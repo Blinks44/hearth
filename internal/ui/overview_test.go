@@ -115,3 +115,21 @@ func TestOverviewInfoIssues(t *testing.T) {
 	tt := openOverview(t, a)
 	hasTexts(t, tt, "3 issues", "Almost ready", "not in apps")
 }
+
+// A narrow window shows what needs attention right under the summary,
+// before the tools.
+func TestOverviewNarrow(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = nodeSnapshot()
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+	issues, ok := tt.Find("Needs attention")
+	tools, ok2 := tt.Find("fnm · 3 versions") // Node's card
+	if !ok || !ok2 {
+		t.Fatalf("no issues or tools: %q", tt.Texts())
+	}
+	if issues.Y >= tools.Y {
+		t.Errorf("issues at %v, tools at %v: want issues first", issues, tools)
+	}
+}
