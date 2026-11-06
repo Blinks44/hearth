@@ -1528,6 +1528,26 @@
       }
     }
   },
+  "sizeMb": "{size} MB",
+  "@sizeMb": {
+    "description": "A size in megabytes (1,000,000 bytes), rounded down.",
+    "placeholders": {
+      "size": {
+        "type": "int",
+        "example": "86"
+      }
+    }
+  },
+  "sizeGb": "{size, number, ::.0} GB",
+  "@sizeGb": {
+    "description": "A size in gigabytes (1,000,000,000 bytes), with one decimal.",
+    "placeholders": {
+      "size": {
+        "type": "double",
+        "example": "2.4"
+      }
+    }
+  },
   "brokenLink": "The link leads to {target}, and nothing is there.",
   "@brokenLink": {
     "description": "Skill details: a broken symlink.",
@@ -2102,6 +2122,10 @@
   "@pkgByDependents": {
     "description": "Package order: the ones most packages depend on first."
   },
+  "pkgBySize": "By size",
+  "@pkgBySize": {
+    "description": "Package order: the biggest first."
+  },
   "pkgSort": "Order packages",
   "@pkgSort": {
     "description": "Label of the package order menu."
@@ -2155,6 +2179,10 @@
   "pkgPackage": "Package",
   "pkgKind": "Type",
   "pkgPathUsage": "Path and usage",
+  "pkgSizeUsage": "Size, who installed it and who needs it",
+  "@pkgSizeUsage": {
+    "description": "Package table column: the size, who asked for the package, and how many packages need it."
+  },
   "pkgAvailable": "available",
   "pkgNone": "No matching packages found.",
   "pkgProbeFailed": "Some package data could not be read.",

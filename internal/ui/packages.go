@@ -100,14 +100,14 @@ func (a *App) packages(c *ui.Context, p page) {
 					a.packageTab = min(a.packageTab, len(segs)-1)
 					segments(c, "package-tabs", &a.packageTab, segs)
 					ui.Box(c).Grow(1).Height(1)
-					if m.ReasonsKnown {
-						order := []string{locales.PkgByName(), locales.PkgByDependents()}
-						value := order[a.packageSort]
-						ui.Select(c.Key("package-sort"), &value, order).Label(locales.PkgSort()).Width(170).OnChange(func() {
-							a.packageSort = 0
-							if value == order[1] {
-								a.packageSort = 1
-							}
+					if sorts := packageSorts(m, a.Sizes); len(sorts) > 1 {
+						labels := make([]string, len(sorts))
+						for i, sort := range sorts {
+							labels[i] = sortLabel(sort)
+						}
+						value := labels[max(slices.Index(sorts, a.packageSort), 0)]
+						ui.Select(c.Key("package-sort"), &value, labels).Label(locales.PkgSort()).Width(170).OnChange(func() {
+							a.packageSort = sorts[slices.Index(labels, value)]
 						})
 					}
 					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Width(200)
@@ -185,7 +185,11 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			ui.Text(c, locales.PkgPackage()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.PkgKind()).Width(64).FontSize(11.5).TextColor(pal.TextFaint)
-			ui.Text(c, locales.PkgPathUsage()).FontSize(11.5).TextColor(pal.TextFaint)
+			usage := locales.PkgPathUsage()
+			if m.ReasonsKnown {
+				usage = locales.PkgSizeUsage()
+			}
+			ui.Text(c, usage).FontSize(11.5).TextColor(pal.TextFaint)
 		})
 		filter := strings.ToLower(a.packageFilter)
 		dependents := packageDependents(m)
@@ -193,9 +197,16 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 		for i := range order {
 			order[i] = i
 		}
-		if a.packageSort == 1 && m.ReasonsKnown {
+		switch sorts := packageSorts(m, a.Sizes); {
+		case a.packageSort == sortByDependents && slices.Contains(sorts, sortByDependents):
 			slices.SortStableFunc(order, func(x, y int) int {
 				return cmp.Compare(dependents[m.Packages[y].Name], dependents[m.Packages[x].Name])
+			})
+		case a.packageSort == sortBySize && slices.Contains(sorts, sortBySize):
+			slices.SortStableFunc(order, func(x, y int) int {
+				sx, _ := a.Sizes.Size(m.Packages[x])
+				sy, _ := a.Sizes.Size(m.Packages[y])
+				return cmp.Compare(sy.Bytes, sx.Bytes)
 			})
 		}
 		updatesTab, askedTab, depsTab := a.packageTab == 1, false, false
@@ -226,10 +237,19 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 					if pkg.Reference != "" {
 						clipped(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					}
-					if m.ReasonsKnown {
-						ui.Text(c, packageReason(m, pkg, dependents[pkg.Name])).FontSize(10.5).TextColor(pal.TextFaint)
+					var usage []string
+					if size, ok := a.Sizes.Size(pkg); ok {
+						usage = append(usage, formatUsage(size))
 					}
-					if pkg.Path != "" {
+					if m.ReasonsKnown {
+						usage = append(usage, packageReason(m, pkg, dependents[pkg.Name]))
+					}
+					if len(usage) > 0 {
+						ui.Text(c, strings.Join(usage, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
+					}
+					// Who asked for it takes the path's place; the buttons
+					// still copy and show it.
+					if pkg.Path != "" && !m.ReasonsKnown {
 						clipped(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					}
 					if pkg.Available != "" {
@@ -337,4 +357,52 @@ func packageReason(m inventory.PackageManager, pkg inventory.SystemPackage, depe
 		return locales.PkgNotNeeded()
 	}
 	return locales.PkgDependency()
+}
+
+// The package table's orders.
+const (
+	sortByName = iota
+	sortByDependents
+	sortBySize
+)
+
+// packageSorts are the orders m's packages can take: by dependents where
+// the manager tells them, by size once any is known.
+func packageSorts(m inventory.PackageManager, sizes *inventory.Sizes) []int {
+	out := []int{sortByName}
+	if m.ReasonsKnown {
+		out = append(out, sortByDependents)
+	}
+	if slices.ContainsFunc(m.Packages, func(p inventory.SystemPackage) bool { _, ok := sizes.Size(p); return ok }) {
+		out = append(out, sortBySize)
+	}
+	return out
+}
+
+func sortLabel(sort int) string {
+	switch sort {
+	case sortByDependents:
+		return locales.PkgByDependents()
+	case sortBySize:
+		return locales.PkgBySize()
+	}
+	return locales.PkgByName()
+}
+
+// formatUsage writes a size in decimal units, as the file managers of
+// macOS and Linux do: "86 MB", "2.4 GB"; one partly read is "≥ 86 MB".
+func formatUsage(u inventory.Usage) string {
+	var s string
+	switch b := u.Bytes; {
+	case b >= 1e9:
+		s = locales.SizeGb(float64(b) / 1e9)
+	case b >= 1e6:
+		s = locales.SizeMb(int(b / 1e6))
+	default:
+		s = locales.SizeKb(int((b + 999) / 1000))
+	}
+	if u.Partial {
+		return "≥ " + s
+	}
+	return s
 }

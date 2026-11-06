@@ -89,6 +89,7 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 				}
 				if err == nil {
 					m.ReasonsKnown = reasons(&m, aptStates, pacmanDB)
+					recordedSizes(&m, dpkgStatus, pacmanDB)
 				}
 				if err != nil {
 					m.Warnings = append(m.Warnings, err.Error())

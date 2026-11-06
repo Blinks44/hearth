@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -176,5 +177,47 @@ func TestPackageReasons(t *testing.T) {
 	tt.Advance(time.Second)
 	if tt.HasText("node") || !tt.HasText("icu4c") {
 		t.Errorf("dependencies tab: %q", tt.Texts())
+	}
+}
+
+// A package's size comes from the manager or from the count, a cask's
+// with its app; one partly read is "at least", and the biggest sort first.
+func TestPackageSizes(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", ReasonsKnown: true, Packages: []inventory.SystemPackage{
+			{Name: "node", Kind: "formula", Path: "/brew/node"},
+			{Name: "orbstack", Kind: "cask", Path: "/brew/orbstack", Artifacts: []string{"/Applications/OrbStack.app"}},
+			{Name: "icu4c", Kind: "formula", Dependency: true, Path: "/brew/icu4c"},
+			{Name: "zlib", Kind: "formula", Dependency: true, Path: "/brew/zlib"},
+		}},
+	}}}}
+	a.Sizes = &inventory.Sizes{Paths: map[string]inventory.Usage{
+		"/brew/node":                 {Bytes: 74_000_000},
+		"/brew/orbstack":             {Bytes: 2_000_000},
+		"/Applications/OrbStack.app": {Bytes: 1_410_000_000},
+		"/brew/icu4c":                {Bytes: 900, Partial: true},
+	}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "packages-sizes")
+	hasTexts(t, tt, "Size, who installed it and who needs it", "74 MB · installed by you", "1.4 GB · installed by you",
+		"≥ 1 KB · dependency · nothing needs it any more", "dependency · nothing needs it any more")
+	if tt.HasText("/brew/node") {
+		t.Error("the path shows next to who installed it")
+	}
+	a.packageSort = sortBySize
+	tt.Frame()
+	tt.Advance(time.Second)
+	var order []string
+	for _, text := range tt.Texts() {
+		if text == "node" || text == "orbstack" || text == "icu4c" || text == "zlib" {
+			order = append(order, text)
+		}
+	}
+	if want := []string{"orbstack", "node", "icu4c", "zlib"}; !slices.Equal(order, want) {
+		t.Errorf("by size: %q, want %q", order, want)
 	}
 }

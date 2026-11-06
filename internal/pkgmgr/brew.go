@@ -22,6 +22,8 @@ type brewInfo struct {
 	Casks []struct {
 		Token     string
 		Installed json.RawMessage
+		// Artifacts are of many shapes; an app's names where it went.
+		Artifacts []json.RawMessage
 	}
 }
 
@@ -90,9 +92,25 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 		if prefix != "" {
 			path = filepath.Join(prefix, "Caskroom", c.Token)
 		}
-		out = append(out, inventory.SystemPackage{Name: c.Token, Version: version, Kind: "cask", Path: path})
+		out = append(out, inventory.SystemPackage{Name: c.Token, Version: version, Kind: "cask", Path: path, Artifacts: caskApps(c.Artifacts)})
 	}
 	return out, nil
+}
+
+// caskApps are where a cask's apps went, as /Applications/OrbStack.app;
+// its other artifacts lead into them or into the Caskroom.
+func caskApps(artifacts []json.RawMessage) []string {
+	var out []string
+	for _, raw := range artifacts {
+		var a struct {
+			App    []json.RawMessage
+			Target string
+		}
+		if json.Unmarshal(raw, &a) == nil && len(a.App) > 0 && filepath.IsAbs(a.Target) {
+			out = append(out, a.Target)
+		}
+	}
+	return out
 }
 
 func brewUpdates(m *inventory.PackageManager, data []byte) error {

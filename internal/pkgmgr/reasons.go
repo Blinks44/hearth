@@ -41,17 +41,32 @@ func reasons(m *inventory.PackageManager, states, db string) bool {
 // pacmanDependencies are the packages in Pacman's database whose
 // %REASON% is 1, installed as a dependency; false when it cannot be read.
 func pacmanDependencies(db string) (map[string]bool, bool) {
+	descs, ok := pacmanDescs(db)
+	deps := map[string]bool{}
+	for name, desc := range descs {
+		if desc["%REASON%"] == "1" {
+			deps[name] = true
+		}
+	}
+	return deps, ok
+}
+
+// pacmanDescs are the fields of the packages in Pacman's database, by
+// package name and then by section, as "%REASON%"; false when it cannot be
+// read.
+func pacmanDescs(db string) (map[string]map[string]string, bool) {
 	entries, err := os.ReadDir(db)
 	if err != nil {
 		return nil, false
 	}
-	deps := map[string]bool{}
+	out := map[string]map[string]string{}
 	for _, e := range entries {
 		f, err := os.Open(filepath.Join(db, e.Name(), "desc"))
 		if err != nil {
 			continue
 		}
-		var name, section string
+		var section string
+		fields := map[string]string{}
 		sc := bufio.NewScanner(f)
 		for sc.Scan() {
 			line := strings.TrimSpace(sc.Text())
@@ -60,15 +75,16 @@ func pacmanDependencies(db string) (map[string]bool, bool) {
 				section = line
 			case line == "":
 				section = ""
-			case section == "%NAME%":
-				name = line
-			case section == "%REASON%" && line == "1":
-				deps[name] = true
+			case section != "" && fields[section] == "":
+				fields[section] = line
 			}
 		}
 		_ = f.Close()
+		if fields["%NAME%"] != "" {
+			out[fields["%NAME%"]] = fields
+		}
 	}
-	return deps, true
+	return out, true
 }
 
 // aptAutomatic are the packages APT's states file marks Auto-Installed;

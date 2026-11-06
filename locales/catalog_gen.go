@@ -3644,6 +3644,34 @@ func (msgs Messages) SizeKb(size int) string {
 	return Catalog.Format(msgs.locale, "sizeKb", map[string]any{"size": size})
 }
 
+// SizeMb says "{size} MB"
+// in the language the app shows.
+//
+// A size in megabytes (1,000,000 bytes), rounded down.
+func SizeMb(size int) string { return In(i18n.Locale()).SizeMb(size) }
+
+// SizeMb says "{size} MB"
+// in the language of msgs.
+//
+// A size in megabytes (1,000,000 bytes), rounded down.
+func (msgs Messages) SizeMb(size int) string {
+	return Catalog.Format(msgs.locale, "sizeMb", map[string]any{"size": size})
+}
+
+// SizeGb says "{size, number, ::.0} GB"
+// in the language the app shows.
+//
+// A size in gigabytes (1,000,000,000 bytes), with one decimal.
+func SizeGb(size float64) string { return In(i18n.Locale()).SizeGb(size) }
+
+// SizeGb says "{size, number, ::.0} GB"
+// in the language of msgs.
+//
+// A size in gigabytes (1,000,000,000 bytes), with one decimal.
+func (msgs Messages) SizeGb(size float64) string {
+	return Catalog.Format(msgs.locale, "sizeGb", map[string]any{"size": size})
+}
+
 // BrokenLink says "The link leads to {target}, and nothing is there."
 // in the language the app shows.
 //
@@ -5888,6 +5916,20 @@ func (msgs Messages) PkgByDependents() string {
 	return Catalog.Format(msgs.locale, "pkgByDependents", nil)
 }
 
+// PkgBySize says "By size"
+// in the language the app shows.
+//
+// Package order: the biggest first.
+func PkgBySize() string { return In(i18n.Locale()).PkgBySize() }
+
+// PkgBySize says "By size"
+// in the language of msgs.
+//
+// Package order: the biggest first.
+func (msgs Messages) PkgBySize() string {
+	return Catalog.Format(msgs.locale, "pkgBySize", nil)
+}
+
 // PkgSort says "Order packages"
 // in the language the app shows.
 //
@@ -6142,6 +6184,22 @@ func PkgPathUsage() string { return In(i18n.Locale()).PkgPathUsage() }
 // in the language of msgs.
 func (msgs Messages) PkgPathUsage() string {
 	return Catalog.Format(msgs.locale, "pkgPathUsage", nil)
+}
+
+// PkgSizeUsage says "Size, who installed it and who needs it"
+// in the language the app shows.
+//
+// Package table column: the size, who asked for the package, and how many
+// packages need it.
+func PkgSizeUsage() string { return In(i18n.Locale()).PkgSizeUsage() }
+
+// PkgSizeUsage says "Size, who installed it and who needs it"
+// in the language of msgs.
+//
+// Package table column: the size, who asked for the package, and how many
+// packages need it.
+func (msgs Messages) PkgSizeUsage() string {
+	return Catalog.Format(msgs.locale, "pkgSizeUsage", nil)
 }
 
 // PkgAvailable says "available"

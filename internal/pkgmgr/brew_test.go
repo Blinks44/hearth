@@ -60,6 +60,10 @@ func TestBrew(t *testing.T) {
 			t.Fatalf("%d: %+v, want %+v", i+1, p, w)
 		}
 	}
+	// A cask's app is counted with it; its command leads into the app.
+	if a := m.Packages[3].Artifacts; len(a) != 1 || a[0] != "/Applications/Editor.app" {
+		t.Fatalf("cask artifacts %q", a)
+	}
 	// A failed update probe keeps installed packages, with an unknown status.
 	f.Stdout("invalid json", "brew", "outdated", "--json=v2")
 	m = inventory.PackageManager{}

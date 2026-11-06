@@ -52,6 +52,9 @@ type App struct {
 	// PackageUpdates overlays immutable local inventory with cached online results.
 	PackageUpdates map[string]inventory.PackageManager
 	PackageChecks  map[string]bool
+	// Sizes are what the count of disk space found, kept from the last
+	// one until the next ends; nil before the first.
+	Sizes *inventory.Sizes
 	// NodeVersions is what nodejs.org says of Node's versions; nil until
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
@@ -120,7 +123,7 @@ type App struct {
 	packageTab     int     // the tab of the system package managers page shown
 	packageManager string  // the path of the package manager shown
 	packageFilter  string  // the package table's filter
-	packageSort    int     // the package table's order: by name, or by dependents
+	packageSort    int     // the package table's order: sortByName, sortByDependents or sortBySize
 	databaseTab    int     // the tab of the databases page shown
 	databaseFilter string  // the databases table's filter
 	dockerTab      int     // the tab of the Docker page shown

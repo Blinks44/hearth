@@ -16,6 +16,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/disk"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -118,12 +119,55 @@ func main() {
 			log.Print(err)
 		}
 		var fetchPackages func()
+		// Disk space is counted after each scan, apart from it: a walk of
+		// big caches takes long. The last count shows until it ends.
+		var cancelSizes context.CancelFunc
+		countSizes := func(s *inventory.Snapshot) {
+			if cancelSizes != nil {
+				cancelSizes()
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			cancelSizes = cancel
+			env := slices.Clone(scanner.Terminal())
+			go func() {
+				sizes, err := disk.Count(ctx, run.Exec{}, env, s, func(path string, u inventory.Usage) {
+					win.Update(func() {
+						if ctx.Err() != nil {
+							return
+						}
+						if a.Sizes == nil {
+							a.Sizes = &inventory.Sizes{}
+						}
+						if a.Sizes.Paths == nil {
+							a.Sizes.Paths = map[string]inventory.Usage{}
+						}
+						a.Sizes.Paths[path] = u
+					})
+				})
+				if err != nil {
+					return
+				}
+				// Saved before the view gets them: the next count adds to
+				// the map the view has.
+				if cache != "" {
+					if err := store.SaveSizes(cache, sizes); err != nil {
+						log.Print(err)
+					}
+				}
+				win.Update(func() {
+					if ctx.Err() == nil {
+						a.Sizes = &sizes
+					}
+				})
+			}()
+		}
 		scanned := func(s inventory.Snapshot) {
 			win.Update(func() {
 				a.Snapshot, a.Scanning = &s, false
 				if fetchPackages != nil {
 					fetchPackages()
 				}
+				countSizes(&s)
 				list.watch.Docker(&s, scanner.Terminal())
 			})
 			if cache != "" {
@@ -207,6 +251,9 @@ func main() {
 			if cancelPackages != nil {
 				cancelPackages()
 			}
+			if cancelSizes != nil {
+				cancelSizes()
+			}
 		})
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
@@ -286,6 +333,17 @@ func main() {
 					win.Update(func() {
 						if a.Snapshot == nil {
 							a.Snapshot = &s
+						}
+					})
+				case !errors.Is(err, os.ErrNotExist):
+					log.Print(err)
+				}
+				sizes, err := store.LoadSizes(cache)
+				switch {
+				case err == nil:
+					win.Update(func() {
+						if a.Sizes == nil {
+							a.Sizes = &sizes
 						}
 					})
 				case !errors.Is(err, os.ErrNotExist):

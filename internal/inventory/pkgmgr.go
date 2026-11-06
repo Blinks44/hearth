@@ -11,6 +11,12 @@ type SystemPackage struct {
 	// Dependency is a package another pulled in, not one asked for; known
 	// only where the manager's ReasonsKnown says so.
 	Dependency bool `json:",omitempty"`
+	// Artifacts are the other paths the package put, as a cask's app in
+	// /Applications.
+	Artifacts []string `json:",omitempty"`
+	// Size is the space it takes in bytes, where the manager records it;
+	// 0 when it does not, and Hearth counts Path and Artifacts.
+	Size int64 `json:",omitempty"`
 }
 
 // PackageManager is a discovered manager and the results of its read probes.
