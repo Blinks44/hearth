@@ -76,6 +76,7 @@ func main() {
 		})
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
+		a.FindProjects = list.find
 		a.LoadSkill = func(dir string, done func([]inventory.Entry, string, error)) {
 			go func() {
 				entries, text, err := ai.SkillFolder(dir)
@@ -108,6 +109,10 @@ func main() {
 		}
 		list.watch.StartupFiles(detect.StartupFiles(sysenv.GUI(), a.Home))
 		list.read()
+		// The first start offers the projects in the usual code folders.
+		if !list.settings.Suggested && len(list.settings.Projects) == 0 {
+			list.find()
+		}
 		cache, err := mygo.App.Path(mygo.PathCache)
 		if err != nil {
 			log.Print(err)

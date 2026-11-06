@@ -70,7 +70,12 @@ func (a *App) settingsPage(c *ui.Context) {
 							ui.Switch(c.Key("settings-lists"), &a.VersionLists).Label(locales.SettingsAllowLists()).OnChange(a.savePreferences)
 						})
 					})
-					card(c, locales.SettingsProjects(), "", func() { ui.Button(c, locales.AddFolder()).Disabled(a.ChooseFolder == nil).OnClick(a.ChooseFolder) }, func() {
+					card(c, locales.SettingsProjects(), "", func() {
+						if a.FindProjects != nil {
+							ui.Button(c, locales.FindProjects()).OnClick(a.FindProjects)
+						}
+						ui.Button(c, locales.AddFolder()).Disabled(a.ChooseFolder == nil).OnClick(a.ChooseFolder)
+					}, func() {
 						if len(a.Projects) == 0 {
 							settingRow(c, locales.SettingsProjectHint(), "", nil)
 						}

@@ -25,6 +25,9 @@ type Settings struct {
 	// queries, which may refresh manager metadata.
 	VersionLists bool      `json:"versionLists"`
 	Projects     []Project `json:"projects"`
+	// Suggested is set once Hearth offered the projects in the usual code
+	// folders, so that it offers them only on the first start.
+	Suggested bool `json:"suggested,omitempty"`
 }
 
 // Project is a folder the user added to Hearth.

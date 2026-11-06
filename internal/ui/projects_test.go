@@ -275,3 +275,27 @@ func TestInstalledCellCorepackDownloads(t *testing.T) {
 		t.Errorf("%q %q %v", value, caption, warn)
 	}
 }
+
+// Projects Hearth found by itself show by folder; the ones long unchanged
+// are offered switched off, and adding takes the rest.
+func TestOfferFound(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	var added []string
+	a.AddProjects = func(dirs []string) { added = dirs }
+	now := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
+	a.OfferFound([]string{home + "/dev"}, []projects.Suggestion{
+		{Project: projects.Project{Dir: home + "/dev/shop-web", Files: []string{".nvmrc"}}, Changed: now.Add(-time.Hour)},
+		{Project: projects.Project{Dir: home + "/dev/old-landing", Files: []string{"package.json"}}, Changed: now.AddDate(-1, 0, 0)},
+	}, now)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Projects found in the usual folders", "~/dev · 2 projects", "shop-web", "old-landing",
+		"unchanged for over half a year · may not need checking", "Add 1 project")
+	if err := tt.Click("Add 1 project"); err != nil {
+		t.Fatal(err)
+	}
+	if len(added) != 1 || added[0] != home+"/dev/shop-web" {
+		t.Errorf("added %q", added)
+	}
+}

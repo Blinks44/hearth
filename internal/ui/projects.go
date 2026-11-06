@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/mod/semver"
@@ -21,6 +22,10 @@ type adding struct {
 	root   projects.Project
 	nested []projects.Project
 	on     []bool
+	// folders are the usual code folders the projects were found in, when
+	// Hearth offers them by itself; nil for a folder the user chose.
+	folders []string
+	changed []time.Time // when each nested project last changed, with folders
 }
 
 // container reports a folder that only holds projects, as ~/code: no
@@ -36,6 +41,22 @@ func (a *App) Offer(root projects.Project, nested []projects.Project) {
 	add := &adding{root: root, nested: nested, on: make([]bool, len(nested))}
 	for i, p := range nested {
 		add.on[i] = add.container() || len(p.Versions()) > 0
+	}
+	a.adding, a.addOpen = add, true
+}
+
+// staleAfter is how long unchanged a found project is offered switched
+// off: likely a try that was left.
+const staleAfter = 180 * 24 * time.Hour
+
+// OfferFound shows the dialog adding the projects found in the usual code
+// folders on the first start; the ones changed lately are chosen.
+func (a *App) OfferFound(folders []string, found []projects.Suggestion, now time.Time) {
+	add := &adding{folders: folders}
+	for _, s := range found {
+		add.nested = append(add.nested, s.Project)
+		add.changed = append(add.changed, s.Changed)
+		add.on = append(add.on, now.Sub(s.Changed) < staleAfter)
 	}
 	a.adding, a.addOpen = add, true
 }
@@ -500,13 +521,22 @@ func (a *App) addDialog(c *ui.Context) {
 			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
 		ui.Column(c).Children(func() {
 			ui.Column(c).Gap(4).Padding(20, 20, 14, 20).Children(func() {
-				ui.Text(c, locales.AddProjectTitle()).FontSize(18).FontWeight(600)
-				ui.Text(c, locales.AddProjectNote()).FontSize(12).TextColor(t.TextMuted)
+				title, note, where := locales.AddProjectTitle(), locales.AddProjectNote(), tilde(add.root.Dir, a.Home)
+				if add.folders != nil {
+					title, note = locales.FoundProjectsTitle(), locales.FoundProjectsNote()
+					dirs := make([]string, len(add.folders))
+					for i, d := range add.folders {
+						dirs[i] = tilde(d, a.Home)
+					}
+					where = strings.Join(dirs, " · ")
+				}
+				ui.Text(c, title).FontSize(18).FontWeight(600)
+				ui.Text(c, note).FontSize(12).TextColor(t.TextMuted)
 				ui.Row(c).Gap(8).Margin(10, 0, 0, 0).AlignItems(ui.Center).Children(func() {
 					ui.Row(c).Grow(1).MinWidth(0).Gap(8).Padding(6, 10).Radius(7).AlignItems(ui.Center).
 						BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
 						ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
-						clipped(c, tilde(add.root.Dir, a.Home)).FontSize(12.5)
+						clipped(c, where).FontSize(12.5)
 					})
 					if a.ChooseFolder != nil {
 						ui.Button(c, locales.OtherFolder()).OnClick(a.ChooseFolder)
@@ -514,6 +544,10 @@ func (a *App) addDialog(c *ui.Context) {
 				})
 			})
 			ui.Scroll(c).MaxHeight(380).Children(func() {
+				if add.folders != nil {
+					a.foundRows(c, add)
+					return
+				}
 				dialogSection(c, locales.FoundInFolder())
 				if len(add.root.Files) == 0 && len(add.root.AI) == 0 {
 					cardNote(c, locales.NothingFound())
@@ -554,7 +588,11 @@ func (a *App) addDialog(c *ui.Context) {
 				}
 			}
 			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Button(c, locales.Cancel()).OnClick(func() { a.addOpen = false })
+				cancel := locales.Cancel()
+				if add.folders != nil {
+					cancel = locales.NotNow()
+				}
+				ui.Button(c, cancel).OnClick(func() { a.addOpen = false })
 				ui.PrimaryButton(c, locales.AddProjects(count)).Disabled(count == 0).OnClick(func() {
 					var dirs []string
 					if !add.container() {
@@ -575,6 +613,34 @@ func (a *App) addDialog(c *ui.Context) {
 	})
 	if !a.addOpen {
 		a.adding = nil
+	}
+}
+
+// foundRows are the projects Hearth found by itself, by folder, each with
+// a switch; the ones long unchanged say so.
+func (a *App) foundRows(c *ui.Context, add *adding) {
+	for _, folder := range add.folders {
+		var rows []int
+		for i, p := range add.nested {
+			if strings.HasPrefix(p.Dir, folder+string(filepath.Separator)) {
+				rows = append(rows, i)
+			}
+		}
+		if len(rows) == 0 {
+			continue
+		}
+		dialogSection(c, locales.FoundIn(tilde(folder, a.Home), len(rows)))
+		for _, i := range rows {
+			p := add.nested[i]
+			rel, _ := filepath.Rel(folder, p.Dir)
+			caption := strings.Join(p.Files, " · ")
+			if !add.on[i] && !add.changed[i].IsZero() {
+				caption = locales.ProjectUnchanged()
+			}
+			listRow(c, filepath.ToSlash(rel), false, caption, func() {
+				ui.Switch(c.Key("found:"+p.Dir), &add.on[i]).Label(filepath.ToSlash(rel))
+			})
+		}
 	}
 }
 

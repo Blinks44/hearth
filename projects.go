@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/egoist/mygo"
 
@@ -77,6 +78,24 @@ func (l *projectList) choose() {
 		}
 		root, nested := projects.Find(paths[0])
 		l.win.Update(func() { l.app.Offer(root, nested) })
+	}()
+}
+
+// find looks for projects in the usual code folders and offers them;
+// once it has, the first start no longer does.
+func (l *projectList) find() {
+	home := l.app.Home
+	go func() {
+		folders, found := projects.Suggest(home)
+		l.win.Update(func() {
+			if !l.settings.Suggested {
+				l.settings.Suggested = true
+				l.save()
+			}
+			if len(found) > 0 {
+				l.app.OfferFound(folders, found, time.Now())
+			}
+		})
 	}()
 }
 

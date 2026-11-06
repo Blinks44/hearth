@@ -1740,6 +1740,90 @@ func (msgs Messages) NoProjectFiles() string {
 	return Catalog.Format(msgs.locale, "noProjectFiles", nil)
 }
 
+// FoundProjectsTitle says "Projects found in the usual folders"
+// in the language the app shows.
+//
+// Dialog title when Hearth offers projects it found by itself.
+func FoundProjectsTitle() string { return In(i18n.Locale()).FoundProjectsTitle() }
+
+// FoundProjectsTitle says "Projects found in the usual folders"
+// in the language of msgs.
+//
+// Dialog title when Hearth offers projects it found by itself.
+func (msgs Messages) FoundProjectsTitle() string {
+	return Catalog.Format(msgs.locale, "foundProjectsTitle", nil)
+}
+
+// FoundProjectsNote says "Hearth checks the ones switched on. The folders to look in are in the settings."
+// in the language the app shows.
+//
+// Dialog note under the found projects title.
+func FoundProjectsNote() string { return In(i18n.Locale()).FoundProjectsNote() }
+
+// FoundProjectsNote says "Hearth checks the ones switched on. The folders to look in are in the settings."
+// in the language of msgs.
+//
+// Dialog note under the found projects title.
+func (msgs Messages) FoundProjectsNote() string {
+	return Catalog.Format(msgs.locale, "foundProjectsNote", nil)
+}
+
+// FoundIn says "{folder} · {count, plural, one {# project} other {# projects}}"
+// in the language the app shows.
+//
+// Section of found projects: the folder and how many.
+func FoundIn(folder string, count int) string { return In(i18n.Locale()).FoundIn(folder, count) }
+
+// FoundIn says "{folder} · {count, plural, one {# project} other {# projects}}"
+// in the language of msgs.
+//
+// Section of found projects: the folder and how many.
+func (msgs Messages) FoundIn(folder string, count int) string {
+	return Catalog.Format(msgs.locale, "foundIn", map[string]any{"folder": folder, "count": count})
+}
+
+// ProjectUnchanged says "unchanged for over half a year · may not need checking"
+// in the language the app shows.
+//
+// Caption of a found project long unchanged, offered switched off.
+func ProjectUnchanged() string { return In(i18n.Locale()).ProjectUnchanged() }
+
+// ProjectUnchanged says "unchanged for over half a year · may not need checking"
+// in the language of msgs.
+//
+// Caption of a found project long unchanged, offered switched off.
+func (msgs Messages) ProjectUnchanged() string {
+	return Catalog.Format(msgs.locale, "projectUnchanged", nil)
+}
+
+// NotNow says "Not now"
+// in the language the app shows.
+//
+// Button closing the found projects dialog without adding.
+func NotNow() string { return In(i18n.Locale()).NotNow() }
+
+// NotNow says "Not now"
+// in the language of msgs.
+//
+// Button closing the found projects dialog without adding.
+func (msgs Messages) NotNow() string {
+	return Catalog.Format(msgs.locale, "notNow", nil)
+}
+
+// FindProjects says "Find projects"
+// in the language the app shows.
+//
+// Settings button: look for projects in the usual code folders.
+func FindProjects() string { return In(i18n.Locale()).FindProjects() }
+
+// FindProjects says "Find projects"
+// in the language of msgs.
+//
+// Settings button: look for projects in the usual code folders.
+func (msgs Messages) FindProjects() string {
+	return Catalog.Format(msgs.locale, "findProjects", nil)
+}
+
 // AddProjectTitle says "Add project"
 // in the language the app shows.
 //

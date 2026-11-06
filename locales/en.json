@@ -663,6 +663,40 @@
   "@noProjectFiles": {
     "description": "Project files card when there are none."
   },
+  "foundProjectsTitle": "Projects found in the usual folders",
+  "@foundProjectsTitle": {
+    "description": "Dialog title when Hearth offers projects it found by itself."
+  },
+  "foundProjectsNote": "Hearth checks the ones switched on. The folders to look in are in the settings.",
+  "@foundProjectsNote": {
+    "description": "Dialog note under the found projects title."
+  },
+  "foundIn": "{folder} · {count, plural, one {# project} other {# projects}}",
+  "@foundIn": {
+    "description": "Section of found projects: the folder and how many.",
+    "placeholders": {
+      "folder": {
+        "type": "String",
+        "example": "~/dev"
+      },
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "projectUnchanged": "unchanged for over half a year · may not need checking",
+  "@projectUnchanged": {
+    "description": "Caption of a found project long unchanged, offered switched off."
+  },
+  "notNow": "Not now",
+  "@notNow": {
+    "description": "Button closing the found projects dialog without adding."
+  },
+  "findProjects": "Find projects",
+  "@findProjects": {
+    "description": "Settings button: look for projects in the usual code folders."
+  },
   "addProjectTitle": "Add project",
   "@addProjectTitle": {
     "description": "Title of the dialog adding a folder."

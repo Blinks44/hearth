@@ -96,6 +96,9 @@ type App struct {
 	// ChooseFolder asks for a folder to add, and shows it with Offer
 	// through Window.Update; nil hides adding.
 	ChooseFolder func()
+	// FindProjects looks for projects in the usual code folders, and shows
+	// them with OfferFound through Window.Update; nil hides it.
+	FindProjects func()
 	// AddProjects adds the folders to the projects, and RemoveProject
 	// takes one off the list, leaving the folder be.
 	AddProjects   func(dirs []string)
