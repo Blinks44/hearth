@@ -11,6 +11,10 @@ import (
 // code, as Hearth looks into them on its first start.
 var SearchFolders = []string{"dev", "code", "projects", "src", "work", "Developer", "repos"}
 
+// StaleAfter is how long unchanged a project is likely a try that was
+// left: one found is offered switched off, and its installs to clean up.
+const StaleAfter = 180 * 24 * time.Hour
+
 // Suggestion is a project Suggest found, with when its files last changed.
 type Suggestion struct {
 	Project Project
@@ -32,7 +36,7 @@ func Suggest(home string) (folders []string, found []Suggestion) {
 			if slices.ContainsFunc(found, func(s Suggestion) bool { return s.Project.Dir == p.Dir || within(p.Dir, s.Project.Dir) }) {
 				continue
 			}
-			found = append(found, Suggestion{Project: p, Changed: changed(p)})
+			found = append(found, Suggestion{Project: p, Changed: p.Changed})
 		}
 	}
 	slices.SortStableFunc(found, func(a, b Suggestion) int { return b.Changed.Compare(a.Changed) })

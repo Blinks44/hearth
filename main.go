@@ -129,8 +129,14 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelSizes = cancel
 			env := slices.Clone(scanner.Terminal())
+			var installs []string
+			for _, p := range a.Projects {
+				for _, name := range p.Installs {
+					installs = append(installs, filepath.Join(p.Dir, name))
+				}
+			}
 			go func() {
-				sizes, err := disk.Count(ctx, run.Exec{}, env, s, func(path string, u inventory.Usage) {
+				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(path string, u inventory.Usage) {
 					win.Update(func() {
 						if ctx.Err() != nil {
 							return

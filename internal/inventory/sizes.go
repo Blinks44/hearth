@@ -21,6 +21,10 @@ type Sizes struct {
 // hard links lead to it.
 type Usage struct {
 	Bytes int64
+	// Shared is the part of Bytes in files hard links outside the folder
+	// also lead to, as a pnpm store's in projects' node_modules: removing
+	// the folder does not free it.
+	Shared int64 `json:",omitempty"`
 	// Partial reports that some of it could not be read: it takes at
 	// least Bytes.
 	Partial bool `json:",omitempty"`
@@ -62,6 +66,7 @@ func (s *Sizes) Size(p SystemPackage) (Usage, bool) {
 			return Usage{}, false
 		}
 		total.Bytes += u.Bytes
+		total.Shared += u.Shared
 		total.Partial = total.Partial || u.Partial
 	}
 	return total, true

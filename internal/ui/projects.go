@@ -45,10 +45,6 @@ func (a *App) Offer(root projects.Project, nested []projects.Project) {
 	a.adding, a.addOpen = add, true
 }
 
-// staleAfter is how long unchanged a found project is offered switched
-// off: likely a try that was left.
-const staleAfter = 180 * 24 * time.Hour
-
 // OfferFound shows the dialog adding the projects found in the usual code
 // folders on the first start; the ones changed lately are chosen.
 func (a *App) OfferFound(folders []string, found []projects.Suggestion, now time.Time) {
@@ -56,7 +52,7 @@ func (a *App) OfferFound(folders []string, found []projects.Suggestion, now time
 	for _, s := range found {
 		add.nested = append(add.nested, s.Project)
 		add.changed = append(add.changed, s.Changed)
-		add.on = append(add.on, now.Sub(s.Changed) < staleAfter)
+		add.on = append(add.on, now.Sub(s.Changed) < projects.StaleAfter)
 	}
 	a.adding, a.addOpen = add, true
 }

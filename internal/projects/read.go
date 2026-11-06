@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 
@@ -53,9 +54,19 @@ type Project struct {
 	MCP []inventory.MCPServer
 	// Databases are the local databases Compose and .env refer to.
 	Databases []DatabaseReference
+	// Changed is when the project last changed, as its files and git's
+	// index say; zero when none of them is there.
+	Changed time.Time
+	// Installs are the folders of dependencies its tools install and can
+	// install again, as node_modules and .venv, that it has.
+	Installs []string
 	// Errs say which files could not be read; the others still count.
 	Errs []error
 }
+
+// installDirs are the dependency folders tools put back from a project's
+// files: npm and the others' node_modules, a Python virtual environment.
+var installDirs = []string{"node_modules", ".venv"}
 
 // aiFiles are the AI settings a project may have, in the order shown.
 var aiFiles = []string{"AGENTS.md", "CLAUDE.md", ".agents", ".claude", ".cursor", ".mcp.json"}
@@ -138,6 +149,12 @@ func Read(dir string) Project {
 			p.AI = append(p.AI, name)
 		}
 	}
+	for _, name := range installDirs {
+		if info, err := os.Stat(filepath.Join(dir, name)); err == nil && info.IsDir() {
+			p.Installs = append(p.Installs, name)
+		}
+	}
+	p.Changed = changed(p)
 	p.Skills = ai.ProjectSkills(dir)
 	mcp, errs := ai.ProjectMCP(dir)
 	p.MCP, p.Errs = mcp, append(p.Errs, errs...)

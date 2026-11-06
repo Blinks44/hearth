@@ -37,8 +37,15 @@ func TestMeasure(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, err := Measure(context.Background(), root)
-	if err != nil || got.Bytes >= single.Bytes+64<<10 {
+	if err != nil || got.Bytes >= single.Bytes+64<<10 || got.Shared != 0 {
 		t.Fatalf("with a hard link: %+v, want about %d", got, single.Bytes)
+	}
+	// A link from outside makes the file shared: removing root keeps it.
+	if err := os.Link(filepath.Join(root, "a"), filepath.Join(dir, "c")); err != nil {
+		t.Fatal(err)
+	}
+	if shared, err := Measure(context.Background(), root); err != nil || shared.Bytes != got.Bytes || shared.Shared < 64<<10 {
+		t.Fatalf("linked from outside: %+v, %v", shared, err)
 	}
 	if err := os.Symlink(filepath.Join(dir, "outside"), filepath.Join(root, "link")); err != nil {
 		t.Skip("no symlinks:", err)
