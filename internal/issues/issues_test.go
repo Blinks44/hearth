@@ -32,6 +32,12 @@ func fnm(v string, term, gui inventory.PathRank) inventory.Installation {
 		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
 }
 
+// rooted is in with the folder its manager keeps it in.
+func rooted(in inventory.Installation) inventory.Installation {
+	in.Source.Root = "/fnm/v" + in.Version
+	return in
+}
+
 func installer(v string, term inventory.PathRank) inventory.Installation {
 	return inventory.Installation{Tool: "node", Version: v, Path: `C:\Program Files\nodejs\node.exe`, OnPath: term, InGUI: term,
 		Source: inventory.Source{Kind: inventory.KindInstaller}}
@@ -84,6 +90,25 @@ func TestFind(t *testing.T) {
 			want: []Issue{{Kind: Duplicate, Severity: Warning, Tool: "node",
 				Copies: []inventory.Installation{installer("26.13.0", 1), withVersion(miseShim(2), "24.22.2")}}}},
 		{name: "other copy only in a manager's directory", snap: nodeSnap(brew("22.12.0", 1, 1), fnm("20.18.1", 0, 0))},
+		// With its folder known, a copy nothing runs or asks for is extra.
+		{name: "extra version in a manager's directory", snap: nodeSnap(brew("22.12.0", 1, 1), rooted(fnm("20.18.1", 0, 0))),
+			want: []Issue{{Kind: ExtraVersion, Severity: Info, Tool: "node", Copies: []inventory.Installation{rooted(fnm("20.18.1", 0, 0))}}}},
+		{name: "npm in an extra Node's folder is Node's", snap: &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "node", Installations: []inventory.Installation{brew("22.12.0", 1, 1), rooted(fnm("20.18.1", 0, 0))}},
+			{Tool: "npm", Installations: []inventory.Installation{func() inventory.Installation {
+				in := rooted(fnm("20.18.1", 0, 0))
+				in.Tool = "npm"
+				return in
+			}()}},
+		}},
+			want: []Issue{{Kind: ExtraVersion, Severity: Info, Tool: "node", Copies: []inventory.Installation{rooted(fnm("20.18.1", 0, 0))}}}},
+		{name: "a project's version is no extra one", snap: nodeSnap(brew("22.12.0", 1, 1), rooted(fnm("20.18.1", 0, 0))), projects: project("20"),
+			want: []Issue{{Kind: ProjectTerminal, Severity: Warning, Tool: "node", Project: "/src/app",
+				Check: func() projects.Check {
+					in := rooted(fnm("20.18.1", 0, 0))
+					return projects.Check{Tool: "node", Want: "20", File: ".nvmrc", Installed: &in}
+				}(),
+				Copies: []inventory.Installation{brew("22.12.0", 1, 1)}}}},
 
 		{name: "apps run another version", snap: nodeSnap(fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)),
 			want: []Issue{{Kind: GUIDiffers, Severity: Warning, Tool: "node",

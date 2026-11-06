@@ -128,6 +128,7 @@ func main() {
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelSizes = cancel
+			a.Counting = true
 			env := slices.Clone(scanner.Terminal())
 			var installs []string
 			for _, p := range a.Projects {
@@ -162,7 +163,7 @@ func main() {
 				}
 				win.Update(func() {
 					if ctx.Err() == nil {
-						a.Sizes = &sizes
+						a.Sizes, a.Counting = &sizes, false
 					}
 				})
 			}()

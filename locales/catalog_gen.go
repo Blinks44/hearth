@@ -2692,34 +2692,6 @@ func (msgs Messages) GroupMCPMissing(count int) string {
 	return Catalog.Format(msgs.locale, "groupMCPMissing", map[string]any{"count": count})
 }
 
-// StatInProjects says "In projects"
-// in the language the app shows.
-//
-// Overview stat: tools projects pin versions of.
-func StatInProjects() string { return In(i18n.Locale()).StatInProjects() }
-
-// StatInProjects says "In projects"
-// in the language of msgs.
-//
-// Overview stat: tools projects pin versions of.
-func (msgs Messages) StatInProjects() string {
-	return Catalog.Format(msgs.locale, "statInProjects", nil)
-}
-
-// StatInProjectsCaption says "versions pinned"
-// in the language the app shows.
-//
-// Overview stat caption under In projects.
-func StatInProjectsCaption() string { return In(i18n.Locale()).StatInProjectsCaption() }
-
-// StatInProjectsCaption says "versions pinned"
-// in the language of msgs.
-//
-// Overview stat caption under In projects.
-func (msgs Messages) StatInProjectsCaption() string {
-	return Catalog.Format(msgs.locale, "statInProjectsCaption", nil)
-}
-
 // ChipProjects says "{count, plural, one {# project} other {# projects}}"
 // in the language the app shows.
 //
@@ -7096,4 +7068,834 @@ func ChipGuiMissing() string { return In(i18n.Locale()).ChipGuiMissing() }
 // in the language of msgs.
 func (msgs Messages) ChipGuiMissing() string {
 	return Catalog.Format(msgs.locale, "chipGuiMissing", nil)
+}
+
+// CleanupTitle says "Cleanup"
+// in the language the app shows.
+//
+// Sidebar item and header of the Cleanup page.
+func CleanupTitle() string { return In(i18n.Locale()).CleanupTitle() }
+
+// CleanupTitle says "Cleanup"
+// in the language of msgs.
+//
+// Sidebar item and header of the Cleanup page.
+func (msgs Messages) CleanupTitle() string {
+	return Catalog.Format(msgs.locale, "cleanupTitle", nil)
+}
+
+// CleanupSubtitle says "What takes space and what can go"
+// in the language the app shows.
+//
+// Under the Cleanup page's title.
+func CleanupSubtitle() string { return In(i18n.Locale()).CleanupSubtitle() }
+
+// CleanupSubtitle says "What takes space and what can go"
+// in the language of msgs.
+//
+// Under the Cleanup page's title.
+func (msgs Messages) CleanupSubtitle() string {
+	return Catalog.Format(msgs.locale, "cleanupSubtitle", nil)
+}
+
+// CleanupLead says "Hearth suggests, you decide: nothing is removed without a plan"
+// in the language the app shows.
+//
+// Under the Cleanup page's big title.
+func CleanupLead() string { return In(i18n.Locale()).CleanupLead() }
+
+// CleanupLead says "Hearth suggests, you decide: nothing is removed without a plan"
+// in the language of msgs.
+//
+// Under the Cleanup page's big title.
+func (msgs Messages) CleanupLead() string {
+	return Catalog.Format(msgs.locale, "cleanupLead", nil)
+}
+
+// CleanupFound says "Found"
+// in the language the app shows.
+//
+// Cleanup card: the space all candidates free.
+func CleanupFound() string { return In(i18n.Locale()).CleanupFound() }
+
+// CleanupFound says "Found"
+// in the language of msgs.
+//
+// Cleanup card: the space all candidates free.
+func (msgs Messages) CleanupFound() string {
+	return Catalog.Format(msgs.locale, "cleanupFound", nil)
+}
+
+// CleanupSelected says "Selected"
+// in the language the app shows.
+//
+// Cleanup card: the space the checked candidates free.
+func CleanupSelected() string { return In(i18n.Locale()).CleanupSelected() }
+
+// CleanupSelected says "Selected"
+// in the language of msgs.
+//
+// Cleanup card: the space the checked candidates free.
+func (msgs Messages) CleanupSelected() string {
+	return Catalog.Format(msgs.locale, "cleanupSelected", nil)
+}
+
+// CleanupCandidates says "{count, plural, one {# candidate} other {# candidates}}"
+// in the language the app shows.
+//
+// Cleanup card caption: how many candidates.
+func CleanupCandidates(count int) string { return In(i18n.Locale()).CleanupCandidates(count) }
+
+// CleanupCandidates says "{count, plural, one {# candidate} other {# candidates}}"
+// in the language of msgs.
+//
+// Cleanup card caption: how many candidates.
+func (msgs Messages) CleanupCandidates(count int) string {
+	return Catalog.Format(msgs.locale, "cleanupCandidates", map[string]any{"count": count})
+}
+
+// CleanupCounted says "Counted"
+// in the language the app shows.
+//
+// Cleanup card: when sizes were last counted.
+func CleanupCounted() string { return In(i18n.Locale()).CleanupCounted() }
+
+// CleanupCounted says "Counted"
+// in the language of msgs.
+//
+// Cleanup card: when sizes were last counted.
+func (msgs Messages) CleanupCounted() string {
+	return Catalog.Format(msgs.locale, "cleanupCounted", nil)
+}
+
+// CleanupCountedCaption says "updates by itself"
+// in the language the app shows.
+//
+// Cleanup card caption: sizes are counted again after each check.
+func CleanupCountedCaption() string { return In(i18n.Locale()).CleanupCountedCaption() }
+
+// CleanupCountedCaption says "updates by itself"
+// in the language of msgs.
+//
+// Cleanup card caption: sizes are counted again after each check.
+func (msgs Messages) CleanupCountedCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupCountedCaption", nil)
+}
+
+// CleanupCounting says "counting sizes…"
+// in the language the app shows.
+//
+// Sizes are being counted.
+func CleanupCounting() string { return In(i18n.Locale()).CleanupCounting() }
+
+// CleanupCounting says "counting sizes…"
+// in the language of msgs.
+//
+// Sizes are being counted.
+func (msgs Messages) CleanupCounting() string {
+	return Catalog.Format(msgs.locale, "cleanupCounting", nil)
+}
+
+// CleanupCaches says "Caches"
+// in the language the app shows.
+//
+// Cleanup tab.
+func CleanupCaches() string { return In(i18n.Locale()).CleanupCaches() }
+
+// CleanupCaches says "Caches"
+// in the language of msgs.
+//
+// Cleanup tab.
+func (msgs Messages) CleanupCaches() string {
+	return Catalog.Format(msgs.locale, "cleanupCaches", nil)
+}
+
+// CleanupCopies says "Copies"
+// in the language the app shows.
+//
+// Cleanup tab: extra copies and leftovers.
+func CleanupCopies() string { return In(i18n.Locale()).CleanupCopies() }
+
+// CleanupCopies says "Copies"
+// in the language of msgs.
+//
+// Cleanup tab: extra copies and leftovers.
+func (msgs Messages) CleanupCopies() string {
+	return Catalog.Format(msgs.locale, "cleanupCopies", nil)
+}
+
+// CleanupFilter says "Filter"
+// in the language the app shows.
+//
+// Placeholder of the Cleanup filter.
+func CleanupFilter() string { return In(i18n.Locale()).CleanupFilter() }
+
+// CleanupFilter says "Filter"
+// in the language of msgs.
+//
+// Placeholder of the Cleanup filter.
+func (msgs Messages) CleanupFilter() string {
+	return Catalog.Format(msgs.locale, "cleanupFilter", nil)
+}
+
+// CleanupGroupCaches says "Caches · come back by themselves"
+// in the language the app shows.
+//
+// Cleanup table group.
+func CleanupGroupCaches() string { return In(i18n.Locale()).CleanupGroupCaches() }
+
+// CleanupGroupCaches says "Caches · come back by themselves"
+// in the language of msgs.
+//
+// Cleanup table group.
+func (msgs Messages) CleanupGroupCaches() string {
+	return Catalog.Format(msgs.locale, "cleanupGroupCaches", nil)
+}
+
+// CleanupGroupCopies says "Extra copies and leftovers"
+// in the language the app shows.
+//
+// Cleanup table group.
+func CleanupGroupCopies() string { return In(i18n.Locale()).CleanupGroupCopies() }
+
+// CleanupGroupCopies says "Extra copies and leftovers"
+// in the language of msgs.
+//
+// Cleanup table group.
+func (msgs Messages) CleanupGroupCopies() string {
+	return Catalog.Format(msgs.locale, "cleanupGroupCopies", nil)
+}
+
+// CleanupGroupProjects says "Abandoned projects"
+// in the language the app shows.
+//
+// Cleanup table group, and a row of the side card.
+func CleanupGroupProjects() string { return In(i18n.Locale()).CleanupGroupProjects() }
+
+// CleanupGroupProjects says "Abandoned projects"
+// in the language of msgs.
+//
+// Cleanup table group, and a row of the side card.
+func (msgs Messages) CleanupGroupProjects() string {
+	return Catalog.Format(msgs.locale, "cleanupGroupProjects", nil)
+}
+
+// CleanupCache says "{name} cache"
+// in the language the app shows.
+//
+// Cleanup row: a tool's cache.
+func CleanupCache(name string) string { return In(i18n.Locale()).CleanupCache(name) }
+
+// CleanupCache says "{name} cache"
+// in the language of msgs.
+//
+// Cleanup row: a tool's cache.
+func (msgs Messages) CleanupCache(name string) string {
+	return Catalog.Format(msgs.locale, "cleanupCache", map[string]any{"name": name})
+}
+
+// CleanupImages says "Images without containers"
+// in the language the app shows.
+//
+// Cleanup row: Docker images no container uses.
+func CleanupImages() string { return In(i18n.Locale()).CleanupImages() }
+
+// CleanupImages says "Images without containers"
+// in the language of msgs.
+//
+// Cleanup row: Docker images no container uses.
+func (msgs Messages) CleanupImages() string {
+	return Catalog.Format(msgs.locale, "cleanupImages", nil)
+}
+
+// CleanupContainers says "Stopped containers"
+// in the language the app shows.
+//
+// Cleanup row: Docker containers not running.
+func CleanupContainers() string { return In(i18n.Locale()).CleanupContainers() }
+
+// CleanupContainers says "Stopped containers"
+// in the language of msgs.
+//
+// Cleanup row: Docker containers not running.
+func (msgs Messages) CleanupContainers() string {
+	return Catalog.Format(msgs.locale, "cleanupContainers", nil)
+}
+
+// CleanupImageCount says "{count, plural, one {# image} other {# images}}"
+// in the language the app shows.
+//
+// Cleanup row caption: how many images.
+func CleanupImageCount(count int) string { return In(i18n.Locale()).CleanupImageCount(count) }
+
+// CleanupImageCount says "{count, plural, one {# image} other {# images}}"
+// in the language of msgs.
+//
+// Cleanup row caption: how many images.
+func (msgs Messages) CleanupImageCount(count int) string {
+	return Catalog.Format(msgs.locale, "cleanupImageCount", map[string]any{"count": count})
+}
+
+// CleanupContainerCount says "{count, plural, one {# container} other {# containers}}"
+// in the language the app shows.
+//
+// Cleanup row caption: how many containers.
+func CleanupContainerCount(count int) string { return In(i18n.Locale()).CleanupContainerCount(count) }
+
+// CleanupContainerCount says "{count, plural, one {# container} other {# containers}}"
+// in the language of msgs.
+//
+// Cleanup row caption: how many containers.
+func (msgs Messages) CleanupContainerCount(count int) string {
+	return Catalog.Format(msgs.locale, "cleanupContainerCount", map[string]any{"count": count})
+}
+
+// CleanupVersions says "{count, plural, one {# version} other {# versions}} of {tool} inside"
+// in the language the app shows.
+//
+// Cleanup row caption: how many versions a left manager keeps.
+func CleanupVersions(count int, tool string) string {
+	return In(i18n.Locale()).CleanupVersions(count, tool)
+}
+
+// CleanupVersions says "{count, plural, one {# version} other {# versions}} of {tool} inside"
+// in the language of msgs.
+//
+// Cleanup row caption: how many versions a left manager keeps.
+func (msgs Messages) CleanupVersions(count int, tool string) string {
+	return Catalog.Format(msgs.locale, "cleanupVersions", map[string]any{"count": count, "tool": tool})
+}
+
+// ReasonNotDefault says "not the default"
+// in the language the app shows.
+//
+// Cleanup reason: its manager picks another version by default.
+func ReasonNotDefault() string { return In(i18n.Locale()).ReasonNotDefault() }
+
+// ReasonNotDefault says "not the default"
+// in the language of msgs.
+//
+// Cleanup reason: its manager picks another version by default.
+func (msgs Messages) ReasonNotDefault() string {
+	return Catalog.Format(msgs.locale, "reasonNotDefault", nil)
+}
+
+// ReasonShadowed says "shadowed by {by}"
+// in the language the app shows.
+//
+// Cleanup reason: on PATH after the copy that runs, from by.
+func ReasonShadowed(by string) string { return In(i18n.Locale()).ReasonShadowed(by) }
+
+// ReasonShadowed says "shadowed by {by}"
+// in the language of msgs.
+//
+// Cleanup reason: on PATH after the copy that runs, from by.
+func (msgs Messages) ReasonShadowed(by string) string {
+	return Catalog.Format(msgs.locale, "reasonShadowed", map[string]any{"by": by})
+}
+
+// ReasonNotOnPath says "not on PATH"
+// in the language the app shows.
+//
+// Cleanup reason.
+func ReasonNotOnPath() string { return In(i18n.Locale()).ReasonNotOnPath() }
+
+// ReasonNotOnPath says "not on PATH"
+// in the language of msgs.
+//
+// Cleanup reason.
+func (msgs Messages) ReasonNotOnPath() string {
+	return Catalog.Format(msgs.locale, "reasonNotOnPath", nil)
+}
+
+// ReasonNoProject says "no project asks for it"
+// in the language the app shows.
+//
+// Cleanup reason.
+func ReasonNoProject() string { return In(i18n.Locale()).ReasonNoProject() }
+
+// ReasonNoProject says "no project asks for it"
+// in the language of msgs.
+//
+// Cleanup reason.
+func (msgs Messages) ReasonNoProject() string {
+	return Catalog.Format(msgs.locale, "reasonNoProject", nil)
+}
+
+// ReasonNotSetUp says "{manager} is not set up in the shell"
+// in the language the app shows.
+//
+// Cleanup reason: the shell does not load the version manager.
+func ReasonNotSetUp(manager string) string { return In(i18n.Locale()).ReasonNotSetUp(manager) }
+
+// ReasonNotSetUp says "{manager} is not set up in the shell"
+// in the language of msgs.
+//
+// Cleanup reason: the shell does not load the version manager.
+func (msgs Messages) ReasonNotSetUp(manager string) string {
+	return Catalog.Format(msgs.locale, "reasonNotSetUp", map[string]any{"manager": manager})
+}
+
+// ReasonRebuilt says "rebuilt when needed"
+// in the language the app shows.
+//
+// Cleanup reason: Docker's build cache.
+func ReasonRebuilt() string { return In(i18n.Locale()).ReasonRebuilt() }
+
+// ReasonRebuilt says "rebuilt when needed"
+// in the language of msgs.
+//
+// Cleanup reason: Docker's build cache.
+func (msgs Messages) ReasonRebuilt() string {
+	return Catalog.Format(msgs.locale, "reasonRebuilt", nil)
+}
+
+// ReasonPulled says "pulled again when needed"
+// in the language the app shows.
+//
+// Cleanup reason: Docker images.
+func ReasonPulled() string { return In(i18n.Locale()).ReasonPulled() }
+
+// ReasonPulled says "pulled again when needed"
+// in the language of msgs.
+//
+// Cleanup reason: Docker images.
+func (msgs Messages) ReasonPulled() string {
+	return Catalog.Format(msgs.locale, "reasonPulled", nil)
+}
+
+// ReasonStopped says "not running"
+// in the language the app shows.
+//
+// Cleanup reason: Docker containers.
+func ReasonStopped() string { return In(i18n.Locale()).ReasonStopped() }
+
+// ReasonStopped says "not running"
+// in the language of msgs.
+//
+// Cleanup reason: Docker containers.
+func (msgs Messages) ReasonStopped() string {
+	return Catalog.Format(msgs.locale, "reasonStopped", nil)
+}
+
+// ReasonUnchanged says "unchanged since {date, date, ::yMMM}"
+// in the language the app shows.
+//
+// Cleanup reason: the project's files have not changed since.
+func ReasonUnchanged(date time.Time) string { return In(i18n.Locale()).ReasonUnchanged(date) }
+
+// ReasonUnchanged says "unchanged since {date, date, ::yMMM}"
+// in the language of msgs.
+//
+// Cleanup reason: the project's files have not changed since.
+func (msgs Messages) ReasonUnchanged(date time.Time) string {
+	return Catalog.Format(msgs.locale, "reasonUnchanged", map[string]any{"date": date})
+}
+
+// ReasonReinstalled says "installed again from its files"
+// in the language the app shows.
+//
+// Cleanup reason: a project's dependencies.
+func ReasonReinstalled() string { return In(i18n.Locale()).ReasonReinstalled() }
+
+// ReasonReinstalled says "installed again from its files"
+// in the language of msgs.
+//
+// Cleanup reason: a project's dependencies.
+func (msgs Messages) ReasonReinstalled() string {
+	return Catalog.Format(msgs.locale, "reasonReinstalled", nil)
+}
+
+// CleanupAtOnce says "Selected at once"
+// in the language the app shows.
+//
+// Cleanup side card.
+func CleanupAtOnce() string { return In(i18n.Locale()).CleanupAtOnce() }
+
+// CleanupAtOnce says "Selected at once"
+// in the language of msgs.
+//
+// Cleanup side card.
+func (msgs Messages) CleanupAtOnce() string {
+	return Catalog.Format(msgs.locale, "cleanupAtOnce", nil)
+}
+
+// CleanupAtOnceRow says "Caches and Build Cache"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupAtOnceRow() string { return In(i18n.Locale()).CleanupAtOnceRow() }
+
+// CleanupAtOnceRow says "Caches and Build Cache"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupAtOnceRow() string {
+	return Catalog.Format(msgs.locale, "cleanupAtOnceRow", nil)
+}
+
+// CleanupAtOnceCaption says "come back by themselves · {size}"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupAtOnceCaption(size string) string { return In(i18n.Locale()).CleanupAtOnceCaption(size) }
+
+// CleanupAtOnceCaption says "come back by themselves · {size}"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupAtOnceCaption(size string) string {
+	return Catalog.Format(msgs.locale, "cleanupAtOnceCaption", map[string]any{"size": size})
+}
+
+// CleanupYourChoice says "Your choice"
+// in the language the app shows.
+//
+// Cleanup side card.
+func CleanupYourChoice() string { return In(i18n.Locale()).CleanupYourChoice() }
+
+// CleanupYourChoice says "Your choice"
+// in the language of msgs.
+//
+// Cleanup side card.
+func (msgs Messages) CleanupYourChoice() string {
+	return Catalog.Format(msgs.locale, "cleanupYourChoice", nil)
+}
+
+// CleanupCopiesRow says "Copies and leftovers"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupCopiesRow() string { return In(i18n.Locale()).CleanupCopiesRow() }
+
+// CleanupCopiesRow says "Copies and leftovers"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupCopiesRow() string {
+	return Catalog.Format(msgs.locale, "cleanupCopiesRow", nil)
+}
+
+// CleanupCopiesCaption says "Hearth does not see runs from scripts and cron"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupCopiesCaption() string { return In(i18n.Locale()).CleanupCopiesCaption() }
+
+// CleanupCopiesCaption says "Hearth does not see runs from scripts and cron"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupCopiesCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupCopiesCaption", nil)
+}
+
+// CleanupDockerRow says "Images and containers"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupDockerRow() string { return In(i18n.Locale()).CleanupDockerRow() }
+
+// CleanupDockerRow says "Images and containers"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupDockerRow() string {
+	return Catalog.Format(msgs.locale, "cleanupDockerRow", nil)
+}
+
+// CleanupDockerCaption says "pulled or created again"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupDockerCaption() string { return In(i18n.Locale()).CleanupDockerCaption() }
+
+// CleanupDockerCaption says "pulled or created again"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupDockerCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupDockerCaption", nil)
+}
+
+// CleanupProjectsCaption says "dependencies install again"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupProjectsCaption() string { return In(i18n.Locale()).CleanupProjectsCaption() }
+
+// CleanupProjectsCaption says "dependencies install again"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupProjectsCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupProjectsCaption", nil)
+}
+
+// CleanupNotOffered says "Not offered"
+// in the language the app shows.
+//
+// Cleanup side card.
+func CleanupNotOffered() string { return In(i18n.Locale()).CleanupNotOffered() }
+
+// CleanupNotOffered says "Not offered"
+// in the language of msgs.
+//
+// Cleanup side card.
+func (msgs Messages) CleanupNotOffered() string {
+	return Catalog.Format(msgs.locale, "cleanupNotOffered", nil)
+}
+
+// CleanupVolumes says "Docker volumes"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupVolumes() string { return In(i18n.Locale()).CleanupVolumes() }
+
+// CleanupVolumes says "Docker volumes"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupVolumes() string {
+	return Catalog.Format(msgs.locale, "cleanupVolumes", nil)
+}
+
+// CleanupVolumesCaption says "they hold databases' and apps' data"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupVolumesCaption() string { return In(i18n.Locale()).CleanupVolumesCaption() }
+
+// CleanupVolumesCaption says "they hold databases' and apps' data"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupVolumesCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupVolumesCaption", nil)
+}
+
+// CleanupSystem says "System copies"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupSystem() string { return In(i18n.Locale()).CleanupSystem() }
+
+// CleanupSystem says "System copies"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupSystem() string {
+	return Catalog.Format(msgs.locale, "cleanupSystem", nil)
+}
+
+// CleanupSystemCaption says "the OS needs them"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupSystemCaption() string { return In(i18n.Locale()).CleanupSystemCaption() }
+
+// CleanupSystemCaption says "the OS needs them"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupSystemCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupSystemCaption", nil)
+}
+
+// CleanupProjectVersions says "Project versions"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupProjectVersions() string { return In(i18n.Locale()).CleanupProjectVersions() }
+
+// CleanupProjectVersions says "Project versions"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupProjectVersions() string {
+	return Catalog.Format(msgs.locale, "cleanupProjectVersions", nil)
+}
+
+// CleanupProjectVersionsCaption says "your projects' files ask for them"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupProjectVersionsCaption() string { return In(i18n.Locale()).CleanupProjectVersionsCaption() }
+
+// CleanupProjectVersionsCaption says "your projects' files ask for them"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupProjectVersionsCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupProjectVersionsCaption", nil)
+}
+
+// CleanupReadOnly says "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused."
+// in the language the app shows.
+//
+// Note under the Cleanup table.
+func CleanupReadOnly() string { return In(i18n.Locale()).CleanupReadOnly() }
+
+// CleanupReadOnly says "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused."
+// in the language of msgs.
+//
+// Note under the Cleanup table.
+func (msgs Messages) CleanupReadOnly() string {
+	return Catalog.Format(msgs.locale, "cleanupReadOnly", nil)
+}
+
+// CleanupWaiting says "Sizes are being counted after the check."
+// in the language the app shows.
+//
+// Cleanup before the first count.
+func CleanupWaiting() string { return In(i18n.Locale()).CleanupWaiting() }
+
+// CleanupWaiting says "Sizes are being counted after the check."
+// in the language of msgs.
+//
+// Cleanup before the first count.
+func (msgs Messages) CleanupWaiting() string {
+	return Catalog.Format(msgs.locale, "cleanupWaiting", nil)
+}
+
+// CleanupEmpty says "Nothing to clean up: no caches, extra copies or leftovers worth a look."
+// in the language the app shows.
+//
+// Cleanup without candidates.
+func CleanupEmpty() string { return In(i18n.Locale()).CleanupEmpty() }
+
+// CleanupEmpty says "Nothing to clean up: no caches, extra copies or leftovers worth a look."
+// in the language of msgs.
+//
+// Cleanup without candidates.
+func (msgs Messages) CleanupEmpty() string {
+	return Catalog.Format(msgs.locale, "cleanupEmpty", nil)
+}
+
+// CleanupNone says "No matching candidates."
+// in the language the app shows.
+//
+// Cleanup filter matched nothing.
+func CleanupNone() string { return In(i18n.Locale()).CleanupNone() }
+
+// CleanupNone says "No matching candidates."
+// in the language of msgs.
+//
+// Cleanup filter matched nothing.
+func (msgs Messages) CleanupNone() string {
+	return Catalog.Format(msgs.locale, "cleanupNone", nil)
+}
+
+// StatFree says "Can be freed"
+// in the language the app shows.
+//
+// Overview count: the space cleanup candidates free.
+func StatFree() string { return In(i18n.Locale()).StatFree() }
+
+// StatFree says "Can be freed"
+// in the language of msgs.
+//
+// Overview count: the space cleanup candidates free.
+func (msgs Messages) StatFree() string {
+	return Catalog.Format(msgs.locale, "statFree", nil)
+}
+
+// StatFreeCaption says "caches and extra copies"
+// in the language the app shows.
+//
+// Overview count caption.
+func StatFreeCaption() string { return In(i18n.Locale()).StatFreeCaption() }
+
+// StatFreeCaption says "caches and extra copies"
+// in the language of msgs.
+//
+// Overview count caption.
+func (msgs Messages) StatFreeCaption() string {
+	return Catalog.Format(msgs.locale, "statFreeCaption", nil)
+}
+
+// AgoJustNow says "just now"
+// in the language the app shows.
+//
+// A time: under a minute ago.
+func AgoJustNow() string { return In(i18n.Locale()).AgoJustNow() }
+
+// AgoJustNow says "just now"
+// in the language of msgs.
+//
+// A time: under a minute ago.
+func (msgs Messages) AgoJustNow() string {
+	return Catalog.Format(msgs.locale, "agoJustNow", nil)
+}
+
+// AgoMinutes says "{minutes} min ago"
+// in the language the app shows.
+//
+// A time: minutes ago.
+func AgoMinutes(minutes int) string { return In(i18n.Locale()).AgoMinutes(minutes) }
+
+// AgoMinutes says "{minutes} min ago"
+// in the language of msgs.
+//
+// A time: minutes ago.
+func (msgs Messages) AgoMinutes(minutes int) string {
+	return Catalog.Format(msgs.locale, "agoMinutes", map[string]any{"minutes": minutes})
+}
+
+// AgoHours says "{hours} h ago"
+// in the language the app shows.
+//
+// A time: hours ago.
+func AgoHours(hours int) string { return In(i18n.Locale()).AgoHours(hours) }
+
+// AgoHours says "{hours} h ago"
+// in the language of msgs.
+//
+// A time: hours ago.
+func (msgs Messages) AgoHours(hours int) string {
+	return Catalog.Format(msgs.locale, "agoHours", map[string]any{"hours": hours})
+}
+
+// AgoOn says "{date, date, ::MMMd}"
+// in the language the app shows.
+//
+// A time: a day before today.
+func AgoOn(date time.Time) string { return In(i18n.Locale()).AgoOn(date) }
+
+// AgoOn says "{date, date, ::MMMd}"
+// in the language of msgs.
+//
+// A time: a day before today.
+func (msgs Messages) AgoOn(date time.Time) string {
+	return Catalog.Format(msgs.locale, "agoOn", map[string]any{"date": date})
+}
+
+// IssueExtraTitle says "{tool}: {count, plural, one {an extra version} other {# extra versions}}"
+// in the language the app shows.
+//
+// Issue title: copies of a tool nothing runs.
+func IssueExtraTitle(tool string, count int) string {
+	return In(i18n.Locale()).IssueExtraTitle(tool, count)
+}
+
+// IssueExtraTitle says "{tool}: {count, plural, one {an extra version} other {# extra versions}}"
+// in the language of msgs.
+//
+// Issue title: copies of a tool nothing runs.
+func (msgs Messages) IssueExtraTitle(tool string, count int) string {
+	return Catalog.Format(msgs.locale, "issueExtraTitle", map[string]any{"tool": tool, "count": count})
+}
+
+// IssueExtraExplain says "{versions}: on no PATH, not the default, and no project asks for them. They are in Cleanup."
+// in the language the app shows.
+//
+// Issue explanation of extra versions.
+func IssueExtraExplain(versions string) string { return In(i18n.Locale()).IssueExtraExplain(versions) }
+
+// IssueExtraExplain says "{versions}: on no PATH, not the default, and no project asks for them. They are in Cleanup."
+// in the language of msgs.
+//
+// Issue explanation of extra versions.
+func (msgs Messages) IssueExtraExplain(versions string) string {
+	return Catalog.Format(msgs.locale, "issueExtraExplain", map[string]any{"versions": versions})
 }

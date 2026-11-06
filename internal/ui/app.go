@@ -53,8 +53,10 @@ type App struct {
 	PackageUpdates map[string]inventory.PackageManager
 	PackageChecks  map[string]bool
 	// Sizes are what the count of disk space found, kept from the last
-	// one until the next ends; nil before the first.
-	Sizes *inventory.Sizes
+	// one until the next ends; nil before the first. Counting reports a
+	// count under way.
+	Sizes    *inventory.Sizes
+	Counting bool
 	// NodeVersions is what nodejs.org says of Node's versions; nil until
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
@@ -114,16 +116,21 @@ type App struct {
 	search         searchState
 	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
-	moreOpen       bool    // the languages not found show in the sidebar
-	nodeTab        int     // the tab of the Node.js page shown
-	jspmTab        int     // the tab of the package managers page shown
-	jspmFilter     string  // the package managers table's filter
-	pathTab        int     // the tab of the PATH page shown
-	pathFilter     string  // the PATH table's filter
-	packageTab     int     // the tab of the system package managers page shown
-	packageManager string  // the path of the package manager shown
-	packageFilter  string  // the package table's filter
-	packageSort    int     // the package table's order: sortByName, sortByDependents or sortBySize
+	moreOpen       bool   // the languages not found show in the sidebar
+	nodeTab        int    // the tab of the Node.js page shown
+	jspmTab        int    // the tab of the package managers page shown
+	jspmFilter     string // the package managers table's filter
+	pathTab        int    // the tab of the PATH page shown
+	pathFilter     string // the PATH table's filter
+	packageTab     int    // the tab of the system package managers page shown
+	packageManager string // the path of the package manager shown
+	packageFilter  string // the package table's filter
+	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
+	cleanupTab     int    // the Cleanup page's tab: all, then a group each
+	cleanupFilter  string // the Cleanup table's filter
+	// cleanupChoice is what the user checked or unchecked on the Cleanup
+	// page, by candidateKey; the others are as Hearth offers them.
+	cleanupChoice  map[string]bool
 	databaseTab    int     // the tab of the databases page shown
 	databaseFilter string  // the databases table's filter
 	dockerTab      int     // the tab of the Docker page shown
@@ -224,6 +231,8 @@ func (a *App) View(c *ui.Context) {
 						a.rust(c, p)
 					case projectsPage.path:
 						a.projectList(c, p)
+					case cleanupPage:
+						a.cleanupView(c, p)
 					case overview.path:
 						a.overviewPage(c, p)
 					case "/ai/agents":
@@ -333,6 +342,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 						ui.Text(c, strconv.Itoa(len(a.Projects))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
+				a.item(c, cleanupNav, a.cleanupEnd(c))
 				a.languages(c)
 				for _, s := range sections {
 					sectionTitle(c, s.title())

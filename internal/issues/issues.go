@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
@@ -54,6 +55,10 @@ const (
 	// first, since the command then opens the Store; else it takes over
 	// once the copies before it go.
 	StubOnPath Kind = "stub-on-path"
+	// ExtraVersion is copies of a tool on no PATH that their manager does
+	// not pick by default and no project asks for: likely left over, a
+	// cleanup candidate. Info: nothing runs them.
+	ExtraVersion Kind = "extra-version"
 )
 
 // Severity is how much an issue matters.
@@ -132,6 +137,7 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 			out = append(out, unsupported(ts, lines, now)...)
 		}
 	}
+	out = append(out, extraVersions(s, ps, lines, now)...)
 	out = append(out, skillIssues(s.Skills)...)
 	out = append(out, mcpMissing(s.MCP)...)
 	for _, p := range ps {
@@ -150,6 +156,38 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 				is.Copies = []inventory.Installation{*st.Terminal}
 			}
 			out = append(out, is)
+		}
+	}
+	return out
+}
+
+// extraVersions are the cleanup's copies on no PATH, extra ones and those
+// of a manager the shell does not set up, one issue per tool and a copy
+// per folder; those shadowed on PATH are Duplicate's.
+func extraVersions(s *inventory.Snapshot, ps []projects.Project, lines map[int]versions.Line, now time.Time) []Issue {
+	var out []Issue
+	// seen are the folders listed: npm in nvm's Node folder is Node's.
+	seen := map[string]bool{}
+	add := func(in inventory.Installation) {
+		if seen[in.Source.Root] {
+			return
+		}
+		seen[in.Source.Root] = true
+		i := slices.IndexFunc(out, func(is Issue) bool { return is.Tool == in.Tool })
+		if i < 0 {
+			out = append(out, Issue{Kind: ExtraVersion, Severity: Info, Tool: in.Tool})
+			i = len(out) - 1
+		}
+		out[i].Copies = append(out[i].Copies, in)
+	}
+	for _, c := range cleanup.Find(s, nil, ps, lines, now) {
+		switch {
+		case c.Kind == cleanup.ExtraCopy && slices.Contains(c.Reasons, cleanup.NotOnPath):
+			add(c.Copies[0])
+		case c.Kind == cleanup.Leftover:
+			for _, in := range c.Copies {
+				add(in)
+			}
 		}
 	}
 	return out

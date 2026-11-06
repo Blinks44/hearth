@@ -118,13 +118,11 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 			}
 			stat(c, dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption())
 			stat(c, pal.Info, a.updateCount(), locales.HeroUpdates(), locales.HeroUpdatesCaption())
-			// The space to free takes this place once sizes are counted
-			// (S6-26).
-			if pinned := a.pinnedTools(); len(a.Projects) == 0 {
-				stat(c, Accent, "—", locales.StatInProjects(), locales.NoProjects())
-			} else {
-				stat(c, Accent, strconv.Itoa(len(pinned)), locales.StatInProjects(), locales.StatInProjectsCaption())
+			free, caption := "—", locales.CleanupCounting()
+			if a.Sizes != nil {
+				free, caption = formatBytes(freeable(a.candidates(c))), locales.StatFreeCaption()
 			}
+			stat(c, Accent, free, locales.StatFree(), caption)
 		})
 	})
 }
@@ -166,19 +164,6 @@ func (a *App) foundTools() []inventory.ToolState {
 	for _, ts := range a.Snapshot.Tools {
 		if len(listed(ts.Installations)) > 0 {
 			out = append(out, ts)
-		}
-	}
-	return out
-}
-
-// pinnedTools are the tools the projects ask for, each once.
-func (a *App) pinnedTools() []string {
-	var out []string
-	for _, p := range a.Projects {
-		for _, r := range p.Requirements {
-			if !slices.Contains(out, r.Tool) {
-				out = append(out, r.Tool)
-			}
 		}
 	}
 	return out

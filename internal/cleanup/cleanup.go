@@ -201,6 +201,12 @@ func docker(rows []inventory.DockerUsage) []Candidate {
 		default:
 			continue
 		}
+		// Docker counts an image a stopped container uses as reclaimable,
+		// though it goes only with the container: none without a container
+		// is nothing to offer.
+		if c.Kind != BuildCache && c.Count <= 0 {
+			continue
+		}
 		if r.Reclaimable >= minFrees {
 			out = append(out, c)
 		}

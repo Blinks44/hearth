@@ -1186,14 +1186,6 @@
       }
     }
   },
-  "statInProjects": "In projects",
-  "@statInProjects": {
-    "description": "Overview stat: tools projects pin versions of."
-  },
-  "statInProjectsCaption": "versions pinned",
-  "@statInProjectsCaption": {
-    "description": "Overview stat caption under In projects."
-  },
   "chipProjects": "{count, plural, one {# project} other {# projects}}",
   "@chipProjects": {
     "description": "Overview tool card chip: projects needing the tool.",
@@ -2309,5 +2301,333 @@
   "jsNpmMissing": "npm is not on the terminal's PATH",
   "issueGuiMissingTitle": "Apps outside the terminal do not see {tool}",
   "@issueGuiMissingTitle": {"description": "Issue title: apps started outside the terminal do not find the tool.", "placeholders": {"tool": {"type": "String", "example": "Node"}}},
-  "chipGuiMissing": "not in apps"
+  "chipGuiMissing": "not in apps",
+  "cleanupTitle": "Cleanup",
+  "@cleanupTitle": {
+    "description": "Sidebar item and header of the Cleanup page."
+  },
+  "cleanupSubtitle": "What takes space and what can go",
+  "@cleanupSubtitle": {
+    "description": "Under the Cleanup page's title."
+  },
+  "cleanupLead": "Hearth suggests, you decide: nothing is removed without a plan",
+  "@cleanupLead": {
+    "description": "Under the Cleanup page's big title."
+  },
+  "cleanupFound": "Found",
+  "@cleanupFound": {
+    "description": "Cleanup card: the space all candidates free."
+  },
+  "cleanupSelected": "Selected",
+  "@cleanupSelected": {
+    "description": "Cleanup card: the space the checked candidates free."
+  },
+  "cleanupCandidates": "{count, plural, one {# candidate} other {# candidates}}",
+  "@cleanupCandidates": {
+    "description": "Cleanup card caption: how many candidates.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "11"
+      }
+    }
+  },
+  "cleanupCounted": "Counted",
+  "@cleanupCounted": {
+    "description": "Cleanup card: when sizes were last counted."
+  },
+  "cleanupCountedCaption": "updates by itself",
+  "@cleanupCountedCaption": {
+    "description": "Cleanup card caption: sizes are counted again after each check."
+  },
+  "cleanupCounting": "counting sizes…",
+  "@cleanupCounting": {
+    "description": "Sizes are being counted."
+  },
+  "cleanupCaches": "Caches",
+  "@cleanupCaches": {
+    "description": "Cleanup tab."
+  },
+  "cleanupCopies": "Copies",
+  "@cleanupCopies": {
+    "description": "Cleanup tab: extra copies and leftovers."
+  },
+  "cleanupFilter": "Filter",
+  "@cleanupFilter": {
+    "description": "Placeholder of the Cleanup filter."
+  },
+  "cleanupGroupCaches": "Caches · come back by themselves",
+  "@cleanupGroupCaches": {
+    "description": "Cleanup table group."
+  },
+  "cleanupGroupCopies": "Extra copies and leftovers",
+  "@cleanupGroupCopies": {
+    "description": "Cleanup table group."
+  },
+  "cleanupGroupProjects": "Abandoned projects",
+  "@cleanupGroupProjects": {
+    "description": "Cleanup table group, and a row of the side card."
+  },
+  "cleanupCache": "{name} cache",
+  "@cleanupCache": {
+    "description": "Cleanup row: a tool's cache.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Bun"
+      }
+    }
+  },
+  "cleanupImages": "Images without containers",
+  "@cleanupImages": {
+    "description": "Cleanup row: Docker images no container uses."
+  },
+  "cleanupContainers": "Stopped containers",
+  "@cleanupContainers": {
+    "description": "Cleanup row: Docker containers not running."
+  },
+  "cleanupImageCount": "{count, plural, one {# image} other {# images}}",
+  "@cleanupImageCount": {
+    "description": "Cleanup row caption: how many images.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "cleanupContainerCount": "{count, plural, one {# container} other {# containers}}",
+  "@cleanupContainerCount": {
+    "description": "Cleanup row caption: how many containers.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "cleanupVersions": "{count, plural, one {# version} other {# versions}} of {tool} inside",
+  "@cleanupVersions": {
+    "description": "Cleanup row caption: how many versions a left manager keeps.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      }
+    }
+  },
+  "reasonNotDefault": "not the default",
+  "@reasonNotDefault": {
+    "description": "Cleanup reason: its manager picks another version by default."
+  },
+  "reasonShadowed": "shadowed by {by}",
+  "@reasonShadowed": {
+    "description": "Cleanup reason: on PATH after the copy that runs, from by.",
+    "placeholders": {
+      "by": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "reasonNotOnPath": "not on PATH",
+  "@reasonNotOnPath": {
+    "description": "Cleanup reason."
+  },
+  "reasonNoProject": "no project asks for it",
+  "@reasonNoProject": {
+    "description": "Cleanup reason."
+  },
+  "reasonNotSetUp": "{manager} is not set up in the shell",
+  "@reasonNotSetUp": {
+    "description": "Cleanup reason: the shell does not load the version manager.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "nvm"
+      }
+    }
+  },
+  "reasonRebuilt": "rebuilt when needed",
+  "@reasonRebuilt": {
+    "description": "Cleanup reason: Docker's build cache."
+  },
+  "reasonPulled": "pulled again when needed",
+  "@reasonPulled": {
+    "description": "Cleanup reason: Docker images."
+  },
+  "reasonStopped": "not running",
+  "@reasonStopped": {
+    "description": "Cleanup reason: Docker containers."
+  },
+  "reasonUnchanged": "unchanged since {date, date, ::yMMM}",
+  "@reasonUnchanged": {
+    "description": "Cleanup reason: the project's files have not changed since.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-03-01"
+      }
+    }
+  },
+  "reasonReinstalled": "installed again from its files",
+  "@reasonReinstalled": {
+    "description": "Cleanup reason: a project's dependencies."
+  },
+  "cleanupAtOnce": "Selected at once",
+  "@cleanupAtOnce": {
+    "description": "Cleanup side card."
+  },
+  "cleanupAtOnceRow": "Caches and Build Cache",
+  "@cleanupAtOnceRow": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupAtOnceCaption": "come back by themselves · {size}",
+  "@cleanupAtOnceCaption": {
+    "description": "Cleanup side card caption.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "19.7 GB"
+      }
+    }
+  },
+  "cleanupYourChoice": "Your choice",
+  "@cleanupYourChoice": {
+    "description": "Cleanup side card."
+  },
+  "cleanupCopiesRow": "Copies and leftovers",
+  "@cleanupCopiesRow": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupCopiesCaption": "Hearth does not see runs from scripts and cron",
+  "@cleanupCopiesCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupDockerRow": "Images and containers",
+  "@cleanupDockerRow": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupDockerCaption": "pulled or created again",
+  "@cleanupDockerCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupProjectsCaption": "dependencies install again",
+  "@cleanupProjectsCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupNotOffered": "Not offered",
+  "@cleanupNotOffered": {
+    "description": "Cleanup side card."
+  },
+  "cleanupVolumes": "Docker volumes",
+  "@cleanupVolumes": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupVolumesCaption": "they hold databases' and apps' data",
+  "@cleanupVolumesCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupSystem": "System copies",
+  "@cleanupSystem": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupSystemCaption": "the OS needs them",
+  "@cleanupSystemCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupProjectVersions": "Project versions",
+  "@cleanupProjectVersions": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupProjectVersionsCaption": "your projects' files ask for them",
+  "@cleanupProjectVersionsCaption": {
+    "description": "Cleanup side card caption."
+  },
+  "cleanupReadOnly": "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused.",
+  "@cleanupReadOnly": {
+    "description": "Note under the Cleanup table."
+  },
+  "cleanupWaiting": "Sizes are being counted after the check.",
+  "@cleanupWaiting": {
+    "description": "Cleanup before the first count."
+  },
+  "cleanupEmpty": "Nothing to clean up: no caches, extra copies or leftovers worth a look.",
+  "@cleanupEmpty": {
+    "description": "Cleanup without candidates."
+  },
+  "cleanupNone": "No matching candidates.",
+  "@cleanupNone": {
+    "description": "Cleanup filter matched nothing."
+  },
+  "statFree": "Can be freed",
+  "@statFree": {
+    "description": "Overview count: the space cleanup candidates free."
+  },
+  "statFreeCaption": "caches and extra copies",
+  "@statFreeCaption": {
+    "description": "Overview count caption."
+  },
+  "agoJustNow": "just now",
+  "@agoJustNow": {
+    "description": "A time: under a minute ago."
+  },
+  "agoMinutes": "{minutes} min ago",
+  "@agoMinutes": {
+    "description": "A time: minutes ago.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "agoHours": "{hours} h ago",
+  "@agoHours": {
+    "description": "A time: hours ago.",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "agoOn": "{date, date, ::MMMd}",
+  "@agoOn": {
+    "description": "A time: a day before today.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-11-05"
+      }
+    }
+  },
+  "issueExtraTitle": "{tool}: {count, plural, one {an extra version} other {# extra versions}}",
+  "@issueExtraTitle": {
+    "description": "Issue title: copies of a tool nothing runs.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "issueExtraExplain": "{versions}: on no PATH, not the default, and no project asks for them. They are in Cleanup.",
+  "@issueExtraExplain": {
+    "description": "Issue explanation of extra versions.",
+    "placeholders": {
+      "versions": {
+        "type": "String",
+        "example": "v20.18.0 (fnm)"
+      }
+    }
+  }
 }

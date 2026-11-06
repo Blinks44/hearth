@@ -67,6 +67,9 @@ func TestFind(t *testing.T) {
 			{Type: "Images", Count: 16, Active: 14, Bytes: 11000e6, Reclaimable: 1600e6},
 			{Type: "Containers", Count: 18, Active: 2, Bytes: 770e6, Reclaimable: 760e6},
 			{Type: "Local Volumes", Count: 29, Active: 25, Bytes: 5300e6, Reclaimable: 400e6},
+			// An image of a stopped container: reclaimable to Docker, yet
+			// not without its container.
+			{Type: "Images", Count: 1, Active: 1, Bytes: 400e6, Reclaimable: 400e6},
 			{Type: "Build Cache", Count: 3, Bytes: 16384, Reclaimable: 16384},
 		},
 	}

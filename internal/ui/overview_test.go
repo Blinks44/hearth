@@ -34,7 +34,7 @@ func TestOverviewFirstScan(t *testing.T) {
 	a.Scanning = true
 	a.ChooseFolder = func() {}
 	tt := openOverview(t, a)
-	hasTexts(t, tt, "Checking", "Getting to know this computer", "worth fixing", "no projects yet",
+	hasTexts(t, tt, "Checking", "Getting to know this computer", "worth fixing", "counting sizes…",
 		"Issues show after the check", "No projects yet", "Add folder")
 	if tt.HasText("Node.js 22.12") || tt.HasText("v22.12.0") {
 		t.Errorf("a tool before the scan: %q", tt.Texts())
@@ -75,8 +75,9 @@ func TestOverviewManyIssues(t *testing.T) {
 	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true}}
 	a.Projects = testProjects()
 	tt := openOverview(t, a)
-	hasTexts(t, tt, "4 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",
-		"legacy-admin needs Node 18", "1 more: PATH lists folders that do not exist",
+	// fnm's third version, on no PATH, is an extra one: an Info.
+	hasTexts(t, tt, "5 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",
+		"legacy-admin needs Node 18", "2 more: PATH lists folders that do not exist, Node: an extra version",
 		"2 copies", "other in apps", "no 18", "no Node 18", "2 projects")
 	// The PATH's item counts its issue.
 	if !tt.HasText("1") {

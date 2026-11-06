@@ -60,6 +60,12 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			vs = append(vs, copyVersion(in))
 		}
 		return locales.IssueUnsupportedTitle(tool, strings.Join(vs, ", ")), locales.IssueUnsupportedExplain()
+	case issues.ExtraVersion:
+		var vs []string
+		for _, in := range is.Copies {
+			vs = append(vs, copyVersion(in)+" ("+copySource(in)+")")
+		}
+		return locales.IssueExtraTitle(tool, len(is.Copies)), locales.IssueExtraExplain(strings.Join(vs, ", "))
 	case issues.StubOnPath:
 		in := is.Copies[0]
 		if in.OnPath != 1 {
