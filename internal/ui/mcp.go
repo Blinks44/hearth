@@ -283,7 +283,7 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			ui.Row(c).AlignSelf(ui.Start).Gap(6).Padding(3, 4, 3, 8).Radius(6).AlignItems(ui.Center).MaxWidth(390).
 				BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
 				ui.Icon(c, Icon("terminal")).Size(13, 13).Shrink(0).TextColor(t.TextMuted)
-				ui.Text(c, launch(first)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Shrink(1).MinWidth(0).SingleLine()
+				clipped(c, launch(first)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Shrink(1).MinWidth(0)
 				iconButton(c, "copy", locales.CopyPath()).OnClick(func() {
 					c.WriteClipboard(launch(first))
 					c.Toast(locales.PathCopied())

@@ -41,7 +41,6 @@ var (
 		{"go", page{"/tools/go", "brand/go", name("Go"), locales.SectionLanguages}},
 		{"java", page{"/tools/java", "brand/openjdk", name("Java"), locales.SectionLanguages}},
 		{"ruby", page{"/tools/ruby", "brand/ruby", name("Ruby"), locales.SectionLanguages}},
-		{"deno", page{"/tools/deno", "brand/deno", name("Deno"), locales.SectionLanguagesJavaScript}},
 		{"dotnet", page{"/tools/dotnet", "brand/dotnet", name(".NET"), locales.SectionLanguages}},
 	}
 

@@ -290,7 +290,7 @@ func groupTitle(c *ui.Context, name, from string) {
 	ui.Row(c).Gap(8).Padding(8, 14, 6, 14).AlignItems(ui.Center).Background(pal.Subtle).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Text(c, strings.ToUpper(name)).FontSize(11).FontWeight(500).TextColor(c.Theme().TextMuted).Shrink(0).SingleLine()
-		ui.Text(c, from).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0).SingleLine()
+		clipped(c, from).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
 	})
 }
 
@@ -388,7 +388,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 					agentTile(c, ag.ID, 28)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 						ui.Text(c, agentTitle(ag.ID)).FontSize(13.5).SingleLine()
-						ui.Text(c, tilde(where, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+						clipped(c, tilde(where, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 					})
 				})
 				version := agentVersion(ag)

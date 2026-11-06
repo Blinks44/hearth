@@ -416,7 +416,7 @@ func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []proj
 		folderTile(c, 28)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, filepath.Base(p.Dir)).FontSize(13.5).SingleLine()
-			ui.Text(c, tilde(p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			clipped(c, tilde(p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 		})
 		for _, st := range statuses {
 			toolTag(c, st)

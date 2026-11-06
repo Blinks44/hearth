@@ -41,9 +41,6 @@ func (a *App) searchIndex() []searchResult {
 	add := func(r searchResult) { out = append(out, r) }
 	all := pages()
 	for _, p := range all {
-		if p.path == "/tools/deno" {
-			continue
-		}
 		add(searchResult{id: p.path, group: locales.SearchTools(), title: p.title(), detail: p.subtitle(), icon: p.icon, open: func() { a.router.Push(p.path) }})
 	}
 	if a.Snapshot != nil {

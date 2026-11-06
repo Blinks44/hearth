@@ -133,7 +133,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.DatabaseServer()).Width(130).FontSize(11.5).TextColor(pal.TextFaint)
+			ui.Text(c, locales.DatabaseServer()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.ColumnSource()).Width(68).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.DatabaseAddress()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
@@ -147,13 +147,13 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 			}
 			shown++
 			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Column(c).Width(130).Gap(3).Children(func() {
+				ui.Column(c).Width(nameWidth(c)).Gap(3).Children(func() {
 					title, subtitle := db.Name+" "+db.Version, db.Service
 					if db.Source == "docker" {
 						title, subtitle = db.Version, db.Name
 					}
-					ui.Text(c, title).Font(FontMono).FontSize(12).SingleLine()
-					ui.Text(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					clipped(c, title).Font(FontMono).FontSize(12)
+					clipped(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint)
 				})
 				ui.Text(c, databaseSource(db.Source)).Width(68).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
@@ -164,7 +164,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					if address == "" {
 						address = "—"
 					}
-					ui.Text(c, address).Font(FontMono).FontSize(10.5).SingleLine().TextColor(pal.MonoText)
+					clipped(c, address).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					text, dot := databaseStatus(c, db.Status)
 					bg, ink := pal.Muted, pal.MonoText
 					if db.Status == "running" {

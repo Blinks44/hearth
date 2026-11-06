@@ -110,7 +110,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 				continue
 			}
 			shown++
-			ui.Row(c.Key("path-"+strconv.Itoa(i))).Gap(12).Padding(12, 16).BorderWidth(1).BorderColor(pal.Divider).AlignItems(ui.Center).Children(func() {
+			ui.Row(c.Key("path-"+strconv.Itoa(i))).Gap(12).Padding(12, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, "#"+strconv.Itoa(i+1)).Width(60).Font(FontMono).FontSize(11.5)
 				ui.Column(c).Width(120).Gap(3).Children(func() {
 					if len(entry.Sources) == 0 {
@@ -129,7 +129,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 					if dir == "" {
 						dir = "."
 					}
-					ui.Text(c, dir).Font(FontMono).FontSize(11.5).SingleLine()
+					clipped(c, dir).Font(FontMono).FontSize(11.5)
 					ui.Row(c).Gap(5).Wrap().Children(func() {
 						for j := range i {
 							if sysenv.SamePath(entries[j].Dir, entry.Dir) {

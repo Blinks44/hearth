@@ -67,7 +67,7 @@ func (a *App) packages(c *ui.Context, p page) {
 						if path == "" {
 							path = m.Path
 						}
-						ui.Text(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted).SingleLine()
+						clipped(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted)
 					})
 				}, func() {
 					version := m.Version
@@ -154,7 +154,7 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.PkgPackage()).Width(130).FontSize(11.5).TextColor(pal.TextFaint)
+			ui.Text(c, locales.PkgPackage()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.PkgKind()).Width(64).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.PkgPathUsage()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
@@ -172,17 +172,17 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 			}
 			shown++
 			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Column(c).Width(130).Gap(3).Children(func() {
-					ui.Text(c, pkg.Name).Font(FontMono).FontSize(12).SingleLine()
-					ui.Text(c, pkg.Version).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+				ui.Column(c).Width(nameWidth(c)).Gap(3).Children(func() {
+					clipped(c, pkg.Name).Font(FontMono).FontSize(12)
+					clipped(c, pkg.Version).FontSize(10.5).TextColor(pal.TextFaint)
 				})
 				ui.Text(c, pkg.Kind).Width(64).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 					if pkg.Reference != "" {
-						ui.Text(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).SingleLine().TextColor(pal.MonoText)
+						clipped(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					}
 					if pkg.Path != "" {
-						ui.Text(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).SingleLine().TextColor(pal.MonoText)
+						clipped(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					}
 					if pkg.Available != "" {
 						ui.Row(c).Children(func() { chip(c, c.Theme().Accent, pal.Muted, pal.MonoText, locales.PkgAvailable()+" "+pkg.Available) })

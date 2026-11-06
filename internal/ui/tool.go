@@ -168,6 +168,24 @@ func columns(c *ui.Context, gap float32, main, side func()) {
 	})
 }
 
+// clipped is s on one line, cut with "…" where it does not fit; the
+// pointer resting on it shows it whole.
+func clipped(c *ui.Context, s string) ui.Element {
+	return ui.Text(c, s).SingleLine().Tooltip(s)
+}
+
+// nameWidth is the width of a table's column of names, as packages' and
+// containers': a share of the table, for its names are as long as people
+// make them.
+func nameWidth(c *ui.Context) float32 {
+	w, _ := c.Size()
+	table := w - 245 - 56 // the sidebar and the page's padding
+	if !narrow(c) {
+		table -= 342 + 18 // the side column
+	}
+	return min(max(table*0.3, 130), 240)
+}
+
 // detailColumn is the column of the item chosen in a list beside it, as
 // on the Skills and MCP pages; in a narrow window the two share the width.
 func detailColumn(c *ui.Context) ui.Element {
@@ -242,7 +260,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 				})
 				ui.Row(c).Width(100).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
 				ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
-					ui.Text(c, displayPath(in, home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
+					clipped(c, displayPath(in, home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted)
 					ui.Row(c).Gap(5).Wrap().Children(func() {
 						if in.Java != nil && in.Java.Home == a.javaHome() {
 							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.JavaHomeChip())
@@ -454,7 +472,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				}
 				entry.Children(func() {
 					ui.Text(c, strconv.Itoa(n+1)).FontSize(11.5).TextColor(pal.TextFaint)
-					ui.Text(c, tilde(in.Path, home)).FontSize(12).TextColor(color).Grow(1).MinWidth(0).SingleLine()
+					clipped(c, tilde(in.Path, home)).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
 					if shown.Version != "" {
 						ui.Text(c, copyVersion(shown)).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 					}

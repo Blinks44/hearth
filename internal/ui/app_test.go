@@ -22,7 +22,7 @@ func TestSidebarOpensPages(t *testing.T) {
 	if tt.HasText("Rust") {
 		t.Error("a language not found shows before opening the rest")
 	}
-	if err := tt.Click("6 more languages"); err != nil {
+	if err := tt.Click("5 more languages"); err != nil {
 		t.Fatal(err)
 	}
 	for _, p := range pages() {
@@ -45,12 +45,12 @@ func TestSidebarOpensPages(t *testing.T) {
 func TestSidebarKeepsOpenLanguage(t *testing.T) {
 	a := NewApp()
 	tt := ui.NewTester(a.View, 1280, 820)
-	if !tt.HasText("10 more languages") {
+	if !tt.HasText("9 more languages") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
 	a.router.Push("/tools/rust")
 	tt.Advance(time.Second)
-	if !tt.HasText("Rust") || !tt.HasText("9 more languages") {
+	if !tt.HasText("Rust") || !tt.HasText("8 more languages") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -82,7 +82,7 @@ func TestShellInRussian(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	a.Snapshot.Taken = tt.Now().Add(-5 * time.Minute)
 	tt.Frame()
-	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Ещё 6 языков", "Сканировать", "Проверено 5 мин назад"} {
+	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Ещё 5 языков", "Сканировать", "Проверено 5 мин назад"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}

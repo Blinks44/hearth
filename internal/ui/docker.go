@@ -117,7 +117,7 @@ func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().Background(c.Theme().Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.DockerContext()).Width(112).FontSize(11.5).TextColor(pal.TextFaint)
+			ui.Text(c, locales.DockerContext()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.DockerEngine()).Width(84).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.DockerEndpoint()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
@@ -132,14 +132,14 @@ func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 				row.Background(pal.AccentSoft.Alpha(0.4))
 			}
 			row.Children(func() {
-				ui.Text(c, context.Name).Font(FontMono).FontSize(12.5).Width(112).SingleLine()
+				clipped(c, context.Name).Font(FontMono).FontSize(12.5).Width(nameWidth(c))
 				engine := context.Engine
 				if engine == "" {
 					engine = "—"
 				}
 				ui.Text(c, engine).FontSize(11).Width(84).SingleLine().TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					ui.Text(c, strings.Replace(context.Endpoint, a.Home+"/", "~/", 1)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText).SingleLine()
+					clipped(c, strings.Replace(context.Endpoint, a.Home+"/", "~/", 1)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					ui.Row(c).Gap(5).Children(func() {
 						if context.Name == d.Selected {
 							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.DockerActive())

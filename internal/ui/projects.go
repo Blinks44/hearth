@@ -150,7 +150,7 @@ func (a *App) projectRows(c *ui.Context) {
 					folderTile(c, 28)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 						ui.Text(c, filepath.Base(r.p.Dir)).FontSize(13.5).SingleLine()
-						ui.Text(c, tilde(r.p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+						clipped(c, tilde(r.p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 					})
 				})
 				ui.Row(c).Grow(1).MinWidth(0).Gap(6).Wrap().Children(func() {
@@ -506,7 +506,7 @@ func (a *App) addDialog(c *ui.Context) {
 					ui.Row(c).Grow(1).MinWidth(0).Gap(8).Padding(6, 10).Radius(7).AlignItems(ui.Center).
 						BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
 						ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
-						ui.Text(c, tilde(add.root.Dir, a.Home)).FontSize(12.5).SingleLine()
+						clipped(c, tilde(add.root.Dir, a.Home)).FontSize(12.5)
 					})
 					if a.ChooseFolder != nil {
 						ui.Button(c, locales.OtherFolder()).OnClick(a.ChooseFolder)

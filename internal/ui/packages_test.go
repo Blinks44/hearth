@@ -117,3 +117,39 @@ func TestPackagesPartialSources(t *testing.T) {
 		t.Error("updates of the sources that answered count as unchecked")
 	}
 }
+
+// A name too long for its column is cut, and the pointer resting on it
+// shows it whole.
+func TestPackageNameTooltip(t *testing.T) {
+	long := "docker-hub.example.org/digital/platform/redis-with-modules"
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Packages: []inventory.SystemPackage{{Name: long, Version: "1.0", Kind: "formula"}}},
+	}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+	at, ok := tt.Find(long)
+	if !ok {
+		t.Fatalf("no %s: %q", long, tt.Texts())
+	}
+	if before := countText(tt, long); before != 1 {
+		t.Fatalf("%d copies of the name before resting on it", before)
+	}
+	tt.Move(at.X+at.W/2, at.Y+at.H/2)
+	tt.Advance(time.Second)
+	if n := countText(tt, long); n != 2 {
+		t.Errorf("%d copies of the name after resting on it, want the cell and its tip", n)
+	}
+}
+
+func countText(tt *ui.Tester, s string) int {
+	n := 0
+	for _, text := range tt.Texts() {
+		if text == s {
+			n++
+		}
+	}
+	return n
+}
