@@ -19,6 +19,8 @@ type Kind string
 const (
 	// DockerUnavailable is an unsuccessful probe of the selected local engine.
 	DockerUnavailable Kind = "docker-unavailable"
+	// DockerDenied is a selected local engine whose socket refused this user.
+	DockerDenied Kind = "docker-denied"
 	// Duplicate is a tool with several copies on the terminal's PATH: the
 	// first runs, the others never do.
 	Duplicate Kind = "duplicate"
@@ -112,7 +114,11 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 		if ts.Docker != nil {
 			for _, c := range ts.Docker.Contexts {
 				if c.Name == ts.Docker.Selected && c.Status == "unavailable" {
-					out = append(out, Issue{Kind: DockerUnavailable, Severity: Warning, Tool: "docker"})
+					kind := DockerUnavailable
+					if c.Denied {
+						kind = DockerDenied
+					}
+					out = append(out, Issue{Kind: kind, Severity: Warning, Tool: "docker"})
 				}
 			}
 		}
@@ -339,5 +345,6 @@ func mcpMissing(servers []inventory.MCPServer) []Issue {
 // npm's global prefix, %APPDATA%\npm, which the first npm install -g makes.
 func OSDir(dir string) bool {
 	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir+"/", p) }) ||
-		strings.HasSuffix(strings.ToLower(strings.TrimRight(dir, `\`)), `\appdata\roaming\npm`)
+		strings.HasSuffix(strings.ToLower(strings.TrimRight(dir, `\`)), `\appdata\roaming\npm`) ||
+		strings.HasSuffix(strings.ReplaceAll(dir, `\`, "/"), "/.dotnet/tools")
 }

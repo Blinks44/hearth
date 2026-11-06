@@ -79,7 +79,7 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 	// A child that left grandchildren holding the pipes open must not keep
 	// Run waiting past its end.
 	cmd.WaitDelay = time.Second
-	hideWindow(cmd)
+	detach(cmd)
 	stdout := &capped{limit: limit}
 	stderr := &capped{limit: limit}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
@@ -125,7 +125,7 @@ func Lines(ctx context.Context, c Cmd, line func(string)) error {
 	cmd.Env = c.Env
 	cmd.Dir = c.Dir
 	cmd.WaitDelay = time.Second
-	hideWindow(cmd)
+	detach(cmd)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)

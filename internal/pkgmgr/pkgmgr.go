@@ -121,7 +121,7 @@ func (s spec) exitOK(args []string, code int) bool {
 
 func firstLine(s string) string {
 	line, _, _ := strings.Cut(strings.TrimSpace(s), "\n")
-	return strings.TrimSpace(line)
+	return strings.Join(strings.Fields(line), " ") // snap --version pads its columns
 }
 
 func applyUpdates(m *inventory.PackageManager, format string, data []byte) error {

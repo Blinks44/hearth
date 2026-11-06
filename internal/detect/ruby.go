@@ -58,6 +58,12 @@ func Ruby(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 	if rbenvDef == "" {
 		rbenvDef = strings.TrimSpace(readFile(filepath.Join(d.Rbenv, "version")))
 	}
+	var rvmDef string // rvm --default writes default=ruby-3.3.7
+	for line := range strings.Lines(readFile(filepath.Join(d.Rvm, "config", "alias"))) {
+		if v, ok := strings.CutPrefix(strings.TrimSpace(line), "default="); ok {
+			rvmDef = v
+		}
+	}
 	for i := range st.Installations {
 		in := &st.Installations[i]
 		if in.Source.Shim {
@@ -66,6 +72,8 @@ func Ruby(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		switch in.Source.Manager {
 		case "rbenv":
 			in.Default = in.Source.Version == rbenvDef
+		case "rvm":
+			in.Default = in.Source.Version == rvmDef
 		case "asdf":
 			want := term.Get("ASDF_RUBY_VERSION")
 			if want == "" && d.Home != "" {

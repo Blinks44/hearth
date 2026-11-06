@@ -231,11 +231,12 @@ func pathProblemCount(term, gui []inventory.PathEntry) int {
 	return len(dirs)
 }
 
-// systemRepeat reports that macOS's path_helper adds e again, from
-// /etc/paths or /etc/paths.d, after a startup file put it first, as
-// Homebrew's brew shellenv does: the later entry is never used, harmless.
+// systemRepeat reports that the system declares e and adds it again: macOS's
+// path_helper, from /etc/paths or /etc/paths.d, after a startup file put it
+// first, as Homebrew's brew shellenv does, and Ubuntu's profile.d, for the
+// /snap/bin of /etc/environment. The later entry is never used, harmless.
 func systemRepeat(e inventory.PathEntry) bool {
 	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool {
-		return s.File == "/etc/paths" || strings.HasPrefix(s.File, "/etc/paths.d/")
+		return s.File == "/etc/paths" || s.File == "/etc/environment" || strings.HasPrefix(s.File, "/etc/paths.d/")
 	})
 }

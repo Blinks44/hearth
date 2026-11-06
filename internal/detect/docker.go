@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -82,6 +83,7 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 			res, err := r.Run(ctx, run.Cmd{Args: []string{exe, "--host", c.Endpoint, "version", "--format", "{{json .}}"}, Env: append(slices.Clone(term), "DOCKER_CONTEXT="), Timeout: 3 * time.Second})
 			var version struct{ Server *struct{ Version string } }
 			c.Status = "unavailable"
+			c.Denied = bytes.Contains(res.Stderr, []byte("permission denied"))
 			if err == nil && res.ExitCode == 0 && !res.Truncated && json.Unmarshal(res.Stdout, &version) == nil && version.Server != nil && version.Server.Version != "" {
 				c.Status, c.Version = "available", version.Server.Version
 				dockerDatabases(ctx, r, term, exe, c.Endpoint, d)

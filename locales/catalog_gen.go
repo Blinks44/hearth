@@ -5150,6 +5150,26 @@ func (msgs Messages) DockerUnchecked() string {
 	return Catalog.Format(msgs.locale, "dockerUnchecked", nil)
 }
 
+// DockerDeniedTitle says "No access to the Docker engine"
+// in the language the app shows.
+func DockerDeniedTitle() string { return In(i18n.Locale()).DockerDeniedTitle() }
+
+// DockerDeniedTitle says "No access to the Docker engine"
+// in the language of msgs.
+func (msgs Messages) DockerDeniedTitle() string {
+	return Catalog.Format(msgs.locale, "dockerDeniedTitle", nil)
+}
+
+// DockerDeniedExplain says "This user has no access to the Docker socket, so docker ps and docker compose up will not work. Add the user to the d…"
+// in the language the app shows.
+func DockerDeniedExplain() string { return In(i18n.Locale()).DockerDeniedExplain() }
+
+// DockerDeniedExplain says "This user has no access to the Docker socket, so docker ps and docker compose up will not work. Add the user to the d…"
+// in the language of msgs.
+func (msgs Messages) DockerDeniedExplain() string {
+	return Catalog.Format(msgs.locale, "dockerDeniedExplain", nil)
+}
+
 // DockerUnavailableTitle says "Docker engine is unavailable"
 // in the language the app shows.
 func DockerUnavailableTitle() string { return In(i18n.Locale()).DockerUnavailableTitle() }

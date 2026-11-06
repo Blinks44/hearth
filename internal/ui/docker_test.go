@@ -44,8 +44,10 @@ func TestDockerPage(t *testing.T) {
 	if issuePage(issues.Issue{Tool: "docker"}) != "/tools/docker" {
 		t.Fatal("wrong issue destination")
 	}
-	if title, explain := issueText(issues.Issue{Kind: issues.DockerUnavailable, Tool: "docker"}, home); title == "" || explain == "" {
-		t.Fatal("missing issue text")
+	for _, kind := range []issues.Kind{issues.DockerUnavailable, issues.DockerDenied} {
+		if title, explain := issueText(issues.Issue{Kind: kind, Tool: "docker"}, home); title == "" || explain == "" {
+			t.Fatal("missing issue text")
+		}
 	}
 	if err := tt.Click("Projects"); err != nil {
 		t.Fatal(err)

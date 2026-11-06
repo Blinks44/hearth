@@ -133,7 +133,7 @@ func (a *App) pythonAvailable(c *ui.Context, ins []inventory.Installation, rows 
 
 // pythonReleaseNote says how release v of line cycle stands to the copies
 // at rows: one installed, an update for the newest copy of its line
-// (recommended when that is the one in use), or a line none is of.
+// (recommended when that is the one in use), or a newer line than any copy.
 func pythonReleaseNote(v, cycle string, ins []inventory.Installation, rows []int, active int) (string, bool) {
 	newest := -1
 	for _, i := range rows {
@@ -146,6 +146,8 @@ func pythonReleaseNote(v, cycle string, ins []inventory.Installation, rows []int
 		}
 	}
 	switch {
+	case newest < 0 && olderRelease(v, ins, rows):
+		return "", false
 	case newest < 0:
 		return locales.NoteNewLine(), false
 	case semver.Compare("v"+ins[newest].Version, "v"+v) < 0:

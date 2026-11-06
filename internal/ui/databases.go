@@ -50,7 +50,7 @@ func (a *App) databases(c *ui.Context, p page) {
 				})
 				for _, is := range conflicts {
 					title, explain := issueText(is, a.Home)
-					warningRow(c, title+" "+explain)
+					warningRow(c, title+". "+explain)
 				}
 				if len(d.Warnings) > 0 {
 					warningRow(c, locales.DatabaseProbeFailed(strings.Join(d.Warnings, ", ")))
@@ -238,6 +238,8 @@ func databaseSource(source string) string {
 		return "—"
 	case "installer":
 		return locales.SourceInstaller()
+	case "system":
+		return locales.SourceSystem()
 	}
 	return source
 }

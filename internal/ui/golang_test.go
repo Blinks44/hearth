@@ -79,6 +79,7 @@ func TestGoReleaseNote(t *testing.T) {
 		{"1.21.13", "update for go1.21.6", false},
 		{"1.22.10", "installed", false},
 		{"1.24.0", "new version", false},
+		{"1.20.14", "", false},
 	} {
 		got, update := goReleaseNote(tt.version, ins, rows, 2)
 		if got != tt.want || update != tt.update {

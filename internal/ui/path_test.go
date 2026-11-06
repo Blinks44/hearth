@@ -38,6 +38,11 @@ func TestPathPage(t *testing.T) {
 		if got := pathProblemCount([]inventory.PathEntry{brew, {Dir: "/usr/bin"}, brew}, nil); got != 0 {
 			t.Fatalf("system repeat counted: %d", got)
 		}
+		// Ubuntu's profile.d adds /etc/environment's /snap/bin again.
+		snap := inventory.PathEntry{Dir: "/snap/bin", Sources: []inventory.PathSource{{File: "/etc/environment", Line: 1}}}
+		if got := pathProblemCount([]inventory.PathEntry{snap, snap}, nil); got != 0 {
+			t.Fatalf("/etc/environment repeat counted: %d", got)
+		}
 	}
 	// Both environments share the missing entry, as on Windows they share the registry's Path.
 	gone := []inventory.PathEntry{{Dir: home + "/gone/bin", Missing: true}}

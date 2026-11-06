@@ -19,13 +19,16 @@ func databaseServices(ctx context.Context, r run.Runner, env sysenv.Env, d *inve
 		d.Warnings = append(d.Warnings, "systemctl")
 		return
 	}
+	// Debian's postgresql.service runs nothing: it only starts the clusters,
+	// each a postgresql@<version>-<name>.service of its own.
+	clusters := strings.Contains(string(data), "postgresql@")
 	for line := range strings.Lines(string(data)) {
 		f := strings.Fields(line)
 		if len(f) < 4 {
 			continue
 		}
 		kind := inventory.DatabaseKind(f[0])
-		if kind == "" {
+		if kind == "" || f[0] == "postgresql.service" && clusters {
 			continue
 		}
 		status := ""

@@ -123,7 +123,7 @@ func (a *App) goAvailable(c *ui.Context, ins []inventory.Installation, rows []in
 
 // goReleaseNote says how Go release v stands to the copies at rows: one
 // installed, an update for the newest copy of its line (recommended when
-// that is the one in use), or a line none is of.
+// that is the one in use), or a newer line than any copy.
 func goReleaseNote(v string, ins []inventory.Installation, rows []int, active int) (string, bool) {
 	line := semver.MajorMinor("v" + v)
 	newest := -1
@@ -137,10 +137,18 @@ func goReleaseNote(v string, ins []inventory.Installation, rows []int, active in
 		}
 	}
 	switch {
+	case newest < 0 && olderRelease(v, ins, rows):
+		return "", false
 	case newest < 0:
 		return locales.NoteNewLine(), false
 	case semver.Compare("v"+ins[newest].Version, "v"+v) < 0:
 		return locales.NoteUpdateFor(copyVersion(ins[newest])), active >= 0 && ins[active].Version == ins[newest].Version
 	}
 	return "", false
+}
+
+// olderRelease reports that a copy at rows is newer than release v: v is
+// then no new line to go to.
+func olderRelease(v string, ins []inventory.Installation, rows []int) bool {
+	return slices.ContainsFunc(rows, func(i int) bool { return semver.Compare("v"+ins[i].Version, "v"+v) > 0 })
 }

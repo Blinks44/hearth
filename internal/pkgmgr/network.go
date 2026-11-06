@@ -128,7 +128,8 @@ func queryNetwork(ctx context.Context, r run.Runner, env sysenv.Env, m inventory
 		if res.ExitCode != 0 && (m.ID != "choco" || res.ExitCode != 2) {
 			return res, queryExitError(res)
 		}
-		if len(strings.TrimSpace(string(res.Stderr))) > 0 {
+		// Nix prints evaluation warnings of nixpkgs on any successful query.
+		if len(strings.TrimSpace(string(res.Stderr))) > 0 && m.ID != "nix" {
 			return res, fmt.Errorf("package query: %s", strings.TrimSpace(string(res.Stderr)))
 		}
 		return res, nil

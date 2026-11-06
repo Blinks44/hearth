@@ -80,24 +80,29 @@ func parseFlatpak(data []byte) ([]inventory.SystemPackage, error) {
 			continue
 		}
 		cols := strings.Split(line, "\t")
-		if len(cols) != 5 {
+		if len(cols) != 6 {
 			return nil, fmt.Errorf("invalid Flatpak installed row")
 		}
-		ref := strings.Split(cols[0], "/")
-		if len(ref) != 4 || (ref[0] != "app" && ref[0] != "runtime") || cols[2] == "" {
+		// list leaves app/ or runtime/ out of the ref, which remote-ls keeps.
+		kind := "app"
+		if slices.Contains(strings.Split(cols[5], ","), "runtime") {
+			kind = "runtime"
+		}
+		ref := append([]string{kind}, strings.Split(cols[0], "/")...)
+		if len(ref) != 4 || cols[2] == "" {
 			return nil, fmt.Errorf("invalid Flatpak reference")
 		}
 		version := cols[1]
 		if version == "" {
 			version = cols[4]
 		}
-		out = append(out, inventory.SystemPackage{Name: ref[1], Version: version, Kind: ref[0], Architecture: ref[2], Reference: cols[0], Scope: cols[2], Origin: cols[3]})
+		out = append(out, inventory.SystemPackage{Name: ref[1], Version: version, Kind: ref[0], Architecture: ref[2], Reference: strings.Join(ref, "/"), Scope: cols[2], Origin: cols[3]})
 	}
 	return out, nil
 }
 
 func queryFlatpak(probe networkProbe) ([]inventory.SystemPackage, error) {
-	res, err := probe("list", "--columns=ref,version,installation,origin,commit")
+	res, err := probe("list", "--columns=ref,version,installation,origin,active,options")
 	if err != nil {
 		return nil, err
 	}

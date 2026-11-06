@@ -13,7 +13,7 @@ func specs() []spec {
 		{id: "zypper", name: "Zypper", command: "zypper", installed: []string{"--no-refresh", "--xmlout", "search", "--installed-only", "--details", "--type", "package"}, updates: []string{"--non-interactive", "--no-refresh", "--xmlout", "list-updates", "--type", "package"}, format: "zypper", updateFormat: "zypper-updates"},
 		{id: "apk", name: "APK", command: "apk", installed: []string{"info", "-v"}, updates: []string{"--no-network", "version", "--limit", "<"}, format: "apk", updateFormat: "apk-updates"},
 		{id: "snap", name: "Snap", command: "snap", installed: []string{"list"}, format: "snap"},
-		{id: "flatpak", name: "Flatpak", command: "flatpak", installed: []string{"list", "--columns=ref,version,installation,origin,commit"}, format: "flatpak"},
+		{id: "flatpak", name: "Flatpak", command: "flatpak", installed: []string{"list", "--columns=ref,version,installation,origin,active,options"}, format: "flatpak"},
 		{id: "nix", name: "Nix", command: "nix-env", installed: []string{"--query", "--installed", "--json"}, format: "nix"},
 		{id: "brew", name: "Homebrew", command: "brew"},
 	}

@@ -33,6 +33,7 @@ func TestRubyDiscovery(t *testing.T) {
 	}
 	rvm := filepath.Join(dir, "rvm")
 	fakeExe(t, filepath.Join(rvm, "rubies", "ruby-3.1.6", "bin", "ruby"))
+	writeFile(t, filepath.Join(rvm, "config", "alias"), "default=ruby-3.1.6\n")
 	fakeExe(t, filepath.Join(dir, ".rubies", "ruby-3.0.7", "bin", "ruby"))
 	env := sysenv.Env{"HOME=" + dir, "PATH=" + filepath.Dir(shim), "RBENV_ROOT=" + rbenv, "rvm_path=" + rvm}
 	r := &run.Fake{}
@@ -50,6 +51,9 @@ func TestRubyDiscovery(t *testing.T) {
 	in := st.Installations[active]
 	if in.Version != "3.3.6" || in.InGUI != 1 || len(in.Packages) != 2 {
 		t.Fatalf("active: %+v", in)
+	}
+	if !slices.ContainsFunc(st.Installations, func(i inventory.Installation) bool { return i.Source.Manager == "rvm" && i.Default }) {
+		t.Fatalf("no rvm default: %+v", st.Installations)
 	}
 	if len(r.Calls()) != 0 {
 		t.Fatalf("executed command: %+v", r.Calls())

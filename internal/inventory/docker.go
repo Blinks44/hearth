@@ -23,6 +23,7 @@ type DockerContext struct {
 	Status                 string // "available", "unavailable", or "" when not checked
 	Version                string
 	Local                  bool
+	Denied                 bool // the socket refused this user: not in its group
 }
 
 // DockerEngine is an installed engine application or command, or a

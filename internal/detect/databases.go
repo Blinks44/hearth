@@ -45,7 +45,14 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 			if source == "" && in.Source.Kind == inventory.KindInstaller {
 				source = "installer" // as EDB's PostgreSQL in Program Files
 			}
-			d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: kind, Version: databaseVersionOf(v), Path: in.RealPath, Source: source})
+			if source == "" && in.Source.Kind == inventory.KindSystem {
+				source = "system"
+			}
+			path := in.RealPath
+			if filepath.Base(path) == "redis-check-rdb" { // Debian links redis-server to this same binary
+				path = in.Path
+			}
+			d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: kind, Version: databaseVersionOf(v), Path: path, Source: source})
 		}
 	}
 	for _, command := range []string{"psql", "mysql", "mariadb", "redis-cli", "sqlite3"} {

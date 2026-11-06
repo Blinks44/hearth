@@ -16,12 +16,13 @@ import (
 func TestDocker(t *testing.T) {
 	for _, tc := range []struct {
 		name, override, selected, status string
-		server                           string
+		server, stderr                   string
 		code                             int
-		probe, host                      bool
+		probe, host, denied              bool
 	}{
 		{name: "available", selected: "colima", status: "available", server: `{"Server":{"Version":"27.4.1"}}`, probe: true},
 		{name: "stopped", selected: "colima", status: "unavailable", server: `{"Client":{"Version":"27.4.1"},"Server":null}`, code: 1, probe: true},
+		{name: "socket refuses this user", selected: "colima", status: "unavailable", server: `{"Client":{"Version":"27.4.1"},"Server":null}`, stderr: "permission denied while trying to connect to the Docker daemon socket", code: 1, probe: true, denied: true},
 		{name: "invalid response", selected: "colima", status: "unavailable", server: `oops`, probe: true},
 		{name: "remote context", override: "DOCKER_CONTEXT=remote", selected: "remote"},
 		{name: "remote host", override: "DOCKER_HOST=tcp://user:secret@server:2376/path?token=hidden", selected: "default"},
@@ -52,7 +53,7 @@ func TestDocker(t *testing.T) {
 			r.Stdout(`{"Name":"default","DockerEndpoint":"`+dockerDefaultEndpoint+`"}
 {"Name":"colima","DockerEndpoint":"unix:///tmp/colima/docker.sock"}
 {"Name":"remote","DockerEndpoint":"ssh://user:secret@server/path?token=hidden"}`, exe, "context", "ls", "--format", "{{json .}}")
-			r.Set(run.Result{Stdout: []byte(tc.server), Stderr: []byte("PRIVATE"), ExitCode: tc.code}, nil, exe, "--host", func() string {
+			r.Set(run.Result{Stdout: []byte(tc.server), Stderr: []byte("PRIVATE " + tc.stderr), ExitCode: tc.code}, nil, exe, "--host", func() string {
 				if tc.selected == "colima" {
 					return "unix:///tmp/colima/docker.sock"
 				}
@@ -85,8 +86,8 @@ func TestDocker(t *testing.T) {
 				if c.Name == tc.selected {
 					want = tc.status
 				}
-				if c.Status != want {
-					t.Errorf("%+v, want status %q", c, want)
+				if c.Status != want || c.Denied != (tc.denied && c.Name == tc.selected) {
+					t.Errorf("%+v, want status %q denied %v", c, want, tc.denied)
 				}
 			}
 			data, _ := json.Marshal(st)

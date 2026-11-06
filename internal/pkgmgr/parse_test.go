@@ -63,3 +63,10 @@ func TestExitOK(t *testing.T) {
 		}
 	}
 }
+
+func TestFirstLine(t *testing.T) {
+	t.Parallel()
+	if got := firstLine("snap    2.76.3+ubuntu24.04\nsnapd   2.76.3\n"); got != "snap 2.76.3+ubuntu24.04" {
+		t.Fatalf("%q", got)
+	}
+}

@@ -41,14 +41,18 @@ func pathSources(env Env) map[string][]inventory.PathSource {
 			files = append(files, filepath.Join(zd, n))
 		}
 	case "bash":
+		// bash reads the first of .bash_profile and .bash_login, and .profile
+		// only without them; yet they usually source it, as RVM's does, and
+		// Ubuntu's desktop session reads it anyway.
 		files = append(files, filepath.Join(home, ".bashrc"))
-		for _, n := range []string{".bash_profile", ".bash_login", ".profile"} {
+		for _, n := range []string{".bash_profile", ".bash_login"} {
 			p := filepath.Join(home, n)
 			if _, err := os.Stat(p); err == nil {
 				files = append(files, p)
 				break
 			}
 		}
+		files = append(files, filepath.Join(home, ".profile"))
 	case "fish":
 		config := env.Get("XDG_CONFIG_HOME")
 		if config == "" {

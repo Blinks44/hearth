@@ -36,3 +36,16 @@ func TestJavaProject(t *testing.T) {
 		}
 	}
 }
+
+// OpenJDK's update releases have four numbers: 21.0.12.1 is a Java 21.
+func TestJavaFourNumbers(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".java-version"), []byte("21\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "java", Installations: []inventory.Installation{{Tool: "java", Version: "21.0.12.1", OnPath: 1}}}}}
+	st := Resolve(Read(dir), snap, nil)[0]
+	if len(st.Checks) != 1 || st.Checks[0].Installed == nil || !st.Checks[0].Met {
+		t.Fatalf("%+v", st)
+	}
+}

@@ -40,6 +40,20 @@ func TestPathSources(t *testing.T) {
 	}
 }
 
+// RVM's .bash_profile sources .profile: its lines still have a source.
+func TestPathSourcesBashProfile(t *testing.T) {
+	root := t.TempDir()
+	for name, body := range map[string]string{".bash_profile": "source ~/.profile\n", ".profile": "export PATH=\"$PATH:/opt/go/bin\"\n"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got := pathSources(Env{"HOME=" + root, "SHELL=/bin/bash"})["/opt/go/bin"]
+	if len(got) != 1 || got[0].File != filepath.Join(root, ".profile") {
+		t.Fatal(got)
+	}
+}
+
 func TestPathSourceUnknownExpansion(t *testing.T) {
 	for _, body := range []string{
 		"export PATH=$UNKNOWN/bin:$PATH",

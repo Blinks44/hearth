@@ -185,7 +185,7 @@ func newest(ins []inventory.Installation, match func(inventory.Installation) boo
 		if !match(in) {
 			continue
 		}
-		v, err := semver.NewVersion(in.Version)
+		v, err := installedVersion(in.Version)
 		if err != nil {
 			continue
 		}
@@ -194,6 +194,15 @@ func newest(ins []inventory.Installation, match func(inventory.Installation) boo
 		}
 	}
 	return best
+}
+
+// installedVersion reads a copy's version. OpenJDK's updates add a fourth
+// number, as 21.0.12.1, which semver does not take.
+func installedVersion(version string) (*semver.Version, error) {
+	if parts := strings.Split(version, "."); len(parts) > 3 {
+		version = strings.Join(parts[:3], ".")
+	}
+	return semver.NewVersion(version)
 }
 
 // matcher reads want, as a project file writes it, into a test of
@@ -239,7 +248,7 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 		return nil, fmt.Errorf("version %q: %w", want, err)
 	}
 	return func(in inventory.Installation) bool {
-		v, err := semver.NewVersion(in.Version)
+		v, err := installedVersion(in.Version)
 		return err == nil && c.Check(v)
 	}, nil
 }

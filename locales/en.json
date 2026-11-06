@@ -1967,6 +1967,8 @@
   "dockerAvailable": "available",
   "dockerUnavailable": "unavailable",
   "dockerUnchecked": "not checked",
+  "dockerDeniedTitle": "No access to the Docker engine",
+  "dockerDeniedExplain": "This user has no access to the Docker socket, so docker ps and docker compose up will not work. Add the user to the docker group (sudo usermod -aG docker $USER), then sign out and back in.",
   "dockerUnavailableTitle": "Docker engine is unavailable",
   "dockerUnavailableExplain": "The selected engine did not answer: docker ps and docker compose up will not work. The engine may be stopped, or the connection may have failed.",
   "dockerContextNote": "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts stay unchecked.",

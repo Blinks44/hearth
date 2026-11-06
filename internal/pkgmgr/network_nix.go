@@ -93,34 +93,26 @@ func queryNixNetwork(ctx context.Context, r run.Runner, env sysenv.Env, m invent
 		}
 	}
 	if classic {
-		res, err := probe("--option", "allow-import-from-derivation", "false", "--query", "--available", "--json")
+		// --available --json would print all of nixpkgs, tens of megabytes.
+		res, err := probe("--option", "allow-import-from-derivation", "false", "--query", "--installed", "--compare-versions")
 		if err != nil {
 			return nil, err
 		}
-		available, err := parse("nix", res.Stdout)
-		if err != nil {
-			return nil, err
-		}
-		for i, p := range out {
-			if _, ok := refs[p.Path]; ok {
+		for line := range strings.Lines(string(res.Stdout)) {
+			f := strings.Fields(line) // hello-2.12.1  < 2.13.0
+			if len(f) != 3 || f[1] != "<" {
 				continue
 			}
-			for _, candidate := range available {
-				name := strings.TrimSuffix(candidate.Name, "-"+candidate.Version)
-				if name != p.Name {
+			for i, p := range out {
+				if _, ok := refs[p.Path]; ok || p.Name+"-"+p.Version != f[0] {
 					continue
 				}
-				current := p.Version
-				if out[i].Available != "" {
-					current = out[i].Available
+				if current := out[i].Available; current != "" {
+					if cmp, ok := packageVersionCompare(f[2], current); !ok || cmp <= 0 {
+						continue
+					}
 				}
-				cmp, ok := packageVersionCompare(candidate.Version, current)
-				if !ok {
-					return nil, fmt.Errorf("cannot compare Nix package versions")
-				}
-				if cmp > 0 {
-					out[i].Available = candidate.Version
-				}
+				out[i].Available = f[2]
 			}
 		}
 	}

@@ -152,7 +152,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 			for _, h := range []struct {
 				title string
 				width float32
-			}{{locales.ColumnVersion(), 132}, {locales.ColumnSource(), 84}, {locales.ColumnPath(), 0}} {
+			}{{locales.ColumnVersion(), 132}, {locales.ColumnSource(), 100}, {locales.ColumnPath(), 0}} {
 				e := ui.Text(c, h.title).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 				if h.width > 0 {
 					e.Width(h.width).Shrink(0)
@@ -174,7 +174,7 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 						ui.Text(c, ch).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				ui.Row(c).Width(84).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
+				ui.Row(c).Width(100).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
 				ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
 					ui.Text(c, displayPath(in, home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 					ui.Row(c).Gap(5).Wrap().Children(func() {

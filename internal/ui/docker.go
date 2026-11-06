@@ -25,7 +25,11 @@ func (a *App) docker(c *ui.Context, p page) {
 				a.dockerHeader(c, st, active)
 				for _, context := range d.Contexts {
 					if context.Name == d.Selected && context.Status == "unavailable" {
-						warningRow(c, locales.DockerUnavailableExplain())
+						if context.Denied {
+							warningRow(c, locales.DockerDeniedExplain())
+						} else {
+							warningRow(c, locales.DockerUnavailableExplain())
+						}
 					}
 				}
 				if active < 0 {

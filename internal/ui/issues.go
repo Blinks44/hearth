@@ -20,6 +20,8 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		return locales.DatabaseConflictTitle(is.Dirs[0]), locales.DatabaseConflictExplain(filepath.Base(is.Project))
 	case issues.DockerUnavailable:
 		return locales.DockerUnavailableTitle(), locales.DockerUnavailableExplain()
+	case issues.DockerDenied:
+		return locales.DockerDeniedTitle(), locales.DockerDeniedExplain()
 	case issues.Duplicate:
 		first := is.Copies[0]
 		var others []string

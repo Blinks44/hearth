@@ -45,10 +45,11 @@ func TestNetworkNix(t *testing.T) {
 func TestNetworkNixClassic(t *testing.T) {
 	t.Parallel()
 	f := &run.Fake{}
-	f.Stdout(`{"hello":{"pname":"hello","version":"2.13.0"}}`, "nix-env", "--option", "allow-import-from-derivation", "false", "--query", "--available", "--json")
-	m := inventory.PackageManager{ID: "nix", Path: "nix-env", Packages: []inventory.SystemPackage{{Name: "hello", Version: "2.12.1"}}}
+	f.Set(run.Result{Stdout: []byte("hello-2.12.1  < 2.13.0\nnix-2.35.4    = 2.35.4\n"), Stderr: []byte("evaluation warning: deprecated\n")}, nil,
+		"nix-env", "--option", "allow-import-from-derivation", "false", "--query", "--installed", "--compare-versions")
+	m := inventory.PackageManager{ID: "nix", Path: "nix-env", Packages: []inventory.SystemPackage{{Name: "hello", Version: "2.12.1"}, {Name: "nix", Version: "2.35.4"}}}
 	got := Network(t.Context(), &versions.Cache{Dir: t.TempDir()}, f, sysenv.Env{"HOME=" + t.TempDir()}, m)
-	if !got.UpdatesKnown || got.UpdateError != "" || got.Packages[0].Available != "2.13.0" {
+	if !got.UpdatesKnown || got.UpdateError != "" || got.Packages[0].Available != "2.13.0" || got.Packages[1].Available != "" {
 		t.Fatalf("%+v", got)
 	}
 }
