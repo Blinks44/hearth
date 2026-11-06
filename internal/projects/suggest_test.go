@@ -37,7 +37,7 @@ func TestSuggest(t *testing.T) {
 	}
 	var names []string
 	for _, s := range found {
-		names = append(names, filepath.Base(s.Dir))
+		names = append(names, filepath.Base(s.Project.Dir))
 	}
 	want := []string{"shop-web", "api", "old-landing"}
 	if len(names) != len(want) {

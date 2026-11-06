@@ -13,7 +13,7 @@ var SearchFolders = []string{"dev", "code", "projects", "src", "work", "Develope
 
 // Suggestion is a project Suggest found, with when its files last changed.
 type Suggestion struct {
-	Project
+	Project Project
 	Changed time.Time
 }
 
@@ -29,7 +29,7 @@ func Suggest(home string) (folders []string, found []Suggestion) {
 		folders = append(folders, dir)
 		_, nested := Find(dir)
 		for _, p := range nested {
-			if slices.ContainsFunc(found, func(s Suggestion) bool { return s.Dir == p.Dir || within(p.Dir, s.Dir) }) {
+			if slices.ContainsFunc(found, func(s Suggestion) bool { return s.Project.Dir == p.Dir || within(p.Dir, s.Project.Dir) }) {
 				continue
 			}
 			found = append(found, Suggestion{Project: p, Changed: changed(p)})
