@@ -133,6 +133,8 @@ type App struct {
 	packageFilter  string // the package table's filter
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
 	gitTab         int    // the Git page's tab: installed, settings, PATH
+	cliTab         int    // the CLI & clouds page's tab
+	cliFilter      string // the CLI & clouds table's filter
 	changesTab     int    // the What changed page's tab: all, added, updated, removed
 	changesFilter  string // the What changed table's filter
 	cleanupTab     int    // the Cleanup page's tab: all, then a group each
@@ -227,6 +229,8 @@ func (a *App) View(c *ui.Context) {
 						a.databases(c, p)
 					case gitPage:
 						a.gitPageView(c, p)
+					case cliPage:
+						a.cliView(c, p)
 					case "/tools/docker":
 						a.docker(c, p)
 					case "/tools/bun":
@@ -381,6 +385,8 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 	switch p.path {
 	case "/ai/agents":
 		n = len(a.foundAgents())
+	case cliPage:
+		n = len(a.miseTools())
 	case skillsPage:
 		n = len(a.allSkills())
 	case mcpPage:

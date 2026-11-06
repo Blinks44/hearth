@@ -162,6 +162,9 @@ type ToolState struct {
 	// Databases are the local servers, clients and listeners, for
 	// "databases" only.
 	Databases *DatabaseState `json:",omitempty"`
+	// MiseTools are mise's tools without a page of their own, for "mise"
+	// only.
+	MiseTools []MiseTool `json:",omitempty"`
 	// Git is how Git is set up, for "git" only.
 	Git *GitState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
@@ -397,4 +400,14 @@ func next(ins []Installation, rank func(Installation) PathRank, manager string) 
 		}
 	}
 	return best
+}
+
+// MiseTool is a tool mise installed that has no page of its own, as zig,
+// by its directory under installs/.
+type MiseTool struct {
+	// Name is the directory's, as "zig" or "npm-prettier" for a backend's.
+	Name string
+	// Installations are its versions, newest first, each as a copy of
+	// mise's: Root is the version's directory.
+	Installations []Installation
 }

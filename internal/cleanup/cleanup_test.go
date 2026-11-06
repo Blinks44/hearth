@@ -43,6 +43,16 @@ func TestFind(t *testing.T) {
 			copyOf("python", "3.9.6", "", sys, "/usr", 3),
 			copyOf("python", "3.13.1", "uv", vm, "/uv/python/cpython-3.13.1", 0),
 		}},
+		// mise's tools without a page: zig's default stays, its older
+		// version goes.
+		{Tool: "mise", MiseTools: []inventory.MiseTool{{Name: "zig", Installations: []inventory.Installation{
+			func() inventory.Installation {
+				in := copyOf("zig", "0.13.0", "mise", vm, "/mise/installs/zig/0.13.0", 0)
+				in.Default = true
+				return in
+			}(),
+			copyOf("zig", "0.12.0", "mise", vm, "/mise/installs/zig/0.12.0", 0),
+		}}}},
 		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", ReasonsKnown: true, Packages: []inventory.SystemPackage{
 			{Name: "node", Path: "/brew/Cellar/node/23.6.0", Dependencies: []string{"icu4c"}},
 			{Name: "icu4c", Path: "/brew/Cellar/icu4c/76", Dependency: true},
@@ -107,6 +117,7 @@ func TestFind(t *testing.T) {
 		"unneeded-package oniguruma /brew/Cellar/oniguruma/6.9 nothing-needs",
 		"extra-copy python /brew/Cellar/python@3.13/3.13.1 shadowed,no-project",
 		"extra-copy python /mise/installs/python/3.11.10 not-default,not-on-path,no-project",
+		"extra-copy zig /mise/installs/zig/0.12.0 not-default,not-on-path,no-project",
 		// Docker: no volumes, and nothing for a build cache this small.
 		"docker-images   pulled",
 		"docker-containers   stopped",
@@ -124,7 +135,7 @@ func TestFind(t *testing.T) {
 	if c := got[6]; c.Known {
 		t.Errorf("a size not counted is known: %+v", c)
 	}
-	if c := got[7]; c.Count != 2 || c.Frees() != 1600e6 {
+	if c := got[8]; c.Count != 2 || c.Frees() != 1600e6 {
 		t.Errorf("images %+v", c)
 	}
 	if Find(nil, sizes, ps, nil, now) != nil {

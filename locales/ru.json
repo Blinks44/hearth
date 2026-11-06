@@ -722,5 +722,19 @@
   "gitSSHFor": "для {hosts}",
   "gitSSHInAgent": "в ssh-agent",
   "gitSSHUnused": "нет ни в конфиге SSH, ни в агенте",
-  "gitNoSSHKeys": "В ~/.ssh ключей нет."
+  "gitNoSSHKeys": "В ~/.ssh ключей нет.",
+  "cliTitle": "CLI и облака",
+  "sectionToolsCli": "Инструменты · командная строка",
+  "cliLead": "Версия, источник и текущее состояние в одной таблице",
+  "cliFoundCaption": "инструментов командной строки",
+  "cliFromMise": "Из mise",
+  "cliNoPage": "без своей страницы",
+  "cliNone": "Инструментов без своей страницы пока нет: здесь появятся остальные инструменты mise.",
+  "cliGroupMise": "Из mise · без своей страницы",
+  "cliDefault": "версия по умолчанию",
+  "cliNotSet": "не подключена",
+  "cliMoreVersions": "{count, plural, one {ещё # версия} few {ещё # версии} many {ещё # версий} other {ещё # версии}}: {versions}",
+  "cliHow": "Как Hearth их находит",
+  "cliHowMise": "Каталоги mise",
+  "cliHowMiseCaption": "installs/ без запуска mise"
 }

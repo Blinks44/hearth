@@ -55,6 +55,7 @@ var (
 			{"/tools/docker", "brand/docker", name("Docker"), locales.SectionToolsContainers},
 			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionTools},
 			{gitPage, "brand/git", name("Git"), locales.SectionToolsVcs},
+			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
 		}},
 		{locales.SectionAI, []page{
 			{"/ai/agents", "lucide/bot", locales.AgentsTitle, locales.SectionAI},

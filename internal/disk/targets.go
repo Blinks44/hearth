@@ -29,6 +29,9 @@ func Targets(snap *inventory.Snapshot, caches []inventory.Cache) []string {
 	if snap != nil {
 		for _, t := range snap.Tools {
 			copies(t.Installations)
+			for _, mt := range t.MiseTools {
+				copies(mt.Installations)
+			}
 			for _, m := range t.PackageManagers {
 				for _, p := range m.Packages {
 					if p.Size == 0 {

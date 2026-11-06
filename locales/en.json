@@ -3059,5 +3059,71 @@
   "gitNoSSHKeys": "No SSH keys in ~/.ssh.",
   "@gitNoSSHKeys": {
     "description": "Git page card without keys."
+  },
+  "cliTitle": "CLI & clouds",
+  "@cliTitle": {
+    "description": "Sidebar item and header of the CLI page."
+  },
+  "sectionToolsCli": "Tools · command line",
+  "@sectionToolsCli": {
+    "description": "Subtitle of the CLI page."
+  },
+  "cliLead": "Version, source and where each stands in one table",
+  "@cliLead": {
+    "description": "Under the CLI page's big title."
+  },
+  "cliFoundCaption": "command-line tools",
+  "@cliFoundCaption": {
+    "description": "CLI page card caption."
+  },
+  "cliFromMise": "From mise",
+  "@cliFromMise": {
+    "description": "CLI page card and tab."
+  },
+  "cliNoPage": "without a page of their own",
+  "@cliNoPage": {
+    "description": "CLI page card caption."
+  },
+  "cliNone": "No command-line tools without a page found yet: mise's other tools show here.",
+  "@cliNone": {
+    "description": "CLI page without tools."
+  },
+  "cliGroupMise": "From mise · no page of their own",
+  "@cliGroupMise": {
+    "description": "CLI table group."
+  },
+  "cliDefault": "the default version",
+  "@cliDefault": {
+    "description": "CLI row: mise's default version."
+  },
+  "cliNotSet": "not set up",
+  "@cliNotSet": {
+    "description": "CLI row: a version neither on PATH nor the default."
+  },
+  "cliMoreVersions": "{count, plural, one {# more version} other {# more versions}}: {versions}",
+  "@cliMoreVersions": {
+    "description": "CLI row: the tool's other versions.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      },
+      "versions": {
+        "type": "String",
+        "example": "0.12.0"
+      }
+    }
+  },
+  "cliHow": "How Hearth finds them",
+  "@cliHow": {
+    "description": "CLI page side card."
+  },
+  "cliHowMise": "mise's folders",
+  "@cliHowMise": {
+    "description": "CLI page side card row."
+  },
+  "cliHowMiseCaption": "installs/ without running mise",
+  "@cliHowMiseCaption": {
+    "description": "CLI page side card caption."
   }
 }

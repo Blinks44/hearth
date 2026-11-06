@@ -243,22 +243,10 @@ func copies(s *inventory.Snapshot, ps []projects.Project, lines map[int]versions
 	var roots []*root
 	// set are the version managers the shell sets up or whose copies run.
 	set := map[string]bool{}
-	for _, ts := range s.Tools {
-		for _, m := range ts.Managers {
-			if m.Activated || m.Shims || m.ShimsInGUI {
-				set[m.Name] = true
-			}
-		}
-		for _, m := range ts.PackageManagers {
-			deps := dependents(m)
-			for _, p := range m.Packages {
-				if deps[p.Name] > 0 {
-					kept[p.Path] = true
-				}
-			}
-		}
-		term, gui := inventory.TerminalCopy(ts.Installations), inventory.GUICopy(ts.Installations)
-		for i, in := range ts.Installations {
+	// add takes a tool's copies by their roots, keeping the ones that run.
+	add := func(tool string, ins []inventory.Installation) {
+		term, gui := inventory.TerminalCopy(ins), inventory.GUICopy(ins)
+		for i, in := range ins {
 			if in.OnPath > 0 || in.InGUI > 0 {
 				set[in.Source.Manager] = true
 			}
@@ -275,10 +263,30 @@ func copies(s *inventory.Snapshot, ps []projects.Project, lines map[int]versions
 			}
 			j := slices.IndexFunc(roots, func(x *root) bool { return x.path == r })
 			if j < 0 {
-				roots = append(roots, &root{path: r, tool: ts.Tool})
+				roots = append(roots, &root{path: r, tool: tool})
 				j = len(roots) - 1
 			}
 			roots[j].copies = append(roots[j].copies, in)
+		}
+	}
+	for _, ts := range s.Tools {
+		for _, m := range ts.Managers {
+			if m.Activated || m.Shims || m.ShimsInGUI {
+				set[m.Name] = true
+			}
+		}
+		for _, m := range ts.PackageManagers {
+			deps := dependents(m)
+			for _, p := range m.Packages {
+				if deps[p.Name] > 0 {
+					kept[p.Path] = true
+				}
+			}
+		}
+		add(ts.Tool, ts.Installations)
+		// mise's tools without a page are tools of their own.
+		for _, mt := range ts.MiseTools {
+			add(mt.Name, mt.Installations)
 		}
 	}
 	var out []Candidate

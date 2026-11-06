@@ -8915,3 +8915,201 @@ func GitNoSSHKeys() string { return In(i18n.Locale()).GitNoSSHKeys() }
 func (msgs Messages) GitNoSSHKeys() string {
 	return Catalog.Format(msgs.locale, "gitNoSSHKeys", nil)
 }
+
+// CliTitle says "CLI & clouds"
+// in the language the app shows.
+//
+// Sidebar item and header of the CLI page.
+func CliTitle() string { return In(i18n.Locale()).CliTitle() }
+
+// CliTitle says "CLI & clouds"
+// in the language of msgs.
+//
+// Sidebar item and header of the CLI page.
+func (msgs Messages) CliTitle() string {
+	return Catalog.Format(msgs.locale, "cliTitle", nil)
+}
+
+// SectionToolsCli says "Tools · command line"
+// in the language the app shows.
+//
+// Subtitle of the CLI page.
+func SectionToolsCli() string { return In(i18n.Locale()).SectionToolsCli() }
+
+// SectionToolsCli says "Tools · command line"
+// in the language of msgs.
+//
+// Subtitle of the CLI page.
+func (msgs Messages) SectionToolsCli() string {
+	return Catalog.Format(msgs.locale, "sectionToolsCli", nil)
+}
+
+// CliLead says "Version, source and where each stands in one table"
+// in the language the app shows.
+//
+// Under the CLI page's big title.
+func CliLead() string { return In(i18n.Locale()).CliLead() }
+
+// CliLead says "Version, source and where each stands in one table"
+// in the language of msgs.
+//
+// Under the CLI page's big title.
+func (msgs Messages) CliLead() string {
+	return Catalog.Format(msgs.locale, "cliLead", nil)
+}
+
+// CliFoundCaption says "command-line tools"
+// in the language the app shows.
+//
+// CLI page card caption.
+func CliFoundCaption() string { return In(i18n.Locale()).CliFoundCaption() }
+
+// CliFoundCaption says "command-line tools"
+// in the language of msgs.
+//
+// CLI page card caption.
+func (msgs Messages) CliFoundCaption() string {
+	return Catalog.Format(msgs.locale, "cliFoundCaption", nil)
+}
+
+// CliFromMise says "From mise"
+// in the language the app shows.
+//
+// CLI page card and tab.
+func CliFromMise() string { return In(i18n.Locale()).CliFromMise() }
+
+// CliFromMise says "From mise"
+// in the language of msgs.
+//
+// CLI page card and tab.
+func (msgs Messages) CliFromMise() string {
+	return Catalog.Format(msgs.locale, "cliFromMise", nil)
+}
+
+// CliNoPage says "without a page of their own"
+// in the language the app shows.
+//
+// CLI page card caption.
+func CliNoPage() string { return In(i18n.Locale()).CliNoPage() }
+
+// CliNoPage says "without a page of their own"
+// in the language of msgs.
+//
+// CLI page card caption.
+func (msgs Messages) CliNoPage() string {
+	return Catalog.Format(msgs.locale, "cliNoPage", nil)
+}
+
+// CliNone says "No command-line tools without a page found yet: mise's other tools show here."
+// in the language the app shows.
+//
+// CLI page without tools.
+func CliNone() string { return In(i18n.Locale()).CliNone() }
+
+// CliNone says "No command-line tools without a page found yet: mise's other tools show here."
+// in the language of msgs.
+//
+// CLI page without tools.
+func (msgs Messages) CliNone() string {
+	return Catalog.Format(msgs.locale, "cliNone", nil)
+}
+
+// CliGroupMise says "From mise · no page of their own"
+// in the language the app shows.
+//
+// CLI table group.
+func CliGroupMise() string { return In(i18n.Locale()).CliGroupMise() }
+
+// CliGroupMise says "From mise · no page of their own"
+// in the language of msgs.
+//
+// CLI table group.
+func (msgs Messages) CliGroupMise() string {
+	return Catalog.Format(msgs.locale, "cliGroupMise", nil)
+}
+
+// CliDefault says "the default version"
+// in the language the app shows.
+//
+// CLI row: mise's default version.
+func CliDefault() string { return In(i18n.Locale()).CliDefault() }
+
+// CliDefault says "the default version"
+// in the language of msgs.
+//
+// CLI row: mise's default version.
+func (msgs Messages) CliDefault() string {
+	return Catalog.Format(msgs.locale, "cliDefault", nil)
+}
+
+// CliNotSet says "not set up"
+// in the language the app shows.
+//
+// CLI row: a version neither on PATH nor the default.
+func CliNotSet() string { return In(i18n.Locale()).CliNotSet() }
+
+// CliNotSet says "not set up"
+// in the language of msgs.
+//
+// CLI row: a version neither on PATH nor the default.
+func (msgs Messages) CliNotSet() string {
+	return Catalog.Format(msgs.locale, "cliNotSet", nil)
+}
+
+// CliMoreVersions says "{count, plural, one {# more version} other {# more versions}}: {versions}"
+// in the language the app shows.
+//
+// CLI row: the tool's other versions.
+func CliMoreVersions(count int, versions string) string {
+	return In(i18n.Locale()).CliMoreVersions(count, versions)
+}
+
+// CliMoreVersions says "{count, plural, one {# more version} other {# more versions}}: {versions}"
+// in the language of msgs.
+//
+// CLI row: the tool's other versions.
+func (msgs Messages) CliMoreVersions(count int, versions string) string {
+	return Catalog.Format(msgs.locale, "cliMoreVersions", map[string]any{"count": count, "versions": versions})
+}
+
+// CliHow says "How Hearth finds them"
+// in the language the app shows.
+//
+// CLI page side card.
+func CliHow() string { return In(i18n.Locale()).CliHow() }
+
+// CliHow says "How Hearth finds them"
+// in the language of msgs.
+//
+// CLI page side card.
+func (msgs Messages) CliHow() string {
+	return Catalog.Format(msgs.locale, "cliHow", nil)
+}
+
+// CliHowMise says "mise's folders"
+// in the language the app shows.
+//
+// CLI page side card row.
+func CliHowMise() string { return In(i18n.Locale()).CliHowMise() }
+
+// CliHowMise says "mise's folders"
+// in the language of msgs.
+//
+// CLI page side card row.
+func (msgs Messages) CliHowMise() string {
+	return Catalog.Format(msgs.locale, "cliHowMise", nil)
+}
+
+// CliHowMiseCaption says "installs/ without running mise"
+// in the language the app shows.
+//
+// CLI page side card caption.
+func CliHowMiseCaption() string { return In(i18n.Locale()).CliHowMiseCaption() }
+
+// CliHowMiseCaption says "installs/ without running mise"
+// in the language of msgs.
+//
+// CLI page side card caption.
+func (msgs Messages) CliHowMiseCaption() string {
+	return Catalog.Format(msgs.locale, "cliHowMiseCaption", nil)
+}
