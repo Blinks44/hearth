@@ -2629,5 +2629,313 @@
         "example": "v20.18.0 (fnm)"
       }
     }
+  },
+  "changesTitle": "What changed",
+  "@changesTitle": {
+    "description": "Header of the history page; the sidebar status opens it."
+  },
+  "changesSubtitle": "Overview · history of checks",
+  "@changesSubtitle": {
+    "description": "Under the history page's title."
+  },
+  "changesLead": "Snapshots compared: what came, what updated and what went",
+  "@changesLead": {
+    "description": "Under the history page's big title."
+  },
+  "changesAdded": "Added",
+  "@changesAdded": {
+    "description": "History card and tab."
+  },
+  "changesUpdated": "Updated",
+  "@changesUpdated": {
+    "description": "History card and tab."
+  },
+  "changesRemoved": "Removed",
+  "@changesRemoved": {
+    "description": "History card and tab."
+  },
+  "changesSince": "since {date, date, ::MMMd}",
+  "@changesSince": {
+    "description": "History card caption: since the oldest check kept.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-10-30"
+      }
+    }
+  },
+  "changesUpdatedCaption": "versions and packages",
+  "@changesUpdatedCaption": {
+    "description": "History card caption."
+  },
+  "changesRemovedCaption": "gone",
+  "@changesRemovedCaption": {
+    "description": "History card caption."
+  },
+  "changesCount": "{count, plural, one {# change} other {# changes}}",
+  "@changesCount": {
+    "description": "History group: changes of a check.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "changesToday": "Today, {time, time, short}",
+  "@changesToday": {
+    "description": "History group: a check today.",
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "example": "2026-11-06T10:42:00"
+      }
+    }
+  },
+  "changesYesterday": "Yesterday, {time, time, short}",
+  "@changesYesterday": {
+    "description": "History group: a check yesterday.",
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "example": "2026-11-05T18:20:00"
+      }
+    }
+  },
+  "changesOn": "{date, date, ::MMMMd}, {date, time, short}",
+  "@changesOn": {
+    "description": "History group: a check on an earlier day.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-10-30T09:00:00"
+      }
+    }
+  },
+  "changesEmpty": "No changes yet: the history fills as checks find something new, updated or gone.",
+  "@changesEmpty": {
+    "description": "History without entries."
+  },
+  "changesNone": "No matching changes.",
+  "@changesNone": {
+    "description": "History filter matched nothing."
+  },
+  "changesLink": "{count, plural, one {# change since the last check} other {# changes since the last check}}",
+  "@changesLink": {
+    "description": "Overview link to the history.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "changesTries": "Looks like a try",
+  "@changesTries": {
+    "description": "History side card: cleanup candidates that came lately."
+  },
+  "changesTryCaption": "came {date, date, ::MMMd} · no project asks for it",
+  "@changesTryCaption": {
+    "description": "History side card caption.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-11-05"
+      }
+    }
+  },
+  "changesNoTries": "Nothing that came in the history is left unused.",
+  "@changesNoTries": {
+    "description": "History side card without tries."
+  },
+  "changesOpenCleanup": "Open in Cleanup",
+  "@changesOpenCleanup": {
+    "description": "Button of the history side card."
+  },
+  "changesKept": "What the history keeps",
+  "@changesKept": {
+    "description": "History side card."
+  },
+  "changesKeptWhat": "Versions, sources, PATH",
+  "@changesKeptWhat": {
+    "description": "History side card row."
+  },
+  "changesKeptWhatCaption": "and agents, skills and MCP",
+  "@changesKeptWhatCaption": {
+    "description": "History side card caption."
+  },
+  "changesKeptNoFiles": "No file contents",
+  "@changesKeptNoFiles": {
+    "description": "History side card row."
+  },
+  "changesKeptNoFilesCaption": "no secrets or env values",
+  "@changesKeptNoFilesCaption": {
+    "description": "History side card caption."
+  },
+  "changesKeptLast": "The last {count} checks with changes",
+  "@changesKeptLast": {
+    "description": "History side card row.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "changesKeptLastCaption": "kept on this computer",
+  "@changesKeptLastCaption": {
+    "description": "History side card caption."
+  },
+  "changeCopyAdded": "came in {folder}",
+  "@changeCopyAdded": {
+    "description": "History row: a new copy.",
+    "placeholders": {
+      "folder": {
+        "type": "String",
+        "example": "~/.bun"
+      }
+    }
+  },
+  "changeCopyUpdated": "new version in {folder}",
+  "@changeCopyUpdated": {
+    "description": "History row: a copy's version changed.",
+    "placeholders": {
+      "folder": {
+        "type": "String",
+        "example": "~/.fnm"
+      }
+    }
+  },
+  "changeCopyRemoved": "its folder is gone",
+  "@changeCopyRemoved": {
+    "description": "History row: a copy went."
+  },
+  "changeTerminal": "the terminal runs another version",
+  "@changeTerminal": {
+    "description": "History row: the terminal's version changed."
+  },
+  "changePackagesAdded": "{manager}: {count, plural, one {# package added} other {# packages added}}",
+  "@changePackagesAdded": {
+    "description": "History row.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      },
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "changePackagesUpdated": "{manager}: {count, plural, one {# package updated} other {# packages updated}}",
+  "@changePackagesUpdated": {
+    "description": "History row.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      },
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "changePackagesRemoved": "{manager}: {count, plural, one {# package removed} other {# packages removed}}",
+  "@changePackagesRemoved": {
+    "description": "History row.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      },
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "changePathAdded": "PATH: a new entry",
+  "@changePathAdded": {
+    "description": "History row."
+  },
+  "changePathRemoved": "PATH: an entry went",
+  "@changePathRemoved": {
+    "description": "History row."
+  },
+  "changePathFrom": "{dir} · from {file}",
+  "@changePathFrom": {
+    "description": "History row caption.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.deno/bin"
+      },
+      "file": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
+  },
+  "changeAgentAdded": "the agent came",
+  "@changeAgentAdded": {
+    "description": "History row caption."
+  },
+  "changeAgentUpdated": "the agent updated",
+  "@changeAgentUpdated": {
+    "description": "History row caption."
+  },
+  "changeAgentRemoved": "the agent is gone",
+  "@changeAgentRemoved": {
+    "description": "History row caption."
+  },
+  "changeSkillAdded": "added in {dir}",
+  "@changeSkillAdded": {
+    "description": "History row caption.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.claude/skills"
+      }
+    }
+  },
+  "changeSkillUpdated": "its files changed",
+  "@changeSkillUpdated": {
+    "description": "History row caption."
+  },
+  "changeSkillRemoved": "removed from {dir}",
+  "@changeSkillRemoved": {
+    "description": "History row caption.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.claude/skills"
+      }
+    }
+  },
+  "changeMcpAdded": "added to {file}",
+  "@changeMcpAdded": {
+    "description": "History row caption.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude.json"
+      }
+    }
+  },
+  "changeMcpRemoved": "removed from {file}",
+  "@changeMcpRemoved": {
+    "description": "History row caption.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude.json"
+      }
+    }
+  },
+  "changesOpenCleanupCaption": "Hearth has counted the sizes",
+  "@changesOpenCleanupCaption": {
+    "description": "Caption under the link to Cleanup on the history page."
   }
 }

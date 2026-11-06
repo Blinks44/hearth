@@ -107,6 +107,19 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 			if !narrow(c) {
 				txt.MaxWidth(380)
 			}
+			// What the last check changed opens the history.
+			if n := a.changesSince(); n > 0 {
+				link := ui.ButtonBase(c.Key("changes-link")).Row().AlignSelf(ui.Start).Gap(4).AlignItems(ui.Center).
+					Label(locales.ChangesLink(n)).OnClick(func() { a.router.Push(changesPage.path) })
+				color := Accent
+				if link.Hovered() {
+					color = pal.AccentInk
+				}
+				link.Children(func() {
+					ui.Text(c, locales.ChangesLink(n)).FontSize(12.5).FontWeight(500).TextColor(color).SingleLine()
+					ui.Icon(c, Icon("chevron-right")).Size(12, 12).TextColor(color)
+				})
+			}
 		})
 		ui.Row(c).Gap(10).Shrink(0).Children(func() {
 			problems, dot := "—", pal.TextFaint

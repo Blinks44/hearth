@@ -7899,3 +7899,655 @@ func IssueExtraExplain(versions string) string { return In(i18n.Locale()).IssueE
 func (msgs Messages) IssueExtraExplain(versions string) string {
 	return Catalog.Format(msgs.locale, "issueExtraExplain", map[string]any{"versions": versions})
 }
+
+// ChangesTitle says "What changed"
+// in the language the app shows.
+//
+// Header of the history page; the sidebar status opens it.
+func ChangesTitle() string { return In(i18n.Locale()).ChangesTitle() }
+
+// ChangesTitle says "What changed"
+// in the language of msgs.
+//
+// Header of the history page; the sidebar status opens it.
+func (msgs Messages) ChangesTitle() string {
+	return Catalog.Format(msgs.locale, "changesTitle", nil)
+}
+
+// ChangesSubtitle says "Overview · history of checks"
+// in the language the app shows.
+//
+// Under the history page's title.
+func ChangesSubtitle() string { return In(i18n.Locale()).ChangesSubtitle() }
+
+// ChangesSubtitle says "Overview · history of checks"
+// in the language of msgs.
+//
+// Under the history page's title.
+func (msgs Messages) ChangesSubtitle() string {
+	return Catalog.Format(msgs.locale, "changesSubtitle", nil)
+}
+
+// ChangesLead says "Snapshots compared: what came, what updated and what went"
+// in the language the app shows.
+//
+// Under the history page's big title.
+func ChangesLead() string { return In(i18n.Locale()).ChangesLead() }
+
+// ChangesLead says "Snapshots compared: what came, what updated and what went"
+// in the language of msgs.
+//
+// Under the history page's big title.
+func (msgs Messages) ChangesLead() string {
+	return Catalog.Format(msgs.locale, "changesLead", nil)
+}
+
+// ChangesAdded says "Added"
+// in the language the app shows.
+//
+// History card and tab.
+func ChangesAdded() string { return In(i18n.Locale()).ChangesAdded() }
+
+// ChangesAdded says "Added"
+// in the language of msgs.
+//
+// History card and tab.
+func (msgs Messages) ChangesAdded() string {
+	return Catalog.Format(msgs.locale, "changesAdded", nil)
+}
+
+// ChangesUpdated says "Updated"
+// in the language the app shows.
+//
+// History card and tab.
+func ChangesUpdated() string { return In(i18n.Locale()).ChangesUpdated() }
+
+// ChangesUpdated says "Updated"
+// in the language of msgs.
+//
+// History card and tab.
+func (msgs Messages) ChangesUpdated() string {
+	return Catalog.Format(msgs.locale, "changesUpdated", nil)
+}
+
+// ChangesRemoved says "Removed"
+// in the language the app shows.
+//
+// History card and tab.
+func ChangesRemoved() string { return In(i18n.Locale()).ChangesRemoved() }
+
+// ChangesRemoved says "Removed"
+// in the language of msgs.
+//
+// History card and tab.
+func (msgs Messages) ChangesRemoved() string {
+	return Catalog.Format(msgs.locale, "changesRemoved", nil)
+}
+
+// ChangesSince says "since {date, date, ::MMMd}"
+// in the language the app shows.
+//
+// History card caption: since the oldest check kept.
+func ChangesSince(date time.Time) string { return In(i18n.Locale()).ChangesSince(date) }
+
+// ChangesSince says "since {date, date, ::MMMd}"
+// in the language of msgs.
+//
+// History card caption: since the oldest check kept.
+func (msgs Messages) ChangesSince(date time.Time) string {
+	return Catalog.Format(msgs.locale, "changesSince", map[string]any{"date": date})
+}
+
+// ChangesUpdatedCaption says "versions and packages"
+// in the language the app shows.
+//
+// History card caption.
+func ChangesUpdatedCaption() string { return In(i18n.Locale()).ChangesUpdatedCaption() }
+
+// ChangesUpdatedCaption says "versions and packages"
+// in the language of msgs.
+//
+// History card caption.
+func (msgs Messages) ChangesUpdatedCaption() string {
+	return Catalog.Format(msgs.locale, "changesUpdatedCaption", nil)
+}
+
+// ChangesRemovedCaption says "gone"
+// in the language the app shows.
+//
+// History card caption.
+func ChangesRemovedCaption() string { return In(i18n.Locale()).ChangesRemovedCaption() }
+
+// ChangesRemovedCaption says "gone"
+// in the language of msgs.
+//
+// History card caption.
+func (msgs Messages) ChangesRemovedCaption() string {
+	return Catalog.Format(msgs.locale, "changesRemovedCaption", nil)
+}
+
+// ChangesCount says "{count, plural, one {# change} other {# changes}}"
+// in the language the app shows.
+//
+// History group: changes of a check.
+func ChangesCount(count int) string { return In(i18n.Locale()).ChangesCount(count) }
+
+// ChangesCount says "{count, plural, one {# change} other {# changes}}"
+// in the language of msgs.
+//
+// History group: changes of a check.
+func (msgs Messages) ChangesCount(count int) string {
+	return Catalog.Format(msgs.locale, "changesCount", map[string]any{"count": count})
+}
+
+// ChangesToday says "Today, {time, time, short}"
+// in the language the app shows.
+//
+// History group: a check today.
+func ChangesToday(time_ time.Time) string { return In(i18n.Locale()).ChangesToday(time_) }
+
+// ChangesToday says "Today, {time, time, short}"
+// in the language of msgs.
+//
+// History group: a check today.
+func (msgs Messages) ChangesToday(time_ time.Time) string {
+	return Catalog.Format(msgs.locale, "changesToday", map[string]any{"time": time_})
+}
+
+// ChangesYesterday says "Yesterday, {time, time, short}"
+// in the language the app shows.
+//
+// History group: a check yesterday.
+func ChangesYesterday(time_ time.Time) string { return In(i18n.Locale()).ChangesYesterday(time_) }
+
+// ChangesYesterday says "Yesterday, {time, time, short}"
+// in the language of msgs.
+//
+// History group: a check yesterday.
+func (msgs Messages) ChangesYesterday(time_ time.Time) string {
+	return Catalog.Format(msgs.locale, "changesYesterday", map[string]any{"time": time_})
+}
+
+// ChangesOn says "{date, date, ::MMMMd}, {date, time, short}"
+// in the language the app shows.
+//
+// History group: a check on an earlier day.
+func ChangesOn(date time.Time) string { return In(i18n.Locale()).ChangesOn(date) }
+
+// ChangesOn says "{date, date, ::MMMMd}, {date, time, short}"
+// in the language of msgs.
+//
+// History group: a check on an earlier day.
+func (msgs Messages) ChangesOn(date time.Time) string {
+	return Catalog.Format(msgs.locale, "changesOn", map[string]any{"date": date})
+}
+
+// ChangesEmpty says "No changes yet: the history fills as checks find something new, updated or gone."
+// in the language the app shows.
+//
+// History without entries.
+func ChangesEmpty() string { return In(i18n.Locale()).ChangesEmpty() }
+
+// ChangesEmpty says "No changes yet: the history fills as checks find something new, updated or gone."
+// in the language of msgs.
+//
+// History without entries.
+func (msgs Messages) ChangesEmpty() string {
+	return Catalog.Format(msgs.locale, "changesEmpty", nil)
+}
+
+// ChangesNone says "No matching changes."
+// in the language the app shows.
+//
+// History filter matched nothing.
+func ChangesNone() string { return In(i18n.Locale()).ChangesNone() }
+
+// ChangesNone says "No matching changes."
+// in the language of msgs.
+//
+// History filter matched nothing.
+func (msgs Messages) ChangesNone() string {
+	return Catalog.Format(msgs.locale, "changesNone", nil)
+}
+
+// ChangesLink says "{count, plural, one {# change since the last check} other {# changes since the last check}}"
+// in the language the app shows.
+//
+// Overview link to the history.
+func ChangesLink(count int) string { return In(i18n.Locale()).ChangesLink(count) }
+
+// ChangesLink says "{count, plural, one {# change since the last check} other {# changes since the last check}}"
+// in the language of msgs.
+//
+// Overview link to the history.
+func (msgs Messages) ChangesLink(count int) string {
+	return Catalog.Format(msgs.locale, "changesLink", map[string]any{"count": count})
+}
+
+// ChangesTries says "Looks like a try"
+// in the language the app shows.
+//
+// History side card: cleanup candidates that came lately.
+func ChangesTries() string { return In(i18n.Locale()).ChangesTries() }
+
+// ChangesTries says "Looks like a try"
+// in the language of msgs.
+//
+// History side card: cleanup candidates that came lately.
+func (msgs Messages) ChangesTries() string {
+	return Catalog.Format(msgs.locale, "changesTries", nil)
+}
+
+// ChangesTryCaption says "came {date, date, ::MMMd} · no project asks for it"
+// in the language the app shows.
+//
+// History side card caption.
+func ChangesTryCaption(date time.Time) string { return In(i18n.Locale()).ChangesTryCaption(date) }
+
+// ChangesTryCaption says "came {date, date, ::MMMd} · no project asks for it"
+// in the language of msgs.
+//
+// History side card caption.
+func (msgs Messages) ChangesTryCaption(date time.Time) string {
+	return Catalog.Format(msgs.locale, "changesTryCaption", map[string]any{"date": date})
+}
+
+// ChangesNoTries says "Nothing that came in the history is left unused."
+// in the language the app shows.
+//
+// History side card without tries.
+func ChangesNoTries() string { return In(i18n.Locale()).ChangesNoTries() }
+
+// ChangesNoTries says "Nothing that came in the history is left unused."
+// in the language of msgs.
+//
+// History side card without tries.
+func (msgs Messages) ChangesNoTries() string {
+	return Catalog.Format(msgs.locale, "changesNoTries", nil)
+}
+
+// ChangesOpenCleanup says "Open in Cleanup"
+// in the language the app shows.
+//
+// Button of the history side card.
+func ChangesOpenCleanup() string { return In(i18n.Locale()).ChangesOpenCleanup() }
+
+// ChangesOpenCleanup says "Open in Cleanup"
+// in the language of msgs.
+//
+// Button of the history side card.
+func (msgs Messages) ChangesOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "changesOpenCleanup", nil)
+}
+
+// ChangesKept says "What the history keeps"
+// in the language the app shows.
+//
+// History side card.
+func ChangesKept() string { return In(i18n.Locale()).ChangesKept() }
+
+// ChangesKept says "What the history keeps"
+// in the language of msgs.
+//
+// History side card.
+func (msgs Messages) ChangesKept() string {
+	return Catalog.Format(msgs.locale, "changesKept", nil)
+}
+
+// ChangesKeptWhat says "Versions, sources, PATH"
+// in the language the app shows.
+//
+// History side card row.
+func ChangesKeptWhat() string { return In(i18n.Locale()).ChangesKeptWhat() }
+
+// ChangesKeptWhat says "Versions, sources, PATH"
+// in the language of msgs.
+//
+// History side card row.
+func (msgs Messages) ChangesKeptWhat() string {
+	return Catalog.Format(msgs.locale, "changesKeptWhat", nil)
+}
+
+// ChangesKeptWhatCaption says "and agents, skills and MCP"
+// in the language the app shows.
+//
+// History side card caption.
+func ChangesKeptWhatCaption() string { return In(i18n.Locale()).ChangesKeptWhatCaption() }
+
+// ChangesKeptWhatCaption says "and agents, skills and MCP"
+// in the language of msgs.
+//
+// History side card caption.
+func (msgs Messages) ChangesKeptWhatCaption() string {
+	return Catalog.Format(msgs.locale, "changesKeptWhatCaption", nil)
+}
+
+// ChangesKeptNoFiles says "No file contents"
+// in the language the app shows.
+//
+// History side card row.
+func ChangesKeptNoFiles() string { return In(i18n.Locale()).ChangesKeptNoFiles() }
+
+// ChangesKeptNoFiles says "No file contents"
+// in the language of msgs.
+//
+// History side card row.
+func (msgs Messages) ChangesKeptNoFiles() string {
+	return Catalog.Format(msgs.locale, "changesKeptNoFiles", nil)
+}
+
+// ChangesKeptNoFilesCaption says "no secrets or env values"
+// in the language the app shows.
+//
+// History side card caption.
+func ChangesKeptNoFilesCaption() string { return In(i18n.Locale()).ChangesKeptNoFilesCaption() }
+
+// ChangesKeptNoFilesCaption says "no secrets or env values"
+// in the language of msgs.
+//
+// History side card caption.
+func (msgs Messages) ChangesKeptNoFilesCaption() string {
+	return Catalog.Format(msgs.locale, "changesKeptNoFilesCaption", nil)
+}
+
+// ChangesKeptLast says "The last {count} checks with changes"
+// in the language the app shows.
+//
+// History side card row.
+func ChangesKeptLast(count int) string { return In(i18n.Locale()).ChangesKeptLast(count) }
+
+// ChangesKeptLast says "The last {count} checks with changes"
+// in the language of msgs.
+//
+// History side card row.
+func (msgs Messages) ChangesKeptLast(count int) string {
+	return Catalog.Format(msgs.locale, "changesKeptLast", map[string]any{"count": count})
+}
+
+// ChangesKeptLastCaption says "kept on this computer"
+// in the language the app shows.
+//
+// History side card caption.
+func ChangesKeptLastCaption() string { return In(i18n.Locale()).ChangesKeptLastCaption() }
+
+// ChangesKeptLastCaption says "kept on this computer"
+// in the language of msgs.
+//
+// History side card caption.
+func (msgs Messages) ChangesKeptLastCaption() string {
+	return Catalog.Format(msgs.locale, "changesKeptLastCaption", nil)
+}
+
+// ChangeCopyAdded says "came in {folder}"
+// in the language the app shows.
+//
+// History row: a new copy.
+func ChangeCopyAdded(folder string) string { return In(i18n.Locale()).ChangeCopyAdded(folder) }
+
+// ChangeCopyAdded says "came in {folder}"
+// in the language of msgs.
+//
+// History row: a new copy.
+func (msgs Messages) ChangeCopyAdded(folder string) string {
+	return Catalog.Format(msgs.locale, "changeCopyAdded", map[string]any{"folder": folder})
+}
+
+// ChangeCopyUpdated says "new version in {folder}"
+// in the language the app shows.
+//
+// History row: a copy's version changed.
+func ChangeCopyUpdated(folder string) string { return In(i18n.Locale()).ChangeCopyUpdated(folder) }
+
+// ChangeCopyUpdated says "new version in {folder}"
+// in the language of msgs.
+//
+// History row: a copy's version changed.
+func (msgs Messages) ChangeCopyUpdated(folder string) string {
+	return Catalog.Format(msgs.locale, "changeCopyUpdated", map[string]any{"folder": folder})
+}
+
+// ChangeCopyRemoved says "its folder is gone"
+// in the language the app shows.
+//
+// History row: a copy went.
+func ChangeCopyRemoved() string { return In(i18n.Locale()).ChangeCopyRemoved() }
+
+// ChangeCopyRemoved says "its folder is gone"
+// in the language of msgs.
+//
+// History row: a copy went.
+func (msgs Messages) ChangeCopyRemoved() string {
+	return Catalog.Format(msgs.locale, "changeCopyRemoved", nil)
+}
+
+// ChangeTerminal says "the terminal runs another version"
+// in the language the app shows.
+//
+// History row: the terminal's version changed.
+func ChangeTerminal() string { return In(i18n.Locale()).ChangeTerminal() }
+
+// ChangeTerminal says "the terminal runs another version"
+// in the language of msgs.
+//
+// History row: the terminal's version changed.
+func (msgs Messages) ChangeTerminal() string {
+	return Catalog.Format(msgs.locale, "changeTerminal", nil)
+}
+
+// ChangePackagesAdded says "{manager}: {count, plural, one {# package added} other {# packages added}}"
+// in the language the app shows.
+//
+// History row.
+func ChangePackagesAdded(manager string, count int) string {
+	return In(i18n.Locale()).ChangePackagesAdded(manager, count)
+}
+
+// ChangePackagesAdded says "{manager}: {count, plural, one {# package added} other {# packages added}}"
+// in the language of msgs.
+//
+// History row.
+func (msgs Messages) ChangePackagesAdded(manager string, count int) string {
+	return Catalog.Format(msgs.locale, "changePackagesAdded", map[string]any{"manager": manager, "count": count})
+}
+
+// ChangePackagesUpdated says "{manager}: {count, plural, one {# package updated} other {# packages updated}}"
+// in the language the app shows.
+//
+// History row.
+func ChangePackagesUpdated(manager string, count int) string {
+	return In(i18n.Locale()).ChangePackagesUpdated(manager, count)
+}
+
+// ChangePackagesUpdated says "{manager}: {count, plural, one {# package updated} other {# packages updated}}"
+// in the language of msgs.
+//
+// History row.
+func (msgs Messages) ChangePackagesUpdated(manager string, count int) string {
+	return Catalog.Format(msgs.locale, "changePackagesUpdated", map[string]any{"manager": manager, "count": count})
+}
+
+// ChangePackagesRemoved says "{manager}: {count, plural, one {# package removed} other {# packages removed}}"
+// in the language the app shows.
+//
+// History row.
+func ChangePackagesRemoved(manager string, count int) string {
+	return In(i18n.Locale()).ChangePackagesRemoved(manager, count)
+}
+
+// ChangePackagesRemoved says "{manager}: {count, plural, one {# package removed} other {# packages removed}}"
+// in the language of msgs.
+//
+// History row.
+func (msgs Messages) ChangePackagesRemoved(manager string, count int) string {
+	return Catalog.Format(msgs.locale, "changePackagesRemoved", map[string]any{"manager": manager, "count": count})
+}
+
+// ChangePathAdded says "PATH: a new entry"
+// in the language the app shows.
+//
+// History row.
+func ChangePathAdded() string { return In(i18n.Locale()).ChangePathAdded() }
+
+// ChangePathAdded says "PATH: a new entry"
+// in the language of msgs.
+//
+// History row.
+func (msgs Messages) ChangePathAdded() string {
+	return Catalog.Format(msgs.locale, "changePathAdded", nil)
+}
+
+// ChangePathRemoved says "PATH: an entry went"
+// in the language the app shows.
+//
+// History row.
+func ChangePathRemoved() string { return In(i18n.Locale()).ChangePathRemoved() }
+
+// ChangePathRemoved says "PATH: an entry went"
+// in the language of msgs.
+//
+// History row.
+func (msgs Messages) ChangePathRemoved() string {
+	return Catalog.Format(msgs.locale, "changePathRemoved", nil)
+}
+
+// ChangePathFrom says "{dir} · from {file}"
+// in the language the app shows.
+//
+// History row caption.
+func ChangePathFrom(dir string, file string) string {
+	return In(i18n.Locale()).ChangePathFrom(dir, file)
+}
+
+// ChangePathFrom says "{dir} · from {file}"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangePathFrom(dir string, file string) string {
+	return Catalog.Format(msgs.locale, "changePathFrom", map[string]any{"dir": dir, "file": file})
+}
+
+// ChangeAgentAdded says "the agent came"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeAgentAdded() string { return In(i18n.Locale()).ChangeAgentAdded() }
+
+// ChangeAgentAdded says "the agent came"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeAgentAdded() string {
+	return Catalog.Format(msgs.locale, "changeAgentAdded", nil)
+}
+
+// ChangeAgentUpdated says "the agent updated"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeAgentUpdated() string { return In(i18n.Locale()).ChangeAgentUpdated() }
+
+// ChangeAgentUpdated says "the agent updated"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeAgentUpdated() string {
+	return Catalog.Format(msgs.locale, "changeAgentUpdated", nil)
+}
+
+// ChangeAgentRemoved says "the agent is gone"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeAgentRemoved() string { return In(i18n.Locale()).ChangeAgentRemoved() }
+
+// ChangeAgentRemoved says "the agent is gone"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeAgentRemoved() string {
+	return Catalog.Format(msgs.locale, "changeAgentRemoved", nil)
+}
+
+// ChangeSkillAdded says "added in {dir}"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeSkillAdded(dir string) string { return In(i18n.Locale()).ChangeSkillAdded(dir) }
+
+// ChangeSkillAdded says "added in {dir}"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeSkillAdded(dir string) string {
+	return Catalog.Format(msgs.locale, "changeSkillAdded", map[string]any{"dir": dir})
+}
+
+// ChangeSkillUpdated says "its files changed"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeSkillUpdated() string { return In(i18n.Locale()).ChangeSkillUpdated() }
+
+// ChangeSkillUpdated says "its files changed"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeSkillUpdated() string {
+	return Catalog.Format(msgs.locale, "changeSkillUpdated", nil)
+}
+
+// ChangeSkillRemoved says "removed from {dir}"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeSkillRemoved(dir string) string { return In(i18n.Locale()).ChangeSkillRemoved(dir) }
+
+// ChangeSkillRemoved says "removed from {dir}"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeSkillRemoved(dir string) string {
+	return Catalog.Format(msgs.locale, "changeSkillRemoved", map[string]any{"dir": dir})
+}
+
+// ChangeMcpAdded says "added to {file}"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeMcpAdded(file string) string { return In(i18n.Locale()).ChangeMcpAdded(file) }
+
+// ChangeMcpAdded says "added to {file}"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeMcpAdded(file string) string {
+	return Catalog.Format(msgs.locale, "changeMcpAdded", map[string]any{"file": file})
+}
+
+// ChangeMcpRemoved says "removed from {file}"
+// in the language the app shows.
+//
+// History row caption.
+func ChangeMcpRemoved(file string) string { return In(i18n.Locale()).ChangeMcpRemoved(file) }
+
+// ChangeMcpRemoved says "removed from {file}"
+// in the language of msgs.
+//
+// History row caption.
+func (msgs Messages) ChangeMcpRemoved(file string) string {
+	return Catalog.Format(msgs.locale, "changeMcpRemoved", map[string]any{"file": file})
+}
+
+// ChangesOpenCleanupCaption says "Hearth has counted the sizes"
+// in the language the app shows.
+//
+// Caption under the link to Cleanup on the history page.
+func ChangesOpenCleanupCaption() string { return In(i18n.Locale()).ChangesOpenCleanupCaption() }
+
+// ChangesOpenCleanupCaption says "Hearth has counted the sizes"
+// in the language of msgs.
+//
+// Caption under the link to Cleanup on the history page.
+func (msgs Messages) ChangesOpenCleanupCaption() string {
+	return Catalog.Format(msgs.locale, "changesOpenCleanupCaption", nil)
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
 
+	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
@@ -57,6 +58,8 @@ type App struct {
 	// count under way.
 	Sizes    *inventory.Sizes
 	Counting bool
+	// History is what the last checks changed, the newest first.
+	History []history.Entry
 	// NodeVersions is what nodejs.org says of Node's versions; nil until
 	// the list comes, or when it could not, NodeVersionsErr says why.
 	NodeVersions    *versions.Node
@@ -126,6 +129,8 @@ type App struct {
 	packageManager string // the path of the package manager shown
 	packageFilter  string // the package table's filter
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
+	changesTab     int    // the What changed page's tab: all, added, updated, removed
+	changesFilter  string // the What changed table's filter
 	cleanupTab     int    // the Cleanup page's tab: all, then a group each
 	cleanupFilter  string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
@@ -187,6 +192,11 @@ func (a *App) View(c *ui.Context) {
 				id := r.Query("id")
 				r.Title(agentTitle(id))
 				a.agentDetail(c, id)
+				return
+			}
+			if r.Match(changesPage.path) {
+				r.Title(changesPage.title())
+				a.changesView(c, changesPage)
 				return
 			}
 			if r.Match(projectPage) {
@@ -417,8 +427,17 @@ func (a *App) status(c *ui.Context) {
 		dot, text = t.Success, checked(c, a.Snapshot.Taken)
 	}
 	ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(2, 2, 0, 9).Children(func() {
-		ui.Box(c).Size(6, 6).Radius(3).Background(dot)
-		ui.Text(c, text).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		// The status opens what the checks changed.
+		status := ui.ButtonBase(c.Key("changes")).Row().Grow(1).MinWidth(0).Gap(7).AlignItems(ui.Center).Radius(6).
+			Label(locales.ChangesTitle()).Tooltip(locales.ChangesTitle()).OnClick(func() { a.router.Push(changesPage.path) })
+		textColor := pal.TextFaint
+		if status.Hovered() {
+			textColor = t.TextMuted
+		}
+		status.Children(func() {
+			ui.Box(c).Size(6, 6).Radius(3).Background(dot)
+			ui.Text(c, text).FontSize(11.5).TextColor(textColor).Grow(1).SingleLine()
+		})
 		icon, mode := themeLook(a.ThemeMode)
 		theme := ui.ButtonBase(c.Key("theme")).Size(24, 24).Radius(6).Center().
 			Label(locales.ThemeButton(mode)).Tooltip(locales.ThemeButton(mode)).

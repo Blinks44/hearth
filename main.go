@@ -17,6 +17,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/disk"
+	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -170,6 +171,18 @@ func main() {
 		}
 		scanned := func(s inventory.Snapshot) {
 			win.Update(func() {
+				// What changed since the check before goes in the history.
+				if changes := history.Diff(a.Snapshot, &s, a.Sizes); len(changes) > 0 {
+					a.History = history.Add(a.History, history.Entry{Taken: s.Taken, Changes: changes})
+					if cache != "" {
+						entries := slices.Clone(a.History)
+						go func() {
+							if err := store.SaveHistory(cache, entries); err != nil {
+								log.Print(err)
+							}
+						}()
+					}
+				}
 				a.Snapshot, a.Scanning = &s, false
 				if fetchPackages != nil {
 					fetchPackages()
@@ -334,6 +347,19 @@ func main() {
 		// The last snapshot shows at once, until the scan replaces it.
 		if cache != "" {
 			go func() {
+				// The history comes before the snapshot: a scan compares
+				// with the snapshot only once the history is there.
+				entries, err := store.LoadHistory(cache)
+				switch {
+				case err == nil:
+					win.Update(func() {
+						if a.History == nil {
+							a.History = entries
+						}
+					})
+				case !errors.Is(err, os.ErrNotExist):
+					log.Print(err)
+				}
 				s, err := store.LoadSnapshot(cache)
 				switch {
 				case err == nil:
