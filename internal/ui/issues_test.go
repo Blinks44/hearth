@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -95,5 +96,16 @@ func TestIssueTextStub(t *testing.T) {
 	is.Copies[0].OnPath = 2
 	if title, _ := issueText(is, ""); title != "A Python stub is in PATH" {
 		t.Errorf("behind a copy: got %q", title)
+	}
+}
+
+// A shim's version is unknown until it runs: the sentence still reads.
+func TestDuplicateUnknownVersion(t *testing.T) {
+	_, explain := issueText(issues.Issue{Kind: issues.Duplicate, Tool: "pnpm", Copies: []inventory.Installation{
+		{Source: inventory.Source{Manager: "corepack", Shim: true}},
+		{Version: "12.16.1", Source: inventory.Source{Manager: "winget"}},
+	}}, "")
+	if !strings.Contains(explain, "a copy of unknown version") {
+		t.Fatal(explain)
 	}
 }

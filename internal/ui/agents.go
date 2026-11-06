@@ -442,7 +442,9 @@ func (a *App) agentsNotFound(c *ui.Context) {
 		for _, ag := range missing {
 			caption := ""
 			// Skills directories other agents share say nothing of this one.
-			if slices.ContainsFunc(ag.Files, func(f inventory.AgentFile) bool { return strings.HasPrefix(filepath.ToSlash(f.Path), filepath.ToSlash(ag.Dir)+"/") }) {
+			if slices.ContainsFunc(ag.Files, func(f inventory.AgentFile) bool {
+				return strings.HasPrefix(filepath.ToSlash(f.Path), filepath.ToSlash(ag.Dir)+"/")
+			}) {
 				caption = locales.SettingsLeft(tilde(ag.Dir, a.Home))
 			}
 			listRow(c, agentTitle(ag.ID), false, caption, func() {})

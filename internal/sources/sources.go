@@ -117,6 +117,7 @@ func rulesFor(env sysenv.Env) []rule {
 	}
 	add(d.N, "n/versions/*/@", vm, "n")
 	add(d.NvmWindows, "@", vm, "nvm-windows")
+	add(sub(env.Get("APPDATA"), "npm"), "", pm, "npm")
 	add(scoop, "apps/*/@", pm, "scoop")
 	add(scoopGlobal, "apps/*/@", pm, "scoop")
 	add(choco, "lib/*", pm, "choco")

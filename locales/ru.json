@@ -140,6 +140,7 @@
   "aiSkills": "скиллы для агентов",
   "backToProjects": "К проектам",
   "issueDuplicateTitle": "{tool}: {count, plural, one {# копия} few {# копии} many {# копий} other {# копии}} в PATH",
+  "copyOfUnknownVersion": "копию неизвестной версии",
   "issueDuplicateExplain": "Терминал запускает {first} ({source}). Остальные копии в PATH ({others}) не запускаются никогда, и легко обновить не ту.",
   "shimOf": "шим {manager}",
   "issueGuiTitle": "{tool} вне терминала другой",

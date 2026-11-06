@@ -815,6 +815,7 @@
       }
     }
   },
+  "copyOfUnknownVersion": "a copy of unknown version",
   "issueDuplicateExplain": "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wrong one.",
   "@issueDuplicateExplain": {
     "description": "Issue explanation: which copy runs, and that the others never do.",

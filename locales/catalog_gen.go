@@ -2028,6 +2028,16 @@ func (msgs Messages) IssueDuplicateTitle(tool string, count int) string {
 	return Catalog.Format(msgs.locale, "issueDuplicateTitle", map[string]any{"tool": tool, "count": count})
 }
 
+// CopyOfUnknownVersion says "a copy of unknown version"
+// in the language the app shows.
+func CopyOfUnknownVersion() string { return In(i18n.Locale()).CopyOfUnknownVersion() }
+
+// CopyOfUnknownVersion says "a copy of unknown version"
+// in the language of msgs.
+func (msgs Messages) CopyOfUnknownVersion() string {
+	return Catalog.Format(msgs.locale, "copyOfUnknownVersion", nil)
+}
+
 // IssueDuplicateExplain says "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wro…"
 // in the language the app shows.
 //

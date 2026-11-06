@@ -68,6 +68,10 @@ func addRoot(roots []skillsRoot, path, agent string) []skillsRoot {
 	return append(roots, skillsRoot{path, []string{agent}})
 }
 
+// linkMode covers Windows' junctions too, which Go reports as irregular:
+// they are how a user without the symlink right shares a folder there.
+const linkMode = fs.ModeSymlink | fs.ModeIrregular
+
 // readSkills reads the skills in roots, a folder that several paths lead
 // to once, in the order found.
 func readSkills(roots []skillsRoot, project string) []inventory.Skill {
@@ -79,7 +83,7 @@ func readSkills(roots []skillsRoot, project string) []inventory.Skill {
 			continue
 		}
 		var found []foundSkill
-		findSkills(r.path, info.Mode()&fs.ModeSymlink != 0, maxDepth, &found)
+		findSkills(r.path, info.Mode()&linkMode != 0, maxDepth, &found)
 		for _, f := range found {
 			p := inventory.SkillPath{Path: f.path, Link: f.link, Agents: r.agents}
 			if f.broken {
@@ -120,7 +124,7 @@ func findSkills(dir string, link bool, depth int, out *[]foundSkill) {
 			continue
 		}
 		p := filepath.Join(dir, e.Name())
-		symlink := e.Type()&fs.ModeSymlink != 0
+		symlink := e.Type()&linkMode != 0
 		info, err := os.Stat(p)
 		switch {
 		case err != nil:

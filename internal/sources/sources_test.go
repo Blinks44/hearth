@@ -108,6 +108,8 @@ func TestClassify(t *testing.T) {
 			inventory.Source{Kind: inst, Root: "/opt"}},
 
 		// Windows
+		{"npm global windows", winEnv, `C:\Users\Ann\AppData\Roaming\npm\claude.cmd`, "",
+			inventory.Source{Kind: pm, Manager: "npm", Root: `C:\Users\Ann\AppData\Roaming\npm`}},
 		{"uv windows", winEnv, `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none\python.exe`, "",
 			inventory.Source{Kind: vm, Manager: "uv", Root: `C:\Users\Ann\AppData\Roaming\uv\python\cpython-3.12.8-windows-x86_64-none`, Version: "3.12.8"}},
 		{"python install manager", winEnv, `C:\Users\Ann\AppData\Local\Python\pythoncore-3.14-arm64\python.exe`, "",

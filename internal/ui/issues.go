@@ -24,12 +24,16 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		return locales.DockerDeniedTitle(), locales.DockerDeniedExplain()
 	case issues.Duplicate:
 		first := is.Copies[0]
+		version := copyVersion(first)
+		if first.Version == "" {
+			version = locales.CopyOfUnknownVersion()
+		}
 		var others []string
 		for _, in := range is.Copies[1:] {
 			others = append(others, copyVersion(in)+" ("+copySource(in)+")")
 		}
 		return locales.IssueDuplicateTitle(tool, len(is.Copies)),
-			locales.IssueDuplicateExplain(copyVersion(first), copySource(first), strings.Join(others, ", "))
+			locales.IssueDuplicateExplain(version, copySource(first), strings.Join(others, ", "))
 	case issues.GUIDiffers:
 		if len(is.Copies) < 2 {
 			return locales.IssueGuiMissingTitle(tool), locales.GuiNotFound(is.Tool)

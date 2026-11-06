@@ -140,7 +140,7 @@ func (a *App) jsTable(c *ui.Context) {
 							ui.Text(c, locales.JsCorepackShim()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 						}
 					})
-					ui.Row(c).Width(70).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
+					ui.Row(c).Width(100).Shrink(0).Children(func() { sourceBadge(c, in.Source) })
 					ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 						ui.Text(c, tilde(in.Path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted).SingleLine()
 						ui.Row(c).Gap(5).Wrap().Children(func() {
