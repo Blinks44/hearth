@@ -162,6 +162,8 @@ type ToolState struct {
 	// Databases are the local servers, clients and listeners, for
 	// "databases" only.
 	Databases *DatabaseState `json:",omitempty"`
+	// Git is how Git is set up, for "git" only.
+	Git *GitState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
 	// only.
 	PackageManagers []PackageManager `json:",omitempty"`
@@ -339,9 +341,10 @@ func (s *Snapshot) Tool(id string) (ToolState, bool) {
 }
 
 // NeededBySystem reports a copy the OS itself runs, as the system's
-// Python: it is no duplicate to remove, whatever comes before it.
+// Python or macOS's Git from the Command Line Tools: it is no duplicate
+// to remove, whatever comes before it.
 func NeededBySystem(in Installation) bool {
-	return (in.Tool == "python" || in.Tool == "ruby") && in.Source.Kind == KindSystem
+	return (in.Tool == "python" || in.Tool == "ruby" || in.Tool == "git") && in.Source.Kind == KindSystem
 }
 
 // TerminalCopy returns the index of the copy in ins the terminal runs, or

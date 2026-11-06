@@ -39,6 +39,7 @@ var Detectors = []Detector{
 	{"java", detect.Java},
 	{"ruby", detect.Ruby},
 	{"dotnet", detect.Dotnet},
+	{"git", detect.Git},
 	{"docker", detect.Docker},
 	{"databases", detect.Databases},
 	{"packages", pkgmgr.Detect},

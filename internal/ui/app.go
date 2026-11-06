@@ -132,6 +132,7 @@ type App struct {
 	packageManager string // the path of the package manager shown
 	packageFilter  string // the package table's filter
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
+	gitTab         int    // the Git page's tab: installed, settings, PATH
 	changesTab     int    // the What changed page's tab: all, added, updated, removed
 	changesFilter  string // the What changed table's filter
 	cleanupTab     int    // the Cleanup page's tab: all, then a group each
@@ -224,6 +225,8 @@ func (a *App) View(c *ui.Context) {
 						a.packages(c, p)
 					case "/tools/databases":
 						a.databases(c, p)
+					case gitPage:
+						a.gitPageView(c, p)
 					case "/tools/docker":
 						a.docker(c, p)
 					case "/tools/bun":
@@ -390,6 +393,13 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		}
 	case pathPage:
 		return a.issueCount(c)
+	case gitPage:
+		// The version the terminal runs, as the languages show theirs.
+		if v := a.version("git"); v != "" {
+			return func() {
+				ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+			}
+		}
 	}
 	if n == 0 {
 		return nil

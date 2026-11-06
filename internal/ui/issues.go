@@ -150,6 +150,8 @@ func issuePage(is issues.Issue) string {
 		return projectPath(is.Project)
 	case is.Tool == "docker":
 		return "/tools/docker"
+	case is.Tool == "git":
+		return gitPage
 	case jsTool(is.Tool):
 		return "/tools/jspm"
 	case is.Tool != "":

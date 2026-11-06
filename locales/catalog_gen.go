@@ -8593,3 +8593,325 @@ func ReportCopied() string { return In(i18n.Locale()).ReportCopied() }
 func (msgs Messages) ReportCopied() string {
 	return Catalog.Format(msgs.locale, "reportCopied", nil)
 }
+
+// SectionToolsVcs says "Tools · version control"
+// in the language the app shows.
+//
+// Subtitle of the Git page.
+func SectionToolsVcs() string { return In(i18n.Locale()).SectionToolsVcs() }
+
+// SectionToolsVcs says "Tools · version control"
+// in the language of msgs.
+//
+// Subtitle of the Git page.
+func (msgs Messages) SectionToolsVcs() string {
+	return Catalog.Format(msgs.locale, "sectionToolsVcs", nil)
+}
+
+// GitSettingsTab says "Settings"
+// in the language the app shows.
+//
+// Git page tab: global settings, credentials, SSH keys.
+func GitSettingsTab() string { return In(i18n.Locale()).GitSettingsTab() }
+
+// GitSettingsTab says "Settings"
+// in the language of msgs.
+//
+// Git page tab: global settings, credentials, SSH keys.
+func (msgs Messages) GitSettingsTab() string {
+	return Catalog.Format(msgs.locale, "gitSettingsTab", nil)
+}
+
+// GitSystemNote says "The system's Git is the OS's own (on macOS from the Command Line Tools): Hearth does not remove or update it."
+// in the language the app shows.
+//
+// Note under Git's copies.
+func GitSystemNote() string { return In(i18n.Locale()).GitSystemNote() }
+
+// GitSystemNote says "The system's Git is the OS's own (on macOS from the Command Line Tools): Hearth does not remove or update it."
+// in the language of msgs.
+//
+// Note under Git's copies.
+func (msgs Messages) GitSystemNote() string {
+	return Catalog.Format(msgs.locale, "gitSystemNote", nil)
+}
+
+// GitUser says "User"
+// in the language the app shows.
+//
+// Git page card: user.name.
+func GitUser() string { return In(i18n.Locale()).GitUser() }
+
+// GitUser says "User"
+// in the language of msgs.
+//
+// Git page card: user.name.
+func (msgs Messages) GitUser() string {
+	return Catalog.Format(msgs.locale, "gitUser", nil)
+}
+
+// GitGlobal says "Global settings"
+// in the language the app shows.
+//
+// Git page card.
+func GitGlobal() string { return In(i18n.Locale()).GitGlobal() }
+
+// GitGlobal says "Global settings"
+// in the language of msgs.
+//
+// Git page card.
+func (msgs Messages) GitGlobal() string {
+	return Catalog.Format(msgs.locale, "gitGlobal", nil)
+}
+
+// GitNoSettings says "No global settings Hearth shows are set."
+// in the language the app shows.
+//
+// Git page card without settings.
+func GitNoSettings() string { return In(i18n.Locale()).GitNoSettings() }
+
+// GitNoSettings says "No global settings Hearth shows are set."
+// in the language of msgs.
+//
+// Git page card without settings.
+func (msgs Messages) GitNoSettings() string {
+	return Catalog.Format(msgs.locale, "gitNoSettings", nil)
+}
+
+// GitConfigFailed says "git config could not be read: {err}"
+// in the language the app shows.
+//
+// Git page card error.
+func GitConfigFailed(err string) string { return In(i18n.Locale()).GitConfigFailed(err) }
+
+// GitConfigFailed says "git config could not be read: {err}"
+// in the language of msgs.
+//
+// Git page card error.
+func (msgs Messages) GitConfigFailed(err string) string {
+	return Catalog.Format(msgs.locale, "gitConfigFailed", map[string]any{"err": err})
+}
+
+// GitCredentials says "Credentials"
+// in the language the app shows.
+//
+// Git page card: credential helpers and GitHub CLI.
+func GitCredentials() string { return In(i18n.Locale()).GitCredentials() }
+
+// GitCredentials says "Credentials"
+// in the language of msgs.
+//
+// Git page card: credential helpers and GitHub CLI.
+func (msgs Messages) GitCredentials() string {
+	return Catalog.Format(msgs.locale, "gitCredentials", nil)
+}
+
+// GitNoHelper says "No credential helper: git asks for passwords each time."
+// in the language the app shows.
+//
+// Git page card without helpers.
+func GitNoHelper() string { return In(i18n.Locale()).GitNoHelper() }
+
+// GitNoHelper says "No credential helper: git asks for passwords each time."
+// in the language of msgs.
+//
+// Git page card without helpers.
+func (msgs Messages) GitNoHelper() string {
+	return Catalog.Format(msgs.locale, "gitNoHelper", nil)
+}
+
+// GitHelperKeychain says "macOS keychain"
+// in the language the app shows.
+//
+// A credential helper's name.
+func GitHelperKeychain() string { return In(i18n.Locale()).GitHelperKeychain() }
+
+// GitHelperKeychain says "macOS keychain"
+// in the language of msgs.
+//
+// A credential helper's name.
+func (msgs Messages) GitHelperKeychain() string {
+	return Catalog.Format(msgs.locale, "gitHelperKeychain", nil)
+}
+
+// GitHelperLibsecret says "GNOME keyring"
+// in the language the app shows.
+//
+// A credential helper's name.
+func GitHelperLibsecret() string { return In(i18n.Locale()).GitHelperLibsecret() }
+
+// GitHelperLibsecret says "GNOME keyring"
+// in the language of msgs.
+//
+// A credential helper's name.
+func (msgs Messages) GitHelperLibsecret() string {
+	return Catalog.Format(msgs.locale, "gitHelperLibsecret", nil)
+}
+
+// GitHelperStore says "Plain file"
+// in the language the app shows.
+//
+// A credential helper's name: git-credential-store.
+func GitHelperStore() string { return In(i18n.Locale()).GitHelperStore() }
+
+// GitHelperStore says "Plain file"
+// in the language of msgs.
+//
+// A credential helper's name: git-credential-store.
+func (msgs Messages) GitHelperStore() string {
+	return Catalog.Format(msgs.locale, "gitHelperStore", nil)
+}
+
+// GitHelperCache says "Memory cache"
+// in the language the app shows.
+//
+// A credential helper's name: git-credential-cache.
+func GitHelperCache() string { return In(i18n.Locale()).GitHelperCache() }
+
+// GitHelperCache says "Memory cache"
+// in the language of msgs.
+//
+// A credential helper's name: git-credential-cache.
+func (msgs Messages) GitHelperCache() string {
+	return Catalog.Format(msgs.locale, "gitHelperCache", nil)
+}
+
+// GitHelperSecrets says "passwords and tokens are kept there"
+// in the language the app shows.
+//
+// Caption of a credential helper.
+func GitHelperSecrets() string { return In(i18n.Locale()).GitHelperSecrets() }
+
+// GitHelperSecrets says "passwords and tokens are kept there"
+// in the language of msgs.
+//
+// Caption of a credential helper.
+func (msgs Messages) GitHelperSecrets() string {
+	return Catalog.Format(msgs.locale, "gitHelperSecrets", nil)
+}
+
+// GitHelperStorePlain says "tokens in ~/.git-credentials as plain text"
+// in the language the app shows.
+//
+// Caption of the store helper.
+func GitHelperStorePlain() string { return In(i18n.Locale()).GitHelperStorePlain() }
+
+// GitHelperStorePlain says "tokens in ~/.git-credentials as plain text"
+// in the language of msgs.
+//
+// Caption of the store helper.
+func (msgs Messages) GitHelperStorePlain() string {
+	return Catalog.Format(msgs.locale, "gitHelperStorePlain", nil)
+}
+
+// GitHubSignedIn says "signed in to {hosts} · the token is not shown"
+// in the language the app shows.
+//
+// GitHub CLI row.
+func GitHubSignedIn(hosts string) string { return In(i18n.Locale()).GitHubSignedIn(hosts) }
+
+// GitHubSignedIn says "signed in to {hosts} · the token is not shown"
+// in the language of msgs.
+//
+// GitHub CLI row.
+func (msgs Messages) GitHubSignedIn(hosts string) string {
+	return Catalog.Format(msgs.locale, "gitHubSignedIn", map[string]any{"hosts": hosts})
+}
+
+// GitHubSignedOut says "not signed in"
+// in the language the app shows.
+//
+// GitHub CLI row.
+func GitHubSignedOut() string { return In(i18n.Locale()).GitHubSignedOut() }
+
+// GitHubSignedOut says "not signed in"
+// in the language of msgs.
+//
+// GitHub CLI row.
+func (msgs Messages) GitHubSignedOut() string {
+	return Catalog.Format(msgs.locale, "gitHubSignedOut", nil)
+}
+
+// GitSSHKeys says "SSH keys"
+// in the language the app shows.
+//
+// Git page card.
+func GitSSHKeys() string { return In(i18n.Locale()).GitSSHKeys() }
+
+// GitSSHKeys says "SSH keys"
+// in the language of msgs.
+//
+// Git page card.
+func (msgs Messages) GitSSHKeys() string {
+	return Catalog.Format(msgs.locale, "gitSSHKeys", nil)
+}
+
+// GitSSHAside says "~/.ssh · no contents"
+// in the language the app shows.
+//
+// Git page card aside.
+func GitSSHAside() string { return In(i18n.Locale()).GitSSHAside() }
+
+// GitSSHAside says "~/.ssh · no contents"
+// in the language of msgs.
+//
+// Git page card aside.
+func (msgs Messages) GitSSHAside() string {
+	return Catalog.Format(msgs.locale, "gitSSHAside", nil)
+}
+
+// GitSSHFor says "for {hosts}"
+// in the language the app shows.
+//
+// SSH key caption: hosts ~/.ssh/config gives it to.
+func GitSSHFor(hosts string) string { return In(i18n.Locale()).GitSSHFor(hosts) }
+
+// GitSSHFor says "for {hosts}"
+// in the language of msgs.
+//
+// SSH key caption: hosts ~/.ssh/config gives it to.
+func (msgs Messages) GitSSHFor(hosts string) string {
+	return Catalog.Format(msgs.locale, "gitSSHFor", map[string]any{"hosts": hosts})
+}
+
+// GitSSHInAgent says "in ssh-agent"
+// in the language the app shows.
+//
+// SSH key caption.
+func GitSSHInAgent() string { return In(i18n.Locale()).GitSSHInAgent() }
+
+// GitSSHInAgent says "in ssh-agent"
+// in the language of msgs.
+//
+// SSH key caption.
+func (msgs Messages) GitSSHInAgent() string {
+	return Catalog.Format(msgs.locale, "gitSSHInAgent", nil)
+}
+
+// GitSSHUnused says "not in the SSH config or the agent"
+// in the language the app shows.
+//
+// SSH key caption.
+func GitSSHUnused() string { return In(i18n.Locale()).GitSSHUnused() }
+
+// GitSSHUnused says "not in the SSH config or the agent"
+// in the language of msgs.
+//
+// SSH key caption.
+func (msgs Messages) GitSSHUnused() string {
+	return Catalog.Format(msgs.locale, "gitSSHUnused", nil)
+}
+
+// GitNoSSHKeys says "No SSH keys in ~/.ssh."
+// in the language the app shows.
+//
+// Git page card without keys.
+func GitNoSSHKeys() string { return In(i18n.Locale()).GitNoSSHKeys() }
+
+// GitNoSSHKeys says "No SSH keys in ~/.ssh."
+// in the language of msgs.
+//
+// Git page card without keys.
+func (msgs Messages) GitNoSSHKeys() string {
+	return Catalog.Format(msgs.locale, "gitNoSSHKeys", nil)
+}

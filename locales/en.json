@@ -2949,5 +2949,115 @@
   "reportCopied": "Report copied",
   "@reportCopied": {
     "description": "Toast after the report is copied."
+  },
+  "sectionToolsVcs": "Tools · version control",
+  "@sectionToolsVcs": {
+    "description": "Subtitle of the Git page."
+  },
+  "gitSettingsTab": "Settings",
+  "@gitSettingsTab": {
+    "description": "Git page tab: global settings, credentials, SSH keys."
+  },
+  "gitSystemNote": "The system's Git is the OS's own (on macOS from the Command Line Tools): Hearth does not remove or update it.",
+  "@gitSystemNote": {
+    "description": "Note under Git's copies."
+  },
+  "gitUser": "User",
+  "@gitUser": {
+    "description": "Git page card: user.name."
+  },
+  "gitGlobal": "Global settings",
+  "@gitGlobal": {
+    "description": "Git page card."
+  },
+  "gitNoSettings": "No global settings Hearth shows are set.",
+  "@gitNoSettings": {
+    "description": "Git page card without settings."
+  },
+  "gitConfigFailed": "git config could not be read: {err}",
+  "@gitConfigFailed": {
+    "description": "Git page card error.",
+    "placeholders": {
+      "err": {
+        "type": "String",
+        "example": "timeout"
+      }
+    }
+  },
+  "gitCredentials": "Credentials",
+  "@gitCredentials": {
+    "description": "Git page card: credential helpers and GitHub CLI."
+  },
+  "gitNoHelper": "No credential helper: git asks for passwords each time.",
+  "@gitNoHelper": {
+    "description": "Git page card without helpers."
+  },
+  "gitHelperKeychain": "macOS keychain",
+  "@gitHelperKeychain": {
+    "description": "A credential helper's name."
+  },
+  "gitHelperLibsecret": "GNOME keyring",
+  "@gitHelperLibsecret": {
+    "description": "A credential helper's name."
+  },
+  "gitHelperStore": "Plain file",
+  "@gitHelperStore": {
+    "description": "A credential helper's name: git-credential-store."
+  },
+  "gitHelperCache": "Memory cache",
+  "@gitHelperCache": {
+    "description": "A credential helper's name: git-credential-cache."
+  },
+  "gitHelperSecrets": "passwords and tokens are kept there",
+  "@gitHelperSecrets": {
+    "description": "Caption of a credential helper."
+  },
+  "gitHelperStorePlain": "tokens in ~/.git-credentials as plain text",
+  "@gitHelperStorePlain": {
+    "description": "Caption of the store helper."
+  },
+  "gitHubSignedIn": "signed in to {hosts} · the token is not shown",
+  "@gitHubSignedIn": {
+    "description": "GitHub CLI row.",
+    "placeholders": {
+      "hosts": {
+        "type": "String",
+        "example": "github.com · ann"
+      }
+    }
+  },
+  "gitHubSignedOut": "not signed in",
+  "@gitHubSignedOut": {
+    "description": "GitHub CLI row."
+  },
+  "gitSSHKeys": "SSH keys",
+  "@gitSSHKeys": {
+    "description": "Git page card."
+  },
+  "gitSSHAside": "~/.ssh · no contents",
+  "@gitSSHAside": {
+    "description": "Git page card aside."
+  },
+  "gitSSHFor": "for {hosts}",
+  "@gitSSHFor": {
+    "description": "SSH key caption: hosts ~/.ssh/config gives it to.",
+    "placeholders": {
+      "hosts": {
+        "type": "String",
+        "example": "github.com"
+      }
+    }
+  },
+  "gitSSHInAgent": "in ssh-agent",
+  "@gitSSHInAgent": {
+    "description": "SSH key caption."
+  },
+  "gitSSHUnused": "not in the SSH config or the agent",
+  "@gitSSHUnused": {
+    "description": "SSH key caption."
+  },
+  "gitNoSSHKeys": "No SSH keys in ~/.ssh.",
+  "@gitNoSSHKeys": {
+    "description": "Git page card without keys."
   }
 }

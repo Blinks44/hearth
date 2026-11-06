@@ -815,7 +815,7 @@ func aiFileCaption(f string) string {
 var toolTitles = map[string]string{
 	"node": "Node", "npm": "npm", "pnpm": "pnpm", "yarn": "Yarn", "bun": "Bun", "deno": "Deno",
 	"python": "Python", "uv": "uv", "rust": "Rust", "go": "Go", "java": "Java", "ruby": "Ruby",
-	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker",
+	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker", "git": "Git",
 }
 
 func toolTitle(id string) string {
@@ -833,8 +833,8 @@ func toolIcon(id string) *ui.SVG {
 		}
 	}
 	switch id {
-	case "npm", "pnpm", "docker":
-		return Brand(map[string]string{"npm": "npm", "pnpm": "pnpm", "docker": "docker"}[id])
+	case "npm", "pnpm", "docker", "git":
+		return Brand(id)
 	}
 	return Icon("package")
 }
