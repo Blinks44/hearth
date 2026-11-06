@@ -256,13 +256,7 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 			}
 		})
 		detailSection(c, locales.AvailableToAgents())
-		ids := a.foundIDs()
-		for _, id := range skillAgents(sk) {
-			if !slices.Contains(ids, id) {
-				ids = append(ids, id)
-			}
-		}
-		for _, id := range ids {
+		for _, id := range a.foundIDs() {
 			var via *inventory.SkillPath
 			for i, p := range sk.Paths {
 				if slices.Contains(p.Agents, id) {

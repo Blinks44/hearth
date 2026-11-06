@@ -441,7 +441,8 @@ func (a *App) agentsNotFound(c *ui.Context) {
 	listCard(c, locales.NotFoundHere(), locales.NotFoundWhere(), func() {
 		for _, ag := range missing {
 			caption := ""
-			if len(ag.Files) > 0 {
+			// Skills directories other agents share say nothing of this one.
+			if slices.ContainsFunc(ag.Files, func(f inventory.AgentFile) bool { return strings.HasPrefix(f.Path, ag.Dir+string(filepath.Separator)) }) {
 				caption = locales.SettingsLeft(tilde(ag.Dir, a.Home))
 			}
 			listRow(c, agentTitle(ag.ID), false, caption, func() {})

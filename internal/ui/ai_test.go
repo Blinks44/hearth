@@ -32,7 +32,7 @@ func aiSnapshot() *inventory.Snapshot {
 			{ID: "codex", Dir: home + "/.codex", Installations: []inventory.Installation{
 				{Tool: "codex", Version: "0.166.0", Path: home + "/.npm/bin/codex", OnPath: 1, InGUI: 1, Source: npm},
 			}, Files: []inventory.AgentFile{{Path: home + "/.codex/AGENTS.md", Kind: inventory.FileInstructions}}},
-			{ID: "copilot"},
+			{ID: "copilot", Dir: home + "/.copilot", Files: []inventory.AgentFile{{Path: home + "/.agents/skills"}}},
 			{ID: "gemini", Dir: home + "/.gemini", Files: []inventory.AgentFile{{Path: home + "/.gemini/settings.json"}}},
 		},
 		Skills: []inventory.Skill{
@@ -81,6 +81,9 @@ func TestAgentsPage(t *testing.T) {
 	hasTexts(t, tt, "AI agents", "Claude Code", "/opt/homebrew/bin/claude", "2.1.308", "brew", "CLAUDE.md",
 		"Codex", "~/.npm/bin/codex", "0.166.0", "npm", "AGENTS.md",
 		"Not found on this computer", "Copilot CLI", "Gemini CLI", "settings left in ~/.gemini")
+	if tt.HasText("settings left in ~/.copilot") {
+		t.Fatal("a shared skills directory told as this agent's settings")
+	}
 	if err := tt.Click("Claude Code"); err != nil {
 		t.Fatal(err)
 	}
