@@ -3125,5 +3125,121 @@
   "cliHowMiseCaption": "installs/ without running mise",
   "@cliHowMiseCaption": {
     "description": "CLI page side card caption."
+  },
+  "sectionLanguagesCpp": "Languages & runtimes · compilers and build",
+  "@sectionLanguagesCpp": {
+    "description": "Subtitle of the C/C++ page."
+  },
+  "cppCompiler": "Compiler",
+  "@cppCompiler": {
+    "description": "C/C++ page header card: what cc runs."
+  },
+  "cppBuild": "Build",
+  "@cppBuild": {
+    "description": "C/C++ page header card: the build system."
+  },
+  "cppCache": "Build cache",
+  "@cppCache": {
+    "description": "C/C++ page header card and side card: ccache."
+  },
+  "cppCommand": "command {command}",
+  "@cppCommand": {
+    "description": "Chip of a versioned compiler: it runs only by its own name.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "gcc-14"
+      }
+    }
+  },
+  "cppNoTools": "No compilers or build tools on the terminal's PATH.",
+  "@cppNoTools": {
+    "description": "C/C++ page without tools."
+  },
+  "cppNoteClt": "The Command Line Tools come from macOS, which installs and updates them. On Linux their place is build-essential, on Windows MSVC Build Tools.",
+  "@cppNoteClt": {
+    "description": "Note under the C/C++ table on macOS."
+  },
+  "cppNoteBuildEssential": "build-essential is the distribution's package: gcc, g++ and make come with it and apt updates them.",
+  "@cppNoteBuildEssential": {
+    "description": "Note under the C/C++ table on Debian and Ubuntu."
+  },
+  "cppNoteMsvc": "MSVC's compiler cl runs in the Developer prompt Visual Studio Installer sets up, not in an ordinary terminal.",
+  "@cppNoteMsvc": {
+    "description": "Note under the C/C++ table on Windows."
+  },
+  "cppGccIsClang": "On macOS the gcc command runs clang. The real GCC {version} is {command}: projects that need GCC set CC={command}.",
+  "@cppGccIsClang": {
+    "description": "Warning on the C/C++ page.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "14"
+      },
+      "command": {
+        "type": "String",
+        "example": "gcc-14"
+      }
+    }
+  },
+  "cppGccIsClangOnly": "On macOS the gcc command runs clang: a project that needs GCC needs Homebrew's gcc, run as gcc-N.",
+  "@cppGccIsClangOnly": {
+    "description": "Note on the C/C++ page."
+  },
+  "cppBase": "Toolset",
+  "@cppBase": {
+    "description": "C/C++ page side card: the OS's toolset, make and pkg-config."
+  },
+  "cppNoBase": "No toolset found: on macOS it is the Command Line Tools (xcode-select --install), on Linux build-essential, on Windows MSVC Build Tools.",
+  "@cppNoBase": {
+    "description": "C/C++ page side card without a toolset."
+  },
+  "cppCacheSize": "Cache {size}",
+  "@cppCacheSize": {
+    "description": "C/C++ page: ccache's cache.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "1.2 GB"
+      }
+    }
+  },
+  "cppInCleanup": "in Cleanup",
+  "@cppInCleanup": {
+    "description": "C/C++ page: the cache is a cleanup candidate."
+  },
+  "cppNoCache": "No cache on disk, or not counted yet.",
+  "@cppNoCache": {
+    "description": "C/C++ page: ccache without a counted cache."
+  },
+  "cppNoCcache": "ccache is not installed: it keeps compiled objects so that rebuilds go faster.",
+  "@cppNoCcache": {
+    "description": "C/C++ page: no ccache."
+  },
+  "cppCMake": "Connected to CMake",
+  "@cppCMake": {
+    "description": "C/C++ page: CMAKE_C_COMPILER_LAUNCHER is ccache."
+  },
+  "cppVars": "Variables",
+  "@cppVars": {
+    "description": "C/C++ page side card."
+  },
+  "cppVarsAside": "terminal environment",
+  "@cppVarsAside": {
+    "description": "C/C++ page side card note."
+  },
+  "cppNotSet": "not set",
+  "@cppNotSet": {
+    "description": "C/C++ page: a variable not set."
+  },
+  "cppSdkFrom": "SDK of {base}",
+  "@cppSdkFrom": {
+    "description": "C/C++ page: SDKROOT not set.",
+    "placeholders": {
+      "base": {
+        "type": "String",
+        "example": "Command Line Tools"
+      }
+    }
   }
 }

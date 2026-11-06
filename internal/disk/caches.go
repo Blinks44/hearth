@@ -20,10 +20,11 @@ var cacheVars = map[string][]string{
 	"brew":     {"HOMEBREW_CACHE"},
 	"go-build": {"GOCACHE"},
 	"composer": {"COMPOSER_CACHE_DIR"},
+	"ccache":   {"CCACHE_DIR"},
 }
 
 // cacheOrder is the order caches come in.
-var cacheOrder = []string{"npm", "pnpm", "yarn", "yarn-berry", "bun", "uv", "pip", "brew", "go-mod", "go-build", "cargo", "gradle", "maven", "composer"}
+var cacheOrder = []string{"npm", "pnpm", "yarn", "yarn-berry", "bun", "uv", "pip", "brew", "go-mod", "go-build", "cargo", "gradle", "maven", "composer", "ccache"}
 
 // Caches returns the tools' caches that are on disk, by the terminal's
 // environment and the snapshot's Go settings.
@@ -42,6 +43,10 @@ func Caches(env sysenv.Env, snap *inventory.Snapshot) []inventory.Cache {
 	paths["cargo"] = filepath.Join(or(env.Get("CARGO_HOME"), filepath.Join(home, ".cargo")), "registry")
 	paths["gradle"] = filepath.Join(or(env.Get("GRADLE_USER_HOME"), filepath.Join(home, ".gradle")), "caches")
 	paths["maven"] = filepath.Join(home, ".m2", "repository")
+	// ccache keeps using its old ~/.ccache while it is there.
+	if legacy := filepath.Join(home, ".ccache"); isDir(legacy) {
+		paths["ccache"] = legacy
+	}
 	if goTool, ok := snap.Tool("go"); ok && goTool.Vars["GOMODCACHE"] != "" {
 		paths["go-mod"] = goTool.Vars["GOMODCACHE"]
 	}
@@ -60,7 +65,7 @@ func Caches(env sysenv.Env, snap *inventory.Snapshot) []inventory.Cache {
 		if path == "" || seen[path] || !filepath.IsAbs(path) {
 			continue
 		}
-		if info, err := os.Stat(path); err != nil || !info.IsDir() {
+		if !isDir(path) {
 			continue
 		}
 		seen[path] = true
@@ -74,4 +79,9 @@ func or(a, b string) string {
 		return a
 	}
 	return b
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }

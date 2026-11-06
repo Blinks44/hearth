@@ -34,6 +34,7 @@ var caches = map[string]struct{ name, command string }{
 	"gradle":     {"Gradle", ""},
 	"maven":      {"Maven", ""},
 	"composer":   {"Composer", "composer clear-cache"},
+	"ccache":     {"ccache", "ccache -C"},
 }
 
 // candidates are what the last scan and count offer to clean up; nil

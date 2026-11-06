@@ -38,6 +38,7 @@ var (
 		{"bun", page{"/tools/bun", "brand/bun", name("Bun"), locales.SectionLanguagesJavaScript}},
 		{"python", page{"/tools/python", "brand/python", name("Python"), locales.SectionLanguages}},
 		{"php", page{"/tools/php", "brand/php", name("PHP"), locales.SectionLanguages}},
+		{"cpp", page{cppPage, "brand/cplusplus", name("C/C++"), locales.SectionLanguagesCpp}},
 		{"rust", page{"/tools/rust", "brand/rust", name("Rust"), locales.SectionLanguages}},
 		{"go", page{"/tools/go", "brand/go", name("Go"), locales.SectionLanguages}},
 		{"java", page{"/tools/java", "brand/openjdk", name("Java"), locales.SectionLanguages}},

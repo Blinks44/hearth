@@ -21,5 +21,6 @@ func defaults(env sysenv.Env, _ string) map[string]string {
 		"pip":      filepath.Join(local, "pip", "Cache"),
 		"go-build": filepath.Join(local, "go-build"),
 		"composer": filepath.Join(local, "Composer"),
+		"ccache":   filepath.Join(local, "ccache"),
 	}
 }

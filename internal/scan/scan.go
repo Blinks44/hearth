@@ -40,6 +40,7 @@ var Detectors = []Detector{
 	{"ruby", detect.Ruby},
 	{"dotnet", detect.Dotnet},
 	{"git", detect.Git},
+	{"cpp", detect.Cpp},
 	{"mise", detect.MiseTools},
 	{"docker", detect.Docker},
 	{"databases", detect.Databases},

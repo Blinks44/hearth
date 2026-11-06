@@ -133,6 +133,7 @@ type App struct {
 	packageFilter  string // the package table's filter
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
 	gitTab         int    // the Git page's tab: installed, settings, PATH
+	cppTab         int    // the C/C++ page's tab: installed, PATH
 	cliTab         int    // the CLI & clouds page's tab
 	cliFilter      string // the CLI & clouds table's filter
 	changesTab     int    // the What changed page's tab: all, added, updated, removed
@@ -231,6 +232,8 @@ func (a *App) View(c *ui.Context) {
 						a.gitPageView(c, p)
 					case cliPage:
 						a.cliView(c, p)
+					case cppPage:
+						a.cppView(c, p)
 					case "/tools/docker":
 						a.docker(c, p)
 					case "/tools/bun":

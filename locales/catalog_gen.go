@@ -9113,3 +9113,313 @@ func CliHowMiseCaption() string { return In(i18n.Locale()).CliHowMiseCaption() }
 func (msgs Messages) CliHowMiseCaption() string {
 	return Catalog.Format(msgs.locale, "cliHowMiseCaption", nil)
 }
+
+// SectionLanguagesCpp says "Languages & runtimes · compilers and build"
+// in the language the app shows.
+//
+// Subtitle of the C/C++ page.
+func SectionLanguagesCpp() string { return In(i18n.Locale()).SectionLanguagesCpp() }
+
+// SectionLanguagesCpp says "Languages & runtimes · compilers and build"
+// in the language of msgs.
+//
+// Subtitle of the C/C++ page.
+func (msgs Messages) SectionLanguagesCpp() string {
+	return Catalog.Format(msgs.locale, "sectionLanguagesCpp", nil)
+}
+
+// CppCompiler says "Compiler"
+// in the language the app shows.
+//
+// C/C++ page header card: what cc runs.
+func CppCompiler() string { return In(i18n.Locale()).CppCompiler() }
+
+// CppCompiler says "Compiler"
+// in the language of msgs.
+//
+// C/C++ page header card: what cc runs.
+func (msgs Messages) CppCompiler() string {
+	return Catalog.Format(msgs.locale, "cppCompiler", nil)
+}
+
+// CppBuild says "Build"
+// in the language the app shows.
+//
+// C/C++ page header card: the build system.
+func CppBuild() string { return In(i18n.Locale()).CppBuild() }
+
+// CppBuild says "Build"
+// in the language of msgs.
+//
+// C/C++ page header card: the build system.
+func (msgs Messages) CppBuild() string {
+	return Catalog.Format(msgs.locale, "cppBuild", nil)
+}
+
+// CppCache says "Build cache"
+// in the language the app shows.
+//
+// C/C++ page header card and side card: ccache.
+func CppCache() string { return In(i18n.Locale()).CppCache() }
+
+// CppCache says "Build cache"
+// in the language of msgs.
+//
+// C/C++ page header card and side card: ccache.
+func (msgs Messages) CppCache() string {
+	return Catalog.Format(msgs.locale, "cppCache", nil)
+}
+
+// CppCommand says "command {command}"
+// in the language the app shows.
+//
+// Chip of a versioned compiler: it runs only by its own name.
+func CppCommand(command string) string { return In(i18n.Locale()).CppCommand(command) }
+
+// CppCommand says "command {command}"
+// in the language of msgs.
+//
+// Chip of a versioned compiler: it runs only by its own name.
+func (msgs Messages) CppCommand(command string) string {
+	return Catalog.Format(msgs.locale, "cppCommand", map[string]any{"command": command})
+}
+
+// CppNoTools says "No compilers or build tools on the terminal's PATH."
+// in the language the app shows.
+//
+// C/C++ page without tools.
+func CppNoTools() string { return In(i18n.Locale()).CppNoTools() }
+
+// CppNoTools says "No compilers or build tools on the terminal's PATH."
+// in the language of msgs.
+//
+// C/C++ page without tools.
+func (msgs Messages) CppNoTools() string {
+	return Catalog.Format(msgs.locale, "cppNoTools", nil)
+}
+
+// CppNoteClt says "The Command Line Tools come from macOS, which installs and updates them. On Linux their place is build-essential, on …"
+// in the language the app shows.
+//
+// Note under the C/C++ table on macOS.
+func CppNoteClt() string { return In(i18n.Locale()).CppNoteClt() }
+
+// CppNoteClt says "The Command Line Tools come from macOS, which installs and updates them. On Linux their place is build-essential, on …"
+// in the language of msgs.
+//
+// Note under the C/C++ table on macOS.
+func (msgs Messages) CppNoteClt() string {
+	return Catalog.Format(msgs.locale, "cppNoteClt", nil)
+}
+
+// CppNoteBuildEssential says "build-essential is the distribution's package: gcc, g++ and make come with it and apt updates them."
+// in the language the app shows.
+//
+// Note under the C/C++ table on Debian and Ubuntu.
+func CppNoteBuildEssential() string { return In(i18n.Locale()).CppNoteBuildEssential() }
+
+// CppNoteBuildEssential says "build-essential is the distribution's package: gcc, g++ and make come with it and apt updates them."
+// in the language of msgs.
+//
+// Note under the C/C++ table on Debian and Ubuntu.
+func (msgs Messages) CppNoteBuildEssential() string {
+	return Catalog.Format(msgs.locale, "cppNoteBuildEssential", nil)
+}
+
+// CppNoteMsvc says "MSVC's compiler cl runs in the Developer prompt Visual Studio Installer sets up, not in an ordinary terminal."
+// in the language the app shows.
+//
+// Note under the C/C++ table on Windows.
+func CppNoteMsvc() string { return In(i18n.Locale()).CppNoteMsvc() }
+
+// CppNoteMsvc says "MSVC's compiler cl runs in the Developer prompt Visual Studio Installer sets up, not in an ordinary terminal."
+// in the language of msgs.
+//
+// Note under the C/C++ table on Windows.
+func (msgs Messages) CppNoteMsvc() string {
+	return Catalog.Format(msgs.locale, "cppNoteMsvc", nil)
+}
+
+// CppGccIsClang says "On macOS the gcc command runs clang. The real GCC {version} is {command}: projects that need GCC set CC={command}."
+// in the language the app shows.
+//
+// Warning on the C/C++ page.
+func CppGccIsClang(version string, command string) string {
+	return In(i18n.Locale()).CppGccIsClang(version, command)
+}
+
+// CppGccIsClang says "On macOS the gcc command runs clang. The real GCC {version} is {command}: projects that need GCC set CC={command}."
+// in the language of msgs.
+//
+// Warning on the C/C++ page.
+func (msgs Messages) CppGccIsClang(version string, command string) string {
+	return Catalog.Format(msgs.locale, "cppGccIsClang", map[string]any{"version": version, "command": command})
+}
+
+// CppGccIsClangOnly says "On macOS the gcc command runs clang: a project that needs GCC needs Homebrew's gcc, run as gcc-N."
+// in the language the app shows.
+//
+// Note on the C/C++ page.
+func CppGccIsClangOnly() string { return In(i18n.Locale()).CppGccIsClangOnly() }
+
+// CppGccIsClangOnly says "On macOS the gcc command runs clang: a project that needs GCC needs Homebrew's gcc, run as gcc-N."
+// in the language of msgs.
+//
+// Note on the C/C++ page.
+func (msgs Messages) CppGccIsClangOnly() string {
+	return Catalog.Format(msgs.locale, "cppGccIsClangOnly", nil)
+}
+
+// CppBase says "Toolset"
+// in the language the app shows.
+//
+// C/C++ page side card: the OS's toolset, make and pkg-config.
+func CppBase() string { return In(i18n.Locale()).CppBase() }
+
+// CppBase says "Toolset"
+// in the language of msgs.
+//
+// C/C++ page side card: the OS's toolset, make and pkg-config.
+func (msgs Messages) CppBase() string {
+	return Catalog.Format(msgs.locale, "cppBase", nil)
+}
+
+// CppNoBase says "No toolset found: on macOS it is the Command Line Tools (xcode-select --install), on Linux build-essential, on Window…"
+// in the language the app shows.
+//
+// C/C++ page side card without a toolset.
+func CppNoBase() string { return In(i18n.Locale()).CppNoBase() }
+
+// CppNoBase says "No toolset found: on macOS it is the Command Line Tools (xcode-select --install), on Linux build-essential, on Window…"
+// in the language of msgs.
+//
+// C/C++ page side card without a toolset.
+func (msgs Messages) CppNoBase() string {
+	return Catalog.Format(msgs.locale, "cppNoBase", nil)
+}
+
+// CppCacheSize says "Cache {size}"
+// in the language the app shows.
+//
+// C/C++ page: ccache's cache.
+func CppCacheSize(size string) string { return In(i18n.Locale()).CppCacheSize(size) }
+
+// CppCacheSize says "Cache {size}"
+// in the language of msgs.
+//
+// C/C++ page: ccache's cache.
+func (msgs Messages) CppCacheSize(size string) string {
+	return Catalog.Format(msgs.locale, "cppCacheSize", map[string]any{"size": size})
+}
+
+// CppInCleanup says "in Cleanup"
+// in the language the app shows.
+//
+// C/C++ page: the cache is a cleanup candidate.
+func CppInCleanup() string { return In(i18n.Locale()).CppInCleanup() }
+
+// CppInCleanup says "in Cleanup"
+// in the language of msgs.
+//
+// C/C++ page: the cache is a cleanup candidate.
+func (msgs Messages) CppInCleanup() string {
+	return Catalog.Format(msgs.locale, "cppInCleanup", nil)
+}
+
+// CppNoCache says "No cache on disk, or not counted yet."
+// in the language the app shows.
+//
+// C/C++ page: ccache without a counted cache.
+func CppNoCache() string { return In(i18n.Locale()).CppNoCache() }
+
+// CppNoCache says "No cache on disk, or not counted yet."
+// in the language of msgs.
+//
+// C/C++ page: ccache without a counted cache.
+func (msgs Messages) CppNoCache() string {
+	return Catalog.Format(msgs.locale, "cppNoCache", nil)
+}
+
+// CppNoCcache says "ccache is not installed: it keeps compiled objects so that rebuilds go faster."
+// in the language the app shows.
+//
+// C/C++ page: no ccache.
+func CppNoCcache() string { return In(i18n.Locale()).CppNoCcache() }
+
+// CppNoCcache says "ccache is not installed: it keeps compiled objects so that rebuilds go faster."
+// in the language of msgs.
+//
+// C/C++ page: no ccache.
+func (msgs Messages) CppNoCcache() string {
+	return Catalog.Format(msgs.locale, "cppNoCcache", nil)
+}
+
+// CppCMake says "Connected to CMake"
+// in the language the app shows.
+//
+// C/C++ page: CMAKE_C_COMPILER_LAUNCHER is ccache.
+func CppCMake() string { return In(i18n.Locale()).CppCMake() }
+
+// CppCMake says "Connected to CMake"
+// in the language of msgs.
+//
+// C/C++ page: CMAKE_C_COMPILER_LAUNCHER is ccache.
+func (msgs Messages) CppCMake() string {
+	return Catalog.Format(msgs.locale, "cppCMake", nil)
+}
+
+// CppVars says "Variables"
+// in the language the app shows.
+//
+// C/C++ page side card.
+func CppVars() string { return In(i18n.Locale()).CppVars() }
+
+// CppVars says "Variables"
+// in the language of msgs.
+//
+// C/C++ page side card.
+func (msgs Messages) CppVars() string {
+	return Catalog.Format(msgs.locale, "cppVars", nil)
+}
+
+// CppVarsAside says "terminal environment"
+// in the language the app shows.
+//
+// C/C++ page side card note.
+func CppVarsAside() string { return In(i18n.Locale()).CppVarsAside() }
+
+// CppVarsAside says "terminal environment"
+// in the language of msgs.
+//
+// C/C++ page side card note.
+func (msgs Messages) CppVarsAside() string {
+	return Catalog.Format(msgs.locale, "cppVarsAside", nil)
+}
+
+// CppNotSet says "not set"
+// in the language the app shows.
+//
+// C/C++ page: a variable not set.
+func CppNotSet() string { return In(i18n.Locale()).CppNotSet() }
+
+// CppNotSet says "not set"
+// in the language of msgs.
+//
+// C/C++ page: a variable not set.
+func (msgs Messages) CppNotSet() string {
+	return Catalog.Format(msgs.locale, "cppNotSet", nil)
+}
+
+// CppSdkFrom says "SDK of {base}"
+// in the language the app shows.
+//
+// C/C++ page: SDKROOT not set.
+func CppSdkFrom(base string) string { return In(i18n.Locale()).CppSdkFrom(base) }
+
+// CppSdkFrom says "SDK of {base}"
+// in the language of msgs.
+//
+// C/C++ page: SDKROOT not set.
+func (msgs Messages) CppSdkFrom(base string) string {
+	return Catalog.Format(msgs.locale, "cppSdkFrom", map[string]any{"base": base})
+}

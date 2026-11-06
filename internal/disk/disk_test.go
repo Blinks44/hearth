@@ -105,7 +105,7 @@ func TestCaches(t *testing.T) {
 	home := t.TempDir()
 	moved := filepath.Join(home, "elsewhere", "uv")
 	gomod := filepath.Join(home, "go", "pkg", "mod")
-	for _, dir := range []string{moved, gomod, filepath.Join(home, ".cargo", "registry"), filepath.Join(home, ".bun", "install", "cache")} {
+	for _, dir := range []string{moved, gomod, filepath.Join(home, ".cargo", "registry"), filepath.Join(home, ".bun", "install", "cache"), filepath.Join(home, ".ccache")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -118,6 +118,8 @@ func TestCaches(t *testing.T) {
 		{ID: "uv", Path: moved},
 		{ID: "go-mod", Path: gomod},
 		{ID: "cargo", Path: filepath.Join(home, ".cargo", "registry")},
+		// ccache's old folder, while it is there.
+		{ID: "ccache", Path: filepath.Join(home, ".ccache")},
 	}
 	if !slices.Equal(got, want) {
 		t.Fatalf("got %+v\nwant %+v", got, want)
