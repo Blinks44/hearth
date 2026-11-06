@@ -696,5 +696,8 @@
   "changeSkillRemoved": "удалён из {dir}",
   "changeMcpAdded": "добавлен в {file}",
   "changeMcpRemoved": "убран из {file}",
-  "changesOpenCleanupCaption": "Hearth уже посчитал размер"
+  "changesOpenCleanupCaption": "Hearth уже посчитал размер",
+  "copyReport": "Скопировать отчёт",
+  "copyReportHint": "Окружение текстом для issue или чата: без секретов, домашняя папка как ~, проекты по номерам",
+  "reportCopied": "Отчёт скопирован"
 }

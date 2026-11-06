@@ -8551,3 +8551,45 @@ func ChangesOpenCleanupCaption() string { return In(i18n.Locale()).ChangesOpenCl
 func (msgs Messages) ChangesOpenCleanupCaption() string {
 	return Catalog.Format(msgs.locale, "changesOpenCleanupCaption", nil)
 }
+
+// CopyReport says "Copy report"
+// in the language the app shows.
+//
+// Overview header button: copies the environment report.
+func CopyReport() string { return In(i18n.Locale()).CopyReport() }
+
+// CopyReport says "Copy report"
+// in the language of msgs.
+//
+// Overview header button: copies the environment report.
+func (msgs Messages) CopyReport() string {
+	return Catalog.Format(msgs.locale, "copyReport", nil)
+}
+
+// CopyReportHint says "The environment as text for an issue or a chat: no secrets, the home as ~, projects by number"
+// in the language the app shows.
+//
+// Tooltip of the report button.
+func CopyReportHint() string { return In(i18n.Locale()).CopyReportHint() }
+
+// CopyReportHint says "The environment as text for an issue or a chat: no secrets, the home as ~, projects by number"
+// in the language of msgs.
+//
+// Tooltip of the report button.
+func (msgs Messages) CopyReportHint() string {
+	return Catalog.Format(msgs.locale, "copyReportHint", nil)
+}
+
+// ReportCopied says "Report copied"
+// in the language the app shows.
+//
+// Toast after the report is copied.
+func ReportCopied() string { return In(i18n.Locale()).ReportCopied() }
+
+// ReportCopied says "Report copied"
+// in the language of msgs.
+//
+// Toast after the report is copied.
+func (msgs Messages) ReportCopied() string {
+	return Catalog.Format(msgs.locale, "reportCopied", nil)
+}

@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	a := hearthui.NewApp()
-	a.Machine = machine()
+	a.Machine, a.OS = machine()
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
@@ -427,8 +427,9 @@ func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cac
 }
 
 // machine is the caption under the logo: the computer's name and its OS,
-// as "studio · macOS 15.4".
-func machine() string {
+// as "studio · macOS 15.4"; and the OS for the report, as "macOS 15.4
+// (arm64)".
+func machine() (caption, system string) {
 	var parts []string
 	if host, err := os.Hostname(); err == nil {
 		parts = append(parts, strings.TrimSuffix(host, ".local"))
@@ -437,6 +438,7 @@ func machine() string {
 	if err != nil {
 		log.Print(err)
 	}
-	parts = append(parts, strings.TrimSpace(o.Name+" "+o.Version))
-	return strings.Join(parts, " · ")
+	name := strings.TrimSpace(o.Name + " " + o.Version)
+	parts = append(parts, name)
+	return strings.Join(parts, " · "), name + " (" + o.Arch + ")"
 }

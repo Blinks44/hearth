@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -150,4 +151,28 @@ func TestOverviewGroupsIssues(t *testing.T) {
 	if tt.HasText("Skill pdf: 2 copies") {
 		t.Errorf("a skill's copies show apart from the group: %q", tt.Texts())
 	}
+}
+
+// The overview's button copies the report: the home as ~, projects by
+// number, and it says so.
+func TestCopyReport(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	a.Projects = testProjects()
+	a.OS, a.AppVersion = "macOS 15.4 (arm64)", "0.1.0"
+	tt := openOverview(t, a)
+	if err := tt.Click("Copy report"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	got := tt.Clipboard()
+	for _, want := range []string{"Hearth 0.1.0 · macOS 15.4 (arm64)", "## Tools", "- project 1:", "## Issues"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("no %q in\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, home) || strings.Contains(got, "shop-web") {
+		t.Errorf("personal paths in\n%s", got)
+	}
+	hasTexts(t, tt, "Report copied")
 }

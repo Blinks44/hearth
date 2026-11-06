@@ -2937,5 +2937,17 @@
   "changesOpenCleanupCaption": "Hearth has counted the sizes",
   "@changesOpenCleanupCaption": {
     "description": "Caption under the link to Cleanup on the history page."
+  },
+  "copyReport": "Copy report",
+  "@copyReport": {
+    "description": "Overview header button: copies the environment report."
+  },
+  "copyReportHint": "The environment as text for an issue or a chat: no secrets, the home as ~, projects by number",
+  "@copyReportHint": {
+    "description": "Tooltip of the report button."
+  },
+  "reportCopied": "Report copied",
+  "@reportCopied": {
+    "description": "Toast after the report is copied."
   }
 }

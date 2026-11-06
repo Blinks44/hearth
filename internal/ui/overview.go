@@ -12,6 +12,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/report"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -25,7 +26,15 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 	found := a.issues(c)
 	items := a.attentionItems(found)
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			ui.Button(c.Key("copy-report"), "").Label(locales.CopyReport()).Tooltip(locales.CopyReportHint()).OnClick(func() {
+				c.WriteClipboard(a.report(found))
+				c.Toast(locales.ReportCopied())
+			}).Children(func() {
+				ui.Icon(c, Icon("copy")).Size(13, 13).TextColor(c.Theme().TextMuted)
+				ui.Text(c, locales.CopyReport()).SingleLine()
+			})
+		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.hero(c, items)
@@ -52,6 +61,12 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 		})
 		a.addDialog(c)
 	})
+}
+
+// report is the environment as text to paste elsewhere, without secrets
+// and personal paths.
+func (a *App) report(found []issues.Issue) string {
+	return report.Write(a.Snapshot, a.Projects, found, report.Info{Version: a.AppVersion, OS: a.OS, Home: a.Home})
 }
 
 // issues are what needs attention in the last scan, warnings first; nil

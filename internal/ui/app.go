@@ -21,6 +21,9 @@ import (
 type App struct {
 	// Machine is the caption under the logo, as "studio · macOS 15.4".
 	Machine string
+	// OS is the system for the report, without the computer's name, as
+	// "macOS 15.4 (arm64)".
+	OS string
 	// ThemeMode is the saved appearance: "light", "dark" or "system".
 	ThemeMode string
 	// Locale is the interface language, "en" or "ru".
