@@ -154,15 +154,17 @@ func (a *App) searchButton(c *ui.Context) {
 		Radius(7).Background(c.Theme().Background).BorderWidth(1).BorderColor(pal.ControlBorder).Label(locales.SearchPlaceholder()).OnClick(a.toggleSearch).Children(func() {
 		ui.Icon(c, Icon("search")).Size(14, 14).TextColor(pal.TextFaint)
 		ui.Text(c, locales.SearchPlaceholder()).FontSize(12).TextColor(pal.TextFaint).Grow(1).SingleLine()
-		ui.Text(c, searchShortcut()).FontSize(11).TextColor(pal.TextFaint)
+		ui.Text(c, cmdKey("K")).FontSize(11).TextColor(pal.TextFaint)
 	})
 }
 
-func searchShortcut() string {
+// cmdKey is the shortcut of key with the platform's modifier, as ⌘K on
+// macOS and Ctrl+K elsewhere.
+func cmdKey(key string) string {
 	if ui.Cmd == ui.Super {
-		return "⌘K"
+		return "⌘" + key
 	}
-	return "Ctrl+K"
+	return "Ctrl+" + key
 }
 
 func (a *App) searchDialog(c *ui.Context) {
@@ -234,7 +236,7 @@ func (a *App) searchDialog(c *ui.Context) {
 				})
 			})
 			ui.Row(c).Height(56).Shrink(0).Padding(10, 16).Gap(8).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Divider).Children(func() {
-				ui.Text(c, locales.SearchKeys()+"   "+searchShortcut()+" "+locales.SearchClose()).FontSize(11).TextColor(pal.TextFaint).Grow(1)
+				ui.Text(c, locales.SearchKeys()+"   "+cmdKey("K")+" "+locales.SearchClose()).FontSize(11).TextColor(pal.TextFaint).Grow(1)
 				ui.Text(c, locales.SearchCount(len(results))).FontSize(11).TextColor(pal.TextFaint)
 			})
 		})

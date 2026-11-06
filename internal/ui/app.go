@@ -106,6 +106,7 @@ type App struct {
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
 	search         searchState
+	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
 	moreOpen       bool    // the languages not found show in the sidebar
 	nodeTab        int     // the tab of the Node.js page shown
@@ -152,6 +153,11 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
+	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
+	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
+	// A focused text field types the slash; elsewhere it goes to the
+	// page's filter.
+	c.OnShortcut(0, ui.KeySlash, func() { a.filterField.Focus(c) })
 	t := c.Theme()
 	// Vibrancy shows wherever the view draws no background: under the
 	// sidebar, which then draws none.
@@ -287,10 +293,6 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 		if x.before != nil {
 			x.before()
 		}
-		ui.Button(c, "").Disabled(a.OnScan == nil || a.Scanning).OnClick(a.Scan).Children(func() {
-			ui.Icon(c, Icon("refresh-cw")).Size(14, 14).TextColor(t.TextMuted)
-			ui.Text(c, locales.Scan()).SingleLine()
-		})
 		if x.after != nil {
 			x.after()
 		}
@@ -400,8 +402,18 @@ func (a *App) status(c *ui.Context) {
 	ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(2, 2, 0, 9).Children(func() {
 		ui.Box(c).Size(6, 6).Radius(3).Background(dot)
 		ui.Text(c, text).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		icon, mode := themeLook(a.ThemeMode)
+		theme := ui.ButtonBase(c.Key("theme")).Size(24, 24).Radius(6).Center().
+			Label(locales.ThemeButton(mode)).Tooltip(locales.ThemeButton(mode)).
+			OnClick(func() { a.ThemeMode = nextTheme(a.ThemeMode); a.savePreferences() })
+		if theme.Hovered() {
+			theme.Background(pal.SidebarHover)
+		}
+		theme.Children(func() {
+			ui.Icon(c, Icon(icon)).Size(13, 13).TextColor(pal.TextFaint)
+		})
 		again := ui.ButtonBase(c.Key("scan-again")).Size(24, 24).Radius(6).Center().
-			Label(locales.Scan()).Tooltip(locales.Scan()).Disabled(a.OnScan == nil || a.Scanning).OnClick(a.Scan)
+			Label(locales.Scan()).Tooltip(locales.Scan() + " · " + cmdKey("R")).Disabled(a.OnScan == nil || a.Scanning).OnClick(a.Scan)
 		if again.Hovered() {
 			again.Background(pal.SidebarHover)
 		}
@@ -409,6 +421,29 @@ func (a *App) status(c *ui.Context) {
 			ui.Icon(c, Icon("refresh-cw")).Size(12, 12).TextColor(pal.TextFaint)
 		})
 	})
+}
+
+// themeLook is the icon of the appearance mode and its name.
+func themeLook(mode string) (icon, name string) {
+	switch mode {
+	case "light":
+		return "sun", locales.SettingsLight()
+	case "dark":
+		return "moon", locales.SettingsDark()
+	}
+	return "sun-moon", locales.SettingsSystem()
+}
+
+// nextTheme is the appearance after mode, as the sidebar's button turns
+// through them: system, light, dark.
+func nextTheme(mode string) string {
+	switch mode {
+	case "system":
+		return "light"
+	case "light":
+		return "dark"
+	}
+	return "system"
 }
 
 // checked says how long ago taken was, and asks for a frame when the text

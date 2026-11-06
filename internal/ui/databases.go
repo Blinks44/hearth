@@ -62,7 +62,7 @@ func (a *App) databases(c *ui.Context, p page) {
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 					segments(c, "database-tabs", &a.databaseTab, []segment{{locales.TabAll(), strconv.Itoa(len(servers))}, {locales.DatabaseServices(), ""}, {locales.ProjectsTitle(), ""}, {locales.DatabaseContainers(), ""}})
 					ui.Box(c).Grow(1)
-					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Placeholder(locales.DatabaseFilter()).Width(200)
+					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Bind(&a.filterField).Placeholder(locales.DatabaseFilter()).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.databaseTab == 2 {

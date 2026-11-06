@@ -512,6 +512,7 @@
   "settingsGeneral": "Основное",
   "settingsLanguage": "Язык интерфейса",
   "settingsLanguageHint": "English — исходный, русский — перевод",
+  "themeButton": "Тема: {mode}",
   "settingsTheme": "Тема",
   "settingsThemeHint": "Светлая, тёмная или как в системе",
   "settingsSystem": "Как в системе",

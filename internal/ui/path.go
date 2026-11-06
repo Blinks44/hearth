@@ -43,7 +43,7 @@ func (a *App) paths(c *ui.Context, p page) {
 				ui.Row(c).Gap(12).Children(func() {
 					segments(c, "path-tabs", &a.pathTab, []segment{{locales.EnvPathTerminal(), strconv.Itoa(len(term))}, {locales.EnvPathApps(), strconv.Itoa(len(gui))}, {locales.EnvPathVariables(), strconv.Itoa(len(a.Snapshot.Variables))}, {locales.EnvPathDifferences(), ""}})
 					ui.Box(c).Grow(1)
-					ui.SearchField(c.Key("path-filter"), &a.pathFilter).Placeholder(locales.EnvPathFilter()).Width(200)
+					ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Width(200)
 				})
 				columns(c, 14, func() {
 					switch a.pathTab {

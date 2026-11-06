@@ -119,7 +119,7 @@ func (a *App) projectRows(c *ui.Context) {
 			{locales.TabAttention(), strconv.Itoa(attention)},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Placeholder(locales.FilterProjects()).Width(200)
+		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Bind(&a.filterField).Placeholder(locales.FilterProjects()).Width(200)
 	})
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {

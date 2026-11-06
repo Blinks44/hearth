@@ -51,7 +51,7 @@ func (a *App) jspm(c *ui.Context, p page) {
 					segments(c, "jspm-tabs", &a.jspmTab, []segment{{locales.JsManagers(), strconv.Itoa(a.jsCount())}, {locales.GlobalPackages(), ""}, {locales.ProjectsTitle(), strconv.Itoa(len(a.Projects))}, {"PATH", ""}})
 					ui.Box(c).Grow(1)
 					if a.jspmTab == 0 {
-						ui.SearchField(c.Key("jspm-filter"), &a.jspmFilter).Placeholder(locales.JsFilter()).Width(200)
+						ui.SearchField(c.Key("jspm-filter"), &a.jspmFilter).Bind(&a.filterField).Placeholder(locales.JsFilter()).Width(200)
 					}
 				})
 				var side func()

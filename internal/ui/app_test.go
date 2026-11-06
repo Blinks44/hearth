@@ -148,3 +148,52 @@ func TestScanStatus(t *testing.T) {
 		t.Errorf("scan again: %v, %d scans", err, scans)
 	}
 }
+
+// The sidebar's theme button turns the appearance through system, light
+// and dark, and keeps it.
+func TestThemeButton(t *testing.T) {
+	a := NewApp()
+	saved := 0
+	a.OnSettings = func() { saved++ }
+	tt := ui.NewTester(a.View, 1280, 820)
+	for _, want := range []string{"light", "dark", "system"} {
+		if err := tt.Click("Theme: " + map[string]string{"light": "System", "dark": "Light", "system": "Dark"}[want]); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+		if a.ThemeMode != want {
+			t.Errorf("theme %q, want %q", a.ThemeMode, want)
+		}
+	}
+	if saved != 3 {
+		t.Errorf("saved %d times, want 3", saved)
+	}
+}
+
+// Cmd+R scans, Cmd+, opens the settings, and / goes to the page's filter,
+// where it types as any other character.
+func TestShortcuts(t *testing.T) {
+	a := NewApp()
+	scans := 0
+	a.OnScan = func() { scans++ }
+	a.Snapshot = found("node")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Key(ui.Cmd, ui.KeyR)
+	if scans != 1 {
+		t.Errorf("%d scans after Cmd+R", scans)
+	}
+	tt.Key(ui.Cmd, ui.KeyComma)
+	tt.Advance(time.Second)
+	if a.router.Path() != settings.path {
+		t.Errorf("Cmd+, went to %q", a.router.Path())
+	}
+	a.router.Push("/system/path")
+	tt.Advance(time.Second)
+	tt.Key(0, ui.KeySlash)
+	tt.Frame()
+	tt.Type("usr/")
+	tt.Frame()
+	if a.pathFilter != "usr/" {
+		t.Errorf("filter %q after / and typing, want %q", a.pathFilter, "usr/")
+	}
+}

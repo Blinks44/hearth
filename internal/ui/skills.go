@@ -148,7 +148,7 @@ func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]in
 	pal := Colors(t)
 	listFrame(c, func() {
 		ui.Row(c).Padding(6, 10).Children(func() {
-			ui.SearchField(c.Key("skill-search"), &a.skillQuery).Placeholder(locales.SearchByName()).Grow(1)
+			ui.SearchField(c.Key("skill-search"), &a.skillQuery).Bind(&a.filterField).Placeholder(locales.SearchByName()).Grow(1)
 		})
 		if len(groups) == 0 {
 			cardNote(c, locales.NothingMatches())

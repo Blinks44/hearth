@@ -6306,6 +6306,22 @@ func (msgs Messages) SettingsLanguageHint() string {
 	return Catalog.Format(msgs.locale, "settingsLanguageHint", nil)
 }
 
+// ThemeButton says "Theme: {mode}"
+// in the language the app shows.
+//
+// Sidebar button that turns the appearance: tooltip with the current mode,
+// as System.
+func ThemeButton(mode string) string { return In(i18n.Locale()).ThemeButton(mode) }
+
+// ThemeButton says "Theme: {mode}"
+// in the language of msgs.
+//
+// Sidebar button that turns the appearance: tooltip with the current mode,
+// as System.
+func (msgs Messages) ThemeButton(mode string) string {
+	return Catalog.Format(msgs.locale, "themeButton", map[string]any{"mode": mode})
+}
+
 // SettingsTheme says "Theme"
 // in the language the app shows.
 func SettingsTheme() string { return In(i18n.Locale()).SettingsTheme() }

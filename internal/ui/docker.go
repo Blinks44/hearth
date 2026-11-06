@@ -42,7 +42,7 @@ func (a *App) docker(c *ui.Context, p page) {
 					segments(c, "docker-tabs", &a.dockerTab, []segment{{locales.DockerContexts(), strconv.Itoa(len(d.Contexts))}, {locales.DockerEngines(), ""}, {locales.ProjectsTitle(), strconv.Itoa(len(a.dockerProjects()))}, {"PATH", ""}})
 					ui.Box(c).Grow(1)
 					if a.dockerTab == 0 {
-						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Placeholder(locales.DockerFilter()).Width(200)
+						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Width(200)
 					}
 				})
 				var side func()

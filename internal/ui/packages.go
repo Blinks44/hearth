@@ -81,7 +81,7 @@ func (a *App) packages(c *ui.Context, p page) {
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 					segments(c, "package-tabs", &a.packageTab, []segment{{locales.PkgInstalled(), installedCount}, {locales.PkgUpdates(), updateCount}})
 					ui.Box(c).Grow(1)
-					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Placeholder(locales.PkgFilter()).Width(200)
+					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Width(200)
 				})
 				columns(c, 12, func() {
 					if m.Unlisted && !partial {

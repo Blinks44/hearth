@@ -159,7 +159,7 @@ func (a *App) mcpList(c *ui.Context, shown []mcpItem, chosen int) {
 	pal := Colors(t)
 	listFrame(c, func() {
 		ui.Row(c).Padding(6, 10).Children(func() {
-			ui.SearchField(c.Key("mcp-search"), &a.mcpQuery).Placeholder(locales.SearchServers()).Grow(1)
+			ui.SearchField(c.Key("mcp-search"), &a.mcpQuery).Bind(&a.filterField).Placeholder(locales.SearchServers()).Grow(1)
 		})
 		if len(shown) == 0 {
 			cardNote(c, locales.NothingMatches())

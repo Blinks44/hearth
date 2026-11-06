@@ -2103,6 +2103,16 @@
   "settingsGeneral": "General",
   "settingsLanguage": "Interface language",
   "settingsLanguageHint": "English is the source; Russian is a translation",
+  "themeButton": "Theme: {mode}",
+  "@themeButton": {
+    "description": "Sidebar button that turns the appearance: tooltip with the current mode, as System.",
+    "placeholders": {
+      "mode": {
+        "type": "String",
+        "example": "System"
+      }
+    }
+  },
   "settingsTheme": "Theme",
   "settingsThemeHint": "Light, dark, or follow the system",
   "settingsSystem": "System",
