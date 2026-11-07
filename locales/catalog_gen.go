@@ -11139,3 +11139,857 @@ func ReasonSuperseded() string { return In(i18n.Locale()).ReasonSuperseded() }
 func (msgs Messages) ReasonSuperseded() string {
 	return Catalog.Format(msgs.locale, "reasonSuperseded", nil)
 }
+
+// OpRun says "Run"
+// in the language the app shows.
+//
+// Default button that runs an operation's plan.
+func OpRun() string { return In(i18n.Locale()).OpRun() }
+
+// OpRun says "Run"
+// in the language of msgs.
+//
+// Default button that runs an operation's plan.
+func (msgs Messages) OpRun() string {
+	return Catalog.Format(msgs.locale, "opRun", nil)
+}
+
+// OpCommands says "Commands · run in order"
+// in the language the app shows.
+//
+// Section of an operation's commands before it runs.
+func OpCommands() string { return In(i18n.Locale()).OpCommands() }
+
+// OpCommands says "Commands · run in order"
+// in the language of msgs.
+//
+// Section of an operation's commands before it runs.
+func (msgs Messages) OpCommands() string {
+	return Catalog.Format(msgs.locale, "opCommands", nil)
+}
+
+// OpWorthKnowing says "Worth knowing"
+// in the language the app shows.
+//
+// Section of notes before an operation runs: password, terms of use.
+func OpWorthKnowing() string { return In(i18n.Locale()).OpWorthKnowing() }
+
+// OpWorthKnowing says "Worth knowing"
+// in the language of msgs.
+//
+// Section of notes before an operation runs: password, terms of use.
+func (msgs Messages) OpWorthKnowing() string {
+	return Catalog.Format(msgs.locale, "opWorthKnowing", nil)
+}
+
+// OpOpenLink says "Open"
+// in the language the app shows.
+//
+// Opens a note's page, as the terms of use, in the browser.
+func OpOpenLink() string { return In(i18n.Locale()).OpOpenLink() }
+
+// OpOpenLink says "Open"
+// in the language of msgs.
+//
+// Opens a note's page, as the terms of use, in the browser.
+func (msgs Messages) OpOpenLink() string {
+	return Catalog.Format(msgs.locale, "opOpenLink", nil)
+}
+
+// OpStepOf says "Step {n} of {total} · can be stopped at any time"
+// in the language the app shows.
+//
+// Under an operation's title while it runs.
+func OpStepOf(n int, total int) string { return In(i18n.Locale()).OpStepOf(n, total) }
+
+// OpStepOf says "Step {n} of {total} · can be stopped at any time"
+// in the language of msgs.
+//
+// Under an operation's title while it runs.
+func (msgs Messages) OpStepOf(n int, total int) string {
+	return Catalog.Format(msgs.locale, "opStepOf", map[string]any{"n": n, "total": total})
+}
+
+// OpVerifying says "Checking the result…"
+// in the language the app shows.
+//
+// Under an operation's title while its result is checked.
+func OpVerifying() string { return In(i18n.Locale()).OpVerifying() }
+
+// OpVerifying says "Checking the result…"
+// in the language of msgs.
+//
+// Under an operation's title while its result is checked.
+func (msgs Messages) OpVerifying() string {
+	return Catalog.Format(msgs.locale, "opVerifying", nil)
+}
+
+// OpVerified says "Done. Checked: {what}"
+// in the language the app shows.
+//
+// Under an operation's title once it ran and its check passed.
+func OpVerified(what string) string { return In(i18n.Locale()).OpVerified(what) }
+
+// OpVerified says "Done. Checked: {what}"
+// in the language of msgs.
+//
+// Under an operation's title once it ran and its check passed.
+func (msgs Messages) OpVerified(what string) string {
+	return Catalog.Format(msgs.locale, "opVerified", map[string]any{"what": what})
+}
+
+// OpSucceeded says "Done."
+// in the language the app shows.
+//
+// Under an operation's title once it ran.
+func OpSucceeded() string { return In(i18n.Locale()).OpSucceeded() }
+
+// OpSucceeded says "Done."
+// in the language of msgs.
+//
+// Under an operation's title once it ran.
+func (msgs Messages) OpSucceeded() string {
+	return Catalog.Format(msgs.locale, "opSucceeded", nil)
+}
+
+// OpFailed says "Step {n} failed: {why}. The steps after it did not run."
+// in the language the app shows.
+//
+// Under an operation's title when a step failed.
+func OpFailed(n int, why string) string { return In(i18n.Locale()).OpFailed(n, why) }
+
+// OpFailed says "Step {n} failed: {why}. The steps after it did not run."
+// in the language of msgs.
+//
+// Under an operation's title when a step failed.
+func (msgs Messages) OpFailed(n int, why string) string {
+	return Catalog.Format(msgs.locale, "opFailed", map[string]any{"n": n, "why": why})
+}
+
+// OpExitCode says "exit code {code}"
+// in the language the app shows.
+//
+// Why a step failed: the command's exit code.
+func OpExitCode(code int) string { return In(i18n.Locale()).OpExitCode(code) }
+
+// OpExitCode says "exit code {code}"
+// in the language of msgs.
+//
+// Why a step failed: the command's exit code.
+func (msgs Messages) OpExitCode(code int) string {
+	return Catalog.Format(msgs.locale, "opExitCode", map[string]any{"code": code})
+}
+
+// OpNotVerified says "The commands ran, but the check did not pass: {why}"
+// in the language the app shows.
+//
+// Under an operation's title when its steps ran but the check failed.
+func OpNotVerified(why string) string { return In(i18n.Locale()).OpNotVerified(why) }
+
+// OpNotVerified says "The commands ran, but the check did not pass: {why}"
+// in the language of msgs.
+//
+// Under an operation's title when its steps ran but the check failed.
+func (msgs Messages) OpNotVerified(why string) string {
+	return Catalog.Format(msgs.locale, "opNotVerified", map[string]any{"why": why})
+}
+
+// OpStopped says "You stopped it at step {n}. The steps after it did not run."
+// in the language the app shows.
+//
+// Under an operation's title once the user stopped it.
+func OpStopped(n int) string { return In(i18n.Locale()).OpStopped(n) }
+
+// OpStopped says "You stopped it at step {n}. The steps after it did not run."
+// in the language of msgs.
+//
+// Under an operation's title once the user stopped it.
+func (msgs Messages) OpStopped(n int) string {
+	return Catalog.Format(msgs.locale, "opStopped", map[string]any{"n": n})
+}
+
+// OpSteps says "Steps"
+// in the language the app shows.
+//
+// Section of an operation's steps as they run.
+func OpSteps() string { return In(i18n.Locale()).OpSteps() }
+
+// OpSteps says "Steps"
+// in the language of msgs.
+//
+// Section of an operation's steps as they run.
+func (msgs Messages) OpSteps() string {
+	return Catalog.Format(msgs.locale, "opSteps", nil)
+}
+
+// OpLog says "LOG · {command}"
+// in the language the app shows.
+//
+// Section of the output of the step running.
+func OpLog(command string) string { return In(i18n.Locale()).OpLog(command) }
+
+// OpLog says "LOG · {command}"
+// in the language of msgs.
+//
+// Section of the output of the step running.
+func (msgs Messages) OpLog(command string) string {
+	return Catalog.Format(msgs.locale, "opLog", map[string]any{"command": command})
+}
+
+// OpLastLines says "LOG · last lines"
+// in the language the app shows.
+//
+// Section of the last output of a failed step.
+func OpLastLines() string { return In(i18n.Locale()).OpLastLines() }
+
+// OpLastLines says "LOG · last lines"
+// in the language of msgs.
+//
+// Section of the last output of a failed step.
+func (msgs Messages) OpLastLines() string {
+	return Catalog.Format(msgs.locale, "opLastLines", nil)
+}
+
+// OpFullLog says "the full output is in the operations log"
+// in the language the app shows.
+//
+// Under the last lines of a failed step.
+func OpFullLog() string { return In(i18n.Locale()).OpFullLog() }
+
+// OpFullLog says "the full output is in the operations log"
+// in the language of msgs.
+//
+// Under the last lines of a failed step.
+func (msgs Messages) OpFullLog() string {
+	return Catalog.Format(msgs.locale, "opFullLog", nil)
+}
+
+// OpChanged says "What changed"
+// in the language the app shows.
+//
+// Section of what an operation changed, once it succeeded.
+func OpChanged() string { return In(i18n.Locale()).OpChanged() }
+
+// OpChanged says "What changed"
+// in the language of msgs.
+//
+// Section of what an operation changed, once it succeeded.
+func (msgs Messages) OpChanged() string {
+	return Catalog.Format(msgs.locale, "opChanged", nil)
+}
+
+// OpLeft says "What stays"
+// in the language the app shows.
+//
+// Section of what stays after the user stopped an operation.
+func OpLeft() string { return In(i18n.Locale()).OpLeft() }
+
+// OpLeft says "What stays"
+// in the language of msgs.
+//
+// Section of what stays after the user stopped an operation.
+func (msgs Messages) OpLeft() string {
+	return Catalog.Format(msgs.locale, "opLeft", nil)
+}
+
+// OpLeftNone says "No step finished: what the stopped one managed to do may stay"
+// in the language the app shows.
+//
+// What stays when the user stopped an operation at its first step.
+func OpLeftNone() string { return In(i18n.Locale()).OpLeftNone() }
+
+// OpLeftNone says "No step finished: what the stopped one managed to do may stay"
+// in the language of msgs.
+//
+// What stays when the user stopped an operation at its first step.
+func (msgs Messages) OpLeftNone() string {
+	return Catalog.Format(msgs.locale, "opLeftNone", nil)
+}
+
+// OpLeftSteps says "{count, plural, one {Step 1 finished: what it changed stays} other {Steps 1–# finished: what they changed stays}}"
+// in the language the app shows.
+//
+// What stays when the user stopped an operation after some steps.
+func OpLeftSteps(count int) string { return In(i18n.Locale()).OpLeftSteps(count) }
+
+// OpLeftSteps says "{count, plural, one {Step 1 finished: what it changed stays} other {Steps 1–# finished: what they changed stays}}"
+// in the language of msgs.
+//
+// What stays when the user stopped an operation after some steps.
+func (msgs Messages) OpLeftSteps(count int) string {
+	return Catalog.Format(msgs.locale, "opLeftSteps", map[string]any{"count": count})
+}
+
+// OpTagRunning says "running"
+// in the language the app shows.
+//
+// Status of the step running.
+func OpTagRunning() string { return In(i18n.Locale()).OpTagRunning() }
+
+// OpTagRunning says "running"
+// in the language of msgs.
+//
+// Status of the step running.
+func (msgs Messages) OpTagRunning() string {
+	return Catalog.Format(msgs.locale, "opTagRunning", nil)
+}
+
+// OpTagWaiting says "waiting"
+// in the language the app shows.
+//
+// Status of a step yet to run.
+func OpTagWaiting() string { return In(i18n.Locale()).OpTagWaiting() }
+
+// OpTagWaiting says "waiting"
+// in the language of msgs.
+//
+// Status of a step yet to run.
+func (msgs Messages) OpTagWaiting() string {
+	return Catalog.Format(msgs.locale, "opTagWaiting", nil)
+}
+
+// OpTagDone says "done"
+// in the language the app shows.
+//
+// Status of a step that finished.
+func OpTagDone() string { return In(i18n.Locale()).OpTagDone() }
+
+// OpTagDone says "done"
+// in the language of msgs.
+//
+// Status of a step that finished.
+func (msgs Messages) OpTagDone() string {
+	return Catalog.Format(msgs.locale, "opTagDone", nil)
+}
+
+// OpTagFailed says "failed"
+// in the language the app shows.
+//
+// Status of a step that failed.
+func OpTagFailed() string { return In(i18n.Locale()).OpTagFailed() }
+
+// OpTagFailed says "failed"
+// in the language of msgs.
+//
+// Status of a step that failed.
+func (msgs Messages) OpTagFailed() string {
+	return Catalog.Format(msgs.locale, "opTagFailed", nil)
+}
+
+// OpTagStopped says "stopped"
+// in the language the app shows.
+//
+// Status of the step the user stopped.
+func OpTagStopped() string { return In(i18n.Locale()).OpTagStopped() }
+
+// OpTagStopped says "stopped"
+// in the language of msgs.
+//
+// Status of the step the user stopped.
+func (msgs Messages) OpTagStopped() string {
+	return Catalog.Format(msgs.locale, "opTagStopped", nil)
+}
+
+// OpTagSkipped says "skipped"
+// in the language the app shows.
+//
+// Status of a step that did not run.
+func OpTagSkipped() string { return In(i18n.Locale()).OpTagSkipped() }
+
+// OpTagSkipped says "skipped"
+// in the language of msgs.
+//
+// Status of a step that did not run.
+func (msgs Messages) OpTagSkipped() string {
+	return Catalog.Format(msgs.locale, "opTagSkipped", nil)
+}
+
+// OpHide says "Run in background"
+// in the language the app shows.
+//
+// Hides the operation dialog while the operation goes on.
+func OpHide() string { return In(i18n.Locale()).OpHide() }
+
+// OpHide says "Run in background"
+// in the language of msgs.
+//
+// Hides the operation dialog while the operation goes on.
+func (msgs Messages) OpHide() string {
+	return Catalog.Format(msgs.locale, "opHide", nil)
+}
+
+// OpStop says "Stop"
+// in the language the app shows.
+//
+// Stops the operation running.
+func OpStop() string { return In(i18n.Locale()).OpStop() }
+
+// OpStop says "Stop"
+// in the language of msgs.
+//
+// Stops the operation running.
+func (msgs Messages) OpStop() string {
+	return Catalog.Format(msgs.locale, "opStop", nil)
+}
+
+// OpDone says "Done"
+// in the language the app shows.
+//
+// Closes the dialog of an operation that succeeded.
+func OpDone() string { return In(i18n.Locale()).OpDone() }
+
+// OpDone says "Done"
+// in the language of msgs.
+//
+// Closes the dialog of an operation that succeeded.
+func (msgs Messages) OpDone() string {
+	return Catalog.Format(msgs.locale, "opDone", nil)
+}
+
+// OpOpenJournal says "Open log"
+// in the language the app shows.
+//
+// Opens the operations log file.
+func OpOpenJournal() string { return In(i18n.Locale()).OpOpenJournal() }
+
+// OpOpenJournal says "Open log"
+// in the language of msgs.
+//
+// Opens the operations log file.
+func (msgs Messages) OpOpenJournal() string {
+	return Catalog.Format(msgs.locale, "opOpenJournal", nil)
+}
+
+// OpClose says "Close"
+// in the language the app shows.
+//
+// Closes the dialog of an operation the user stopped.
+func OpClose() string { return In(i18n.Locale()).OpClose() }
+
+// OpClose says "Close"
+// in the language of msgs.
+//
+// Closes the dialog of an operation the user stopped.
+func (msgs Messages) OpClose() string {
+	return Catalog.Format(msgs.locale, "opClose", nil)
+}
+
+// OpRestart says "Start again"
+// in the language the app shows.
+//
+// Runs a stopped operation again from its first step.
+func OpRestart() string { return In(i18n.Locale()).OpRestart() }
+
+// OpRestart says "Start again"
+// in the language of msgs.
+//
+// Runs a stopped operation again from its first step.
+func (msgs Messages) OpRestart() string {
+	return Catalog.Format(msgs.locale, "opRestart", nil)
+}
+
+// OpCopyLog says "Copy log"
+// in the language the app shows.
+//
+// Copies the output of the failed step.
+func OpCopyLog() string { return In(i18n.Locale()).OpCopyLog() }
+
+// OpCopyLog says "Copy log"
+// in the language of msgs.
+//
+// Copies the output of the failed step.
+func (msgs Messages) OpCopyLog() string {
+	return Catalog.Format(msgs.locale, "opCopyLog", nil)
+}
+
+// OpLogCopied says "Log copied"
+// in the language the app shows.
+//
+// Toast after copying an operation's output.
+func OpLogCopied() string { return In(i18n.Locale()).OpLogCopied() }
+
+// OpLogCopied says "Log copied"
+// in the language of msgs.
+//
+// Toast after copying an operation's output.
+func (msgs Messages) OpLogCopied() string {
+	return Catalog.Format(msgs.locale, "opLogCopied", nil)
+}
+
+// OpRetry says "Retry"
+// in the language the app shows.
+//
+// Runs a failed operation again.
+func OpRetry() string { return In(i18n.Locale()).OpRetry() }
+
+// OpRetry says "Retry"
+// in the language of msgs.
+//
+// Runs a failed operation again.
+func (msgs Messages) OpRetry() string {
+	return Catalog.Format(msgs.locale, "opRetry", nil)
+}
+
+// OpShow says "Show"
+// in the language the app shows.
+//
+// Shows the dialog of an operation running or ended in the background.
+func OpShow() string { return In(i18n.Locale()).OpShow() }
+
+// OpShow says "Show"
+// in the language of msgs.
+//
+// Shows the dialog of an operation running or ended in the background.
+func (msgs Messages) OpShow() string {
+	return Catalog.Format(msgs.locale, "opShow", nil)
+}
+
+// OpDetails says "Details"
+// in the language the app shows.
+//
+// Shows the dialog of an operation that failed in the background.
+func OpDetails() string { return In(i18n.Locale()).OpDetails() }
+
+// OpDetails says "Details"
+// in the language of msgs.
+//
+// Shows the dialog of an operation that failed in the background.
+func (msgs Messages) OpDetails() string {
+	return Catalog.Format(msgs.locale, "opDetails", nil)
+}
+
+// OpToastDone says "{title}: done"
+// in the language the app shows.
+//
+// Toast when an operation run in the background succeeded.
+func OpToastDone(title string) string { return In(i18n.Locale()).OpToastDone(title) }
+
+// OpToastDone says "{title}: done"
+// in the language of msgs.
+//
+// Toast when an operation run in the background succeeded.
+func (msgs Messages) OpToastDone(title string) string {
+	return Catalog.Format(msgs.locale, "opToastDone", map[string]any{"title": title})
+}
+
+// OpToastFailed says "{title}: failed"
+// in the language the app shows.
+//
+// Toast when an operation run in the background failed.
+func OpToastFailed(title string) string { return In(i18n.Locale()).OpToastFailed(title) }
+
+// OpToastFailed says "{title}: failed"
+// in the language of msgs.
+//
+// Toast when an operation run in the background failed.
+func (msgs Messages) OpToastFailed(title string) string {
+	return Catalog.Format(msgs.locale, "opToastFailed", map[string]any{"title": title})
+}
+
+// OpToastStopped says "{title}: stopped"
+// in the language the app shows.
+//
+// Toast when an operation run in the background was stopped.
+func OpToastStopped(title string) string { return In(i18n.Locale()).OpToastStopped(title) }
+
+// OpToastStopped says "{title}: stopped"
+// in the language of msgs.
+//
+// Toast when an operation run in the background was stopped.
+func (msgs Messages) OpToastStopped(title string) string {
+	return Catalog.Format(msgs.locale, "opToastStopped", map[string]any{"title": title})
+}
+
+// NodeInstallTitle says "Install Node {version}"
+// in the language the app shows.
+//
+// Title of the plan that installs a Node version.
+func NodeInstallTitle(version string) string { return In(i18n.Locale()).NodeInstallTitle(version) }
+
+// NodeInstallTitle says "Install Node {version}"
+// in the language of msgs.
+//
+// Title of the plan that installs a Node version.
+func (msgs Messages) NodeInstallTitle(version string) string {
+	return Catalog.Format(msgs.locale, "nodeInstallTitle", map[string]any{"version": version})
+}
+
+// NodeInstallWhy says "Through {manager}, as your other Node versions. The version in use stays as it is."
+// in the language the app shows.
+//
+// Why and how a Node version installs.
+func NodeInstallWhy(manager string) string { return In(i18n.Locale()).NodeInstallWhy(manager) }
+
+// NodeInstallWhy says "Through {manager}, as your other Node versions. The version in use stays as it is."
+// in the language of msgs.
+//
+// Why and how a Node version installs.
+func (msgs Messages) NodeInstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "nodeInstallWhy", map[string]any{"manager": manager})
+}
+
+// NodeUninstallTitle says "Remove Node {version}"
+// in the language the app shows.
+//
+// Title of the plan that removes a Node version.
+func NodeUninstallTitle(version string) string { return In(i18n.Locale()).NodeUninstallTitle(version) }
+
+// NodeUninstallTitle says "Remove Node {version}"
+// in the language of msgs.
+//
+// Title of the plan that removes a Node version.
+func (msgs Messages) NodeUninstallTitle(version string) string {
+	return Catalog.Format(msgs.locale, "nodeUninstallTitle", map[string]any{"version": version})
+}
+
+// NodeUninstallWhy says "Through {manager}. The global npm packages of this version go with it."
+// in the language the app shows.
+//
+// Why and how a Node version is removed.
+func NodeUninstallWhy(manager string) string { return In(i18n.Locale()).NodeUninstallWhy(manager) }
+
+// NodeUninstallWhy says "Through {manager}. The global npm packages of this version go with it."
+// in the language of msgs.
+//
+// Why and how a Node version is removed.
+func (msgs Messages) NodeUninstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "nodeUninstallWhy", map[string]any{"manager": manager})
+}
+
+// NodeDefaultTitle says "Make Node {version} the default"
+// in the language the app shows.
+//
+// Title of the plan that makes a Node version the default.
+func NodeDefaultTitle(version string) string { return In(i18n.Locale()).NodeDefaultTitle(version) }
+
+// NodeDefaultTitle says "Make Node {version} the default"
+// in the language of msgs.
+//
+// Title of the plan that makes a Node version the default.
+func (msgs Messages) NodeDefaultTitle(version string) string {
+	return Catalog.Format(msgs.locale, "nodeDefaultTitle", map[string]any{"version": version})
+}
+
+// NodeDefaultWhy says "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs."
+// in the language the app shows.
+//
+// Why and how a Node version becomes the default.
+func NodeDefaultWhy(manager string) string { return In(i18n.Locale()).NodeDefaultWhy(manager) }
+
+// NodeDefaultWhy says "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs."
+// in the language of msgs.
+//
+// Why and how a Node version becomes the default.
+func (msgs Messages) NodeDefaultWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "nodeDefaultWhy", map[string]any{"manager": manager})
+}
+
+// NodeDefaultChange says "Node v{version} is the default of {manager}"
+// in the language the app shows.
+//
+// What changed once a Node version became the default.
+func NodeDefaultChange(version string, manager string) string {
+	return In(i18n.Locale()).NodeDefaultChange(version, manager)
+}
+
+// NodeDefaultChange says "Node v{version} is the default of {manager}"
+// in the language of msgs.
+//
+// What changed once a Node version became the default.
+func (msgs Messages) NodeDefaultChange(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeDefaultChange", map[string]any{"version": version, "manager": manager})
+}
+
+// NoteAdmin says "Administrator rights"
+// in the language the app shows.
+//
+// Worth knowing before an operation: it needs administrator rights.
+func NoteAdmin() string { return In(i18n.Locale()).NoteAdmin() }
+
+// NoteAdmin says "Administrator rights"
+// in the language of msgs.
+//
+// Worth knowing before an operation: it needs administrator rights.
+func (msgs Messages) NoteAdmin() string {
+	return Catalog.Format(msgs.locale, "noteAdmin", nil)
+}
+
+// NoteNvmWindowsUAC says "nvm-windows asks Windows for them to switch the version"
+// in the language the app shows.
+//
+// Why switching Node with nvm-windows asks for administrator rights.
+func NoteNvmWindowsUAC() string { return In(i18n.Locale()).NoteNvmWindowsUAC() }
+
+// NoteNvmWindowsUAC says "nvm-windows asks Windows for them to switch the version"
+// in the language of msgs.
+//
+// Why switching Node with nvm-windows asks for administrator rights.
+func (msgs Messages) NoteNvmWindowsUAC() string {
+	return Catalog.Format(msgs.locale, "noteNvmWindowsUAC", nil)
+}
+
+// NodeCheckInstalled says "{manager} has Node v{version}"
+// in the language the app shows.
+//
+// What the check found after installing a Node version.
+func NodeCheckInstalled(version string, manager string) string {
+	return In(i18n.Locale()).NodeCheckInstalled(version, manager)
+}
+
+// NodeCheckInstalled says "{manager} has Node v{version}"
+// in the language of msgs.
+//
+// What the check found after installing a Node version.
+func (msgs Messages) NodeCheckInstalled(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckInstalled", map[string]any{"version": version, "manager": manager})
+}
+
+// NodeCheckNotInstalled says "Hearth does not find Node v{version} of {manager}"
+// in the language the app shows.
+//
+// The check after installing did not find the version.
+func NodeCheckNotInstalled(version string, manager string) string {
+	return In(i18n.Locale()).NodeCheckNotInstalled(version, manager)
+}
+
+// NodeCheckNotInstalled says "Hearth does not find Node v{version} of {manager}"
+// in the language of msgs.
+//
+// The check after installing did not find the version.
+func (msgs Messages) NodeCheckNotInstalled(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckNotInstalled", map[string]any{"version": version, "manager": manager})
+}
+
+// NodeCheckRemoved says "Node v{version} is gone"
+// in the language the app shows.
+//
+// What the check found after removing a Node version.
+func NodeCheckRemoved(version string) string { return In(i18n.Locale()).NodeCheckRemoved(version) }
+
+// NodeCheckRemoved says "Node v{version} is gone"
+// in the language of msgs.
+//
+// What the check found after removing a Node version.
+func (msgs Messages) NodeCheckRemoved(version string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckRemoved", map[string]any{"version": version})
+}
+
+// NodeCheckNotRemoved says "Node v{version} of {manager} is still there"
+// in the language the app shows.
+//
+// The check after removing still found the version.
+func NodeCheckNotRemoved(version string, manager string) string {
+	return In(i18n.Locale()).NodeCheckNotRemoved(version, manager)
+}
+
+// NodeCheckNotRemoved says "Node v{version} of {manager} is still there"
+// in the language of msgs.
+//
+// The check after removing still found the version.
+func (msgs Messages) NodeCheckNotRemoved(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckNotRemoved", map[string]any{"version": version, "manager": manager})
+}
+
+// NodeCheckDefault says "{manager} starts v{version} by default"
+// in the language the app shows.
+//
+// What the check found after making a Node version the default.
+func NodeCheckDefault(version string, manager string) string {
+	return In(i18n.Locale()).NodeCheckDefault(version, manager)
+}
+
+// NodeCheckDefault says "{manager} starts v{version} by default"
+// in the language of msgs.
+//
+// What the check found after making a Node version the default.
+func (msgs Messages) NodeCheckDefault(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckDefault", map[string]any{"version": version, "manager": manager})
+}
+
+// NodeCheckNotDefault says "{manager} does not start v{version} by default"
+// in the language the app shows.
+//
+// The check after making a version the default found another.
+func NodeCheckNotDefault(version string, manager string) string {
+	return In(i18n.Locale()).NodeCheckNotDefault(version, manager)
+}
+
+// NodeCheckNotDefault says "{manager} does not start v{version} by default"
+// in the language of msgs.
+//
+// The check after making a version the default found another.
+func (msgs Messages) NodeCheckNotDefault(version string, manager string) string {
+	return Catalog.Format(msgs.locale, "nodeCheckNotDefault", map[string]any{"version": version, "manager": manager})
+}
+
+// InstallVersion says "Install version"
+// in the language the app shows.
+//
+// Main action of a language page's header: install the recommended version.
+func InstallVersion() string { return In(i18n.Locale()).InstallVersion() }
+
+// InstallVersion says "Install version"
+// in the language of msgs.
+//
+// Main action of a language page's header: install the recommended version.
+func (msgs Messages) InstallVersion() string {
+	return Catalog.Format(msgs.locale, "installVersion", nil)
+}
+
+// InstallNamed says "Install {name}"
+// in the language the app shows.
+//
+// Tooltip of a button that installs a version.
+func InstallNamed(name string) string { return In(i18n.Locale()).InstallNamed(name) }
+
+// InstallNamed says "Install {name}"
+// in the language of msgs.
+//
+// Tooltip of a button that installs a version.
+func (msgs Messages) InstallNamed(name string) string {
+	return Catalog.Format(msgs.locale, "installNamed", map[string]any{"name": name})
+}
+
+// Through says "through {manager}"
+// in the language the app shows.
+//
+// Which manager installs the versions listed, at the top right of their
+// card.
+func Through(manager string) string { return In(i18n.Locale()).Through(manager) }
+
+// Through says "through {manager}"
+// in the language of msgs.
+//
+// Which manager installs the versions listed, at the top right of their
+// card.
+func (msgs Messages) Through(manager string) string {
+	return Catalog.Format(msgs.locale, "through", map[string]any{"manager": manager})
+}
+
+// MakeDefault says "Make default"
+// in the language the app shows.
+//
+// Menu item of a version: new terminals start it.
+func MakeDefault() string { return In(i18n.Locale()).MakeDefault() }
+
+// MakeDefault says "Make default"
+// in the language of msgs.
+//
+// Menu item of a version: new terminals start it.
+func (msgs Messages) MakeDefault() string {
+	return Catalog.Format(msgs.locale, "makeDefault", nil)
+}
+
+// RemoveEllipsis says "Remove…"
+// in the language the app shows.
+//
+// Menu item of a version: shows the plan that removes it.
+func RemoveEllipsis() string { return In(i18n.Locale()).RemoveEllipsis() }
+
+// RemoveEllipsis says "Remove…"
+// in the language of msgs.
+//
+// Menu item of a version: shows the plan that removes it.
+func (msgs Messages) RemoveEllipsis() string {
+	return Catalog.Format(msgs.locale, "removeEllipsis", nil)
+}

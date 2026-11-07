@@ -58,6 +58,10 @@ type Palette struct {
 	SuccessText   ui.Color
 	WarningSoft   ui.Color // behind a warning chip
 	WarningText   ui.Color
+	InfoSoft      ui.Color // behind a step under way
+	InfoText      ui.Color
+	DangerSoft    ui.Color // behind a failed step
+	DangerText    ui.Color
 
 	// The overview's hero: its gradient from the top left, its border and
 	// the background of its counts.
@@ -89,6 +93,10 @@ func Colors(t *ui.Theme) Palette {
 			SuccessText:   ui.Hex("#5FD08E"),
 			WarningSoft:   ui.Hex("#33291A"),
 			WarningText:   ui.Hex("#E3AE4A"),
+			InfoSoft:      ui.Hex("#1C2639"),
+			InfoText:      ui.Hex("#8DB4F5"),
+			DangerSoft:    ui.Hex("#3B1F1C"),
+			DangerText:    ui.Hex("#FF8A80"),
 			HeroFrom:      ui.Hex("#2E231C"),
 			HeroMid:       ui.Hex("#26201B"),
 			HeroTo:        ui.Hex("#221F1B"),
@@ -116,6 +124,10 @@ func Colors(t *ui.Theme) Palette {
 		SuccessText:   ui.Hex("#23794A"),
 		WarningSoft:   ui.Hex("#FBF2DE"),
 		WarningText:   ui.Hex("#9A6300"),
+		InfoSoft:      ui.Hex("#E8EFFC"),
+		InfoText:      ui.Hex("#244A8F"),
+		DangerSoft:    ui.Hex("#FBEAE8"),
+		DangerText:    ui.Hex("#8C2A22"),
 		HeroFrom:      ui.Hex("#FFF1E6"),
 		HeroMid:       ui.Hex("#FFF9F4"),
 		HeroTo:        ui.Hex("#FAF8F5"),

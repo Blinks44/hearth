@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -108,6 +109,19 @@ func TestExecRun(t *testing.T) {
 		}
 	})
 
+	t.Run("output goes to Output too", func(t *testing.T) {
+		c := helper("flood")
+		c.MaxOutput = 100
+		var out syncBuffer
+		c.Output = &out
+		if _, err := (Exec{}).Run(ctx, c); err != nil {
+			t.Fatal(err)
+		}
+		if n := len(out.String()); n != 10_000 {
+			t.Errorf("Output got %d bytes, want all 10000", n)
+		}
+	})
+
 	t.Run("working directory", func(t *testing.T) {
 		dir := t.TempDir()
 		c := helper("pwd")
@@ -171,4 +185,22 @@ func TestLines(t *testing.T) {
 	if err := Lines(ctx, helper("sleep"), func(string) {}); !errors.Is(err, context.DeadlineExceeded) || time.Since(start) > 5*time.Second {
 		t.Errorf("canceled: %v after %v", err, time.Since(start))
 	}
+}
+
+// syncBuffer is a buffer two goroutines may write at once.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
 }

@@ -3972,5 +3972,433 @@
   "reasonSuperseded": "a newer version is installed",
   "@reasonSuperseded": {
     "description": "Cleanup reason: old versions of extensions."
+  },
+  "opRun": "Run",
+  "@opRun": {
+    "description": "Default button that runs an operation's plan."
+  },
+  "opCommands": "Commands · run in order",
+  "@opCommands": {
+    "description": "Section of an operation's commands before it runs."
+  },
+  "opWorthKnowing": "Worth knowing",
+  "@opWorthKnowing": {
+    "description": "Section of notes before an operation runs: password, terms of use."
+  },
+  "opOpenLink": "Open",
+  "@opOpenLink": {
+    "description": "Opens a note's page, as the terms of use, in the browser."
+  },
+  "opStepOf": "Step {n} of {total} · can be stopped at any time",
+  "@opStepOf": {
+    "description": "Under an operation's title while it runs.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "opVerifying": "Checking the result…",
+  "@opVerifying": {
+    "description": "Under an operation's title while its result is checked."
+  },
+  "opVerified": "Done. Checked: {what}",
+  "@opVerified": {
+    "description": "Under an operation's title once it ran and its check passed.",
+    "placeholders": {
+      "what": {
+        "type": "String",
+        "example": "docker 27.4.1 answers"
+      }
+    }
+  },
+  "opSucceeded": "Done.",
+  "@opSucceeded": {
+    "description": "Under an operation's title once it ran."
+  },
+  "opFailed": "Step {n} failed: {why}. The steps after it did not run.",
+  "@opFailed": {
+    "description": "Under an operation's title when a step failed.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      },
+      "why": {
+        "type": "String",
+        "example": "exit code 1"
+      }
+    }
+  },
+  "opExitCode": "exit code {code}",
+  "@opExitCode": {
+    "description": "Why a step failed: the command's exit code.",
+    "placeholders": {
+      "code": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "opNotVerified": "The commands ran, but the check did not pass: {why}",
+  "@opNotVerified": {
+    "description": "Under an operation's title when its steps ran but the check failed.",
+    "placeholders": {
+      "why": {
+        "type": "String",
+        "example": "node --version answers 20.1.0"
+      }
+    }
+  },
+  "opStopped": "You stopped it at step {n}. The steps after it did not run.",
+  "@opStopped": {
+    "description": "Under an operation's title once the user stopped it.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "opSteps": "Steps",
+  "@opSteps": {
+    "description": "Section of an operation's steps as they run."
+  },
+  "opLog": "LOG · {command}",
+  "@opLog": {
+    "description": "Section of the output of the step running.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "brew install --cask docker"
+      }
+    }
+  },
+  "opLastLines": "LOG · last lines",
+  "@opLastLines": {
+    "description": "Section of the last output of a failed step."
+  },
+  "opFullLog": "the full output is in the operations log",
+  "@opFullLog": {
+    "description": "Under the last lines of a failed step."
+  },
+  "opChanged": "What changed",
+  "@opChanged": {
+    "description": "Section of what an operation changed, once it succeeded."
+  },
+  "opLeft": "What stays",
+  "@opLeft": {
+    "description": "Section of what stays after the user stopped an operation."
+  },
+  "opLeftNone": "No step finished: what the stopped one managed to do may stay",
+  "@opLeftNone": {
+    "description": "What stays when the user stopped an operation at its first step."
+  },
+  "opLeftSteps": "{count, plural, one {Step 1 finished: what it changed stays} other {Steps 1–# finished: what they changed stays}}",
+  "@opLeftSteps": {
+    "description": "What stays when the user stopped an operation after some steps.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "opTagRunning": "running",
+  "@opTagRunning": {
+    "description": "Status of the step running."
+  },
+  "opTagWaiting": "waiting",
+  "@opTagWaiting": {
+    "description": "Status of a step yet to run."
+  },
+  "opTagDone": "done",
+  "@opTagDone": {
+    "description": "Status of a step that finished."
+  },
+  "opTagFailed": "failed",
+  "@opTagFailed": {
+    "description": "Status of a step that failed."
+  },
+  "opTagStopped": "stopped",
+  "@opTagStopped": {
+    "description": "Status of the step the user stopped."
+  },
+  "opTagSkipped": "skipped",
+  "@opTagSkipped": {
+    "description": "Status of a step that did not run."
+  },
+  "opHide": "Run in background",
+  "@opHide": {
+    "description": "Hides the operation dialog while the operation goes on."
+  },
+  "opStop": "Stop",
+  "@opStop": {
+    "description": "Stops the operation running."
+  },
+  "opDone": "Done",
+  "@opDone": {
+    "description": "Closes the dialog of an operation that succeeded."
+  },
+  "opOpenJournal": "Open log",
+  "@opOpenJournal": {
+    "description": "Opens the operations log file."
+  },
+  "opClose": "Close",
+  "@opClose": {
+    "description": "Closes the dialog of an operation the user stopped."
+  },
+  "opRestart": "Start again",
+  "@opRestart": {
+    "description": "Runs a stopped operation again from its first step."
+  },
+  "opCopyLog": "Copy log",
+  "@opCopyLog": {
+    "description": "Copies the output of the failed step."
+  },
+  "opLogCopied": "Log copied",
+  "@opLogCopied": {
+    "description": "Toast after copying an operation's output."
+  },
+  "opRetry": "Retry",
+  "@opRetry": {
+    "description": "Runs a failed operation again."
+  },
+  "opShow": "Show",
+  "@opShow": {
+    "description": "Shows the dialog of an operation running or ended in the background."
+  },
+  "opDetails": "Details",
+  "@opDetails": {
+    "description": "Shows the dialog of an operation that failed in the background."
+  },
+  "opToastDone": "{title}: done",
+  "@opToastDone": {
+    "description": "Toast when an operation run in the background succeeded.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Install Docker Desktop"
+      }
+    }
+  },
+  "opToastFailed": "{title}: failed",
+  "@opToastFailed": {
+    "description": "Toast when an operation run in the background failed.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Install Docker Desktop"
+      }
+    }
+  },
+  "opToastStopped": "{title}: stopped",
+  "@opToastStopped": {
+    "description": "Toast when an operation run in the background was stopped.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Install Docker Desktop"
+      }
+    }
+  },
+  "nodeInstallTitle": "Install Node {version}",
+  "@nodeInstallTitle": {
+    "description": "Title of the plan that installs a Node version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      }
+    }
+  },
+  "nodeInstallWhy": "Through {manager}, as your other Node versions. The version in use stays as it is.",
+  "@nodeInstallWhy": {
+    "description": "Why and how a Node version installs.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeUninstallTitle": "Remove Node {version}",
+  "@nodeUninstallTitle": {
+    "description": "Title of the plan that removes a Node version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "20.18.1"
+      }
+    }
+  },
+  "nodeUninstallWhy": "Through {manager}. The global npm packages of this version go with it.",
+  "@nodeUninstallWhy": {
+    "description": "Why and how a Node version is removed.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeDefaultTitle": "Make Node {version} the default",
+  "@nodeDefaultTitle": {
+    "description": "Title of the plan that makes a Node version the default.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      }
+    }
+  },
+  "nodeDefaultWhy": "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs.",
+  "@nodeDefaultWhy": {
+    "description": "Why and how a Node version becomes the default.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeDefaultChange": "Node v{version} is the default of {manager}",
+  "@nodeDefaultChange": {
+    "description": "What changed once a Node version became the default.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "noteAdmin": "Administrator rights",
+  "@noteAdmin": {
+    "description": "Worth knowing before an operation: it needs administrator rights."
+  },
+  "noteNvmWindowsUAC": "nvm-windows asks Windows for them to switch the version",
+  "@noteNvmWindowsUAC": {
+    "description": "Why switching Node with nvm-windows asks for administrator rights."
+  },
+  "nodeCheckInstalled": "{manager} has Node v{version}",
+  "@nodeCheckInstalled": {
+    "description": "What the check found after installing a Node version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeCheckNotInstalled": "Hearth does not find Node v{version} of {manager}",
+  "@nodeCheckNotInstalled": {
+    "description": "The check after installing did not find the version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeCheckRemoved": "Node v{version} is gone",
+  "@nodeCheckRemoved": {
+    "description": "What the check found after removing a Node version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "20.18.1"
+      }
+    }
+  },
+  "nodeCheckNotRemoved": "Node v{version} of {manager} is still there",
+  "@nodeCheckNotRemoved": {
+    "description": "The check after removing still found the version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "20.18.1"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeCheckDefault": "{manager} starts v{version} by default",
+  "@nodeCheckDefault": {
+    "description": "What the check found after making a Node version the default.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "nodeCheckNotDefault": "{manager} does not start v{version} by default",
+  "@nodeCheckNotDefault": {
+    "description": "The check after making a version the default found another.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.14.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "installVersion": "Install version",
+  "@installVersion": {
+    "description": "Main action of a language page's header: install the recommended version."
+  },
+  "installNamed": "Install {name}",
+  "@installNamed": {
+    "description": "Tooltip of a button that installs a version.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "v22.14.0"
+      }
+    }
+  },
+  "through": "through {manager}",
+  "@through": {
+    "description": "Which manager installs the versions listed, at the top right of their card.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "makeDefault": "Make default",
+  "@makeDefault": {
+    "description": "Menu item of a version: new terminals start it."
+  },
+  "removeEllipsis": "Remove…",
+  "@removeEllipsis": {
+    "description": "Menu item of a version: shows the plan that removes it."
   }
 }

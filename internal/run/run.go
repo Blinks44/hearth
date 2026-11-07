@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"time"
 )
@@ -35,6 +36,9 @@ type Cmd struct {
 	// MaxOutput caps the bytes kept of stdout and of stderr each; zero is
 	// DefaultMaxOutput. The rest is read and dropped.
 	MaxOutput int
+	// Output, when set, also gets stdout and stderr as the command writes
+	// them, all of it, from two goroutines at once.
+	Output io.Writer
 }
 
 // Result is what a command that ran left. A non-zero ExitCode is a result,
@@ -83,6 +87,9 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 	stdout := &capped{limit: limit}
 	stderr := &capped{limit: limit}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
+	if c.Output != nil {
+		cmd.Stdout, cmd.Stderr = io.MultiWriter(stdout, c.Output), io.MultiWriter(stderr, c.Output)
+	}
 
 	start := time.Now()
 	err := cmd.Run()

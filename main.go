@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"github.com/Blinks44/hearth/internal/disk"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
@@ -84,6 +86,37 @@ func main() {
 				entries, text, err := ai.SkillFolder(dir)
 				win.Update(func() { done(entries, text, err) })
 			}()
+		}
+		// Operations run one at a time in the background, as the user's
+		// own commands would in the terminal, and append all their output
+		// to the operations log.
+		if logs, err := mygo.App.Path(mygo.PathLogs); err != nil {
+			log.Print(err)
+		} else {
+			a.JournalPath = filepath.Join(logs, "operations.log")
+		}
+		a.DetectTool = scanner.Detect
+		a.RunPlan = func(p ops.Plan, update func(ops.State)) func() {
+			if p.Env == nil {
+				p.Env = slices.Clone(scanner.Terminal())
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			journalPath := a.JournalPath
+			go func() {
+				defer cancel()
+				journal := io.Discard
+				if journalPath != "" {
+					f, err := os.OpenFile(journalPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+					if err != nil {
+						log.Print(err)
+					} else {
+						defer func() { _ = f.Close() }()
+						journal = f
+					}
+				}
+				ops.Execute(ctx, run.Exec{}, p, journal, func(s ops.State) { win.Update(func() { update(s) }) })
+			}()
+			return cancel
 		}
 		// Project files and the shells' startup files are followed: a
 		// change reads that project again, or scans again. A change of the

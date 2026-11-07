@@ -55,6 +55,10 @@ func (f *Fake) Run(ctx context.Context, c Cmd) (Result, error) {
 	if !ok {
 		return Result{}, fmt.Errorf("run %s: %w", strings.Join(c.Args, " "), exec.ErrNotFound)
 	}
+	if c.Output != nil {
+		_, _ = c.Output.Write(a.res.Stdout)
+		_, _ = c.Output.Write(a.res.Stderr)
+	}
 	return a.res, a.err
 }
 

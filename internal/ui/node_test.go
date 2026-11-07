@@ -440,3 +440,53 @@ func TestNodeNarrow(t *testing.T) {
 		}
 	}
 }
+
+// Installing from the available versions, the header and removing from a
+// row's menu all show their plan through the version manager in use.
+func TestNodeOperations(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	a.Shell = &fakeShell{}
+	tt := openNode(t, a)
+	a.NodeVersions = nodeVersions(tt.Now())
+	tt.Frame()
+	if !tt.HasText("through fnm") {
+		t.Errorf("no manager on the available card: %q", tt.Texts())
+	}
+	screenshot(t, tt, "node-operations")
+	if err := tt.Click("Install v24.1.0"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("Install Node 24.1.0") || !tt.HasText("fnm install 24.1.0") {
+		t.Fatalf("no install plan: %q", tt.Texts())
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	if err := tt.Click("Install version"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("fnm install 24.1.0") {
+		t.Fatalf("the header does not install the recommended version: %q", tt.Texts())
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Remove…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("Remove Node 22.12.0") || !tt.HasText("fnm uninstall 22.12.0") {
+		t.Fatalf("no remove plan: %q", tt.Texts())
+	}
+}

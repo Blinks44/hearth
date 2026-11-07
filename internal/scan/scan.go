@@ -4,6 +4,7 @@ package scan
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"sync"
@@ -143,6 +144,29 @@ func (s *Scanner) Refresh(tools []string, done func([]inventory.ToolState)) {
 			done(states)
 		}
 	}()
+}
+
+// Detect runs the detector of tool alone, in the environment of the last
+// scan, and returns what it found: an operation checks its result so.
+func (s *Scanner) Detect(ctx context.Context, tool string) (inventory.ToolState, error) {
+	s.mu.Lock()
+	term, gui := s.term, s.gui
+	s.mu.Unlock()
+	if term == nil {
+		env := s.Env
+		if env == nil {
+			env = systemEnv
+		}
+		term, gui = env(ctx, s.Runner)
+	}
+	for _, d := range s.Detectors {
+		if d.Tool == tool {
+			st, err := d.Detect(ctx, s.Runner, term, gui)
+			st.Tool = tool
+			return st, err
+		}
+	}
+	return inventory.ToolState{}, fmt.Errorf("detect %s: no detector", tool)
 }
 
 // Replace returns snap with the tools' states replaced by those of

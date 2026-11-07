@@ -573,7 +573,11 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 			if m.Item(showInFolder()).Chosen() {
 				reveal()
 			}
-			if a.Home == "" || in.Tool != "node" {
+			if in.Tool != "node" {
+				return
+			}
+			a.nodeMenu(m, in)
+			if a.Home == "" {
 				return
 			}
 			m.Separator()

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -119,6 +121,17 @@ type App struct {
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
+	// RunPlan executes a plan the user confirmed in the background,
+	// giving update how it goes through Window.Update, and returns what
+	// stops it; nil shows plans without running them.
+	RunPlan func(p ops.Plan, update func(ops.State)) (stop func())
+	// JournalPath is the log of operations, which their dialog opens.
+	JournalPath string
+	// DetectTool finds a tool again, as a scan would, for an operation's
+	// check; it runs on the operation's goroutine.
+	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)
+
+	op             *operation // the operation shown or running; nil when none
 	search         searchState
 	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
@@ -287,6 +300,7 @@ func (a *App) View(c *ui.Context) {
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
 	a.searchDialog(c)
+	a.operationView(c)
 }
 
 // Scan starts a scan, as the header and the sidebar do, unless one is
