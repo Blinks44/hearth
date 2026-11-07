@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -71,6 +72,15 @@ func TestDetectFiles(t *testing.T) {
 		{"devin", p(".config", "devin"), []inventory.AgentFile{
 			{Path: p(".config", "devin", "mcp_config.json"), Kind: mcp},
 		}},
+		{"grok", p(".grok"), []inventory.AgentFile{
+			{Path: p(".grok", "config.toml"), Kind: settings}, {Path: p(".agents", "skills"), Kind: skills},
+			{Path: p(".claude", "skills"), Kind: skills},
+		}},
+		{"kimi", p(".kimi-code"), []inventory.AgentFile{
+			{Path: p(".kimi-code", "mcp.json"), Kind: mcp}, {Path: p(".agents", "skills"), Kind: skills},
+		}},
+		// Aider keeps no directory of its own.
+		{"aider", "", []inventory.AgentFile{{Path: p(".aider.conf.yml"), Kind: settings}}},
 	}
 	found := byID(got)
 	for _, tt := range tests {
@@ -127,5 +137,15 @@ func TestVersions(t *testing.T) {
 		if got != tt.out {
 			t.Errorf("%q%q: %q, want %q", tt.path, tt.in, got, tt.out)
 		}
+	}
+}
+
+// An agent's first start may be slow: its version gets more than the
+// default timeout.
+func TestRunVersionTimeout(t *testing.T) {
+	r := &run.Fake{}
+	r.Stdout("grok 1.0.77 (50ca579fa996)", "/bin/grok", "--version")
+	if v := runVersion(t.Context(), r, nil, "/bin/grok"); v != "1.0.77" || r.Calls()[0].Timeout < 10*time.Second {
+		t.Fatal(v, r.Calls())
 	}
 }

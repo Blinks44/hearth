@@ -51,6 +51,9 @@ func TestMCP(t *testing.T) {
 			URL: "https://mcp.example.com/sse?token=" + hidden + "&team=" + hidden},
 		{Name: "docs", Agent: "devin", File: p(".config", "devin", "mcp_config.json"), Transport: "http",
 			URL: "https://docs.example.com/sse", Disabled: true},
+		{Name: "everything", Agent: "grok", File: p(".grok", "config.toml"), Transport: "stdio", Command: "npx",
+			Args: []string{"-y", "@modelcontextprotocol/server-everything"}, Missing: true},
+		{Name: "search", Agent: "kimi", File: p(".kimi-code", "mcp.json"), Transport: "http", URL: "https://search.example.com/mcp"},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("%d servers, want %d: %+v", len(got), len(want), got)

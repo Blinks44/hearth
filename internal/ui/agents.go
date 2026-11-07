@@ -26,6 +26,9 @@ var agentInfos = []agentInfo{
 	{"cursor", "Cursor", "cursor"},
 	{"opencode", "OpenCode", ""},
 	{"devin", "Devin", ""},
+	{"grok", "Grok Build", ""},
+	{"kimi", "Kimi Code", ""},
+	{"aider", "Aider", ""},
 }
 
 // brandColors tint the logos of the agents whose brand has a color.
@@ -405,11 +408,14 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 					}
 				})
 				count := func(n int) {
-					color := t.Text
+					color, text := t.Text, strconv.Itoa(n)
 					if n == 0 {
 						color = pal.TextFaint
 					}
-					ui.Text(c, strconv.Itoa(n)).FontSize(12.5).TextColor(color).Width(56).Shrink(0).SingleLine()
+					if ag.ID == "aider" { // it has neither skills nor MCP
+						text = "—"
+					}
+					ui.Text(c, text).FontSize(12.5).TextColor(color).Width(56).Shrink(0).SingleLine()
 				}
 				count(skills)
 				count(servers)

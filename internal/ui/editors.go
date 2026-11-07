@@ -91,8 +91,9 @@ func (a *App) editorRows(e inventory.Editor, all []inventory.Editor) []editorRow
 		if e.Config != "" {
 			about = []string{locales.EditorsConfig(e.Config)}
 		}
+		// Extensions shared with VS Code, the one others are made of.
 		for _, o := range all {
-			if o.ID == e.ID || e.Config != "" || o.Config != "" {
+			if o.ID != "vscode" || e.ID == "vscode" || e.Config != "" {
 				continue
 			}
 			shared := 0
@@ -101,7 +102,7 @@ func (a *App) editorRows(e inventory.Editor, all []inventory.Editor) []editorRow
 					shared++
 				}
 			}
-			if shared > 0 && e.ID != "vscode" {
+			if shared > 0 {
 				about = append(about, locales.EditorsAlsoIn(shared, o.Name))
 			}
 		}

@@ -41,8 +41,8 @@ func skillMD(name, description string) string {
 
 // Readers of each skills directory, in Hearth's order.
 var (
-	claudeDir = []string{"claude", "cursor", "opencode"}
-	sharedDir = []string{"codex", "copilot", "gemini", "cursor", "opencode"}
+	claudeDir = []string{"claude", "cursor", "opencode", "grok"}
+	sharedDir = []string{"codex", "copilot", "gemini", "cursor", "opencode", "grok", "kimi"}
 )
 
 // skill is what a test checks of a found skill; dir and paths are relative
@@ -166,8 +166,8 @@ func TestProjectSkills(t *testing.T) {
 		map[string]string{".claude/skills/plan": "../../.agents/skills/plan"})
 	got := ProjectSkills(dir)
 	want := []skill{{name: "plan", description: "Plan work", dir: ".agents/skills/plan", paths: []inventory.SkillPath{
-		{Path: ".claude/skills/plan", Link: true, Agents: []string{"claude", "copilot", "cursor", "opencode"}},
-		{Path: ".agents/skills/plan", Agents: []string{"codex", "copilot", "gemini", "cursor", "opencode", "devin"}},
+		{Path: ".claude/skills/plan", Link: true, Agents: []string{"claude", "copilot", "cursor", "opencode", "grok"}},
+		{Path: ".agents/skills/plan", Agents: []string{"codex", "copilot", "gemini", "cursor", "opencode", "devin", "grok", "kimi"}},
 	}}}
 	if s := summary(t, got, dir); !reflect.DeepEqual(s, want) {
 		t.Errorf("got  %+v\nwant %+v", s, want)

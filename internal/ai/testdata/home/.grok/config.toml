@@ -1,0 +1,7 @@
+[cli]
+installer = "npm"
+
+[mcp_servers.everything]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-everything"]
+enabled = true

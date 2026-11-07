@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -74,6 +75,19 @@ var agents = []agent{
 	{"devin", []string{"devin"}, []string{"$APPDATA/devin", "$XDG_CONFIG_HOME/devin", "~/.config/devin"}, []file{
 		{"mcp_config.json", mcp}, {"AGENTS.md", instructions},
 	}, []string{"skills"}, []string{".devin/skills", ".agents/skills", ".windsurf/skills"}},
+	// Grok Build also reads Claude Code's and Cursor's skills directories.
+	{"grok", []string{"grok"}, []string{"$GROK_HOME", "~/.grok"}, []file{
+		{"config.toml", settings},
+	}, []string{"skills", sharedSkills, "~/.claude/skills", "~/.cursor/skills"},
+		[]string{".grok/skills", ".agents/skills", ".claude/skills", ".cursor/skills"}},
+	// Kimi Code, the successor of the archived Kimi CLI and its ~/.kimi.
+	{"kimi", []string{"kimi"}, []string{"$KIMI_CODE_HOME", "~/.kimi-code"}, []file{
+		{"config.toml", settings}, {"AGENTS.md", instructions}, {"mcp.json", mcp},
+	}, []string{"skills", sharedSkills}, []string{".kimi-code/skills", ".agents/skills"}},
+	// Aider has neither MCP nor skills: only its settings in the home.
+	{"aider", []string{"aider"}, nil, []file{
+		{"~/.aider.conf.yml", settings},
+	}, nil, nil},
 }
 
 // Detect finds every agent Hearth knows, on the terminal's PATH (term)
@@ -214,7 +228,9 @@ func pathVersion(real string) string {
 // runVersion asks the command at path for its version; "" when it does
 // not tell.
 func runVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) string {
-	res, err := r.Run(ctx, run.Cmd{Args: []string{path, "--version"}, Env: env})
+	// Agents are big programs: Kimi Code's first start on Windows on Arm
+	// takes some 10 s. They are asked side by side.
+	res, err := r.Run(ctx, run.Cmd{Args: []string{path, "--version"}, Env: env, Timeout: 20 * time.Second})
 	if err != nil || res.ExitCode != 0 {
 		return ""
 	}

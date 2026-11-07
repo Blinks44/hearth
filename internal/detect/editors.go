@@ -20,6 +20,9 @@ import (
 var codeEditors = []struct{ id, name, command, dir string }{
 	{"vscode", "VS Code", "code", ".vscode"},
 	{"cursor", "Cursor", "cursor", ".cursor"},
+	// Windsurf became Devin Desktop; an older install keeps its name.
+	{"devin-desktop", "Devin Desktop", "devin-desktop", ".devin"},
+	{"windsurf", "Windsurf", "windsurf", ".windsurf"},
 }
 
 // Editors finds VS Code, Cursor and the JetBrains IDEs: the app, its
@@ -53,7 +56,8 @@ func Editors(ctx context.Context, _ run.Runner, term, _ sysenv.Env) (inventory.T
 }
 
 // codeVersion is the version in the app's package.json, the newest
-// written when an update left two.
+// written when an update left two. Windsurf and Devin Desktop keep VS
+// Code's there, and their own as windsurfVersion in product.json.
 func codeVersion(app string) string {
 	var version string
 	var newest time.Time
@@ -64,6 +68,10 @@ func codeVersion(app string) string {
 		var pkg struct{ Version string }
 		if err != nil || err2 != nil || json.Unmarshal(data, &pkg) != nil || pkg.Version == "" || info.ModTime().Before(newest) {
 			continue
+		}
+		var product struct{ WindsurfVersion string }
+		if data, err := os.ReadFile(filepath.Join(dir, "product.json")); err == nil && json.Unmarshal(data, &product) == nil && product.WindsurfVersion != "" {
+			pkg.Version = product.WindsurfVersion
 		}
 		version, newest = pkg.Version, info.ModTime()
 	}

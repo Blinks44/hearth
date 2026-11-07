@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "search": {"url": "https://search.example.com/mcp"}
+  }
+}

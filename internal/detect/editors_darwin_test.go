@@ -65,3 +65,28 @@ func TestEditorsCommunityCommand(t *testing.T) {
 		}
 	}
 }
+
+// Devin Desktop, Windsurf renamed, keeps VS Code's version in its
+// package.json and its own in product.json.
+func TestEditorsDevinDesktop(t *testing.T) {
+	dir := root(t)
+	saved := applications
+	applications = filepath.Join(dir, "Applications")
+	t.Cleanup(func() { applications = saved })
+	res := filepath.Join(applications, "Devin.app", "Contents", "Resources", "app")
+	writeFile(t, filepath.Join(res, "package.json"), `{"version":"1.126.0"}`)
+	writeFile(t, filepath.Join(res, "product.json"), `{"nameShort":"Devin","windsurfVersion":"3.11.238","dataFolderName":".devin"}`)
+	home := filepath.Join(dir, "home")
+	writeFile(t, filepath.Join(home, ".devin", "extensions", "extensions.json"), `[]`)
+	env := sysenv.Env{"HOME=" + home, "PATH=" + filepath.Join(dir, "bin")}
+	st, _ := Editors(t.Context(), &run.Fake{}, env, env)
+	for _, e := range st.Editors.Editors {
+		if e.ID == "devin-desktop" {
+			if e.Version != "3.11.238" || e.Command != "devin-desktop" || e.Extensions != filepath.Join(home, ".devin", "extensions") {
+				t.Fatalf("%+v", e)
+			}
+			return
+		}
+	}
+	t.Fatalf("no Devin Desktop: %+v", st.Editors)
+}

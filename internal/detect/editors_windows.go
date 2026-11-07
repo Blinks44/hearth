@@ -12,7 +12,7 @@ const toolboxScriptExt = ".cmd"
 // codeApps are where an editor of VS Code's is installed: for the user
 // alone, or for all.
 func codeApps(env sysenv.Env, _, id string) []string {
-	name := map[string]string{"vscode": "Microsoft VS Code", "cursor": "cursor"}[id]
+	name := map[string]string{"vscode": "Microsoft VS Code", "cursor": "cursor", "devin-desktop": "Devin", "windsurf": "Windsurf"}[id]
 	var out []string
 	if local := env.Get("LOCALAPPDATA"); local != "" {
 		out = append(out, filepath.Join(local, "Programs", name))

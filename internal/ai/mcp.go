@@ -28,7 +28,8 @@ const (
 	// claudeState is ~/.claude.json: the user's servers under
 	// "mcpServers", and those of single projects under "projects".
 	claudeState
-	// codexTOML is Codex's config.toml, the servers in [mcp_servers.<name>].
+	// codexTOML is Codex's config.toml, the servers in [mcp_servers.<name>];
+	// Grok Build's is the same.
 	codexTOML
 	// openCodeJSON is opencode.json, the servers under "mcp".
 	openCodeJSON
@@ -50,6 +51,8 @@ var mcpFiles = map[string]struct{ user, project []mcpFile }{
 	"cursor":   {[]mcpFile{{"mcp.json", mcpServersJSON}}, []mcpFile{{".cursor/mcp.json", mcpServersJSON}}},
 	"opencode": {[]mcpFile{{"opencode.json", openCodeJSON}}, []mcpFile{{"opencode.json", openCodeJSON}}},
 	"devin":    {[]mcpFile{{"mcp_config.json", mcpServersJSON}}, []mcpFile{{".devin/mcp_config.json", mcpServersJSON}}},
+	"grok":     {[]mcpFile{{"config.toml", codexTOML}}, []mcpFile{{".grok/config.toml", codexTOML}}},
+	"kimi":     {[]mcpFile{{"mcp.json", mcpServersJSON}}, []mcpFile{{".kimi-code/mcp.json", mcpServersJSON}}},
 }
 
 // MCP reads the MCP servers in the user's files of every agent, in the

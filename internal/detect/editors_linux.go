@@ -12,8 +12,11 @@ const toolboxScriptExt = ""
 // codeApps are where an editor of VS Code's is installed: its package's
 // folder, or its snap.
 func codeApps(_ sysenv.Env, _, id string) []string {
-	if id == "cursor" {
+	switch id {
+	case "cursor":
 		return []string{"/usr/share/cursor", "/opt/Cursor"}
+	case "devin-desktop", "windsurf":
+		return []string{"/usr/share/" + id}
 	}
 	return []string{"/usr/share/code", "/snap/code/current/usr/share/code", "/opt/visual-studio-code"}
 }
