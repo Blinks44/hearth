@@ -39,8 +39,12 @@ type Step struct {
 	// system's own dialog each time: never a silent sudo.
 	Admin bool
 	// Edit, in place of Argv, changes a file of the user's after a copy
-	// of it, which comes back if a later step fails or is stopped.
+	// of it, which comes back if the plan does not get through: a later
+	// step fails or is stopped, or the check does not pass.
 	Edit *FileEdit
+	// UserPath, in place of Argv, sets the user's Path in the Windows
+	// registry, which comes back as an Edit does.
+	UserPath *UserPathEdit
 }
 
 // Note is something worth knowing before a plan runs, as that it asks for
@@ -142,19 +146,20 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 	e.state = State{Phase: Running, Steps: make([]StepStatus, len(p.Steps))}
 	e.printf("== %s  %s\n", time.Now().Format("2006-01-02 15:04:05"), p.Title)
 	e.emit()
+	// applied are the changes to the user's files and settings, which a
+	// plan that does not get through puts back.
 	type applied struct {
-		edit   FileEdit
-		backup string
+		name    string
+		restore func() error
 	}
-	var edits []applied
-	// A plan that does not get through puts the user's files back.
+	var changes []applied
 	undo := func() {
-		for _, a := range slices.Backward(edits) {
-			err := restoreEdit(a.edit, a.backup)
-			e.printf("restore %s%s\n", a.edit.Path, errText(err))
+		for _, a := range slices.Backward(changes) {
+			err := a.restore()
+			e.printf("restore %s%s\n", a.name, errText(err))
 			e.mu.Lock()
 			if err == nil {
-				e.state.Restored = append(e.state.Restored, a.edit.Path)
+				e.state.Restored = append(e.state.Restored, a.name)
 			}
 			e.mu.Unlock()
 		}
@@ -163,13 +168,24 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
-		if step.Edit != nil {
-			e.printf("edit %s\n", step.Edit.Path)
-			e.emit()
-			backup, err := applyEdit(*step.Edit, time.Now())
-			if err == nil {
-				edits = append(edits, applied{*step.Edit, backup})
-				e.printf("backup %s\n", backup)
+		if step.Edit != nil || step.UserPath != nil {
+			var err error
+			if edit := step.Edit; edit != nil {
+				e.printf("edit %s\n", edit.Path)
+				e.emit()
+				var backup string
+				if backup, err = applyEdit(*edit, time.Now()); err == nil {
+					changes = append(changes, applied{edit.Path, func() error { return restoreEdit(*edit, backup) }})
+					e.printf("backup %s\n", backup)
+				}
+			} else {
+				edit := step.UserPath
+				// The value that was is the copy: the log keeps it.
+				e.printf("edit %s\nbackup %s\n", UserPathName, edit.Before)
+				e.emit()
+				if err = applyUserPath(*edit); err == nil {
+					changes = append(changes, applied{UserPathName, func() error { return restoreUserPath(*edit) }})
+				}
 			}
 			e.mu.Lock()
 			if err != nil {
@@ -239,8 +255,12 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		default:
 			e.state.Phase, e.state.Verified = Succeeded, found
 		}
+		phase := e.state.Phase
 		e.mu.Unlock()
 		e.printf("verify: %s%s\n", found, errText(err))
+		if phase != Succeeded {
+			undo()
+		}
 	} else {
 		e.mu.Lock()
 		e.state.Phase = Succeeded

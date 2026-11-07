@@ -96,6 +96,14 @@ func main() {
 			a.JournalPath = filepath.Join(logs, "operations.log")
 		}
 		a.DetectTool = scanner.Detect
+		a.PlanPath = func(entries []inventory.PathEntry, dirs []string, done func(ops.Plan, error)) {
+			env := scanner.Terminal()
+			go func() {
+				terminal := func(ctx context.Context) (sysenv.Env, error) { return sysenv.Terminal(ctx, run.Exec{}) }
+				p, err := ops.PathPlan(entries, dirs, env, terminal)
+				win.Update(func() { done(p, err) })
+			}()
+		}
 		a.RunPlan = func(p ops.Plan, update func(ops.State)) func() {
 			if p.Env == nil {
 				p.Env = slices.Clone(scanner.Terminal())

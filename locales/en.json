@@ -2219,7 +2219,7 @@
   "envPathToolVariables": "Tool variables",
   "envPathNoVariables": "No known tool variables are set.",
   "envPathNoDifference": "Both environments have the same directories. Their order may differ.",
-  "envPathReadOnly": "Read only. PATH changes will be available through a confirmed plan.",
+  "envPathReadOnly": "Hearth changes only your own settings, never the system's entries, and always through a plan with a diff and a copy.",
   "envPathEmpty": "No PATH entries in this snapshot.",
   "envPathNoMatches": "No matching directories.",
   "envPathUnset": "Not set",
@@ -4612,6 +4612,90 @@
       "version": {
         "type": "String",
         "example": "22.12.0"
+      }
+    }
+  },
+  "pathFixTitle": "Fix PATH: {count, plural, one {# entry} other {# entries}}",
+  "@pathFixTitle": {
+    "description": "Title of the plan that fixes PATH entries.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "pathFixWhy": "The lines become comments, not removed. Hearth keeps a copy of each file and checks that a new terminal finds commands where it did.",
+  "@pathFixWhy": {
+    "description": "How a PATH fix in startup files goes."
+  },
+  "pathFixWhyRegistry": "The entries leave your user Path in the registry; the computer's Path stays. The old value goes to the operations log and comes back if the check does not pass.",
+  "@pathFixWhyRegistry": {
+    "description": "How a PATH fix in the Windows registry goes."
+  },
+  "pathFixComment": "Comment out {count, plural, one {# line} other {# lines}}",
+  "@pathFixComment": {
+    "description": "Button that runs a PATH fix in startup files.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "pathFixRemove": "Remove {count, plural, one {# entry} other {# entries}}",
+  "@pathFixRemove": {
+    "description": "Button that runs a PATH fix in the Windows registry.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "pathCheckOrder": "A new terminal finds commands in other folders than before",
+  "@pathCheckOrder": {
+    "description": "The check after a PATH fix found the order changed."
+  },
+  "pathCheckStill": "{dir} is still in a new terminal's PATH as before",
+  "@pathCheckStill": {
+    "description": "The check after a PATH fix found a problem left.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "/opt/homebrew/bin"
+      }
+    }
+  },
+  "pathChecked": "A new terminal's PATH: {count, plural, one {# entry} other {# entries}}, commands found where they were",
+  "@pathChecked": {
+    "description": "What the check after a PATH fix found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "9"
+      }
+    }
+  },
+  "pathNoFix": "Hearth cannot fix this where it is declared: the line adds other folders too, or Hearth cannot tell where the entry comes from",
+  "@pathNoFix": {
+    "description": "Why a PATH problem has no fix."
+  },
+  "pathFix": "Fix…",
+  "@pathFix": {
+    "description": "Button of the PATH problems banner."
+  },
+  "pathRemove": "Remove…",
+  "@pathRemove": {
+    "description": "Button of a PATH entry with a problem."
+  },
+  "pathRemoveNamed": "Remove {dir} from PATH",
+  "@pathRemoveNamed": {
+    "description": "Accessible label of the button that removes a PATH entry.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.nvm/versions/node/v16.20.2/bin"
       }
     }
   }

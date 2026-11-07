@@ -220,4 +220,16 @@ func TestOperationEditDialog(t *testing.T) {
 	if !tt.HasText("~/.zshrc is back as it was, from its copy") || tt.HasText("Step 1 finished: what it changed stays") {
 		t.Errorf("stopped: %q", tt.Texts())
 	}
+	// A check that does not pass puts the file back too, and says so.
+	if err := tt.Click("Start again"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	update(ops.State{Phase: ops.NotVerified, Steps: []ops.StepStatus{ops.Done}, Err: "the order changed", Restored: []string{zshrc}})
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("~/.zshrc is back as it was, from its copy") {
+		t.Errorf("not verified: %q", tt.Texts())
+	}
+	screenshot(t, tt, "operation-edit-restored")
 }

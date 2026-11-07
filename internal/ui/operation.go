@@ -188,19 +188,22 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 	notes := p.Notes
 	commands := false
 	for _, step := range p.Steps {
-		commands = commands || step.Edit == nil
+		_, _, edit := stepEdit(step)
+		commands = commands || !edit
 	}
 	if commands {
 		dialogSection(c, strings.ToUpper(locales.OpCommands()))
 		operationSteps(c, p.Steps, ops.State{Steps: make([]ops.StepStatus, len(p.Steps)), Current: -1}, a.Home)
 	}
 	for _, step := range p.Steps {
-		if step.Edit == nil {
+		e, setting, ok := stepEdit(step)
+		if !ok {
 			continue
 		}
-		a.editDiff(c, *step.Edit)
-		if !step.Edit.New {
-			backup := tilde(step.Edit.Path, a.Home) + ".hearth-" + c.Now().Format("2006-01-02") + "….bak"
+		a.editDiff(c, e, setting)
+		// A setting's value that was goes to the log, as Why says.
+		if !e.New && !setting {
+			backup := tilde(e.Path, a.Home) + ".hearth-" + c.Now().Format("2006-01-02") + "….bak"
 			notes = append(notes, ops.Note{Title: locales.OpBackup(), Text: locales.OpBackupText(backup), Tag: locales.OpTagBackup()})
 		}
 	}
@@ -230,9 +233,23 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 	}
 }
 
+// stepEdit is the change step makes to a file or, setting, to a setting
+// of the user's, as its diff shows it: the user's Path in the Windows
+// registry, an entry a line; false for a step that runs a command.
+func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
+	switch {
+	case step.Edit != nil:
+		return *step.Edit, false, true
+	case step.UserPath != nil:
+		lines := func(value string) string { return strings.ReplaceAll(value, ";", "\n") }
+		return ops.FileEdit{Path: ops.UserPathName, Before: lines(step.UserPath.Before), After: lines(step.UserPath.After)}, true, true
+	}
+	return ops.FileEdit{}, false, false
+}
+
 // editDiff is a file a plan edits: its path, a button that opens it, and
 // the lines that change, numbered, removed in red and added in green.
-func (a *App) editDiff(c *ui.Context, e ops.FileEdit) {
+func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	path := tilde(e.Path, a.Home)
@@ -243,7 +260,7 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit) {
 			ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
 			clipped(c, path).FontSize(12.5)
 		})
-		if a.Shell != nil && !e.New {
+		if a.Shell != nil && !e.New && !setting {
 			ui.Button(c.Key("open:"+e.Path), locales.OpOpenFile()).OnClick(func() { a.openFile(c, e.Path) })
 		}
 	})
@@ -296,8 +313,9 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 			row.Children(func() {
 				ui.Text(c, strconv.Itoa(i+1)).FontSize(11.5).TextColor(pal.TextFaint)
 				command := ops.Command(step.Argv)
-				if step.Edit != nil {
-					command = locales.OpEditStep(tilde(step.Edit.Path, home))
+				e, _, edit := stepEdit(step)
+				if edit {
+					command = locales.OpEditStep(tilde(e.Path, home))
 				}
 				if step.Note != "" {
 					command += "  ·  " + step.Note
@@ -306,7 +324,7 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				if step.Admin && s.Current < 0 {
 					aiTag(c, locales.OpTagAdmin(), pal.WarningSoft, pal.WarningText)
 				}
-				if step.Edit != nil && s.Current < 0 {
+				if edit && s.Current < 0 {
 					aiTag(c, locales.OpTagFile(), pal.Muted, t.TextMuted)
 				}
 				if s.Current >= 0 {
@@ -351,8 +369,11 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		dialogSection(c, locales.OpLog(command))
 		logBlock(c, lastLines(s.Log, 8), c.Theme().TextMuted, "")
 	case ops.Failed, ops.NotVerified:
-		dialogSection(c, locales.OpLastLines())
-		logBlock(c, lastLines(s.Log, 5), pal.DangerText, locales.OpFullLog())
+		// A plan of file edits alone has no output to show.
+		if len(s.Log) > 0 {
+			dialogSection(c, locales.OpLastLines())
+			logBlock(c, lastLines(s.Log, 5), pal.DangerText, locales.OpFullLog())
+		}
 	case ops.Succeeded:
 		if len(op.plan.Changes) > 0 {
 			dialogSection(c, strings.ToUpper(locales.OpChanged()))
@@ -376,7 +397,7 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		}
 		logBlock(c, append(left, a.restored(s)...), c.Theme().Text, "")
 	}
-	if s.Phase == ops.Failed && len(s.Restored) > 0 {
+	if (s.Phase == ops.Failed || s.Phase == ops.NotVerified) && len(s.Restored) > 0 {
 		dialogSection(c, strings.ToUpper(locales.OpLeft()))
 		logBlock(c, a.restored(s), c.Theme().Text, "")
 	}

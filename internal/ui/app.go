@@ -121,6 +121,11 @@ type App struct {
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
 
+	// PlanPath makes, in the background, the plan that fixes dirs of
+	// entries, the terminal's PATH, all its problems when dirs is nil, and
+	// gives it to done through Window.Update; nil offers no fixes.
+	PlanPath func(entries []inventory.PathEntry, dirs []string, done func(ops.Plan, error))
+
 	// RunPlan executes a plan the user confirmed in the background,
 	// giving update how it goes through Window.Update, and returns what
 	// stops it; nil shows plans without running them.
@@ -141,6 +146,7 @@ type App struct {
 	jspmFilter     string // the package managers table's filter
 	pathTab        int    // the tab of the PATH page shown
 	pathFilter     string // the PATH table's filter
+	pathFixErr     string // why the PATH problems asked to fix have no plan
 	packageTab     int    // the tab of the system package managers page shown
 	packageManager string // the path of the package manager shown
 	packageFilter  string // the package table's filter

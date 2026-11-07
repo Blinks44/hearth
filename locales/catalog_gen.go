@@ -6488,11 +6488,11 @@ func (msgs Messages) EnvPathNoDifference() string {
 	return Catalog.Format(msgs.locale, "envPathNoDifference", nil)
 }
 
-// EnvPathReadOnly says "Read only. PATH changes will be available through a confirmed plan."
+// EnvPathReadOnly says "Hearth changes only your own settings, never the system's entries, and always through a plan with a diff and a copy."
 // in the language the app shows.
 func EnvPathReadOnly() string { return In(i18n.Locale()).EnvPathReadOnly() }
 
-// EnvPathReadOnly says "Read only. PATH changes will be available through a confirmed plan."
+// EnvPathReadOnly says "Hearth changes only your own settings, never the system's entries, and always through a plan with a diff and a copy."
 // in the language of msgs.
 func (msgs Messages) EnvPathReadOnly() string {
 	return Catalog.Format(msgs.locale, "envPathReadOnly", nil)
@@ -12340,4 +12340,172 @@ func PinNotChecked(file string, tool string, version string) string {
 // The check after a pin did not find the version.
 func (msgs Messages) PinNotChecked(file string, tool string, version string) string {
 	return Catalog.Format(msgs.locale, "pinNotChecked", map[string]any{"file": file, "tool": tool, "version": version})
+}
+
+// PathFixTitle says "Fix PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language the app shows.
+//
+// Title of the plan that fixes PATH entries.
+func PathFixTitle(count int) string { return In(i18n.Locale()).PathFixTitle(count) }
+
+// PathFixTitle says "Fix PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language of msgs.
+//
+// Title of the plan that fixes PATH entries.
+func (msgs Messages) PathFixTitle(count int) string {
+	return Catalog.Format(msgs.locale, "pathFixTitle", map[string]any{"count": count})
+}
+
+// PathFixWhy says "The lines become comments, not removed. Hearth keeps a copy of each file and checks that a new terminal finds command…"
+// in the language the app shows.
+//
+// How a PATH fix in startup files goes.
+func PathFixWhy() string { return In(i18n.Locale()).PathFixWhy() }
+
+// PathFixWhy says "The lines become comments, not removed. Hearth keeps a copy of each file and checks that a new terminal finds command…"
+// in the language of msgs.
+//
+// How a PATH fix in startup files goes.
+func (msgs Messages) PathFixWhy() string {
+	return Catalog.Format(msgs.locale, "pathFixWhy", nil)
+}
+
+// PathFixWhyRegistry says "The entries leave your user Path in the registry; the computer's Path stays. The old value goes to the operations log…"
+// in the language the app shows.
+//
+// How a PATH fix in the Windows registry goes.
+func PathFixWhyRegistry() string { return In(i18n.Locale()).PathFixWhyRegistry() }
+
+// PathFixWhyRegistry says "The entries leave your user Path in the registry; the computer's Path stays. The old value goes to the operations log…"
+// in the language of msgs.
+//
+// How a PATH fix in the Windows registry goes.
+func (msgs Messages) PathFixWhyRegistry() string {
+	return Catalog.Format(msgs.locale, "pathFixWhyRegistry", nil)
+}
+
+// PathFixComment says "Comment out {count, plural, one {# line} other {# lines}}"
+// in the language the app shows.
+//
+// Button that runs a PATH fix in startup files.
+func PathFixComment(count int) string { return In(i18n.Locale()).PathFixComment(count) }
+
+// PathFixComment says "Comment out {count, plural, one {# line} other {# lines}}"
+// in the language of msgs.
+//
+// Button that runs a PATH fix in startup files.
+func (msgs Messages) PathFixComment(count int) string {
+	return Catalog.Format(msgs.locale, "pathFixComment", map[string]any{"count": count})
+}
+
+// PathFixRemove says "Remove {count, plural, one {# entry} other {# entries}}"
+// in the language the app shows.
+//
+// Button that runs a PATH fix in the Windows registry.
+func PathFixRemove(count int) string { return In(i18n.Locale()).PathFixRemove(count) }
+
+// PathFixRemove says "Remove {count, plural, one {# entry} other {# entries}}"
+// in the language of msgs.
+//
+// Button that runs a PATH fix in the Windows registry.
+func (msgs Messages) PathFixRemove(count int) string {
+	return Catalog.Format(msgs.locale, "pathFixRemove", map[string]any{"count": count})
+}
+
+// PathCheckOrder says "A new terminal finds commands in other folders than before"
+// in the language the app shows.
+//
+// The check after a PATH fix found the order changed.
+func PathCheckOrder() string { return In(i18n.Locale()).PathCheckOrder() }
+
+// PathCheckOrder says "A new terminal finds commands in other folders than before"
+// in the language of msgs.
+//
+// The check after a PATH fix found the order changed.
+func (msgs Messages) PathCheckOrder() string {
+	return Catalog.Format(msgs.locale, "pathCheckOrder", nil)
+}
+
+// PathCheckStill says "{dir} is still in a new terminal's PATH as before"
+// in the language the app shows.
+//
+// The check after a PATH fix found a problem left.
+func PathCheckStill(dir string) string { return In(i18n.Locale()).PathCheckStill(dir) }
+
+// PathCheckStill says "{dir} is still in a new terminal's PATH as before"
+// in the language of msgs.
+//
+// The check after a PATH fix found a problem left.
+func (msgs Messages) PathCheckStill(dir string) string {
+	return Catalog.Format(msgs.locale, "pathCheckStill", map[string]any{"dir": dir})
+}
+
+// PathChecked says "A new terminal's PATH: {count, plural, one {# entry} other {# entries}}, commands found where they were"
+// in the language the app shows.
+//
+// What the check after a PATH fix found.
+func PathChecked(count int) string { return In(i18n.Locale()).PathChecked(count) }
+
+// PathChecked says "A new terminal's PATH: {count, plural, one {# entry} other {# entries}}, commands found where they were"
+// in the language of msgs.
+//
+// What the check after a PATH fix found.
+func (msgs Messages) PathChecked(count int) string {
+	return Catalog.Format(msgs.locale, "pathChecked", map[string]any{"count": count})
+}
+
+// PathNoFix says "Hearth cannot fix this where it is declared: the line adds other folders too, or Hearth cannot tell where the entry c…"
+// in the language the app shows.
+//
+// Why a PATH problem has no fix.
+func PathNoFix() string { return In(i18n.Locale()).PathNoFix() }
+
+// PathNoFix says "Hearth cannot fix this where it is declared: the line adds other folders too, or Hearth cannot tell where the entry c…"
+// in the language of msgs.
+//
+// Why a PATH problem has no fix.
+func (msgs Messages) PathNoFix() string {
+	return Catalog.Format(msgs.locale, "pathNoFix", nil)
+}
+
+// PathFix says "Fix…"
+// in the language the app shows.
+//
+// Button of the PATH problems banner.
+func PathFix() string { return In(i18n.Locale()).PathFix() }
+
+// PathFix says "Fix…"
+// in the language of msgs.
+//
+// Button of the PATH problems banner.
+func (msgs Messages) PathFix() string {
+	return Catalog.Format(msgs.locale, "pathFix", nil)
+}
+
+// PathRemove says "Remove…"
+// in the language the app shows.
+//
+// Button of a PATH entry with a problem.
+func PathRemove() string { return In(i18n.Locale()).PathRemove() }
+
+// PathRemove says "Remove…"
+// in the language of msgs.
+//
+// Button of a PATH entry with a problem.
+func (msgs Messages) PathRemove() string {
+	return Catalog.Format(msgs.locale, "pathRemove", nil)
+}
+
+// PathRemoveNamed says "Remove {dir} from PATH"
+// in the language the app shows.
+//
+// Accessible label of the button that removes a PATH entry.
+func PathRemoveNamed(dir string) string { return In(i18n.Locale()).PathRemoveNamed(dir) }
+
+// PathRemoveNamed says "Remove {dir} from PATH"
+// in the language of msgs.
+//
+// Accessible label of the button that removes a PATH entry.
+func (msgs Messages) PathRemoveNamed(dir string) string {
+	return Catalog.Format(msgs.locale, "pathRemoveNamed", map[string]any{"dir": dir})
 }

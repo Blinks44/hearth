@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -38,7 +40,7 @@ func (a *App) paths(c *ui.Context, p page) {
 					stateCard(c, c.Theme().Warning, locales.EnvPathProblems(), strconv.Itoa(problems), "")
 				})
 				if problems > 0 {
-					warningRow(c, locales.EnvPathWarnings())
+					a.pathBanner(c, term)
 				}
 				ui.Row(c).Gap(12).Children(func() {
 					segments(c, "path-tabs", &a.pathTab, []segment{{locales.EnvPathTerminal(), strconv.Itoa(len(term))}, {locales.EnvPathApps(), strconv.Itoa(len(gui))}, {locales.EnvPathVariables(), strconv.Itoa(len(a.Snapshot.Variables))}, {locales.EnvPathDifferences(), ""}})
@@ -133,7 +135,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 					ui.Row(c).Gap(5).Wrap().Children(func() {
 						for j := range i {
 							if sysenv.SamePath(entries[j].Dir, entry.Dir) {
-								if systemRepeat(entry) {
+								if ops.SystemRepeat(entry) {
 									chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.EnvPathDuplicate()+strconv.Itoa(j+1))
 								} else {
 									chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.EnvPathDuplicate()+strconv.Itoa(j+1))
@@ -159,6 +161,9 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 						}
 					})
 				})
+				if a.pathTab == 0 && a.fixable(entries, i) {
+					ui.Button(c.Key("path-fix:"+strconv.Itoa(i)), locales.PathRemove()).Label(locales.PathRemoveNamed(tilde(entry.Dir, a.Home))).OnClick(func() { a.fixPath([]string{entry.Dir}) })
+				}
 				iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(entry.Dir); c.Toast(locales.PathCopied()) })
 			})
 		}
@@ -221,7 +226,7 @@ func pathProblemCount(term, gui []inventory.PathEntry) int {
 	var dirs []inventory.PathEntry
 	for _, entries := range [][]inventory.PathEntry{term, gui} {
 		for i, e := range entries {
-			if (e.Missing && !issues.OSDir(e.Dir) || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) && !systemRepeat(e)) && !hasPath(dirs, e.Dir) {
+			if (e.Missing && !issues.OSDir(e.Dir) || !filepath.IsAbs(e.Dir) || hasPath(entries[:i], e.Dir) && !ops.SystemRepeat(e)) && !hasPath(dirs, e.Dir) {
 				dirs = append(dirs, e)
 			}
 		}
@@ -229,12 +234,58 @@ func pathProblemCount(term, gui []inventory.PathEntry) int {
 	return len(dirs)
 }
 
-// systemRepeat reports that the system declares e and adds it again: macOS's
-// path_helper, from /etc/paths or /etc/paths.d, after a startup file put it
-// first, as Homebrew's brew shellenv does, and Ubuntu's profile.d, for the
-// /snap/bin of /etc/environment. The later entry is never used, harmless.
-func systemRepeat(e inventory.PathEntry) bool {
-	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool {
-		return s.File == "/etc/paths" || s.File == "/etc/environment" || strings.HasPrefix(s.File, "/etc/paths.d/")
+// pathBanner says the PATH has problems, with a button that fixes those
+// Hearth can in the terminal's, and why it could not when it could not.
+func (a *App) pathBanner(c *ui.Context, term []inventory.PathEntry) {
+	pal := Colors(c.Theme())
+	fixable := false
+	for i := range term {
+		fixable = fixable || a.fixable(term, i)
+	}
+	ui.Column(c).Gap(6).Padding(10, 10, 10, 12).Radius(9).Background(pal.WarningSoft).Children(func() {
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
+			ui.Text(c, locales.EnvPathWarnings()).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
+			if fixable {
+				// Dark, as in the design: the page's one accent stays for
+				// the header.
+				ui.Button(c.Key("path-fix"), locales.PathFix()).Background(c.Theme().Text).TextColor(c.Theme().Background).
+					BorderColor(c.Theme().Text).OnClick(func() { a.fixPath(nil) })
+			}
+		})
+		if a.pathFixErr != "" {
+			ui.Text(c, a.pathFixErr).FontSize(11.5).TextColor(pal.WarningText).Padding(0, 0, 0, 26)
+		}
+	})
+}
+
+// fixable reports that the i-th entry of the terminal's PATH is a problem
+// Hearth may fix where it is declared: the repeat, not the first, or a
+// directory that is not there.
+func (a *App) fixable(term []inventory.PathEntry, i int) bool {
+	if a.PlanPath == nil || !ops.PathFixable(term[i], a.Home) {
+		return false
+	}
+	for _, p := range ops.PathProblems(term) {
+		if sysenv.SamePath(p.Dir, term[i].Dir) {
+			return !p.Repeat || slices.ContainsFunc(term[:i], func(e inventory.PathEntry) bool { return sysenv.SamePath(e.Dir, p.Dir) })
+		}
+	}
+	return false
+}
+
+// fixPath offers the plan that fixes dirs of the terminal's PATH, all its
+// problems when dirs is nil, once it is made.
+func (a *App) fixPath(dirs []string) {
+	a.pathFixErr = ""
+	a.PlanPath(a.Snapshot.TerminalPath, dirs, func(p ops.Plan, err error) {
+		switch {
+		case errors.Is(err, ops.ErrNoFix):
+			a.pathFixErr = locales.PathNoFix()
+		case err != nil:
+			a.pathFixErr = err.Error()
+		default:
+			a.Propose(p)
+		}
 	})
 }

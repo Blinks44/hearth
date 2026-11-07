@@ -522,7 +522,7 @@
   "envPathToolVariables": "Переменные инструментов",
   "envPathNoVariables": "Известные переменные инструментов не заданы.",
   "envPathNoDifference": "В обоих окружениях те же каталоги. Порядок может различаться.",
-  "envPathReadOnly": "Только просмотр. Изменения PATH будут доступны через план с подтверждением.",
+  "envPathReadOnly": "Hearth меняет только ваши настройки, системные записи не трогает, и всегда через план с diff и копией.",
   "envPathEmpty": "В этом снимке нет записей PATH.",
   "envPathNoMatches": "Подходящих каталогов нет.",
   "envPathUnset": "Не задано",
@@ -964,5 +964,17 @@
   "pinAction": "Закрепить {version}",
   "pinChange": "{file}: {tool} {version}",
   "pinChecked": "{file} требует {tool} {version}",
-  "pinNotChecked": "{file} не требует {tool} {version}"
+  "pinNotChecked": "{file} не требует {tool} {version}",
+  "pathFixTitle": "Исправить PATH: {count, plural, one {# запись} few {# записи} many {# записей} other {# записи}}",
+  "pathFixWhy": "Строки станут комментариями, а не удалятся. Hearth сохранит копию каждого файла и проверит, что новый терминал находит команды там же, где раньше.",
+  "pathFixWhyRegistry": "Записи уйдут из Path пользователя в реестре, Path компьютера не меняется. Прежнее значение останется в журнале операций и вернётся, если проверка не пройдёт.",
+  "pathFixComment": "Закомментировать {count, plural, one {# строку} few {# строки} many {# строк} other {# строки}}",
+  "pathFixRemove": "Убрать {count, plural, one {# запись} few {# записи} many {# записей} other {# записи}}",
+  "pathCheckOrder": "Новый терминал ищет команды не в тех каталогах, что раньше",
+  "pathCheckStill": "{dir} по-прежнему в PATH нового терминала",
+  "pathChecked": "PATH нового терминала: {count, plural, one {# запись} few {# записи} many {# записей} other {# записи}}, команды находятся там же",
+  "pathNoFix": "Hearth не может исправить это там, где оно объявлено: строка добавляет и другие каталоги, или неизвестно, откуда взялась запись",
+  "pathFix": "Исправить…",
+  "pathRemove": "Убрать…",
+  "pathRemoveNamed": "Убрать {dir} из PATH"
 }

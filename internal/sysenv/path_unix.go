@@ -78,44 +78,52 @@ func sourceFiles(env Env, files []string) map[string][]inventory.PathSource {
 		if err != nil {
 			continue
 		}
-		plain := file == "/etc/paths" || strings.HasPrefix(file, "/etc/paths.d/")
 		for i, line := range strings.Split(string(b), "\n") {
-			line, _, _ = strings.Cut(line, "#")
-			line = strings.TrimSpace(line)
-			if line == "" {
-				continue
-			}
-			var values []string
-			if plain {
-				values = []string{line}
-			} else if m := brewShellenv.FindStringSubmatch(line); m != nil {
-				values = []string{m[1] + "/bin", m[1] + "/sbin"}
-			} else {
-				// A command substitution is computed: its directories stay unknown.
-				if !pathLine.MatchString(line) || strings.Contains(line, "$(") || strings.Contains(line, "`") {
-					continue
-				}
-				values = strings.FieldsFunc(line, func(r rune) bool { return strings.ContainsRune(" \t:=()\"'", r) })
-			}
-			seen := map[string]bool{}
-			for _, v := range values {
-				if v == "$PATH" || v == "${PATH}" {
-					continue
-				}
-				v = expandPath(v, env)
-				if !filepath.IsAbs(v) || strings.ContainsAny(v, "`;$()") {
-					continue
-				}
+			for _, v := range LineDirs(file, line, env) {
 				key := pathKey(v)
-				if seen[key] {
-					continue
-				}
-				seen[key] = true
 				out[key] = append(out[key], inventory.PathSource{File: file, Line: i + 1})
 			}
 		}
 	}
 	return out
+}
+
+// LineDirs are the directories a line of file puts on PATH, as far as
+// Hearth can tell without running it, each once: none for a line that
+// computes them, as a command substitution does.
+func LineDirs(file, line string, env Env) []string {
+	plain := file == "/etc/paths" || strings.HasPrefix(file, "/etc/paths.d/")
+	line, _, _ = strings.Cut(line, "#")
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return nil
+	}
+	var values []string
+	if plain {
+		values = []string{line}
+	} else if m := brewShellenv.FindStringSubmatch(line); m != nil {
+		values = []string{m[1] + "/bin", m[1] + "/sbin"}
+	} else {
+		// A command substitution is computed: its directories stay unknown.
+		if !pathLine.MatchString(line) || strings.Contains(line, "$(") || strings.Contains(line, "`") {
+			return nil
+		}
+		values = strings.FieldsFunc(line, func(r rune) bool { return strings.ContainsRune(" \t:=()\"'", r) })
+	}
+	var dirs []string
+	seen := map[string]bool{}
+	for _, v := range values {
+		if v == "$PATH" || v == "${PATH}" {
+			continue
+		}
+		v = expandPath(v, env)
+		if !filepath.IsAbs(v) || strings.ContainsAny(v, "`;$()") || seen[pathKey(v)] {
+			continue
+		}
+		seen[pathKey(v)] = true
+		dirs = append(dirs, v)
+	}
+	return dirs
 }
 
 func expandPath(value string, env Env) string {
