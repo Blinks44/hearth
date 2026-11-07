@@ -140,6 +140,8 @@ type App struct {
 	cliFilter      string // the CLI & clouds table's filter
 	mobileTab      int    // the mobile page's tab: all, then a group each
 	mobileFilter   string // the mobile table's filter
+	editorsTab     int    // the editors page's tab: all, extensions, commands
+	editorsFilter  string // the editors table's filter
 	changesTab     int    // the What changed page's tab: all, added, updated, removed
 	changesFilter  string // the What changed table's filter
 	cleanupTab     int    // the Cleanup page's tab: all, then a group each
@@ -238,6 +240,8 @@ func (a *App) View(c *ui.Context) {
 						a.cliView(c, p)
 					case mobilePage:
 						a.mobileView(c, p)
+					case editorsPage:
+						a.editorsView(c, p)
 					case cppPage:
 						a.cppView(c, p)
 					case modelsPage:
@@ -400,6 +404,8 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = a.cliCount()
 	case mobilePage:
 		n = a.mobileCount()
+	case editorsPage:
+		n = len(a.editorsState().Editors)
 	case modelsPage:
 		n = a.modelCount()
 	case skillsPage:

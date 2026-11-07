@@ -10575,3 +10575,567 @@ func MobileNone() string { return In(i18n.Locale()).MobileNone() }
 func (msgs Messages) MobileNone() string {
 	return Catalog.Format(msgs.locale, "mobileNone", nil)
 }
+
+// SectionToolsEditors says "Tools · editors and IDEs"
+// in the language the app shows.
+//
+// Subtitle of the editors page.
+func SectionToolsEditors() string { return In(i18n.Locale()).SectionToolsEditors() }
+
+// SectionToolsEditors says "Tools · editors and IDEs"
+// in the language of msgs.
+//
+// Subtitle of the editors page.
+func (msgs Messages) SectionToolsEditors() string {
+	return Catalog.Format(msgs.locale, "sectionToolsEditors", nil)
+}
+
+// EditorsTitle says "Editors"
+// in the language the app shows.
+//
+// Sidebar item and header of the editors page.
+func EditorsTitle() string { return In(i18n.Locale()).EditorsTitle() }
+
+// EditorsTitle says "Editors"
+// in the language of msgs.
+//
+// Sidebar item and header of the editors page.
+func (msgs Messages) EditorsTitle() string {
+	return Catalog.Format(msgs.locale, "editorsTitle", nil)
+}
+
+// EditorsLead says "Commands on the PATH, extensions and the space they take"
+// in the language the app shows.
+//
+// Under the editors page's big title.
+func EditorsLead() string { return In(i18n.Locale()).EditorsLead() }
+
+// EditorsLead says "Commands on the PATH, extensions and the space they take"
+// in the language of msgs.
+//
+// Under the editors page's big title.
+func (msgs Messages) EditorsLead() string {
+	return Catalog.Format(msgs.locale, "editorsLead", nil)
+}
+
+// EditorsFound says "Found"
+// in the language the app shows.
+//
+// Editors page card label.
+func EditorsFound() string { return In(i18n.Locale()).EditorsFound() }
+
+// EditorsFound says "Found"
+// in the language of msgs.
+//
+// Editors page card label.
+func (msgs Messages) EditorsFound() string {
+	return Catalog.Format(msgs.locale, "editorsFound", nil)
+}
+
+// EditorsFoundCaption says "editors and IDEs"
+// in the language the app shows.
+//
+// Editors page card caption.
+func EditorsFoundCaption() string { return In(i18n.Locale()).EditorsFoundCaption() }
+
+// EditorsFoundCaption says "editors and IDEs"
+// in the language of msgs.
+//
+// Editors page card caption.
+func (msgs Messages) EditorsFoundCaption() string {
+	return Catalog.Format(msgs.locale, "editorsFoundCaption", nil)
+}
+
+// EditorsCommands says "Commands"
+// in the language the app shows.
+//
+// Editors page card label and tab.
+func EditorsCommands() string { return In(i18n.Locale()).EditorsCommands() }
+
+// EditorsCommands says "Commands"
+// in the language of msgs.
+//
+// Editors page card label and tab.
+func (msgs Messages) EditorsCommands() string {
+	return Catalog.Format(msgs.locale, "editorsCommands", nil)
+}
+
+// EditorsOf says "{count} of {total}"
+// in the language the app shows.
+//
+// Editors page card: commands on the PATH of the editors found.
+func EditorsOf(count int, total int) string { return In(i18n.Locale()).EditorsOf(count, total) }
+
+// EditorsOf says "{count} of {total}"
+// in the language of msgs.
+//
+// Editors page card: commands on the PATH of the editors found.
+func (msgs Messages) EditorsOf(count int, total int) string {
+	return Catalog.Format(msgs.locale, "editorsOf", map[string]any{"count": count, "total": total})
+}
+
+// EditorsExtensionsCard says "Extensions"
+// in the language the app shows.
+//
+// Editors page card label and tab.
+func EditorsExtensionsCard() string { return In(i18n.Locale()).EditorsExtensionsCard() }
+
+// EditorsExtensionsCard says "Extensions"
+// in the language of msgs.
+//
+// Editors page card label and tab.
+func (msgs Messages) EditorsExtensionsCard() string {
+	return Catalog.Format(msgs.locale, "editorsExtensionsCard", nil)
+}
+
+// EditorsExtensions says "{count, plural, one {# extension} other {# extensions}}"
+// in the language the app shows.
+//
+// Editors page: how many extensions.
+func EditorsExtensions(count int) string { return In(i18n.Locale()).EditorsExtensions(count) }
+
+// EditorsExtensions says "{count, plural, one {# extension} other {# extensions}}"
+// in the language of msgs.
+//
+// Editors page: how many extensions.
+func (msgs Messages) EditorsExtensions(count int) string {
+	return Catalog.Format(msgs.locale, "editorsExtensions", map[string]any{"count": count})
+}
+
+// EditorsPlugins says "{count, plural, one {# plugin} other {# plugins}}"
+// in the language the app shows.
+//
+// Editors page: how many plugins of a JetBrains IDE.
+func EditorsPlugins(count int) string { return In(i18n.Locale()).EditorsPlugins(count) }
+
+// EditorsPlugins says "{count, plural, one {# plugin} other {# plugins}}"
+// in the language of msgs.
+//
+// Editors page: how many plugins of a JetBrains IDE.
+func (msgs Messages) EditorsPlugins(count int) string {
+	return Catalog.Format(msgs.locale, "editorsPlugins", map[string]any{"count": count})
+}
+
+// EditorsFolders says "{count, plural, one {# folder} other {# folders}}"
+// in the language the app shows.
+//
+// Editors page and Cleanup: how many folders of old extensions.
+func EditorsFolders(count int) string { return In(i18n.Locale()).EditorsFolders(count) }
+
+// EditorsFolders says "{count, plural, one {# folder} other {# folders}}"
+// in the language of msgs.
+//
+// Editors page and Cleanup: how many folders of old extensions.
+func (msgs Messages) EditorsFolders(count int) string {
+	return Catalog.Format(msgs.locale, "editorsFolders", map[string]any{"count": count})
+}
+
+// EditorsNone says "No VS Code, Cursor or JetBrains IDE found."
+// in the language the app shows.
+//
+// Editors page without editors.
+func EditorsNone() string { return In(i18n.Locale()).EditorsNone() }
+
+// EditorsNone says "No VS Code, Cursor or JetBrains IDE found."
+// in the language of msgs.
+//
+// Editors page without editors.
+func (msgs Messages) EditorsNone() string {
+	return Catalog.Format(msgs.locale, "editorsNone", nil)
+}
+
+// EditorsCommand says "Command {name}"
+// in the language the app shows.
+//
+// Editors table row: the editor's command.
+func EditorsCommand(name string) string { return In(i18n.Locale()).EditorsCommand(name) }
+
+// EditorsCommand says "Command {name}"
+// in the language of msgs.
+//
+// Editors table row: the editor's command.
+func (msgs Messages) EditorsCommand(name string) string {
+	return Catalog.Format(msgs.locale, "editorsCommand", map[string]any{"name": name})
+}
+
+// EditorsToolboxScript says "Toolbox script · on the PATH"
+// in the language the app shows.
+//
+// Editors table: a command that is Toolbox's script.
+func EditorsToolboxScript() string { return In(i18n.Locale()).EditorsToolboxScript() }
+
+// EditorsToolboxScript says "Toolbox script · on the PATH"
+// in the language of msgs.
+//
+// Editors table: a command that is Toolbox's script.
+func (msgs Messages) EditorsToolboxScript() string {
+	return Catalog.Format(msgs.locale, "editorsToolboxScript", nil)
+}
+
+// EditorsNotOnPath says "not on the PATH"
+// in the language the app shows.
+//
+// Editors table: a command the terminal does not find.
+func EditorsNotOnPath() string { return In(i18n.Locale()).EditorsNotOnPath() }
+
+// EditorsNotOnPath says "not on the PATH"
+// in the language of msgs.
+//
+// Editors table: a command the terminal does not find.
+func (msgs Messages) EditorsNotOnPath() string {
+	return Catalog.Format(msgs.locale, "editorsNotOnPath", nil)
+}
+
+// EditorsFromToolbox says "turned on in Toolbox"
+// in the language the app shows.
+//
+// Editors table: where a JetBrains IDE's command comes from.
+func EditorsFromToolbox() string { return In(i18n.Locale()).EditorsFromToolbox() }
+
+// EditorsFromToolbox says "turned on in Toolbox"
+// in the language of msgs.
+//
+// Editors table: where a JetBrains IDE's command comes from.
+func (msgs Messages) EditorsFromToolbox() string {
+	return Catalog.Format(msgs.locale, "editorsFromToolbox", nil)
+}
+
+// EditorsFromApp says "installed from {name} itself"
+// in the language the app shows.
+//
+// Editors table: where an editor's command comes from.
+func EditorsFromApp(name string) string { return In(i18n.Locale()).EditorsFromApp(name) }
+
+// EditorsFromApp says "installed from {name} itself"
+// in the language of msgs.
+//
+// Editors table: where an editor's command comes from.
+func (msgs Messages) EditorsFromApp(name string) string {
+	return Catalog.Format(msgs.locale, "editorsFromApp", map[string]any{"name": name})
+}
+
+// EditorsConfig says "settings {name}"
+// in the language the app shows.
+//
+// Editors table: a JetBrains IDE's settings folder.
+func EditorsConfig(name string) string { return In(i18n.Locale()).EditorsConfig(name) }
+
+// EditorsConfig says "settings {name}"
+// in the language of msgs.
+//
+// Editors table: a JetBrains IDE's settings folder.
+func (msgs Messages) EditorsConfig(name string) string {
+	return Catalog.Format(msgs.locale, "editorsConfig", map[string]any{"name": name})
+}
+
+// EditorsAlsoIn says "{count} also in {name}"
+// in the language the app shows.
+//
+// Editors table: extensions installed in another editor too.
+func EditorsAlsoIn(count int, name string) string {
+	return In(i18n.Locale()).EditorsAlsoIn(count, name)
+}
+
+// EditorsAlsoIn says "{count} also in {name}"
+// in the language of msgs.
+//
+// Editors table: extensions installed in another editor too.
+func (msgs Messages) EditorsAlsoIn(count int, name string) string {
+	return Catalog.Format(msgs.locale, "editorsAlsoIn", map[string]any{"count": count, "name": name})
+}
+
+// EditorsOld says "Old versions of extensions"
+// in the language the app shows.
+//
+// Editors table row and hint.
+func EditorsOld() string { return In(i18n.Locale()).EditorsOld() }
+
+// EditorsOld says "Old versions of extensions"
+// in the language of msgs.
+//
+// Editors table row and hint.
+func (msgs Messages) EditorsOld() string {
+	return Catalog.Format(msgs.locale, "editorsOld", nil)
+}
+
+// EditorsOldAbout says "left after updates"
+// in the language the app shows.
+//
+// Editors table: about old extensions.
+func EditorsOldAbout() string { return In(i18n.Locale()).EditorsOldAbout() }
+
+// EditorsOldAbout says "left after updates"
+// in the language of msgs.
+//
+// Editors table: about old extensions.
+func (msgs Messages) EditorsOldAbout() string {
+	return Catalog.Format(msgs.locale, "editorsOldAbout", nil)
+}
+
+// EditorsOldTitle says "Old extensions · {name}"
+// in the language the app shows.
+//
+// Cleanup row title.
+func EditorsOldTitle(name string) string { return In(i18n.Locale()).EditorsOldTitle(name) }
+
+// EditorsOldTitle says "Old extensions · {name}"
+// in the language of msgs.
+//
+// Cleanup row title.
+func (msgs Messages) EditorsOldTitle(name string) string {
+	return Catalog.Format(msgs.locale, "editorsOldTitle", map[string]any{"name": name})
+}
+
+// EditorsIndexCache says "Index cache"
+// in the language the app shows.
+//
+// Editors table row: a JetBrains IDE's caches.
+func EditorsIndexCache() string { return In(i18n.Locale()).EditorsIndexCache() }
+
+// EditorsIndexCache says "Index cache"
+// in the language of msgs.
+//
+// Editors table row: a JetBrains IDE's caches.
+func (msgs Messages) EditorsIndexCache() string {
+	return Catalog.Format(msgs.locale, "editorsIndexCache", nil)
+}
+
+// EditorsRestorable says "rebuilt by itself"
+// in the language the app shows.
+//
+// Editors table: the IDE makes its caches again.
+func EditorsRestorable() string { return In(i18n.Locale()).EditorsRestorable() }
+
+// EditorsRestorable says "rebuilt by itself"
+// in the language of msgs.
+//
+// Editors table: the IDE makes its caches again.
+func (msgs Messages) EditorsRestorable() string {
+	return Catalog.Format(msgs.locale, "editorsRestorable", nil)
+}
+
+// EditorsNoApp says "app not found"
+// in the language the app shows.
+//
+// Editors table group: only extensions are left.
+func EditorsNoApp() string { return In(i18n.Locale()).EditorsNoApp() }
+
+// EditorsNoApp says "app not found"
+// in the language of msgs.
+//
+// Editors table group: only extensions are left.
+func (msgs Messages) EditorsNoApp() string {
+	return Catalog.Format(msgs.locale, "editorsNoApp", nil)
+}
+
+// EditorsOnPath says "on PATH"
+// in the language the app shows.
+//
+// Editors table: the command is found.
+func EditorsOnPath() string { return In(i18n.Locale()).EditorsOnPath() }
+
+// EditorsOnPath says "on PATH"
+// in the language of msgs.
+//
+// Editors table: the command is found.
+func (msgs Messages) EditorsOnPath() string {
+	return Catalog.Format(msgs.locale, "editorsOnPath", nil)
+}
+
+// EditorsNo says "no"
+// in the language the app shows.
+//
+// Editors table: the command is not found.
+func EditorsNo() string { return In(i18n.Locale()).EditorsNo() }
+
+// EditorsNo says "no"
+// in the language of msgs.
+//
+// Editors table: the command is not found.
+func (msgs Messages) EditorsNo() string {
+	return Catalog.Format(msgs.locale, "editorsNo", nil)
+}
+
+// EditorsHints says "Hints"
+// in the language the app shows.
+//
+// Editors page card title.
+func EditorsHints() string { return In(i18n.Locale()).EditorsHints() }
+
+// EditorsHints says "Hints"
+// in the language of msgs.
+//
+// Editors page card title.
+func (msgs Messages) EditorsHints() string {
+	return Catalog.Format(msgs.locale, "editorsHints", nil)
+}
+
+// EditorsNoCommand says "{name} without a command on the PATH"
+// in the language the app shows.
+//
+// Editors hint.
+func EditorsNoCommand(name string) string { return In(i18n.Locale()).EditorsNoCommand(name) }
+
+// EditorsNoCommand says "{name} without a command on the PATH"
+// in the language of msgs.
+//
+// Editors hint.
+func (msgs Messages) EditorsNoCommand(name string) string {
+	return Catalog.Format(msgs.locale, "editorsNoCommand", map[string]any{"name": name})
+}
+
+// EditorsNoCommandCaption says "{command} won't work in the terminal"
+// in the language the app shows.
+//
+// Editors hint caption.
+func EditorsNoCommandCaption(command string) string {
+	return In(i18n.Locale()).EditorsNoCommandCaption(command)
+}
+
+// EditorsNoCommandCaption says "{command} won't work in the terminal"
+// in the language of msgs.
+//
+// Editors hint caption.
+func (msgs Messages) EditorsNoCommandCaption(command string) string {
+	return Catalog.Format(msgs.locale, "editorsNoCommandCaption", map[string]any{"command": command})
+}
+
+// EditorsRemovable says "{size} · can be removed"
+// in the language the app shows.
+//
+// Editors hint caption.
+func EditorsRemovable(size string) string { return In(i18n.Locale()).EditorsRemovable(size) }
+
+// EditorsRemovable says "{size} · can be removed"
+// in the language of msgs.
+//
+// Editors hint caption.
+func (msgs Messages) EditorsRemovable(size string) string {
+	return Catalog.Format(msgs.locale, "editorsRemovable", map[string]any{"size": size})
+}
+
+// EditorsNoHints says "No hints."
+// in the language the app shows.
+//
+// Editors hints card without rows.
+func EditorsNoHints() string { return In(i18n.Locale()).EditorsNoHints() }
+
+// EditorsNoHints says "No hints."
+// in the language of msgs.
+//
+// Editors hints card without rows.
+func (msgs Messages) EditorsNoHints() string {
+	return Catalog.Format(msgs.locale, "editorsNoHints", nil)
+}
+
+// EditorsUntouched says "What Hearth leaves alone"
+// in the language the app shows.
+//
+// Editors page card title.
+func EditorsUntouched() string { return In(i18n.Locale()).EditorsUntouched() }
+
+// EditorsUntouched says "What Hearth leaves alone"
+// in the language of msgs.
+//
+// Editors page card title.
+func (msgs Messages) EditorsUntouched() string {
+	return Catalog.Format(msgs.locale, "editorsUntouched", nil)
+}
+
+// EditorsSettings says "Editors' settings"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsSettings() string { return In(i18n.Locale()).EditorsSettings() }
+
+// EditorsSettings says "Editors' settings"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsSettings() string {
+	return Catalog.Format(msgs.locale, "editorsSettings", nil)
+}
+
+// EditorsSettingsCaption says "settings.json is not read or changed"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsSettingsCaption() string { return In(i18n.Locale()).EditorsSettingsCaption() }
+
+// EditorsSettingsCaption says "settings.json is not read or changed"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsSettingsCaption() string {
+	return Catalog.Format(msgs.locale, "editorsSettingsCaption", nil)
+}
+
+// EditorsOwnExtensions says "Extensions themselves"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsOwnExtensions() string { return In(i18n.Locale()).EditorsOwnExtensions() }
+
+// EditorsOwnExtensions says "Extensions themselves"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsOwnExtensions() string {
+	return Catalog.Format(msgs.locale, "editorsOwnExtensions", nil)
+}
+
+// EditorsOwnExtensionsCaption says "the editor installs and removes them"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsOwnExtensionsCaption() string { return In(i18n.Locale()).EditorsOwnExtensionsCaption() }
+
+// EditorsOwnExtensionsCaption says "the editor installs and removes them"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsOwnExtensionsCaption() string {
+	return Catalog.Format(msgs.locale, "editorsOwnExtensionsCaption", nil)
+}
+
+// EditorsAccounts says "Accounts and sync"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsAccounts() string { return In(i18n.Locale()).EditorsAccounts() }
+
+// EditorsAccounts says "Accounts and sync"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsAccounts() string {
+	return Catalog.Format(msgs.locale, "editorsAccounts", nil)
+}
+
+// EditorsAccountsCaption says "Hearth does not read them"
+// in the language the app shows.
+//
+// Editors page: what Hearth leaves alone.
+func EditorsAccountsCaption() string { return In(i18n.Locale()).EditorsAccountsCaption() }
+
+// EditorsAccountsCaption says "Hearth does not read them"
+// in the language of msgs.
+//
+// Editors page: what Hearth leaves alone.
+func (msgs Messages) EditorsAccountsCaption() string {
+	return Catalog.Format(msgs.locale, "editorsAccountsCaption", nil)
+}
+
+// ReasonSuperseded says "a newer version is installed"
+// in the language the app shows.
+//
+// Cleanup reason: old versions of extensions.
+func ReasonSuperseded() string { return In(i18n.Locale()).ReasonSuperseded() }
+
+// ReasonSuperseded says "a newer version is installed"
+// in the language of msgs.
+//
+// Cleanup reason: old versions of extensions.
+func (msgs Messages) ReasonSuperseded() string {
+	return Catalog.Format(msgs.locale, "reasonSuperseded", nil)
+}

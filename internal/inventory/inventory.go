@@ -176,6 +176,8 @@ type ToolState struct {
 	// Mobile is how iOS and Android development is set up, for "mobile"
 	// only.
 	Mobile *MobileState `json:",omitempty"`
+	// Editors are the code editors and IDEs, for "editors" only.
+	Editors *EditorsState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
 	// only.
 	PackageManagers []PackageManager `json:",omitempty"`

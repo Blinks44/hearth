@@ -72,6 +72,16 @@ func Caches(env sysenv.Env, snap *inventory.Snapshot) []inventory.Cache {
 		seen[path] = true
 		out = append(out, inventory.Cache{ID: id, Path: path})
 	}
+	// A JetBrains IDE's caches and indexes, made again when it opens a
+	// project, one folder each.
+	if ed, ok := snap.Tool("editors"); ok && ed.Editors != nil {
+		for _, e := range ed.Editors.Editors {
+			if e.Caches != "" && !seen[e.Caches] && isDir(e.Caches) {
+				seen[e.Caches] = true
+				out = append(out, inventory.Cache{ID: "jetbrains", Path: e.Caches})
+			}
+		}
+	}
 	return out
 }
 

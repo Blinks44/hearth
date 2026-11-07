@@ -59,6 +59,14 @@ func Targets(snap *inventory.Snapshot, caches []inventory.Cache) []string {
 				add(f.Root)
 			}
 		}
+		if ed, ok := snap.Tool("editors"); ok && ed.Editors != nil {
+			for _, e := range ed.Editors.Editors {
+				add(e.Extensions)
+				for _, p := range e.Superseded {
+					add(p)
+				}
+			}
+		}
 		for _, a := range snap.Agents {
 			copies(a.Installations)
 		}

@@ -299,7 +299,8 @@ func (a *App) submitSearch() {
 }
 
 // searchCopies are the tool's copies and, for a page of several tools,
-// the tools it lists: kubectl on CLI & clouds, Xcode on Mobile development.
+// the tools it lists: kubectl on CLI & clouds, Xcode on Mobile
+// development, the editors.
 func searchCopies(tool inventory.ToolState) []inventory.Installation {
 	out := slices.Clone(tool.Installations)
 	if tool.Cpp != nil {
@@ -320,6 +321,13 @@ func searchCopies(tool inventory.ToolState) []inventory.Installation {
 		}
 		if m.Android != nil && !m.Android.Missing {
 			out = append(out, inventory.Installation{Tool: "Android SDK", Path: m.Android.Root})
+		}
+	}
+	if ed := tool.Editors; ed != nil {
+		for _, e := range ed.Editors {
+			if e.App != "" {
+				out = append(out, inventory.Installation{Tool: e.Name, Version: e.Version, Path: e.App})
+			}
 		}
 	}
 	if d := tool.Databases; d != nil {

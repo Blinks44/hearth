@@ -3732,5 +3732,245 @@
   "mobileNone": "No Xcode, Android SDK or Flutter found.",
   "@mobileNone": {
     "description": "Mobile page without tools."
+  },
+  "sectionToolsEditors": "Tools · editors and IDEs",
+  "@sectionToolsEditors": {
+    "description": "Subtitle of the editors page."
+  },
+  "editorsTitle": "Editors",
+  "@editorsTitle": {
+    "description": "Sidebar item and header of the editors page."
+  },
+  "editorsLead": "Commands on the PATH, extensions and the space they take",
+  "@editorsLead": {
+    "description": "Under the editors page's big title."
+  },
+  "editorsFound": "Found",
+  "@editorsFound": {
+    "description": "Editors page card label."
+  },
+  "editorsFoundCaption": "editors and IDEs",
+  "@editorsFoundCaption": {
+    "description": "Editors page card caption."
+  },
+  "editorsCommands": "Commands",
+  "@editorsCommands": {
+    "description": "Editors page card label and tab."
+  },
+  "editorsOf": "{count} of {total}",
+  "@editorsOf": {
+    "description": "Editors page card: commands on the PATH of the editors found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "editorsExtensionsCard": "Extensions",
+  "@editorsExtensionsCard": {
+    "description": "Editors page card label and tab."
+  },
+  "editorsExtensions": "{count, plural, one {# extension} other {# extensions}}",
+  "@editorsExtensions": {
+    "description": "Editors page: how many extensions.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "48"
+      }
+    }
+  },
+  "editorsPlugins": "{count, plural, one {# plugin} other {# plugins}}",
+  "@editorsPlugins": {
+    "description": "Editors page: how many plugins of a JetBrains IDE.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "13"
+      }
+    }
+  },
+  "editorsFolders": "{count, plural, one {# folder} other {# folders}}",
+  "@editorsFolders": {
+    "description": "Editors page and Cleanup: how many folders of old extensions.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "14"
+      }
+    }
+  },
+  "editorsNone": "No VS Code, Cursor or JetBrains IDE found.",
+  "@editorsNone": {
+    "description": "Editors page without editors."
+  },
+  "editorsCommand": "Command {name}",
+  "@editorsCommand": {
+    "description": "Editors table row: the editor's command.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "code"
+      }
+    }
+  },
+  "editorsToolboxScript": "Toolbox script · on the PATH",
+  "@editorsToolboxScript": {
+    "description": "Editors table: a command that is Toolbox's script."
+  },
+  "editorsNotOnPath": "not on the PATH",
+  "@editorsNotOnPath": {
+    "description": "Editors table: a command the terminal does not find."
+  },
+  "editorsFromToolbox": "turned on in Toolbox",
+  "@editorsFromToolbox": {
+    "description": "Editors table: where a JetBrains IDE's command comes from."
+  },
+  "editorsFromApp": "installed from {name} itself",
+  "@editorsFromApp": {
+    "description": "Editors table: where an editor's command comes from.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Cursor"
+      }
+    }
+  },
+  "editorsConfig": "settings {name}",
+  "@editorsConfig": {
+    "description": "Editors table: a JetBrains IDE's settings folder.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "IntelliJIdea2024.3"
+      }
+    }
+  },
+  "editorsAlsoIn": "{count} also in {name}",
+  "@editorsAlsoIn": {
+    "description": "Editors table: extensions installed in another editor too.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      },
+      "name": {
+        "type": "String",
+        "example": "VS Code"
+      }
+    }
+  },
+  "editorsOld": "Old versions of extensions",
+  "@editorsOld": {
+    "description": "Editors table row and hint."
+  },
+  "editorsOldAbout": "left after updates",
+  "@editorsOldAbout": {
+    "description": "Editors table: about old extensions."
+  },
+  "editorsOldTitle": "Old extensions · {name}",
+  "@editorsOldTitle": {
+    "description": "Cleanup row title.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "VS Code"
+      }
+    }
+  },
+  "editorsIndexCache": "Index cache",
+  "@editorsIndexCache": {
+    "description": "Editors table row: a JetBrains IDE's caches."
+  },
+  "editorsRestorable": "rebuilt by itself",
+  "@editorsRestorable": {
+    "description": "Editors table: the IDE makes its caches again."
+  },
+  "editorsNoApp": "app not found",
+  "@editorsNoApp": {
+    "description": "Editors table group: only extensions are left."
+  },
+  "editorsOnPath": "on PATH",
+  "@editorsOnPath": {
+    "description": "Editors table: the command is found."
+  },
+  "editorsNo": "no",
+  "@editorsNo": {
+    "description": "Editors table: the command is not found."
+  },
+  "editorsHints": "Hints",
+  "@editorsHints": {
+    "description": "Editors page card title."
+  },
+  "editorsNoCommand": "{name} without a command on the PATH",
+  "@editorsNoCommand": {
+    "description": "Editors hint.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Cursor"
+      }
+    }
+  },
+  "editorsNoCommandCaption": "{command} won't work in the terminal",
+  "@editorsNoCommandCaption": {
+    "description": "Editors hint caption.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "cursor"
+      }
+    }
+  },
+  "editorsRemovable": "{size} · can be removed",
+  "@editorsRemovable": {
+    "description": "Editors hint caption.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "0.2 GB"
+      }
+    }
+  },
+  "editorsNoHints": "No hints.",
+  "@editorsNoHints": {
+    "description": "Editors hints card without rows."
+  },
+  "editorsUntouched": "What Hearth leaves alone",
+  "@editorsUntouched": {
+    "description": "Editors page card title."
+  },
+  "editorsSettings": "Editors' settings",
+  "@editorsSettings": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "editorsSettingsCaption": "settings.json is not read or changed",
+  "@editorsSettingsCaption": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "editorsOwnExtensions": "Extensions themselves",
+  "@editorsOwnExtensions": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "editorsOwnExtensionsCaption": "the editor installs and removes them",
+  "@editorsOwnExtensionsCaption": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "editorsAccounts": "Accounts and sync",
+  "@editorsAccounts": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "editorsAccountsCaption": "Hearth does not read them",
+  "@editorsAccountsCaption": {
+    "description": "Editors page: what Hearth leaves alone."
+  },
+  "reasonSuperseded": "a newer version is installed",
+  "@reasonSuperseded": {
+    "description": "Cleanup reason: old versions of extensions."
   }
 }

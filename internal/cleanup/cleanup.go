@@ -42,6 +42,9 @@ const (
 	ProjectInstalls Kind = "project-installs"
 	// Model is a local AI model: Ollama or LM Studio downloads it again.
 	Model Kind = "model"
+	// OldExtensions are the older versions of an editor's extensions an
+	// update left behind.
+	OldExtensions Kind = "old-extensions"
 )
 
 // Group is a section candidates come in, in this order.
@@ -102,6 +105,8 @@ const (
 	NoAgent Reason = "no-agent"
 	// Downloaded: its app downloads it again.
 	Downloaded Reason = "downloaded"
+	// Superseded: a newer version of it is installed.
+	Superseded Reason = "superseded"
 )
 
 // Candidate is something the user may remove to free space.
@@ -122,7 +127,8 @@ type Candidate struct {
 	// when it last changed.
 	Project string
 	Changed time.Time
-	// Count is how many of Docker's images or containers.
+	// Count is how many of Docker's images or containers, or of the
+	// folders of OldExtensions.
 	Count int
 	// Usage is the space it takes, when Known; Docker's is what pruning
 	// frees.
@@ -183,6 +189,7 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 	}
 	out = append(out, copies(s, ps, lines, usage)...)
 	out = append(out, models(s, ps)...)
+	out = append(out, oldExtensions(s, usage)...)
 	for _, p := range ps {
 		if p.Changed.IsZero() || now.Sub(p.Changed) < projects.StaleAfter {
 			continue
@@ -397,6 +404,24 @@ func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
 			out = append(out, Candidate{Kind: Model, ID: m.Name, Manager: app.name, Paths: []string{m.Path}, Changed: m.Downloaded,
 				Usage: inventory.Usage{Bytes: m.Size, Shared: m.Size - m.Frees}, Known: true, Reasons: []Reason{NoAgent, Downloaded}})
 		}
+	}
+	return out
+}
+
+// oldExtensions are the folders of extensions' older versions, an
+// editor each.
+func oldExtensions(s *inventory.Snapshot, usage func(...string) (inventory.Usage, bool)) []Candidate {
+	st, _ := s.Tool("editors")
+	if st.Editors == nil {
+		return nil
+	}
+	var out []Candidate
+	for _, e := range st.Editors.Editors {
+		if len(e.Superseded) == 0 {
+			continue
+		}
+		u, ok := usage(e.Superseded...)
+		out = append(out, Candidate{Kind: OldExtensions, ID: e.Name, Paths: e.Superseded, Count: len(e.Superseded), Usage: u, Known: ok, Reasons: []Reason{Superseded}})
 	}
 	return out
 }

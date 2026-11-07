@@ -38,6 +38,7 @@ var caches = map[string]struct{ name, command string }{
 	"xcode":      {"Xcode DerivedData", ""},
 	"cocoapods":  {"CocoaPods", "pod cache clean --all"},
 	"pub":        {"Flutter pub", "flutter pub cache clean"},
+	"jetbrains":  {"JetBrains", ""},
 }
 
 // cleanupGroups are the Cleanup page's groups, a tab each after All.
@@ -262,6 +263,8 @@ func (a *App) candidateTitle(cand cleanup.Candidate) string {
 		return filepath.Base(cand.Project) + ": " + cand.ID
 	case cleanup.Model:
 		return cand.ID + " · " + cand.Manager
+	case cleanup.OldExtensions:
+		return locales.EditorsOldTitle(cand.ID)
 	}
 	return cand.ID
 }
@@ -284,6 +287,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		parts = append(parts, locales.CleanupContainerCount(cand.Count))
 	case cleanup.ProjectInstalls:
 		parts = append(parts, tilde(cand.Project, a.Home))
+	case cleanup.OldExtensions:
+		parts = append(parts, locales.EditorsFolders(cand.Count))
 	case cleanup.Model:
 		if !cand.Changed.IsZero() {
 			parts = append(parts, locales.ModelsDownloaded(locales.AgoOn(cand.Changed)))
@@ -317,6 +322,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 			parts = append(parts, locales.ReasonNoAgent())
 		case cleanup.Downloaded:
 			parts = append(parts, locales.ReasonDownloaded())
+		case cleanup.Superseded:
+			parts = append(parts, locales.ReasonSuperseded())
 		}
 	}
 	return strings.Join(parts, " · ")

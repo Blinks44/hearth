@@ -92,8 +92,11 @@ func TestTargets(t *testing.T) {
 		},
 		Agents: []inventory.Agent{{Installations: []inventory.Installation{{Source: inventory.Source{Kind: inventory.KindPackageManager, Root: "/brew/claude"}}}}},
 	}
+	snap.Tools = append(snap.Tools, inventory.ToolState{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{
+		{App: "/Applications/Visual Studio Code.app", Extensions: "/home/.vscode/extensions", Superseded: []string{"/home/.vscode/extensions/go-0.45.0"}},
+	}}})
 	got := Targets(snap, []inventory.Cache{{ID: "npm", Path: "/home/.npm/_cacache"}})
-	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/brew/claude", "/home/.npm/_cacache"}
+	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/home/.vscode/extensions", "/home/.vscode/extensions/go-0.45.0", "/brew/claude", "/home/.npm/_cacache"}
 	if !slices.Equal(got, want) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
@@ -111,7 +114,12 @@ func TestCaches(t *testing.T) {
 		}
 	}
 	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "UV_CACHE_DIR=" + moved}
-	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "go", Vars: map[string]string{"GOMODCACHE": gomod}}}}
+	idea := filepath.Join(home, "jetbrains", "IntelliJIdea2024.3")
+	if err := os.MkdirAll(idea, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "go", Vars: map[string]string{"GOMODCACHE": gomod}},
+		{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{{Caches: idea}, {Caches: filepath.Join(home, "gone")}}}}}}
 	got := Caches(env, snap)
 	want := []inventory.Cache{
 		{ID: "bun", Path: filepath.Join(home, ".bun", "install", "cache")},
@@ -120,6 +128,7 @@ func TestCaches(t *testing.T) {
 		{ID: "cargo", Path: filepath.Join(home, ".cargo", "registry")},
 		// ccache's old folder, while it is there.
 		{ID: "ccache", Path: filepath.Join(home, ".ccache")},
+		{ID: "jetbrains", Path: idea},
 	}
 	if !slices.Equal(got, want) {
 		t.Fatalf("got %+v\nwant %+v", got, want)

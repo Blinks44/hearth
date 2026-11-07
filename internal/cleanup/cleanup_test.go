@@ -179,3 +179,20 @@ func TestModels(t *testing.T) {
 		t.Errorf("models %q, want %q", got, want)
 	}
 }
+
+func TestOldExtensions(t *testing.T) {
+	old := []string{"/h/.vscode/extensions/go-0.45.0", "/h/.vscode/extensions/go-0.44.0"}
+	s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{
+		{Name: "VS Code", Superseded: old}, {Name: "Cursor"},
+	}}}}}
+	sizes := &inventory.Sizes{Paths: map[string]inventory.Usage{old[0]: {Bytes: 30}, old[1]: {Bytes: 20}}}
+	var got []Candidate
+	for _, c := range Find(s, sizes, nil, nil, now) {
+		if c.Kind == OldExtensions {
+			got = append(got, c)
+		}
+	}
+	if len(got) != 1 || got[0].ID != "VS Code" || got[0].Count != 2 || got[0].Frees() != 50 || got[0].Selected || got[0].Kind.Group() != Copies {
+		t.Fatalf("%+v", got)
+	}
+}
