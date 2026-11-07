@@ -171,6 +171,8 @@ type ToolState struct {
 	Cpp *CppState `json:",omitempty"`
 	// Models are the local AI models' apps, for "models" only.
 	Models *ModelsState `json:",omitempty"`
+	// Cli is the command-line tools without a page, for "cli" only.
+	Cli *CliState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
 	// only.
 	PackageManagers []PackageManager `json:",omitempty"`

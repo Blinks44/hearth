@@ -94,6 +94,10 @@ func (f *finder) add(path string) *inventory.Installation {
 			source = sources.Classify(real, real, f.env)
 		}
 	}
+	// A snap's commands all lead to snapd itself: the copy is its command.
+	if root := snapRoot(path); root != "" {
+		real, source = path, inventory.Source{Kind: inventory.KindPackageManager, Manager: "snap", Root: root}
+	}
 	if i, ok := f.byReal[real]; ok {
 		return &f.ins[i]
 	}

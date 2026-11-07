@@ -393,7 +393,7 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 	case "/ai/agents":
 		n = len(a.foundAgents())
 	case cliPage:
-		n = len(a.miseTools())
+		n = a.cliCount()
 	case modelsPage:
 		n = a.modelCount()
 	case skillsPage:

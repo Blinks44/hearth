@@ -8958,18 +8958,18 @@ func (msgs Messages) CliLead() string {
 	return Catalog.Format(msgs.locale, "cliLead", nil)
 }
 
-// CliFoundCaption says "command-line tools"
+// CliFoundCaption says "of {count} known"
 // in the language the app shows.
 //
-// CLI page card caption.
-func CliFoundCaption() string { return In(i18n.Locale()).CliFoundCaption() }
+// CLI page card caption: how many tools Hearth knows.
+func CliFoundCaption(count int) string { return In(i18n.Locale()).CliFoundCaption(count) }
 
-// CliFoundCaption says "command-line tools"
+// CliFoundCaption says "of {count} known"
 // in the language of msgs.
 //
-// CLI page card caption.
-func (msgs Messages) CliFoundCaption() string {
-	return Catalog.Format(msgs.locale, "cliFoundCaption", nil)
+// CLI page card caption: how many tools Hearth knows.
+func (msgs Messages) CliFoundCaption(count int) string {
+	return Catalog.Format(msgs.locale, "cliFoundCaption", map[string]any{"count": count})
 }
 
 // CliFromMise says "From mise"
@@ -8998,20 +8998,6 @@ func CliNoPage() string { return In(i18n.Locale()).CliNoPage() }
 // CLI page card caption.
 func (msgs Messages) CliNoPage() string {
 	return Catalog.Format(msgs.locale, "cliNoPage", nil)
-}
-
-// CliNone says "No command-line tools without a page found yet: mise's other tools show here."
-// in the language the app shows.
-//
-// CLI page without tools.
-func CliNone() string { return In(i18n.Locale()).CliNone() }
-
-// CliNone says "No command-line tools without a page found yet: mise's other tools show here."
-// in the language of msgs.
-//
-// CLI page without tools.
-func (msgs Messages) CliNone() string {
-	return Catalog.Format(msgs.locale, "cliNone", nil)
 }
 
 // CliGroupMise says "From mise · no page of their own"
@@ -9112,6 +9098,258 @@ func CliHowMiseCaption() string { return In(i18n.Locale()).CliHowMiseCaption() }
 // CLI page side card caption.
 func (msgs Messages) CliHowMiseCaption() string {
 	return Catalog.Format(msgs.locale, "cliHowMiseCaption", nil)
+}
+
+// CliGroupKubernetes says "Kubernetes"
+// in the language the app shows.
+//
+// CLI page group and tab.
+func CliGroupKubernetes() string { return In(i18n.Locale()).CliGroupKubernetes() }
+
+// CliGroupKubernetes says "Kubernetes"
+// in the language of msgs.
+//
+// CLI page group and tab.
+func (msgs Messages) CliGroupKubernetes() string {
+	return Catalog.Format(msgs.locale, "cliGroupKubernetes", nil)
+}
+
+// CliGroupClouds says "Clouds"
+// in the language the app shows.
+//
+// CLI page group and tab.
+func CliGroupClouds() string { return In(i18n.Locale()).CliGroupClouds() }
+
+// CliGroupClouds says "Clouds"
+// in the language of msgs.
+//
+// CLI page group and tab.
+func (msgs Messages) CliGroupClouds() string {
+	return Catalog.Format(msgs.locale, "cliGroupClouds", nil)
+}
+
+// CliGroupInfra says "Infrastructure"
+// in the language the app shows.
+//
+// CLI page group and tab.
+func CliGroupInfra() string { return In(i18n.Locale()).CliGroupInfra() }
+
+// CliGroupInfra says "Infrastructure"
+// in the language of msgs.
+//
+// CLI page group and tab.
+func (msgs Messages) CliGroupInfra() string {
+	return Catalog.Format(msgs.locale, "cliGroupInfra", nil)
+}
+
+// CliMissing says "not found · {name}"
+// in the language the app shows.
+//
+// CLI row of a known tool not found.
+func CliMissing(name string) string { return In(i18n.Locale()).CliMissing(name) }
+
+// CliMissing says "not found · {name}"
+// in the language of msgs.
+//
+// CLI row of a known tool not found.
+func (msgs Messages) CliMissing(name string) string {
+	return Catalog.Format(msgs.locale, "cliMissing", map[string]any{"name": name})
+}
+
+// CliContext says "context {name}"
+// in the language the app shows.
+//
+// CLI row: kubectl's current context.
+func CliContext(name string) string { return In(i18n.Locale()).CliContext(name) }
+
+// CliContext says "context {name}"
+// in the language of msgs.
+//
+// CLI row: kubectl's current context.
+func (msgs Messages) CliContext(name string) string {
+	return Catalog.Format(msgs.locale, "cliContext", map[string]any{"name": name})
+}
+
+// CliHelmRepos says "{count, plural, one {# chart repository} other {# chart repositories}}"
+// in the language the app shows.
+//
+// CLI row: helm's repositories.
+func CliHelmRepos(count int) string { return In(i18n.Locale()).CliHelmRepos(count) }
+
+// CliHelmRepos says "{count, plural, one {# chart repository} other {# chart repositories}}"
+// in the language of msgs.
+//
+// CLI row: helm's repositories.
+func (msgs Messages) CliHelmRepos(count int) string {
+	return Catalog.Format(msgs.locale, "cliHelmRepos", map[string]any{"count": count})
+}
+
+// CliProfile says "profile {name}"
+// in the language the app shows.
+//
+// CLI row: the AWS CLI's profile.
+func CliProfile(name string) string { return In(i18n.Locale()).CliProfile(name) }
+
+// CliProfile says "profile {name}"
+// in the language of msgs.
+//
+// CLI row: the AWS CLI's profile.
+func (msgs Messages) CliProfile(name string) string {
+	return Catalog.Format(msgs.locale, "cliProfile", map[string]any{"name": name})
+}
+
+// CliProject says "project {name}"
+// in the language the app shows.
+//
+// CLI row: gcloud's project.
+func CliProject(name string) string { return In(i18n.Locale()).CliProject(name) }
+
+// CliProject says "project {name}"
+// in the language of msgs.
+//
+// CLI row: gcloud's project.
+func (msgs Messages) CliProject(name string) string {
+	return Catalog.Format(msgs.locale, "cliProject", map[string]any{"name": name})
+}
+
+// CliNoProject says "no project chosen"
+// in the language the app shows.
+//
+// CLI row: gcloud without a project.
+func CliNoProject() string { return In(i18n.Locale()).CliNoProject() }
+
+// CliNoProject says "no project chosen"
+// in the language of msgs.
+//
+// CLI row: gcloud without a project.
+func (msgs Messages) CliNoProject() string {
+	return Catalog.Format(msgs.locale, "cliNoProject", nil)
+}
+
+// CliSubscription says "subscription {name}"
+// in the language the app shows.
+//
+// CLI row: Azure CLI's default subscription.
+func CliSubscription(name string) string { return In(i18n.Locale()).CliSubscription(name) }
+
+// CliSubscription says "subscription {name}"
+// in the language of msgs.
+//
+// CLI row: Azure CLI's default subscription.
+func (msgs Messages) CliSubscription(name string) string {
+	return Catalog.Format(msgs.locale, "cliSubscription", map[string]any{"name": name})
+}
+
+// CliNoSubscription says "no subscription chosen"
+// in the language the app shows.
+//
+// CLI row: Azure CLI without a default subscription.
+func CliNoSubscription() string { return In(i18n.Locale()).CliNoSubscription() }
+
+// CliNoSubscription says "no subscription chosen"
+// in the language of msgs.
+//
+// CLI row: Azure CLI without a default subscription.
+func (msgs Messages) CliNoSubscription() string {
+	return Catalog.Format(msgs.locale, "cliNoSubscription", nil)
+}
+
+// CliNoUpdates says "none known"
+// in the language the app shows.
+//
+// CLI page updates card caption without updates.
+func CliNoUpdates() string { return In(i18n.Locale()).CliNoUpdates() }
+
+// CliNoUpdates says "none known"
+// in the language of msgs.
+//
+// CLI page updates card caption without updates.
+func (msgs Messages) CliNoUpdates() string {
+	return Catalog.Format(msgs.locale, "cliNoUpdates", nil)
+}
+
+// CliContexts says "Current contexts"
+// in the language the app shows.
+//
+// CLI page card title.
+func CliContexts() string { return In(i18n.Locale()).CliContexts() }
+
+// CliContexts says "Current contexts"
+// in the language of msgs.
+//
+// CLI page card title.
+func (msgs Messages) CliContexts() string {
+	return Catalog.Format(msgs.locale, "cliContexts", nil)
+}
+
+// CliContextFrom says "from {file}"
+// in the language the app shows.
+//
+// CLI page context caption.
+func CliContextFrom(file string) string { return In(i18n.Locale()).CliContextFrom(file) }
+
+// CliContextFrom says "from {file}"
+// in the language of msgs.
+//
+// CLI page context caption.
+func (msgs Messages) CliContextFrom(file string) string {
+	return Catalog.Format(msgs.locale, "cliContextFrom", map[string]any{"file": file})
+}
+
+// CliHowPath says "Commands on PATH"
+// in the language the app shows.
+//
+// CLI page how card row.
+func CliHowPath() string { return In(i18n.Locale()).CliHowPath() }
+
+// CliHowPath says "Commands on PATH"
+// in the language of msgs.
+//
+// CLI page how card row.
+func (msgs Messages) CliHowPath() string {
+	return Catalog.Format(msgs.locale, "cliHowPath", nil)
+}
+
+// CliHowPathCaption says "the terminal's and the apps'"
+// in the language the app shows.
+//
+// CLI page how card caption.
+func CliHowPathCaption() string { return In(i18n.Locale()).CliHowPathCaption() }
+
+// CliHowPathCaption says "the terminal's and the apps'"
+// in the language of msgs.
+//
+// CLI page how card caption.
+func (msgs Messages) CliHowPathCaption() string {
+	return Catalog.Format(msgs.locale, "cliHowPathCaption", nil)
+}
+
+// CliHowNoSignIn says "No signing in to clouds"
+// in the language the app shows.
+//
+// CLI page how card row.
+func CliHowNoSignIn() string { return In(i18n.Locale()).CliHowNoSignIn() }
+
+// CliHowNoSignIn says "No signing in to clouds"
+// in the language of msgs.
+//
+// CLI page how card row.
+func (msgs Messages) CliHowNoSignIn() string {
+	return Catalog.Format(msgs.locale, "cliHowNoSignIn", nil)
+}
+
+// CliHowNoSignInCaption says "keys are not read, accounts not called"
+// in the language the app shows.
+//
+// CLI page how card caption.
+func CliHowNoSignInCaption() string { return In(i18n.Locale()).CliHowNoSignInCaption() }
+
+// CliHowNoSignInCaption says "keys are not read, accounts not called"
+// in the language of msgs.
+//
+// CLI page how card caption.
+func (msgs Messages) CliHowNoSignInCaption() string {
+	return Catalog.Format(msgs.locale, "cliHowNoSignInCaption", nil)
 }
 
 // SectionLanguagesCpp says "Languages & runtimes · compilers and build"

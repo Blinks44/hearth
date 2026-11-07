@@ -2284,11 +2284,25 @@
   "searchAvailable": "Search available versions",
   "searchPlaceholder": "Find a tool…",
   "searchNoResults": "No results for “{query}”",
-  "@searchNoResults": {"description": "Search palette: nothing matches the query.", "placeholders": {"query": {"type": "String"}}},
+  "@searchNoResults": {
+    "description": "Search palette: nothing matches the query.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "searchOpen": "↵ open",
   "searchKeys": "↑↓ choose   ↵ open   Esc close",
   "searchClose": "close",
-  "@searchCount": {"description": "Number of results shown in the search palette.", "placeholders": {"count": {"type": "int"}}},
+  "@searchCount": {
+    "description": "Number of results shown in the search palette.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "searchCount": "{count, plural, one {# result} other {# results}}",
   "searchLocal": "Back to local results",
   "managerGlobalConfig": "Global configuration",
@@ -2296,11 +2310,27 @@
   "seenInApps": "only apps started outside the terminal see it",
   "miseSwitchUnknown": "no terminal activation or shims detected",
   "versionsUnreachable": "no connection to {host}. Hearth will try again on the next scan",
-  "@versionsUnreachable": {"description": "Version list error when the server did not answer.", "placeholders": {"host": {"type": "String", "example": "nodejs.org"}}},
+  "@versionsUnreachable": {
+    "description": "Version list error when the server did not answer.",
+    "placeholders": {
+      "host": {
+        "type": "String",
+        "example": "nodejs.org"
+      }
+    }
+  },
   "databaseRunningCount": "Running",
   "jsNpmMissing": "npm is not on the terminal's PATH",
   "issueGuiMissingTitle": "Apps outside the terminal do not see {tool}",
-  "@issueGuiMissingTitle": {"description": "Issue title: apps started outside the terminal do not find the tool.", "placeholders": {"tool": {"type": "String", "example": "Node"}}},
+  "@issueGuiMissingTitle": {
+    "description": "Issue title: apps started outside the terminal do not find the tool.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node"
+      }
+    }
+  },
   "chipGuiMissing": "not in apps",
   "cleanupTitle": "Cleanup",
   "@cleanupTitle": {
@@ -3072,9 +3102,15 @@
   "@cliLead": {
     "description": "Under the CLI page's big title."
   },
-  "cliFoundCaption": "command-line tools",
+  "cliFoundCaption": "of {count} known",
   "@cliFoundCaption": {
-    "description": "CLI page card caption."
+    "description": "CLI page card caption: how many tools Hearth knows.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
   },
   "cliFromMise": "From mise",
   "@cliFromMise": {
@@ -3083,10 +3119,6 @@
   "cliNoPage": "without a page of their own",
   "@cliNoPage": {
     "description": "CLI page card caption."
-  },
-  "cliNone": "No command-line tools without a page found yet: mise's other tools show here.",
-  "@cliNone": {
-    "description": "CLI page without tools."
   },
   "cliGroupMise": "From mise · no page of their own",
   "@cliGroupMise": {
@@ -3125,6 +3157,120 @@
   "cliHowMiseCaption": "installs/ without running mise",
   "@cliHowMiseCaption": {
     "description": "CLI page side card caption."
+  },
+  "cliGroupKubernetes": "Kubernetes",
+  "@cliGroupKubernetes": {
+    "description": "CLI page group and tab."
+  },
+  "cliGroupClouds": "Clouds",
+  "@cliGroupClouds": {
+    "description": "CLI page group and tab."
+  },
+  "cliGroupInfra": "Infrastructure",
+  "@cliGroupInfra": {
+    "description": "CLI page group and tab."
+  },
+  "cliMissing": "not found · {name}",
+  "@cliMissing": {
+    "description": "CLI row of a known tool not found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Azure CLI"
+      }
+    }
+  },
+  "cliContext": "context {name}",
+  "@cliContext": {
+    "description": "CLI row: kubectl's current context.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "kind-dev"
+      }
+    }
+  },
+  "cliHelmRepos": "{count, plural, one {# chart repository} other {# chart repositories}}",
+  "@cliHelmRepos": {
+    "description": "CLI row: helm's repositories.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "cliProfile": "profile {name}",
+  "@cliProfile": {
+    "description": "CLI row: the AWS CLI's profile.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "default"
+      }
+    }
+  },
+  "cliProject": "project {name}",
+  "@cliProject": {
+    "description": "CLI row: gcloud's project.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "shop-prod"
+      }
+    }
+  },
+  "cliNoProject": "no project chosen",
+  "@cliNoProject": {
+    "description": "CLI row: gcloud without a project."
+  },
+  "cliSubscription": "subscription {name}",
+  "@cliSubscription": {
+    "description": "CLI row: Azure CLI's default subscription.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Prod"
+      }
+    }
+  },
+  "cliNoSubscription": "no subscription chosen",
+  "@cliNoSubscription": {
+    "description": "CLI row: Azure CLI without a default subscription."
+  },
+  "cliNoUpdates": "none known",
+  "@cliNoUpdates": {
+    "description": "CLI page updates card caption without updates."
+  },
+  "cliContexts": "Current contexts",
+  "@cliContexts": {
+    "description": "CLI page card title."
+  },
+  "cliContextFrom": "from {file}",
+  "@cliContextFrom": {
+    "description": "CLI page context caption.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "cliHowPath": "Commands on PATH",
+  "@cliHowPath": {
+    "description": "CLI page how card row."
+  },
+  "cliHowPathCaption": "the terminal's and the apps'",
+  "@cliHowPathCaption": {
+    "description": "CLI page how card caption."
+  },
+  "cliHowNoSignIn": "No signing in to clouds",
+  "@cliHowNoSignIn": {
+    "description": "CLI page how card row."
+  },
+  "cliHowNoSignInCaption": "keys are not read, accounts not called",
+  "@cliHowNoSignInCaption": {
+    "description": "CLI page how card caption."
   },
   "sectionLanguagesCpp": "Languages & runtimes · compilers and build",
   "@sectionLanguagesCpp": {

@@ -43,6 +43,7 @@ var Detectors = []Detector{
 	{"cpp", detect.Cpp},
 	{"models", detect.Models},
 	{"mise", detect.MiseTools},
+	{"cli", detect.Cli},
 	{"docker", detect.Docker},
 	{"databases", detect.Databases},
 	{"packages", pkgmgr.Detect},
