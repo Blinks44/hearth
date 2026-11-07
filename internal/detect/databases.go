@@ -22,7 +22,7 @@ func Databases(ctx context.Context, r run.Runner, term, gui sysenv.Env) (invento
 
 func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, globs func(sysenv.Env, string) []string) (inventory.ToolState, error) {
 	d := &inventory.DatabaseState{}
-	for _, spec := range []struct{ command, kind string }{{"postgres", "PostgreSQL"}, {"mysqld", "MySQL"}, {"mariadbd", "MariaDB"}, {"redis-server", "Redis"}} {
+	for _, spec := range []struct{ command, kind string }{{"postgres", "PostgreSQL"}, {"mysqld", "MySQL"}, {"mariadbd", "MariaDB"}, {"redis-server", "Redis"}, {"mongod", "MongoDB"}, {"sqlservr", "SQL Server"}} {
 		f := newFinder(spec.command, term)
 		f.lookPath(spec.command, term, gui)
 		for _, pattern := range globs(term, spec.command) {
@@ -36,8 +36,14 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 			if in.Source.Shim || slices.ContainsFunc(d.Servers, func(db inventory.Database) bool { return db.Path == in.RealPath }) {
 				continue
 			}
-			v := versionOf(ctx, r, term, in.Path)
 			kind := spec.kind
+			var v string
+			if kind == "SQL Server" {
+				// sqlservr has no --version: running it starts the server.
+				v = sqlServerVersion(ctx, r, term, in.RealPath)
+			} else {
+				v = versionOf(ctx, r, term, in.Path)
+			}
 			if strings.Contains(v, "MariaDB") {
 				kind = "MariaDB"
 			}
@@ -55,7 +61,7 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 			d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: kind, Version: databaseVersionOf(v), Path: path, Source: source})
 		}
 	}
-	for _, command := range []string{"psql", "mysql", "mariadb", "redis-cli", "sqlite3"} {
+	for _, command := range []string{"psql", "mysql", "mariadb", "redis-cli", "mongosh", "sqlcmd", "sqlite3"} {
 		f := newFinder(command, term)
 		f.lookPath(command, term, gui)
 		for _, pattern := range globs(term, command) {
@@ -70,7 +76,13 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 				continue
 			}
 			// mysql --version exits without reading a database or connecting.
-			in.Version = databaseVersionOf(versionOf(ctx, r, term, in.Path))
+			cmd := run.Cmd{Args: []string{in.Path, "--version"}, Env: term}
+			if command == "mongosh" {
+				cmd.Timeout = 20 * time.Second // a Node program: its first start takes some 10 s
+			}
+			if res, err := r.Run(ctx, cmd); err == nil && res.ExitCode == 0 {
+				in.Version = databaseVersionOf(string(res.Stdout))
+			}
 			d.Clients = append(d.Clients, in)
 		}
 	}

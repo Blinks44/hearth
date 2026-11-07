@@ -23,11 +23,17 @@ type DatabaseListener struct{ Address, Port, Process, PID string }
 // DatabaseKind recognizes supported image and service names.
 func DatabaseKind(name string) string {
 	name = strings.ToLower(name)
+	// Microsoft names its images by path: mcr.microsoft.com/mssql/server.
+	if strings.Contains("/"+name, "/mssql/") || strings.HasPrefix(name, "mssql$") {
+		return "SQL Server" // the image or a named instance's Windows service, MSSQL$SQLEXPRESS
+	}
 	name = name[strings.LastIndex(name, "/")+1:]
 	name, _, _ = strings.Cut(name, "@sha256:") // postgres@sha256:…
 	name, _, _ = strings.Cut(name, ":")
 	name = strings.TrimSuffix(name, ".service")
-	for _, spec := range []struct{ prefix, kind string }{{"postgresql", "PostgreSQL"}, {"postgres", "PostgreSQL"}, {"mariadb", "MariaDB"}, {"mysql", "MySQL"}, {"redis", "Redis"}} {
+	for _, spec := range []struct{ prefix, kind string }{{"postgresql", "PostgreSQL"}, {"postgres", "PostgreSQL"}, {"mariadb", "MariaDB"}, {"mysql", "MySQL"}, {"redis", "Redis"},
+		{"mongodb-community", "MongoDB"}, {"mongodb", "MongoDB"}, {"mongod", "MongoDB"}, {"mongo", "MongoDB"},
+		{"mssql", "SQL Server"}, {"mssqlserver", "SQL Server"}, {"azure-sql-edge", "SQL Server"}} {
 		if name == spec.prefix || name == spec.prefix+"-server" {
 			return spec.kind
 		}

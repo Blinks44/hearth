@@ -10,7 +10,20 @@ import (
 )
 
 func databaseGlobs(_ sysenv.Env, command string) []string {
-	return []string{"/usr/lib/postgresql/*/bin/" + command, "/usr/pgsql-*/bin/" + command, "/usr/sbin/" + command, "/usr/bin/" + command, "/usr/local/bin/" + command}
+	return []string{"/usr/lib/postgresql/*/bin/" + command, "/usr/pgsql-*/bin/" + command, "/usr/sbin/" + command, "/usr/bin/" + command, "/usr/local/bin/" + command,
+		"/opt/mssql/bin/" + command, "/opt/mssql-tools18/bin/" + command, "/opt/mssql-tools/bin/" + command}
+}
+
+// sqlServerVersion is the version of the mssql-server package, Microsoft's
+// only way to install SQL Server on Linux: dpkg's on Ubuntu, rpm's on RHEL.
+func sqlServerVersion(ctx context.Context, r run.Runner, env sysenv.Env, _ string) string {
+	for _, argv := range [][]string{{"dpkg-query", "-W", "-f=${Version}", "mssql-server"}, {"rpm", "-q", "--queryformat", "%{VERSION}", "mssql-server"}} {
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env})
+		if err == nil && res.ExitCode == 0 {
+			return databaseVersionOf(string(res.Stdout))
+		}
+	}
+	return ""
 }
 
 func databaseServices(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {
@@ -32,10 +45,13 @@ func databaseServices(ctx context.Context, r run.Runner, env sysenv.Env, d *inve
 			continue
 		}
 		status := ""
-		if f[3] == "running" {
+		switch {
+		case f[3] == "running":
 			status = "running"
-		} else if f[2] == "inactive" {
+		case f[2] == "inactive":
 			status = "stopped"
+		case f[2] == "failed": // as mongod that exited at start
+			status = "error"
 		}
 		databaseService(d, kind, f[0], "system", status)
 	}

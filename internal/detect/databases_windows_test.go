@@ -22,8 +22,11 @@ func TestDatabaseWindowsServices(t *testing.T) {
 		{"postgresql-x64-17", windows.SERVICE_RUNNING},
 		{"EventLog", windows.SERVICE_RUNNING},
 		{"MySQL80", windows.SERVICE_STOPPED},
+		{"MongoDB", windows.SERVICE_RUNNING},
+		{"MSSQL$SQLEXPRESS", windows.SERVICE_RUNNING},
+		{"SQLBrowser", windows.SERVICE_STOPPED},
 	})
-	if len(d.Servers) != 2 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" {
+	if len(d.Servers) != 4 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || d.Servers[2].Kind != "MongoDB" || d.Servers[3].Kind != "SQL Server" {
 		t.Fatal(d)
 	}
 }

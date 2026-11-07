@@ -74,7 +74,7 @@ func (a *App) databases(c *ui.Context, p page) {
 					listCard(c, locales.DatabaseListeners(), locales.DatabaseObserved(), func() {
 						shown := 0
 						for _, l := range d.Listeners {
-							if l.Port != "5432" && l.Port != "3306" && l.Port != "6379" && !databaseProjectPort(a, l.Port) {
+							if !slices.Contains([]string{"5432", "3306", "6379", "27017", "1433"}, l.Port) && !databaseProjectPort(a, l.Port) {
 								continue
 							}
 							shown++
@@ -252,6 +252,10 @@ func databaseClientKind(command string) string {
 		return "MariaDB"
 	case "redis-cli":
 		return "Redis"
+	case "mongosh":
+		return "MongoDB"
+	case "sqlcmd":
+		return "SQL Server"
 	}
 	return ""
 }

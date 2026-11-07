@@ -23,6 +23,9 @@ func databaseGlobs(env sysenv.Env, command string) []string {
 	return out
 }
 
+// sqlServerVersion is empty: SQL Server runs on macOS only in containers.
+func sqlServerVersion(context.Context, run.Runner, sysenv.Env, string) string { return "" }
+
 func databaseServices(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {
 	databaseBrewServices(ctx, r, env, d)
 }

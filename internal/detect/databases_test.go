@@ -53,10 +53,12 @@ func TestDockerDatabases(t *testing.T) {
 	}
 	r.Stdout(`{"Name":"db","Image":"postgres:16","State":"running","Ports":"127.0.0.1:5433->5432/tcp, [::1]:5433->5432/tcp","Service":"db","Project":"/dev/app"}
 {"Name":"metrics","Image":"postgres-exporter:latest","State":"running"}
-{"Name":"cache","Image":"redis:7","State":"exited"}`, call.Args...)
+{"Name":"cache","Image":"redis:7","State":"exited"}
+{"Name":"docs","Image":"mongo:8","State":"running","Ports":"0.0.0.0:27017->27017/tcp"}
+{"Name":"sql","Image":"mcr.microsoft.com/mssql/server:2022-latest","State":"running","Ports":"127.0.0.1:1433->1433/tcp"}`, call.Args...)
 	d = &inventory.DockerState{}
 	dockerDatabases(t.Context(), r, nil, "docker", "unix:///local", d)
-	if d.DatabaseErr || len(d.Databases) != 2 || len(d.Databases[0].Ports) != 1 || d.Databases[0].Ports[0] != "5433" || d.Databases[1].Status != "stopped" {
+	if d.DatabaseErr || len(d.Databases) != 4 || d.Databases[2].Kind != "MongoDB" || d.Databases[3].Kind != "SQL Server" || d.Databases[3].Ports[0] != "1433" || len(d.Databases[0].Ports) != 1 || d.Databases[0].Ports[0] != "5433" || d.Databases[1].Status != "stopped" {
 		t.Fatalf("%+v", d)
 	}
 }
@@ -69,10 +71,10 @@ func TestDatabaseBrewServices(t *testing.T) {
 	}
 	env := sysenv.Env{"PATH=" + dir, "PATHEXT=.EXE"}
 	r := &run.Fake{}
-	r.Stdout(`[{"name":"postgresql@17","status":"started"},{"name":"redis","status":"none"},{"name":"postgres-exporter","status":"started"}]`, exe, "services", "list", "--json")
-	d := &inventory.DatabaseState{Servers: []inventory.Database{{Kind: "PostgreSQL", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Source: "brew"}}}
+	r.Stdout(`[{"name":"postgresql@17","status":"started"},{"name":"redis","status":"none"},{"name":"postgres-exporter","status":"started"},{"name":"mongodb-community","status":"started"}]`, exe, "services", "list", "--json")
+	d := &inventory.DatabaseState{Servers: []inventory.Database{{Kind: "PostgreSQL", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Source: "brew"}, {Kind: "MongoDB", Path: "/opt/homebrew/Cellar/mongodb-community/8.0.4/bin/mongod", Source: "brew"}}}
 	databaseBrewServices(t.Context(), r, env, d)
-	if len(d.Servers) != 2 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" {
+	if len(d.Servers) != 3 || d.Servers[0].Status != "running" || d.Servers[1].Service != "mongodb-community" || d.Servers[2].Status != "stopped" {
 		t.Fatal(d)
 	}
 }

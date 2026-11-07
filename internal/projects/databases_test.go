@@ -60,3 +60,21 @@ func TestComposeDatabasePorts(t *testing.T) {
 		})
 	}
 }
+
+func TestEnvDatabases(t *testing.T) {
+	for _, tc := range []struct{ line, want string }{
+		{"MONGO_URL=mongodb://app:secret@127.0.0.1/app", "MongoDB 27017"},
+		{"MONGO_URL=mongodb+srv://app:secret@cluster.example/app", ""},
+		{"DATABASE_URL=sqlserver://localhost:1434;database=app;user=sa;password=secret", "SQL Server 1434"},
+		{"DATABASE_URL=sqlserver://localhost;database=app", "SQL Server 1433"},
+	} {
+		refs := envDatabases(tc.line)
+		got := ""
+		if len(refs) == 1 {
+			got = refs[0].Kind + " " + strings.Join(refs[0].Ports, ",")
+		}
+		if got != tc.want {
+			t.Errorf("%s: %q, want %q", tc.line, got, tc.want)
+		}
+	}
+}

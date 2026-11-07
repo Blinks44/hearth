@@ -122,7 +122,11 @@ func envDatabases(data string) []DatabaseReference {
 		if !ok || !strings.HasSuffix(strings.ToUpper(strings.TrimSpace(key)), "URL") {
 			continue
 		}
-		u, err := url.Parse(strings.Trim(strings.TrimSpace(value), `"'`))
+		value = strings.Trim(strings.TrimSpace(value), `"'`)
+		// Prisma's sqlserver://localhost:1433;database=app;user=sa keeps
+		// its settings after the first semicolon.
+		value, _, _ = strings.Cut(value, ";")
+		u, err := url.Parse(value)
 		if err != nil {
 			continue
 		}
@@ -134,6 +138,10 @@ func envDatabases(data string) []DatabaseReference {
 			kind, port = "MySQL", "3306"
 		case "redis", "rediss":
 			kind, port = "Redis", "6379"
+		case "mongodb":
+			kind, port = "MongoDB", "27017"
+		case "sqlserver", "mssql":
+			kind, port = "SQL Server", "1433"
 		default:
 			continue
 		}

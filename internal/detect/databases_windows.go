@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -19,12 +20,33 @@ func databaseGlobs(env sysenv.Env, command string) []string {
 	var out []string
 	for _, root := range []string{env.Get("ProgramFiles"), env.Get("ProgramFiles(x86)")} {
 		if root != "" {
-			for _, pattern := range []string{"PostgreSQL/*/bin", "MySQL/*/bin", "MariaDB*/bin", "Redis"} {
+			for _, pattern := range []string{"PostgreSQL/*/bin", "MySQL/*/bin", "MariaDB*/bin", "Redis", "MongoDB/Server/*/bin", "mongosh",
+				"Microsoft SQL Server/MSSQL*/MSSQL/Binn", "Microsoft SQL Server/Client SDK/ODBC/*/Tools/Binn", "SqlCmd"} {
 				out = append(out, filepath.Join(root, pattern, command+".exe"))
 			}
 		}
 	}
+	if local := env.Get("LOCALAPPDATA"); local != "" {
+		out = append(out, filepath.Join(local, "Programs", "mongosh", command+".exe")) // mongosh's installer for one user
+	}
 	return out
+}
+
+// sqlServerVersion reads the instance's setup version from the registry:
+// sqlservr.exe is under Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\Binn,
+// and the instance's key is named as that folder.
+func sqlServerVersion(_ context.Context, _ run.Runner, _ sysenv.Env, path string) string {
+	instance := filepath.Base(filepath.Dir(filepath.Dir(filepath.Dir(path))))
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Microsoft SQL Server\`+instance+`\Setup`, registry.QUERY_VALUE)
+	if err != nil {
+		return ""
+	}
+	defer k.Close() //nolint:errcheck // a key opened for reading only
+	v, _, err := k.GetStringValue("Version")
+	if err != nil {
+		return ""
+	}
+	return databaseVersionOf(v)
 }
 
 // listWindowsServices is replaced in tests, which must not see the machine's services.
