@@ -9,12 +9,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // DefaultTimeout ends a step that left Step.Timeout zero: installs
@@ -32,6 +34,9 @@ type Step struct {
 	Note string
 	// Timeout ends the step after it; zero is DefaultTimeout.
 	Timeout time.Duration
+	// Admin runs it as the administrator, asking the user through the
+	// system's own dialog each time: never a silent sudo.
+	Admin bool
 }
 
 // Note is something worth knowing before a plan runs, as that it asks for
@@ -140,14 +145,24 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if timeout <= 0 {
 			timeout = DefaultTimeout
 		}
-		res, err := r.Run(ctx, run.Cmd{Args: step.Argv, Env: p.Env, Timeout: timeout, Output: e})
+		argv := step.Argv
+		if step.Admin {
+			argv = elevate(fullPath(argv, p.Env), p.Title)
+		}
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: p.Env, Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
+		refused := ""
+		if step.Admin {
+			refused = adminRefused(res.ExitCode, string(res.Stdout)+string(res.Stderr))
+		}
 		switch {
 		case ctx.Err() != nil:
 			e.end(i, StepStopped, Stopped, -1, "")
 		case err != nil:
 			e.end(i, StepFailed, Failed, -1, err.Error())
+		case refused != "":
+			e.end(i, StepFailed, Failed, res.ExitCode, refused)
 		case res.ExitCode != 0:
 			e.end(i, StepFailed, Failed, res.ExitCode, "")
 		default:
@@ -166,7 +181,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.state.Phase = Verifying
 		e.mu.Unlock()
 		e.emit()
-		found, err := p.Verify(ctx)
+		found, err := verify(ctx, p.Verify)
 		e.mu.Lock()
 		switch {
 		case ctx.Err() != nil:
@@ -185,6 +200,46 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 	}
 	e.emit()
 	return e.snapshot()
+}
+
+// verify runs check, and runs it again a few times a second apart while
+// it fails: a program that asked for the administrator, as nvm-windows
+// does, may leave its elevated part still at work as it exits.
+func verify(ctx context.Context, check func(context.Context) (string, error)) (string, error) {
+	found, err := check(ctx)
+	for range verifyTries - 1 {
+		if err == nil {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return found, err
+		case <-time.After(verifyPause):
+		}
+		found, err = check(ctx)
+	}
+	return found, err
+}
+
+// verifyTries and verifyPause are how often and how far apart verify
+// checks; tests shorten the pause.
+var (
+	verifyTries = 3
+	verifyPause = time.Second
+)
+
+// fullPath returns argv with its program found in env's PATH, as the
+// elevated command runs with a PATH of its own; argv as it is when the
+// program is not found, for the step to fail saying so.
+func fullPath(argv []string, env []string) []string {
+	if len(argv) == 0 || filepath.IsAbs(argv[0]) {
+		return argv
+	}
+	found := sysenv.LookPathAll(argv[0], env)
+	if len(found) == 0 {
+		return argv
+	}
+	return append([]string{found[0]}, argv[1:]...)
 }
 
 func errText(err error) string {

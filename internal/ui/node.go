@@ -304,17 +304,21 @@ func (a *App) nodeManager(st inventory.ToolState) string {
 // ops.NodePlan, checked by finding Node again.
 func (a *App) nodePlan(action ops.NodeAction, manager, version, root string) (ops.Plan, bool) {
 	st, _ := a.toolState("node")
-	asdfSet := true
+	t := ops.NodeTarget{Manager: manager, Version: version, Root: root, AsdfSet: true}
 	for _, m := range st.Managers {
-		if m.Name == "asdf" {
-			asdfSet = ops.AsdfSet(m.Version)
+		switch {
+		case m.Name != manager:
+		case m.Name == "asdf":
+			t.AsdfSet = ops.AsdfSet(m.Version)
+		default:
+			t.Admin = m.Admin
 		}
 	}
 	var detect ops.Detect
 	if d := a.DetectTool; d != nil {
 		detect = func(ctx context.Context) (inventory.ToolState, error) { return d(ctx, "node") }
 	}
-	return ops.NodePlan(action, manager, version, root, asdfSet, detect)
+	return ops.NodePlan(action, t, detect)
 }
 
 // installNode offers to install version through the manager in use.

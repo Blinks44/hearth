@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
 )
@@ -31,6 +32,8 @@ func plan(steps ...[]string) Plan {
 	}
 	return p
 }
+
+func init() { verifyPause = time.Millisecond }
 
 func TestExecute(t *testing.T) {
 	fail := errors.New("broken")
@@ -80,6 +83,24 @@ func TestExecute(t *testing.T) {
 			plan: func() Plan {
 				p := plan([]string{"brew", "install", "thing"})
 				p.Verify = func(context.Context) (string, error) { return "thing 1.0 answers", nil }
+				return p
+			}(),
+			answers:  func(f *run.Fake) { f.Stdout("", "brew", "install", "thing") },
+			phase:    Succeeded,
+			steps:    []StepStatus{Done},
+			verified: "thing 1.0 answers",
+		},
+		{
+			name: "the check passes on a later try",
+			plan: func() Plan {
+				p := plan([]string{"brew", "install", "thing"})
+				tries := 0
+				p.Verify = func(context.Context) (string, error) {
+					if tries++; tries < 2 {
+						return "", fail
+					}
+					return "thing 1.0 answers", nil
+				}
 				return p
 			}(),
 			answers:  func(f *run.Fake) { f.Stdout("", "brew", "install", "thing") },

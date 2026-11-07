@@ -57,6 +57,11 @@ func nodeManagers(ins []inventory.Installation, env sysenv.Env, home string) []i
 			m.SwitchOnCD, m.Files = true, []string{".tool-versions"}
 		case "nodenv":
 			m.SwitchOnCD, m.Files = true, []string{".node-version"}
+		case "n":
+			// n keeps versions in <prefix>/n/versions/node/<version> and
+			// copies the one in use into the prefix.
+			prefix := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(in.Source.Root))))
+			m.Admin = !writable(prefix)
 		}
 		if !m.SwitchOnCD {
 			m.Files = nil

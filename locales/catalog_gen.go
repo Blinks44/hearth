@@ -11993,3 +11993,89 @@ func RemoveEllipsis() string { return In(i18n.Locale()).RemoveEllipsis() }
 func (msgs Messages) RemoveEllipsis() string {
 	return Catalog.Format(msgs.locale, "removeEllipsis", nil)
 }
+
+// AdminCanceled says "you did not give the administrator's password"
+// in the language the app shows.
+//
+// Why a step that needs the administrator failed: the user canceled the
+// password prompt.
+func AdminCanceled() string { return In(i18n.Locale()).AdminCanceled() }
+
+// AdminCanceled says "you did not give the administrator's password"
+// in the language of msgs.
+//
+// Why a step that needs the administrator failed: the user canceled the
+// password prompt.
+func (msgs Messages) AdminCanceled() string {
+	return Catalog.Format(msgs.locale, "adminCanceled", nil)
+}
+
+// AdminNoAgent says "the system has no window to ask for the administrator's password: run the command in a terminal with sudo"
+// in the language the app shows.
+//
+// Why a step failed on Linux: no polkit agent to ask for the password.
+func AdminNoAgent() string { return In(i18n.Locale()).AdminNoAgent() }
+
+// AdminNoAgent says "the system has no window to ask for the administrator's password: run the command in a terminal with sudo"
+// in the language of msgs.
+//
+// Why a step failed on Linux: no polkit agent to ask for the password.
+func (msgs Messages) AdminNoAgent() string {
+	return Catalog.Format(msgs.locale, "adminNoAgent", nil)
+}
+
+// NoteAdminMac says "macOS asks for the administrator's password in its own window, for each run"
+// in the language the app shows.
+//
+// Worth knowing on macOS: a step runs as the administrator.
+func NoteAdminMac() string { return In(i18n.Locale()).NoteAdminMac() }
+
+// NoteAdminMac says "macOS asks for the administrator's password in its own window, for each run"
+// in the language of msgs.
+//
+// Worth knowing on macOS: a step runs as the administrator.
+func (msgs Messages) NoteAdminMac() string {
+	return Catalog.Format(msgs.locale, "noteAdminMac", nil)
+}
+
+// NoteAdminLinux says "The system asks for the administrator's password in its own window (polkit), for each run"
+// in the language the app shows.
+//
+// Worth knowing on Linux: a step runs as the administrator.
+func NoteAdminLinux() string { return In(i18n.Locale()).NoteAdminLinux() }
+
+// NoteAdminLinux says "The system asks for the administrator's password in its own window (polkit), for each run"
+// in the language of msgs.
+//
+// Worth knowing on Linux: a step runs as the administrator.
+func (msgs Messages) NoteAdminLinux() string {
+	return Catalog.Format(msgs.locale, "noteAdminLinux", nil)
+}
+
+// NoteAdminWindows says "Windows asks for permission (UAC) when the installer starts"
+// in the language the app shows.
+//
+// Worth knowing on Windows: a step needs administrator rights.
+func NoteAdminWindows() string { return In(i18n.Locale()).NoteAdminWindows() }
+
+// NoteAdminWindows says "Windows asks for permission (UAC) when the installer starts"
+// in the language of msgs.
+//
+// Worth knowing on Windows: a step needs administrator rights.
+func (msgs Messages) NoteAdminWindows() string {
+	return Catalog.Format(msgs.locale, "noteAdminWindows", nil)
+}
+
+// OpTagAdmin says "password"
+// in the language the app shows.
+//
+// Tag of a step that asks for the administrator's password.
+func OpTagAdmin() string { return In(i18n.Locale()).OpTagAdmin() }
+
+// OpTagAdmin says "password"
+// in the language of msgs.
+//
+// Tag of a step that asks for the administrator's password.
+func (msgs Messages) OpTagAdmin() string {
+	return Catalog.Format(msgs.locale, "opTagAdmin", nil)
+}

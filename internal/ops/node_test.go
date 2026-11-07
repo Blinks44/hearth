@@ -45,11 +45,13 @@ func TestNodePlanCommands(t *testing.T) {
 		{"brew", NodeUninstall, "/opt/homebrew/Cellar/node@22/22.14.0", false, []string{"brew", "uninstall", "node@22"}},
 		{"brew", NodeInstall, "/opt/homebrew/Cellar/node@22/22.14.0", false, nil},
 		{"brew", NodeDefault, "", false, nil},
-		{"n", NodeInstall, "", false, nil},
+		{"n", NodeInstall, "", false, []string{"n", "download", v}},
+		{"n", NodeUninstall, "", false, []string{"n", "rm", v}},
+		{"n", NodeDefault, "", false, []string{"n", v}},
 		{"", NodeInstall, "", false, nil},
 	}
 	for _, tt := range tests {
-		p, ok := NodePlan(tt.action, tt.manager, v, tt.root, tt.asdfSet, nil)
+		p, ok := NodePlan(tt.action, NodeTarget{Manager: tt.manager, Version: v, Root: tt.root, AsdfSet: tt.asdfSet}, nil)
 		if ok != (tt.want != nil) {
 			t.Errorf("%s %d: ok = %v, want %v", tt.manager, tt.action, ok, tt.want != nil)
 			continue
@@ -91,7 +93,7 @@ func TestNodePlanVerify(t *testing.T) {
 			detect := func(context.Context) (inventory.ToolState, error) {
 				return inventory.ToolState{Tool: "node", Installations: tt.found}, nil
 			}
-			p, _ := NodePlan(tt.action, "fnm", v, "", false, detect)
+			p, _ := NodePlan(tt.action, NodeTarget{Manager: "fnm", Version: v}, detect)
 			f := &run.Fake{}
 			f.Stdout("", p.Steps[0].Argv...)
 			got := Execute(t.Context(), f, p, &strings.Builder{}, func(State) {})

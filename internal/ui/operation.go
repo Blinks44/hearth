@@ -236,6 +236,9 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State) {
 					command += "  ·  " + step.Note
 				}
 				clipped(c, command).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
+				if step.Admin && s.Current < 0 {
+					aiTag(c, locales.OpTagAdmin(), pal.WarningSoft, pal.WarningText)
+				}
 				if s.Current >= 0 {
 					label, bg, fg := stepTag(c, status)
 					aiTag(c, label, bg, fg)

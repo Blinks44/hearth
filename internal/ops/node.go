@@ -29,17 +29,27 @@ type Detect func(ctx context.Context) (inventory.ToolState, error)
 // then refuse to uninstall.
 const nvmScript = `. "${NVM_DIR:-$HOME/.nvm}/nvm.sh" --no-use && nvm "$@"`
 
-// NodePlan returns the plan that does action to version through manager,
-// the copy's or the one in use, with the commands the user would type;
-// ok is false when Hearth cannot do it through that manager. root is the
-// copy's Source.Root, which names Homebrew's formula; asdfSet that asdf
-// is 0.16 or later, which sets versions with asdf set.
-func NodePlan(action NodeAction, manager, version, root string, asdfSet bool, detect Detect) (p Plan, ok bool) {
-	argv := nodeCommand(action, manager, version, root, asdfSet)
+// NodeTarget is the version an operation is for and the manager it goes
+// through: the copy's, or the one in use.
+type NodeTarget struct {
+	Manager, Version string
+	// Root is the copy's Source.Root, which names Homebrew's formula.
+	Root string
+	// AsdfSet reports asdf 0.16 or later, which sets versions with asdf
+	// set; Admin a manager that needs the administrator, as Manager.Admin.
+	AsdfSet, Admin bool
+}
+
+// NodePlan returns the plan that does action to t, with the commands the
+// user would type; ok is false when Hearth cannot do it through that
+// manager.
+func NodePlan(action NodeAction, t NodeTarget, detect Detect) (p Plan, ok bool) {
+	manager, version := t.Manager, t.Version
+	argv := nodeCommand(action, manager, version, t.Root, t.AsdfSet)
 	if argv == nil {
 		return Plan{}, false
 	}
-	p.Steps = []Step{{Argv: argv}}
+	p.Steps = []Step{{Argv: argv, Admin: t.Admin}}
 	if manager == "nvm" {
 		// nvm is a shell function: the step says what the script runs.
 		p.Steps[0].Note = strings.Join(argv[3:], " ")
@@ -57,6 +67,9 @@ func NodePlan(action NodeAction, manager, version, root string, asdfSet bool, de
 		if manager == "nvm-windows" {
 			p.Notes = []Note{{Title: locales.NoteAdmin(), Text: locales.NoteNvmWindowsUAC(), Tag: "UAC"}}
 		}
+	}
+	if t.Admin {
+		p.Notes = append(p.Notes, AdminNote())
 	}
 	if detect != nil {
 		p.Verify = func(ctx context.Context) (string, error) {
@@ -96,6 +109,10 @@ func nodeCommand(action NodeAction, manager, version, root string, asdfSet bool)
 		argvs = [3][]string{{"asdf", "install", "nodejs", version}, {"asdf", "uninstall", "nodejs", version}, set}
 	case "nodenv":
 		argvs = [3][]string{{"nodenv", "install", version}, {"nodenv", "uninstall", "-f", version}, {"nodenv", "global", version}}
+	case "n":
+		// n download keeps a version without putting it in use; n
+		// <version> copies it into the prefix.
+		argvs = [3][]string{{"n", "download", version}, {"n", "rm", version}, {"n", version}}
 	case "volta":
 		// Volta keeps the versions it fetched and has no command that
 		// removes one.

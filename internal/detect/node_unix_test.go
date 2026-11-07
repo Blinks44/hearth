@@ -200,3 +200,28 @@ func TestCorepackSymlink(t *testing.T) {
 		t.Error("yarn linked to Corepack, not enabled")
 	}
 }
+
+// n's default is the version it copied into its prefix, as the headers
+// there say; a prefix the user can write needs no administrator.
+func TestNodeN(t *testing.T) {
+	root := root(t)
+	prefix := filepath.Join(root, "n")
+	v20 := fakeNode(t, filepath.Join(prefix, "n", "versions", "node", "20.19.0"))
+	v22 := fakeNode(t, filepath.Join(prefix, "n", "versions", "node", "22.11.0"))
+	writeFile(t, filepath.Join(prefix, "include", "node", "node_version.h"),
+		"#define NODE_MAJOR_VERSION 20\n#define NODE_MINOR_VERSION 19\n#define NODE_PATCH_VERSION 0\n")
+	got, err := Node(t.Context(), &run.Fake{}, homeEnv(root), sysenv.Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := func(v string) inventory.Source {
+		return inventory.Source{Kind: vm, Manager: "n", Root: filepath.Join(prefix, "n", "versions", "node", v), Version: v}
+	}
+	checkInstallations(t, got, []inventory.Installation{
+		{Tool: "node", Version: "20.19.0", Path: v20, RealPath: v20, Source: src("20.19.0"), Default: true},
+		{Tool: "node", Version: "22.11.0", Path: v22, RealPath: v22, Source: src("22.11.0")},
+	})
+	if len(got.Managers) != 1 || got.Managers[0].Name != "n" || got.Managers[0].Admin {
+		t.Errorf("managers %+v, want n without the administrator", got.Managers)
+	}
+}

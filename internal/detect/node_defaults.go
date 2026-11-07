@@ -47,6 +47,11 @@ func nodeDefaults(d sources.Dirs, env sysenv.Env, installed map[string][]string)
 	if d.Nodenv != "" {
 		set("nodenv", firstLine(readFile(filepath.Join(d.Nodenv, "version"))))
 	}
+	// n copies the version in use into its prefix, headers and all; one of
+	// its own versions is its default.
+	if d.N != "" && len(installed["n"]) > 0 {
+		set("n", nodeHeaderVersion(filepath.Join(d.N, "include", "node", "node_version.h")))
+	}
 	// nvm-windows switches versions by pointing NVM_SYMLINK at one.
 	if link := env.Get("NVM_SYMLINK"); link != "" {
 		if target, err := sysenv.RealPath(link); err == nil {
@@ -54,6 +59,23 @@ func nodeDefaults(d sources.Dirs, env sysenv.Env, installed map[string][]string)
 		}
 	}
 	return defaults
+}
+
+// nodeHeaderVersion reads the version node_version.h defines, as
+// "20.19.0"; "" when it cannot.
+func nodeHeaderVersion(path string) string {
+	parts := map[string]string{}
+	for line := range strings.Lines(readFile(path)) {
+		f := strings.Fields(line)
+		if len(f) == 3 && f[0] == "#define" {
+			parts[f[1]] = f[2]
+		}
+	}
+	major, minor, patch := parts["NODE_MAJOR_VERSION"], parts["NODE_MINOR_VERSION"], parts["NODE_PATCH_VERSION"]
+	if major == "" || minor == "" || patch == "" {
+		return ""
+	}
+	return major + "." + minor + "." + patch
 }
 
 // pickVersion settles a requested version against the installed ones: an
