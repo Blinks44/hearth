@@ -12191,3 +12191,153 @@ func OpRestored(file string) string { return In(i18n.Locale()).OpRestored(file) 
 func (msgs Messages) OpRestored(file string) string {
 	return Catalog.Format(msgs.locale, "opRestored", map[string]any{"file": file})
 }
+
+// Install says "Install"
+// in the language the app shows.
+//
+// Button that installs what a project needs.
+func Install() string { return In(i18n.Locale()).Install() }
+
+// Install says "Install"
+// in the language of msgs.
+//
+// Button that installs what a project needs.
+func (msgs Messages) Install() string {
+	return Catalog.Format(msgs.locale, "install", nil)
+}
+
+// InstallEllipsis says "Install {name}…"
+// in the language the app shows.
+//
+// Button of a project's problem that installs the version it needs.
+func InstallEllipsis(name string) string { return In(i18n.Locale()).InstallEllipsis(name) }
+
+// InstallEllipsis says "Install {name}…"
+// in the language of msgs.
+//
+// Button of a project's problem that installs the version it needs.
+func (msgs Messages) InstallEllipsis(name string) string {
+	return Catalog.Format(msgs.locale, "installEllipsis", map[string]any{"name": name})
+}
+
+// PinMenu says "Pin {tool} {version}…"
+// in the language the app shows.
+//
+// Project menu item: write the version in use to the project's version
+// file.
+func PinMenu(tool string, version string) string { return In(i18n.Locale()).PinMenu(tool, version) }
+
+// PinMenu says "Pin {tool} {version}…"
+// in the language of msgs.
+//
+// Project menu item: write the version in use to the project's version
+// file.
+func (msgs Messages) PinMenu(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "pinMenu", map[string]any{"tool": tool, "version": version})
+}
+
+// PinTitle says "Pin {tool} {version} in {project}"
+// in the language the app shows.
+//
+// Title of the plan that writes a version to a project's file.
+func PinTitle(tool string, version string, project string) string {
+	return In(i18n.Locale()).PinTitle(tool, version, project)
+}
+
+// PinTitle says "Pin {tool} {version} in {project}"
+// in the language of msgs.
+//
+// Title of the plan that writes a version to a project's file.
+func (msgs Messages) PinTitle(tool string, version string, project string) string {
+	return Catalog.Format(msgs.locale, "pinTitle", map[string]any{"tool": tool, "version": version, "project": project})
+}
+
+// PinWhy says "The version goes into {file}, which the project already uses: tools that read it switch to it in this folder, on ever…"
+// in the language the app shows.
+//
+// How a version gets pinned in a file the project has.
+func PinWhy(file string) string { return In(i18n.Locale()).PinWhy(file) }
+
+// PinWhy says "The version goes into {file}, which the project already uses: tools that read it switch to it in this folder, on ever…"
+// in the language of msgs.
+//
+// How a version gets pinned in a file the project has.
+func (msgs Messages) PinWhy(file string) string {
+	return Catalog.Format(msgs.locale, "pinWhy", map[string]any{"file": file})
+}
+
+// PinWhyNew says "The project pins no version yet: Hearth makes {file}, which {manager} reads, and switches to this version in this fol…"
+// in the language the app shows.
+//
+// How a version gets pinned in a new file.
+func PinWhyNew(file string, manager string) string { return In(i18n.Locale()).PinWhyNew(file, manager) }
+
+// PinWhyNew says "The project pins no version yet: Hearth makes {file}, which {manager} reads, and switches to this version in this fol…"
+// in the language of msgs.
+//
+// How a version gets pinned in a new file.
+func (msgs Messages) PinWhyNew(file string, manager string) string {
+	return Catalog.Format(msgs.locale, "pinWhyNew", map[string]any{"file": file, "manager": manager})
+}
+
+// PinAction says "Pin {version}"
+// in the language the app shows.
+//
+// Button that runs the plan pinning a version.
+func PinAction(version string) string { return In(i18n.Locale()).PinAction(version) }
+
+// PinAction says "Pin {version}"
+// in the language of msgs.
+//
+// Button that runs the plan pinning a version.
+func (msgs Messages) PinAction(version string) string {
+	return Catalog.Format(msgs.locale, "pinAction", map[string]any{"version": version})
+}
+
+// PinChange says "{file}: {tool} {version}"
+// in the language the app shows.
+//
+// What a pin changed.
+func PinChange(file string, tool string, version string) string {
+	return In(i18n.Locale()).PinChange(file, tool, version)
+}
+
+// PinChange says "{file}: {tool} {version}"
+// in the language of msgs.
+//
+// What a pin changed.
+func (msgs Messages) PinChange(file string, tool string, version string) string {
+	return Catalog.Format(msgs.locale, "pinChange", map[string]any{"file": file, "tool": tool, "version": version})
+}
+
+// PinChecked says "{file} asks for {tool} {version}"
+// in the language the app shows.
+//
+// What the check after a pin found.
+func PinChecked(file string, tool string, version string) string {
+	return In(i18n.Locale()).PinChecked(file, tool, version)
+}
+
+// PinChecked says "{file} asks for {tool} {version}"
+// in the language of msgs.
+//
+// What the check after a pin found.
+func (msgs Messages) PinChecked(file string, tool string, version string) string {
+	return Catalog.Format(msgs.locale, "pinChecked", map[string]any{"file": file, "tool": tool, "version": version})
+}
+
+// PinNotChecked says "{file} does not ask for {tool} {version}"
+// in the language the app shows.
+//
+// The check after a pin did not find the version.
+func PinNotChecked(file string, tool string, version string) string {
+	return In(i18n.Locale()).PinNotChecked(file, tool, version)
+}
+
+// PinNotChecked says "{file} does not ask for {tool} {version}"
+// in the language of msgs.
+//
+// The check after a pin did not find the version.
+func (msgs Messages) PinNotChecked(file string, tool string, version string) string {
+	return Catalog.Format(msgs.locale, "pinNotChecked", map[string]any{"file": file, "tool": tool, "version": version})
+}

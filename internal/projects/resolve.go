@@ -252,3 +252,18 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 		return err == nil && c.Check(v)
 	}, nil
 }
+
+// Pick returns the newest of releases, newest first, that want asks of
+// tool; false when none does or want cannot be understood.
+func Pick(tool, want string, releases []string, lines map[int]versions.Line) (string, bool) {
+	match, err := matcher(tool, want, lines)
+	if err != nil {
+		return "", false
+	}
+	for _, v := range releases {
+		if match(inventory.Installation{Version: v}) {
+			return v, true
+		}
+	}
+	return "", false
+}

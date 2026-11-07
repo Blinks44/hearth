@@ -4480,5 +4480,139 @@
         "example": "~/.zshrc"
       }
     }
+  },
+  "install": "Install",
+  "@install": {
+    "description": "Button that installs what a project needs."
+  },
+  "installEllipsis": "Install {name}…",
+  "@installEllipsis": {
+    "description": "Button of a project's problem that installs the version it needs.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "pinMenu": "Pin {tool} {version}…",
+  "@pinMenu": {
+    "description": "Project menu item: write the version in use to the project's version file.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
+  },
+  "pinTitle": "Pin {tool} {version} in {project}",
+  "@pinTitle": {
+    "description": "Title of the plan that writes a version to a project's file.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      },
+      "project": {
+        "type": "String",
+        "example": "legacy-admin"
+      }
+    }
+  },
+  "pinWhy": "The version goes into {file}, which the project already uses: tools that read it switch to it in this folder, on every computer.",
+  "@pinWhy": {
+    "description": "How a version gets pinned in a file the project has.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      }
+    }
+  },
+  "pinWhyNew": "The project pins no version yet: Hearth makes {file}, which {manager} reads, and switches to this version in this folder.",
+  "@pinWhyNew": {
+    "description": "How a version gets pinned in a new file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "pinAction": "Pin {version}",
+  "@pinAction": {
+    "description": "Button that runs the plan pinning a version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
+  },
+  "pinChange": "{file}: {tool} {version}",
+  "@pinChange": {
+    "description": "What a pin changed.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
+  },
+  "pinChecked": "{file} asks for {tool} {version}",
+  "@pinChecked": {
+    "description": "What the check after a pin found.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
+  },
+  "pinNotChecked": "{file} does not ask for {tool} {version}",
+  "@pinNotChecked": {
+    "description": "The check after a pin did not find the version.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": ".nvmrc"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
   }
 }

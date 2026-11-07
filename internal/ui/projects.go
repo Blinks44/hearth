@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/mod/semver"
 
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -273,6 +274,18 @@ func (a *App) project(c *ui.Context, dir string) {
 						Background(Colors(c.Theme()).WarningSoft).Children(func() {
 						ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
 						ui.Text(c, text).FontSize(12).TextColor(Colors(c.Theme()).WarningText).Grow(1).MinWidth(0)
+						for _, st := range statuses {
+							if ch, ok := st.Unmet(); ok {
+								if plan, ok := a.projectInstall(st); ok {
+									// Dark, as in the design: the page's one accent
+									// stays for the header's action.
+									ui.Button(c.Key("banner-install"), locales.InstallEllipsis(toolTitle(st.Tool)+withSpace(ch.Want))).
+										Background(c.Theme().Text).TextColor(c.Theme().Background).BorderColor(c.Theme().Text).
+										OnClick(func() { a.Propose(plan) })
+								}
+								break
+							}
+						}
 					})
 				}
 				if len(statuses) > 0 {
@@ -291,6 +304,7 @@ func (a *App) project(c *ui.Context, dir string) {
 // the list, which leaves the folder be.
 func (a *App) projectMenu(c *ui.Context, dir string) {
 	ui.Button(c.Key("project-menu"), "").Size(28, 26).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
+		a.pinItems(m, dir)
 		a.projectItems(m, dir, false)
 	}).Children(func() {
 		ui.Icon(c, Icon("ellipsis")).Size(14, 14).TextColor(c.Theme().TextMuted)
@@ -317,6 +331,64 @@ func (a *App) projectItems(m *ui.Menu, dir string, open bool) {
 			a.router.Replace(projectsPage.path)
 		}
 	}
+}
+
+// pinItems offer to pin, in the project in dir, the versions its terminal
+// runs of Node, pnpm and Yarn, where its files do not pin them already.
+func (a *App) pinItems(m *ui.Menu, dir string) {
+	i := slices.IndexFunc(a.Projects, func(p projects.Project) bool { return p.Dir == dir })
+	if i < 0 {
+		return
+	}
+	p := a.Projects[i]
+	node, _ := a.toolState("node")
+	added := false
+	for _, st := range projects.Resolve(p, a.Snapshot, a.nodeLines()) {
+		if st.Terminal == nil || st.Downloads || st.Terminal.Version == "" {
+			continue
+		}
+		t := ops.PinTarget{Tool: st.Tool, Title: toolTitle(st.Tool), Version: st.Terminal.Version, Manager: a.nodeManager(node)}
+		plan, ok := ops.PinPlan(p, t)
+		if !ok {
+			continue
+		}
+		added = true
+		if m.Item(locales.PinMenu(t.Title, t.Version)).Chosen() {
+			a.Propose(plan)
+		}
+	}
+	if added {
+		m.Separator()
+	}
+}
+
+// projectInstall is the plan that installs the Node version a project
+// needs and does not have: the newest release its file asks for, the
+// recommended one when it names none, through the manager in use.
+func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
+	ch, ok := st.Unmet()
+	nv := a.NodeVersions
+	if !ok || ch.Installed != nil || st.Tool != "node" || nv == nil {
+		return ops.Plan{}, false
+	}
+	var version string
+	if ch.Want == "" {
+		r, ok := nv.Recommended()
+		if !ok {
+			return ops.Plan{}, false
+		}
+		version = r.Version
+	} else {
+		releases := make([]string, len(nv.Releases))
+		for i, r := range nv.Releases {
+			releases[i] = r.Version
+		}
+		if version, ok = projects.Pick("node", ch.Want, releases, nv.Lines); !ok {
+			return ops.Plan{}, false
+		}
+	}
+	node, _ := a.toolState("node")
+	return a.nodePlan(ops.NodeInstall, a.nodeManager(node), version, "")
 }
 
 // projectHero is the folder, its name and what it needs, and on the right
@@ -408,7 +480,13 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 				}
 				cell(c, columnGrow[3], run, runCaption, pal.TextFaint)
 				ui.Row(c).Width(110).Shrink(0).Justify(ui.End).Children(func() {
+					plan, install := a.projectInstall(st)
 					switch {
+					case install:
+						ui.Button(c.Key("install:"+st.Tool), "").Label(plan.Title).OnClick(func() { a.Propose(plan) }).Children(func() {
+							ui.Icon(c, Icon("download")).Size(13, 13).TextColor(t.TextMuted)
+							ui.Text(c, locales.Install()).SingleLine()
+						})
 					case !st.Checked:
 						chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.ChipNotChecked())
 					case statusProblem(st) == "":

@@ -228,3 +228,27 @@ func TestResolveCorepack(t *testing.T) {
 		})
 	}
 }
+
+func TestPick(t *testing.T) {
+	releases := []string{"24.1.0", "23.6.0", "22.12.0", "22.11.0", "20.18.1", "18.20.5", "18.20.4"}
+	lines := map[int]versions.Line{22: {LTS: time.Date(2024, 10, 29, 0, 0, 0, 0, time.UTC), Codename: "Jod"}}
+	tests := []struct {
+		want, got string
+		ok        bool
+	}{
+		{"18", "18.20.5", true},
+		{"^20.10", "20.18.1", true},
+		{">=18 <23", "22.12.0", true},
+		{"lts/*", "22.12.0", true},
+		{"lts/jod", "22.12.0", true},
+		{"node", "24.1.0", true},
+		{"16", "", false},
+		{"not a version", "", false},
+	}
+	for _, tt := range tests {
+		got, ok := Pick("node", tt.want, releases, lines)
+		if got != tt.got || ok != tt.ok {
+			t.Errorf("Pick(%q) = %q, %v; want %q, %v", tt.want, got, ok, tt.got, tt.ok)
+		}
+	}
+}

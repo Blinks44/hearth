@@ -954,5 +954,15 @@
   "opBackup": "Копия файла",
   "opBackupText": "{file} · вернётся, если план не пройдёт; вернуть можно и из журнала",
   "opTagBackup": "бэкап",
-  "opRestored": "{file} восстановлен из копии"
+  "opRestored": "{file} восстановлен из копии",
+  "install": "Установить",
+  "installEllipsis": "Установить {name}…",
+  "pinMenu": "Закрепить {tool} {version}…",
+  "pinTitle": "Закрепить {tool} {version} в {project}",
+  "pinWhy": "Версия запишется в {file}, который проект уже использует: инструменты, которые его читают, переключатся на неё в этой папке на любом компьютере.",
+  "pinWhyNew": "Проект ещё не закрепляет версию: Hearth создаст {file}, который читает {manager}, и он переключится на эту версию в этой папке.",
+  "pinAction": "Закрепить {version}",
+  "pinChange": "{file}: {tool} {version}",
+  "pinChecked": "{file} требует {tool} {version}",
+  "pinNotChecked": "{file} не требует {tool} {version}"
 }

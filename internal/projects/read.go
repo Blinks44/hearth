@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -60,9 +61,15 @@ type Project struct {
 	// Installs are the folders of dependencies its tools install and can
 	// install again, as node_modules and .venv, that it has.
 	Installs []string
+	// Texts are the version files Hearth may write, by name, as Read
+	// found them: an edit starts from them.
+	Texts map[string]string
 	// Errs say which files could not be read; the others still count.
 	Errs []error
 }
+
+// VersionFiles are the files that pin versions Hearth may write.
+var VersionFiles = []string{".nvmrc", ".node-version", ".tool-versions", "mise.toml", ".mise.toml", "package.json"}
 
 // installDirs are the dependency folders tools put back from a project's
 // files: npm and the others' node_modules, a Python virtual environment.
@@ -129,6 +136,12 @@ func Read(dir string) Project {
 			continue // a folder by that name, as testdata/rust-toolchain
 		}
 		p.Files = append(p.Files, r.file)
+		if err == nil && slices.Contains(VersionFiles, r.file) {
+			if p.Texts == nil {
+				p.Texts = map[string]string{}
+			}
+			p.Texts[r.file] = string(data)
+		}
 		var reqs []Requirement
 		if err == nil {
 			reqs, err = r.read(data)

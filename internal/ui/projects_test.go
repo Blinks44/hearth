@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/versions"
 )
 
 // testProjects are a project fnm switches to an installed Node by .nvmrc,
@@ -298,4 +299,45 @@ func TestOfferFound(t *testing.T) {
 	if len(added) != 1 || added[0] != home+"/dev/shop-web" {
 		t.Errorf("added %q", added)
 	}
+}
+
+// A Node the project needs and nobody installed installs from its row and
+// from the banner, the newest release its file asks for, through fnm.
+func TestProjectInstall(t *testing.T) {
+	a := NewApp()
+	a.NodeVersions = nodeVersions(time.Now())
+	a.NodeVersions.Releases = append(a.NodeVersions.Releases, versions.Release{Version: "18.20.5"}, versions.Release{Version: "18.20.4"})
+	tt := openProjects(t, a, projectPath(home+"/work/legacy-admin"))
+	screenshot(t, tt, "project-install")
+	for _, button := range []string{"Install Node 18…", "Install Node 18.20.5"} {
+		if err := tt.Click(button); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		if !tt.HasText("fnm install 18.20.5") {
+			t.Errorf("%s: %q", button, tt.Texts())
+		}
+		if err := tt.Click("Cancel"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+	}
+}
+
+// The project menu pins the Node the terminal runs in the project's own
+// version file, showing the change.
+func TestProjectPin(t *testing.T) {
+	a := NewApp()
+	tt := openProjects(t, a, projectPath(home+"/dev/shop-web"))
+	a.Projects[0].Texts = map[string]string{".nvmrc": "22\n"}
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.ChooseMenuItem("Pin Node 22.12.0…"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Pin Node 22.12.0 in shop-web", "~/dev/shop-web/.nvmrc", "- 22", "+ 22.12.0", "Pin 22.12.0")
+	screenshot(t, tt, "project-pin")
 }
