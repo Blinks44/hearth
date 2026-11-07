@@ -9423,3 +9423,439 @@ func CppSdkFrom(base string) string { return In(i18n.Locale()).CppSdkFrom(base) 
 func (msgs Messages) CppSdkFrom(base string) string {
 	return Catalog.Format(msgs.locale, "cppSdkFrom", map[string]any{"base": base})
 }
+
+// ModelsTitle says "Local models"
+// in the language the app shows.
+//
+// Sidebar item and header of the local models page.
+func ModelsTitle() string { return In(i18n.Locale()).ModelsTitle() }
+
+// ModelsTitle says "Local models"
+// in the language of msgs.
+//
+// Sidebar item and header of the local models page.
+func (msgs Messages) ModelsTitle() string {
+	return Catalog.Format(msgs.locale, "modelsTitle", nil)
+}
+
+// ModelsSubtitle says "AI · models on this computer"
+// in the language the app shows.
+//
+// Subtitle of the local models page.
+func ModelsSubtitle() string { return In(i18n.Locale()).ModelsSubtitle() }
+
+// ModelsSubtitle says "AI · models on this computer"
+// in the language of msgs.
+//
+// Subtitle of the local models page.
+func (msgs Messages) ModelsSubtitle() string {
+	return Catalog.Format(msgs.locale, "modelsSubtitle", nil)
+}
+
+// ModelsLead says "Ollama and LM Studio: which models are downloaded and how much space they take"
+// in the language the app shows.
+//
+// Local models page lead.
+func ModelsLead() string { return In(i18n.Locale()).ModelsLead() }
+
+// ModelsLead says "Ollama and LM Studio: which models are downloaded and how much space they take"
+// in the language of msgs.
+//
+// Local models page lead.
+func (msgs Messages) ModelsLead() string {
+	return Catalog.Format(msgs.locale, "modelsLead", nil)
+}
+
+// ModelsCount says "Models"
+// in the language the app shows.
+//
+// Local models header card.
+func ModelsCount() string { return In(i18n.Locale()).ModelsCount() }
+
+// ModelsCount says "Models"
+// in the language of msgs.
+//
+// Local models header card.
+func (msgs Messages) ModelsCount() string {
+	return Catalog.Format(msgs.locale, "modelsCount", nil)
+}
+
+// ModelsInApps says "{count, plural, =1 {in one app} one {in # app} other {in # apps}}"
+// in the language the app shows.
+//
+// Local models header card caption.
+func ModelsInApps(count int) string { return In(i18n.Locale()).ModelsInApps(count) }
+
+// ModelsInApps says "{count, plural, =1 {in one app} one {in # app} other {in # apps}}"
+// in the language of msgs.
+//
+// Local models header card caption.
+func (msgs Messages) ModelsInApps(count int) string {
+	return Catalog.Format(msgs.locale, "modelsInApps", map[string]any{"count": count})
+}
+
+// ModelsTake says "Take"
+// in the language the app shows.
+//
+// Local models header card: disk space.
+func ModelsTake() string { return In(i18n.Locale()).ModelsTake() }
+
+// ModelsTake says "Take"
+// in the language of msgs.
+//
+// Local models header card: disk space.
+func (msgs Messages) ModelsTake() string {
+	return Catalog.Format(msgs.locale, "modelsTake", nil)
+}
+
+// ModelsOnDisk says "on disk"
+// in the language the app shows.
+//
+// Local models header card caption.
+func ModelsOnDisk() string { return In(i18n.Locale()).ModelsOnDisk() }
+
+// ModelsOnDisk says "on disk"
+// in the language of msgs.
+//
+// Local models header card caption.
+func (msgs Messages) ModelsOnDisk() string {
+	return Catalog.Format(msgs.locale, "modelsOnDisk", nil)
+}
+
+// ModelsRunning says "running"
+// in the language the app shows.
+//
+// A local model server is running.
+func ModelsRunning() string { return In(i18n.Locale()).ModelsRunning() }
+
+// ModelsRunning says "running"
+// in the language of msgs.
+//
+// A local model server is running.
+func (msgs Messages) ModelsRunning() string {
+	return Catalog.Format(msgs.locale, "modelsRunning", nil)
+}
+
+// ModelsStopped says "not running"
+// in the language the app shows.
+//
+// Ollama's server is not running.
+func ModelsStopped() string { return In(i18n.Locale()).ModelsStopped() }
+
+// ModelsStopped says "not running"
+// in the language of msgs.
+//
+// Ollama's server is not running.
+func (msgs Messages) ModelsStopped() string {
+	return Catalog.Format(msgs.locale, "modelsStopped", nil)
+}
+
+// ModelsServerOff says "server off"
+// in the language the app shows.
+//
+// LM Studio's server is off.
+func ModelsServerOff() string { return In(i18n.Locale()).ModelsServerOff() }
+
+// ModelsServerOff says "server off"
+// in the language of msgs.
+//
+// LM Studio's server is off.
+func (msgs Messages) ModelsServerOff() string {
+	return Catalog.Format(msgs.locale, "modelsServerOff", nil)
+}
+
+// ModelsNotFound says "not found"
+// in the language the app shows.
+//
+// Ollama not found.
+func ModelsNotFound() string { return In(i18n.Locale()).ModelsNotFound() }
+
+// ModelsNotFound says "not found"
+// in the language of msgs.
+//
+// Ollama not found.
+func (msgs Messages) ModelsNotFound() string {
+	return Catalog.Format(msgs.locale, "modelsNotFound", nil)
+}
+
+// ModelsLoaded says "in memory now"
+// in the language the app shows.
+//
+// A model the app keeps in memory.
+func ModelsLoaded() string { return In(i18n.Locale()).ModelsLoaded() }
+
+// ModelsLoaded says "in memory now"
+// in the language of msgs.
+//
+// A model the app keeps in memory.
+func (msgs Messages) ModelsLoaded() string {
+	return Catalog.Format(msgs.locale, "modelsLoaded", nil)
+}
+
+// ModelsDownloaded says "downloaded {ago}"
+// in the language the app shows.
+//
+// When a model was downloaded.
+func ModelsDownloaded(ago string) string { return In(i18n.Locale()).ModelsDownloaded(ago) }
+
+// ModelsDownloaded says "downloaded {ago}"
+// in the language of msgs.
+//
+// When a model was downloaded.
+func (msgs Messages) ModelsDownloaded(ago string) string {
+	return Catalog.Format(msgs.locale, "modelsDownloaded", map[string]any{"ago": ago})
+}
+
+// ModelsAskedBy says "MCP {server} of {agent} asks for it"
+// in the language the app shows.
+//
+// A model an MCP server names.
+func ModelsAskedBy(server string, agent string) string {
+	return In(i18n.Locale()).ModelsAskedBy(server, agent)
+}
+
+// ModelsAskedBy says "MCP {server} of {agent} asks for it"
+// in the language of msgs.
+//
+// A model an MCP server names.
+func (msgs Messages) ModelsAskedBy(server string, agent string) string {
+	return Catalog.Format(msgs.locale, "modelsAskedBy", map[string]any{"server": server, "agent": agent})
+}
+
+// ModelsNone says "Neither Ollama nor LM Studio is found, and no models are downloaded."
+// in the language the app shows.
+//
+// Local models page without apps.
+func ModelsNone() string { return In(i18n.Locale()).ModelsNone() }
+
+// ModelsNone says "Neither Ollama nor LM Studio is found, and no models are downloaded."
+// in the language of msgs.
+//
+// Local models page without apps.
+func (msgs Messages) ModelsNone() string {
+	return Catalog.Format(msgs.locale, "modelsNone", nil)
+}
+
+// ModelsNoModels says "No models downloaded."
+// in the language the app shows.
+//
+// An app without models.
+func ModelsNoModels() string { return In(i18n.Locale()).ModelsNoModels() }
+
+// ModelsNoModels says "No models downloaded."
+// in the language of msgs.
+//
+// An app without models.
+func (msgs Messages) ModelsNoModels() string {
+	return Catalog.Format(msgs.locale, "modelsNoModels", nil)
+}
+
+// ModelsServers says "Servers"
+// in the language the app shows.
+//
+// Local models side card.
+func ModelsServers() string { return In(i18n.Locale()).ModelsServers() }
+
+// ModelsServers says "Servers"
+// in the language of msgs.
+//
+// Local models side card.
+func (msgs Messages) ModelsServers() string {
+	return Catalog.Format(msgs.locale, "modelsServers", nil)
+}
+
+// ModelsNotSet says "not set · {dir}"
+// in the language the app shows.
+//
+// OLLAMA_MODELS not set: the folder used.
+func ModelsNotSet(dir string) string { return In(i18n.Locale()).ModelsNotSet(dir) }
+
+// ModelsNotSet says "not set · {dir}"
+// in the language of msgs.
+//
+// OLLAMA_MODELS not set: the folder used.
+func (msgs Messages) ModelsNotSet(dir string) string {
+	return Catalog.Format(msgs.locale, "modelsNotSet", map[string]any{"dir": dir})
+}
+
+// ModelsLinks says "Links and space"
+// in the language the app shows.
+//
+// Local models side card.
+func ModelsLinks() string { return In(i18n.Locale()).ModelsLinks() }
+
+// ModelsLinks says "Links and space"
+// in the language of msgs.
+//
+// Local models side card.
+func (msgs Messages) ModelsLinks() string {
+	return Catalog.Format(msgs.locale, "modelsLinks", nil)
+}
+
+// ModelsAsks says "asks for {model}"
+// in the language the app shows.
+//
+// Local models side card: what an MCP server asks for.
+func ModelsAsks(model string) string { return In(i18n.Locale()).ModelsAsks(model) }
+
+// ModelsAsks says "asks for {model}"
+// in the language of msgs.
+//
+// Local models side card: what an MCP server asks for.
+func (msgs Messages) ModelsAsks(model string) string {
+	return Catalog.Format(msgs.locale, "modelsAsks", map[string]any{"model": model})
+}
+
+// ModelsRest says "Other models"
+// in the language the app shows.
+//
+// Local models side card row.
+func ModelsRest() string { return In(i18n.Locale()).ModelsRest() }
+
+// ModelsRest says "Other models"
+// in the language of msgs.
+//
+// Local models side card row.
+func (msgs Messages) ModelsRest() string {
+	return Catalog.Format(msgs.locale, "modelsRest", nil)
+}
+
+// ModelsRestCaption says "the agents' settings do not mention them"
+// in the language the app shows.
+//
+// Local models side card caption.
+func ModelsRestCaption() string { return In(i18n.Locale()).ModelsRestCaption() }
+
+// ModelsRestCaption says "the agents' settings do not mention them"
+// in the language of msgs.
+//
+// Local models side card caption.
+func (msgs Messages) ModelsRestCaption() string {
+	return Catalog.Format(msgs.locale, "modelsRestCaption", nil)
+}
+
+// ModelsOpenCleanup says "Open in Cleanup"
+// in the language the app shows.
+//
+// Local models side card link.
+func ModelsOpenCleanup() string { return In(i18n.Locale()).ModelsOpenCleanup() }
+
+// ModelsOpenCleanup says "Open in Cleanup"
+// in the language of msgs.
+//
+// Local models side card link.
+func (msgs Messages) ModelsOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "modelsOpenCleanup", nil)
+}
+
+// ModelsOpenCleanupCaption says "models of 1 GB and more"
+// in the language the app shows.
+//
+// Local models side card caption.
+func ModelsOpenCleanupCaption() string { return In(i18n.Locale()).ModelsOpenCleanupCaption() }
+
+// ModelsOpenCleanupCaption says "models of 1 GB and more"
+// in the language of msgs.
+//
+// Local models side card caption.
+func (msgs Messages) ModelsOpenCleanupCaption() string {
+	return Catalog.Format(msgs.locale, "modelsOpenCleanupCaption", nil)
+}
+
+// ModelsReadFailed says "The models could not be read: {err}"
+// in the language the app shows.
+//
+// An app's models folder could not be read.
+func ModelsReadFailed(err string) string { return In(i18n.Locale()).ModelsReadFailed(err) }
+
+// ModelsReadFailed says "The models could not be read: {err}"
+// in the language of msgs.
+//
+// An app's models folder could not be read.
+func (msgs Messages) ModelsReadFailed(err string) string {
+	return Catalog.Format(msgs.locale, "modelsReadFailed", map[string]any{"err": err})
+}
+
+// CleanupModels says "Models"
+// in the language the app shows.
+//
+// Cleanup tab: local AI models.
+func CleanupModels() string { return In(i18n.Locale()).CleanupModels() }
+
+// CleanupModels says "Models"
+// in the language of msgs.
+//
+// Cleanup tab: local AI models.
+func (msgs Messages) CleanupModels() string {
+	return Catalog.Format(msgs.locale, "cleanupModels", nil)
+}
+
+// CleanupGroupModels says "Local models"
+// in the language the app shows.
+//
+// Cleanup group title.
+func CleanupGroupModels() string { return In(i18n.Locale()).CleanupGroupModels() }
+
+// CleanupGroupModels says "Local models"
+// in the language of msgs.
+//
+// Cleanup group title.
+func (msgs Messages) CleanupGroupModels() string {
+	return Catalog.Format(msgs.locale, "cleanupGroupModels", nil)
+}
+
+// ReasonNoAgent says "no agent's MCP server names it"
+// in the language the app shows.
+//
+// Cleanup reason: a local model.
+func ReasonNoAgent() string { return In(i18n.Locale()).ReasonNoAgent() }
+
+// ReasonNoAgent says "no agent's MCP server names it"
+// in the language of msgs.
+//
+// Cleanup reason: a local model.
+func (msgs Messages) ReasonNoAgent() string {
+	return Catalog.Format(msgs.locale, "reasonNoAgent", nil)
+}
+
+// ReasonDownloaded says "its app can download it again"
+// in the language the app shows.
+//
+// Cleanup reason: a local model.
+func ReasonDownloaded() string { return In(i18n.Locale()).ReasonDownloaded() }
+
+// ReasonDownloaded says "its app can download it again"
+// in the language of msgs.
+//
+// Cleanup reason: a local model.
+func (msgs Messages) ReasonDownloaded() string {
+	return Catalog.Format(msgs.locale, "reasonDownloaded", nil)
+}
+
+// CleanupModelsRow says "Local models"
+// in the language the app shows.
+//
+// Cleanup side card row.
+func CleanupModelsRow() string { return In(i18n.Locale()).CleanupModelsRow() }
+
+// CleanupModelsRow says "Local models"
+// in the language of msgs.
+//
+// Cleanup side card row.
+func (msgs Messages) CleanupModelsRow() string {
+	return Catalog.Format(msgs.locale, "cleanupModelsRow", nil)
+}
+
+// CleanupModelsCaption says "1 GB and more, not in memory or MCP"
+// in the language the app shows.
+//
+// Cleanup side card caption.
+func CleanupModelsCaption() string { return In(i18n.Locale()).CleanupModelsCaption() }
+
+// CleanupModelsCaption says "1 GB and more, not in memory or MCP"
+// in the language of msgs.
+//
+// Cleanup side card caption.
+func (msgs Messages) CleanupModelsCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupModelsCaption", nil)
+}

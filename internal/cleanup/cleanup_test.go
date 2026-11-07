@@ -142,3 +142,40 @@ func TestFind(t *testing.T) {
 		t.Error("candidates before a scan")
 	}
 }
+
+// Models of a gigabyte or more are offered, not chosen at once, with what
+// they free; not those in memory, those an MCP server of the user's or a
+// project's names, nor small ones.
+func TestModels(t *testing.T) {
+	const gb = 1_000_000_000
+	s := &inventory.Snapshot{
+		Tools: []inventory.ToolState{{Tool: "models", Models: &inventory.ModelsState{
+			Ollama: &inventory.ModelApp{Models: []inventory.Model{
+				{Name: "llama3.2:3b", Path: "/o/3b", Size: 2 * gb, Frees: 2*gb - 5},
+				{Name: "qwen2.5-coder:32b", Path: "/o/32b", Size: 19 * gb, Frees: 19 * gb, Loaded: true},
+				{Name: "nomic-embed-text:latest", Path: "/o/nomic", Size: 3 * gb, Frees: 3 * gb},
+				{Name: "mxbai-embed-large:latest", Path: "/o/mxbai", Size: 2 * gb, Frees: 2 * gb},
+				{Name: "all-minilm:latest", Path: "/o/minilm", Size: gb / 20, Frees: gb / 20},
+			}},
+			LMStudio: &inventory.ModelApp{Models: []inventory.Model{{Name: "Mistral-Nemo-12B-GGUF", Path: "/l/mistral", Size: 7 * gb, Frees: 7 * gb}}},
+		}}},
+		MCP: []inventory.MCPServer{{Name: "memory", Agent: "claude", Args: []string{"-y", "mcp-memory", "--embed-model=nomic-embed-text"}}},
+	}
+	ps := []projects.Project{{Dir: "/p", MCP: []inventory.MCPServer{{Name: "rag", Args: []string{"--model", "ollama/mxbai-embed-large"}}}}}
+	var got []string
+	for _, c := range Find(s, nil, ps, nil, now) {
+		if c.Kind != Model {
+			continue
+		}
+		got = append(got, c.Manager+" "+c.ID)
+		if c.Selected || !c.Known || c.Kind.Group() != Models {
+			t.Errorf("%s: %+v", c.ID, c)
+		}
+		if c.ID == "llama3.2:3b" && (c.Frees() != 2*gb-5 || c.Paths[0] != "/o/3b") {
+			t.Errorf("3b frees %d", c.Frees())
+		}
+	}
+	if want := []string{"LM Studio Mistral-Nemo-12B-GGUF", "Ollama llama3.2:3b"}; !slices.Equal(got, want) {
+		t.Errorf("models %q, want %q", got, want)
+	}
+}

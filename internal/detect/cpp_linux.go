@@ -11,7 +11,8 @@ import (
 
 const ccCommand = "cc"
 
-func cppExe(name string) string { return name }
+// exeName is the file of the command name.
+func exeName(name string) string { return name }
 
 // cppStub reports a stand-in compiler; Linux has none.
 func cppStub(string) bool { return false }

@@ -12,7 +12,8 @@ import (
 
 const ccCommand = "cc"
 
-func cppExe(name string) string { return name }
+// exeName is the file of the command name.
+func exeName(name string) string { return name }
 
 // cppStub reports macOS's /usr/bin/cc, clang, make and the rest when the
 // Command Line Tools are not installed: they then offer to install them

@@ -37,6 +37,9 @@ var caches = map[string]struct{ name, command string }{
 	"ccache":     {"ccache", "ccache -C"},
 }
 
+// cleanupGroups are the Cleanup page's groups, a tab each after All.
+var cleanupGroups = []cleanup.Group{cleanup.Caches, cleanup.Copies, cleanup.Docker, cleanup.Projects, cleanup.Models}
+
 // candidates are what the last scan and count offer to clean up; nil
 // before the first scan.
 func (a *App) candidates(c *ui.Context) []cleanup.Candidate {
@@ -109,7 +112,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 					}
 					stateCard(c, t.Success, locales.CleanupCounted(), counted, caption)
 				})
-				groups := []cleanup.Group{cleanup.Caches, cleanup.Copies, cleanup.Docker, cleanup.Projects}
+				groups := cleanupGroups
 				count := func(g cleanup.Group) string {
 					n := 0
 					for _, cand := range cands {
@@ -130,6 +133,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						{locales.CleanupCopies(), count(cleanup.Copies)},
 						{"Docker", count(cleanup.Docker)},
 						{locales.ProjectsTitle(), count(cleanup.Projects)},
+						{locales.CleanupModels(), count(cleanup.Models)},
 					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
@@ -193,6 +197,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						listRow(c, locales.CleanupCopiesRow(), false, locales.CleanupCopiesCaption(), func() {})
 						listRow(c, locales.CleanupDockerRow(), false, locales.CleanupDockerCaption(), func() {})
 						listRow(c, locales.CleanupGroupProjects(), false, locales.CleanupProjectsCaption(), func() {})
+						listRow(c, locales.CleanupModelsRow(), false, locales.CleanupModelsCaption(), func() {})
 					})
 					listCard(c, locales.CleanupNotOffered(), "", func() {
 						listRow(c, locales.CleanupVolumes(), false, locales.CleanupVolumesCaption(), func() {})
@@ -252,6 +257,8 @@ func (a *App) candidateTitle(cand cleanup.Candidate) string {
 		return locales.CleanupContainers()
 	case cleanup.ProjectInstalls:
 		return filepath.Base(cand.Project) + ": " + cand.ID
+	case cleanup.Model:
+		return cand.ID + " · " + cand.Manager
 	}
 	return cand.ID
 }
@@ -274,6 +281,10 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		parts = append(parts, locales.CleanupContainerCount(cand.Count))
 	case cleanup.ProjectInstalls:
 		parts = append(parts, tilde(cand.Project, a.Home))
+	case cleanup.Model:
+		if !cand.Changed.IsZero() {
+			parts = append(parts, locales.ModelsDownloaded(locales.AgoOn(cand.Changed)))
+		}
 	}
 	for _, r := range cand.Reasons {
 		switch r {
@@ -299,6 +310,10 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 			parts = append(parts, locales.ReasonUnchanged(cand.Changed))
 		case cleanup.Reinstalled:
 			parts = append(parts, locales.ReasonReinstalled())
+		case cleanup.NoAgent:
+			parts = append(parts, locales.ReasonNoAgent())
+		case cleanup.Downloaded:
+			parts = append(parts, locales.ReasonDownloaded())
 		}
 	}
 	return strings.Join(parts, " · ")
@@ -339,6 +354,8 @@ func cleanupGroupTitle(g cleanup.Group) string {
 		return locales.CleanupGroupCopies()
 	case cleanup.Docker:
 		return "Docker"
+	case cleanup.Models:
+		return locales.CleanupGroupModels()
 	}
 	return locales.CleanupGroupProjects()
 }

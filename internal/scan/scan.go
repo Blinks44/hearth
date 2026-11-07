@@ -41,6 +41,7 @@ var Detectors = []Detector{
 	{"dotnet", detect.Dotnet},
 	{"git", detect.Git},
 	{"cpp", detect.Cpp},
+	{"models", detect.Models},
 	{"mise", detect.MiseTools},
 	{"docker", detect.Docker},
 	{"databases", detect.Databases},

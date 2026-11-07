@@ -40,6 +40,8 @@ const (
 	// ProjectInstalls is the dependencies of a project not changed for long,
 	// as its node_modules: installed again from its files.
 	ProjectInstalls Kind = "project-installs"
+	// Model is a local AI model: Ollama or LM Studio downloads it again.
+	Model Kind = "model"
 )
 
 // Group is a section candidates come in, in this order.
@@ -50,6 +52,7 @@ const (
 	Copies
 	Docker
 	Projects
+	Models
 )
 
 // Group returns the section of the kind.
@@ -61,6 +64,8 @@ func (k Kind) Group() Group {
 		return Docker
 	case ProjectInstalls:
 		return Projects
+	case Model:
+		return Models
 	}
 	return Copies
 }
@@ -93,6 +98,10 @@ const (
 	Unchanged Reason = "unchanged"
 	// Reinstalled: installed again from the project's files.
 	Reinstalled Reason = "reinstalled"
+	// NoAgent: no MCP server of the agents' names it.
+	NoAgent Reason = "no-agent"
+	// Downloaded: its app downloads it again.
+	Downloaded Reason = "downloaded"
 )
 
 // Candidate is something the user may remove to free space.
@@ -101,7 +110,8 @@ type Candidate struct {
 	// ID names it in its kind: a cache's ID, as "npm"; a tool's, as
 	// "node"; a version manager's, as "nvm"; a package's name.
 	ID string
-	// Manager is the package manager of an UnneededPackage, as "brew".
+	// Manager is the package manager of an UnneededPackage, as "brew";
+	// the app of a Model, "Ollama" or "LM Studio".
 	Manager string `json:",omitempty"`
 	// Paths are the folders that would go; none for Docker's.
 	Paths []string
@@ -131,6 +141,10 @@ func (c Candidate) Frees() int64 { return c.Usage.Bytes - c.Usage.Shared }
 // minFrees is the least a cache or Docker's data must free to be offered:
 // less is not worth a look.
 const minFrees = 1_000_000
+
+// minModel is the least a model must take to be offered: a small one, as
+// an embedding model, is not worth downloading again.
+const minModel = 1_000_000_000
 
 // Find returns the candidates in s, sizes and the projects ps, by group
 // and then the biggest first. Volumes, the system's copies and what
@@ -168,6 +182,7 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 		out = append(out, docker(sizes.Docker)...)
 	}
 	out = append(out, copies(s, ps, lines, usage)...)
+	out = append(out, models(s, ps)...)
 	for _, p := range ps {
 		if p.Changed.IsZero() || now.Sub(p.Changed) < projects.StaleAfter {
 			continue
@@ -350,6 +365,37 @@ func dependents(m inventory.PackageManager) map[string]int {
 	for _, p := range m.Packages {
 		for _, d := range p.Dependencies {
 			out[d]++
+		}
+	}
+	return out
+}
+
+// models are the local models of a gigabyte or more that are not in
+// memory and no MCP server names, never chosen at once: what to keep is
+// the user's call.
+func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
+	st, _ := s.Tool("models")
+	if st.Models == nil {
+		return nil
+	}
+	servers := slices.Clone(s.MCP)
+	for _, p := range ps {
+		servers = append(servers, p.MCP...)
+	}
+	var out []Candidate
+	for _, app := range []struct {
+		name string
+		app  *inventory.ModelApp
+	}{{"Ollama", st.Models.Ollama}, {"LM Studio", st.Models.LMStudio}} {
+		if app.app == nil {
+			continue
+		}
+		for _, m := range app.app.Models {
+			if m.Size < minModel || m.Loaded || len(inventory.ModelMentions(servers, m)) > 0 {
+				continue
+			}
+			out = append(out, Candidate{Kind: Model, ID: m.Name, Manager: app.name, Paths: []string{m.Path}, Changed: m.Downloaded,
+				Usage: inventory.Usage{Bytes: m.Size, Shared: m.Size - m.Frees}, Known: true, Reasons: []Reason{NoAgent, Downloaded}})
 		}
 	}
 	return out

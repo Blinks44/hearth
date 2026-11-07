@@ -14,7 +14,8 @@ import (
 // terminal runs; MSVC's cl only runs in a Developer prompt.
 const ccCommand = "gcc"
 
-func cppExe(name string) string { return name + ".exe" }
+// exeName is the file of the command name.
+func exeName(name string) string { return name + ".exe" }
 
 // cppStub reports a stand-in compiler; Windows has none.
 func cppStub(string) bool { return false }

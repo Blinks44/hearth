@@ -134,6 +134,8 @@ type App struct {
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
 	gitTab         int    // the Git page's tab: installed, settings, PATH
 	cppTab         int    // the C/C++ page's tab: installed, PATH
+	modelsTab      int    // the local models page's tab: all, then an app each
+	modelsFilter   string // the local models table's filter
 	cliTab         int    // the CLI & clouds page's tab
 	cliFilter      string // the CLI & clouds table's filter
 	changesTab     int    // the What changed page's tab: all, added, updated, removed
@@ -234,6 +236,8 @@ func (a *App) View(c *ui.Context) {
 						a.cliView(c, p)
 					case cppPage:
 						a.cppView(c, p)
+					case modelsPage:
+						a.modelsView(c, p)
 					case "/tools/docker":
 						a.docker(c, p)
 					case "/tools/bun":
@@ -390,6 +394,8 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = len(a.foundAgents())
 	case cliPage:
 		n = len(a.miseTools())
+	case modelsPage:
+		n = a.modelCount()
 	case skillsPage:
 		n = len(a.allSkills())
 	case mcpPage:

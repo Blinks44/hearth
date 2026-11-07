@@ -3241,5 +3241,162 @@
         "example": "Command Line Tools"
       }
     }
+  },
+  "modelsTitle": "Local models",
+  "@modelsTitle": {
+    "description": "Sidebar item and header of the local models page."
+  },
+  "modelsSubtitle": "AI · models on this computer",
+  "@modelsSubtitle": {
+    "description": "Subtitle of the local models page."
+  },
+  "modelsLead": "Ollama and LM Studio: which models are downloaded and how much space they take",
+  "@modelsLead": {
+    "description": "Local models page lead."
+  },
+  "modelsCount": "Models",
+  "@modelsCount": {
+    "description": "Local models header card."
+  },
+  "modelsInApps": "{count, plural, =1 {in one app} one {in # app} other {in # apps}}",
+  "@modelsInApps": {
+    "description": "Local models header card caption.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "modelsTake": "Take",
+  "@modelsTake": {
+    "description": "Local models header card: disk space."
+  },
+  "modelsOnDisk": "on disk",
+  "@modelsOnDisk": {
+    "description": "Local models header card caption."
+  },
+  "modelsRunning": "running",
+  "@modelsRunning": {
+    "description": "A local model server is running."
+  },
+  "modelsStopped": "not running",
+  "@modelsStopped": {
+    "description": "Ollama's server is not running."
+  },
+  "modelsServerOff": "server off",
+  "@modelsServerOff": {
+    "description": "LM Studio's server is off."
+  },
+  "modelsNotFound": "not found",
+  "@modelsNotFound": {
+    "description": "Ollama not found."
+  },
+  "modelsLoaded": "in memory now",
+  "@modelsLoaded": {
+    "description": "A model the app keeps in memory."
+  },
+  "modelsDownloaded": "downloaded {ago}",
+  "@modelsDownloaded": {
+    "description": "When a model was downloaded.",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "modelsAskedBy": "MCP {server} of {agent} asks for it",
+  "@modelsAskedBy": {
+    "description": "A model an MCP server names.",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      },
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "modelsNone": "Neither Ollama nor LM Studio is found, and no models are downloaded.",
+  "@modelsNone": {
+    "description": "Local models page without apps."
+  },
+  "modelsNoModels": "No models downloaded.",
+  "@modelsNoModels": {
+    "description": "An app without models."
+  },
+  "modelsServers": "Servers",
+  "@modelsServers": {
+    "description": "Local models side card."
+  },
+  "modelsNotSet": "not set · {dir}",
+  "@modelsNotSet": {
+    "description": "OLLAMA_MODELS not set: the folder used.",
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "modelsLinks": "Links and space",
+  "@modelsLinks": {
+    "description": "Local models side card."
+  },
+  "modelsAsks": "asks for {model}",
+  "@modelsAsks": {
+    "description": "Local models side card: what an MCP server asks for.",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelsRest": "Other models",
+  "@modelsRest": {
+    "description": "Local models side card row."
+  },
+  "modelsRestCaption": "the agents' settings do not mention them",
+  "@modelsRestCaption": {
+    "description": "Local models side card caption."
+  },
+  "modelsOpenCleanup": "Open in Cleanup",
+  "@modelsOpenCleanup": {
+    "description": "Local models side card link."
+  },
+  "modelsOpenCleanupCaption": "models of 1 GB and more",
+  "@modelsOpenCleanupCaption": {
+    "description": "Local models side card caption."
+  },
+  "modelsReadFailed": "The models could not be read: {err}",
+  "@modelsReadFailed": {
+    "description": "An app's models folder could not be read.",
+    "placeholders": {
+      "err": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupModels": "Models",
+  "@cleanupModels": {
+    "description": "Cleanup tab: local AI models."
+  },
+  "cleanupGroupModels": "Local models",
+  "@cleanupGroupModels": {
+    "description": "Cleanup group title."
+  },
+  "reasonNoAgent": "no agent's MCP server names it",
+  "@reasonNoAgent": {
+    "description": "Cleanup reason: a local model."
+  },
+  "reasonDownloaded": "its app can download it again",
+  "@reasonDownloaded": {
+    "description": "Cleanup reason: a local model."
+  },
+  "cleanupModelsRow": "Local models",
+  "@cleanupModelsRow": {
+    "description": "Cleanup side card row."
+  },
+  "cleanupModelsCaption": "1 GB and more, not in memory or MCP",
+  "@cleanupModelsCaption": {
+    "description": "Cleanup side card caption."
   }
 }

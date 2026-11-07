@@ -169,6 +169,8 @@ type ToolState struct {
 	Git *GitState `json:",omitempty"`
 	// Cpp is how C and C++ are set up, for "cpp" only.
 	Cpp *CppState `json:",omitempty"`
+	// Models are the local AI models' apps, for "models" only.
+	Models *ModelsState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
 	// only.
 	PackageManagers []PackageManager `json:",omitempty"`

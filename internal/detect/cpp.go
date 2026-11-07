@@ -31,7 +31,7 @@ var (
 // build tools on PATH, the OS's toolset, and the variables set for builds.
 func Cpp(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
 	f := newFinder("cpp", term)
-	f.lookPath(cppExe(ccCommand), term, gui)
+	f.lookPath(exeName(ccCommand), term, gui)
 	st := inventory.ToolState{Tool: "cpp", Installations: f.ins}
 	s := &inventory.CppState{Command: ccCommand}
 	st.Cpp = s
@@ -51,7 +51,7 @@ func Cpp(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 	seen := map[string]bool{}
 	for _, name := range cppCommands(term) {
 		g := newFinder(name, term)
-		g.lookPath(cppExe(name), term, gui)
+		g.lookPath(exeName(name), term, gui)
 		for _, in := range g.ins {
 			if seen[in.RealPath] || cppStub(in.Path) {
 				continue
