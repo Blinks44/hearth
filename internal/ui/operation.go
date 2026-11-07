@@ -106,7 +106,7 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 					return
 				}
 				dialogSection(c, strings.ToUpper(locales.OpSteps()))
-				operationSteps(c, op.plan.Steps, op.state)
+				operationSteps(c, op.plan.Steps, op.state, a.Home)
 				a.operationResult(c, op)
 			})
 			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
@@ -184,15 +184,33 @@ func (a *App) operationProgress(c *ui.Context, op *operation) ui.Element {
 func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 	t := c.Theme()
 	pal := Colors(t)
-	dialogSection(c, strings.ToUpper(locales.OpCommands()))
-	operationSteps(c, p.Steps, ops.State{Steps: make([]ops.StepStatus, len(p.Steps)), Current: -1})
-	if len(p.Notes) == 0 {
+	// A plan that only edits files shows their changes alone.
+	notes := p.Notes
+	commands := false
+	for _, step := range p.Steps {
+		commands = commands || step.Edit == nil
+	}
+	if commands {
+		dialogSection(c, strings.ToUpper(locales.OpCommands()))
+		operationSteps(c, p.Steps, ops.State{Steps: make([]ops.StepStatus, len(p.Steps)), Current: -1}, a.Home)
+	}
+	for _, step := range p.Steps {
+		if step.Edit == nil {
+			continue
+		}
+		a.editDiff(c, *step.Edit)
+		if !step.Edit.New {
+			backup := tilde(step.Edit.Path, a.Home) + ".hearth-" + c.Now().Format("2006-01-02") + "….bak"
+			notes = append(notes, ops.Note{Title: locales.OpBackup(), Text: locales.OpBackupText(backup), Tag: locales.OpTagBackup()})
+		}
+	}
+	if len(notes) == 0 {
 		return
 	}
 	dialogSection(c, strings.ToUpper(locales.OpWorthKnowing()))
-	for i, n := range p.Notes {
+	for i, n := range notes {
 		bottom := float32(8)
-		if i == len(p.Notes)-1 {
+		if i == len(notes)-1 {
 			bottom = 14
 		}
 		ui.Row(c).Gap(12).Padding(8, 20, bottom, 20).AlignItems(ui.Center).Children(func() {
@@ -212,9 +230,55 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 	}
 }
 
+// editDiff is a file a plan edits: its path, a button that opens it, and
+// the lines that change, numbered, removed in red and added in green.
+func (a *App) editDiff(c *ui.Context, e ops.FileEdit) {
+	t := c.Theme()
+	pal := Colors(t)
+	path := tilde(e.Path, a.Home)
+	diff := ops.Diff(e.Before, e.After)
+	ui.Row(c).Gap(8).Padding(0, 20, 12, 20).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Grow(1).MinWidth(0).Gap(8).Padding(6, 10).Radius(7).AlignItems(ui.Center).
+			BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
+			ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
+			clipped(c, path).FontSize(12.5)
+		})
+		if a.Shell != nil && !e.New {
+			ui.Button(c.Key("open:"+e.Path), locales.OpOpenFile()).OnClick(func() { a.openFile(c, e.Path) })
+		}
+	})
+	// A line replaced counts once, as the user sees it.
+	removed, added := 0, 0
+	for _, d := range diff {
+		if d.Added {
+			added++
+		} else {
+			removed++
+		}
+	}
+	dialogSection(c, strings.ToUpper(locales.OpWillChange(max(removed, added))))
+	ui.Column(c).Gap(2).Padding(6).Margin(0, 20, 14, 20).Radius(9).Background(pal.Subtle).
+		BorderWidth(1).BorderColor(pal.Line).Font(FontMono).Children(func() {
+		ui.Row(c).Gap(6).Padding(4, 10, 4, 10).Children(func() {
+			ui.Text(c, "$").FontSize(12).TextColor(pal.TextFaint)
+			ui.Text(c, path).FontSize(12)
+		})
+		for _, d := range diff {
+			mark, bg, fg := "-", pal.DangerSoft, pal.DangerText
+			if d.Added {
+				mark, bg, fg = "+", pal.SuccessSoft, pal.SuccessText
+			}
+			ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
+				ui.Text(c, strconv.Itoa(d.Line)).FontSize(11.5).TextColor(pal.TextFaint).Width(24).Shrink(0)
+				clipped(c, mark+" "+d.Text).FontSize(12).TextColor(fg).Grow(1).MinWidth(0)
+			})
+		}
+	})
+}
+
 // operationSteps are the commands, numbered, each with its status once
 // the operation started.
-func operationSteps(c *ui.Context, steps []ops.Step, s ops.State) {
+func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Gap(2).Padding(6).Radius(9).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).
@@ -232,12 +296,18 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State) {
 			row.Children(func() {
 				ui.Text(c, strconv.Itoa(i+1)).FontSize(11.5).TextColor(pal.TextFaint)
 				command := ops.Command(step.Argv)
+				if step.Edit != nil {
+					command = locales.OpEditStep(tilde(step.Edit.Path, home))
+				}
 				if step.Note != "" {
 					command += "  ·  " + step.Note
 				}
 				clipped(c, command).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
 				if step.Admin && s.Current < 0 {
 					aiTag(c, locales.OpTagAdmin(), pal.WarningSoft, pal.WarningText)
+				}
+				if step.Edit != nil && s.Current < 0 {
+					aiTag(c, locales.OpTagFile(), pal.Muted, t.TextMuted)
 				}
 				if s.Current >= 0 {
 					label, bg, fg := stepTag(c, status)
@@ -296,12 +366,29 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 			}
 		}
 		dialogSection(c, strings.ToUpper(locales.OpLeft()))
-		left := locales.OpLeftNone()
-		if done > 0 {
-			left = locales.OpLeftSteps(done)
+		var left []string
+		switch {
+		case len(s.Restored) > 0:
+		case done > 0:
+			left = append(left, locales.OpLeftSteps(done))
+		default:
+			left = append(left, locales.OpLeftNone())
 		}
-		logBlock(c, []string{left}, c.Theme().Text, "")
+		logBlock(c, append(left, a.restored(s)...), c.Theme().Text, "")
 	}
+	if s.Phase == ops.Failed && len(s.Restored) > 0 {
+		dialogSection(c, strings.ToUpper(locales.OpLeft()))
+		logBlock(c, a.restored(s), c.Theme().Text, "")
+	}
+}
+
+// restored says which files came back from their copies.
+func (a *App) restored(s ops.State) []string {
+	var lines []string
+	for _, path := range s.Restored {
+		lines = append(lines, locales.OpRestored(tilde(path, a.Home)))
+	}
+	return lines
 }
 
 // lastLines returns the last n of lines.

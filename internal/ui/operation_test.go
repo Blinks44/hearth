@@ -183,3 +183,41 @@ func TestOperationRunsPlan(t *testing.T) {
 		t.Errorf("ran %d commands, texts %q", len(f.Calls()), tt.Texts())
 	}
 }
+
+// A plan that edits a file shows the lines that change, the file copy it
+// makes, and once it did not get through, that the file came back.
+func TestOperationEditDialog(t *testing.T) {
+	a := NewApp()
+	a.Home = "/Users/ann"
+	a.Shell = &fakeShell{}
+	var update func(ops.State)
+	a.RunPlan = func(p ops.Plan, u func(ops.State)) func() { update = u; return func() {} }
+	before := "export PATH=\"$HOME/.nvm/versions/node/v16.20.2/bin:$PATH\"\nalias ll='ls -l'\nexport PATH=\"/opt/homebrew/bin:$PATH\"\n"
+	after := ops.CommentOut(before, []int{1}, "no such folder")
+	after = ops.CommentOut(after, []int{3}, "already in ~/.zprofile")
+	zshrc := "/Users/ann/.zshrc"
+	tt := ui.NewTester(a.View, 1280, 820)
+	a.Propose(ops.Plan{Title: "Fix PATH in ~/.zshrc", Why: "Two lines become comments, not removed. Hearth keeps a copy of the file first.",
+		Action: "Comment out 2 lines", Steps: []ops.Step{{Edit: &ops.FileEdit{Path: zshrc, Before: before, After: after}}}})
+	tt.Frame()
+	tt.Advance(time.Second)
+	for _, text := range []string{"~/.zshrc", "Open file", "WHAT WILL CHANGE · 2 LINES", "File copy", "backup",
+		"+ # hearth: no such folder · export PATH=\"$HOME/.nvm/versions/node/v16.20.2/bin:$PATH\""} {
+		if !tt.HasText(text) {
+			t.Fatalf("plan misses %q: %q", text, tt.Texts())
+		}
+	}
+	if tt.HasText("COMMANDS · RUN IN ORDER") {
+		t.Error("a plan of edits alone lists commands")
+	}
+	screenshot(t, tt, "operation-edit")
+	if err := tt.Click("Comment out 2 lines"); err != nil {
+		t.Fatal(err)
+	}
+	update(ops.State{Phase: ops.Stopped, Steps: []ops.StepStatus{ops.Done}, Restored: []string{zshrc}})
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("~/.zshrc is back as it was, from its copy") || tt.HasText("Step 1 finished: what it changed stays") {
+		t.Errorf("stopped: %q", tt.Texts())
+	}
+}

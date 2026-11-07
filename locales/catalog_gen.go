@@ -12079,3 +12079,115 @@ func OpTagAdmin() string { return In(i18n.Locale()).OpTagAdmin() }
 func (msgs Messages) OpTagAdmin() string {
 	return Catalog.Format(msgs.locale, "opTagAdmin", nil)
 }
+
+// OpEditStep says "edit {file}"
+// in the language the app shows.
+//
+// A step that edits a file.
+func OpEditStep(file string) string { return In(i18n.Locale()).OpEditStep(file) }
+
+// OpEditStep says "edit {file}"
+// in the language of msgs.
+//
+// A step that edits a file.
+func (msgs Messages) OpEditStep(file string) string {
+	return Catalog.Format(msgs.locale, "opEditStep", map[string]any{"file": file})
+}
+
+// OpTagFile says "changes a file"
+// in the language the app shows.
+//
+// Tag of a step that edits a file.
+func OpTagFile() string { return In(i18n.Locale()).OpTagFile() }
+
+// OpTagFile says "changes a file"
+// in the language of msgs.
+//
+// Tag of a step that edits a file.
+func (msgs Messages) OpTagFile() string {
+	return Catalog.Format(msgs.locale, "opTagFile", nil)
+}
+
+// OpWillChange says "What will change · {count, plural, one {# line} other {# lines}}"
+// in the language the app shows.
+//
+// Section of the lines a file edit changes.
+func OpWillChange(count int) string { return In(i18n.Locale()).OpWillChange(count) }
+
+// OpWillChange says "What will change · {count, plural, one {# line} other {# lines}}"
+// in the language of msgs.
+//
+// Section of the lines a file edit changes.
+func (msgs Messages) OpWillChange(count int) string {
+	return Catalog.Format(msgs.locale, "opWillChange", map[string]any{"count": count})
+}
+
+// OpOpenFile says "Open file"
+// in the language the app shows.
+//
+// Opens the file an operation edits.
+func OpOpenFile() string { return In(i18n.Locale()).OpOpenFile() }
+
+// OpOpenFile says "Open file"
+// in the language of msgs.
+//
+// Opens the file an operation edits.
+func (msgs Messages) OpOpenFile() string {
+	return Catalog.Format(msgs.locale, "opOpenFile", nil)
+}
+
+// OpBackup says "File copy"
+// in the language the app shows.
+//
+// Worth knowing: Hearth copies a file before it edits it.
+func OpBackup() string { return In(i18n.Locale()).OpBackup() }
+
+// OpBackup says "File copy"
+// in the language of msgs.
+//
+// Worth knowing: Hearth copies a file before it edits it.
+func (msgs Messages) OpBackup() string {
+	return Catalog.Format(msgs.locale, "opBackup", nil)
+}
+
+// OpBackupText says "{file} · comes back if the plan does not get through; also from the operations log"
+// in the language the app shows.
+//
+// Where the copy of an edited file goes.
+func OpBackupText(file string) string { return In(i18n.Locale()).OpBackupText(file) }
+
+// OpBackupText says "{file} · comes back if the plan does not get through; also from the operations log"
+// in the language of msgs.
+//
+// Where the copy of an edited file goes.
+func (msgs Messages) OpBackupText(file string) string {
+	return Catalog.Format(msgs.locale, "opBackupText", map[string]any{"file": file})
+}
+
+// OpTagBackup says "backup"
+// in the language the app shows.
+//
+// Tag of the file copy note.
+func OpTagBackup() string { return In(i18n.Locale()).OpTagBackup() }
+
+// OpTagBackup says "backup"
+// in the language of msgs.
+//
+// Tag of the file copy note.
+func (msgs Messages) OpTagBackup() string {
+	return Catalog.Format(msgs.locale, "opTagBackup", nil)
+}
+
+// OpRestored says "{file} is back as it was, from its copy"
+// in the language the app shows.
+//
+// What stays: a file that came back from its copy.
+func OpRestored(file string) string { return In(i18n.Locale()).OpRestored(file) }
+
+// OpRestored says "{file} is back as it was, from its copy"
+// in the language of msgs.
+//
+// What stays: a file that came back from its copy.
+func (msgs Messages) OpRestored(file string) string {
+	return Catalog.Format(msgs.locale, "opRestored", map[string]any{"file": file})
+}

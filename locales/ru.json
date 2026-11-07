@@ -946,5 +946,13 @@
   "noteAdminMac": "macOS спросит пароль администратора в своём окне, при каждом запуске",
   "noteAdminLinux": "Система спросит пароль администратора в своём окне (polkit), при каждом запуске",
   "noteAdminWindows": "Windows спросит разрешение (UAC), когда запустится установщик",
-  "opTagAdmin": "пароль"
+  "opTagAdmin": "пароль",
+  "opEditStep": "изменить {file}",
+  "opTagFile": "меняет файл",
+  "opWillChange": "Что изменится · {count, plural, one {# строка} few {# строки} many {# строк} other {# строки}}",
+  "opOpenFile": "Открыть файл",
+  "opBackup": "Копия файла",
+  "opBackupText": "{file} · вернётся, если план не пройдёт; вернуть можно и из журнала",
+  "opTagBackup": "бэкап",
+  "opRestored": "{file} восстановлен из копии"
 }

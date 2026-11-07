@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,6 +38,9 @@ type Step struct {
 	// Admin runs it as the administrator, asking the user through the
 	// system's own dialog each time: never a silent sudo.
 	Admin bool
+	// Edit, in place of Argv, changes a file of the user's after a copy
+	// of it, which comes back if a later step fails or is stopped.
+	Edit *FileEdit
 }
 
 // Note is something worth knowing before a plan runs, as that it asks for
@@ -111,6 +115,9 @@ type State struct {
 	// Err says why a step failed or the check did not pass; Verified
 	// what the check found.
 	Err, Verified string
+	// Restored are the files put back from their copies as the plan did
+	// not get through.
+	Restored []string
 }
 
 // Command shows argv as a terminal would take it, quoting the arguments
@@ -135,10 +142,50 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 	e.state = State{Phase: Running, Steps: make([]StepStatus, len(p.Steps))}
 	e.printf("== %s  %s\n", time.Now().Format("2006-01-02 15:04:05"), p.Title)
 	e.emit()
+	type applied struct {
+		edit   FileEdit
+		backup string
+	}
+	var edits []applied
+	// A plan that does not get through puts the user's files back.
+	undo := func() {
+		for _, a := range slices.Backward(edits) {
+			err := restoreEdit(a.edit, a.backup)
+			e.printf("restore %s%s\n", a.edit.Path, errText(err))
+			e.mu.Lock()
+			if err == nil {
+				e.state.Restored = append(e.state.Restored, a.edit.Path)
+			}
+			e.mu.Unlock()
+		}
+	}
 	for i, step := range p.Steps {
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
+		if step.Edit != nil {
+			e.printf("edit %s\n", step.Edit.Path)
+			e.emit()
+			backup, err := applyEdit(*step.Edit, time.Now())
+			if err == nil {
+				edits = append(edits, applied{*step.Edit, backup})
+				e.printf("backup %s\n", backup)
+			}
+			e.mu.Lock()
+			if err != nil {
+				e.end(i, StepFailed, Failed, -1, err.Error())
+			} else {
+				e.state.Steps[i] = Done
+			}
+			e.mu.Unlock()
+			if err != nil {
+				undo()
+				e.emit()
+				return e.snapshot()
+			}
+			e.emit()
+			continue
+		}
 		e.printf("$ %s\n", Command(step.Argv))
 		e.emit()
 		timeout := step.Timeout
@@ -173,6 +220,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			continue
 		}
 		e.mu.Unlock()
+		undo()
 		e.emit()
 		return e.snapshot()
 	}
@@ -328,6 +376,7 @@ func (e *execution) snapshot() State {
 	s := e.state
 	s.Steps = append([]StepStatus(nil), s.Steps...)
 	s.Log = append([]string(nil), s.Log...)
+	s.Restored = append([]string(nil), s.Restored...)
 	if len(e.line) > 0 {
 		s.Log = append(s.Log, string(e.line))
 	}

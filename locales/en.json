@@ -4424,5 +4424,61 @@
   "opTagAdmin": "password",
   "@opTagAdmin": {
     "description": "Tag of a step that asks for the administrator's password."
+  },
+  "opEditStep": "edit {file}",
+  "@opEditStep": {
+    "description": "A step that edits a file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
+  },
+  "opTagFile": "changes a file",
+  "@opTagFile": {
+    "description": "Tag of a step that edits a file."
+  },
+  "opWillChange": "What will change · {count, plural, one {# line} other {# lines}}",
+  "@opWillChange": {
+    "description": "Section of the lines a file edit changes.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "opOpenFile": "Open file",
+  "@opOpenFile": {
+    "description": "Opens the file an operation edits."
+  },
+  "opBackup": "File copy",
+  "@opBackup": {
+    "description": "Worth knowing: Hearth copies a file before it edits it."
+  },
+  "opBackupText": "{file} · comes back if the plan does not get through; also from the operations log",
+  "@opBackupText": {
+    "description": "Where the copy of an edited file goes.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.zshrc.hearth-2026-11-07….bak"
+      }
+    }
+  },
+  "opTagBackup": "backup",
+  "@opTagBackup": {
+    "description": "Tag of the file copy note."
+  },
+  "opRestored": "{file} is back as it was, from its copy",
+  "@opRestored": {
+    "description": "What stays: a file that came back from its copy.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
   }
 }
