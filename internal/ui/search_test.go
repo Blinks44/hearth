@@ -20,6 +20,10 @@ func searchApp() *App {
 	a.Snapshot.Tools[0].Installations[0].Path = "/usr/local/bin/node"
 	a.Snapshot.Skills = []inventory.Skill{{Name: "component-workflow", Description: "Reusable components", Paths: []inventory.SkillPath{{Path: "/skills/component-workflow"}}}}
 	a.Snapshot.MCP = []inventory.MCPServer{{Name: "docs-server", Agent: "codex"}}
+	a.Snapshot.Tools = append(a.Snapshot.Tools,
+		inventory.ToolState{Tool: "cli", Cli: &inventory.CliState{Tools: []inventory.Installation{{Tool: "kubectl", Version: "1.34.1", Path: "/opt/homebrew/bin/kubectl"}}}},
+		inventory.ToolState{Tool: "mobile", Mobile: &inventory.MobileState{Xcodes: []inventory.XcodeApp{{Path: "/Applications/Xcode.app", Version: "27.2"}}}},
+		inventory.ToolState{Tool: "databases", Databases: &inventory.DatabaseState{Servers: []inventory.Database{{Kind: "MongoDB", Version: "9.0.4", Path: "/opt/homebrew/bin/mongod", Source: "brew"}}}})
 	a.Projects = []projects.Project{{Dir: "/work/shop-web", Requirements: []projects.Requirement{{Tool: "node", Want: "22", File: ".nvmrc"}}}}
 	return a
 }
@@ -27,7 +31,7 @@ func searchApp() *App {
 func TestSearchResults(t *testing.T) {
 	a := searchApp()
 	for _, tc := range []struct{ name, query, want string }{
-		{"tool", "NODE", "/tools/node"}, {"version", "node 22", "version:node:"}, {"project requirement", "node .nvmrc", "/projects/project?dir="}, {"skill description", "reusable components", "skill:"}, {"MCP", "docs-server", "mcp:"}, {"all words required", "node nonexistent", ""},
+		{"tool", "NODE", "/tools/node"}, {"version", "node 22", "version:node:"}, {"project requirement", "node .nvmrc", "/projects/project?dir="}, {"skill description", "reusable components", "skill:"}, {"MCP", "docs-server", "mcp:"}, {"page", "mobile development", "/tools/mobile"}, {"CLI tool", "kubectl", "version:cli:"}, {"Xcode", "xcode 27", "version:mobile:"}, {"database", "mongodb", "version:databases:"}, {"all words required", "node nonexistent", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a.search.query = tc.query

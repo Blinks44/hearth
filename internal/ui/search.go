@@ -7,6 +7,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -55,9 +56,13 @@ func (a *App) searchIndex() []searchResult {
 			if !slices.ContainsFunc(all, func(p page) bool { return p.path == target }) {
 				continue
 			}
-			for _, in := range tool.Installations {
+			for _, in := range searchCopies(tool) {
+				name := tool.Tool
+				if in.Tool != "" {
+					name = in.Tool
+				}
 				detail := strings.Trim(in.Source.Manager+" · "+tilde(in.Path, a.Home), " ·")
-				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: tool.Tool + " " + in.Version, detail: detail, icon: "lucide/box", open: func() { a.router.Push(target) }})
+				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: strings.TrimSpace(name + " " + in.Version), detail: detail, icon: "lucide/box", open: func() { a.router.Push(target) }})
 			}
 		}
 	}
@@ -291,4 +296,40 @@ func (a *App) submitSearch() {
 	if len(results) > 0 {
 		a.openSearchResult(results[min(a.search.selected, len(results)-1)])
 	}
+}
+
+// searchCopies are the tool's copies and, for a page of several tools,
+// the tools it lists: kubectl on CLI & clouds, Xcode on Mobile development.
+func searchCopies(tool inventory.ToolState) []inventory.Installation {
+	out := slices.Clone(tool.Installations)
+	if tool.Cpp != nil {
+		out = append(out, tool.Cpp.Tools...)
+	}
+	if tool.Cli != nil {
+		out = append(out, tool.Cli.Tools...)
+	}
+	if m := tool.Mobile; m != nil {
+		for _, x := range m.Xcodes {
+			out = append(out, inventory.Installation{Tool: "Xcode", Version: x.Version, Path: x.Path})
+		}
+		if m.CocoaPods != nil {
+			out = append(out, *m.CocoaPods)
+		}
+		if m.Flutter != nil {
+			out = append(out, m.Flutter.Installation)
+		}
+		if m.Android != nil && !m.Android.Missing {
+			out = append(out, inventory.Installation{Tool: "Android SDK", Path: m.Android.Root})
+		}
+	}
+	if d := tool.Databases; d != nil {
+		for _, db := range d.Servers {
+			if db.Path == "" { // a service alone: its server is the row with a path
+				continue
+			}
+			out = append(out, inventory.Installation{Tool: db.Kind, Version: db.Version, Path: db.Path, Source: inventory.Source{Manager: db.Source}})
+		}
+		out = append(out, d.Clients...)
+	}
+	return out
 }
