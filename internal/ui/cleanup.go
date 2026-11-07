@@ -35,6 +35,9 @@ var caches = map[string]struct{ name, command string }{
 	"maven":      {"Maven", ""},
 	"composer":   {"Composer", "composer clear-cache"},
 	"ccache":     {"ccache", "ccache -C"},
+	"xcode":      {"Xcode DerivedData", ""},
+	"cocoapods":  {"CocoaPods", "pod cache clean --all"},
+	"pub":        {"Flutter pub", "flutter pub cache clean"},
 }
 
 // cleanupGroups are the Cleanup page's groups, a tab each after All.

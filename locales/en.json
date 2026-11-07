@@ -3544,5 +3544,193 @@
   "cleanupModelsCaption": "1 GB and more, not in memory or MCP",
   "@cleanupModelsCaption": {
     "description": "Cleanup side card caption."
+  },
+  "mobileTitle": "Mobile development",
+  "@mobileTitle": {
+    "description": "Sidebar item and header of the mobile page."
+  },
+  "sectionToolsMobile": "Tools · iOS and Android",
+  "@sectionToolsMobile": {
+    "description": "Subtitle of the mobile page."
+  },
+  "mobileLead": "Xcode, simulators, Android SDK and Flutter: versions and disk space",
+  "@mobileLead": {
+    "description": "Under the mobile page's big title."
+  },
+  "mobileTake": "Take",
+  "@mobileTake": {
+    "description": "Mobile page card label."
+  },
+  "mobileToCleanup": "{size} to Cleanup",
+  "@mobileToCleanup": {
+    "description": "Mobile page card caption.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "16 GB"
+      }
+    }
+  },
+  "mobileNotFound": "not found",
+  "@mobileNotFound": {
+    "description": "Mobile page card value."
+  },
+  "mobileNotSelected": "not chosen by xcode-select",
+  "@mobileNotSelected": {
+    "description": "Mobile page Xcode caption."
+  },
+  "mobileDefaultDir": "default folder",
+  "@mobileDefaultDir": {
+    "description": "Mobile page: the SDK is in its default folder."
+  },
+  "mobileSelected": "xcode-select points here",
+  "@mobileSelected": {
+    "description": "Mobile row: the Xcode chosen."
+  },
+  "mobileSimulator": "{platform} simulator {version}",
+  "@mobileSimulator": {
+    "description": "Mobile row: a simulator runtime.",
+    "placeholders": {
+      "platform": {
+        "type": "String",
+        "example": "iOS"
+      },
+      "version": {
+        "type": "String",
+        "example": "18.2"
+      }
+    }
+  },
+  "mobileNewest": "the newest {platform}",
+  "@mobileNewest": {
+    "description": "Mobile row: the newest runtime.",
+    "placeholders": {
+      "platform": {
+        "type": "String",
+        "example": "iOS"
+      }
+    }
+  },
+  "mobileOlder": "older than {version}",
+  "@mobileOlder": {
+    "description": "Mobile row: an older runtime.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "18.2"
+      }
+    }
+  },
+  "mobileBuildCache": "build cache",
+  "@mobileBuildCache": {
+    "description": "Mobile row: Xcode's DerivedData."
+  },
+  "mobileRestorable": "rebuilt by itself",
+  "@mobileRestorable": {
+    "description": "Mobile row: a cache."
+  },
+  "mobileSpecsCache": "specs cache",
+  "@mobileSpecsCache": {
+    "description": "Mobile row: CocoaPods' cache."
+  },
+  "mobilePlatform": "Android SDK · platform {api}",
+  "@mobilePlatform": {
+    "description": "Mobile row: an SDK platform.",
+    "placeholders": {
+      "api": {
+        "type": "int",
+        "example": "35"
+      }
+    }
+  },
+  "mobileVarSet": "{name} set",
+  "@mobileVarSet": {
+    "description": "Mobile row: the variable names the SDK.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "ANDROID_HOME"
+      }
+    }
+  },
+  "mobileNoPlatforms": "no platforms installed",
+  "@mobileNoPlatforms": {
+    "description": "Mobile row: SDK without platforms."
+  },
+  "mobileImage": "Emulator image API {api}",
+  "@mobileImage": {
+    "description": "Mobile row: a system image.",
+    "placeholders": {
+      "api": {
+        "type": "int",
+        "example": "34"
+      }
+    }
+  },
+  "mobileNoAVD": "no AVD uses it",
+  "@mobileNoAVD": {
+    "description": "Mobile row: an image without AVDs."
+  },
+  "mobileGradleCache": "Gradle cache",
+  "@mobileGradleCache": {
+    "description": "Mobile row."
+  },
+  "mobilePubCache": "pub cache",
+  "@mobilePubCache": {
+    "description": "Mobile row."
+  },
+  "mobileChannel": "{channel} channel",
+  "@mobileChannel": {
+    "description": "Mobile row: Flutter's channel.",
+    "placeholders": {
+      "channel": {
+        "type": "String",
+        "example": "stable"
+      }
+    }
+  },
+  "mobileEnv": "Environment",
+  "@mobileEnv": {
+    "description": "Mobile page card title."
+  },
+  "mobileDirExists": "folder exists",
+  "@mobileDirExists": {
+    "description": "Mobile environment caption."
+  },
+  "mobileDirMissing": "no such folder",
+  "@mobileDirMissing": {
+    "description": "Mobile environment caption."
+  },
+  "mobileUnset": "not set",
+  "@mobileUnset": {
+    "description": "Mobile environment caption."
+  },
+  "mobileJavaHome": "JAVA_HOME for Gradle",
+  "@mobileJavaHome": {
+    "description": "Mobile environment row."
+  },
+  "mobileRemovable": "Can be removed",
+  "@mobileRemovable": {
+    "description": "Mobile page card title."
+  },
+  "mobileOldSimulator": "Older simulator",
+  "@mobileOldSimulator": {
+    "description": "Mobile removable row."
+  },
+  "mobileOpenCleanup": "Open in Cleanup",
+  "@mobileOpenCleanup": {
+    "description": "Mobile page link."
+  },
+  "mobileOpenCleanupCaption": "Hearth has counted the sizes",
+  "@mobileOpenCleanupCaption": {
+    "description": "Mobile page link caption."
+  },
+  "mobileNothing": "Nothing to remove yet.",
+  "@mobileNothing": {
+    "description": "Mobile removable card without rows."
+  },
+  "mobileNone": "No Xcode, Android SDK or Flutter found.",
+  "@mobileNone": {
+    "description": "Mobile page without tools."
   }
 }

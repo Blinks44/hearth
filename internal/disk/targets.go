@@ -43,6 +43,22 @@ func Targets(snap *inventory.Snapshot, caches []inventory.Cache) []string {
 				}
 			}
 		}
+		if m, ok := snap.Tool("mobile"); ok && m.Mobile != nil {
+			for _, x := range m.Mobile.Xcodes {
+				add(x.Path)
+			}
+			for _, rt := range m.Mobile.Runtimes {
+				add(rt.Path)
+			}
+			if sdk := m.Mobile.Android; sdk != nil {
+				for _, p := range append(slices.Clone(sdk.Platforms), sdk.Images...) {
+					add(p.Path)
+				}
+			}
+			if f := m.Mobile.Flutter; f != nil && f.Root != "" {
+				add(f.Root)
+			}
+		}
 		for _, a := range snap.Agents {
 			copies(a.Installations)
 		}

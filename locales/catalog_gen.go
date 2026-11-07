@@ -10097,3 +10097,481 @@ func CleanupModelsCaption() string { return In(i18n.Locale()).CleanupModelsCapti
 func (msgs Messages) CleanupModelsCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupModelsCaption", nil)
 }
+
+// MobileTitle says "Mobile development"
+// in the language the app shows.
+//
+// Sidebar item and header of the mobile page.
+func MobileTitle() string { return In(i18n.Locale()).MobileTitle() }
+
+// MobileTitle says "Mobile development"
+// in the language of msgs.
+//
+// Sidebar item and header of the mobile page.
+func (msgs Messages) MobileTitle() string {
+	return Catalog.Format(msgs.locale, "mobileTitle", nil)
+}
+
+// SectionToolsMobile says "Tools · iOS and Android"
+// in the language the app shows.
+//
+// Subtitle of the mobile page.
+func SectionToolsMobile() string { return In(i18n.Locale()).SectionToolsMobile() }
+
+// SectionToolsMobile says "Tools · iOS and Android"
+// in the language of msgs.
+//
+// Subtitle of the mobile page.
+func (msgs Messages) SectionToolsMobile() string {
+	return Catalog.Format(msgs.locale, "sectionToolsMobile", nil)
+}
+
+// MobileLead says "Xcode, simulators, Android SDK and Flutter: versions and disk space"
+// in the language the app shows.
+//
+// Under the mobile page's big title.
+func MobileLead() string { return In(i18n.Locale()).MobileLead() }
+
+// MobileLead says "Xcode, simulators, Android SDK and Flutter: versions and disk space"
+// in the language of msgs.
+//
+// Under the mobile page's big title.
+func (msgs Messages) MobileLead() string {
+	return Catalog.Format(msgs.locale, "mobileLead", nil)
+}
+
+// MobileTake says "Take"
+// in the language the app shows.
+//
+// Mobile page card label.
+func MobileTake() string { return In(i18n.Locale()).MobileTake() }
+
+// MobileTake says "Take"
+// in the language of msgs.
+//
+// Mobile page card label.
+func (msgs Messages) MobileTake() string {
+	return Catalog.Format(msgs.locale, "mobileTake", nil)
+}
+
+// MobileToCleanup says "{size} to Cleanup"
+// in the language the app shows.
+//
+// Mobile page card caption.
+func MobileToCleanup(size string) string { return In(i18n.Locale()).MobileToCleanup(size) }
+
+// MobileToCleanup says "{size} to Cleanup"
+// in the language of msgs.
+//
+// Mobile page card caption.
+func (msgs Messages) MobileToCleanup(size string) string {
+	return Catalog.Format(msgs.locale, "mobileToCleanup", map[string]any{"size": size})
+}
+
+// MobileNotFound says "not found"
+// in the language the app shows.
+//
+// Mobile page card value.
+func MobileNotFound() string { return In(i18n.Locale()).MobileNotFound() }
+
+// MobileNotFound says "not found"
+// in the language of msgs.
+//
+// Mobile page card value.
+func (msgs Messages) MobileNotFound() string {
+	return Catalog.Format(msgs.locale, "mobileNotFound", nil)
+}
+
+// MobileNotSelected says "not chosen by xcode-select"
+// in the language the app shows.
+//
+// Mobile page Xcode caption.
+func MobileNotSelected() string { return In(i18n.Locale()).MobileNotSelected() }
+
+// MobileNotSelected says "not chosen by xcode-select"
+// in the language of msgs.
+//
+// Mobile page Xcode caption.
+func (msgs Messages) MobileNotSelected() string {
+	return Catalog.Format(msgs.locale, "mobileNotSelected", nil)
+}
+
+// MobileDefaultDir says "default folder"
+// in the language the app shows.
+//
+// Mobile page: the SDK is in its default folder.
+func MobileDefaultDir() string { return In(i18n.Locale()).MobileDefaultDir() }
+
+// MobileDefaultDir says "default folder"
+// in the language of msgs.
+//
+// Mobile page: the SDK is in its default folder.
+func (msgs Messages) MobileDefaultDir() string {
+	return Catalog.Format(msgs.locale, "mobileDefaultDir", nil)
+}
+
+// MobileSelected says "xcode-select points here"
+// in the language the app shows.
+//
+// Mobile row: the Xcode chosen.
+func MobileSelected() string { return In(i18n.Locale()).MobileSelected() }
+
+// MobileSelected says "xcode-select points here"
+// in the language of msgs.
+//
+// Mobile row: the Xcode chosen.
+func (msgs Messages) MobileSelected() string {
+	return Catalog.Format(msgs.locale, "mobileSelected", nil)
+}
+
+// MobileSimulator says "{platform} simulator {version}"
+// in the language the app shows.
+//
+// Mobile row: a simulator runtime.
+func MobileSimulator(platform string, version string) string {
+	return In(i18n.Locale()).MobileSimulator(platform, version)
+}
+
+// MobileSimulator says "{platform} simulator {version}"
+// in the language of msgs.
+//
+// Mobile row: a simulator runtime.
+func (msgs Messages) MobileSimulator(platform string, version string) string {
+	return Catalog.Format(msgs.locale, "mobileSimulator", map[string]any{"platform": platform, "version": version})
+}
+
+// MobileNewest says "the newest {platform}"
+// in the language the app shows.
+//
+// Mobile row: the newest runtime.
+func MobileNewest(platform string) string { return In(i18n.Locale()).MobileNewest(platform) }
+
+// MobileNewest says "the newest {platform}"
+// in the language of msgs.
+//
+// Mobile row: the newest runtime.
+func (msgs Messages) MobileNewest(platform string) string {
+	return Catalog.Format(msgs.locale, "mobileNewest", map[string]any{"platform": platform})
+}
+
+// MobileOlder says "older than {version}"
+// in the language the app shows.
+//
+// Mobile row: an older runtime.
+func MobileOlder(version string) string { return In(i18n.Locale()).MobileOlder(version) }
+
+// MobileOlder says "older than {version}"
+// in the language of msgs.
+//
+// Mobile row: an older runtime.
+func (msgs Messages) MobileOlder(version string) string {
+	return Catalog.Format(msgs.locale, "mobileOlder", map[string]any{"version": version})
+}
+
+// MobileBuildCache says "build cache"
+// in the language the app shows.
+//
+// Mobile row: Xcode's DerivedData.
+func MobileBuildCache() string { return In(i18n.Locale()).MobileBuildCache() }
+
+// MobileBuildCache says "build cache"
+// in the language of msgs.
+//
+// Mobile row: Xcode's DerivedData.
+func (msgs Messages) MobileBuildCache() string {
+	return Catalog.Format(msgs.locale, "mobileBuildCache", nil)
+}
+
+// MobileRestorable says "rebuilt by itself"
+// in the language the app shows.
+//
+// Mobile row: a cache.
+func MobileRestorable() string { return In(i18n.Locale()).MobileRestorable() }
+
+// MobileRestorable says "rebuilt by itself"
+// in the language of msgs.
+//
+// Mobile row: a cache.
+func (msgs Messages) MobileRestorable() string {
+	return Catalog.Format(msgs.locale, "mobileRestorable", nil)
+}
+
+// MobileSpecsCache says "specs cache"
+// in the language the app shows.
+//
+// Mobile row: CocoaPods' cache.
+func MobileSpecsCache() string { return In(i18n.Locale()).MobileSpecsCache() }
+
+// MobileSpecsCache says "specs cache"
+// in the language of msgs.
+//
+// Mobile row: CocoaPods' cache.
+func (msgs Messages) MobileSpecsCache() string {
+	return Catalog.Format(msgs.locale, "mobileSpecsCache", nil)
+}
+
+// MobilePlatform says "Android SDK · platform {api}"
+// in the language the app shows.
+//
+// Mobile row: an SDK platform.
+func MobilePlatform(api int) string { return In(i18n.Locale()).MobilePlatform(api) }
+
+// MobilePlatform says "Android SDK · platform {api}"
+// in the language of msgs.
+//
+// Mobile row: an SDK platform.
+func (msgs Messages) MobilePlatform(api int) string {
+	return Catalog.Format(msgs.locale, "mobilePlatform", map[string]any{"api": api})
+}
+
+// MobileVarSet says "{name} set"
+// in the language the app shows.
+//
+// Mobile row: the variable names the SDK.
+func MobileVarSet(name string) string { return In(i18n.Locale()).MobileVarSet(name) }
+
+// MobileVarSet says "{name} set"
+// in the language of msgs.
+//
+// Mobile row: the variable names the SDK.
+func (msgs Messages) MobileVarSet(name string) string {
+	return Catalog.Format(msgs.locale, "mobileVarSet", map[string]any{"name": name})
+}
+
+// MobileNoPlatforms says "no platforms installed"
+// in the language the app shows.
+//
+// Mobile row: SDK without platforms.
+func MobileNoPlatforms() string { return In(i18n.Locale()).MobileNoPlatforms() }
+
+// MobileNoPlatforms says "no platforms installed"
+// in the language of msgs.
+//
+// Mobile row: SDK without platforms.
+func (msgs Messages) MobileNoPlatforms() string {
+	return Catalog.Format(msgs.locale, "mobileNoPlatforms", nil)
+}
+
+// MobileImage says "Emulator image API {api}"
+// in the language the app shows.
+//
+// Mobile row: a system image.
+func MobileImage(api int) string { return In(i18n.Locale()).MobileImage(api) }
+
+// MobileImage says "Emulator image API {api}"
+// in the language of msgs.
+//
+// Mobile row: a system image.
+func (msgs Messages) MobileImage(api int) string {
+	return Catalog.Format(msgs.locale, "mobileImage", map[string]any{"api": api})
+}
+
+// MobileNoAVD says "no AVD uses it"
+// in the language the app shows.
+//
+// Mobile row: an image without AVDs.
+func MobileNoAVD() string { return In(i18n.Locale()).MobileNoAVD() }
+
+// MobileNoAVD says "no AVD uses it"
+// in the language of msgs.
+//
+// Mobile row: an image without AVDs.
+func (msgs Messages) MobileNoAVD() string {
+	return Catalog.Format(msgs.locale, "mobileNoAVD", nil)
+}
+
+// MobileGradleCache says "Gradle cache"
+// in the language the app shows.
+//
+// Mobile row.
+func MobileGradleCache() string { return In(i18n.Locale()).MobileGradleCache() }
+
+// MobileGradleCache says "Gradle cache"
+// in the language of msgs.
+//
+// Mobile row.
+func (msgs Messages) MobileGradleCache() string {
+	return Catalog.Format(msgs.locale, "mobileGradleCache", nil)
+}
+
+// MobilePubCache says "pub cache"
+// in the language the app shows.
+//
+// Mobile row.
+func MobilePubCache() string { return In(i18n.Locale()).MobilePubCache() }
+
+// MobilePubCache says "pub cache"
+// in the language of msgs.
+//
+// Mobile row.
+func (msgs Messages) MobilePubCache() string {
+	return Catalog.Format(msgs.locale, "mobilePubCache", nil)
+}
+
+// MobileChannel says "{channel} channel"
+// in the language the app shows.
+//
+// Mobile row: Flutter's channel.
+func MobileChannel(channel string) string { return In(i18n.Locale()).MobileChannel(channel) }
+
+// MobileChannel says "{channel} channel"
+// in the language of msgs.
+//
+// Mobile row: Flutter's channel.
+func (msgs Messages) MobileChannel(channel string) string {
+	return Catalog.Format(msgs.locale, "mobileChannel", map[string]any{"channel": channel})
+}
+
+// MobileEnv says "Environment"
+// in the language the app shows.
+//
+// Mobile page card title.
+func MobileEnv() string { return In(i18n.Locale()).MobileEnv() }
+
+// MobileEnv says "Environment"
+// in the language of msgs.
+//
+// Mobile page card title.
+func (msgs Messages) MobileEnv() string {
+	return Catalog.Format(msgs.locale, "mobileEnv", nil)
+}
+
+// MobileDirExists says "folder exists"
+// in the language the app shows.
+//
+// Mobile environment caption.
+func MobileDirExists() string { return In(i18n.Locale()).MobileDirExists() }
+
+// MobileDirExists says "folder exists"
+// in the language of msgs.
+//
+// Mobile environment caption.
+func (msgs Messages) MobileDirExists() string {
+	return Catalog.Format(msgs.locale, "mobileDirExists", nil)
+}
+
+// MobileDirMissing says "no such folder"
+// in the language the app shows.
+//
+// Mobile environment caption.
+func MobileDirMissing() string { return In(i18n.Locale()).MobileDirMissing() }
+
+// MobileDirMissing says "no such folder"
+// in the language of msgs.
+//
+// Mobile environment caption.
+func (msgs Messages) MobileDirMissing() string {
+	return Catalog.Format(msgs.locale, "mobileDirMissing", nil)
+}
+
+// MobileUnset says "not set"
+// in the language the app shows.
+//
+// Mobile environment caption.
+func MobileUnset() string { return In(i18n.Locale()).MobileUnset() }
+
+// MobileUnset says "not set"
+// in the language of msgs.
+//
+// Mobile environment caption.
+func (msgs Messages) MobileUnset() string {
+	return Catalog.Format(msgs.locale, "mobileUnset", nil)
+}
+
+// MobileJavaHome says "JAVA_HOME for Gradle"
+// in the language the app shows.
+//
+// Mobile environment row.
+func MobileJavaHome() string { return In(i18n.Locale()).MobileJavaHome() }
+
+// MobileJavaHome says "JAVA_HOME for Gradle"
+// in the language of msgs.
+//
+// Mobile environment row.
+func (msgs Messages) MobileJavaHome() string {
+	return Catalog.Format(msgs.locale, "mobileJavaHome", nil)
+}
+
+// MobileRemovable says "Can be removed"
+// in the language the app shows.
+//
+// Mobile page card title.
+func MobileRemovable() string { return In(i18n.Locale()).MobileRemovable() }
+
+// MobileRemovable says "Can be removed"
+// in the language of msgs.
+//
+// Mobile page card title.
+func (msgs Messages) MobileRemovable() string {
+	return Catalog.Format(msgs.locale, "mobileRemovable", nil)
+}
+
+// MobileOldSimulator says "Older simulator"
+// in the language the app shows.
+//
+// Mobile removable row.
+func MobileOldSimulator() string { return In(i18n.Locale()).MobileOldSimulator() }
+
+// MobileOldSimulator says "Older simulator"
+// in the language of msgs.
+//
+// Mobile removable row.
+func (msgs Messages) MobileOldSimulator() string {
+	return Catalog.Format(msgs.locale, "mobileOldSimulator", nil)
+}
+
+// MobileOpenCleanup says "Open in Cleanup"
+// in the language the app shows.
+//
+// Mobile page link.
+func MobileOpenCleanup() string { return In(i18n.Locale()).MobileOpenCleanup() }
+
+// MobileOpenCleanup says "Open in Cleanup"
+// in the language of msgs.
+//
+// Mobile page link.
+func (msgs Messages) MobileOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "mobileOpenCleanup", nil)
+}
+
+// MobileOpenCleanupCaption says "Hearth has counted the sizes"
+// in the language the app shows.
+//
+// Mobile page link caption.
+func MobileOpenCleanupCaption() string { return In(i18n.Locale()).MobileOpenCleanupCaption() }
+
+// MobileOpenCleanupCaption says "Hearth has counted the sizes"
+// in the language of msgs.
+//
+// Mobile page link caption.
+func (msgs Messages) MobileOpenCleanupCaption() string {
+	return Catalog.Format(msgs.locale, "mobileOpenCleanupCaption", nil)
+}
+
+// MobileNothing says "Nothing to remove yet."
+// in the language the app shows.
+//
+// Mobile removable card without rows.
+func MobileNothing() string { return In(i18n.Locale()).MobileNothing() }
+
+// MobileNothing says "Nothing to remove yet."
+// in the language of msgs.
+//
+// Mobile removable card without rows.
+func (msgs Messages) MobileNothing() string {
+	return Catalog.Format(msgs.locale, "mobileNothing", nil)
+}
+
+// MobileNone says "No Xcode, Android SDK or Flutter found."
+// in the language the app shows.
+//
+// Mobile page without tools.
+func MobileNone() string { return In(i18n.Locale()).MobileNone() }
+
+// MobileNone says "No Xcode, Android SDK or Flutter found."
+// in the language of msgs.
+//
+// Mobile page without tools.
+func (msgs Messages) MobileNone() string {
+	return Catalog.Format(msgs.locale, "mobileNone", nil)
+}

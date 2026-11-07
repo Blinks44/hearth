@@ -57,6 +57,7 @@ var (
 			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionTools},
 			{gitPage, "brand/git", name("Git"), locales.SectionToolsVcs},
 			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
+			{mobilePage, "lucide/smartphone", locales.MobileTitle, locales.SectionToolsMobile},
 		}},
 		{locales.SectionAI, []page{
 			{"/ai/agents", "lucide/bot", locales.AgentsTitle, locales.SectionAI},

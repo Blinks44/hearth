@@ -173,6 +173,9 @@ type ToolState struct {
 	Models *ModelsState `json:",omitempty"`
 	// Cli is the command-line tools without a page, for "cli" only.
 	Cli *CliState `json:",omitempty"`
+	// Mobile is how iOS and Android development is set up, for "mobile"
+	// only.
+	Mobile *MobileState `json:",omitempty"`
 	// PackageManagers are the system package managers found, for "packages"
 	// only.
 	PackageManagers []PackageManager `json:",omitempty"`

@@ -94,6 +94,13 @@ func (f *finder) add(path string) *inventory.Installation {
 			source = sources.Classify(real, real, f.env)
 		}
 	}
+	// A link through a manager's folder makes the copy the manager's, as a
+	// Homebrew cask's Caskroom/<name>/<version> linked to share/<name>.
+	if source.Manager == "" {
+		if s := linkedSource(path, f.env); s.Manager != "" {
+			source = s
+		}
+	}
 	// A snap's commands all lead to snapd itself: the copy is its command.
 	if root := snapRoot(path); root != "" {
 		real, source = path, inventory.Source{Kind: inventory.KindPackageManager, Manager: "snap", Root: root}
@@ -109,6 +116,25 @@ func (f *finder) add(path string) *inventory.Installation {
 		Source:   source,
 	})
 	return &f.ins[len(f.ins)-1]
+}
+
+// linkedSource is the source of the first link on the way from path to
+// its file that a manager's folder holds; empty when none does.
+func linkedSource(path string, env sysenv.Env) inventory.Source {
+	for range 8 {
+		target, err := os.Readlink(path)
+		if err != nil {
+			break
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
+		if s := sources.Classify(target, target, env); s.Manager != "" {
+			return s
+		}
+		path = target
+	}
+	return inventory.Source{}
 }
 
 // lookPath adds the copies of exe on the terminal's PATH (term) and the

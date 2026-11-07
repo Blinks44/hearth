@@ -20,5 +20,9 @@ func defaults(env sysenv.Env, home string) map[string]string {
 		"go-build": filepath.Join(caches, "go-build"),
 		"composer": filepath.Join(caches, "composer"),
 		"ccache":   filepath.Join(caches, "ccache"),
+		// Xcode's build products and indexes, made again by the next build.
+		"xcode":     filepath.Join(home, "Library", "Developer", "Xcode", "DerivedData"),
+		"cocoapods": filepath.Join(caches, "CocoaPods"),
+		"pub":       filepath.Join(home, ".pub-cache"),
 	}
 }

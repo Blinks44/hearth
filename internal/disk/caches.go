@@ -21,10 +21,11 @@ var cacheVars = map[string][]string{
 	"go-build": {"GOCACHE"},
 	"composer": {"COMPOSER_CACHE_DIR"},
 	"ccache":   {"CCACHE_DIR"},
+	"pub":      {"PUB_CACHE"},
 }
 
 // cacheOrder is the order caches come in.
-var cacheOrder = []string{"npm", "pnpm", "yarn", "yarn-berry", "bun", "uv", "pip", "brew", "go-mod", "go-build", "cargo", "gradle", "maven", "composer", "ccache"}
+var cacheOrder = []string{"npm", "pnpm", "yarn", "yarn-berry", "bun", "uv", "pip", "brew", "go-mod", "go-build", "cargo", "gradle", "maven", "composer", "ccache", "xcode", "cocoapods", "pub"}
 
 // Caches returns the tools' caches that are on disk, by the terminal's
 // environment and the snapshot's Go settings.
