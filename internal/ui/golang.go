@@ -17,7 +17,7 @@ import (
 // the version manager and the commands go install put in GOPATH/bin.
 func (a *App) goPage(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "go", a.goRecommended()) }})
 		st, ok := a.toolState("go")
 		if !ok {
 			a.toolEmpty(c, "go", "Go")
@@ -39,14 +39,14 @@ func (a *App) goPage(c *ui.Context, p page) {
 						}
 						pathCard(c, "go", ins, active, a.Home)
 					}, func() {
-						a.goAvailable(c, ins, rows, active)
+						a.goAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
 							globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
 						}
 					})
 				case 1:
-					a.goAvailable(c, ins, rows, active)
+					a.goAvailable(c, st, rows, active)
 				case 3:
 					pathCard(c, "go", ins, active, a.Home)
 				default:
@@ -90,14 +90,15 @@ func goChannel(in inventory.Installation) (string, bool) {
 
 // goAvailable lists the newest release of each supported Go line, as
 // go.dev says, with how each stands to the versions installed.
-func (a *App) goAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) goAvailable(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
 	pal := Colors(c.Theme())
 	gv := a.GoVersions
 	asOf := ""
 	if gv != nil && !gv.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(gv.Fetched)
 	}
-	listCard(c, locales.AvailableTitle(), asOf, func() {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {
 		if gv == nil {
 			text := locales.VersionsLoading()
 			if a.GoVersionsErr != "" {
@@ -113,6 +114,7 @@ func (a *App) goAvailable(c *ui.Context, ins []inventory.Installation, rows []in
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
+				a.installButton(c, st, v, "go"+v)
 			})
 		}
 	})
@@ -148,4 +150,12 @@ func goReleaseNote(v string, ins []inventory.Installation, rows []int, active in
 // then no new line to go to.
 func olderRelease(v string, ins []inventory.Installation, rows []int) bool {
 	return slices.ContainsFunc(rows, func(i int) bool { return semver.Compare("v"+ins[i].Version, "v"+v) > 0 })
+}
+
+// goRecommended is the newest Go release, as go.dev says.
+func (a *App) goRecommended() string {
+	if a.GoVersions == nil || len(a.GoVersions.Releases) == 0 {
+		return ""
+	}
+	return a.GoVersions.Releases[0]
 }

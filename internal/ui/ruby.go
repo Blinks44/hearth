@@ -15,7 +15,7 @@ import (
 // available, the version manager and gems.
 func (a *App) ruby(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "ruby", a.RubyVersions.Newest(c.Now())) }})
 		st, ok := a.toolState("ruby")
 		if !ok {
 			a.toolEmpty(c, "ruby", "Ruby")
@@ -37,14 +37,14 @@ func (a *App) ruby(c *ui.Context, p page) {
 						}
 						pathCard(c, "ruby", ins, active, a.Home)
 					}, func() {
-						a.rubyAvailable(c, ins, rows, active)
+						a.rubyAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
 							globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
 						}
 					})
 				case 1:
-					a.rubyAvailable(c, ins, rows, active)
+					a.rubyAvailable(c, st, rows, active)
 				case 3:
 					pathCard(c, "ruby", ins, active, a.Home)
 				default:
@@ -88,13 +88,14 @@ func (a *App) rubyChannel(c *ui.Context) func(inventory.Installation) (string, b
 
 // rubyAvailable lists the newest release of each line released and still
 // supported, newest first, with how each stands to the copies installed.
-func (a *App) rubyAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
 	pal := Colors(c.Theme())
 	asOf := ""
 	if a.RubyVersions != nil {
 		asOf = locales.VersionsAsOf(a.RubyVersions.Fetched)
 	}
-	listCard(c, locales.AvailableTitle(), asOf, func() {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {
 		if a.RubyVersions == nil {
 			text := locales.VersionsLoading()
 			if a.RubyVersionsErr != "" {
@@ -114,6 +115,7 @@ func (a *App) rubyAvailable(c *ui.Context, ins []inventory.Installation, rows []
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
+				a.installButton(c, st, l.Latest, l.Latest)
 			})
 		}
 	})

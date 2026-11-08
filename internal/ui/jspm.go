@@ -286,7 +286,13 @@ func (a *App) jsUpdates(c *ui.Context) {
 			} else if current != "" && semver.Compare("v"+current, "v"+p.latest.Version) < 0 {
 				caption = locales.NoteUpdateFor(versionText(current))
 			}
-			listRow(c, p.name+" "+p.latest.Version, true, caption, func() {})
+			listRow(c, p.name+" "+p.latest.Version, true, caption, func() {
+				// npm comes with Node.
+				if p.name != "npm" {
+					st.Tool = p.name
+					a.installButton(c, st, p.latest.Version, p.name+" "+p.latest.Version)
+				}
+			})
 		}
 	})
 }

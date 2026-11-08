@@ -309,7 +309,7 @@ func TestProjectInstall(t *testing.T) {
 	a.NodeVersions.Releases = append(a.NodeVersions.Releases, versions.Release{Version: "18.20.5"}, versions.Release{Version: "18.20.4"})
 	tt := openProjects(t, a, projectPath(home+"/work/legacy-admin"))
 	screenshot(t, tt, "project-install")
-	for _, button := range []string{"Install Node 18…", "Install Node 18.20.5"} {
+	for _, button := range []string{"Install Node 18…", "Install Node v18.20.5"} {
 		if err := tt.Click(button); err != nil {
 			t.Fatal(err)
 		}

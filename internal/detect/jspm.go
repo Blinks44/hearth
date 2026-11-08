@@ -43,6 +43,19 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 			}
 		}
 	}
+	// mise keeps pnpm in the version's folder, Yarn in its bin.
+	if mise := sources.ManagerDirs(term).Mise; mise != "" && (name == "pnpm" || name == "yarn") {
+		for _, exe := range jsLaunchers(name) {
+			for _, pattern := range []string{filepath.Join(mise, "installs", name, "*", exe), filepath.Join(mise, "installs", name, "*", "bin", exe)} {
+				matches, _ := filepath.Glob(pattern) // only a malformed pattern fails
+				for _, m := range matches {
+					if real, err := sysenv.RealPath(m); err == nil {
+						f.add(real)
+					}
+				}
+			}
+		}
+	}
 	nodes := newFinder("node", term)
 	nodes.lookPath(nodeExe, term, gui)
 	for _, pattern := range nodeGlobs(sources.ManagerDirs(term)) {
@@ -90,6 +103,9 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 		if name != "corepack" && (core != "" || strings.Contains(readHead(in.Path), "corepack")) {
 			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: "corepack", Root: core, Shim: true}
 			in.Version = ""
+		}
+		if in.Version == "" && !in.Source.Shim && in.Source.Manager == "mise" {
+			in.Version = pathVersion(in.Source.Version)
 		}
 		if in.Version == "" && !in.Source.Shim {
 			in.Version = versionOf(ctx, r, term, in.RealPath)

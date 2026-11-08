@@ -2,6 +2,7 @@ package ui
 
 import (
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -14,7 +15,7 @@ import (
 // version manager and the build tools on PATH.
 func (a *App) javaPage(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "java", a.javaLine(c.Now())) }})
 		st, ok := a.toolState("java")
 		if !ok {
 			a.toolEmpty(c, "java", "Java")
@@ -33,7 +34,7 @@ func (a *App) javaPage(c *ui.Context, p page) {
 						toolNote(c, locales.JavaHomeNote())
 						a.javaPath(c, st, active)
 					}, func() {
-						a.javaAvailable(c)
+						a.javaAvailable(c, st)
 						a.managerCard(c, st, rows, active, nil)
 						listCard(c, locales.JavaBuilders(), "", func() {
 							found := false
@@ -49,7 +50,7 @@ func (a *App) javaPage(c *ui.Context, p page) {
 						})
 					})
 				case 1:
-					a.javaAvailable(c)
+					a.javaAvailable(c, st)
 				case 3:
 					a.javaPath(c, st, active)
 				default:
@@ -116,8 +117,8 @@ func (a *App) javaPath(c *ui.Context, st inventory.ToolState, active int) {
 
 // javaAvailable lists Temurin's supported lines; other vendors have
 // their own support policies.
-func (a *App) javaAvailable(c *ui.Context) {
-	listCard(c, locales.AvailableTitle(), "Temurin", func() {
+func (a *App) javaAvailable(c *ui.Context, st inventory.ToolState) {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, "Temurin"), func() {
 		if a.JavaVersions == nil {
 			text := locales.VersionsLoading()
 			if a.JavaVersionsErr != "" {
@@ -130,7 +131,18 @@ func (a *App) javaAvailable(c *ui.Context) {
 			if l.Latest == "" || !l.End.IsZero() && !c.Now().Before(l.End) || !l.Release.IsZero() && c.Now().Before(l.Release) {
 				continue
 			}
-			listRow(c, "Temurin "+l.Latest, true, locales.JavaReleaseLine(l.Cycle), func() {})
+			listRow(c, "Temurin "+l.Latest, true, locales.JavaReleaseLine(l.Cycle), func() { a.installButton(c, st, l.Cycle, "Temurin "+l.Latest) })
 		}
 	})
+}
+
+// javaLine is the newest Temurin line out and still supported, which
+// Java installs by.
+func (a *App) javaLine(now time.Time) string {
+	if v := a.JavaVersions.Newest(now); v != "" {
+		if l, ok := a.JavaVersions.Line(v); ok {
+			return l.Cycle
+		}
+	}
+	return ""
 }

@@ -4207,36 +4207,6 @@
       }
     }
   },
-  "nodeInstallTitle": "Install Node {version}",
-  "@nodeInstallTitle": {
-    "description": "Title of the plan that installs a Node version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "22.14.0"
-      }
-    }
-  },
-  "nodeInstallWhy": "Through {manager}, as your other Node versions. The version in use stays as it is.",
-  "@nodeInstallWhy": {
-    "description": "Why and how a Node version installs.",
-    "placeholders": {
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
-  },
-  "nodeUninstallTitle": "Remove Node {version}",
-  "@nodeUninstallTitle": {
-    "description": "Title of the plan that removes a Node version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "20.18.1"
-      }
-    }
-  },
   "nodeUninstallWhy": "Through {manager}. The global npm packages of this version go with it.",
   "@nodeUninstallWhy": {
     "description": "Why and how a Node version is removed.",
@@ -4247,37 +4217,221 @@
       }
     }
   },
-  "nodeDefaultTitle": "Make Node {version} the default",
-  "@nodeDefaultTitle": {
-    "description": "Title of the plan that makes a Node version the default.",
+  "versionInstallTitle": "Install {tool} {version}",
+  "@versionInstallTitle": {
+    "description": "Title of the plan that installs a version of a language.",
     "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
       "version": {
         "type": "String",
-        "example": "22.14.0"
+        "example": "3.13.1"
       }
     }
   },
-  "nodeDefaultWhy": "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs.",
-  "@nodeDefaultWhy": {
-    "description": "Why and how a Node version becomes the default.",
+  "versionInstallWhy": "Through {manager}, as your other {tool} versions. The version in use stays as it is.",
+  "@versionInstallWhy": {
+    "description": "Why of the plan that installs a version of a language.",
     "placeholders": {
       "manager": {
         "type": "String",
-        "example": "fnm"
+        "example": "pyenv"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Python"
       }
     }
   },
-  "nodeDefaultChange": "Node v{version} is the default of {manager}",
-  "@nodeDefaultChange": {
-    "description": "What changed once a Node version became the default.",
+  "versionUninstallTitle": "Remove {tool} {version}",
+  "@versionUninstallTitle": {
+    "description": "Title of the plan that removes a version of a language.",
     "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
       "version": {
         "type": "String",
-        "example": "22.14.0"
+        "example": "3.12.8"
+      }
+    }
+  },
+  "versionUninstallWhy": "Through {manager}.",
+  "@versionUninstallWhy": {
+    "description": "Why of the plan that removes a version of a language with nothing installed into it.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "mise"
+      }
+    }
+  },
+  "pythonUninstallWhy": "Through {manager}. The packages installed into this version with pip go with it.",
+  "@pythonUninstallWhy": {
+    "description": "Why of the plan that removes a Python version.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "rubyUninstallWhy": "Through {manager}. The gems of this version go with it.",
+  "@rubyUninstallWhy": {
+    "description": "Why of the plan that removes a Ruby version.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "rbenv"
+      }
+    }
+  },
+  "versionDefaultTitle": "Make {tool} {version} the default",
+  "@versionDefaultTitle": {
+    "description": "Title of the plan that makes a version of a language the default.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
+      }
+    }
+  },
+  "versionDefaultWhy": "Through {manager}: new terminals start with this version; folders that pin another keep theirs.",
+  "@versionDefaultWhy": {
+    "description": "Why of the plan that makes a version the default.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionDefaultChange": "{tool} {version} is the default of {manager}",
+  "@versionDefaultChange": {
+    "description": "What changed once a version became the default.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
       },
       "manager": {
         "type": "String",
-        "example": "fnm"
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionCheckInstalled": "{manager} has {tool} {version}",
+  "@versionCheckInstalled": {
+    "description": "What the check found after installing a version.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
+      },
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionCheckNotInstalled": "Hearth does not find {tool} {version} of {manager}",
+  "@versionCheckNotInstalled": {
+    "description": "The check after installing a version did not find it.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
+      },
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionCheckRemoved": "{tool} {version} is gone",
+  "@versionCheckRemoved": {
+    "description": "What the check found after removing a version.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.12.8"
+      }
+    }
+  },
+  "versionCheckNotRemoved": "{tool} {version} of {manager} is still there",
+  "@versionCheckNotRemoved": {
+    "description": "The check after removing a version still found it.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.12.8"
+      },
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionCheckDefault": "{manager} starts {tool} {version} by default",
+  "@versionCheckDefault": {
+    "description": "What the check found after making a version the default.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
+      },
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
+      }
+    }
+  },
+  "versionCheckNotDefault": "{manager} does not start {tool} {version} by default",
+  "@versionCheckNotDefault": {
+    "description": "The check after making a version the default found another.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.13.1"
+      },
+      "manager": {
+        "type": "String",
+        "example": "pyenv"
       }
     }
   },
@@ -4288,86 +4442,6 @@
   "noteNvmWindowsUAC": "nvm-windows asks Windows for them to switch the version",
   "@noteNvmWindowsUAC": {
     "description": "Why switching Node with nvm-windows asks for administrator rights."
-  },
-  "nodeCheckInstalled": "{manager} has Node v{version}",
-  "@nodeCheckInstalled": {
-    "description": "What the check found after installing a Node version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "22.14.0"
-      },
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
-  },
-  "nodeCheckNotInstalled": "Hearth does not find Node v{version} of {manager}",
-  "@nodeCheckNotInstalled": {
-    "description": "The check after installing did not find the version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "22.14.0"
-      },
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
-  },
-  "nodeCheckRemoved": "Node v{version} is gone",
-  "@nodeCheckRemoved": {
-    "description": "What the check found after removing a Node version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "20.18.1"
-      }
-    }
-  },
-  "nodeCheckNotRemoved": "Node v{version} of {manager} is still there",
-  "@nodeCheckNotRemoved": {
-    "description": "The check after removing still found the version.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "20.18.1"
-      },
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
-  },
-  "nodeCheckDefault": "{manager} starts v{version} by default",
-  "@nodeCheckDefault": {
-    "description": "What the check found after making a Node version the default.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "22.14.0"
-      },
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
-  },
-  "nodeCheckNotDefault": "{manager} does not start v{version} by default",
-  "@nodeCheckNotDefault": {
-    "description": "The check after making a version the default found another.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "22.14.0"
-      },
-      "manager": {
-        "type": "String",
-        "example": "fnm"
-      }
-    }
   },
   "installVersion": "Install version",
   "@installVersion": {
@@ -4976,6 +5050,86 @@
       "count": {
         "type": "int",
         "example": 7
+      }
+    }
+  },
+  "moveToMise": "Move to mise…",
+  "@moveToMise": {
+    "description": "Menu item of a copy that installs the same version through mise and makes it the default."
+  },
+  "moveTitle": "Move {tool} {version} to mise",
+  "@moveTitle": {
+    "description": "Title of the plan that moves a copy of a language to mise.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Python"
+      },
+      "version": {
+        "type": "String",
+        "example": "3.12.8"
+      }
+    }
+  },
+  "moveWhy": "mise installs the same version and new terminals start it. The copy ({source}) stays: remove it separately once nothing needs it.",
+  "@moveWhy": {
+    "description": "Why of the plan that moves a copy to mise.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "movePackagesTitle": "Packages stay behind",
+  "@movePackagesTitle": {
+    "description": "Note title: packages of the old copy do not move to mise."
+  },
+  "movePackagesText": "What you installed into the copy ({source}) with pip, gem, npm -g or go install stays with it: install it again with mise's version.",
+  "@movePackagesText": {
+    "description": "Note: packages of the old copy do not move to mise.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "brew"
+      }
+    }
+  },
+  "moveVenvTitle": "Project .venv folders",
+  "@moveVenvTitle": {
+    "description": "Note title: virtual environments made by the old Python."
+  },
+  "moveVenvText": ".venv folders made with the old copy keep running it. Create them again to use mise's Python.",
+  "@moveVenvText": {
+    "description": "Note: virtual environments made by the old Python keep using it."
+  },
+  "pythonOrgRemoveWhy": "python.org's installer has no uninstaller: Hearth deletes the files it put, each listed below. The packages installed into this version go with it.",
+  "@pythonOrgRemoveWhy": {
+    "description": "Why of the plan that removes a python.org copy on macOS."
+  },
+  "pythonOrgNoUninstaller": "No uninstaller",
+  "@pythonOrgNoUninstaller": {
+    "description": "Note title: python.org's installer has no uninstaller."
+  },
+  "pythonOrgNoUninstallerText": "Python's guide for macOS says what the installer puts where.",
+  "@pythonOrgNoUninstallerText": {
+    "description": "Note linking to Python's macOS guide."
+  },
+  "pythonOrgPaths": "What is deleted",
+  "@pythonOrgPaths": {
+    "description": "Note title above the paths the removal of a python.org copy deletes."
+  },
+  "noVersionManagerOwn": "No version manager: {tool} comes from {sources}.",
+  "@noVersionManagerOwn": {
+    "description": "Version manager card when no version manager keeps the tool and Hearth does not install it through mise, as PHP.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "PHP"
+      },
+      "sources": {
+        "type": "String",
+        "example": "brew"
       }
     }
   }

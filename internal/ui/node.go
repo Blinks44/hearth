@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"cmp"
-	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -11,8 +9,6 @@ import (
 	"golang.org/x/mod/semver"
 
 	"github.com/Blinks44/hearth/internal/inventory"
-	"github.com/Blinks44/hearth/internal/ops"
-	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -31,27 +27,14 @@ var (
 func (a *App) node(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		st, ok := a.toolState("node")
-		manager := a.nodeManager(st)
+		st.Tool = "node"
 		recommended := ""
 		if a.NodeVersions != nil {
 			if r, found := a.NodeVersions.Recommended(); found {
 				recommended = r.Version
 			}
 		}
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			// With no version manager, nor Node at all, mise installs it,
-			// once the scan says what there is.
-			if a.Snapshot == nil || recommended == "" || manager == "" && a.BuildPlan == nil || !ok && manager != "" {
-				return
-			}
-			ui.PrimaryButton(c.Key("node-install"), "").Disabled(nodeHas(st.Installations, cmp.Or(manager, "mise"), recommended)).
-				OnClick(func() { a.installNode(recommended) }).Children(func() {
-				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-					ui.Icon(c, Icon("plus")).Size(14, 14)
-					ui.Text(c, locales.InstallVersion())
-				})
-			})
-		}})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "node", recommended) }})
 		if !ok {
 			a.toolEmpty(c, "node", "Node.js")
 			return
@@ -118,15 +101,11 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 	pal := Colors(c.Theme())
 	nv := a.NodeVersions
 	ins := st.Installations
-	manager := a.nodeManager(st)
 	asOf := ""
 	if nv != nil && !nv.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(nv.Fetched)
 	}
-	if manager != "" || a.BuildPlan != nil {
-		asOf = locales.Through(cmp.Or(manager, "mise"))
-	}
-	listCard(c, locales.AvailableTitle(), asOf, func() {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {
 		if nv == nil {
 			text := locales.VersionsLoading()
 			if a.NodeVersionsErr != "" {
@@ -151,10 +130,7 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
-				if (manager != "" || a.BuildPlan != nil) && !nodeHas(ins, cmp.Or(manager, "mise"), r.Version) {
-					iconButton(c.Key("install:"+r.Version), "download", locales.InstallNamed("v"+r.Version)).
-						OnClick(func() { a.installNode(r.Version) })
-				}
+				a.installButton(c, st, r.Version, "v"+r.Version)
 			})
 		}
 	})
@@ -284,89 +260,4 @@ func managedBy(ins []inventory.Installation, rows []int, active int) string {
 		return locales.ManagedBy(vm)
 	}
 	return locales.ManagedBy(vm) + " · " + locales.AlsoFrom(strings.Join(rest, ", "))
-}
-
-// nodeManager is the version manager Node versions install through: the
-// one of the copy the terminal runs, else the first found, else mise when
-// it is there; "" when none is.
-func (a *App) nodeManager(st inventory.ToolState) string {
-	if active := inventory.TerminalCopy(st.Installations); active >= 0 {
-		if s := st.Installations[active].Source; s.Kind == inventory.KindVersionManager {
-			return s.Manager
-		}
-	}
-	if len(st.Managers) > 0 {
-		return st.Managers[0].Name
-	}
-	if _, ok := a.toolState("mise"); ok {
-		return "mise"
-	}
-	return ""
-}
-
-// nodePlan is the plan that does action to version through manager, as
-// ops.NodePlan, checked by finding Node again.
-func (a *App) nodePlan(action ops.NodeAction, manager, version, root string) (ops.Plan, bool) {
-	st, _ := a.toolState("node")
-	t := ops.NodeTarget{Manager: manager, Version: version, Root: root, AsdfSet: true}
-	for _, m := range st.Managers {
-		switch {
-		case m.Name != manager:
-		case m.Name == "asdf":
-			t.AsdfSet = ops.AsdfSet(m.Version)
-		default:
-			t.Admin = m.Admin
-		}
-	}
-	var detect ops.Detect
-	if d := a.DetectTool; d != nil {
-		detect = func(ctx context.Context) (inventory.ToolState, error) { return d(ctx, "node") }
-	}
-	return ops.NodePlan(action, t, detect)
-}
-
-// installNode offers to install version through the manager in use; with
-// none, through mise, set up first.
-func (a *App) installNode(version string) {
-	st, _ := a.toolState("node")
-	manager := a.nodeManager(st)
-	p, ok := a.nodePlan(ops.NodeInstall, cmp.Or(manager, "mise"), version, "")
-	switch {
-	case !ok:
-	case manager != "":
-		a.Propose(p)
-	case a.BuildPlan != nil:
-		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-			s, err := ops.SetUpMise(env)
-			return ops.WithMise(p, s), err
-		}, a.proposeOrSay)
-	}
-}
-
-// nodeHas reports that manager keeps version of Node.
-func nodeHas(ins []inventory.Installation, manager, version string) bool {
-	for _, in := range ins {
-		if in.Version == version && in.Source.Manager == manager && !in.Source.Shim {
-			return true
-		}
-	}
-	return false
-}
-
-// nodeMenu adds a Node copy's operations to its menu: make it the
-// default, remove it, through the manager that keeps it.
-func (a *App) nodeMenu(m *ui.Menu, in inventory.Installation) {
-	manager, version := in.Source.Manager, in.Version
-	makeDefault, canDefault := a.nodePlan(ops.NodeDefault, manager, version, in.Source.Root)
-	remove, canRemove := a.nodePlan(ops.NodeUninstall, manager, version, in.Source.Root)
-	if version == "" || !canDefault && !canRemove {
-		return
-	}
-	m.Separator()
-	if canDefault && m.Item(locales.MakeDefault()).Disabled(in.Default).Chosen() {
-		a.Propose(makeDefault)
-	}
-	if canRemove && m.Item(locales.RemoveEllipsis()).Chosen() {
-		a.Propose(remove)
-	}
 }

@@ -17,7 +17,7 @@ import (
 // script installed it and the global packages.
 func (a *App) bun(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "bun", a.bunRecommended()) }})
 		st, ok := a.toolState("bun")
 		if !ok {
 			a.toolEmpty(c, "bun", "Bun")
@@ -39,14 +39,14 @@ func (a *App) bun(c *ui.Context, p page) {
 						}
 						pathCard(c, "bun", ins, active, a.Home)
 					}, func() {
-						a.bunAvailable(c, ins, rows, active)
+						a.bunAvailable(c, st, rows, active)
 						if active >= 0 {
 							a.bunInstall(c, ins[active])
 							globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
 						}
 					})
 				case 1:
-					a.bunAvailable(c, ins, rows, active)
+					a.bunAvailable(c, st, rows, active)
 				case 3:
 					pathCard(c, "bun", ins, active, a.Home)
 				default:
@@ -113,14 +113,15 @@ func bunNote(ins []inventory.Installation, rows []int) string {
 
 // bunAvailable shows Bun's newest stable version, as the npm registry
 // says, and how it stands to the copy in use; and the canary channel.
-func (a *App) bunAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) bunAvailable(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
 	pal := Colors(c.Theme())
 	latest := a.BunLatest
 	asOf := ""
 	if latest != nil && !latest.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(latest.Fetched)
 	}
-	listCard(c, locales.Available(), asOf, func() {
+	listCard(c, locales.Available(), a.availableAside(st, asOf), func() {
 		if latest == nil {
 			text := locales.VersionsLoading()
 			if a.BunLatestErr != "" {
@@ -144,6 +145,7 @@ func (a *App) bunAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 				ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 					Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 			}
+			a.installButton(c, st, latest.Version, versionText(latest.Version))
 		})
 		listRow(c, "canary", true, locales.BunCanary(), func() {})
 	})
@@ -169,4 +171,12 @@ func (a *App) bunInstall(c *ui.Context, in inventory.Installation) {
 		}
 		listRow(c, locales.AddedToPath(), false, caption, value(tilde(filepath.Dir(in.Path), a.Home)))
 	})
+}
+
+// bunRecommended is Bun's newest stable version.
+func (a *App) bunRecommended() string {
+	if a.BunLatest == nil {
+		return ""
+	}
+	return a.BunLatest.Version
 }

@@ -17,7 +17,7 @@ import (
 // available, the version manager and the tools uv and pipx installed.
 func (a *App) python(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "python", a.PythonVersions.Newest(c.Now())) }})
 		st, ok := a.toolState("python")
 		if !ok {
 			a.toolEmpty(c, "python", "Python")
@@ -39,14 +39,14 @@ func (a *App) python(c *ui.Context, p page) {
 						}
 						pathCard(c, pythonCommand, ins, active, a.Home)
 					}, func() {
-						a.pythonAvailable(c, ins, rows, active)
+						a.pythonAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
 							globalsCard(c, locales.PythonTools(), locales.NoPythonTools(), ins[active].Packages, "uv tool · pipx")
 						}
 					})
 				case 1:
-					a.pythonAvailable(c, ins, rows, active)
+					a.pythonAvailable(c, st, rows, active)
 				case 3:
 					pathCard(c, pythonCommand, ins, active, a.Home)
 				default:
@@ -96,14 +96,15 @@ func (a *App) pythonChannel(c *ui.Context) func(inventory.Installation) (string,
 
 // pythonAvailable lists the newest release of each line still supported,
 // newest first, with how each stands to the copies installed.
-func (a *App) pythonAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) pythonAvailable(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
 	pal := Colors(c.Theme())
 	pv := a.PythonVersions
 	asOf := ""
 	if pv != nil && !pv.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(pv.Fetched)
 	}
-	listCard(c, locales.AvailableTitle(), asOf, func() {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {
 		if pv == nil {
 			text := locales.VersionsLoading()
 			if a.PythonVersionsErr != "" {
@@ -123,6 +124,7 @@ func (a *App) pythonAvailable(c *ui.Context, ins []inventory.Installation, rows 
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
+				a.installButton(c, st, l.Latest, l.Latest)
 			})
 		}
 	})

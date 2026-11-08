@@ -311,7 +311,12 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 	listCard(c, title, aside, func() {
 		if m == nil {
 			if names := sourceNames(ins, rows, active); len(names) > 0 {
-				cardNote(c, locales.NoVersionManager(toolTitle(st.Tool), strings.Join(names, ", ")))
+				note := locales.NoVersionManager(toolTitle(st.Tool), strings.Join(names, ", "))
+				// PHP and the like do not install through mise.
+				if _, ok := ops.VersionPlan(ops.VersionInstall, ops.VersionTarget{Tool: st.Tool, Manager: "mise", Version: "0"}, nil); !ok {
+					note = locales.NoVersionManagerOwn(toolTitle(st.Tool), strings.Join(names, ", "))
+				}
+				cardNote(c, note)
 			} else {
 				cardNote(c, locales.NoVersionManagerNone(toolTitle(st.Tool)))
 			}
@@ -605,17 +610,14 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 			if m.Item(showInFolder()).Chosen() {
 				reveal()
 			}
-			if in.Tool != "node" {
-				if pm, pkg, ok := a.copyPackage(in); ok {
-					if a.packageCan(pm, pkg) {
-						m.Separator()
-						a.packageItems(m, pm, pkg)
-					}
+			if !a.versionMenu(m, in) && in.Tool != "node" {
+				if pm, pkg, ok := a.copyPackage(in); ok && a.packageCan(pm, pkg) {
+					m.Separator()
+					a.packageItems(m, pm, pkg)
 				}
-				return
 			}
-			a.nodeMenu(m, in)
-			if a.Home == "" {
+			a.moveMenu(m, in)
+			if in.Tool != "node" || a.Home == "" {
 				return
 			}
 			m.Separator()

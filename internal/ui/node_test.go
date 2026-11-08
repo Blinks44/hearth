@@ -462,7 +462,7 @@ func TestNodeOperations(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if !tt.HasText("Install Node 24.1.0") || !tt.HasText("fnm install 24.1.0") {
+	if !tt.HasText("Install Node v24.1.0") || !tt.HasText("fnm install 24.1.0") {
 		t.Fatalf("no install plan: %q", tt.Texts())
 	}
 	if err := tt.Click("Cancel"); err != nil {
@@ -490,7 +490,7 @@ func TestNodeOperations(t *testing.T) {
 	}
 	tt.Frame()
 	tt.Advance(time.Second)
-	if !tt.HasText("Remove Node 22.12.0") || !tt.HasText("fnm uninstall 22.12.0") {
+	if !tt.HasText("Remove Node v22.12.0") || !tt.HasText("fnm uninstall 22.12.0") {
 		t.Fatalf("no remove plan: %q", tt.Texts())
 	}
 }

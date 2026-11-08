@@ -65,3 +65,17 @@ func (p *Cycles) Line(version string) (Cycle, bool) {
 	}
 	return Cycle{}, false
 }
+
+// Newest is the newest release of the newest line out at now and still
+// supported; "" when none is known.
+func (p *Cycles) Newest(now time.Time) string {
+	if p == nil {
+		return ""
+	}
+	for _, l := range p.Lines {
+		if l.Latest != "" && (l.End.IsZero() || now.Before(l.End)) && (l.Release.IsZero() || !now.Before(l.Release)) {
+			return l.Latest
+		}
+	}
+	return ""
+}

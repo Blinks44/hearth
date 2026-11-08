@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -18,7 +20,11 @@ import (
 // packages.
 func (a *App) php(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if plan, ok := a.phpInstall("", a.PHPVersions.Newest(c.Now())); ok {
+				installVersionButton(c, "php", false, func() { a.Propose(plan) })
+			}
+		}})
 		st, ok := a.toolState("php")
 		if !ok {
 			a.toolEmpty(c, "php", "PHP")
@@ -101,6 +107,9 @@ func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 	if a.PHPVersions != nil {
 		asOf = locales.VersionsAsOf(a.PHPVersions.Fetched)
 	}
+	if m, ok := a.phpManager(); ok && phpPackage(m.ID, "8.4.0", "8.4.0") != "" {
+		asOf = locales.Through(m.ID)
+	}
 	listCard(c, locales.AvailableTitle(), asOf, func() {
 		if a.PHPVersions == nil {
 			text := locales.VersionsLoading()
@@ -120,6 +129,9 @@ func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 				if update {
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
+				}
+				if plan, ok := a.phpInstall(l.Latest, a.PHPVersions.Newest(now)); ok {
+					iconButton(c.Key("install:"+l.Latest), "download", locales.InstallNamed(l.Latest)).OnClick(func() { a.Propose(plan) })
 				}
 			})
 		}
@@ -162,4 +174,97 @@ func (a *App) composerCard(c *ui.Context) {
 	}
 	in := st.Installations[active]
 	globalsCard(c, "Composer · "+in.Version, locales.PhpNoComposerPackages(), in.Packages, "composer global")
+}
+
+// phpManagers are the package managers PHP installs with, the first
+// found: mise and asdf build it from source, which takes libraries a
+// computer seldom has.
+var phpManagers = []string{"brew", "winget", "apt", "dnf", "pacman", "zypper"}
+
+// phpManager is the package manager PHP installs with, as the scan found
+// it, with the updates checked since: the one of the PHP in use, when it
+// is one of phpManagers, else the first found.
+func (a *App) phpManager() (inventory.PackageManager, bool) {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok {
+		return inventory.PackageManager{}, false
+	}
+	ids := phpManagers
+	if php, ok := a.toolState("php"); ok {
+		if i := inventory.TerminalCopy(php.Installations); i >= 0 && slices.Contains(phpManagers, php.Installations[i].Source.Manager) {
+			ids = append([]string{php.Installations[i].Source.Manager}, phpManagers...)
+		}
+	}
+	for _, id := range ids {
+		for _, m := range st.PackageManagers {
+			if m.ID == id {
+				if checked, ok := a.PackageUpdates[m.Path]; ok {
+					m = checked
+				}
+				return m, true
+			}
+		}
+	}
+	return inventory.PackageManager{}, false
+}
+
+// phpPackage is the package of manager that installs the PHP line of
+// release, newest being the newest release: Homebrew's php for the newest
+// line, php@8.3 for the others, WinGet's PHP.PHP.8.3. Linux's managers
+// have the system's one PHP, its command line alone, installed when
+// release is "", as the header does. "" when manager has none.
+func phpPackage(manager, release, newest string) string {
+	l := phpLine(cmp.Or(release, newest))
+	switch manager {
+	case "brew":
+		if l == "" || l == phpLine(newest) {
+			return "php"
+		}
+		return "php@" + l
+	case "winget":
+		if l == "" {
+			return ""
+		}
+		return "PHP.PHP." + l
+	}
+	if release != "" {
+		return ""
+	}
+	return map[string]string{"apt": "php-cli", "dnf": "php-cli", "pacman": "php", "zypper": "php8"}[manager]
+}
+
+// phpLine is the line of a PHP version, as 8.4 of 8.4.3; "" when it has
+// none.
+func phpLine(v string) string {
+	parts := strings.SplitN(v, ".", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[0] + "." + parts[1]
+}
+
+// phpInstall is the plan that installs the PHP line of release, or the
+// newest line or the system's PHP when it is "", with the system's package
+// manager; ok is false without one, or when a copy of the line or the
+// package is installed already, from any source.
+func (a *App) phpInstall(release, newest string) (ops.Plan, bool) {
+	m, ok := a.phpManager()
+	if !ok {
+		return ops.Plan{}, false
+	}
+	if php, ok := a.toolState("php"); ok && slices.ContainsFunc(php.Installations, func(in inventory.Installation) bool {
+		return !in.Stub && !in.Source.Shim && in.Version != "" && phpLine(in.Version) == phpLine(cmp.Or(release, newest))
+	}) {
+		return ops.Plan{}, false
+	}
+	name := phpPackage(m.ID, release, newest)
+	if name == "" || slices.ContainsFunc(m.Packages, func(p inventory.SystemPackage) bool { return strings.EqualFold(p.Name, name) }) {
+		return ops.Plan{}, false
+	}
+	p, ok := a.packagePlan(ops.PackageInstall, m, []inventory.SystemPackage{{Name: name}})
+	// A package of a line is named by the release, as PHP 8.4.3.
+	if v := cmp.Or(release, newest); ok && phpPackage(m.ID, "8.4.0", "8.4.0") != "" && v != "" {
+		p.Title = locales.VersionInstallTitle("PHP", v)
+	}
+	return p, ok
 }

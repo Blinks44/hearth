@@ -347,7 +347,7 @@ func (a *App) pinItems(m *ui.Menu, dir string) {
 		if st.Terminal == nil || st.Downloads || st.Terminal.Version == "" {
 			continue
 		}
-		t := ops.PinTarget{Tool: st.Tool, Title: toolTitle(st.Tool), Version: st.Terminal.Version, Manager: a.nodeManager(node)}
+		t := ops.PinTarget{Tool: st.Tool, Title: toolTitle(st.Tool), Version: st.Terminal.Version, Manager: a.installManager(node)}
 		plan, ok := ops.PinPlan(p, t)
 		if !ok {
 			continue
@@ -388,7 +388,7 @@ func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
 		}
 	}
 	node, _ := a.toolState("node")
-	return a.nodePlan(ops.NodeInstall, a.nodeManager(node), version, "")
+	return a.versionPlan(ops.VersionInstall, "node", a.installManager(node), version, versionText(version), "")
 }
 
 // projectHero is the folder, its name and what it needs, and on the right

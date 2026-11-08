@@ -15,7 +15,7 @@ import (
 
 func (a *App) dotnet(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.installHeader(c, "dotnet", a.dotnetRecommended()) }})
 		st, ok := a.toolState("dotnet")
 		if !ok {
 			a.toolEmpty(c, "dotnet", ".NET")
@@ -73,14 +73,14 @@ func (a *App) dotnet(c *ui.Context, p page) {
 							}
 						}
 					}, func() {
-						a.dotnetAvailable(c)
+						a.dotnetAvailable(c, st)
 						dotnetEnvironment(c, st)
 						if i := inventory.TerminalCopy(st.Installations); i >= 0 {
 							globalsCard(c, locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
 						}
 					})
 				case 1:
-					a.dotnetAvailable(c)
+					a.dotnetAvailable(c, st)
 				case 2:
 					a.dotnetSelection(c, st)
 				case 3:
@@ -202,8 +202,8 @@ func (a *App) dotnetLines() []versions.DotnetLine {
 	}
 	return a.DotnetVersions.Lines
 }
-func (a *App) dotnetAvailable(c *ui.Context) {
-	listCard(c, locales.AvailableTitle(), "", func() {
+func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState) {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, ""), func() {
 		if a.DotnetVersions == nil {
 			text := locales.VersionsLoading()
 			if a.DotnetVersionsErr != "" {
@@ -234,7 +234,7 @@ func (a *App) dotnetAvailable(c *ui.Context) {
 			if l.Phase == "eol" {
 				caption += " · " + locales.ChipSupportEnded()
 			}
-			listRow(c, "SDK "+l.Version, true, caption, func() {})
+			listRow(c, "SDK "+l.Version, true, caption, func() { a.installButton(c, st, l.Version, "SDK "+l.Version) })
 		}
 	})
 }
@@ -245,4 +245,15 @@ func dotnetLinePrefix(v string) string {
 		return v
 	}
 	return strings.Join(parts[:2], ".")
+}
+
+// dotnetRecommended is the newest SDK of the newest line with long-term
+// support still in it.
+func (a *App) dotnetRecommended() string {
+	for _, l := range a.dotnetLines() {
+		if l.Support == "lts" && l.Phase == "active" && !strings.Contains(l.Version, "-") {
+			return l.Version
+		}
+	}
+	return ""
 }

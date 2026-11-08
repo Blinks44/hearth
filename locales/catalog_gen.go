@@ -11700,48 +11700,6 @@ func (msgs Messages) OpToastStopped(title string) string {
 	return Catalog.Format(msgs.locale, "opToastStopped", map[string]any{"title": title})
 }
 
-// NodeInstallTitle says "Install Node {version}"
-// in the language the app shows.
-//
-// Title of the plan that installs a Node version.
-func NodeInstallTitle(version string) string { return In(i18n.Locale()).NodeInstallTitle(version) }
-
-// NodeInstallTitle says "Install Node {version}"
-// in the language of msgs.
-//
-// Title of the plan that installs a Node version.
-func (msgs Messages) NodeInstallTitle(version string) string {
-	return Catalog.Format(msgs.locale, "nodeInstallTitle", map[string]any{"version": version})
-}
-
-// NodeInstallWhy says "Through {manager}, as your other Node versions. The version in use stays as it is."
-// in the language the app shows.
-//
-// Why and how a Node version installs.
-func NodeInstallWhy(manager string) string { return In(i18n.Locale()).NodeInstallWhy(manager) }
-
-// NodeInstallWhy says "Through {manager}, as your other Node versions. The version in use stays as it is."
-// in the language of msgs.
-//
-// Why and how a Node version installs.
-func (msgs Messages) NodeInstallWhy(manager string) string {
-	return Catalog.Format(msgs.locale, "nodeInstallWhy", map[string]any{"manager": manager})
-}
-
-// NodeUninstallTitle says "Remove Node {version}"
-// in the language the app shows.
-//
-// Title of the plan that removes a Node version.
-func NodeUninstallTitle(version string) string { return In(i18n.Locale()).NodeUninstallTitle(version) }
-
-// NodeUninstallTitle says "Remove Node {version}"
-// in the language of msgs.
-//
-// Title of the plan that removes a Node version.
-func (msgs Messages) NodeUninstallTitle(version string) string {
-	return Catalog.Format(msgs.locale, "nodeUninstallTitle", map[string]any{"version": version})
-}
-
 // NodeUninstallWhy says "Through {manager}. The global npm packages of this version go with it."
 // in the language the app shows.
 //
@@ -11756,48 +11714,240 @@ func (msgs Messages) NodeUninstallWhy(manager string) string {
 	return Catalog.Format(msgs.locale, "nodeUninstallWhy", map[string]any{"manager": manager})
 }
 
-// NodeDefaultTitle says "Make Node {version} the default"
+// VersionInstallTitle says "Install {tool} {version}"
 // in the language the app shows.
 //
-// Title of the plan that makes a Node version the default.
-func NodeDefaultTitle(version string) string { return In(i18n.Locale()).NodeDefaultTitle(version) }
-
-// NodeDefaultTitle says "Make Node {version} the default"
-// in the language of msgs.
-//
-// Title of the plan that makes a Node version the default.
-func (msgs Messages) NodeDefaultTitle(version string) string {
-	return Catalog.Format(msgs.locale, "nodeDefaultTitle", map[string]any{"version": version})
+// Title of the plan that installs a version of a language.
+func VersionInstallTitle(tool string, version string) string {
+	return In(i18n.Locale()).VersionInstallTitle(tool, version)
 }
 
-// NodeDefaultWhy says "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs."
+// VersionInstallTitle says "Install {tool} {version}"
+// in the language of msgs.
+//
+// Title of the plan that installs a version of a language.
+func (msgs Messages) VersionInstallTitle(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "versionInstallTitle", map[string]any{"tool": tool, "version": version})
+}
+
+// VersionInstallWhy says "Through {manager}, as your other {tool} versions. The version in use stays as it is."
 // in the language the app shows.
 //
-// Why and how a Node version becomes the default.
-func NodeDefaultWhy(manager string) string { return In(i18n.Locale()).NodeDefaultWhy(manager) }
-
-// NodeDefaultWhy says "Through {manager}: new terminals start with this version; folders with .nvmrc and the like keep theirs."
-// in the language of msgs.
-//
-// Why and how a Node version becomes the default.
-func (msgs Messages) NodeDefaultWhy(manager string) string {
-	return Catalog.Format(msgs.locale, "nodeDefaultWhy", map[string]any{"manager": manager})
+// Why of the plan that installs a version of a language.
+func VersionInstallWhy(manager string, tool string) string {
+	return In(i18n.Locale()).VersionInstallWhy(manager, tool)
 }
 
-// NodeDefaultChange says "Node v{version} is the default of {manager}"
+// VersionInstallWhy says "Through {manager}, as your other {tool} versions. The version in use stays as it is."
+// in the language of msgs.
+//
+// Why of the plan that installs a version of a language.
+func (msgs Messages) VersionInstallWhy(manager string, tool string) string {
+	return Catalog.Format(msgs.locale, "versionInstallWhy", map[string]any{"manager": manager, "tool": tool})
+}
+
+// VersionUninstallTitle says "Remove {tool} {version}"
 // in the language the app shows.
 //
-// What changed once a Node version became the default.
-func NodeDefaultChange(version string, manager string) string {
-	return In(i18n.Locale()).NodeDefaultChange(version, manager)
+// Title of the plan that removes a version of a language.
+func VersionUninstallTitle(tool string, version string) string {
+	return In(i18n.Locale()).VersionUninstallTitle(tool, version)
 }
 
-// NodeDefaultChange says "Node v{version} is the default of {manager}"
+// VersionUninstallTitle says "Remove {tool} {version}"
 // in the language of msgs.
 //
-// What changed once a Node version became the default.
-func (msgs Messages) NodeDefaultChange(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeDefaultChange", map[string]any{"version": version, "manager": manager})
+// Title of the plan that removes a version of a language.
+func (msgs Messages) VersionUninstallTitle(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "versionUninstallTitle", map[string]any{"tool": tool, "version": version})
+}
+
+// VersionUninstallWhy says "Through {manager}."
+// in the language the app shows.
+//
+// Why of the plan that removes a version of a language with nothing
+// installed into it.
+func VersionUninstallWhy(manager string) string {
+	return In(i18n.Locale()).VersionUninstallWhy(manager)
+}
+
+// VersionUninstallWhy says "Through {manager}."
+// in the language of msgs.
+//
+// Why of the plan that removes a version of a language with nothing
+// installed into it.
+func (msgs Messages) VersionUninstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "versionUninstallWhy", map[string]any{"manager": manager})
+}
+
+// PythonUninstallWhy says "Through {manager}. The packages installed into this version with pip go with it."
+// in the language the app shows.
+//
+// Why of the plan that removes a Python version.
+func PythonUninstallWhy(manager string) string { return In(i18n.Locale()).PythonUninstallWhy(manager) }
+
+// PythonUninstallWhy says "Through {manager}. The packages installed into this version with pip go with it."
+// in the language of msgs.
+//
+// Why of the plan that removes a Python version.
+func (msgs Messages) PythonUninstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "pythonUninstallWhy", map[string]any{"manager": manager})
+}
+
+// RubyUninstallWhy says "Through {manager}. The gems of this version go with it."
+// in the language the app shows.
+//
+// Why of the plan that removes a Ruby version.
+func RubyUninstallWhy(manager string) string { return In(i18n.Locale()).RubyUninstallWhy(manager) }
+
+// RubyUninstallWhy says "Through {manager}. The gems of this version go with it."
+// in the language of msgs.
+//
+// Why of the plan that removes a Ruby version.
+func (msgs Messages) RubyUninstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "rubyUninstallWhy", map[string]any{"manager": manager})
+}
+
+// VersionDefaultTitle says "Make {tool} {version} the default"
+// in the language the app shows.
+//
+// Title of the plan that makes a version of a language the default.
+func VersionDefaultTitle(tool string, version string) string {
+	return In(i18n.Locale()).VersionDefaultTitle(tool, version)
+}
+
+// VersionDefaultTitle says "Make {tool} {version} the default"
+// in the language of msgs.
+//
+// Title of the plan that makes a version of a language the default.
+func (msgs Messages) VersionDefaultTitle(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "versionDefaultTitle", map[string]any{"tool": tool, "version": version})
+}
+
+// VersionDefaultWhy says "Through {manager}: new terminals start with this version; folders that pin another keep theirs."
+// in the language the app shows.
+//
+// Why of the plan that makes a version the default.
+func VersionDefaultWhy(manager string) string { return In(i18n.Locale()).VersionDefaultWhy(manager) }
+
+// VersionDefaultWhy says "Through {manager}: new terminals start with this version; folders that pin another keep theirs."
+// in the language of msgs.
+//
+// Why of the plan that makes a version the default.
+func (msgs Messages) VersionDefaultWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "versionDefaultWhy", map[string]any{"manager": manager})
+}
+
+// VersionDefaultChange says "{tool} {version} is the default of {manager}"
+// in the language the app shows.
+//
+// What changed once a version became the default.
+func VersionDefaultChange(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionDefaultChange(tool, version, manager)
+}
+
+// VersionDefaultChange says "{tool} {version} is the default of {manager}"
+// in the language of msgs.
+//
+// What changed once a version became the default.
+func (msgs Messages) VersionDefaultChange(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionDefaultChange", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// VersionCheckInstalled says "{manager} has {tool} {version}"
+// in the language the app shows.
+//
+// What the check found after installing a version.
+func VersionCheckInstalled(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckInstalled(tool, version, manager)
+}
+
+// VersionCheckInstalled says "{manager} has {tool} {version}"
+// in the language of msgs.
+//
+// What the check found after installing a version.
+func (msgs Messages) VersionCheckInstalled(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckInstalled", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// VersionCheckNotInstalled says "Hearth does not find {tool} {version} of {manager}"
+// in the language the app shows.
+//
+// The check after installing a version did not find it.
+func VersionCheckNotInstalled(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckNotInstalled(tool, version, manager)
+}
+
+// VersionCheckNotInstalled says "Hearth does not find {tool} {version} of {manager}"
+// in the language of msgs.
+//
+// The check after installing a version did not find it.
+func (msgs Messages) VersionCheckNotInstalled(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckNotInstalled", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// VersionCheckRemoved says "{tool} {version} is gone"
+// in the language the app shows.
+//
+// What the check found after removing a version.
+func VersionCheckRemoved(tool string, version string) string {
+	return In(i18n.Locale()).VersionCheckRemoved(tool, version)
+}
+
+// VersionCheckRemoved says "{tool} {version} is gone"
+// in the language of msgs.
+//
+// What the check found after removing a version.
+func (msgs Messages) VersionCheckRemoved(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "versionCheckRemoved", map[string]any{"tool": tool, "version": version})
+}
+
+// VersionCheckNotRemoved says "{tool} {version} of {manager} is still there"
+// in the language the app shows.
+//
+// The check after removing a version still found it.
+func VersionCheckNotRemoved(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckNotRemoved(tool, version, manager)
+}
+
+// VersionCheckNotRemoved says "{tool} {version} of {manager} is still there"
+// in the language of msgs.
+//
+// The check after removing a version still found it.
+func (msgs Messages) VersionCheckNotRemoved(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckNotRemoved", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// VersionCheckDefault says "{manager} starts {tool} {version} by default"
+// in the language the app shows.
+//
+// What the check found after making a version the default.
+func VersionCheckDefault(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckDefault(tool, version, manager)
+}
+
+// VersionCheckDefault says "{manager} starts {tool} {version} by default"
+// in the language of msgs.
+//
+// What the check found after making a version the default.
+func (msgs Messages) VersionCheckDefault(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckDefault", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// VersionCheckNotDefault says "{manager} does not start {tool} {version} by default"
+// in the language the app shows.
+//
+// The check after making a version the default found another.
+func VersionCheckNotDefault(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckNotDefault(tool, version, manager)
+}
+
+// VersionCheckNotDefault says "{manager} does not start {tool} {version} by default"
+// in the language of msgs.
+//
+// The check after making a version the default found another.
+func (msgs Messages) VersionCheckNotDefault(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckNotDefault", map[string]any{"tool": tool, "version": version, "manager": manager})
 }
 
 // NoteAdmin says "Administrator rights"
@@ -11826,100 +11976,6 @@ func NoteNvmWindowsUAC() string { return In(i18n.Locale()).NoteNvmWindowsUAC() }
 // Why switching Node with nvm-windows asks for administrator rights.
 func (msgs Messages) NoteNvmWindowsUAC() string {
 	return Catalog.Format(msgs.locale, "noteNvmWindowsUAC", nil)
-}
-
-// NodeCheckInstalled says "{manager} has Node v{version}"
-// in the language the app shows.
-//
-// What the check found after installing a Node version.
-func NodeCheckInstalled(version string, manager string) string {
-	return In(i18n.Locale()).NodeCheckInstalled(version, manager)
-}
-
-// NodeCheckInstalled says "{manager} has Node v{version}"
-// in the language of msgs.
-//
-// What the check found after installing a Node version.
-func (msgs Messages) NodeCheckInstalled(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckInstalled", map[string]any{"version": version, "manager": manager})
-}
-
-// NodeCheckNotInstalled says "Hearth does not find Node v{version} of {manager}"
-// in the language the app shows.
-//
-// The check after installing did not find the version.
-func NodeCheckNotInstalled(version string, manager string) string {
-	return In(i18n.Locale()).NodeCheckNotInstalled(version, manager)
-}
-
-// NodeCheckNotInstalled says "Hearth does not find Node v{version} of {manager}"
-// in the language of msgs.
-//
-// The check after installing did not find the version.
-func (msgs Messages) NodeCheckNotInstalled(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckNotInstalled", map[string]any{"version": version, "manager": manager})
-}
-
-// NodeCheckRemoved says "Node v{version} is gone"
-// in the language the app shows.
-//
-// What the check found after removing a Node version.
-func NodeCheckRemoved(version string) string { return In(i18n.Locale()).NodeCheckRemoved(version) }
-
-// NodeCheckRemoved says "Node v{version} is gone"
-// in the language of msgs.
-//
-// What the check found after removing a Node version.
-func (msgs Messages) NodeCheckRemoved(version string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckRemoved", map[string]any{"version": version})
-}
-
-// NodeCheckNotRemoved says "Node v{version} of {manager} is still there"
-// in the language the app shows.
-//
-// The check after removing still found the version.
-func NodeCheckNotRemoved(version string, manager string) string {
-	return In(i18n.Locale()).NodeCheckNotRemoved(version, manager)
-}
-
-// NodeCheckNotRemoved says "Node v{version} of {manager} is still there"
-// in the language of msgs.
-//
-// The check after removing still found the version.
-func (msgs Messages) NodeCheckNotRemoved(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckNotRemoved", map[string]any{"version": version, "manager": manager})
-}
-
-// NodeCheckDefault says "{manager} starts v{version} by default"
-// in the language the app shows.
-//
-// What the check found after making a Node version the default.
-func NodeCheckDefault(version string, manager string) string {
-	return In(i18n.Locale()).NodeCheckDefault(version, manager)
-}
-
-// NodeCheckDefault says "{manager} starts v{version} by default"
-// in the language of msgs.
-//
-// What the check found after making a Node version the default.
-func (msgs Messages) NodeCheckDefault(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckDefault", map[string]any{"version": version, "manager": manager})
-}
-
-// NodeCheckNotDefault says "{manager} does not start v{version} by default"
-// in the language the app shows.
-//
-// The check after making a version the default found another.
-func NodeCheckNotDefault(version string, manager string) string {
-	return In(i18n.Locale()).NodeCheckNotDefault(version, manager)
-}
-
-// NodeCheckNotDefault says "{manager} does not start v{version} by default"
-// in the language of msgs.
-//
-// The check after making a version the default found another.
-func (msgs Messages) NodeCheckNotDefault(version string, manager string) string {
-	return Catalog.Format(msgs.locale, "nodeCheckNotDefault", map[string]any{"version": version, "manager": manager})
 }
 
 // InstallVersion says "Install version"
@@ -13066,4 +13122,178 @@ func PkgUpgradeAllWarning(count int) string { return In(i18n.Locale()).PkgUpgrad
 // Warning of the package manager's card beside Choose packages.
 func (msgs Messages) PkgUpgradeAllWarning(count int) string {
 	return Catalog.Format(msgs.locale, "pkgUpgradeAllWarning", map[string]any{"count": count})
+}
+
+// MoveToMise says "Move to mise…"
+// in the language the app shows.
+//
+// Menu item of a copy that installs the same version through mise and makes
+// it the default.
+func MoveToMise() string { return In(i18n.Locale()).MoveToMise() }
+
+// MoveToMise says "Move to mise…"
+// in the language of msgs.
+//
+// Menu item of a copy that installs the same version through mise and makes
+// it the default.
+func (msgs Messages) MoveToMise() string {
+	return Catalog.Format(msgs.locale, "moveToMise", nil)
+}
+
+// MoveTitle says "Move {tool} {version} to mise"
+// in the language the app shows.
+//
+// Title of the plan that moves a copy of a language to mise.
+func MoveTitle(tool string, version string) string { return In(i18n.Locale()).MoveTitle(tool, version) }
+
+// MoveTitle says "Move {tool} {version} to mise"
+// in the language of msgs.
+//
+// Title of the plan that moves a copy of a language to mise.
+func (msgs Messages) MoveTitle(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "moveTitle", map[string]any{"tool": tool, "version": version})
+}
+
+// MoveWhy says "mise installs the same version and new terminals start it. The copy ({source}) stays: remove it separately once nothi…"
+// in the language the app shows.
+//
+// Why of the plan that moves a copy to mise.
+func MoveWhy(source string) string { return In(i18n.Locale()).MoveWhy(source) }
+
+// MoveWhy says "mise installs the same version and new terminals start it. The copy ({source}) stays: remove it separately once nothi…"
+// in the language of msgs.
+//
+// Why of the plan that moves a copy to mise.
+func (msgs Messages) MoveWhy(source string) string {
+	return Catalog.Format(msgs.locale, "moveWhy", map[string]any{"source": source})
+}
+
+// MovePackagesTitle says "Packages stay behind"
+// in the language the app shows.
+//
+// Note title: packages of the old copy do not move to mise.
+func MovePackagesTitle() string { return In(i18n.Locale()).MovePackagesTitle() }
+
+// MovePackagesTitle says "Packages stay behind"
+// in the language of msgs.
+//
+// Note title: packages of the old copy do not move to mise.
+func (msgs Messages) MovePackagesTitle() string {
+	return Catalog.Format(msgs.locale, "movePackagesTitle", nil)
+}
+
+// MovePackagesText says "What you installed into the copy ({source}) with pip, gem, npm -g or go install stays with it: install it again with …"
+// in the language the app shows.
+//
+// Note: packages of the old copy do not move to mise.
+func MovePackagesText(source string) string { return In(i18n.Locale()).MovePackagesText(source) }
+
+// MovePackagesText says "What you installed into the copy ({source}) with pip, gem, npm -g or go install stays with it: install it again with …"
+// in the language of msgs.
+//
+// Note: packages of the old copy do not move to mise.
+func (msgs Messages) MovePackagesText(source string) string {
+	return Catalog.Format(msgs.locale, "movePackagesText", map[string]any{"source": source})
+}
+
+// MoveVenvTitle says "Project .venv folders"
+// in the language the app shows.
+//
+// Note title: virtual environments made by the old Python.
+func MoveVenvTitle() string { return In(i18n.Locale()).MoveVenvTitle() }
+
+// MoveVenvTitle says "Project .venv folders"
+// in the language of msgs.
+//
+// Note title: virtual environments made by the old Python.
+func (msgs Messages) MoveVenvTitle() string {
+	return Catalog.Format(msgs.locale, "moveVenvTitle", nil)
+}
+
+// MoveVenvText says ".venv folders made with the old copy keep running it. Create them again to use mise's Python."
+// in the language the app shows.
+//
+// Note: virtual environments made by the old Python keep using it.
+func MoveVenvText() string { return In(i18n.Locale()).MoveVenvText() }
+
+// MoveVenvText says ".venv folders made with the old copy keep running it. Create them again to use mise's Python."
+// in the language of msgs.
+//
+// Note: virtual environments made by the old Python keep using it.
+func (msgs Messages) MoveVenvText() string {
+	return Catalog.Format(msgs.locale, "moveVenvText", nil)
+}
+
+// PythonOrgRemoveWhy says "python.org's installer has no uninstaller: Hearth deletes the files it put, each listed below. The packages installed…"
+// in the language the app shows.
+//
+// Why of the plan that removes a python.org copy on macOS.
+func PythonOrgRemoveWhy() string { return In(i18n.Locale()).PythonOrgRemoveWhy() }
+
+// PythonOrgRemoveWhy says "python.org's installer has no uninstaller: Hearth deletes the files it put, each listed below. The packages installed…"
+// in the language of msgs.
+//
+// Why of the plan that removes a python.org copy on macOS.
+func (msgs Messages) PythonOrgRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "pythonOrgRemoveWhy", nil)
+}
+
+// PythonOrgNoUninstaller says "No uninstaller"
+// in the language the app shows.
+//
+// Note title: python.org's installer has no uninstaller.
+func PythonOrgNoUninstaller() string { return In(i18n.Locale()).PythonOrgNoUninstaller() }
+
+// PythonOrgNoUninstaller says "No uninstaller"
+// in the language of msgs.
+//
+// Note title: python.org's installer has no uninstaller.
+func (msgs Messages) PythonOrgNoUninstaller() string {
+	return Catalog.Format(msgs.locale, "pythonOrgNoUninstaller", nil)
+}
+
+// PythonOrgNoUninstallerText says "Python's guide for macOS says what the installer puts where."
+// in the language the app shows.
+//
+// Note linking to Python's macOS guide.
+func PythonOrgNoUninstallerText() string { return In(i18n.Locale()).PythonOrgNoUninstallerText() }
+
+// PythonOrgNoUninstallerText says "Python's guide for macOS says what the installer puts where."
+// in the language of msgs.
+//
+// Note linking to Python's macOS guide.
+func (msgs Messages) PythonOrgNoUninstallerText() string {
+	return Catalog.Format(msgs.locale, "pythonOrgNoUninstallerText", nil)
+}
+
+// PythonOrgPaths says "What is deleted"
+// in the language the app shows.
+//
+// Note title above the paths the removal of a python.org copy deletes.
+func PythonOrgPaths() string { return In(i18n.Locale()).PythonOrgPaths() }
+
+// PythonOrgPaths says "What is deleted"
+// in the language of msgs.
+//
+// Note title above the paths the removal of a python.org copy deletes.
+func (msgs Messages) PythonOrgPaths() string {
+	return Catalog.Format(msgs.locale, "pythonOrgPaths", nil)
+}
+
+// NoVersionManagerOwn says "No version manager: {tool} comes from {sources}."
+// in the language the app shows.
+//
+// Version manager card when no version manager keeps the tool and Hearth
+// does not install it through mise, as PHP.
+func NoVersionManagerOwn(tool string, sources string) string {
+	return In(i18n.Locale()).NoVersionManagerOwn(tool, sources)
+}
+
+// NoVersionManagerOwn says "No version manager: {tool} comes from {sources}."
+// in the language of msgs.
+//
+// Version manager card when no version manager keeps the tool and Hearth
+// does not install it through mise, as PHP.
+func (msgs Messages) NoVersionManagerOwn(tool string, sources string) string {
+	return Catalog.Format(msgs.locale, "noVersionManagerOwn", map[string]any{"tool": tool, "sources": sources})
 }
