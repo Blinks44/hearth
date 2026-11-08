@@ -279,12 +279,21 @@ func (a *App) cliRow(c *ui.Context, cli inventory.CliState, cmd string) {
 	} else {
 		parts = append(parts, locales.CliMissing(cliProducts[cmd]))
 	}
-	cliTableRow(c, cmd, strings.Join(parts, " · "), version)
+	cliTableRow(c, cmd, strings.Join(parts, " · "), version, func() {
+		if !found {
+			return
+		}
+		if m, pkg, ok := a.copyPackage(in); ok {
+			if a.packageCan(m, pkg) {
+				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
+			}
+		}
+	})
 }
 
-// cliTableRow is a row of the table: the command, a line about it and its
-// version.
-func cliTableRow(c *ui.Context, name, about, version string) {
+// cliTableRow is a row of the table: the command, a line about it, its
+// version and its actions.
+func cliTableRow(c *ui.Context, name, about, version string, actions func()) {
 	pal := Colors(c.Theme())
 	ui.Row(c).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
@@ -292,6 +301,9 @@ func cliTableRow(c *ui.Context, name, about, version string) {
 			clipped(c, about).FontSize(10.5).TextColor(pal.TextFaint)
 		})
 		ui.Text(c, version).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+		if actions != nil {
+			actions()
+		}
 	})
 }
 
@@ -327,5 +339,5 @@ func (a *App) miseToolRow(c *ui.Context, mt inventory.MiseTool) {
 		}
 		parts = append(parts, locales.CliMoreVersions(n, strings.Join(others, ", ")))
 	}
-	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version)
+	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version, nil)
 }

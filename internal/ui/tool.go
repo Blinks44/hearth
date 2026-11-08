@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -334,6 +335,13 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 			if title, caption := hookup(*m); title != "" {
 				listRow(c, title, false, caption, func() { stateText(c, true) })
 			}
+			// Hooked in for the apps alone, mise still does not switch
+			// versions in the terminal.
+			if m.Name == "mise" && !m.Activated && !m.Shims && a.BuildPlan != nil {
+				listRow(c, locales.MiseHook(), false, locales.MiseNotHooked(), func() {
+					ui.Button(c.Key("mise-setup"), locales.MiseSetUp()).OnClick(a.setUpMise)
+				})
+			}
 			if m.ConfigPath != "" {
 				listRow(c, locales.ManagerGlobalConfig(), false, tilde(m.ConfigPath, a.Home), func() {})
 			}
@@ -357,6 +365,21 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 			extra(c, ins[active])
 		}
 	})
+}
+
+// setUpMise offers the plan that installs mise and hooks it in, once it
+// is made.
+func (a *App) setUpMise() {
+	a.BuildPlan(ops.MisePlan, a.proposeOrSay)
+}
+
+// proposeOrSay offers p, or says why there is none.
+func (a *App) proposeOrSay(p ops.Plan, err error) {
+	if err != nil {
+		a.planErr = err.Error()
+		return
+	}
+	a.Propose(p)
 }
 
 // hookup says how a manager like mise is hooked in and who sees it: its
@@ -497,10 +520,19 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 
 // warningRow is a warning inside a card.
 func warningRow(c *ui.Context, text string) {
+	warningWith(c, text, nil)
+}
+
+// warningWith is warningRow with what action adds after the text, as a
+// button; nil adds nothing.
+func warningWith(c *ui.Context, text string, action func()) {
 	pal := Colors(c.Theme())
 	ui.Row(c).Gap(10).Padding(10, 10, 10, 12).Radius(9).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
 		ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
 		ui.Text(c, text).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
+		if action != nil {
+			action()
+		}
 	})
 }
 
@@ -574,6 +606,12 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 				reveal()
 			}
 			if in.Tool != "node" {
+				if pm, pkg, ok := a.copyPackage(in); ok {
+					if a.packageCan(pm, pkg) {
+						m.Separator()
+						a.packageItems(m, pm, pkg)
+					}
+				}
 				return
 			}
 			a.nodeMenu(m, in)

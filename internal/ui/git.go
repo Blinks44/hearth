@@ -197,9 +197,18 @@ func prefixed(p, s string) string {
 // packageUpdate tells a copy a package manager has an update for: "update
 // 2.48.1".
 func (a *App) packageUpdate(in inventory.Installation) (string, bool) {
+	if _, p, ok := a.copyPackage(in); ok && p.Available != "" {
+		return locales.PkgAvailable() + " " + p.Available, false
+	}
+	return "", false
+}
+
+// copyPackage finds the package that put a copy, and its manager, with
+// the updates the online check found.
+func (a *App) copyPackage(in inventory.Installation) (inventory.PackageManager, inventory.SystemPackage, bool) {
 	st, ok := a.Snapshot.Tool("packages")
 	if !ok || in.Source.Root == "" {
-		return "", false
+		return inventory.PackageManager{}, inventory.SystemPackage{}, false
 	}
 	for _, m := range st.PackageManagers {
 		if m.ID != in.Source.Manager {
@@ -209,10 +218,10 @@ func (a *App) packageUpdate(in inventory.Installation) (string, bool) {
 			m = checked
 		}
 		for _, p := range m.Packages {
-			if p.Path == in.Source.Root && p.Available != "" {
-				return locales.PkgAvailable() + " " + p.Available, false
+			if p.Path == in.Source.Root {
+				return m, p, true
 			}
 		}
 	}
-	return "", false
+	return inventory.PackageManager{}, inventory.SystemPackage{}, false
 }

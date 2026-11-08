@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -37,10 +39,12 @@ func (a *App) node(c *ui.Context, p page) {
 			}
 		}
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			if !ok || manager == "" || recommended == "" {
+			// With no version manager, nor Node at all, mise installs it,
+			// once the scan says what there is.
+			if a.Snapshot == nil || recommended == "" || manager == "" && a.BuildPlan == nil || !ok && manager != "" {
 				return
 			}
-			ui.PrimaryButton(c.Key("node-install"), "").Disabled(nodeHas(st.Installations, manager, recommended)).
+			ui.PrimaryButton(c.Key("node-install"), "").Disabled(nodeHas(st.Installations, cmp.Or(manager, "mise"), recommended)).
 				OnClick(func() { a.installNode(recommended) }).Children(func() {
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 					ui.Icon(c, Icon("plus")).Size(14, 14)
@@ -119,8 +123,8 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 	if nv != nil && !nv.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(nv.Fetched)
 	}
-	if manager != "" {
-		asOf = locales.Through(manager)
+	if manager != "" || a.BuildPlan != nil {
+		asOf = locales.Through(cmp.Or(manager, "mise"))
 	}
 	listCard(c, locales.AvailableTitle(), asOf, func() {
 		if nv == nil {
@@ -147,7 +151,7 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
-				if manager != "" && !nodeHas(ins, manager, r.Version) {
+				if (manager != "" || a.BuildPlan != nil) && !nodeHas(ins, cmp.Or(manager, "mise"), r.Version) {
 					iconButton(c.Key("install:"+r.Version), "download", locales.InstallNamed("v"+r.Version)).
 						OnClick(func() { a.installNode(r.Version) })
 				}
@@ -321,11 +325,21 @@ func (a *App) nodePlan(action ops.NodeAction, manager, version, root string) (op
 	return ops.NodePlan(action, t, detect)
 }
 
-// installNode offers to install version through the manager in use.
+// installNode offers to install version through the manager in use; with
+// none, through mise, set up first.
 func (a *App) installNode(version string) {
 	st, _ := a.toolState("node")
-	if p, ok := a.nodePlan(ops.NodeInstall, a.nodeManager(st), version, ""); ok {
+	manager := a.nodeManager(st)
+	p, ok := a.nodePlan(ops.NodeInstall, cmp.Or(manager, "mise"), version, "")
+	switch {
+	case !ok:
+	case manager != "":
 		a.Propose(p)
+	case a.BuildPlan != nil:
+		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+			s, err := ops.SetUpMise(env)
+			return ops.WithMise(p, s), err
+		}, a.proposeOrSay)
 	}
 }
 

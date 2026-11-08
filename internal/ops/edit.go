@@ -59,6 +59,23 @@ func Block(text, body string) string {
 	return joinLines(out)
 }
 
+// AddToBlock returns text with lines in Hearth's block, after the lines
+// the block has; those it has already stay once. A block that is not
+// there is made at the end.
+func AddToBlock(text string, lines ...string) string {
+	all := splitLines(text)
+	var body []string
+	if start, end := blockLines(all); start >= 0 {
+		body = all[start+1 : end]
+	}
+	for _, l := range lines {
+		if !slices.Contains(body, l) {
+			body = append(slices.Clip(body), l)
+		}
+	}
+	return Block(text, strings.Join(body, "\n"))
+}
+
 // CommentOut returns text with the lines numbered in lines, counting
 // from 1, made comments that say why: the user's lines are never
 // removed. Lines in Hearth's block and comments already are left.

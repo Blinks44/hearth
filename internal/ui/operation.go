@@ -312,7 +312,7 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 			}
 			row.Children(func() {
 				ui.Text(c, strconv.Itoa(i+1)).FontSize(11.5).TextColor(pal.TextFaint)
-				command := ops.Command(step.Argv)
+				command := ops.Command(step.Shown())
 				e, _, edit := stepEdit(step)
 				if edit {
 					command = locales.OpEditStep(tilde(e.Path, home))
@@ -364,7 +364,7 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 	case ops.Running, ops.Verifying:
 		command := ""
 		if s.Current < len(op.plan.Steps) {
-			command = ops.Command(op.plan.Steps[s.Current].Argv)
+			command = ops.Command(op.plan.Steps[s.Current].Shown())
 		}
 		dialogSection(c, locales.OpLog(command))
 		logBlock(c, lastLines(s.Log, 8), c.Theme().TextMuted, "")

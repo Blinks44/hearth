@@ -221,3 +221,103 @@ func TestPackageSizes(t *testing.T) {
 		t.Errorf("by size: %q, want %q", order, want)
 	}
 }
+
+// A package's menu updates and removes it through its manager; the
+// Updates tab updates the packages checked, never all at once.
+func TestPackageOperations(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", UpdatesKnown: true, ReasonsKnown: true, Packages: []inventory.SystemPackage{
+			{Name: "jq", Version: "1.7.1", Available: "1.8.2", Kind: "formula"},
+			{Name: "oniguruma", Version: "6.9.9", Kind: "formula", Dependency: true},
+			{Name: "gh", Version: "2.60.0", Available: "2.63.0", Kind: "formula", Dependencies: []string{"oniguruma"}},
+		}},
+		{ID: "pacman", Name: "Pacman", Path: "/usr/bin/pacman", UpdatesKnown: true, Packages: []inventory.SystemPackage{
+			{Name: "git", Version: "2.47.0", Available: "2.47.1", Kind: "package"},
+		}},
+	}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "packages-actions")
+	// A dependency has no menu: other packages may need it.
+	brew := a.Snapshot.Tools[0].PackageManagers[0]
+	if a.packageCan(brew, brew.Packages[1]) {
+		t.Error("a dependency offers its removal")
+	}
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Update to 1.8.2"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "upgrade", "--formula", "jq"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Remove…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "uninstall", "--formula", "jq"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("Updating all 2 packages at once can break the projects that rely on them. Hearth updates only those you choose.") {
+		t.Fatal(tt.Texts())
+	}
+	if err := tt.Click("Choose packages…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	screenshot(t, tt, "packages-choose")
+	if a.packageTab != 3 || tt.HasText("oniguruma") {
+		t.Fatalf("tab %d: %q", a.packageTab, tt.Texts())
+	}
+	if err := tt.Click("Update selected"); err != nil {
+		t.Fatal(err)
+	}
+	if a.op.open {
+		t.Fatal("updated with none checked")
+	}
+	if err := tt.Click("jq"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Update selected"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "upgrade", "--formula", "jq"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	// Arch updates the whole system: nothing to choose.
+	a.packageManager, a.packageTab = "/usr/bin/pacman", 0
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("Choose packages…") {
+		t.Fatal(tt.Texts())
+	}
+	if err := tt.Click("Update the whole system…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/usr/bin/pacman", "-Syu", "--noconfirm"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+}

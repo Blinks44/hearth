@@ -3,8 +3,10 @@ package ui
 import (
 	"errors"
 	"image/color"
+	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +14,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 )
 
@@ -488,5 +492,71 @@ func TestNodeOperations(t *testing.T) {
 	tt.Advance(time.Second)
 	if !tt.HasText("Remove Node 22.12.0") || !tt.HasText("fnm uninstall 22.12.0") {
 		t.Fatalf("no remove plan: %q", tt.Texts())
+	}
+}
+
+// With no version manager, Node installs through mise: Hearth sets it up
+// first, hooking it into the shell, then runs it.
+func TestNodeInstallThroughMise(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node"}}}
+	home := t.TempDir()
+	mise := filepath.Join(home, "bin", "mise")
+	if err := os.MkdirAll(filepath.Dir(mise), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(mise, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	env := sysenv.Env{"HOME=" + home, "SHELL=/bin/zsh", "PATH=" + filepath.Dir(mise)}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	tt := openNode(t, a)
+	a.NodeVersions = nodeVersions(tt.Now())
+	tt.Frame()
+	if !tt.HasText("Node.js is not installed on this computer") {
+		t.Fatalf("texts %q", tt.Texts())
+	}
+	if err := tt.Click("Install version"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil {
+		t.Fatal("no plan")
+	}
+	steps := a.op.plan.Steps
+	if len(steps) != 3 || steps[0].Edit == nil || steps[1].Edit == nil || !slices.Equal(steps[2].Argv, []string{mise, "install", "node@24.1.0"}) {
+		t.Fatalf("steps %+v", steps)
+	}
+	if !strings.HasPrefix(a.op.plan.Why, "There is no version manager yet") {
+		t.Errorf("why %q", a.op.plan.Why)
+	}
+	screenshot(t, tt, "node-mise")
+}
+
+// mise that is installed but not hooked into the shell offers to set it
+// up from its card.
+func TestMiseSetUp(t *testing.T) {
+	a := NewApp()
+	home := t.TempDir()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: []inventory.Installation{
+		{Tool: "node", Version: "22.12.0", Path: home + "/.local/share/mise/installs/node/22.12.0/bin/node", Default: true,
+			Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Root: home + "/.local/share/mise/installs/node/22.12.0"}},
+	}, Managers: []inventory.Manager{{Name: "mise", Files: []string{"mise.toml"}}}}}}
+	env := sysenv.Env{"HOME=" + home, "SHELL=/bin/bash", "PATH=/usr/bin:/bin"}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	tt := openNode(t, a)
+	if !tt.HasText("Not hooked into the shell: new terminals do not switch versions") {
+		t.Fatalf("texts %q", tt.Texts())
+	}
+	if err := tt.Click("Set up…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Set up mise" {
+		t.Fatalf("plan %+v", a.op)
 	}
 }

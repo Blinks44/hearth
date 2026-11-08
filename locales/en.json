@@ -2160,7 +2160,7 @@
   "pkgPartialNote": "not all sources answered",
   "pkgCached": "local metadata",
   "pkgUpdatesUnknown": "Available updates have not been checked for this manager.",
-  "pkgReadOnly": "Packages are read only. Installing, updating and removing packages will be available through a change plan.",
+  "pkgReadOnly": "Hearth updates and removes packages through their manager, after showing what will change. It does not offer to remove packages others need.",
   "pkgReadOnlyLabel": "read only",
   "pkgStatus": "Package manager status",
   "pkgCachedNote": "Online queries may refresh package-manager metadata. No packages are installed or upgraded. Results are cached for a day and remain available offline.",
@@ -4402,6 +4402,10 @@
     "description": "Menu item of a version: shows the plan that removes it."
   },
   "adminCanceled": "you did not give the administrator's password",
+  "adminDenied": "you did not allow it in the UAC window",
+  "@adminDenied": {
+    "description": "Why a step failed: the user said no in Windows' UAC prompt."
+  },
   "@adminCanceled": {
     "description": "Why a step that needs the administrator failed: the user canceled the password prompt."
   },
@@ -4696,6 +4700,282 @@
       "dir": {
         "type": "String",
         "example": "~/.nvm/versions/node/v16.20.2/bin"
+      }
+    }
+  },
+  "miseSetupTitle": "Set up mise",
+  "@miseSetupTitle": {
+    "description": "Title of the plan that installs mise and hooks it into the shell."
+  },
+  "miseSetupWhy": "mise installs and switches versions of languages and tools. Hearth installs it where it is not there and adds its line to your shell's startup files, in a block of its own, after a copy of each file.",
+  "@miseSetupWhy": {
+    "description": "Why and how mise gets set up."
+  },
+  "miseSetupChange": "mise: new terminals run the versions it installs",
+  "@miseSetupChange": {
+    "description": "What setting up mise changed."
+  },
+  "miseFirst": "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}",
+  "@miseFirst": {
+    "description": "Why of a plan that sets up mise before it installs a version.",
+    "placeholders": {
+      "why": {
+        "type": "String",
+        "example": "Through mise, as your other Node versions."
+      }
+    }
+  },
+  "miseCheckActivated": "A new terminal activates mise",
+  "@miseCheckActivated": {
+    "description": "What the check after setting up mise found: mise activate runs."
+  },
+  "miseCheckShims": "mise's shims are on a new terminal's PATH",
+  "@miseCheckShims": {
+    "description": "What the check after setting up mise found: the shims are on PATH."
+  },
+  "miseCheckNot": "A new terminal does not run mise yet",
+  "@miseCheckNot": {
+    "description": "The check after setting up mise did not find it."
+  },
+  "miseRunInstaller": "mise's official installer, into ~/.local/bin",
+  "@miseRunInstaller": {
+    "description": "Note of the step that runs mise's installer."
+  },
+  "homebrewDownload": "download Homebrew's installer from its GitHub releases",
+  "@homebrewDownload": {
+    "description": "Note of the step that downloads Homebrew."
+  },
+  "homebrewSignature": "check it is signed by Homebrew",
+  "@homebrewSignature": {
+    "description": "Note of the step that checks Homebrew's package signature."
+  },
+  "homebrewNote": "Homebrew first",
+  "@homebrewNote": {
+    "description": "Worth knowing: Homebrew gets installed before mise."
+  },
+  "homebrewNoteText": "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package",
+  "@homebrewNoteText": {
+    "description": "Why Homebrew gets installed before mise."
+  },
+  "miseSetUp": "Set up…",
+  "@miseSetUp": {
+    "description": "Button that sets up mise."
+  },
+  "miseNotHooked": "Not hooked into the shell: new terminals do not switch versions",
+  "@miseNotHooked": {
+    "description": "Row of the mise card when mise is neither activated nor on PATH."
+  },
+  "miseShellUnsupported": "Hearth cannot hook mise into the {shell} shell: add mise's line to its startup file by hand, as mise's documentation shows",
+  "@miseShellUnsupported": {
+    "description": "Why mise cannot be hooked into the user's shell.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "tcsh"
+      }
+    }
+  },
+  "miseHook": "Shell hookup",
+  "@miseHook": {
+    "description": "Title of the mise card's row when mise is not hooked into the shell."
+  },
+  "pkgInstallTitle": "Install {name}",
+  "@pkgInstallTitle": {
+    "description": "Title of the plan that installs a system package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      }
+    }
+  },
+  "pkgInstallWhy": "Through {manager}.",
+  "@pkgInstallWhy": {
+    "description": "How a system package installs.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgUpgradeTitle": "Update {name}",
+  "@pkgUpgradeTitle": {
+    "description": "Title of the plan that updates one system package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      }
+    }
+  },
+  "pkgUpgradeMany": "{count, plural, one {Update # package} other {Update # packages}}",
+  "@pkgUpgradeMany": {
+    "description": "Title of the plan that updates several system packages.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": 3
+      }
+    }
+  },
+  "pkgUpgradeWhy": "Through {manager}. Only the chosen packages update, with what they need.",
+  "@pkgUpgradeWhy": {
+    "description": "How system packages update.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgUninstallTitle": "Remove {name}",
+  "@pkgUninstallTitle": {
+    "description": "Title of the plan that removes a system package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      }
+    }
+  },
+  "pkgUninstallWhy": "Through {manager}, which installed it. If other packages need it, the removal stops and nothing changes.",
+  "@pkgUninstallWhy": {
+    "description": "How a system package is removed.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgPacmanNote": "Arch updates the whole system",
+  "@pkgPacmanNote": {
+    "description": "Title of a plan's note: pacman updates all packages at once."
+  },
+  "pkgPacmanNoteText": "Arch does not support updating one package alone: it can break the packages that share its libraries. pacman -Syu updates the package lists and every package.",
+  "@pkgPacmanNoteText": {
+    "description": "Text of the note on pacman's full update."
+  },
+  "pkgRunAsStep": "in a window of its own: its output does not reach the log",
+  "@pkgRunAsStep": {
+    "description": "Note after a step that runs Chocolatey or global Scoop as the administrator."
+  },
+  "pkgCheckInstalled": "{names} installed",
+  "@pkgCheckInstalled": {
+    "description": "What the check of an install found.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "jq"
+      }
+    }
+  },
+  "pkgCheckUpgraded": "{names} updated",
+  "@pkgCheckUpgraded": {
+    "description": "What the check of an update found.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "jq, gh"
+      }
+    }
+  },
+  "pkgCheckRemoved": "{names} no longer installed",
+  "@pkgCheckRemoved": {
+    "description": "What the check of a removal found.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "jq"
+      }
+    }
+  },
+  "pkgCheckNotInstalled": "Hearth does not find {name} in {manager}",
+  "@pkgCheckNotInstalled": {
+    "description": "The check of an install failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      },
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgCheckGone": "{name} is no longer in {manager}",
+  "@pkgCheckGone": {
+    "description": "The check of an update found the package gone.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      },
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgCheckNotUpgraded": "{name} is still {version}",
+  "@pkgCheckNotUpgraded": {
+    "description": "The check of an update found the old version.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      },
+      "version": {
+        "type": "String",
+        "example": "1.7.1"
+      }
+    }
+  },
+  "pkgCheckNotRemoved": "{name} is still in {manager}",
+  "@pkgCheckNotRemoved": {
+    "description": "The check of a removal found the package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "jq"
+      },
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "pkgUpgradeTo": "Update to {version}",
+  "@pkgUpgradeTo": {
+    "description": "Menu item of a package that updates it.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.8.2"
+      }
+    }
+  },
+  "pkgUpgradeSystem": "Update the whole system…",
+  "@pkgUpgradeSystem": {
+    "description": "Menu item and button that update all of pacman's packages."
+  },
+  "pkgUpgradeChosen": "Update selected",
+  "@pkgUpgradeChosen": {
+    "description": "Header button of the package managers page that updates the checked packages."
+  },
+  "pkgChoose": "Choose packages…",
+  "@pkgChoose": {
+    "description": "Button that shows the updates to check."
+  },
+  "pkgUpgradeAllWarning": "Updating all {count} packages at once can break the projects that rely on them. Hearth updates only those you choose.",
+  "@pkgUpgradeAllWarning": {
+    "description": "Warning of the package manager's card beside Choose packages.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": 7
       }
     }
   }

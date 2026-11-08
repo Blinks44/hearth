@@ -2,6 +2,7 @@ package ui
 
 import (
 	"cmp"
+	"context"
 	"slices"
 	"strconv"
 	"strings"
@@ -9,14 +10,15 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
 func (a *App) packages(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
 		st, ok := a.Snapshot.Tool("packages")
 		if !ok || len(st.PackageManagers) == 0 {
+			a.header(c, p.title(), p.subtitle())
 			a.toolEmpty(c, "packages", p.title())
 			return
 		}
@@ -58,6 +60,7 @@ func (a *App) packages(c *ui.Context, p page) {
 		} else if partial {
 			updateCount = atLeast(updates)
 		}
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.upgradeButton(c, m) }})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
@@ -130,6 +133,13 @@ func (a *App) packages(c *ui.Context, p page) {
 						listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
 							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
 						})
+						if updates > 1 && choosable(m) {
+							ui.Box(c).Padding(10, 14, 0, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+								warningWith(c, locales.PkgUpgradeAllWarning(updates), func() {
+									ui.Button(c.Key("package-choose"), locales.PkgChoose()).Shrink(0).OnClick(func() { a.packageTab = updatesTabIndex(m) })
+								})
+							})
+						}
 						cardNote(c, locales.PkgCachedNote())
 						if !m.UpdatesFetched.IsZero() {
 							cardNote(c, locales.VersionsAsOf(m.UpdatesFetched))
@@ -209,9 +219,9 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 				return cmp.Compare(sy.Bytes, sx.Bytes)
 			})
 		}
-		updatesTab, askedTab, depsTab := a.packageTab == 1, false, false
+		updatesTab, askedTab, depsTab := a.packageTab == updatesTabIndex(m), false, false
 		if m.ReasonsKnown {
-			updatesTab, askedTab, depsTab = a.packageTab == 3, a.packageTab == 1, a.packageTab == 2
+			askedTab, depsTab = a.packageTab == 1, a.packageTab == 2
 		}
 		shown, total := 0, 0
 		for _, i := range order {
@@ -228,9 +238,23 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 			}
 			shown++
 			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Column(c).Width(nameWidth(c)).Gap(3).Children(func() {
-					clipped(c, pkg.Name).Font(FontMono).FontSize(12)
-					clipped(c, pkg.Version).FontSize(10.5).TextColor(pal.TextFaint)
+				// The check box goes in the name's column, so the
+				// columns stay under their heads.
+				ui.Row(c).Width(nameWidth(c)).Gap(10).AlignItems(ui.Center).Children(func() {
+					if updatesTab && choosable(m) {
+						key := m.Path + "\x00" + packageKey(pkg)
+						on := a.packageChosen[key]
+						if ui.Checkbox(c.Key("check"), &on, "").Label(pkg.Name).Changed() {
+							if a.packageChosen == nil {
+								a.packageChosen = map[string]bool{}
+							}
+							a.packageChosen[key] = on
+						}
+					}
+					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+						clipped(c, pkg.Name).Font(FontMono).FontSize(12)
+						clipped(c, pkg.Version).FontSize(10.5).TextColor(pal.TextFaint)
+					})
 				})
 				ui.Text(c, pkg.Kind).Width(64).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
@@ -264,6 +288,9 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 					if a.Shell != nil {
 						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(pkg.Path) })
 					}
+				}
+				if a.packageCan(m, pkg) {
+					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
 				}
 			})
 		}
@@ -405,4 +432,120 @@ func formatUsage(u inventory.Usage) string {
 		return "≥ " + s
 	}
 	return s
+}
+
+// updatesTabIndex is the index of m's Updates tab.
+func updatesTabIndex(m inventory.PackageManager) int {
+	if m.ReasonsKnown {
+		return 3
+	}
+	return 1
+}
+
+// packageKey tells a package from the others of its manager.
+func packageKey(pkg inventory.SystemPackage) string {
+	return pkg.Name + "\x00" + pkg.Kind + "\x00" + pkg.Architecture + "\x00" + pkg.Scope
+}
+
+// choosable reports that m updates the packages one chooses: Arch's
+// pacman updates the whole system only.
+func choosable(m inventory.PackageManager) bool {
+	return m.ID != "pacman" && ops.PackageManaged(m.ID)
+}
+
+// packagePlan is the plan that does action to pkgs of m, as ops.PackagePlan,
+// checked by reading m again as the scan found it.
+func (a *App) packagePlan(action ops.PackageAction, m inventory.PackageManager, pkgs []inventory.SystemPackage) (ops.Plan, bool) {
+	var reread ops.Reread
+	if r := a.RereadPackages; r != nil {
+		base := m
+		if st, ok := a.Snapshot.Tool("packages"); ok {
+			for _, found := range st.PackageManagers {
+				if found.Path == m.Path {
+					base = found
+				}
+			}
+		}
+		reread = func(ctx context.Context) (inventory.PackageManager, error) { return r(ctx, base) }
+	}
+	if action == ops.PackageUpgrade && m.ID == "pacman" {
+		pkgs = upgradable(m)
+	}
+	return ops.PackagePlan(action, m, pkgs, reread)
+}
+
+// upgradable are m's packages with an update.
+func upgradable(m inventory.PackageManager) []inventory.SystemPackage {
+	var out []inventory.SystemPackage
+	for _, pkg := range m.Packages {
+		if pkg.Available != "" {
+			out = append(out, pkg)
+		}
+	}
+	return out
+}
+
+// removable reports that Hearth offers to remove pkg: not a package
+// another pulled in, which others may need where the manager does not
+// say.
+func removable(pkg inventory.SystemPackage) bool {
+	return !pkg.Dependency
+}
+
+// packageCan reports that pkg of m has an operation for its menu.
+func (a *App) packageCan(m inventory.PackageManager, pkg inventory.SystemPackage) bool {
+	if _, ok := a.packagePlan(ops.PackageUpgrade, m, []inventory.SystemPackage{pkg}); ok && pkg.Available != "" {
+		return true
+	}
+	_, ok := a.packagePlan(ops.PackageUninstall, m, []inventory.SystemPackage{pkg})
+	return ok && removable(pkg)
+}
+
+// packageItems adds pkg's operations to its menu: update it, remove it,
+// through m.
+func (a *App) packageItems(menu *ui.Menu, m inventory.PackageManager, pkg inventory.SystemPackage) {
+	one := []inventory.SystemPackage{pkg}
+	if upgrade, ok := a.packagePlan(ops.PackageUpgrade, m, one); ok && pkg.Available != "" {
+		label := locales.PkgUpgradeTo(pkg.Available)
+		if m.ID == "pacman" {
+			label = locales.PkgUpgradeSystem()
+		}
+		if menu.Item(label).Chosen() {
+			a.Propose(upgrade)
+		}
+	}
+	if remove, ok := a.packagePlan(ops.PackageUninstall, m, one); ok && removable(pkg) && menu.Item(locales.RemoveEllipsis()).Chosen() {
+		a.Propose(remove)
+	}
+}
+
+// upgradeButton is the header's button that updates the packages checked
+// in m's Updates tab, or for pacman the whole system; none when m has no
+// updates.
+func (a *App) upgradeButton(c *ui.Context, m inventory.PackageManager) {
+	all := upgradable(m)
+	if len(all) == 0 {
+		return
+	}
+	if m.ID == "pacman" {
+		if p, ok := a.packagePlan(ops.PackageUpgrade, m, all); ok {
+			ui.PrimaryButton(c.Key("package-upgrade"), locales.PkgUpgradeSystem()).OnClick(func() { a.Propose(p) })
+		}
+		return
+	}
+	if !choosable(m) {
+		return
+	}
+	var chosen []inventory.SystemPackage
+	for _, pkg := range all {
+		if a.packageChosen[m.Path+"\x00"+packageKey(pkg)] {
+			chosen = append(chosen, pkg)
+		}
+	}
+	ui.PrimaryButton(c.Key("package-upgrade"), locales.PkgUpgradeChosen()).Disabled(len(chosen) == 0).OnClick(func() {
+		if p, ok := a.packagePlan(ops.PackageUpgrade, m, chosen); ok {
+			a.packageChosen = nil
+			a.Propose(p)
+		}
+	})
 }

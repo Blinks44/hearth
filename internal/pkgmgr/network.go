@@ -30,16 +30,7 @@ func Network(ctx context.Context, c *versions.Cache, r run.Runner, env sysenv.En
 		return m
 	}
 	m.Packages = slices.Clone(m.Packages)
-	identity := slices.Clone(m.Packages)
-	for i := range identity {
-		identity[i].Available = ""
-	}
-	slices.SortFunc(identity, func(a, b inventory.SystemPackage) int {
-		return strings.Compare(a.Name+"\x00"+a.Version+"\x00"+a.Path+"\x00"+a.Scope+"\x00"+a.Reference, b.Name+"\x00"+b.Version+"\x00"+b.Path+"\x00"+b.Scope+"\x00"+b.Reference)
-	})
-	keyEnv := queryEnv(env)
-	keyData, _ := json.Marshal([]any{3, m.ID, m.Path, m.Prefix, keyEnv, identity})
-	key := fmt.Sprintf("packages-%x.json", sha256.Sum256(keyData))
+	key := networkKey(env, m)
 	data, fetched, err := c.Query(ctx, key, func(ctx context.Context) ([]byte, error) {
 		packages, e := queryNetwork(ctx, r, env, m)
 		if e != nil && (m.ID != "winget" || len(packages) == 0) {
@@ -88,6 +79,30 @@ func Network(ctx context.Context, c *versions.Cache, r run.Runner, env sysenv.En
 		m.UpdateError = err.Error()
 	}
 	return m
+}
+
+// networkKey names the kept result of m's network query: m and the
+// packages it holds, so that it is asked again once they change.
+func networkKey(env sysenv.Env, m inventory.PackageManager) string {
+	identity := slices.Clone(m.Packages)
+	for i := range identity {
+		identity[i].Available = ""
+	}
+	slices.SortFunc(identity, func(a, b inventory.SystemPackage) int {
+		return strings.Compare(a.Name+"\x00"+a.Version+"\x00"+a.Path+"\x00"+a.Scope+"\x00"+a.Reference, b.Name+"\x00"+b.Version+"\x00"+b.Path+"\x00"+b.Scope+"\x00"+b.Reference)
+	})
+	keyEnv := queryEnv(env)
+	keyData, _ := json.Marshal([]any{3, m.ID, m.Path, m.Prefix, keyEnv, identity})
+	return fmt.Sprintf("packages-%x.json", sha256.Sum256(keyData))
+}
+
+// Forget drops the kept result of m's network query, as an operation
+// changed its packages: WinGet's local list may not show it.
+func Forget(c *versions.Cache, env sysenv.Env, m inventory.PackageManager) error {
+	if !HasNetworkQuery(m.ID) {
+		return nil
+	}
+	return c.Forget(networkKey(env, m))
 }
 
 // queryEnv keeps the variables that select a manager's installation and

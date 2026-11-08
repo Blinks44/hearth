@@ -15,6 +15,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -126,6 +127,11 @@ type App struct {
 	// gives it to done through Window.Update; nil offers no fixes.
 	PlanPath func(entries []inventory.PathEntry, dirs []string, done func(ops.Plan, error))
 
+	// BuildPlan makes a plan in the background, as build does with the
+	// terminal's environment and a way to check a new terminal, and gives
+	// it to done through Window.Update; nil offers no such plans.
+	BuildPlan func(build func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error), done func(ops.Plan, error))
+
 	// RunPlan executes a plan the user confirmed in the background,
 	// giving update how it goes through Window.Update, and returns what
 	// stops it; nil shows plans without running them.
@@ -135,6 +141,10 @@ type App struct {
 	// DetectTool finds a tool again, as a scan would, for an operation's
 	// check; it runs on the operation's goroutine.
 	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)
+	// RereadPackages lists m's packages again, as the scan found m, for a
+	// package operation's check, and drops m's kept online answer; it
+	// runs on the operation's goroutine.
+	RereadPackages func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error)
 
 	op             *operation // the operation shown or running; nil when none
 	search         searchState
@@ -147,24 +157,28 @@ type App struct {
 	pathTab        int    // the tab of the PATH page shown
 	pathFilter     string // the PATH table's filter
 	pathFixErr     string // why the PATH problems asked to fix have no plan
+	planErr        string // why a plan asked for could not be made, until a toast says it
 	packageTab     int    // the tab of the system package managers page shown
 	packageManager string // the path of the package manager shown
 	packageFilter  string // the package table's filter
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
-	gitTab         int    // the Git page's tab: installed, settings, PATH
-	cppTab         int    // the C/C++ page's tab: installed, PATH
-	modelsTab      int    // the local models page's tab: all, then an app each
-	modelsFilter   string // the local models table's filter
-	cliTab         int    // the CLI & clouds page's tab
-	cliFilter      string // the CLI & clouds table's filter
-	mobileTab      int    // the mobile page's tab: all, then a group each
-	mobileFilter   string // the mobile table's filter
-	editorsTab     int    // the editors page's tab: all, extensions, commands
-	editorsFilter  string // the editors table's filter
-	changesTab     int    // the What changed page's tab: all, added, updated, removed
-	changesFilter  string // the What changed table's filter
-	cleanupTab     int    // the Cleanup page's tab: all, then a group each
-	cleanupFilter  string // the Cleanup table's filter
+	// packageChosen are the updates checked to run, by manager path and
+	// packageKey.
+	packageChosen map[string]bool
+	gitTab        int    // the Git page's tab: installed, settings, PATH
+	cppTab        int    // the C/C++ page's tab: installed, PATH
+	modelsTab     int    // the local models page's tab: all, then an app each
+	modelsFilter  string // the local models table's filter
+	cliTab        int    // the CLI & clouds page's tab
+	cliFilter     string // the CLI & clouds table's filter
+	mobileTab     int    // the mobile page's tab: all, then a group each
+	mobileFilter  string // the mobile table's filter
+	editorsTab    int    // the editors page's tab: all, extensions, commands
+	editorsFilter string // the editors table's filter
+	changesTab    int    // the What changed page's tab: all, added, updated, removed
+	changesFilter string // the What changed table's filter
+	cleanupTab    int    // the Cleanup page's tab: all, then a group each
+	cleanupFilter string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice  map[string]bool
@@ -209,6 +223,10 @@ func (a *App) View(c *ui.Context) {
 	// A focused text field types the slash; elsewhere it goes to the
 	// page's filter.
 	c.OnShortcut(0, ui.KeySlash, func() { a.filterField.Focus(c) })
+	if a.planErr != "" {
+		c.AddToast(ui.Toast{Title: a.planErr, Type: "error", Timeout: -1})
+		a.planErr = ""
+	}
 	t := c.Theme()
 	// Vibrancy shows wherever the view draws no background: under the
 	// sidebar, which then draws none.

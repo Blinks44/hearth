@@ -96,6 +96,14 @@ func main() {
 			a.JournalPath = filepath.Join(logs, "operations.log")
 		}
 		a.DetectTool = scanner.Detect
+		a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+			env := scanner.Terminal()
+			go func() {
+				terminal := func(ctx context.Context) (sysenv.Env, error) { return sysenv.Terminal(ctx, run.Exec{}) }
+				p, err := build(env, terminal)
+				win.Update(func() { done(p, err) })
+			}()
+		}
 		a.PlanPath = func(entries []inventory.PathEntry, dirs []string, done func(ops.Plan, error)) {
 			env := scanner.Terminal()
 			go func() {
@@ -243,6 +251,13 @@ func main() {
 		lists := &versions.Cache{Dir: filepath.Join(cache, "versions")}
 		if cache == "" {
 			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
+		}
+		a.RereadPackages = func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error) {
+			env := scanner.Terminal()
+			if err := pkgmgr.Forget(lists, env, m); err != nil {
+				log.Print(err)
+			}
+			return pkgmgr.Reread(ctx, run.Exec{}, env, m)
 		}
 		var cancelVersions context.CancelFunc
 		var cancelPackages context.CancelFunc

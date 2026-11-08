@@ -2,7 +2,10 @@ package versions
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -55,4 +58,18 @@ func (c *Cache) Query(ctx context.Context, name string, fetch func(context.Conte
 		return nil, time.Time{}, err
 	}
 	return data, m.Fetched, nil
+}
+
+// Forget removes the kept result of the query name, so that the next
+// Query runs it: the packages it lists changed.
+func (c *Cache) Forget(name string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	path := filepath.Join(c.Dir, name)
+	for _, p := range []string{path, path + ".meta"} {
+		if err := os.Remove(p); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("forget %s: %w", name, err)
+		}
+	}
+	return nil
 }

@@ -40,6 +40,32 @@ func TestBlock(t *testing.T) {
 	}
 }
 
+func TestAddToBlock(t *testing.T) {
+	activate, shims := `eval "$(mise activate zsh)"`, `eval "$(mise activate zsh --shims)"`
+	tests := []struct {
+		name, text, want string
+	}{
+		{"a new block", "alias ll='ls -l'\n", "alias ll='ls -l'\n\n" + BlockStart + "\n" + activate + "\n" + BlockEnd + "\n"},
+		{"after what the block has", "a\n" + BlockStart + "\nexport X=1\n" + BlockEnd + "\nb\n",
+			"a\n" + BlockStart + "\nexport X=1\n" + activate + "\n" + BlockEnd + "\nb\n"},
+		{"a line it has stays once", BlockStart + "\n" + activate + "\n" + BlockEnd + "\n", BlockStart + "\n" + activate + "\n" + BlockEnd + "\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := AddToBlock(tt.text, activate)
+			if got != tt.want {
+				t.Errorf("AddToBlock() =\n%q\nwant\n%q", got, tt.want)
+			}
+			if again := AddToBlock(got, activate); again != got {
+				t.Errorf("applied again:\n%q", again)
+			}
+		})
+	}
+	if got := AddToBlock("", activate, shims); got != BlockStart+"\n"+activate+"\n"+shims+"\n"+BlockEnd+"\n" {
+		t.Errorf("two lines: %q", got)
+	}
+}
+
 func TestCommentOut(t *testing.T) {
 	text := "a\nexport PATH=/nowhere:$PATH\n# a comment\n" + BlockStart + "\nours\n" + BlockEnd + "\n"
 	want := "a\n# hearth: no such folder · export PATH=/nowhere:$PATH\n# a comment\n" + BlockStart + "\nours\n" + BlockEnd + "\n"

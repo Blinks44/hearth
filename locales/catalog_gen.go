@@ -6048,11 +6048,11 @@ func (msgs Messages) PkgUpdatesUnknown() string {
 	return Catalog.Format(msgs.locale, "pkgUpdatesUnknown", nil)
 }
 
-// PkgReadOnly says "Packages are read only. Installing, updating and removing packages will be available through a change plan."
+// PkgReadOnly says "Hearth updates and removes packages through their manager, after showing what will change. It does not offer to remov…"
 // in the language the app shows.
 func PkgReadOnly() string { return In(i18n.Locale()).PkgReadOnly() }
 
-// PkgReadOnly says "Packages are read only. Installing, updating and removing packages will be available through a change plan."
+// PkgReadOnly says "Hearth updates and removes packages through their manager, after showing what will change. It does not offer to remov…"
 // in the language of msgs.
 func (msgs Messages) PkgReadOnly() string {
 	return Catalog.Format(msgs.locale, "pkgReadOnly", nil)
@@ -12010,6 +12010,20 @@ func (msgs Messages) AdminCanceled() string {
 	return Catalog.Format(msgs.locale, "adminCanceled", nil)
 }
 
+// AdminDenied says "you did not allow it in the UAC window"
+// in the language the app shows.
+//
+// Why a step failed: the user said no in Windows' UAC prompt.
+func AdminDenied() string { return In(i18n.Locale()).AdminDenied() }
+
+// AdminDenied says "you did not allow it in the UAC window"
+// in the language of msgs.
+//
+// Why a step failed: the user said no in Windows' UAC prompt.
+func (msgs Messages) AdminDenied() string {
+	return Catalog.Format(msgs.locale, "adminDenied", nil)
+}
+
 // AdminNoAgent says "the system has no window to ask for the administrator's password: run the command in a terminal with sudo"
 // in the language the app shows.
 //
@@ -12508,4 +12522,548 @@ func PathRemoveNamed(dir string) string { return In(i18n.Locale()).PathRemoveNam
 // Accessible label of the button that removes a PATH entry.
 func (msgs Messages) PathRemoveNamed(dir string) string {
 	return Catalog.Format(msgs.locale, "pathRemoveNamed", map[string]any{"dir": dir})
+}
+
+// MiseSetupTitle says "Set up mise"
+// in the language the app shows.
+//
+// Title of the plan that installs mise and hooks it into the shell.
+func MiseSetupTitle() string { return In(i18n.Locale()).MiseSetupTitle() }
+
+// MiseSetupTitle says "Set up mise"
+// in the language of msgs.
+//
+// Title of the plan that installs mise and hooks it into the shell.
+func (msgs Messages) MiseSetupTitle() string {
+	return Catalog.Format(msgs.locale, "miseSetupTitle", nil)
+}
+
+// MiseSetupWhy says "mise installs and switches versions of languages and tools. Hearth installs it where it is not there and adds its lin…"
+// in the language the app shows.
+//
+// Why and how mise gets set up.
+func MiseSetupWhy() string { return In(i18n.Locale()).MiseSetupWhy() }
+
+// MiseSetupWhy says "mise installs and switches versions of languages and tools. Hearth installs it where it is not there and adds its lin…"
+// in the language of msgs.
+//
+// Why and how mise gets set up.
+func (msgs Messages) MiseSetupWhy() string {
+	return Catalog.Format(msgs.locale, "miseSetupWhy", nil)
+}
+
+// MiseSetupChange says "mise: new terminals run the versions it installs"
+// in the language the app shows.
+//
+// What setting up mise changed.
+func MiseSetupChange() string { return In(i18n.Locale()).MiseSetupChange() }
+
+// MiseSetupChange says "mise: new terminals run the versions it installs"
+// in the language of msgs.
+//
+// What setting up mise changed.
+func (msgs Messages) MiseSetupChange() string {
+	return Catalog.Format(msgs.locale, "miseSetupChange", nil)
+}
+
+// MiseFirst says "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}"
+// in the language the app shows.
+//
+// Why of a plan that sets up mise before it installs a version.
+func MiseFirst(why string) string { return In(i18n.Locale()).MiseFirst(why) }
+
+// MiseFirst says "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}"
+// in the language of msgs.
+//
+// Why of a plan that sets up mise before it installs a version.
+func (msgs Messages) MiseFirst(why string) string {
+	return Catalog.Format(msgs.locale, "miseFirst", map[string]any{"why": why})
+}
+
+// MiseCheckActivated says "A new terminal activates mise"
+// in the language the app shows.
+//
+// What the check after setting up mise found: mise activate runs.
+func MiseCheckActivated() string { return In(i18n.Locale()).MiseCheckActivated() }
+
+// MiseCheckActivated says "A new terminal activates mise"
+// in the language of msgs.
+//
+// What the check after setting up mise found: mise activate runs.
+func (msgs Messages) MiseCheckActivated() string {
+	return Catalog.Format(msgs.locale, "miseCheckActivated", nil)
+}
+
+// MiseCheckShims says "mise's shims are on a new terminal's PATH"
+// in the language the app shows.
+//
+// What the check after setting up mise found: the shims are on PATH.
+func MiseCheckShims() string { return In(i18n.Locale()).MiseCheckShims() }
+
+// MiseCheckShims says "mise's shims are on a new terminal's PATH"
+// in the language of msgs.
+//
+// What the check after setting up mise found: the shims are on PATH.
+func (msgs Messages) MiseCheckShims() string {
+	return Catalog.Format(msgs.locale, "miseCheckShims", nil)
+}
+
+// MiseCheckNot says "A new terminal does not run mise yet"
+// in the language the app shows.
+//
+// The check after setting up mise did not find it.
+func MiseCheckNot() string { return In(i18n.Locale()).MiseCheckNot() }
+
+// MiseCheckNot says "A new terminal does not run mise yet"
+// in the language of msgs.
+//
+// The check after setting up mise did not find it.
+func (msgs Messages) MiseCheckNot() string {
+	return Catalog.Format(msgs.locale, "miseCheckNot", nil)
+}
+
+// MiseRunInstaller says "mise's official installer, into ~/.local/bin"
+// in the language the app shows.
+//
+// Note of the step that runs mise's installer.
+func MiseRunInstaller() string { return In(i18n.Locale()).MiseRunInstaller() }
+
+// MiseRunInstaller says "mise's official installer, into ~/.local/bin"
+// in the language of msgs.
+//
+// Note of the step that runs mise's installer.
+func (msgs Messages) MiseRunInstaller() string {
+	return Catalog.Format(msgs.locale, "miseRunInstaller", nil)
+}
+
+// HomebrewDownload says "download Homebrew's installer from its GitHub releases"
+// in the language the app shows.
+//
+// Note of the step that downloads Homebrew.
+func HomebrewDownload() string { return In(i18n.Locale()).HomebrewDownload() }
+
+// HomebrewDownload says "download Homebrew's installer from its GitHub releases"
+// in the language of msgs.
+//
+// Note of the step that downloads Homebrew.
+func (msgs Messages) HomebrewDownload() string {
+	return Catalog.Format(msgs.locale, "homebrewDownload", nil)
+}
+
+// HomebrewSignature says "check it is signed by Homebrew"
+// in the language the app shows.
+//
+// Note of the step that checks Homebrew's package signature.
+func HomebrewSignature() string { return In(i18n.Locale()).HomebrewSignature() }
+
+// HomebrewSignature says "check it is signed by Homebrew"
+// in the language of msgs.
+//
+// Note of the step that checks Homebrew's package signature.
+func (msgs Messages) HomebrewSignature() string {
+	return Catalog.Format(msgs.locale, "homebrewSignature", nil)
+}
+
+// HomebrewNote says "Homebrew first"
+// in the language the app shows.
+//
+// Worth knowing: Homebrew gets installed before mise.
+func HomebrewNote() string { return In(i18n.Locale()).HomebrewNote() }
+
+// HomebrewNote says "Homebrew first"
+// in the language of msgs.
+//
+// Worth knowing: Homebrew gets installed before mise.
+func (msgs Messages) HomebrewNote() string {
+	return Catalog.Format(msgs.locale, "homebrewNote", nil)
+}
+
+// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package"
+// in the language the app shows.
+//
+// Why Homebrew gets installed before mise.
+func HomebrewNoteText() string { return In(i18n.Locale()).HomebrewNoteText() }
+
+// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package"
+// in the language of msgs.
+//
+// Why Homebrew gets installed before mise.
+func (msgs Messages) HomebrewNoteText() string {
+	return Catalog.Format(msgs.locale, "homebrewNoteText", nil)
+}
+
+// MiseSetUp says "Set up…"
+// in the language the app shows.
+//
+// Button that sets up mise.
+func MiseSetUp() string { return In(i18n.Locale()).MiseSetUp() }
+
+// MiseSetUp says "Set up…"
+// in the language of msgs.
+//
+// Button that sets up mise.
+func (msgs Messages) MiseSetUp() string {
+	return Catalog.Format(msgs.locale, "miseSetUp", nil)
+}
+
+// MiseNotHooked says "Not hooked into the shell: new terminals do not switch versions"
+// in the language the app shows.
+//
+// Row of the mise card when mise is neither activated nor on PATH.
+func MiseNotHooked() string { return In(i18n.Locale()).MiseNotHooked() }
+
+// MiseNotHooked says "Not hooked into the shell: new terminals do not switch versions"
+// in the language of msgs.
+//
+// Row of the mise card when mise is neither activated nor on PATH.
+func (msgs Messages) MiseNotHooked() string {
+	return Catalog.Format(msgs.locale, "miseNotHooked", nil)
+}
+
+// MiseShellUnsupported says "Hearth cannot hook mise into the {shell} shell: add mise's line to its startup file by hand, as mise's documentation …"
+// in the language the app shows.
+//
+// Why mise cannot be hooked into the user's shell.
+func MiseShellUnsupported(shell string) string { return In(i18n.Locale()).MiseShellUnsupported(shell) }
+
+// MiseShellUnsupported says "Hearth cannot hook mise into the {shell} shell: add mise's line to its startup file by hand, as mise's documentation …"
+// in the language of msgs.
+//
+// Why mise cannot be hooked into the user's shell.
+func (msgs Messages) MiseShellUnsupported(shell string) string {
+	return Catalog.Format(msgs.locale, "miseShellUnsupported", map[string]any{"shell": shell})
+}
+
+// MiseHook says "Shell hookup"
+// in the language the app shows.
+//
+// Title of the mise card's row when mise is not hooked into the shell.
+func MiseHook() string { return In(i18n.Locale()).MiseHook() }
+
+// MiseHook says "Shell hookup"
+// in the language of msgs.
+//
+// Title of the mise card's row when mise is not hooked into the shell.
+func (msgs Messages) MiseHook() string {
+	return Catalog.Format(msgs.locale, "miseHook", nil)
+}
+
+// PkgInstallTitle says "Install {name}"
+// in the language the app shows.
+//
+// Title of the plan that installs a system package.
+func PkgInstallTitle(name string) string { return In(i18n.Locale()).PkgInstallTitle(name) }
+
+// PkgInstallTitle says "Install {name}"
+// in the language of msgs.
+//
+// Title of the plan that installs a system package.
+func (msgs Messages) PkgInstallTitle(name string) string {
+	return Catalog.Format(msgs.locale, "pkgInstallTitle", map[string]any{"name": name})
+}
+
+// PkgInstallWhy says "Through {manager}."
+// in the language the app shows.
+//
+// How a system package installs.
+func PkgInstallWhy(manager string) string { return In(i18n.Locale()).PkgInstallWhy(manager) }
+
+// PkgInstallWhy says "Through {manager}."
+// in the language of msgs.
+//
+// How a system package installs.
+func (msgs Messages) PkgInstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgInstallWhy", map[string]any{"manager": manager})
+}
+
+// PkgUpgradeTitle says "Update {name}"
+// in the language the app shows.
+//
+// Title of the plan that updates one system package.
+func PkgUpgradeTitle(name string) string { return In(i18n.Locale()).PkgUpgradeTitle(name) }
+
+// PkgUpgradeTitle says "Update {name}"
+// in the language of msgs.
+//
+// Title of the plan that updates one system package.
+func (msgs Messages) PkgUpgradeTitle(name string) string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeTitle", map[string]any{"name": name})
+}
+
+// PkgUpgradeMany says "{count, plural, one {Update # package} other {Update # packages}}"
+// in the language the app shows.
+//
+// Title of the plan that updates several system packages.
+func PkgUpgradeMany(count int) string { return In(i18n.Locale()).PkgUpgradeMany(count) }
+
+// PkgUpgradeMany says "{count, plural, one {Update # package} other {Update # packages}}"
+// in the language of msgs.
+//
+// Title of the plan that updates several system packages.
+func (msgs Messages) PkgUpgradeMany(count int) string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeMany", map[string]any{"count": count})
+}
+
+// PkgUpgradeWhy says "Through {manager}. Only the chosen packages update, with what they need."
+// in the language the app shows.
+//
+// How system packages update.
+func PkgUpgradeWhy(manager string) string { return In(i18n.Locale()).PkgUpgradeWhy(manager) }
+
+// PkgUpgradeWhy says "Through {manager}. Only the chosen packages update, with what they need."
+// in the language of msgs.
+//
+// How system packages update.
+func (msgs Messages) PkgUpgradeWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeWhy", map[string]any{"manager": manager})
+}
+
+// PkgUninstallTitle says "Remove {name}"
+// in the language the app shows.
+//
+// Title of the plan that removes a system package.
+func PkgUninstallTitle(name string) string { return In(i18n.Locale()).PkgUninstallTitle(name) }
+
+// PkgUninstallTitle says "Remove {name}"
+// in the language of msgs.
+//
+// Title of the plan that removes a system package.
+func (msgs Messages) PkgUninstallTitle(name string) string {
+	return Catalog.Format(msgs.locale, "pkgUninstallTitle", map[string]any{"name": name})
+}
+
+// PkgUninstallWhy says "Through {manager}, which installed it. If other packages need it, the removal stops and nothing changes."
+// in the language the app shows.
+//
+// How a system package is removed.
+func PkgUninstallWhy(manager string) string { return In(i18n.Locale()).PkgUninstallWhy(manager) }
+
+// PkgUninstallWhy says "Through {manager}, which installed it. If other packages need it, the removal stops and nothing changes."
+// in the language of msgs.
+//
+// How a system package is removed.
+func (msgs Messages) PkgUninstallWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgUninstallWhy", map[string]any{"manager": manager})
+}
+
+// PkgPacmanNote says "Arch updates the whole system"
+// in the language the app shows.
+//
+// Title of a plan's note: pacman updates all packages at once.
+func PkgPacmanNote() string { return In(i18n.Locale()).PkgPacmanNote() }
+
+// PkgPacmanNote says "Arch updates the whole system"
+// in the language of msgs.
+//
+// Title of a plan's note: pacman updates all packages at once.
+func (msgs Messages) PkgPacmanNote() string {
+	return Catalog.Format(msgs.locale, "pkgPacmanNote", nil)
+}
+
+// PkgPacmanNoteText says "Arch does not support updating one package alone: it can break the packages that share its libraries. pacman -Syu upd…"
+// in the language the app shows.
+//
+// Text of the note on pacman's full update.
+func PkgPacmanNoteText() string { return In(i18n.Locale()).PkgPacmanNoteText() }
+
+// PkgPacmanNoteText says "Arch does not support updating one package alone: it can break the packages that share its libraries. pacman -Syu upd…"
+// in the language of msgs.
+//
+// Text of the note on pacman's full update.
+func (msgs Messages) PkgPacmanNoteText() string {
+	return Catalog.Format(msgs.locale, "pkgPacmanNoteText", nil)
+}
+
+// PkgRunAsStep says "in a window of its own: its output does not reach the log"
+// in the language the app shows.
+//
+// Note after a step that runs Chocolatey or global Scoop as the
+// administrator.
+func PkgRunAsStep() string { return In(i18n.Locale()).PkgRunAsStep() }
+
+// PkgRunAsStep says "in a window of its own: its output does not reach the log"
+// in the language of msgs.
+//
+// Note after a step that runs Chocolatey or global Scoop as the
+// administrator.
+func (msgs Messages) PkgRunAsStep() string {
+	return Catalog.Format(msgs.locale, "pkgRunAsStep", nil)
+}
+
+// PkgCheckInstalled says "{names} installed"
+// in the language the app shows.
+//
+// What the check of an install found.
+func PkgCheckInstalled(names string) string { return In(i18n.Locale()).PkgCheckInstalled(names) }
+
+// PkgCheckInstalled says "{names} installed"
+// in the language of msgs.
+//
+// What the check of an install found.
+func (msgs Messages) PkgCheckInstalled(names string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckInstalled", map[string]any{"names": names})
+}
+
+// PkgCheckUpgraded says "{names} updated"
+// in the language the app shows.
+//
+// What the check of an update found.
+func PkgCheckUpgraded(names string) string { return In(i18n.Locale()).PkgCheckUpgraded(names) }
+
+// PkgCheckUpgraded says "{names} updated"
+// in the language of msgs.
+//
+// What the check of an update found.
+func (msgs Messages) PkgCheckUpgraded(names string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckUpgraded", map[string]any{"names": names})
+}
+
+// PkgCheckRemoved says "{names} no longer installed"
+// in the language the app shows.
+//
+// What the check of a removal found.
+func PkgCheckRemoved(names string) string { return In(i18n.Locale()).PkgCheckRemoved(names) }
+
+// PkgCheckRemoved says "{names} no longer installed"
+// in the language of msgs.
+//
+// What the check of a removal found.
+func (msgs Messages) PkgCheckRemoved(names string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckRemoved", map[string]any{"names": names})
+}
+
+// PkgCheckNotInstalled says "Hearth does not find {name} in {manager}"
+// in the language the app shows.
+//
+// The check of an install failed.
+func PkgCheckNotInstalled(name string, manager string) string {
+	return In(i18n.Locale()).PkgCheckNotInstalled(name, manager)
+}
+
+// PkgCheckNotInstalled says "Hearth does not find {name} in {manager}"
+// in the language of msgs.
+//
+// The check of an install failed.
+func (msgs Messages) PkgCheckNotInstalled(name string, manager string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckNotInstalled", map[string]any{"name": name, "manager": manager})
+}
+
+// PkgCheckGone says "{name} is no longer in {manager}"
+// in the language the app shows.
+//
+// The check of an update found the package gone.
+func PkgCheckGone(name string, manager string) string {
+	return In(i18n.Locale()).PkgCheckGone(name, manager)
+}
+
+// PkgCheckGone says "{name} is no longer in {manager}"
+// in the language of msgs.
+//
+// The check of an update found the package gone.
+func (msgs Messages) PkgCheckGone(name string, manager string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckGone", map[string]any{"name": name, "manager": manager})
+}
+
+// PkgCheckNotUpgraded says "{name} is still {version}"
+// in the language the app shows.
+//
+// The check of an update found the old version.
+func PkgCheckNotUpgraded(name string, version string) string {
+	return In(i18n.Locale()).PkgCheckNotUpgraded(name, version)
+}
+
+// PkgCheckNotUpgraded says "{name} is still {version}"
+// in the language of msgs.
+//
+// The check of an update found the old version.
+func (msgs Messages) PkgCheckNotUpgraded(name string, version string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckNotUpgraded", map[string]any{"name": name, "version": version})
+}
+
+// PkgCheckNotRemoved says "{name} is still in {manager}"
+// in the language the app shows.
+//
+// The check of a removal found the package.
+func PkgCheckNotRemoved(name string, manager string) string {
+	return In(i18n.Locale()).PkgCheckNotRemoved(name, manager)
+}
+
+// PkgCheckNotRemoved says "{name} is still in {manager}"
+// in the language of msgs.
+//
+// The check of a removal found the package.
+func (msgs Messages) PkgCheckNotRemoved(name string, manager string) string {
+	return Catalog.Format(msgs.locale, "pkgCheckNotRemoved", map[string]any{"name": name, "manager": manager})
+}
+
+// PkgUpgradeTo says "Update to {version}"
+// in the language the app shows.
+//
+// Menu item of a package that updates it.
+func PkgUpgradeTo(version string) string { return In(i18n.Locale()).PkgUpgradeTo(version) }
+
+// PkgUpgradeTo says "Update to {version}"
+// in the language of msgs.
+//
+// Menu item of a package that updates it.
+func (msgs Messages) PkgUpgradeTo(version string) string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeTo", map[string]any{"version": version})
+}
+
+// PkgUpgradeSystem says "Update the whole system…"
+// in the language the app shows.
+//
+// Menu item and button that update all of pacman's packages.
+func PkgUpgradeSystem() string { return In(i18n.Locale()).PkgUpgradeSystem() }
+
+// PkgUpgradeSystem says "Update the whole system…"
+// in the language of msgs.
+//
+// Menu item and button that update all of pacman's packages.
+func (msgs Messages) PkgUpgradeSystem() string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeSystem", nil)
+}
+
+// PkgUpgradeChosen says "Update selected"
+// in the language the app shows.
+//
+// Header button of the package managers page that updates the checked
+// packages.
+func PkgUpgradeChosen() string { return In(i18n.Locale()).PkgUpgradeChosen() }
+
+// PkgUpgradeChosen says "Update selected"
+// in the language of msgs.
+//
+// Header button of the package managers page that updates the checked
+// packages.
+func (msgs Messages) PkgUpgradeChosen() string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeChosen", nil)
+}
+
+// PkgChoose says "Choose packages…"
+// in the language the app shows.
+//
+// Button that shows the updates to check.
+func PkgChoose() string { return In(i18n.Locale()).PkgChoose() }
+
+// PkgChoose says "Choose packages…"
+// in the language of msgs.
+//
+// Button that shows the updates to check.
+func (msgs Messages) PkgChoose() string {
+	return Catalog.Format(msgs.locale, "pkgChoose", nil)
+}
+
+// PkgUpgradeAllWarning says "Updating all {count} packages at once can break the projects that rely on them. Hearth updates only those you choose."
+// in the language the app shows.
+//
+// Warning of the package manager's card beside Choose packages.
+func PkgUpgradeAllWarning(count int) string { return In(i18n.Locale()).PkgUpgradeAllWarning(count) }
+
+// PkgUpgradeAllWarning says "Updating all {count} packages at once can break the projects that rely on them. Hearth updates only those you choose."
+// in the language of msgs.
+//
+// Warning of the package manager's card beside Choose packages.
+func (msgs Messages) PkgUpgradeAllWarning(count int) string {
+	return Catalog.Format(msgs.locale, "pkgUpgradeAllWarning", map[string]any{"count": count})
 }

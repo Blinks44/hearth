@@ -45,6 +45,19 @@ type Step struct {
 	// UserPath, in place of Argv, sets the user's Path in the Windows
 	// registry, which comes back as an Edit does.
 	UserPath *UserPathEdit
+	// Env adds to the plan's environment for this step, as KEY=value.
+	Env []string
+	// Runs, when Argv is a wrapper, is the command it runs, which the
+	// plan shows in Argv's place.
+	Runs []string
+}
+
+// Shown is the command a step shows: what it runs.
+func (s Step) Shown() []string {
+	if len(s.Runs) > 0 {
+		return s.Runs
+	}
+	return s.Argv
 }
 
 // Note is something worth knowing before a plan runs, as that it asks for
@@ -125,14 +138,11 @@ type State struct {
 }
 
 // Command shows argv as a terminal would take it, quoting the arguments
-// that need it.
+// that need it as the system's terminal does.
 func Command(argv []string) string {
 	parts := make([]string, len(argv))
 	for i, a := range argv {
-		parts[i] = a
-		if a == "" || strings.ContainsAny(a, " \t\"'$\\;&|<>*?()[]{}`!#~") {
-			parts[i] = strconv.Quote(a)
-		}
+		parts[i] = quoteArg(a)
 	}
 	return strings.Join(parts, " ")
 }
@@ -179,12 +189,13 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 					e.printf("backup %s\n", backup)
 				}
 			} else {
-				edit := step.UserPath
-				// The value that was is the copy: the log keeps it.
-				e.printf("edit %s\nbackup %s\n", UserPathName, edit.Before)
+				e.printf("edit %s\n", UserPathName)
 				e.emit()
-				if err = applyUserPath(*edit); err == nil {
-					changes = append(changes, applied{UserPathName, func() error { return restoreUserPath(*edit) }})
+				var before string
+				if before, err = applyUserPath(*step.UserPath); err == nil {
+					// The value that was is the copy: the log keeps it.
+					e.printf("backup %s\n", before)
+					changes = append(changes, applied{UserPathName, func() error { return restoreUserPath(before) }})
 				}
 			}
 			e.mu.Lock()
@@ -212,7 +223,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.Admin {
 			argv = elevate(fullPath(argv, p.Env), p.Title)
 		}
-		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: p.Env, Timeout: timeout, Output: e})
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: slices.Concat(p.Env, step.Env), Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
 		refused := ""

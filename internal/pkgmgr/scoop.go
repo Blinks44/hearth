@@ -51,6 +51,9 @@ func scoopManagers(env sysenv.Env) []inventory.PackageManager {
 				continue
 			}
 			p := inventory.SystemPackage{Name: dir.Name(), Version: version, Path: current, Kind: "app"}
+			if root == global {
+				p.Scope = "global" // scoop -g changes them, as the administrator
+			}
 			available, err := scoopUpdate(user, current, p)
 			if err != nil {
 				m.UpdatesKnown = false
