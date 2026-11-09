@@ -88,7 +88,7 @@ func (a *App) operationView(c *ui.Context) {
 func (a *App) operationDialog(c *ui.Context, op *operation) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.DialogBase(c.Key("operation"), &op.open, func(backdrop, panel ui.Element) {
+	dialogBase(c.Key("operation"), &op.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
 		panel.Width(640).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
 			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))

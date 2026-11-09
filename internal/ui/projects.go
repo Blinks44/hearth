@@ -589,7 +589,7 @@ func (a *App) addDialog(c *ui.Context) {
 	}
 	t := c.Theme()
 	pal := Colors(t)
-	ui.DialogBase(c, &a.addOpen, func(backdrop, panel ui.Element) {
+	dialogBase(c, &a.addOpen, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
 		panel.Width(520).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
 			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))

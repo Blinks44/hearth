@@ -179,7 +179,7 @@ func (a *App) searchDialog(c *ui.Context) {
 	t := c.Theme()
 	pal := Colors(t)
 	width, height := c.Size()
-	ui.DialogBase(c.Key("global-search"), &a.search.open, func(backdrop, panel ui.Element) {
+	dialogBase(c.Key("global-search"), &a.search.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.18)).Justify(ui.Start).Padding(min(float32(80), height/10), 0, 0, 0)
 		panel.Width(640).MaxWidth(width-32).Radius(14).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Shadow(0, 12, 32, 0, pal.Shadow)
 		ui.Column(c).Children(func() {
