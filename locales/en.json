@@ -6008,5 +6008,29 @@
   "next": "Next",
   "@next": {
     "description": "Button that goes on to the plan."
+  },
+  "mobileInstall": "Install",
+  "@mobileInstall": {
+    "description": "Card of official install pages for mobile tools that are not found."
+  },
+  "mobileInstallXcode": "App Store · iOS SDK and simulators",
+  "@mobileInstallXcode": {
+    "description": "What installing Xcode gives."
+  },
+  "mobileInstallStudio": "Android SDK, emulator and JDK",
+  "@mobileInstallStudio": {
+    "description": "What installing Android Studio gives."
+  },
+  "mobileInstallFlutter": "iOS and Android from one code",
+  "@mobileInstallFlutter": {
+    "description": "What installing Flutter gives."
+  },
+  "mobileInstallNote": "Hearth does not install these: their installers are large and ask for choices along the way. After installing, Hearth finds them on the next scan.",
+  "@mobileInstallNote": {
+    "description": "Why the mobile tools are links, not installs."
+  },
+  "mobileInstallOpen": "Open",
+  "@mobileInstallOpen": {
+    "description": "Link to a tool's official install page."
   }
 }

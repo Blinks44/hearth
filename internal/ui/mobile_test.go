@@ -61,6 +61,9 @@ func TestMobilePage(t *testing.T) {
 		"Emulator image API 34", "google_apis · arm64-v8a · AVD Pixel_8", "Gradle cache", "FLUTTER", "Flutter 3.27.1", "mise · stable channel",
 		"API 35", "Environment", "ANDROID_HOME", "~/Library/Android/sdk · folder exists", "JAVA_HOME for Gradle", "~/.local/share/mise/installs/java/21",
 		"xcode-select", "Can be removed", "Older simulator", "7.4 GB · iOS 17.5", "Xcode DerivedData", "Open in Cleanup")
+	if tt.HasText("Android SDK, emulator and JDK") {
+		t.Error("install links shown with everything found")
+	}
 	a.mobileTab = 2 // Android
 	tt.Frame()
 	tt.Advance(time.Second)
@@ -73,5 +76,22 @@ func TestMobilePage(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.router.Path() != cleanupPage || cleanupGroups[a.cleanupTab-1] != cleanup.Caches {
 		t.Fatalf("at %s, tab %d", a.router.Path(), a.cleanupTab)
+	}
+}
+
+// Without the tools, the official install pages with what each brings;
+// Xcode only where it installs.
+func TestMobileInstallLinks(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "mobile", Mobile: &inventory.MobileState{}}}}
+	a.router.Push(mobilePage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "mobile-install")
+	hasTexts(t, tt, "No Xcode, Android SDK or Flutter found.", "Install", "Android Studio", "Android SDK, emulator and JDK",
+		"Flutter", "iOS and Android from one code", "Open ↗")
+	if got := tt.HasText("App Store · iOS SDK and simulators"); got != xcodeHere {
+		t.Errorf("Xcode link shown %v, want %v", got, xcodeHere)
 	}
 }

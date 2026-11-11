@@ -1135,5 +1135,11 @@
   "modelsPullLead": "Введите имя модели из библиотеки Ollama, например llama3.2 или qwen3:8b. Без тега Ollama скачает latest.",
   "modelsPullLibrary": "Модели на ollama.com",
   "modelsPullHas": "{model} уже есть в Ollama",
-  "next": "Дальше"
+  "next": "Дальше",
+  "mobileInstall": "Установить",
+  "mobileInstallXcode": "App Store · iOS SDK и симуляторы",
+  "mobileInstallStudio": "Android SDK, эмулятор и JDK",
+  "mobileInstallFlutter": "iOS и Android из одного кода",
+  "mobileInstallNote": "Hearth не ставит их сам: установщики большие и по ходу задают вопросы. После установки Hearth найдёт их при следующей проверке.",
+  "mobileInstallOpen": "Открыть"
 }

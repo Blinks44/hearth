@@ -14809,3 +14809,87 @@ func Next() string { return In(i18n.Locale()).Next() }
 func (msgs Messages) Next() string {
 	return Catalog.Format(msgs.locale, "next", nil)
 }
+
+// MobileInstall says "Install"
+// in the language the app shows.
+//
+// Card of official install pages for mobile tools that are not found.
+func MobileInstall() string { return In(i18n.Locale()).MobileInstall() }
+
+// MobileInstall says "Install"
+// in the language of msgs.
+//
+// Card of official install pages for mobile tools that are not found.
+func (msgs Messages) MobileInstall() string {
+	return Catalog.Format(msgs.locale, "mobileInstall", nil)
+}
+
+// MobileInstallXcode says "App Store · iOS SDK and simulators"
+// in the language the app shows.
+//
+// What installing Xcode gives.
+func MobileInstallXcode() string { return In(i18n.Locale()).MobileInstallXcode() }
+
+// MobileInstallXcode says "App Store · iOS SDK and simulators"
+// in the language of msgs.
+//
+// What installing Xcode gives.
+func (msgs Messages) MobileInstallXcode() string {
+	return Catalog.Format(msgs.locale, "mobileInstallXcode", nil)
+}
+
+// MobileInstallStudio says "Android SDK, emulator and JDK"
+// in the language the app shows.
+//
+// What installing Android Studio gives.
+func MobileInstallStudio() string { return In(i18n.Locale()).MobileInstallStudio() }
+
+// MobileInstallStudio says "Android SDK, emulator and JDK"
+// in the language of msgs.
+//
+// What installing Android Studio gives.
+func (msgs Messages) MobileInstallStudio() string {
+	return Catalog.Format(msgs.locale, "mobileInstallStudio", nil)
+}
+
+// MobileInstallFlutter says "iOS and Android from one code"
+// in the language the app shows.
+//
+// What installing Flutter gives.
+func MobileInstallFlutter() string { return In(i18n.Locale()).MobileInstallFlutter() }
+
+// MobileInstallFlutter says "iOS and Android from one code"
+// in the language of msgs.
+//
+// What installing Flutter gives.
+func (msgs Messages) MobileInstallFlutter() string {
+	return Catalog.Format(msgs.locale, "mobileInstallFlutter", nil)
+}
+
+// MobileInstallNote says "Hearth does not install these: their installers are large and ask for choices along the way. After installing, Hearth…"
+// in the language the app shows.
+//
+// Why the mobile tools are links, not installs.
+func MobileInstallNote() string { return In(i18n.Locale()).MobileInstallNote() }
+
+// MobileInstallNote says "Hearth does not install these: their installers are large and ask for choices along the way. After installing, Hearth…"
+// in the language of msgs.
+//
+// Why the mobile tools are links, not installs.
+func (msgs Messages) MobileInstallNote() string {
+	return Catalog.Format(msgs.locale, "mobileInstallNote", nil)
+}
+
+// MobileInstallOpen says "Open"
+// in the language the app shows.
+//
+// Link to a tool's official install page.
+func MobileInstallOpen() string { return In(i18n.Locale()).MobileInstallOpen() }
+
+// MobileInstallOpen says "Open"
+// in the language of msgs.
+//
+// Link to a tool's official install page.
+func (msgs Messages) MobileInstallOpen() string {
+	return Catalog.Format(msgs.locale, "mobileInstallOpen", nil)
+}

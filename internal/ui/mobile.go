@@ -296,6 +296,9 @@ func (a *App) mobileView(c *ui.Context, p page) {
 						a.mobileTable(c, groups)
 					}
 				}, func() {
+					if a.Snapshot != nil {
+						mobileInstall(c, m)
+					}
 					a.mobileEnv(c, m)
 					a.mobileRemovable(c, m, removable)
 				})
@@ -347,6 +350,34 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 		if shown == 0 {
 			cardNote(c, locales.CleanupNone())
 		}
+	})
+}
+
+// mobileInstall links the official install pages of the tools not found:
+// their installers are large and ask along the way, so Hearth does not
+// run them.
+func mobileInstall(c *ui.Context, m inventory.MobileState) {
+	type link struct{ name, about, url string }
+	var links []link
+	if xcodeHere && len(m.Xcodes) == 0 {
+		links = append(links, link{"Xcode", locales.MobileInstallXcode(), "https://apps.apple.com/app/xcode/id497799835"})
+	}
+	if m.Android == nil {
+		links = append(links, link{"Android Studio", locales.MobileInstallStudio(), "https://developer.android.com/studio"})
+	}
+	if m.Flutter == nil {
+		links = append(links, link{"Flutter", locales.MobileInstallFlutter(), "https://docs.flutter.dev/get-started/install"})
+	}
+	if len(links) == 0 {
+		return
+	}
+	listCard(c, locales.MobileInstall(), "", func() {
+		for _, l := range links {
+			listRow(c, l.name, false, l.about, func() {
+				ui.Link(c.Key("install:"+l.name), locales.MobileInstallOpen()+" ↗", l.url).FontSize(12.5).Shrink(0)
+			})
+		}
+		cardNote(c, locales.MobileInstallNote())
 	})
 }
 
