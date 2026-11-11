@@ -198,7 +198,12 @@ type App struct {
 	cleanupFilter  string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
-	cleanupChoice  map[string]bool
+	cleanupChoice map[string]bool
+	updatesTab    int    // the Updates page's tab: all, versions, packages
+	updatesFilter string // the Updates table's filter
+	// updateChoice is what the user checked or unchecked on the Updates
+	// page, by updateRow.key; the others are as Hearth offers them.
+	updateChoice   map[string]bool
 	databaseTab    int     // the tab of the databases page shown
 	databaseFilter string  // the databases table's filter
 	dockerTab      int     // the tab of the Docker page shown
@@ -322,6 +327,8 @@ func (a *App) View(c *ui.Context) {
 						a.projectList(c, p)
 					case cleanupPage:
 						a.cleanupView(c, p)
+					case updatesPage:
+						a.updatesView(c, p)
 					case problemsPage:
 						a.problemsView(c, p)
 					case overview.path:
@@ -430,6 +437,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)
 				a.item(c, problemsNav, a.problemsEnd(c))
+				a.item(c, updatesNav, a.updatesEnd(c))
 				a.item(c, projectsPage, func() {
 					if len(a.Projects) > 0 {
 						ui.Text(c, strconv.Itoa(len(a.Projects))).FontSize(11).TextColor(pal.TextFaint).SingleLine()

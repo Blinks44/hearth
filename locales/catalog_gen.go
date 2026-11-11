@@ -2625,24 +2625,24 @@ func (msgs Messages) HeroProblemsCaption() string {
 // HeroUpdates says "Updates"
 // in the language the app shows.
 //
-// Hero count: package updates available.
+// Hero count: updates of versions and packages available.
 func HeroUpdates() string { return In(i18n.Locale()).HeroUpdates() }
 
 // HeroUpdates says "Updates"
 // in the language of msgs.
 //
-// Hero count: package updates available.
+// Hero count: updates of versions and packages available.
 func (msgs Messages) HeroUpdates() string {
 	return Catalog.Format(msgs.locale, "heroUpdates", nil)
 }
 
-// HeroUpdatesCaption says "in package managers"
+// HeroUpdatesCaption says "versions and packages"
 // in the language the app shows.
 //
 // Caption under the update count.
 func HeroUpdatesCaption() string { return In(i18n.Locale()).HeroUpdatesCaption() }
 
-// HeroUpdatesCaption says "in package managers"
+// HeroUpdatesCaption says "versions and packages"
 // in the language of msgs.
 //
 // Caption under the update count.
@@ -15666,4 +15666,512 @@ func AllIssues() string { return In(i18n.Locale()).AllIssues() }
 // Link from the overview's issues card to the Issues page.
 func (msgs Messages) AllIssues() string {
 	return Catalog.Format(msgs.locale, "allIssues", nil)
+}
+
+// UpdatesTitle says "Updates"
+// in the language the app shows.
+//
+// Sidebar item and header of the Updates page.
+func UpdatesTitle() string { return In(i18n.Locale()).UpdatesTitle() }
+
+// UpdatesTitle says "Updates"
+// in the language of msgs.
+//
+// Sidebar item and header of the Updates page.
+func (msgs Messages) UpdatesTitle() string {
+	return Catalog.Format(msgs.locale, "updatesTitle", nil)
+}
+
+// UpdatesSubtitle says "New versions of tools and packages"
+// in the language the app shows.
+//
+// Under the Updates page's title.
+func UpdatesSubtitle() string { return In(i18n.Locale()).UpdatesSubtitle() }
+
+// UpdatesSubtitle says "New versions of tools and packages"
+// in the language of msgs.
+//
+// Under the Updates page's title.
+func (msgs Messages) UpdatesSubtitle() string {
+	return Catalog.Format(msgs.locale, "updatesSubtitle", nil)
+}
+
+// UpdatesLead says "The manager that installed it updates it"
+// in the language the app shows.
+//
+// Under the Updates page's big title.
+func UpdatesLead() string { return In(i18n.Locale()).UpdatesLead() }
+
+// UpdatesLead says "The manager that installed it updates it"
+// in the language of msgs.
+//
+// Under the Updates page's big title.
+func (msgs Messages) UpdatesLead() string {
+	return Catalog.Format(msgs.locale, "updatesLead", nil)
+}
+
+// UpdatesFoundCaption says "{versions, plural, one {# version} other {# versions}} · {packages, plural, one {# package} other {# packages}}"
+// in the language the app shows.
+//
+// Updates card caption: how many versions and packages.
+func UpdatesFoundCaption(versions int, packages int) string {
+	return In(i18n.Locale()).UpdatesFoundCaption(versions, packages)
+}
+
+// UpdatesFoundCaption says "{versions, plural, one {# version} other {# versions}} · {packages, plural, one {# package} other {# packages}}"
+// in the language of msgs.
+//
+// Updates card caption: how many versions and packages.
+func (msgs Messages) UpdatesFoundCaption(versions int, packages int) string {
+	return Catalog.Format(msgs.locale, "updatesFoundCaption", map[string]any{"versions": versions, "packages": packages})
+}
+
+// UpdatesSelectedCaption says "fixes and packages"
+// in the language the app shows.
+//
+// Updates card caption under the count of checked updates.
+func UpdatesSelectedCaption() string { return In(i18n.Locale()).UpdatesSelectedCaption() }
+
+// UpdatesSelectedCaption says "fixes and packages"
+// in the language of msgs.
+//
+// Updates card caption under the count of checked updates.
+func (msgs Messages) UpdatesSelectedCaption() string {
+	return Catalog.Format(msgs.locale, "updatesSelectedCaption", nil)
+}
+
+// UpdatesVersions says "Versions"
+// in the language the app shows.
+//
+// Updates tab: newer versions of tools.
+func UpdatesVersions() string { return In(i18n.Locale()).UpdatesVersions() }
+
+// UpdatesVersions says "Versions"
+// in the language of msgs.
+//
+// Updates tab: newer versions of tools.
+func (msgs Messages) UpdatesVersions() string {
+	return Catalog.Format(msgs.locale, "updatesVersions", nil)
+}
+
+// UpdatesPackages says "Packages"
+// in the language the app shows.
+//
+// Updates tab: packages of package managers.
+func UpdatesPackages() string { return In(i18n.Locale()).UpdatesPackages() }
+
+// UpdatesPackages says "Packages"
+// in the language of msgs.
+//
+// Updates tab: packages of package managers.
+func (msgs Messages) UpdatesPackages() string {
+	return Catalog.Format(msgs.locale, "updatesPackages", nil)
+}
+
+// UpdatesGroupPatches says "Versions · fixes in the same line"
+// in the language the app shows.
+//
+// Updates table group.
+func UpdatesGroupPatches() string { return In(i18n.Locale()).UpdatesGroupPatches() }
+
+// UpdatesGroupPatches says "Versions · fixes in the same line"
+// in the language of msgs.
+//
+// Updates table group.
+func (msgs Messages) UpdatesGroupPatches() string {
+	return Catalog.Format(msgs.locale, "updatesGroupPatches", nil)
+}
+
+// UpdatesGroupLines says "Versions · new lines"
+// in the language the app shows.
+//
+// Updates table group.
+func UpdatesGroupLines() string { return In(i18n.Locale()).UpdatesGroupLines() }
+
+// UpdatesGroupLines says "Versions · new lines"
+// in the language of msgs.
+//
+// Updates table group.
+func (msgs Messages) UpdatesGroupLines() string {
+	return Catalog.Format(msgs.locale, "updatesGroupLines", nil)
+}
+
+// UpdatesGroupFormulas says "{manager} · formulas"
+// in the language the app shows.
+//
+// Updates table group: Homebrew's formulas.
+func UpdatesGroupFormulas(manager string) string {
+	return In(i18n.Locale()).UpdatesGroupFormulas(manager)
+}
+
+// UpdatesGroupFormulas says "{manager} · formulas"
+// in the language of msgs.
+//
+// Updates table group: Homebrew's formulas.
+func (msgs Messages) UpdatesGroupFormulas(manager string) string {
+	return Catalog.Format(msgs.locale, "updatesGroupFormulas", map[string]any{"manager": manager})
+}
+
+// UpdatesGroupApps says "{manager} · apps"
+// in the language the app shows.
+//
+// Updates table group: Homebrew's casks.
+func UpdatesGroupApps(manager string) string { return In(i18n.Locale()).UpdatesGroupApps(manager) }
+
+// UpdatesGroupApps says "{manager} · apps"
+// in the language of msgs.
+//
+// Updates table group: Homebrew's casks.
+func (msgs Messages) UpdatesGroupApps(manager string) string {
+	return Catalog.Format(msgs.locale, "updatesGroupApps", map[string]any{"manager": manager})
+}
+
+// UpdatesPatchCaption says "a fix in the same line"
+// in the language the app shows.
+//
+// Updates row caption: a newer release of the copy's line.
+func UpdatesPatchCaption() string { return In(i18n.Locale()).UpdatesPatchCaption() }
+
+// UpdatesPatchCaption says "a fix in the same line"
+// in the language of msgs.
+//
+// Updates row caption: a newer release of the copy's line.
+func (msgs Messages) UpdatesPatchCaption() string {
+	return Catalog.Format(msgs.locale, "updatesPatchCaption", nil)
+}
+
+// UpdatesLineCaption says "installs alongside, the default stays"
+// in the language the app shows.
+//
+// Updates row caption and side card caption: a new line.
+func UpdatesLineCaption() string { return In(i18n.Locale()).UpdatesLineCaption() }
+
+// UpdatesLineCaption says "installs alongside, the default stays"
+// in the language of msgs.
+//
+// Updates row caption and side card caption: a new line.
+func (msgs Messages) UpdatesLineCaption() string {
+	return Catalog.Format(msgs.locale, "updatesLineCaption", nil)
+}
+
+// UpdatesCaskCaption says "cask · the app closes while it updates"
+// in the language the app shows.
+//
+// Updates row caption: a Homebrew cask.
+func UpdatesCaskCaption() string { return In(i18n.Locale()).UpdatesCaskCaption() }
+
+// UpdatesCaskCaption says "cask · the app closes while it updates"
+// in the language of msgs.
+//
+// Updates row caption: a Homebrew cask.
+func (msgs Messages) UpdatesCaskCaption() string {
+	return Catalog.Format(msgs.locale, "updatesCaskCaption", nil)
+}
+
+// UpdatesDependency says "a dependency of other packages"
+// in the language the app shows.
+//
+// Updates row caption.
+func UpdatesDependency() string { return In(i18n.Locale()).UpdatesDependency() }
+
+// UpdatesDependency says "a dependency of other packages"
+// in the language of msgs.
+//
+// Updates row caption.
+func (msgs Messages) UpdatesDependency() string {
+	return Catalog.Format(msgs.locale, "updatesDependency", nil)
+}
+
+// UpdatesAsked says "installed by you"
+// in the language the app shows.
+//
+// Updates row caption.
+func UpdatesAsked() string { return In(i18n.Locale()).UpdatesAsked() }
+
+// UpdatesAsked says "installed by you"
+// in the language of msgs.
+//
+// Updates row caption.
+func (msgs Messages) UpdatesAsked() string {
+	return Catalog.Format(msgs.locale, "updatesAsked", nil)
+}
+
+// UpdatesNotThrough says "Hearth does not update through {manager}"
+// in the language the app shows.
+//
+// Updates row caption: a manager Hearth has no operation for.
+func UpdatesNotThrough(manager string) string { return In(i18n.Locale()).UpdatesNotThrough(manager) }
+
+// UpdatesNotThrough says "Hearth does not update through {manager}"
+// in the language of msgs.
+//
+// Updates row caption: a manager Hearth has no operation for.
+func (msgs Messages) UpdatesNotThrough(manager string) string {
+	return Catalog.Format(msgs.locale, "updatesNotThrough", map[string]any{"manager": manager})
+}
+
+// UpdatesWaiting says "Updates show after the first check."
+// in the language the app shows.
+//
+// Updates page before the first scan.
+func UpdatesWaiting() string { return In(i18n.Locale()).UpdatesWaiting() }
+
+// UpdatesWaiting says "Updates show after the first check."
+// in the language of msgs.
+//
+// Updates page before the first scan.
+func (msgs Messages) UpdatesWaiting() string {
+	return Catalog.Format(msgs.locale, "updatesWaiting", nil)
+}
+
+// UpdatesEmpty says "Everything is up to date."
+// in the language the app shows.
+//
+// Updates page without updates.
+func UpdatesEmpty() string { return In(i18n.Locale()).UpdatesEmpty() }
+
+// UpdatesEmpty says "Everything is up to date."
+// in the language of msgs.
+//
+// Updates page without updates.
+func (msgs Messages) UpdatesEmpty() string {
+	return Catalog.Format(msgs.locale, "updatesEmpty", nil)
+}
+
+// UpdatesAtOnceRow says "Packages you installed"
+// in the language the app shows.
+//
+// Updates side card row: what is checked at once.
+func UpdatesAtOnceRow() string { return In(i18n.Locale()).UpdatesAtOnceRow() }
+
+// UpdatesAtOnceRow says "Packages you installed"
+// in the language of msgs.
+//
+// Updates side card row: what is checked at once.
+func (msgs Messages) UpdatesAtOnceRow() string {
+	return Catalog.Format(msgs.locale, "updatesAtOnceRow", nil)
+}
+
+// UpdatesAtOnceCaption says "compatible: projects will not notice"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesAtOnceCaption() string { return In(i18n.Locale()).UpdatesAtOnceCaption() }
+
+// UpdatesAtOnceCaption says "compatible: projects will not notice"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesAtOnceCaption() string {
+	return Catalog.Format(msgs.locale, "updatesAtOnceCaption", nil)
+}
+
+// UpdatesLinesRow says "New lines"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesLinesRow() string { return In(i18n.Locale()).UpdatesLinesRow() }
+
+// UpdatesLinesRow says "New lines"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesLinesRow() string {
+	return Catalog.Format(msgs.locale, "updatesLinesRow", nil)
+}
+
+// UpdatesAppsRow says "Apps"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesAppsRow() string { return In(i18n.Locale()).UpdatesAppsRow() }
+
+// UpdatesAppsRow says "Apps"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesAppsRow() string {
+	return Catalog.Format(msgs.locale, "updatesAppsRow", nil)
+}
+
+// UpdatesAppsCaption says "close while they update"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesAppsCaption() string { return In(i18n.Locale()).UpdatesAppsCaption() }
+
+// UpdatesAppsCaption says "close while they update"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesAppsCaption() string {
+	return Catalog.Format(msgs.locale, "updatesAppsCaption", nil)
+}
+
+// UpdatesPinnedRow says "Versions a project pins"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesPinnedRow() string { return In(i18n.Locale()).UpdatesPinnedRow() }
+
+// UpdatesPinnedRow says "Versions a project pins"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesPinnedRow() string {
+	return Catalog.Format(msgs.locale, "updatesPinnedRow", nil)
+}
+
+// UpdatesPinnedCaption says "a project asks for that one: .nvmrc stays"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesPinnedCaption() string { return In(i18n.Locale()).UpdatesPinnedCaption() }
+
+// UpdatesPinnedCaption says "a project asks for that one: .nvmrc stays"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesPinnedCaption() string {
+	return Catalog.Format(msgs.locale, "updatesPinnedCaption", nil)
+}
+
+// UpdatesSystemRow says "System copies"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesSystemRow() string { return In(i18n.Locale()).UpdatesSystemRow() }
+
+// UpdatesSystemRow says "System copies"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesSystemRow() string {
+	return Catalog.Format(msgs.locale, "updatesSystemRow", nil)
+}
+
+// UpdatesSystemCaption says "the operating system updates them"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesSystemCaption() string { return In(i18n.Locale()).UpdatesSystemCaption() }
+
+// UpdatesSystemCaption says "the operating system updates them"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesSystemCaption() string {
+	return Catalog.Format(msgs.locale, "updatesSystemCaption", nil)
+}
+
+// UpdatesManualRow says "Installed by hand"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesManualRow() string { return In(i18n.Locale()).UpdatesManualRow() }
+
+// UpdatesManualRow says "Installed by hand"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesManualRow() string {
+	return Catalog.Format(msgs.locale, "updatesManualRow", nil)
+}
+
+// UpdatesManualCaption says "without a manager Hearth cannot tell how"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesManualCaption() string { return In(i18n.Locale()).UpdatesManualCaption() }
+
+// UpdatesManualCaption says "without a manager Hearth cannot tell how"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesManualCaption() string {
+	return Catalog.Format(msgs.locale, "updatesManualCaption", nil)
+}
+
+// UpdatesRunChosen says "Update selected · {count}"
+// in the language the app shows.
+//
+// Updates header button.
+func UpdatesRunChosen(count int) string { return In(i18n.Locale()).UpdatesRunChosen(count) }
+
+// UpdatesRunChosen says "Update selected · {count}"
+// in the language of msgs.
+//
+// Updates header button.
+func (msgs Messages) UpdatesRunChosen(count int) string {
+	return Catalog.Format(msgs.locale, "updatesRunChosen", map[string]any{"count": count})
+}
+
+// UpdatesPlanTitle says "{count, plural, one {Update through # manager} other {Update through # managers}}"
+// in the language the app shows.
+//
+// Title of the plan that updates through several managers at once.
+func UpdatesPlanTitle(count int) string { return In(i18n.Locale()).UpdatesPlanTitle(count) }
+
+// UpdatesPlanTitle says "{count, plural, one {Update through # manager} other {Update through # managers}}"
+// in the language of msgs.
+//
+// Title of the plan that updates through several managers at once.
+func (msgs Messages) UpdatesPlanTitle(count int) string {
+	return Catalog.Format(msgs.locale, "updatesPlanTitle", map[string]any{"count": count})
+}
+
+// UpdatesPlanWhy says "Each manager updates what it installed, one after another."
+// in the language the app shows.
+//
+// Why of the plan that updates through several managers.
+func UpdatesPlanWhy() string { return In(i18n.Locale()).UpdatesPlanWhy() }
+
+// UpdatesPlanWhy says "Each manager updates what it installed, one after another."
+// in the language of msgs.
+//
+// Why of the plan that updates through several managers.
+func (msgs Messages) UpdatesPlanWhy() string {
+	return Catalog.Format(msgs.locale, "updatesPlanWhy", nil)
+}
+
+// UpdatesDepsRow says "Dependencies and unknown origin"
+// in the language the app shows.
+//
+// Updates side card row.
+func UpdatesDepsRow() string { return In(i18n.Locale()).UpdatesDepsRow() }
+
+// UpdatesDepsRow says "Dependencies and unknown origin"
+// in the language of msgs.
+//
+// Updates side card row.
+func (msgs Messages) UpdatesDepsRow() string {
+	return Catalog.Format(msgs.locale, "updatesDepsRow", nil)
+}
+
+// UpdatesDepsCaption says "other packages may need them as they are"
+// in the language the app shows.
+//
+// Updates side card caption.
+func UpdatesDepsCaption() string { return In(i18n.Locale()).UpdatesDepsCaption() }
+
+// UpdatesDepsCaption says "other packages may need them as they are"
+// in the language of msgs.
+//
+// Updates side card caption.
+func (msgs Messages) UpdatesDepsCaption() string {
+	return Catalog.Format(msgs.locale, "updatesDepsCaption", nil)
+}
+
+// UpdatesNone says "No updates match."
+// in the language the app shows.
+//
+// Updates filter matched nothing.
+func UpdatesNone() string { return In(i18n.Locale()).UpdatesNone() }
+
+// UpdatesNone says "No updates match."
+// in the language of msgs.
+//
+// Updates filter matched nothing.
+func (msgs Messages) UpdatesNone() string {
+	return Catalog.Format(msgs.locale, "updatesNone", nil)
 }

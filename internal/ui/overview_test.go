@@ -107,12 +107,11 @@ func TestOverviewManyIssues(t *testing.T) {
 	}
 }
 
-// The hero's counts open the Issues page, the package managers' updates
-// and Cleanup.
+// The hero's counts open the Issues, Updates and Cleanup pages.
 func TestOverviewCountsOpenPages(t *testing.T) {
 	// By their captions: the sidebar's Issues comes before the hero's.
 	for _, tc := range []struct{ label, path string }{
-		{"worth fixing", problemsPage}, {"in package managers", "/system/packages"}, {"counting sizes…", cleanupPage},
+		{"worth fixing", problemsPage}, {"versions and packages", updatesPage}, {"counting sizes…", cleanupPage},
 	} {
 		a := NewApp()
 		a.Snapshot = calmSnapshot()
@@ -123,9 +122,6 @@ func TestOverviewCountsOpenPages(t *testing.T) {
 		tt.Advance(time.Second)
 		if a.router.Path() != tc.path {
 			t.Errorf("%s went to %q, want %q", tc.label, a.router.Path(), tc.path)
-		}
-		if tc.path == "/system/packages" && a.packageTab != 3 {
-			t.Errorf("Updates opened the package managers' tab %d", a.packageTab)
 		}
 	}
 }

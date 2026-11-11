@@ -32,10 +32,9 @@ func TestPackagesPage(t *testing.T) {
 			t.Fatalf("no %s: %q", text, tt.Texts())
 		}
 	}
-	if err := tt.Click("Updates"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Advance(time.Second)
+	// The sidebar's Updates comes before the tab.
+	a.packageTab = updatesTabIndex(a.Snapshot.Tools[0].PackageManagers[0])
+	tt.Frame()
 	if tt.HasText("node") || !tt.HasText("python@3.13") {
 		t.Fatal(tt.Texts())
 	}

@@ -145,12 +145,7 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 				}
 			}
 			stat(c, "stat-issues", dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption(), func() { a.router.Push(problemsPage) })
-			// Until the Updates page, the package managers' updates: their
-			// last tab, which the page clamps the index to.
-			stat(c, "stat-updates", pal.Info, a.updateCount(), locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() {
-				a.packageTab = updatesTabIndex(inventory.PackageManager{ReasonsKnown: true})
-				a.router.Push("/system/packages")
-			})
+			stat(c, "stat-updates", pal.Info, a.updateCount(c), locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() { a.router.Push(updatesPage) })
 			free, caption := "—", locales.CleanupCounting()
 			if a.Sizes != nil {
 				free, caption = formatBytes(freeable(a.candidates(c))), locales.StatFreeCaption()
@@ -654,32 +649,4 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity, issueArea(is), a.issueFix(is, found)})
 	}
 	return out
-}
-
-// updateCount is how many packages the package managers can update, as
-// last checked; "—" when no manager knows.
-func (a *App) updateCount() string {
-	st, ok := a.Snapshot.Tool("packages")
-	if !ok {
-		return "—"
-	}
-	n, known := 0, false
-	for _, m := range st.PackageManagers {
-		if checked, ok := a.PackageUpdates[m.Path]; ok {
-			m = checked
-		}
-		if !m.UpdatesKnown {
-			continue
-		}
-		known = true
-		for _, pkg := range m.Packages {
-			if pkg.Available != "" {
-				n++
-			}
-		}
-	}
-	if !known {
-		return "—"
-	}
-	return strconv.Itoa(n)
 }

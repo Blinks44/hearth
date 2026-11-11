@@ -1150,9 +1150,9 @@
   },
   "heroUpdates": "Updates",
   "@heroUpdates": {
-    "description": "Hero count: package updates available."
+    "description": "Hero count: updates of versions and packages available."
   },
-  "heroUpdatesCaption": "in package managers",
+  "heroUpdatesCaption": "versions and packages",
   "@heroUpdatesCaption": {
     "description": "Caption under the update count."
   },
@@ -6300,5 +6300,189 @@
   "allIssues": "All issues",
   "@allIssues": {
     "description": "Link from the overview's issues card to the Issues page."
+  },
+  "updatesTitle": "Updates",
+  "@updatesTitle": {
+    "description": "Sidebar item and header of the Updates page."
+  },
+  "updatesSubtitle": "New versions of tools and packages",
+  "@updatesSubtitle": {
+    "description": "Under the Updates page's title."
+  },
+  "updatesLead": "The manager that installed it updates it",
+  "@updatesLead": {
+    "description": "Under the Updates page's big title."
+  },
+  "updatesFoundCaption": "{versions, plural, one {# version} other {# versions}} · {packages, plural, one {# package} other {# packages}}",
+  "@updatesFoundCaption": {
+    "description": "Updates card caption: how many versions and packages.",
+    "placeholders": {
+      "versions": {
+        "type": "int",
+        "example": "5"
+      },
+      "packages": {
+        "type": "int",
+        "example": "9"
+      }
+    }
+  },
+  "updatesSelectedCaption": "fixes and packages",
+  "@updatesSelectedCaption": {
+    "description": "Updates card caption under the count of checked updates."
+  },
+  "updatesVersions": "Versions",
+  "@updatesVersions": {
+    "description": "Updates tab: newer versions of tools."
+  },
+  "updatesPackages": "Packages",
+  "@updatesPackages": {
+    "description": "Updates tab: packages of package managers."
+  },
+  "updatesGroupPatches": "Versions · fixes in the same line",
+  "@updatesGroupPatches": {
+    "description": "Updates table group."
+  },
+  "updatesGroupLines": "Versions · new lines",
+  "@updatesGroupLines": {
+    "description": "Updates table group."
+  },
+  "updatesGroupFormulas": "{manager} · formulas",
+  "@updatesGroupFormulas": {
+    "description": "Updates table group: Homebrew's formulas.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "updatesGroupApps": "{manager} · apps",
+  "@updatesGroupApps": {
+    "description": "Updates table group: Homebrew's casks.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Homebrew"
+      }
+    }
+  },
+  "updatesPatchCaption": "a fix in the same line",
+  "@updatesPatchCaption": {
+    "description": "Updates row caption: a newer release of the copy's line."
+  },
+  "updatesLineCaption": "installs alongside, the default stays",
+  "@updatesLineCaption": {
+    "description": "Updates row caption and side card caption: a new line."
+  },
+  "updatesCaskCaption": "cask · the app closes while it updates",
+  "@updatesCaskCaption": {
+    "description": "Updates row caption: a Homebrew cask."
+  },
+  "updatesDependency": "a dependency of other packages",
+  "@updatesDependency": {
+    "description": "Updates row caption."
+  },
+  "updatesAsked": "installed by you",
+  "@updatesAsked": {
+    "description": "Updates row caption."
+  },
+  "updatesNotThrough": "Hearth does not update through {manager}",
+  "@updatesNotThrough": {
+    "description": "Updates row caption: a manager Hearth has no operation for.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "Nix"
+      }
+    }
+  },
+  "updatesWaiting": "Updates show after the first check.",
+  "@updatesWaiting": {
+    "description": "Updates page before the first scan."
+  },
+  "updatesEmpty": "Everything is up to date.",
+  "@updatesEmpty": {
+    "description": "Updates page without updates."
+  },
+  "updatesAtOnceRow": "Packages you installed",
+  "@updatesAtOnceRow": {
+    "description": "Updates side card row: what is checked at once."
+  },
+  "updatesAtOnceCaption": "compatible: projects will not notice",
+  "@updatesAtOnceCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesLinesRow": "New lines",
+  "@updatesLinesRow": {
+    "description": "Updates side card row."
+  },
+  "updatesAppsRow": "Apps",
+  "@updatesAppsRow": {
+    "description": "Updates side card row."
+  },
+  "updatesAppsCaption": "close while they update",
+  "@updatesAppsCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesPinnedRow": "Versions a project pins",
+  "@updatesPinnedRow": {
+    "description": "Updates side card row."
+  },
+  "updatesPinnedCaption": "a project asks for that one: .nvmrc stays",
+  "@updatesPinnedCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesSystemRow": "System copies",
+  "@updatesSystemRow": {
+    "description": "Updates side card row."
+  },
+  "updatesSystemCaption": "the operating system updates them",
+  "@updatesSystemCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesManualRow": "Installed by hand",
+  "@updatesManualRow": {
+    "description": "Updates side card row."
+  },
+  "updatesManualCaption": "without a manager Hearth cannot tell how",
+  "@updatesManualCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesRunChosen": "Update selected · {count}",
+  "@updatesRunChosen": {
+    "description": "Updates header button.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "11"
+      }
+    }
+  },
+  "updatesPlanTitle": "{count, plural, one {Update through # manager} other {Update through # managers}}",
+  "@updatesPlanTitle": {
+    "description": "Title of the plan that updates through several managers at once.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "updatesPlanWhy": "Each manager updates what it installed, one after another.",
+  "@updatesPlanWhy": {
+    "description": "Why of the plan that updates through several managers."
+  },
+  "updatesDepsRow": "Dependencies and unknown origin",
+  "@updatesDepsRow": {
+    "description": "Updates side card row."
+  },
+  "updatesDepsCaption": "other packages may need them as they are",
+  "@updatesDepsCaption": {
+    "description": "Updates side card caption."
+  },
+  "updatesNone": "No updates match.",
+  "@updatesNone": {
+    "description": "Updates filter matched nothing."
   }
 }
