@@ -148,14 +148,25 @@ func TestDocker(t *testing.T) {
 {"Active":"0","Reclaimable":"0B","Size":"0B","TotalCount":"0","Type":"Containers"}
 {"Active":"0","Reclaimable":"6.979GB","Size":"14.46GB","TotalCount":"201","Type":"Build Cache"}
 `, "/bin/docker", "--host", "unix:///orb.sock", "system", "df", "--format", "{{json .}}")
+	// Of the reclaimable images, two have stopped containers: only what
+	// the others alone hold goes.
+	f.Stdout(`[{"Containers":"0","UniqueSize":"213.9MB"},{"Containers":"1","UniqueSize":"1.136GB"},{"Containers":"0","UniqueSize":"0B"},{"Containers":"2","UniqueSize":"300MB"}]
+`, "/bin/docker", "--host", "unix:///orb.sock", "system", "df", "--verbose", "--format", "{{json .Images}}")
 	got, err := Docker(context.Background(), f, nil, snap)
 	want := []inventory.DockerUsage{
-		{Type: "Images", Count: 16, Active: 14, Bytes: 11_660_000_000, Reclaimable: 1_664_000_000},
+		{Type: "Images", Count: 16, Active: 14, Bytes: 11_660_000_000, Reclaimable: 213_900_000},
 		{Type: "Containers"},
 		{Type: "Build Cache", Count: 201, Bytes: 14_460_000_000, Reclaimable: 6_979_000_000},
 	}
 	if err != nil || !slices.Equal(got, want) {
 		t.Fatalf("got %+v, %v", got, err)
+	}
+	// Images that all have containers free nothing, whatever Docker says.
+	f.Stdout(`{"Active":"3","Reclaimable":"3.781GB (94%)","Size":"3.995GB","TotalCount":"3","Type":"Images"}
+`, "/bin/docker", "--host", "unix:///orb.sock", "system", "df", "--format", "{{json .}}")
+	got, err = Docker(context.Background(), f, nil, snap)
+	if want := []inventory.DockerUsage{{Type: "Images", Count: 3, Active: 3, Bytes: 3_995_000_000}}; err != nil || !slices.Equal(got, want) {
+		t.Fatalf("all images in use: got %+v, %v", got, err)
 	}
 	// The context the terminal selects is not asked unless the scan found
 	// its engine running.

@@ -35,15 +35,66 @@ func Docker(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.S
 	if i < 0 {
 		return nil, ErrNoEngine
 	}
-	res, err := r.Run(ctx, run.Cmd{Args: []string{st.Installations[active].Path, "--host", st.Docker.Contexts[i].Endpoint, "system", "df", "--format", "{{json .}}"},
-		Env: append(slices.Clone(env), "DOCKER_CONTEXT="), Timeout: time.Minute})
+	df := func(args ...string) ([]byte, error) {
+		res, err := r.Run(ctx, run.Cmd{Args: append([]string{st.Installations[active].Path, "--host", st.Docker.Contexts[i].Endpoint, "system", "df"}, args...),
+			Env: append(slices.Clone(env), "DOCKER_CONTEXT="), Timeout: time.Minute})
+		if err != nil {
+			return nil, fmt.Errorf("docker system df: %w", err)
+		}
+		if res.ExitCode != 0 || res.Truncated {
+			return nil, fmt.Errorf("docker system df: exit %d: %s", res.ExitCode, strings.TrimSpace(string(res.Stderr)))
+		}
+		return res.Stdout, nil
+	}
+	out, err := df("--format", "{{json .}}")
 	if err != nil {
-		return nil, fmt.Errorf("docker system df: %w", err)
+		return nil, err
 	}
-	if res.ExitCode != 0 || res.Truncated {
-		return nil, fmt.Errorf("docker system df: exit %d: %s", res.ExitCode, strings.TrimSpace(string(res.Stderr)))
+	rows, err := parseDockerDF(out)
+	if err != nil {
+		return nil, err
 	}
-	return parseDockerDF(res.Stdout)
+	// Docker counts an image a stopped container uses as reclaimable,
+	// though image prune leaves it: images without containers free what
+	// only they hold, and none nothing.
+	for j, u := range rows {
+		if u.Type != "Images" {
+			continue
+		}
+		if u.Count <= u.Active {
+			rows[j].Reclaimable = 0
+			continue
+		}
+		out, err := df("--verbose", "--format", "{{json .Images}}")
+		if err != nil {
+			return nil, err
+		}
+		if rows[j].Reclaimable, err = parseUnusedImages(out); err != nil {
+			return nil, err
+		}
+	}
+	return rows, nil
+}
+
+// parseUnusedImages adds up the layers only the images without
+// containers hold; a layer two of them share is not counted.
+func parseUnusedImages(data []byte) (int64, error) {
+	var images []struct{ Containers, UniqueSize string }
+	if err := json.Unmarshal(data, &images); err != nil {
+		return 0, fmt.Errorf("docker system df --verbose: %w", err)
+	}
+	var n int64
+	for _, img := range images {
+		if img.Containers != "0" {
+			continue
+		}
+		size, err := parseDockerSize(img.UniqueSize)
+		if err != nil {
+			return 0, fmt.Errorf("docker system df --verbose: %w", err)
+		}
+		n += size
+	}
+	return n, nil
 }
 
 func parseDockerDF(data []byte) ([]inventory.DockerUsage, error) {
