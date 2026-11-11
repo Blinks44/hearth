@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -50,5 +51,40 @@ func TestDatabasesPage(t *testing.T) {
 	tt.Advance(time.Second)
 	if !tt.HasText("No matching database servers found.") {
 		t.Fatal(tt.Texts())
+	}
+}
+
+func TestDatabaseServiceOperations(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{Servers: []inventory.Database{
+		{Kind: "PostgreSQL", Name: "PostgreSQL", Version: "17.2", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Source: "brew", Status: "running", Service: "postgresql@17"},
+		{Kind: "MySQL", Name: "MySQL", Version: "8.4.3", Path: "/opt/homebrew/bin/mysqld", Source: "brew", Status: "stopped", Service: "mysql@8.4"},
+	}, Listeners: []inventory.DatabaseListener{{Address: "*", Port: "5432", Process: "postgres", PID: "812"}}}}}}
+	a.Projects = []projects.Project{{Dir: home + "/dev/shop-web", Databases: []projects.DatabaseReference{{Kind: "PostgreSQL", Service: "db", File: "compose.yaml", Ports: []string{"5432"}}}}}
+	a.router.Push("/tools/databases")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "databases-actions")
+	// The conflict's button stops the service on the port.
+	if err := tt.Click("Stop service…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"brew", "services", "stop", "postgresql@17"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	stopped := a.Snapshot.Tools[0].Databases.Servers[1]
+	if p, ok := a.servicePlan(stopped); !ok || !slices.Equal(p.Steps[0].Argv, []string{"brew", "services", "start", "mysql@8.4"}) {
+		t.Fatalf("start plan %+v, %v", p, ok)
+	}
+	// A container on the port holds it, not the service.
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker", Docker: &inventory.DockerState{Databases: []inventory.Database{{Kind: "PostgreSQL", Name: "other-db", Source: "docker", Status: "running", Ports: []string{"5432"}}}}})
+	if _, ok := a.conflictPlan(issues.Issue{Project: home + "/dev/shop-web", Dirs: []string{"5432"}}, inventory.DatabaseServers(a.Snapshot)); ok {
+		t.Error("offers to stop a service for a port a container holds")
 	}
 }

@@ -33,7 +33,7 @@ func plan(steps ...[]string) Plan {
 	return p
 }
 
-func init() { verifyPause = time.Millisecond }
+func init() { verifyPause, engineStartPause = time.Millisecond, time.Millisecond }
 
 func TestExecute(t *testing.T) {
 	fail := errors.New("broken")

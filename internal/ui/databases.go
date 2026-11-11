@@ -10,6 +10,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -51,7 +52,13 @@ func (a *App) databases(c *ui.Context, p page) {
 				})
 				for _, is := range conflicts {
 					title, explain := issueText(is, a.Home)
-					warningRow(c, title+". "+explain)
+					var action func()
+					if plan, ok := a.conflictPlan(is, servers); ok {
+						action = func() {
+							ui.Button(c.Key("stop:"+is.Project+is.Dirs[0]), locales.ServiceStop()).Shrink(0).OnClick(func() { a.Propose(plan) })
+						}
+					}
+					warningWith(c, title+". "+explain, action)
 				}
 				if len(d.Warnings) > 0 {
 					warningRow(c, locales.DatabaseProbeFailed(strings.Join(d.Warnings, ", ")))
@@ -184,6 +191,17 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
 					}
 				}
+				if plan, ok := a.servicePlan(db); ok {
+					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+						label := locales.ServiceStart()
+						if db.Status == "running" {
+							label = locales.ServiceStop()
+						}
+						if menu.Item(label).Chosen() {
+							a.Propose(plan)
+						}
+					})
+				}
 			})
 		}
 		if shown == 0 {
@@ -258,4 +276,48 @@ func databaseClientKind(command string) string {
 		return "SQL Server"
 	}
 	return ""
+}
+
+// servicePlan is the plan that starts db's service when it is stopped
+// and stops it when it runs; ok is false for a status not known, or a
+// server without a service Hearth changes.
+func (a *App) servicePlan(db inventory.Database) (ops.Plan, bool) {
+	switch db.Status {
+	case "running":
+		return ops.ServicePlan(ops.ServiceStop, db, a.detect("databases"))
+	case "stopped", "error":
+		return ops.ServicePlan(ops.ServiceStart, db, a.detect("databases"))
+	}
+	return ops.Plan{}, false
+}
+
+// conflictPlan is the plan that stops the service holding is's port: the
+// one running service of the kind the project asks for there, when no
+// container publishes the port.
+func (a *App) conflictPlan(is issues.Issue, servers []inventory.Database) (ops.Plan, bool) {
+	port := is.Dirs[0]
+	kind := ""
+	for _, p := range a.Projects {
+		if p.Dir != is.Project {
+			continue
+		}
+		for _, ref := range p.Databases {
+			if slices.Contains(ref.Ports, port) {
+				kind = ref.Kind
+			}
+		}
+	}
+	var holder []inventory.Database
+	for _, db := range servers {
+		if db.Source == "docker" && db.Status == "running" && slices.Contains(db.Ports, port) {
+			return ops.Plan{}, false
+		}
+		if db.Service != "" && db.Source != "docker" && db.Status == "running" && db.Kind == kind {
+			holder = append(holder, db)
+		}
+	}
+	if kind == "" || len(holder) != 1 {
+		return ops.Plan{}, false
+	}
+	return ops.ServicePlan(ops.ServiceStop, holder[0], a.detect("databases"))
 }

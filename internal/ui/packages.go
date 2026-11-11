@@ -456,22 +456,28 @@ func choosable(m inventory.PackageManager) bool {
 // packagePlan is the plan that does action to pkgs of m, as ops.PackagePlan,
 // checked by reading m again as the scan found it.
 func (a *App) packagePlan(action ops.PackageAction, m inventory.PackageManager, pkgs []inventory.SystemPackage) (ops.Plan, bool) {
-	var reread ops.Reread
-	if r := a.RereadPackages; r != nil {
-		base := m
-		if st, ok := a.Snapshot.Tool("packages"); ok {
-			for _, found := range st.PackageManagers {
-				if found.Path == m.Path {
-					base = found
-				}
-			}
-		}
-		reread = func(ctx context.Context) (inventory.PackageManager, error) { return r(ctx, base) }
-	}
 	if action == ops.PackageUpgrade && m.ID == "pacman" {
 		pkgs = upgradable(m)
 	}
-	return ops.PackagePlan(action, m, pkgs, reread)
+	return ops.PackagePlan(action, m, pkgs, a.reread(m))
+}
+
+// reread lists m's packages again as the scan found m, for a plan's
+// check; nil when the app cannot.
+func (a *App) reread(m inventory.PackageManager) ops.Reread {
+	r := a.RereadPackages
+	if r == nil {
+		return nil
+	}
+	base := m
+	if st, ok := a.Snapshot.Tool("packages"); ok {
+		for _, found := range st.PackageManagers {
+			if found.Path == m.Path {
+				base = found
+			}
+		}
+	}
+	return func(ctx context.Context) (inventory.PackageManager, error) { return r(ctx, base) }
 }
 
 // upgradable are m's packages with an update.

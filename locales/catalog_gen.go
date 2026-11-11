@@ -5618,11 +5618,11 @@ func (msgs Messages) DatabaseContainers() string {
 	return Catalog.Format(msgs.locale, "DatabaseContainers", nil)
 }
 
-// DatabaseReadOnly says "Service controls will be available through a reviewed operation plan. Status comes from the service manager; listenin…"
+// DatabaseReadOnly says "Services start and stop through their manager, after showing what will change. Containers are run by docker compose i…"
 // in the language the app shows.
 func DatabaseReadOnly() string { return In(i18n.Locale()).DatabaseReadOnly() }
 
-// DatabaseReadOnly says "Service controls will be available through a reviewed operation plan. Status comes from the service manager; listenin…"
+// DatabaseReadOnly says "Services start and stop through their manager, after showing what will change. Containers are run by docker compose i…"
 // in the language of msgs.
 func (msgs Messages) DatabaseReadOnly() string {
 	return Catalog.Format(msgs.locale, "DatabaseReadOnly", nil)
@@ -12122,13 +12122,13 @@ func (msgs Messages) NoteAdminLinux() string {
 	return Catalog.Format(msgs.locale, "noteAdminLinux", nil)
 }
 
-// NoteAdminWindows says "Windows asks for permission (UAC) when the installer starts"
+// NoteAdminWindows says "Windows asks for permission (UAC) before the step that needs it"
 // in the language the app shows.
 //
 // Worth knowing on Windows: a step needs administrator rights.
 func NoteAdminWindows() string { return In(i18n.Locale()).NoteAdminWindows() }
 
-// NoteAdminWindows says "Windows asks for permission (UAC) when the installer starts"
+// NoteAdminWindows says "Windows asks for permission (UAC) before the step that needs it"
 // in the language of msgs.
 //
 // Worth knowing on Windows: a step needs administrator rights.
@@ -13296,4 +13296,432 @@ func NoVersionManagerOwn(tool string, sources string) string {
 // does not install it through mise, as PHP.
 func (msgs Messages) NoVersionManagerOwn(tool string, sources string) string {
 	return Catalog.Format(msgs.locale, "noVersionManagerOwn", map[string]any{"tool": tool, "sources": sources})
+}
+
+// DockerTermsDesktop says "Docker Desktop terms of use"
+// in the language the app shows.
+//
+// Note title before installing Docker Desktop.
+func DockerTermsDesktop() string { return In(i18n.Locale()).DockerTermsDesktop() }
+
+// DockerTermsDesktop says "Docker Desktop terms of use"
+// in the language of msgs.
+//
+// Note title before installing Docker Desktop.
+func (msgs Messages) DockerTermsDesktop() string {
+	return Catalog.Format(msgs.locale, "dockerTermsDesktop", nil)
+}
+
+// DockerTermsDesktopText says "Free for personal use, education and companies under 250 people and $10M revenue; paid otherwise"
+// in the language the app shows.
+//
+// Docker Desktop's license in short.
+func DockerTermsDesktopText() string { return In(i18n.Locale()).DockerTermsDesktopText() }
+
+// DockerTermsDesktopText says "Free for personal use, education and companies under 250 people and $10M revenue; paid otherwise"
+// in the language of msgs.
+//
+// Docker Desktop's license in short.
+func (msgs Messages) DockerTermsDesktopText() string {
+	return Catalog.Format(msgs.locale, "dockerTermsDesktopText", nil)
+}
+
+// DockerTermsOrb says "OrbStack terms of use"
+// in the language the app shows.
+//
+// Note title before installing OrbStack.
+func DockerTermsOrb() string { return In(i18n.Locale()).DockerTermsOrb() }
+
+// DockerTermsOrb says "OrbStack terms of use"
+// in the language of msgs.
+//
+// Note title before installing OrbStack.
+func (msgs Messages) DockerTermsOrb() string {
+	return Catalog.Format(msgs.locale, "dockerTermsOrb", nil)
+}
+
+// DockerTermsOrbText says "Free for personal use; paid for work at a company"
+// in the language the app shows.
+//
+// OrbStack's license in short.
+func DockerTermsOrbText() string { return In(i18n.Locale()).DockerTermsOrbText() }
+
+// DockerTermsOrbText says "Free for personal use; paid for work at a company"
+// in the language of msgs.
+//
+// OrbStack's license in short.
+func (msgs Messages) DockerTermsOrbText() string {
+	return Catalog.Format(msgs.locale, "dockerTermsOrbText", nil)
+}
+
+// DockerAcceptInstall says "Accept the terms and install"
+// in the language the app shows.
+//
+// Button that runs an install whose app has terms of use.
+func DockerAcceptInstall() string { return In(i18n.Locale()).DockerAcceptInstall() }
+
+// DockerAcceptInstall says "Accept the terms and install"
+// in the language of msgs.
+//
+// Button that runs an install whose app has terms of use.
+func (msgs Messages) DockerAcceptInstall() string {
+	return Catalog.Format(msgs.locale, "dockerAcceptInstall", nil)
+}
+
+// DockerStartTitle says "Start {engine}"
+// in the language the app shows.
+//
+// Title of the plan that starts a container engine, and its button.
+func DockerStartTitle(engine string) string { return In(i18n.Locale()).DockerStartTitle(engine) }
+
+// DockerStartTitle says "Start {engine}"
+// in the language of msgs.
+//
+// Title of the plan that starts a container engine, and its button.
+func (msgs Messages) DockerStartTitle(engine string) string {
+	return Catalog.Format(msgs.locale, "dockerStartTitle", map[string]any{"engine": engine})
+}
+
+// DockerStartWhy says "Hearth starts the engine and waits until docker gets an answer from it."
+// in the language the app shows.
+//
+// How starting a container engine goes.
+func DockerStartWhy() string { return In(i18n.Locale()).DockerStartWhy() }
+
+// DockerStartWhy says "Hearth starts the engine and waits until docker gets an answer from it."
+// in the language of msgs.
+//
+// How starting a container engine goes.
+func (msgs Messages) DockerStartWhy() string {
+	return Catalog.Format(msgs.locale, "dockerStartWhy", nil)
+}
+
+// DockerStartChange says "{engine} is running"
+// in the language the app shows.
+//
+// What is different after an engine started.
+func DockerStartChange(engine string) string { return In(i18n.Locale()).DockerStartChange(engine) }
+
+// DockerStartChange says "{engine} is running"
+// in the language of msgs.
+//
+// What is different after an engine started.
+func (msgs Messages) DockerStartChange(engine string) string {
+	return Catalog.Format(msgs.locale, "dockerStartChange", map[string]any{"engine": engine})
+}
+
+// DockerCheckAnswers says "{engine} answers: Docker {version}"
+// in the language the app shows.
+//
+// What the check of a started engine found.
+func DockerCheckAnswers(engine string, version string) string {
+	return In(i18n.Locale()).DockerCheckAnswers(engine, version)
+}
+
+// DockerCheckAnswers says "{engine} answers: Docker {version}"
+// in the language of msgs.
+//
+// What the check of a started engine found.
+func (msgs Messages) DockerCheckAnswers(engine string, version string) string {
+	return Catalog.Format(msgs.locale, "dockerCheckAnswers", map[string]any{"engine": engine, "version": version})
+}
+
+// DockerCheckSilent says "{engine} did not answer in 2 minutes"
+// in the language the app shows.
+//
+// Why the check of a started engine failed.
+func DockerCheckSilent(engine string) string { return In(i18n.Locale()).DockerCheckSilent(engine) }
+
+// DockerCheckSilent says "{engine} did not answer in 2 minutes"
+// in the language of msgs.
+//
+// Why the check of a started engine failed.
+func (msgs Messages) DockerCheckSilent(engine string) string {
+	return Catalog.Format(msgs.locale, "dockerCheckSilent", map[string]any{"engine": engine})
+}
+
+// DockerContextTitle says "Switch Docker to {name}"
+// in the language the app shows.
+//
+// Title of the plan that changes the Docker context.
+func DockerContextTitle(name string) string { return In(i18n.Locale()).DockerContextTitle(name) }
+
+// DockerContextTitle says "Switch Docker to {name}"
+// in the language of msgs.
+//
+// Title of the plan that changes the Docker context.
+func (msgs Messages) DockerContextTitle(name string) string {
+	return Catalog.Format(msgs.locale, "dockerContextTitle", map[string]any{"name": name})
+}
+
+// DockerContextWhy says "docker context use: every terminal and docker compose will use this engine."
+// in the language the app shows.
+//
+// What changing the Docker context does.
+func DockerContextWhy() string { return In(i18n.Locale()).DockerContextWhy() }
+
+// DockerContextWhy says "docker context use: every terminal and docker compose will use this engine."
+// in the language of msgs.
+//
+// What changing the Docker context does.
+func (msgs Messages) DockerContextWhy() string {
+	return Catalog.Format(msgs.locale, "dockerContextWhy", nil)
+}
+
+// DockerCheckSelected says "Context {name} selected"
+// in the language the app shows.
+//
+// What the check of a context switch found.
+func DockerCheckSelected(name string) string { return In(i18n.Locale()).DockerCheckSelected(name) }
+
+// DockerCheckSelected says "Context {name} selected"
+// in the language of msgs.
+//
+// What the check of a context switch found.
+func (msgs Messages) DockerCheckSelected(name string) string {
+	return Catalog.Format(msgs.locale, "dockerCheckSelected", map[string]any{"name": name})
+}
+
+// DockerCheckNotSelected says "Context {name} is not selected"
+// in the language the app shows.
+//
+// Why the check of a context switch failed.
+func DockerCheckNotSelected(name string) string {
+	return In(i18n.Locale()).DockerCheckNotSelected(name)
+}
+
+// DockerCheckNotSelected says "Context {name} is not selected"
+// in the language of msgs.
+//
+// Why the check of a context switch failed.
+func (msgs Messages) DockerCheckNotSelected(name string) string {
+	return Catalog.Format(msgs.locale, "dockerCheckNotSelected", map[string]any{"name": name})
+}
+
+// DockerUseContext says "Use this context"
+// in the language the app shows.
+//
+// Menu item of a Docker context: switch to it.
+func DockerUseContext() string { return In(i18n.Locale()).DockerUseContext() }
+
+// DockerUseContext says "Use this context"
+// in the language of msgs.
+//
+// Menu item of a Docker context: switch to it.
+func (msgs Messages) DockerUseContext() string {
+	return Catalog.Format(msgs.locale, "dockerUseContext", nil)
+}
+
+// DockerSwitchTo says "Switch to {name}…"
+// in the language the app shows.
+//
+// Banner button: switch the Docker context to another one.
+func DockerSwitchTo(name string) string { return In(i18n.Locale()).DockerSwitchTo(name) }
+
+// DockerSwitchTo says "Switch to {name}…"
+// in the language of msgs.
+//
+// Banner button: switch the Docker context to another one.
+func (msgs Messages) DockerSwitchTo(name string) string {
+	return Catalog.Format(msgs.locale, "dockerSwitchTo", map[string]any{"name": name})
+}
+
+// ServiceWhyBrew says "Through brew services, as the terminal would."
+// in the language the app shows.
+//
+// How a Homebrew service starts or stops.
+func ServiceWhyBrew() string { return In(i18n.Locale()).ServiceWhyBrew() }
+
+// ServiceWhyBrew says "Through brew services, as the terminal would."
+// in the language of msgs.
+//
+// How a Homebrew service starts or stops.
+func (msgs Messages) ServiceWhyBrew() string {
+	return Catalog.Format(msgs.locale, "serviceWhyBrew", nil)
+}
+
+// ServiceWhySystem says "Through the system's service manager."
+// in the language the app shows.
+//
+// How a system service starts or stops.
+func ServiceWhySystem() string { return In(i18n.Locale()).ServiceWhySystem() }
+
+// ServiceWhySystem says "Through the system's service manager."
+// in the language of msgs.
+//
+// How a system service starts or stops.
+func (msgs Messages) ServiceWhySystem() string {
+	return Catalog.Format(msgs.locale, "serviceWhySystem", nil)
+}
+
+// ServiceBrewLogin says "It will not start at login"
+// in the language the app shows.
+//
+// Note title: stopping a brew service also removes it from login.
+func ServiceBrewLogin() string { return In(i18n.Locale()).ServiceBrewLogin() }
+
+// ServiceBrewLogin says "It will not start at login"
+// in the language of msgs.
+//
+// Note title: stopping a brew service also removes it from login.
+func (msgs Messages) ServiceBrewLogin() string {
+	return Catalog.Format(msgs.locale, "serviceBrewLogin", nil)
+}
+
+// ServiceBrewLoginText says "brew services stop also takes it out of login items; starting it brings it back."
+// in the language the app shows.
+//
+// Note text on stopping a brew service.
+func ServiceBrewLoginText() string { return In(i18n.Locale()).ServiceBrewLoginText() }
+
+// ServiceBrewLoginText says "brew services stop also takes it out of login items; starting it brings it back."
+// in the language of msgs.
+//
+// Note text on stopping a brew service.
+func (msgs Messages) ServiceBrewLoginText() string {
+	return Catalog.Format(msgs.locale, "serviceBrewLoginText", nil)
+}
+
+// ServiceStartTitle says "Start {name}"
+// in the language the app shows.
+//
+// Title of the plan that starts a database service.
+func ServiceStartTitle(name string) string { return In(i18n.Locale()).ServiceStartTitle(name) }
+
+// ServiceStartTitle says "Start {name}"
+// in the language of msgs.
+//
+// Title of the plan that starts a database service.
+func (msgs Messages) ServiceStartTitle(name string) string {
+	return Catalog.Format(msgs.locale, "serviceStartTitle", map[string]any{"name": name})
+}
+
+// ServiceStopTitle says "Stop {name}"
+// in the language the app shows.
+//
+// Title of the plan that stops a database service.
+func ServiceStopTitle(name string) string { return In(i18n.Locale()).ServiceStopTitle(name) }
+
+// ServiceStopTitle says "Stop {name}"
+// in the language of msgs.
+//
+// Title of the plan that stops a database service.
+func (msgs Messages) ServiceStopTitle(name string) string {
+	return Catalog.Format(msgs.locale, "serviceStopTitle", map[string]any{"name": name})
+}
+
+// ServiceStartChange says "Service {name} is running"
+// in the language the app shows.
+//
+// What is different after a service started.
+func ServiceStartChange(name string) string { return In(i18n.Locale()).ServiceStartChange(name) }
+
+// ServiceStartChange says "Service {name} is running"
+// in the language of msgs.
+//
+// What is different after a service started.
+func (msgs Messages) ServiceStartChange(name string) string {
+	return Catalog.Format(msgs.locale, "serviceStartChange", map[string]any{"name": name})
+}
+
+// ServiceStopChange says "Service {name} is stopped"
+// in the language the app shows.
+//
+// What is different after a service stopped.
+func ServiceStopChange(name string) string { return In(i18n.Locale()).ServiceStopChange(name) }
+
+// ServiceStopChange says "Service {name} is stopped"
+// in the language of msgs.
+//
+// What is different after a service stopped.
+func (msgs Messages) ServiceStopChange(name string) string {
+	return Catalog.Format(msgs.locale, "serviceStopChange", map[string]any{"name": name})
+}
+
+// ServiceCheckRunning says "{name} is running"
+// in the language the app shows.
+//
+// What the check of a started service found.
+func ServiceCheckRunning(name string) string { return In(i18n.Locale()).ServiceCheckRunning(name) }
+
+// ServiceCheckRunning says "{name} is running"
+// in the language of msgs.
+//
+// What the check of a started service found.
+func (msgs Messages) ServiceCheckRunning(name string) string {
+	return Catalog.Format(msgs.locale, "serviceCheckRunning", map[string]any{"name": name})
+}
+
+// ServiceCheckStopped says "{name} is stopped"
+// in the language the app shows.
+//
+// What the check of a stopped service found.
+func ServiceCheckStopped(name string) string { return In(i18n.Locale()).ServiceCheckStopped(name) }
+
+// ServiceCheckStopped says "{name} is stopped"
+// in the language of msgs.
+//
+// What the check of a stopped service found.
+func (msgs Messages) ServiceCheckStopped(name string) string {
+	return Catalog.Format(msgs.locale, "serviceCheckStopped", map[string]any{"name": name})
+}
+
+// ServiceCheckNotRunning says "{name} is not running"
+// in the language the app shows.
+//
+// Why the check of a started service failed.
+func ServiceCheckNotRunning(name string) string {
+	return In(i18n.Locale()).ServiceCheckNotRunning(name)
+}
+
+// ServiceCheckNotRunning says "{name} is not running"
+// in the language of msgs.
+//
+// Why the check of a started service failed.
+func (msgs Messages) ServiceCheckNotRunning(name string) string {
+	return Catalog.Format(msgs.locale, "serviceCheckNotRunning", map[string]any{"name": name})
+}
+
+// ServiceCheckNotStopped says "{name} is still running"
+// in the language the app shows.
+//
+// Why the check of a stopped service failed.
+func ServiceCheckNotStopped(name string) string {
+	return In(i18n.Locale()).ServiceCheckNotStopped(name)
+}
+
+// ServiceCheckNotStopped says "{name} is still running"
+// in the language of msgs.
+//
+// Why the check of a stopped service failed.
+func (msgs Messages) ServiceCheckNotStopped(name string) string {
+	return Catalog.Format(msgs.locale, "serviceCheckNotStopped", map[string]any{"name": name})
+}
+
+// ServiceStart says "Start service"
+// in the language the app shows.
+//
+// Menu item of a database service.
+func ServiceStart() string { return In(i18n.Locale()).ServiceStart() }
+
+// ServiceStart says "Start service"
+// in the language of msgs.
+//
+// Menu item of a database service.
+func (msgs Messages) ServiceStart() string {
+	return Catalog.Format(msgs.locale, "serviceStart", nil)
+}
+
+// ServiceStop says "Stop service…"
+// in the language the app shows.
+//
+// Menu item of a database service, and the port conflict banner's button.
+func ServiceStop() string { return In(i18n.Locale()).ServiceStop() }
+
+// ServiceStop says "Stop service…"
+// in the language of msgs.
+//
+// Menu item of a database service, and the port conflict banner's button.
+func (msgs Messages) ServiceStop() string {
+	return Catalog.Format(msgs.locale, "serviceStop", nil)
 }

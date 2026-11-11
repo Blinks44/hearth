@@ -2077,7 +2077,7 @@
   "DatabasePorts": "TCP ports",
   "DatabaseServices": "Services",
   "DatabaseContainers": "Containers",
-  "DatabaseReadOnly": "Service controls will be available through a reviewed operation plan. Status comes from the service manager; listening ports are shown separately.",
+  "DatabaseReadOnly": "Services start and stop through their manager, after showing what will change. Containers are run by docker compose in their project.",
   "DatabaseListeners": "Database port listeners",
   "DatabaseObserved": "observed · read only",
   "DatabaseNoListeners": "No listeners observed on database ports.",
@@ -4495,7 +4495,7 @@
   "@noteAdminLinux": {
     "description": "Worth knowing on Linux: a step runs as the administrator."
   },
-  "noteAdminWindows": "Windows asks for permission (UAC) when the installer starts",
+  "noteAdminWindows": "Windows asks for permission (UAC) before the step that needs it",
   "@noteAdminWindows": {
     "description": "Worth knowing on Windows: a step needs administrator rights."
   },
@@ -5132,5 +5132,225 @@
         "example": "brew"
       }
     }
+  },
+  "dockerTermsDesktop": "Docker Desktop terms of use",
+  "@dockerTermsDesktop": {
+    "description": "Note title before installing Docker Desktop."
+  },
+  "dockerTermsDesktopText": "Free for personal use, education and companies under 250 people and $10M revenue; paid otherwise",
+  "@dockerTermsDesktopText": {
+    "description": "Docker Desktop's license in short."
+  },
+  "dockerTermsOrb": "OrbStack terms of use",
+  "@dockerTermsOrb": {
+    "description": "Note title before installing OrbStack."
+  },
+  "dockerTermsOrbText": "Free for personal use; paid for work at a company",
+  "@dockerTermsOrbText": {
+    "description": "OrbStack's license in short."
+  },
+  "dockerAcceptInstall": "Accept the terms and install",
+  "@dockerAcceptInstall": {
+    "description": "Button that runs an install whose app has terms of use."
+  },
+  "dockerStartTitle": "Start {engine}",
+  "@dockerStartTitle": {
+    "description": "Title of the plan that starts a container engine, and its button.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "OrbStack"
+      }
+    }
+  },
+  "dockerStartWhy": "Hearth starts the engine and waits until docker gets an answer from it.",
+  "@dockerStartWhy": {
+    "description": "How starting a container engine goes."
+  },
+  "dockerStartChange": "{engine} is running",
+  "@dockerStartChange": {
+    "description": "What is different after an engine started.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "OrbStack"
+      }
+    }
+  },
+  "dockerCheckAnswers": "{engine} answers: Docker {version}",
+  "@dockerCheckAnswers": {
+    "description": "What the check of a started engine found.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "OrbStack"
+      },
+      "version": {
+        "type": "String",
+        "example": "27.4.1"
+      }
+    }
+  },
+  "dockerCheckSilent": "{engine} did not answer in 2 minutes",
+  "@dockerCheckSilent": {
+    "description": "Why the check of a started engine failed.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "OrbStack"
+      }
+    }
+  },
+  "dockerContextTitle": "Switch Docker to {name}",
+  "@dockerContextTitle": {
+    "description": "Title of the plan that changes the Docker context.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "colima"
+      }
+    }
+  },
+  "dockerContextWhy": "docker context use: every terminal and docker compose will use this engine.",
+  "@dockerContextWhy": {
+    "description": "What changing the Docker context does."
+  },
+  "dockerCheckSelected": "Context {name} selected",
+  "@dockerCheckSelected": {
+    "description": "What the check of a context switch found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "colima"
+      }
+    }
+  },
+  "dockerCheckNotSelected": "Context {name} is not selected",
+  "@dockerCheckNotSelected": {
+    "description": "Why the check of a context switch failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "colima"
+      }
+    }
+  },
+  "dockerUseContext": "Use this context",
+  "@dockerUseContext": {
+    "description": "Menu item of a Docker context: switch to it."
+  },
+  "dockerSwitchTo": "Switch to {name}…",
+  "@dockerSwitchTo": {
+    "description": "Banner button: switch the Docker context to another one.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "colima"
+      }
+    }
+  },
+  "serviceWhyBrew": "Through brew services, as the terminal would.",
+  "@serviceWhyBrew": {
+    "description": "How a Homebrew service starts or stops."
+  },
+  "serviceWhySystem": "Through the system's service manager.",
+  "@serviceWhySystem": {
+    "description": "How a system service starts or stops."
+  },
+  "serviceBrewLogin": "It will not start at login",
+  "@serviceBrewLogin": {
+    "description": "Note title: stopping a brew service also removes it from login."
+  },
+  "serviceBrewLoginText": "brew services stop also takes it out of login items; starting it brings it back.",
+  "@serviceBrewLoginText": {
+    "description": "Note text on stopping a brew service."
+  },
+  "serviceStartTitle": "Start {name}",
+  "@serviceStartTitle": {
+    "description": "Title of the plan that starts a database service.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceStopTitle": "Stop {name}",
+  "@serviceStopTitle": {
+    "description": "Title of the plan that stops a database service.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceStartChange": "Service {name} is running",
+  "@serviceStartChange": {
+    "description": "What is different after a service started.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceStopChange": "Service {name} is stopped",
+  "@serviceStopChange": {
+    "description": "What is different after a service stopped.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceCheckRunning": "{name} is running",
+  "@serviceCheckRunning": {
+    "description": "What the check of a started service found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceCheckStopped": "{name} is stopped",
+  "@serviceCheckStopped": {
+    "description": "What the check of a stopped service found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceCheckNotRunning": "{name} is not running",
+  "@serviceCheckNotRunning": {
+    "description": "Why the check of a started service failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceCheckNotStopped": "{name} is still running",
+  "@serviceCheckNotStopped": {
+    "description": "Why the check of a stopped service failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceStart": "Start service",
+  "@serviceStart": {
+    "description": "Menu item of a database service."
+  },
+  "serviceStop": "Stop service…",
+  "@serviceStop": {
+    "description": "Menu item of a database service, and the port conflict banner's button."
   }
 }

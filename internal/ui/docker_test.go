@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -72,4 +73,49 @@ func TestDockerWithoutCLI(t *testing.T) {
 	if !tt.HasText("How the terminal finds docker") {
 		t.Fatal(tt.Texts())
 	}
+}
+
+func TestDockerOperations(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = dockerSnapshot()
+	d := a.Snapshot.Tools[0].Docker
+	d.Selected = "podman"
+	d.Contexts = append(d.Contexts, inventory.DockerContext{Name: "podman", Endpoint: "unix://" + home + "/.local/share/containers/podman.sock", Engine: "Podman", Status: "unavailable", Local: true})
+	d.Engines = append(d.Engines, inventory.DockerEngine{Name: "Podman", Path: "/opt/homebrew/bin/podman"})
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}})
+	tt := openDocker(a)
+	screenshot(t, tt, "docker-actions")
+	if err := tt.Click("Start Podman"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Start Podman" || a.op.plan.Verify == nil && a.DetectTool != nil {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Use this context"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/docker", "context", "use", "orbstack"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Install Docker Desktop"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "install", "--cask", "docker-desktop"}) || a.op.plan.Action != "Accept the terms and install" {
+		t.Fatalf("plan %+v", a.op)
+	}
+	screenshot(t, tt, "docker-install")
 }

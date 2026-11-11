@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/Blinks44/hearth/internal/ops"
 
 	"github.com/egoist/mygo/ui"
 
@@ -12,7 +15,11 @@ import (
 
 func (a *App) docker(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if plan, ok := a.engineStartPlan(); ok {
+				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
+			}
+		}})
 		st, checked := a.Snapshot.Tool("docker")
 		if !checked || st.Err != "" || st.Docker == nil {
 			a.toolEmpty(c, "docker", "Docker")
@@ -48,7 +55,7 @@ func (a *App) docker(c *ui.Context, p page) {
 				var side func()
 				if a.dockerTab == 0 {
 					side = func() {
-						dockerEngines(c, d.Engines)
+						a.dockerEngines(c, st)
 						globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
 					}
 				}
@@ -62,7 +69,7 @@ func (a *App) docker(c *ui.Context, p page) {
 						}
 						pathCard(c, "docker", st.Installations, active, a.Home)
 					case 1:
-						dockerEngines(c, d.Engines)
+						a.dockerEngines(c, st)
 					case 2:
 						a.dockerProjectList(c)
 					case 3:
@@ -161,6 +168,13 @@ func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 				if context.Local {
 					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(context.Endpoint); c.Toast(locales.PathCopied()) })
 				}
+				if plan, ok := a.contextPlan(context.Name); ok {
+					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+						if menu.Item(locales.DockerUseContext()).Chosen() {
+							a.Propose(plan)
+						}
+					})
+				}
 			})
 		}
 		if shown == 0 {
@@ -169,8 +183,10 @@ func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 	})
 }
 
-func dockerEngines(c *ui.Context, engines []inventory.DockerEngine) {
+func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 	pal := Colors(c.Theme())
+	engines := st.Docker.Engines
+	cli := inventory.TerminalCopy(st.Installations) >= 0
 	listCard(c, locales.DockerEngineOptions(), dockerPlatform(), func() {
 		for _, engine := range engines {
 			caption := locales.DockerOpenSource()
@@ -185,8 +201,11 @@ func dockerEngines(c *ui.Context, engines []inventory.DockerEngine) {
 			listRow(c, engine.Name, false, caption, func() {
 				if engine.Path != "" {
 					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.DockerInstalled())
-				} else {
-					ui.Text(c, locales.DockerNotInstalled()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					return
+				}
+				ui.Text(c, locales.DockerNotInstalled()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+				if plan, ok := a.engineInstallPlan(engine.Name, cli); ok {
+					iconButton(c.Key("install:"+engine.Name), "download", plan.Title).OnClick(func() { a.Propose(plan) })
 				}
 			})
 		}
@@ -229,4 +248,71 @@ func (a *App) dockerProjectList(c *ui.Context) {
 			cardNote(c, locales.DockerNoProjects())
 		}
 	})
+}
+
+// engineStartPlan is the plan that starts the engine of the selected
+// context when it did not answer: its own, or the only one installed.
+// ok is false when the engine answered, refused this user, or is not
+// known.
+func (a *App) engineStartPlan() (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil {
+		return ops.Plan{}, false
+	}
+	d := st.Docker
+	i := slices.IndexFunc(d.Contexts, func(c inventory.DockerContext) bool { return c.Name == d.Selected })
+	if i < 0 || d.Contexts[i].Status != "unavailable" || d.Contexts[i].Denied || !d.Contexts[i].Local {
+		return ops.Plan{}, false
+	}
+	name := d.Contexts[i].Engine
+	var installed []inventory.DockerEngine
+	for _, e := range d.Engines {
+		if e.Path != "" {
+			installed = append(installed, e)
+		}
+	}
+	// Linux's default socket is Docker Engine's.
+	if name == "" && slices.ContainsFunc(installed, func(e inventory.DockerEngine) bool { return e.Name == "Docker Engine" }) {
+		name = "Docker Engine"
+	}
+	if name == "" && len(installed) == 1 {
+		name = installed[0].Name
+	}
+	for _, e := range installed {
+		if e.Name == name {
+			return ops.EngineStartPlan(ops.Engine{Name: e.Name, Path: e.Path}, d.Selected, a.detect("docker"))
+		}
+	}
+	return ops.Plan{}, false
+}
+
+// contextPlan is the plan that makes name the Docker context, through
+// the terminal's CLI; ok is false for the context already selected, or
+// one an environment variable would override.
+func (a *App) contextPlan(name string) (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil || st.Docker.Override != "" || name == st.Docker.Selected {
+		return ops.Plan{}, false
+	}
+	active := inventory.TerminalCopy(st.Installations)
+	if active < 0 || st.Installations[active].Source.Shim {
+		return ops.Plan{}, false
+	}
+	return ops.ContextPlan(st.Installations[active].Path, st.Docker.Selected, name, a.detect("docker"))
+}
+
+// engineInstallPlan is the plan that installs engine through the first
+// of the system's package managers that has it; cli reports a Docker CLI
+// on the terminal's PATH.
+func (a *App) engineInstallPlan(engine string, cli bool) (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok {
+		return ops.Plan{}, false
+	}
+	for _, m := range st.PackageManagers {
+		if p, ok := ops.EngineInstallPlan(engine, m, cli, a.reread(m)); ok {
+			return p, true
+		}
+	}
+	return ops.Plan{}, false
 }
