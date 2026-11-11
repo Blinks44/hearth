@@ -1060,5 +1060,12 @@
   "serviceCheckNotRunning": "{name} не работает",
   "serviceCheckNotStopped": "{name} всё ещё работает",
   "serviceStart": "Запустить службу",
-  "serviceStop": "Остановить службу…"
+  "serviceStop": "Остановить службу…",
+  "agentNpmInstallWhy": "Через npm, глобальным пакетом Node терминала.",
+  "agentNpmUpdateWhy": "npm поставит последний выпуск поверх этого, в ту же папку npm.",
+  "agentCheckFound": "{name} {version} найден",
+  "agentCheckMissing": "{name} не найден",
+  "agentInstall": "Установить…",
+  "agentUpdateNpm": "Обновить через npm…",
+  "agentUpdateAvailable": "есть {version}"
 }

@@ -99,3 +99,27 @@ func TestMCPCommands(t *testing.T) {
 		t.Errorf("got  %+v\nwant %+v", checks, want)
 	}
 }
+
+// A mise shim leads to mise itself: the shim is asked, not mise, which
+// would tell its own version.
+func TestDetectShimVersion(t *testing.T) {
+	root := t.TempDir()
+	home := filepath.Join(root, "home")
+	mise := executable(t, filepath.Join(root, "bin", "mise"))
+	shims := filepath.Join(home, ".local", "share", "mise", "shims")
+	if err := os.MkdirAll(shims, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	shim := filepath.Join(shims, "gemini")
+	if err := os.Symlink(mise, shim); err != nil {
+		t.Fatal(err)
+	}
+	term := sysenv.Env{"HOME=" + home, "PATH=" + shims}
+	r := &run.Fake{}
+	r.Stdout("0.68.0\n", shim, "--version")
+	r.Stdout("2026.11.1 linux-arm64\n", mise, "--version")
+	got := byID(Detect(t.Context(), r, term, sysenv.Env{}))["gemini"].Installations
+	if len(got) != 1 || !got[0].Source.Shim || got[0].Version != "0.68.0" {
+		t.Errorf("gemini: %+v", got)
+	}
+}

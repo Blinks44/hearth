@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -10,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -398,7 +400,15 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 				if version == "" {
 					version = "—"
 				}
-				ui.Text(c, version).Font(FontMono).FontSize(13).Width(110).Shrink(0).SingleLine()
+				ui.Column(c).Width(110).Shrink(0).Gap(1).Children(func() {
+					ui.Text(c, version).Font(FontMono).FontSize(13).SingleLine()
+					if in == nil {
+						return
+					}
+					if _, pkg, ok := a.copyPackage(*in); ok && pkg.Available != "" {
+						ui.Text(c, locales.AgentUpdateAvailable(pkg.Available)).FontSize(11).TextColor(pal.Info).SingleLine()
+					}
+				})
 				ui.Row(c).Width(90).Shrink(0).Children(func() {
 					if in != nil {
 						sourceBadge(c, in.Source)
@@ -462,7 +472,11 @@ func (a *App) agentsNotFound(c *ui.Context) {
 			}) {
 				caption = locales.SettingsLeft(tilde(ag.Dir, a.Home))
 			}
-			listRow(c, agentTitle(ag.ID), false, caption, func() {})
+			listRow(c, agentTitle(ag.ID), false, caption, func() {
+				if plan, ok := a.agentInstallPlan(ag.ID); ok {
+					ui.Button(c.Key("install:"+ag.ID), locales.AgentInstall()).OnClick(func() { a.Propose(plan) })
+				}
+			})
 		}
 	})
 }
@@ -541,7 +555,11 @@ func (a *App) agentHero(c *ui.Context, ag inventory.Agent) {
 func (a *App) installCard(c *ui.Context, ag inventory.Agent) {
 	listCard(c, locales.InstallationCard(), "", func() {
 		if len(ag.Installations) == 0 && ag.App == "" {
-			cardNote(c, locales.ToolNotInstalled(agentTitle(ag.ID)))
+			listRow(c, locales.ToolNotInstalled(agentTitle(ag.ID)), false, "", func() {
+				if plan, ok := a.agentInstallPlan(ag.ID); ok {
+					ui.Button(c.Key("install:"+ag.ID), locales.AgentInstall()).OnClick(func() { a.Propose(plan) })
+				}
+			})
 		}
 		for _, in := range ag.Installations {
 			where := locales.CopyGuiOnly()
@@ -553,6 +571,7 @@ func (a *App) installCard(c *ui.Context, ag inventory.Agent) {
 			}
 			listRow(c, tilde(in.Path, a.Home), true, where+" · "+sourceName(in.Source), func() {
 				ui.Text(c, in.Version).Font(FontMono).FontSize(11.5).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+				a.agentCopyMenu(c, ag.ID, in)
 			})
 		}
 		if ag.App != "" {
@@ -723,5 +742,49 @@ func (a *App) overviewAgents(c *ui.Context) {
 				a.router.Push(agentPath(ag.ID))
 			}
 		}
+	})
+}
+
+// findAgent finds the agent id again for an operation's check; nil when
+// the app cannot.
+func (a *App) findAgent(id string) ops.FindAgent {
+	d := a.DetectAgent
+	if d == nil {
+		return nil
+	}
+	return func(ctx context.Context) (inventory.Agent, error) { return d(ctx, id) }
+}
+
+// agentInstallPlan is the plan that installs the agent id through the
+// system's package manager, else the terminal's npm.
+func (a *App) agentInstallPlan(id string) (ops.Plan, bool) {
+	var managers []inventory.PackageManager
+	if st, ok := a.Snapshot.Tool("packages"); ok {
+		managers = st.PackageManagers
+	}
+	st, _ := a.Snapshot.Tool("npm")
+	npm := inventory.TerminalCopy(st.Installations) >= 0
+	return ops.AgentInstallPlan(id, agentTitle(id), managers, npm, a.findAgent(id))
+}
+
+// agentCopyMenu is the menu of in, a copy of the agent id: update it,
+// remove it, through the package manager that installed it, or update it
+// through npm. None when there is nothing to do.
+func (a *App) agentCopyMenu(c *ui.Context, id string, in inventory.Installation) {
+	pm, pkg, managed := a.copyPackage(in)
+	managed = managed && a.packageCan(pm, pkg)
+	npm, viaNpm := ops.AgentNpmUpdatePlan(id, agentTitle(id), in, a.findAgent(id))
+	if !managed && !viaNpm {
+		return
+	}
+	ui.Row(c.Key("menu:" + in.RealPath)).Shrink(0).Children(func() {
+		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+			if managed {
+				a.packageItems(m, pm, pkg)
+			}
+			if viaNpm && m.Item(locales.AgentUpdateNpm()).Chosen() {
+				a.Propose(npm)
+			}
+		})
 	})
 }

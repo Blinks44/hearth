@@ -5352,5 +5352,55 @@
   "serviceStop": "Stop service…",
   "@serviceStop": {
     "description": "Menu item of a database service, and the port conflict banner's button."
+  },
+  "agentNpmInstallWhy": "Through npm, as a global package of the terminal's Node.",
+  "@agentNpmInstallWhy": {
+    "description": "How an agent installs through npm."
+  },
+  "agentNpmUpdateWhy": "npm installs the latest release over this one, in the same npm folder.",
+  "@agentNpmUpdateWhy": {
+    "description": "How an agent npm installed updates."
+  },
+  "agentCheckFound": "{name} {version} found",
+  "@agentCheckFound": {
+    "description": "What the check of an agent install or update found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "version": {
+        "type": "String",
+        "example": "2.1.322"
+      }
+    }
+  },
+  "agentCheckMissing": "{name} is not found",
+  "@agentCheckMissing": {
+    "description": "Why the check of an agent install failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "agentInstall": "Install…",
+  "@agentInstall": {
+    "description": "Button of an agent not found: install it."
+  },
+  "agentUpdateNpm": "Update through npm…",
+  "@agentUpdateNpm": {
+    "description": "Menu item of an agent's copy npm installed."
+  },
+  "agentUpdateAvailable": "{version} available",
+  "@agentUpdateAvailable": {
+    "description": "Under an agent's version: its package manager has a newer one.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.0.90"
+      }
+    }
   }
 }

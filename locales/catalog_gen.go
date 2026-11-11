@@ -13725,3 +13725,105 @@ func ServiceStop() string { return In(i18n.Locale()).ServiceStop() }
 func (msgs Messages) ServiceStop() string {
 	return Catalog.Format(msgs.locale, "serviceStop", nil)
 }
+
+// AgentNpmInstallWhy says "Through npm, as a global package of the terminal's Node."
+// in the language the app shows.
+//
+// How an agent installs through npm.
+func AgentNpmInstallWhy() string { return In(i18n.Locale()).AgentNpmInstallWhy() }
+
+// AgentNpmInstallWhy says "Through npm, as a global package of the terminal's Node."
+// in the language of msgs.
+//
+// How an agent installs through npm.
+func (msgs Messages) AgentNpmInstallWhy() string {
+	return Catalog.Format(msgs.locale, "agentNpmInstallWhy", nil)
+}
+
+// AgentNpmUpdateWhy says "npm installs the latest release over this one, in the same npm folder."
+// in the language the app shows.
+//
+// How an agent npm installed updates.
+func AgentNpmUpdateWhy() string { return In(i18n.Locale()).AgentNpmUpdateWhy() }
+
+// AgentNpmUpdateWhy says "npm installs the latest release over this one, in the same npm folder."
+// in the language of msgs.
+//
+// How an agent npm installed updates.
+func (msgs Messages) AgentNpmUpdateWhy() string {
+	return Catalog.Format(msgs.locale, "agentNpmUpdateWhy", nil)
+}
+
+// AgentCheckFound says "{name} {version} found"
+// in the language the app shows.
+//
+// What the check of an agent install or update found.
+func AgentCheckFound(name string, version string) string {
+	return In(i18n.Locale()).AgentCheckFound(name, version)
+}
+
+// AgentCheckFound says "{name} {version} found"
+// in the language of msgs.
+//
+// What the check of an agent install or update found.
+func (msgs Messages) AgentCheckFound(name string, version string) string {
+	return Catalog.Format(msgs.locale, "agentCheckFound", map[string]any{"name": name, "version": version})
+}
+
+// AgentCheckMissing says "{name} is not found"
+// in the language the app shows.
+//
+// Why the check of an agent install failed.
+func AgentCheckMissing(name string) string { return In(i18n.Locale()).AgentCheckMissing(name) }
+
+// AgentCheckMissing says "{name} is not found"
+// in the language of msgs.
+//
+// Why the check of an agent install failed.
+func (msgs Messages) AgentCheckMissing(name string) string {
+	return Catalog.Format(msgs.locale, "agentCheckMissing", map[string]any{"name": name})
+}
+
+// AgentInstall says "Install…"
+// in the language the app shows.
+//
+// Button of an agent not found: install it.
+func AgentInstall() string { return In(i18n.Locale()).AgentInstall() }
+
+// AgentInstall says "Install…"
+// in the language of msgs.
+//
+// Button of an agent not found: install it.
+func (msgs Messages) AgentInstall() string {
+	return Catalog.Format(msgs.locale, "agentInstall", nil)
+}
+
+// AgentUpdateNpm says "Update through npm…"
+// in the language the app shows.
+//
+// Menu item of an agent's copy npm installed.
+func AgentUpdateNpm() string { return In(i18n.Locale()).AgentUpdateNpm() }
+
+// AgentUpdateNpm says "Update through npm…"
+// in the language of msgs.
+//
+// Menu item of an agent's copy npm installed.
+func (msgs Messages) AgentUpdateNpm() string {
+	return Catalog.Format(msgs.locale, "agentUpdateNpm", nil)
+}
+
+// AgentUpdateAvailable says "{version} available"
+// in the language the app shows.
+//
+// Under an agent's version: its package manager has a newer one.
+func AgentUpdateAvailable(version string) string {
+	return In(i18n.Locale()).AgentUpdateAvailable(version)
+}
+
+// AgentUpdateAvailable says "{version} available"
+// in the language of msgs.
+//
+// Under an agent's version: its package manager has a newer one.
+func (msgs Messages) AgentUpdateAvailable(version string) string {
+	return Catalog.Format(msgs.locale, "agentUpdateAvailable", map[string]any{"version": version})
+}

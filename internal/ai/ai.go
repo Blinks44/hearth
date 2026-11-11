@@ -110,7 +110,11 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 	for i := range found.Installations {
 		in := &found.Installations[i]
 		in.Tool = a.id
-		if in.Version = pathVersion(in.RealPath); in.Version == "" {
+		// A shim leads to its manager, as mise: the shim itself runs the
+		// agent.
+		if in.Source.Shim {
+			in.Version = runVersion(ctx, r, term, in.Path)
+		} else if in.Version = pathVersion(in.RealPath); in.Version == "" {
 			in.Version = runVersion(ctx, r, term, in.RealPath)
 		}
 	}

@@ -3,6 +3,7 @@ package ui
 import (
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -218,5 +219,53 @@ func TestSplitFrontmatter(t *testing.T) {
 	}
 	if front, body := splitFrontmatter("# X"); front != "" || body != "# X" {
 		t.Errorf("%q, %q", front, body)
+	}
+}
+
+// An agent not found installs through the system's package manager; a
+// copy Homebrew installed tells its update and updates through Homebrew,
+// one npm installed updates through npm.
+func TestAgentOperations(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	root := "/opt/homebrew/Caskroom/claude-code"
+	a.Snapshot.Agents[0].Installations[0].Source.Root = root
+	a.Snapshot.Tools = []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew",
+		Packages: []inventory.SystemPackage{{Name: "claude-code", Kind: "cask", Version: "2.1.308", Available: "2.1.322", Path: root}}}}}}
+	tt := openAI(t, a, "/ai/agents")
+	screenshot(t, tt, "agents-actions")
+	hasTexts(t, tt, "2.1.322 available")
+	if err := tt.Click("Install…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "install", "--cask", "copilot-cli"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	a.op = nil
+	a.router.Push(agentPath("claude"))
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Update to 2.1.322"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "upgrade", "--cask", "claude-code"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	a.op = nil
+	a.router.Push(agentPath("codex"))
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Update through npm…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"npm", "install", "--global", "--prefix", filepath.Dir(a.Snapshot.Agents[1].Installations[0].Path), "@openai/codex@latest"}) {
+		t.Fatalf("plan %+v", a.op)
 	}
 }

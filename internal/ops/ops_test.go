@@ -3,7 +3,11 @@ package ops
 import (
 	"context"
 	"errors"
+	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -206,5 +210,24 @@ func TestCommand(t *testing.T) {
 		if got := Command(strings.Split(argv, "\x00")); got != want {
 			t.Errorf("Command(%q) = %s, want %s", argv, got, want)
 		}
+	}
+}
+
+// A step's program is found in the plan's PATH, the terminal's, not in
+// Hearth's own.
+func TestExecuteFindsProgramInPlanPath(t *testing.T) {
+	dir := t.TempDir()
+	name := "hearth-test-tool"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r := &run.Fake{}
+	p := Plan{Title: "t", Env: []string{"PATH=" + dir, "Path=" + dir, "PATHEXT=.EXE"}, Steps: []Step{{Argv: []string{"hearth-test-tool", "go"}}}}
+	Execute(context.Background(), r, p, io.Discard, func(State) {})
+	if calls, want := r.Calls(), filepath.Join(dir, name); len(calls) != 1 || !strings.EqualFold(calls[0].Args[0], want) {
+		t.Errorf("ran %+v, want %q", calls, want)
 	}
 }

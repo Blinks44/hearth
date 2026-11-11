@@ -169,6 +169,27 @@ func (s *Scanner) Detect(ctx context.Context, tool string) (inventory.ToolState,
 	return inventory.ToolState{}, fmt.Errorf("detect %s: no detector", tool)
 }
 
+// Agent finds the agent id alone, in the environment of the last scan:
+// an operation checks its result so.
+func (s *Scanner) Agent(ctx context.Context, id string) (inventory.Agent, error) {
+	s.mu.Lock()
+	term, gui := s.term, s.gui
+	s.mu.Unlock()
+	if term == nil {
+		env := s.Env
+		if env == nil {
+			env = systemEnv
+		}
+		term, gui = env(ctx, s.Runner)
+	}
+	for _, ag := range ai.Detect(ctx, s.Runner, term, gui) {
+		if ag.ID == id {
+			return ag, ctx.Err()
+		}
+	}
+	return inventory.Agent{}, fmt.Errorf("detect agent %s: unknown", id)
+}
+
 // Replace returns snap with the tools' states replaced by those of
 // states. snap itself is left alone, as another goroutine may read it.
 func Replace(snap inventory.Snapshot, states []inventory.ToolState) inventory.Snapshot {

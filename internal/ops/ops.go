@@ -219,11 +219,14 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if timeout <= 0 {
 			timeout = DefaultTimeout
 		}
-		argv := step.Argv
+		// The program is found in the terminal's PATH, as the user's own
+		// command would be: Hearth's own PATH, as an app's, may lack it.
+		env := slices.Concat(p.Env, step.Env)
+		argv := fullPath(step.Argv, env)
 		if step.Admin {
-			argv = elevate(fullPath(argv, p.Env), p.Title)
+			argv = elevate(argv, p.Title)
 		}
-		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: slices.Concat(p.Env, step.Env), Timeout: timeout, Output: e})
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
 		refused := ""
@@ -307,9 +310,10 @@ var (
 	verifyPause = time.Second
 )
 
-// fullPath returns argv with its program found in env's PATH, as the
-// elevated command runs with a PATH of its own; argv as it is when the
-// program is not found, for the step to fail saying so.
+// fullPath returns argv with its program found in env's PATH: the
+// runner would look in Hearth's own, and an elevated command runs with a
+// PATH of its own. argv as it is when the program is not found, for the
+// step to fail saying so.
 func fullPath(argv []string, env []string) []string {
 	if len(argv) == 0 || filepath.IsAbs(argv[0]) {
 		return argv

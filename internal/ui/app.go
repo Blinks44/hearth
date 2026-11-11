@@ -141,6 +141,9 @@ type App struct {
 	// DetectTool finds a tool again, as a scan would, for an operation's
 	// check; it runs on the operation's goroutine.
 	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)
+	// DetectAgent finds an agent again, as a scan would, for an
+	// operation's check; it runs on the operation's goroutine.
+	DetectAgent func(ctx context.Context, id string) (inventory.Agent, error)
 	// RereadPackages lists m's packages again, as the scan found m, for a
 	// package operation's check, and drops m's kept online answer; it
 	// runs on the operation's goroutine.

@@ -23,8 +23,9 @@ const (
 
 // Cmd describes one command to run.
 type Cmd struct {
-	// Args is the argv: Args[0] is the program, found in Env's PATH when it
-	// has no separator, as exec.Command does.
+	// Args is the argv: Args[0] is the program, found as exec.Command
+	// finds it, in Hearth's own PATH when it has no separator: pass a full
+	// path for a program of the terminal's.
 	Args []string
 	// Env is the whole environment of the command, as KEY=value. Nil
 	// inherits Hearth's own, which is not the terminal's: pass sysenv's.
