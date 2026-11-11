@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+
+	"github.com/Blinks44/hearth/internal/inventory"
 )
 
 // FileEdit changes a file of the user's, as a step of a plan. Before is
@@ -20,6 +22,19 @@ import (
 type FileEdit struct {
 	Path, Before, After string
 	New                 bool
+	// Hide are values that show as inventory.Hidden in the diff, as the
+	// tokens of an MCP server copied: they go in the file, not on screen.
+	Hide []string
+}
+
+// Masked is text with e.Hide's values hidden, as the diff shows it.
+func (e FileEdit) Masked(text string) string {
+	for _, h := range e.Hide {
+		if h != "" {
+			text = strings.ReplaceAll(text, h, inventory.Hidden)
+		}
+	}
+	return text
 }
 
 // The lines around Hearth's block in a file with # comments: what is
@@ -309,7 +324,12 @@ func SetJSON(text, key string, value any) (string, error) {
 // table's last where it is not, the table at the end where there is
 // none. The other lines stay as they are.
 func SetTOML(text, table, key, value string) (string, error) {
-	line := key + " = " + strconv.Quote(value)
+	return setTOMLRaw(text, table, key, strconv.Quote(value))
+}
+
+// setTOMLRaw is SetTOML with value written as it is, as false.
+func setTOMLRaw(text, table, key, value string) (string, error) {
+	line := key + " = " + value
 	lines := splitLines(text)
 	start := -1
 	for i, l := range lines {

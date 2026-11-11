@@ -253,7 +253,7 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	path := tilde(e.Path, a.Home)
-	diff := ops.Diff(e.Before, e.After)
+	diff := ops.Diff(e.Masked(e.Before), e.Masked(e.After))
 	ui.Row(c).Gap(8).Padding(0, 20, 12, 20).AlignItems(ui.Center).Children(func() {
 		ui.Row(c).Grow(1).MinWidth(0).Gap(8).Padding(6, 10).Radius(7).AlignItems(ui.Center).
 			BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {

@@ -10,7 +10,9 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -352,6 +354,7 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				if i >= 0 && m.decls[i].Disabled {
 					aiTag(c, locales.TagOff(), pal.Muted, t.TextMuted)
 				}
+				a.mcpAgentControl(c, m, id, i)
 			})
 		}
 		if a.Shell != nil {
@@ -367,4 +370,40 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			})
 		}
 	})
+}
+
+// mcpAgentControl is what the agent id can do with m, i its declaration
+// in m.decls or -1: connect the server as another agent declares it,
+// turn it on or off where the agent has a setting for it, remove it. The
+// plans are made in the background: they read the files.
+func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
+	if a.BuildPlan == nil || id == "aider" {
+		return
+	}
+	propose := func(build func(env sysenv.Env) (ops.Plan, error)) {
+		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) { return build(env) }, a.proposeOrSay)
+	}
+	if i < 0 {
+		from := m.decls[0]
+		ui.Button(c.Key("mcp-connect:"+id), locales.SkillConnect()).Shrink(0).OnClick(func() {
+			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPConnectPlan(from, id, env, agentTitle) })
+		})
+		return
+	}
+	s := m.decls[i]
+	if ops.MCPToggles(s) {
+		on := !s.Disabled
+		ui.Switch(c.Key("mcp-on:"+id), &on).Label(locales.McpOnFor(agentTitle(id))).OnChange(func() {
+			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPEnablePlan(s, on, env, agentTitle) })
+		})
+	}
+	if ops.MCPRemovable(s) {
+		ui.Row(c.Key("mcp-menu:" + id)).Shrink(0).Children(func() {
+			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+				if menu.Item(locales.McpRemove(agentTitle(id))).Chosen() {
+					propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPRemovePlan(s, env, agentTitle) })
+				}
+			})
+		})
+	}
 }

@@ -213,7 +213,9 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.emit()
 			continue
 		}
-		e.printf("$ %s\n", Command(step.Argv))
+		// The log keeps what the plan showed: a step's real argv may carry
+		// a secret, as an MCP server's token.
+		e.printf("$ %s\n", Command(step.Shown()))
 		e.emit()
 		timeout := step.Timeout
 		if timeout <= 0 {

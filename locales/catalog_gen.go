@@ -14133,3 +14133,311 @@ func SkillConnectedTo(agent string) string { return In(i18n.Locale()).SkillConne
 func (msgs Messages) SkillConnectedTo(agent string) string {
 	return Catalog.Format(msgs.locale, "skillConnectedTo", map[string]any{"agent": agent})
 }
+
+// McpCannotCopy says "{name} takes values from the environment by their names, which other agents write differently: Hearth does not copy it."
+// in the language the app shows.
+//
+// Why a Codex server cannot be copied.
+func McpCannotCopy(name string) string { return In(i18n.Locale()).McpCannotCopy(name) }
+
+// McpCannotCopy says "{name} takes values from the environment by their names, which other agents write differently: Hearth does not copy it."
+// in the language of msgs.
+//
+// Why a Codex server cannot be copied.
+func (msgs Messages) McpCannotCopy(name string) string {
+	return Catalog.Format(msgs.locale, "mcpCannotCopy", map[string]any{"name": name})
+}
+
+// McpNoFile says "Hearth knows no MCP file of {agent}."
+// in the language the app shows.
+//
+// Why a server cannot be connected to an agent.
+func McpNoFile(agent string) string { return In(i18n.Locale()).McpNoFile(agent) }
+
+// McpNoFile says "Hearth knows no MCP file of {agent}."
+// in the language of msgs.
+//
+// Why a server cannot be connected to an agent.
+func (msgs Messages) McpNoFile(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpNoFile", map[string]any{"agent": agent})
+}
+
+// McpAlready says "{agent} already declares {name}."
+// in the language the app shows.
+//
+// Why a server cannot be connected: it is there.
+func McpAlready(name string, agent string) string { return In(i18n.Locale()).McpAlready(name, agent) }
+
+// McpAlready says "{agent} already declares {name}."
+// in the language of msgs.
+//
+// Why a server cannot be connected: it is there.
+func (msgs Messages) McpAlready(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpAlready", map[string]any{"name": name, "agent": agent})
+}
+
+// McpConnectTitle says "Connect {name} to {agent}"
+// in the language the app shows.
+//
+// Title of the plan that copies an MCP server to another agent.
+func McpConnectTitle(name string, agent string) string {
+	return In(i18n.Locale()).McpConnectTitle(name, agent)
+}
+
+// McpConnectTitle says "Connect {name} to {agent}"
+// in the language of msgs.
+//
+// Title of the plan that copies an MCP server to another agent.
+func (msgs Messages) McpConnectTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpConnectTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpConnectWhy says "The server is declared as {from} declares it, the values of its variables and headers too: they go in the file and st…"
+// in the language the app shows.
+//
+// How connecting an MCP server works.
+func McpConnectWhy(from string) string { return In(i18n.Locale()).McpConnectWhy(from) }
+
+// McpConnectWhy says "The server is declared as {from} declares it, the values of its variables and headers too: they go in the file and st…"
+// in the language of msgs.
+//
+// How connecting an MCP server works.
+func (msgs Messages) McpConnectWhy(from string) string {
+	return Catalog.Format(msgs.locale, "mcpConnectWhy", map[string]any{"from": from})
+}
+
+// McpCheckMissing says "{agent} does not declare {name}"
+// in the language the app shows.
+//
+// Why the check of a connect failed.
+func McpCheckMissing(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckMissing(name, agent)
+}
+
+// McpCheckMissing says "{agent} does not declare {name}"
+// in the language of msgs.
+//
+// Why the check of a connect failed.
+func (msgs Messages) McpCheckMissing(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckMissing", map[string]any{"name": name, "agent": agent})
+}
+
+// McpCheckDeclared says "{agent} declares {name}"
+// in the language the app shows.
+//
+// What the check of a connect found.
+func McpCheckDeclared(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckDeclared(name, agent)
+}
+
+// McpCheckDeclared says "{agent} declares {name}"
+// in the language of msgs.
+//
+// What the check of a connect found.
+func (msgs Messages) McpCheckDeclared(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckDeclared", map[string]any{"name": name, "agent": agent})
+}
+
+// McpClaudeLocal says "{name} is kept by Claude Code for one project: remove it with claude mcp remove in that folder."
+// in the language the app shows.
+//
+// Why Hearth does not remove a Claude Code local server.
+func McpClaudeLocal(name string) string { return In(i18n.Locale()).McpClaudeLocal(name) }
+
+// McpClaudeLocal says "{name} is kept by Claude Code for one project: remove it with claude mcp remove in that folder."
+// in the language of msgs.
+//
+// Why Hearth does not remove a Claude Code local server.
+func (msgs Messages) McpClaudeLocal(name string) string {
+	return Catalog.Format(msgs.locale, "mcpClaudeLocal", map[string]any{"name": name})
+}
+
+// McpRemoveTitle says "Remove {name} from {agent}"
+// in the language the app shows.
+//
+// Title of the plan that removes an MCP server from an agent.
+func McpRemoveTitle(name string, agent string) string {
+	return In(i18n.Locale()).McpRemoveTitle(name, agent)
+}
+
+// McpRemoveTitle says "Remove {name} from {agent}"
+// in the language of msgs.
+//
+// Title of the plan that removes an MCP server from an agent.
+func (msgs Messages) McpRemoveTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpRemoveTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpRemoveWhy says "Only this agent's declaration goes: the other agents keep theirs."
+// in the language the app shows.
+//
+// What removing an MCP server does.
+func McpRemoveWhy() string { return In(i18n.Locale()).McpRemoveWhy() }
+
+// McpRemoveWhy says "Only this agent's declaration goes: the other agents keep theirs."
+// in the language of msgs.
+//
+// What removing an MCP server does.
+func (msgs Messages) McpRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "mcpRemoveWhy", nil)
+}
+
+// McpCheckStill says "{agent} still declares {name}"
+// in the language the app shows.
+//
+// Why the check of a remove failed.
+func McpCheckStill(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckStill(name, agent)
+}
+
+// McpCheckStill says "{agent} still declares {name}"
+// in the language of msgs.
+//
+// Why the check of a remove failed.
+func (msgs Messages) McpCheckStill(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckStill", map[string]any{"name": name, "agent": agent})
+}
+
+// McpCheckRemoved says "{agent} no longer declares {name}"
+// in the language the app shows.
+//
+// What the check of a remove found.
+func McpCheckRemoved(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckRemoved(name, agent)
+}
+
+// McpCheckRemoved says "{agent} no longer declares {name}"
+// in the language of msgs.
+//
+// What the check of a remove found.
+func (msgs Messages) McpCheckRemoved(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckRemoved", map[string]any{"name": name, "agent": agent})
+}
+
+// McpNoToggle says "{agent} has no setting that turns a server off: remove it instead."
+// in the language the app shows.
+//
+// Why a server cannot be turned off.
+func McpNoToggle(agent string) string { return In(i18n.Locale()).McpNoToggle(agent) }
+
+// McpNoToggle says "{agent} has no setting that turns a server off: remove it instead."
+// in the language of msgs.
+//
+// Why a server cannot be turned off.
+func (msgs Messages) McpNoToggle(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpNoToggle", map[string]any{"agent": agent})
+}
+
+// McpOffTitle says "Turn {name} off for {agent}"
+// in the language the app shows.
+//
+// Title of the plan that turns an MCP server off.
+func McpOffTitle(name string, agent string) string { return In(i18n.Locale()).McpOffTitle(name, agent) }
+
+// McpOffTitle says "Turn {name} off for {agent}"
+// in the language of msgs.
+//
+// Title of the plan that turns an MCP server off.
+func (msgs Messages) McpOffTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpOffTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpOnTitle says "Turn {name} on for {agent}"
+// in the language the app shows.
+//
+// Title of the plan that turns an MCP server on.
+func McpOnTitle(name string, agent string) string { return In(i18n.Locale()).McpOnTitle(name, agent) }
+
+// McpOnTitle says "Turn {name} on for {agent}"
+// in the language of msgs.
+//
+// Title of the plan that turns an MCP server on.
+func (msgs Messages) McpOnTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpOnTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpToggleWhy says "The agent's own setting: the declaration stays in its file."
+// in the language the app shows.
+//
+// How turning an MCP server off works.
+func McpToggleWhy() string { return In(i18n.Locale()).McpToggleWhy() }
+
+// McpToggleWhy says "The agent's own setting: the declaration stays in its file."
+// in the language of msgs.
+//
+// How turning an MCP server off works.
+func (msgs Messages) McpToggleWhy() string {
+	return Catalog.Format(msgs.locale, "mcpToggleWhy", nil)
+}
+
+// McpCheckToggle says "{agent} did not take the change of {name}"
+// in the language the app shows.
+//
+// Why the check of an on/off failed.
+func McpCheckToggle(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckToggle(name, agent)
+}
+
+// McpCheckToggle says "{agent} did not take the change of {name}"
+// in the language of msgs.
+//
+// Why the check of an on/off failed.
+func (msgs Messages) McpCheckToggle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckToggle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpRemove says "Remove from {agent}…"
+// in the language the app shows.
+//
+// Menu item: remove an MCP server from an agent.
+func McpRemove(agent string) string { return In(i18n.Locale()).McpRemove(agent) }
+
+// McpRemove says "Remove from {agent}…"
+// in the language of msgs.
+//
+// Menu item: remove an MCP server from an agent.
+func (msgs Messages) McpRemove(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpRemove", map[string]any{"agent": agent})
+}
+
+// McpOnFor says "On: {agent}"
+// in the language the app shows.
+//
+// Label of the switch that turns a server on or off for an agent.
+func McpOnFor(agent string) string { return In(i18n.Locale()).McpOnFor(agent) }
+
+// McpOnFor says "On: {agent}"
+// in the language of msgs.
+//
+// Label of the switch that turns a server on or off for an agent.
+func (msgs Messages) McpOnFor(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpOnFor", map[string]any{"agent": agent})
+}
+
+// McpCheckOn says "{name} is on for {agent}"
+// in the language the app shows.
+//
+// What the check of turning a server on found.
+func McpCheckOn(name string, agent string) string { return In(i18n.Locale()).McpCheckOn(name, agent) }
+
+// McpCheckOn says "{name} is on for {agent}"
+// in the language of msgs.
+//
+// What the check of turning a server on found.
+func (msgs Messages) McpCheckOn(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckOn", map[string]any{"name": name, "agent": agent})
+}
+
+// McpCheckOff says "{name} is off for {agent}"
+// in the language the app shows.
+//
+// What the check of turning a server off found.
+func McpCheckOff(name string, agent string) string { return In(i18n.Locale()).McpCheckOff(name, agent) }
+
+// McpCheckOff says "{name} is off for {agent}"
+// in the language of msgs.
+//
+// What the check of turning a server off found.
+func (msgs Messages) McpCheckOff(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckOff", map[string]any{"name": name, "agent": agent})
+}

@@ -5600,5 +5600,251 @@
         "example": "Codex"
       }
     }
+  },
+  "mcpCannotCopy": "{name} takes values from the environment by their names, which other agents write differently: Hearth does not copy it.",
+  "@mcpCannotCopy": {
+    "description": "Why a Codex server cannot be copied.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      }
+    }
+  },
+  "mcpNoFile": "Hearth knows no MCP file of {agent}.",
+  "@mcpNoFile": {
+    "description": "Why a server cannot be connected to an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpAlready": "{agent} already declares {name}.",
+  "@mcpAlready": {
+    "description": "Why a server cannot be connected: it is there.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpConnectTitle": "Connect {name} to {agent}",
+  "@mcpConnectTitle": {
+    "description": "Title of the plan that copies an MCP server to another agent.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpConnectWhy": "The server is declared as {from} declares it, the values of its variables and headers too: they go in the file and stay hidden here.",
+  "@mcpConnectWhy": {
+    "description": "How connecting an MCP server works.",
+    "placeholders": {
+      "from": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "mcpCheckMissing": "{agent} does not declare {name}",
+  "@mcpCheckMissing": {
+    "description": "Why the check of a connect failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpCheckDeclared": "{agent} declares {name}",
+  "@mcpCheckDeclared": {
+    "description": "What the check of a connect found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpClaudeLocal": "{name} is kept by Claude Code for one project: remove it with claude mcp remove in that folder.",
+  "@mcpClaudeLocal": {
+    "description": "Why Hearth does not remove a Claude Code local server.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      }
+    }
+  },
+  "mcpRemoveTitle": "Remove {name} from {agent}",
+  "@mcpRemoveTitle": {
+    "description": "Title of the plan that removes an MCP server from an agent.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpRemoveWhy": "Only this agent's declaration goes: the other agents keep theirs.",
+  "@mcpRemoveWhy": {
+    "description": "What removing an MCP server does."
+  },
+  "mcpCheckStill": "{agent} still declares {name}",
+  "@mcpCheckStill": {
+    "description": "Why the check of a remove failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpCheckRemoved": "{agent} no longer declares {name}",
+  "@mcpCheckRemoved": {
+    "description": "What the check of a remove found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpNoToggle": "{agent} has no setting that turns a server off: remove it instead.",
+  "@mcpNoToggle": {
+    "description": "Why a server cannot be turned off.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpOffTitle": "Turn {name} off for {agent}",
+  "@mcpOffTitle": {
+    "description": "Title of the plan that turns an MCP server off.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpOnTitle": "Turn {name} on for {agent}",
+  "@mcpOnTitle": {
+    "description": "Title of the plan that turns an MCP server on.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpToggleWhy": "The agent's own setting: the declaration stays in its file.",
+  "@mcpToggleWhy": {
+    "description": "How turning an MCP server off works."
+  },
+  "mcpCheckToggle": "{agent} did not take the change of {name}",
+  "@mcpCheckToggle": {
+    "description": "Why the check of an on/off failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpRemove": "Remove from {agent}…",
+  "@mcpRemove": {
+    "description": "Menu item: remove an MCP server from an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpOnFor": "On: {agent}",
+  "@mcpOnFor": {
+    "description": "Label of the switch that turns a server on or off for an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "mcpCheckOn": "{name} is on for {agent}",
+  "mcpCheckOff": "{name} is off for {agent}",
+  "@mcpCheckOn": {
+    "description": "What the check of turning a server on found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "oc"
+      },
+      "agent": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "@mcpCheckOff": {
+    "description": "What the check of turning a server off found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "oc"
+      },
+      "agent": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
   }
 }

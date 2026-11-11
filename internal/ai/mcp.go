@@ -55,6 +55,29 @@ var mcpFiles = map[string]struct{ user, project []mcpFile }{
 	"kimi":     {[]mcpFile{{"mcp.json", mcpServersJSON}}, []mcpFile{{".kimi-code/mcp.json", mcpServersJSON}}},
 }
 
+// MCPFile is the file the agent id reads MCP servers from first: the
+// user's, or, when project is not "", that project's; "" for an agent
+// with none, as Aider.
+func MCPFile(id string, env sysenv.Env, project string) string {
+	files := mcpFiles[id]
+	if project != "" {
+		if len(files.project) == 0 {
+			return ""
+		}
+		return filepath.Join(project, filepath.FromSlash(files.project[0].path))
+	}
+	if len(files.user) == 0 {
+		return ""
+	}
+	home := homeDir(env)
+	for _, a := range agents {
+		if a.id == id {
+			return resolve(files.user[0].path, dir(a.dir, env, home), home)
+		}
+	}
+	return ""
+}
+
 // MCP reads the MCP servers in the user's files of every agent, in the
 // agents' order, and checks their commands on the PATH of env, the
 // terminal's. errs say which files could not be read; the others count.

@@ -304,3 +304,36 @@ func TestSkillOperations(t *testing.T) {
 		t.Errorf("plans asked for: %d, want 3", built)
 	}
 }
+
+// A server an agent does not declare offers to connect it; Codex's turns
+// off by its switch; a declaration's menu removes it. Each plan is made
+// in the background.
+func TestMCPOperations(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	built := 0
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		built++
+	}
+	tt := openAI(t, a, mcpPage)
+	screenshot(t, tt, "mcp-actions")
+	if err := tt.Click("On: Codex"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Remove from Claude Code…"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click("linear"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Connect"); err != nil {
+		t.Fatal(err)
+	}
+	if built != 3 {
+		t.Errorf("plans asked for: %d, want 3", built)
+	}
+}
