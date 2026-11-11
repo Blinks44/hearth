@@ -45,7 +45,7 @@ func TestCleanupPlan(t *testing.T) {
 	}
 	titles := []string{"pnpm cache", "npm cache", "Cargo cache", "pub cache", "Build Cache", "Images", "Containers", "Node", "old: node_modules"}
 	env := pathWith(t, "pnpm", "flutter")
-	p, err := CleanupPlan(cands, titles, env, DockerTarget{CLI: "/usr/local/bin/docker", Context: "orbstack"}, nil)
+	p, err := CleanupPlan(cands, titles, nil, env, DockerTarget{CLI: "/usr/local/bin/docker", Context: "orbstack"}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestCleanupPlan(t *testing.T) {
 		t.Errorf("notes %+v, want the folders' and pub's", p.Notes)
 	}
 	// Without an engine Docker's are left out; with nothing left, no plan.
-	p, err = CleanupPlan(cands[4:5], titles[4:5], env, DockerTarget{}, nil)
+	p, err = CleanupPlan(cands[4:5], titles[4:5], nil, env, DockerTarget{}, nil)
 	if err == nil {
 		t.Errorf("plan %+v without anything to remove", p)
 	}
@@ -101,7 +101,7 @@ func TestCleanupFreed(t *testing.T) {
 	docker := func(context.Context) ([]inventory.DockerUsage, error) {
 		return []inventory.DockerUsage{{Type: "Build Cache", Reclaimable: 0}, {Type: "Images", Reclaimable: 7e9}}, nil
 	}
-	p, err := CleanupPlan(cands, []string{"a", "b", "c"}, nil, DockerTarget{CLI: "docker", Context: "default"}, docker)
+	p, err := CleanupPlan(cands, []string{"a", "b", "c"}, nil, nil, DockerTarget{CLI: "docker", Context: "default"}, docker)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,5 +139,118 @@ func TestExecuteRemove(t *testing.T) {
 	p.Steps[0].Remove = "relative/cache"
 	if got := Execute(t.Context(), &run.Fake{}, p, journal, func(State) {}); got.Phase != Failed {
 		t.Errorf("relative path: phase %d", got.Phase)
+	}
+}
+
+// A copy goes through its version manager, or as its folder when the
+// terminal does not find the manager; a leftover's versions one by root;
+// Homebrew's copies and packages through one brew uninstall, but not a
+// formula with another version installed. What no source removes is
+// left out.
+func TestCleanupCopies(t *testing.T) {
+	vm := func(tool, manager, root, version string) inventory.Installation {
+		return inventory.Installation{Tool: tool, Version: version, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: manager, Root: root, Version: version}}
+	}
+	keg := func(tool, root string) inventory.Installation {
+		return inventory.Installation{Tool: tool, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew", Root: root}}
+	}
+	gb := inventory.Usage{Bytes: 1e9}
+	s := &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "node", Managers: []inventory.Manager{{Name: "fnm"}, {Name: "n", Admin: true}}},
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Packages: []inventory.SystemPackage{
+			{Name: "python@3.12", Kind: "formula", Path: "/opt/homebrew/Cellar/python@3.12/3.12.8"},
+			{Name: "libyaml", Kind: "formula", Path: "/opt/homebrew/Cellar/libyaml/0.2.5", Dependency: true},
+			{Name: "node", Kind: "formula", Path: "/opt/homebrew/Cellar/node/23.3.0"},
+			{Name: "node", Kind: "formula", Path: "/opt/homebrew/Cellar/node/24.1.0"},
+		}}}},
+	}}
+	nvm1, nvm2 := "/h/.nvm/versions/node/v18.20.4", "/h/.nvm/versions/node/v20.18.0"
+	cands := []cleanup.Candidate{
+		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/fnm/v20.1.0"}, Copies: []inventory.Installation{vm("node", "fnm", "/fnm/v20.1.0", "20.1.0")}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "python", Paths: []string{"/h/.pyenv/versions/3.11.9"}, Copies: []inventory.Installation{vm("python", "pyenv", "/h/.pyenv/versions/3.11.9", "3.11.9")}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/n/versions/node/16.0.0"}, Copies: []inventory.Installation{vm("node", "n", "/n/versions/node/16.0.0", "16.0.0")}, Usage: gb},
+		{Kind: cleanup.Leftover, ID: "nvm", Paths: []string{nvm1, nvm2}, Copies: []inventory.Installation{
+			vm("node", "nvm", nvm1, "18.20.4"), vm("npm", "nvm", nvm1, "10.8.2"), vm("node", "nvm", nvm2, "20.18.0"),
+		}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "python", Paths: []string{"/opt/homebrew/Cellar/python@3.12/3.12.8"}, Copies: []inventory.Installation{keg("python", "/opt/homebrew/Cellar/python@3.12/3.12.8")}, Usage: gb},
+		{Kind: cleanup.UnneededPackage, ID: "libyaml", Manager: "brew", Paths: []string{"/opt/homebrew/Cellar/libyaml/0.2.5"}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/opt/homebrew/Cellar/node/23.3.0"}, Copies: []inventory.Installation{keg("node", "/opt/homebrew/Cellar/node/23.3.0")}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/h/.volta/tools/image/node/22.11.0"}, Copies: []inventory.Installation{vm("node", "volta", "/h/.volta/tools/image/node/22.11.0", "22.11.0")}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "rust", Paths: []string{"/h/.rustup/toolchains/nightly"}, Copies: []inventory.Installation{vm("rust", "rustup", "/h/.rustup/toolchains/nightly", "nightly")}, Usage: gb},
+	}
+	titles := []string{"Node 20.1.0 · fnm", "Python 3.11.9 · pyenv", "Node 16.0.0 · n", "nvm", "Python · brew", "libyaml · brew", "Node 23.3.0 · brew", "Node · Volta", "Rust · rustup"}
+	for i, c := range cands {
+		if want := i < 6; Cleans(c, s) != want {
+			t.Errorf("%s: Cleans %v, want %v", titles[i], !want, want)
+		}
+	}
+	home := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(home, ".nvm"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, ".nvm", "nvm.sh"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	env := append(pathWith(t, "fnm", "n"), "HOME="+home)
+	p, err := CleanupPlan(cands, titles, s, env, DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, st := range p.Steps {
+		switch {
+		case st.Remove != "":
+			got = append(got, "remove "+st.Remove)
+		case st.Admin:
+			got = append(got, "admin "+Command(st.Shown()))
+		default:
+			got = append(got, Command(st.Shown()))
+		}
+	}
+	want := []string{
+		"/opt/homebrew/bin/brew uninstall --formula python@3.12 libyaml",
+		"fnm uninstall 20.1.0",
+		"remove /h/.pyenv/versions/3.11.9",
+		"admin n rm 16.0.0",
+		"nvm uninstall 18.20.4",
+		"nvm uninstall 20.18.0",
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("steps\n%q\nwant\n%q", got, want)
+	}
+	if len(p.Changes) != 6 {
+		t.Errorf("changes %q", p.Changes)
+	}
+	var notes []string
+	for _, n := range p.Notes {
+		notes = append(notes, n.Title)
+	}
+	if len(notes) != 4 {
+		t.Errorf("notes %q, want brew's, the folders', the versions' and the administrator's", notes)
+	}
+	// nvm removed leaves its versions: they go as folders.
+	p, err = CleanupPlan(cands[3:4], titles[3:4], s, env[:1], DockerTarget{}, nil)
+	if err != nil || len(p.Steps) != 2 || p.Steps[0].Remove != nvm1 || p.Steps[1].Remove != nvm2 {
+		t.Errorf("without nvm.sh: %+v, %v", p.Steps, err)
+	}
+}
+
+// A copy's check counts all its folders: those gone free what they took.
+func TestCleanupFreedCopies(t *testing.T) {
+	root := t.TempDir()
+	gone, kept := filepath.Join(root, "gone"), filepath.Join(root, "kept")
+	if err := os.MkdirAll(kept, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(kept, "f"), make([]byte, 10_000), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	after, err := disk.Measure(t.Context(), kept)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := cleanup.Candidate{Kind: cleanup.Leftover, Paths: []string{gone, kept}, Usage: inventory.Usage{Bytes: 2e9 + after.Bytes}}
+	if got := freed(t.Context(), []cleanup.Candidate{c}, nil); got != 2e9 {
+		t.Errorf("freed %d, want 2e9", got)
 	}
 }

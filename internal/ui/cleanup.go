@@ -226,7 +226,7 @@ func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
 	var titles []string
 	var frees int64
 	for _, cand := range selected {
-		if ops.Cleans(cand.Kind) {
+		if ops.Cleans(cand, a.Snapshot) {
 			cands, titles = append(cands, cand), append(titles, a.candidateTitle(cand))
 			frees += cand.Frees()
 		}
@@ -241,7 +241,7 @@ func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
 			if count != nil {
 				docker = func(ctx context.Context) ([]inventory.DockerUsage, error) { return count(ctx, env, snap) }
 			}
-			return ops.CleanupPlan(cands, titles, env, target, docker)
+			return ops.CleanupPlan(cands, titles, snap, env, target, docker)
 		}, a.proposeOrSay)
 	})
 }
@@ -348,7 +348,7 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		case cleanup.NoProject:
 			parts = append(parts, locales.ReasonNoProject())
 		case cleanup.NotSetUp:
-			parts = append(parts, locales.ReasonNotSetUp(cand.ID), locales.CleanupVersions(len(cand.Copies), toolName(cand.Copies[0].Tool)))
+			parts = append(parts, locales.ReasonNotSetUp(cand.ID), locales.CleanupVersions(len(cand.Paths), toolName(cand.Copies[0].Tool)))
 		case cleanup.NothingNeeds:
 			parts = append(parts, locales.PkgNotNeeded())
 		case cleanup.Rebuilt:

@@ -133,12 +133,17 @@ func TestCleanupNarrowRussian(t *testing.T) {
 // The header's button removes the selected the plan removes, which the
 // plan made with the terminal's environment lists a step each: the
 // command of a cache the terminal finds, the folder of one it does not,
-// and Docker's prune in the context counted.
+// Docker's prune in the context counted, the versions of a leftover
+// whose nvm.sh is gone as folders, and a copy from Homebrew through brew,
+// first.
 func TestCleanupRemove(t *testing.T) {
 	a := cleanupApp()
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker",
 		Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
 		Docker:        &inventory.DockerState{Selected: "orbstack"}})
+	brew := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Packages: []inventory.SystemPackage{
+		{Name: "node", Kind: "formula", Path: "/opt/homebrew/Cellar/node/23.6.0"},
+	}}
 	bin := t.TempDir()
 	if err := os.WriteFile(filepath.Join(bin, "pnpm"+exeSuffix), []byte("#!/bin/sh\n"), 0o755); err != nil {
 		t.Fatal(err)
@@ -149,12 +154,19 @@ func TestCleanupRemove(t *testing.T) {
 	a.router.Push(cleanupPage)
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
-	// An extra copy is not removed from here yet: the button leaves it out.
-	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
-		t.Fatal(err)
+	// Without Homebrew's packages known its copy is not removed: the
+	// button leaves it out.
+	for _, row := range []string{"Node.js 23.6.0 · brew", "nvm"} {
+		if err := tt.Click(row); err != nil {
+			t.Fatal(err)
+		}
 	}
 	tt.Advance(time.Second)
-	if err := tt.Click("Remove selected · 17.2 GB"); err != nil {
+	hasTexts(t, tt, "Remove selected · 18.2 GB")
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{brew}})
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Remove selected · 18.4 GB"); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
 	tt.Advance(time.Second)
@@ -163,5 +175,7 @@ func TestCleanupRemove(t *testing.T) {
 	}
 	screenshot(t, tt, "cleanup-plan")
 	hasTexts(t, tt, "Clean up the selected", "pnpm store prune", "remove ~/.bun/install/cache", "remove ~/.cache/uv",
-		"/usr/local/bin/docker --context orbstack builder prune --force", "for good", "Folders are removed for good")
+		"/usr/local/bin/docker --context orbstack builder prune --force", "for good", "Folders are removed for good",
+		"remove ~/.nvm/versions/node/v20.18.0", "remove ~/.nvm/versions/node/v18.20.4", "/opt/homebrew/bin/brew uninstall --formula node",
+		"Packages of the versions go with them")
 }

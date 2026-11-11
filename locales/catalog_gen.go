@@ -7732,13 +7732,13 @@ func (msgs Messages) CleanupProjectVersionsCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupProjectVersionsCaption", nil)
 }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. For now the plan removes caches and Docker's data; copie…"
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. The plan removes caches, Docker's data, copies through t…"
 // in the language the app shows.
 //
 // Note under the Cleanup table.
 func CleanupReadOnly() string { return In(i18n.Locale()).CleanupReadOnly() }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. For now the plan removes caches and Docker's data; copie…"
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. The plan removes caches, Docker's data, copies through t…"
 // in the language of msgs.
 //
 // Note under the Cleanup table.
@@ -14936,13 +14936,13 @@ func (msgs Messages) CleanupPlanTitle() string {
 	return Catalog.Format(msgs.locale, "cleanupPlanTitle", nil)
 }
 
-// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses. A cache without a command, or …"
+// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses, versions go through their mana…"
 // in the language the app shows.
 //
 // Under the cleanup plan's title.
 func CleanupPlanWhy() string { return In(i18n.Locale()).CleanupPlanWhy() }
 
-// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses. A cache without a command, or …"
+// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses, versions go through their mana…"
 // in the language of msgs.
 //
 // Under the cleanup plan's title.
@@ -14978,13 +14978,13 @@ func (msgs Messages) CleanupRemoveNote() string {
 	return Catalog.Format(msgs.locale, "cleanupRemoveNote", nil)
 }
 
-// CleanupRemoveNoteText says "Not to the Trash: the tools download what they need again."
+// CleanupRemoveNoteText says "Not to the Trash: caches come back by themselves, a version is installed again when needed."
 // in the language the app shows.
 //
 // Cleanup plan note text.
 func CleanupRemoveNoteText() string { return In(i18n.Locale()).CleanupRemoveNoteText() }
 
-// CleanupRemoveNoteText says "Not to the Trash: the tools download what they need again."
+// CleanupRemoveNoteText says "Not to the Trash: caches come back by themselves, a version is installed again when needed."
 // in the language of msgs.
 //
 // Cleanup plan note text.
@@ -15018,6 +15018,62 @@ func CleanupPubNoteText() string { return In(i18n.Locale()).CleanupPubNoteText()
 // Cleanup plan note text: pub cache clean.
 func (msgs Messages) CleanupPubNoteText() string {
 	return Catalog.Format(msgs.locale, "cleanupPubNoteText", nil)
+}
+
+// CleanupVersionsNote says "Packages of the versions go with them"
+// in the language the app shows.
+//
+// Cleanup plan note: versions removed through their manager.
+func CleanupVersionsNote() string { return In(i18n.Locale()).CleanupVersionsNote() }
+
+// CleanupVersionsNote says "Packages of the versions go with them"
+// in the language of msgs.
+//
+// Cleanup plan note: versions removed through their manager.
+func (msgs Messages) CleanupVersionsNote() string {
+	return Catalog.Format(msgs.locale, "cleanupVersionsNote", nil)
+}
+
+// CleanupVersionsNoteText says "Global npm packages, pip packages and gems installed into a removed version go with it."
+// in the language the app shows.
+//
+// Cleanup plan note text: versions removed through their manager.
+func CleanupVersionsNoteText() string { return In(i18n.Locale()).CleanupVersionsNoteText() }
+
+// CleanupVersionsNoteText says "Global npm packages, pip packages and gems installed into a removed version go with it."
+// in the language of msgs.
+//
+// Cleanup plan note text: versions removed through their manager.
+func (msgs Messages) CleanupVersionsNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupVersionsNoteText", nil)
+}
+
+// CleanupBrewNote says "Homebrew removes only what nothing needs"
+// in the language the app shows.
+//
+// Cleanup plan note: brew uninstall.
+func CleanupBrewNote() string { return In(i18n.Locale()).CleanupBrewNote() }
+
+// CleanupBrewNote says "Homebrew removes only what nothing needs"
+// in the language of msgs.
+//
+// Cleanup plan note: brew uninstall.
+func (msgs Messages) CleanupBrewNote() string {
+	return Catalog.Format(msgs.locale, "cleanupBrewNote", nil)
+}
+
+// CleanupBrewNoteText says "If another formula needs one of them, brew uninstall refuses and removes none."
+// in the language the app shows.
+//
+// Cleanup plan note text: brew uninstall.
+func CleanupBrewNoteText() string { return In(i18n.Locale()).CleanupBrewNoteText() }
+
+// CleanupBrewNoteText says "If another formula needs one of them, brew uninstall refuses and removes none."
+// in the language of msgs.
+//
+// Cleanup plan note text: brew uninstall.
+func (msgs Messages) CleanupBrewNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupBrewNoteText", nil)
 }
 
 // CleanupFreed says "Freed {size}"
