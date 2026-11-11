@@ -175,6 +175,8 @@ type App struct {
 	cppTab        int    // the C/C++ page's tab: installed, PATH
 	modelsTab     int    // the local models page's tab: all, then an app each
 	modelsFilter  string // the local models table's filter
+	modelPull     string // the name of the Ollama model to download
+	modelPullOpen bool   // the dialog to download an Ollama model is open
 	cliTab        int    // the CLI & clouds page's tab
 	cliFilter     string // the CLI & clouds table's filter
 	mobileTab     int    // the mobile page's tab: all, then a group each

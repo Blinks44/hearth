@@ -339,9 +339,11 @@ func errText(err error) string {
 // execution is one run of a plan. It is the io.Writer the steps' output
 // goes to, splitting it into lines for the log.
 type execution struct {
-	mu      sync.Mutex
-	state   State
-	line    []byte // the output after the last line break
+	mu    sync.Mutex
+	state State
+	line  []byte // the output after the last line break
+	// esc is the terminal control sequence being read, from its ESC.
+	esc     []byte
 	last    time.Time
 	journal io.Writer
 	update  func(State)
@@ -367,6 +369,10 @@ func (e *execution) Write(p []byte) (int, error) {
 	e.mu.Lock()
 	_, _ = e.journal.Write(p)
 	for _, b := range p {
+		if len(e.esc) > 0 || b == 0x1b {
+			e.control(b)
+			continue
+		}
 		switch b {
 		case '\n':
 			e.flushLine()
@@ -389,6 +395,33 @@ func (e *execution) Write(p []byte) (int, error) {
 		e.emit()
 	}
 	return len(p), nil
+}
+
+// control reads b, a byte of a terminal control sequence, with e.mu
+// held. A progress bar, as ollama pull's, draws with them even where no
+// terminal reads: moving to the line's start is as '\r', moving up n
+// lines takes back the n last lines it drew over, and the rest, colors
+// and the cursor's look, show nothing.
+func (e *execution) control(b byte) {
+	e.esc = append(e.esc, b)
+	switch {
+	case len(e.esc) == 2 && b != '[':
+		// Not a CSI sequence: ESC and the byte after it.
+	case len(e.esc) < 3 || b < 0x40 || b > 0x7e:
+		if len(e.esc) < 64 {
+			return
+		}
+	case b == 'G':
+		e.line = e.line[:0]
+	case b == 'A':
+		n, err := strconv.Atoi(string(e.esc[2 : len(e.esc)-1]))
+		if err != nil {
+			n = 1
+		}
+		e.line = e.line[:0]
+		e.state.Log = e.state.Log[:max(0, len(e.state.Log)-n)]
+	}
+	e.esc = e.esc[:0]
 }
 
 // flushLine moves the unfinished line to the log, with e.mu held.

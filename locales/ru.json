@@ -1120,5 +1120,20 @@
   "compilerCheckFound": "Найден {name}",
   "opCheckStopped": "Вы остановили проверку: шаги выполнены, их результат не проверен.",
   "compilerNoteMac": "Установщик Apple",
-  "compilerNoteMacText": "Нажмите в его окне «Установить» и примите лицензию. Hearth проверяет, пока инструменты не появятся; если закроете установщик, остановите операцию."
+  "compilerNoteMacText": "Нажмите в его окне «Установить» и примите лицензию. Hearth проверяет, пока инструменты не появятся; если закроете установщик, остановите операцию.",
+  "ollamaPullTitle": "Скачать {model}",
+  "ollamaPullWhy": "Через сервер Ollama. Модели весят гигабайты, скачивание может занять время; если остановить, скачанное останется и следующее скачивание продолжит с того же места.",
+  "ollamaPullFound": "{model} есть в Ollama",
+  "ollamaPullMissing": "{model} пока нет в Ollama",
+  "ollamaRemoveWhy": "Ollama удалит файлы модели, кроме общих с другими моделями. Вернуть её можно, скачав снова.",
+  "ollamaRemoveAsked": "MCP {server} использует её",
+  "ollamaRemoveAskedText": "Сервер указывает эту модель в своих аргументах и без неё работать не будет.",
+  "ollamaRemoveGone": "{model} удалена",
+  "ollamaRemoveLeft": "{model} всё ещё есть в Ollama",
+  "modelsPull": "Скачать модель…",
+  "modelsPullTitle": "Скачать модель Ollama",
+  "modelsPullLead": "Введите имя модели из библиотеки Ollama, например llama3.2 или qwen3:8b. Без тега Ollama скачает latest.",
+  "modelsPullLibrary": "Модели на ollama.com",
+  "modelsPullHas": "{model} уже есть в Ollama",
+  "next": "Дальше"
 }

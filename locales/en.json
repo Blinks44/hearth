@@ -5906,5 +5906,107 @@
   "compilerNoteMacText": "Click Install in its window and accept the license. Hearth checks for the tools until they are there; if you close the installer, stop the operation.",
   "@compilerNoteMacText": {
     "description": "What to do in macOS's Command Line Tools installer."
+  },
+  "ollamaPullTitle": "Download {model}",
+  "@ollamaPullTitle": {
+    "description": "Title of the plan that downloads an Ollama model.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "ollamaPullWhy": "Through Ollama's server. Models take gigabytes, so the download may take a while; if you stop it, what is downloaded stays and the next download goes on from there.",
+  "@ollamaPullWhy": {
+    "description": "How downloading an Ollama model goes."
+  },
+  "ollamaPullFound": "Ollama has {model}",
+  "@ollamaPullFound": {
+    "description": "Check after downloading a model: it is there.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "ollamaPullMissing": "Ollama does not have {model} yet",
+  "@ollamaPullMissing": {
+    "description": "Check after downloading a model: it is not there.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "ollamaRemoveWhy": "Ollama removes the model's files, except those another model shares. Downloading it again brings it back.",
+  "@ollamaRemoveWhy": {
+    "description": "How removing an Ollama model goes."
+  },
+  "ollamaRemoveAsked": "MCP {server} asks for it",
+  "@ollamaRemoveAsked": {
+    "description": "Note of removing a model an MCP server names.",
+    "placeholders": {
+      "server": {
+        "type": "String",
+        "example": "memory · Claude Code"
+      }
+    }
+  },
+  "ollamaRemoveAskedText": "The server names this model in its arguments and will not work without it.",
+  "@ollamaRemoveAskedText": {
+    "description": "Note text of removing a model an MCP server names."
+  },
+  "ollamaRemoveGone": "{model} is removed",
+  "@ollamaRemoveGone": {
+    "description": "Check after removing a model: it is gone.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "ollamaRemoveLeft": "Ollama still has {model}",
+  "@ollamaRemoveLeft": {
+    "description": "Check after removing a model: it is still there.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "modelsPull": "Download model…",
+  "@modelsPull": {
+    "description": "Models page header button that opens the dialog to download an Ollama model."
+  },
+  "modelsPullTitle": "Download an Ollama model",
+  "@modelsPullTitle": {
+    "description": "Title of the dialog to download an Ollama model."
+  },
+  "modelsPullLead": "Enter a model's name from Ollama's library, as llama3.2 or qwen3:8b. Without a tag, Ollama downloads latest.",
+  "@modelsPullLead": {
+    "description": "Lead of the dialog to download an Ollama model."
+  },
+  "modelsPullLibrary": "Models on ollama.com",
+  "@modelsPullLibrary": {
+    "description": "Link to Ollama's library in the download dialog."
+  },
+  "modelsPullHas": "Ollama already has {model}",
+  "@modelsPullHas": {
+    "description": "Download dialog: the model is downloaded already.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "llama3.2:latest"
+      }
+    }
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Button that goes on to the plan."
   }
 }

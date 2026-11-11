@@ -166,6 +166,22 @@ func TestExecuteProgressLines(t *testing.T) {
 	}
 }
 
+// A progress bar drawn with terminal control sequences, as ollama pull's,
+// keeps its last drawing, without the sequences.
+func TestExecuteControlSequences(t *testing.T) {
+	f := &run.Fake{}
+	out := "\x1b[?2026h\x1b[?25l\x1b[1Gpulling manifest ⠋\x1b[K\x1b[?2026l" +
+		"\x1b[1Gpulling manifest\x1b[K\npulling 797b: 50%\x1b[K" +
+		"\x1b[A\x1b[1Gpulling manifest\x1b[K\npulling 797b: 100%\x1b[K\nverifying\x1b[K" +
+		"\n\x1b[32msuccess\x1b[0m\x1b[?25h"
+	f.Stdout(out, "ollama", "pull", "qwen3")
+	got := Execute(t.Context(), f, plan([]string{"ollama", "pull", "qwen3"}), &strings.Builder{}, func(State) {})
+	want := []string{"pulling manifest", "pulling 797b: 100%", "verifying", "success"}
+	if !slices.Equal(got.Log, want) {
+		t.Errorf("Log = %q, want %q", got.Log, want)
+	}
+}
+
 // blocking runs its first command until the context ends and answers the
 // rest at once.
 type blocking struct {

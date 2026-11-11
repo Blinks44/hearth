@@ -14597,3 +14597,215 @@ func CompilerNoteMacText() string { return In(i18n.Locale()).CompilerNoteMacText
 func (msgs Messages) CompilerNoteMacText() string {
 	return Catalog.Format(msgs.locale, "compilerNoteMacText", nil)
 }
+
+// OllamaPullTitle says "Download {model}"
+// in the language the app shows.
+//
+// Title of the plan that downloads an Ollama model.
+func OllamaPullTitle(model string) string { return In(i18n.Locale()).OllamaPullTitle(model) }
+
+// OllamaPullTitle says "Download {model}"
+// in the language of msgs.
+//
+// Title of the plan that downloads an Ollama model.
+func (msgs Messages) OllamaPullTitle(model string) string {
+	return Catalog.Format(msgs.locale, "ollamaPullTitle", map[string]any{"model": model})
+}
+
+// OllamaPullWhy says "Through Ollama's server. Models take gigabytes, so the download may take a while; if you stop it, what is downloaded …"
+// in the language the app shows.
+//
+// How downloading an Ollama model goes.
+func OllamaPullWhy() string { return In(i18n.Locale()).OllamaPullWhy() }
+
+// OllamaPullWhy says "Through Ollama's server. Models take gigabytes, so the download may take a while; if you stop it, what is downloaded …"
+// in the language of msgs.
+//
+// How downloading an Ollama model goes.
+func (msgs Messages) OllamaPullWhy() string {
+	return Catalog.Format(msgs.locale, "ollamaPullWhy", nil)
+}
+
+// OllamaPullFound says "Ollama has {model}"
+// in the language the app shows.
+//
+// Check after downloading a model: it is there.
+func OllamaPullFound(model string) string { return In(i18n.Locale()).OllamaPullFound(model) }
+
+// OllamaPullFound says "Ollama has {model}"
+// in the language of msgs.
+//
+// Check after downloading a model: it is there.
+func (msgs Messages) OllamaPullFound(model string) string {
+	return Catalog.Format(msgs.locale, "ollamaPullFound", map[string]any{"model": model})
+}
+
+// OllamaPullMissing says "Ollama does not have {model} yet"
+// in the language the app shows.
+//
+// Check after downloading a model: it is not there.
+func OllamaPullMissing(model string) string { return In(i18n.Locale()).OllamaPullMissing(model) }
+
+// OllamaPullMissing says "Ollama does not have {model} yet"
+// in the language of msgs.
+//
+// Check after downloading a model: it is not there.
+func (msgs Messages) OllamaPullMissing(model string) string {
+	return Catalog.Format(msgs.locale, "ollamaPullMissing", map[string]any{"model": model})
+}
+
+// OllamaRemoveWhy says "Ollama removes the model's files, except those another model shares. Downloading it again brings it back."
+// in the language the app shows.
+//
+// How removing an Ollama model goes.
+func OllamaRemoveWhy() string { return In(i18n.Locale()).OllamaRemoveWhy() }
+
+// OllamaRemoveWhy says "Ollama removes the model's files, except those another model shares. Downloading it again brings it back."
+// in the language of msgs.
+//
+// How removing an Ollama model goes.
+func (msgs Messages) OllamaRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "ollamaRemoveWhy", nil)
+}
+
+// OllamaRemoveAsked says "MCP {server} asks for it"
+// in the language the app shows.
+//
+// Note of removing a model an MCP server names.
+func OllamaRemoveAsked(server string) string { return In(i18n.Locale()).OllamaRemoveAsked(server) }
+
+// OllamaRemoveAsked says "MCP {server} asks for it"
+// in the language of msgs.
+//
+// Note of removing a model an MCP server names.
+func (msgs Messages) OllamaRemoveAsked(server string) string {
+	return Catalog.Format(msgs.locale, "ollamaRemoveAsked", map[string]any{"server": server})
+}
+
+// OllamaRemoveAskedText says "The server names this model in its arguments and will not work without it."
+// in the language the app shows.
+//
+// Note text of removing a model an MCP server names.
+func OllamaRemoveAskedText() string { return In(i18n.Locale()).OllamaRemoveAskedText() }
+
+// OllamaRemoveAskedText says "The server names this model in its arguments and will not work without it."
+// in the language of msgs.
+//
+// Note text of removing a model an MCP server names.
+func (msgs Messages) OllamaRemoveAskedText() string {
+	return Catalog.Format(msgs.locale, "ollamaRemoveAskedText", nil)
+}
+
+// OllamaRemoveGone says "{model} is removed"
+// in the language the app shows.
+//
+// Check after removing a model: it is gone.
+func OllamaRemoveGone(model string) string { return In(i18n.Locale()).OllamaRemoveGone(model) }
+
+// OllamaRemoveGone says "{model} is removed"
+// in the language of msgs.
+//
+// Check after removing a model: it is gone.
+func (msgs Messages) OllamaRemoveGone(model string) string {
+	return Catalog.Format(msgs.locale, "ollamaRemoveGone", map[string]any{"model": model})
+}
+
+// OllamaRemoveLeft says "Ollama still has {model}"
+// in the language the app shows.
+//
+// Check after removing a model: it is still there.
+func OllamaRemoveLeft(model string) string { return In(i18n.Locale()).OllamaRemoveLeft(model) }
+
+// OllamaRemoveLeft says "Ollama still has {model}"
+// in the language of msgs.
+//
+// Check after removing a model: it is still there.
+func (msgs Messages) OllamaRemoveLeft(model string) string {
+	return Catalog.Format(msgs.locale, "ollamaRemoveLeft", map[string]any{"model": model})
+}
+
+// ModelsPull says "Download model…"
+// in the language the app shows.
+//
+// Models page header button that opens the dialog to download an Ollama
+// model.
+func ModelsPull() string { return In(i18n.Locale()).ModelsPull() }
+
+// ModelsPull says "Download model…"
+// in the language of msgs.
+//
+// Models page header button that opens the dialog to download an Ollama
+// model.
+func (msgs Messages) ModelsPull() string {
+	return Catalog.Format(msgs.locale, "modelsPull", nil)
+}
+
+// ModelsPullTitle says "Download an Ollama model"
+// in the language the app shows.
+//
+// Title of the dialog to download an Ollama model.
+func ModelsPullTitle() string { return In(i18n.Locale()).ModelsPullTitle() }
+
+// ModelsPullTitle says "Download an Ollama model"
+// in the language of msgs.
+//
+// Title of the dialog to download an Ollama model.
+func (msgs Messages) ModelsPullTitle() string {
+	return Catalog.Format(msgs.locale, "modelsPullTitle", nil)
+}
+
+// ModelsPullLead says "Enter a model's name from Ollama's library, as llama3.2 or qwen3:8b. Without a tag, Ollama downloads latest."
+// in the language the app shows.
+//
+// Lead of the dialog to download an Ollama model.
+func ModelsPullLead() string { return In(i18n.Locale()).ModelsPullLead() }
+
+// ModelsPullLead says "Enter a model's name from Ollama's library, as llama3.2 or qwen3:8b. Without a tag, Ollama downloads latest."
+// in the language of msgs.
+//
+// Lead of the dialog to download an Ollama model.
+func (msgs Messages) ModelsPullLead() string {
+	return Catalog.Format(msgs.locale, "modelsPullLead", nil)
+}
+
+// ModelsPullLibrary says "Models on ollama.com"
+// in the language the app shows.
+//
+// Link to Ollama's library in the download dialog.
+func ModelsPullLibrary() string { return In(i18n.Locale()).ModelsPullLibrary() }
+
+// ModelsPullLibrary says "Models on ollama.com"
+// in the language of msgs.
+//
+// Link to Ollama's library in the download dialog.
+func (msgs Messages) ModelsPullLibrary() string {
+	return Catalog.Format(msgs.locale, "modelsPullLibrary", nil)
+}
+
+// ModelsPullHas says "Ollama already has {model}"
+// in the language the app shows.
+//
+// Download dialog: the model is downloaded already.
+func ModelsPullHas(model string) string { return In(i18n.Locale()).ModelsPullHas(model) }
+
+// ModelsPullHas says "Ollama already has {model}"
+// in the language of msgs.
+//
+// Download dialog: the model is downloaded already.
+func (msgs Messages) ModelsPullHas(model string) string {
+	return Catalog.Format(msgs.locale, "modelsPullHas", map[string]any{"model": model})
+}
+
+// Next says "Next"
+// in the language the app shows.
+//
+// Button that goes on to the plan.
+func Next() string { return In(i18n.Locale()).Next() }
+
+// Next says "Next"
+// in the language of msgs.
+//
+// Button that goes on to the plan.
+func (msgs Messages) Next() string {
+	return Catalog.Format(msgs.locale, "next", nil)
+}

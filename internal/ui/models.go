@@ -9,6 +9,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -34,6 +35,59 @@ func (a *App) modelApps() []modelApp {
 		}
 	}
 	return out
+}
+
+// ollama is Ollama when its command is on the terminal's PATH: Hearth
+// downloads and removes models through it.
+func (a *App) ollama() *inventory.ModelApp {
+	st, _ := a.Snapshot.Tool("models")
+	if st.Models == nil || st.Models.Ollama == nil || st.Models.Ollama.Path == "" {
+		return nil
+	}
+	return st.Models.Ollama
+}
+
+// modelPullDialog asks for the name of the Ollama model to download,
+// with a link to Ollama's library, then proposes the download.
+func (a *App) modelPullDialog(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	dialogBase(c.Key("model-pull"), &a.modelPullOpen, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(460).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		plan, ok := ops.OllamaPullPlan(a.modelPull, a.detect("models"))
+		name, _ := ops.OllamaModelName(a.modelPull)
+		has := false
+		if app := a.ollama(); app != nil {
+			has = slices.ContainsFunc(app.Models, func(m inventory.Model) bool { return strings.EqualFold(m.Name, name) })
+		}
+		next := func() {
+			if ok && !has {
+				a.modelPullOpen = false
+				a.Propose(plan)
+			}
+		}
+		ui.Column(c).Children(func() {
+			ui.Column(c).Gap(4).Padding(20, 20, 16, 20).Children(func() {
+				ui.Text(c, locales.ModelsPullTitle()).FontSize(18).FontWeight(600)
+				ui.Text(c, locales.ModelsPullLead()).FontSize(12).TextColor(t.TextMuted)
+				in := ui.TextInput(c.Key("model-pull-name"), &a.modelPull).Placeholder("llama3.2:3b").Label(locales.ModelsPullTitle()).Margin(10, 0, 0, 0).AutoFocus()
+				if in.Submitted() {
+					next()
+				}
+				if has {
+					ui.Text(c, locales.ModelsPullHas(name)).FontSize(12).TextColor(pal.WarningText)
+				}
+			})
+			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Link(c, locales.ModelsPullLibrary()+" ↗", "https://ollama.com/library").FontSize(12.5)
+				ui.Box(c).Grow(1).Height(1)
+				ui.Button(c, locales.Cancel()).OnClick(func() { a.modelPullOpen = false })
+				ui.PrimaryButton(c, locales.Next()).Disabled(!ok || has).OnClick(next)
+			})
+		})
+	})
 }
 
 // modelCount is how many models the apps found downloaded.
@@ -65,7 +119,14 @@ func (a *App) listening(port string) bool {
 
 func (a *App) modelsView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if a.ollama() != nil {
+				ui.PrimaryButton(c.Key("models-pull"), locales.ModelsPull()).OnClick(func() {
+					a.modelPull, a.modelPullOpen = "", true
+				})
+			}
+		}})
+		a.modelPullDialog(c)
 		t := c.Theme()
 		pal := Colors(t)
 		apps := a.modelApps()
@@ -197,6 +258,17 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 				clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
 			})
 			ui.Text(c, formatBytes(md.Size)).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+			if m.name == "Ollama" && m.app.Path != "" {
+				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+					if menu.Item(locales.RemoveEllipsis()).Chosen() {
+						var askedBy []string
+						for _, s := range inventory.ModelMentions(servers, md) {
+							askedBy = append(askedBy, s.Name+" · "+agentTitle(s.Agent))
+						}
+						a.Propose(ops.OllamaRemovePlan(md, askedBy, a.detect("models")))
+					}
+				})
+			}
 		})
 	}
 	if shown == 0 && m.app.Err == "" {
