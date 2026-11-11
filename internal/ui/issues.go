@@ -1,13 +1,18 @@
 package ui
 
 import (
+	"errors"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -163,4 +168,70 @@ func issuePage(is issues.Issue) string {
 		return overview.path
 	}
 	return pathPage
+}
+
+// issueFix is what fixes is with an operation that exists, nil for an
+// issue without one: the page it lives on tells what to do then. found
+// are the scan's issues, for the skills' copies, which merge at once.
+func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
+	switch is.Kind {
+	case issues.PathMissing:
+		term := a.Snapshot.TerminalPath
+		var dirs []string
+		for i, e := range term {
+			if slices.Contains(is.Dirs, e.Dir) && !slices.Contains(dirs, e.Dir) && a.fixable(term, i) {
+				dirs = append(dirs, e.Dir)
+			}
+		}
+		if len(dirs) == 0 {
+			return nil
+		}
+		return func() {
+			a.PlanPath(term, dirs, func(p ops.Plan, err error) {
+				if errors.Is(err, ops.ErrNoFix) {
+					err = errors.New(locales.PathNoFix())
+				}
+				a.proposeOrSay(p, err)
+			})
+		}
+	case issues.ProjectMissing:
+		for _, p := range a.Projects {
+			if p.Dir != is.Project {
+				continue
+			}
+			for _, st := range projects.Resolve(p, a.Snapshot, a.nodeLines()) {
+				if st.Tool != is.Tool {
+					continue
+				}
+				if plan, ok := a.projectInstall(st); ok {
+					return func() { a.Propose(plan) }
+				}
+			}
+		}
+	case issues.DockerUnavailable:
+		if plan, ok := a.engineStartPlan(); ok {
+			return func() { a.Propose(plan) }
+		}
+	case issues.DatabasePortConflict:
+		if plan, ok := a.conflictPlan(is, inventory.DatabaseServers(a.Snapshot)); ok {
+			return func() { a.Propose(plan) }
+		}
+	case issues.SkillCopies:
+		if a.BuildPlan == nil || a.SkillBackups == "" {
+			return nil
+		}
+		var groups [][]inventory.Skill
+		for _, o := range found {
+			if o.Kind == issues.SkillCopies {
+				groups = append(groups, o.Skills)
+			}
+		}
+		backups := a.SkillBackups
+		return func() {
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.SkillMergePlan(groups, backups, env, time.Now())
+			}, a.proposeOrSay)
+		}
+	}
+	return nil
 }

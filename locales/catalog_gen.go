@@ -14893,3 +14893,17 @@ func MobileInstallOpen() string { return In(i18n.Locale()).MobileInstallOpen() }
 func (msgs Messages) MobileInstallOpen() string {
 	return Catalog.Format(msgs.locale, "mobileInstallOpen", nil)
 }
+
+// IssueFix says "Fix…"
+// in the language the app shows.
+//
+// Button of an issue that opens the plan fixing it.
+func IssueFix() string { return In(i18n.Locale()).IssueFix() }
+
+// IssueFix says "Fix…"
+// in the language of msgs.
+//
+// Button of an issue that opens the plan fixing it.
+func (msgs Messages) IssueFix() string {
+	return Catalog.Format(msgs.locale, "issueFix", nil)
+}

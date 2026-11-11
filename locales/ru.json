@@ -1141,5 +1141,6 @@
   "mobileInstallStudio": "Android SDK, эмулятор и JDK",
   "mobileInstallFlutter": "iOS и Android из одного кода",
   "mobileInstallNote": "Hearth не ставит их сам: установщики большие и по ходу задают вопросы. После установки Hearth найдёт их при следующей проверке.",
-  "mobileInstallOpen": "Открыть"
+  "mobileInstallOpen": "Открыть",
+  "issueFix": "Исправить…"
 }

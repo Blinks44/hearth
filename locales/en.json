@@ -6032,5 +6032,9 @@
   "mobileInstallOpen": "Open",
   "@mobileInstallOpen": {
     "description": "Link to a tool's official install page."
+  },
+  "issueFix": "Fix…",
+  "@issueFix": {
+    "description": "Button of an issue that opens the plan fixing it."
   }
 }

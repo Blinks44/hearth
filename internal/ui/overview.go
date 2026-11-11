@@ -538,8 +538,9 @@ func attentionNote(c *ui.Context, icon string, ok bool, title, text string) {
 	})
 }
 
-// issueRow is an issue: its level, what it is and why it matters, and a
-// button to the page it lives on.
+// issueRow is an issue: its level, what it is and why it matters, a
+// button to its fix when an operation makes one, and to the page it lives
+// on.
 func (a *App) issueRow(c *ui.Context, it attentionItem) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -555,7 +556,14 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 			ui.Text(c, it.title).FontSize(13.5).FontWeight(500)
 			// The page tells the rest; the card stays short.
 			ui.Text(c, it.explain).FontSize(11.5).TextColor(t.TextMuted).MaxLines(2).Tooltip(it.explain)
-			ui.Row(c).Padding(5, 0, 0, 0).Children(func() {
+			ui.Row(c).Gap(6).Padding(5, 0, 0, 0).Children(func() {
+				if it.fix != nil {
+					// Dark, as in the design.
+					ui.Button(c.Key("fix:"+it.key), "").Height(24).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
+						Label(locales.IssueFix()).OnClick(it.fix).Children(func() {
+						ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
+					})
+				}
 				ui.Button(c.Key("details:"+it.key), "").Height(24).Padding(0, 10).
 					Label(locales.Details()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
 					ui.Text(c, locales.Details()).FontSize(12).SingleLine()
@@ -570,6 +578,7 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 type attentionItem struct {
 	title, explain, page, key string
 	severity                  issues.Severity
+	fix                       func() // proposes the plan that fixes it; nil for none
 }
 
 // grouped are the kinds whose issues the card shows as one when there are
@@ -591,7 +600,7 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		group := byKind[is.Kind]
 		if len(group) < 2 {
 			title, explain := issueText(is, a.Home)
-			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity})
+			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity, a.issueFix(is, found)})
 			continue
 		}
 		if done[is.Kind] {
@@ -618,7 +627,7 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		case issues.MCPMissing:
 			title = locales.GroupMCPMissing(len(group))
 		}
-		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity})
+		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity, a.issueFix(is, found)})
 	}
 	return out
 }
