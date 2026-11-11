@@ -2818,20 +2818,6 @@ func (msgs Messages) Details() string {
 	return Catalog.Format(msgs.locale, "details", nil)
 }
 
-// MoreIssues says "{count} more: {titles}"
-// in the language the app shows.
-//
-// Overview issues card: the issues not shown.
-func MoreIssues(count int, titles string) string { return In(i18n.Locale()).MoreIssues(count, titles) }
-
-// MoreIssues says "{count} more: {titles}"
-// in the language of msgs.
-//
-// Overview issues card: the issues not shown.
-func (msgs Messages) MoreIssues(count int, titles string) string {
-	return Catalog.Format(msgs.locale, "moreIssues", map[string]any{"count": count, "titles": titles})
-}
-
 // NoProjectsHeading says "No projects yet"
 // in the language the app shows.
 //
@@ -15498,4 +15484,186 @@ func PathFirstAhead(dir string, dirs string) string {
 // The check found other folders still ahead of the one put first.
 func (msgs Messages) PathFirstAhead(dir string, dirs string) string {
 	return Catalog.Format(msgs.locale, "pathFirstAhead", map[string]any{"dir": dir, "dirs": dirs})
+}
+
+// ProblemsTitle says "Issues"
+// in the language the app shows.
+//
+// Sidebar item and header of the Issues page.
+func ProblemsTitle() string { return In(i18n.Locale()).ProblemsTitle() }
+
+// ProblemsTitle says "Issues"
+// in the language of msgs.
+//
+// Sidebar item and header of the Issues page.
+func (msgs Messages) ProblemsTitle() string {
+	return Catalog.Format(msgs.locale, "problemsTitle", nil)
+}
+
+// ProblemsSubtitle says "Everything worth fixing in the environment"
+// in the language the app shows.
+//
+// Subtitle of the Issues page.
+func ProblemsSubtitle() string { return In(i18n.Locale()).ProblemsSubtitle() }
+
+// ProblemsSubtitle says "Everything worth fixing in the environment"
+// in the language of msgs.
+//
+// Subtitle of the Issues page.
+func (msgs Messages) ProblemsSubtitle() string {
+	return Catalog.Format(msgs.locale, "problemsSubtitle", nil)
+}
+
+// ProblemsLead says "Hearth shows, you decide: nothing changes without your confirmation"
+// in the language the app shows.
+//
+// Line under the Issues page's title.
+func ProblemsLead() string { return In(i18n.Locale()).ProblemsLead() }
+
+// ProblemsLead says "Hearth shows, you decide: nothing changes without your confirmation"
+// in the language of msgs.
+//
+// Line under the Issues page's title.
+func (msgs Messages) ProblemsLead() string {
+	return Catalog.Format(msgs.locale, "problemsLead", nil)
+}
+
+// ProblemsImportant says "Important"
+// in the language the app shows.
+//
+// Issues page card: how many warnings.
+func ProblemsImportant() string { return In(i18n.Locale()).ProblemsImportant() }
+
+// ProblemsImportant says "Important"
+// in the language of msgs.
+//
+// Issues page card: how many warnings.
+func (msgs Messages) ProblemsImportant() string {
+	return Catalog.Format(msgs.locale, "problemsImportant", nil)
+}
+
+// ProblemsInfo says "For information"
+// in the language the app shows.
+//
+// Issues page card: how many issues are only worth knowing.
+func ProblemsInfo() string { return In(i18n.Locale()).ProblemsInfo() }
+
+// ProblemsInfo says "For information"
+// in the language of msgs.
+//
+// Issues page card: how many issues are only worth knowing.
+func (msgs Messages) ProblemsInfo() string {
+	return Catalog.Format(msgs.locale, "problemsInfo", nil)
+}
+
+// ProblemsInfoCaption says "safe to leave"
+// in the language the app shows.
+//
+// Caption under the count of issues only worth knowing.
+func ProblemsInfoCaption() string { return In(i18n.Locale()).ProblemsInfoCaption() }
+
+// ProblemsInfoCaption says "safe to leave"
+// in the language of msgs.
+//
+// Caption under the count of issues only worth knowing.
+func (msgs Messages) ProblemsInfoCaption() string {
+	return Catalog.Format(msgs.locale, "problemsInfoCaption", nil)
+}
+
+// ProblemsChecked says "Checked"
+// in the language the app shows.
+//
+// Issues page card: when the last check ran.
+func ProblemsChecked() string { return In(i18n.Locale()).ProblemsChecked() }
+
+// ProblemsChecked says "Checked"
+// in the language of msgs.
+//
+// Issues page card: when the last check ran.
+func (msgs Messages) ProblemsChecked() string {
+	return Catalog.Format(msgs.locale, "problemsChecked", nil)
+}
+
+// ProblemsCheckedCaption says "updates by itself"
+// in the language the app shows.
+//
+// Caption under when the last check ran.
+func ProblemsCheckedCaption() string { return In(i18n.Locale()).ProblemsCheckedCaption() }
+
+// ProblemsCheckedCaption says "updates by itself"
+// in the language of msgs.
+//
+// Caption under when the last check ran.
+func (msgs Messages) ProblemsCheckedCaption() string {
+	return Catalog.Format(msgs.locale, "problemsCheckedCaption", nil)
+}
+
+// ProblemsGroupImportant says "Important · worth fixing"
+// in the language the app shows.
+//
+// Issues table: the group of warnings.
+func ProblemsGroupImportant() string { return In(i18n.Locale()).ProblemsGroupImportant() }
+
+// ProblemsGroupImportant says "Important · worth fixing"
+// in the language of msgs.
+//
+// Issues table: the group of warnings.
+func (msgs Messages) ProblemsGroupImportant() string {
+	return Catalog.Format(msgs.locale, "problemsGroupImportant", nil)
+}
+
+// ProblemsGroupInfo says "For information · safe to leave"
+// in the language the app shows.
+//
+// Issues table: the group of issues only worth knowing.
+func ProblemsGroupInfo() string { return In(i18n.Locale()).ProblemsGroupInfo() }
+
+// ProblemsGroupInfo says "For information · safe to leave"
+// in the language of msgs.
+//
+// Issues table: the group of issues only worth knowing.
+func (msgs Messages) ProblemsGroupInfo() string {
+	return Catalog.Format(msgs.locale, "problemsGroupInfo", nil)
+}
+
+// ProblemsNone says "No matching issues."
+// in the language the app shows.
+//
+// Issues table when the tab and filter leave none.
+func ProblemsNone() string { return In(i18n.Locale()).ProblemsNone() }
+
+// ProblemsNone says "No matching issues."
+// in the language of msgs.
+//
+// Issues table when the tab and filter leave none.
+func (msgs Messages) ProblemsNone() string {
+	return Catalog.Format(msgs.locale, "problemsNone", nil)
+}
+
+// IssueOpen says "Open"
+// in the language the app shows.
+//
+// Issues page button opening the page an issue lives on.
+func IssueOpen() string { return In(i18n.Locale()).IssueOpen() }
+
+// IssueOpen says "Open"
+// in the language of msgs.
+//
+// Issues page button opening the page an issue lives on.
+func (msgs Messages) IssueOpen() string {
+	return Catalog.Format(msgs.locale, "issueOpen", nil)
+}
+
+// AllIssues says "All issues"
+// in the language the app shows.
+//
+// Link from the overview's issues card to the Issues page.
+func AllIssues() string { return In(i18n.Locale()).AllIssues() }
+
+// AllIssues says "All issues"
+// in the language of msgs.
+//
+// Link from the overview's issues card to the Issues page.
+func (msgs Messages) AllIssues() string {
+	return Catalog.Format(msgs.locale, "allIssues", nil)
 }

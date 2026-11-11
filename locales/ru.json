@@ -194,7 +194,6 @@
   "noIssues": "Проблем не найдено",
   "noIssuesText": "Hearth проверяет снова при изменении файлов проектов и настроек шелла.",
   "details": "Подробнее",
-  "moreIssues": "Ещё {count}: {titles}",
   "noProjectsHeading": "Проектов пока нет",
   "openProject": "Открыть проект",
   "aiAgentsTitle": "AI-агенты",
@@ -1184,5 +1183,18 @@
   "appsPathStopChange": "Приложения, открытые теперь, получат системный PATH",
   "appsPathStopChecked": "macOS передаёт приложениям системный PATH",
   "appsPathGiven": "Приложения получают PATH терминала от агента запуска Hearth",
-  "pathFirstAhead": "Новый терминал всё ещё ищет команды в {dirs} раньше, чем в {dir}: их ставят вперёд строки, которые выполняются после строки Hearth, как это делают менеджеры версий"
+  "pathFirstAhead": "Новый терминал всё ещё ищет команды в {dirs} раньше, чем в {dir}: их ставят вперёд строки, которые выполняются после строки Hearth, как это делают менеджеры версий",
+  "problemsTitle": "Проблемы",
+  "problemsSubtitle": "Всё, что стоит поправить в окружении",
+  "problemsLead": "Hearth показывает, решаете вы: без подтверждения ничего не меняется",
+  "problemsImportant": "Важно",
+  "problemsInfo": "Для сведения",
+  "problemsInfoCaption": "можно не трогать",
+  "problemsChecked": "Проверено",
+  "problemsCheckedCaption": "обновится сам",
+  "problemsGroupImportant": "Важно · стоит поправить",
+  "problemsGroupInfo": "Для сведения · можно не трогать",
+  "problemsNone": "Подходящих проблем нет.",
+  "issueOpen": "Открыть",
+  "allIssues": "Все проблемы"
 }

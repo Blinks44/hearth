@@ -707,16 +707,7 @@ func (a *App) overviewAgents(c *ui.Context) {
 		count = strconv.Itoa(len(found))
 	}
 	card(c, locales.AiAgentsTitle(), count, func() {
-		b := ui.ButtonBase(c.Key("overview-ai")).Gap(4).AlignItems(ui.Center).Label(locales.SkillsAndMcp()).
-			OnClick(func() { a.router.Push(skillsPage) })
-		color := t.TextMuted
-		if b.Hovered() {
-			color = t.Text
-		}
-		b.Children(func() {
-			ui.Text(c, locales.SkillsAndMcp()).FontSize(12.5).TextColor(color).SingleLine()
-			ui.Icon(c, Icon("chevron-right")).Size(13, 13).TextColor(color)
-		})
+		a.pageLink(c, "overview-ai", locales.SkillsAndMcp(), skillsPage)
 	}, func() {
 		if len(found) == 0 {
 			cardNote(c, locales.NoAgents())

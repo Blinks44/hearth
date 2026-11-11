@@ -174,23 +174,25 @@ type App struct {
 	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
 	// packageChosen are the updates checked to run, by manager path and
 	// packageKey.
-	packageChosen map[string]bool
-	gitTab        int    // the Git page's tab: installed, settings, PATH
-	cppTab        int    // the C/C++ page's tab: installed, PATH
-	modelsTab     int    // the local models page's tab: all, then an app each
-	modelsFilter  string // the local models table's filter
-	modelPull     string // the name of the Ollama model to download
-	modelPullOpen bool   // the dialog to download an Ollama model is open
-	cliTab        int    // the CLI & clouds page's tab
-	cliFilter     string // the CLI & clouds table's filter
-	mobileTab     int    // the mobile page's tab: all, then a group each
-	mobileFilter  string // the mobile table's filter
-	editorsTab    int    // the editors page's tab: all, extensions, commands
-	editorsFilter string // the editors table's filter
-	changesTab    int    // the What changed page's tab: all, added, updated, removed
-	changesFilter string // the What changed table's filter
-	cleanupTab    int    // the Cleanup page's tab: all, then a group each
-	cleanupFilter string // the Cleanup table's filter
+	packageChosen  map[string]bool
+	gitTab         int    // the Git page's tab: installed, settings, PATH
+	cppTab         int    // the C/C++ page's tab: installed, PATH
+	modelsTab      int    // the local models page's tab: all, then an app each
+	modelsFilter   string // the local models table's filter
+	modelPull      string // the name of the Ollama model to download
+	modelPullOpen  bool   // the dialog to download an Ollama model is open
+	cliTab         int    // the CLI & clouds page's tab
+	cliFilter      string // the CLI & clouds table's filter
+	mobileTab      int    // the mobile page's tab: all, then a group each
+	mobileFilter   string // the mobile table's filter
+	editorsTab     int    // the editors page's tab: all, extensions, commands
+	editorsFilter  string // the editors table's filter
+	changesTab     int    // the What changed page's tab: all, added, updated, removed
+	changesFilter  string // the What changed table's filter
+	problemsTab    int    // the Issues page's tab: all, then an area each
+	problemsFilter string // the Issues table's filter
+	cleanupTab     int    // the Cleanup page's tab: all, then a group each
+	cleanupFilter  string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice  map[string]bool
@@ -317,6 +319,8 @@ func (a *App) View(c *ui.Context) {
 						a.projectList(c, p)
 					case cleanupPage:
 						a.cleanupView(c, p)
+					case problemsPage:
+						a.problemsView(c, p)
 					case overview.path:
 						a.overviewPage(c, p)
 					case "/ai/agents":
@@ -422,6 +426,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)
+				a.item(c, problemsNav, a.problemsEnd(c))
 				a.item(c, projectsPage, func() {
 					if len(a.Projects) > 0 {
 						ui.Text(c, strconv.Itoa(len(a.Projects))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
@@ -494,14 +499,7 @@ func (a *App) issueCount(c *ui.Context) func() {
 			n++
 		}
 	}
-	if n == 0 {
-		return nil
-	}
-	return func() {
-		pal := Colors(c.Theme())
-		ui.Text(c, strconv.Itoa(n)).FontSize(10.5).FontWeight(500).TextColor(pal.WarningText).
-			Padding(1, 6).Radius(8).Background(pal.WarningSoft).SingleLine()
-	}
+	return warningPill(c, n)
 }
 
 // status tells when the computer was last checked, with a button that

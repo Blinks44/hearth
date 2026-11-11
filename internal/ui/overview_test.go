@@ -69,17 +69,17 @@ func TestOverviewAllGood(t *testing.T) {
 }
 
 // With three issues or more the hero asks for attention, the card lists
-// the first three with their pages, and the rest go in a line.
+// the first three with their pages, and links to all of them.
 func TestOverviewManyIssues(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = nodeSnapshot()
 	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true}}
 	a.Projects = testProjects()
 	tt := openOverview(t, a)
+	screenshot(t, tt, "overview-issues")
 	// fnm's third version, on no PATH, is an extra one: an Info.
 	hasTexts(t, tt, "5 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",
-		"legacy-admin needs Node 18", "2 more: PATH lists folders that do not exist, Node: an extra version",
-		"2 copies", "other in apps", "no 18", "no Node 18", "2 projects")
+		"legacy-admin needs Node 18", "All issues", "2 copies", "other in apps", "no 18", "no Node 18", "2 projects")
 	// The PATH's item counts its issue.
 	if !tt.HasText("1") {
 		t.Errorf("no count on the PATH's item: %q", tt.Texts())
@@ -92,6 +92,41 @@ func TestOverviewManyIssues(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.router.Path() != "/tools/node" {
 		t.Errorf("Details went to %q", a.router.Path())
+	}
+	a.router.Push(overview.path)
+	tt.Advance(time.Second)
+	if tt.HasText("PATH lists folders that do not exist") {
+		t.Error("the card lists more than three issues")
+	}
+	if err := tt.Click("All issues"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != problemsPage {
+		t.Errorf("All issues went to %q", a.router.Path())
+	}
+}
+
+// The hero's counts open the Issues page, the package managers' updates
+// and Cleanup.
+func TestOverviewCountsOpenPages(t *testing.T) {
+	// By their captions: the sidebar's Issues comes before the hero's.
+	for _, tc := range []struct{ label, path string }{
+		{"worth fixing", problemsPage}, {"in package managers", "/system/packages"}, {"counting sizes…", cleanupPage},
+	} {
+		a := NewApp()
+		a.Snapshot = calmSnapshot()
+		tt := openOverview(t, a)
+		if err := tt.Click(tc.label); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		if a.router.Path() != tc.path {
+			t.Errorf("%s went to %q, want %q", tc.label, a.router.Path(), tc.path)
+		}
+		if tc.path == "/system/packages" && a.packageTab != 3 {
+			t.Errorf("Updates opened the package managers' tab %d", a.packageTab)
+		}
 	}
 }
 

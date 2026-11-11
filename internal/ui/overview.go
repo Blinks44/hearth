@@ -144,13 +144,18 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 					dot = t.Warning
 				}
 			}
-			stat(c, dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption())
-			stat(c, pal.Info, a.updateCount(), locales.HeroUpdates(), locales.HeroUpdatesCaption())
+			stat(c, "stat-issues", dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption(), func() { a.router.Push(problemsPage) })
+			// Until the Updates page, the package managers' updates: their
+			// last tab, which the page clamps the index to.
+			stat(c, "stat-updates", pal.Info, a.updateCount(), locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() {
+				a.packageTab = updatesTabIndex(inventory.PackageManager{ReasonsKnown: true})
+				a.router.Push("/system/packages")
+			})
 			free, caption := "—", locales.CleanupCounting()
 			if a.Sizes != nil {
 				free, caption = formatBytes(freeable(a.candidates(c))), locales.StatFreeCaption()
 			}
-			stat(c, Accent, free, locales.StatFree(), caption)
+			stat(c, "stat-free", Accent, free, locales.StatFree(), caption, func() { a.router.Push(cleanupPage) })
 		})
 	})
 }
@@ -164,17 +169,25 @@ func heroChip(c *ui.Context, dot, bg, text ui.Color, label string) {
 }
 
 // stat is one of the hero's counts: the number, a dot and a label, and a
-// caption.
-func stat(c *ui.Context, dot ui.Color, value, label, caption string) {
+// caption. It opens the page open goes to, as its chevron says.
+func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string, open func()) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.Column(c).MinWidth(158).Gap(4).Padding(14, 16)
+	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).MinWidth(158).Gap(4).Padding(14, 16).Label(label).OnClick(open)
 	if narrow(c) {
 		e.Grow(1).Padding(10, 14).Gap(2)
 	}
-	e.Radius(10).Background(pal.StatBg).
+	bg, chevron := pal.StatBg, pal.TextFaint
+	if e.Hovered() {
+		bg, chevron = t.Background, Accent
+		e.Shadow(0, 2, 8, 0, pal.Shadow)
+	}
+	e.Radius(10).Background(bg).
 		BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
-		ui.Text(c, value).FontSize(26).SingleLine()
+		ui.Row(c).AlignItems(ui.Start).Children(func() {
+			ui.Text(c, value).FontSize(26).Grow(1).SingleLine()
+			ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(chevron)
+		})
 		ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
 			ui.Box(c).Size(8, 8).Radius(4).Background(dot)
 			ui.Text(c, label).FontSize(12.5).FontWeight(500).SingleLine()
@@ -488,13 +501,17 @@ func (a *App) noProjects(c *ui.Context) {
 	})
 }
 
-// attention lists the first issues, the rest in a line under them.
+// attention lists the first issues, with a link to all of them.
 func (a *App) attention(c *ui.Context, found []attentionItem) {
 	count := ""
 	if !a.firstScan() {
 		count = strconv.Itoa(len(found))
 	}
-	card(c, locales.AttentionTitle(), count, nil, func() {
+	var all func()
+	if len(found) > 0 {
+		all = func() { a.pageLink(c, "all-issues", locales.AllIssues(), problemsPage) }
+	}
+	card(c, locales.AttentionTitle(), count, all, func() {
 		switch {
 		case a.firstScan():
 			attentionNote(c, "refresh-cw", false, locales.IssuesAfterScan(), locales.IssuesAfterScanText())
@@ -506,15 +523,21 @@ func (a *App) attention(c *ui.Context, found []attentionItem) {
 		for _, it := range found[:min(len(found), shownIssues)] {
 			a.issueRow(c, it)
 		}
-		if rest := found[min(len(found), shownIssues):]; len(rest) > 0 {
-			titles := make([]string, len(rest))
-			for i, it := range rest {
-				titles[i] = it.title
-			}
-			pal := Colors(c.Theme())
-			ui.Text(c, locales.MoreIssues(len(rest), strings.Join(titles, ", "))).FontSize(12).
-				TextColor(c.Theme().TextMuted).Padding(11, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
-		}
+	})
+}
+
+// pageLink is a card header's link to the page at path: its label and a
+// chevron.
+func (a *App) pageLink(c *ui.Context, key, label, path string) {
+	t := c.Theme()
+	b := ui.ButtonBase(c.Key(key)).Gap(4).AlignItems(ui.Center).Label(label).OnClick(func() { a.router.Push(path) })
+	color := t.TextMuted
+	if b.Hovered() {
+		color = t.Text
+	}
+	b.Children(func() {
+		ui.Text(c, label).FontSize(12.5).TextColor(color).SingleLine()
+		ui.Icon(c, Icon("chevron-right")).Size(13, 13).TextColor(color)
 	})
 }
 
@@ -578,6 +601,7 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 type attentionItem struct {
 	title, explain, page, key string
 	severity                  issues.Severity
+	area                      int    // the Issues page's tab it shows under: areaTools, …
 	fix                       func() // proposes the plan that fixes it; nil for none
 }
 
@@ -600,7 +624,7 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		group := byKind[is.Kind]
 		if len(group) < 2 {
 			title, explain := issueText(is, a.Home)
-			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity, a.issueFix(is, found)})
+			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity, issueArea(is), a.issueFix(is, found)})
 			continue
 		}
 		if done[is.Kind] {
@@ -627,7 +651,7 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		case issues.MCPMissing:
 			title = locales.GroupMCPMissing(len(group))
 		}
-		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity, a.issueFix(is, found)})
+		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity, issueArea(is), a.issueFix(is, found)})
 	}
 	return out
 }

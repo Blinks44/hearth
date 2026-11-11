@@ -1234,20 +1234,6 @@
   "@details": {
     "description": "Button opening the page an issue lives on."
   },
-  "moreIssues": "{count} more: {titles}",
-  "@moreIssues": {
-    "description": "Overview issues card: the issues not shown.",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      },
-      "titles": {
-        "type": "String",
-        "example": "Python for ml-notebooks, MCP postgres"
-      }
-    }
-  },
   "noProjectsHeading": "No projects yet",
   "@noProjectsHeading": {
     "description": "Overview projects card before any project is added."
@@ -6262,5 +6248,57 @@
         "example": "~/.rvm/gems/ruby-3.3.7/bin, ~/.nix-profile/bin"
       }
     }
+  },
+  "problemsTitle": "Issues",
+  "@problemsTitle": {
+    "description": "Sidebar item and header of the Issues page."
+  },
+  "problemsSubtitle": "Everything worth fixing in the environment",
+  "@problemsSubtitle": {
+    "description": "Subtitle of the Issues page."
+  },
+  "problemsLead": "Hearth shows, you decide: nothing changes without your confirmation",
+  "@problemsLead": {
+    "description": "Line under the Issues page's title."
+  },
+  "problemsImportant": "Important",
+  "@problemsImportant": {
+    "description": "Issues page card: how many warnings."
+  },
+  "problemsInfo": "For information",
+  "@problemsInfo": {
+    "description": "Issues page card: how many issues are only worth knowing."
+  },
+  "problemsInfoCaption": "safe to leave",
+  "@problemsInfoCaption": {
+    "description": "Caption under the count of issues only worth knowing."
+  },
+  "problemsChecked": "Checked",
+  "@problemsChecked": {
+    "description": "Issues page card: when the last check ran."
+  },
+  "problemsCheckedCaption": "updates by itself",
+  "@problemsCheckedCaption": {
+    "description": "Caption under when the last check ran."
+  },
+  "problemsGroupImportant": "Important · worth fixing",
+  "@problemsGroupImportant": {
+    "description": "Issues table: the group of warnings."
+  },
+  "problemsGroupInfo": "For information · safe to leave",
+  "@problemsGroupInfo": {
+    "description": "Issues table: the group of issues only worth knowing."
+  },
+  "problemsNone": "No matching issues.",
+  "@problemsNone": {
+    "description": "Issues table when the tab and filter leave none."
+  },
+  "issueOpen": "Open",
+  "@issueOpen": {
+    "description": "Issues page button opening the page an issue lives on."
+  },
+  "allIssues": "All issues",
+  "@allIssues": {
+    "description": "Link from the overview's issues card to the Issues page."
   }
 }
