@@ -274,6 +274,7 @@ func main() {
 			cancelPackages = cancel
 			a.PackageUpdates = map[string]inventory.PackageManager{}
 			a.PackageChecks = map[string]bool{}
+			fetchMise(ctx, win, lists, a, scanner.Terminal())
 			st, ok := a.Snapshot.Tool("packages")
 			if !ok {
 				return
@@ -452,6 +453,36 @@ func main() {
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// fetchMise asks mise in the background which of the tools it installed
+// that have no page of their own have newer versions, and puts the answer
+// in a.MiseOutdated on the UI thread; a failed ask keeps the one before.
+func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *hearthui.App, env sysenv.Env) {
+	st, ok := a.Snapshot.Tool("mise")
+	found := sysenv.LookPathAll("mise", env)
+	if !ok || len(st.MiseTools) == 0 || len(found) == 0 {
+		a.MiseOutdated = nil
+		return
+	}
+	var installed []string
+	for _, mt := range st.MiseTools {
+		for _, in := range mt.Installations {
+			installed = append(installed, mt.Name+"@"+in.Version)
+		}
+	}
+	env = slices.Clone(env)
+	go func() {
+		m, err := versions.FetchMise(ctx, lists, run.Exec{}, env, found[0], installed)
+		if err != nil && !errors.Is(err, versions.ErrOffline) && ctx.Err() == nil {
+			log.Print(err)
+		}
+		win.Update(func() {
+			if ctx.Err() == nil && (err == nil || len(m.Tools) > 0) {
+				a.MiseOutdated = &m
+			}
+		})
+	}()
 }
 
 // fetchList gets a version list through lists in the background and

@@ -1,0 +1,24 @@
+{
+  "go": {
+    "name": "go",
+    "requested": "1.26",
+    "current": "1.26.3",
+    "bump": null,
+    "latest": "1.26.10",
+    "source": {
+      "type": "mise.toml",
+      "path": "/Users/admin/.config/mise/config.toml"
+    }
+  },
+  "shellcheck": {
+    "name": "shellcheck",
+    "requested": "0.9.0",
+    "current": "0.9.0",
+    "bump": null,
+    "latest": "0.11.0",
+    "release_url": "https://github.com/koalaman/shellcheck/releases/tag/v0.11.0",
+    "source": {
+      "type": "unknown"
+    }
+  }
+}

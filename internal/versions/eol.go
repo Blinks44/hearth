@@ -14,6 +14,8 @@ type Cycle struct {
 	// Release is when the line came out; End is when its security fixes
 	// end.
 	Release, End time.Time
+	// LTS reports a line with long-term support, as Java's 25.
+	LTS bool
 }
 
 // Cycles is what is known of a tool's release lines.
@@ -43,6 +45,7 @@ func parseCycles(tool string, data []byte) ([]Cycle, error) {
 	var cycles []struct {
 		Cycle, Latest, ReleaseDate string
 		EOL                        any // a date, or false
+		LTS                        any // a bool, or the date support became long-term
 	}
 	if err := json.Unmarshal(data, &cycles); err != nil {
 		return nil, fmt.Errorf("read %s release lines: %w", tool, err)
@@ -50,7 +53,11 @@ func parseCycles(tool string, data []byte) ([]Cycle, error) {
 	lines := make([]Cycle, 0, len(cycles))
 	for _, c := range cycles {
 		eol, _ := c.EOL.(string)
-		lines = append(lines, Cycle{Cycle: c.Cycle, Latest: c.Latest, Release: date(c.ReleaseDate), End: date(eol)})
+		lts, _ := c.LTS.(bool)
+		if since, ok := c.LTS.(string); ok {
+			lts = since != ""
+		}
+		lines = append(lines, Cycle{Cycle: c.Cycle, Latest: c.Latest, Release: date(c.ReleaseDate), End: date(eol), LTS: lts})
 	}
 	return lines, nil
 }
@@ -69,11 +76,20 @@ func (p *Cycles) Line(version string) (Cycle, bool) {
 // Newest is the newest release of the newest line out at now and still
 // supported; "" when none is known.
 func (p *Cycles) Newest(now time.Time) string {
+	return p.newest(now, false)
+}
+
+// NewestLTS is Newest among the lines with long-term support.
+func (p *Cycles) NewestLTS(now time.Time) string {
+	return p.newest(now, true)
+}
+
+func (p *Cycles) newest(now time.Time, lts bool) string {
 	if p == nil {
 		return ""
 	}
 	for _, l := range p.Lines {
-		if l.Latest != "" && (l.End.IsZero() || now.Before(l.End)) && (l.Release.IsZero() || !now.Before(l.Release)) {
+		if l.Latest != "" && (!lts || l.LTS) && (l.End.IsZero() || now.Before(l.End)) && (l.Release.IsZero() || !now.Before(l.Release)) {
 			return l.Latest
 		}
 	}

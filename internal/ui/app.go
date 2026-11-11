@@ -100,6 +100,9 @@ type App struct {
 	RubyVersionsErr   string
 	JavaVersions      *versions.Java
 	JavaVersionsErr   string
+	// MiseOutdated is what mise says of newer versions of its tools
+	// without a page of their own; nil until it comes, or without mise.
+	MiseOutdated *versions.Mise
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
