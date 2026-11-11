@@ -1,6 +1,10 @@
 package ui
 
 import (
+	"cmp"
+	"context"
+	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +14,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/updates"
+	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -68,10 +73,16 @@ func (a *App) managersChecked() []inventory.PackageManager {
 func (a *App) updateGroups(c *ui.Context) []updateGroup {
 	patches := updateGroup{title: locales.UpdatesGroupPatches(), versions: true}
 	lines := updateGroup{title: locales.UpdatesGroupLines(), versions: true}
+	managers := a.managersChecked()
 	for _, u := range updates.Find(a.Snapshot, a.Projects, a.updateLists(), c.Now()) {
 		r := updateRow{key: "version\x00" + u.Tool + "\x00" + u.Copy.Path + "\x00" + u.Version, version: &u, to: u.Version}
+		_, r.choosable = a.updatePlan(u)
 		if u.Kind == updates.Patch {
-			r.title, r.from = toolName(u.Tool), u.Copy.Version
+			// Its package's row updates it, to the version its manager has.
+			if updates.Held(u.Copy, managers) {
+				continue
+			}
+			r.title, r.from, r.offered = toolName(u.Tool), u.Copy.Version, r.choosable
 			r.caption = sourceName(u.Copy.Source) + " · " + locales.UpdatesPatchCaption()
 			patches.rows = append(patches.rows, r)
 			continue
@@ -84,7 +95,7 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 		lines.rows = append(lines.rows, r)
 	}
 	groups := []updateGroup{patches, lines}
-	for _, m := range a.managersChecked() {
+	for _, m := range managers {
 		formulas := updateGroup{title: m.Name}
 		apps := updateGroup{title: locales.UpdatesGroupApps(m.Name)}
 		if m.ID == "brew" {
@@ -301,31 +312,40 @@ func (a *App) updateRowView(c *ui.Context, r updateRow) {
 				clipped(c, r.caption).FontSize(10.5).TextColor(pal.TextFaint)
 			}
 		})
-		versions := r.to
+		// A cask's version adds its download's hash, as 3.29.9,306d153d…:
+		// the tooltip has it whole.
+		short := func(v string) string { v, _, _ = strings.Cut(v, ","); return v }
+		versions, whole := short(r.to), r.to
 		if r.from != "" {
-			versions = r.from + " → " + r.to
+			versions, whole = short(r.from)+" → "+versions, r.from+" → "+r.to
 		}
-		ui.Text(c, versions).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+		ui.Text(c, versions).Font(FontMono).FontSize(12).Shrink(0).MaxWidth(280).SingleLine().Tooltip(whole)
 	})
 }
 
 // updateButton is the header's button that updates the chosen rows, each
-// through the manager that keeps it, in one plan; nothing when none is
-// chosen.
+// through the manager that keeps it, in one plan: the versions first, then
+// the packages by manager; nothing when none is chosen.
 func (a *App) updateButton(c *ui.Context, chosen []updateRow) {
 	if len(chosen) == 0 {
 		return
 	}
 	ui.PrimaryButton(c.Key("updates-run"), locales.UpdatesRunChosen(len(chosen))).OnClick(func() {
+		var plans []ops.Plan
 		var managers []inventory.PackageManager
 		byManager := map[string][]inventory.SystemPackage{}
 		for _, r := range chosen {
+			if r.version != nil {
+				if p, ok := a.updatePlan(*r.version); ok {
+					plans = append(plans, p)
+				}
+				continue
+			}
 			if _, seen := byManager[r.m.Path]; !seen {
 				managers = append(managers, r.m)
 			}
 			byManager[r.m.Path] = append(byManager[r.m.Path], r.pkg)
 		}
-		var plans []ops.Plan
 		for _, m := range managers {
 			if p, ok := a.packagePlan(ops.PackageUpgrade, m, byManager[m.Path]); ok {
 				plans = append(plans, p)
@@ -363,4 +383,104 @@ func (a *App) updatesEnd(c *ui.Context) func() {
 	return func() {
 		ui.Text(c, strconv.Itoa(nv+np)).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 	}
+}
+
+// updatePlan is the plan that installs u: a fix through the manager of the
+// copy it replaces, a new line beside the copies through the one new
+// versions install through; false when Hearth cannot.
+func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
+	if u.Mise != "" {
+		detect := a.detectMiseTool(u.Tool)
+		if u.Kind == updates.NewLine {
+			return ops.VersionPlan(ops.VersionInstall, ops.VersionTarget{Tool: u.Mise, Title: u.Tool, Manager: "mise", Version: u.Version}, detect)
+		}
+		from := ops.VersionTarget{Tool: u.Tool, Title: u.Tool, Manager: "mise", Version: u.Copy.Version, Root: u.Copy.Source.Root}
+		return ops.VersionUpdatePlan(ops.VersionUpdate{From: from, To: ops.VersionTarget{Version: u.Version}, Mise: u.Mise}, detect)
+	}
+	if u.Kind == updates.NewLine {
+		st, _ := a.toolState(u.Tool)
+		manager := a.installManager(st)
+		version, label := u.Version, versionLabel(u.Tool, u.Version)
+		if u.Tool == "java" {
+			// Its managers install the newest Temurin of a line.
+			version, _, _ = strings.Cut(version, ".")
+			label = "Temurin " + version
+		}
+		if manager == "" {
+			return ops.Plan{}, false
+		}
+		return a.versionPlan(ops.VersionInstall, u.Tool, manager, version, label, "")
+	}
+	in := u.Copy
+	if in.Source.Kind != inventory.KindVersionManager || in.Source.Shim {
+		return ops.Plan{}, false
+	}
+	manager := in.Source.Manager
+	if manager == "mise" && in.Default {
+		// mise use -g would pin the config's range, as "22" or "latest",
+		// to the release: mise upgrade moves the default within it, when
+		// mise sees the release in it.
+		name := filepath.Base(filepath.Dir(in.Source.Root))
+		if t, ok := a.miseOutdated(name); !ok || t.Current != in.Version || t.InRange != u.Version {
+			return ops.Plan{}, false
+		}
+		u.Mise, u.Tool = name, toolTitle(u.Tool)
+		from := ops.VersionTarget{Tool: name, Title: u.Tool, Manager: "mise", Version: in.Version, Label: versionLabel(name, in.Version), Root: in.Source.Root}
+		return ops.VersionUpdatePlan(ops.VersionUpdate{From: from, To: ops.VersionTarget{Version: u.Version, Label: versionLabel(name, u.Version)}, Mise: name}, a.detect(name))
+	}
+	vu := ops.VersionUpdate{
+		From:    a.versionTarget(u.Tool, manager, cmp.Or(in.Source.Version, in.Version), versionLabel(u.Tool, in.Version), in.Source.Root),
+		To:      a.versionTarget(u.Tool, manager, u.Version, versionLabel(u.Tool, u.Version), ""),
+		Default: in.Default,
+		Globals: globals(in),
+	}
+	if in.Rust != nil {
+		vu.Toolchain = in.Rust.Name
+	}
+	return ops.VersionUpdatePlan(vu, a.detect(u.Tool))
+}
+
+// miseOutdated is what mise outdated said of its tool name; false when it
+// said nothing.
+func (a *App) miseOutdated(name string) (versions.MiseTool, bool) {
+	if a.MiseOutdated == nil {
+		return versions.MiseTool{}, false
+	}
+	t, ok := a.MiseOutdated.Tools[name]
+	return t, ok
+}
+
+// detectMiseTool finds mise's tool of the folder name again, for a plan's
+// check: its versions as the tool's copies.
+func (a *App) detectMiseTool(name string) ops.Detect {
+	d := a.detect("mise")
+	if d == nil {
+		return nil
+	}
+	return func(ctx context.Context) (inventory.ToolState, error) {
+		st, err := d(ctx)
+		if err != nil {
+			return inventory.ToolState{}, err
+		}
+		out := inventory.ToolState{Tool: name}
+		for _, mt := range st.MiseTools {
+			if mt.Name == name {
+				out.Installations = mt.Installations
+			}
+		}
+		return out, nil
+	}
+}
+
+// globals reports packages installed globally into a copy, which go with
+// it: Node's besides the npm and Corepack it comes with; any Python or
+// Ruby, whose pip and gem Hearth does not tell from those they come with.
+func globals(in inventory.Installation) bool {
+	switch in.Tool {
+	case "node":
+		return slices.ContainsFunc(in.Packages, func(p inventory.Package) bool { return p.Name != "npm" && p.Name != "corepack" })
+	case "python", "ruby":
+		return true
+	}
+	return false
 }

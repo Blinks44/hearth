@@ -40,6 +40,9 @@ type Update struct {
 	// LTS is the codename of a Node release's LTS line, as "Jod"; "" for
 	// another tool.
 	LTS string
+	// Mise is mise's name of a tool of its own, as "npm:prettier"; "" for
+	// a tool with a page.
+	Mise string
 }
 
 // Lists are the version lists the updates come from; a nil one means its
@@ -133,9 +136,11 @@ func (l Lists) mise(tools []inventory.MiseTool) []Update {
 		return nil
 	}
 	byDir := map[string]versions.MiseTool{}
+	names := map[string]string{}
 	for name, t := range l.Mise.Tools {
 		// installs/ names npm:prettier's folder npm-prettier.
-		byDir[strings.NewReplacer(":", "-", "/", "-").Replace(name)] = t
+		dir := strings.NewReplacer(":", "-", "/", "-").Replace(name)
+		byDir[dir], names[dir] = t, name
 	}
 	var out []Update
 	for _, mt := range tools {
@@ -152,14 +157,41 @@ func (l Lists) mise(tools []inventory.MiseTool) []Update {
 		}
 		top := t.Current
 		if newer(t.InRange, t.Current) && !installed(t.InRange) {
-			out = append(out, Update{Kind: Patch, Tool: mt.Name, Copy: mt.Installations[i], Version: t.InRange})
+			out = append(out, Update{Kind: Patch, Tool: mt.Name, Copy: mt.Installations[i], Version: t.InRange, Mise: names[mt.Name]})
 			top = t.InRange
 		}
 		if newer(t.Latest, top) && !installed(t.Latest) {
-			out = append(out, Update{Kind: NewLine, Tool: mt.Name, Version: t.Latest})
+			out = append(out, Update{Kind: NewLine, Tool: mt.Name, Version: t.Latest, Mise: names[mt.Name]})
 		}
 	}
 	return out
+}
+
+// Held reports that a package manager keeps the copy in: its own, or an
+// installer's whose package one of ms lists at the copy's version, as
+// WinGet's GoLang.Go of C:\Program Files\Go. Its update is the package's.
+func Held(in inventory.Installation, ms []inventory.PackageManager) bool {
+	if in.Source.Kind == inventory.KindPackageManager {
+		return true
+	}
+	if in.Source.Kind != inventory.KindInstaller || in.Source.Manager != "" {
+		return false
+	}
+	for _, m := range ms {
+		for _, pkg := range m.Packages {
+			if pkg.Version != in.Version {
+				continue
+			}
+			// The ID names the tool in one of its parts, as golang of
+			// GoLang.Go or dotnet of Microsoft.DotNet.SDK.10.
+			for _, part := range strings.FieldsFunc(strings.ToLower(pkg.Name), func(r rune) bool { return r == '.' || r == '-' || r == '_' }) {
+				if strings.HasPrefix(part, in.Tool) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // keeps reports that moving a copy at from to to keeps every project that

@@ -16106,16 +16106,16 @@ func (msgs Messages) UpdatesRunChosen(count int) string {
 	return Catalog.Format(msgs.locale, "updatesRunChosen", map[string]any{"count": count})
 }
 
-// UpdatesPlanTitle says "{count, plural, one {Update through # manager} other {Update through # managers}}"
+// UpdatesPlanTitle says "Update the chosen · {count}"
 // in the language the app shows.
 //
-// Title of the plan that updates through several managers at once.
+// Title of the plan that updates the chosen versions and packages at once.
 func UpdatesPlanTitle(count int) string { return In(i18n.Locale()).UpdatesPlanTitle(count) }
 
-// UpdatesPlanTitle says "{count, plural, one {Update through # manager} other {Update through # managers}}"
+// UpdatesPlanTitle says "Update the chosen · {count}"
 // in the language of msgs.
 //
-// Title of the plan that updates through several managers at once.
+// Title of the plan that updates the chosen versions and packages at once.
 func (msgs Messages) UpdatesPlanTitle(count int) string {
 	return Catalog.Format(msgs.locale, "updatesPlanTitle", map[string]any{"count": count})
 }
@@ -16174,4 +16174,102 @@ func UpdatesNone() string { return In(i18n.Locale()).UpdatesNone() }
 // Updates filter matched nothing.
 func (msgs Messages) UpdatesNone() string {
 	return Catalog.Format(msgs.locale, "updatesNone", nil)
+}
+
+// VersionUpdateTitle says "Update {tool} {from} to {to}"
+// in the language the app shows.
+//
+// Title of the plan that moves a copy of a language to a newer release of
+// its line.
+func VersionUpdateTitle(tool string, from string, to string) string {
+	return In(i18n.Locale()).VersionUpdateTitle(tool, from, to)
+}
+
+// VersionUpdateTitle says "Update {tool} {from} to {to}"
+// in the language of msgs.
+//
+// Title of the plan that moves a copy of a language to a newer release of
+// its line.
+func (msgs Messages) VersionUpdateTitle(tool string, from string, to string) string {
+	return Catalog.Format(msgs.locale, "versionUpdateTitle", map[string]any{"tool": tool, "from": from, "to": to})
+}
+
+// VersionReplaceWhy says "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice."
+// in the language the app shows.
+//
+// Why of the plan that replaces a copy with a newer release of its line.
+func VersionReplaceWhy(manager string) string { return In(i18n.Locale()).VersionReplaceWhy(manager) }
+
+// VersionReplaceWhy says "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice."
+// in the language of msgs.
+//
+// Why of the plan that replaces a copy with a newer release of its line.
+func (msgs Messages) VersionReplaceWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "versionReplaceWhy", map[string]any{"manager": manager})
+}
+
+// VersionUpdateInPlaceWhy says "Through {manager}, in place: it installs the new version and removes the old one itself."
+// in the language the app shows.
+//
+// Why of the plan that updates a copy in place, through rustup or mise
+// upgrade.
+func VersionUpdateInPlaceWhy(manager string) string {
+	return In(i18n.Locale()).VersionUpdateInPlaceWhy(manager)
+}
+
+// VersionUpdateInPlaceWhy says "Through {manager}, in place: it installs the new version and removes the old one itself."
+// in the language of msgs.
+//
+// Why of the plan that updates a copy in place, through rustup or mise
+// upgrade.
+func (msgs Messages) VersionUpdateInPlaceWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "versionUpdateInPlaceWhy", map[string]any{"manager": manager})
+}
+
+// NoteGlobals says "Global packages"
+// in the language the app shows.
+//
+// Title of the note that a copy's global packages do not move to the new
+// version.
+func NoteGlobals() string { return In(i18n.Locale()).NoteGlobals() }
+
+// NoteGlobals says "Global packages"
+// in the language of msgs.
+//
+// Title of the note that a copy's global packages do not move to the new
+// version.
+func (msgs Messages) NoteGlobals() string {
+	return Catalog.Format(msgs.locale, "noteGlobals", nil)
+}
+
+// NoteGlobalsText says "Packages installed globally into {tool} {version} go with it: install the ones you need into the new version again."
+// in the language the app shows.
+//
+// Note: the global packages of the copy being replaced are removed with it.
+func NoteGlobalsText(tool string, version string) string {
+	return In(i18n.Locale()).NoteGlobalsText(tool, version)
+}
+
+// NoteGlobalsText says "Packages installed globally into {tool} {version} go with it: install the ones you need into the new version again."
+// in the language of msgs.
+//
+// Note: the global packages of the copy being replaced are removed with it.
+func (msgs Messages) NoteGlobalsText(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "noteGlobalsText", map[string]any{"tool": tool, "version": version})
+}
+
+// VersionCheckNotUpdated says "{manager} still has {tool} {version}"
+// in the language the app shows.
+//
+// Check after an update in place: the old version is still there.
+func VersionCheckNotUpdated(tool string, version string, manager string) string {
+	return In(i18n.Locale()).VersionCheckNotUpdated(tool, version, manager)
+}
+
+// VersionCheckNotUpdated says "{manager} still has {tool} {version}"
+// in the language of msgs.
+//
+// Check after an update in place: the old version is still there.
+func (msgs Messages) VersionCheckNotUpdated(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "versionCheckNotUpdated", map[string]any{"tool": tool, "version": version, "manager": manager})
 }

@@ -1228,9 +1228,15 @@
   "updatesManualRow": "Поставленное вручную",
   "updatesManualCaption": "без менеджера Hearth не знает, как обновить",
   "updatesRunChosen": "Обновить выбранные · {count}",
-  "updatesPlanTitle": "{count, plural, one {Обновить через # менеджер} few {Обновить через # менеджера} many {Обновить через # менеджеров} other {Обновить через # менеджера}}",
+  "updatesPlanTitle": "Обновить выбранное · {count}",
   "updatesPlanWhy": "Каждый менеджер обновляет то, что поставил, по очереди.",
   "updatesDepsRow": "Зависимости и неизвестное происхождение",
   "updatesDepsCaption": "другим пакетам они могут быть нужны такими",
-  "updatesNone": "Подходящих обновлений нет."
+  "updatesNone": "Подходящих обновлений нет.",
+  "versionUpdateTitle": "Обновить {tool} {from} до {to}",
+  "versionReplaceWhy": "Через {manager}: новая версия ставится, старая удаляется. Проекты той же линии не заметят разницы.",
+  "versionUpdateInPlaceWhy": "Через {manager}, на месте: он сам ставит новую версию и убирает старую.",
+  "noteGlobals": "Глобальные пакеты",
+  "noteGlobalsText": "Пакеты, поставленные глобально в {tool} {version}, удалятся вместе с ней: нужные поставьте в новую версию заново.",
+  "versionCheckNotUpdated": "В {manager} всё ещё {tool} {version}"
 }

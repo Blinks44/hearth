@@ -272,7 +272,11 @@ func main() {
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelPackages = cancel
-			a.PackageUpdates = map[string]inventory.PackageManager{}
+			// The last check's results stay until the new one's come: the
+			// packages and what they hold do not drop out meanwhile.
+			if a.PackageUpdates == nil {
+				a.PackageUpdates = map[string]inventory.PackageManager{}
+			}
 			a.PackageChecks = map[string]bool{}
 			fetchMise(ctx, win, lists, a, scanner.Terminal())
 			st, ok := a.Snapshot.Tool("packages")
@@ -401,7 +405,6 @@ func main() {
 				cancelPackages()
 			}
 			a.PackageChecks = nil
-			a.PackageUpdates = nil
 			scanner.Start(scanned)
 			fetchVersions()
 			list.read()

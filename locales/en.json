@@ -6459,9 +6459,9 @@
       }
     }
   },
-  "updatesPlanTitle": "{count, plural, one {Update through # manager} other {Update through # managers}}",
+  "updatesPlanTitle": "Update the chosen · {count}",
   "@updatesPlanTitle": {
-    "description": "Title of the plan that updates through several managers at once.",
+    "description": "Title of the plan that updates the chosen versions and packages at once.",
     "placeholders": {
       "count": {
         "type": "int",
@@ -6484,5 +6484,79 @@
   "updatesNone": "No updates match.",
   "@updatesNone": {
     "description": "Updates filter matched nothing."
+  },
+  "versionUpdateTitle": "Update {tool} {from} to {to}",
+  "@versionUpdateTitle": {
+    "description": "Title of the plan that moves a copy of a language to a newer release of its line.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "from": {
+        "type": "String",
+        "example": "v22.12.0"
+      },
+      "to": {
+        "type": "String",
+        "example": "v22.23.4"
+      }
+    }
+  },
+  "versionReplaceWhy": "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice.",
+  "@versionReplaceWhy": {
+    "description": "Why of the plan that replaces a copy with a newer release of its line.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "fnm"
+      }
+    }
+  },
+  "versionUpdateInPlaceWhy": "Through {manager}, in place: it installs the new version and removes the old one itself.",
+  "@versionUpdateInPlaceWhy": {
+    "description": "Why of the plan that updates a copy in place, through rustup or mise upgrade.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "rustup"
+      }
+    }
+  },
+  "noteGlobals": "Global packages",
+  "@noteGlobals": {
+    "description": "Title of the note that a copy's global packages do not move to the new version."
+  },
+  "noteGlobalsText": "Packages installed globally into {tool} {version} go with it: install the ones you need into the new version again.",
+  "@noteGlobalsText": {
+    "description": "Note: the global packages of the copy being replaced are removed with it.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js"
+      },
+      "version": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "versionCheckNotUpdated": "{manager} still has {tool} {version}",
+  "@versionCheckNotUpdated": {
+    "description": "Check after an update in place: the old version is still there.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Rust"
+      },
+      "version": {
+        "type": "String",
+        "example": "1.91.0"
+      },
+      "manager": {
+        "type": "String",
+        "example": "rustup"
+      }
+    }
   }
 }

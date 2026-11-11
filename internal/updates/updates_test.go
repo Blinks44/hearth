@@ -284,13 +284,17 @@ func TestFindMise(t *testing.T) {
 		{Name: "terraform", Installations: []inventory.Installation{miseCopy("terraform", "1.9.0")}},
 	}
 	s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "mise", MiseTools: tools}}}
+	mise := func(u Update, name string) Update {
+		u.Mise = name
+		return u
+	}
 	want := []Update{
 		// jq = "1.7" in the config allows no newer 1.7.
-		newLine("jq", "1.8.2", ""),
+		mise(newLine("jq", "1.8.2", ""), "jq"),
 		// shellcheck is in no config: the new version goes in beside.
-		newLine("shellcheck", "0.11.0", ""),
+		mise(newLine("shellcheck", "0.11.0", ""), "shellcheck"),
 		// Its folder is npm-prettier; the newest overall is in the range.
-		patch(miseCopy("npm-prettier", "3.5.0"), "3.6.2", ""),
+		mise(patch(miseCopy("npm-prettier", "3.5.0"), "3.6.2", ""), "npm:prettier"),
 		// zig's newest is installed already; terraform is up to date.
 	}
 	if got := Find(s, nil, l, now); !reflect.DeepEqual(got, want) {
@@ -298,6 +302,33 @@ func TestFindMise(t *testing.T) {
 	}
 	if got := Find(s, nil, Lists{}, now); got != nil {
 		t.Errorf("Find() without mise's answer = %+v", got)
+	}
+}
+
+// A package manager's copy is the package's to update: its own, or an
+// installer's whose package it lists at the copy's version.
+func TestHeld(t *testing.T) {
+	winget := []inventory.PackageManager{{ID: "winget", Packages: []inventory.SystemPackage{
+		{Name: "GoLang.Go", Version: "1.25.4", Available: "1.25.5"},
+		{Name: "Microsoft.DotNet.SDK.10", Version: "10.0.100"},
+	}}}
+	installer := func(tool, v string) inventory.Installation { return copyOf(tool, v, inventory.KindInstaller, "") }
+	for _, tc := range []struct {
+		name string
+		in   inventory.Installation
+		want bool
+	}{
+		{"brew's", copyOf("node", "22.12.0", inventory.KindPackageManager, "brew"), true},
+		{"WinGet's Go", installer("go", "1.25.4"), true},
+		{"WinGet's .NET", installer("dotnet", "10.0.100"), true},
+		{"another version", installer("go", "1.24.0"), false},
+		{"no package", installer("python", "3.13.1"), false},
+		{"a known installer", copyOf("bun", "1.2.0", inventory.KindInstaller, inventory.ScriptInstall), false},
+		{"a version manager's", fnm("1.25.4"), false},
+	} {
+		if got := Held(tc.in, winget); got != tc.want {
+			t.Errorf("%s: Held() = %v, want %v", tc.name, got, tc.want)
+		}
 	}
 }
 

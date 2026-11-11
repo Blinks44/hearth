@@ -42,6 +42,12 @@ func (a *App) installManager(st inventory.ToolState) string {
 // manager, as ops.VersionPlan, checked by finding the tool again; label
 // is the version as the page shows it.
 func (a *App) versionPlan(action ops.VersionAction, tool, manager, version, label, root string) (ops.Plan, bool) {
+	return ops.VersionPlan(action, a.versionTarget(tool, manager, version, label, root), a.detect(tool))
+}
+
+// versionTarget is version of tool through manager, with how the manager
+// is set up: whether it needs the administrator, and asdf's version.
+func (a *App) versionTarget(tool, manager, version, label, root string) ops.VersionTarget {
 	st, _ := a.toolState(tool)
 	t := ops.VersionTarget{Tool: tool, Title: toolTitle(tool), Manager: manager, Version: version, Label: label, Root: root, AsdfSet: true}
 	for _, m := range st.Managers {
@@ -53,7 +59,7 @@ func (a *App) versionPlan(action ops.VersionAction, tool, manager, version, labe
 			t.Admin = m.Admin
 		}
 	}
-	return ops.VersionPlan(action, t, a.detect(tool))
+	return t
 }
 
 // detect finds tool again, for a plan's check; nil when the app cannot.
