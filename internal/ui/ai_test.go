@@ -10,7 +10,9 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // aiSnapshot has Claude Code from Homebrew and Codex from npm; the others
@@ -267,5 +269,38 @@ func TestAgentOperations(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"npm", "install", "--global", "--prefix", filepath.Dir(a.Snapshot.Agents[1].Installations[0].Path), "@openai/codex@latest"}) {
 		t.Fatalf("plan %+v", a.op)
+	}
+}
+
+// A skill an agent does not get offers to connect it; a link it gets it
+// by switches off; the copies' hint offers to merge them. Each plan is
+// made in the background.
+func TestSkillOperations(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.SkillBackups = home + "/backups"
+	built := 0
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		built++
+	}
+	tt := openAI(t, a, skillsPage)
+	screenshot(t, tt, "skills-actions")
+	// pdf in ~/.claude/skills: Claude Code has it, Codex can connect it.
+	if err := tt.Click("Connect"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click("Merge…"); err != nil {
+		t.Fatal(err)
+	}
+	// plan reaches Claude Code and Codex by links: each switches off.
+	if err := tt.Click("plan"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Connected: Codex"); err != nil {
+		t.Fatal(err)
+	}
+	if built != 3 {
+		t.Errorf("plans asked for: %d, want 3", built)
 	}
 }

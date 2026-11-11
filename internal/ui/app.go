@@ -141,6 +141,9 @@ type App struct {
 	// DetectTool finds a tool again, as a scan would, for an operation's
 	// check; it runs on the operation's goroutine.
 	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)
+	// SkillBackups is the folder copies of skills move to when they are
+	// merged; "" offers no merge.
+	SkillBackups string
 	// DetectAgent finds an agent again, as a scan would, for an
 	// operation's check; it runs on the operation's goroutine.
 	DetectAgent func(ctx context.Context, id string) (inventory.Agent, error)

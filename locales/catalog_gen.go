@@ -13827,3 +13827,309 @@ func AgentUpdateAvailable(version string) string {
 func (msgs Messages) AgentUpdateAvailable(version string) string {
 	return Catalog.Format(msgs.locale, "agentUpdateAvailable", map[string]any{"version": version})
 }
+
+// SkillLinkTitle says "Connect {skill} to {agent}"
+// in the language the app shows.
+//
+// Title of the plan that connects a skill to an agent.
+func SkillLinkTitle(skill string, agent string) string {
+	return In(i18n.Locale()).SkillLinkTitle(skill, agent)
+}
+
+// SkillLinkTitle says "Connect {skill} to {agent}"
+// in the language of msgs.
+//
+// Title of the plan that connects a skill to an agent.
+func (msgs Messages) SkillLinkTitle(skill string, agent string) string {
+	return Catalog.Format(msgs.locale, "skillLinkTitle", map[string]any{"skill": skill, "agent": agent})
+}
+
+// SkillLinkWhy says "A link in the agent's skills folder leads to the skill's folder: the skill stays one folder, its edits reach every ag…"
+// in the language the app shows.
+//
+// How connecting a skill works.
+func SkillLinkWhy() string { return In(i18n.Locale()).SkillLinkWhy() }
+
+// SkillLinkWhy says "A link in the agent's skills folder leads to the skill's folder: the skill stays one folder, its edits reach every ag…"
+// in the language of msgs.
+//
+// How connecting a skill works.
+func (msgs Messages) SkillLinkWhy() string {
+	return Catalog.Format(msgs.locale, "skillLinkWhy", nil)
+}
+
+// SkillShared says "Other agents read this folder too"
+// in the language the app shows.
+//
+// Note title: the skills folder is shared.
+func SkillShared() string { return In(i18n.Locale()).SkillShared() }
+
+// SkillShared says "Other agents read this folder too"
+// in the language of msgs.
+//
+// Note title: the skills folder is shared.
+func (msgs Messages) SkillShared() string {
+	return Catalog.Format(msgs.locale, "skillShared", nil)
+}
+
+// SkillSharedText says "{agents} get the skill as well."
+// in the language the app shows.
+//
+// Note text: which other agents get the skill.
+func SkillSharedText(agents string) string { return In(i18n.Locale()).SkillSharedText(agents) }
+
+// SkillSharedText says "{agents} get the skill as well."
+// in the language of msgs.
+//
+// Note text: which other agents get the skill.
+func (msgs Messages) SkillSharedText(agents string) string {
+	return Catalog.Format(msgs.locale, "skillSharedText", map[string]any{"agents": agents})
+}
+
+// SkillNoDir says "Hearth knows no skills folder of {agent}."
+// in the language the app shows.
+//
+// Why a skill cannot be connected to an agent.
+func SkillNoDir(agent string) string { return In(i18n.Locale()).SkillNoDir(agent) }
+
+// SkillNoDir says "Hearth knows no skills folder of {agent}."
+// in the language of msgs.
+//
+// Why a skill cannot be connected to an agent.
+func (msgs Messages) SkillNoDir(agent string) string {
+	return Catalog.Format(msgs.locale, "skillNoDir", map[string]any{"agent": agent})
+}
+
+// SkillLinkTaken says "There is already something at {path}."
+// in the language the app shows.
+//
+// Why a skill cannot be connected: its place is taken.
+func SkillLinkTaken(path string) string { return In(i18n.Locale()).SkillLinkTaken(path) }
+
+// SkillLinkTaken says "There is already something at {path}."
+// in the language of msgs.
+//
+// Why a skill cannot be connected: its place is taken.
+func (msgs Messages) SkillLinkTaken(path string) string {
+	return Catalog.Format(msgs.locale, "skillLinkTaken", map[string]any{"path": path})
+}
+
+// SkillUnlinkTitle says "Disconnect {skill} from {agents}"
+// in the language the app shows.
+//
+// Title of the plan that removes a link to a skill.
+func SkillUnlinkTitle(skill string, agents string) string {
+	return In(i18n.Locale()).SkillUnlinkTitle(skill, agents)
+}
+
+// SkillUnlinkTitle says "Disconnect {skill} from {agents}"
+// in the language of msgs.
+//
+// Title of the plan that removes a link to a skill.
+func (msgs Messages) SkillUnlinkTitle(skill string, agents string) string {
+	return Catalog.Format(msgs.locale, "skillUnlinkTitle", map[string]any{"skill": skill, "agents": agents})
+}
+
+// SkillUnlinkWhy says "Only the link goes: the skill's folder stays."
+// in the language the app shows.
+//
+// What disconnecting a skill does.
+func SkillUnlinkWhy() string { return In(i18n.Locale()).SkillUnlinkWhy() }
+
+// SkillUnlinkWhy says "Only the link goes: the skill's folder stays."
+// in the language of msgs.
+//
+// What disconnecting a skill does.
+func (msgs Messages) SkillUnlinkWhy() string {
+	return Catalog.Format(msgs.locale, "skillUnlinkWhy", nil)
+}
+
+// SkillNotLink says "{path} is the skill's own folder, not a link: Hearth does not delete it."
+// in the language the app shows.
+//
+// Why a skill cannot be disconnected.
+func SkillNotLink(path string) string { return In(i18n.Locale()).SkillNotLink(path) }
+
+// SkillNotLink says "{path} is the skill's own folder, not a link: Hearth does not delete it."
+// in the language of msgs.
+//
+// Why a skill cannot be disconnected.
+func (msgs Messages) SkillNotLink(path string) string {
+	return Catalog.Format(msgs.locale, "skillNotLink", map[string]any{"path": path})
+}
+
+// SkillMergeTitle says "{count, plural, one {Merge the copies of # skill} other {Merge the copies of # skills}}"
+// in the language the app shows.
+//
+// Title of the plan that merges skill copies.
+func SkillMergeTitle(count int) string { return In(i18n.Locale()).SkillMergeTitle(count) }
+
+// SkillMergeTitle says "{count, plural, one {Merge the copies of # skill} other {Merge the copies of # skills}}"
+// in the language of msgs.
+//
+// Title of the plan that merges skill copies.
+func (msgs Messages) SkillMergeTitle(count int) string {
+	return Catalog.Format(msgs.locale, "skillMergeTitle", map[string]any{"count": count})
+}
+
+// SkillMergeWhy says "One folder of each skill stays. The other copies move to {dir}, and links to the kept folder take their place."
+// in the language the app shows.
+//
+// How merging skill copies works.
+func SkillMergeWhy(dir string) string { return In(i18n.Locale()).SkillMergeWhy(dir) }
+
+// SkillMergeWhy says "One folder of each skill stays. The other copies move to {dir}, and links to the kept folder take their place."
+// in the language of msgs.
+//
+// How merging skill copies works.
+func (msgs Messages) SkillMergeWhy(dir string) string {
+	return Catalog.Format(msgs.locale, "skillMergeWhy", map[string]any{"dir": dir})
+}
+
+// SkillNothingToMerge says "No skill has identical copies to merge."
+// in the language the app shows.
+//
+// Why there is nothing to merge.
+func SkillNothingToMerge() string { return In(i18n.Locale()).SkillNothingToMerge() }
+
+// SkillNothingToMerge says "No skill has identical copies to merge."
+// in the language of msgs.
+//
+// Why there is nothing to merge.
+func (msgs Messages) SkillNothingToMerge() string {
+	return Catalog.Format(msgs.locale, "skillNothingToMerge", nil)
+}
+
+// SkillCheckLinked says "{agent} finds {skill}"
+// in the language the app shows.
+//
+// What the check of a connect found.
+func SkillCheckLinked(skill string, agent string) string {
+	return In(i18n.Locale()).SkillCheckLinked(skill, agent)
+}
+
+// SkillCheckLinked says "{agent} finds {skill}"
+// in the language of msgs.
+//
+// What the check of a connect found.
+func (msgs Messages) SkillCheckLinked(skill string, agent string) string {
+	return Catalog.Format(msgs.locale, "skillCheckLinked", map[string]any{"skill": skill, "agent": agent})
+}
+
+// SkillCheckNotLinked says "{agent} does not find {skill}"
+// in the language the app shows.
+//
+// Why the check of a connect failed.
+func SkillCheckNotLinked(skill string, agent string) string {
+	return In(i18n.Locale()).SkillCheckNotLinked(skill, agent)
+}
+
+// SkillCheckNotLinked says "{agent} does not find {skill}"
+// in the language of msgs.
+//
+// Why the check of a connect failed.
+func (msgs Messages) SkillCheckNotLinked(skill string, agent string) string {
+	return Catalog.Format(msgs.locale, "skillCheckNotLinked", map[string]any{"skill": skill, "agent": agent})
+}
+
+// SkillCheckUnlinked says "{agents} no longer find {skill}"
+// in the language the app shows.
+//
+// What the check of a disconnect found.
+func SkillCheckUnlinked(skill string, agents string) string {
+	return In(i18n.Locale()).SkillCheckUnlinked(skill, agents)
+}
+
+// SkillCheckUnlinked says "{agents} no longer find {skill}"
+// in the language of msgs.
+//
+// What the check of a disconnect found.
+func (msgs Messages) SkillCheckUnlinked(skill string, agents string) string {
+	return Catalog.Format(msgs.locale, "skillCheckUnlinked", map[string]any{"skill": skill, "agents": agents})
+}
+
+// SkillCheckStillLinked says "{agents} still find {skill}"
+// in the language the app shows.
+//
+// Why the check of a disconnect failed.
+func SkillCheckStillLinked(skill string, agents string) string {
+	return In(i18n.Locale()).SkillCheckStillLinked(skill, agents)
+}
+
+// SkillCheckStillLinked says "{agents} still find {skill}"
+// in the language of msgs.
+//
+// Why the check of a disconnect failed.
+func (msgs Messages) SkillCheckStillLinked(skill string, agents string) string {
+	return Catalog.Format(msgs.locale, "skillCheckStillLinked", map[string]any{"skill": skill, "agents": agents})
+}
+
+// SkillCheckMerged says "{count, plural, one {# skill is one folder} other {# skills are one folder each}}"
+// in the language the app shows.
+//
+// What the check of a merge found.
+func SkillCheckMerged(count int) string { return In(i18n.Locale()).SkillCheckMerged(count) }
+
+// SkillCheckMerged says "{count, plural, one {# skill is one folder} other {# skills are one folder each}}"
+// in the language of msgs.
+//
+// What the check of a merge found.
+func (msgs Messages) SkillCheckMerged(count int) string {
+	return Catalog.Format(msgs.locale, "skillCheckMerged", map[string]any{"count": count})
+}
+
+// SkillCheckNotMerged says "{skill} still has several folders"
+// in the language the app shows.
+//
+// Why the check of a merge failed.
+func SkillCheckNotMerged(skill string) string { return In(i18n.Locale()).SkillCheckNotMerged(skill) }
+
+// SkillCheckNotMerged says "{skill} still has several folders"
+// in the language of msgs.
+//
+// Why the check of a merge failed.
+func (msgs Messages) SkillCheckNotMerged(skill string) string {
+	return Catalog.Format(msgs.locale, "skillCheckNotMerged", map[string]any{"skill": skill})
+}
+
+// SkillConnect says "Connect"
+// in the language the app shows.
+//
+// Button: connect a skill to an agent.
+func SkillConnect() string { return In(i18n.Locale()).SkillConnect() }
+
+// SkillConnect says "Connect"
+// in the language of msgs.
+//
+// Button: connect a skill to an agent.
+func (msgs Messages) SkillConnect() string {
+	return Catalog.Format(msgs.locale, "skillConnect", nil)
+}
+
+// SkillMerge says "Merge…"
+// in the language the app shows.
+//
+// Button of the skill copies hint.
+func SkillMerge() string { return In(i18n.Locale()).SkillMerge() }
+
+// SkillMerge says "Merge…"
+// in the language of msgs.
+//
+// Button of the skill copies hint.
+func (msgs Messages) SkillMerge() string {
+	return Catalog.Format(msgs.locale, "skillMerge", nil)
+}
+
+// SkillConnectedTo says "Connected: {agent}"
+// in the language the app shows.
+//
+// Label of the switch that disconnects a skill from an agent.
+func SkillConnectedTo(agent string) string { return In(i18n.Locale()).SkillConnectedTo(agent) }
+
+// SkillConnectedTo says "Connected: {agent}"
+// in the language of msgs.
+//
+// Label of the switch that disconnects a skill from an agent.
+func (msgs Messages) SkillConnectedTo(agent string) string {
+	return Catalog.Format(msgs.locale, "skillConnectedTo", map[string]any{"agent": agent})
+}

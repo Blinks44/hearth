@@ -47,6 +47,7 @@ func main() {
 		log.Print(err)
 	} else {
 		list.dir = dir
+		a.SkillBackups = filepath.Join(dir, "skill-backups")
 		// A broken file is kept aside; Hearth starts with the defaults.
 		if list.settings, err = store.LoadSettings(dir); err != nil {
 			log.Print(err)

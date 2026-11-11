@@ -5402,5 +5402,203 @@
         "example": "1.0.90"
       }
     }
+  },
+  "skillLinkTitle": "Connect {skill} to {agent}",
+  "@skillLinkTitle": {
+    "description": "Title of the plan that connects a skill to an agent.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillLinkWhy": "A link in the agent's skills folder leads to the skill's folder: the skill stays one folder, its edits reach every agent.",
+  "@skillLinkWhy": {
+    "description": "How connecting a skill works."
+  },
+  "skillShared": "Other agents read this folder too",
+  "@skillShared": {
+    "description": "Note title: the skills folder is shared."
+  },
+  "skillSharedText": "{agents} get the skill as well.",
+  "@skillSharedText": {
+    "description": "Note text: which other agents get the skill.",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "Copilot CLI, Gemini CLI"
+      }
+    }
+  },
+  "skillNoDir": "Hearth knows no skills folder of {agent}.",
+  "@skillNoDir": {
+    "description": "Why a skill cannot be connected to an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Aider"
+      }
+    }
+  },
+  "skillLinkTaken": "There is already something at {path}.",
+  "@skillLinkTaken": {
+    "description": "Why a skill cannot be connected: its place is taken.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/.agents/skills/pdf"
+      }
+    }
+  },
+  "skillUnlinkTitle": "Disconnect {skill} from {agents}",
+  "@skillUnlinkTitle": {
+    "description": "Title of the plan that removes a link to a skill.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agents": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillUnlinkWhy": "Only the link goes: the skill's folder stays.",
+  "@skillUnlinkWhy": {
+    "description": "What disconnecting a skill does."
+  },
+  "skillNotLink": "{path} is the skill's own folder, not a link: Hearth does not delete it.",
+  "@skillNotLink": {
+    "description": "Why a skill cannot be disconnected.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/.claude/skills/pdf"
+      }
+    }
+  },
+  "skillMergeTitle": "{count, plural, one {Merge the copies of # skill} other {Merge the copies of # skills}}",
+  "@skillMergeTitle": {
+    "description": "Title of the plan that merges skill copies.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": 2
+      }
+    }
+  },
+  "skillMergeWhy": "One folder of each skill stays. The other copies move to {dir}, and links to the kept folder take their place.",
+  "@skillMergeWhy": {
+    "description": "How merging skill copies works.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/Library/Application Support/Hearth/skill-backups"
+      }
+    }
+  },
+  "skillNothingToMerge": "No skill has identical copies to merge.",
+  "@skillNothingToMerge": {
+    "description": "Why there is nothing to merge."
+  },
+  "skillCheckLinked": "{agent} finds {skill}",
+  "@skillCheckLinked": {
+    "description": "What the check of a connect found.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillCheckNotLinked": "{agent} does not find {skill}",
+  "@skillCheckNotLinked": {
+    "description": "Why the check of a connect failed.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillCheckUnlinked": "{agents} no longer find {skill}",
+  "@skillCheckUnlinked": {
+    "description": "What the check of a disconnect found.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agents": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillCheckStillLinked": "{agents} still find {skill}",
+  "@skillCheckStillLinked": {
+    "description": "Why the check of a disconnect failed.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      },
+      "agents": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "skillCheckMerged": "{count, plural, one {# skill is one folder} other {# skills are one folder each}}",
+  "@skillCheckMerged": {
+    "description": "What the check of a merge found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": 2
+      }
+    }
+  },
+  "skillCheckNotMerged": "{skill} still has several folders",
+  "@skillCheckNotMerged": {
+    "description": "Why the check of a merge failed.",
+    "placeholders": {
+      "skill": {
+        "type": "String",
+        "example": "pdf"
+      }
+    }
+  },
+  "skillConnect": "Connect",
+  "@skillConnect": {
+    "description": "Button: connect a skill to an agent."
+  },
+  "skillMerge": "Merge…",
+  "@skillMerge": {
+    "description": "Button of the skill copies hint."
+  },
+  "skillConnectedTo": "Connected: {agent}",
+  "@skillConnectedTo": {
+    "description": "Label of the switch that disconnects a skill from an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   }
 }

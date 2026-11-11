@@ -18,7 +18,7 @@ func searchApp() *App {
 	a.Snapshot = found("node")
 	a.Snapshot.Tools[0].Installations[0].Version = "22.12.0"
 	a.Snapshot.Tools[0].Installations[0].Path = "/usr/local/bin/node"
-	a.Snapshot.Skills = []inventory.Skill{{Name: "component-workflow", Description: "Reusable components", Paths: []inventory.SkillPath{{Path: "/skills/component-workflow"}}}}
+	a.Snapshot.Skills = []inventory.Skill{{Name: "component-workflow", Description: "Reusable components", Dir: "/skills/component-workflow", Paths: []inventory.SkillPath{{Path: "/skills/component-workflow"}}}}
 	a.Snapshot.MCP = []inventory.MCPServer{{Name: "docs-server", Agent: "codex"}}
 	a.Snapshot.Tools = append(a.Snapshot.Tools,
 		inventory.ToolState{Tool: "cli", Cli: &inventory.CliState{Tools: []inventory.Installation{{Tool: "kubectl", Version: "1.34.1", Path: "/opt/homebrew/bin/kubectl"}}}},

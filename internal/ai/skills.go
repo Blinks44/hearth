@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -51,6 +52,45 @@ func ProjectSkills(dir string) []inventory.Skill {
 		}
 	}
 	return readSkills(roots, dir)
+}
+
+// SkillsDir is the skills directory the agent id reads first, the user's
+// or, when project is not "", that project's, with the agents that read
+// it: a skill linked there is theirs too. "" when the agent reads none.
+func SkillsDir(id string, env sysenv.Env, project string) (skills string, readers []string) {
+	home := homeDir(env)
+	paths := func(a agent) []string {
+		var out []string
+		if project != "" {
+			for _, s := range a.projectSkills {
+				out = append(out, filepath.Join(project, filepath.FromSlash(s)))
+			}
+			return out
+		}
+		d := dir(a.dir, env, home)
+		for _, s := range a.skills {
+			if p := resolve(s, d, home); p != "" {
+				out = append(out, p)
+			}
+		}
+		return out
+	}
+	for _, a := range agents {
+		if a.id == id {
+			if p := paths(a); len(p) > 0 {
+				skills = p[0]
+			}
+		}
+	}
+	if skills == "" {
+		return "", nil
+	}
+	for _, a := range agents {
+		if slices.Contains(paths(a), skills) {
+			readers = append(readers, a.id)
+		}
+	}
+	return skills, readers
 }
 
 // addRoot adds agent as a reader of the skills directory path, the

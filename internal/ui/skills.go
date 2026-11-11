@@ -5,11 +5,15 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -29,8 +33,14 @@ type skillGroup struct {
 	skills  []inventory.Skill
 }
 
-// skillKey tells a skill apart: the first path it is found by.
-func skillKey(sk inventory.Skill) string { return sk.Paths[0].Path }
+// skillKey tells a skill apart: its folder, which stays when a link to
+// it comes or goes; for a broken link, the link.
+func skillKey(sk inventory.Skill) string {
+	if sk.Broken {
+		return sk.Paths[0].Path
+	}
+	return sk.Dir
+}
 
 // skillsPage lists the skills of the user and of the projects, filtered by
 // agent, scope and text, with the chosen one's details beside them.
@@ -232,6 +242,55 @@ func (a *App) copiesHint(c *ui.Context, n int) {
 		BorderWidth(1).BorderColor(pal.Line).Children(func() {
 		ui.Icon(c, Icon("sparkles")).Size(16, 16).Shrink(0).TextColor(Accent)
 		ui.Text(c, locales.SkillsCopiesHint(n)).FontSize(12).TextColor(t.TextMuted).Grow(1).MinWidth(0)
+		if groups := a.skillCopyGroups(c); len(groups) > 0 && a.BuildPlan != nil && a.SkillBackups != "" {
+			backups := a.SkillBackups
+			ui.Button(c.Key("skill-merge"), locales.SkillMerge()).Shrink(0).OnClick(func() {
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+					return ops.SkillMergePlan(groups, backups, env, time.Now())
+				}, a.proposeOrSay)
+			})
+		}
+	})
+}
+
+// skillCopyGroups are the skills whose copies hold the same files, each
+// with its copies: the ones a merge keeps one folder of.
+func (a *App) skillCopyGroups(c *ui.Context) [][]inventory.Skill {
+	var out [][]inventory.Skill
+	for _, is := range a.issues(c) {
+		if is.Kind == issues.SkillCopies {
+			out = append(out, is.Skills)
+		}
+	}
+	return out
+}
+
+// skillAgentControl is how the agent id gets sk, which via is the path it
+// finds it by, nil for none: a button to connect it, or for a link a
+// switch that disconnects it. The plan is made in the background: it looks at the
+// disk, and says why when it cannot be made.
+func (a *App) skillAgentControl(c *ui.Context, sk inventory.Skill, id string, via *inventory.SkillPath) {
+	// Aider reads no skills at all.
+	if a.BuildPlan == nil || sk.Broken || id == "aider" {
+		return
+	}
+	if via == nil {
+		ui.Button(c.Key("connect:"+id), locales.SkillConnect()).Shrink(0).OnClick(func() {
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.SkillLinkPlan(sk, id, env, agentTitle)
+			}, a.proposeOrSay)
+		})
+		return
+	}
+	// The skill's own folder is not a link to take away.
+	if !via.Link {
+		return
+	}
+	on, path := true, via.Path
+	ui.Switch(c.Key("connected:"+id), &on).Label(locales.SkillConnectedTo(agentTitle(id))).OnChange(func() {
+		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+			return ops.SkillUnlinkPlan(sk, path, env, agentTitle)
+		}, a.proposeOrSay)
 	})
 }
 
@@ -277,6 +336,7 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 				if via != nil && via.Link {
 					aiTag(c, locales.TagSymlink(), pal.Info.Alpha(0.12), pal.Info)
 				}
+				a.skillAgentControl(c, sk, id, via)
 			})
 		}
 		detailSection(c, locales.FilesSection())
