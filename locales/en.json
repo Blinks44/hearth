@@ -6650,5 +6650,271 @@
   "catalogKimi": "Moonshot AI's coding agent in the terminal, on Kimi models.",
   "@catalogKimi": {
     "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "setupNothing": "Everything chosen is on this computer already.",
+  "@setupNothing": {
+    "description": "New computer: why there is no plan, as all the tools chosen are installed."
+  },
+  "setupPlanTitle": "Set up this computer",
+  "@setupPlanTitle": {
+    "description": "New computer: title of the plan that installs the tools chosen."
+  },
+  "setupPlanWhy": "The base first, then languages and tools, each through the way the wizard showed.",
+  "@setupPlanWhy": {
+    "description": "New computer: why under the plan's title."
+  },
+  "setupNoWay": "Hearth has no way to install {tool} on this computer.",
+  "@setupNoWay": {
+    "description": "New computer: a chosen tool cannot be installed here.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Rust"
+      }
+    }
+  },
+  "setupInstall": "Install {count}",
+  "@setupInstall": {
+    "description": "New computer: the button that installs the plan, with how many tools.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "setupRustup": "downloads rustup from rust-lang.org and installs stable Rust",
+  "@setupRustup": {
+    "description": "New computer: what the rustup step does, after its command."
+  },
+  "setupClaudeInstaller": "downloads Claude Code's own installer from claude.ai and runs it",
+  "@setupClaudeInstaller": {
+    "description": "New computer: what the Claude Code installer step does."
+  },
+  "setupShellUnsupported": "Hearth cannot add lines to the startup files of the {shell} shell: install this tool by hand",
+  "@setupShellUnsupported": {
+    "description": "New computer: the user's shell is one Hearth does not edit.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "nu"
+      }
+    }
+  },
+  "setupTitle": "New computer",
+  "@setupTitle": {
+    "description": "New computer wizard: its header title and the Overview's button that opens it."
+  },
+  "setupHint": "Choose languages, tools and AI agents, and install them in one plan",
+  "@setupHint": {
+    "description": "Tooltip of the Overview's button that opens the new computer wizard."
+  },
+  "setupStepChoice": "Step 1 of 4 · choice",
+  "@setupStepChoice": {
+    "description": "New computer: header subtitle on step 1."
+  },
+  "setupStepPlan": "Step 2 of 4 · plan",
+  "@setupStepPlan": {
+    "description": "New computer: header subtitle on step 2."
+  },
+  "setupChoiceTitle": "Let's set up this computer",
+  "@setupChoiceTitle": {
+    "description": "New computer: step 1 heading."
+  },
+  "setupChoiceLead": "Choose what you need. Hearth leaves what is installed already alone and does not install it again.",
+  "@setupChoiceLead": {
+    "description": "New computer: text under the step 1 heading."
+  },
+  "setupPlanHeading": "What installs, and in what order",
+  "@setupPlanHeading": {
+    "description": "New computer: step 2 heading."
+  },
+  "setupPlanLead": "The base first, then languages and tools. You can stop at any step.",
+  "@setupPlanLead": {
+    "description": "New computer: text under the step 2 heading."
+  },
+  "setupSegChoice": "Choice",
+  "@setupSegChoice": {
+    "description": "New computer: stepper segment 1."
+  },
+  "setupSegPlan": "Plan",
+  "@setupSegPlan": {
+    "description": "New computer: stepper segment 2."
+  },
+  "setupSegInstall": "Install",
+  "@setupSegInstall": {
+    "description": "New computer: stepper segment 3."
+  },
+  "setupSegCheck": "Check",
+  "@setupSegCheck": {
+    "description": "New computer: stepper segment 4."
+  },
+  "setupBack": "Back",
+  "@setupBack": {
+    "description": "New computer: header button that goes back from the plan to the choice."
+  },
+  "setupCancel": "Cancel",
+  "@setupCancel": {
+    "description": "New computer: header button that leaves the wizard."
+  },
+  "setupNext": "Next: plan",
+  "@setupNext": {
+    "description": "New computer: header button that makes the plan of the choice."
+  },
+  "setupBuilding": "Making the plan…",
+  "@setupBuilding": {
+    "description": "New computer: the Next button while the plan is being made."
+  },
+  "setupLanguages": "Languages and runtimes",
+  "@setupLanguages": {
+    "description": "New computer: card of languages to choose."
+  },
+  "setupTools": "Tools",
+  "@setupTools": {
+    "description": "New computer: card of tools to choose."
+  },
+  "setupBase": "Base · installs first",
+  "@setupBase": {
+    "description": "New computer: card of Homebrew and mise."
+  },
+  "setupAgents": "AI agents",
+  "@setupAgents": {
+    "description": "New computer: card of AI agents to choose."
+  },
+  "setupHaveNone": "installed: none",
+  "@setupHaveNone": {
+    "description": "New computer: languages card aside when none is installed."
+  },
+  "setupHaveCount": "installed: {count}",
+  "@setupHaveCount": {
+    "description": "New computer: languages card aside, how many are installed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "setupHave": "already there",
+  "@setupHave": {
+    "description": "New computer: a tool that is installed already, in place of its switch."
+  },
+  "setupRequired": "required",
+  "@setupRequired": {
+    "description": "New computer: a base tool that always installs."
+  },
+  "setupVia": "via {manager}",
+  "@setupVia": {
+    "description": "New computer: how a tool installs, under its name.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "mise"
+      }
+    }
+  },
+  "setupViaRustup": "via rustup, as Rust recommends",
+  "@setupViaRustup": {
+    "description": "New computer: how Rust installs."
+  },
+  "setupOfficialInstaller": "the official installer",
+  "@setupOfficialInstaller": {
+    "description": "New computer: a tool's maker's own installer, after 'via'."
+  },
+  "setupDockerEngine": "Docker engine",
+  "@setupDockerEngine": {
+    "description": "New computer: the Docker row's title and its engine select's label."
+  },
+  "setupEngineTerms": "{engine} is paid for work at larger companies",
+  "@setupEngineTerms": {
+    "description": "New computer: Docker row caption for an engine with terms of use.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "OrbStack"
+      }
+    }
+  },
+  "setupEngineOpen": "{engine} is open source",
+  "@setupEngineOpen": {
+    "description": "New computer: Docker row caption for an open-source engine.",
+    "placeholders": {
+      "engine": {
+        "type": "String",
+        "example": "Colima"
+      }
+    }
+  },
+  "setupChoiceNote": "Chosen {count}, with the base. The next step shows the order, the commands and where the administrator's password is needed.",
+  "@setupChoiceNote": {
+    "description": "New computer: note under the choice.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "setupOrder": "Installation order",
+  "@setupOrder": {
+    "description": "New computer: step 2 card of the tools in order."
+  },
+  "setupSteps": "{count} steps",
+  "@setupSteps": {
+    "description": "New computer: aside of the order card.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "setupStopNote": "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were.",
+  "@setupStopNote": {
+    "description": "New computer: note under the plan."
+  },
+  "setupFiles": "Files that will change",
+  "@setupFiles": {
+    "description": "New computer: step 2 card of the files the plan edits."
+  },
+  "setupFileCaption": "{tools} · Hearth's block",
+  "@setupFileCaption": {
+    "description": "New computer: what changes a file, under its path.",
+    "placeholders": {
+      "tools": {
+        "type": "String",
+        "example": "mise, Claude Code"
+      }
+    }
+  },
+  "setupShowDiff": "show diff",
+  "@setupShowDiff": {
+    "description": "New computer: shows a file's changes."
+  },
+  "setupHideDiff": "hide diff",
+  "@setupHideDiff": {
+    "description": "New computer: hides a file's changes."
+  },
+  "setupTagPassword": "password",
+  "@setupTagPassword": {
+    "description": "New computer: tag of a step that asks for the administrator's password."
+  },
+  "setupTagFile": "changes a file",
+  "@setupTagFile": {
+    "description": "New computer: tag of a step that edits a startup file."
+  },
+  "setupWithHomebrew": "comes with Homebrew's installer",
+  "@setupWithHomebrew": {
+    "description": "New computer: the Command Line Tools need no step of their own."
+  },
+  "setupLineIn": "a line in {files}",
+  "@setupLineIn": {
+    "description": "New computer: a step adds a line to startup files.",
+    "placeholders": {
+      "files": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
   }
 }

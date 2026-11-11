@@ -160,6 +160,7 @@ type App struct {
 	RereadPackages func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error)
 
 	op             *operation // the operation shown or running; nil when none
+	setup          setupState // where the new computer wizard is
 	search         searchState
 	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
@@ -264,6 +265,11 @@ func (a *App) View(c *ui.Context) {
 				id := r.Query("id")
 				r.Title(agentTitle(id))
 				a.agentDetail(c, id)
+				return
+			}
+			if r.Match(setupPage) {
+				r.Title(locales.SetupTitle())
+				a.setupView(c)
 				return
 			}
 			if r.Match(changesPage.path) {

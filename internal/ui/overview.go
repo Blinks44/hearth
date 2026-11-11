@@ -27,6 +27,10 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 	items := a.attentionItems(found)
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			ui.Button(c.Key("setup"), "").Label(locales.SetupTitle()).Tooltip(locales.SetupHint()).OnClick(func() { a.router.Push(setupPage) }).Children(func() {
+				ui.Icon(c, Icon("sparkles")).Size(13, 13).TextColor(c.Theme().TextMuted)
+				ui.Text(c, locales.SetupTitle()).SingleLine()
+			})
 			ui.Button(c.Key("copy-report"), "").Label(locales.CopyReport()).Tooltip(locales.CopyReportHint()).OnClick(func() {
 				c.WriteClipboard(a.report(found))
 				c.Toast(locales.ReportCopied())

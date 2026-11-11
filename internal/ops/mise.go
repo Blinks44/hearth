@@ -22,6 +22,9 @@ type MiseSetup struct {
 	// is not; none when both are done.
 	Steps []Step
 	Notes []Note
+	// Base are how many of the first Steps install what mise installs
+	// with: Homebrew on macOS.
+	Base int
 	// Mise is the program, where it is or will be once Steps ran.
 	Mise string
 }

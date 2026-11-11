@@ -191,8 +191,11 @@ var Tools = []Entry{
 	}},
 
 	// Agents install through the system's manager first, as a tool that
-	// is not a language, then npm.
+	// is not a language, then npm. Claude Code's own installer comes
+	// first: it is how Anthropic says to install it, and it updates
+	// itself.
 	{ID: "claude", Group: Agent, Methods: []Method{
+		unixInstaller("https://claude.ai/install.sh"),
 		{Manager: "brew", Package: "claude-code", Kind: "cask"},
 		{Manager: "winget", Package: "Anthropic.ClaudeCode"},
 		{Manager: "npm", Package: "@anthropic-ai/claude-code"},

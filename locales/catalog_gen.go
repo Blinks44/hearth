@@ -16595,3 +16595,709 @@ func CatalogKimi() string { return In(i18n.Locale()).CatalogKimi() }
 func (msgs Messages) CatalogKimi() string {
 	return Catalog.Format(msgs.locale, "catalogKimi", nil)
 }
+
+// SetupNothing says "Everything chosen is on this computer already."
+// in the language the app shows.
+//
+// New computer: why there is no plan, as all the tools chosen are
+// installed.
+func SetupNothing() string { return In(i18n.Locale()).SetupNothing() }
+
+// SetupNothing says "Everything chosen is on this computer already."
+// in the language of msgs.
+//
+// New computer: why there is no plan, as all the tools chosen are
+// installed.
+func (msgs Messages) SetupNothing() string {
+	return Catalog.Format(msgs.locale, "setupNothing", nil)
+}
+
+// SetupPlanTitle says "Set up this computer"
+// in the language the app shows.
+//
+// New computer: title of the plan that installs the tools chosen.
+func SetupPlanTitle() string { return In(i18n.Locale()).SetupPlanTitle() }
+
+// SetupPlanTitle says "Set up this computer"
+// in the language of msgs.
+//
+// New computer: title of the plan that installs the tools chosen.
+func (msgs Messages) SetupPlanTitle() string {
+	return Catalog.Format(msgs.locale, "setupPlanTitle", nil)
+}
+
+// SetupPlanWhy says "The base first, then languages and tools, each through the way the wizard showed."
+// in the language the app shows.
+//
+// New computer: why under the plan's title.
+func SetupPlanWhy() string { return In(i18n.Locale()).SetupPlanWhy() }
+
+// SetupPlanWhy says "The base first, then languages and tools, each through the way the wizard showed."
+// in the language of msgs.
+//
+// New computer: why under the plan's title.
+func (msgs Messages) SetupPlanWhy() string {
+	return Catalog.Format(msgs.locale, "setupPlanWhy", nil)
+}
+
+// SetupNoWay says "Hearth has no way to install {tool} on this computer."
+// in the language the app shows.
+//
+// New computer: a chosen tool cannot be installed here.
+func SetupNoWay(tool string) string { return In(i18n.Locale()).SetupNoWay(tool) }
+
+// SetupNoWay says "Hearth has no way to install {tool} on this computer."
+// in the language of msgs.
+//
+// New computer: a chosen tool cannot be installed here.
+func (msgs Messages) SetupNoWay(tool string) string {
+	return Catalog.Format(msgs.locale, "setupNoWay", map[string]any{"tool": tool})
+}
+
+// SetupInstall says "Install {count}"
+// in the language the app shows.
+//
+// New computer: the button that installs the plan, with how many tools.
+func SetupInstall(count int) string { return In(i18n.Locale()).SetupInstall(count) }
+
+// SetupInstall says "Install {count}"
+// in the language of msgs.
+//
+// New computer: the button that installs the plan, with how many tools.
+func (msgs Messages) SetupInstall(count int) string {
+	return Catalog.Format(msgs.locale, "setupInstall", map[string]any{"count": count})
+}
+
+// SetupRustup says "downloads rustup from rust-lang.org and installs stable Rust"
+// in the language the app shows.
+//
+// New computer: what the rustup step does, after its command.
+func SetupRustup() string { return In(i18n.Locale()).SetupRustup() }
+
+// SetupRustup says "downloads rustup from rust-lang.org and installs stable Rust"
+// in the language of msgs.
+//
+// New computer: what the rustup step does, after its command.
+func (msgs Messages) SetupRustup() string {
+	return Catalog.Format(msgs.locale, "setupRustup", nil)
+}
+
+// SetupClaudeInstaller says "downloads Claude Code's own installer from claude.ai and runs it"
+// in the language the app shows.
+//
+// New computer: what the Claude Code installer step does.
+func SetupClaudeInstaller() string { return In(i18n.Locale()).SetupClaudeInstaller() }
+
+// SetupClaudeInstaller says "downloads Claude Code's own installer from claude.ai and runs it"
+// in the language of msgs.
+//
+// New computer: what the Claude Code installer step does.
+func (msgs Messages) SetupClaudeInstaller() string {
+	return Catalog.Format(msgs.locale, "setupClaudeInstaller", nil)
+}
+
+// SetupShellUnsupported says "Hearth cannot add lines to the startup files of the {shell} shell: install this tool by hand"
+// in the language the app shows.
+//
+// New computer: the user's shell is one Hearth does not edit.
+func SetupShellUnsupported(shell string) string {
+	return In(i18n.Locale()).SetupShellUnsupported(shell)
+}
+
+// SetupShellUnsupported says "Hearth cannot add lines to the startup files of the {shell} shell: install this tool by hand"
+// in the language of msgs.
+//
+// New computer: the user's shell is one Hearth does not edit.
+func (msgs Messages) SetupShellUnsupported(shell string) string {
+	return Catalog.Format(msgs.locale, "setupShellUnsupported", map[string]any{"shell": shell})
+}
+
+// SetupTitle says "New computer"
+// in the language the app shows.
+//
+// New computer wizard: its header title and the Overview's button that
+// opens it.
+func SetupTitle() string { return In(i18n.Locale()).SetupTitle() }
+
+// SetupTitle says "New computer"
+// in the language of msgs.
+//
+// New computer wizard: its header title and the Overview's button that
+// opens it.
+func (msgs Messages) SetupTitle() string {
+	return Catalog.Format(msgs.locale, "setupTitle", nil)
+}
+
+// SetupHint says "Choose languages, tools and AI agents, and install them in one plan"
+// in the language the app shows.
+//
+// Tooltip of the Overview's button that opens the new computer wizard.
+func SetupHint() string { return In(i18n.Locale()).SetupHint() }
+
+// SetupHint says "Choose languages, tools and AI agents, and install them in one plan"
+// in the language of msgs.
+//
+// Tooltip of the Overview's button that opens the new computer wizard.
+func (msgs Messages) SetupHint() string {
+	return Catalog.Format(msgs.locale, "setupHint", nil)
+}
+
+// SetupStepChoice says "Step 1 of 4 · choice"
+// in the language the app shows.
+//
+// New computer: header subtitle on step 1.
+func SetupStepChoice() string { return In(i18n.Locale()).SetupStepChoice() }
+
+// SetupStepChoice says "Step 1 of 4 · choice"
+// in the language of msgs.
+//
+// New computer: header subtitle on step 1.
+func (msgs Messages) SetupStepChoice() string {
+	return Catalog.Format(msgs.locale, "setupStepChoice", nil)
+}
+
+// SetupStepPlan says "Step 2 of 4 · plan"
+// in the language the app shows.
+//
+// New computer: header subtitle on step 2.
+func SetupStepPlan() string { return In(i18n.Locale()).SetupStepPlan() }
+
+// SetupStepPlan says "Step 2 of 4 · plan"
+// in the language of msgs.
+//
+// New computer: header subtitle on step 2.
+func (msgs Messages) SetupStepPlan() string {
+	return Catalog.Format(msgs.locale, "setupStepPlan", nil)
+}
+
+// SetupChoiceTitle says "Let's set up this computer"
+// in the language the app shows.
+//
+// New computer: step 1 heading.
+func SetupChoiceTitle() string { return In(i18n.Locale()).SetupChoiceTitle() }
+
+// SetupChoiceTitle says "Let's set up this computer"
+// in the language of msgs.
+//
+// New computer: step 1 heading.
+func (msgs Messages) SetupChoiceTitle() string {
+	return Catalog.Format(msgs.locale, "setupChoiceTitle", nil)
+}
+
+// SetupChoiceLead says "Choose what you need. Hearth leaves what is installed already alone and does not install it again."
+// in the language the app shows.
+//
+// New computer: text under the step 1 heading.
+func SetupChoiceLead() string { return In(i18n.Locale()).SetupChoiceLead() }
+
+// SetupChoiceLead says "Choose what you need. Hearth leaves what is installed already alone and does not install it again."
+// in the language of msgs.
+//
+// New computer: text under the step 1 heading.
+func (msgs Messages) SetupChoiceLead() string {
+	return Catalog.Format(msgs.locale, "setupChoiceLead", nil)
+}
+
+// SetupPlanHeading says "What installs, and in what order"
+// in the language the app shows.
+//
+// New computer: step 2 heading.
+func SetupPlanHeading() string { return In(i18n.Locale()).SetupPlanHeading() }
+
+// SetupPlanHeading says "What installs, and in what order"
+// in the language of msgs.
+//
+// New computer: step 2 heading.
+func (msgs Messages) SetupPlanHeading() string {
+	return Catalog.Format(msgs.locale, "setupPlanHeading", nil)
+}
+
+// SetupPlanLead says "The base first, then languages and tools. You can stop at any step."
+// in the language the app shows.
+//
+// New computer: text under the step 2 heading.
+func SetupPlanLead() string { return In(i18n.Locale()).SetupPlanLead() }
+
+// SetupPlanLead says "The base first, then languages and tools. You can stop at any step."
+// in the language of msgs.
+//
+// New computer: text under the step 2 heading.
+func (msgs Messages) SetupPlanLead() string {
+	return Catalog.Format(msgs.locale, "setupPlanLead", nil)
+}
+
+// SetupSegChoice says "Choice"
+// in the language the app shows.
+//
+// New computer: stepper segment 1.
+func SetupSegChoice() string { return In(i18n.Locale()).SetupSegChoice() }
+
+// SetupSegChoice says "Choice"
+// in the language of msgs.
+//
+// New computer: stepper segment 1.
+func (msgs Messages) SetupSegChoice() string {
+	return Catalog.Format(msgs.locale, "setupSegChoice", nil)
+}
+
+// SetupSegPlan says "Plan"
+// in the language the app shows.
+//
+// New computer: stepper segment 2.
+func SetupSegPlan() string { return In(i18n.Locale()).SetupSegPlan() }
+
+// SetupSegPlan says "Plan"
+// in the language of msgs.
+//
+// New computer: stepper segment 2.
+func (msgs Messages) SetupSegPlan() string {
+	return Catalog.Format(msgs.locale, "setupSegPlan", nil)
+}
+
+// SetupSegInstall says "Install"
+// in the language the app shows.
+//
+// New computer: stepper segment 3.
+func SetupSegInstall() string { return In(i18n.Locale()).SetupSegInstall() }
+
+// SetupSegInstall says "Install"
+// in the language of msgs.
+//
+// New computer: stepper segment 3.
+func (msgs Messages) SetupSegInstall() string {
+	return Catalog.Format(msgs.locale, "setupSegInstall", nil)
+}
+
+// SetupSegCheck says "Check"
+// in the language the app shows.
+//
+// New computer: stepper segment 4.
+func SetupSegCheck() string { return In(i18n.Locale()).SetupSegCheck() }
+
+// SetupSegCheck says "Check"
+// in the language of msgs.
+//
+// New computer: stepper segment 4.
+func (msgs Messages) SetupSegCheck() string {
+	return Catalog.Format(msgs.locale, "setupSegCheck", nil)
+}
+
+// SetupBack says "Back"
+// in the language the app shows.
+//
+// New computer: header button that goes back from the plan to the choice.
+func SetupBack() string { return In(i18n.Locale()).SetupBack() }
+
+// SetupBack says "Back"
+// in the language of msgs.
+//
+// New computer: header button that goes back from the plan to the choice.
+func (msgs Messages) SetupBack() string {
+	return Catalog.Format(msgs.locale, "setupBack", nil)
+}
+
+// SetupCancel says "Cancel"
+// in the language the app shows.
+//
+// New computer: header button that leaves the wizard.
+func SetupCancel() string { return In(i18n.Locale()).SetupCancel() }
+
+// SetupCancel says "Cancel"
+// in the language of msgs.
+//
+// New computer: header button that leaves the wizard.
+func (msgs Messages) SetupCancel() string {
+	return Catalog.Format(msgs.locale, "setupCancel", nil)
+}
+
+// SetupNext says "Next: plan"
+// in the language the app shows.
+//
+// New computer: header button that makes the plan of the choice.
+func SetupNext() string { return In(i18n.Locale()).SetupNext() }
+
+// SetupNext says "Next: plan"
+// in the language of msgs.
+//
+// New computer: header button that makes the plan of the choice.
+func (msgs Messages) SetupNext() string {
+	return Catalog.Format(msgs.locale, "setupNext", nil)
+}
+
+// SetupBuilding says "Making the plan…"
+// in the language the app shows.
+//
+// New computer: the Next button while the plan is being made.
+func SetupBuilding() string { return In(i18n.Locale()).SetupBuilding() }
+
+// SetupBuilding says "Making the plan…"
+// in the language of msgs.
+//
+// New computer: the Next button while the plan is being made.
+func (msgs Messages) SetupBuilding() string {
+	return Catalog.Format(msgs.locale, "setupBuilding", nil)
+}
+
+// SetupLanguages says "Languages and runtimes"
+// in the language the app shows.
+//
+// New computer: card of languages to choose.
+func SetupLanguages() string { return In(i18n.Locale()).SetupLanguages() }
+
+// SetupLanguages says "Languages and runtimes"
+// in the language of msgs.
+//
+// New computer: card of languages to choose.
+func (msgs Messages) SetupLanguages() string {
+	return Catalog.Format(msgs.locale, "setupLanguages", nil)
+}
+
+// SetupTools says "Tools"
+// in the language the app shows.
+//
+// New computer: card of tools to choose.
+func SetupTools() string { return In(i18n.Locale()).SetupTools() }
+
+// SetupTools says "Tools"
+// in the language of msgs.
+//
+// New computer: card of tools to choose.
+func (msgs Messages) SetupTools() string {
+	return Catalog.Format(msgs.locale, "setupTools", nil)
+}
+
+// SetupBase says "Base · installs first"
+// in the language the app shows.
+//
+// New computer: card of Homebrew and mise.
+func SetupBase() string { return In(i18n.Locale()).SetupBase() }
+
+// SetupBase says "Base · installs first"
+// in the language of msgs.
+//
+// New computer: card of Homebrew and mise.
+func (msgs Messages) SetupBase() string {
+	return Catalog.Format(msgs.locale, "setupBase", nil)
+}
+
+// SetupAgents says "AI agents"
+// in the language the app shows.
+//
+// New computer: card of AI agents to choose.
+func SetupAgents() string { return In(i18n.Locale()).SetupAgents() }
+
+// SetupAgents says "AI agents"
+// in the language of msgs.
+//
+// New computer: card of AI agents to choose.
+func (msgs Messages) SetupAgents() string {
+	return Catalog.Format(msgs.locale, "setupAgents", nil)
+}
+
+// SetupHaveNone says "installed: none"
+// in the language the app shows.
+//
+// New computer: languages card aside when none is installed.
+func SetupHaveNone() string { return In(i18n.Locale()).SetupHaveNone() }
+
+// SetupHaveNone says "installed: none"
+// in the language of msgs.
+//
+// New computer: languages card aside when none is installed.
+func (msgs Messages) SetupHaveNone() string {
+	return Catalog.Format(msgs.locale, "setupHaveNone", nil)
+}
+
+// SetupHaveCount says "installed: {count}"
+// in the language the app shows.
+//
+// New computer: languages card aside, how many are installed.
+func SetupHaveCount(count int) string { return In(i18n.Locale()).SetupHaveCount(count) }
+
+// SetupHaveCount says "installed: {count}"
+// in the language of msgs.
+//
+// New computer: languages card aside, how many are installed.
+func (msgs Messages) SetupHaveCount(count int) string {
+	return Catalog.Format(msgs.locale, "setupHaveCount", map[string]any{"count": count})
+}
+
+// SetupHave says "already there"
+// in the language the app shows.
+//
+// New computer: a tool that is installed already, in place of its switch.
+func SetupHave() string { return In(i18n.Locale()).SetupHave() }
+
+// SetupHave says "already there"
+// in the language of msgs.
+//
+// New computer: a tool that is installed already, in place of its switch.
+func (msgs Messages) SetupHave() string {
+	return Catalog.Format(msgs.locale, "setupHave", nil)
+}
+
+// SetupRequired says "required"
+// in the language the app shows.
+//
+// New computer: a base tool that always installs.
+func SetupRequired() string { return In(i18n.Locale()).SetupRequired() }
+
+// SetupRequired says "required"
+// in the language of msgs.
+//
+// New computer: a base tool that always installs.
+func (msgs Messages) SetupRequired() string {
+	return Catalog.Format(msgs.locale, "setupRequired", nil)
+}
+
+// SetupVia says "via {manager}"
+// in the language the app shows.
+//
+// New computer: how a tool installs, under its name.
+func SetupVia(manager string) string { return In(i18n.Locale()).SetupVia(manager) }
+
+// SetupVia says "via {manager}"
+// in the language of msgs.
+//
+// New computer: how a tool installs, under its name.
+func (msgs Messages) SetupVia(manager string) string {
+	return Catalog.Format(msgs.locale, "setupVia", map[string]any{"manager": manager})
+}
+
+// SetupViaRustup says "via rustup, as Rust recommends"
+// in the language the app shows.
+//
+// New computer: how Rust installs.
+func SetupViaRustup() string { return In(i18n.Locale()).SetupViaRustup() }
+
+// SetupViaRustup says "via rustup, as Rust recommends"
+// in the language of msgs.
+//
+// New computer: how Rust installs.
+func (msgs Messages) SetupViaRustup() string {
+	return Catalog.Format(msgs.locale, "setupViaRustup", nil)
+}
+
+// SetupOfficialInstaller says "the official installer"
+// in the language the app shows.
+//
+// New computer: a tool's maker's own installer, after 'via'.
+func SetupOfficialInstaller() string { return In(i18n.Locale()).SetupOfficialInstaller() }
+
+// SetupOfficialInstaller says "the official installer"
+// in the language of msgs.
+//
+// New computer: a tool's maker's own installer, after 'via'.
+func (msgs Messages) SetupOfficialInstaller() string {
+	return Catalog.Format(msgs.locale, "setupOfficialInstaller", nil)
+}
+
+// SetupDockerEngine says "Docker engine"
+// in the language the app shows.
+//
+// New computer: the Docker row's title and its engine select's label.
+func SetupDockerEngine() string { return In(i18n.Locale()).SetupDockerEngine() }
+
+// SetupDockerEngine says "Docker engine"
+// in the language of msgs.
+//
+// New computer: the Docker row's title and its engine select's label.
+func (msgs Messages) SetupDockerEngine() string {
+	return Catalog.Format(msgs.locale, "setupDockerEngine", nil)
+}
+
+// SetupEngineTerms says "{engine} is paid for work at larger companies"
+// in the language the app shows.
+//
+// New computer: Docker row caption for an engine with terms of use.
+func SetupEngineTerms(engine string) string { return In(i18n.Locale()).SetupEngineTerms(engine) }
+
+// SetupEngineTerms says "{engine} is paid for work at larger companies"
+// in the language of msgs.
+//
+// New computer: Docker row caption for an engine with terms of use.
+func (msgs Messages) SetupEngineTerms(engine string) string {
+	return Catalog.Format(msgs.locale, "setupEngineTerms", map[string]any{"engine": engine})
+}
+
+// SetupEngineOpen says "{engine} is open source"
+// in the language the app shows.
+//
+// New computer: Docker row caption for an open-source engine.
+func SetupEngineOpen(engine string) string { return In(i18n.Locale()).SetupEngineOpen(engine) }
+
+// SetupEngineOpen says "{engine} is open source"
+// in the language of msgs.
+//
+// New computer: Docker row caption for an open-source engine.
+func (msgs Messages) SetupEngineOpen(engine string) string {
+	return Catalog.Format(msgs.locale, "setupEngineOpen", map[string]any{"engine": engine})
+}
+
+// SetupChoiceNote says "Chosen {count}, with the base. The next step shows the order, the commands and where the administrator's password is …"
+// in the language the app shows.
+//
+// New computer: note under the choice.
+func SetupChoiceNote(count int) string { return In(i18n.Locale()).SetupChoiceNote(count) }
+
+// SetupChoiceNote says "Chosen {count}, with the base. The next step shows the order, the commands and where the administrator's password is …"
+// in the language of msgs.
+//
+// New computer: note under the choice.
+func (msgs Messages) SetupChoiceNote(count int) string {
+	return Catalog.Format(msgs.locale, "setupChoiceNote", map[string]any{"count": count})
+}
+
+// SetupOrder says "Installation order"
+// in the language the app shows.
+//
+// New computer: step 2 card of the tools in order.
+func SetupOrder() string { return In(i18n.Locale()).SetupOrder() }
+
+// SetupOrder says "Installation order"
+// in the language of msgs.
+//
+// New computer: step 2 card of the tools in order.
+func (msgs Messages) SetupOrder() string {
+	return Catalog.Format(msgs.locale, "setupOrder", nil)
+}
+
+// SetupSteps says "{count} steps"
+// in the language the app shows.
+//
+// New computer: aside of the order card.
+func SetupSteps(count int) string { return In(i18n.Locale()).SetupSteps(count) }
+
+// SetupSteps says "{count} steps"
+// in the language of msgs.
+//
+// New computer: aside of the order card.
+func (msgs Messages) SetupSteps(count int) string {
+	return Catalog.Format(msgs.locale, "setupSteps", map[string]any{"count": count})
+}
+
+// SetupStopNote says "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were."
+// in the language the app shows.
+//
+// New computer: note under the plan.
+func SetupStopNote() string { return In(i18n.Locale()).SetupStopNote() }
+
+// SetupStopNote says "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were."
+// in the language of msgs.
+//
+// New computer: note under the plan.
+func (msgs Messages) SetupStopNote() string {
+	return Catalog.Format(msgs.locale, "setupStopNote", nil)
+}
+
+// SetupFiles says "Files that will change"
+// in the language the app shows.
+//
+// New computer: step 2 card of the files the plan edits.
+func SetupFiles() string { return In(i18n.Locale()).SetupFiles() }
+
+// SetupFiles says "Files that will change"
+// in the language of msgs.
+//
+// New computer: step 2 card of the files the plan edits.
+func (msgs Messages) SetupFiles() string {
+	return Catalog.Format(msgs.locale, "setupFiles", nil)
+}
+
+// SetupFileCaption says "{tools} · Hearth's block"
+// in the language the app shows.
+//
+// New computer: what changes a file, under its path.
+func SetupFileCaption(tools string) string { return In(i18n.Locale()).SetupFileCaption(tools) }
+
+// SetupFileCaption says "{tools} · Hearth's block"
+// in the language of msgs.
+//
+// New computer: what changes a file, under its path.
+func (msgs Messages) SetupFileCaption(tools string) string {
+	return Catalog.Format(msgs.locale, "setupFileCaption", map[string]any{"tools": tools})
+}
+
+// SetupShowDiff says "show diff"
+// in the language the app shows.
+//
+// New computer: shows a file's changes.
+func SetupShowDiff() string { return In(i18n.Locale()).SetupShowDiff() }
+
+// SetupShowDiff says "show diff"
+// in the language of msgs.
+//
+// New computer: shows a file's changes.
+func (msgs Messages) SetupShowDiff() string {
+	return Catalog.Format(msgs.locale, "setupShowDiff", nil)
+}
+
+// SetupHideDiff says "hide diff"
+// in the language the app shows.
+//
+// New computer: hides a file's changes.
+func SetupHideDiff() string { return In(i18n.Locale()).SetupHideDiff() }
+
+// SetupHideDiff says "hide diff"
+// in the language of msgs.
+//
+// New computer: hides a file's changes.
+func (msgs Messages) SetupHideDiff() string {
+	return Catalog.Format(msgs.locale, "setupHideDiff", nil)
+}
+
+// SetupTagPassword says "password"
+// in the language the app shows.
+//
+// New computer: tag of a step that asks for the administrator's password.
+func SetupTagPassword() string { return In(i18n.Locale()).SetupTagPassword() }
+
+// SetupTagPassword says "password"
+// in the language of msgs.
+//
+// New computer: tag of a step that asks for the administrator's password.
+func (msgs Messages) SetupTagPassword() string {
+	return Catalog.Format(msgs.locale, "setupTagPassword", nil)
+}
+
+// SetupTagFile says "changes a file"
+// in the language the app shows.
+//
+// New computer: tag of a step that edits a startup file.
+func SetupTagFile() string { return In(i18n.Locale()).SetupTagFile() }
+
+// SetupTagFile says "changes a file"
+// in the language of msgs.
+//
+// New computer: tag of a step that edits a startup file.
+func (msgs Messages) SetupTagFile() string {
+	return Catalog.Format(msgs.locale, "setupTagFile", nil)
+}
+
+// SetupWithHomebrew says "comes with Homebrew's installer"
+// in the language the app shows.
+//
+// New computer: the Command Line Tools need no step of their own.
+func SetupWithHomebrew() string { return In(i18n.Locale()).SetupWithHomebrew() }
+
+// SetupWithHomebrew says "comes with Homebrew's installer"
+// in the language of msgs.
+//
+// New computer: the Command Line Tools need no step of their own.
+func (msgs Messages) SetupWithHomebrew() string {
+	return Catalog.Format(msgs.locale, "setupWithHomebrew", nil)
+}
+
+// SetupLineIn says "a line in {files}"
+// in the language the app shows.
+//
+// New computer: a step adds a line to startup files.
+func SetupLineIn(files string) string { return In(i18n.Locale()).SetupLineIn(files) }
+
+// SetupLineIn says "a line in {files}"
+// in the language of msgs.
+//
+// New computer: a step adds a line to startup files.
+func (msgs Messages) SetupLineIn(files string) string {
+	return Catalog.Format(msgs.locale, "setupLineIn", map[string]any{"files": files})
+}

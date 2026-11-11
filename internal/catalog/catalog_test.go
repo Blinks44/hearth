@@ -92,7 +92,9 @@ func TestRecommended(t *testing.T) {
 		{"git", "darwin", "xcode-select", nil},
 		{"docker", "darwin", "brew", []string{"homebrew"}},
 		{"codex", "windows", "npm", []string{"node"}},
-		{"claude", "linux", "npm", []string{"node"}},
+		{"claude", "linux", "installer", nil},
+		{"claude", "windows", "winget", nil},
+		{"gemini", "linux", "npm", []string{"node"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.id+" on "+tt.goos, func(t *testing.T) {
