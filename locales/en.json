@@ -6558,5 +6558,97 @@
         "example": "rustup"
       }
     }
+  },
+  "catalogHomebrew": "The package manager for macOS: installs command-line tools and apps, and mise with them.",
+  "@catalogHomebrew": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogMise": "Installs languages and command-line tools, keeps several versions of each and switches them per project.",
+  "@catalogMise": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogNode": "Runs JavaScript outside the browser: web servers, build tools, most front-end projects.",
+  "@catalogNode": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogPython": "A general-purpose language for scripts, data, machine learning and web back ends.",
+  "@catalogPython": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogGo": "A compiled language by Google for servers, command-line tools and cloud software.",
+  "@catalogGo": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogRust": "A fast, memory-safe compiled language. rustup installs its compiler, Cargo and their updates.",
+  "@catalogRust": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogBun": "A fast JavaScript runtime with its own package manager and test runner, compatible with Node.",
+  "@catalogBun": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogPhp": "The language of many websites and of frameworks such as Laravel and Symfony.",
+  "@catalogPhp": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogJava": "The JVM and its compiler, for Java, Kotlin and Android projects. Installs Eclipse Temurin.",
+  "@catalogJava": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogRuby": "A language loved for Rails, the web framework, and for scripts.",
+  "@catalogRuby": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogDotnet": "Microsoft's platform for C# and F#: web services, desktop apps and games.",
+  "@catalogDotnet": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogPnpm": "A fast npm-compatible package manager for JavaScript that saves disk space.",
+  "@catalogPnpm": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogYarn": "A package manager for JavaScript, which some projects use instead of npm.",
+  "@catalogYarn": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogGit": "Keeps the history of your code and syncs it with GitHub and other hosts.",
+  "@catalogGit": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogDocker": "Runs containers: databases and services in the versions a project needs, without installing them.",
+  "@catalogDocker": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogClaude": "Anthropic's coding agent in the terminal: reads the project, edits files, runs commands.",
+  "@catalogClaude": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogCodex": "OpenAI's coding agent in the terminal.",
+  "@catalogCodex": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogCopilot": "GitHub Copilot's coding agent in the terminal.",
+  "@catalogCopilot": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogGemini": "Google's coding agent in the terminal, on Gemini models.",
+  "@catalogGemini": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogCursor": "A code editor built around AI, with its own agent.",
+  "@catalogCursor": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogOpencode": "An open-source coding agent in the terminal that works with many model providers.",
+  "@catalogOpencode": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogGrok": "xAI's coding agent in the terminal, on Grok models.",
+  "@catalogGrok": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogKimi": "Moonshot AI's coding agent in the terminal, on Kimi models.",
+  "@catalogKimi": {
+    "description": "New computer: what the tool is for, under its name in the choice."
   }
 }

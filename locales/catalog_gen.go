@@ -16273,3 +16273,325 @@ func VersionCheckNotUpdated(tool string, version string, manager string) string 
 func (msgs Messages) VersionCheckNotUpdated(tool string, version string, manager string) string {
 	return Catalog.Format(msgs.locale, "versionCheckNotUpdated", map[string]any{"tool": tool, "version": version, "manager": manager})
 }
+
+// CatalogHomebrew says "The package manager for macOS: installs command-line tools and apps, and mise with them."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogHomebrew() string { return In(i18n.Locale()).CatalogHomebrew() }
+
+// CatalogHomebrew says "The package manager for macOS: installs command-line tools and apps, and mise with them."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogHomebrew() string {
+	return Catalog.Format(msgs.locale, "catalogHomebrew", nil)
+}
+
+// CatalogMise says "Installs languages and command-line tools, keeps several versions of each and switches them per project."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogMise() string { return In(i18n.Locale()).CatalogMise() }
+
+// CatalogMise says "Installs languages and command-line tools, keeps several versions of each and switches them per project."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogMise() string {
+	return Catalog.Format(msgs.locale, "catalogMise", nil)
+}
+
+// CatalogNode says "Runs JavaScript outside the browser: web servers, build tools, most front-end projects."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogNode() string { return In(i18n.Locale()).CatalogNode() }
+
+// CatalogNode says "Runs JavaScript outside the browser: web servers, build tools, most front-end projects."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogNode() string {
+	return Catalog.Format(msgs.locale, "catalogNode", nil)
+}
+
+// CatalogPython says "A general-purpose language for scripts, data, machine learning and web back ends."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogPython() string { return In(i18n.Locale()).CatalogPython() }
+
+// CatalogPython says "A general-purpose language for scripts, data, machine learning and web back ends."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogPython() string {
+	return Catalog.Format(msgs.locale, "catalogPython", nil)
+}
+
+// CatalogGo says "A compiled language by Google for servers, command-line tools and cloud software."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogGo() string { return In(i18n.Locale()).CatalogGo() }
+
+// CatalogGo says "A compiled language by Google for servers, command-line tools and cloud software."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogGo() string {
+	return Catalog.Format(msgs.locale, "catalogGo", nil)
+}
+
+// CatalogRust says "A fast, memory-safe compiled language. rustup installs its compiler, Cargo and their updates."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogRust() string { return In(i18n.Locale()).CatalogRust() }
+
+// CatalogRust says "A fast, memory-safe compiled language. rustup installs its compiler, Cargo and their updates."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogRust() string {
+	return Catalog.Format(msgs.locale, "catalogRust", nil)
+}
+
+// CatalogBun says "A fast JavaScript runtime with its own package manager and test runner, compatible with Node."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogBun() string { return In(i18n.Locale()).CatalogBun() }
+
+// CatalogBun says "A fast JavaScript runtime with its own package manager and test runner, compatible with Node."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogBun() string {
+	return Catalog.Format(msgs.locale, "catalogBun", nil)
+}
+
+// CatalogPhp says "The language of many websites and of frameworks such as Laravel and Symfony."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogPhp() string { return In(i18n.Locale()).CatalogPhp() }
+
+// CatalogPhp says "The language of many websites and of frameworks such as Laravel and Symfony."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogPhp() string {
+	return Catalog.Format(msgs.locale, "catalogPhp", nil)
+}
+
+// CatalogJava says "The JVM and its compiler, for Java, Kotlin and Android projects. Installs Eclipse Temurin."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogJava() string { return In(i18n.Locale()).CatalogJava() }
+
+// CatalogJava says "The JVM and its compiler, for Java, Kotlin and Android projects. Installs Eclipse Temurin."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogJava() string {
+	return Catalog.Format(msgs.locale, "catalogJava", nil)
+}
+
+// CatalogRuby says "A language loved for Rails, the web framework, and for scripts."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogRuby() string { return In(i18n.Locale()).CatalogRuby() }
+
+// CatalogRuby says "A language loved for Rails, the web framework, and for scripts."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogRuby() string {
+	return Catalog.Format(msgs.locale, "catalogRuby", nil)
+}
+
+// CatalogDotnet says "Microsoft's platform for C# and F#: web services, desktop apps and games."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogDotnet() string { return In(i18n.Locale()).CatalogDotnet() }
+
+// CatalogDotnet says "Microsoft's platform for C# and F#: web services, desktop apps and games."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogDotnet() string {
+	return Catalog.Format(msgs.locale, "catalogDotnet", nil)
+}
+
+// CatalogPnpm says "A fast npm-compatible package manager for JavaScript that saves disk space."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogPnpm() string { return In(i18n.Locale()).CatalogPnpm() }
+
+// CatalogPnpm says "A fast npm-compatible package manager for JavaScript that saves disk space."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogPnpm() string {
+	return Catalog.Format(msgs.locale, "catalogPnpm", nil)
+}
+
+// CatalogYarn says "A package manager for JavaScript, which some projects use instead of npm."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogYarn() string { return In(i18n.Locale()).CatalogYarn() }
+
+// CatalogYarn says "A package manager for JavaScript, which some projects use instead of npm."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogYarn() string {
+	return Catalog.Format(msgs.locale, "catalogYarn", nil)
+}
+
+// CatalogGit says "Keeps the history of your code and syncs it with GitHub and other hosts."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogGit() string { return In(i18n.Locale()).CatalogGit() }
+
+// CatalogGit says "Keeps the history of your code and syncs it with GitHub and other hosts."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogGit() string {
+	return Catalog.Format(msgs.locale, "catalogGit", nil)
+}
+
+// CatalogDocker says "Runs containers: databases and services in the versions a project needs, without installing them."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogDocker() string { return In(i18n.Locale()).CatalogDocker() }
+
+// CatalogDocker says "Runs containers: databases and services in the versions a project needs, without installing them."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogDocker() string {
+	return Catalog.Format(msgs.locale, "catalogDocker", nil)
+}
+
+// CatalogClaude says "Anthropic's coding agent in the terminal: reads the project, edits files, runs commands."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogClaude() string { return In(i18n.Locale()).CatalogClaude() }
+
+// CatalogClaude says "Anthropic's coding agent in the terminal: reads the project, edits files, runs commands."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogClaude() string {
+	return Catalog.Format(msgs.locale, "catalogClaude", nil)
+}
+
+// CatalogCodex says "OpenAI's coding agent in the terminal."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogCodex() string { return In(i18n.Locale()).CatalogCodex() }
+
+// CatalogCodex says "OpenAI's coding agent in the terminal."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogCodex() string {
+	return Catalog.Format(msgs.locale, "catalogCodex", nil)
+}
+
+// CatalogCopilot says "GitHub Copilot's coding agent in the terminal."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogCopilot() string { return In(i18n.Locale()).CatalogCopilot() }
+
+// CatalogCopilot says "GitHub Copilot's coding agent in the terminal."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogCopilot() string {
+	return Catalog.Format(msgs.locale, "catalogCopilot", nil)
+}
+
+// CatalogGemini says "Google's coding agent in the terminal, on Gemini models."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogGemini() string { return In(i18n.Locale()).CatalogGemini() }
+
+// CatalogGemini says "Google's coding agent in the terminal, on Gemini models."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogGemini() string {
+	return Catalog.Format(msgs.locale, "catalogGemini", nil)
+}
+
+// CatalogCursor says "A code editor built around AI, with its own agent."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogCursor() string { return In(i18n.Locale()).CatalogCursor() }
+
+// CatalogCursor says "A code editor built around AI, with its own agent."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogCursor() string {
+	return Catalog.Format(msgs.locale, "catalogCursor", nil)
+}
+
+// CatalogOpencode says "An open-source coding agent in the terminal that works with many model providers."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogOpencode() string { return In(i18n.Locale()).CatalogOpencode() }
+
+// CatalogOpencode says "An open-source coding agent in the terminal that works with many model providers."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogOpencode() string {
+	return Catalog.Format(msgs.locale, "catalogOpencode", nil)
+}
+
+// CatalogGrok says "xAI's coding agent in the terminal, on Grok models."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogGrok() string { return In(i18n.Locale()).CatalogGrok() }
+
+// CatalogGrok says "xAI's coding agent in the terminal, on Grok models."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogGrok() string {
+	return Catalog.Format(msgs.locale, "catalogGrok", nil)
+}
+
+// CatalogKimi says "Moonshot AI's coding agent in the terminal, on Kimi models."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogKimi() string { return In(i18n.Locale()).CatalogKimi() }
+
+// CatalogKimi says "Moonshot AI's coding agent in the terminal, on Kimi models."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogKimi() string {
+	return Catalog.Format(msgs.locale, "catalogKimi", nil)
+}

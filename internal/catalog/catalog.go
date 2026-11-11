@@ -1,0 +1,271 @@
+// Package catalog describes the tools Hearth installs on a new computer:
+// what each is for, how it installs on each system and what it needs
+// first. It holds data only: the operations in internal/ops turn a
+// method into a plan.
+package catalog
+
+import (
+	"slices"
+
+	"github.com/Blinks44/hearth/locales"
+)
+
+// Group is where a tool stands in the new computer's choice.
+type Group int
+
+const (
+	// Base installs first: what the rest installs with.
+	Base Group = iota
+	Language
+	Tool
+	Agent
+)
+
+// Method is a way to install a tool.
+type Method struct {
+	// Manager installs it: a system package manager as
+	// inventory.PackageManager's ID ("brew", "winget", "apt"…), "mise",
+	// "npm", "corepack", "xcode-select" (Apple's Command Line Tools), or
+	// "installer", the maker's own.
+	Manager string
+	// Package is the name the manager knows the tool by; for "installer",
+	// the address it comes from. Kind is Homebrew's formula or cask.
+	Package, Kind string
+	// OS are the systems it works on, as runtime.GOOS names them; the
+	// manager's when empty.
+	OS []string
+	// Terms is the address of terms of use beyond open source, as a
+	// license that is paid for work; "" when there are none.
+	Terms string
+}
+
+// managerOS are the systems each manager works on; all for the others.
+// Homebrew runs on Linux too, but there Hearth installs with the
+// system's own manager.
+var managerOS = map[string][]string{
+	"brew": {"darwin"}, "xcode-select": {"darwin"},
+	"winget": {"windows"}, "choco": {"windows"}, "scoop": {"windows"},
+	"apt": {"linux"}, "dnf": {"linux"}, "zypper": {"linux"}, "pacman": {"linux"}, "apk": {"linux"}, "snap": {"linux"}, "flatpak": {"linux"},
+}
+
+// Systems are the systems m works on.
+func (m Method) Systems() []string {
+	if len(m.OS) > 0 {
+		return m.OS
+	}
+	if os, ok := managerOS[m.Manager]; ok {
+		return os
+	}
+	return All
+}
+
+// All are the systems Hearth runs on.
+var All = []string{"darwin", "windows", "linux"}
+
+// managerTools are the tools in the catalog each manager is, or runs
+// on: they install before what the manager installs.
+var managerTools = map[string]string{"brew": "homebrew", "mise": "mise", "npm": "node", "corepack": "node"}
+
+// Entry is a tool of the catalog.
+type Entry struct {
+	// ID is the tool's, as inventory and the sidebar name it, or the
+	// agent's; "homebrew" for Homebrew.
+	ID    string
+	Group Group
+	// OS are the systems the tool installs on; All when empty.
+	OS []string
+	// Methods are the ways it installs, in the order Hearth prefers: the
+	// first that works on a system is the one recommended there.
+	Methods []Method
+	// Needs are the tools it needs first beyond its manager.
+	Needs []string
+}
+
+// Systems are the systems e installs on.
+func (e Entry) Systems() []string {
+	if len(e.OS) > 0 {
+		return e.OS
+	}
+	return All
+}
+
+// On returns e's methods that work on goos, in order.
+func (e Entry) On(goos string) []Method {
+	var out []Method
+	for _, m := range e.Methods {
+		if slices.Contains(m.Systems(), goos) {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+// NeedsWith returns the tools e needs before m installs it: its own needs,
+// then its manager.
+func (e Entry) NeedsWith(m Method) []string {
+	out := slices.Clone(e.Needs)
+	if t, ok := managerTools[m.Manager]; ok && !slices.Contains(out, t) {
+		out = append(out, t)
+	}
+	return out
+}
+
+// mise installs a tool through mise, on every system.
+func mise(name string) []Method { return []Method{{Manager: "mise", Package: name}} }
+
+// unixInstaller is the maker's installer script at url, on macOS and
+// Linux.
+func unixInstaller(url string) Method {
+	return Method{Manager: "installer", Package: url, OS: []string{"darwin", "linux"}}
+}
+
+// Tools are the tools of the catalog, the bases first. Languages and
+// command-line tools install through mise by default, the rest through
+// the system's manager.
+var Tools = []Entry{
+	{ID: "homebrew", Group: Base, OS: []string{"darwin"}, Methods: []Method{
+		// Its own signed package, which brings the Command Line Tools
+		// too.
+		{Manager: "installer", Package: "https://github.com/Homebrew/brew/releases/latest", OS: []string{"darwin"}},
+	}},
+	{ID: "mise", Group: Base, Methods: []Method{
+		{Manager: "brew", Package: "mise", Kind: "formula"},
+		{Manager: "winget", Package: "jdx.mise"},
+		// Arch and Alpine package mise; elsewhere its own script puts it
+		// in ~/.local/bin.
+		{Manager: "pacman", Package: "mise"},
+		{Manager: "apk", Package: "mise"},
+		{Manager: "installer", Package: "https://mise.run", OS: []string{"linux"}},
+	}},
+
+	{ID: "node", Group: Language, Methods: mise("node")},
+	{ID: "python", Group: Language, Methods: mise("python")},
+	{ID: "go", Group: Language, Methods: mise("go")},
+	// rustup is how Rust says to install it: it keeps the toolchains and
+	// their components.
+	{ID: "rust", Group: Language, Methods: []Method{
+		unixInstaller("https://sh.rustup.rs"),
+		{Manager: "winget", Package: "Rustlang.Rustup"},
+	}},
+	{ID: "bun", Group: Language, Methods: mise("bun")},
+	// mise builds PHP from source, which takes libraries a computer
+	// seldom has: the system's manager installs it. WinGet names it by
+	// line, PHP.PHP.8.4: the line follows the name.
+	{ID: "php", Group: Language, Methods: []Method{
+		{Manager: "brew", Package: "php", Kind: "formula"},
+		{Manager: "winget", Package: "PHP.PHP"},
+		{Manager: "apt", Package: "php-cli"},
+		{Manager: "dnf", Package: "php-cli"},
+		{Manager: "pacman", Package: "php"},
+		{Manager: "zypper", Package: "php8"},
+	}},
+	{ID: "java", Group: Language, Methods: mise("java")},
+	{ID: "ruby", Group: Language, Methods: mise("ruby")},
+	{ID: "dotnet", Group: Language, Methods: mise("dotnet")},
+
+	{ID: "pnpm", Group: Tool, Methods: mise("pnpm"), Needs: []string{"node"}},
+	// Yarn's current releases install through Corepack alone.
+	{ID: "yarn", Group: Tool, Methods: []Method{{Manager: "corepack", Package: "yarn"}}},
+	{ID: "git", Group: Tool, Methods: []Method{
+		{Manager: "xcode-select", Package: "Command Line Tools"},
+		{Manager: "brew", Package: "git", Kind: "formula"},
+		{Manager: "winget", Package: "Git.Git"},
+		{Manager: "apt", Package: "git"},
+		{Manager: "dnf", Package: "git"},
+		{Manager: "pacman", Package: "git"},
+		{Manager: "zypper", Package: "git"},
+		{Manager: "apk", Package: "git"},
+	}},
+	// The engine runs containers. Colima and the engines of Linux are open
+	// source; Docker Desktop and OrbStack are paid for work at larger
+	// companies.
+	{ID: "docker", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "colima", Kind: "formula"},
+		{Manager: "brew", Package: "orbstack", Kind: "cask", Terms: "https://orbstack.dev/pricing"},
+		{Manager: "winget", Package: "Docker.DockerDesktop", Terms: "https://docs.docker.com/subscription-billing/desktop-license/"},
+		{Manager: "apt", Package: "docker.io"},
+		{Manager: "dnf", Package: "moby-engine"},
+		{Manager: "zypper", Package: "docker"},
+		{Manager: "pacman", Package: "docker"},
+		{Manager: "apk", Package: "docker"},
+	}},
+
+	// Agents install through the system's manager first, as a tool that
+	// is not a language, then npm.
+	{ID: "claude", Group: Agent, Methods: []Method{
+		{Manager: "brew", Package: "claude-code", Kind: "cask"},
+		{Manager: "winget", Package: "Anthropic.ClaudeCode"},
+		{Manager: "npm", Package: "@anthropic-ai/claude-code"},
+	}},
+	{ID: "codex", Group: Agent, Methods: []Method{
+		{Manager: "brew", Package: "codex", Kind: "cask"},
+		{Manager: "npm", Package: "@openai/codex"},
+	}},
+	{ID: "copilot", Group: Agent, Methods: []Method{
+		{Manager: "brew", Package: "copilot-cli", Kind: "cask"},
+		{Manager: "winget", Package: "GitHub.Copilot"},
+		{Manager: "npm", Package: "@github/copilot"},
+	}},
+	{ID: "gemini", Group: Agent, Methods: []Method{
+		{Manager: "brew", Package: "gemini-cli", Kind: "formula"},
+		{Manager: "npm", Package: "@google/gemini-cli"},
+	}},
+	{ID: "cursor", Group: Agent, OS: []string{"darwin", "windows"}, Methods: []Method{
+		{Manager: "brew", Package: "cursor", Kind: "cask"},
+		{Manager: "winget", Package: "Anysphere.Cursor"},
+	}},
+	{ID: "opencode", Group: Agent, Methods: []Method{
+		{Manager: "brew", Package: "opencode", Kind: "formula"},
+		{Manager: "npm", Package: "opencode-ai"},
+	}},
+	{ID: "grok", Group: Agent, Methods: []Method{
+		{Manager: "winget", Package: "xAI.GrokBuild"},
+		{Manager: "npm", Package: "@xai-official/grok"},
+	}},
+	{ID: "kimi", Group: Agent, OS: []string{"windows"}, Methods: []Method{
+		{Manager: "winget", Package: "MoonshotAI.KimiCodeCLI"},
+	}},
+}
+
+// Find returns the entry of the tool id.
+func Find(id string) (Entry, bool) {
+	i := slices.IndexFunc(Tools, func(e Entry) bool { return e.ID == id })
+	if i < 0 {
+		return Entry{}, false
+	}
+	return Tools[i], true
+}
+
+// About says what the tool id is for, to someone new to it; "" for a
+// tool not in the catalog.
+func About(id string) string {
+	about, ok := map[string]func() string{
+		"homebrew": locales.CatalogHomebrew,
+		"mise":     locales.CatalogMise,
+		"node":     locales.CatalogNode,
+		"python":   locales.CatalogPython,
+		"go":       locales.CatalogGo,
+		"rust":     locales.CatalogRust,
+		"bun":      locales.CatalogBun,
+		"php":      locales.CatalogPhp,
+		"java":     locales.CatalogJava,
+		"ruby":     locales.CatalogRuby,
+		"dotnet":   locales.CatalogDotnet,
+		"pnpm":     locales.CatalogPnpm,
+		"yarn":     locales.CatalogYarn,
+		"git":      locales.CatalogGit,
+		"docker":   locales.CatalogDocker,
+		"claude":   locales.CatalogClaude,
+		"codex":    locales.CatalogCodex,
+		"copilot":  locales.CatalogCopilot,
+		"gemini":   locales.CatalogGemini,
+		"cursor":   locales.CatalogCursor,
+		"opencode": locales.CatalogOpencode,
+		"grok":     locales.CatalogGrok,
+		"kimi":     locales.CatalogKimi,
+	}[id]
+	if !ok {
+		return ""
+	}
+	return about()
+}
