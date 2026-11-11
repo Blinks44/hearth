@@ -56,11 +56,16 @@ type CountDocker func(ctx context.Context) ([]inventory.DockerUsage, error)
 
 // Cleans reports that a cleanup plan removes c, found in s: caches and
 // Docker's data; copies through their version manager or Homebrew;
-// Homebrew's packages nothing needs.
+// Homebrew's packages nothing needs; projects' installs, extensions' old
+// versions, LM Studio's models; Ollama's when the terminal has ollama.
 func Cleans(c cleanup.Candidate, s *inventory.Snapshot) bool {
 	switch c.Kind {
-	case cleanup.Cache, cleanup.BuildCache, cleanup.UnusedImages, cleanup.StoppedContainers:
+	case cleanup.Cache, cleanup.BuildCache, cleanup.UnusedImages, cleanup.StoppedContainers,
+		cleanup.ProjectInstalls, cleanup.OldExtensions:
 		return true
+	case cleanup.Model:
+		st, _ := s.Tool("models")
+		return c.Manager == "LM Studio" || c.Manager == "Ollama" && st.Models != nil && st.Models.Ollama != nil && st.Models.Ollama.Path != ""
 	case cleanup.ExtraCopy, cleanup.UnneededPackage:
 		if _, _, ok := brewPackage(c, s); ok {
 			return true
@@ -150,7 +155,9 @@ var dockerPrune = map[cleanup.Kind][]string{
 // finds it, or as its folder; Docker's through its prune commands; a
 // copy through its version manager, or as its folder when the terminal
 // does not find the manager; Homebrew's packages through one brew
-// uninstall, first. Candidates it does not remove are left out. Its check counts
+// uninstall, first; Ollama's models through ollama rm; projects'
+// installs, extensions' old versions and LM Studio's models as their
+// folders. Candidates it does not remove are left out. Its check counts
 // again what they take and says what was freed; docker, nil without an
 // engine, asks Docker.
 func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapshot, env sysenv.Env, target DockerTarget, docker CountDocker) (Plan, error) {
@@ -158,7 +165,7 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 	var done []cleanup.Candidate
 	var brew inventory.PackageManager
 	var pkgs []inventory.SystemPackage
-	removes, pub, versions, admin := false, false, false, false
+	removes, pub, versions, admin, installs, models := false, false, false, false, false, false
 	for i, c := range cands {
 		if !Cleans(c, s) {
 			continue
@@ -179,6 +186,18 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 				continue
 			}
 			steps = []Step{{Argv: append([]string{target.CLI, "--context", target.Context}, dockerPrune[c.Kind]...)}}
+		case cleanup.ProjectInstalls, cleanup.OldExtensions:
+			for _, path := range c.Paths {
+				steps = append(steps, Step{Remove: path})
+			}
+			removes, installs = true, installs || c.Kind == cleanup.ProjectInstalls
+		case cleanup.Model:
+			if c.Manager == "Ollama" {
+				steps = []Step{{Argv: []string{"ollama", "rm", c.ID}}}
+			} else {
+				steps, removes = []Step{{Remove: c.Paths[0]}}, true
+			}
+			models = true
 		default:
 			if m, pkg, ok := brewPackage(c, s); ok {
 				brew, pkgs = m, append(pkgs, pkg)
@@ -226,6 +245,12 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 	}
 	if pub {
 		p.Notes = append(p.Notes, Note{Title: locales.CleanupPubNote(), Text: locales.CleanupPubNoteText()})
+	}
+	if installs {
+		p.Notes = append(p.Notes, Note{Title: locales.CleanupInstallsNote(), Text: locales.CleanupInstallsNoteText()})
+	}
+	if models {
+		p.Notes = append(p.Notes, Note{Title: locales.CleanupModelsNote(), Text: locales.CleanupModelsNoteText()})
 	}
 	if versions {
 		p.Notes = append(p.Notes, Note{Title: locales.CleanupVersionsNote(), Text: locales.CleanupVersionsNoteText()})
@@ -277,6 +302,12 @@ func freed(ctx context.Context, cands []cleanup.Candidate, docker CountDocker) i
 	var n int64
 	for _, c := range cands {
 		before := c.Frees()
+		if c.Kind == cleanup.Model && c.Manager == "Ollama" {
+			// ollama rm succeeded, as the check runs only then; the Linux
+			// service's folder cannot be counted again.
+			n += before
+			continue
+		}
 		switch c.Kind {
 		case cleanup.BuildCache, cleanup.UnusedImages, cleanup.StoppedContainers:
 			if docker == nil || dockerErr != nil {

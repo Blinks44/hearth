@@ -2582,7 +2582,7 @@
   "@cleanupProjectVersionsCaption": {
     "description": "Cleanup side card caption."
   },
-  "cleanupReadOnly": "Hearth offers candidates; it does not claim they are unused. The plan removes caches, Docker's data, copies through their manager and Homebrew's packages; projects, models and copies Hearth cannot remove through their source are not removed from here yet.",
+  "cleanupReadOnly": "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as winget's or rustup's, are not removed from here.",
   "@cleanupReadOnly": {
     "description": "Note under the Cleanup table."
   },
@@ -6051,7 +6051,7 @@
   "@cleanupPlanTitle": {
     "description": "Title of the cleanup plan."
   },
-  "cleanupPlanWhy": "Each tool clears its cache with its own command, Docker prunes what no container uses, versions go through their manager and Homebrew's packages through brew. A cache without a command, or a tool or manager the terminal does not find, is removed as a folder.",
+  "cleanupPlanWhy": "Each tool clears its cache with its own command, Docker prunes what no container uses, versions go through their manager, Homebrew's packages through brew and Ollama's models through ollama rm. A cache without a command, or a tool or manager the terminal does not find, is removed as a folder.",
   "@cleanupPlanWhy": {
     "description": "Under the cleanup plan's title."
   },
@@ -6063,7 +6063,7 @@
   "@cleanupRemoveNote": {
     "description": "Cleanup plan note."
   },
-  "cleanupRemoveNoteText": "Not to the Trash: caches come back by themselves, a version is installed again when needed.",
+  "cleanupRemoveNoteText": "Not to the Trash: what goes comes back by itself or is installed again when needed.",
   "@cleanupRemoveNoteText": {
     "description": "Cleanup plan note text."
   },
@@ -6090,6 +6090,22 @@
   "cleanupBrewNoteText": "If another formula needs one of them, brew uninstall refuses and removes none.",
   "@cleanupBrewNoteText": {
     "description": "Cleanup plan note text: brew uninstall."
+  },
+  "cleanupInstallsNote": "Projects install them again",
+  "@cleanupInstallsNote": {
+    "description": "Cleanup plan note: projects' dependency folders."
+  },
+  "cleanupInstallsNoteText": "When you come back to a project, npm install, pnpm install or uv sync puts its dependencies back from its files.",
+  "@cleanupInstallsNoteText": {
+    "description": "Cleanup plan note text: projects' dependency folders."
+  },
+  "cleanupModelsNote": "Models are downloaded again",
+  "@cleanupModelsNote": {
+    "description": "Cleanup plan note: models."
+  },
+  "cleanupModelsNoteText": "A removed model comes back with ollama pull or from LM Studio's search. Ollama removes its models only while it is running.",
+  "@cleanupModelsNoteText": {
+    "description": "Cleanup plan note text: models."
   },
   "cleanupFreed": "Freed {size}",
   "@cleanupFreed": {

@@ -7732,13 +7732,13 @@ func (msgs Messages) CleanupProjectVersionsCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupProjectVersionsCaption", nil)
 }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. The plan removes caches, Docker's data, copies through t…"
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as win…"
 // in the language the app shows.
 //
 // Note under the Cleanup table.
 func CleanupReadOnly() string { return In(i18n.Locale()).CleanupReadOnly() }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. The plan removes caches, Docker's data, copies through t…"
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as win…"
 // in the language of msgs.
 //
 // Note under the Cleanup table.
@@ -14978,13 +14978,13 @@ func (msgs Messages) CleanupRemoveNote() string {
 	return Catalog.Format(msgs.locale, "cleanupRemoveNote", nil)
 }
 
-// CleanupRemoveNoteText says "Not to the Trash: caches come back by themselves, a version is installed again when needed."
+// CleanupRemoveNoteText says "Not to the Trash: what goes comes back by itself or is installed again when needed."
 // in the language the app shows.
 //
 // Cleanup plan note text.
 func CleanupRemoveNoteText() string { return In(i18n.Locale()).CleanupRemoveNoteText() }
 
-// CleanupRemoveNoteText says "Not to the Trash: caches come back by themselves, a version is installed again when needed."
+// CleanupRemoveNoteText says "Not to the Trash: what goes comes back by itself or is installed again when needed."
 // in the language of msgs.
 //
 // Cleanup plan note text.
@@ -15074,6 +15074,62 @@ func CleanupBrewNoteText() string { return In(i18n.Locale()).CleanupBrewNoteText
 // Cleanup plan note text: brew uninstall.
 func (msgs Messages) CleanupBrewNoteText() string {
 	return Catalog.Format(msgs.locale, "cleanupBrewNoteText", nil)
+}
+
+// CleanupInstallsNote says "Projects install them again"
+// in the language the app shows.
+//
+// Cleanup plan note: projects' dependency folders.
+func CleanupInstallsNote() string { return In(i18n.Locale()).CleanupInstallsNote() }
+
+// CleanupInstallsNote says "Projects install them again"
+// in the language of msgs.
+//
+// Cleanup plan note: projects' dependency folders.
+func (msgs Messages) CleanupInstallsNote() string {
+	return Catalog.Format(msgs.locale, "cleanupInstallsNote", nil)
+}
+
+// CleanupInstallsNoteText says "When you come back to a project, npm install, pnpm install or uv sync puts its dependencies back from its files."
+// in the language the app shows.
+//
+// Cleanup plan note text: projects' dependency folders.
+func CleanupInstallsNoteText() string { return In(i18n.Locale()).CleanupInstallsNoteText() }
+
+// CleanupInstallsNoteText says "When you come back to a project, npm install, pnpm install or uv sync puts its dependencies back from its files."
+// in the language of msgs.
+//
+// Cleanup plan note text: projects' dependency folders.
+func (msgs Messages) CleanupInstallsNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupInstallsNoteText", nil)
+}
+
+// CleanupModelsNote says "Models are downloaded again"
+// in the language the app shows.
+//
+// Cleanup plan note: models.
+func CleanupModelsNote() string { return In(i18n.Locale()).CleanupModelsNote() }
+
+// CleanupModelsNote says "Models are downloaded again"
+// in the language of msgs.
+//
+// Cleanup plan note: models.
+func (msgs Messages) CleanupModelsNote() string {
+	return Catalog.Format(msgs.locale, "cleanupModelsNote", nil)
+}
+
+// CleanupModelsNoteText says "A removed model comes back with ollama pull or from LM Studio's search. Ollama removes its models only while it is ru…"
+// in the language the app shows.
+//
+// Cleanup plan note text: models.
+func CleanupModelsNoteText() string { return In(i18n.Locale()).CleanupModelsNoteText() }
+
+// CleanupModelsNoteText says "A removed model comes back with ollama pull or from LM Studio's search. Ollama removes its models only while it is ru…"
+// in the language of msgs.
+//
+// Cleanup plan note text: models.
+func (msgs Messages) CleanupModelsNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupModelsNoteText", nil)
 }
 
 // CleanupFreed says "Freed {size}"

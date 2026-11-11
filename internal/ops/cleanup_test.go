@@ -29,7 +29,7 @@ func pathWith(t *testing.T, names ...string) sysenv.Env {
 
 // A cache goes through its tool's command when the terminal finds it, or
 // else as its folder; Docker's through prune in the context counted;
-// what the plan does not remove yet is left out.
+// projects' installs and extensions' old versions as their folders.
 func TestCleanupPlan(t *testing.T) {
 	gb := inventory.Usage{Bytes: 2e9}
 	cands := []cleanup.Candidate{
@@ -42,8 +42,9 @@ func TestCleanupPlan(t *testing.T) {
 		{Kind: cleanup.StoppedContainers, Usage: gb},
 		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/c/node"}, Usage: gb},
 		{Kind: cleanup.ProjectInstalls, ID: "node_modules", Paths: []string{"/p/node_modules"}, Usage: gb},
+		{Kind: cleanup.OldExtensions, ID: "VS Code", Paths: []string{"/e/go-0.1", "/e/go-0.2"}, Usage: gb},
 	}
-	titles := []string{"pnpm cache", "npm cache", "Cargo cache", "pub cache", "Build Cache", "Images", "Containers", "Node", "old: node_modules"}
+	titles := []string{"pnpm cache", "npm cache", "Cargo cache", "pub cache", "Build Cache", "Images", "Containers", "Node", "old: node_modules", "VS Code"}
 	env := pathWith(t, "pnpm", "flutter")
 	p, err := CleanupPlan(cands, titles, nil, env, DockerTarget{CLI: "/usr/local/bin/docker", Context: "orbstack"}, nil)
 	if err != nil {
@@ -65,15 +66,18 @@ func TestCleanupPlan(t *testing.T) {
 		"/usr/local/bin/docker --context orbstack builder prune --force",
 		"/usr/local/bin/docker --context orbstack image prune --all --force",
 		"/usr/local/bin/docker --context orbstack container prune --force",
+		"remove /p/node_modules",
+		"remove /e/go-0.1",
+		"remove /e/go-0.2",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("steps\n%q\nwant\n%q", got, want)
 	}
-	if len(p.Changes) != 7 || p.Changes[0] != "− pnpm cache · 2.0 GB" {
+	if len(p.Changes) != 9 || p.Changes[0] != "− pnpm cache · 2.0 GB" {
 		t.Errorf("changes %q", p.Changes)
 	}
-	if len(p.Notes) != 2 {
-		t.Errorf("notes %+v, want the folders' and pub's", p.Notes)
+	if len(p.Notes) != 3 {
+		t.Errorf("notes %+v, want the folders', pub's and the projects'", p.Notes)
 	}
 	// Without an engine Docker's are left out; with nothing left, no plan.
 	p, err = CleanupPlan(cands[4:5], titles[4:5], nil, env, DockerTarget{}, nil)
@@ -252,5 +256,30 @@ func TestCleanupFreedCopies(t *testing.T) {
 	c := cleanup.Candidate{Kind: cleanup.Leftover, Paths: []string{gone, kept}, Usage: inventory.Usage{Bytes: 2e9 + after.Bytes}}
 	if got := freed(t.Context(), []cleanup.Candidate{c}, nil); got != 2e9 {
 		t.Errorf("freed %d, want 2e9", got)
+	}
+}
+
+// Ollama's models go through ollama rm when the terminal has it, LM
+// Studio's as their folders. Ollama's frees all it took once ollama rm
+// succeeded, LM Studio's once its folder is gone.
+func TestCleanupModels(t *testing.T) {
+	folder := filepath.Join(t.TempDir(), "qwen")
+	cands := []cleanup.Candidate{
+		{Kind: cleanup.Model, ID: "llama3.2:latest", Manager: "Ollama", Paths: []string{"/o/manifests/llama3.2/latest"}, Usage: inventory.Usage{Bytes: 2e9}},
+		{Kind: cleanup.Model, ID: "qwen", Manager: "LM Studio", Paths: []string{folder}, Usage: inventory.Usage{Bytes: 3e9}},
+	}
+	withOllama := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "models", Models: &inventory.ModelsState{Ollama: &inventory.ModelApp{Path: "/usr/local/bin/ollama"}}}}}
+	if Cleans(cands[0], nil) || !Cleans(cands[0], withOllama) || !Cleans(cands[1], nil) {
+		t.Errorf("cleans: Ollama's only with ollama, LM Studio's always")
+	}
+	p, err := CleanupPlan(cands, []string{"llama3.2", "qwen"}, withOllama, nil, DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Steps) != 2 || Command(p.Steps[0].Argv) != "ollama rm llama3.2:latest" || p.Steps[1].Remove != folder {
+		t.Errorf("steps %+v", p.Steps)
+	}
+	if got := freed(t.Context(), cands, nil); got != 5e9 {
+		t.Errorf("freed %d, want 5e9", got)
 	}
 }
