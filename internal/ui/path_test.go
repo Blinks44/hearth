@@ -10,6 +10,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 func TestPathPage(t *testing.T) {
@@ -141,5 +142,38 @@ func TestPathFix(t *testing.T) {
 	}
 	if !tt.HasText("Hearth cannot fix this where it is declared: the line adds other folders too, or Hearth cannot tell where the entry comes from") {
 		t.Errorf("no reason: %q", tt.Texts())
+	}
+}
+
+// An entry of the terminal's PATH after another can be put first; the
+// first, a repeat and a missing folder cannot.
+func TestPathFirst(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix paths and startup files")
+	}
+	dir := t.TempDir()
+	a := NewApp()
+	a.Home = dir
+	a.Snapshot = &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+		{Dir: "/opt/homebrew/bin"}, {Dir: dir + "/bin"}, {Dir: "/opt/homebrew/bin"}, {Dir: "/nowhere", Missing: true},
+	}}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + dir, "SHELL=/bin/zsh"}, nil))
+	}
+	a.router.Push(pathPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if n := slices.Index(tt.Texts(), "More"); n < 0 || slices.Contains(tt.Texts()[n+1:], "More") {
+		t.Fatalf("want one menu: %q", tt.Texts())
+	}
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Put first…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Put "+dir+"/bin first in PATH" || a.op.plan.Steps[0].Edit.Path != dir+"/.zshrc" {
+		t.Fatalf("plan %+v", a.op)
 	}
 }

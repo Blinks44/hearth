@@ -216,6 +216,9 @@ type Snapshot struct {
 	// TerminalPath and GUIPath are the entries of the terminal's PATH and
 	// of the one apps started from the Dock or a desktop menu get, in order.
 	TerminalPath, GUIPath []PathEntry `json:",omitempty"`
+	// AppsAgent is the file of Hearth's launch agent, which gives apps the
+	// terminal's PATH as the user signs in, when it is there (macOS).
+	AppsAgent string `json:",omitempty"`
 	// Variables are the tool settings both environments have, by name.
 	Variables []EnvironmentVariable `json:",omitempty"`
 	// Agents are the AI agents Hearth knows, found or not, in its order.

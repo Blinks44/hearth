@@ -6130,5 +6130,137 @@
   "opTagRemove": "for good",
   "@opTagRemove": {
     "description": "Tag of a step that removes a folder."
+  },
+  "pathFirst": "Put first…",
+  "@pathFirst": {
+    "description": "Menu item of a PATH entry that puts it first."
+  },
+  "pathFirstTitle": "Put {dir} first in PATH",
+  "@pathFirstTitle": {
+    "description": "Title of the plan that puts a PATH entry first.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.local/bin"
+      }
+    }
+  },
+  "pathFirstAction": "Put first",
+  "@pathFirstAction": {
+    "description": "Button that runs the plan putting a PATH entry first."
+  },
+  "pathFirstWhy": "A line in Hearth's block at the end of your shell's startup file puts the folder before the rest of PATH, so commands are looked for there first. Your own lines stay as they are. Hearth keeps a copy of the file and checks a new terminal.",
+  "@pathFirstWhy": {
+    "description": "How putting a PATH entry first goes on macOS and Linux."
+  },
+  "pathFirstWhyRegistry": "The entry moves to the start of your user Path in the registry. The computer's Path still comes before it: changing that needs the administrator. The old value goes to the operations log and comes back if the check does not pass.",
+  "@pathFirstWhyRegistry": {
+    "description": "How putting a PATH entry first goes on Windows."
+  },
+  "pathFirstChecked": "A new terminal looks for commands in {dir} before the folders that were ahead of it, the rest in the same order",
+  "@pathFirstChecked": {
+    "description": "What the check after putting a PATH entry first found.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.local/bin"
+      }
+    }
+  },
+  "appsPathSet": "Give apps this PATH…",
+  "@appsPathSet": {
+    "description": "Button that gives apps opened from the Dock the terminal's PATH (macOS)."
+  },
+  "appsPathStop": "Stop giving it…",
+  "@appsPathStop": {
+    "description": "Button that takes back the terminal's PATH given to apps (macOS)."
+  },
+  "appsPathTitle": "Give apps the terminal's PATH",
+  "@appsPathTitle": {
+    "description": "Title of the plan that gives apps the terminal's PATH."
+  },
+  "appsPathWhy": "Apps opened from the Dock, Finder or Spotlight get their PATH from macOS, not from your shell's files. Hearth gives macOS the terminal's PATH now and adds a launch agent that gives it again each time you sign in. This is the PATH as it is now: when the terminal's changes, Hearth offers to give it again.",
+  "@appsPathWhy": {
+    "description": "How giving apps the terminal's PATH goes."
+  },
+  "appsPathReopen": "Open apps again",
+  "@appsPathReopen": {
+    "description": "Note title: open apps keep their PATH."
+  },
+  "appsPathReopenText": "Apps that are open now, Hearth too, keep the PATH they started with until you quit and open them again.",
+  "@appsPathReopenText": {
+    "description": "Note: open apps keep the PATH they started with."
+  },
+  "appsPathLoginItem": "macOS says a background item was added",
+  "@appsPathLoginItem": {
+    "description": "Note title: macOS notifies that a background item was added."
+  },
+  "appsPathLoginItemText": "The notice names launchctl: it is Hearth's agent {label}, which only runs launchctl setenv as you sign in. It is in System Settings › General › Login Items & Extensions, where you can turn it off.",
+  "@appsPathLoginItemText": {
+    "description": "Note: what Hearth's launch agent does and where macOS shows it.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "dev.hearth.path"
+      }
+    }
+  },
+  "appsPathChange": "Apps opened now get the terminal's PATH: {count, plural, one {# entry} other {# entries}}",
+  "@appsPathChange": {
+    "description": "What giving apps the terminal's PATH changed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "appsPathChecked": "macOS gives apps opened now the terminal's PATH: {count, plural, one {# entry} other {# entries}}",
+  "@appsPathChecked": {
+    "description": "What the check after giving apps the terminal's PATH found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "appsPathOther": "macOS gives apps another PATH than the plan set",
+  "@appsPathOther": {
+    "description": "The check found apps get another PATH."
+  },
+  "appsPathStopTitle": "Stop giving apps the terminal's PATH",
+  "@appsPathStopTitle": {
+    "description": "Title of the plan that takes back the PATH given to apps."
+  },
+  "appsPathStopWhy": "Hearth removes its launch agent and the PATH it gave macOS. Apps opened after get the system's PATH again.",
+  "@appsPathStopWhy": {
+    "description": "How taking back the PATH given to apps goes."
+  },
+  "appsPathStopChange": "Apps opened now get the system's PATH",
+  "@appsPathStopChange": {
+    "description": "What taking back the PATH given to apps changed."
+  },
+  "appsPathStopChecked": "macOS gives apps the system's PATH",
+  "@appsPathStopChecked": {
+    "description": "What the check after taking back the PATH found."
+  },
+  "appsPathGiven": "Apps get the terminal's PATH from Hearth's launch agent",
+  "@appsPathGiven": {
+    "description": "Caption on the PATH page when Hearth's launch agent is there."
+  },
+  "pathFirstAhead": "A new terminal still looks for commands in {dirs} before {dir}: lines that run after Hearth's put them first, as version managers do",
+  "@pathFirstAhead": {
+    "description": "The check found other folders still ahead of the one put first.",
+    "placeholders": {
+      "dir": {
+        "type": "String",
+        "example": "~/.local/bin"
+      },
+      "dirs": {
+        "type": "String",
+        "example": "~/.rvm/gems/ruby-3.3.7/bin, ~/.nix-profile/bin"
+      }
+    }
   }
 }

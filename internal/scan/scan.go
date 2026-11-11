@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"slices"
 	"sync"
 	"time"
@@ -219,7 +220,21 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 	tools := detectTools(ctx, r, term, gui, ds)
 	wg.Wait()
 	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
-		TerminalPath: sysenv.Paths(term), GUIPath: sysenv.Paths(gui), Variables: sysenv.Variables(term, gui)}
+		TerminalPath: sysenv.Paths(term), GUIPath: sysenv.Paths(gui), Variables: sysenv.Variables(term, gui),
+		AppsAgent: appsAgent(term.Get("HOME"))}
+}
+
+// appsAgent is the file of Hearth's launch agent for the user of home,
+// "" when it is not there.
+func appsAgent(home string) string {
+	file := sysenv.AppsAgent(home)
+	if file == "" || home == "" {
+		return ""
+	}
+	if _, err := os.Stat(file); err != nil {
+		return ""
+	}
+	return file
 }
 
 // detectTools runs the detectors, a few at once, and returns their states
@@ -247,7 +262,7 @@ func detectTools(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []D
 // systemEnv reads the terminal's environment from the user's shell, and
 // falls back to the app's own when the shell fails.
 func systemEnv(ctx context.Context, r run.Runner) (term, gui sysenv.Env) {
-	gui = sysenv.GUI()
+	gui = sysenv.Apps(ctx, r, sysenv.GUI())
 	term, err := sysenv.Terminal(ctx, r)
 	if err != nil {
 		log.Printf("scan: terminal environment: %v", err)

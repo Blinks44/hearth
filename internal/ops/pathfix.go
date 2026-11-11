@@ -141,3 +141,63 @@ func firsts(path []string, skip func(string) bool) []string {
 	}
 	return out
 }
+
+// firstable reports that the i-th entry of the terminal's PATH is a
+// directory commands could be found in before those of the entries ahead
+// of it: there, named whole, and not a repeat of one of them.
+func firstable(entries []inventory.PathEntry, i int) bool {
+	e := entries[i]
+	return i > 0 && filepath.IsAbs(e.Dir) && !e.Missing &&
+		!slices.ContainsFunc(entries[:i], func(o inventory.PathEntry) bool { return sysenv.SamePath(o.Dir, e.Dir) })
+}
+
+// pathFirstPlan returns the plan of step putting dir first in PATH, after
+// the at directories that stay ahead of it, checked by a new terminal's
+// PATH: dir there, the other directories in the order they were.
+func pathFirstPlan(step Step, why string, entries []inventory.PathEntry, dir string, at int, terminal Terminal) Plan {
+	p := Plan{Title: locales.PathFirstTitle(dir), Why: why, Action: locales.PathFirstAction(), Steps: []Step{step},
+		Changes: []string{"↑ " + dir}}
+	if terminal == nil {
+		return p
+	}
+	var old []string
+	for _, e := range entries {
+		old = append(old, e.Dir)
+	}
+	p.Verify = func(ctx context.Context) (string, error) {
+		env, err := terminal(ctx)
+		if err != nil {
+			return "", err
+		}
+		return checkFirst(old, filepath.SplitList(env.Get("PATH")), dir, at)
+	}
+	return p
+}
+
+// checkFirst says whether new, a terminal's PATH after a plan, finds
+// commands in dir after the at directories ahead of it and in the others
+// in the order old did.
+func checkFirst(old, new []string, dir string, at int) (string, error) {
+	want := firsts(old, func(d string) bool { return sysenv.SamePath(d, dir) })
+	at = min(at, len(want))
+	want = slices.Insert(want, at, filepath.Clean(dir))
+	got := firsts(new, func(string) bool { return false })
+	if i := slices.IndexFunc(got, func(d string) bool { return sysenv.SamePath(d, dir) }); i > at {
+		// Lines run after Hearth's put others before it, as a version
+		// manager's hook does.
+		ahead := got[at:i]
+		if len(ahead) > 3 {
+			ahead = append(ahead[:3:3], "…")
+		}
+		return "", errors.New(locales.PathFirstAhead(dir, strings.Join(ahead, ", ")))
+	}
+	if !slices.EqualFunc(want, got, sysenv.SamePath) {
+		return "", errors.New(locales.PathCheckOrder())
+	}
+	return locales.PathFirstChecked(dir), nil
+}
+
+// firstIndex is the index of dir's first entry in entries, -1 when none.
+func firstIndex(entries []inventory.PathEntry, dir string) int {
+	return slices.IndexFunc(entries, func(e inventory.PathEntry) bool { return sysenv.SamePath(e.Dir, dir) })
+}

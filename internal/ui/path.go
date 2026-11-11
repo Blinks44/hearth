@@ -164,6 +164,13 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 				if a.pathTab == 0 && a.fixable(entries, i) {
 					ui.Button(c.Key("path-fix:"+strconv.Itoa(i)), locales.PathRemove()).Label(locales.PathRemoveNamed(tilde(entry.Dir, a.Home))).OnClick(func() { a.fixPath([]string{entry.Dir}) })
 				}
+				if a.pathTab == 0 && a.BuildPlan != nil && ops.PathFirstable(entries, i, a.Home) {
+					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+						if m.Item(locales.PathFirst()).Chosen() {
+							a.putFirst(entry.Dir)
+						}
+					})
+				}
 				iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(entry.Dir); c.Toast(locales.PathCopied()) })
 			})
 		}
@@ -216,6 +223,34 @@ func (a *App) pathDifferences(c *ui.Context, term, gui []inventory.PathEntry) {
 		}
 		if count == 0 {
 			cardNote(c, locales.EnvPathNoDifference())
+		}
+		if ops.AppsPathSettable && a.BuildPlan != nil {
+			a.appsPath(c, count > 0)
+		}
+	})
+}
+
+// appsPath offers to give apps the terminal's PATH when they get another,
+// and to stop when Hearth's launch agent gives it to them.
+func (a *App) appsPath(c *ui.Context, differs bool) {
+	agent := a.Snapshot.AppsAgent != ""
+	if !differs && !agent {
+		return
+	}
+	pal := Colors(c.Theme())
+	ui.Row(c).Gap(8).Padding(10, 12, 12, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
+		caption := ""
+		if agent {
+			caption = locales.AppsPathGiven()
+		}
+		ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+		if differs {
+			ui.Button(c.Key("apps-path"), locales.AppsPathSet()).OnClick(func() {
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) { return ops.AppsPathPlan(env) }, a.proposeOrSay)
+			})
+		}
+		if agent {
+			ui.Button(c.Key("apps-path-stop"), locales.AppsPathStop()).OnClick(func() { a.Propose(ops.AppsPathStopPlan(a.Home)) })
 		}
 	})
 }
@@ -288,4 +323,17 @@ func (a *App) fixPath(dirs []string) {
 			a.Propose(p)
 		}
 	})
+}
+
+// putFirst offers the plan that puts dir first in the terminal's PATH,
+// once it is made.
+func (a *App) putFirst(dir string) {
+	term := a.Snapshot.TerminalPath
+	a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
+		p, err := ops.PathFirstPlan(term, dir, env, terminal)
+		if errors.Is(err, ops.ErrNoFix) {
+			err = errors.New(locales.PathNoFix())
+		}
+		return p, err
+	}, a.proposeOrSay)
 }

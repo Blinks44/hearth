@@ -15173,3 +15173,329 @@ func OpTagRemove() string { return In(i18n.Locale()).OpTagRemove() }
 func (msgs Messages) OpTagRemove() string {
 	return Catalog.Format(msgs.locale, "opTagRemove", nil)
 }
+
+// PathFirst says "Put first…"
+// in the language the app shows.
+//
+// Menu item of a PATH entry that puts it first.
+func PathFirst() string { return In(i18n.Locale()).PathFirst() }
+
+// PathFirst says "Put first…"
+// in the language of msgs.
+//
+// Menu item of a PATH entry that puts it first.
+func (msgs Messages) PathFirst() string {
+	return Catalog.Format(msgs.locale, "pathFirst", nil)
+}
+
+// PathFirstTitle says "Put {dir} first in PATH"
+// in the language the app shows.
+//
+// Title of the plan that puts a PATH entry first.
+func PathFirstTitle(dir string) string { return In(i18n.Locale()).PathFirstTitle(dir) }
+
+// PathFirstTitle says "Put {dir} first in PATH"
+// in the language of msgs.
+//
+// Title of the plan that puts a PATH entry first.
+func (msgs Messages) PathFirstTitle(dir string) string {
+	return Catalog.Format(msgs.locale, "pathFirstTitle", map[string]any{"dir": dir})
+}
+
+// PathFirstAction says "Put first"
+// in the language the app shows.
+//
+// Button that runs the plan putting a PATH entry first.
+func PathFirstAction() string { return In(i18n.Locale()).PathFirstAction() }
+
+// PathFirstAction says "Put first"
+// in the language of msgs.
+//
+// Button that runs the plan putting a PATH entry first.
+func (msgs Messages) PathFirstAction() string {
+	return Catalog.Format(msgs.locale, "pathFirstAction", nil)
+}
+
+// PathFirstWhy says "A line in Hearth's block at the end of your shell's startup file puts the folder before the rest of PATH, so commands…"
+// in the language the app shows.
+//
+// How putting a PATH entry first goes on macOS and Linux.
+func PathFirstWhy() string { return In(i18n.Locale()).PathFirstWhy() }
+
+// PathFirstWhy says "A line in Hearth's block at the end of your shell's startup file puts the folder before the rest of PATH, so commands…"
+// in the language of msgs.
+//
+// How putting a PATH entry first goes on macOS and Linux.
+func (msgs Messages) PathFirstWhy() string {
+	return Catalog.Format(msgs.locale, "pathFirstWhy", nil)
+}
+
+// PathFirstWhyRegistry says "The entry moves to the start of your user Path in the registry. The computer's Path still comes before it: changing t…"
+// in the language the app shows.
+//
+// How putting a PATH entry first goes on Windows.
+func PathFirstWhyRegistry() string { return In(i18n.Locale()).PathFirstWhyRegistry() }
+
+// PathFirstWhyRegistry says "The entry moves to the start of your user Path in the registry. The computer's Path still comes before it: changing t…"
+// in the language of msgs.
+//
+// How putting a PATH entry first goes on Windows.
+func (msgs Messages) PathFirstWhyRegistry() string {
+	return Catalog.Format(msgs.locale, "pathFirstWhyRegistry", nil)
+}
+
+// PathFirstChecked says "A new terminal looks for commands in {dir} before the folders that were ahead of it, the rest in the same order"
+// in the language the app shows.
+//
+// What the check after putting a PATH entry first found.
+func PathFirstChecked(dir string) string { return In(i18n.Locale()).PathFirstChecked(dir) }
+
+// PathFirstChecked says "A new terminal looks for commands in {dir} before the folders that were ahead of it, the rest in the same order"
+// in the language of msgs.
+//
+// What the check after putting a PATH entry first found.
+func (msgs Messages) PathFirstChecked(dir string) string {
+	return Catalog.Format(msgs.locale, "pathFirstChecked", map[string]any{"dir": dir})
+}
+
+// AppsPathSet says "Give apps this PATH…"
+// in the language the app shows.
+//
+// Button that gives apps opened from the Dock the terminal's PATH (macOS).
+func AppsPathSet() string { return In(i18n.Locale()).AppsPathSet() }
+
+// AppsPathSet says "Give apps this PATH…"
+// in the language of msgs.
+//
+// Button that gives apps opened from the Dock the terminal's PATH (macOS).
+func (msgs Messages) AppsPathSet() string {
+	return Catalog.Format(msgs.locale, "appsPathSet", nil)
+}
+
+// AppsPathStop says "Stop giving it…"
+// in the language the app shows.
+//
+// Button that takes back the terminal's PATH given to apps (macOS).
+func AppsPathStop() string { return In(i18n.Locale()).AppsPathStop() }
+
+// AppsPathStop says "Stop giving it…"
+// in the language of msgs.
+//
+// Button that takes back the terminal's PATH given to apps (macOS).
+func (msgs Messages) AppsPathStop() string {
+	return Catalog.Format(msgs.locale, "appsPathStop", nil)
+}
+
+// AppsPathTitle says "Give apps the terminal's PATH"
+// in the language the app shows.
+//
+// Title of the plan that gives apps the terminal's PATH.
+func AppsPathTitle() string { return In(i18n.Locale()).AppsPathTitle() }
+
+// AppsPathTitle says "Give apps the terminal's PATH"
+// in the language of msgs.
+//
+// Title of the plan that gives apps the terminal's PATH.
+func (msgs Messages) AppsPathTitle() string {
+	return Catalog.Format(msgs.locale, "appsPathTitle", nil)
+}
+
+// AppsPathWhy says "Apps opened from the Dock, Finder or Spotlight get their PATH from macOS, not from your shell's files. Hearth gives m…"
+// in the language the app shows.
+//
+// How giving apps the terminal's PATH goes.
+func AppsPathWhy() string { return In(i18n.Locale()).AppsPathWhy() }
+
+// AppsPathWhy says "Apps opened from the Dock, Finder or Spotlight get their PATH from macOS, not from your shell's files. Hearth gives m…"
+// in the language of msgs.
+//
+// How giving apps the terminal's PATH goes.
+func (msgs Messages) AppsPathWhy() string {
+	return Catalog.Format(msgs.locale, "appsPathWhy", nil)
+}
+
+// AppsPathReopen says "Open apps again"
+// in the language the app shows.
+//
+// Note title: open apps keep their PATH.
+func AppsPathReopen() string { return In(i18n.Locale()).AppsPathReopen() }
+
+// AppsPathReopen says "Open apps again"
+// in the language of msgs.
+//
+// Note title: open apps keep their PATH.
+func (msgs Messages) AppsPathReopen() string {
+	return Catalog.Format(msgs.locale, "appsPathReopen", nil)
+}
+
+// AppsPathReopenText says "Apps that are open now, Hearth too, keep the PATH they started with until you quit and open them again."
+// in the language the app shows.
+//
+// Note: open apps keep the PATH they started with.
+func AppsPathReopenText() string { return In(i18n.Locale()).AppsPathReopenText() }
+
+// AppsPathReopenText says "Apps that are open now, Hearth too, keep the PATH they started with until you quit and open them again."
+// in the language of msgs.
+//
+// Note: open apps keep the PATH they started with.
+func (msgs Messages) AppsPathReopenText() string {
+	return Catalog.Format(msgs.locale, "appsPathReopenText", nil)
+}
+
+// AppsPathLoginItem says "macOS says a background item was added"
+// in the language the app shows.
+//
+// Note title: macOS notifies that a background item was added.
+func AppsPathLoginItem() string { return In(i18n.Locale()).AppsPathLoginItem() }
+
+// AppsPathLoginItem says "macOS says a background item was added"
+// in the language of msgs.
+//
+// Note title: macOS notifies that a background item was added.
+func (msgs Messages) AppsPathLoginItem() string {
+	return Catalog.Format(msgs.locale, "appsPathLoginItem", nil)
+}
+
+// AppsPathLoginItemText says "The notice names launchctl: it is Hearth's agent {label}, which only runs launchctl setenv as you sign in. It is in S…"
+// in the language the app shows.
+//
+// Note: what Hearth's launch agent does and where macOS shows it.
+func AppsPathLoginItemText(label string) string {
+	return In(i18n.Locale()).AppsPathLoginItemText(label)
+}
+
+// AppsPathLoginItemText says "The notice names launchctl: it is Hearth's agent {label}, which only runs launchctl setenv as you sign in. It is in S…"
+// in the language of msgs.
+//
+// Note: what Hearth's launch agent does and where macOS shows it.
+func (msgs Messages) AppsPathLoginItemText(label string) string {
+	return Catalog.Format(msgs.locale, "appsPathLoginItemText", map[string]any{"label": label})
+}
+
+// AppsPathChange says "Apps opened now get the terminal's PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language the app shows.
+//
+// What giving apps the terminal's PATH changed.
+func AppsPathChange(count int) string { return In(i18n.Locale()).AppsPathChange(count) }
+
+// AppsPathChange says "Apps opened now get the terminal's PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language of msgs.
+//
+// What giving apps the terminal's PATH changed.
+func (msgs Messages) AppsPathChange(count int) string {
+	return Catalog.Format(msgs.locale, "appsPathChange", map[string]any{"count": count})
+}
+
+// AppsPathChecked says "macOS gives apps opened now the terminal's PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language the app shows.
+//
+// What the check after giving apps the terminal's PATH found.
+func AppsPathChecked(count int) string { return In(i18n.Locale()).AppsPathChecked(count) }
+
+// AppsPathChecked says "macOS gives apps opened now the terminal's PATH: {count, plural, one {# entry} other {# entries}}"
+// in the language of msgs.
+//
+// What the check after giving apps the terminal's PATH found.
+func (msgs Messages) AppsPathChecked(count int) string {
+	return Catalog.Format(msgs.locale, "appsPathChecked", map[string]any{"count": count})
+}
+
+// AppsPathOther says "macOS gives apps another PATH than the plan set"
+// in the language the app shows.
+//
+// The check found apps get another PATH.
+func AppsPathOther() string { return In(i18n.Locale()).AppsPathOther() }
+
+// AppsPathOther says "macOS gives apps another PATH than the plan set"
+// in the language of msgs.
+//
+// The check found apps get another PATH.
+func (msgs Messages) AppsPathOther() string {
+	return Catalog.Format(msgs.locale, "appsPathOther", nil)
+}
+
+// AppsPathStopTitle says "Stop giving apps the terminal's PATH"
+// in the language the app shows.
+//
+// Title of the plan that takes back the PATH given to apps.
+func AppsPathStopTitle() string { return In(i18n.Locale()).AppsPathStopTitle() }
+
+// AppsPathStopTitle says "Stop giving apps the terminal's PATH"
+// in the language of msgs.
+//
+// Title of the plan that takes back the PATH given to apps.
+func (msgs Messages) AppsPathStopTitle() string {
+	return Catalog.Format(msgs.locale, "appsPathStopTitle", nil)
+}
+
+// AppsPathStopWhy says "Hearth removes its launch agent and the PATH it gave macOS. Apps opened after get the system's PATH again."
+// in the language the app shows.
+//
+// How taking back the PATH given to apps goes.
+func AppsPathStopWhy() string { return In(i18n.Locale()).AppsPathStopWhy() }
+
+// AppsPathStopWhy says "Hearth removes its launch agent and the PATH it gave macOS. Apps opened after get the system's PATH again."
+// in the language of msgs.
+//
+// How taking back the PATH given to apps goes.
+func (msgs Messages) AppsPathStopWhy() string {
+	return Catalog.Format(msgs.locale, "appsPathStopWhy", nil)
+}
+
+// AppsPathStopChange says "Apps opened now get the system's PATH"
+// in the language the app shows.
+//
+// What taking back the PATH given to apps changed.
+func AppsPathStopChange() string { return In(i18n.Locale()).AppsPathStopChange() }
+
+// AppsPathStopChange says "Apps opened now get the system's PATH"
+// in the language of msgs.
+//
+// What taking back the PATH given to apps changed.
+func (msgs Messages) AppsPathStopChange() string {
+	return Catalog.Format(msgs.locale, "appsPathStopChange", nil)
+}
+
+// AppsPathStopChecked says "macOS gives apps the system's PATH"
+// in the language the app shows.
+//
+// What the check after taking back the PATH found.
+func AppsPathStopChecked() string { return In(i18n.Locale()).AppsPathStopChecked() }
+
+// AppsPathStopChecked says "macOS gives apps the system's PATH"
+// in the language of msgs.
+//
+// What the check after taking back the PATH found.
+func (msgs Messages) AppsPathStopChecked() string {
+	return Catalog.Format(msgs.locale, "appsPathStopChecked", nil)
+}
+
+// AppsPathGiven says "Apps get the terminal's PATH from Hearth's launch agent"
+// in the language the app shows.
+//
+// Caption on the PATH page when Hearth's launch agent is there.
+func AppsPathGiven() string { return In(i18n.Locale()).AppsPathGiven() }
+
+// AppsPathGiven says "Apps get the terminal's PATH from Hearth's launch agent"
+// in the language of msgs.
+//
+// Caption on the PATH page when Hearth's launch agent is there.
+func (msgs Messages) AppsPathGiven() string {
+	return Catalog.Format(msgs.locale, "appsPathGiven", nil)
+}
+
+// PathFirstAhead says "A new terminal still looks for commands in {dirs} before {dir}: lines that run after Hearth's put them first, as vers…"
+// in the language the app shows.
+//
+// The check found other folders still ahead of the one put first.
+func PathFirstAhead(dir string, dirs string) string {
+	return In(i18n.Locale()).PathFirstAhead(dir, dirs)
+}
+
+// PathFirstAhead says "A new terminal still looks for commands in {dirs} before {dir}: lines that run after Hearth's put them first, as vers…"
+// in the language of msgs.
+//
+// The check found other folders still ahead of the one put first.
+func (msgs Messages) PathFirstAhead(dir string, dirs string) string {
+	return Catalog.Format(msgs.locale, "pathFirstAhead", map[string]any{"dir": dir, "dirs": dirs})
+}

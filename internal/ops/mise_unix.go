@@ -70,27 +70,20 @@ func hookMise(env sysenv.Env, mise string) ([]Step, error) {
 	var lines []line
 	switch shell := filepath.Base(env.Get("SHELL")); shell {
 	case "zsh":
-		dir := env.Get("ZDOTDIR")
-		if dir == "" {
-			dir = home
-		}
+		rc := rcFile(env, shell)
 		lines = []line{
-			{filepath.Join(dir, ".zshrc"), `eval "$(` + mise + ` activate zsh)"`},
-			{filepath.Join(dir, ".zprofile"), `eval "$(` + mise + ` activate zsh --shims)"`},
+			{rc, `eval "$(` + mise + ` activate zsh)"`},
+			{filepath.Join(filepath.Dir(rc), ".zprofile"), `eval "$(` + mise + ` activate zsh --shims)"`},
 		}
 	case "bash":
 		// The shims go to .profile, which Linux desktop sessions read as
 		// the user signs in, so that apps see them too.
 		lines = []line{
-			{filepath.Join(home, ".bashrc"), `eval "$(` + mise + ` activate bash)"`},
+			{rcFile(env, shell), `eval "$(` + mise + ` activate bash)"`},
 			{filepath.Join(home, ".profile"), `eval "$(` + mise + ` activate bash --shims)"`},
 		}
 	case "fish":
-		config := env.Get("XDG_CONFIG_HOME")
-		if config == "" {
-			config = filepath.Join(home, ".config")
-		}
-		lines = []line{{filepath.Join(config, "fish", "config.fish"), mise + ` activate fish | source`}}
+		lines = []line{{rcFile(env, shell), mise + ` activate fish | source`}}
 	default:
 		return nil, errors.New(locales.MiseShellUnsupported(shell))
 	}
