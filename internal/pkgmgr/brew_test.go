@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -41,6 +42,10 @@ func TestBrew(t *testing.T) {
 	}
 	if p := m.Packages[0]; p.Available != "24.0" || p.Path != filepath.FromSlash("/opt/homebrew/Cellar/node/22.1") || len(p.Dependencies) != 1 {
 		t.Fatalf("%+v", p)
+	}
+	// A tap's formula may list no dependencies: its keg's receipt does.
+	if p := m.Packages[2]; !slices.Equal(p.Dependencies, []string{"custom/tools/tool", "icu4c"}) {
+		t.Errorf("editor's dependencies %q", p.Dependencies)
 	}
 	// node was asked for; tool came as a dependency; casks always are
 	// asked for.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -16,6 +17,12 @@ type brewInfo struct {
 		Installed []struct {
 			Version            string
 			InstalledOnRequest bool `json:"installed_on_request"`
+			// RuntimeDependencies are what the keg was built with, from its
+			// install receipt, as brew uses --installed reads them: a tap's
+			// formula may list no Dependencies, as the tap's optional ones.
+			RuntimeDependencies []struct {
+				FullName string `json:"full_name"`
+			} `json:"runtime_dependencies"`
 		}
 		Dependencies []string
 	}
@@ -75,7 +82,13 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 			if name == "" {
 				name = f.Name
 			}
-			out = append(out, inventory.SystemPackage{Name: name, Version: v.Version, Kind: "formula", Path: path, Dependencies: f.Dependencies,
+			deps := slices.Clone(f.Dependencies)
+			for _, d := range v.RuntimeDependencies {
+				if !slices.Contains(deps, d.FullName) {
+					deps = append(deps, d.FullName)
+				}
+			}
+			out = append(out, inventory.SystemPackage{Name: name, Version: v.Version, Kind: "formula", Path: path, Dependencies: deps,
 				Dependency: !v.InstalledOnRequest})
 		}
 	}
