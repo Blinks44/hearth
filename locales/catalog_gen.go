@@ -7732,13 +7732,13 @@ func (msgs Messages) CleanupProjectVersionsCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupProjectVersionsCaption", nil)
 }
 
-// CleanupReadOnly says "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused."
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. For now the plan removes caches and Docker's data; copie…"
 // in the language the app shows.
 //
 // Note under the Cleanup table.
 func CleanupReadOnly() string { return In(i18n.Locale()).CleanupReadOnly() }
 
-// CleanupReadOnly says "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused."
+// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. For now the plan removes caches and Docker's data; copie…"
 // in the language of msgs.
 //
 // Note under the Cleanup table.
@@ -14906,4 +14906,158 @@ func IssueFix() string { return In(i18n.Locale()).IssueFix() }
 // Button of an issue that opens the plan fixing it.
 func (msgs Messages) IssueFix() string {
 	return Catalog.Format(msgs.locale, "issueFix", nil)
+}
+
+// CleanupRemoveSelected says "Remove selected · {size}"
+// in the language the app shows.
+//
+// Cleanup header button: what the selected free.
+func CleanupRemoveSelected(size string) string { return In(i18n.Locale()).CleanupRemoveSelected(size) }
+
+// CleanupRemoveSelected says "Remove selected · {size}"
+// in the language of msgs.
+//
+// Cleanup header button: what the selected free.
+func (msgs Messages) CleanupRemoveSelected(size string) string {
+	return Catalog.Format(msgs.locale, "cleanupRemoveSelected", map[string]any{"size": size})
+}
+
+// CleanupPlanTitle says "Clean up the selected"
+// in the language the app shows.
+//
+// Title of the cleanup plan.
+func CleanupPlanTitle() string { return In(i18n.Locale()).CleanupPlanTitle() }
+
+// CleanupPlanTitle says "Clean up the selected"
+// in the language of msgs.
+//
+// Title of the cleanup plan.
+func (msgs Messages) CleanupPlanTitle() string {
+	return Catalog.Format(msgs.locale, "cleanupPlanTitle", nil)
+}
+
+// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses. A cache without a command, or …"
+// in the language the app shows.
+//
+// Under the cleanup plan's title.
+func CleanupPlanWhy() string { return In(i18n.Locale()).CleanupPlanWhy() }
+
+// CleanupPlanWhy says "Each tool clears its cache with its own command, Docker prunes what no container uses. A cache without a command, or …"
+// in the language of msgs.
+//
+// Under the cleanup plan's title.
+func (msgs Messages) CleanupPlanWhy() string {
+	return Catalog.Format(msgs.locale, "cleanupPlanWhy", nil)
+}
+
+// CleanupNothing says "Nothing selected that Hearth can remove yet"
+// in the language the app shows.
+//
+// Error: the selection has no candidate the plan removes.
+func CleanupNothing() string { return In(i18n.Locale()).CleanupNothing() }
+
+// CleanupNothing says "Nothing selected that Hearth can remove yet"
+// in the language of msgs.
+//
+// Error: the selection has no candidate the plan removes.
+func (msgs Messages) CleanupNothing() string {
+	return Catalog.Format(msgs.locale, "cleanupNothing", nil)
+}
+
+// CleanupRemoveNote says "Folders are removed for good"
+// in the language the app shows.
+//
+// Cleanup plan note.
+func CleanupRemoveNote() string { return In(i18n.Locale()).CleanupRemoveNote() }
+
+// CleanupRemoveNote says "Folders are removed for good"
+// in the language of msgs.
+//
+// Cleanup plan note.
+func (msgs Messages) CleanupRemoveNote() string {
+	return Catalog.Format(msgs.locale, "cleanupRemoveNote", nil)
+}
+
+// CleanupRemoveNoteText says "Not to the Trash: the tools download what they need again."
+// in the language the app shows.
+//
+// Cleanup plan note text.
+func CleanupRemoveNoteText() string { return In(i18n.Locale()).CleanupRemoveNoteText() }
+
+// CleanupRemoveNoteText says "Not to the Trash: the tools download what they need again."
+// in the language of msgs.
+//
+// Cleanup plan note text.
+func (msgs Messages) CleanupRemoveNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupRemoveNoteText", nil)
+}
+
+// CleanupPubNote says "Global Dart packages go too"
+// in the language the app shows.
+//
+// Cleanup plan note: pub cache clean.
+func CleanupPubNote() string { return In(i18n.Locale()).CleanupPubNote() }
+
+// CleanupPubNote says "Global Dart packages go too"
+// in the language of msgs.
+//
+// Cleanup plan note: pub cache clean.
+func (msgs Messages) CleanupPubNote() string {
+	return Catalog.Format(msgs.locale, "cleanupPubNote", nil)
+}
+
+// CleanupPubNoteText says "pub cache clean also removes the packages activated with dart pub global activate."
+// in the language the app shows.
+//
+// Cleanup plan note text: pub cache clean.
+func CleanupPubNoteText() string { return In(i18n.Locale()).CleanupPubNoteText() }
+
+// CleanupPubNoteText says "pub cache clean also removes the packages activated with dart pub global activate."
+// in the language of msgs.
+//
+// Cleanup plan note text: pub cache clean.
+func (msgs Messages) CleanupPubNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupPubNoteText", nil)
+}
+
+// CleanupFreed says "Freed {size}"
+// in the language the app shows.
+//
+// Cleanup check: the space freed.
+func CleanupFreed(size string) string { return In(i18n.Locale()).CleanupFreed(size) }
+
+// CleanupFreed says "Freed {size}"
+// in the language of msgs.
+//
+// Cleanup check: the space freed.
+func (msgs Messages) CleanupFreed(size string) string {
+	return Catalog.Format(msgs.locale, "cleanupFreed", map[string]any{"size": size})
+}
+
+// OpRemoveStep says "remove {folder}"
+// in the language the app shows.
+//
+// A step that removes a folder for good.
+func OpRemoveStep(folder string) string { return In(i18n.Locale()).OpRemoveStep(folder) }
+
+// OpRemoveStep says "remove {folder}"
+// in the language of msgs.
+//
+// A step that removes a folder for good.
+func (msgs Messages) OpRemoveStep(folder string) string {
+	return Catalog.Format(msgs.locale, "opRemoveStep", map[string]any{"folder": folder})
+}
+
+// OpTagRemove says "for good"
+// in the language the app shows.
+//
+// Tag of a step that removes a folder.
+func OpTagRemove() string { return In(i18n.Locale()).OpTagRemove() }
+
+// OpTagRemove says "for good"
+// in the language of msgs.
+//
+// Tag of a step that removes a folder.
+func (msgs Messages) OpTagRemove() string {
+	return Catalog.Format(msgs.locale, "opTagRemove", nil)
 }

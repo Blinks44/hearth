@@ -45,6 +45,9 @@ type Step struct {
 	// UserPath, in place of Argv, sets the user's Path in the Windows
 	// registry, which comes back as an Edit does.
 	UserPath *UserPathEdit
+	// Remove, in place of Argv, removes this folder and all in it for
+	// good: it does not come back if the plan does not get through.
+	Remove string
 	// Env adds to the plan's environment for this step, as KEY=value.
 	Env []string
 	// Runs, when Argv is a wrapper, is the command it runs, which the
@@ -178,6 +181,25 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
+		if step.Remove != "" {
+			e.printf("remove %s\n", step.Remove)
+			e.emit()
+			err := removeAll(step.Remove)
+			e.mu.Lock()
+			if err != nil {
+				e.end(i, StepFailed, Failed, -1, err.Error())
+			} else {
+				e.state.Steps[i] = Done
+			}
+			e.mu.Unlock()
+			if err != nil {
+				undo()
+				e.emit()
+				return e.snapshot()
+			}
+			e.emit()
+			continue
+		}
 		if step.Edit != nil || step.UserPath != nil {
 			var err error
 			if edit := step.Edit; edit != nil {

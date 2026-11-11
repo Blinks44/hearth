@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -17,28 +20,27 @@ import (
 // cleanupPage is the Cleanup page's path.
 const cleanupPage = "/cleanup"
 
-// caches name the tools' caches by ID, and the command each tool clears
-// its own with, where it has one.
-var caches = map[string]struct{ name, command string }{
-	"npm":        {"npm", "npm cache clean --force"},
-	"pnpm":       {"pnpm", "pnpm store prune"},
-	"yarn":       {"Yarn", "yarn cache clean"},
-	"yarn-berry": {"Yarn Berry", "yarn cache clean --mirror"},
-	"bun":        {"Bun", "bun pm cache rm"},
-	"uv":         {"uv", "uv cache clean"},
-	"pip":        {"pip", "pip cache purge"},
-	"brew":       {"Homebrew", "brew cleanup --prune=all"},
-	"go-mod":     {"Go modules", "go clean -modcache"},
-	"go-build":   {"Go build", "go clean -cache"},
-	"cargo":      {"Cargo", ""},
-	"gradle":     {"Gradle", ""},
-	"maven":      {"Maven", ""},
-	"composer":   {"Composer", "composer clear-cache"},
-	"ccache":     {"ccache", "ccache -C"},
-	"xcode":      {"Xcode DerivedData", ""},
-	"cocoapods":  {"CocoaPods", "pod cache clean --all"},
-	"pub":        {"Flutter pub", "flutter pub cache clean"},
-	"jetbrains":  {"JetBrains", ""},
+// caches name the tools' caches by ID.
+var caches = map[string]string{
+	"npm":        "npm",
+	"pnpm":       "pnpm",
+	"yarn":       "Yarn",
+	"yarn-berry": "Yarn Berry",
+	"bun":        "Bun",
+	"uv":         "uv",
+	"pip":        "pip",
+	"brew":       "Homebrew",
+	"go-mod":     "Go modules",
+	"go-build":   "Go build",
+	"cargo":      "Cargo",
+	"gradle":     "Gradle",
+	"maven":      "Maven",
+	"composer":   "Composer",
+	"ccache":     "ccache",
+	"xcode":      "Xcode DerivedData",
+	"cocoapods":  "CocoaPods",
+	"pub":        "Flutter pub",
+	"jetbrains":  "JetBrains",
 }
 
 // cleanupGroups are the Cleanup page's groups, a tab each after All.
@@ -80,7 +82,6 @@ func freeable(cands []cleanup.Candidate) int64 {
 
 func (a *App) cleanupView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
 		t := c.Theme()
 		pal := Colors(t)
 		cands := a.candidates(c)
@@ -90,6 +91,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				selected = append(selected, cand)
 			}
 		}
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.cleanupButton(c, selected) }})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
@@ -214,6 +216,47 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 	})
 }
 
+// cleanupButton is the header's button that proposes removing the
+// selected candidates the plan removes; nothing when there are none.
+func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
+	if a.BuildPlan == nil || a.Sizes == nil {
+		return
+	}
+	var cands []cleanup.Candidate
+	var titles []string
+	var frees int64
+	for _, cand := range selected {
+		if ops.Cleans(cand.Kind) {
+			cands, titles = append(cands, cand), append(titles, a.candidateTitle(cand))
+			frees += cand.Frees()
+		}
+	}
+	if len(cands) == 0 {
+		return
+	}
+	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(formatBytes(frees))).OnClick(func() {
+		target, snap, count := a.dockerTarget(), a.Snapshot, a.CountDocker
+		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+			var docker ops.CountDocker
+			if count != nil {
+				docker = func(ctx context.Context) ([]inventory.DockerUsage, error) { return count(ctx, env, snap) }
+			}
+			return ops.CleanupPlan(cands, titles, env, target, docker)
+		}, a.proposeOrSay)
+	})
+}
+
+// dockerTarget is the terminal's Docker CLI and its selected context,
+// which Docker's candidates were counted in.
+func (a *App) dockerTarget() ops.DockerTarget {
+	st, _ := a.Snapshot.Tool("docker")
+	i := inventory.TerminalCopy(st.Installations)
+	if i < 0 || st.Docker == nil {
+		return ops.DockerTarget{}
+	}
+	return ops.DockerTarget{CLI: st.Installations[i].Path, Context: st.Docker.Selected}
+}
+
 // candidateRow is a candidate in the table: its check box, what it is and
 // why Hearth offers it, and the space it frees.
 func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
@@ -275,8 +318,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 	var parts []string
 	switch cand.Kind {
 	case cleanup.Cache:
-		if cmd := caches[cand.ID].command; cmd != "" {
-			return cmd
+		if argv := ops.CacheCommand(cand.ID); argv != nil {
+			return ops.Command(argv)
 		}
 		return tilde(cand.Paths[0], a.Home)
 	case cleanup.BuildCache:
@@ -350,8 +393,8 @@ func toolName(id string) string {
 }
 
 func cacheName(id string) string {
-	if c, ok := caches[id]; ok {
-		return c.name
+	if name, ok := caches[id]; ok {
+		return name
 	}
 	return id
 }

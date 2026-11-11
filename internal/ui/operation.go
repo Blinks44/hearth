@@ -321,6 +321,9 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				if edit {
 					command = locales.OpEditStep(tilde(e.Path, home))
 				}
+				if step.Remove != "" {
+					command = locales.OpRemoveStep(tilde(step.Remove, home))
+				}
 				if step.Note != "" {
 					command += "  ·  " + step.Note
 				}
@@ -330,6 +333,9 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				}
 				if edit && s.Current < 0 {
 					aiTag(c, locales.OpTagFile(), pal.Muted, t.TextMuted)
+				}
+				if step.Remove != "" && s.Current < 0 {
+					aiTag(c, locales.OpTagRemove(), pal.WarningSoft, pal.WarningText)
 				}
 				if s.Current >= 0 {
 					label, bg, fg := stepTag(c, status)

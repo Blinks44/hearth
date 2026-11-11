@@ -2582,7 +2582,7 @@
   "@cleanupProjectVersionsCaption": {
     "description": "Cleanup side card caption."
   },
-  "cleanupReadOnly": "Removing comes with change plans. Hearth offers candidates; it does not claim they are unused.",
+  "cleanupReadOnly": "Hearth offers candidates; it does not claim they are unused. For now the plan removes caches and Docker's data; copies, projects and models are not removed from here yet.",
   "@cleanupReadOnly": {
     "description": "Note under the Cleanup table."
   },
@@ -6036,5 +6036,67 @@
   "issueFix": "Fix…",
   "@issueFix": {
     "description": "Button of an issue that opens the plan fixing it."
+  },
+  "cleanupRemoveSelected": "Remove selected · {size}",
+  "@cleanupRemoveSelected": {
+    "description": "Cleanup header button: what the selected free.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "19.7 GB"
+      }
+    }
+  },
+  "cleanupPlanTitle": "Clean up the selected",
+  "@cleanupPlanTitle": {
+    "description": "Title of the cleanup plan."
+  },
+  "cleanupPlanWhy": "Each tool clears its cache with its own command, Docker prunes what no container uses. A cache without a command, or whose tool the terminal does not find, is removed as a folder.",
+  "@cleanupPlanWhy": {
+    "description": "Under the cleanup plan's title."
+  },
+  "cleanupNothing": "Nothing selected that Hearth can remove yet",
+  "@cleanupNothing": {
+    "description": "Error: the selection has no candidate the plan removes."
+  },
+  "cleanupRemoveNote": "Folders are removed for good",
+  "@cleanupRemoveNote": {
+    "description": "Cleanup plan note."
+  },
+  "cleanupRemoveNoteText": "Not to the Trash: the tools download what they need again.",
+  "@cleanupRemoveNoteText": {
+    "description": "Cleanup plan note text."
+  },
+  "cleanupPubNote": "Global Dart packages go too",
+  "@cleanupPubNote": {
+    "description": "Cleanup plan note: pub cache clean."
+  },
+  "cleanupPubNoteText": "pub cache clean also removes the packages activated with dart pub global activate.",
+  "@cleanupPubNoteText": {
+    "description": "Cleanup plan note text: pub cache clean."
+  },
+  "cleanupFreed": "Freed {size}",
+  "@cleanupFreed": {
+    "description": "Cleanup check: the space freed.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "19.7 GB"
+      }
+    }
+  },
+  "opRemoveStep": "remove {folder}",
+  "@opRemoveStep": {
+    "description": "A step that removes a folder for good.",
+    "placeholders": {
+      "folder": {
+        "type": "String",
+        "example": "~/Library/Caches/pip"
+      }
+    }
+  },
+  "opTagRemove": "for good",
+  "@opTagRemove": {
+    "description": "Tag of a step that removes a folder."
   }
 }

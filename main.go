@@ -97,6 +97,9 @@ func main() {
 			a.JournalPath = filepath.Join(logs, "operations.log")
 		}
 		a.DetectTool = scanner.Detect
+		a.CountDocker = func(ctx context.Context, env sysenv.Env, s *inventory.Snapshot) ([]inventory.DockerUsage, error) {
+			return disk.Docker(ctx, run.Exec{}, env, s)
+		}
 		a.DetectAgent = scanner.Agent
 		a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
 			env := scanner.Terminal()

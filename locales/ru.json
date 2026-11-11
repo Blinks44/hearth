@@ -639,7 +639,7 @@
   "cleanupSystemCaption": "они нужны операционной системе",
   "cleanupProjectVersions": "Версии проектов",
   "cleanupProjectVersionsCaption": "их просят файлы ваших проектов",
-  "cleanupReadOnly": "Удаление появится вместе с планом изменений. Hearth предлагает кандидатов и не утверждает, что они не используются.",
+  "cleanupReadOnly": "Hearth предлагает кандидатов и не утверждает, что они не используются. Пока план убирает кэши и данные Docker; копии, проекты и модели отсюда ещё не удаляются.",
   "cleanupWaiting": "Размеры подсчитываются после проверки.",
   "cleanupEmpty": "Убирать нечего: ни кэшей, ни лишних копий, ни остатков.",
   "cleanupNone": "Подходящих кандидатов нет.",
@@ -1142,5 +1142,16 @@
   "mobileInstallFlutter": "iOS и Android из одного кода",
   "mobileInstallNote": "Hearth не ставит их сам: установщики большие и по ходу задают вопросы. После установки Hearth найдёт их при следующей проверке.",
   "mobileInstallOpen": "Открыть",
-  "issueFix": "Исправить…"
+  "issueFix": "Исправить…",
+  "cleanupRemoveSelected": "Убрать выбранное · {size}",
+  "cleanupPlanTitle": "Убрать выбранное",
+  "cleanupPlanWhy": "Каждый инструмент чистит кэш своей командой, Docker убирает то, что не нужно контейнерам. Кэш без своей команды или без инструмента в терминале удаляется как папка.",
+  "cleanupNothing": "Среди выбранного нет того, что Hearth уже умеет убирать",
+  "cleanupRemoveNote": "Папки удаляются насовсем",
+  "cleanupRemoveNoteText": "Не в Корзину: инструменты сами скачают нужное заново.",
+  "cleanupPubNote": "Глобальные пакеты Dart тоже удалятся",
+  "cleanupPubNoteText": "pub cache clean удаляет и пакеты, подключённые через dart pub global activate.",
+  "cleanupFreed": "Освобождено {size}",
+  "opRemoveStep": "удалить {folder}",
+  "opTagRemove": "насовсем"
 }

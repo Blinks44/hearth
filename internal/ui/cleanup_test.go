@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -8,7 +10,9 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // cleanupApp is a computer with the design's candidates: caches, an extra
@@ -124,4 +128,40 @@ func TestCleanupNarrowRussian(t *testing.T) {
 	screenshot(t, tt, "cleanup-narrow-ru")
 	hasTexts(t, tt, "Уборка", "КЭШИ · ВОССТАНОВЯТСЯ САМИ", "Кэш pnpm", "6,4 ГБ", "9 кандидатов", "4 кандидата",
 		"nvm не подключён к шеллу · внутри 2 версии Node.js · проекты не просят", "Не предлагаем")
+}
+
+// The header's button removes the selected the plan removes, which the
+// plan made with the terminal's environment lists a step each: the
+// command of a cache the terminal finds, the folder of one it does not,
+// and Docker's prune in the context counted.
+func TestCleanupRemove(t *testing.T) {
+	a := cleanupApp()
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker",
+		Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
+		Docker:        &inventory.DockerState{Selected: "orbstack"}})
+	bin := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bin, "pnpm"+exeSuffix), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"PATH=" + bin}, nil))
+	}
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	// An extra copy is not removed from here yet: the button leaves it out.
+	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Remove selected · 17.2 GB"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !a.op.open {
+		t.Fatalf("plan %+v, error %q", a.op, a.planErr)
+	}
+	screenshot(t, tt, "cleanup-plan")
+	hasTexts(t, tt, "Clean up the selected", "pnpm store prune", "remove ~/.bun/install/cache", "remove ~/.cache/uv",
+		"/usr/local/bin/docker --context orbstack builder prune --force", "for good", "Folders are removed for good")
 }

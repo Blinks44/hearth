@@ -141,6 +141,10 @@ type App struct {
 	// DetectTool finds a tool again, as a scan would, for an operation's
 	// check; it runs on the operation's goroutine.
 	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)
+	// CountDocker asks the Docker engine of s, with the terminal's env,
+	// what pruning would free, for what a cleanup freed; it runs on the
+	// operation's goroutine.
+	CountDocker func(ctx context.Context, env sysenv.Env, s *inventory.Snapshot) ([]inventory.DockerUsage, error)
 	// SkillBackups is the folder copies of skills move to when they are
 	// merged; "" offers no merge.
 	SkillBackups string
