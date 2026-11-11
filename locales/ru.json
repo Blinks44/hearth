@@ -300,7 +300,7 @@
   "tagStub": "заглушка",
   "stubStoreWarning": "{path} — не Python, а заглушка Microsoft Store: если копии перед ней пропадут из PATH, команда откроет Store вместо ошибки.",
   "stubStoreFirstWarning": "{path} — не Python, а заглушка Microsoft Store, и она первая в PATH: команда python открывает Store.",
-  "stubCltWarning": "{path} — заглушка: без Xcode Command Line Tools она предлагает их установить вместо запуска Python.",
+  "stubCltWarning": "{path} — заглушка: без Xcode Command Line Tools она предлагает их установить вместо запуска {command}.",
   "pythonSystemNote": "Системный Python нужен самой ОС: Hearth его не удаляет и не обновляет.",
   "pythonTools": "Инструменты",
   "noPythonTools": "Нет инструментов из uv tool или pipx",
@@ -1109,5 +1109,16 @@
   "mcpRemove": "Убрать у {agent}…",
   "mcpOnFor": "Включён: {agent}",
   "mcpCheckOn": "{name} включён у {agent}",
-  "mcpCheckOff": "{name} выключен у {agent}"
+  "mcpCheckOff": "{name} выключен у {agent}",
+  "compilerInstallTitle": "Установить компилятор C и C++",
+  "compilerWhyMac": "Command Line Tools ставит сама macOS в своём окне: clang, make, git и SDK. Hearth ждёт, пока установщик закончит.",
+  "compilerStepMac": "откроет установщик Apple",
+  "compilerWhyLinux": "Через {manager}: gcc, g++, make и заголовки, с которыми собираются программы на C.",
+  "compilerWhyWindows": "Visual Studio Build Tools через WinGet с набором для C++: компилятор MSVC и Windows SDK. Установщик скачает несколько гигабайт и покажет ход в своём окне.",
+  "compilerNoteWindows": "Установщик Visual Studio сам попросит права администратора через UAC.",
+  "compilerCheckMissing": "Компилятор C пока не найден",
+  "compilerCheckFound": "Найден {name}",
+  "opCheckStopped": "Вы остановили проверку: шаги выполнены, их результат не проверен.",
+  "compilerNoteMac": "Установщик Apple",
+  "compilerNoteMacText": "Нажмите в его окне «Установить» и примите лицензию. Hearth проверяет, пока инструменты не появятся; если закроете установщик, остановите операцию."
 }

@@ -50,16 +50,30 @@ func TestCppPage(t *testing.T) {
 		"Toolset", "Command Line Tools 16.2.0", "make 3.81",
 		"Cache 1.2 GB", "~/Library/Caches/ccache · in Cleanup", "Connected to CMake", "CMAKE_C_COMPILER_LAUNCHER=ccache",
 		"Variables", "not set · cc → clang", "not set · SDK of Command Line Tools")
+	if tt.HasText("Install the C and C++ compiler") {
+		t.Error("offers a compiler beside one")
+	}
 }
 
-// Without a copy or a toolset the page says C/C++ is not installed.
+// Without a copy or a toolset the page says C/C++ is not installed and
+// offers the OS's compiler.
 func TestCppPageEmpty(t *testing.T) {
 	a := NewApp()
-	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "cpp", Cpp: &inventory.CppState{Command: "cc"}}}}
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{
+		{Tool: "cpp", Cpp: &inventory.CppState{Command: "cc"}},
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}, {ID: "winget", Name: "WinGet", Path: "winget"}}},
+	}}
 	a.router.Push(cppPage)
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	if !tt.HasText("C/C++ is not installed on this computer") {
 		t.Errorf("texts %q", tt.Texts())
+	}
+	if err := tt.Click("Install the C and C++ compiler"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Install the C and C++ compiler" || len(a.op.plan.Steps) != 1 {
+		t.Fatalf("plan %+v", a.op)
 	}
 }

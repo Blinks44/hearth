@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -140,6 +141,9 @@ func operationCaption(op *operation) string {
 		return locales.OpFailed(n, why)
 	case s.Phase == ops.NotVerified:
 		return locales.OpNotVerified(s.Err)
+	}
+	if !slices.Contains(s.Steps, ops.StepStopped) {
+		return locales.OpCheckStopped()
 	}
 	return locales.OpStopped(n)
 }
@@ -454,7 +458,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 	case !op.state.Phase.Over():
 		ui.Button(c.Key("op-hide"), locales.OpHide()).OnClick(hide)
 		ui.Button(c.Key("op-stop"), locales.OpStop()).TextColor(c.Theme().Danger).
-			Disabled(op.state.Phase != ops.Running).OnClick(func() { op.stop() })
+			Disabled(op.state.Phase.Over()).OnClick(func() { op.stop() })
 	case op.state.Phase == ops.Succeeded:
 		if a.JournalPath != "" && a.Shell != nil {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
@@ -492,7 +496,7 @@ func (a *App) operationToast(c *ui.Context, op *operation) {
 					ui.Row(c).Gap(8).Children(func() {
 						ui.Button(c.Key("op-toast-show"), locales.OpShow()).OnClick(func() { op.open = true })
 						ui.Button(c.Key("op-toast-stop"), locales.OpStop()).
-							Disabled(op.state.Phase != ops.Running).OnClick(func() { op.stop() })
+							Disabled(op.state.Phase.Over()).OnClick(func() { op.stop() })
 					})
 				})
 			})

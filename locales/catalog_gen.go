@@ -4314,20 +4314,22 @@ func (msgs Messages) StubStoreFirstWarning(path string) string {
 	return Catalog.Format(msgs.locale, "stubStoreFirstWarning", map[string]any{"path": path})
 }
 
-// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python."
+// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running {command}."
 // in the language the app shows.
 //
-// Warning: macOS's python3 stub is in PATH while the Command Line Tools are
-// missing.
-func StubCltWarning(path string) string { return In(i18n.Locale()).StubCltWarning(path) }
+// Warning: a macOS stub, as /usr/bin/python3 or /usr/bin/cc, is in PATH
+// while the Command Line Tools are missing.
+func StubCltWarning(path string, command string) string {
+	return In(i18n.Locale()).StubCltWarning(path, command)
+}
 
-// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python."
+// StubCltWarning says "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running {command}."
 // in the language of msgs.
 //
-// Warning: macOS's python3 stub is in PATH while the Command Line Tools are
-// missing.
-func (msgs Messages) StubCltWarning(path string) string {
-	return Catalog.Format(msgs.locale, "stubCltWarning", map[string]any{"path": path})
+// Warning: a macOS stub, as /usr/bin/python3 or /usr/bin/cc, is in PATH
+// while the Command Line Tools are missing.
+func (msgs Messages) StubCltWarning(path string, command string) string {
+	return Catalog.Format(msgs.locale, "stubCltWarning", map[string]any{"path": path, "command": command})
 }
 
 // PythonSystemNote says "The system's Python is needed by the OS itself: Hearth does not remove or update it."
@@ -14440,4 +14442,158 @@ func McpCheckOff(name string, agent string) string { return In(i18n.Locale()).Mc
 // What the check of turning a server off found.
 func (msgs Messages) McpCheckOff(name string, agent string) string {
 	return Catalog.Format(msgs.locale, "mcpCheckOff", map[string]any{"name": name, "agent": agent})
+}
+
+// CompilerInstallTitle says "Install the C and C++ compiler"
+// in the language the app shows.
+//
+// Title of the plan that installs the OS's C and C++ compiler.
+func CompilerInstallTitle() string { return In(i18n.Locale()).CompilerInstallTitle() }
+
+// CompilerInstallTitle says "Install the C and C++ compiler"
+// in the language of msgs.
+//
+// Title of the plan that installs the OS's C and C++ compiler.
+func (msgs Messages) CompilerInstallTitle() string {
+	return Catalog.Format(msgs.locale, "compilerInstallTitle", nil)
+}
+
+// CompilerWhyMac says "macOS installs the Command Line Tools itself, in its own window: clang, make, git and the SDK. Hearth waits until the…"
+// in the language the app shows.
+//
+// How the Command Line Tools install on macOS.
+func CompilerWhyMac() string { return In(i18n.Locale()).CompilerWhyMac() }
+
+// CompilerWhyMac says "macOS installs the Command Line Tools itself, in its own window: clang, make, git and the SDK. Hearth waits until the…"
+// in the language of msgs.
+//
+// How the Command Line Tools install on macOS.
+func (msgs Messages) CompilerWhyMac() string {
+	return Catalog.Format(msgs.locale, "compilerWhyMac", nil)
+}
+
+// CompilerStepMac says "opens Apple's installer"
+// in the language the app shows.
+//
+// What the xcode-select --install step does.
+func CompilerStepMac() string { return In(i18n.Locale()).CompilerStepMac() }
+
+// CompilerStepMac says "opens Apple's installer"
+// in the language of msgs.
+//
+// What the xcode-select --install step does.
+func (msgs Messages) CompilerStepMac() string {
+	return Catalog.Format(msgs.locale, "compilerStepMac", nil)
+}
+
+// CompilerWhyLinux says "Through {manager}: gcc, g++, make and the headers C programs build with."
+// in the language the app shows.
+//
+// How the C and C++ compiler installs on Linux.
+func CompilerWhyLinux(manager string) string { return In(i18n.Locale()).CompilerWhyLinux(manager) }
+
+// CompilerWhyLinux says "Through {manager}: gcc, g++, make and the headers C programs build with."
+// in the language of msgs.
+//
+// How the C and C++ compiler installs on Linux.
+func (msgs Messages) CompilerWhyLinux(manager string) string {
+	return Catalog.Format(msgs.locale, "compilerWhyLinux", map[string]any{"manager": manager})
+}
+
+// CompilerWhyWindows says "Visual Studio Build Tools through WinGet, with the C++ workload: the MSVC compiler and the Windows SDK. The installer…"
+// in the language the app shows.
+//
+// How the C and C++ compiler installs on Windows.
+func CompilerWhyWindows() string { return In(i18n.Locale()).CompilerWhyWindows() }
+
+// CompilerWhyWindows says "Visual Studio Build Tools through WinGet, with the C++ workload: the MSVC compiler and the Windows SDK. The installer…"
+// in the language of msgs.
+//
+// How the C and C++ compiler installs on Windows.
+func (msgs Messages) CompilerWhyWindows() string {
+	return Catalog.Format(msgs.locale, "compilerWhyWindows", nil)
+}
+
+// CompilerNoteWindows says "The Visual Studio installer asks for the administrator through UAC itself."
+// in the language the app shows.
+//
+// Note of the Build Tools plan: UAC.
+func CompilerNoteWindows() string { return In(i18n.Locale()).CompilerNoteWindows() }
+
+// CompilerNoteWindows says "The Visual Studio installer asks for the administrator through UAC itself."
+// in the language of msgs.
+//
+// Note of the Build Tools plan: UAC.
+func (msgs Messages) CompilerNoteWindows() string {
+	return Catalog.Format(msgs.locale, "compilerNoteWindows", nil)
+}
+
+// CompilerCheckMissing says "No C compiler found yet"
+// in the language the app shows.
+//
+// Check after installing the compiler: none found.
+func CompilerCheckMissing() string { return In(i18n.Locale()).CompilerCheckMissing() }
+
+// CompilerCheckMissing says "No C compiler found yet"
+// in the language of msgs.
+//
+// Check after installing the compiler: none found.
+func (msgs Messages) CompilerCheckMissing() string {
+	return Catalog.Format(msgs.locale, "compilerCheckMissing", nil)
+}
+
+// CompilerCheckFound says "Found {name}"
+// in the language the app shows.
+//
+// Check after installing the compiler: what was found.
+func CompilerCheckFound(name string) string { return In(i18n.Locale()).CompilerCheckFound(name) }
+
+// CompilerCheckFound says "Found {name}"
+// in the language of msgs.
+//
+// Check after installing the compiler: what was found.
+func (msgs Messages) CompilerCheckFound(name string) string {
+	return Catalog.Format(msgs.locale, "compilerCheckFound", map[string]any{"name": name})
+}
+
+// OpCheckStopped says "You stopped the check: the steps ran, their result was not checked."
+// in the language the app shows.
+//
+// Caption of an operation stopped while its result was checked.
+func OpCheckStopped() string { return In(i18n.Locale()).OpCheckStopped() }
+
+// OpCheckStopped says "You stopped the check: the steps ran, their result was not checked."
+// in the language of msgs.
+//
+// Caption of an operation stopped while its result was checked.
+func (msgs Messages) OpCheckStopped() string {
+	return Catalog.Format(msgs.locale, "opCheckStopped", nil)
+}
+
+// CompilerNoteMac says "Apple's installer"
+// in the language the app shows.
+//
+// Title of the note on macOS's Command Line Tools installer.
+func CompilerNoteMac() string { return In(i18n.Locale()).CompilerNoteMac() }
+
+// CompilerNoteMac says "Apple's installer"
+// in the language of msgs.
+//
+// Title of the note on macOS's Command Line Tools installer.
+func (msgs Messages) CompilerNoteMac() string {
+	return Catalog.Format(msgs.locale, "compilerNoteMac", nil)
+}
+
+// CompilerNoteMacText says "Click Install in its window and accept the license. Hearth checks for the tools until they are there; if you close th…"
+// in the language the app shows.
+//
+// What to do in macOS's Command Line Tools installer.
+func CompilerNoteMacText() string { return In(i18n.Locale()).CompilerNoteMacText() }
+
+// CompilerNoteMacText says "Click Install in its window and accept the license. Hearth checks for the tools until they are there; if you close th…"
+// in the language of msgs.
+//
+// What to do in macOS's Command Line Tools installer.
+func (msgs Messages) CompilerNoteMacText() string {
+	return Catalog.Format(msgs.locale, "compilerNoteMacText", nil)
 }

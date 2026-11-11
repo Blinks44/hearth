@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -255,6 +256,23 @@ func TestExecuteRestoresEdits(t *testing.T) {
 	got = Execute(t.Context(), f, p, &strings.Builder{}, func(State) {})
 	if got.Phase != Succeeded || len(got.Restored) != 0 {
 		t.Fatalf("phase %d, err %q, restored %q", got.Phase, got.Err, got.Restored)
+	}
+	checkFile(t, zshrc, Block("a\n", "b"), 0o644)
+}
+
+// Stopping the check after the steps leaves the edit: the check did not
+// fail.
+func TestExecuteStoppedCheckKeepsEdits(t *testing.T) {
+	zshrc := filepath.Join(t.TempDir(), ".zshrc")
+	if err := os.WriteFile(zshrc, []byte("a\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	p := Plan{Title: "Fix PATH", Steps: []Step{{Edit: &FileEdit{Path: zshrc, Before: "a\n", After: Block("a\n", "b")}}},
+		Verify: func(context.Context) (string, error) { cancel(); return "", errors.New("not yet") }}
+	got := Execute(ctx, &run.Fake{}, p, &strings.Builder{}, func(State) {})
+	if got.Phase != Stopped || len(got.Restored) != 0 || got.Steps[0] != Done {
+		t.Fatalf("phase %d, steps %v, restored %q", got.Phase, got.Steps, got.Restored)
 	}
 	checkFile(t, zshrc, Block("a\n", "b"), 0o644)
 }

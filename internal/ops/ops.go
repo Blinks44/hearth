@@ -99,7 +99,7 @@ const (
 	Succeeded
 	Failed      // a step failed; those after it did not run
 	NotVerified // the steps ran but the check found otherwise
-	Stopped     // the user stopped it
+	Stopped     // the user stopped a step, or the check after them all
 )
 
 // Over reports that the execution ended.
@@ -274,7 +274,9 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		phase := e.state.Phase
 		e.mu.Unlock()
 		e.printf("verify: %s%s\n", found, errText(err))
-		if phase != Succeeded {
+		// Stopping the check is not its failing: what the steps did
+		// stays, unchecked.
+		if phase == NotVerified {
 			undo()
 		}
 	} else {

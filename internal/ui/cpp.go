@@ -9,6 +9,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -22,7 +23,11 @@ var cppCards = []string{"make", "pkg-config", "ccache"}
 // terminal finds cc, the OS's toolset, ccache and the build variables.
 func (a *App) cppView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if plan, ok := a.compilerPlan(); ok {
+				ui.PrimaryButton(c.Key("compiler-install"), plan.Title).OnClick(func() { a.Propose(plan) })
+			}
+		}})
 		st, _ := a.Snapshot.Tool("cpp")
 		s := st.Cpp
 		if st.Err != "" || s == nil || len(s.Tools) == 0 && s.Base == nil && len(listed(st.Installations)) == 0 {
@@ -64,6 +69,20 @@ func (a *App) cppView(c *ui.Context, p page) {
 			})
 		})
 	})
+}
+
+// compilerPlan is the plan that installs the OS's C and C++ compiler,
+// when the scan found none.
+func (a *App) compilerPlan() (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("cpp")
+	if !ok || st.Err != "" || ops.CompilerFound(st) {
+		return ops.Plan{}, false
+	}
+	var managers []inventory.PackageManager
+	if pm, ok := a.Snapshot.Tool("packages"); ok {
+		managers = pm.PackageManagers
+	}
+	return ops.CompilerPlan(managers, a.detect("cpp"))
 }
 
 // cppHeader is the logo, the toolset and where the other tools come from,

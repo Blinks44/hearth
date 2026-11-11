@@ -784,7 +784,7 @@ func stubWarning(ins []inventory.Installation, entries []int, home string) strin
 				}
 				return locales.StubStoreWarning(tilde(in.Path, home))
 			}
-			return locales.StubCltWarning(in.Path)
+			return locales.StubCltWarning(in.Path, filepath.Base(in.Path))
 		}
 	}
 	return ""

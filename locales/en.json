@@ -1822,13 +1822,17 @@
       }
     }
   },
-  "stubCltWarning": "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running Python.",
+  "stubCltWarning": "{path} is a stub: without Xcode's Command Line Tools it offers to install them instead of running {command}.",
   "@stubCltWarning": {
-    "description": "Warning: macOS's python3 stub is in PATH while the Command Line Tools are missing.",
+    "description": "Warning: a macOS stub, as /usr/bin/python3 or /usr/bin/cc, is in PATH while the Command Line Tools are missing.",
     "placeholders": {
       "path": {
         "type": "String",
         "example": "/usr/bin/python3"
+      },
+      "command": {
+        "type": "String",
+        "example": "python3"
       }
     }
   },
@@ -5846,5 +5850,61 @@
         "example": "OpenCode"
       }
     }
+  },
+  "compilerInstallTitle": "Install the C and C++ compiler",
+  "@compilerInstallTitle": {
+    "description": "Title of the plan that installs the OS's C and C++ compiler."
+  },
+  "compilerWhyMac": "macOS installs the Command Line Tools itself, in its own window: clang, make, git and the SDK. Hearth waits until the installer is done.",
+  "@compilerWhyMac": {
+    "description": "How the Command Line Tools install on macOS."
+  },
+  "compilerStepMac": "opens Apple's installer",
+  "@compilerStepMac": {
+    "description": "What the xcode-select --install step does."
+  },
+  "compilerWhyLinux": "Through {manager}: gcc, g++, make and the headers C programs build with.",
+  "@compilerWhyLinux": {
+    "description": "How the C and C++ compiler installs on Linux.",
+    "placeholders": {
+      "manager": {
+        "type": "String",
+        "example": "APT"
+      }
+    }
+  },
+  "compilerWhyWindows": "Visual Studio Build Tools through WinGet, with the C++ workload: the MSVC compiler and the Windows SDK. The installer downloads several gigabytes and shows its progress in its own window.",
+  "@compilerWhyWindows": {
+    "description": "How the C and C++ compiler installs on Windows."
+  },
+  "compilerNoteWindows": "The Visual Studio installer asks for the administrator through UAC itself.",
+  "@compilerNoteWindows": {
+    "description": "Note of the Build Tools plan: UAC."
+  },
+  "compilerCheckMissing": "No C compiler found yet",
+  "@compilerCheckMissing": {
+    "description": "Check after installing the compiler: none found."
+  },
+  "compilerCheckFound": "Found {name}",
+  "@compilerCheckFound": {
+    "description": "Check after installing the compiler: what was found.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Command Line Tools 16.2"
+      }
+    }
+  },
+  "opCheckStopped": "You stopped the check: the steps ran, their result was not checked.",
+  "@opCheckStopped": {
+    "description": "Caption of an operation stopped while its result was checked."
+  },
+  "compilerNoteMac": "Apple's installer",
+  "@compilerNoteMac": {
+    "description": "Title of the note on macOS's Command Line Tools installer."
+  },
+  "compilerNoteMacText": "Click Install in its window and accept the license. Hearth checks for the tools until they are there; if you close the installer, stop the operation.",
+  "@compilerNoteMacText": {
+    "description": "What to do in macOS's Command Line Tools installer."
   }
 }
