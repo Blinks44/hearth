@@ -6916,5 +6916,261 @@
         "example": "~/.zshrc"
       }
     }
+  },
+  "setupStepInstall": "Step 3 of 4 · install",
+  "@setupStepInstall": {
+    "description": "New computer: header subtitle on step 3."
+  },
+  "setupStepCheck": "Step 4 of 4 · check",
+  "@setupStepCheck": {
+    "description": "New computer: header subtitle on step 4."
+  },
+  "setupInstalling": "Installing",
+  "@setupInstalling": {
+    "description": "New computer: step 3 title while the plan runs."
+  },
+  "setupInstallLead": "Step {n} of {total} · {tool}. You can run it in the background: the installation goes on.",
+  "@setupInstallLead": {
+    "description": "New computer: step 3 lead while the plan runs.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js LTS"
+      }
+    }
+  },
+  "setupFailed": "{tool} did not install",
+  "@setupFailed": {
+    "description": "New computer: step 3 title when a step failed.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node.js LTS"
+      }
+    }
+  },
+  "setupStopped": "Installation stopped",
+  "@setupStopped": {
+    "description": "New computer: step 3 title when the user stopped it."
+  },
+  "setupAgain": "Make the plan again",
+  "@setupAgain": {
+    "description": "New computer: button after a failed or stopped installation; the new plan leaves out what is installed now."
+  },
+  "setupLog": "Log · step {n}",
+  "@setupLog": {
+    "description": "New computer: step 3 card of the running step's output.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "setupPasswordAhead": "The password is still needed",
+  "@setupPasswordAhead": {
+    "description": "New computer: a later step asks for the administrator's password."
+  },
+  "setupPasswordAt": "at step {n}: {tool}",
+  "@setupPasswordAt": {
+    "description": "New computer: the step that will ask for the password.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "6"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Docker engine"
+      }
+    }
+  },
+  "setupPasswordDone": "The password is no longer needed",
+  "@setupPasswordDone": {
+    "description": "New computer: no step left asks for the password."
+  },
+  "setupPasswordAsked": "it was asked at step {steps}",
+  "@setupPasswordAsked": {
+    "description": "New computer: the steps that asked for the password.",
+    "placeholders": {
+      "steps": {
+        "type": "String",
+        "example": "1"
+      }
+    }
+  },
+  "setupHideTitle": "You can leave this page",
+  "@setupHideTitle": {
+    "description": "New computer: the installation goes on in the background."
+  },
+  "setupHideText": "Hearth shows the progress in the corner and tells you when it ends",
+  "@setupHideText": {
+    "description": "New computer: under the leave-this-page note."
+  },
+  "setupNothingYet": "Nothing changed yet: stopping now leaves the computer as it was.",
+  "@setupNothingYet": {
+    "description": "New computer: note under the order before a tool installed."
+  },
+  "setupLeftRunning": "Installed already: {tools}. They stay even if you stop now. If a step fails, Hearth shows why.",
+  "@setupLeftRunning": {
+    "description": "New computer: note under the order while it installs.",
+    "placeholders": {
+      "tools": {
+        "type": "String",
+        "example": "Homebrew, mise"
+      }
+    }
+  },
+  "setupLeftOver": "Installed and staying: {tools}. The plan made again leaves them out.",
+  "@setupLeftOver": {
+    "description": "New computer: note under the order after a failed or stopped installation.",
+    "placeholders": {
+      "tools": {
+        "type": "String",
+        "example": "Homebrew, mise"
+      }
+    }
+  },
+  "setupChecking": "Checking in a new terminal",
+  "@setupChecking": {
+    "description": "New computer: step 4 title while the scan runs."
+  },
+  "setupCheckingLead": "Hearth reads the terminal's environment again and runs each command.",
+  "@setupCheckingLead": {
+    "description": "New computer: step 4 lead while the scan runs."
+  },
+  "setupDoneTitle": "Done",
+  "@setupDoneTitle": {
+    "description": "New computer: step 4 title when every tool works."
+  },
+  "setupDoneLead": "Checked in a new terminal: every command is found and runs.",
+  "@setupDoneLead": {
+    "description": "New computer: step 4 lead when every tool works."
+  },
+  "setupLeftTitle": "Done, one thing left",
+  "@setupLeftTitle": {
+    "description": "New computer: step 4 title when a tool needs one more action, as Docker's engine to start."
+  },
+  "setupLeftLead": "Every command is found in a new terminal; what is left to do is on the right.",
+  "@setupLeftLead": {
+    "description": "New computer: step 4 lead when something is left to do."
+  },
+  "setupMissingTitle": "Not everything works yet",
+  "@setupMissingTitle": {
+    "description": "New computer: step 4 title when a new terminal does not find a tool."
+  },
+  "setupMissingLead": "A new terminal does not find {count} of the commands: the PATH page shows why.",
+  "@setupMissingLead": {
+    "description": "New computer: step 4 lead when tools are not found.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "setupCheckCard": "Check in a new terminal",
+  "@setupCheckCard": {
+    "description": "New computer: step 4 card of the tools."
+  },
+  "setupCheckAside": "{works} of {total} work",
+  "@setupCheckAside": {
+    "description": "New computer: aside of the check card.",
+    "placeholders": {
+      "works": {
+        "type": "int",
+        "example": "6"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "setupNotOnPath": "not on the terminal's PATH",
+  "@setupNotOnPath": {
+    "description": "New computer: a tool a new terminal does not find."
+  },
+  "setupTagWorks": "works",
+  "@setupTagWorks": {
+    "description": "New computer: tag of a tool that runs in a new terminal."
+  },
+  "setupTagChecking": "checking",
+  "@setupTagChecking": {
+    "description": "New computer: tag of a tool while the scan runs."
+  },
+  "setupTagMissing": "not found",
+  "@setupTagMissing": {
+    "description": "New computer: tag of a tool a new terminal does not find."
+  },
+  "setupTagEngineStopped": "engine stopped",
+  "@setupTagEngineStopped": {
+    "description": "New computer: tag of Docker whose engine does not answer."
+  },
+  "setupAppsNote": "Apps started outside the terminal do not see its PATH: that is normal. Editors like VS Code pick the versions up themselves. More on the “PATH and variables” page.",
+  "@setupAppsNote": {
+    "description": "New computer: note under the check on macOS and Linux."
+  },
+  "setupWhatNext": "What's next",
+  "@setupWhatNext": {
+    "description": "New computer: step 4 card of what is left to do."
+  },
+  "setupEngineNeeded": "containers need the engine running",
+  "@setupEngineNeeded": {
+    "description": "New computer: why to start the Docker engine."
+  },
+  "setupStart": "Start…",
+  "@setupStart": {
+    "description": "New computer: starts the Docker engine."
+  },
+  "setupNewTerminal": "Open a new terminal",
+  "@setupNewTerminal": {
+    "description": "New computer: terminals open before do not see what installed."
+  },
+  "setupNewTerminalText": "terminals open now do not see what was installed",
+  "@setupNewTerminalText": {
+    "description": "New computer: under the new terminal row."
+  },
+  "setupAddProjects": "Add projects",
+  "@setupAddProjects": {
+    "description": "New computer: step 4 offer to add projects."
+  },
+  "setupAddProjectsText": "Hearth checks they have the versions they need",
+  "@setupAddProjectsText": {
+    "description": "New computer: under the add projects row."
+  },
+  "setupAdd": "Add…",
+  "@setupAdd": {
+    "description": "New computer: opens the projects page."
+  },
+  "setupChanged": "What changed",
+  "@setupChanged": {
+    "description": "New computer: step 4 card of the files changed."
+  },
+  "setupChangedCaption": "Hearth's blocks · copies next to the files",
+  "@setupChangedCaption": {
+    "description": "New computer: under the files changed."
+  },
+  "setupFailedLead": "Why: {why}. The tools after it did not install.",
+  "setupStoppedLead": "Stopped: the tools after the one running did not install.",
+  "@setupFailedLead": {
+    "description": "New computer: step 3 lead when a step failed.",
+    "placeholders": {
+      "why": {
+        "type": "String",
+        "example": "exit code 1"
+      }
+    }
+  },
+  "@setupStoppedLead": {
+    "description": "New computer: step 3 lead when the user stopped the installation."
   }
 }

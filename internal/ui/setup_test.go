@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/ui"
+
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -135,5 +137,129 @@ func TestSetupPlanStep(t *testing.T) {
 	tt.Advance(time.Second)
 	if ran == nil || len(ran.Steps) != 7 || !a.op.running() {
 		t.Errorf("Install ran %+v", ran)
+	}
+}
+
+// installingApp is the wizard on step 3 with the design's plan, whose
+// operation update and stopped drive.
+func installingApp(t *testing.T) (a *App, tt *ui.Tester, update *func(ops.State), stopped *bool) {
+	t.Helper()
+	a = setupApp(t)
+	a.setup.plan, a.setup.parts = setupPlan()
+	a.setup.step = 1
+	update, stopped = new(func(ops.State)), new(bool)
+	a.RunPlan = func(p ops.Plan, u func(ops.State)) func() {
+		*update = u
+		return func() { *stopped = true }
+	}
+	a.OnScan = func() {}
+	tt = newTester(a)
+	if err := tt.Click("Install 4"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	return a, tt, update, stopped
+}
+
+// Step 3 shows each tool as its steps go, the log of the one running and
+// what stays; Run in background leaves it to the operation's toast,
+// whose Show comes back to the wizard.
+func TestSetupInstallStep(t *testing.T) {
+	a, tt, update, stopped := installingApp(t)
+	if a.setup.step != 2 || a.op.open {
+		t.Fatalf("Install shows step %d, the dialog open %v", a.setup.step, a.op.open)
+	}
+	(*update)(ops.State{Phase: ops.Running, Current: 3,
+		Steps: []ops.StepStatus{ops.Done, ops.Done, ops.Done, ops.Busy, ops.Waiting, ops.Waiting, ops.Waiting},
+		Log:   []string{"==> Pouring mise--2025.11.0.arm64_sequoia.bottle.tar.gz"}})
+	tt.Frame()
+	screenshot(t, tt, "setup-install")
+	hasTexts(t, tt, "Step 3 of 4 · install", "Installing", "Step 2 of 4 · mise. You can run it in the background: the installation goes on.",
+		"1  Homebrew", "done", "2  mise", "running", "3  Git", "waiting", "Log · step 2", "==> Pouring mise--2025.11.0.arm64_sequoia.bottle.tar.gz",
+		"The password is no longer needed", "it was asked at step 1", "You can leave this page",
+		"Installed already: Homebrew. They stay even if you stop now. If a step fails, Hearth shows why.")
+	if tt.HasText("Show") {
+		t.Error("the toast shows over the wizard")
+	}
+	if err := tt.Click("Stop"); err != nil {
+		t.Fatal(err)
+	}
+	if !*stopped {
+		t.Error("Stop did not stop the plan")
+	}
+	if err := tt.Click("Run in background"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	// Away from the header's tooltip, which takes the first click.
+	tt.Move(600, 600)
+	tt.Advance(time.Second)
+	if err := tt.Click("Show"); err != nil {
+		t.Fatalf("no toast away from the wizard: %v", err)
+	}
+	tt.Advance(time.Second)
+	tt.Frame()
+	if a.router.Path() != setupPage || a.op.open {
+		t.Errorf("Show went to %s, the dialog open %v", a.router.Path(), a.op.open)
+	}
+}
+
+// A step that failed says so with its output; the plan made again
+// leaves out what installed.
+func TestSetupInstallFailed(t *testing.T) {
+	a, tt, update, _ := installingApp(t)
+	built := 0
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) { built++ }
+	(*update)(ops.State{Phase: ops.Failed, Current: 3, ExitCode: 1,
+		Steps: []ops.StepStatus{ops.Done, ops.Done, ops.Done, ops.StepFailed, ops.Skipped, ops.Skipped, ops.Skipped},
+		Log:   []string{"Error: No such keg: mise"}})
+	if !a.Scanning {
+		t.Error("no scan after the installation")
+	}
+	a.Scanning = false
+	tt.Frame()
+	screenshot(t, tt, "setup-failed")
+	hasTexts(t, tt, "mise did not install", "Why: exit code 1. The tools after it did not install.", "failed", "skipped", "Error: No such keg: mise", "Details",
+		"Installed and staying: Homebrew. The plan made again leaves them out.")
+	if err := tt.Click("Make the plan again"); err != nil {
+		t.Fatal(err)
+	}
+	if built != 1 {
+		t.Error("the plan was not made again")
+	}
+}
+
+// Once the plan went through, step 4 waits for the scan, which reads the
+// terminal's environment again, then shows each tool's version and path
+// in it, and a tool it does not find.
+func TestSetupCheckStep(t *testing.T) {
+	a, tt, update, _ := installingApp(t)
+	done := make([]ops.StepStatus, 7)
+	for i := range done {
+		done[i] = ops.Done
+	}
+	(*update)(ops.State{Phase: ops.Succeeded, Current: 6, Steps: done})
+	tt.Frame()
+	if !a.Scanning || a.setup.step != 3 {
+		t.Fatalf("scanning %v, step %d", a.Scanning, a.setup.step)
+	}
+	hasTexts(t, tt, "Step 4 of 4 · check", "Checking in a new terminal", "checking")
+	a.Scanning = false
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Version: "4.4.22", Path: "/opt/homebrew/bin/brew"}}},
+		{Tool: "mise", Installations: []inventory.Installation{{Tool: "mise", Version: "2025.11.0", Path: "/opt/homebrew/bin/mise", OnPath: 1}}},
+	}, Agents: []inventory.Agent{{ID: "claude", Installations: []inventory.Installation{{Tool: "claude", Version: "2.0.1", Path: home + "/.local/bin/claude", OnPath: 1}}}}}
+	tt.Frame()
+	screenshot(t, tt, "setup-check")
+	hasTexts(t, tt, "Not everything works yet", "Check in a new terminal", "3 of 4 work",
+		"1  Homebrew", "4.4.22 · /opt/homebrew/bin/brew", "works", "2025.11.0 · /opt/homebrew/bin/mise",
+		"3  Git", "not on the terminal's PATH", "not found", "2.0.1 · ~/.local/bin/claude",
+		"What's next", "Open a new terminal", "What changed", "~/.zshrc")
+	if err := tt.Click("Done"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.setup.op != nil || a.router.Path() != overview.path {
+		t.Errorf("Done left the wizard at %s", a.router.Path())
 	}
 }

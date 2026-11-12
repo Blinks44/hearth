@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -24,7 +25,7 @@ var goos = runtime.GOOS
 
 // setupState is where the new computer wizard is.
 type setupState struct {
-	step int // 0 the choice, 1 the plan
+	step int // 0 the choice, 1 the plan, 2 the installation, 3 the check
 	// tab is the stepper's segment, which goes back to the choice; shown
 	// the step it showed, which tells the user's click from a new step.
 	tab, shown int
@@ -38,6 +39,8 @@ type setupState struct {
 	parts    []ops.SetupPart
 	building bool
 	diff     string // the file whose diff shows on the plan; "" for none
+	// op is the operation that installs the plan, from step 3 on.
+	op *operation
 }
 
 // setupOffered are the tools switched on until the user says otherwise.
@@ -155,18 +158,19 @@ func managerTitle(m catalog.Method) string {
 
 func (a *App) setupView(c *ui.Context) {
 	s := &a.setup
-	// The stepper goes back to the choice alone.
-	if s.tab != s.shown && s.tab < s.step {
+	// The installation went through: the check follows.
+	if s.step == 2 && s.op.state.Phase == ops.Succeeded {
+		s.step = 3
+	}
+	// The stepper goes back to the choice alone, before the installation.
+	if s.tab != s.shown && s.tab < s.step && s.step <= 1 {
 		s.step, s.diff = s.tab, ""
 	}
 	s.tab, s.shown = s.step, s.step
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
-		subtitle := locales.SetupStepChoice()
-		if s.step == 1 {
-			subtitle = locales.SetupStepPlan()
-		}
+		subtitle := []string{locales.SetupStepChoice(), locales.SetupStepPlan(), locales.SetupStepInstall(), locales.SetupStepCheck()}[s.step]
 		a.headerWith(c, locales.SetupTitle(), subtitle, headerExtras{after: func() { a.setupButtons(c) }})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -175,10 +179,7 @@ func (a *App) setupView(c *ui.Context) {
 						ui.Icon(c, Icon("sparkles")).Size(26, 26).TextColor(Accent)
 					})
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-						title, lead := locales.SetupChoiceTitle(), locales.SetupChoiceLead()
-						if s.step == 1 {
-							title, lead = locales.SetupPlanHeading(), locales.SetupPlanLead()
-						}
+						title, lead := a.setupHeading()
 						ui.Text(c, title).FontSize(22).FontWeight(600)
 						ui.Text(c, lead).FontSize(12).TextColor(t.TextMuted)
 					})
@@ -189,32 +190,105 @@ func (a *App) setupView(c *ui.Context) {
 						{"3 " + locales.SetupSegInstall(), ""}, {"4 " + locales.SetupSegCheck(), ""},
 					})
 				})
-				if s.step == 1 {
+				switch s.step {
+				case 0:
+					a.setupChoiceView(c)
+				case 1:
 					a.setupPlanView(c)
-					return
+				case 2:
+					a.operationProgress(c, s.op)
+					a.setupInstallView(c)
+				case 3:
+					a.operationProgress(c, s.op)
+					a.setupCheckView(c)
 				}
-				a.setupChoiceView(c)
 			})
 		})
 	})
+}
+
+// setupHeading is the title and the lead of the step shown.
+func (a *App) setupHeading() (title, lead string) {
+	s := &a.setup
+	switch s.step {
+	case 1:
+		return locales.SetupPlanHeading(), locales.SetupPlanLead()
+	case 2:
+		i := a.setupCurrent()
+		st := s.op.state
+		switch st.Phase {
+		case ops.Failed, ops.NotVerified:
+			why := st.Err
+			if why == "" {
+				why = locales.OpExitCode(st.ExitCode)
+			}
+			return locales.SetupFailed(setupTitle(s.parts[i].Tool)), locales.SetupFailedLead(why)
+		case ops.Stopped:
+			return locales.SetupStopped(), locales.SetupStoppedLead()
+		}
+		return locales.SetupInstalling(), locales.SetupInstallLead(i+1, len(s.parts), setupTitle(s.parts[i].Tool))
+	case 3:
+		if a.Scanning {
+			return locales.SetupChecking(), locales.SetupCheckingLead()
+		}
+		missing, left := 0, false
+		for _, part := range s.parts {
+			switch _, r := a.setupResult(part.Tool); r {
+			case checkMissing:
+				missing++
+			case checkStopped:
+				left = true
+			}
+		}
+		switch {
+		case missing > 0:
+			return locales.SetupMissingTitle(), locales.SetupMissingLead(missing)
+		case left:
+			return locales.SetupLeftTitle(), locales.SetupLeftLead()
+		}
+		return locales.SetupDoneTitle(), locales.SetupDoneLead()
+	}
+	return locales.SetupChoiceTitle(), locales.SetupChoiceLead()
 }
 
 // setupButtons are the header's buttons: cancel and go on to the plan on
 // the choice; back and install on the plan.
 func (a *App) setupButtons(c *ui.Context) {
 	s := &a.setup
-	if s.step == 1 {
+	switch {
+	case s.step == 3:
+		if a.Shell != nil && a.JournalPath != "" {
+			ui.Button(c.Key("setup-journal"), locales.OpOpenJournal()).OnClick(func() { a.openFile(c, a.JournalPath) })
+		}
+		ui.PrimaryButton(c.Key("setup-done"), locales.OpDone()).OnClick(func() {
+			a.setup = setupState{}
+			a.router.Push(overview.path)
+		})
+	case s.step == 2 && !s.op.state.Phase.Over():
+		// The operation's toast shows it away from the wizard.
+		ui.Button(c.Key("setup-hide"), locales.OpHide()).OnClick(func() { a.router.Push(overview.path) })
+		ui.Button(c.Key("setup-stop"), locales.OpStop()).TextColor(c.Theme().Danger).OnClick(func() { s.op.stop() })
+	case s.step == 2:
+		ui.Button(c.Key("setup-details"), locales.OpDetails()).OnClick(func() { s.op.open = true })
+		label := locales.SetupAgain()
+		if s.building {
+			label = locales.SetupBuilding()
+		}
+		// The plan made again leaves out what the scan after the
+		// installation found.
+		ui.PrimaryButton(c.Key("setup-again"), label).Disabled(s.building || a.Scanning || a.BuildPlan == nil).OnClick(a.setupNext)
+	case s.step == 1:
 		ui.Button(c.Key("setup-back"), locales.SetupBack()).OnClick(func() { s.step, s.diff = 0, "" })
 		ui.PrimaryButton(c.Key("setup-install"), s.plan.Action).Disabled(a.op.running()).OnClick(a.setupInstall)
-		return
+	default:
+		ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
+		label := locales.SetupNext()
+		if s.building {
+			label = locales.SetupBuilding()
+		}
+		ui.PrimaryButton(c.Key("setup-next"), label).
+			Disabled(s.building || a.BuildPlan == nil || len(a.setupInput().Parts()) == 0).OnClick(a.setupNext)
 	}
-	ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
-	label := locales.SetupNext()
-	if s.building {
-		label = locales.SetupBuilding()
-	}
-	ui.PrimaryButton(c.Key("setup-next"), label).
-		Disabled(s.building || a.BuildPlan == nil || len(a.setupInput().Parts()) == 0).OnClick(a.setupNext)
 }
 
 // setupNext makes the plan of the choice and shows it.
@@ -237,13 +311,16 @@ func (a *App) setupNext() {
 	})
 }
 
-// setupInstall runs the plan the user read on step 2, in the operation's
-// dialog.
+// setupInstall runs the plan the user read on step 2, which step 3
+// shows as it goes.
 func (a *App) setupInstall() {
-	a.Propose(a.setup.plan)
-	if a.RunPlan != nil && !a.op.running() {
-		a.startOperation()
+	if a.RunPlan == nil || a.op.running() {
+		return
 	}
+	a.Propose(a.setup.plan)
+	a.op.open = false
+	a.startOperation()
+	a.setup.op, a.setup.step, a.setup.diff = a.op, 2, ""
 }
 
 // setupChoiceView is step 1: the languages and tools to switch on beside
@@ -399,23 +476,311 @@ func (a *App) setupPlanView(c *ui.Context) {
 }
 
 // setupPartRow is a tool in the order of the plan: its number and name,
-// what runs, and tags for the password and a file changed.
+// what runs, and tags for the password and a file changed; while it
+// installs, how its steps went.
 func (a *App) setupPartRow(c *ui.Context, i int, part ops.SetupPart) {
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	steps := a.setup.plan.Steps[part.From:part.To]
 	admin := slices.ContainsFunc(steps, func(s ops.Step) bool { return s.Admin })
 	file := slices.ContainsFunc(steps, func(s ops.Step) bool { _, _, ok := stepEdit(s); return ok })
-	ui.Row(c.Key("part:"+part.Tool)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
-		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+	installing := a.setup.step == 2
+	status := ops.Waiting
+	if installing {
+		status = partStatus(a.setup.op.state, part)
+	}
+	color := t.Text
+	if installing && (status == ops.Waiting || status == ops.Skipped) {
+		color = t.TextMuted
+	}
+	row := ui.Row(c.Key("part:"+part.Tool)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+	if installing && status == ops.Busy {
+		row.Background(pal.AccentSoft)
+	}
+	row.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, strconv.Itoa(i+1)+"  "+setupTitle(part.Tool)).FontSize(13).SingleLine()
+			ui.Text(c, strconv.Itoa(i+1)+"  "+setupTitle(part.Tool)).FontSize(13).TextColor(color).SingleLine()
 			clipped(c, a.partCaption(steps)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 		})
+		if installing {
+			label, bg, fg := stepTag(c, status)
+			aiTag(c, label, bg, fg)
+			return
+		}
 		if admin {
 			aiTag(c, locales.SetupTagPassword(), pal.WarningSoft, pal.WarningText)
 		}
 		if file {
-			aiTag(c, locales.SetupTagFile(), pal.Muted, c.Theme().TextMuted)
+			aiTag(c, locales.SetupTagFile(), pal.Muted, t.TextMuted)
+		}
+	})
+}
+
+// partStatus is how a tool's steps went: as the step that failed,
+// stopped or runs, done once all are. A tool with no steps of its own,
+// as Git with Homebrew's, is done with the steps before it.
+func partStatus(st ops.State, part ops.SetupPart) ops.StepStatus {
+	if part.From == part.To {
+		switch {
+		case !slices.ContainsFunc(st.Steps[:part.From], func(s ops.StepStatus) bool { return s != ops.Done }):
+			return ops.Done
+		case st.Phase.Over():
+			return ops.Skipped
+		}
+		return ops.Waiting
+	}
+	steps := st.Steps[part.From:part.To]
+	for _, s := range []ops.StepStatus{ops.StepFailed, ops.StepStopped, ops.Busy} {
+		if slices.Contains(steps, s) {
+			return s
+		}
+	}
+	done := 0
+	for _, s := range steps {
+		if s == ops.Done {
+			done++
+		}
+	}
+	switch {
+	case done == len(steps):
+		return ops.Done
+	case done > 0 && st.Phase == ops.Running:
+		// Between two of its steps.
+		return ops.Busy
+	case slices.Contains(steps, ops.Skipped):
+		return ops.Skipped
+	}
+	return ops.Waiting
+}
+
+// setupCurrent is the index of the tool whose step runs, or ran last.
+func (a *App) setupCurrent() int {
+	i := 0
+	for j, part := range a.setup.parts {
+		if part.From <= a.setup.op.state.Current && part.To > part.From {
+			i = j
+		}
+	}
+	return i
+}
+
+// setupInstallView is step 3: the order with how each tool went, the log
+// of the step running, and what stays when it stops.
+func (a *App) setupInstallView(c *ui.Context) {
+	s := &a.setup
+	st := s.op.state
+	t := c.Theme()
+	pal := Colors(t)
+	columns(c, 12, func() {
+		listCard(c, locales.SetupOrder(), locales.SetupSteps(len(s.parts)), func() {
+			for i, part := range s.parts {
+				a.setupPartRow(c, i, part)
+			}
+		})
+		toolNote(c, a.setupLeftNote())
+	}, func() {
+		listCard(c, locales.SetupLog(a.setupCurrent()+1), "", func() {
+			color := t.TextMuted
+			if st.Phase == ops.Failed || st.Phase == ops.NotVerified {
+				color = pal.DangerText
+			}
+			lines := lastLines(st.Log, 8)
+			ui.Column(c).Gap(4).Padding(10, 14, 12, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Font(FontMono).Children(func() {
+				if len(lines) == 0 {
+					ui.Text(c, "…").FontSize(11.5).TextColor(pal.TextFaint)
+				}
+				for _, line := range lines {
+					clipped(c, line).FontSize(11.5).TextColor(color)
+				}
+			})
+		})
+		if st.Phase.Over() {
+			return
+		}
+		listCard(c, locales.OpWorthKnowing(), "", func() {
+			ahead := -1
+			var asked []string
+			for i, part := range s.parts {
+				if !slices.ContainsFunc(s.plan.Steps[part.From:part.To], func(s ops.Step) bool { return s.Admin }) {
+					continue
+				}
+				if partStatus(st, part) == ops.Done {
+					asked = append(asked, strconv.Itoa(i+1))
+				} else if ahead < 0 {
+					ahead = i
+				}
+			}
+			switch {
+			case ahead >= 0:
+				listRow(c, locales.SetupPasswordAhead(), false, locales.SetupPasswordAt(ahead+1, setupTitle(s.parts[ahead].Tool)), func() {})
+			case len(asked) > 0:
+				listRow(c, locales.SetupPasswordDone(), false, locales.SetupPasswordAsked(strings.Join(asked, ", ")), func() {})
+			}
+			listRow(c, locales.SetupHideTitle(), false, locales.SetupHideText(), func() {})
+		})
+	})
+}
+
+// setupLeftNote says, under the order, what stays: the tools installed
+// already.
+func (a *App) setupLeftNote() string {
+	s := &a.setup
+	var done []string
+	for _, part := range s.parts {
+		if partStatus(s.op.state, part) == ops.Done {
+			done = append(done, setupTitle(part.Tool))
+		}
+	}
+	switch {
+	case len(done) == 0:
+		return locales.SetupNothingYet()
+	case s.op.state.Phase.Over():
+		return locales.SetupLeftOver(strings.Join(done, ", "))
+	}
+	return locales.SetupLeftRunning(strings.Join(done, ", "))
+}
+
+// checkResult is how a tool installed answers in a new terminal.
+type checkResult int
+
+const (
+	checkWorks   checkResult = iota
+	checkStopped             // Docker's CLI is there, its engine does not answer
+	checkMissing             // not on the terminal's PATH
+)
+
+// setupResult is the copy of tool id a new terminal runs, as the scan
+// after the installation found it, reading the terminal's environment
+// again, and how it answers.
+func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
+	if a.Snapshot == nil {
+		return inventory.Installation{}, checkMissing
+	}
+	if id == "homebrew" {
+		for _, m := range a.packageManagers() {
+			if m.ID == "brew" {
+				return inventory.Installation{Version: m.Version, Path: m.Path}, checkWorks
+			}
+		}
+		return inventory.Installation{}, checkMissing
+	}
+	var ins []inventory.Installation
+	var docker *inventory.DockerState
+	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
+		if i := slices.IndexFunc(a.Snapshot.Agents, func(ag inventory.Agent) bool { return ag.ID == id }); i >= 0 {
+			ins = a.Snapshot.Agents[i].Installations
+		}
+	} else {
+		st, _ := a.Snapshot.Tool(id)
+		ins, docker = st.Installations, st.Docker
+	}
+	i := inventory.TerminalCopy(ins)
+	if i < 0 {
+		return inventory.Installation{}, checkMissing
+	}
+	if docker != nil && slices.ContainsFunc(docker.Contexts, func(ctx inventory.DockerContext) bool {
+		return ctx.Name == docker.Selected && ctx.Status == "unavailable"
+	}) {
+		return ins[i], checkStopped
+	}
+	return ins[i], checkWorks
+}
+
+// setupCheckView is step 4: each tool in a new terminal, what is left to
+// do and what changed.
+func (a *App) setupCheckView(c *ui.Context) {
+	s := &a.setup
+	works := 0
+	for _, part := range s.parts {
+		if _, r := a.setupResult(part.Tool); r == checkWorks {
+			works++
+		}
+	}
+	aside := ""
+	if !a.Scanning {
+		aside = locales.SetupCheckAside(works, len(s.parts))
+	}
+	columns(c, 12, func() {
+		listCard(c, locales.SetupCheckCard(), aside, func() {
+			for i, part := range s.parts {
+				a.setupCheckRow(c, i, part.Tool)
+			}
+		})
+		if goos != "windows" {
+			toolNote(c, locales.SetupAppsNote())
+		}
+	}, func() {
+		if !a.Scanning {
+			a.setupNextCard(c)
+		}
+		var paths []string
+		for _, e := range setupEdits(s.plan, s.parts) {
+			paths = append(paths, tilde(e.edit.Path, a.Home))
+		}
+		if len(paths) > 0 {
+			listCard(c, locales.SetupChanged(), "", func() {
+				listRow(c, strings.Join(paths, ", "), false, locales.SetupChangedCaption(), func() {})
+			})
+		}
+	})
+}
+
+// setupCheckRow is a tool as a new terminal runs it: its version and
+// path, and whether it works.
+func (a *App) setupCheckRow(c *ui.Context, i int, id string) {
+	t := c.Theme()
+	pal := Colors(t)
+	in, r := a.setupResult(id)
+	caption := locales.SetupNotOnPath()
+	if r != checkMissing {
+		caption = strings.TrimPrefix(cmp.Or(in.Version, "…")+" · "+tilde(in.Path, a.Home), " · ")
+	}
+	label, bg, fg := locales.SetupTagWorks(), pal.SuccessSoft, pal.SuccessText
+	switch {
+	case a.Scanning:
+		label, bg, fg, caption = locales.SetupTagChecking(), pal.InfoSoft, pal.InfoText, ""
+	case r == checkStopped:
+		label, bg, fg = locales.SetupTagEngineStopped(), pal.WarningSoft, pal.WarningText
+	case r == checkMissing:
+		label, bg, fg = locales.SetupTagMissing(), pal.DangerSoft, pal.DangerText
+	}
+	row := ui.Row(c.Key("check:"+id)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+	if !a.Scanning && r == checkStopped {
+		row.Background(pal.WarningSoft)
+	}
+	row.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			ui.Text(c, strconv.Itoa(i+1)+"  "+setupTitle(id)).FontSize(13).SingleLine()
+			if caption != "" {
+				clipped(c, caption).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+			}
+		})
+		aiTag(c, label, bg, fg)
+	})
+}
+
+// setupNextCard is what is left to do: start the engine installed, open
+// a new terminal, add projects.
+func (a *App) setupNextCard(c *ui.Context) {
+	link := func(key, label string, onClick func()) {
+		ui.ButtonBase(c.Key(key)).Label(label).OnClick(onClick).Children(func() {
+			ui.Text(c, label).FontSize(11.5).TextColor(Accent).SingleLine()
+		})
+	}
+	listCard(c, locales.SetupWhatNext(), "", func() {
+		docker := slices.ContainsFunc(a.setup.parts, func(p ops.SetupPart) bool { return p.Tool == "docker" })
+		if plan, ok := a.engineStartPlan(); ok && docker {
+			listRow(c, plan.Title, false, locales.SetupEngineNeeded(), func() {
+				link("setup-engine-start", locales.SetupStart(), func() { a.Propose(plan) })
+			})
+		}
+		listRow(c, locales.SetupNewTerminal(), false, locales.SetupNewTerminalText(), func() {})
+		if len(a.Projects) == 0 && a.ChooseFolder != nil {
+			listRow(c, locales.SetupAddProjects(), false, locales.SetupAddProjectsText(), func() {
+				link("setup-projects", locales.SetupAdd(), func() { a.router.Push(projectsPage.path) })
+			})
 		}
 	})
 }

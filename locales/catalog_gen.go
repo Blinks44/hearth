@@ -17301,3 +17301,643 @@ func SetupLineIn(files string) string { return In(i18n.Locale()).SetupLineIn(fil
 func (msgs Messages) SetupLineIn(files string) string {
 	return Catalog.Format(msgs.locale, "setupLineIn", map[string]any{"files": files})
 }
+
+// SetupStepInstall says "Step 3 of 4 · install"
+// in the language the app shows.
+//
+// New computer: header subtitle on step 3.
+func SetupStepInstall() string { return In(i18n.Locale()).SetupStepInstall() }
+
+// SetupStepInstall says "Step 3 of 4 · install"
+// in the language of msgs.
+//
+// New computer: header subtitle on step 3.
+func (msgs Messages) SetupStepInstall() string {
+	return Catalog.Format(msgs.locale, "setupStepInstall", nil)
+}
+
+// SetupStepCheck says "Step 4 of 4 · check"
+// in the language the app shows.
+//
+// New computer: header subtitle on step 4.
+func SetupStepCheck() string { return In(i18n.Locale()).SetupStepCheck() }
+
+// SetupStepCheck says "Step 4 of 4 · check"
+// in the language of msgs.
+//
+// New computer: header subtitle on step 4.
+func (msgs Messages) SetupStepCheck() string {
+	return Catalog.Format(msgs.locale, "setupStepCheck", nil)
+}
+
+// SetupInstalling says "Installing"
+// in the language the app shows.
+//
+// New computer: step 3 title while the plan runs.
+func SetupInstalling() string { return In(i18n.Locale()).SetupInstalling() }
+
+// SetupInstalling says "Installing"
+// in the language of msgs.
+//
+// New computer: step 3 title while the plan runs.
+func (msgs Messages) SetupInstalling() string {
+	return Catalog.Format(msgs.locale, "setupInstalling", nil)
+}
+
+// SetupInstallLead says "Step {n} of {total} · {tool}. You can run it in the background: the installation goes on."
+// in the language the app shows.
+//
+// New computer: step 3 lead while the plan runs.
+func SetupInstallLead(n int, total int, tool string) string {
+	return In(i18n.Locale()).SetupInstallLead(n, total, tool)
+}
+
+// SetupInstallLead says "Step {n} of {total} · {tool}. You can run it in the background: the installation goes on."
+// in the language of msgs.
+//
+// New computer: step 3 lead while the plan runs.
+func (msgs Messages) SetupInstallLead(n int, total int, tool string) string {
+	return Catalog.Format(msgs.locale, "setupInstallLead", map[string]any{"n": n, "total": total, "tool": tool})
+}
+
+// SetupFailed says "{tool} did not install"
+// in the language the app shows.
+//
+// New computer: step 3 title when a step failed.
+func SetupFailed(tool string) string { return In(i18n.Locale()).SetupFailed(tool) }
+
+// SetupFailed says "{tool} did not install"
+// in the language of msgs.
+//
+// New computer: step 3 title when a step failed.
+func (msgs Messages) SetupFailed(tool string) string {
+	return Catalog.Format(msgs.locale, "setupFailed", map[string]any{"tool": tool})
+}
+
+// SetupStopped says "Installation stopped"
+// in the language the app shows.
+//
+// New computer: step 3 title when the user stopped it.
+func SetupStopped() string { return In(i18n.Locale()).SetupStopped() }
+
+// SetupStopped says "Installation stopped"
+// in the language of msgs.
+//
+// New computer: step 3 title when the user stopped it.
+func (msgs Messages) SetupStopped() string {
+	return Catalog.Format(msgs.locale, "setupStopped", nil)
+}
+
+// SetupAgain says "Make the plan again"
+// in the language the app shows.
+//
+// New computer: button after a failed or stopped installation; the new plan
+// leaves out what is installed now.
+func SetupAgain() string { return In(i18n.Locale()).SetupAgain() }
+
+// SetupAgain says "Make the plan again"
+// in the language of msgs.
+//
+// New computer: button after a failed or stopped installation; the new plan
+// leaves out what is installed now.
+func (msgs Messages) SetupAgain() string {
+	return Catalog.Format(msgs.locale, "setupAgain", nil)
+}
+
+// SetupLog says "Log · step {n}"
+// in the language the app shows.
+//
+// New computer: step 3 card of the running step's output.
+func SetupLog(n int) string { return In(i18n.Locale()).SetupLog(n) }
+
+// SetupLog says "Log · step {n}"
+// in the language of msgs.
+//
+// New computer: step 3 card of the running step's output.
+func (msgs Messages) SetupLog(n int) string {
+	return Catalog.Format(msgs.locale, "setupLog", map[string]any{"n": n})
+}
+
+// SetupPasswordAhead says "The password is still needed"
+// in the language the app shows.
+//
+// New computer: a later step asks for the administrator's password.
+func SetupPasswordAhead() string { return In(i18n.Locale()).SetupPasswordAhead() }
+
+// SetupPasswordAhead says "The password is still needed"
+// in the language of msgs.
+//
+// New computer: a later step asks for the administrator's password.
+func (msgs Messages) SetupPasswordAhead() string {
+	return Catalog.Format(msgs.locale, "setupPasswordAhead", nil)
+}
+
+// SetupPasswordAt says "at step {n}: {tool}"
+// in the language the app shows.
+//
+// New computer: the step that will ask for the password.
+func SetupPasswordAt(n int, tool string) string { return In(i18n.Locale()).SetupPasswordAt(n, tool) }
+
+// SetupPasswordAt says "at step {n}: {tool}"
+// in the language of msgs.
+//
+// New computer: the step that will ask for the password.
+func (msgs Messages) SetupPasswordAt(n int, tool string) string {
+	return Catalog.Format(msgs.locale, "setupPasswordAt", map[string]any{"n": n, "tool": tool})
+}
+
+// SetupPasswordDone says "The password is no longer needed"
+// in the language the app shows.
+//
+// New computer: no step left asks for the password.
+func SetupPasswordDone() string { return In(i18n.Locale()).SetupPasswordDone() }
+
+// SetupPasswordDone says "The password is no longer needed"
+// in the language of msgs.
+//
+// New computer: no step left asks for the password.
+func (msgs Messages) SetupPasswordDone() string {
+	return Catalog.Format(msgs.locale, "setupPasswordDone", nil)
+}
+
+// SetupPasswordAsked says "it was asked at step {steps}"
+// in the language the app shows.
+//
+// New computer: the steps that asked for the password.
+func SetupPasswordAsked(steps string) string { return In(i18n.Locale()).SetupPasswordAsked(steps) }
+
+// SetupPasswordAsked says "it was asked at step {steps}"
+// in the language of msgs.
+//
+// New computer: the steps that asked for the password.
+func (msgs Messages) SetupPasswordAsked(steps string) string {
+	return Catalog.Format(msgs.locale, "setupPasswordAsked", map[string]any{"steps": steps})
+}
+
+// SetupHideTitle says "You can leave this page"
+// in the language the app shows.
+//
+// New computer: the installation goes on in the background.
+func SetupHideTitle() string { return In(i18n.Locale()).SetupHideTitle() }
+
+// SetupHideTitle says "You can leave this page"
+// in the language of msgs.
+//
+// New computer: the installation goes on in the background.
+func (msgs Messages) SetupHideTitle() string {
+	return Catalog.Format(msgs.locale, "setupHideTitle", nil)
+}
+
+// SetupHideText says "Hearth shows the progress in the corner and tells you when it ends"
+// in the language the app shows.
+//
+// New computer: under the leave-this-page note.
+func SetupHideText() string { return In(i18n.Locale()).SetupHideText() }
+
+// SetupHideText says "Hearth shows the progress in the corner and tells you when it ends"
+// in the language of msgs.
+//
+// New computer: under the leave-this-page note.
+func (msgs Messages) SetupHideText() string {
+	return Catalog.Format(msgs.locale, "setupHideText", nil)
+}
+
+// SetupNothingYet says "Nothing changed yet: stopping now leaves the computer as it was."
+// in the language the app shows.
+//
+// New computer: note under the order before a tool installed.
+func SetupNothingYet() string { return In(i18n.Locale()).SetupNothingYet() }
+
+// SetupNothingYet says "Nothing changed yet: stopping now leaves the computer as it was."
+// in the language of msgs.
+//
+// New computer: note under the order before a tool installed.
+func (msgs Messages) SetupNothingYet() string {
+	return Catalog.Format(msgs.locale, "setupNothingYet", nil)
+}
+
+// SetupLeftRunning says "Installed already: {tools}. They stay even if you stop now. If a step fails, Hearth shows why."
+// in the language the app shows.
+//
+// New computer: note under the order while it installs.
+func SetupLeftRunning(tools string) string { return In(i18n.Locale()).SetupLeftRunning(tools) }
+
+// SetupLeftRunning says "Installed already: {tools}. They stay even if you stop now. If a step fails, Hearth shows why."
+// in the language of msgs.
+//
+// New computer: note under the order while it installs.
+func (msgs Messages) SetupLeftRunning(tools string) string {
+	return Catalog.Format(msgs.locale, "setupLeftRunning", map[string]any{"tools": tools})
+}
+
+// SetupLeftOver says "Installed and staying: {tools}. The plan made again leaves them out."
+// in the language the app shows.
+//
+// New computer: note under the order after a failed or stopped
+// installation.
+func SetupLeftOver(tools string) string { return In(i18n.Locale()).SetupLeftOver(tools) }
+
+// SetupLeftOver says "Installed and staying: {tools}. The plan made again leaves them out."
+// in the language of msgs.
+//
+// New computer: note under the order after a failed or stopped
+// installation.
+func (msgs Messages) SetupLeftOver(tools string) string {
+	return Catalog.Format(msgs.locale, "setupLeftOver", map[string]any{"tools": tools})
+}
+
+// SetupChecking says "Checking in a new terminal"
+// in the language the app shows.
+//
+// New computer: step 4 title while the scan runs.
+func SetupChecking() string { return In(i18n.Locale()).SetupChecking() }
+
+// SetupChecking says "Checking in a new terminal"
+// in the language of msgs.
+//
+// New computer: step 4 title while the scan runs.
+func (msgs Messages) SetupChecking() string {
+	return Catalog.Format(msgs.locale, "setupChecking", nil)
+}
+
+// SetupCheckingLead says "Hearth reads the terminal's environment again and runs each command."
+// in the language the app shows.
+//
+// New computer: step 4 lead while the scan runs.
+func SetupCheckingLead() string { return In(i18n.Locale()).SetupCheckingLead() }
+
+// SetupCheckingLead says "Hearth reads the terminal's environment again and runs each command."
+// in the language of msgs.
+//
+// New computer: step 4 lead while the scan runs.
+func (msgs Messages) SetupCheckingLead() string {
+	return Catalog.Format(msgs.locale, "setupCheckingLead", nil)
+}
+
+// SetupDoneTitle says "Done"
+// in the language the app shows.
+//
+// New computer: step 4 title when every tool works.
+func SetupDoneTitle() string { return In(i18n.Locale()).SetupDoneTitle() }
+
+// SetupDoneTitle says "Done"
+// in the language of msgs.
+//
+// New computer: step 4 title when every tool works.
+func (msgs Messages) SetupDoneTitle() string {
+	return Catalog.Format(msgs.locale, "setupDoneTitle", nil)
+}
+
+// SetupDoneLead says "Checked in a new terminal: every command is found and runs."
+// in the language the app shows.
+//
+// New computer: step 4 lead when every tool works.
+func SetupDoneLead() string { return In(i18n.Locale()).SetupDoneLead() }
+
+// SetupDoneLead says "Checked in a new terminal: every command is found and runs."
+// in the language of msgs.
+//
+// New computer: step 4 lead when every tool works.
+func (msgs Messages) SetupDoneLead() string {
+	return Catalog.Format(msgs.locale, "setupDoneLead", nil)
+}
+
+// SetupLeftTitle says "Done, one thing left"
+// in the language the app shows.
+//
+// New computer: step 4 title when a tool needs one more action, as Docker's
+// engine to start.
+func SetupLeftTitle() string { return In(i18n.Locale()).SetupLeftTitle() }
+
+// SetupLeftTitle says "Done, one thing left"
+// in the language of msgs.
+//
+// New computer: step 4 title when a tool needs one more action, as Docker's
+// engine to start.
+func (msgs Messages) SetupLeftTitle() string {
+	return Catalog.Format(msgs.locale, "setupLeftTitle", nil)
+}
+
+// SetupLeftLead says "Every command is found in a new terminal; what is left to do is on the right."
+// in the language the app shows.
+//
+// New computer: step 4 lead when something is left to do.
+func SetupLeftLead() string { return In(i18n.Locale()).SetupLeftLead() }
+
+// SetupLeftLead says "Every command is found in a new terminal; what is left to do is on the right."
+// in the language of msgs.
+//
+// New computer: step 4 lead when something is left to do.
+func (msgs Messages) SetupLeftLead() string {
+	return Catalog.Format(msgs.locale, "setupLeftLead", nil)
+}
+
+// SetupMissingTitle says "Not everything works yet"
+// in the language the app shows.
+//
+// New computer: step 4 title when a new terminal does not find a tool.
+func SetupMissingTitle() string { return In(i18n.Locale()).SetupMissingTitle() }
+
+// SetupMissingTitle says "Not everything works yet"
+// in the language of msgs.
+//
+// New computer: step 4 title when a new terminal does not find a tool.
+func (msgs Messages) SetupMissingTitle() string {
+	return Catalog.Format(msgs.locale, "setupMissingTitle", nil)
+}
+
+// SetupMissingLead says "A new terminal does not find {count} of the commands: the PATH page shows why."
+// in the language the app shows.
+//
+// New computer: step 4 lead when tools are not found.
+func SetupMissingLead(count int) string { return In(i18n.Locale()).SetupMissingLead(count) }
+
+// SetupMissingLead says "A new terminal does not find {count} of the commands: the PATH page shows why."
+// in the language of msgs.
+//
+// New computer: step 4 lead when tools are not found.
+func (msgs Messages) SetupMissingLead(count int) string {
+	return Catalog.Format(msgs.locale, "setupMissingLead", map[string]any{"count": count})
+}
+
+// SetupCheckCard says "Check in a new terminal"
+// in the language the app shows.
+//
+// New computer: step 4 card of the tools.
+func SetupCheckCard() string { return In(i18n.Locale()).SetupCheckCard() }
+
+// SetupCheckCard says "Check in a new terminal"
+// in the language of msgs.
+//
+// New computer: step 4 card of the tools.
+func (msgs Messages) SetupCheckCard() string {
+	return Catalog.Format(msgs.locale, "setupCheckCard", nil)
+}
+
+// SetupCheckAside says "{works} of {total} work"
+// in the language the app shows.
+//
+// New computer: aside of the check card.
+func SetupCheckAside(works int, total int) string {
+	return In(i18n.Locale()).SetupCheckAside(works, total)
+}
+
+// SetupCheckAside says "{works} of {total} work"
+// in the language of msgs.
+//
+// New computer: aside of the check card.
+func (msgs Messages) SetupCheckAside(works int, total int) string {
+	return Catalog.Format(msgs.locale, "setupCheckAside", map[string]any{"works": works, "total": total})
+}
+
+// SetupNotOnPath says "not on the terminal's PATH"
+// in the language the app shows.
+//
+// New computer: a tool a new terminal does not find.
+func SetupNotOnPath() string { return In(i18n.Locale()).SetupNotOnPath() }
+
+// SetupNotOnPath says "not on the terminal's PATH"
+// in the language of msgs.
+//
+// New computer: a tool a new terminal does not find.
+func (msgs Messages) SetupNotOnPath() string {
+	return Catalog.Format(msgs.locale, "setupNotOnPath", nil)
+}
+
+// SetupTagWorks says "works"
+// in the language the app shows.
+//
+// New computer: tag of a tool that runs in a new terminal.
+func SetupTagWorks() string { return In(i18n.Locale()).SetupTagWorks() }
+
+// SetupTagWorks says "works"
+// in the language of msgs.
+//
+// New computer: tag of a tool that runs in a new terminal.
+func (msgs Messages) SetupTagWorks() string {
+	return Catalog.Format(msgs.locale, "setupTagWorks", nil)
+}
+
+// SetupTagChecking says "checking"
+// in the language the app shows.
+//
+// New computer: tag of a tool while the scan runs.
+func SetupTagChecking() string { return In(i18n.Locale()).SetupTagChecking() }
+
+// SetupTagChecking says "checking"
+// in the language of msgs.
+//
+// New computer: tag of a tool while the scan runs.
+func (msgs Messages) SetupTagChecking() string {
+	return Catalog.Format(msgs.locale, "setupTagChecking", nil)
+}
+
+// SetupTagMissing says "not found"
+// in the language the app shows.
+//
+// New computer: tag of a tool a new terminal does not find.
+func SetupTagMissing() string { return In(i18n.Locale()).SetupTagMissing() }
+
+// SetupTagMissing says "not found"
+// in the language of msgs.
+//
+// New computer: tag of a tool a new terminal does not find.
+func (msgs Messages) SetupTagMissing() string {
+	return Catalog.Format(msgs.locale, "setupTagMissing", nil)
+}
+
+// SetupTagEngineStopped says "engine stopped"
+// in the language the app shows.
+//
+// New computer: tag of Docker whose engine does not answer.
+func SetupTagEngineStopped() string { return In(i18n.Locale()).SetupTagEngineStopped() }
+
+// SetupTagEngineStopped says "engine stopped"
+// in the language of msgs.
+//
+// New computer: tag of Docker whose engine does not answer.
+func (msgs Messages) SetupTagEngineStopped() string {
+	return Catalog.Format(msgs.locale, "setupTagEngineStopped", nil)
+}
+
+// SetupAppsNote says "Apps started outside the terminal do not see its PATH: that is normal. Editors like VS Code pick the versions up them…"
+// in the language the app shows.
+//
+// New computer: note under the check on macOS and Linux.
+func SetupAppsNote() string { return In(i18n.Locale()).SetupAppsNote() }
+
+// SetupAppsNote says "Apps started outside the terminal do not see its PATH: that is normal. Editors like VS Code pick the versions up them…"
+// in the language of msgs.
+//
+// New computer: note under the check on macOS and Linux.
+func (msgs Messages) SetupAppsNote() string {
+	return Catalog.Format(msgs.locale, "setupAppsNote", nil)
+}
+
+// SetupWhatNext says "What's next"
+// in the language the app shows.
+//
+// New computer: step 4 card of what is left to do.
+func SetupWhatNext() string { return In(i18n.Locale()).SetupWhatNext() }
+
+// SetupWhatNext says "What's next"
+// in the language of msgs.
+//
+// New computer: step 4 card of what is left to do.
+func (msgs Messages) SetupWhatNext() string {
+	return Catalog.Format(msgs.locale, "setupWhatNext", nil)
+}
+
+// SetupEngineNeeded says "containers need the engine running"
+// in the language the app shows.
+//
+// New computer: why to start the Docker engine.
+func SetupEngineNeeded() string { return In(i18n.Locale()).SetupEngineNeeded() }
+
+// SetupEngineNeeded says "containers need the engine running"
+// in the language of msgs.
+//
+// New computer: why to start the Docker engine.
+func (msgs Messages) SetupEngineNeeded() string {
+	return Catalog.Format(msgs.locale, "setupEngineNeeded", nil)
+}
+
+// SetupStart says "Start…"
+// in the language the app shows.
+//
+// New computer: starts the Docker engine.
+func SetupStart() string { return In(i18n.Locale()).SetupStart() }
+
+// SetupStart says "Start…"
+// in the language of msgs.
+//
+// New computer: starts the Docker engine.
+func (msgs Messages) SetupStart() string {
+	return Catalog.Format(msgs.locale, "setupStart", nil)
+}
+
+// SetupNewTerminal says "Open a new terminal"
+// in the language the app shows.
+//
+// New computer: terminals open before do not see what installed.
+func SetupNewTerminal() string { return In(i18n.Locale()).SetupNewTerminal() }
+
+// SetupNewTerminal says "Open a new terminal"
+// in the language of msgs.
+//
+// New computer: terminals open before do not see what installed.
+func (msgs Messages) SetupNewTerminal() string {
+	return Catalog.Format(msgs.locale, "setupNewTerminal", nil)
+}
+
+// SetupNewTerminalText says "terminals open now do not see what was installed"
+// in the language the app shows.
+//
+// New computer: under the new terminal row.
+func SetupNewTerminalText() string { return In(i18n.Locale()).SetupNewTerminalText() }
+
+// SetupNewTerminalText says "terminals open now do not see what was installed"
+// in the language of msgs.
+//
+// New computer: under the new terminal row.
+func (msgs Messages) SetupNewTerminalText() string {
+	return Catalog.Format(msgs.locale, "setupNewTerminalText", nil)
+}
+
+// SetupAddProjects says "Add projects"
+// in the language the app shows.
+//
+// New computer: step 4 offer to add projects.
+func SetupAddProjects() string { return In(i18n.Locale()).SetupAddProjects() }
+
+// SetupAddProjects says "Add projects"
+// in the language of msgs.
+//
+// New computer: step 4 offer to add projects.
+func (msgs Messages) SetupAddProjects() string {
+	return Catalog.Format(msgs.locale, "setupAddProjects", nil)
+}
+
+// SetupAddProjectsText says "Hearth checks they have the versions they need"
+// in the language the app shows.
+//
+// New computer: under the add projects row.
+func SetupAddProjectsText() string { return In(i18n.Locale()).SetupAddProjectsText() }
+
+// SetupAddProjectsText says "Hearth checks they have the versions they need"
+// in the language of msgs.
+//
+// New computer: under the add projects row.
+func (msgs Messages) SetupAddProjectsText() string {
+	return Catalog.Format(msgs.locale, "setupAddProjectsText", nil)
+}
+
+// SetupAdd says "Add…"
+// in the language the app shows.
+//
+// New computer: opens the projects page.
+func SetupAdd() string { return In(i18n.Locale()).SetupAdd() }
+
+// SetupAdd says "Add…"
+// in the language of msgs.
+//
+// New computer: opens the projects page.
+func (msgs Messages) SetupAdd() string {
+	return Catalog.Format(msgs.locale, "setupAdd", nil)
+}
+
+// SetupChanged says "What changed"
+// in the language the app shows.
+//
+// New computer: step 4 card of the files changed.
+func SetupChanged() string { return In(i18n.Locale()).SetupChanged() }
+
+// SetupChanged says "What changed"
+// in the language of msgs.
+//
+// New computer: step 4 card of the files changed.
+func (msgs Messages) SetupChanged() string {
+	return Catalog.Format(msgs.locale, "setupChanged", nil)
+}
+
+// SetupChangedCaption says "Hearth's blocks · copies next to the files"
+// in the language the app shows.
+//
+// New computer: under the files changed.
+func SetupChangedCaption() string { return In(i18n.Locale()).SetupChangedCaption() }
+
+// SetupChangedCaption says "Hearth's blocks · copies next to the files"
+// in the language of msgs.
+//
+// New computer: under the files changed.
+func (msgs Messages) SetupChangedCaption() string {
+	return Catalog.Format(msgs.locale, "setupChangedCaption", nil)
+}
+
+// SetupFailedLead says "Why: {why}. The tools after it did not install."
+// in the language the app shows.
+//
+// New computer: step 3 lead when a step failed.
+func SetupFailedLead(why string) string { return In(i18n.Locale()).SetupFailedLead(why) }
+
+// SetupFailedLead says "Why: {why}. The tools after it did not install."
+// in the language of msgs.
+//
+// New computer: step 3 lead when a step failed.
+func (msgs Messages) SetupFailedLead(why string) string {
+	return Catalog.Format(msgs.locale, "setupFailedLead", map[string]any{"why": why})
+}
+
+// SetupStoppedLead says "Stopped: the tools after the one running did not install."
+// in the language the app shows.
+//
+// New computer: step 3 lead when the user stopped the installation.
+func SetupStoppedLead() string { return In(i18n.Locale()).SetupStoppedLead() }
+
+// SetupStoppedLead says "Stopped: the tools after the one running did not install."
+// in the language of msgs.
+//
+// New computer: step 3 lead when the user stopped the installation.
+func (msgs Messages) SetupStoppedLead() string {
+	return Catalog.Format(msgs.locale, "setupStoppedLead", nil)
+}

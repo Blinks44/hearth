@@ -64,15 +64,17 @@ func (a *App) operationView(c *ui.Context) {
 	if op.open {
 		a.operationDialog(c, op)
 	}
+	// The wizard shows its installation on its page.
+	wizard := op == a.setup.op && a.router.Path() == setupPage
 	switch {
-	case op.open || !op.started:
+	case op.open || !op.started || wizard:
 		op.told = op.told || op.state.Phase.Over()
 	case !op.state.Phase.Over():
 		a.operationToast(c, op)
 	case !op.told:
 		op.told = true
 		toast := ui.Toast{Title: locales.OpToastDone(op.plan.Title), Type: "success", Action: locales.OpShow(),
-			OnAction: func() { op.open = true }}
+			OnAction: func() { a.showOperation(op) }}
 		// What went wrong waits for the user.
 		if op.state.Phase != ops.Succeeded {
 			toast.Title, toast.Type, toast.Action, toast.Timeout = locales.OpToastFailed(op.plan.Title), "error", locales.OpDetails(), -1
@@ -82,6 +84,16 @@ func (a *App) operationView(c *ui.Context) {
 		}
 		c.AddToast(toast)
 	}
+}
+
+// showOperation shows op again: the wizard's installation on its page,
+// another in its dialog.
+func (a *App) showOperation(op *operation) {
+	if op == a.setup.op {
+		a.router.Push(setupPage)
+		return
+	}
+	op.open = true
 }
 
 // operationDialog is "What will change" before the user confirms, then
@@ -500,7 +512,7 @@ func (a *App) operationToast(c *ui.Context, op *operation) {
 					ui.Text(c, operationCaption(op)).FontSize(12).TextColor(t.TextMuted)
 					a.operationProgress(c, op).Margin(6, 0, 4, 0)
 					ui.Row(c).Gap(8).Children(func() {
-						ui.Button(c.Key("op-toast-show"), locales.OpShow()).OnClick(func() { op.open = true })
+						ui.Button(c.Key("op-toast-show"), locales.OpShow()).OnClick(func() { a.showOperation(op) })
 						ui.Button(c.Key("op-toast-stop"), locales.OpStop()).
 							Disabled(op.state.Phase.Over()).OnClick(func() { op.stop() })
 					})
