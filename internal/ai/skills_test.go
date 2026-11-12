@@ -50,7 +50,7 @@ var (
 type skill struct {
 	name, description, dir string
 	paths                  []inventory.SkillPath
-	broken, err            bool
+	broken, err, synced    bool
 }
 
 func TestSkills(t *testing.T) {
@@ -102,8 +102,18 @@ func TestSkills(t *testing.T) {
 			".claude/skills/notes/README.md":              "no skill",
 			".claude/skills/README.md":                    "no skill",
 		}, nil, []skill{
-			{name: "morning", description: "Brief", dir: ".claude/skills/synced/acct/morning",
+			{name: "morning", description: "Brief", dir: ".claude/skills/synced/acct/morning", synced: true,
 				paths: []inventory.SkillPath{{Path: ".claude/skills/synced/acct/morning", Agents: claudeDir}}},
+		}},
+		// Claude keeps each organization's synced skills apart and reads
+		// only the signed-in one's: the other folder is no copy.
+		{"synced for two organizations", map[string]string{
+			".claude.json": `{"oauthAccount":{"organizationUuid":"org-b"}}`,
+			".claude/skills/synced/org-a_1/morning/SKILL.md": skillMD("morning", "Old brief"),
+			".claude/skills/synced/org-b_2/morning/SKILL.md": skillMD("morning", "Brief"),
+		}, nil, []skill{
+			{name: "morning", description: "Brief", dir: ".claude/skills/synced/org-b_2/morning", synced: true,
+				paths: []inventory.SkillPath{{Path: ".claude/skills/synced/org-b_2/morning", Agents: claudeDir}}},
 		}},
 		{"frontmatter without name, and none", map[string]string{
 			".codex/skills/fold/SKILL.md": "---\ndescription: >\n  Folded\n  text\n---\n",
@@ -142,7 +152,7 @@ func summary(t *testing.T, skills []inventory.Skill, root string) []skill {
 	}
 	var out []skill
 	for _, s := range skills {
-		k := skill{name: s.Name, description: s.Description, dir: rel(s.Dir), broken: s.Broken, err: s.Err != ""}
+		k := skill{name: s.Name, description: s.Description, dir: rel(s.Dir), broken: s.Broken, err: s.Err != "", synced: s.Synced}
 		for _, p := range s.Paths {
 			p.Path = rel(p.Path)
 			k.paths = append(k.paths, p)

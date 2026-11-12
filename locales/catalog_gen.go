@@ -3576,6 +3576,26 @@ func (msgs Messages) TagSymlink() string {
 	return Catalog.Format(msgs.locale, "tagSymlink", nil)
 }
 
+// TagSynced says "claude.ai"
+// in the language the app shows.
+func TagSynced() string { return In(i18n.Locale()).TagSynced() }
+
+// TagSynced says "claude.ai"
+// in the language of msgs.
+func (msgs Messages) TagSynced() string {
+	return Catalog.Format(msgs.locale, "tagSynced", nil)
+}
+
+// SkillSyncedNote says "Claude syncs this skill from claude.ai and writes it over: change it there."
+// in the language the app shows.
+func SkillSyncedNote() string { return In(i18n.Locale()).SkillSyncedNote() }
+
+// SkillSyncedNote says "Claude syncs this skill from claude.ai and writes it over: change it there."
+// in the language of msgs.
+func (msgs Messages) SkillSyncedNote() string {
+	return Catalog.Format(msgs.locale, "skillSyncedNote", nil)
+}
+
 // SkillsCopiesHint says "{count, plural, one {# skill is} other {# skills are}} copied to several folders. One folder can stay, and the others…"
 // in the language the app shows.
 //
@@ -11958,7 +11978,7 @@ func (msgs Messages) VersionInstallTitle(tool string, version string) string {
 	return Catalog.Format(msgs.locale, "versionInstallTitle", map[string]any{"tool": tool, "version": version})
 }
 
-// VersionInstallWhy says "Through {manager}, as your other {tool} versions. The version in use stays as it is."
+// VersionInstallWhy says "Installs through {manager}. The {tool} version in use now stays as it is."
 // in the language the app shows.
 //
 // Why of the plan that installs a version of a language.
@@ -11966,7 +11986,7 @@ func VersionInstallWhy(manager string, tool string) string {
 	return In(i18n.Locale()).VersionInstallWhy(manager, tool)
 }
 
-// VersionInstallWhy says "Through {manager}, as your other {tool} versions. The version in use stays as it is."
+// VersionInstallWhy says "Installs through {manager}. The {tool} version in use now stays as it is."
 // in the language of msgs.
 //
 // Why of the plan that installs a version of a language.
@@ -12864,13 +12884,13 @@ func (msgs Messages) MiseSetupChange() string {
 	return Catalog.Format(msgs.locale, "miseSetupChange", nil)
 }
 
-// MiseFirst says "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}"
+// MiseFirst says "There is no version manager yet, so Hearth sets up mise first. {why}"
 // in the language the app shows.
 //
 // Why of a plan that sets up mise before it installs a version.
 func MiseFirst(why string) string { return In(i18n.Locale()).MiseFirst(why) }
 
-// MiseFirst says "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}"
+// MiseFirst says "There is no version manager yet, so Hearth sets up mise first. {why}"
 // in the language of msgs.
 //
 // Why of a plan that sets up mise before it installs a version.
@@ -15910,6 +15930,46 @@ func (msgs Messages) ProblemsGroupInfo() string {
 	return Catalog.Format(msgs.locale, "problemsGroupInfo", nil)
 }
 
+// ProblemHide says "Hide"
+// in the language the app shows.
+func ProblemHide() string { return In(i18n.Locale()).ProblemHide() }
+
+// ProblemHide says "Hide"
+// in the language of msgs.
+func (msgs Messages) ProblemHide() string {
+	return Catalog.Format(msgs.locale, "problemHide", nil)
+}
+
+// ProblemHideHint says "Hide it for good: it stays on the computer, Hearth stops showing it."
+// in the language the app shows.
+func ProblemHideHint() string { return In(i18n.Locale()).ProblemHideHint() }
+
+// ProblemHideHint says "Hide it for good: it stays on the computer, Hearth stops showing it."
+// in the language of msgs.
+func (msgs Messages) ProblemHideHint() string {
+	return Catalog.Format(msgs.locale, "problemHideHint", nil)
+}
+
+// ProblemsHidden says "{count, plural, one {# hidden item} other {# hidden items}}"
+// in the language the app shows.
+func ProblemsHidden(count int) string { return In(i18n.Locale()).ProblemsHidden(count) }
+
+// ProblemsHidden says "{count, plural, one {# hidden item} other {# hidden items}}"
+// in the language of msgs.
+func (msgs Messages) ProblemsHidden(count int) string {
+	return Catalog.Format(msgs.locale, "problemsHidden", map[string]any{"count": count})
+}
+
+// ProblemsShowHidden says "Show hidden"
+// in the language the app shows.
+func ProblemsShowHidden() string { return In(i18n.Locale()).ProblemsShowHidden() }
+
+// ProblemsShowHidden says "Show hidden"
+// in the language of msgs.
+func (msgs Messages) ProblemsShowHidden() string {
+	return Catalog.Format(msgs.locale, "problemsShowHidden", nil)
+}
+
 // ProblemsNone says "No matching issues."
 // in the language the app shows.
 //
@@ -16146,6 +16206,36 @@ func UpdatesLineCaption() string { return In(i18n.Locale()).UpdatesLineCaption()
 // Updates row caption and side card caption: a new line.
 func (msgs Messages) UpdatesLineCaption() string {
 	return Catalog.Format(msgs.locale, "updatesLineCaption", nil)
+}
+
+// UpdatesLineMise says "installs alongside through mise, the default stays"
+// in the language the app shows.
+func UpdatesLineMise() string { return In(i18n.Locale()).UpdatesLineMise() }
+
+// UpdatesLineMise says "installs alongside through mise, the default stays"
+// in the language of msgs.
+func (msgs Messages) UpdatesLineMise() string {
+	return Catalog.Format(msgs.locale, "updatesLineMise", nil)
+}
+
+// UpdatesMiseHeld says "mise's config holds this version"
+// in the language the app shows.
+func UpdatesMiseHeld() string { return In(i18n.Locale()).UpdatesMiseHeld() }
+
+// UpdatesMiseHeld says "mise's config holds this version"
+// in the language of msgs.
+func (msgs Messages) UpdatesMiseHeld() string {
+	return Catalog.Format(msgs.locale, "updatesMiseHeld", nil)
+}
+
+// UpdatesElsewhere says "Hearth cannot update it: update it where it came from"
+// in the language the app shows.
+func UpdatesElsewhere() string { return In(i18n.Locale()).UpdatesElsewhere() }
+
+// UpdatesElsewhere says "Hearth cannot update it: update it where it came from"
+// in the language of msgs.
+func (msgs Messages) UpdatesElsewhere() string {
+	return Catalog.Format(msgs.locale, "updatesElsewhere", nil)
 }
 
 // UpdatesCaskCaption says "cask · the app closes while it updates"

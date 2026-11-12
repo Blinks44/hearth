@@ -10,6 +10,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/updates"
 	"github.com/Blinks44/hearth/internal/versions"
 )
@@ -193,6 +195,28 @@ func TestUpdatesHeldAndMise(t *testing.T) {
 	a.MiseOutdated.Tools["go"] = versions.MiseTool{Current: "1.26.5", Latest: "1.27.4"}
 	if p, ok := a.updatePlan(updates.Update{Kind: updates.Patch, Tool: "go", Copy: st.Installations[0], Version: "1.26.9"}); ok {
 		t.Errorf("the default Go outside mise's range: %q", p.Steps[0].Argv)
+	}
+}
+
+// A new line of a tool no version manager keeps, as Node from Homebrew,
+// goes in through mise, set up first, instead of a row with nothing to do.
+func TestUpdatesLineWithoutManager(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: []inventory.Installation{
+		{Tool: "node", Version: "24.22.2", Path: "/opt/homebrew/bin/node", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
+	}}}}
+	u := updates.Update{Kind: updates.NewLine, Tool: "node", Version: "26.13.1", LTS: "26"}
+	if _, ok := a.updatePlan(u); ok {
+		t.Error("a plan without a way to set mise up")
+	}
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	p, ok := a.updatePlan(u)
+	if !ok || !a.newMise(u) {
+		t.Fatalf("plan %v, mise first %v", ok, a.newMise(u))
+	}
+	if got := strings.Join(p.Steps[0].Shown(), " "); got != "mise install node@26.13.1" {
+		t.Errorf("step %q", got)
 	}
 }
 

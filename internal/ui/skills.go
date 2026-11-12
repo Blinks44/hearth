@@ -111,11 +111,11 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 }
 
 // skillCopies counts the folders of each skill name in each scope, broken
-// links aside.
+// links and skills synced from claude.ai aside, as issues counts them.
 func skillCopies(skills []inventory.Skill) map[string]int {
 	n := map[string]int{}
 	for _, sk := range skills {
-		if !sk.Broken {
+		if !sk.Broken && !sk.Synced {
 			n[sk.Project+"\x00"+sk.Name]++
 		}
 	}
@@ -140,6 +140,7 @@ func (a *App) skillGroups() []skillGroup {
 			}
 		}
 		if len(g.skills) > 0 {
+			slices.SortStableFunc(g.skills, func(x, y inventory.Skill) int { return a.byTitle(x.Name, y.Name) })
 			groups = append(groups, g)
 		}
 	}
@@ -186,9 +187,12 @@ func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]in
 							ui.Text(c, sk.Description).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 						}
 					})
-					if sk.Broken {
+					switch n := copies[sk.Project+"\x00"+sk.Name]; {
+					case sk.Broken:
 						aiTag(c, locales.TagBroken(), pal.WarningSoft, pal.WarningText)
-					} else if n := copies[sk.Project+"\x00"+sk.Name]; n > 1 {
+					case sk.Synced:
+						aiTag(c, locales.TagSynced(), pal.Info.Alpha(0.12), pal.Info)
+					case n > 1:
 						aiTag(c, locales.ChipCopies(n), pal.WarningSoft, pal.WarningText)
 					}
 					agentAvatars(c, a.shownAgents(skillAgents(sk)))
@@ -270,8 +274,8 @@ func (a *App) skillCopyGroups(c *ui.Context) [][]inventory.Skill {
 // switch that disconnects it. The plan is made in the background: it looks at the
 // disk, and says why when it cannot be made.
 func (a *App) skillAgentControl(c *ui.Context, sk inventory.Skill, id string, via *inventory.SkillPath) {
-	// Aider reads no skills at all.
-	if a.BuildPlan == nil || sk.Broken || id == "aider" {
+	// Aider reads no skills at all; Claude writes a synced skill over.
+	if a.BuildPlan == nil || sk.Broken || sk.Synced || id == "aider" {
 		return
 	}
 	if via == nil {
@@ -305,6 +309,9 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, sk.Name).FontSize(17).FontWeight(500).Shrink(1).MinWidth(0).SingleLine()
 				aiTag(c, scopeName(sk.Project), pal.AccentSoft, pal.AccentInk)
+				if sk.Synced {
+					aiTag(c, locales.TagSynced(), pal.Info.Alpha(0.12), pal.Info)
+				}
 			})
 			if sk.Description != "" {
 				ui.Text(c, sk.Description).FontSize(12.5).TextColor(t.TextMuted)
@@ -312,6 +319,9 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 			pathChip(c, tilde(sk.Dir, a.Home), sk.Dir)
 			if sk.Err != "" {
 				ui.Text(c, sk.Err).FontSize(12).TextColor(pal.WarningText)
+			}
+			if sk.Synced {
+				ui.Text(c, locales.SkillSyncedNote()).FontSize(12).TextColor(t.TextMuted)
 			}
 		})
 		detailSection(c, locales.AvailableToAgents())

@@ -16,6 +16,11 @@ var Fonts embed.FS
 //go:embed icons/lucide/*.svg icons/brand/*.svg
 var Icons embed.FS
 
+// Logo is the app icon's tile without its margin, small, for the sidebar.
+//
+//go:embed logo.png
+var Logo []byte
+
 // Notice is Hearth's license and the licenses of everything it ships:
 // fonts, icons and Go modules.
 //

@@ -298,6 +298,10 @@ type Skill struct {
 	// Sum is a hash of its files' names and contents: copies with the same
 	// Sum are the same.
 	Sum string `json:",omitempty"`
+	// Synced reports a skill Claude syncs from claude.ai into
+	// skills/synced: Claude writes it over, so it is not the user's to
+	// change.
+	Synced bool `json:",omitempty"`
 	// Broken reports a symlink that leads nowhere.
 	Broken bool `json:",omitempty"`
 	// Err says why SKILL.md could not be read; empty when it was.

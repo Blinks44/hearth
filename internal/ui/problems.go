@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -43,6 +44,11 @@ func (a *App) problemsView(c *ui.Context, p page) {
 		t := c.Theme()
 		pal := Colors(t)
 		items := a.attentionItems(a.issues(c))
+		hidden := len(items)
+		items = slices.DeleteFunc(items, func(it attentionItem) bool {
+			return it.severity == issues.Info && slices.Contains(a.Hidden, it.key)
+		})
+		hidden -= len(items)
 		a.header(c, p.title(), p.subtitle())
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -94,6 +100,15 @@ func (a *App) problemsView(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("problems-filter"), &a.problemsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
 				})
+				if hidden > 0 && !a.firstScan() {
+					// Under the table, or the note that stands for it.
+					defer func() {
+						ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+							ui.Text(c, locales.ProblemsHidden(hidden)).FontSize(12).TextColor(t.TextMuted)
+							ui.Button(c.Key("problems-unhide"), locales.ProblemsShowHidden()).OnClick(func() { a.setHidden(nil) })
+						})
+					}()
+				}
 				switch {
 				case a.firstScan():
 					toolNote(c, locales.IssuesAfterScanText())
@@ -138,6 +153,14 @@ func (a *App) problemsView(c *ui.Context, p page) {
 	})
 }
 
+// setHidden keeps keys as the hidden issues.
+func (a *App) setHidden(keys []string) {
+	a.Hidden = keys
+	if a.OnSettings != nil {
+		a.OnSettings()
+	}
+}
+
 // problemRow is an issue in the table: its level, what it is and the whole
 // of why it matters, and on the right its fix and the page it lives on.
 func (a *App) problemRow(c *ui.Context, it attentionItem) {
@@ -162,6 +185,12 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 					ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
 				})
 			}
+			if it.severity == issues.Info {
+				ui.Button(c.Key("hide"), "").Height(22).Padding(0, 10).Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
+					OnClick(func() { a.setHidden(append(slices.Clone(a.Hidden), it.key)) }).Children(func() {
+					ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
+				})
+			}
 			ui.Button(c.Key("open"), "").Height(22).Padding(0, 10).
 				Label(locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
 				ui.Text(c, locales.IssueOpen()).FontSize(12).SingleLine()
@@ -172,17 +201,16 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 
 // problemsEnd is the Issues item's end in the sidebar: how many there are.
 func (a *App) problemsEnd(c *ui.Context) func() {
-	return warningPill(c, len(a.attentionItems(a.issues(c))))
+	return warningCount(c, len(needAttention(a.attentionItems(a.issues(c)))))
 }
 
-// warningPill shows n on a soft warning pill; nil for none.
-func warningPill(c *ui.Context, n int) func() {
+// warningCount shows n in the warning color, as the other items show
+// their counts; nil for none.
+func warningCount(c *ui.Context, n int) func() {
 	if n == 0 {
 		return nil
 	}
 	return func() {
-		pal := Colors(c.Theme())
-		ui.Text(c, strconv.Itoa(n)).FontSize(10.5).FontWeight(500).TextColor(pal.WarningText).
-			Padding(1, 6).Radius(8).Background(pal.WarningSoft).SingleLine()
+		ui.Text(c, strconv.Itoa(n)).FontSize(11).FontWeight(500).TextColor(Colors(c.Theme()).WarningText).SingleLine()
 	}
 }

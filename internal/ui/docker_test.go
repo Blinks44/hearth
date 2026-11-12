@@ -2,6 +2,7 @@ package ui
 
 import (
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,9 +38,14 @@ func TestDockerPage(t *testing.T) {
 	a.Projects = []projects.Project{{Dir: home + "/dev/api", Requirements: []projects.Requirement{{Tool: "docker", File: "compose.yaml"}}}}
 	tt := openDocker(a)
 	screenshot(t, tt, "docker")
-	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "How the terminal finds docker", "Container engines", "docker compose", "not checked", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
+	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "How the terminal finds docker", "Container engines", "docker compose", "~/.orbstack/run/docker.sock", "/var/run/docker.sock", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
 		if !tt.HasText(text) {
 			t.Errorf("missing %q: %q", text, tt.Texts())
+		}
+	}
+	for _, text := range []string{"unix://", "not checked"} {
+		if slices.ContainsFunc(tt.Texts(), func(s string) bool { return strings.Contains(s, text) }) {
+			t.Errorf("unexpected %q: %q", text, tt.Texts())
 		}
 	}
 	if issuePage(issues.Issue{Tool: "docker"}) != "/tools/docker" {

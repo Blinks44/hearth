@@ -24,7 +24,7 @@ const shownIssues = 3
 // the projects, and what needs attention.
 func (a *App) overviewPage(c *ui.Context, p page) {
 	found := a.issues(c)
-	items := a.attentionItems(found)
+	items := needAttention(a.attentionItems(found))
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			ui.Button(c.Key("setup"), "").Label(locales.SetupTitle()).Tooltip(locales.SetupHint()).OnClick(func() { a.router.Push(setupPage) }).Children(func() {
@@ -121,7 +121,7 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 			default:
 				heroChip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipIssues(n))
 				title = locales.HeroAlmost()
-				if warnings := len(slices.DeleteFunc(slices.Clone(found), func(it attentionItem) bool { return it.severity == issues.Info })); warnings >= 3 {
+				if n >= 3 {
 					title = locales.HeroAttention()
 				}
 				text = foundText + " " + locales.HeroSomeIssues(n)
@@ -251,7 +251,7 @@ func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
 		case hy && !hx:
 			return 1
 		}
-		return 0
+		return a.byTitle(toolName(x.Tool), toolName(y.Tool))
 	})
 	ui.Column(c).Gap(10).Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -638,6 +638,14 @@ type attentionItem struct {
 // grouped are the kinds whose issues the card shows as one when there are
 // several: each is the same advice about another skill or server.
 var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
+
+// needAttention are the items that need attention: warnings, and what is
+// only worth knowing when Hearth can fix it. The rest waits on the Issues
+// page, so that a computer nothing is wrong with, as macOS with its Java
+// stub, counts none.
+func needAttention(items []attentionItem) []attentionItem {
+	return slices.DeleteFunc(items, func(it attentionItem) bool { return it.severity == issues.Info && it.fix == nil })
+}
 
 // attentionItems are the card's lines for found, in its order, a group
 // where its first issue was.

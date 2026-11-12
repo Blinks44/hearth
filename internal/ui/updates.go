@@ -14,6 +14,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/updates"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -85,6 +86,16 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 			}
 			r.title, r.from, r.offered = toolName(u.Tool), u.Copy.Version, r.choosable
 			r.caption = sourceName(u.Copy.Source) + " · " + locales.UpdatesPatchCaption()
+			switch {
+			case r.choosable:
+			case u.Copy.Source.Manager == "mise" && a.MiseOutdated == nil:
+				// mise has not said yet whether the release is in range.
+			case u.Copy.Source.Manager == "mise":
+				// mise outdated sees no release in the config's range.
+				r.caption = sourceName(u.Copy.Source) + " · " + locales.UpdatesMiseHeld()
+			default:
+				r.caption = sourceName(u.Copy.Source) + " · " + locales.UpdatesElsewhere()
+			}
 			patches.rows = append(patches.rows, r)
 			continue
 		}
@@ -92,7 +103,14 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 		if u.LTS != "" {
 			r.title += " LTS"
 		}
-		r.caption = locales.UpdatesLineCaption()
+		switch {
+		case !r.choosable:
+			r.caption = locales.UpdatesElsewhere()
+		case a.newMise(u):
+			r.caption = locales.UpdatesLineMise()
+		default:
+			r.caption = locales.UpdatesLineCaption()
+		}
 		lines.rows = append(lines.rows, r)
 	}
 	groups := []updateGroup{patches, lines}
@@ -335,8 +353,10 @@ func (a *App) updateButton(c *ui.Context, chosen []updateRow) {
 		var plans []ops.Plan
 		var managers []inventory.PackageManager
 		byManager := map[string][]inventory.SystemPackage{}
+		mise := false
 		for _, r := range chosen {
 			if r.version != nil {
+				mise = mise || a.newMise(*r.version)
 				if p, ok := a.updatePlan(*r.version); ok {
 					plans = append(plans, p)
 				}
@@ -354,7 +374,15 @@ func (a *App) updateButton(c *ui.Context, chosen []updateRow) {
 		}
 		// The choice stays: what was updated leaves the table with the
 		// next scan, and a plan cancelled keeps what was checked.
-		if p, ok := ops.UpdatePlan(plans); ok {
+		p, ok := ops.UpdatePlan(plans)
+		switch {
+		case !ok:
+		case mise:
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				s, err := ops.SetUpMise(env)
+				return ops.WithMise(p, s), err
+			}, a.proposeOrSay)
+		default:
 			a.Propose(p)
 		}
 	})
@@ -388,7 +416,8 @@ func (a *App) updatesEnd(c *ui.Context) func() {
 
 // updatePlan is the plan that installs u: a fix through the manager of the
 // copy it replaces, a new line beside the copies through the one new
-// versions install through; false when Hearth cannot.
+// versions install through, or mise when there is none (newMise says it
+// is set up first); false when Hearth cannot.
 func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
 	if u.Mise != "" {
 		detect := a.detectMiseTool(u.Tool)
@@ -408,7 +437,10 @@ func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
 			label = "Temurin " + version
 		}
 		if manager == "" {
-			return ops.Plan{}, false
+			if a.BuildPlan == nil {
+				return ops.Plan{}, false
+			}
+			manager = "mise"
 		}
 		return a.versionPlan(ops.VersionInstall, u.Tool, manager, version, label, "")
 	}
@@ -439,6 +471,16 @@ func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
 		vu.Toolchain = in.Rust.Name
 	}
 	return ops.VersionUpdatePlan(vu, a.detect(u.Tool))
+}
+
+// newMise reports that u's plan needs mise set up first: a new line of a
+// tool no version manager keeps yet.
+func (a *App) newMise(u updates.Update) bool {
+	if u.Kind != updates.NewLine || u.Mise != "" {
+		return false
+	}
+	st, _ := a.toolState(u.Tool)
+	return a.installManager(st) == ""
 }
 
 // miseOutdated is what mise outdated said of its tool name; false when it

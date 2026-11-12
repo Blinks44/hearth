@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -80,7 +81,7 @@ func (a *App) mcpItems() []mcpItem {
 		}
 		return len(a.Projects)
 	}
-	slices.SortStableFunc(items, func(x, y mcpItem) int { return rank(x) - rank(y) })
+	slices.SortStableFunc(items, func(x, y mcpItem) int { return cmp.Or(rank(x)-rank(y), a.byTitle(x.name, y.name)) })
 	return items
 }
 
@@ -374,36 +375,52 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 
 // mcpAgentControl is what the agent id can do with m, i its declaration
 // in m.decls or -1: connect the server as another agent declares it,
-// turn it on or off where the agent has a setting for it, remove it. The
-// plans are made in the background: they read the files.
+// turn it on or off where the agent has a setting for it, remove it, and
+// open the file that declares it. The plans are made in the background:
+// they read the files.
 func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
-	if a.BuildPlan == nil || id == "aider" {
-		return
-	}
+	plans := a.BuildPlan != nil && id != "aider"
 	propose := func(build func(env sysenv.Env) (ops.Plan, error)) {
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) { return build(env) }, a.proposeOrSay)
 	}
 	if i < 0 {
-		from := m.decls[0]
-		ui.Button(c.Key("mcp-connect:"+id), locales.SkillConnect()).Shrink(0).OnClick(func() {
-			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPConnectPlan(from, id, env, agentTitle) })
-		})
+		if plans {
+			from := m.decls[0]
+			ui.Button(c.Key("mcp-connect:"+id), locales.SkillConnect()).Shrink(0).OnClick(func() {
+				propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPConnectPlan(from, id, env, agentTitle) })
+			})
+		}
 		return
 	}
 	s := m.decls[i]
-	if ops.MCPToggles(s) {
+	if plans && ops.MCPToggles(s) {
 		on := !s.Disabled
 		toggle(c, "mcp-on:"+id, &on).Label(locales.McpOnFor(agentTitle(id))).OnChange(func() {
 			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPEnablePlan(s, on, env, agentTitle) })
 		})
 	}
-	if ops.MCPRemovable(s) {
-		ui.Row(c.Key("mcp-menu:" + id)).Shrink(0).Children(func() {
-			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+	removable := plans && ops.MCPRemovable(s)
+	if a.Shell == nil && !removable {
+		return
+	}
+	ui.Row(c.Key("mcp-menu:" + id)).Shrink(0).Children(func() {
+		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+			if a.Shell != nil {
+				if menu.Item(locales.OpenFile(filepath.Base(s.File))).Chosen() {
+					a.openFile(c, s.File)
+				}
+				if menu.Item(showInFolder()).Chosen() {
+					a.Shell.ShowItemInFolder(s.File)
+				}
+			}
+			if removable {
+				if a.Shell != nil {
+					menu.Separator()
+				}
 				if menu.Item(locales.McpRemove(agentTitle(id))).Chosen() {
 					propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPRemovePlan(s, env, agentTitle) })
 				}
-			})
+			}
 		})
-	}
+	})
 }

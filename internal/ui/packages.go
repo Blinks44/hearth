@@ -134,7 +134,7 @@ func (a *App) packages(c *ui.Context, p page) {
 							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
 						})
 						if updates > 1 && choosable(m) {
-							ui.Box(c).Padding(10, 14, 0, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+							ui.Box(c).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 								warningWith(c, locales.PkgUpgradeAllWarning(updates), func() {
 									ui.Button(c.Key("package-choose"), locales.PkgChoose()).Shrink(0).OnClick(func() { a.packageTab = updatesTabIndex(m) })
 								})

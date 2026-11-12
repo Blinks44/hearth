@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 
@@ -98,4 +99,39 @@ func TestProblemsMany(t *testing.T) {
 	a.problemsFilter = "nothing like it"
 	tt.Frame()
 	hasTexts(t, tt, "No matching issues.")
+}
+
+// What is only worth knowing, as tools apps do not find, counts nowhere
+// but its group, and hides for good: the choice is saved, and Show hidden
+// brings it back.
+func TestProblemsHide(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	ts := &a.Snapshot.Tools[0]
+	for i := range ts.Installations {
+		ts.Installations[i].InGUI = 0
+	}
+	saved := 0
+	a.OnSettings = func() { saved++ }
+	tt := openProblems(t, a)
+	hasTexts(t, tt, "FOR INFORMATION · SAFE TO LEAVE", "Apps outside the terminal do not see Node")
+	// The sidebar's Issues item comes with no count.
+	if texts := tt.Texts(); !slices.Contains(texts, "Issues") || texts[slices.Index(texts, "Issues")+1] != "Updates" {
+		t.Errorf("the sidebar counts an issue only worth knowing: %q", texts)
+	}
+	if err := tt.Click("Hide"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if saved != 1 || len(a.Hidden) != 1 || tt.HasText("Apps outside the terminal do not see Node") {
+		t.Fatalf("saved %d, hidden %q: %q", saved, a.Hidden, tt.Texts())
+	}
+	hasTexts(t, tt, "1 hidden item")
+	if err := tt.Click("Show hidden"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if saved != 2 || len(a.Hidden) != 0 || !tt.HasText("Apps outside the terminal do not see Node") {
+		t.Errorf("saved %d, hidden %q: %q", saved, a.Hidden, tt.Texts())
+	}
 }

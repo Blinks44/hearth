@@ -3,6 +3,7 @@ package ai
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -39,7 +40,52 @@ func Skills(env sysenv.Env) []inventory.Skill {
 			roots = addRoot(roots, resolve(s, d, home), a.id)
 		}
 	}
-	return readSkills(roots, "")
+	return synced(readSkills(roots, ""), dir(agents[0].dir, env, home), home)
+}
+
+// synced marks the skills Claude syncs from claude.ai, kept as
+// claude/skills/synced/<organization>_<…>/<name>, and drops those of an
+// organization the user is not signed in to now: Claude reads only the
+// current one's, the others are what an earlier sign-in left.
+func synced(skills []inventory.Skill, claude, home string) []inventory.Skill {
+	if claude == "" {
+		return skills
+	}
+	root := filepath.Join(claude, "skills", "synced") + string(filepath.Separator)
+	if real, err := sysenv.RealPath(strings.TrimSuffix(root, string(filepath.Separator))); err == nil {
+		root = real + string(filepath.Separator)
+	}
+	org := organization(filepath.Join(home, ".claude.json"))
+	out := skills[:0]
+	for _, s := range skills {
+		if rest, ok := strings.CutPrefix(s.Dir, root); ok {
+			bucket, _, _ := strings.Cut(rest, string(filepath.Separator))
+			if org != "" && !strings.HasPrefix(bucket, org+"_") {
+				continue
+			}
+			s.Synced = true
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+// organization is the claude.ai organization Claude Code is signed in
+// to, from its state file; "" when unknown.
+func organization(state string) string {
+	data, err := os.ReadFile(state)
+	if err != nil {
+		return ""
+	}
+	var v struct {
+		OAuthAccount struct {
+			OrganizationUUID string `json:"organizationUuid"`
+		} `json:"oauthAccount"`
+	}
+	if json.Unmarshal(data, &v) != nil {
+		return ""
+	}
+	return v.OAuthAccount.OrganizationUUID
 }
 
 // ProjectSkills finds the skills in the skills directories of the project

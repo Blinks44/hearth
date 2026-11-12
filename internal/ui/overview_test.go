@@ -2,14 +2,18 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 func openOverview(t *testing.T, a *App) *ui.Tester {
@@ -101,8 +105,9 @@ func TestOverviewManyIssues(t *testing.T) {
 	a.Projects = testProjects()
 	tt := openOverview(t, a)
 	screenshot(t, tt, "overview-issues")
-	// fnm's third version, on no PATH, is an extra one: an Info.
-	hasTexts(t, tt, "5 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",
+	// fnm's third version, on no PATH, is an extra one, and the folder
+	// that does not exist has no fix here: worth knowing, not counted.
+	hasTexts(t, tt, "3 issues", "Needs attention", "Node: 2 copies on PATH", "Node differs outside the terminal",
 		"legacy-admin needs Node 18", "All issues", "2 copies", "other in apps", "no 18", "no Node 18", "2 projects")
 	// The PATH's item counts its issue.
 	if !tt.HasText("1") {
@@ -159,8 +164,9 @@ func TestOverviewFewIssues(t *testing.T) {
 	hasTexts(t, tt, "1 issue", "Almost ready", "legacy-admin needs Node 18")
 }
 
-// Only warnings ask for attention: tools apps do not find are worth
-// knowing, as a setup through mise activate has for each.
+// Only warnings, and what Hearth can fix, ask for attention: tools apps
+// do not find are worth knowing, as a setup through mise activate has for
+// each, and wait on the Issues page.
 func TestOverviewInfoIssues(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = calmSnapshot()
@@ -170,7 +176,10 @@ func TestOverviewInfoIssues(t *testing.T) {
 		ts.Installations[i].InGUI = 0
 	}
 	tt := openOverview(t, a)
-	hasTexts(t, tt, "3 issues", "Almost ready", "not in apps")
+	hasTexts(t, tt, "1 issue", "Almost ready", "not in apps", "PATH includes the current folder")
+	if tt.HasText("Apps outside the terminal do not see Node") {
+		t.Errorf("an issue only worth knowing needs attention: %q", tt.Texts())
+	}
 }
 
 // A narrow window shows what needs attention right under the summary,
@@ -192,9 +201,12 @@ func TestOverviewNarrow(t *testing.T) {
 }
 
 // Issues of one kind that only add up, as skills copied to several
-// folders, take one line of the card and count once.
+// folders, take one line of the card and count once; Hearth merges them,
+// so they need attention.
 func TestOverviewGroupsIssues(t *testing.T) {
 	a := NewApp()
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	a.SkillBackups = home + "/backups"
 	a.Snapshot = calmSnapshot()
 	for _, name := range []string{"pdf", "docx", "xlsx"} {
 		for _, dir := range []string{"/Users/dev/.claude/skills/", "/Users/dev/.agents/skills/"} {
@@ -230,4 +242,83 @@ func TestCopyReport(t *testing.T) {
 		t.Errorf("personal paths in\n%s", got)
 	}
 	hasTexts(t, tt, "Report copied")
+}
+
+// The sidebar lists the languages and each section's pages by title, and
+// the overview its tools cards by name, after those with issues.
+func TestAlphabeticalOrder(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	for _, tool := range []string{"python", "go", "bun"} {
+		a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: tool, Installations: []inventory.Installation{
+			{Tool: tool, Version: "1.0.0", Path: "/usr/local/bin/" + tool, OnPath: 1, InGUI: 1, Source: inventory.Source{Kind: inventory.KindInstaller}},
+		}})
+	}
+	tt := openOverview(t, a)
+	texts := tt.Texts()
+	at := func(s string) int {
+		i := slices.Index(texts, s)
+		if i < 0 {
+			t.Fatalf("no %q in %q", s, texts)
+		}
+		return i
+	}
+	// The sidebar's, then the cards'.
+	for _, order := range [][]string{
+		{"Bun", "Go", "Node.js", "Python"},
+		{"CLI & clouds", "Databases", "Docker", "Editors", "Git", "Mobile development", "npm · pnpm · Yarn"},
+		{"Agents", "Local models", "MCP", "Skills"},
+	} {
+		for i := 1; i < len(order); i++ {
+			if at(order[i-1]) > at(order[i]) {
+				t.Errorf("%q after %q", order[i-1], order[i])
+			}
+		}
+	}
+	var cards []string
+	for i, s := range texts {
+		if i > 0 && texts[i-1] == s && slices.Contains([]string{"Bun", "Go", "Node.js", "Python"}, s) {
+			cards = append(cards, s)
+		}
+	}
+	if want := []string{"Bun", "Go", "Node.js", "Python"}; !slices.Equal(cards, want) {
+		t.Errorf("cards %q, want %q", cards, want)
+	}
+}
+
+// In Russian the sidebar puts Russian titles before Latin ones, as the
+// language sorts them; MCP servers and skills go by name within a group.
+func TestAlphabeticalOrderRussian(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	a := NewApp()
+	a.Locale = "ru"
+	a.Snapshot = calmSnapshot()
+	tt := openOverview(t, a)
+	texts := tt.Texts()
+	for _, pair := range [][2]string{{"Агенты", "MCP"}, {"Локальные модели", "Skills"}, {"Базы данных", "Docker"}} {
+		if i, j := slices.Index(texts, pair[0]), slices.Index(texts, pair[1]); i < 0 || j < 0 || i > j {
+			t.Errorf("%q should come before %q: %q", pair[0], pair[1], texts)
+		}
+	}
+	a.Locale = "en"
+	a.Snapshot = aiSnapshot()
+	var names []string
+	for _, m := range a.mcpItems() {
+		if m.project == "" {
+			names = append(names, m.name)
+		}
+	}
+	if !slices.IsSorted(names) {
+		t.Errorf("servers %q", names)
+	}
+	var skills []string
+	for _, g := range a.skillGroups() {
+		for _, sk := range g.skills {
+			skills = append(skills, sk.Name)
+		}
+	}
+	if !slices.IsSorted(skills) {
+		t.Errorf("skills %q", skills)
+	}
 }

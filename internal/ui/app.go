@@ -6,10 +6,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
+	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -18,6 +20,7 @@ import (
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
+	"github.com/Blinks44/hearth/resources"
 )
 
 // App is the state of Hearth's main window.
@@ -31,6 +34,10 @@ type App struct {
 	ThemeMode string
 	// Locale is the interface language, "en" or "ru".
 	Locale string
+	// collator sorts titles in collatorLocale, made again when Locale
+	// changes.
+	collator       *collate.Collator
+	collatorLocale string
 	// VersionLists allows version lists and package-manager availability queries; without
 	// it, only the kept copies show.
 	VersionLists bool
@@ -40,8 +47,11 @@ type App struct {
 	CachePath string
 	// CacheBusy is true while the version lists are being cleared.
 	CacheBusy bool
-	// OnSettings saves ThemeMode and VersionLists after the user changed
-	// them; OnLocale shows and keeps another language.
+	// Hidden are the keys of the issues worth knowing the user hid: they
+	// leave the Issues page.
+	Hidden []string
+	// OnSettings saves ThemeMode, VersionLists and Hidden after the user
+	// changed them; OnLocale shows and keeps another language.
 	OnSettings func()
 	OnLocale   func(string)
 	// ClearCache removes the kept version lists.
@@ -421,6 +431,12 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 	})
 }
 
+var (
+	logoOnce sync.Once
+	// logo is the app icon in the sidebar, decoded once.
+	logo ui.ImageSource
+)
+
 // sidebar is the navigation: the logo, the pages by section, and settings
 // with the scan status at the bottom.
 func (a *App) sidebar(c *ui.Context, vibrant bool) {
@@ -454,7 +470,9 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				a.languages(c)
 				for _, s := range sections {
 					sectionTitle(c, s.title())
-					for _, p := range s.pages {
+					// By title in the language shown.
+					pages := slices.SortedFunc(slices.Values(s.pages), func(x, y page) int { return a.byTitle(x.title(), y.title()) })
+					for _, p := range pages {
 						a.item(c, p, a.pageEnd(c, p))
 					}
 				}
@@ -517,7 +535,7 @@ func (a *App) issueCount(c *ui.Context) func() {
 			n++
 		}
 	}
-	return warningPill(c, n)
+	return warningCount(c, n)
 }
 
 // status tells when the computer was last checked, with a button that
@@ -616,7 +634,7 @@ func (a *App) languages(c *ui.Context) {
 	plus := func() {
 		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(pal.TextFaint).Tooltip(locales.NotInstalledHint())
 	}
-	for _, l := range languages {
+	for _, l := range slices.SortedFunc(slices.Values(languages), func(x, y language) int { return a.byTitle(x.title(), y.title()) }) {
 		switch v := a.version(l.id); {
 		case v != "":
 			a.item(c, l.page, func() {
@@ -714,11 +732,11 @@ func sectionTitle(c *ui.Context, title string) {
 
 // brand is the logo, the app's name and the machine it looks at.
 func brand(c *ui.Context, machine string) {
+	logoOnce.Do(func() { logo, _ = ui.DecodeImage(resources.Logo) })
 	pal := Colors(c.Theme())
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Padding(2, 8, 14, 8).Shrink(0).Children(func() {
-		ui.Box(c).Size(28, 28).Radius(8).Center().Background(Accent).
-			Shadow(0, 2, 6, 0, ui.Hex("#C2410C").Alpha(0.25)).Children(func() {
-			ui.Icon(c, Icon("flame")).Size(16, 16).TextColor(ui.Hex("#FFFFFF"))
+		ui.Box(c).Size(28, 28).Radius(7).Clip().Shadow(0, 2, 6, 0, ui.Hex("#C2410C").Alpha(0.25)).Children(func() {
+			ui.Image(c, logo).Size(28, 28)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 			ui.Text(c, "Hearth").FontSize(14).FontWeight(600).SingleLine()

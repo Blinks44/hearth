@@ -347,12 +347,13 @@ func unsupported(ts inventory.ToolState, lines map[int]versions.Line, now time.T
 }
 
 // skillIssues are the copies by one name among one scope's skills. One
-// folder that several paths lead to is no copy, nor is a broken link.
+// folder that several paths lead to is no copy, nor is a broken link, nor
+// a skill Claude syncs from claude.ai: it writes that one over.
 func skillIssues(skills []inventory.Skill) []Issue {
 	var names []string
 	byName := map[string][]inventory.Skill{}
 	for _, sk := range skills {
-		if sk.Broken {
+		if sk.Broken || sk.Synced {
 			continue
 		}
 		if _, ok := byName[sk.Name]; !ok {

@@ -1483,6 +1483,8 @@
     "description": "Skill tag: a symlink leading nowhere."
   },
   "tagSymlink": "symlink",
+  "tagSynced": "claude.ai",
+  "skillSyncedNote": "Claude syncs this skill from claude.ai and writes it over: change it there.",
   "@tagSymlink": {
     "description": "Tag: found through a symlink."
   },
@@ -4293,7 +4295,7 @@
       }
     }
   },
-  "versionInstallWhy": "Through {manager}, as your other {tool} versions. The version in use stays as it is.",
+  "versionInstallWhy": "Installs through {manager}. The {tool} version in use now stays as it is.",
   "@versionInstallWhy": {
     "description": "Why of the plan that installs a version of a language.",
     "placeholders": {
@@ -4855,7 +4857,7 @@
   "@miseSetupChange": {
     "description": "What setting up mise changed."
   },
-  "miseFirst": "There is no version manager yet: first Hearth sets up mise, which then installs it. {why}",
+  "miseFirst": "There is no version manager yet, so Hearth sets up mise first. {why}",
   "@miseFirst": {
     "description": "Why of a plan that sets up mise before it installs a version.",
     "placeholders": {
@@ -6370,6 +6372,10 @@
     "description": "Issues table: the group of warnings."
   },
   "problemsGroupInfo": "For information · safe to leave",
+  "problemHide": "Hide",
+  "problemHideHint": "Hide it for good: it stays on the computer, Hearth stops showing it.",
+  "problemsHidden": "{count, plural, one {# hidden item} other {# hidden items}}",
+  "problemsShowHidden": "Show hidden",
   "@problemsGroupInfo": {
     "description": "Issues table: the group of issues only worth knowing."
   },
@@ -6462,6 +6468,9 @@
     "description": "Updates row caption: a newer release of the copy's line."
   },
   "updatesLineCaption": "installs alongside, the default stays",
+  "updatesLineMise": "installs alongside through mise, the default stays",
+  "updatesMiseHeld": "mise's config holds this version",
+  "updatesElsewhere": "Hearth cannot update it: update it where it came from",
   "@updatesLineCaption": {
     "description": "Updates row caption and side card caption: a new line."
   },

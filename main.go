@@ -53,7 +53,7 @@ func main() {
 			log.Print(err)
 		}
 	}
-	a.ThemeMode, a.VersionLists = list.settings.Theme, list.settings.VersionLists
+	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
 	// The native parts follow it too: the sidebar's material, the window
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
@@ -343,7 +343,7 @@ func main() {
 		})
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
-			list.settings.Theme, list.settings.VersionLists = a.ThemeMode, a.VersionLists
+			list.settings.Theme, list.settings.VersionLists, list.settings.Hidden = a.ThemeMode, a.VersionLists, a.Hidden
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 			list.save()
 			if onlineChanged {
@@ -459,20 +459,29 @@ func main() {
 }
 
 // fetchMise asks mise in the background which of the tools it installed
-// that have no page of their own have newer versions, and puts the answer
-// in a.MiseOutdated on the UI thread; a failed ask keeps the one before.
+// have newer versions, those with a page of their own as Node too, and
+// puts the answer in a.MiseOutdated on the UI thread; a failed ask keeps
+// the one before.
 func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *hearthui.App, env sysenv.Env) {
-	st, ok := a.Snapshot.Tool("mise")
 	found := sysenv.LookPathAll("mise", env)
-	if !ok || len(st.MiseTools) == 0 || len(found) == 0 {
+	var installed []string
+	if a.Snapshot != nil {
+		for _, st := range a.Snapshot.Tools {
+			for _, in := range st.Installations {
+				if in.Source.Manager == "mise" && !in.Source.Shim {
+					installed = append(installed, filepath.Base(filepath.Dir(in.Source.Root))+"@"+in.Version)
+				}
+			}
+			for _, mt := range st.MiseTools {
+				for _, in := range mt.Installations {
+					installed = append(installed, mt.Name+"@"+in.Version)
+				}
+			}
+		}
+	}
+	if len(installed) == 0 || len(found) == 0 {
 		a.MiseOutdated = nil
 		return
-	}
-	var installed []string
-	for _, mt := range st.MiseTools {
-		for _, in := range mt.Installations {
-			installed = append(installed, mt.Name+"@"+in.Version)
-		}
 	}
 	env = slices.Clone(env)
 	go func() {

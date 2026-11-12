@@ -286,6 +286,10 @@ func TestSkillOperations(t *testing.T) {
 	tt := openAI(t, a, skillsPage)
 	screenshot(t, tt, "skills-actions")
 	// pdf in ~/.claude/skills: Claude Code has it, Codex can connect it.
+	if err := tt.Click("pdf"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
 	if err := tt.Click("Connect"); err != nil {
 		t.Fatal(err)
 	}
@@ -302,6 +306,53 @@ func TestSkillOperations(t *testing.T) {
 	}
 	if built != 3 {
 		t.Errorf("plans asked for: %d, want 3", built)
+	}
+}
+
+// A skill synced from claude.ai is tagged, counts as no copy of the
+// user's own and offers nothing to change: Claude writes it over.
+func TestSyncedSkill(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	dir := home + "/.claude/skills/synced/org_1/morning"
+	a.Snapshot.Skills = []inventory.Skill{
+		{Name: "morning", Dir: dir, Synced: true, Sum: "a", Paths: []inventory.SkillPath{{Path: dir, Agents: []string{"claude"}}}},
+		{Name: "morning", Dir: home + "/.agents/skills/morning", Sum: "a", Paths: []inventory.SkillPath{{Path: home + "/.agents/skills/morning", Agents: []string{"codex"}}}},
+	}
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	tt := openAI(t, a, skillsPage)
+	hasTexts(t, tt, "claude.ai", "Claude syncs this skill from claude.ai and writes it over: change it there.")
+	for _, text := range []string{"Connect", "2 copies"} {
+		if tt.HasText(text) {
+			t.Errorf("unexpected %q: %q", text, tt.Texts())
+		}
+	}
+}
+
+// Each declaration's menu opens and shows its own file, not only the first
+// declaration's, the one the buttons under the list open.
+func TestMCPOpenFile(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	shell := &fakeShell{}
+	a.Shell = shell
+	tt := openAI(t, a, mcpPage)
+	if err := tt.Click("weftcut"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	for _, item := range []string{"Open config.toml", showInFolder()} {
+		if err := tt.Click("More"); err != nil {
+			t.Fatal(err)
+		}
+		if err := tt.ChooseMenuItem(item); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+	}
+	file := home + "/.codex/config.toml"
+	if !slices.Equal(shell.opened, []string{file}) || !slices.Equal(shell.revealed, []string{file}) {
+		t.Errorf("opened %q, revealed %q", shell.opened, shell.revealed)
 	}
 }
 

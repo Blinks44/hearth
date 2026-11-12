@@ -124,6 +124,15 @@ func dockerStatus(c *ui.Context, status string) (string, ui.Color) {
 	}
 }
 
+// endpointText shows a context's endpoint: a local socket as its path,
+// with ~ for home, the rest as Docker writes it.
+func endpointText(endpoint, home string) string {
+	if p, ok := strings.CutPrefix(endpoint, "unix://"); ok {
+		return tilde(p, home)
+	}
+	return endpoint
+}
+
 func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().Background(c.Theme().Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
@@ -150,10 +159,14 @@ func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 				}
 				ui.Text(c, engine).FontSize(11).Width(84).SingleLine().TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					clipped(c, strings.Replace(context.Endpoint, a.Home+"/", "~/", 1)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
+					clipped(c, endpointText(context.Endpoint, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					ui.Row(c).Gap(5).Children(func() {
 						if context.Name == d.Selected {
 							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.DockerActive())
+						} else if context.Status == "" {
+							// Only the selected context is probed: saying the
+							// others were not checked tells nothing.
+							return
 						}
 						status, dot := dockerStatus(c, context.Status)
 						bg, ink := pal.Muted, pal.TextFaint

@@ -137,7 +137,7 @@ func TestIssueFixes(t *testing.T) {
 }
 
 // The overview's issue has Fix… beside Details, and it opens the plan;
-// an issue without an operation has only Details.
+// a warning without an operation has only Details.
 func TestOverviewFix(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{Servers: []inventory.Database{
@@ -158,7 +158,7 @@ func TestOverviewFix(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	a.Snapshot = calmSnapshot()
-	a.Snapshot.Tools[0].Installations[0].InGUI = 0
+	a.Projects = []projects.Project{testProjects()[1]}
 	tt.Frame()
 	tt.Advance(time.Second)
 	if !tt.HasText("Details") || tt.HasText("Fix…") {

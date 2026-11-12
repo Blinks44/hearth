@@ -28,6 +28,8 @@ type Settings struct {
 	// Suggested is set once Hearth offered the projects in the usual code
 	// folders, so that it offers them only on the first start.
 	Suggested bool `json:"suggested,omitempty"`
+	// Hidden are the issues worth knowing the user hid, by their keys.
+	Hidden []string `json:"hidden,omitempty"`
 }
 
 // Project is a folder the user added to Hearth.
