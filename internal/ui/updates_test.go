@@ -232,3 +232,17 @@ func TestUpdatesRussian(t *testing.T) {
 	screenshot(t, tt, "updates-narrow-ru")
 	hasTexts(t, tt, "Обновления", "2 версии · 6 пакетов", "Обновить выбранные · 2", "ВЕРСИИ · ИСПРАВЛЕНИЯ В ТОЙ ЖЕ ЛИНИИ")
 }
+
+// A Flatpak commit, standing for a version there is none of, shows as a
+// build; versions and other managers' strings stay as they are.
+func TestFlatpakBuild(t *testing.T) {
+	for _, tt := range []struct{ manager, v, want string }{
+		{"flatpak", "40a4a730925d", "build 40a4a730925d"},
+		{"flatpak", "51.1", "51.1"},
+		{"apt", "40a4a730925d", "40a4a730925d"},
+	} {
+		if got := flatpakBuild(tt.manager, tt.v); got != tt.want {
+			t.Errorf("%s %s: %q, want %q", tt.manager, tt.v, got, tt.want)
+		}
+	}
+}

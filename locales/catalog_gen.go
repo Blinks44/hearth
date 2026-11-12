@@ -15980,6 +15980,16 @@ func (msgs Messages) UpdatesSubtitle() string {
 	return Catalog.Format(msgs.locale, "updatesSubtitle", nil)
 }
 
+// UpdatesBuild says "build {commit}"
+// in the language the app shows.
+func UpdatesBuild(commit string) string { return In(i18n.Locale()).UpdatesBuild(commit) }
+
+// UpdatesBuild says "build {commit}"
+// in the language of msgs.
+func (msgs Messages) UpdatesBuild(commit string) string {
+	return Catalog.Format(msgs.locale, "updatesBuild", map[string]any{"commit": commit})
+}
+
 // UpdatesLead says "The manager that installed it updates it"
 // in the language the app shows.
 //

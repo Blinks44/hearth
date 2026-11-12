@@ -1220,6 +1220,12 @@
   "allIssues": "Все проблемы",
   "updatesTitle": "Обновления",
   "updatesSubtitle": "Новые версии инструментов и пакетов",
+  "updatesBuild": "сборка {commit}",
+  "@updatesBuild": {
+    "placeholders": {
+      "commit": {}
+    }
+  },
   "updatesLead": "Обновляет тот менеджер, который поставил",
   "updatesFoundCaption": "{versions, plural, one {# версия} few {# версии} many {# версий} other {# версии}} · {packages, plural, one {# пакет} few {# пакета} many {# пакетов} other {# пакета}}",
   "updatesSelectedCaption": "патчи и пакеты",

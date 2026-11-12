@@ -6393,6 +6393,12 @@
   "@updatesSubtitle": {
     "description": "Under the Updates page's title."
   },
+  "updatesBuild": "build {commit}",
+  "@updatesBuild": {
+    "placeholders": {
+      "commit": {}
+    }
+  },
   "updatesLead": "The manager that installed it updates it",
   "@updatesLead": {
     "description": "Under the Updates page's big title."

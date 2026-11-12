@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -105,7 +106,7 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 			if pkg.Available == "" {
 				continue
 			}
-			r := updateRow{key: m.Path + "\x00" + packageKey(pkg), title: pkg.Name, from: pkg.Version, to: pkg.Available, m: m, pkg: pkg}
+			r := updateRow{key: m.Path + "\x00" + packageKey(pkg), title: pkg.Name, from: flatpakBuild(m.ID, pkg.Version), to: flatpakBuild(m.ID, pkg.Available), m: m, pkg: pkg}
 			r.choosable = ops.PackageManaged(m.ID)
 			// Only what the user asked for: others need the dependencies at
 			// the versions they have.
@@ -484,3 +485,15 @@ func globals(in inventory.Installation) bool {
 	}
 	return false
 }
+
+// flatpakBuild names a Flatpak commit, which stands for a version a
+// package or its update has none of, as "build 40a4a730925d".
+func flatpakBuild(manager, v string) string {
+	if manager == "flatpak" && commitID.MatchString(v) {
+		return locales.UpdatesBuild(v)
+	}
+	return v
+}
+
+// commitID is the short commit Flatpak shows, 12 hex digits.
+var commitID = regexp.MustCompile(`^[0-9a-f]{12}$`)
