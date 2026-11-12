@@ -264,6 +264,32 @@ func TestFind(t *testing.T) {
 	}
 }
 
+// A manager that installs from build definitions gets the newest release
+// they name, not one they do not name yet, and none when they name nothing
+// newer; one whose definitions Hearth did not find gets the list's.
+func TestFindInstallable(t *testing.T) {
+	asdf := copyOf("node", "22.12.0", inventory.KindVersionManager, "asdf")
+	for _, tt := range []struct {
+		name        string
+		installable []string
+		want        []Update
+	}{
+		{"behind the release", []string{"22.12.0", "22.20.0", "22.21.0-rc.1", "26.13.0", "lts"}, []Update{patch(asdf, "22.20.0", ""), newLine("node", "26.13.0", "Lithium")}},
+		{"nothing newer yet", []string{"22.12.0"}, []Update{newLine("node", "26.13.0", "Lithium")}},
+		{"definitions not found", nil, []Update{patch(asdf, "22.23.4", "Jod"), newLine("node", "26.13.0", "Lithium")}},
+		// Another manager's copy at the release does not update asdf's.
+		{"another manager has it", []string{"22.23.4"}, []Update{patch(asdf, "22.23.4", "Jod"), newLine("node", "26.13.0", "Lithium")}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node", Installations: []inventory.Installation{asdf, copyOf("node", "22.23.4", inventory.KindVersionManager, "mise")},
+				Managers: []inventory.Manager{{Name: "asdf", Installable: tt.installable}}}}}
+			if got := Find(s, nil, lists(t), now); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Find() =\n%+v\nwant\n%+v", got, tt.want)
+			}
+		})
+	}
+}
+
 func miseCopy(tool, v string) inventory.Installation {
 	return copyOf(tool, v, inventory.KindVersionManager, "mise")
 }

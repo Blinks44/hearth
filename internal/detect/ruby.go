@@ -106,6 +106,7 @@ func Ruby(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		}
 		st.Managers = append(st.Managers, m)
 	}
+	st.Managers = withInstallable(st.Managers, "ruby", term, d)
 	if active := inventory.TerminalCopy(st.Installations); active >= 0 {
 		in := &st.Installations[active]
 		in.Packages = rubyGems(in.RealPath, term)

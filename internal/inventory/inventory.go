@@ -143,6 +143,10 @@ type Manager struct {
 	// Admin reports that changing the manager's versions needs the
 	// administrator, as n's in a /usr/local the user cannot write.
 	Admin bool `json:",omitempty"`
+	// Installable is the versions the manager's build definitions name, as
+	// rbenv's ruby-build ones: it installs no newer release; nil when the
+	// manager has none or Hearth did not find them.
+	Installable []string `json:",omitempty"`
 	// Settings are the manager's settings that change which version runs,
 	// by name as it names them, as uv's python-preference.
 	Settings map[string]string `json:",omitempty"`

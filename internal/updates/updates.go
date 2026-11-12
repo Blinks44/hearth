@@ -96,12 +96,12 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 			}
 			return t.line(in.Version)
 		}
-		installed := map[string]bool{}
+		installed := map[string]bool{} // by manager@version: another manager's copy does not update this one
 		lines := map[string]bool{}
 		var newest *semver.Version
 		var own []inventory.Installation
 		for _, in := range ts.Installations {
-			installed[in.Version] = true
+			installed[in.Source.Manager+"@"+in.Version] = true
 			v := parse(in.Version)
 			if v == nil || v.Prerelease() != "" || in.Stub || in.Source.Shim ||
 				in.Source.Kind == inventory.KindSystem || in.Source.Kind == inventory.KindUnknown {
@@ -114,8 +114,14 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 			}
 		}
 		for _, in := range own {
-			to, ok := t.latest[lineOf(in)]
-			if !ok || installed[to] || !newer(to, in.Version) || !keeps(ts.Tool, wants, in.Version, to, l.nodeLines()) {
+			line := lineOf(in)
+			to, ok := t.latest[line]
+			// A manager that installs from build definitions, as rbenv,
+			// gets no release they do not name yet.
+			if i := slices.IndexFunc(ts.Managers, func(m inventory.Manager) bool { return m.Name == in.Source.Manager }); ok && i >= 0 && ts.Managers[i].Installable != nil {
+				to = newestKnown(ts.Managers[i].Installable, to, func(v string) bool { return t.line(v) == line })
+			}
+			if !ok || to == "" || installed[in.Source.Manager+"@"+to] || !newer(to, in.Version) || !keeps(ts.Tool, wants, in.Version, to, l.nodeLines()) {
 				continue
 			}
 			out = append(out, Update{Kind: Patch, Tool: ts.Tool, Copy: in, Version: to, LTS: l.lts(to)})
@@ -125,6 +131,26 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 		}
 	}
 	return out
+}
+
+// newestKnown is the newest of known in a line, no newer than to: the
+// release a manager installs from its build definitions; "" for none.
+func newestKnown(known []string, to string, inLine func(string) bool) string {
+	limit := parse(to)
+	var best *semver.Version
+	for _, k := range known {
+		v := parse(k)
+		if v == nil || v.Prerelease() != "" || !inLine(k) || limit != nil && v.GreaterThan(limit) {
+			continue
+		}
+		if best == nil || v.GreaterThan(best) {
+			best = v
+		}
+	}
+	if best == nil {
+		return ""
+	}
+	return best.Original()
 }
 
 // mise is the updates of mise's tools by what mise outdated said: a

@@ -75,7 +75,7 @@ func Python(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 			in.Default = true
 		}
 	}
-	state.Managers = pythonManagers(ctx, r, state.Installations, term, gui, dirs)
+	state.Managers = withInstallable(pythonManagers(ctx, r, state.Installations, term, gui, dirs), "python", term, dirs)
 	return state, ctx.Err()
 }
 
