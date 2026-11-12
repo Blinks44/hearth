@@ -6,6 +6,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/locales"
+	"github.com/Blinks44/hearth/resources"
 )
 
 func (a *App) settingsPage(c *ui.Context) {
@@ -97,12 +98,37 @@ func (a *App) settingsPage(c *ui.Context) {
 							v = locales.SettingsDevelopment()
 						}
 						settingRow(c, locales.SettingsVersion(), locales.SettingsFree(), func() { ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(c.Theme().TextMuted) })
+						settingRow(c, locales.SettingsLicenses(), locales.SettingsLicensesHint(), func() {
+							ui.Button(c, locales.SettingsOpen()).OnClick(func() { a.licensesOpen = true })
+						})
 					})
 				})
 			})
 		})
 	})
 	a.addDialog(c)
+	a.licensesDialog(c)
+}
+
+// licensesDialog shows Hearth's license and those of the fonts, icons and
+// Go modules it ships.
+func (a *App) licensesDialog(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	dialogBase(c, &a.licensesOpen, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(640).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		ui.Column(c).Children(func() {
+			ui.Text(c, locales.SettingsLicenses()).FontSize(18).FontWeight(600).Padding(20, 20, 14, 20)
+			ui.Scroll(c).Height(420).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, resources.Notice).Font(FontMono).FontSize(11).TextColor(t.TextMuted).Padding(14, 20).Selectable()
+			})
+			ui.Row(c).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Button(c, locales.SettingsClose()).OnClick(func() { a.licensesOpen = false })
+			})
+		})
+	})
 }
 
 func (a *App) savePreferences() {

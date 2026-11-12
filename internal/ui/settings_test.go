@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -38,6 +39,21 @@ func TestSettingsPage(t *testing.T) {
 	tt.Frame()
 	if a.VersionLists || saved != 1 {
 		t.Fatalf("network toggle: %v, saves %d", a.VersionLists, saved)
+	}
+	if err := tt.Click("Open"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	screenshot(t, tt, "settings-licenses")
+	if !strings.Contains(strings.Join(tt.Texts(), "\n"), "SIL Open Font License") || !tt.HasText("Licenses") {
+		t.Fatalf("licenses dialog: %q", tt.Texts())
+	}
+	if err := tt.Click("Close"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.licensesOpen {
+		t.Fatal("licenses dialog did not close")
 	}
 	if err := tt.Click("Clear cache"); err != nil {
 		t.Fatal(err)

@@ -2271,6 +2271,10 @@
   "settingsVersion": "Version",
   "settingsDevelopment": "Development build",
   "settingsFree": "Free · local · no telemetry",
+  "settingsLicenses": "Licenses",
+  "settingsLicensesHint": "Inter, JetBrains Mono, Lucide, Simple Icons",
+  "settingsOpen": "Open",
+  "settingsClose": "Close",
   "settingsError": "Settings could not be saved: {error}",
   "@settingsError": {
     "placeholders": {

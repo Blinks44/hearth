@@ -221,6 +221,7 @@ type App struct {
 	projectFilter  string  // the projects page's filter
 	adding         *adding // the folder the add dialog shows; nil when closed
 	addOpen        bool
+	licensesOpen   bool // the licenses dialog from Settings
 
 	// The skills and MCP pages: the agent filtered by, "" for all; the
 	// scope, as scopeSegments; the search; and the key of the one shown.

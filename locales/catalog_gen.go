@@ -6860,6 +6860,46 @@ func (msgs Messages) SettingsFree() string {
 	return Catalog.Format(msgs.locale, "settingsFree", nil)
 }
 
+// SettingsLicenses says "Licenses"
+// in the language the app shows.
+func SettingsLicenses() string { return In(i18n.Locale()).SettingsLicenses() }
+
+// SettingsLicenses says "Licenses"
+// in the language of msgs.
+func (msgs Messages) SettingsLicenses() string {
+	return Catalog.Format(msgs.locale, "settingsLicenses", nil)
+}
+
+// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons"
+// in the language the app shows.
+func SettingsLicensesHint() string { return In(i18n.Locale()).SettingsLicensesHint() }
+
+// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons"
+// in the language of msgs.
+func (msgs Messages) SettingsLicensesHint() string {
+	return Catalog.Format(msgs.locale, "settingsLicensesHint", nil)
+}
+
+// SettingsOpen says "Open"
+// in the language the app shows.
+func SettingsOpen() string { return In(i18n.Locale()).SettingsOpen() }
+
+// SettingsOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) SettingsOpen() string {
+	return Catalog.Format(msgs.locale, "settingsOpen", nil)
+}
+
+// SettingsClose says "Close"
+// in the language the app shows.
+func SettingsClose() string { return In(i18n.Locale()).SettingsClose() }
+
+// SettingsClose says "Close"
+// in the language of msgs.
+func (msgs Messages) SettingsClose() string {
+	return Catalog.Format(msgs.locale, "settingsClose", nil)
+}
+
 // SettingsError says "Settings could not be saved: {error}"
 // in the language the app shows.
 func SettingsError(error string) string { return In(i18n.Locale()).SettingsError(error) }

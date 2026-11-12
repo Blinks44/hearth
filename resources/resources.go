@@ -1,4 +1,5 @@
-// Package resources embeds the files the app ships with: fonts and icons.
+// Package resources embeds the files the app ships with: fonts, icons and
+// the licenses notice.
 // Licenses of third-party files sit next to them.
 package resources
 
@@ -14,3 +15,9 @@ var Fonts embed.FS
 //
 //go:embed icons/lucide/*.svg icons/brand/*.svg
 var Icons embed.FS
+
+// Notice is Hearth's license and the licenses of everything it ships:
+// fonts, icons and Go modules.
+//
+//go:embed NOTICE.txt
+var Notice string
