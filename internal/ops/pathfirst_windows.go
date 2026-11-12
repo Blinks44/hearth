@@ -42,7 +42,7 @@ func PathFirstPlan(entries []inventory.PathEntry, dir string, _ sysenv.Env, term
 	}
 	after := strings.Join(append([]string{items[j]}, slices.Delete(slices.Clone(items), j, j+1)...), ";")
 	var ahead []string
-	for _, d := range strings.Split(system, ";") {
+	for d := range strings.SplitSeq(system, ";") {
 		ahead = append(ahead, sysenv.ExpandPath(d))
 	}
 	at := len(firsts(ahead, func(d string) bool { return sysenv.SamePath(d, dir) }))

@@ -41,7 +41,7 @@ func PathPlan(entries []inventory.PathEntry, dirs []string, _ sysenv.Env, termin
 	seen := slices.DeleteFunc(strings.Split(system, ";"), func(d string) bool { return d == "" })
 	var kept []string
 	var fixed []PathProblem
-	for _, item := range strings.Split(before, ";") {
+	for item := range strings.SplitSeq(before, ";") {
 		dir := sysenv.ExpandPath(item)
 		i := slices.IndexFunc(want, func(p PathProblem) bool { return sysenv.SamePath(p.Dir, dir) })
 		repeat := slices.ContainsFunc(seen, func(d string) bool { return sysenv.SamePath(d, dir) })
