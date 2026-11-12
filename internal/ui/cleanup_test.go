@@ -36,13 +36,13 @@ func cleanupApp() *App {
 	a.Projects = []projects.Project{{Dir: home + "/dev/old-landing", Installs: []string{"node_modules"}, Changed: time.Now().AddDate(0, -8, 0)}}
 	a.Sizes = &inventory.Sizes{Taken: time.Now().Add(-5 * time.Minute),
 		Paths: map[string]inventory.Usage{
-			home + "/Library/pnpm/store":           {Bytes: 6_400_000_000},
-			home + "/.bun/install/cache":           {Bytes: 2_700_000_000},
-			home + "/.cache/uv":                    {Bytes: 2_600_000_000},
-			"/opt/homebrew/Cellar/node/23.6.0":     {Bytes: 200_000_000},
-			home + "/.nvm/versions/node/v20.18.0":  {Bytes: 500_000_000},
-			home + "/.nvm/versions/node/v18.20.4":  {Bytes: 500_000_000},
-			home + "/dev/old-landing/node_modules": {Bytes: 900_000_000},
+			home + "/Library/pnpm/store":                           {Bytes: 6_400_000_000},
+			home + "/.bun/install/cache":                           {Bytes: 2_700_000_000},
+			home + "/.cache/uv":                                    {Bytes: 2_600_000_000},
+			"/opt/homebrew/Cellar/node/23.6.0":                     {Bytes: 200_000_000},
+			home + "/.nvm/versions/node/v20.18.0":                  {Bytes: 500_000_000},
+			home + "/.nvm/versions/node/v18.20.4":                  {Bytes: 500_000_000},
+			filepath.Join(home+"/dev/old-landing", "node_modules"): {Bytes: 900_000_000},
 		},
 		Caches: []inventory.Cache{
 			{ID: "pnpm", Path: home + "/Library/pnpm/store"},

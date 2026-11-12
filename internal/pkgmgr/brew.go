@@ -3,6 +3,7 @@ package pkgmgr
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -111,7 +112,8 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 }
 
 // caskApps are where a cask's apps went, as /Applications/OrbStack.app;
-// its other artifacts lead into them or into the Caskroom.
+// its other artifacts lead into them or into the Caskroom. Homebrew's
+// paths are POSIX ones on every system it runs on.
 func caskApps(artifacts []json.RawMessage) []string {
 	var out []string
 	for _, raw := range artifacts {
@@ -119,7 +121,7 @@ func caskApps(artifacts []json.RawMessage) []string {
 			App    []json.RawMessage
 			Target string
 		}
-		if json.Unmarshal(raw, &a) == nil && len(a.App) > 0 && filepath.IsAbs(a.Target) {
+		if json.Unmarshal(raw, &a) == nil && len(a.App) > 0 && path.IsAbs(a.Target) {
 			out = append(out, a.Target)
 		}
 	}

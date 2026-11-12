@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"reflect"
 	"slices"
 	"testing"
@@ -285,18 +286,19 @@ func TestOfferFound(t *testing.T) {
 	var added []string
 	a.AddProjects = func(dirs []string) { added = dirs }
 	now := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
-	a.OfferFound([]string{home + "/dev"}, []projects.Suggestion{
-		{Project: projects.Project{Dir: home + "/dev/shop-web", Files: []string{".nvmrc"}}, Changed: now.Add(-time.Hour)},
-		{Project: projects.Project{Dir: home + "/dev/old-landing", Files: []string{"package.json"}}, Changed: now.AddDate(-1, 0, 0)},
+	dev := filepath.Join(home, "dev")
+	a.OfferFound([]string{dev}, []projects.Suggestion{
+		{Project: projects.Project{Dir: filepath.Join(dev, "shop-web"), Files: []string{".nvmrc"}}, Changed: now.Add(-time.Hour)},
+		{Project: projects.Project{Dir: filepath.Join(dev, "old-landing"), Files: []string{"package.json"}}, Changed: now.AddDate(-1, 0, 0)},
 	}, now)
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Projects found in the usual folders", "~/dev · 2 projects", "shop-web", "old-landing",
+	hasTexts(t, tt, "Projects found in the usual folders", tilde(dev, home)+" · 2 projects", "shop-web", "old-landing",
 		"unchanged for over half a year · may not need checking", "Add 1 project")
 	if err := tt.Click("Add 1 project"); err != nil {
 		t.Fatal(err)
 	}
-	if len(added) != 1 || added[0] != home+"/dev/shop-web" {
+	if len(added) != 1 || added[0] != filepath.Join(dev, "shop-web") {
 		t.Errorf("added %q", added)
 	}
 }
@@ -338,6 +340,6 @@ func TestProjectPin(t *testing.T) {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Pin Node 22.12.0 in shop-web", "~/dev/shop-web/.nvmrc", "- 22", "+ 22.12.0", "Pin 22.12.0")
+	hasTexts(t, tt, "Pin Node 22.12.0 in shop-web", tilde(filepath.Join(home+"/dev/shop-web", ".nvmrc"), home), "- 22", "+ 22.12.0", "Pin 22.12.0")
 	screenshot(t, tt, "project-pin")
 }

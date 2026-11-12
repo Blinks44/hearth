@@ -501,7 +501,7 @@ func TestNodeInstallThroughMise(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node"}}}
 	home := t.TempDir()
-	mise := filepath.Join(home, "bin", "mise")
+	mise := filepath.Join(home, "bin", "mise"+exeSuffix)
 	if err := os.MkdirAll(filepath.Dir(mise), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -526,7 +526,9 @@ func TestNodeInstallThroughMise(t *testing.T) {
 		t.Fatal("no plan")
 	}
 	steps := a.op.plan.Steps
-	if len(steps) != 3 || steps[0].Edit == nil || steps[1].Edit == nil || !slices.Equal(steps[2].Argv, []string{mise, "install", "node@24.1.0"}) {
+	// Setting mise up comes first: shell files on Unix, the user's Path
+	// on Windows.
+	if len(steps) < 2 || !slices.Equal(steps[len(steps)-1].Argv, []string{mise, "install", "node@24.1.0"}) {
 		t.Fatalf("steps %+v", steps)
 	}
 	if !strings.HasPrefix(a.op.plan.Why, "There is no version manager yet") {

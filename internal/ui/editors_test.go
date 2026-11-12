@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -54,12 +55,16 @@ func TestEditorsPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "editors")
-	hasTexts(t, tt, "Editors", "Tools · editors and IDEs", "VS CODE 1.96.2", "Command code", "/usr/local/bin/code → Visual Studio Code.app", "on PATH",
+	hasTexts(t, tt, "Editors", "Tools · editors and IDEs", "VS CODE 1.96.2", "Command code", "on PATH",
 		"48 extensions", "~/.vscode/extensions", "1.4 GB", "Old versions of extensions", "left after updates · 14 folders", "210 MB", "210 MB · can be removed",
 		"CURSOR 0.44.11", "Command cursor", "not on the PATH · installed from Cursor itself", "no", "31 extensions", "~/.cursor/extensions · 12 also in VS Code",
 		"INTELLIJ IDEA 2024.3 · TOOLBOX", "Command idea", "Toolbox script · on the PATH", "13 plugins", "settings IntelliJIdea2024.3",
-		"Index cache", "~/Library/Caches/JetBrains · rebuilt by itself", "2 of 3", "code, idea", "92 extensions",
+		"Index cache", "2 of 3", "code, idea", "92 extensions",
 		"Hints", "Cursor without a command on the PATH", "cursor won't work in the terminal", "Open in Cleanup", "What Hearth leaves alone")
+	// The fixture's paths are macOS ones: on Windows they show as they are.
+	if filepath.Separator == '/' {
+		hasTexts(t, tt, "/usr/local/bin/code → Visual Studio Code.app", "~/Library/Caches/JetBrains · rebuilt by itself")
+	}
 	a.editorsTab = 2 // commands
 	tt.Frame()
 	tt.Advance(time.Second)

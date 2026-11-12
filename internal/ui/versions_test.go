@@ -78,7 +78,7 @@ func TestRubyVersionMenu(t *testing.T) {
 // releases name it by Temurin's version for Java.
 func TestInstallThroughMise(t *testing.T) {
 	home := t.TempDir()
-	mise := filepath.Join(home, "bin", "mise")
+	mise := filepath.Join(home, "bin", "mise"+exeSuffix)
 	if err := os.MkdirAll(filepath.Dir(mise), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func newTester(a *App) *ui.Tester {
 // mise installs the same version and makes it the default.
 func TestMoveToMise(t *testing.T) {
 	dir := t.TempDir()
-	mise := filepath.Join(dir, "bin", "mise")
+	mise := filepath.Join(dir, "bin", "mise"+exeSuffix)
 	if err := os.MkdirAll(filepath.Dir(mise), 0o755); err != nil {
 		t.Fatal(err)
 	}

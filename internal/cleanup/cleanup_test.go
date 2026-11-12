@@ -1,6 +1,7 @@
 package cleanup
 
 import (
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -62,15 +63,15 @@ func TestFind(t *testing.T) {
 	}}
 	sizes := &inventory.Sizes{
 		Paths: map[string]inventory.Usage{
-			"/fnm/v20.18.0":              {Bytes: 200e6},
-			"/nvm/v16.20.2":              {Bytes: 300e6},
-			"/nvm/v14.21.3":              {Bytes: 400e6},
-			"/brew/Cellar/node/23.6.0":   {Bytes: 250e6},
-			"/brew/Cellar/oniguruma/6.9": {Bytes: 10e6},
-			"/npm-cache":                 {Bytes: 5000e6},
-			"/pnpm-store":                {Bytes: 9000e6, Shared: 9000e6},
-			"/yarn-cache":                {Bytes: 16384},
-			"/old/node_modules":          {Bytes: 900e6},
+			"/fnm/v20.18.0":                       {Bytes: 200e6},
+			"/nvm/v16.20.2":                       {Bytes: 300e6},
+			"/nvm/v14.21.3":                       {Bytes: 400e6},
+			"/brew/Cellar/node/23.6.0":            {Bytes: 250e6},
+			"/brew/Cellar/oniguruma/6.9":          {Bytes: 10e6},
+			"/npm-cache":                          {Bytes: 5000e6},
+			"/pnpm-store":                         {Bytes: 9000e6, Shared: 9000e6},
+			"/yarn-cache":                         {Bytes: 16384},
+			filepath.Join("/old", "node_modules"): {Bytes: 900e6},
 		},
 		Caches: []inventory.Cache{{ID: "npm", Path: "/npm-cache"}, {ID: "pnpm", Path: "/pnpm-store"}, {ID: "yarn", Path: "/yarn-cache"}},
 		Docker: []inventory.DockerUsage{
@@ -121,7 +122,7 @@ func TestFind(t *testing.T) {
 		// Docker: no volumes, and nothing for a build cache this small.
 		"docker-images   pulled",
 		"docker-containers   stopped",
-		"project-installs node_modules /old/node_modules unchanged,reinstalled",
+		"project-installs node_modules " + filepath.Join("/old", "node_modules") + " unchanged,reinstalled",
 	}
 	if !slices.Equal(summary, want) {
 		t.Fatalf("got\n%s\nwant\n%s", strings.Join(summary, "\n"), strings.Join(want, "\n"))
