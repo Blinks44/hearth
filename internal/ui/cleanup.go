@@ -63,8 +63,12 @@ func candidateKey(cand cleanup.Candidate) string {
 }
 
 // chosen reports whether the candidate is chosen: as the user set it, or
-// as Hearth offers it.
+// as Hearth offers it. One the plan cannot remove, as a copy from winget,
+// is never chosen.
 func (a *App) chosen(cand cleanup.Candidate) bool {
+	if !ops.Cleans(cand, a.Snapshot) {
+		return false
+	}
 	if v, ok := a.cleanupChoice[candidateKey(cand)]; ok {
 		return v
 	}
@@ -265,7 +269,7 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 	ui.Row(c.Key(key)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		on := a.chosen(cand)
 		title := a.candidateTitle(cand)
-		if ui.Checkbox(c.Key("check"), &on, "").Label(title).Changed() {
+		if ui.Checkbox(c.Key("check"), &on, "").Label(title).Disabled(!ops.Cleans(cand, a.Snapshot)).Changed() {
 			if a.cleanupChoice == nil {
 				a.cleanupChoice = map[string]bool{}
 			}

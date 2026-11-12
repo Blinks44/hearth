@@ -83,11 +83,11 @@ func TestCleanupPage(t *testing.T) {
 	if !tt.HasText("22.1 GB") {
 		t.Error("no size in the sidebar")
 	}
-	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
+	if err := tt.Click("nvm"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "17.4 GB", "5 candidates")
+	hasTexts(t, tt, "18.2 GB", "5 candidates")
 	a.cleanupTab = 3 // Docker
 	tt.Frame()
 	tt.Advance(time.Second)
@@ -154,17 +154,20 @@ func TestCleanupRemove(t *testing.T) {
 	a.router.Push(cleanupPage)
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
-	// Without Homebrew's packages known its copy is not removed: the
-	// button leaves it out.
+	// Without Homebrew's packages known its copy is not removed: it cannot
+	// be chosen.
 	for _, row := range []string{"Node.js 23.6.0 · brew", "nvm"} {
 		if err := tt.Click(row); err != nil {
 			t.Fatal(err)
 		}
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Remove selected · 18.2 GB")
+	hasTexts(t, tt, "Remove selected · 18.2 GB", "5 candidates")
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{brew}})
 	tt.Frame()
+	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
+		t.Fatal(err)
+	}
 	tt.Advance(time.Second)
 	if err := tt.Click("Remove selected · 18.4 GB"); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
