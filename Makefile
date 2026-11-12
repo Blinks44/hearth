@@ -1,12 +1,15 @@
 LINT := go tool -modfile=tools/go.mod golangci-lint
 
-.PHONY: dev build build-macos build-windows build-linux test e2e lint fmt check
+.PHONY: dev build build-release build-macos build-windows build-linux test e2e lint fmt check
 
 dev: ## run the app with live reload
 	go tool mygo dev
 
 build: ## package the app for this machine into build/
 	go tool mygo build
+
+build-release: ## package every release target into build/: macOS universal, Windows and Linux on amd64 and arm64
+	go tool mygo build -platform darwin/universal,windows/amd64,windows/arm64,linux/amd64,linux/arm64
 
 # arm64 targets match the test VMs in docs/manual-checks.md
 build-macos: ## package for macOS arm64 into build/darwin-arm64
