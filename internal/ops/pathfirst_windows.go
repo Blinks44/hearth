@@ -47,5 +47,5 @@ func PathFirstPlan(entries []inventory.PathEntry, dir string, _ sysenv.Env, term
 	}
 	at := len(firsts(ahead, func(d string) bool { return sysenv.SamePath(d, dir) }))
 	step := Step{UserPath: &UserPathEdit{Before: before, After: after}}
-	return pathFirstPlan(step, locales.PathFirstWhyRegistry(), entries, dir, at, terminal), nil
+	return pathFirstPlan([]Step{step}, locales.PathFirstWhyRegistry(), entries, dir, at, terminal), nil
 }

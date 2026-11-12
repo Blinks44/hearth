@@ -45,15 +45,47 @@ func PathFirstPlan(entries []inventory.PathEntry, dir string, env sysenv.Env, te
 	default:
 		return Plan{}, errors.New(locales.MiseShellUnsupported(shell))
 	}
-	data, err := os.ReadFile(file)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return Plan{}, fmt.Errorf("read %s: %w", file, err)
+	step, err := firstLineStep(file, line, true)
+	if err != nil {
+		return Plan{}, err
 	}
-	// A line put there before goes to the end of the block, after those
-	// that put other directories first since.
+	steps := []Step{step}
+	// A login bash reads its login file, and Ubuntu's ~/.profile puts
+	// ~/.local/bin first after it sources .bashrc: the line goes at its end
+	// too.
+	if login := bashLogin(home); shell == "bash" && login != "" {
+		step, err := firstLineStep(login, line, false)
+		if err != nil {
+			return Plan{}, err
+		}
+		steps = append(steps, step)
+	}
+	return pathFirstPlan(steps, locales.PathFirstWhy(), entries, dir, 0, terminal), nil
+}
+
+// firstLineStep is the step that puts line at the end of Hearth's block
+// in file, which may be new when isNew allows it. A line put there before
+// goes to the end of the block, after those that put other directories
+// first since.
+func firstLineStep(file, line string, isNew bool) (Step, error) {
+	data, err := os.ReadFile(file)
+	if err != nil && (!isNew || !errors.Is(err, os.ErrNotExist)) {
+		return Step{}, fmt.Errorf("read %s: %w", file, err)
+	}
 	after := AddToBlock(withoutBlockLine(string(data), line), line)
-	step := Step{Edit: &FileEdit{Path: file, Before: string(data), After: after, New: err != nil}}
-	return pathFirstPlan(step, locales.PathFirstWhy(), entries, dir, 0, terminal), nil
+	return Step{Edit: &FileEdit{Path: file, Before: string(data), After: after, New: err != nil}}, nil
+}
+
+// bashLogin is the file a login bash reads in home, as bash picks it: the
+// first of ~/.bash_profile, ~/.bash_login and ~/.profile there is; "" for
+// none.
+func bashLogin(home string) string {
+	for _, name := range []string{".bash_profile", ".bash_login", ".profile"} {
+		if p := filepath.Join(home, name); exists(p) {
+			return p
+		}
+	}
+	return ""
 }
 
 // rcFile is the startup file of shell's interactive sessions, as zsh's

@@ -151,11 +151,11 @@ func firstable(entries []inventory.PathEntry, i int) bool {
 		!slices.ContainsFunc(entries[:i], func(o inventory.PathEntry) bool { return sysenv.SamePath(o.Dir, e.Dir) })
 }
 
-// pathFirstPlan returns the plan of step putting dir first in PATH, after
+// pathFirstPlan returns the plan of steps putting dir first in PATH, after
 // the at directories that stay ahead of it, checked by a new terminal's
 // PATH: dir there, the other directories in the order they were.
-func pathFirstPlan(step Step, why string, entries []inventory.PathEntry, dir string, at int, terminal Terminal) Plan {
-	p := Plan{Title: locales.PathFirstTitle(dir), Why: why, Action: locales.PathFirstAction(), Steps: []Step{step},
+func pathFirstPlan(steps []Step, why string, entries []inventory.PathEntry, dir string, at int, terminal Terminal) Plan {
+	p := Plan{Title: locales.PathFirstTitle(dir), Why: why, Action: locales.PathFirstAction(), Steps: steps,
 		Changes: []string{"↑ " + dir}}
 	if terminal == nil {
 		return p

@@ -79,6 +79,32 @@ func TestPathFirstPlan(t *testing.T) {
 	}
 }
 
+// A login bash reads ~/.profile, which on Ubuntu sources .bashrc and then
+// puts ~/.local/bin first: the line goes at the end of both.
+func TestPathFirstBashLogin(t *testing.T) {
+	home := t.TempDir()
+	profile := filepath.Join(home, ".profile")
+	text := ". \"$HOME/.bashrc\"\nPATH=\"$HOME/.local/bin:$PATH\"\n"
+	if err := os.WriteFile(profile, []byte(text), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries := []inventory.PathEntry{{Dir: "/usr/bin"}, {Dir: "/opt/tool/bin"}}
+	p, err := PathFirstPlan(entries, "/opt/tool/bin", sysenv.Env{"HOME=" + home, "SHELL=/bin/bash"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	line := `export PATH="/opt/tool/bin:$PATH"`
+	if len(p.Steps) != 2 || p.Steps[0].Edit.Path != filepath.Join(home, ".bashrc") || p.Steps[1].Edit.Path != profile ||
+		p.Steps[1].Edit.New || !strings.HasPrefix(p.Steps[1].Edit.After, text) || !strings.Contains(p.Steps[1].Edit.After, line) {
+		t.Fatalf("steps %+v", p.Steps)
+	}
+	// zsh reads .zshrc last in a login shell: its file alone.
+	p, err = PathFirstPlan(entries, "/opt/tool/bin", sysenv.Env{"HOME=" + home, "SHELL=/bin/zsh"}, nil)
+	if err != nil || len(p.Steps) != 1 {
+		t.Fatalf("zsh: %v, steps %+v", err, p.Steps)
+	}
+}
+
 // Putting an entry first checks a new terminal: the entry first, the
 // rest in order; one that does not pass puts the file back.
 func TestPathFirstVerify(t *testing.T) {
