@@ -648,7 +648,7 @@ func (a *App) addDialog(c *ui.Context) {
 						caption = locales.OwnVersion(v[0].File, toolTitle(v[0].Tool)+" "+v[0].Want)
 					}
 					listRow(c, filepath.ToSlash(rel), false, caption, func() {
-						ui.Switch(c.Key("nested:"+p.Dir), &add.on[i]).Label(filepath.ToSlash(rel))
+						toggle(c, "nested:"+p.Dir, &add.on[i]).Label(filepath.ToSlash(rel))
 					})
 				}
 			})
@@ -712,7 +712,7 @@ func (a *App) foundRows(c *ui.Context, add *adding) {
 				caption = locales.ProjectUnchanged()
 			}
 			listRow(c, filepath.ToSlash(rel), false, caption, func() {
-				ui.Switch(c.Key("found:"+p.Dir), &add.on[i]).Label(filepath.ToSlash(rel))
+				toggle(c, "found:"+p.Dir, &add.on[i]).Label(filepath.ToSlash(rel))
 			})
 		}
 	}

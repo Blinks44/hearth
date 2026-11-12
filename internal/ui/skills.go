@@ -287,7 +287,7 @@ func (a *App) skillAgentControl(c *ui.Context, sk inventory.Skill, id string, vi
 		return
 	}
 	on, path := true, via.Path
-	ui.Switch(c.Key("connected:"+id), &on).Label(locales.SkillConnectedTo(agentTitle(id))).OnChange(func() {
+	toggle(c, "connected:"+id, &on).Label(locales.SkillConnectedTo(agentTitle(id))).OnChange(func() {
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 			return ops.SkillUnlinkPlan(sk, path, env, agentTitle)
 		}, a.proposeOrSay)

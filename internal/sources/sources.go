@@ -103,6 +103,8 @@ func rulesFor(env sysenv.Env) []rule {
 	add(d.Nvm, "versions/node/@", vm, "nvm")
 	add(d.Volta, "tools/image/*/@", vm, "volta")
 	add(d.Mise, "installs/*/@", vm, "mise")
+	// mise's .NET keeps every SDK in one shared root, as dotnet does.
+	add(d.Mise, "dotnet-root", vm, "mise")
 	add(d.Asdf, "installs/*/@", vm, "asdf")
 	add(d.Nodenv, "versions/@", vm, "nodenv")
 	add(d.Rbenv, "versions/@", vm, "rbenv")

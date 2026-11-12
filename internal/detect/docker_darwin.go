@@ -28,3 +28,6 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 	}
 	return engines, paths
 }
+
+// dockerJoined: the docker group is Linux's.
+func dockerJoined(string) bool { return false }

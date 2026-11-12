@@ -1082,6 +1082,10 @@
   "@chipChecking": {
     "description": "Overview hero chip during the first scan."
   },
+  "chipBare": "Ready to set up",
+  "@chipBare": {
+    "description": "Overview: hero chip when the scan found only what the system brings."
+  },
   "chipReadyToWork": "Ready to work",
   "@chipReadyToWork": {
     "description": "Overview hero chip without issues."
@@ -1111,6 +1115,22 @@
   "heroAlmost": "Almost ready",
   "@heroAlmost": {
     "description": "Overview hero title with one or two issues."
+  },
+  "heroBare": "A clean slate",
+  "@heroBare": {
+    "description": "Overview: hero title when the scan found only what the system brings."
+  },
+  "heroBareText": "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one plan.",
+  "@heroBareText": {
+    "description": "Overview: hero text under heroBare, which leads to the new computer wizard."
+  },
+  "heroBareAction": "Set up this computer",
+  "@heroBareAction": {
+    "description": "Overview: hero button that opens the new computer wizard."
+  },
+  "toolsNoneYet": "None yet: the new computer wizard installs what you need.",
+  "@toolsNoneYet": {
+    "description": "Overview: under the Tools heading when the scan found none."
   },
   "heroAttention": "Needs attention",
   "@heroAttention": {
@@ -2034,6 +2054,10 @@
   "dockerAvailable": "available",
   "dockerUnavailable": "unavailable",
   "dockerUnchecked": "not checked",
+  "dockerSignInExplain": "You are in the docker group already, but this session started before you joined it: docker ps and docker compose up will work once you sign out and back in.",
+  "@dockerSignInExplain": {
+    "description": "Docker issue: the user joined the docker group but has not signed in again."
+  },
   "dockerDeniedTitle": "No access to the Docker engine",
   "dockerDeniedExplain": "This user has no access to the Docker socket, so docker ps and docker compose up will not work. Add the user to the docker group (sudo usermod -aG docker $USER), then sign out and back in.",
   "dockerUnavailableTitle": "Docker engine is unavailable",
@@ -4025,6 +4049,50 @@
       }
     }
   },
+  "opOffline": "no connection to {host}, check the internet",
+  "@opOffline": {
+    "description": "Why a step failed: a download could not reach its server.",
+    "placeholders": {
+      "host": {
+        "type": "String",
+        "example": "api.github.com"
+      }
+    }
+  },
+  "wingetCancelled": "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered",
+  "@wingetCancelled": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "wingetDependencies": "a package it needs did not install, as when Windows' permission request (UAC) is left unanswered",
+  "@wingetDependencies": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "wingetNoNetwork": "no network connection",
+  "@wingetNoNetwork": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "wingetInUse": "the program is running: close it and try again",
+  "@wingetInUse": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "wingetReboot": "Windows needs a restart to finish installing",
+  "@wingetReboot": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "wingetDiskFull": "not enough disk space",
+  "@wingetDiskFull": {
+    "description": "Why a WinGet step failed, from its documented error code."
+  },
+  "opExitCodeHex": "exit code {code}",
+  "@opExitCodeHex": {
+    "description": "Why a step failed: the command's exit code in hex, as Windows' HRESULTs.",
+    "placeholders": {
+      "code": {
+        "type": "String",
+        "example": "0x8a150110"
+      }
+    }
+  },
   "opExitCode": "exit code {code}",
   "@opExitCode": {
     "description": "Why a step failed: the command's exit code.",
@@ -4485,6 +4553,10 @@
   "@noteAdminLinux": {
     "description": "Worth knowing on Linux: a step runs as the administrator."
   },
+  "noteWingetUAC": "Windows may ask for permission (UAC) when a package installs for all users",
+  "@noteWingetUAC": {
+    "description": "What will change: note on WinGet's installs and upgrades."
+  },
   "noteAdminWindows": "Windows asks for permission (UAC) before the step that needs it",
   "@noteAdminWindows": {
     "description": "Worth knowing on Windows: a step needs administrator rights."
@@ -4813,11 +4885,19 @@
   "@homebrewSignature": {
     "description": "Note of the step that checks Homebrew's package signature."
   },
+  "homebrewInstallStep": "install Apple's Command Line Tools, then Homebrew's package",
+  "@homebrewInstallStep": {
+    "description": "Step note: installing Homebrew after the Command Line Tools, with one password."
+  },
+  "cltInstallStep": "install Apple's Command Line Tools through Software Update",
+  "@cltInstallStep": {
+    "description": "Step note: installing the Command Line Tools without Apple's window."
+  },
   "homebrewNote": "Homebrew first",
   "@homebrewNote": {
     "description": "Worth knowing: Homebrew gets installed before mise."
   },
-  "homebrewNoteText": "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package",
+  "homebrewNoteText": "mise comes through Homebrew, the package manager of macOS developers. Hearth installs Apple's Command Line Tools, which Homebrew needs, and Homebrew's official package",
   "@homebrewNoteText": {
     "description": "Why Homebrew gets installed before mise."
   },
@@ -6859,7 +6939,7 @@
   "@setupOrder": {
     "description": "New computer: step 2 card of the tools in order."
   },
-  "setupSteps": "{count} steps",
+  "setupSteps": "{count, plural, one {# step} other {# steps}}",
   "@setupSteps": {
     "description": "New computer: aside of the order card.",
     "placeholders": {
@@ -6869,7 +6949,7 @@
       }
     }
   },
-  "setupStopNote": "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were.",
+  "setupStopNote": "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it was. The log shows it all.",
   "@setupStopNote": {
     "description": "New computer: note under the plan."
   },
@@ -6899,11 +6979,25 @@
   "@setupTagPassword": {
     "description": "New computer: tag of a step that asks for the administrator's password."
   },
+  "setupTagPath": "changes PATH",
+  "@setupTagPath": {
+    "description": "New computer plan: tag on a tool whose steps change the user's Path in the Windows registry."
+  },
   "setupTagFile": "changes a file",
   "@setupTagFile": {
     "description": "New computer: tag of a step that edits a startup file."
   },
-  "setupWithHomebrew": "comes with Homebrew's installer",
+  "setupWithPart": "in one command with {tool}",
+  "@setupWithPart": {
+    "description": "New computer plan: caption of a tool the system's manager installs in the same command as an earlier one.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "PHP"
+      }
+    }
+  },
+  "setupWithHomebrew": "part of the Command Line Tools, which install with Homebrew",
   "@setupWithHomebrew": {
     "description": "New computer: the Command Line Tools need no step of their own."
   },
@@ -6928,6 +7022,46 @@
   "setupInstalling": "Installing",
   "@setupInstalling": {
     "description": "New computer: step 3 title while the plan runs."
+  },
+  "setupToastStep": "Step {n} of {total} · {tool}",
+  "@setupToastStep": {
+    "description": "New computer: the installation's toast away from the wizard, as its tools count.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      },
+      "tool": {
+        "type": "String",
+        "example": "Node.js LTS"
+      }
+    }
+  },
+  "setupRustMSVC": "A compiler for Rust",
+  "@setupRustMSVC": {
+    "description": "New computer plan, Windows: note title when Rust brings Visual Studio Build Tools."
+  },
+  "setupRustMSVCText": "Rust on Windows builds programs with Microsoft's tools: Visual Studio Build Tools install first, a few gigabytes",
+  "@setupRustMSVCText": {
+    "description": "New computer plan, Windows: note text under setupRustMSVC."
+  },
+  "setupDockerGroupTitle": "Docker without sudo after signing in again",
+  "@setupDockerGroupTitle": {
+    "description": "New computer plan, Linux: note title on the docker group."
+  },
+  "setupDockerGroupText": "The docker group lets {user} run docker without sudo. It takes effect after you sign out and back in, or restart",
+  "@setupDockerGroupText": {
+    "description": "New computer plan, Linux: note text on the docker group.",
+    "placeholders": {
+      "user": {
+        "type": "String",
+        "example": "ann"
+      }
+    }
   },
   "setupInstallLead": "Step {n} of {total} · {tool}. You can run it in the background: the installation goes on.",
   "@setupInstallLead": {
@@ -6979,17 +7113,17 @@
   "@setupPasswordAhead": {
     "description": "New computer: a later step asks for the administrator's password."
   },
-  "setupPasswordAt": "at step {n}: {tool}",
+  "setupPasswordAt": "{count, plural, one {at step {steps}} other {at steps {steps}}}",
   "@setupPasswordAt": {
-    "description": "New computer: the step that will ask for the password.",
+    "description": "New computer: the steps that will ask for the password, as \"6: Docker engine\".",
     "placeholders": {
-      "n": {
+      "count": {
         "type": "int",
-        "example": "6"
+        "example": "2"
       },
-      "tool": {
+      "steps": {
         "type": "String",
-        "example": "Docker engine"
+        "example": "5: PHP, 9: Docker engine"
       }
     }
   },
@@ -6997,13 +7131,17 @@
   "@setupPasswordDone": {
     "description": "New computer: no step left asks for the password."
   },
-  "setupPasswordAsked": "it was asked at step {steps}",
+  "setupPasswordAsked": "{count, plural, one {it was asked at step {steps}} other {it was asked at steps {steps}}}",
   "@setupPasswordAsked": {
     "description": "New computer: the steps that asked for the password.",
     "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
       "steps": {
         "type": "String",
-        "example": "1"
+        "example": "5, 9"
       }
     }
   },
@@ -7014,6 +7152,10 @@
   "setupHideText": "Hearth shows the progress in the corner and tells you when it ends",
   "@setupHideText": {
     "description": "New computer: under the leave-this-page note."
+  },
+  "setupNothingChanged": "Nothing changed: the computer is as it was.",
+  "@setupNothingChanged": {
+    "description": "New computer: note under the order when the installation failed or stopped before a tool installed."
   },
   "setupNothingYet": "Nothing changed yet: stopping now leaves the computer as it was.",
   "@setupNothingYet": {
@@ -7054,6 +7196,18 @@
   "setupDoneLead": "Checked in a new terminal: every command is found and runs.",
   "@setupDoneLead": {
     "description": "New computer: step 4 lead when every tool works."
+  },
+  "setupTagSignIn": "after signing in again",
+  "@setupTagSignIn": {
+    "description": "New computer check: tag on Docker while the user waits to join the docker group."
+  },
+  "setupSignInAgain": "Sign out and back in",
+  "@setupSignInAgain": {
+    "description": "New computer, what's next: Linux's docker group takes effect on the next sign-in."
+  },
+  "setupSignInAgainText": "then docker works without sudo",
+  "@setupSignInAgainText": {
+    "description": "New computer, what's next: caption under setupSignInAgain."
   },
   "setupLeftTitle": "Done, one thing left",
   "@setupLeftTitle": {
@@ -7154,6 +7308,18 @@
   "setupChanged": "What changed",
   "@setupChanged": {
     "description": "New computer: step 4 card of the files changed."
+  },
+  "setupChangedCaptionWindows": "Hearth's entry first · the old value in the operations log",
+  "@setupChangedCaptionWindows": {
+    "description": "New computer, Windows: caption under the user's Path in What changed."
+  },
+  "setupMiseActivated": "hooked into the shell",
+  "@setupMiseActivated": {
+    "description": "New computer check: mise's caption when the shell's startup activates it."
+  },
+  "setupMiseShims": "shims on PATH",
+  "@setupMiseShims": {
+    "description": "New computer check: mise's caption when its shims are on PATH."
   },
   "setupChangedCaption": "Hearth's blocks · copies next to the files",
   "@setupChangedCaption": {

@@ -1,7 +1,10 @@
 package detect
 
 import (
+	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -22,4 +25,27 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 		paths = append(paths, filepath.Join(home, ".docker", "bin", "docker"), filepath.Join(home, ".rd", "bin", "docker"))
 	}
 	return engines, paths
+}
+
+// groupFile lists the system's groups; a variable, for tests.
+var groupFile = "/etc/group"
+
+// dockerJoined reports that user is in the docker group, as the group
+// file has it, though the socket refused them: the session started
+// before they joined, and a new sign-in gives access.
+func dockerJoined(user string) bool {
+	if user == "" {
+		return false
+	}
+	data, err := os.ReadFile(groupFile)
+	if err != nil {
+		return false
+	}
+	for line := range strings.Lines(string(data)) {
+		fields := strings.Split(strings.TrimSpace(line), ":")
+		if len(fields) == 4 && fields[0] == "docker" {
+			return slices.Contains(strings.Split(fields[3], ","), user)
+		}
+	}
+	return false
 }

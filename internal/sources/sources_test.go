@@ -62,6 +62,8 @@ func TestClassify(t *testing.T) {
 			inventory.Source{Kind: vm, Manager: "mise", Root: "/Users/ann/.local/share/mise/installs/node/22.11.0", Version: "22.11.0"}},
 		{"asdf shim", macEnv, "/Users/ann/.asdf/shims/node", "",
 			inventory.Source{Kind: vm, Manager: "asdf", Root: "/Users/ann/.asdf", Shim: true}},
+		{"mise .NET root", macEnv, "/Users/ann/.local/share/mise/dotnet-root/dotnet", "",
+			inventory.Source{Kind: vm, Manager: "mise", Root: "/Users/ann/.local/share/mise/dotnet-root"}},
 		{"asdf install", macEnv, "/Users/ann/.asdf/installs/nodejs/22.11.0/bin/node", "",
 			inventory.Source{Kind: vm, Manager: "asdf", Root: "/Users/ann/.asdf/installs/nodejs/22.11.0", Version: "22.11.0"}},
 		{"n", macEnv, "/usr/local/bin/node", "/usr/local/n/versions/node/22.11.0/bin/node",

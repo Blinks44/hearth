@@ -51,6 +51,13 @@ func (a *App) setupChosen(id string) bool {
 	if on, ok := a.setup.choice[id]; ok {
 		return on
 	}
+	// An engine with terms to read, as Docker Desktop's on Windows, waits
+	// for the user to choose it.
+	if e, _ := catalog.Find(id); id == "docker" {
+		if ms := e.On(goos); len(ms) > 0 && ms[0].Terms != "" {
+			return false
+		}
+	}
 	return slices.Contains(setupOffered, id)
 }
 
@@ -62,22 +69,54 @@ func (a *App) setupHave(id string) bool {
 	case "homebrew":
 		return slices.ContainsFunc(a.packageManagers(), func(m inventory.PackageManager) bool { return m.ID == "brew" })
 	case "mise":
-		if a.version("mise") == "" || a.Snapshot == nil {
-			return false
-		}
-		for _, st := range a.Snapshot.Tools {
-			for _, m := range st.Managers {
-				if m.Name == "mise" && (m.Activated || m.Shims) {
-					return true
-				}
-			}
-		}
-		return false
+		m, ok := a.miseManager()
+		return ok && (m.Activated || m.Shims)
 	}
-	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
+	e, _ := catalog.Find(id)
+	if e.Group == catalog.Agent {
 		return slices.Contains(a.foundIDs(), id)
 	}
-	return a.version(id) != ""
+	if a.version(id) == "" {
+		return false
+	}
+	// A language the system brings, as macOS's Ruby 2.6, is there for
+	// the system's own scripts: the wizard installs one to work with,
+	// unless the system's manager is how it installs here.
+	if ms := e.On(goos); e.Group == catalog.Language && len(ms) > 0 && !systemManager(ms[0].Manager) {
+		st, _ := a.Snapshot.Tool(id)
+		return slices.ContainsFunc(st.Installations, func(in inventory.Installation) bool {
+			return !in.Stub && in.Source.Kind != inventory.KindSystem
+		})
+	}
+	return true
+}
+
+// systemManager reports that manager is the system's package manager,
+// whose packages are the system's own copies.
+func systemManager(manager string) bool {
+	switch manager {
+	case "apt", "dnf", "zypper", "pacman", "apk":
+		return true
+	}
+	return false
+}
+
+// miseManager is mise as the last scan found it beside the tools it
+// keeps: its version, and how the shell runs it; false when no tool
+// names a mise that runs.
+func (a *App) miseManager() (inventory.Manager, bool) {
+	if a.Snapshot == nil {
+		return inventory.Manager{}, false
+	}
+	var found inventory.Manager
+	for _, st := range a.Snapshot.Tools {
+		for _, m := range st.Managers {
+			if m.Name == "mise" && m.Version != "" && (found.Version == "" || m.Activated || m.Shims) {
+				found = m
+			}
+		}
+	}
+	return found, found.Version != ""
 }
 
 // packageManagers are the system's package managers the last scan found.
@@ -92,6 +131,10 @@ func (a *App) packageManagers() []inventory.PackageManager {
 // setupInput is what the wizard installs, as chosen: the base always.
 func (a *App) setupInput() ops.Setup {
 	s := ops.Setup{GOOS: goos, Managers: a.packageManagers(), Engine: a.setup.engine, Have: map[string]bool{}, Title: setupTitle}
+	// Rust on Windows needs a C++ compiler, which is not in the catalog.
+	if a.version("cpp") != "" {
+		s.Have["cpp"] = true
+	}
 	for _, e := range a.setupEntries() {
 		if a.setupHave(e.ID) {
 			s.Have[e.ID] = true
@@ -218,11 +261,7 @@ func (a *App) setupHeading() (title, lead string) {
 		st := s.op.state
 		switch st.Phase {
 		case ops.Failed, ops.NotVerified:
-			why := st.Err
-			if why == "" {
-				why = locales.OpExitCode(st.ExitCode)
-			}
-			return locales.SetupFailed(setupTitle(s.parts[i].Tool)), locales.SetupFailedLead(why)
+			return locales.SetupFailed(setupTitle(s.parts[i].Tool)), locales.SetupFailedLead(failReason(st))
 		case ops.Stopped:
 			return locales.SetupStopped(), locales.SetupStoppedLead()
 		}
@@ -236,7 +275,7 @@ func (a *App) setupHeading() (title, lead string) {
 			switch _, r := a.setupResult(part.Tool); r {
 			case checkMissing:
 				missing++
-			case checkStopped:
+			case checkStopped, checkDenied:
 				left = true
 			}
 		}
@@ -392,9 +431,9 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 	caption := locales.SetupVia(managerTitle(m))
 	switch {
 	case e.ID == "docker" && m.Terms != "":
-		caption = locales.SetupEngineTerms(ops.EngineName(m.Package))
+		caption = locales.SetupEngineTerms(m.Engine)
 	case e.ID == "docker":
-		caption = locales.SetupEngineOpen(ops.EngineName(m.Package))
+		caption = locales.SetupEngineOpen(m.Engine)
 	case e.ID == "rust" && m.Manager == "installer":
 		caption = locales.SetupViaRustup()
 	}
@@ -402,7 +441,9 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 	ui.Row(c.Key("setup:"+e.ID)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, setupTitle(e.ID)).FontSize(13).SingleLine().Tooltip(catalog.About(e.ID))
+			ui.Text(c, setupTitle(e.ID)).FontSize(13).SingleLine()
+			// What it is for, to someone new to it, then how it installs.
+			ui.Text(c, catalog.About(e.ID)).FontSize(11.5).TextColor(c.Theme().TextMuted)
 			ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 		})
 		switch {
@@ -415,14 +456,14 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 			if e.ID == "docker" && on && len(methods) > 1 {
 				labels := make([]string, len(methods))
 				for i, em := range methods {
-					labels[i] = ops.EngineName(em.Package)
+					labels[i] = em.Engine
 				}
-				value := ops.EngineName(m.Package)
+				value := m.Engine
 				ui.Select(c.Key("setup-engine"), &value, labels).Label(locales.SetupDockerEngine()).Width(150).OnChange(func() {
 					a.setup.engine = methods[slices.Index(labels, value)].Package
 				})
 			}
-			if ui.Switch(c.Key("on"), &on).Label(locales.InstallNamed(setupTitle(e.ID))).Changed() {
+			if toggle(c, "on", &on).Label(locales.InstallNamed(setupTitle(e.ID))).Changed() {
 				if a.setup.choice == nil {
 					a.setup.choice = map[string]bool{}
 				}
@@ -464,7 +505,7 @@ func (a *App) setupPlanView(c *ui.Context) {
 		if len(s.plan.Notes) > 0 {
 			listCard(c, locales.OpWorthKnowing(), "", func() {
 				for _, n := range s.plan.Notes {
-					listRow(c, n.Title, false, n.Text, func() {
+					noteRow(c, n.Title, n.Text, func() {
 						if n.URL != "" {
 							ui.Button(c.Key("note:"+n.URL), locales.OpOpenLink()+" ↗").OnClick(func() { c.OpenURL(n.URL) })
 						}
@@ -472,6 +513,22 @@ func (a *App) setupPlanView(c *ui.Context) {
 				}
 			})
 		}
+	})
+}
+
+// noteRow is a row of "Worth knowing": a title and the text under it,
+// whole, which says more than a caption.
+func noteRow(c *ui.Context, title, text string, end func()) {
+	pal := Colors(c.Theme())
+	ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			ui.Text(c, title).FontSize(13)
+			if text != "" {
+				ui.Text(c, text).FontSize(11.5).TextColor(pal.TextFaint)
+			}
+		})
+		end()
 	})
 }
 
@@ -483,7 +540,8 @@ func (a *App) setupPartRow(c *ui.Context, i int, part ops.SetupPart) {
 	pal := Colors(t)
 	steps := a.setup.plan.Steps[part.From:part.To]
 	admin := slices.ContainsFunc(steps, func(s ops.Step) bool { return s.Admin })
-	file := slices.ContainsFunc(steps, func(s ops.Step) bool { _, _, ok := stepEdit(s); return ok })
+	file := slices.ContainsFunc(steps, func(s ops.Step) bool { _, setting, ok := stepEdit(s); return ok && !setting })
+	setting := slices.ContainsFunc(steps, func(s ops.Step) bool { _, setting, _ := stepEdit(s); return setting })
 	installing := a.setup.step == 2
 	status := ops.Waiting
 	if installing {
@@ -501,7 +559,7 @@ func (a *App) setupPartRow(c *ui.Context, i int, part ops.SetupPart) {
 	row.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, strconv.Itoa(i+1)+"  "+setupTitle(part.Tool)).FontSize(13).TextColor(color).SingleLine()
-			clipped(c, a.partCaption(steps)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+			clipped(c, a.partCaption(part, steps)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 		})
 		if installing {
 			label, bg, fg := stepTag(c, status)
@@ -513,6 +571,9 @@ func (a *App) setupPartRow(c *ui.Context, i int, part ops.SetupPart) {
 		}
 		if file {
 			aiTag(c, locales.SetupTagFile(), pal.Muted, t.TextMuted)
+		}
+		if setting {
+			aiTag(c, locales.SetupTagPath(), pal.Muted, t.TextMuted)
 		}
 	})
 }
@@ -581,17 +642,24 @@ func (a *App) setupInstallView(c *ui.Context) {
 		toolNote(c, a.setupLeftNote())
 	}, func() {
 		listCard(c, locales.SetupLog(a.setupCurrent()+1), "", func() {
-			color := t.TextMuted
+			color, wrap := t.TextMuted, false
 			if st.Phase == ops.Failed || st.Phase == ops.NotVerified {
-				color = pal.DangerText
+				color, wrap = pal.DangerText, true
 			}
 			lines := lastLines(st.Log, 8)
 			ui.Column(c).Gap(4).Padding(10, 14, 12, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Font(FontMono).Children(func() {
+				// A step that prints nothing yet, as one the administrator
+				// runs, says what it does.
 				if len(lines) == 0 {
-					ui.Text(c, "…").FontSize(11.5).TextColor(pal.TextFaint)
+					what := "…"
+					if st.Current < len(s.plan.Steps) && !st.Phase.Over() {
+						step := s.plan.Steps[st.Current]
+						what = cmp.Or(step.Note, ops.Command(step.Shown())) + "…"
+					}
+					ui.Text(c, what).FontSize(11.5).TextColor(pal.TextFaint)
 				}
 				for _, line := range lines {
-					clipped(c, line).FontSize(11.5).TextColor(color)
+					logLine(c, line, wrap).FontSize(11.5).TextColor(color)
 				}
 			})
 		})
@@ -599,25 +667,24 @@ func (a *App) setupInstallView(c *ui.Context) {
 			return
 		}
 		listCard(c, locales.OpWorthKnowing(), "", func() {
-			ahead := -1
-			var asked []string
+			var ahead, asked []string
 			for i, part := range s.parts {
 				if !slices.ContainsFunc(s.plan.Steps[part.From:part.To], func(s ops.Step) bool { return s.Admin }) {
 					continue
 				}
 				if partStatus(st, part) == ops.Done {
 					asked = append(asked, strconv.Itoa(i+1))
-				} else if ahead < 0 {
-					ahead = i
+				} else {
+					ahead = append(ahead, strconv.Itoa(i+1)+": "+setupTitle(part.Tool))
 				}
 			}
 			switch {
-			case ahead >= 0:
-				listRow(c, locales.SetupPasswordAhead(), false, locales.SetupPasswordAt(ahead+1, setupTitle(s.parts[ahead].Tool)), func() {})
+			case len(ahead) > 0:
+				noteRow(c, locales.SetupPasswordAhead(), locales.SetupPasswordAt(len(ahead), strings.Join(ahead, ", ")), func() {})
 			case len(asked) > 0:
-				listRow(c, locales.SetupPasswordDone(), false, locales.SetupPasswordAsked(strings.Join(asked, ", ")), func() {})
+				noteRow(c, locales.SetupPasswordDone(), locales.SetupPasswordAsked(len(asked), strings.Join(asked, ", ")), func() {})
 			}
-			listRow(c, locales.SetupHideTitle(), false, locales.SetupHideText(), func() {})
+			noteRow(c, locales.SetupHideTitle(), locales.SetupHideText(), func() {})
 		})
 	})
 }
@@ -633,6 +700,8 @@ func (a *App) setupLeftNote() string {
 		}
 	}
 	switch {
+	case len(done) == 0 && s.op.state.Phase.Over():
+		return locales.SetupNothingChanged()
 	case len(done) == 0:
 		return locales.SetupNothingYet()
 	case s.op.state.Phase.Over():
@@ -647,6 +716,7 @@ type checkResult int
 const (
 	checkWorks   checkResult = iota
 	checkStopped             // Docker's CLI is there, its engine does not answer
+	checkDenied              // Docker's engine refuses the user until they sign in again
 	checkMissing             // not on the terminal's PATH
 )
 
@@ -655,6 +725,16 @@ const (
 // again, and how it answers.
 func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 	if a.Snapshot == nil {
+		return inventory.Installation{}, checkMissing
+	}
+	if id == "mise" {
+		m, ok := a.miseManager()
+		switch {
+		case ok && m.Activated:
+			return inventory.Installation{Version: m.Version, Path: locales.SetupMiseActivated()}, checkWorks
+		case ok && m.Shims:
+			return inventory.Installation{Version: m.Version, Path: locales.SetupMiseShims()}, checkWorks
+		}
 		return inventory.Installation{}, checkMissing
 	}
 	if id == "homebrew" {
@@ -676,13 +756,24 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 		ins, docker = st.Installations, st.Docker
 	}
 	i := inventory.TerminalCopy(ins)
+	// A shim first on PATH whose version is picked as it runs, as Yarn's
+	// through Corepack before its first download, still answers.
+	if i < 0 {
+		i = slices.IndexFunc(ins, func(in inventory.Installation) bool { return in.OnPath == 1 && in.Source.Shim && !in.Stub })
+	}
 	if i < 0 {
 		return inventory.Installation{}, checkMissing
 	}
-	if docker != nil && slices.ContainsFunc(docker.Contexts, func(ctx inventory.DockerContext) bool {
-		return ctx.Name == docker.Selected && ctx.Status == "unavailable"
-	}) {
-		return ins[i], checkStopped
+	if docker != nil {
+		for _, ctx := range docker.Contexts {
+			if ctx.Name != docker.Selected || ctx.Status != "unavailable" {
+				continue
+			}
+			if ctx.Denied {
+				return ins[i], checkDenied
+			}
+			return ins[i], checkStopped
+		}
 	}
 	return ins[i], checkWorks
 }
@@ -720,7 +811,11 @@ func (a *App) setupCheckView(c *ui.Context) {
 		}
 		if len(paths) > 0 {
 			listCard(c, locales.SetupChanged(), "", func() {
-				listRow(c, strings.Join(paths, ", "), false, locales.SetupChangedCaption(), func() {})
+				caption := locales.SetupChangedCaption()
+				if goos == "windows" {
+					caption = locales.SetupChangedCaptionWindows()
+				}
+				listRow(c, strings.Join(paths, ", "), false, caption, func() {})
 			})
 		}
 	})
@@ -742,12 +837,14 @@ func (a *App) setupCheckRow(c *ui.Context, i int, id string) {
 		label, bg, fg, caption = locales.SetupTagChecking(), pal.InfoSoft, pal.InfoText, ""
 	case r == checkStopped:
 		label, bg, fg = locales.SetupTagEngineStopped(), pal.WarningSoft, pal.WarningText
+	case r == checkDenied:
+		label, bg, fg = locales.SetupTagSignIn(), pal.WarningSoft, pal.WarningText
 	case r == checkMissing:
 		label, bg, fg = locales.SetupTagMissing(), pal.DangerSoft, pal.DangerText
 	}
 	row := ui.Row(c.Key("check:"+id)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
-	if !a.Scanning && r == checkStopped {
+	if !a.Scanning && (r == checkStopped || r == checkDenied) {
 		row.Background(pal.WarningSoft)
 	}
 	row.Children(func() {
@@ -771,6 +868,9 @@ func (a *App) setupNextCard(c *ui.Context) {
 	}
 	listCard(c, locales.SetupWhatNext(), "", func() {
 		docker := slices.ContainsFunc(a.setup.parts, func(p ops.SetupPart) bool { return p.Tool == "docker" })
+		if _, r := a.setupResult("docker"); docker && r == checkDenied {
+			listRow(c, locales.SetupSignInAgain(), false, locales.SetupSignInAgainText(), func() {})
+		}
 		if plan, ok := a.engineStartPlan(); ok && docker {
 			listRow(c, plan.Title, false, locales.SetupEngineNeeded(), func() {
 				link("setup-engine-start", locales.SetupStart(), func() { a.Propose(plan) })
@@ -787,7 +887,13 @@ func (a *App) setupNextCard(c *ui.Context) {
 
 // partCaption says what a tool's steps run: the first command, or what
 // a script does, and the files it adds a line to.
-func (a *App) partCaption(steps []ops.Step) string {
+func (a *App) partCaption(part ops.SetupPart, steps []ops.Step) string {
+	switch {
+	case part.With == "homebrew":
+		return locales.SetupWithHomebrew()
+	case part.With != "":
+		return locales.SetupWithPart(setupTitle(part.With))
+	}
 	var what string
 	var files []string
 	for _, s := range steps {
@@ -806,8 +912,6 @@ func (a *App) partCaption(steps []ops.Step) string {
 		what = strings.Join(append([]string{strings.TrimSuffix(filepath.Base(argv[0]), ".exe")}, argv[1:]...), " ")
 	}
 	switch {
-	case what == "" && len(files) == 0:
-		return locales.SetupWithHomebrew()
 	case len(files) == 0:
 		return what
 	case what == "":

@@ -55,7 +55,10 @@ func TestSetupPlanMac(t *testing.T) {
 		t.Errorf("Grok through the Node mise installs: %v", got)
 	}
 	if git := part("git"); len(git) != 0 {
-		t.Errorf("the Command Line Tools come with Homebrew's package: %+v", git)
+		t.Errorf("Homebrew's part installs the Command Line Tools: %+v", git)
+	}
+	if hb := part("homebrew")[2]; !strings.Contains(hb.Argv[2], "softwareupdate -i") || !strings.Contains(hb.Argv[2], "installer -pkg") {
+		t.Errorf("Homebrew's install: %+v", hb)
 	}
 	// mise's hook and Claude Code's PATH share .zshrc: one block, edited
 	// in turn.
@@ -77,5 +80,13 @@ func TestSetupPlanMac(t *testing.T) {
 	}
 	if homebrewNotes != 1 {
 		t.Errorf("notes %+v", p.Notes)
+	}
+	// With Homebrew there, Git brings the Command Line Tools on its own,
+	// without Apple's window.
+	s.Have = map[string]bool{"homebrew": true}
+	s.Tools = []string{"git"}
+	p, _, err = SetupPlan(s, env)
+	if err != nil || len(p.Steps) != 1 || !p.Steps[0].Admin || !strings.Contains(p.Steps[0].Argv[2], "softwareupdate") {
+		t.Errorf("Git alone: %+v, %v", p.Steps, err)
 	}
 }

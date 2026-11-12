@@ -118,3 +118,31 @@ func TestCorepackFromNpm(t *testing.T) {
 		t.Fatalf("corepack: %+v", in)
 	}
 }
+
+// mise's pnpm shim runs the version its global config picks.
+func TestJSMiseDefault(t *testing.T) {
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	mise := filepath.Join(dir, "mise")
+	shim := filepath.Join(mise, "shims", jsLaunchers("pnpm")[0])
+	writeFile(t, shim, "shim")
+	for _, v := range []string{"10.6.2", "12.18.0"} {
+		writeFile(t, filepath.Join(mise, "installs", "pnpm", v, jsLaunchers("pnpm")[0]), "pnpm")
+	}
+	if err := os.Chmod(shim, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir, "config.toml"), "[tools]\npnpm = \"latest\"\n")
+	env := sysenv.Env{"PATH=" + filepath.Dir(shim), "PATHEXT=.CMD;.EXE", "MISE_DATA_DIR=" + mise,
+		"MISE_GLOBAL_CONFIG_FILE=" + filepath.Join(dir, "config.toml"), "HOME=" + dir, "USERPROFILE=" + dir}
+	st, err := jsManager(t.Context(), &run.Fake{}, "pnpm", env, sysenv.Env{"PATH="})
+	if err != nil {
+		t.Fatal(err)
+	}
+	active := inventory.TerminalCopy(st.Installations)
+	if active < 0 || st.Installations[active].Version != "12.18.0" {
+		t.Fatalf("active=%d: %+v", active, st.Installations)
+	}
+}

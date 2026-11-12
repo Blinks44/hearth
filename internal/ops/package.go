@@ -176,7 +176,13 @@ func packageSteps(action PackageAction, m inventory.PackageManager, pkgs []inven
 			}
 			steps = append(steps, Step{Argv: append(argv, "--disable-interactivity")})
 		}
-		return steps, nil
+		// A package installed for every user, as Git, asks through UAC
+		// itself; which do is the package's to say.
+		var notes []Note
+		if action != PackageUninstall {
+			notes = []Note{{Title: locales.NoteAdmin(), Text: locales.NoteWingetUAC(), Tag: "UAC"}}
+		}
+		return steps, notes
 	case "choco":
 		// Chocolatey changes C:\ProgramData and does not ask for the
 		// administrator itself.
@@ -194,11 +200,19 @@ func packageSteps(action PackageAction, m inventory.PackageManager, pkgs []inven
 		}
 		return []Step{{Argv: append(append([]string{"powershell.exe"}, script...), names...)}}, nil
 	case "apt":
+		// A new Ubuntu updates itself in the background for a while: apt
+		// waits for dpkg's lock instead of failing at once.
+		// The plan shows the command without it.
+		waiting := func(argv ...string) ([]Step, []Note) {
+			steps, notes := admin(append([]string{argv[0], "-oDPkg::Lock::Timeout=600"}, argv[1:]...)...)
+			steps[0].Runs = append(argv, names...)
+			return steps, notes
+		}
 		switch action {
 		case PackageInstall:
-			return admin(sibling("apt-get"), "install", "-y")
+			return waiting(sibling("apt-get"), "install", "-y")
 		case PackageUpgrade:
-			return admin(sibling("apt-get"), "install", "--only-upgrade", "-y")
+			return waiting(sibling("apt-get"), "install", "--only-upgrade", "-y")
 		}
 		// dpkg refuses to remove what other packages depend on, where
 		// apt-get would remove them too.

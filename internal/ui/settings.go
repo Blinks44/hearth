@@ -67,7 +67,7 @@ func (a *App) settingsPage(c *ui.Context) {
 					})
 					card(c, locales.SettingsNetwork(), "", nil, func() {
 						settingRow(c, locales.SettingsLists(), locales.SettingsListsHint(), func() {
-							ui.Switch(c.Key("settings-lists"), &a.VersionLists).Label(locales.SettingsAllowLists()).OnChange(a.savePreferences)
+							toggle(c, "settings-lists", &a.VersionLists).Label(locales.SettingsAllowLists()).OnChange(a.savePreferences)
 						})
 					})
 					card(c, locales.SettingsProjects(), "", func() {

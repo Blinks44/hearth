@@ -2,7 +2,6 @@ package detect
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -22,15 +21,15 @@ func cppStub(path string) bool {
 	if !strings.HasPrefix(path, "/usr/bin/") {
 		return false
 	}
-	_, err := filepath.EvalSymlinks(xcodeSelectLink)
-	return err != nil
+	_, ok := developerDir()
+	return !ok
 }
 
 // cppBase is the developer directory xcode-select chose: the Command Line
 // Tools, with their version from their package's receipt, or Xcode.
 func cppBase(ctx context.Context, r run.Runner, env sysenv.Env) *inventory.CppBase {
-	dir, err := filepath.EvalSymlinks(xcodeSelectLink)
-	if err != nil {
+	dir, ok := developerDir()
+	if !ok {
 		return nil
 	}
 	if strings.Contains(dir, ".app/") {

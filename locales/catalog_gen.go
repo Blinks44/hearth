@@ -2454,6 +2454,20 @@ func (msgs Messages) ChipChecking() string {
 	return Catalog.Format(msgs.locale, "chipChecking", nil)
 }
 
+// ChipBare says "Ready to set up"
+// in the language the app shows.
+//
+// Overview: hero chip when the scan found only what the system brings.
+func ChipBare() string { return In(i18n.Locale()).ChipBare() }
+
+// ChipBare says "Ready to set up"
+// in the language of msgs.
+//
+// Overview: hero chip when the scan found only what the system brings.
+func (msgs Messages) ChipBare() string {
+	return Catalog.Format(msgs.locale, "chipBare", nil)
+}
+
 // ChipReadyToWork says "Ready to work"
 // in the language the app shows.
 //
@@ -2536,6 +2550,64 @@ func HeroAlmost() string { return In(i18n.Locale()).HeroAlmost() }
 // Overview hero title with one or two issues.
 func (msgs Messages) HeroAlmost() string {
 	return Catalog.Format(msgs.locale, "heroAlmost", nil)
+}
+
+// HeroBare says "A clean slate"
+// in the language the app shows.
+//
+// Overview: hero title when the scan found only what the system brings.
+func HeroBare() string { return In(i18n.Locale()).HeroBare() }
+
+// HeroBare says "A clean slate"
+// in the language of msgs.
+//
+// Overview: hero title when the scan found only what the system brings.
+func (msgs Messages) HeroBare() string {
+	return Catalog.Format(msgs.locale, "heroBare", nil)
+}
+
+// HeroBareText says "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one …"
+// in the language the app shows.
+//
+// Overview: hero text under heroBare, which leads to the new computer
+// wizard.
+func HeroBareText() string { return In(i18n.Locale()).HeroBareText() }
+
+// HeroBareText says "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one …"
+// in the language of msgs.
+//
+// Overview: hero text under heroBare, which leads to the new computer
+// wizard.
+func (msgs Messages) HeroBareText() string {
+	return Catalog.Format(msgs.locale, "heroBareText", nil)
+}
+
+// HeroBareAction says "Set up this computer"
+// in the language the app shows.
+//
+// Overview: hero button that opens the new computer wizard.
+func HeroBareAction() string { return In(i18n.Locale()).HeroBareAction() }
+
+// HeroBareAction says "Set up this computer"
+// in the language of msgs.
+//
+// Overview: hero button that opens the new computer wizard.
+func (msgs Messages) HeroBareAction() string {
+	return Catalog.Format(msgs.locale, "heroBareAction", nil)
+}
+
+// ToolsNoneYet says "None yet: the new computer wizard installs what you need."
+// in the language the app shows.
+//
+// Overview: under the Tools heading when the scan found none.
+func ToolsNoneYet() string { return In(i18n.Locale()).ToolsNoneYet() }
+
+// ToolsNoneYet says "None yet: the new computer wizard installs what you need."
+// in the language of msgs.
+//
+// Overview: under the Tools heading when the scan found none.
+func (msgs Messages) ToolsNoneYet() string {
+	return Catalog.Format(msgs.locale, "toolsNoneYet", nil)
 }
 
 // HeroAttention says "Needs attention"
@@ -5272,6 +5344,22 @@ func DockerUnchecked() string { return In(i18n.Locale()).DockerUnchecked() }
 // in the language of msgs.
 func (msgs Messages) DockerUnchecked() string {
 	return Catalog.Format(msgs.locale, "dockerUnchecked", nil)
+}
+
+// DockerSignInExplain says "You are in the docker group already, but this session started before you joined it: docker ps and docker compose up w…"
+// in the language the app shows.
+//
+// Docker issue: the user joined the docker group but has not signed in
+// again.
+func DockerSignInExplain() string { return In(i18n.Locale()).DockerSignInExplain() }
+
+// DockerSignInExplain says "You are in the docker group already, but this session started before you joined it: docker ps and docker compose up w…"
+// in the language of msgs.
+//
+// Docker issue: the user joined the docker group but has not signed in
+// again.
+func (msgs Messages) DockerSignInExplain() string {
+	return Catalog.Format(msgs.locale, "dockerSignInExplain", nil)
 }
 
 // DockerDeniedTitle says "No access to the Docker engine"
@@ -11254,6 +11342,118 @@ func (msgs Messages) OpFailed(n int, why string) string {
 	return Catalog.Format(msgs.locale, "opFailed", map[string]any{"n": n, "why": why})
 }
 
+// OpOffline says "no connection to {host}, check the internet"
+// in the language the app shows.
+//
+// Why a step failed: a download could not reach its server.
+func OpOffline(host string) string { return In(i18n.Locale()).OpOffline(host) }
+
+// OpOffline says "no connection to {host}, check the internet"
+// in the language of msgs.
+//
+// Why a step failed: a download could not reach its server.
+func (msgs Messages) OpOffline(host string) string {
+	return Catalog.Format(msgs.locale, "opOffline", map[string]any{"host": host})
+}
+
+// WingetCancelled says "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetCancelled() string { return In(i18n.Locale()).WingetCancelled() }
+
+// WingetCancelled says "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetCancelled() string {
+	return Catalog.Format(msgs.locale, "wingetCancelled", nil)
+}
+
+// WingetDependencies says "a package it needs did not install, as when Windows' permission request (UAC) is left unanswered"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetDependencies() string { return In(i18n.Locale()).WingetDependencies() }
+
+// WingetDependencies says "a package it needs did not install, as when Windows' permission request (UAC) is left unanswered"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetDependencies() string {
+	return Catalog.Format(msgs.locale, "wingetDependencies", nil)
+}
+
+// WingetNoNetwork says "no network connection"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetNoNetwork() string { return In(i18n.Locale()).WingetNoNetwork() }
+
+// WingetNoNetwork says "no network connection"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetNoNetwork() string {
+	return Catalog.Format(msgs.locale, "wingetNoNetwork", nil)
+}
+
+// WingetInUse says "the program is running: close it and try again"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetInUse() string { return In(i18n.Locale()).WingetInUse() }
+
+// WingetInUse says "the program is running: close it and try again"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetInUse() string {
+	return Catalog.Format(msgs.locale, "wingetInUse", nil)
+}
+
+// WingetReboot says "Windows needs a restart to finish installing"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetReboot() string { return In(i18n.Locale()).WingetReboot() }
+
+// WingetReboot says "Windows needs a restart to finish installing"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetReboot() string {
+	return Catalog.Format(msgs.locale, "wingetReboot", nil)
+}
+
+// WingetDiskFull says "not enough disk space"
+// in the language the app shows.
+//
+// Why a WinGet step failed, from its documented error code.
+func WingetDiskFull() string { return In(i18n.Locale()).WingetDiskFull() }
+
+// WingetDiskFull says "not enough disk space"
+// in the language of msgs.
+//
+// Why a WinGet step failed, from its documented error code.
+func (msgs Messages) WingetDiskFull() string {
+	return Catalog.Format(msgs.locale, "wingetDiskFull", nil)
+}
+
+// OpExitCodeHex says "exit code {code}"
+// in the language the app shows.
+//
+// Why a step failed: the command's exit code in hex, as Windows' HRESULTs.
+func OpExitCodeHex(code string) string { return In(i18n.Locale()).OpExitCodeHex(code) }
+
+// OpExitCodeHex says "exit code {code}"
+// in the language of msgs.
+//
+// Why a step failed: the command's exit code in hex, as Windows' HRESULTs.
+func (msgs Messages) OpExitCodeHex(code string) string {
+	return Catalog.Format(msgs.locale, "opExitCodeHex", map[string]any{"code": code})
+}
+
 // OpExitCode says "exit code {code}"
 // in the language the app shows.
 //
@@ -12110,6 +12310,20 @@ func (msgs Messages) NoteAdminLinux() string {
 	return Catalog.Format(msgs.locale, "noteAdminLinux", nil)
 }
 
+// NoteWingetUAC says "Windows may ask for permission (UAC) when a package installs for all users"
+// in the language the app shows.
+//
+// What will change: note on WinGet's installs and upgrades.
+func NoteWingetUAC() string { return In(i18n.Locale()).NoteWingetUAC() }
+
+// NoteWingetUAC says "Windows may ask for permission (UAC) when a package installs for all users"
+// in the language of msgs.
+//
+// What will change: note on WinGet's installs and upgrades.
+func (msgs Messages) NoteWingetUAC() string {
+	return Catalog.Format(msgs.locale, "noteWingetUAC", nil)
+}
+
 // NoteAdminWindows says "Windows asks for permission (UAC) before the step that needs it"
 // in the language the app shows.
 //
@@ -12708,6 +12922,36 @@ func (msgs Messages) HomebrewSignature() string {
 	return Catalog.Format(msgs.locale, "homebrewSignature", nil)
 }
 
+// HomebrewInstallStep says "install Apple's Command Line Tools, then Homebrew's package"
+// in the language the app shows.
+//
+// Step note: installing Homebrew after the Command Line Tools, with one
+// password.
+func HomebrewInstallStep() string { return In(i18n.Locale()).HomebrewInstallStep() }
+
+// HomebrewInstallStep says "install Apple's Command Line Tools, then Homebrew's package"
+// in the language of msgs.
+//
+// Step note: installing Homebrew after the Command Line Tools, with one
+// password.
+func (msgs Messages) HomebrewInstallStep() string {
+	return Catalog.Format(msgs.locale, "homebrewInstallStep", nil)
+}
+
+// CltInstallStep says "install Apple's Command Line Tools through Software Update"
+// in the language the app shows.
+//
+// Step note: installing the Command Line Tools without Apple's window.
+func CltInstallStep() string { return In(i18n.Locale()).CltInstallStep() }
+
+// CltInstallStep says "install Apple's Command Line Tools through Software Update"
+// in the language of msgs.
+//
+// Step note: installing the Command Line Tools without Apple's window.
+func (msgs Messages) CltInstallStep() string {
+	return Catalog.Format(msgs.locale, "cltInstallStep", nil)
+}
+
 // HomebrewNote says "Homebrew first"
 // in the language the app shows.
 //
@@ -12722,13 +12966,13 @@ func (msgs Messages) HomebrewNote() string {
 	return Catalog.Format(msgs.locale, "homebrewNote", nil)
 }
 
-// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package"
+// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers. Hearth installs Apple's Command Line Tools, whi…"
 // in the language the app shows.
 //
 // Why Homebrew gets installed before mise.
 func HomebrewNoteText() string { return In(i18n.Locale()).HomebrewNoteText() }
 
-// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers; Hearth installs it with its official package"
+// HomebrewNoteText says "mise comes through Homebrew, the package manager of macOS developers. Hearth installs Apple's Command Line Tools, whi…"
 // in the language of msgs.
 //
 // Why Homebrew gets installed before mise.
@@ -17162,13 +17406,13 @@ func (msgs Messages) SetupOrder() string {
 	return Catalog.Format(msgs.locale, "setupOrder", nil)
 }
 
-// SetupSteps says "{count} steps"
+// SetupSteps says "{count, plural, one {# step} other {# steps}}"
 // in the language the app shows.
 //
 // New computer: aside of the order card.
 func SetupSteps(count int) string { return In(i18n.Locale()).SetupSteps(count) }
 
-// SetupSteps says "{count} steps"
+// SetupSteps says "{count, plural, one {# step} other {# steps}}"
 // in the language of msgs.
 //
 // New computer: aside of the order card.
@@ -17176,13 +17420,13 @@ func (msgs Messages) SetupSteps(count int) string {
 	return Catalog.Format(msgs.locale, "setupSteps", map[string]any{"count": count})
 }
 
-// SetupStopNote says "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were."
+// SetupStopNote says "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it wa…"
 // in the language the app shows.
 //
 // New computer: note under the plan.
 func SetupStopNote() string { return In(i18n.Locale()).SetupStopNote() }
 
-// SetupStopNote says "You can stop at any time: the steps done stay and show in the log, and the files changed come back as they were."
+// SetupStopNote says "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it wa…"
 // in the language of msgs.
 //
 // New computer: note under the plan.
@@ -17260,6 +17504,22 @@ func (msgs Messages) SetupTagPassword() string {
 	return Catalog.Format(msgs.locale, "setupTagPassword", nil)
 }
 
+// SetupTagPath says "changes PATH"
+// in the language the app shows.
+//
+// New computer plan: tag on a tool whose steps change the user's Path in
+// the Windows registry.
+func SetupTagPath() string { return In(i18n.Locale()).SetupTagPath() }
+
+// SetupTagPath says "changes PATH"
+// in the language of msgs.
+//
+// New computer plan: tag on a tool whose steps change the user's Path in
+// the Windows registry.
+func (msgs Messages) SetupTagPath() string {
+	return Catalog.Format(msgs.locale, "setupTagPath", nil)
+}
+
 // SetupTagFile says "changes a file"
 // in the language the app shows.
 //
@@ -17274,13 +17534,29 @@ func (msgs Messages) SetupTagFile() string {
 	return Catalog.Format(msgs.locale, "setupTagFile", nil)
 }
 
-// SetupWithHomebrew says "comes with Homebrew's installer"
+// SetupWithPart says "in one command with {tool}"
+// in the language the app shows.
+//
+// New computer plan: caption of a tool the system's manager installs in the
+// same command as an earlier one.
+func SetupWithPart(tool string) string { return In(i18n.Locale()).SetupWithPart(tool) }
+
+// SetupWithPart says "in one command with {tool}"
+// in the language of msgs.
+//
+// New computer plan: caption of a tool the system's manager installs in the
+// same command as an earlier one.
+func (msgs Messages) SetupWithPart(tool string) string {
+	return Catalog.Format(msgs.locale, "setupWithPart", map[string]any{"tool": tool})
+}
+
+// SetupWithHomebrew says "part of the Command Line Tools, which install with Homebrew"
 // in the language the app shows.
 //
 // New computer: the Command Line Tools need no step of their own.
 func SetupWithHomebrew() string { return In(i18n.Locale()).SetupWithHomebrew() }
 
-// SetupWithHomebrew says "comes with Homebrew's installer"
+// SetupWithHomebrew says "part of the Command Line Tools, which install with Homebrew"
 // in the language of msgs.
 //
 // New computer: the Command Line Tools need no step of their own.
@@ -17342,6 +17618,82 @@ func SetupInstalling() string { return In(i18n.Locale()).SetupInstalling() }
 // New computer: step 3 title while the plan runs.
 func (msgs Messages) SetupInstalling() string {
 	return Catalog.Format(msgs.locale, "setupInstalling", nil)
+}
+
+// SetupToastStep says "Step {n} of {total} · {tool}"
+// in the language the app shows.
+//
+// New computer: the installation's toast away from the wizard, as its tools
+// count.
+func SetupToastStep(n int, total int, tool string) string {
+	return In(i18n.Locale()).SetupToastStep(n, total, tool)
+}
+
+// SetupToastStep says "Step {n} of {total} · {tool}"
+// in the language of msgs.
+//
+// New computer: the installation's toast away from the wizard, as its tools
+// count.
+func (msgs Messages) SetupToastStep(n int, total int, tool string) string {
+	return Catalog.Format(msgs.locale, "setupToastStep", map[string]any{"n": n, "total": total, "tool": tool})
+}
+
+// SetupRustMSVC says "A compiler for Rust"
+// in the language the app shows.
+//
+// New computer plan, Windows: note title when Rust brings Visual Studio
+// Build Tools.
+func SetupRustMSVC() string { return In(i18n.Locale()).SetupRustMSVC() }
+
+// SetupRustMSVC says "A compiler for Rust"
+// in the language of msgs.
+//
+// New computer plan, Windows: note title when Rust brings Visual Studio
+// Build Tools.
+func (msgs Messages) SetupRustMSVC() string {
+	return Catalog.Format(msgs.locale, "setupRustMSVC", nil)
+}
+
+// SetupRustMSVCText says "Rust on Windows builds programs with Microsoft's tools: Visual Studio Build Tools install first, a few gigabytes"
+// in the language the app shows.
+//
+// New computer plan, Windows: note text under setupRustMSVC.
+func SetupRustMSVCText() string { return In(i18n.Locale()).SetupRustMSVCText() }
+
+// SetupRustMSVCText says "Rust on Windows builds programs with Microsoft's tools: Visual Studio Build Tools install first, a few gigabytes"
+// in the language of msgs.
+//
+// New computer plan, Windows: note text under setupRustMSVC.
+func (msgs Messages) SetupRustMSVCText() string {
+	return Catalog.Format(msgs.locale, "setupRustMSVCText", nil)
+}
+
+// SetupDockerGroupTitle says "Docker without sudo after signing in again"
+// in the language the app shows.
+//
+// New computer plan, Linux: note title on the docker group.
+func SetupDockerGroupTitle() string { return In(i18n.Locale()).SetupDockerGroupTitle() }
+
+// SetupDockerGroupTitle says "Docker without sudo after signing in again"
+// in the language of msgs.
+//
+// New computer plan, Linux: note title on the docker group.
+func (msgs Messages) SetupDockerGroupTitle() string {
+	return Catalog.Format(msgs.locale, "setupDockerGroupTitle", nil)
+}
+
+// SetupDockerGroupText says "The docker group lets {user} run docker without sudo. It takes effect after you sign out and back in, or restart"
+// in the language the app shows.
+//
+// New computer plan, Linux: note text on the docker group.
+func SetupDockerGroupText(user string) string { return In(i18n.Locale()).SetupDockerGroupText(user) }
+
+// SetupDockerGroupText says "The docker group lets {user} run docker without sudo. It takes effect after you sign out and back in, or restart"
+// in the language of msgs.
+//
+// New computer plan, Linux: note text on the docker group.
+func (msgs Messages) SetupDockerGroupText(user string) string {
+	return Catalog.Format(msgs.locale, "setupDockerGroupText", map[string]any{"user": user})
 }
 
 // SetupInstallLead says "Step {n} of {total} · {tool}. You can run it in the background: the installation goes on."
@@ -17432,18 +17784,22 @@ func (msgs Messages) SetupPasswordAhead() string {
 	return Catalog.Format(msgs.locale, "setupPasswordAhead", nil)
 }
 
-// SetupPasswordAt says "at step {n}: {tool}"
+// SetupPasswordAt says "{count, plural, one {at step {steps}} other {at steps {steps}}}"
 // in the language the app shows.
 //
-// New computer: the step that will ask for the password.
-func SetupPasswordAt(n int, tool string) string { return In(i18n.Locale()).SetupPasswordAt(n, tool) }
+// New computer: the steps that will ask for the password, as "6: Docker
+// engine".
+func SetupPasswordAt(count int, steps string) string {
+	return In(i18n.Locale()).SetupPasswordAt(count, steps)
+}
 
-// SetupPasswordAt says "at step {n}: {tool}"
+// SetupPasswordAt says "{count, plural, one {at step {steps}} other {at steps {steps}}}"
 // in the language of msgs.
 //
-// New computer: the step that will ask for the password.
-func (msgs Messages) SetupPasswordAt(n int, tool string) string {
-	return Catalog.Format(msgs.locale, "setupPasswordAt", map[string]any{"n": n, "tool": tool})
+// New computer: the steps that will ask for the password, as "6: Docker
+// engine".
+func (msgs Messages) SetupPasswordAt(count int, steps string) string {
+	return Catalog.Format(msgs.locale, "setupPasswordAt", map[string]any{"count": count, "steps": steps})
 }
 
 // SetupPasswordDone says "The password is no longer needed"
@@ -17460,18 +17816,20 @@ func (msgs Messages) SetupPasswordDone() string {
 	return Catalog.Format(msgs.locale, "setupPasswordDone", nil)
 }
 
-// SetupPasswordAsked says "it was asked at step {steps}"
+// SetupPasswordAsked says "{count, plural, one {it was asked at step {steps}} other {it was asked at steps {steps}}}"
 // in the language the app shows.
 //
 // New computer: the steps that asked for the password.
-func SetupPasswordAsked(steps string) string { return In(i18n.Locale()).SetupPasswordAsked(steps) }
+func SetupPasswordAsked(count int, steps string) string {
+	return In(i18n.Locale()).SetupPasswordAsked(count, steps)
+}
 
-// SetupPasswordAsked says "it was asked at step {steps}"
+// SetupPasswordAsked says "{count, plural, one {it was asked at step {steps}} other {it was asked at steps {steps}}}"
 // in the language of msgs.
 //
 // New computer: the steps that asked for the password.
-func (msgs Messages) SetupPasswordAsked(steps string) string {
-	return Catalog.Format(msgs.locale, "setupPasswordAsked", map[string]any{"steps": steps})
+func (msgs Messages) SetupPasswordAsked(count int, steps string) string {
+	return Catalog.Format(msgs.locale, "setupPasswordAsked", map[string]any{"count": count, "steps": steps})
 }
 
 // SetupHideTitle says "You can leave this page"
@@ -17500,6 +17858,22 @@ func SetupHideText() string { return In(i18n.Locale()).SetupHideText() }
 // New computer: under the leave-this-page note.
 func (msgs Messages) SetupHideText() string {
 	return Catalog.Format(msgs.locale, "setupHideText", nil)
+}
+
+// SetupNothingChanged says "Nothing changed: the computer is as it was."
+// in the language the app shows.
+//
+// New computer: note under the order when the installation failed or
+// stopped before a tool installed.
+func SetupNothingChanged() string { return In(i18n.Locale()).SetupNothingChanged() }
+
+// SetupNothingChanged says "Nothing changed: the computer is as it was."
+// in the language of msgs.
+//
+// New computer: note under the order when the installation failed or
+// stopped before a tool installed.
+func (msgs Messages) SetupNothingChanged() string {
+	return Catalog.Format(msgs.locale, "setupNothingChanged", nil)
 }
 
 // SetupNothingYet says "Nothing changed yet: stopping now leaves the computer as it was."
@@ -17600,6 +17974,52 @@ func SetupDoneLead() string { return In(i18n.Locale()).SetupDoneLead() }
 // New computer: step 4 lead when every tool works.
 func (msgs Messages) SetupDoneLead() string {
 	return Catalog.Format(msgs.locale, "setupDoneLead", nil)
+}
+
+// SetupTagSignIn says "after signing in again"
+// in the language the app shows.
+//
+// New computer check: tag on Docker while the user waits to join the docker
+// group.
+func SetupTagSignIn() string { return In(i18n.Locale()).SetupTagSignIn() }
+
+// SetupTagSignIn says "after signing in again"
+// in the language of msgs.
+//
+// New computer check: tag on Docker while the user waits to join the docker
+// group.
+func (msgs Messages) SetupTagSignIn() string {
+	return Catalog.Format(msgs.locale, "setupTagSignIn", nil)
+}
+
+// SetupSignInAgain says "Sign out and back in"
+// in the language the app shows.
+//
+// New computer, what's next: Linux's docker group takes effect on the next
+// sign-in.
+func SetupSignInAgain() string { return In(i18n.Locale()).SetupSignInAgain() }
+
+// SetupSignInAgain says "Sign out and back in"
+// in the language of msgs.
+//
+// New computer, what's next: Linux's docker group takes effect on the next
+// sign-in.
+func (msgs Messages) SetupSignInAgain() string {
+	return Catalog.Format(msgs.locale, "setupSignInAgain", nil)
+}
+
+// SetupSignInAgainText says "then docker works without sudo"
+// in the language the app shows.
+//
+// New computer, what's next: caption under setupSignInAgain.
+func SetupSignInAgainText() string { return In(i18n.Locale()).SetupSignInAgainText() }
+
+// SetupSignInAgainText says "then docker works without sudo"
+// in the language of msgs.
+//
+// New computer, what's next: caption under setupSignInAgain.
+func (msgs Messages) SetupSignInAgainText() string {
+	return Catalog.Format(msgs.locale, "setupSignInAgainText", nil)
 }
 
 // SetupLeftTitle says "Done, one thing left"
@@ -17898,6 +18318,48 @@ func SetupChanged() string { return In(i18n.Locale()).SetupChanged() }
 // New computer: step 4 card of the files changed.
 func (msgs Messages) SetupChanged() string {
 	return Catalog.Format(msgs.locale, "setupChanged", nil)
+}
+
+// SetupChangedCaptionWindows says "Hearth's entry first · the old value in the operations log"
+// in the language the app shows.
+//
+// New computer, Windows: caption under the user's Path in What changed.
+func SetupChangedCaptionWindows() string { return In(i18n.Locale()).SetupChangedCaptionWindows() }
+
+// SetupChangedCaptionWindows says "Hearth's entry first · the old value in the operations log"
+// in the language of msgs.
+//
+// New computer, Windows: caption under the user's Path in What changed.
+func (msgs Messages) SetupChangedCaptionWindows() string {
+	return Catalog.Format(msgs.locale, "setupChangedCaptionWindows", nil)
+}
+
+// SetupMiseActivated says "hooked into the shell"
+// in the language the app shows.
+//
+// New computer check: mise's caption when the shell's startup activates it.
+func SetupMiseActivated() string { return In(i18n.Locale()).SetupMiseActivated() }
+
+// SetupMiseActivated says "hooked into the shell"
+// in the language of msgs.
+//
+// New computer check: mise's caption when the shell's startup activates it.
+func (msgs Messages) SetupMiseActivated() string {
+	return Catalog.Format(msgs.locale, "setupMiseActivated", nil)
+}
+
+// SetupMiseShims says "shims on PATH"
+// in the language the app shows.
+//
+// New computer check: mise's caption when its shims are on PATH.
+func SetupMiseShims() string { return In(i18n.Locale()).SetupMiseShims() }
+
+// SetupMiseShims says "shims on PATH"
+// in the language of msgs.
+//
+// New computer check: mise's caption when its shims are on PATH.
+func (msgs Messages) SetupMiseShims() string {
+	return Catalog.Format(msgs.locale, "setupMiseShims", nil)
 }
 
 // SetupChangedCaption says "Hearth's blocks · copies next to the files"

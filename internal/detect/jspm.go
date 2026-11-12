@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -110,6 +111,45 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 		if in.Version == "" && !in.Source.Shim {
 			in.Version = versionOf(ctx, r, term, in.RealPath)
 		}
+	}
+	// mise's shim runs the version its global config picks: the tool's
+	// own, or, for what comes with Node, the one in Node's folder.
+	dirs := sources.ManagerDirs(term)
+	versions := map[string][]string{}
+	for _, in := range slices.Concat(f.ins, nodes.ins) {
+		if in.Source.Manager == "mise" && !in.Source.Shim && in.Source.Version != "" {
+			tool := filepath.Base(filepath.Dir(in.Source.Root))
+			versions[tool] = append(versions[tool], in.Source.Version)
+		}
+	}
+	miseShim := slices.IndexFunc(f.ins, func(in inventory.Installation) bool {
+		return in.Source.Manager == "mise" && in.Source.Shim && in.OnPath > 0
+	})
+	nodeDef := miseDefault(dirs, term, "node", versions["node"])
+	if versions[name] != nil {
+		// mise's own copy of the tool runs, as its pnpm.
+		nodeDef = ""
+	}
+	for i := range f.ins {
+		in := &f.ins[i]
+		switch {
+		case in.Source.Manager == "mise" && !in.Source.Shim:
+			tool := filepath.Base(filepath.Dir(in.Source.Root))
+			if def := miseDefault(dirs, term, tool, versions[tool]); def != "" && in.Source.Version == def {
+				in.Default = true
+			}
+		case in.Source.Manager == "corepack" && in.Source.Shim && miseShim >= 0 && nodeDef != "" && dirs.Mise != "" &&
+			within(in.RealPath, filepath.Join(dirs.Mise, "installs", "node", nodeDef)):
+			// mise's shim runs Corepack's in the default Node's folder:
+			// one command, where mise's shim stands on PATH.
+			if r := f.ins[miseShim].OnPath; in.OnPath == 0 || r < in.OnPath {
+				in.OnPath = r
+			}
+			f.ins[miseShim].OnPath = 0
+		}
+	}
+	if miseShim >= 0 && f.ins[miseShim].OnPath == 0 && f.ins[miseShim].InGUI == 0 {
+		f.ins = slices.Delete(f.ins, miseShim, miseShim+1)
 	}
 	cache := corepackHome(term)
 	var defaults map[string]string

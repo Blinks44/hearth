@@ -20,7 +20,7 @@ func TestInstallMiseMac(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(s.Steps) != 4 || !s.Steps[2].Admin || s.Steps[2].Argv[0] != "/usr/sbin/installer" ||
+	if len(s.Steps) != 4 || !s.Steps[2].Admin || s.Steps[2].Shown()[0] != "/usr/sbin/installer" ||
 		!slices.Contains(s.Steps[1].Argv, homebrewSigned) || s.Steps[3].Argv[1] != "install" || len(s.Notes) != 2 {
 		t.Fatalf("without Homebrew: %+v", s)
 	}

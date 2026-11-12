@@ -68,6 +68,30 @@ func TestOverviewAllGood(t *testing.T) {
 	}
 }
 
+// A computer with only what the system brings leads to the new computer
+// wizard.
+func TestOverviewBare(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "ruby", Installations: []inventory.Installation{
+		{Tool: "ruby", Version: "2.6.10", Path: "/usr/bin/ruby", OnPath: 1, Source: inventory.Source{Kind: inventory.KindSystem}},
+	}}}}
+	tt := openOverview(t, a)
+	screenshot(t, tt, "overview-bare")
+	hasTexts(t, tt, "Ready to set up", "A clean slate", "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one plan.")
+	if err := tt.Click("Set up this computer"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Location() != setupPage {
+		t.Errorf("the button went to %q", a.router.Location())
+	}
+	a.Snapshot = calmSnapshot()
+	tt.Frame()
+	if tt.HasText("A clean slate") {
+		t.Error("a computer with Node is bare")
+	}
+}
+
 // With three issues or more the hero asks for attention, the card lists
 // the first three with their pages, and links to all of them.
 func TestOverviewManyIssues(t *testing.T) {

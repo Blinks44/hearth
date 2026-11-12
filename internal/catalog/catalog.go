@@ -37,6 +37,62 @@ type Method struct {
 	// Terms is the address of terms of use beyond open source, as a
 	// license that is paid for work; "" when there are none.
 	Terms string
+	// Engine is the container engine it installs, as
+	// inventory.DockerEngine names it; "" for a tool that is not one.
+	Engine string
+}
+
+// Engines are the container engines Hearth installs, each through each
+// manager that has it: the Docker page's and, those the wizard offers,
+// the catalog's Docker. Linux distributions package Docker Engine with
+// its CLI, each under a name of its own.
+var Engines = []Method{
+	{Engine: "Colima", Manager: "brew", Package: "colima", Kind: "formula"},
+	{Engine: "OrbStack", Manager: "brew", Package: "orbstack", Kind: "cask", Terms: "https://orbstack.dev/pricing"},
+	{Engine: "Docker Desktop", Manager: "brew", Package: "docker-desktop", Kind: "cask", Terms: dockerDesktopTerms},
+	{Engine: "Podman Desktop", Manager: "brew", Package: "podman-desktop", Kind: "cask"},
+	{Engine: "Rancher Desktop", Manager: "brew", Package: "rancher", Kind: "cask"},
+	{Engine: "Podman", Manager: "brew", Package: "podman", Kind: "formula"},
+	{Engine: "Docker Desktop", Manager: "winget", Package: "Docker.DockerDesktop", Terms: dockerDesktopTerms},
+	{Engine: "Podman", Manager: "winget", Package: "RedHat.Podman"},
+	{Engine: "Podman Desktop", Manager: "winget", Package: "RedHat.Podman-Desktop"},
+	{Engine: "Rancher Desktop", Manager: "winget", Package: "SUSE.RancherDesktop"},
+	{Engine: "Docker Engine", Manager: "apt", Package: "docker.io"},
+	{Engine: "Docker Engine", Manager: "dnf", Package: "moby-engine"},
+	{Engine: "Docker Engine", Manager: "zypper", Package: "docker"},
+	{Engine: "Docker Engine", Manager: "pacman", Package: "docker"},
+	{Engine: "Docker Engine", Manager: "apk", Package: "docker"},
+	{Engine: "Podman", Manager: "apt", Package: "podman"},
+	{Engine: "Podman", Manager: "dnf", Package: "podman"},
+	{Engine: "Podman", Manager: "zypper", Package: "podman"},
+	{Engine: "Podman", Manager: "pacman", Package: "podman"},
+	{Engine: "Podman", Manager: "apk", Package: "podman"},
+}
+
+const dockerDesktopTerms = "https://docs.docker.com/subscription-billing/desktop-license/"
+
+// EngineMethod is how engine installs through manager; false when it
+// does not.
+func EngineMethod(engine, manager string) (Method, bool) {
+	i := slices.IndexFunc(Engines, func(m Method) bool { return m.Engine == engine && m.Manager == manager })
+	if i < 0 {
+		return Method{}, false
+	}
+	return Engines[i], true
+}
+
+// engines are the methods of Engines of each engine and manager, in
+// order.
+func engines(pairs ...string) []Method {
+	var out []Method
+	for i := 0; i < len(pairs); i += 2 {
+		m, ok := EngineMethod(pairs[i], pairs[i+1])
+		if !ok {
+			panic("catalog: no engine " + pairs[i] + " through " + pairs[i+1])
+		}
+		out = append(out, m)
+	}
+	return out
 }
 
 // managerOS are the systems each manager works on; all for the others.
@@ -179,16 +235,10 @@ var Tools = []Entry{
 	// The engine runs containers. Colima and the engines of Linux are open
 	// source; Docker Desktop and OrbStack are paid for work at larger
 	// companies.
-	{ID: "docker", Group: Tool, Methods: []Method{
-		{Manager: "brew", Package: "colima", Kind: "formula"},
-		{Manager: "brew", Package: "orbstack", Kind: "cask", Terms: "https://orbstack.dev/pricing"},
-		{Manager: "winget", Package: "Docker.DockerDesktop", Terms: "https://docs.docker.com/subscription-billing/desktop-license/"},
-		{Manager: "apt", Package: "docker.io"},
-		{Manager: "dnf", Package: "moby-engine"},
-		{Manager: "zypper", Package: "docker"},
-		{Manager: "pacman", Package: "docker"},
-		{Manager: "apk", Package: "docker"},
-	}},
+	{ID: "docker", Group: Tool, Methods: engines(
+		"Colima", "brew", "OrbStack", "brew", "Docker Desktop", "winget",
+		"Docker Engine", "apt", "Docker Engine", "dnf", "Docker Engine", "zypper", "Docker Engine", "pacman", "Docker Engine", "apk",
+	)},
 
 	// Agents install through the system's manager first, as a tool that
 	// is not a language, then npm. Claude Code's own installer comes

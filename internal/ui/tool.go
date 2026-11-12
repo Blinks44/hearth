@@ -444,6 +444,16 @@ func listRow(c *ui.Context, name string, mono bool, caption string, end func()) 
 	})
 }
 
+// toggle is a switch, green when on as the designs have it: the theme's
+// accent, Hearth's orange, is for buttons.
+func toggle(c *ui.Context, key any, on *bool) ui.Element {
+	sw := ui.Switch(c.Key(key), on)
+	if *on {
+		sw.Background(c.Theme().Success)
+	}
+	return sw
+}
+
 // cardNote is a list card's text in place of rows.
 func cardNote(c *ui.Context, text string) {
 	ui.Text(c, text).FontSize(12).TextColor(c.Theme().TextMuted).Padding(10, 14, 14, 14).

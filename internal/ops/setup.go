@@ -3,7 +3,9 @@ package ops
 import (
 	"cmp"
 	"errors"
+	"regexp"
 	"slices"
+	"strings"
 
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -34,7 +36,17 @@ type SetupPart struct {
 	Tool     string
 	Method   catalog.Method
 	From, To int
+	// With is the tool whose steps install this one too, as the system's
+	// packages in one command; "" when it has steps of its own.
+	With string
 }
+
+// unixUser is a user name as useradd makes them.
+var unixUser = regexp.MustCompile(`^[a-z_][a-z0-9_-]*$`)
+
+// linuxManagers are the system package managers of Linux, whose
+// packages the plan installs in one command: one password.
+var linuxManagers = []string{"apt", "dnf", "zypper", "pacman", "apk"}
 
 // miseVersions are the versions mise installs of a tool, where it is not
 // the latest: Node's LTS, as Node advises for most, and Java's current
@@ -108,14 +120,28 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 	planned := func(id string) bool {
 		return slices.ContainsFunc(parts, func(part SetupPart) bool { return part.Tool == id })
 	}
-	// npm and Corepack run through the Node mise installs, which no
-	// terminal has on its PATH yet.
-	var viaMise []string
-	if planned("node") {
-		viaMise = []string{"mise", "exec", "--"}
-	}
+	// npm and Corepack run through mise, which finds the Node it keeps
+	// though the terminal Hearth read has it on no PATH yet, as before
+	// mise's line in the shell's startup; without one of its own, the
+	// PATH's.
+	viaMise := []string{"mise", "exec", "--"}
 	brew, _, _ := homebrew(env)
 	mise := ""
+	// The system's packages go in one command with the first of them:
+	// one password.
+	together, docker := -1, false
+	var packages []inventory.SystemPackage
+	for i, part := range parts {
+		if !slices.Contains(linuxManagers, part.Method.Manager) ||
+			together >= 0 && part.Method.Manager != parts[together].Method.Manager {
+			continue
+		}
+		docker = docker || part.Tool == "docker"
+		if together < 0 {
+			together = i
+		}
+		packages = append(packages, inventory.SystemPackage{Name: part.Method.Package, Kind: part.Method.Kind})
+	}
 	for i := range parts {
 		part := &parts[i]
 		m, title := part.Method, s.Title(part.Tool)
@@ -138,36 +164,63 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 		case m.Manager == "installer":
 			steps, ok = installerSteps(part.Tool, env)
 		case m.Manager == "xcode-select":
-			// Homebrew's package brings the Command Line Tools.
+			// Homebrew's part installs the Command Line Tools first.
 			if !planned("homebrew") {
-				cp, _ := compilerPlan(nil)
-				steps, notes = cp.Steps, cp.Notes
+				steps, notes = cltSteps()
+			} else {
+				part.With = "homebrew"
 			}
 		case m.Manager == "mise":
 			steps = []Step{{Argv: []string{"mise", "use", "--global", m.Package + "@" + cmp.Or(miseVersions[part.Tool], "latest")}}}
 		case m.Manager == "npm":
 			steps = []Step{{Argv: append(slices.Clone(viaMise), "npm", "install", "--global", m.Package)}}
 		case m.Manager == "corepack":
-			// Node 25 and later no longer bring Corepack: npm installs it.
+			// Node 25 and later no longer bring Corepack: npm installs it,
+			// with shims for Yarn and pnpm both. Only the one chosen stays:
+			// pnpm's would stand beside the pnpm mise installs.
 			steps = []Step{
 				{Argv: append(slices.Clone(viaMise), "npm", "install", "--global", "corepack")},
+				{Argv: append(slices.Clone(viaMise), "corepack", "disable")},
 				{Argv: append(slices.Clone(viaMise), "corepack", "enable", m.Package)},
 			}
-			if viaMise != nil {
-				steps = append(steps, Step{Argv: []string{"mise", "reshim"}})
-			}
+			steps = append(steps, Step{Argv: []string{"mise", "reshim"}})
 		default:
 			pm := inventory.PackageManager{ID: m.Manager, Name: m.Manager, Path: brew}
 			if i := slices.IndexFunc(s.Managers, func(f inventory.PackageManager) bool { return f.ID == m.Manager }); i >= 0 {
 				pm = s.Managers[i]
 			}
 			var pp Plan
-			if part.Tool == "docker" {
-				pp, ok = EngineInstallPlan(EngineName(m.Package), pm, false, nil)
-			} else {
+			switch {
+			case i == together:
+				pp, ok = PackagePlan(PackageInstall, pm, packages, nil)
+				// Docker Engine's socket is the docker group's: the user joins
+				// it in the same command, one password, as Docker's own
+				// steps after installing say. The command reads plain in
+				// polkit's window: a user name as the system makes them
+				// needs no quoting.
+				if user := env.Get("USER"); ok && docker && unixUser.MatchString(user) && len(pp.Steps) == 1 && pp.Steps[0].Admin {
+					install := pp.Steps[0]
+					script := strings.Join(install.Argv, " ") + " && /usr/sbin/usermod -aG docker " + user
+					pp.Steps = []Step{{Argv: []string{"/bin/sh", "-c", script}, Runs: install.Shown(), Admin: true}}
+					pp.Notes = append(pp.Notes, Note{Title: locales.SetupDockerGroupTitle(), Text: locales.SetupDockerGroupText(user)})
+				}
+			case part.Tool == "docker" && !slices.Contains(linuxManagers, m.Manager):
+				pp, ok = EngineInstallPlan(m.Engine, pm, false, nil)
+			case together >= 0 && m.Manager == parts[together].Method.Manager:
+				part.With = parts[together].Tool
+			default:
 				pp, ok = PackagePlan(PackageInstall, pm, []inventory.SystemPackage{{Name: m.Package, Kind: m.Kind}}, nil)
 			}
 			steps, notes = pp.Steps, pp.Notes
+			// Rust builds on Windows with Microsoft's linker, which Visual
+			// Studio Build Tools bring: rustup warns without them.
+			if part.Tool == "rust" && s.GOOS == "windows" && !s.Have["cpp"] {
+				if cp, found := compilerPlan(s.Managers); found {
+					steps = append(slices.Clone(cp.Steps), steps...)
+					// WinGet's own note says Windows asks through UAC.
+					notes = append([]Note{{Title: locales.SetupRustMSVC(), Text: locales.SetupRustMSVCText()}}, notes...)
+				}
+			}
 		}
 		if !ok {
 			return Plan{}, nil, errors.New(locales.SetupNoWay(title))
@@ -191,22 +244,11 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 		}
 	}
 	chainEdits(p.Steps)
+	for _, part := range parts {
+		p.Parts = append(p.Parts, part.From)
+	}
 	p.Action = locales.SetupInstall(len(parts))
 	return p, parts, nil
-}
-
-// EngineName is the Docker engine the catalog's package installs, as
-// EngineInstallPlan names it.
-func EngineName(pkg string) string {
-	switch pkg {
-	case "colima":
-		return "Colima"
-	case "orbstack":
-		return "OrbStack"
-	case "Docker.DockerDesktop":
-		return "Docker Desktop"
-	}
-	return "Docker Engine"
 }
 
 // chainEdits makes each edit of a file an earlier step edits too start

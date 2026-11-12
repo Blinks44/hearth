@@ -2,9 +2,11 @@ package ops
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 func TestSetupParts(t *testing.T) {
@@ -76,5 +78,44 @@ func TestChainEdits(t *testing.T) {
 	}
 	if !steps[3].Edit.New || steps[3].Edit.Before != "" {
 		t.Errorf("another file changed: %+v", steps[3].Edit)
+	}
+}
+
+// The system's packages install in one command, one password, the
+// Docker engine among them with the user joining the docker group.
+func TestSetupPlanSystemPackages(t *testing.T) {
+	apt := []inventory.PackageManager{{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}}
+	s := Setup{GOOS: "linux", Tools: []string{"php", "git", "docker"}, Managers: apt, Title: func(id string) string { return id }}
+	p, parts, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash", "USER=ann"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	php := parts[0]
+	steps := p.Steps[php.From:php.To]
+	if len(steps) != 1 || !steps[0].Admin ||
+		!strings.Contains(steps[0].Argv[2], "-oDPkg::Lock::Timeout=600 install -y php-cli git docker.io && /usr/sbin/usermod -aG docker ann") {
+		t.Errorf("PHP's part: %+v", steps)
+	}
+	for _, part := range parts[1:] {
+		if part.From != part.To || part.With != "php" {
+			t.Errorf("%s's part: %+v", part.Tool, part)
+		}
+	}
+	if len(p.Steps) != 1 {
+		t.Errorf("steps: %+v", p.Steps)
+	}
+}
+
+// npm runs through mise with Node there already: the terminal Hearth
+// read may have it on no PATH yet, as before mise's line in the shell.
+func TestSetupPlanNpmThroughMise(t *testing.T) {
+	s := Setup{GOOS: "linux", Tools: []string{"gemini"}, Have: map[string]bool{"mise": true, "node": true},
+		Title: func(id string) string { return id }}
+	p, _, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := p.Steps[0].Argv; !slices.Equal(got[:4], []string{"mise", "exec", "--", "npm"}) {
+		t.Errorf("Gemini: %v", got)
 	}
 }

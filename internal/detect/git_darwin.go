@@ -17,8 +17,8 @@ func gitStub(path string) bool {
 	if path != "/usr/bin/git" {
 		return false
 	}
-	_, err := filepath.EvalSymlinks(xcodeSelectLink)
-	return err != nil
+	_, ok := developerDir()
+	return !ok
 }
 
 // ghConfigDir is where GitHub CLI keeps its settings.

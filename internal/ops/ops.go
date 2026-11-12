@@ -91,6 +91,10 @@ type Plan struct {
 	// Verify checks the result after the steps ran, saying what it found,
 	// as "docker 27.4.1 answers"; nil checks nothing.
 	Verify func(ctx context.Context) (string, error)
+	// Parts are the first steps of the plan's parts that stand on their
+	// own, as the new computer's tools: a step that fails puts back only
+	// what its part changed. None makes the plan one part.
+	Parts []int
 }
 
 // Phase is where an execution of a plan is.
@@ -178,6 +182,10 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		}
 	}
 	for i, step := range p.Steps {
+		// The parts done keep what they changed.
+		if slices.Contains(p.Parts, i) {
+			changes = nil
+		}
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()

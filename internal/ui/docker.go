@@ -33,7 +33,11 @@ func (a *App) docker(c *ui.Context, p page) {
 				for _, context := range d.Contexts {
 					if context.Name == d.Selected && context.Status == "unavailable" {
 						if context.Denied {
-							warningRow(c, locales.DockerDeniedExplain())
+							explain := locales.DockerDeniedExplain()
+							if context.Joined {
+								explain = locales.DockerSignInExplain()
+							}
+							warningRow(c, explain)
 						} else {
 							warningRow(c, locales.DockerUnavailableExplain())
 						}

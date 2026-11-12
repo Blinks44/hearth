@@ -393,7 +393,7 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 	s := m.decls[i]
 	if ops.MCPToggles(s) {
 		on := !s.Disabled
-		ui.Switch(c.Key("mcp-on:"+id), &on).Label(locales.McpOnFor(agentTitle(id))).OnChange(func() {
+		toggle(c, "mcp-on:"+id, &on).Label(locales.McpOnFor(agentTitle(id))).OnChange(func() {
 			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPEnablePlan(s, on, env, agentTitle) })
 		})
 	}

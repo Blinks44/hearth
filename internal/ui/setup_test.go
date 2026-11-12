@@ -102,7 +102,7 @@ func setupPlan() (ops.Plan, []ops.SetupPart) {
 	return p, []ops.SetupPart{
 		{Tool: "homebrew", From: 0, To: 3},
 		{Tool: "mise", From: 3, To: 5},
-		{Tool: "git", From: 5, To: 5},
+		{Tool: "git", From: 5, To: 5, With: "homebrew"},
 		{Tool: "claude", From: 5, To: 7},
 	}
 }
@@ -121,7 +121,7 @@ func TestSetupPlanStep(t *testing.T) {
 	hasTexts(t, tt, "What installs, and in what order", "Installation order", "4 steps",
 		"1  Homebrew", "downloads Homebrew's installer", "password",
 		"2  mise", "brew install mise · a line in ~/.zshrc", "changes a file",
-		"3  Git", "comes with Homebrew's installer",
+		"3  Git", "part of the Command Line Tools, which install with Homebrew",
 		"4  Claude Code", "downloads Claude Code's own installer from claude.ai and runs it · a line in ~/.zshrc",
 		"Files that will change", "~/.zshrc", "mise, Claude Code · Hearth's block", "show diff",
 		"Worth knowing", "Administrator's password", "Install 4")
@@ -194,6 +194,8 @@ func TestSetupInstallStep(t *testing.T) {
 	// Away from the header's tooltip, which takes the first click.
 	tt.Move(600, 600)
 	tt.Advance(time.Second)
+	// The toast counts the wizard's tools, as its page.
+	hasTexts(t, tt, "Step 2 of 4 · mise")
 	if err := tt.Click("Show"); err != nil {
 		t.Fatalf("no toast away from the wizard: %v", err)
 	}
@@ -219,7 +221,7 @@ func TestSetupInstallFailed(t *testing.T) {
 	a.Scanning = false
 	tt.Frame()
 	screenshot(t, tt, "setup-failed")
-	hasTexts(t, tt, "mise did not install", "Why: exit code 1. The tools after it did not install.", "failed", "skipped", "Error: No such keg: mise", "Details",
+	hasTexts(t, tt, "mise did not install", "Why: Error: No such keg: mise. The tools after it did not install.", "failed", "skipped", "Error: No such keg: mise", "Details",
 		"Installed and staying: Homebrew. The plan made again leaves them out.")
 	if err := tt.Click("Make the plan again"); err != nil {
 		t.Fatal(err)
@@ -247,12 +249,13 @@ func TestSetupCheckStep(t *testing.T) {
 	a.Scanning = false
 	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{
 		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Version: "4.4.22", Path: "/opt/homebrew/bin/brew"}}},
-		{Tool: "mise", Installations: []inventory.Installation{{Tool: "mise", Version: "2025.11.0", Path: "/opt/homebrew/bin/mise", OnPath: 1}}},
+		// The scan tells mise by the tools it keeps, not as a copy of its own.
+		{Tool: "node", Managers: []inventory.Manager{{Name: "mise", Version: "2025.11.0", Activated: true}}},
 	}, Agents: []inventory.Agent{{ID: "claude", Installations: []inventory.Installation{{Tool: "claude", Version: "2.0.1", Path: home + "/.local/bin/claude", OnPath: 1}}}}}
 	tt.Frame()
 	screenshot(t, tt, "setup-check")
 	hasTexts(t, tt, "Not everything works yet", "Check in a new terminal", "3 of 4 work",
-		"1  Homebrew", "4.4.22 · /opt/homebrew/bin/brew", "works", "2025.11.0 · /opt/homebrew/bin/mise",
+		"1  Homebrew", "4.4.22 · /opt/homebrew/bin/brew", "works", "2025.11.0 · hooked into the shell",
 		"3  Git", "not on the terminal's PATH", "not found", "2.0.1 · ~/.local/bin/claude",
 		"What's next", "Open a new terminal", "What changed", "~/.zshrc")
 	if err := tt.Click("Done"); err != nil {
@@ -262,4 +265,57 @@ func TestSetupCheckStep(t *testing.T) {
 	if a.setup.op != nil || a.router.Path() != overview.path {
 		t.Errorf("Done left the wizard at %s", a.router.Path())
 	}
+}
+
+// A language only the system brings, as macOS's Ruby 2.6, is not there
+// for the wizard, which installs one through mise; a copy of the user's
+// own is; on Linux, PHP from the system's manager is.
+func TestSetupHaveSystemCopy(t *testing.T) {
+	a := setupApp(t)
+	system := inventory.Source{Kind: inventory.KindSystem}
+	a.Snapshot.Tools = append(a.Snapshot.Tools,
+		inventory.ToolState{Tool: "ruby", Installations: []inventory.Installation{{Tool: "ruby", Version: "2.6.10", Path: "/usr/bin/ruby", OnPath: 1, Source: system}}},
+		inventory.ToolState{Tool: "php", Installations: []inventory.Installation{{Tool: "php", Version: "8.3.6", Path: "/usr/bin/php", OnPath: 1, Source: system}}},
+	)
+	if a.setupHave("ruby") {
+		t.Error("the system's Ruby counts as installed")
+	}
+	if !a.setupHave("node") {
+		t.Error("Node from an installer does not count")
+	}
+	goos = "linux"
+	if !a.setupHave("php") {
+		t.Error("PHP from APT on Linux does not count")
+	}
+}
+
+// Docker is offered where its first engine is open source; Docker
+// Desktop, the one on Windows, waits for the user.
+func TestSetupDockerOffered(t *testing.T) {
+	a := setupApp(t)
+	if !a.setupChosen("docker") {
+		t.Error("Colima is not offered on macOS")
+	}
+	goos = "windows"
+	if a.setupChosen("docker") {
+		t.Error("Docker Desktop is offered on Windows")
+	}
+	a.setup.choice = map[string]bool{"docker": true}
+	if !a.setupChosen("docker") {
+		t.Error("the user's choice does not count")
+	}
+}
+
+// Docker Engine on Linux refuses the user until they sign in again into
+// the docker group: the check says so, and what's next how.
+func TestSetupCheckDockerDenied(t *testing.T) {
+	a := setupApp(t)
+	goos = "linux"
+	a.setup.step, a.setup.parts = 3, []ops.SetupPart{{Tool: "docker"}}
+	a.setup.op = &operation{started: true, state: ops.State{Phase: ops.Succeeded}}
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker",
+		Installations: []inventory.Installation{{Tool: "docker", Version: "29.1.3", Path: "/usr/bin/docker", OnPath: 1}},
+		Docker:        &inventory.DockerState{Selected: "default", Contexts: []inventory.DockerContext{{Name: "default", Status: "unavailable", Denied: true}}}})
+	tt := newTester(a)
+	hasTexts(t, tt, "Done, one thing left", "after signing in again", "Sign out and back in", "then docker works without sudo")
 }

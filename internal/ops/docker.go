@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -22,50 +23,14 @@ var (
 // allows it.
 var contextRef = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.+-]*$`)
 
-// enginePackages are the packages that install engine through the
-// manager id; none when Hearth does not install it that way. cli reports
-// a Docker CLI already there, which Colima needs and does not bring.
-func enginePackages(manager, engine string, cli bool) []inventory.SystemPackage {
-	cask := func(name string) []inventory.SystemPackage {
-		return []inventory.SystemPackage{{Name: name, Kind: "cask"}}
-	}
-	switch manager + " " + engine {
-	case "brew Docker Desktop":
-		return cask("docker-desktop")
-	case "brew OrbStack":
-		return cask("orbstack")
-	case "brew Podman Desktop":
-		return cask("podman-desktop")
-	case "brew Rancher Desktop":
-		return cask("rancher")
-	case "brew Podman":
-		return []inventory.SystemPackage{{Name: "podman", Kind: "formula"}}
-	case "brew Colima":
-		out := []inventory.SystemPackage{{Name: "colima", Kind: "formula"}}
-		if !cli {
-			out = append(out, inventory.SystemPackage{Name: "docker", Kind: "formula"})
+// engineTermsURL is the address of engine's terms, as the catalog has it.
+func engineTermsURL(engine string) string {
+	for _, m := range catalog.Engines {
+		if m.Engine == engine && m.Terms != "" {
+			return m.Terms
 		}
-		return out
-	case "winget Docker Desktop":
-		return []inventory.SystemPackage{{Name: "Docker.DockerDesktop"}}
-	case "winget Podman":
-		return []inventory.SystemPackage{{Name: "RedHat.Podman"}}
-	case "winget Podman Desktop":
-		return []inventory.SystemPackage{{Name: "RedHat.Podman-Desktop"}}
-	case "winget Rancher Desktop":
-		return []inventory.SystemPackage{{Name: "SUSE.RancherDesktop"}}
-	// Linux distributions package Docker Engine with its CLI, each under
-	// a name of its own.
-	case "apt Docker Engine":
-		return []inventory.SystemPackage{{Name: "docker.io"}}
-	case "dnf Docker Engine":
-		return []inventory.SystemPackage{{Name: "moby-engine"}}
-	case "zypper Docker Engine", "pacman Docker Engine", "apk Docker Engine":
-		return []inventory.SystemPackage{{Name: "docker"}}
-	case "apt Podman", "dnf Podman", "zypper Podman", "pacman Podman", "apk Podman":
-		return []inventory.SystemPackage{{Name: "podman"}}
 	}
-	return nil
+	return ""
 }
 
 // engineTerms is the note on the terms of use of an engine that has
@@ -73,9 +38,9 @@ func enginePackages(manager, engine string, cli bool) []inventory.SystemPackage 
 func engineTerms(engine string) (Note, bool) {
 	switch engine {
 	case "Docker Desktop":
-		return Note{Title: locales.DockerTermsDesktop(), Text: locales.DockerTermsDesktopText(), URL: "https://docs.docker.com/subscription-billing/desktop-license/"}, true
+		return Note{Title: locales.DockerTermsDesktop(), Text: locales.DockerTermsDesktopText(), URL: engineTermsURL(engine)}, true
 	case "OrbStack":
-		return Note{Title: locales.DockerTermsOrb(), Text: locales.DockerTermsOrbText(), URL: "https://orbstack.dev/pricing"}, true
+		return Note{Title: locales.DockerTermsOrb(), Text: locales.DockerTermsOrbText(), URL: engineTermsURL(engine)}, true
 	}
 	return Note{}, false
 }
@@ -84,9 +49,15 @@ func engineTerms(engine string) (Note, bool) {
 // system's package manager; cli reports a Docker CLI already there. ok
 // is false when Hearth does not install engine through m.
 func EngineInstallPlan(engine string, m inventory.PackageManager, cli bool, reread Reread) (p Plan, ok bool) {
-	pkgs := enginePackages(m.ID, engine, cli)
-	if len(pkgs) == 0 {
+	// The catalog has the engines and their packages. Colima needs a
+	// Docker CLI and does not bring one.
+	em, found := catalog.EngineMethod(engine, m.ID)
+	if !found {
 		return Plan{}, false
+	}
+	pkgs := []inventory.SystemPackage{{Name: em.Package, Kind: em.Kind}}
+	if engine == "Colima" && !cli {
+		pkgs = append(pkgs, inventory.SystemPackage{Name: "docker", Kind: "formula"})
 	}
 	if p, ok = PackagePlan(PackageInstall, m, pkgs, reread); !ok {
 		return Plan{}, false

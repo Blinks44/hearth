@@ -107,7 +107,12 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 				foundText = locales.HeroFoundAll(len(tools), n)
 			}
 			title, text := locales.HeroAllGood(), foundText+" "+locales.HeroNoIssues()
+			bare := a.bareComputer()
 			switch n := len(found); {
+			case bare:
+				// What the system brings is worth knowing, not a problem
+				// of a computer nothing is set up on yet.
+				heroChip(c, pal.Info, pal.Info.Alpha(0.12), pal.Info, locales.ChipBare())
 			case a.firstScan():
 				heroChip(c, pal.Info, pal.Info.Alpha(0.12), pal.Info, locales.ChipChecking())
 				title, text = locales.HeroFirstScan(), locales.HeroFirstScanText()
@@ -121,10 +126,16 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 				}
 				text = foundText + " " + locales.HeroSomeIssues(n)
 			}
+			if bare {
+				title, text = locales.HeroBare(), locales.HeroBareText()
+			}
 			ui.Text(c, title).FontSize(24).FontWeight(600).SingleLine()
 			txt := ui.Text(c, text).FontSize(13).TextColor(t.TextMuted)
 			if !narrow(c) {
 				txt.MaxWidth(380)
+			}
+			if bare {
+				ui.PrimaryButton(c.Key("hero-setup"), locales.HeroBareAction()).AlignSelf(ui.Start).OnClick(func() { a.router.Push(setupPage) })
 			}
 			// What the last check changed opens the history.
 			if n := a.changesSince(); n > 0 {
@@ -209,6 +220,22 @@ func (a *App) foundTools() []inventory.ToolState {
 	return out
 }
 
+// bareComputer reports that the last scan found only what the system
+// brings and no AI agent: a new computer, which the wizard sets up.
+func (a *App) bareComputer() bool {
+	if a.Snapshot == nil || len(a.foundAgents()) > 0 {
+		return false
+	}
+	for _, ts := range a.foundTools() {
+		for _, i := range listed(ts.Installations) {
+			if ts.Installations[i].Source.Kind != inventory.KindSystem {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // toolCards are the tools found, three in a row, those with issues first;
 // skeletons stand for them until the first scan ends.
 func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
@@ -233,6 +260,10 @@ func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
 				ui.Text(c, strconv.Itoa(len(tools))).FontSize(12.5).TextColor(pal.TextFaint).SingleLine()
 			}
 		})
+		if !a.firstScan() && len(tools) == 0 {
+			ui.Text(c, locales.ToolsNoneYet()).FontSize(12.5).TextColor(c.Theme().TextMuted)
+			return
+		}
 		ui.Grid(c).Columns(3).Gap(10).Children(func() {
 			if a.firstScan() {
 				for range 3 {

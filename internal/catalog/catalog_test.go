@@ -124,3 +124,16 @@ func TestToolsNotOnASystem(t *testing.T) {
 		t.Error("a tool not in the catalog has a description")
 	}
 }
+
+// Each engine the wizard offers is one of Engines, with its name.
+func TestDockerEngines(t *testing.T) {
+	e, _ := Find("docker")
+	for _, m := range e.Methods {
+		if m.Engine == "" {
+			t.Errorf("no engine name: %+v", m)
+		}
+		if got, ok := EngineMethod(m.Engine, m.Manager); !ok || got.Package != m.Package {
+			t.Errorf("%s through %s: %+v", m.Engine, m.Manager, got)
+		}
+	}
+}

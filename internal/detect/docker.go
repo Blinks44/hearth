@@ -84,6 +84,7 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 			var version struct{ Server *struct{ Version string } }
 			c.Status = "unavailable"
 			c.Denied = bytes.Contains(res.Stderr, []byte("permission denied"))
+			c.Joined = c.Denied && dockerJoined(term.Get("USER"))
 			if err == nil && res.ExitCode == 0 && !res.Truncated && json.Unmarshal(res.Stdout, &version) == nil && version.Server != nil && version.Server.Version != "" {
 				c.Status, c.Version = "available", version.Server.Version
 				dockerDatabases(ctx, r, term, exe, c.Endpoint, d)

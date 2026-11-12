@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -146,11 +148,7 @@ func operationCaption(op *operation) string {
 	case s.Phase == ops.Succeeded:
 		return locales.OpSucceeded()
 	case s.Phase == ops.Failed:
-		why := s.Err
-		if why == "" {
-			why = locales.OpExitCode(s.ExitCode)
-		}
-		return locales.OpFailed(n, why)
+		return locales.OpFailed(n, failReason(s))
 	case s.Phase == ops.NotVerified:
 		return locales.OpNotVerified(s.Err)
 	}
@@ -389,17 +387,17 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 			command = ops.Command(op.plan.Steps[s.Current].Shown())
 		}
 		dialogSection(c, locales.OpLog(command))
-		logBlock(c, lastLines(s.Log, 8), c.Theme().TextMuted, "")
+		logBlock(c, lastLines(s.Log, 8), c.Theme().TextMuted, "", false)
 	case ops.Failed, ops.NotVerified:
 		// A plan of file edits alone has no output to show.
 		if len(s.Log) > 0 {
 			dialogSection(c, locales.OpLastLines())
-			logBlock(c, lastLines(s.Log, 5), pal.DangerText, locales.OpFullLog())
+			logBlock(c, lastLines(s.Log, 5), pal.DangerText, locales.OpFullLog(), true)
 		}
 	case ops.Succeeded:
 		if len(op.plan.Changes) > 0 {
 			dialogSection(c, strings.ToUpper(locales.OpChanged()))
-			logBlock(c, op.plan.Changes, c.Theme().Text, "")
+			logBlock(c, op.plan.Changes, c.Theme().Text, "", true)
 		}
 	case ops.Stopped:
 		done := 0
@@ -417,11 +415,11 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		default:
 			left = append(left, locales.OpLeftNone())
 		}
-		logBlock(c, append(left, a.restored(s)...), c.Theme().Text, "")
+		logBlock(c, append(left, a.restored(s)...), c.Theme().Text, "", true)
 	}
 	if (s.Phase == ops.Failed || s.Phase == ops.NotVerified) && len(s.Restored) > 0 {
 		dialogSection(c, strings.ToUpper(locales.OpLeft()))
-		logBlock(c, a.restored(s), c.Theme().Text, "")
+		logBlock(c, a.restored(s), c.Theme().Text, "", true)
 	}
 }
 
@@ -434,13 +432,83 @@ func (a *App) restored(s ops.State) []string {
 	return lines
 }
 
+// logLine is a line of output: whole when wrap, else cut to one line.
+func logLine(c *ui.Context, line string, wrap bool) ui.Element {
+	if wrap {
+		return ui.Text(c, line)
+	}
+	return clipped(c, line)
+}
+
+// offlineRe finds the host curl could not reach in its error.
+var offlineRe = regexp.MustCompile(`(?:Failed to connect to|Could not resolve host:) ([^\s:]+)`)
+
+// failReason says why the plan's step failed: the error, the line its
+// command printed last, or its exit code. A download that found no
+// network says so.
+func failReason(s ops.State) string {
+	if s.Err != "" {
+		return s.Err
+	}
+	for _, line := range slices.Backward(s.Log) {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "$ ") {
+			break
+		}
+		if line == "" {
+			continue
+		}
+		if m := offlineRe.FindStringSubmatch(line); m != nil {
+			return locales.OpOffline(m[1])
+		}
+		return strings.TrimSuffix(line, ".")
+	}
+	return exitCode(s.ExitCode)
+}
+
+// exitCode says a step's exit code, in hex where it is one of Windows'
+// HRESULTs, as WinGet's 0x8a150110, which its documentation lists so.
+func exitCode(code int) string {
+	if code < 0 || code > 255 {
+		hex := fmt.Sprintf("%#x", uint32(code))
+		if why := wingetError(uint32(code)); why != "" {
+			return why + " (" + hex + ")"
+		}
+		return locales.OpExitCodeHex(hex)
+	}
+	return locales.OpExitCode(code)
+}
+
+// wingetError says what WinGet's install error code means, as its
+// documentation lists them; "" for the others. A Windows permission
+// prompt nobody answered ends as a cancel.
+func wingetError(code uint32) string {
+	switch code {
+	case 0x8a15010c:
+		return locales.WingetCancelled()
+	case 0x8a150110, 0x8a150104:
+		return locales.WingetDependencies()
+	case 0x8a150107:
+		return locales.WingetNoNetwork()
+	case 0x8a150101, 0x8a150103, 0x8a150111:
+		return locales.WingetInUse()
+	case 0x8a150109, 0x8a15010a:
+		return locales.WingetReboot()
+	case 0x8a150105:
+		return locales.WingetDiskFull()
+	}
+	return ""
+}
+
 // lastLines returns the last n of lines.
 func lastLines(lines []string, n int) []string {
 	return lines[max(len(lines)-n, 0):]
 }
 
-// logBlock is lines of output in a mono block, with a footnote under them.
-func logBlock(c *ui.Context, lines []string, color ui.Color, footnote string) {
+// logBlock is lines of output in a mono block, with a footnote under them;
+// wrap shows each line whole, as a step's error, where output that runs
+// keeps a line each.
+func logBlock(c *ui.Context, lines []string, color ui.Color, footnote string, wrap bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Gap(6).Padding(12, 14).Margin(0, 20, 14, 20).Radius(9).Background(pal.Subtle).
@@ -449,7 +517,7 @@ func logBlock(c *ui.Context, lines []string, color ui.Color, footnote string) {
 			ui.Text(c, "…").FontSize(11.5).TextColor(pal.TextFaint)
 		}
 		for _, line := range lines {
-			clipped(c, line).FontSize(11.5).TextColor(color)
+			logLine(c, line, wrap).FontSize(11.5).TextColor(color)
 		}
 		if footnote != "" {
 			ui.Text(c, footnote).FontSize(11.5).TextColor(t.TextMuted)
@@ -509,7 +577,13 @@ func (a *App) operationToast(c *ui.Context, op *operation) {
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 					ui.Text(c, op.plan.Title+"…").FontSize(13.5).FontWeight(600)
-					ui.Text(c, operationCaption(op)).FontSize(12).TextColor(t.TextMuted)
+					caption := operationCaption(op)
+					// The wizard's installation counts its tools, as its page.
+					if op == a.setup.op {
+						i := a.setupCurrent()
+						caption = locales.SetupToastStep(i+1, len(a.setup.parts), setupTitle(a.setup.parts[i].Tool))
+					}
+					ui.Text(c, caption).FontSize(12).TextColor(t.TextMuted)
 					a.operationProgress(c, op).Margin(6, 0, 4, 0)
 					ui.Row(c).Gap(8).Children(func() {
 						ui.Button(c.Key("op-toast-show"), locales.OpShow()).OnClick(func() { a.showOperation(op) })

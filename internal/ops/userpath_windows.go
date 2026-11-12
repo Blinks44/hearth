@@ -23,7 +23,9 @@ func applyUserPath(e UserPathEdit) (string, error) {
 		if slices.ContainsFunc(entries, func(d string) bool { return sysenv.SamePath(sysenv.ExpandPath(d), sysenv.ExpandPath(e.Add)) }) {
 			return value, nil
 		}
-		after = strings.Join(slices.DeleteFunc(append(entries, e.Add), func(d string) bool { return d == "" }), ";")
+		// First, ahead of WindowsApps, whose aliases, as python.exe that
+		// opens the Store, would run in place of the entry's.
+		after = strings.Join(slices.DeleteFunc(append([]string{e.Add}, entries...), func(d string) bool { return d == "" }), ";")
 	} else if value != e.Before {
 		return "", fmt.Errorf("%s: %w", UserPathName, ErrChanged)
 	}

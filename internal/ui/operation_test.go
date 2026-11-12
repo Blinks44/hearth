@@ -91,7 +91,7 @@ func TestOperationDialog(t *testing.T) {
 		Log: []string{"curl: (6) Could not resolve host: desktop.docker.com", "Error: Download failed on Cask 'docker'"}})
 	tt.Frame()
 	tt.Advance(time.Second)
-	for _, text := range []string{"Step 1 failed: exit code 1. The steps after it did not run.", "failed", "skipped", "Error: Download failed on Cask 'docker'", "Copy log"} {
+	for _, text := range []string{"Step 1 failed: Error: Download failed on Cask 'docker'. The steps after it did not run.", "failed", "skipped", "Error: Download failed on Cask 'docker'", "Copy log"} {
 		if !tt.HasText(text) {
 			t.Fatalf("failed misses %q: %q", text, tt.Texts())
 		}
@@ -232,4 +232,28 @@ func TestOperationEditDialog(t *testing.T) {
 		t.Errorf("not verified: %q", tt.Texts())
 	}
 	screenshot(t, tt, "operation-edit-restored")
+}
+
+func TestFailReason(t *testing.T) {
+	tests := []struct {
+		name string
+		st   ops.State
+		want string
+	}{
+		{"error", ops.State{Err: "refused", Log: []string{"$ brew install mise", "oops"}}, "refused"},
+		{"last line of the step", ops.State{ExitCode: 1, Log: []string{"$ a", "earlier", "$ brew install mise", "Error: No such keg: mise.", ""}}, "Error: No such keg: mise"},
+		{"no network", ops.State{ExitCode: 28, Log: []string{"$ /bin/sh -c …", "curl: (28) Failed to connect to api.github.com port 443 after 75073 ms: Couldn't connect to server"}}, "no connection to api.github.com, check the internet"},
+		{"no host", ops.State{ExitCode: 6, Log: []string{"$ /bin/sh -c …", "curl: (6) Could not resolve host: mise.run"}}, "no connection to mise.run, check the internet"},
+		{"no output", ops.State{ExitCode: 2, Log: []string{"$ a", "earlier", "$ b"}}, "exit code 2"},
+		{"HRESULT", ops.State{ExitCode: 0x8a150006, Log: []string{"$ winget install"}}, "exit code 0x8a150006"},
+		{"WinGet cancelled", ops.State{ExitCode: 0x8a15010c, Log: []string{"$ winget install"}},
+			"the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered (0x8a15010c)"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := failReason(tc.st); got != tc.want {
+				t.Errorf("failReason = %q, want %q", got, tc.want)
+			}
+		})
+	}
 }

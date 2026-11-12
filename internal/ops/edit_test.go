@@ -260,6 +260,31 @@ func TestExecuteRestoresEdits(t *testing.T) {
 	checkFile(t, zshrc, Block("a\n", "b"), 0o644)
 }
 
+// A plan of parts that stand on their own, as the new computer's, puts
+// back only what the failed step's part changed.
+func TestExecuteKeepsPartsDone(t *testing.T) {
+	dir := t.TempDir()
+	bashrc, profile := filepath.Join(dir, ".bashrc"), filepath.Join(dir, ".profile")
+	for _, f := range []string{bashrc, profile} {
+		if err := os.WriteFile(f, []byte("a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	p := Plan{Title: "Set up", Parts: []int{0, 1}, Steps: []Step{
+		{Edit: &FileEdit{Path: bashrc, Before: "a\n", After: Block("a\n", "mise")}},
+		{Edit: &FileEdit{Path: profile, Before: "a\n", After: Block("a\n", "claude")}},
+		{Argv: []string{"sh", "-c", "false"}},
+	}}
+	f := &run.Fake{}
+	f.Set(run.Result{ExitCode: 1}, nil, "sh", "-c", "false")
+	got := Execute(t.Context(), f, p, &strings.Builder{}, func(State) {})
+	if got.Phase != Failed || !reflect.DeepEqual(got.Restored, []string{profile}) {
+		t.Fatalf("phase %d, restored %q", got.Phase, got.Restored)
+	}
+	checkFile(t, bashrc, Block("a\n", "mise"), 0o644)
+	checkFile(t, profile, "a\n", 0o644)
+}
+
 // Stopping the check after the steps leaves the edit: the check did not
 // fail.
 func TestExecuteStoppedCheckKeepsEdits(t *testing.T) {

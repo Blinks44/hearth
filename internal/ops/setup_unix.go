@@ -15,20 +15,23 @@ import (
 
 // The scripts below download a maker's installer and run it, failing as
 // the download does: a pipe into the shell would run what half came.
-// They are fixed.
+// They are fixed. A new Ubuntu has wget, not curl: both installers take
+// either.
 const (
 	// rustupScript installs rustup and Rust's stable toolchain without
 	// changing the startup files: Hearth's block does that.
 	rustupScript = `set -e
 f=$(mktemp)
-curl --proto '=https' --tlsv1.2 -sSf -o "$f" https://sh.rustup.rs
+if command -v curl >/dev/null 2>&1; then curl --proto '=https' --tlsv1.2 -sSf -o "$f" https://sh.rustup.rs
+else wget --https-only --secure-protocol=TLSv1_2 -qO "$f" https://sh.rustup.rs; fi
 sh "$f" -y --no-modify-path
 rm -f "$f"`
 	// claudeScript runs Claude Code's own installer, which puts claude in
 	// ~/.local/bin.
 	claudeScript = `set -e
 f=$(mktemp)
-curl -fsSL -o "$f" https://claude.ai/install.sh
+if command -v curl >/dev/null 2>&1; then curl -fsSL -o "$f" https://claude.ai/install.sh
+else wget -qO "$f" https://claude.ai/install.sh; fi
 bash "$f"
 rm -f "$f"`
 )

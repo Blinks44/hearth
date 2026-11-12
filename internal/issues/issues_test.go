@@ -68,6 +68,25 @@ var nodeLines = &versions.Node{Lines: map[int]versions.Line{
 	22: {LTS: time.Date(2024, 10, 29, 0, 0, 0, 0, time.UTC), End: time.Date(2027, 4, 30, 0, 0, 0, 0, time.UTC), Codename: "Jod"},
 }}
 
+// A refused Docker socket says what to do: join the group, or only sign
+// in again when the user joined it already.
+func TestDockerDenied(t *testing.T) {
+	snap := func(c inventory.DockerContext) *inventory.Snapshot {
+		c.Name, c.Status = "default", "unavailable"
+		return &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "docker", Docker: &inventory.DockerState{Selected: "default", Contexts: []inventory.DockerContext{c}}}}}
+	}
+	for c, want := range map[inventory.DockerContext]Kind{
+		{}:                           DockerUnavailable,
+		{Denied: true}:               DockerDenied,
+		{Denied: true, Joined: true}: DockerSignIn,
+	} {
+		got := Find(snap(c), nil, nil, time.Now())
+		if len(got) != 1 || got[0].Kind != want {
+			t.Errorf("%+v: %+v, want %s", c, got, want)
+		}
+	}
+}
+
 func TestFind(t *testing.T) {
 	project := func(want string) []projects.Project {
 		return []projects.Project{{Dir: "/src/app", Requirements: []projects.Requirement{{Tool: "node", Want: want, File: ".nvmrc"}}}}
@@ -113,6 +132,18 @@ func TestFind(t *testing.T) {
 		{name: "apps run another version", snap: nodeSnap(fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)),
 			want: []Issue{{Kind: GUIDiffers, Severity: Warning, Tool: "node",
 				Copies: []inventory.Installation{fnm("22.12.0", 1, 0), brew("23.6.0", 0, 1)}}}},
+		// The system's own copy is on every computer.
+		{name: "apps run the system's copy", snap: nodeSnap(fnm("22.12.0", 1, 0), func() inventory.Installation {
+			in := brew("18.19.1", 0, 1)
+			in.Source = inventory.Source{Kind: inventory.KindSystem}
+			return in
+		}()),
+			want: []Issue{{Kind: GUIDiffers, Severity: Info, Tool: "node",
+				Copies: []inventory.Installation{fnm("22.12.0", 1, 0), func() inventory.Installation {
+					in := brew("18.19.1", 0, 1)
+					in.Source = inventory.Source{Kind: inventory.KindSystem}
+					return in
+				}()}}}},
 		// VS Code and JetBrains IDEs take the terminal's PATH themselves.
 		{name: "apps do not find it", snap: nodeSnap(fnm("22.12.0", 1, 0)),
 			want: []Issue{{Kind: GUIDiffers, Severity: Info, Tool: "node",

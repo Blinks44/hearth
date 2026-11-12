@@ -57,6 +57,8 @@ func Dotnet(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 		if in.Source.Shim {
 			continue
 		}
+		// mise's one root holds all its SDKs: its shim runs that dotnet.
+		in.Default = in.Source.Manager == "mise"
 		info := &inventory.Dotnet{}
 		in.Dotnet = info
 		for _, probe := range []struct {

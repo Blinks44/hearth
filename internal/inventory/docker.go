@@ -24,6 +24,9 @@ type DockerContext struct {
 	Version                string
 	Local                  bool
 	Denied                 bool // the socket refused this user: not in its group
+	// Joined reports that the user is in the socket's group already but
+	// this session is not: signing in again gives access.
+	Joined bool `json:",omitempty"`
 }
 
 // DockerEngine is an installed engine application or command, or a

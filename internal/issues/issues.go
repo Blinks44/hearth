@@ -22,6 +22,9 @@ const (
 	DockerUnavailable Kind = "docker-unavailable"
 	// DockerDenied is a selected local engine whose socket refused this user.
 	DockerDenied Kind = "docker-denied"
+	// DockerSignIn is DockerDenied for a user in the socket's group
+	// already, whose session started before they joined it.
+	DockerSignIn Kind = "docker-sign-in"
 	// Duplicate is a tool with several copies on the terminal's PATH: the
 	// first runs, the others never do.
 	Duplicate Kind = "duplicate"
@@ -120,7 +123,10 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 			for _, c := range ts.Docker.Contexts {
 				if c.Name == ts.Docker.Selected && c.Status == "unavailable" {
 					kind := DockerUnavailable
-					if c.Denied {
+					switch {
+					case c.Joined:
+						kind = DockerSignIn
+					case c.Denied:
 						kind = DockerDenied
 					}
 					out = append(out, Issue{Kind: kind, Severity: Warning, Tool: "docker"})
@@ -296,7 +302,8 @@ func stubs(ts inventory.ToolState, ps []projects.Project) []Issue {
 // guiDiffers is an issue when the terminal runs a copy and apps run
 // another version, a warning, or none, which is only worth knowing: VS Code
 // and JetBrains IDEs take the terminal's PATH themselves. The same
-// version elsewhere is no matter.
+// version elsewhere is no matter, and the system's own copy in apps, as
+// macOS's Ruby, only worth knowing: it is there on every computer.
 func guiDiffers(ts inventory.ToolState) []Issue {
 	term := inventory.TerminalCopy(ts.Installations)
 	if term < 0 {
@@ -311,6 +318,9 @@ func guiDiffers(ts inventory.ToolState) []Issue {
 		return nil
 	default:
 		is.Copies = append(is.Copies, ts.Installations[gui])
+		if ts.Installations[gui].Source.Kind == inventory.KindSystem {
+			is.Severity = Info
+		}
 	}
 	return []Issue{is}
 }

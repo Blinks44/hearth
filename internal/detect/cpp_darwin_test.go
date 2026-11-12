@@ -14,9 +14,9 @@ import (
 func TestCppBaseDarwin(t *testing.T) {
 	dir := root(t)
 	link := filepath.Join(dir, "xcode_select_link")
-	orig := xcodeSelectLink
-	xcodeSelectLink = link
-	t.Cleanup(func() { xcodeSelectLink = orig })
+	origLink, origCLT := xcodeSelectLink, cltDir
+	xcodeSelectLink, cltDir = link, filepath.Join(dir, "none")
+	t.Cleanup(func() { xcodeSelectLink, cltDir = origLink, origCLT })
 	r := &run.Fake{}
 	if cppBase(t.Context(), r, sysenv.Env{}) != nil || !cppStub("/usr/bin/clang") {
 		t.Error("without the Command Line Tools: a base, or clang is no stub")

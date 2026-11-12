@@ -27,6 +27,8 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		return locales.DockerUnavailableTitle(), locales.DockerUnavailableExplain()
 	case issues.DockerDenied:
 		return locales.DockerDeniedTitle(), locales.DockerDeniedExplain()
+	case issues.DockerSignIn:
+		return locales.DockerDeniedTitle(), locales.DockerSignInExplain()
 	case issues.Duplicate:
 		first := is.Copies[0]
 		version := copyVersion(first)
