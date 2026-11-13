@@ -11,6 +11,9 @@ type Sizes struct {
 	Paths map[string]Usage
 	// Caches are the tools' caches found, counted in Paths.
 	Caches []Cache `json:",omitempty"`
+	// Installs are the projects' folders of dependencies found under the
+	// home folder, as node_modules, counted in Paths.
+	Installs []ProjectInstall `json:",omitempty"`
 	// Docker is what the selected local engine reports it keeps;
 	// DockerErr says why it could not be asked.
 	Docker    []DockerUsage `json:",omitempty"`
@@ -36,6 +39,13 @@ type Cache struct {
 	// ID names the cache: "npm", "pnpm", "uv", "go-build", ...
 	ID   string
 	Path string
+}
+
+// ProjectInstall is a project's folder of dependencies, Project/Name, with
+// when the project last changed.
+type ProjectInstall struct {
+	Project, Name string
+	Changed       time.Time
 }
 
 // DockerUsage is one line of docker system df: the images, the containers,

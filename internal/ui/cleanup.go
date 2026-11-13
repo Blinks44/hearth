@@ -175,7 +175,8 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 							if len(rows) == 0 {
 								continue
 							}
-							ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+							ui.Row(c.Key(cleanupGroupTitle(g))).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+								a.groupCheckbox(c, cleanupGroupTitle(g), rows)
 								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 							})
@@ -192,7 +193,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				}, func() {
 					var restorable int64
 					for _, cand := range cands {
-						if cand.Selected {
+						if cand.Selected && cand.Kind.Group() != cleanup.Projects {
 							restorable += cand.Frees()
 						}
 					}
@@ -259,6 +260,37 @@ func (a *App) dockerTarget() ops.DockerTarget {
 		return ops.DockerTarget{}
 	}
 	return ops.DockerTarget{CLI: st.Installations[i].Path, Context: st.Docker.Selected}
+}
+
+// groupCheckbox is a group's check box: checked when every row shown the
+// plan removes is chosen, mixed when some are; a click chooses them all,
+// or none when all were.
+func (a *App) groupCheckbox(c *ui.Context, title string, rows []cleanup.Candidate) {
+	var keys []string
+	on := 0
+	for _, cand := range rows {
+		if ops.Cleans(cand, a.Snapshot) {
+			keys = append(keys, candidateKey(cand))
+			if a.chosen(cand) {
+				on++
+			}
+		}
+	}
+	all := ui.CheckOff
+	switch {
+	case on > 0 && on == len(keys):
+		all = ui.CheckOn
+	case on > 0:
+		all = ui.CheckMixed
+	}
+	if ui.CheckboxState(c.Key("all"), &all, "").Label(locales.CleanupSelectGroup(title)).Disabled(len(keys) == 0).Changed() {
+		if a.cleanupChoice == nil {
+			a.cleanupChoice = map[string]bool{}
+		}
+		for _, key := range keys {
+			a.cleanupChoice[key] = all == ui.CheckOn
+		}
+	}
 }
 
 // candidateRow is a candidate in the table: its check box, what it is and

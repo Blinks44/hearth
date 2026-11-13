@@ -135,7 +135,8 @@ type Candidate struct {
 	Usage inventory.Usage
 	Known bool
 	// Selected reports that it is chosen at once: what comes back by
-	// itself, the caches and Docker's build cache.
+	// itself, the caches and Docker's build cache, and the installs of a
+	// project not changed for long.
 	Selected bool
 	Reasons  []Reason
 }
@@ -190,20 +191,45 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 	out = append(out, copies(s, ps, lines, usage)...)
 	out = append(out, models(s, ps)...)
 	out = append(out, oldExtensions(s, usage)...)
+	out = append(out, installs(sizes, ps, usage, now)...)
+	slices.SortStableFunc(out, func(a, b Candidate) int {
+		return cmp.Or(cmp.Compare(a.Kind.Group(), b.Kind.Group()), cmp.Compare(b.Frees(), a.Frees()))
+	})
+	return out
+}
+
+// installs offers projects' folders of dependencies: those of the known
+// projects not changed for long, and every node_modules found under home,
+// chosen at once only when its project has not changed for long.
+func installs(sizes *inventory.Sizes, ps []projects.Project, usage func(...string) (inventory.Usage, bool), now time.Time) []Candidate {
+	var out []Candidate
+	add := func(project, name string, changed time.Time) {
+		path := filepath.Join(project, name)
+		if slices.ContainsFunc(out, func(c Candidate) bool { return c.Paths[0] == path }) {
+			return
+		}
+		stale := !changed.IsZero() && now.Sub(changed) >= projects.StaleAfter
+		reasons := []Reason{Reinstalled}
+		if stale {
+			reasons = []Reason{Unchanged, Reinstalled}
+		}
+		u, ok := usage(path)
+		out = append(out, Candidate{Kind: ProjectInstalls, ID: name, Paths: []string{path}, Project: project, Changed: changed,
+			Usage: u, Known: ok, Selected: stale, Reasons: reasons})
+	}
 	for _, p := range ps {
 		if p.Changed.IsZero() || now.Sub(p.Changed) < projects.StaleAfter {
 			continue
 		}
 		for _, name := range p.Installs {
-			path := filepath.Join(p.Dir, name)
-			u, ok := usage(path)
-			out = append(out, Candidate{Kind: ProjectInstalls, ID: name, Paths: []string{path}, Project: p.Dir, Changed: p.Changed,
-				Usage: u, Known: ok, Reasons: []Reason{Unchanged, Reinstalled}})
+			add(p.Dir, name, p.Changed)
 		}
 	}
-	slices.SortStableFunc(out, func(a, b Candidate) int {
-		return cmp.Or(cmp.Compare(a.Kind.Group(), b.Kind.Group()), cmp.Compare(b.Frees(), a.Frees()))
-	})
+	if sizes != nil {
+		for _, in := range sizes.Installs {
+			add(in.Project, in.Name, in.Changed)
+		}
+	}
 	return out
 }
 

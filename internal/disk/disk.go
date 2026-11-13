@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -74,14 +75,15 @@ func Measure(ctx context.Context, root string) (inventory.Usage, error) {
 	return u, nil
 }
 
-// Count counts what snap's copies, packages and caches take, and the
-// projects' installs (their node_modules and the like, as paths), one path
+// Count counts what the projects' installs (their node_modules and the
+// like, as paths) and snap's copies, packages and caches take, one path
 // after another, telling progress each path as it is counted, and then
 // asks Docker. A path that cannot be counted is left out. When ctx ends
 // it stops, with the error.
 func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs []string, progress func(path string, u inventory.Usage)) (inventory.Sizes, error) {
 	s := inventory.Sizes{Paths: map[string]inventory.Usage{}, Caches: Caches(env, snap)}
-	for _, path := range append(Targets(snap, s.Caches), installs...) {
+	// Installs first: the projects' are many and small next to a build cache.
+	for _, path := range append(slices.Clone(installs), Targets(snap, s.Caches)...) {
 		u, err := Measure(ctx, path)
 		if ctx.Err() != nil {
 			return s, ctx.Err()

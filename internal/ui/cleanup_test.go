@@ -59,9 +59,9 @@ func cleanupApp() *App {
 	return a
 }
 
-// The page groups the candidates with their reasons and sizes; the caches
-// and the build cache are chosen at once, and a check box changes what is
-// selected.
+// The page groups the candidates with their reasons and sizes; the caches,
+// the build cache and the installs of a project not changed for long are
+// chosen at once, and a check box changes what is selected.
 func TestCleanupPage(t *testing.T) {
 	a := cleanupApp()
 	a.router.Push(cleanupPage)
@@ -73,8 +73,8 @@ func TestCleanupPage(t *testing.T) {
 		"nvm", "nvm is not set up in the shell · 2 versions of Node.js inside · no project asks for it", "1.0 GB",
 		"DOCKER", "Build Cache", "docker builder prune · rebuilt when needed", "Images without containers", "4 images · pulled again when needed",
 		"Stopped containers", "6 containers · not running",
-		"ABANDONED PROJECTS", "old-landing: node_modules",
-		"Found", "22.1 GB", "9 candidates", "Selected", "17.2 GB", "4 candidates", "5 min ago",
+		"PROJECT DEPENDENCIES", "old-landing: node_modules",
+		"Found", "22.1 GB", "9 candidates", "Selected", "18.1 GB", "5 candidates", "5 min ago",
 		"Docker volumes", "come back by themselves · 17.2 GB")
 	if tt.HasText("Local Volumes") {
 		t.Error("volumes are offered")
@@ -87,7 +87,16 @@ func TestCleanupPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "18.2 GB", "5 candidates")
+	hasTexts(t, tt, "19.1 GB", "6 candidates")
+	// Docker's check box is mixed, with only the build cache chosen: a
+	// click chooses the whole group, the next one none of it.
+	for _, want := range []string{"21.9 GB", "13.6 GB"} {
+		if err := tt.Click("Select all: Docker"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		hasTexts(t, tt, want)
+	}
 	a.cleanupTab = 3 // Docker
 	tt.Frame()
 	tt.Advance(time.Second)
@@ -126,7 +135,7 @@ func TestCleanupNarrowRussian(t *testing.T) {
 	tt := ui.NewTester(a.View, 1000, 680)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "cleanup-narrow-ru")
-	hasTexts(t, tt, "Уборка", "КЭШИ · ВОССТАНОВЯТСЯ САМИ", "Кэш pnpm", "6,4 ГБ", "9 кандидатов", "4 кандидата",
+	hasTexts(t, tt, "Уборка", "КЭШИ · ВОССТАНОВЯТСЯ САМИ", "Кэш pnpm", "6,4 ГБ", "9 кандидатов", "5 кандидатов",
 		"nvm не подключён к шеллу · внутри 2 версии Node.js · проекты не просят", "Не предлагаем")
 }
 
@@ -162,14 +171,14 @@ func TestCleanupRemove(t *testing.T) {
 		}
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Remove selected · 18.2 GB", "5 candidates")
+	hasTexts(t, tt, "Remove selected · 19.1 GB", "6 candidates")
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{brew}})
 	tt.Frame()
 	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if err := tt.Click("Remove selected · 18.4 GB"); err != nil {
+	if err := tt.Click("Remove selected · 19.3 GB"); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
 	tt.Advance(time.Second)

@@ -2414,7 +2414,17 @@
   "@cleanupGroupCopies": {
     "description": "Cleanup table group."
   },
-  "cleanupGroupProjects": "Abandoned projects",
+  "cleanupGroupProjects": "Project dependencies",
+  "cleanupSelectGroup": "Select all: {group}",
+  "@cleanupSelectGroup": {
+    "description": "Accessible name of a Cleanup group's check box that selects all its rows.",
+    "placeholders": {
+      "group": {
+        "type": "String",
+        "example": "Project dependencies"
+      }
+    }
+  },
   "@cleanupGroupProjects": {
     "description": "Cleanup table group, and a row of the side card."
   },
@@ -2566,7 +2576,7 @@
   "@cleanupDockerCaption": {
     "description": "Cleanup side card caption."
   },
-  "cleanupProjectsCaption": "dependencies install again",
+  "cleanupProjectsCaption": "install again · long-unchanged ones selected",
   "@cleanupProjectsCaption": {
     "description": "Cleanup side card caption."
   },

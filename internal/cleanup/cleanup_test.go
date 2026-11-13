@@ -63,15 +63,24 @@ func TestFind(t *testing.T) {
 	}}
 	sizes := &inventory.Sizes{
 		Paths: map[string]inventory.Usage{
-			"/fnm/v20.18.0":                       {Bytes: 200e6},
-			"/nvm/v16.20.2":                       {Bytes: 300e6},
-			"/nvm/v14.21.3":                       {Bytes: 400e6},
-			"/brew/Cellar/node/23.6.0":            {Bytes: 250e6},
-			"/brew/Cellar/oniguruma/6.9":          {Bytes: 10e6},
-			"/npm-cache":                          {Bytes: 5000e6},
-			"/pnpm-store":                         {Bytes: 9000e6, Shared: 9000e6},
-			"/yarn-cache":                         {Bytes: 16384},
-			filepath.Join("/old", "node_modules"): {Bytes: 900e6},
+			"/fnm/v20.18.0":                         {Bytes: 200e6},
+			"/nvm/v16.20.2":                         {Bytes: 300e6},
+			"/nvm/v14.21.3":                         {Bytes: 400e6},
+			"/brew/Cellar/node/23.6.0":              {Bytes: 250e6},
+			"/brew/Cellar/oniguruma/6.9":            {Bytes: 10e6},
+			"/npm-cache":                            {Bytes: 5000e6},
+			"/pnpm-store":                           {Bytes: 9000e6, Shared: 9000e6},
+			"/yarn-cache":                           {Bytes: 16384},
+			filepath.Join("/old", "node_modules"):   {Bytes: 900e6},
+			filepath.Join("/h/try", "node_modules"): {Bytes: 500e6},
+			filepath.Join("/h/app", "node_modules"): {Bytes: 700e6},
+		},
+		// Found under home: the known /old again, an unknown project not
+		// changed for long, and one changed lately.
+		Installs: []inventory.ProjectInstall{
+			{Project: "/old", Name: "node_modules", Changed: now.AddDate(-1, 0, 0)},
+			{Project: "/h/try", Name: "node_modules", Changed: now.AddDate(-2, 0, 0)},
+			{Project: "/h/app", Name: "node_modules", Changed: now.AddDate(0, 0, -3)},
 		},
 		Caches: []inventory.Cache{{ID: "npm", Path: "/npm-cache"}, {ID: "pnpm", Path: "/pnpm-store"}, {ID: "yarn", Path: "/yarn-cache"}},
 		Docker: []inventory.DockerUsage{
@@ -122,7 +131,11 @@ func TestFind(t *testing.T) {
 		// Docker: no volumes, and nothing for a build cache this small.
 		"docker-images   pulled",
 		"docker-containers   stopped",
-		"project-installs node_modules " + filepath.Join("/old", "node_modules") + " unchanged,reinstalled",
+		// Projects not changed for long are chosen at once, one changed
+		// lately is offered; the known project's comes once.
+		"project-installs node_modules " + filepath.Join("/old", "node_modules") + " unchanged,reinstalled selected",
+		"project-installs node_modules " + filepath.Join("/h/app", "node_modules") + " reinstalled",
+		"project-installs node_modules " + filepath.Join("/h/try", "node_modules") + " unchanged,reinstalled selected",
 	}
 	if !slices.Equal(summary, want) {
 		t.Fatalf("got\n%s\nwant\n%s", strings.Join(summary, "\n"), strings.Join(want, "\n"))

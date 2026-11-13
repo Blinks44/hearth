@@ -7402,18 +7402,32 @@ func (msgs Messages) CleanupGroupCopies() string {
 	return Catalog.Format(msgs.locale, "cleanupGroupCopies", nil)
 }
 
-// CleanupGroupProjects says "Abandoned projects"
+// CleanupGroupProjects says "Project dependencies"
 // in the language the app shows.
 //
 // Cleanup table group, and a row of the side card.
 func CleanupGroupProjects() string { return In(i18n.Locale()).CleanupGroupProjects() }
 
-// CleanupGroupProjects says "Abandoned projects"
+// CleanupGroupProjects says "Project dependencies"
 // in the language of msgs.
 //
 // Cleanup table group, and a row of the side card.
 func (msgs Messages) CleanupGroupProjects() string {
 	return Catalog.Format(msgs.locale, "cleanupGroupProjects", nil)
+}
+
+// CleanupSelectGroup says "Select all: {group}"
+// in the language the app shows.
+//
+// Accessible name of a Cleanup group's check box that selects all its rows.
+func CleanupSelectGroup(group string) string { return In(i18n.Locale()).CleanupSelectGroup(group) }
+
+// CleanupSelectGroup says "Select all: {group}"
+// in the language of msgs.
+//
+// Accessible name of a Cleanup group's check box that selects all its rows.
+func (msgs Messages) CleanupSelectGroup(group string) string {
+	return Catalog.Format(msgs.locale, "cleanupSelectGroup", map[string]any{"group": group})
 }
 
 // CleanupCache says "{name} cache"
@@ -7754,13 +7768,13 @@ func (msgs Messages) CleanupDockerCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupDockerCaption", nil)
 }
 
-// CleanupProjectsCaption says "dependencies install again"
+// CleanupProjectsCaption says "install again · long-unchanged ones selected"
 // in the language the app shows.
 //
 // Cleanup side card caption.
 func CleanupProjectsCaption() string { return In(i18n.Locale()).CleanupProjectsCaption() }
 
-// CleanupProjectsCaption says "dependencies install again"
+// CleanupProjectsCaption says "install again · long-unchanged ones selected"
 // in the language of msgs.
 //
 // Cleanup side card caption.

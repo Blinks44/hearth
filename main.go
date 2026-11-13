@@ -191,7 +191,32 @@ func main() {
 					installs = append(installs, filepath.Join(p.Dir, name))
 				}
 			}
+			home := a.Home
 			go func() {
+				// Every project's node_modules under home is counted too.
+				found, err := projects.NodeModules(ctx, home)
+				if ctx.Err() != nil {
+					return
+				}
+				if err != nil {
+					log.Print(err)
+				}
+				// The view offers them at once; their sizes come as they
+				// are counted.
+				win.Update(func() {
+					if ctx.Err() != nil {
+						return
+					}
+					if a.Sizes == nil {
+						a.Sizes = &inventory.Sizes{}
+					}
+					a.Sizes.Installs = found
+				})
+				for _, in := range found {
+					if path := filepath.Join(in.Project, in.Name); !slices.Contains(installs, path) {
+						installs = append(installs, path)
+					}
+				}
 				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(path string, u inventory.Usage) {
 					win.Update(func() {
 						if ctx.Err() != nil {
@@ -209,6 +234,7 @@ func main() {
 				if err != nil {
 					return
 				}
+				sizes.Installs = found
 				// Saved before the view gets them: the next count adds to
 				// the map the view has.
 				if cache != "" {
