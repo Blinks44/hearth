@@ -20,7 +20,7 @@ func TestDatabaseSystemd(t *testing.T) {
 	env := sysenv.Env{"PATH=" + dir}
 	r := &run.Fake{}
 	r.Stdout("postgresql.service loaded active exited PostgreSQL RDBMS\npostgresql@17-main.service loaded active running PostgreSQL\nmysql.service loaded inactive dead MySQL\nmongod.service loaded failed failed MongoDB\nmssql-server.service loaded inactive dead SQL Server\npostgres-exporter.service loaded active running Metrics", exe, "list-units", "--all", "--type=service", "--no-legend", "--plain", "--no-pager")
-	r.Stdout("LISTEN 0 100 127.0.0.1:5432 0.0.0.0:*\nLISTEN 0 100 [::1]:6379 [::]:*", ss, "-ltnH")
+	r.Stdout("LISTEN 0 100 127.0.0.1:5432 0.0.0.0:*\nLISTEN 0 100 [::1]:6379 [::]:*", ss, "-ltnpH")
 	r.Set(run.Result{ExitCode: 1, Stdout: []byte("enabled\ndisabled\nenabled\nstatic\n")}, nil, exe, "is-enabled", "postgresql.service", "mysql.service", "mongod.service", "mssql-server.service")
 	d := &inventory.DatabaseState{}
 	databaseServices(t.Context(), r, env, d)
@@ -73,5 +73,31 @@ func TestDatabaseMongoAndSQLServer(t *testing.T) {
 		if filepath.Base(call.Args[0]) == "sqlservr" || filepath.Base(call.Args[0]) == "mongosh" && call.Timeout < 10*time.Second {
 			t.Fatal(call.Args, call.Timeout)
 		}
+	}
+}
+
+func TestListenerProcessesLinux(t *testing.T) {
+	dir := t.TempDir()
+	ss := filepath.Join(dir, "ss")
+	fakeExe(t, ss)
+	procDir = t.TempDir()
+	t.Cleanup(func() { procDir = "/proc" })
+	proc := filepath.Join(procDir, "4312")
+	if err := os.MkdirAll(proc, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, target := range map[string]string{"exe": "/usr/bin/node", "cwd": "/home/me/dev/shop"} {
+		if err := os.Symlink(target, filepath.Join(proc, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r := &run.Fake{}
+	r.Stdout("LISTEN 0 511 *:5173 *:* users:((\"node\",pid=4312,fd=21))\nLISTEN 0 4096 127.0.0.53%lo:53 0.0.0.0:*\n", ss, "-ltnpH")
+	d := &inventory.DatabaseState{}
+	databaseListeners(t.Context(), r, sysenv.Env{"PATH=" + dir}, d)
+	l := d.Listeners
+	if len(l) != 2 || l[0].Process != "node" || l[0].PID != "4312" || l[0].Path != "/usr/bin/node" || len(l[0].Dirs) != 1 || l[0].Dirs[0] != "/home/me/dev/shop" || !l[0].Own ||
+		l[1].Port != "53" || l[1].PID != "" || l[1].Own {
+		t.Fatal(l)
 	}
 }

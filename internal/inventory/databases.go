@@ -31,7 +31,18 @@ type DatabaseState struct {
 }
 
 // DatabaseListener is an observed TCP listener; no connection is made to it.
-type DatabaseListener struct{ Address, Port, Process, PID string }
+// Process and PID are empty when the system does not tell this user whose
+// it is.
+type DatabaseListener struct {
+	Address, Port, Process, PID string
+	// Path is the process' program; Dirs the folders it works in: its
+	// working folder, or on Windows, which does not tell it, the absolute
+	// paths in its command line. Its other arguments are not kept.
+	Path string   `json:",omitempty"`
+	Dirs []string `json:",omitempty"`
+	// Own reports that the process runs as this user.
+	Own bool `json:",omitempty"`
+}
 
 // DatabaseKind recognizes supported image and service names.
 func DatabaseKind(name string) string {

@@ -7647,5 +7647,181 @@
         "example": "Cursor, Redis"
       }
     }
+  },
+  "portsTitle": "Ports",
+  "@portsTitle": {
+    "description": "Sidebar item and header of the ports page."
+  },
+  "portsSubtitle": "Who listens on this computer's ports",
+  "@portsSubtitle": {
+    "description": "Under the ports page's title."
+  },
+  "portsLead": "TCP ports programs listen on, as of the last check",
+  "@portsLead": {
+    "description": "Line under the ports page's big title."
+  },
+  "portsListening": "Listening",
+  "@portsListening": {
+    "description": "State card: how many ports programs listen on."
+  },
+  "portsListeningCaption": "TCP ports",
+  "@portsListeningCaption": {
+    "description": "Under the number of listening ports."
+  },
+  "portsInProjects": "In projects",
+  "@portsInProjects": {
+    "description": "State card: ports of programs started in a project."
+  },
+  "portsInProjectsCaption": "from a project folder",
+  "@portsInProjectsCaption": {
+    "description": "Under the number of ports in projects."
+  },
+  "portsNetwork": "Open to the network",
+  "@portsNetwork": {
+    "description": "State card: ports reachable from the network, not only this computer."
+  },
+  "portsNetworkCaption": "not only localhost",
+  "@portsNetworkCaption": {
+    "description": "Under the number of ports open to the network."
+  },
+  "portsNetworkChip": "network",
+  "@portsNetworkChip": {
+    "description": "Chip of a port other computers on the network can reach."
+  },
+  "portsFilter": "Port or program",
+  "@portsFilter": {
+    "description": "Placeholder of the ports filter."
+  },
+  "portsNone": "No program listens on a TCP port.",
+  "@portsNone": {
+    "description": "The ports table when nothing listens."
+  },
+  "portsPID": "PID {pid}",
+  "@portsPID": {
+    "description": "A process' number.",
+    "placeholders": {
+      "pid": {
+        "type": "String",
+        "example": "4312"
+      }
+    }
+  },
+  "portsOther": "another user's or the system's process",
+  "@portsOther": {
+    "description": "Who listens at a port when the system does not tell this user."
+  },
+  "portsNotYours": "another user's",
+  "@portsNotYours": {
+    "description": "A process that runs as another user."
+  },
+  "portsSystem": "part of the system",
+  "@portsSystem": {
+    "description": "A process that is part of the operating system."
+  },
+  "portsAirPlay": "AirPlay Receiver: turn it off in System Settings → General → AirDrop & Handoff",
+  "@portsAirPlay": {
+    "description": "macOS' ControlCenter listening on 5000 or 7000."
+  },
+  "portsDocker": "forwards to a container: stop it in its project",
+  "@portsDocker": {
+    "description": "A port Docker's engine forwards to a container."
+  },
+  "portsContainer": "Docker container {name}",
+  "@portsContainer": {
+    "description": "A port a database container publishes.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "shop-db-1"
+      }
+    }
+  },
+  "portsService": "service {name}",
+  "@portsService": {
+    "description": "A port a database service listens on.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "portsStop": "Stop…",
+  "@portsStop": {
+    "description": "Menu item that stops whoever listens at a port, after a plan."
+  },
+  "portsHow": "How Hearth sees ports",
+  "@portsHow": {
+    "description": "Card on the ports page: how Hearth sees ports."
+  },
+  "portsHowRead": "Only reads",
+  "@portsHowRead": {
+    "description": "Row of the how card: only reading."
+  },
+  "portsHowReadCaption": "lsof, ss, netstat; never connects to ports",
+  "@portsHowReadCaption": {
+    "description": "Caption of the only-reads row."
+  },
+  "portsHowStop": "Stops your programs",
+  "@portsHowStop": {
+    "description": "Row of the how card: stopping."
+  },
+  "portsHowStopCaption": "after the plan; database services through their manager",
+  "@portsHowStopCaption": {
+    "description": "Caption of the stopping row."
+  },
+  "portsHowOthers": "Others' and the system's",
+  "@portsHowOthers": {
+    "description": "Row of the how card: other users' and the system's processes."
+  },
+  "portsHowOthersCaption": "Hearth does not stop them",
+  "@portsHowOthersCaption": {
+    "description": "Caption of the others' row."
+  },
+  "processStopTitle": "Stop {name} on port {port}",
+  "@processStopTitle": {
+    "description": "Title of the plan that stops a process listening at a port.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "node"
+      },
+      "port": {
+        "type": "String",
+        "example": "5173"
+      }
+    }
+  },
+  "processWhyUnix": "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first.",
+  "@processWhyUnix": {
+    "description": "How the plan that stops a process goes on macOS and Linux."
+  },
+  "processWhyWindows": "taskkill ends the process at once: what it has not saved is lost.",
+  "@processWhyWindows": {
+    "description": "How the plan that stops a process goes on Windows."
+  },
+  "processStopChange": "Port {port} is free",
+  "@processStopChange": {
+    "description": "What is different after a process stopped; also what the check found.",
+    "placeholders": {
+      "port": {
+        "type": "String",
+        "example": "5173"
+      }
+    }
+  },
+  "processCheckBusy": "{name} still listens on port {port}",
+  "@processCheckBusy": {
+    "description": "Why the check after stopping a process failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "node"
+      },
+      "port": {
+        "type": "String",
+        "example": "5173"
+      }
+    }
   }
 }

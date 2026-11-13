@@ -19263,3 +19263,469 @@ func SetNotHere(names string) string { return In(i18n.Locale()).SetNotHere(names
 func (msgs Messages) SetNotHere(names string) string {
 	return Catalog.Format(msgs.locale, "setNotHere", map[string]any{"names": names})
 }
+
+// PortsTitle says "Ports"
+// in the language the app shows.
+//
+// Sidebar item and header of the ports page.
+func PortsTitle() string { return In(i18n.Locale()).PortsTitle() }
+
+// PortsTitle says "Ports"
+// in the language of msgs.
+//
+// Sidebar item and header of the ports page.
+func (msgs Messages) PortsTitle() string {
+	return Catalog.Format(msgs.locale, "portsTitle", nil)
+}
+
+// PortsSubtitle says "Who listens on this computer's ports"
+// in the language the app shows.
+//
+// Under the ports page's title.
+func PortsSubtitle() string { return In(i18n.Locale()).PortsSubtitle() }
+
+// PortsSubtitle says "Who listens on this computer's ports"
+// in the language of msgs.
+//
+// Under the ports page's title.
+func (msgs Messages) PortsSubtitle() string {
+	return Catalog.Format(msgs.locale, "portsSubtitle", nil)
+}
+
+// PortsLead says "TCP ports programs listen on, as of the last check"
+// in the language the app shows.
+//
+// Line under the ports page's big title.
+func PortsLead() string { return In(i18n.Locale()).PortsLead() }
+
+// PortsLead says "TCP ports programs listen on, as of the last check"
+// in the language of msgs.
+//
+// Line under the ports page's big title.
+func (msgs Messages) PortsLead() string {
+	return Catalog.Format(msgs.locale, "portsLead", nil)
+}
+
+// PortsListening says "Listening"
+// in the language the app shows.
+//
+// State card: how many ports programs listen on.
+func PortsListening() string { return In(i18n.Locale()).PortsListening() }
+
+// PortsListening says "Listening"
+// in the language of msgs.
+//
+// State card: how many ports programs listen on.
+func (msgs Messages) PortsListening() string {
+	return Catalog.Format(msgs.locale, "portsListening", nil)
+}
+
+// PortsListeningCaption says "TCP ports"
+// in the language the app shows.
+//
+// Under the number of listening ports.
+func PortsListeningCaption() string { return In(i18n.Locale()).PortsListeningCaption() }
+
+// PortsListeningCaption says "TCP ports"
+// in the language of msgs.
+//
+// Under the number of listening ports.
+func (msgs Messages) PortsListeningCaption() string {
+	return Catalog.Format(msgs.locale, "portsListeningCaption", nil)
+}
+
+// PortsInProjects says "In projects"
+// in the language the app shows.
+//
+// State card: ports of programs started in a project.
+func PortsInProjects() string { return In(i18n.Locale()).PortsInProjects() }
+
+// PortsInProjects says "In projects"
+// in the language of msgs.
+//
+// State card: ports of programs started in a project.
+func (msgs Messages) PortsInProjects() string {
+	return Catalog.Format(msgs.locale, "portsInProjects", nil)
+}
+
+// PortsInProjectsCaption says "from a project folder"
+// in the language the app shows.
+//
+// Under the number of ports in projects.
+func PortsInProjectsCaption() string { return In(i18n.Locale()).PortsInProjectsCaption() }
+
+// PortsInProjectsCaption says "from a project folder"
+// in the language of msgs.
+//
+// Under the number of ports in projects.
+func (msgs Messages) PortsInProjectsCaption() string {
+	return Catalog.Format(msgs.locale, "portsInProjectsCaption", nil)
+}
+
+// PortsNetwork says "Open to the network"
+// in the language the app shows.
+//
+// State card: ports reachable from the network, not only this computer.
+func PortsNetwork() string { return In(i18n.Locale()).PortsNetwork() }
+
+// PortsNetwork says "Open to the network"
+// in the language of msgs.
+//
+// State card: ports reachable from the network, not only this computer.
+func (msgs Messages) PortsNetwork() string {
+	return Catalog.Format(msgs.locale, "portsNetwork", nil)
+}
+
+// PortsNetworkCaption says "not only localhost"
+// in the language the app shows.
+//
+// Under the number of ports open to the network.
+func PortsNetworkCaption() string { return In(i18n.Locale()).PortsNetworkCaption() }
+
+// PortsNetworkCaption says "not only localhost"
+// in the language of msgs.
+//
+// Under the number of ports open to the network.
+func (msgs Messages) PortsNetworkCaption() string {
+	return Catalog.Format(msgs.locale, "portsNetworkCaption", nil)
+}
+
+// PortsNetworkChip says "network"
+// in the language the app shows.
+//
+// Chip of a port other computers on the network can reach.
+func PortsNetworkChip() string { return In(i18n.Locale()).PortsNetworkChip() }
+
+// PortsNetworkChip says "network"
+// in the language of msgs.
+//
+// Chip of a port other computers on the network can reach.
+func (msgs Messages) PortsNetworkChip() string {
+	return Catalog.Format(msgs.locale, "portsNetworkChip", nil)
+}
+
+// PortsFilter says "Port or program"
+// in the language the app shows.
+//
+// Placeholder of the ports filter.
+func PortsFilter() string { return In(i18n.Locale()).PortsFilter() }
+
+// PortsFilter says "Port or program"
+// in the language of msgs.
+//
+// Placeholder of the ports filter.
+func (msgs Messages) PortsFilter() string {
+	return Catalog.Format(msgs.locale, "portsFilter", nil)
+}
+
+// PortsNone says "No program listens on a TCP port."
+// in the language the app shows.
+//
+// The ports table when nothing listens.
+func PortsNone() string { return In(i18n.Locale()).PortsNone() }
+
+// PortsNone says "No program listens on a TCP port."
+// in the language of msgs.
+//
+// The ports table when nothing listens.
+func (msgs Messages) PortsNone() string {
+	return Catalog.Format(msgs.locale, "portsNone", nil)
+}
+
+// PortsPID says "PID {pid}"
+// in the language the app shows.
+//
+// A process' number.
+func PortsPID(pid string) string { return In(i18n.Locale()).PortsPID(pid) }
+
+// PortsPID says "PID {pid}"
+// in the language of msgs.
+//
+// A process' number.
+func (msgs Messages) PortsPID(pid string) string {
+	return Catalog.Format(msgs.locale, "portsPID", map[string]any{"pid": pid})
+}
+
+// PortsOther says "another user's or the system's process"
+// in the language the app shows.
+//
+// Who listens at a port when the system does not tell this user.
+func PortsOther() string { return In(i18n.Locale()).PortsOther() }
+
+// PortsOther says "another user's or the system's process"
+// in the language of msgs.
+//
+// Who listens at a port when the system does not tell this user.
+func (msgs Messages) PortsOther() string {
+	return Catalog.Format(msgs.locale, "portsOther", nil)
+}
+
+// PortsNotYours says "another user's"
+// in the language the app shows.
+//
+// A process that runs as another user.
+func PortsNotYours() string { return In(i18n.Locale()).PortsNotYours() }
+
+// PortsNotYours says "another user's"
+// in the language of msgs.
+//
+// A process that runs as another user.
+func (msgs Messages) PortsNotYours() string {
+	return Catalog.Format(msgs.locale, "portsNotYours", nil)
+}
+
+// PortsSystem says "part of the system"
+// in the language the app shows.
+//
+// A process that is part of the operating system.
+func PortsSystem() string { return In(i18n.Locale()).PortsSystem() }
+
+// PortsSystem says "part of the system"
+// in the language of msgs.
+//
+// A process that is part of the operating system.
+func (msgs Messages) PortsSystem() string {
+	return Catalog.Format(msgs.locale, "portsSystem", nil)
+}
+
+// PortsAirPlay says "AirPlay Receiver: turn it off in System Settings → General → AirDrop & Handoff"
+// in the language the app shows.
+//
+// macOS' ControlCenter listening on 5000 or 7000.
+func PortsAirPlay() string { return In(i18n.Locale()).PortsAirPlay() }
+
+// PortsAirPlay says "AirPlay Receiver: turn it off in System Settings → General → AirDrop & Handoff"
+// in the language of msgs.
+//
+// macOS' ControlCenter listening on 5000 or 7000.
+func (msgs Messages) PortsAirPlay() string {
+	return Catalog.Format(msgs.locale, "portsAirPlay", nil)
+}
+
+// PortsDocker says "forwards to a container: stop it in its project"
+// in the language the app shows.
+//
+// A port Docker's engine forwards to a container.
+func PortsDocker() string { return In(i18n.Locale()).PortsDocker() }
+
+// PortsDocker says "forwards to a container: stop it in its project"
+// in the language of msgs.
+//
+// A port Docker's engine forwards to a container.
+func (msgs Messages) PortsDocker() string {
+	return Catalog.Format(msgs.locale, "portsDocker", nil)
+}
+
+// PortsContainer says "Docker container {name}"
+// in the language the app shows.
+//
+// A port a database container publishes.
+func PortsContainer(name string) string { return In(i18n.Locale()).PortsContainer(name) }
+
+// PortsContainer says "Docker container {name}"
+// in the language of msgs.
+//
+// A port a database container publishes.
+func (msgs Messages) PortsContainer(name string) string {
+	return Catalog.Format(msgs.locale, "portsContainer", map[string]any{"name": name})
+}
+
+// PortsService says "service {name}"
+// in the language the app shows.
+//
+// A port a database service listens on.
+func PortsService(name string) string { return In(i18n.Locale()).PortsService(name) }
+
+// PortsService says "service {name}"
+// in the language of msgs.
+//
+// A port a database service listens on.
+func (msgs Messages) PortsService(name string) string {
+	return Catalog.Format(msgs.locale, "portsService", map[string]any{"name": name})
+}
+
+// PortsStop says "Stop…"
+// in the language the app shows.
+//
+// Menu item that stops whoever listens at a port, after a plan.
+func PortsStop() string { return In(i18n.Locale()).PortsStop() }
+
+// PortsStop says "Stop…"
+// in the language of msgs.
+//
+// Menu item that stops whoever listens at a port, after a plan.
+func (msgs Messages) PortsStop() string {
+	return Catalog.Format(msgs.locale, "portsStop", nil)
+}
+
+// PortsHow says "How Hearth sees ports"
+// in the language the app shows.
+//
+// Card on the ports page: how Hearth sees ports.
+func PortsHow() string { return In(i18n.Locale()).PortsHow() }
+
+// PortsHow says "How Hearth sees ports"
+// in the language of msgs.
+//
+// Card on the ports page: how Hearth sees ports.
+func (msgs Messages) PortsHow() string {
+	return Catalog.Format(msgs.locale, "portsHow", nil)
+}
+
+// PortsHowRead says "Only reads"
+// in the language the app shows.
+//
+// Row of the how card: only reading.
+func PortsHowRead() string { return In(i18n.Locale()).PortsHowRead() }
+
+// PortsHowRead says "Only reads"
+// in the language of msgs.
+//
+// Row of the how card: only reading.
+func (msgs Messages) PortsHowRead() string {
+	return Catalog.Format(msgs.locale, "portsHowRead", nil)
+}
+
+// PortsHowReadCaption says "lsof, ss, netstat; never connects to ports"
+// in the language the app shows.
+//
+// Caption of the only-reads row.
+func PortsHowReadCaption() string { return In(i18n.Locale()).PortsHowReadCaption() }
+
+// PortsHowReadCaption says "lsof, ss, netstat; never connects to ports"
+// in the language of msgs.
+//
+// Caption of the only-reads row.
+func (msgs Messages) PortsHowReadCaption() string {
+	return Catalog.Format(msgs.locale, "portsHowReadCaption", nil)
+}
+
+// PortsHowStop says "Stops your programs"
+// in the language the app shows.
+//
+// Row of the how card: stopping.
+func PortsHowStop() string { return In(i18n.Locale()).PortsHowStop() }
+
+// PortsHowStop says "Stops your programs"
+// in the language of msgs.
+//
+// Row of the how card: stopping.
+func (msgs Messages) PortsHowStop() string {
+	return Catalog.Format(msgs.locale, "portsHowStop", nil)
+}
+
+// PortsHowStopCaption says "after the plan; database services through their manager"
+// in the language the app shows.
+//
+// Caption of the stopping row.
+func PortsHowStopCaption() string { return In(i18n.Locale()).PortsHowStopCaption() }
+
+// PortsHowStopCaption says "after the plan; database services through their manager"
+// in the language of msgs.
+//
+// Caption of the stopping row.
+func (msgs Messages) PortsHowStopCaption() string {
+	return Catalog.Format(msgs.locale, "portsHowStopCaption", nil)
+}
+
+// PortsHowOthers says "Others' and the system's"
+// in the language the app shows.
+//
+// Row of the how card: other users' and the system's processes.
+func PortsHowOthers() string { return In(i18n.Locale()).PortsHowOthers() }
+
+// PortsHowOthers says "Others' and the system's"
+// in the language of msgs.
+//
+// Row of the how card: other users' and the system's processes.
+func (msgs Messages) PortsHowOthers() string {
+	return Catalog.Format(msgs.locale, "portsHowOthers", nil)
+}
+
+// PortsHowOthersCaption says "Hearth does not stop them"
+// in the language the app shows.
+//
+// Caption of the others' row.
+func PortsHowOthersCaption() string { return In(i18n.Locale()).PortsHowOthersCaption() }
+
+// PortsHowOthersCaption says "Hearth does not stop them"
+// in the language of msgs.
+//
+// Caption of the others' row.
+func (msgs Messages) PortsHowOthersCaption() string {
+	return Catalog.Format(msgs.locale, "portsHowOthersCaption", nil)
+}
+
+// ProcessStopTitle says "Stop {name} on port {port}"
+// in the language the app shows.
+//
+// Title of the plan that stops a process listening at a port.
+func ProcessStopTitle(name string, port string) string {
+	return In(i18n.Locale()).ProcessStopTitle(name, port)
+}
+
+// ProcessStopTitle says "Stop {name} on port {port}"
+// in the language of msgs.
+//
+// Title of the plan that stops a process listening at a port.
+func (msgs Messages) ProcessStopTitle(name string, port string) string {
+	return Catalog.Format(msgs.locale, "processStopTitle", map[string]any{"name": name, "port": port})
+}
+
+// ProcessWhyUnix says "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first."
+// in the language the app shows.
+//
+// How the plan that stops a process goes on macOS and Linux.
+func ProcessWhyUnix() string { return In(i18n.Locale()).ProcessWhyUnix() }
+
+// ProcessWhyUnix says "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first."
+// in the language of msgs.
+//
+// How the plan that stops a process goes on macOS and Linux.
+func (msgs Messages) ProcessWhyUnix() string {
+	return Catalog.Format(msgs.locale, "processWhyUnix", nil)
+}
+
+// ProcessWhyWindows says "taskkill ends the process at once: what it has not saved is lost."
+// in the language the app shows.
+//
+// How the plan that stops a process goes on Windows.
+func ProcessWhyWindows() string { return In(i18n.Locale()).ProcessWhyWindows() }
+
+// ProcessWhyWindows says "taskkill ends the process at once: what it has not saved is lost."
+// in the language of msgs.
+//
+// How the plan that stops a process goes on Windows.
+func (msgs Messages) ProcessWhyWindows() string {
+	return Catalog.Format(msgs.locale, "processWhyWindows", nil)
+}
+
+// ProcessStopChange says "Port {port} is free"
+// in the language the app shows.
+//
+// What is different after a process stopped; also what the check found.
+func ProcessStopChange(port string) string { return In(i18n.Locale()).ProcessStopChange(port) }
+
+// ProcessStopChange says "Port {port} is free"
+// in the language of msgs.
+//
+// What is different after a process stopped; also what the check found.
+func (msgs Messages) ProcessStopChange(port string) string {
+	return Catalog.Format(msgs.locale, "processStopChange", map[string]any{"port": port})
+}
+
+// ProcessCheckBusy says "{name} still listens on port {port}"
+// in the language the app shows.
+//
+// Why the check after stopping a process failed.
+func ProcessCheckBusy(name string, port string) string {
+	return In(i18n.Locale()).ProcessCheckBusy(name, port)
+}
+
+// ProcessCheckBusy says "{name} still listens on port {port}"
+// in the language of msgs.
+//
+// Why the check after stopping a process failed.
+func (msgs Messages) ProcessCheckBusy(name string, port string) string {
+	return Catalog.Format(msgs.locale, "processCheckBusy", map[string]any{"name": name, "port": port})
+}

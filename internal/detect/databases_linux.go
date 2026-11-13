@@ -2,7 +2,11 @@ package detect
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -96,7 +100,8 @@ func databaseEnabled(ctx context.Context, r run.Runner, env sysenv.Env, names []
 }
 
 func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {
-	data, ok := databaseRun(ctx, r, env, "ss", "-ltnH")
+	// -p names the process only for this user's: others' need root.
+	data, ok := databaseRun(ctx, r, env, "ss", "-ltnpH")
 	if !ok {
 		d.Warnings = append(d.Warnings, "ss")
 		return
@@ -110,6 +115,25 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 		if i < 0 {
 			continue
 		}
-		d.Listeners = append(d.Listeners, inventory.DatabaseListener{Address: f[3][:i], Port: f[3][i+1:]})
+		l := inventory.DatabaseListener{Address: f[3][:i], Port: f[3][i+1:]}
+		if m := ssUser.FindStringSubmatch(line); m != nil {
+			l.Process, l.PID = m[1], m[2]
+			proc := filepath.Join(procDir, l.PID)
+			l.Path, _ = os.Readlink(filepath.Join(proc, "exe"))
+			if cwd, err := os.Readlink(filepath.Join(proc, "cwd")); err == nil && cwd != "/" {
+				l.Dirs = []string{cwd}
+			}
+			if fi, err := os.Stat(proc); err == nil {
+				st, ok := fi.Sys().(*syscall.Stat_t)
+				l.Own = ok && int(st.Uid) == os.Getuid()
+			}
+		}
+		d.Listeners = append(d.Listeners, l)
 	}
 }
+
+// ssUser is the first process of ss' users:(("node",pid=4312,fd=21)).
+var ssUser = regexp.MustCompile(`users:\(\("((?:[^"\\]|\\.)*)",pid=([0-9]+),`)
+
+// procDir is where Linux shows the processes; tests set their own.
+var procDir = "/proc"

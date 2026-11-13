@@ -204,6 +204,7 @@ type App struct {
 	modelPullOpen  bool   // the dialog to download an Ollama model is open
 	cliTab         int    // the CLI & clouds page's tab
 	cliFilter      string // the CLI & clouds table's filter
+	portsFilter    string // the Ports table's filter
 	mobileTab      int    // the mobile page's tab: all, then a group each
 	mobileFilter   string // the mobile table's filter
 	editorsTab     int    // the editors page's tab: all, extensions, commands
@@ -322,6 +323,8 @@ func (a *App) View(c *ui.Context) {
 						a.gitPageView(c, p)
 					case cliPage:
 						a.cliView(c, p)
+					case portsPage:
+						a.portsView(c, p)
 					case mobilePage:
 						a.mobileView(c, p)
 					case editorsPage:

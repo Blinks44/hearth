@@ -106,6 +106,7 @@ var (
 		{locales.SectionSystem, []page{
 			{"/system/packages", "lucide/package", locales.PackageManagersTitle, locales.SectionSystem},
 			{pathPage, "lucide/terminal", locales.PathTitle, locales.SectionSystem},
+			{portsPage, "lucide/ethernet-port", locales.PortsTitle, locales.PortsSubtitle},
 		}},
 	}
 )

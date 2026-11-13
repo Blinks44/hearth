@@ -56,9 +56,15 @@ func TestDatabaseWindowsListeners(t *testing.T) {
 	env := sysenv.Env{"PATH=" + dir, "PATHEXT=.EXE"}
 	r := &run.Fake{}
 	r.Stdout("  Proto  Local Address          Foreign Address        State           PID\r\n  TCP    127.0.0.1:5432         0.0.0.0:0              ABH\u00d6REN         812\r\n  TCP    127.0.0.1:50000        127.0.0.1:5432         HERGESTELLT     900\r\n", netstat, "-ano", "-p", "tcp")
+	old := processInfo
+	t.Cleanup(func() { processInfo = old })
+	processInfo = func(pid uint32) (process, bool) {
+		return process{path: `C:\Program Files\nodejs\node.exe`, args: []string{`C:\Program Files\nodejs\node.exe`, `C:\Users\me\dev\shop\node_modules\vite\bin\vite.js`, "--port", "5432"}, own: true}, pid == 812
+	}
 	d := &inventory.DatabaseState{}
 	databaseListeners(t.Context(), r, env, d)
-	if len(d.Listeners) != 1 {
-		t.Fatal(d)
+	l := d.Listeners
+	if len(l) != 1 || l[0].Process != "node" || !l[0].Own || len(l[0].Dirs) != 1 || l[0].Dirs[0] != `C:\Users\me\dev\shop\node_modules\vite\bin\vite.js` {
+		t.Fatal(l)
 	}
 }

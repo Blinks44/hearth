@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -176,6 +177,59 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 		if i < 0 {
 			continue
 		}
-		d.Listeners = append(d.Listeners, inventory.DatabaseListener{Address: f[1][:i], Port: f[1][i+1:], PID: f[4]})
+		l := inventory.DatabaseListener{Address: f[1][:i], Port: f[1][i+1:], PID: f[4]}
+		if pid, err := strconv.ParseUint(l.PID, 10, 32); err == nil && pid > 4 { // 0 and 4 are the system's
+			if p, ok := processInfo(uint32(pid)); ok {
+				l.Path, l.Own = p.path, p.own
+				l.Process = strings.TrimSuffix(filepath.Base(p.path), filepath.Ext(p.path))
+				for _, arg := range p.args {
+					if filepath.IsAbs(arg) && !strings.EqualFold(arg, p.path) {
+						l.Dirs = append(l.Dirs, arg)
+					}
+				}
+			}
+		}
+		d.Listeners = append(d.Listeners, l)
 	}
+}
+
+type process struct {
+	path string
+	args []string
+	own  bool
+}
+
+// processInfo reads a process' program, command line and whether it
+// runs as this user; ok is false when Windows does not let this user
+// see it. Tests set their own.
+var processInfo = func(pid uint32) (process, bool) {
+	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		return process{}, false
+	}
+	defer windows.CloseHandle(h)
+	buf := make([]uint16, windows.MAX_LONG_PATH)
+	n := uint32(len(buf))
+	if windows.QueryFullProcessImageName(h, 0, &buf[0], &n) != nil {
+		return process{}, false
+	}
+	p := process{path: windows.UTF16ToString(buf[:n])}
+	var token windows.Token
+	if windows.OpenProcessToken(h, windows.TOKEN_QUERY, &token) == nil {
+		user, err := token.GetTokenUser()
+		me, err2 := windows.GetCurrentProcessToken().GetTokenUser()
+		p.own = err == nil && err2 == nil && user.User.Sid.Equals(me.User.Sid)
+		token.Close()
+	}
+	// The command line comes as a UNICODE_STRING and the text after it.
+	var size uint32
+	_ = windows.NtQueryInformationProcess(h, windows.ProcessCommandLineInformation, nil, 0, &size)
+	if size > 0 && size < 1<<20 {
+		info := make([]byte, size)
+		if windows.NtQueryInformationProcess(h, windows.ProcessCommandLineInformation, unsafe.Pointer(&info[0]), size, &size) == nil {
+			line := (*windows.NTUnicodeString)(unsafe.Pointer(&info[0])).String()
+			p.args, _ = windows.DecomposeCommandLine(line)
+		}
+	}
+	return p, true
 }
