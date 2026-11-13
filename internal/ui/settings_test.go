@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/projects"
@@ -104,5 +105,40 @@ func TestSettingsPage(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.ThemeMode != "system" {
 		t.Fatal(a.ThemeMode)
+	}
+}
+
+// The language menu lists every catalog in its own language, and the
+// languages an AI translated say so under the setting.
+func TestSettingsLanguages(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "zh-Hans" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	a := NewApp()
+	a.Locale = "zh-Hans"
+	var chosen string
+	a.OnLocale = func(lang string) { chosen = lang }
+	a.router.Push(settings.path)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "settings-zh")
+	for _, text := range []string{"界面语言", "中文（简体）", "由 AI 翻译：可能不准确"} {
+		if !tt.HasText(text) {
+			t.Fatalf("missing %q: %q", text, tt.Texts())
+		}
+	}
+	if err := tt.Click("选择界面语言"); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range languageNames {
+		if !tt.HasText(name) {
+			t.Fatalf("menu lacks %q: %q", name, tt.Texts())
+		}
+	}
+	if err := tt.Click("Deutsch"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.Locale != "de" || chosen != "de" {
+		t.Fatal(a.Locale, chosen)
 	}
 }

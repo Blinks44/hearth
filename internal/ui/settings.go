@@ -9,6 +9,16 @@ import (
 	"github.com/Blinks44/hearth/resources"
 )
 
+// languageTags are the catalogs of locales/, in the order the language
+// menu lists them by languageNames, each in its own language.
+var (
+	languageTags  = []string{"en", "de", "es", "fr", "ru", "zh-Hans"}
+	languageNames = []string{"English", "Deutsch", "Español", "Français", "Русский", "中文（简体）"}
+	// machineTranslated are the languages an AI translated without a
+	// native speaker's review.
+	machineTranslated = map[string]bool{"de": true, "es": true, "fr": true, "zh-Hans": true}
+)
+
 func (a *App) settingsPage(c *ui.Context) {
 	ui.Column(c).Fill().Children(func() {
 		a.header(c, locales.SettingsTitle(), "Hearth")
@@ -29,15 +39,22 @@ func (a *App) settingsPage(c *ui.Context) {
 				}
 				columns(c, 12, func() {
 					card(c, locales.SettingsGeneral(), "", nil, func() {
-						settingRow(c, locales.SettingsLanguage(), locales.SettingsLanguageHint(), func() {
-							lang := "English"
-							if a.Locale == "ru" {
-								lang = "Русский"
+						hint := locales.SettingsLanguageHint()
+						if machineTranslated[a.Locale] {
+							hint = locales.SettingsLanguageMachine()
+						}
+						settingRow(c, locales.SettingsLanguage(), hint, func() {
+							lang := languageNames[0]
+							for i, tag := range languageTags {
+								if tag == a.Locale {
+									lang = languageNames[i]
+								}
 							}
-							ui.Select(c.Key("settings-language"), &lang, []string{"English", "Русский"}).Label(locales.SettingsChooseLanguage()).Width(145).OnChange(func() {
-								a.Locale = "en"
-								if lang == "Русский" {
-									a.Locale = "ru"
+							ui.Select(c.Key("settings-language"), &lang, languageNames).Label(locales.SettingsChooseLanguage()).Width(145).OnChange(func() {
+								for i, name := range languageNames {
+									if name == lang {
+										a.Locale = languageTags[i]
+									}
 								}
 								a.SettingsNotice = "" // says it in the language it was shown in
 								if a.OnLocale != nil {

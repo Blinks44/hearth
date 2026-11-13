@@ -32,7 +32,7 @@ type App struct {
 	OS string
 	// ThemeMode is the saved appearance: "light", "dark" or "system".
 	ThemeMode string
-	// Locale is the interface language, "en" or "ru".
+	// Locale is the interface language, a catalog of locales/ as "en".
 	Locale string
 	// collator sorts titles in collatorLocale, made again when Locale
 	// changes.

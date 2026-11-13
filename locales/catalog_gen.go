@@ -7,13 +7,17 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/i18n"
+
+	// MyGo's own strings in the app's languages.
+	_ "github.com/egoist/mygo/locales/zh-Hans"
 )
 
 //go:embed *.json
 var files embed.FS
 
-// Catalog holds the messages in en, the source language, and ru. It is
-// registered with package i18n, which makes its languages the app's.
+// Catalog holds the messages in en, the source language, and de, es, fr, ru
+// and zh-Hans. It is registered with package i18n, which makes its
+// languages the app's.
 var Catalog *i18n.Catalog
 
 func init() {
@@ -6674,14 +6678,30 @@ func (msgs Messages) SettingsLanguage() string {
 	return Catalog.Format(msgs.locale, "settingsLanguage", nil)
 }
 
-// SettingsLanguageHint says "English is the source; Russian is a translation"
+// SettingsLanguageHint says "English is the source; the others are translations"
 // in the language the app shows.
 func SettingsLanguageHint() string { return In(i18n.Locale()).SettingsLanguageHint() }
 
-// SettingsLanguageHint says "English is the source; Russian is a translation"
+// SettingsLanguageHint says "English is the source; the others are translations"
 // in the language of msgs.
 func (msgs Messages) SettingsLanguageHint() string {
 	return Catalog.Format(msgs.locale, "settingsLanguageHint", nil)
+}
+
+// SettingsLanguageMachine says "Translated by AI: may be inaccurate"
+// in the language the app shows.
+//
+// Settings: under the interface language when it is one an AI translated
+// without review.
+func SettingsLanguageMachine() string { return In(i18n.Locale()).SettingsLanguageMachine() }
+
+// SettingsLanguageMachine says "Translated by AI: may be inaccurate"
+// in the language of msgs.
+//
+// Settings: under the interface language when it is one an AI translated
+// without review.
+func (msgs Messages) SettingsLanguageMachine() string {
+	return Catalog.Format(msgs.locale, "settingsLanguageMachine", nil)
 }
 
 // ThemeButton says "Theme: {mode}"

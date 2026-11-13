@@ -2244,7 +2244,11 @@
   "settingsLocal": "Local app · no account or Hearth telemetry",
   "settingsGeneral": "General",
   "settingsLanguage": "Interface language",
-  "settingsLanguageHint": "English is the source; Russian is a translation",
+  "settingsLanguageHint": "English is the source; the others are translations",
+  "settingsLanguageMachine": "Translated by AI: may be inaccurate",
+  "@settingsLanguageMachine": {
+    "description": "Settings: under the interface language when it is one an AI translated without review."
+  },
   "themeButton": "Theme: {mode}",
   "@themeButton": {
     "description": "Sidebar button that turns the appearance: tooltip with the current mode, as System.",
