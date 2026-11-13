@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"errors"
 	"slices"
 	"testing"
 )
@@ -164,5 +165,35 @@ func TestDatabases(t *testing.T) {
 				t.Errorf("%s clashes with %s, not back", e.ID, id)
 			}
 		}
+	}
+}
+
+// A set read back is the tools saved, in the catalog's order, without
+// those a newer Hearth knows; a file Hearth did not save, or a newer one,
+// is not read.
+func TestSet(t *testing.T) {
+	data, err := MarshalSet([]string{"claude", "node", "homebrew"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name string
+		data string
+		want []string
+		err  error
+	}{
+		{"saved", string(data), []string{"homebrew", "node", "claude"}, nil},
+		{"unknown tool", `{"hearth": "set", "version": 1, "tools": ["node", "zig"]}`, []string{"node"}, nil},
+		{"other json", `{"tools": ["node"]}`, nil, ErrNotSet},
+		{"not json", "node\n", nil, ErrNotSet},
+		{"newer", `{"hearth": "set", "version": 2, "tools": ["node"]}`, nil, ErrNewerSet},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := ParseSet([]byte(tc.data))
+			if !errors.Is(err, tc.err) || !slices.Equal(got, tc.want) {
+				t.Errorf("ParseSet = %q, %v; want %q, %v", got, err, tc.want, tc.err)
+			}
+		})
 	}
 }

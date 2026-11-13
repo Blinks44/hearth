@@ -1404,5 +1404,16 @@
   "databaseAutostartFor": "自动启动 {name}",
   "databaseCopyURL": "复制连接字符串",
   "databaseURLCopied": "已复制连接字符串",
-  "databasePassword": "密码为服务器上设置的密码"
+  "databasePassword": "密码为服务器上设置的密码",
+  "setSave": "保存我的工具集…",
+  "setOpen": "打开工具集…",
+  "setSaveTitle": "保存我的工具集",
+  "setOpenTitle": "打开工具集",
+  "setFileKind": "Hearth 工具集",
+  "setSaved": "工具集已保存到 {path}",
+  "setSaveFailed": "无法保存工具集：{error}",
+  "setNotSet": "{name} 不是 Hearth 保存的工具集。",
+  "setNewer": "此工具集来自更新版本的 Hearth。请更新 Hearth 后再打开。",
+  "setAllHere": "工具集中的所有内容已在这台电脑上。",
+  "setNotHere": "已跳过，无法在此系统上安装：{names}"
 }

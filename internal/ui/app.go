@@ -161,6 +161,12 @@ type App struct {
 	// SkillBackups is the folder copies of skills move to when they are
 	// merged; "" offers no merge.
 	SkillBackups string
+	// SaveSet asks where to save a set's file and writes data there, and
+	// OpenSet asks for a set's file and reads it; both give done the file
+	// chosen, "" when the user canceled, through Window.Update. nil hides
+	// them.
+	SaveSet func(data []byte, done func(path string, err error))
+	OpenSet func(done func(path string, data []byte, err error))
 	// DetectAgent finds an agent again, as a scan would, for an
 	// operation's check; it runs on the operation's goroutine.
 	DetectAgent func(ctx context.Context, id string) (inventory.Agent, error)
@@ -182,6 +188,7 @@ type App struct {
 	pathFilter     string // the PATH table's filter
 	pathFixErr     string // why the PATH problems asked to fix have no plan
 	planErr        string // why a plan asked for could not be made, until a toast says it
+	notice         string // what a toast says next, as a set saved
 	packageTab     int    // the tab of the system package managers page shown
 	packageManager string // the path of the package manager shown
 	packageFilter  string // the package table's filter
@@ -260,6 +267,10 @@ func (a *App) View(c *ui.Context) {
 	if a.planErr != "" {
 		c.AddToast(ui.Toast{Title: a.planErr, Type: "error", Timeout: -1})
 		a.planErr = ""
+	}
+	if a.notice != "" {
+		c.Toast(a.notice)
+		a.notice = ""
 	}
 	t := c.Theme()
 	// Vibrancy shows wherever the view draws no background: under the

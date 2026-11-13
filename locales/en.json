@@ -7579,5 +7579,73 @@
   "databasePassword": "password as set on the server",
   "@databasePassword": {
     "description": "Databases page: under a connection string the server asks a password for, which Hearth does not know."
+  },
+  "setSave": "Save my set…",
+  "@setSave": {
+    "description": "Install page header menu: saves the catalog's tools on this computer to a file another computer installs from."
+  },
+  "setOpen": "Open a set…",
+  "@setOpen": {
+    "description": "Install page: opens a set's file and shows the plan that installs it."
+  },
+  "setSaveTitle": "Save my set",
+  "@setSaveTitle": {
+    "description": "Title of the dialog that saves a set."
+  },
+  "setOpenTitle": "Open a set",
+  "@setOpenTitle": {
+    "description": "Title of the dialog that opens a set."
+  },
+  "setFileKind": "Hearth set",
+  "@setFileKind": {
+    "description": "Kind of file of a set, in the open and save dialogs' filter."
+  },
+  "setSaved": "Set saved to {path}",
+  "@setSaved": {
+    "description": "Toast after a set is saved.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/Desktop/hearth-set.json"
+      }
+    }
+  },
+  "setSaveFailed": "Could not save the set: {error}",
+  "@setSaveFailed": {
+    "description": "Toast when a set could not be saved.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "permission denied"
+      }
+    }
+  },
+  "setNotSet": "{name} is not a set saved by Hearth.",
+  "@setNotSet": {
+    "description": "Toast when the file opened is not a set Hearth saved.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "notes.json"
+      }
+    }
+  },
+  "setNewer": "This set is from a newer Hearth. Update Hearth to open it.",
+  "@setNewer": {
+    "description": "Toast when the set opened was saved by a newer Hearth."
+  },
+  "setAllHere": "Everything in the set is on this computer already.",
+  "@setAllHere": {
+    "description": "Toast when everything in the set opened is on this computer already."
+  },
+  "setNotHere": "Left out, as they do not install here: {names}",
+  "@setNotHere": {
+    "description": "Toast when tools of the set opened do not install on this system; names lists them.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "Cursor, Redis"
+      }
+    }
   }
 }

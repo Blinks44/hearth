@@ -2,6 +2,7 @@ package ui
 
 import (
 	"cmp"
+	"errors"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -430,13 +431,19 @@ func (a *App) setupButtons(c *ui.Context) {
 		label := locales.SetupNext()
 		if a.setupWizard() {
 			ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
-		} else if chosen := a.setupChosenTools(); len(chosen) > 0 {
-			ui.Button(c.Key("setup-clear"), locales.InstallClear()).OnClick(func() {
-				for _, id := range chosen {
-					s.choice[id] = false
-				}
-			})
-			label = locales.SetupNextCount(len(chosen))
+			if a.OpenSet != nil {
+				ui.Button(c.Key("set-open"), locales.SetOpen()).OnClick(a.openSet)
+			}
+		} else {
+			a.setMenu(c)
+			if chosen := a.setupChosenTools(); len(chosen) > 0 {
+				ui.Button(c.Key("setup-clear"), locales.InstallClear()).OnClick(func() {
+					for _, id := range chosen {
+						s.choice[id] = false
+					}
+				})
+				label = locales.SetupNextCount(len(chosen))
+			}
 		}
 		if s.building {
 			label = locales.SetupBuilding()
@@ -476,6 +483,114 @@ func (a *App) setupInstall() {
 	a.op.open = false
 	a.startOperation()
 	a.setup.op, a.setup.step, a.setup.diff = a.op, 2, ""
+}
+
+// setMenu is the catalog's menu that saves the tools here as a set, and
+// opens one.
+func (a *App) setMenu(c *ui.Context) {
+	if a.SaveSet == nil && a.OpenSet == nil {
+		return
+	}
+	ui.Row(c.Key("set-menu")).Shrink(0).Children(func() {
+		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+			if a.SaveSet != nil && m.Item(locales.SetSave()).Disabled(len(a.setupSetTools()) == 0).Chosen() {
+				a.saveSet()
+			}
+			if a.OpenSet != nil && m.Item(locales.SetOpen()).Chosen() {
+				a.openSet()
+			}
+		})
+	})
+}
+
+// setupSetTools are the catalog's tools on this computer, which its set
+// saves.
+func (a *App) setupSetTools() []string {
+	var out []string
+	for _, e := range a.setupEntries() {
+		if a.setupHave(e.ID) {
+			out = append(out, e.ID)
+		}
+	}
+	return out
+}
+
+// saveSet saves the tools here as a set, to a file the user chooses.
+func (a *App) saveSet() {
+	data, err := catalog.MarshalSet(a.setupSetTools())
+	if err != nil {
+		a.planErr = locales.SetSaveFailed(err.Error())
+		return
+	}
+	a.SaveSet(data, func(path string, err error) {
+		switch {
+		case err != nil:
+			a.planErr = locales.SetSaveFailed(err.Error())
+		case path != "":
+			a.notice = locales.SetSaved(tilde(path, a.Home))
+		}
+	})
+}
+
+// openSet reads a set from a file the user chooses and shows the plan
+// that installs it.
+func (a *App) openSet() {
+	a.OpenSet(func(path string, data []byte, err error) {
+		if path == "" {
+			return
+		}
+		if err != nil {
+			a.planErr = locales.OpenFailed(tilde(path, a.Home), err.Error())
+			return
+		}
+		tools, err := catalog.ParseSet(data)
+		switch {
+		case errors.Is(err, catalog.ErrNewerSet):
+			a.planErr = locales.SetNewer()
+		case err != nil:
+			a.planErr = locales.SetNotSet(filepath.Base(path))
+		default:
+			a.applySet(tools)
+		}
+	})
+}
+
+// applySet switches on the tools of a set, and every other off, and
+// makes their plan; those that do not install here are left out, and
+// said so but for another system's base, as Homebrew on Windows.
+func (a *App) applySet(tools []string) {
+	s := &a.setup
+	s.choice = map[string]bool{}
+	for _, e := range a.setupEntries() {
+		s.choice[e.ID] = slices.Contains(tools, e.ID)
+	}
+	parts := a.setupInput().Parts()
+	planned := func(id string) bool {
+		return slices.ContainsFunc(parts, func(p ops.SetupPart) bool { return p.Tool == id })
+	}
+	var left []string
+	missing := false
+	for _, id := range tools {
+		e, _ := catalog.Find(id)
+		switch {
+		case a.setupHave(id):
+		case planned(id):
+			missing = true
+		case e.Group == catalog.Base:
+		default:
+			left = append(left, setupTitle(id))
+		}
+	}
+	if len(left) > 0 {
+		a.notice = locales.SetNotHere(strings.Join(left, ", "))
+	}
+	if !missing {
+		if len(left) == 0 {
+			a.notice = locales.SetAllHere()
+		}
+		return
+	}
+	a.setupNext()
 }
 
 // setupChoiceView is step 1: the languages and tools to switch on beside

@@ -19105,3 +19105,161 @@ func DatabasePassword() string { return In(i18n.Locale()).DatabasePassword() }
 func (msgs Messages) DatabasePassword() string {
 	return Catalog.Format(msgs.locale, "databasePassword", nil)
 }
+
+// SetSave says "Save my set…"
+// in the language the app shows.
+//
+// Install page header menu: saves the catalog's tools on this computer to a
+// file another computer installs from.
+func SetSave() string { return In(i18n.Locale()).SetSave() }
+
+// SetSave says "Save my set…"
+// in the language of msgs.
+//
+// Install page header menu: saves the catalog's tools on this computer to a
+// file another computer installs from.
+func (msgs Messages) SetSave() string {
+	return Catalog.Format(msgs.locale, "setSave", nil)
+}
+
+// SetOpen says "Open a set…"
+// in the language the app shows.
+//
+// Install page: opens a set's file and shows the plan that installs it.
+func SetOpen() string { return In(i18n.Locale()).SetOpen() }
+
+// SetOpen says "Open a set…"
+// in the language of msgs.
+//
+// Install page: opens a set's file and shows the plan that installs it.
+func (msgs Messages) SetOpen() string {
+	return Catalog.Format(msgs.locale, "setOpen", nil)
+}
+
+// SetSaveTitle says "Save my set"
+// in the language the app shows.
+//
+// Title of the dialog that saves a set.
+func SetSaveTitle() string { return In(i18n.Locale()).SetSaveTitle() }
+
+// SetSaveTitle says "Save my set"
+// in the language of msgs.
+//
+// Title of the dialog that saves a set.
+func (msgs Messages) SetSaveTitle() string {
+	return Catalog.Format(msgs.locale, "setSaveTitle", nil)
+}
+
+// SetOpenTitle says "Open a set"
+// in the language the app shows.
+//
+// Title of the dialog that opens a set.
+func SetOpenTitle() string { return In(i18n.Locale()).SetOpenTitle() }
+
+// SetOpenTitle says "Open a set"
+// in the language of msgs.
+//
+// Title of the dialog that opens a set.
+func (msgs Messages) SetOpenTitle() string {
+	return Catalog.Format(msgs.locale, "setOpenTitle", nil)
+}
+
+// SetFileKind says "Hearth set"
+// in the language the app shows.
+//
+// Kind of file of a set, in the open and save dialogs' filter.
+func SetFileKind() string { return In(i18n.Locale()).SetFileKind() }
+
+// SetFileKind says "Hearth set"
+// in the language of msgs.
+//
+// Kind of file of a set, in the open and save dialogs' filter.
+func (msgs Messages) SetFileKind() string {
+	return Catalog.Format(msgs.locale, "setFileKind", nil)
+}
+
+// SetSaved says "Set saved to {path}"
+// in the language the app shows.
+//
+// Toast after a set is saved.
+func SetSaved(path string) string { return In(i18n.Locale()).SetSaved(path) }
+
+// SetSaved says "Set saved to {path}"
+// in the language of msgs.
+//
+// Toast after a set is saved.
+func (msgs Messages) SetSaved(path string) string {
+	return Catalog.Format(msgs.locale, "setSaved", map[string]any{"path": path})
+}
+
+// SetSaveFailed says "Could not save the set: {error}"
+// in the language the app shows.
+//
+// Toast when a set could not be saved.
+func SetSaveFailed(error string) string { return In(i18n.Locale()).SetSaveFailed(error) }
+
+// SetSaveFailed says "Could not save the set: {error}"
+// in the language of msgs.
+//
+// Toast when a set could not be saved.
+func (msgs Messages) SetSaveFailed(error string) string {
+	return Catalog.Format(msgs.locale, "setSaveFailed", map[string]any{"error": error})
+}
+
+// SetNotSet says "{name} is not a set saved by Hearth."
+// in the language the app shows.
+//
+// Toast when the file opened is not a set Hearth saved.
+func SetNotSet(name string) string { return In(i18n.Locale()).SetNotSet(name) }
+
+// SetNotSet says "{name} is not a set saved by Hearth."
+// in the language of msgs.
+//
+// Toast when the file opened is not a set Hearth saved.
+func (msgs Messages) SetNotSet(name string) string {
+	return Catalog.Format(msgs.locale, "setNotSet", map[string]any{"name": name})
+}
+
+// SetNewer says "This set is from a newer Hearth. Update Hearth to open it."
+// in the language the app shows.
+//
+// Toast when the set opened was saved by a newer Hearth.
+func SetNewer() string { return In(i18n.Locale()).SetNewer() }
+
+// SetNewer says "This set is from a newer Hearth. Update Hearth to open it."
+// in the language of msgs.
+//
+// Toast when the set opened was saved by a newer Hearth.
+func (msgs Messages) SetNewer() string {
+	return Catalog.Format(msgs.locale, "setNewer", nil)
+}
+
+// SetAllHere says "Everything in the set is on this computer already."
+// in the language the app shows.
+//
+// Toast when everything in the set opened is on this computer already.
+func SetAllHere() string { return In(i18n.Locale()).SetAllHere() }
+
+// SetAllHere says "Everything in the set is on this computer already."
+// in the language of msgs.
+//
+// Toast when everything in the set opened is on this computer already.
+func (msgs Messages) SetAllHere() string {
+	return Catalog.Format(msgs.locale, "setAllHere", nil)
+}
+
+// SetNotHere says "Left out, as they do not install here: {names}"
+// in the language the app shows.
+//
+// Toast when tools of the set opened do not install on this system; names
+// lists them.
+func SetNotHere(names string) string { return In(i18n.Locale()).SetNotHere(names) }
+
+// SetNotHere says "Left out, as they do not install here: {names}"
+// in the language of msgs.
+//
+// Toast when tools of the set opened do not install on this system; names
+// lists them.
+func (msgs Messages) SetNotHere(names string) string {
+	return Catalog.Format(msgs.locale, "setNotHere", map[string]any{"names": names})
+}

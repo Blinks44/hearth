@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -228,4 +229,78 @@ func TestInstallPageSystemCopy(t *testing.T) {
 		{Tool: "ruby", Version: "2.6.10", Path: "/usr/bin/ruby", OnPath: 1, Source: inventory.Source{Kind: inventory.KindSystem}}}})
 	tt := newTester(a)
 	hasTexts(t, tt, "The system has its own 2.6.10: Hearth installs one to work with beside it.", "4 more", "Install Ruby")
+}
+
+// A set saved on one computer and opened on a clean one makes the plan
+// of the same tools; opened where everything is there, it makes none.
+func TestInstallSet(t *testing.T) {
+	a := installPageApp(t)
+	var saved []byte
+	a.SaveSet = func(data []byte, done func(string, error)) {
+		saved = data
+		done("/Users/me/hearth-set.json", nil)
+	}
+	tt := newTester(a)
+	if err := tt.Click("More"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	if err := tt.ChooseMenuItem("Save my set…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	want := []string{"homebrew", "mise", "node", "claude", "cursor"}
+	if got, err := catalog.ParseSet(saved); err != nil || !slices.Equal(got, want) {
+		t.Fatalf("saved %q, %v; want %q", got, err, want)
+	}
+
+	b := cleanApp(t)
+	b.Snapshot.Agents = nil
+	b.router.Push(setupPage)
+	b.OpenSet = func(done func(string, []byte, error)) { done("/Volumes/USB/hearth-set.json", saved, nil) }
+	tb := newTester(b)
+	if err := tb.Click("Open a set…"); err != nil {
+		t.Fatalf("%v: %q", err, tb.Texts())
+	}
+	tb.Advance(time.Second)
+	if b.setup.step != 1 {
+		t.Fatalf("step %d: %q", b.setup.step, tb.Texts())
+	}
+	var planned []string
+	for _, p := range b.setup.parts {
+		planned = append(planned, p.Tool)
+	}
+	if !slices.Equal(planned, want) {
+		t.Errorf("plan of %q, want %q", planned, want)
+	}
+
+	// The computer that saved it has it all.
+	a.OpenSet = func(done func(string, []byte, error)) { done("/Users/me/hearth-set.json", saved, nil) }
+	a.openSet()
+	if a.setup.step != 0 || a.notice != "Everything in the set is on this computer already." {
+		t.Errorf("step %d, notice %q", a.setup.step, a.notice)
+	}
+}
+
+// Tools of a set that do not install here are left out and said so,
+// but for another system's base; a file Hearth did not save is not a
+// set.
+func TestInstallSetElsewhere(t *testing.T) {
+	g := goos
+	t.Cleanup(func() { goos = g })
+	goos = "windows"
+	a := cleanApp(t)
+	data, _ := catalog.MarshalSet([]string{"homebrew", "redis", "git"})
+	a.OpenSet = func(done func(string, []byte, error)) { done(`C:\set.json`, data, nil) }
+	a.openSet()
+	if a.notice != "Left out, as they do not install here: Redis" {
+		t.Errorf("notice %q", a.notice)
+	}
+	if n := len(a.setup.parts); n == 0 || a.setup.parts[n-1].Tool != "git" {
+		t.Errorf("parts %+v", a.setup.parts)
+	}
+	a.OpenSet = func(done func(string, []byte, error)) { done("/tmp/notes.json", []byte(`{"notes": []}`), nil) }
+	a.openSet()
+	if a.planErr != "notes.json is not a set saved by Hearth." {
+		t.Errorf("error %q", a.planErr)
+	}
 }

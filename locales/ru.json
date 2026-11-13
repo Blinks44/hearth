@@ -1444,5 +1444,16 @@
   "databaseAutostartFor": "Запускать {name} автоматически",
   "databaseCopyURL": "Скопировать строку подключения",
   "databaseURLCopied": "Строка подключения скопирована",
-  "databasePassword": "пароль — тот, что задан на сервере"
+  "databasePassword": "пароль — тот, что задан на сервере",
+  "setSave": "Сохранить мой набор…",
+  "setOpen": "Открыть набор…",
+  "setSaveTitle": "Сохранить мой набор",
+  "setOpenTitle": "Открыть набор",
+  "setFileKind": "Набор Hearth",
+  "setSaved": "Набор сохранён в {path}",
+  "setSaveFailed": "Не удалось сохранить набор: {error}",
+  "setNotSet": "{name} не набор, сохранённый Hearth.",
+  "setNewer": "Набор сохранён более новым Hearth. Обновите Hearth, чтобы открыть его.",
+  "setAllHere": "Всё из набора уже есть на этом компьютере.",
+  "setNotHere": "Пропущено, на этой системе не ставится: {names}"
 }

@@ -1404,5 +1404,16 @@
   "databaseAutostartFor": "{name} automatisch starten",
   "databaseCopyURL": "Verbindungs-URL kopieren",
   "databaseURLCopied": "Verbindungs-URL kopiert",
-  "databasePassword": "Passwort wie auf dem Server festgelegt"
+  "databasePassword": "Passwort wie auf dem Server festgelegt",
+  "setSave": "Mein Set speichern…",
+  "setOpen": "Set öffnen…",
+  "setSaveTitle": "Mein Set speichern",
+  "setOpenTitle": "Set öffnen",
+  "setFileKind": "Hearth-Set",
+  "setSaved": "Set gespeichert unter {path}",
+  "setSaveFailed": "Set konnte nicht gespeichert werden: {error}",
+  "setNotSet": "{name} ist kein von Hearth gespeichertes Set.",
+  "setNewer": "Dieses Set stammt aus einem neueren Hearth. Aktualisieren Sie Hearth, um es zu öffnen.",
+  "setAllHere": "Alles aus dem Set ist schon auf diesem Computer.",
+  "setNotHere": "Ausgelassen, da hier nicht installierbar: {names}"
 }

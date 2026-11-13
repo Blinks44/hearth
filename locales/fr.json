@@ -1404,5 +1404,16 @@
   "databaseAutostartFor": "Démarrer {name} automatiquement",
   "databaseCopyURL": "Copier la chaîne de connexion",
   "databaseURLCopied": "Chaîne de connexion copiée",
-  "databasePassword": "le mot de passe défini sur le serveur"
+  "databasePassword": "le mot de passe défini sur le serveur",
+  "setSave": "Enregistrer mon ensemble…",
+  "setOpen": "Ouvrir un ensemble…",
+  "setSaveTitle": "Enregistrer mon ensemble",
+  "setOpenTitle": "Ouvrir un ensemble",
+  "setFileKind": "Ensemble Hearth",
+  "setSaved": "Ensemble enregistré dans {path}",
+  "setSaveFailed": "Impossible d’enregistrer l’ensemble : {error}",
+  "setNotSet": "{name} n’est pas un ensemble enregistré par Hearth.",
+  "setNewer": "Cet ensemble vient d’un Hearth plus récent. Mettez Hearth à jour pour l’ouvrir.",
+  "setAllHere": "Tout l’ensemble est déjà sur cet ordinateur.",
+  "setNotHere": "Ignoré, ne s’installe pas sur ce système : {names}"
 }

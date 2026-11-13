@@ -1404,5 +1404,16 @@
   "databaseAutostartFor": "Iniciar {name} automáticamente",
   "databaseCopyURL": "Copiar cadena de conexión",
   "databaseURLCopied": "Cadena de conexión copiada",
-  "databasePassword": "la contraseña configurada en el servidor"
+  "databasePassword": "la contraseña configurada en el servidor",
+  "setSave": "Guardar mi conjunto…",
+  "setOpen": "Abrir un conjunto…",
+  "setSaveTitle": "Guardar mi conjunto",
+  "setOpenTitle": "Abrir un conjunto",
+  "setFileKind": "Conjunto de Hearth",
+  "setSaved": "Conjunto guardado en {path}",
+  "setSaveFailed": "No se pudo guardar el conjunto: {error}",
+  "setNotSet": "{name} no es un conjunto guardado por Hearth.",
+  "setNewer": "Este conjunto es de un Hearth más reciente. Actualice Hearth para abrirlo.",
+  "setAllHere": "Todo lo del conjunto ya está en este equipo.",
+  "setNotHere": "Omitido, no se instala en este sistema: {names}"
 }

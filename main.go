@@ -16,6 +16,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/disk"
 	"github.com/Blinks44/hearth/internal/history"
@@ -88,6 +89,8 @@ func main() {
 				win.Update(func() { done(entries, text, err) })
 			}()
 		}
+		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
+		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
 		// Operations run one at a time in the background, as the user's
 		// own commands would in the terminal, and append all their output
 		// to the operations log.
@@ -571,4 +574,42 @@ func machine() (caption, system string) {
 	name := strings.TrimSpace(o.Name + " " + o.Version)
 	parts = append(parts, name)
 	return strings.Join(parts, " · "), name + " (" + o.Arch + ")"
+}
+
+// setFilter is the filter of a set's file in the open and save dialogs.
+func setFilter() []mygo.FileFilter {
+	return []mygo.FileFilter{{Name: locales.SetFileKind(), Extensions: []string{"json"}}}
+}
+
+// saveSet asks where to save a set and writes data there, giving done the
+// file through win.Update; "" when the user canceled.
+func saveSet(win *mygo.Window, data []byte, done func(path string, err error)) {
+	go func() {
+		// In Documents: without a folder macOS offers the disk's root,
+		// where the user cannot write.
+		dir, _ := mygo.App.Path(mygo.PathDocuments)
+		path, err := mygo.Dialog.Save(mygo.SaveDialogOptions{
+			Parent: win, Title: locales.SetSaveTitle(), DefaultPath: filepath.Join(dir, catalog.SetName), Filters: setFilter(), CreateDirectories: true,
+		})
+		if err == nil && path != "" {
+			err = os.WriteFile(path, data, 0o644)
+		}
+		win.Update(func() { done(path, err) })
+	}()
+}
+
+// openSet asks for a set's file and reads it, giving done the file and
+// what it holds through win.Update; "" when the user canceled.
+func openSet(win *mygo.Window, done func(path string, data []byte, err error)) {
+	go func() {
+		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: locales.SetOpenTitle(), Filters: setFilter()})
+		if err != nil {
+			log.Print(err)
+		}
+		if len(paths) == 0 {
+			return
+		}
+		data, err := os.ReadFile(paths[0])
+		win.Update(func() { done(paths[0], data, err) })
+	}()
 }
