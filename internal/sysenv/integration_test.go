@@ -30,3 +30,17 @@ func TestReadOSReal(t *testing.T) {
 	}
 	t.Logf("%+v", o)
 }
+
+func TestStartupReal(t *testing.T) {
+	s := Startup(t.Context(), run.Exec{}, GUI(), GUI())
+	if s == nil || s.Took <= 0 {
+		t.Fatalf("Startup = %+v", s)
+	}
+	t.Logf("%s took %v, %v bare", s.Shell, s.Took, s.Bare)
+	for _, f := range s.Files {
+		t.Logf("file %s %v", f.File, f.Took)
+	}
+	for _, l := range s.Lines {
+		t.Logf("line %s:%d %v %q", l.File, l.Line, l.Took, l.Text)
+	}
+}

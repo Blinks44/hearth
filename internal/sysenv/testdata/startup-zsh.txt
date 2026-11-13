@@ -1,0 +1,107 @@
++M|1794598576.598454|/etc/zprofile|6|1|[ -z C.UTF-8 ']'
++M|1794598576.598527|/etc/zprofile|10|1|[ -x /usr/libexec/path_helper ']'
++M|1794598576.599216|/etc/zprofile|11|1|/usr/libexec/path_helper -s
++M|1794598576.601877|/etc/zprofile|11|1|eval 'PATH="/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/user/.orbstack/bin";' export 'PATH;'
++M|1794598576.601924|/etc/zprofile|12|2|PATH=/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/user/.orbstack/bin 
++M|1794598576.601960|/etc/zprofile|12|2|export PATH
++M|1794598576.602018|/home/u/.zprofile|1|1|export BAR=1
++M|1794598576.602100|/etc/zshrc|8|1|[[ ! -x /usr/bin/locale ]]
++M|1794598576.602266|/etc/zshrc|8|1|[[+M|1794598576.604792|/etc/zshrc|8|1|locale LC_CTYPE
++M|1794598576.602266|/etc/zshrc|8|1|[[ UTF-8 == UTF-8 ]]
++M|1794598576.606876|/etc/zshrc|9|1|setopt COMBINING_CHARS
++M|1794598576.606917|/etc/zshrc|13|1|disable log
++M|1794598576.606939|/etc/zshrc|16|1|HISTFILE=/home/u/.zsh_history 
++M|1794598576.606958|/etc/zshrc|17|1|HISTSIZE=2000 
++M|1794598576.606972|/etc/zshrc|18|1|SAVEHIST=1000 
++M|1794598576.606987|/etc/zshrc|21|1|setopt BEEP
++M|1794598576.607082|/etc/zshrc|25|1|[[ -r /home/u/.zkbd/xterm-256color-apple ]]
++M|1794598576.607110|/etc/zshrc|28|1|typeset -g -A key
++M|1794598576.607123|/etc/zshrc|30|1|[[ -n $'\C-[OP' ]]
++M|1794598576.607441|/etc/zshrc|30|1|key[F1]=$'\C-[OP' 
++M|1794598576.607453|/etc/zshrc|31|1|[[ -n $'\C-[OQ' ]]
++M|1794598576.607463|/etc/zshrc|31|1|key[F2]=$'\C-[OQ' 
++M|1794598576.607473|/etc/zshrc|32|1|[[ -n $'\C-[OR' ]]
++M|1794598576.607483|/etc/zshrc|32|1|key[F3]=$'\C-[OR' 
++M|1794598576.607493|/etc/zshrc|33|1|[[ -n $'\C-[OS' ]]
++M|1794598576.607502|/etc/zshrc|33|1|key[F4]=$'\C-[OS' 
++M|1794598576.607511|/etc/zshrc|34|1|[[ -n $'\C-[[15~' ]]
++M|1794598576.607521|/etc/zshrc|34|1|key[F5]=$'\C-[[15~' 
++M|1794598576.607531|/etc/zshrc|35|1|[[ -n $'\C-[[17~' ]]
++M|1794598576.607540|/etc/zshrc|35|1|key[F6]=$'\C-[[17~' 
++M|1794598576.607549|/etc/zshrc|36|1|[[ -n $'\C-[[18~' ]]
++M|1794598576.607558|/etc/zshrc|36|1|key[F7]=$'\C-[[18~' 
++M|1794598576.607568|/etc/zshrc|37|1|[[ -n $'\C-[[19~' ]]
++M|1794598576.607577|/etc/zshrc|37|1|key[F8]=$'\C-[[19~' 
++M|1794598576.607587|/etc/zshrc|38|1|[[ -n $'\C-[[20~' ]]
++M|1794598576.607596|/etc/zshrc|38|1|key[F9]=$'\C-[[20~' 
++M|1794598576.607607|/etc/zshrc|39|1|[[ -n $'\C-[[21~' ]]
++M|1794598576.607617|/etc/zshrc|39|1|key[F10]=$'\C-[[21~' 
++M|1794598576.607628|/etc/zshrc|40|1|[[ -n $'\C-[[23~' ]]
++M|1794598576.607638|/etc/zshrc|40|1|key[F11]=$'\C-[[23~' 
++M|1794598576.607648|/etc/zshrc|41|1|[[ -n $'\C-[[24~' ]]
++M|1794598576.607657|/etc/zshrc|41|1|key[F12]=$'\C-[[24~' 
++M|1794598576.607668|/etc/zshrc|42|1|[[ -n $'\C-[[1;2P' ]]
++M|1794598576.607681|/etc/zshrc|42|1|key[F13]=$'\C-[[1;2P' 
++M|1794598576.607692|/etc/zshrc|43|1|[[ -n $'\C-[[1;2Q' ]]
++M|1794598576.607701|/etc/zshrc|43|1|key[F14]=$'\C-[[1;2Q' 
++M|1794598576.607712|/etc/zshrc|44|1|[[ -n $'\C-[[1;2R' ]]
++M|1794598576.607721|/etc/zshrc|44|1|key[F15]=$'\C-[[1;2R' 
++M|1794598576.607731|/etc/zshrc|45|1|[[ -n $'\C-[[1;2S' ]]
++M|1794598576.607741|/etc/zshrc|45|1|key[F16]=$'\C-[[1;2S' 
++M|1794598576.607758|/etc/zshrc|46|1|[[ -n $'\C-[[15;2~' ]]
++M|1794598576.607767|/etc/zshrc|46|1|key[F17]=$'\C-[[15;2~' 
++M|1794598576.607777|/etc/zshrc|47|1|[[ -n $'\C-[[17;2~' ]]
++M|1794598576.607786|/etc/zshrc|47|1|key[F18]=$'\C-[[17;2~' 
++M|1794598576.607796|/etc/zshrc|48|1|[[ -n $'\C-[[18;2~' ]]
++M|1794598576.607805|/etc/zshrc|48|1|key[F19]=$'\C-[[18;2~' 
++M|1794598576.607814|/etc/zshrc|49|1|[[ -n $'\C-[[19;2~' ]]
++M|1794598576.607823|/etc/zshrc|49|1|key[F20]=$'\C-[[19;2~' 
++M|1794598576.607832|/etc/zshrc|50|1|[[ -n $'\C-H' ]]
++M|1794598576.607875|/etc/zshrc|50|1|key[Backspace]=$'\C-H' 
++M|1794598576.607956|/etc/zshrc|51|1|[[ -n $'\C-[[2~' ]]
++M|1794598576.607979|/etc/zshrc|51|1|key[Insert]=$'\C-[[2~' 
++M|1794598576.607994|/etc/zshrc|52|1|[[ -n $'\C-[[3~' ]]
++M|1794598576.608005|/etc/zshrc|52|1|key[Delete]=$'\C-[[3~' 
++M|1794598576.608017|/etc/zshrc|53|1|[[ -n $'\C-[OH' ]]
++M|1794598576.608027|/etc/zshrc|53|1|key[Home]=$'\C-[OH' 
++M|1794598576.608038|/etc/zshrc|54|1|[[ -n $'\C-[OF' ]]
++M|1794598576.608050|/etc/zshrc|54|1|key[End]=$'\C-[OF' 
++M|1794598576.608060|/etc/zshrc|55|1|[[ -n $'\C-[[5~' ]]
++M|1794598576.608071|/etc/zshrc|55|1|key[PageUp]=$'\C-[[5~' 
++M|1794598576.608081|/etc/zshrc|56|1|[[ -n $'\C-[[6~' ]]
++M|1794598576.608090|/etc/zshrc|56|1|key[PageDown]=$'\C-[[6~' 
++M|1794598576.608102|/etc/zshrc|57|1|[[ -n $'\C-[OA' ]]
++M|1794598576.608111|/etc/zshrc|57|1|key[Up]=$'\C-[OA' 
++M|1794598576.608120|/etc/zshrc|58|1|[[ -n $'\C-[OD' ]]
++M|1794598576.608129|/etc/zshrc|58|1|key[Left]=$'\C-[OD' 
++M|1794598576.608150|/etc/zshrc|59|1|[[ -n $'\C-[OB' ]]
++M|1794598576.608159|/etc/zshrc|59|1|key[Down]=$'\C-[OB' 
++M|1794598576.608169|/etc/zshrc|60|1|[[ -n $'\C-[OC' ]]
++M|1794598576.608177|/etc/zshrc|60|1|key[Right]=$'\C-[OC' 
++M|1794598576.608208|/etc/zshrc|64|1|[[ -n $'\C-[[3~' ]]
++M|1794598576.612187|/etc/zshrc|64|1|bindkey $'\C-[[3~' delete-char
++M|1794598576.612252|/etc/zshrc|65|1|[[ -n $'\C-[OH' ]]
++M|1794598576.612271|/etc/zshrc|65|1|bindkey $'\C-[OH' beginning-of-line
++M|1794598576.612295|/etc/zshrc|66|1|[[ -n $'\C-[OF' ]]
++M|1794598576.612309|/etc/zshrc|66|1|bindkey $'\C-[OF' end-of-line
++M|1794598576.612324|/etc/zshrc|67|1|[[ -n $'\C-[OA' ]]
++M|1794598576.612339|/etc/zshrc|67|1|bindkey $'\C-[OA' up-line-or-search
++M|1794598576.612354|/etc/zshrc|68|1|[[ -n $'\C-[OB' ]]
++M|1794598576.612366|/etc/zshrc|68|1|bindkey $'\C-[OB' down-line-or-search
++M|1794598576.612382|/etc/zshrc|71|1|PS1='%n@%m %1~ %# ' 
++M|1794598576.612404|/etc/zshrc|74|1|[ -r /etc/zshrc_ ']'
++M|1794598576.612501|/home/u/.zshrc|1|1|export FOO=1
++M|1794598576.612525|/home/u/.zshrc|2|1|[ -s /home/u/nvm.sh ']'
++M|1794598576.612550|/home/u/.zshrc|2|1|. /home/u/nvm.sh
++M|1794598576.612591|/home/u/nvm.sh|1|2|nvm_a=1 
++M|1794598576.614748|/home/u/nvm.sh|2|2|sleep 0.3
++M|1794598576.922236|/home/u/nvm.sh|3|2|nvm_b=2 
++M|1794598576.923470|/home/u/.zshrc|3|1|printf 'x=1\nsleep 0.2\ny=2\n'
++M|1794598576.924499|/home/u/.zshrc|3|1|eval $'x=1\nsleep 0.2\ny=2'
++M|1794598576.924551|/home/u/.zshrc|4|2|x=1 
++M|1794598576.925519|/home/u/.zshrc|5|2|sleep 0.2
++M|1794598577.133884|/home/u/.zshrc|6|2|y=2 
++M|1794598577.134032|/home/u/.zshrc|7|1|slowf
++M|1794598577.135350|/home/u/.zshrc|5|2|sleep 0.1
++M|1794598577.243914|/home/u/.zshrc|8|1|echo hello
++M|1794598577.244167|zsh|1|0|exit

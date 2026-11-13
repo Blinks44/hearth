@@ -234,6 +234,45 @@ type Snapshot struct {
 	// MCPErrs say which of those files could not be read.
 	MCP     []MCPServer `json:",omitempty"`
 	MCPErrs []string    `json:",omitempty"`
+	// Startup is how long a new terminal's shell takes to start; nil when
+	// it could not be measured.
+	Startup *ShellStartup `json:",omitempty"`
+}
+
+// ShellStartup is how long the shell a new terminal opens takes to start,
+// and which lines of its startup files take the time.
+type ShellStartup struct {
+	// Shell is the shell's name, as zsh, bash, fish or powershell.
+	Shell string
+	// Took is the whole start, the startup files with it.
+	Took time.Duration
+	// Bare is the start without the profile, on Windows; zero elsewhere.
+	Bare time.Duration `json:",omitempty"`
+	// Files are the startup files in the order they ran, with their time
+	// when the start was traced; on Windows the profiles there are, with
+	// no time.
+	Files []StartupFile `json:",omitempty"`
+	// Lines are the slowest lines of the startup files, slowest first, when
+	// the start was slow enough to trace; on Windows the lines of the
+	// profiles known to be slow, with no time.
+	Lines []StartupLine `json:",omitempty"`
+}
+
+// StartupFile is a startup file of the shell and the time its lines took.
+type StartupFile struct {
+	File string
+	Took time.Duration `json:",omitempty"`
+}
+
+// StartupLine is a line of a startup file and the time it took, all it
+// ran with it: the files it sourced, the code it evaluated, the functions
+// it called.
+type StartupLine struct {
+	File string
+	Line int
+	// Text is the line as the file has it.
+	Text string
+	Took time.Duration `json:",omitempty"`
 }
 
 // MCPServer is an MCP server as one agent's file declares it. Secrets are

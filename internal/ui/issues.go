@@ -95,6 +95,14 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			dirs[i] = tilde(d, home)
 		}
 		return locales.IssuePathMissingTitle(), locales.IssuePathMissingExplain(strings.Join(dirs, ", "))
+	case issues.SlowStartup:
+		st := is.Startup
+		title = locales.IssueSlowStartupTitle(seconds(st.Took))
+		if len(st.Lines) > 0 && st.Lines[0].Took > 0 {
+			l := st.Lines[0]
+			return title, locales.IssueSlowStartupLine(st.Shell, tilde(l.File, home)+":"+strconv.Itoa(l.Line), seconds(l.Took))
+		}
+		return title, locales.IssueSlowStartupExplain(st.Shell)
 	case issues.SkillCopies, issues.SkillDiffers:
 		dirs := make([]string, len(is.Skills))
 		for i, sk := range is.Skills {
@@ -195,6 +203,15 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 				}
 				a.proposeOrSay(p, err)
 			})
+		}
+	case issues.SlowStartup:
+		if a.BuildPlan == nil {
+			return nil
+		}
+		for _, l := range is.Startup.Lines {
+			if sysenv.StartupCulprit(l.Text) == sysenv.CulpritNvm {
+				return func() { a.nvmMove(l) }
+			}
 		}
 	case issues.ProjectMissing:
 		for _, p := range a.Projects {

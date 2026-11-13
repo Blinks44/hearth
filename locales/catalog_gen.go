@@ -19729,3 +19729,695 @@ func ProcessCheckBusy(name string, port string) string {
 func (msgs Messages) ProcessCheckBusy(name string, port string) string {
 	return Catalog.Format(msgs.locale, "processCheckBusy", map[string]any{"name": name, "port": port})
 }
+
+// DurationSeconds says "{seconds, number, ::.00} s"
+// in the language the app shows.
+//
+// A duration in seconds, with two decimals.
+func DurationSeconds(seconds float64) string { return In(i18n.Locale()).DurationSeconds(seconds) }
+
+// DurationSeconds says "{seconds, number, ::.00} s"
+// in the language of msgs.
+//
+// A duration in seconds, with two decimals.
+func (msgs Messages) DurationSeconds(seconds float64) string {
+	return Catalog.Format(msgs.locale, "durationSeconds", map[string]any{"seconds": seconds})
+}
+
+// StartupLabel says "Startup"
+// in the language the app shows.
+//
+// PATH page: the card and tab of the terminal shell's start.
+func StartupLabel() string { return In(i18n.Locale()).StartupLabel() }
+
+// StartupLabel says "Startup"
+// in the language of msgs.
+//
+// PATH page: the card and tab of the terminal shell's start.
+func (msgs Messages) StartupLabel() string {
+	return Catalog.Format(msgs.locale, "startupLabel", nil)
+}
+
+// StartupSlow says "{shell} · slow"
+// in the language the app shows.
+//
+// Startup card caption of a slow start.
+func StartupSlow(shell string) string { return In(i18n.Locale()).StartupSlow(shell) }
+
+// StartupSlow says "{shell} · slow"
+// in the language of msgs.
+//
+// Startup card caption of a slow start.
+func (msgs Messages) StartupSlow(shell string) string {
+	return Catalog.Format(msgs.locale, "startupSlow", map[string]any{"shell": shell})
+}
+
+// StartupTime says "Time"
+// in the language the app shows.
+//
+// Startup tab: column of a line's time.
+func StartupTime() string { return In(i18n.Locale()).StartupTime() }
+
+// StartupTime says "Time"
+// in the language of msgs.
+//
+// Startup tab: column of a line's time.
+func (msgs Messages) StartupTime() string {
+	return Catalog.Format(msgs.locale, "startupTime", nil)
+}
+
+// StartupFile says "File"
+// in the language the app shows.
+//
+// Startup tab: column of the startup file.
+func StartupFile() string { return In(i18n.Locale()).StartupFile() }
+
+// StartupFile says "File"
+// in the language of msgs.
+//
+// Startup tab: column of the startup file.
+func (msgs Messages) StartupFile() string {
+	return Catalog.Format(msgs.locale, "startupFile", nil)
+}
+
+// StartupLine says "What the line runs"
+// in the language the app shows.
+//
+// Startup tab: column of the line of a startup file.
+func StartupLine() string { return In(i18n.Locale()).StartupLine() }
+
+// StartupLine says "What the line runs"
+// in the language of msgs.
+//
+// Startup tab: column of the line of a startup file.
+func (msgs Messages) StartupLine() string {
+	return Catalog.Format(msgs.locale, "startupLine", nil)
+}
+
+// StartupShare says "{percent}% of the start"
+// in the language the app shows.
+//
+// Startup tab: a line's part of the whole start.
+func StartupShare(percent int) string { return In(i18n.Locale()).StartupShare(percent) }
+
+// StartupShare says "{percent}% of the start"
+// in the language of msgs.
+//
+// Startup tab: a line's part of the whole start.
+func (msgs Messages) StartupShare(percent int) string {
+	return Catalog.Format(msgs.locale, "startupShare", map[string]any{"percent": percent})
+}
+
+// StartupRest says "The rest, in {count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+//
+// Startup tab: the row of the lines not listed.
+func StartupRest(count int) string { return In(i18n.Locale()).StartupRest(count) }
+
+// StartupRest says "The rest, in {count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+//
+// Startup tab: the row of the lines not listed.
+func (msgs Messages) StartupRest(count int) string {
+	return Catalog.Format(msgs.locale, "startupRest", map[string]any{"count": count})
+}
+
+// StartupFast says "The shell starts quickly: there is nothing to look into line by line."
+// in the language the app shows.
+//
+// Startup tab: a fast start, not traced.
+func StartupFast() string { return In(i18n.Locale()).StartupFast() }
+
+// StartupFast says "The shell starts quickly: there is nothing to look into line by line."
+// in the language of msgs.
+//
+// Startup tab: a fast start, not traced.
+func (msgs Messages) StartupFast() string {
+	return Catalog.Format(msgs.locale, "startupFast", nil)
+}
+
+// StartupProfileNoLines says "None of the profiles' lines is known to be slow. PowerShell gives no time per line: to find the slow one, comment lin…"
+// in the language the app shows.
+//
+// Startup tab on Windows: no profile line known to be slow.
+func StartupProfileNoLines() string { return In(i18n.Locale()).StartupProfileNoLines() }
+
+// StartupProfileNoLines says "None of the profiles' lines is known to be slow. PowerShell gives no time per line: to find the slow one, comment lin…"
+// in the language of msgs.
+//
+// Startup tab on Windows: no profile line known to be slow.
+func (msgs Messages) StartupProfileNoLines() string {
+	return Catalog.Format(msgs.locale, "startupProfileNoLines", nil)
+}
+
+// StartupNoTrace says "{shell} gave no trace with time, so Hearth cannot tell which lines are slow. macOS's own bash 3.2 has no such trace."
+// in the language the app shows.
+//
+// Startup tab: zsh or bash gave no trace with time.
+func StartupNoTrace(shell string) string { return In(i18n.Locale()).StartupNoTrace(shell) }
+
+// StartupNoTrace says "{shell} gave no trace with time, so Hearth cannot tell which lines are slow. macOS's own bash 3.2 has no such trace."
+// in the language of msgs.
+//
+// Startup tab: zsh or bash gave no trace with time.
+func (msgs Messages) StartupNoTrace(shell string) string {
+	return Catalog.Format(msgs.locale, "startupNoTrace", map[string]any{"shell": shell})
+}
+
+// StartupNoTraceShell says "Hearth breaks the start down line by line for zsh and bash; for {shell} it shows the whole time."
+// in the language the app shows.
+//
+// Startup tab: a shell Hearth does not trace.
+func StartupNoTraceShell(shell string) string { return In(i18n.Locale()).StartupNoTraceShell(shell) }
+
+// StartupNoTraceShell says "Hearth breaks the start down line by line for zsh and bash; for {shell} it shows the whole time."
+// in the language of msgs.
+//
+// Startup tab: a shell Hearth does not trace.
+func (msgs Messages) StartupNoTraceShell(shell string) string {
+	return Catalog.Format(msgs.locale, "startupNoTraceShell", map[string]any{"shell": shell})
+}
+
+// StartupLineNumber says "line {line}"
+// in the language the app shows.
+//
+// Startup tab: chip with a line number.
+func StartupLineNumber(line int) string { return In(i18n.Locale()).StartupLineNumber(line) }
+
+// StartupLineNumber says "line {line}"
+// in the language of msgs.
+//
+// Startup tab: chip with a line number.
+func (msgs Messages) StartupLineNumber(line int) string {
+	return Catalog.Format(msgs.locale, "startupLineNumber", map[string]any{"line": line})
+}
+
+// StartupSlowChip says "slow"
+// in the language the app shows.
+//
+// Startup tab: chip of a slow line.
+func StartupSlowChip() string { return In(i18n.Locale()).StartupSlowChip() }
+
+// StartupSlowChip says "slow"
+// in the language of msgs.
+//
+// Startup tab: chip of a slow line.
+func (msgs Messages) StartupSlowChip() string {
+	return Catalog.Format(msgs.locale, "startupSlowChip", nil)
+}
+
+// StartupNote says "A line's time includes all it runs: the files it sources, the code it evaluates and the functions it calls. Measured …"
+// in the language the app shows.
+//
+// Startup tab: note under the lines.
+func StartupNote() string { return In(i18n.Locale()).StartupNote() }
+
+// StartupNote says "A line's time includes all it runs: the files it sources, the code it evaluates and the functions it calls. Measured …"
+// in the language of msgs.
+//
+// Startup tab: note under the lines.
+func (msgs Messages) StartupNote() string {
+	return Catalog.Format(msgs.locale, "startupNote", nil)
+}
+
+// StartupProfileNote says "PowerShell gives no time per line: these lines of the profiles are known to be slow."
+// in the language the app shows.
+//
+// Startup tab on Windows: note under the profile lines.
+func StartupProfileNote() string { return In(i18n.Locale()).StartupProfileNote() }
+
+// StartupProfileNote says "PowerShell gives no time per line: these lines of the profiles are known to be slow."
+// in the language of msgs.
+//
+// Startup tab on Windows: note under the profile lines.
+func (msgs Messages) StartupProfileNote() string {
+	return Catalog.Format(msgs.locale, "startupProfileNote", nil)
+}
+
+// CulpritNvm says "nvm loads at every start. fnm and mise switch Node without that."
+// in the language the app shows.
+//
+// Advice for a startup line that loads nvm.
+func CulpritNvm() string { return In(i18n.Locale()).CulpritNvm() }
+
+// CulpritNvm says "nvm loads at every start. fnm and mise switch Node without that."
+// in the language of msgs.
+//
+// Advice for a startup line that loads nvm.
+func (msgs Messages) CulpritNvm() string {
+	return Catalog.Format(msgs.locale, "culpritNvm", nil)
+}
+
+// CulpritConda says "conda activates its base environment at every start. conda config --set auto_activate_base false stops that; conda ac…"
+// in the language the app shows.
+//
+// Advice for a startup line that loads conda.
+func CulpritConda() string { return In(i18n.Locale()).CulpritConda() }
+
+// CulpritConda says "conda activates its base environment at every start. conda config --set auto_activate_base false stops that; conda ac…"
+// in the language of msgs.
+//
+// Advice for a startup line that loads conda.
+func (msgs Messages) CulpritConda() string {
+	return Catalog.Format(msgs.locale, "culpritConda", nil)
+}
+
+// CulpritPyenv says "pyenv init rebuilds its shims at every start. pyenv init - --no-rehash skips that."
+// in the language the app shows.
+//
+// Advice for a startup line that runs pyenv init.
+func CulpritPyenv() string { return In(i18n.Locale()).CulpritPyenv() }
+
+// CulpritPyenv says "pyenv init rebuilds its shims at every start. pyenv init - --no-rehash skips that."
+// in the language of msgs.
+//
+// Advice for a startup line that runs pyenv init.
+func (msgs Messages) CulpritPyenv() string {
+	return Catalog.Format(msgs.locale, "culpritPyenv", nil)
+}
+
+// CulpritRbenv says "rbenv init rebuilds its shims at every start. rbenv init - --no-rehash skips that."
+// in the language the app shows.
+//
+// Advice for a startup line that runs rbenv init.
+func CulpritRbenv() string { return In(i18n.Locale()).CulpritRbenv() }
+
+// CulpritRbenv says "rbenv init rebuilds its shims at every start. rbenv init - --no-rehash skips that."
+// in the language of msgs.
+//
+// Advice for a startup line that runs rbenv init.
+func (msgs Messages) CulpritRbenv() string {
+	return Catalog.Format(msgs.locale, "culpritRbenv", nil)
+}
+
+// CulpritRvm says "RVM loads all its scripts at every start. rbenv and mise switch Ruby with far less."
+// in the language the app shows.
+//
+// Advice for a startup line that loads RVM.
+func CulpritRvm() string { return In(i18n.Locale()).CulpritRvm() }
+
+// CulpritRvm says "RVM loads all its scripts at every start. rbenv and mise switch Ruby with far less."
+// in the language of msgs.
+//
+// Advice for a startup line that loads RVM.
+func (msgs Messages) CulpritRvm() string {
+	return Catalog.Format(msgs.locale, "culpritRvm", nil)
+}
+
+// CulpritSdkman says "SDKMAN! loads at every start. mise installs and switches Java without that."
+// in the language the app shows.
+//
+// Advice for a startup line that loads SDKMAN!.
+func CulpritSdkman() string { return In(i18n.Locale()).CulpritSdkman() }
+
+// CulpritSdkman says "SDKMAN! loads at every start. mise installs and switches Java without that."
+// in the language of msgs.
+//
+// Advice for a startup line that loads SDKMAN!.
+func (msgs Messages) CulpritSdkman() string {
+	return Catalog.Format(msgs.locale, "culpritSdkman", nil)
+}
+
+// CulpritCompinit says "Checks the completion files at every start. With -C it uses the cache it made."
+// in the language the app shows.
+//
+// Advice for a startup line that runs compinit.
+func CulpritCompinit() string { return In(i18n.Locale()).CulpritCompinit() }
+
+// CulpritCompinit says "Checks the completion files at every start. With -C it uses the cache it made."
+// in the language of msgs.
+//
+// Advice for a startup line that runs compinit.
+func (msgs Messages) CulpritCompinit() string {
+	return Catalog.Format(msgs.locale, "culpritCompinit", nil)
+}
+
+// CulpritOhMyZsh says "Oh My Zsh loads its plugins and theme at every start: each plugin turned off makes it faster."
+// in the language the app shows.
+//
+// Advice for a startup line that loads Oh My Zsh.
+func CulpritOhMyZsh() string { return In(i18n.Locale()).CulpritOhMyZsh() }
+
+// CulpritOhMyZsh says "Oh My Zsh loads its plugins and theme at every start: each plugin turned off makes it faster."
+// in the language of msgs.
+//
+// Advice for a startup line that loads Oh My Zsh.
+func (msgs Messages) CulpritOhMyZsh() string {
+	return Catalog.Format(msgs.locale, "culpritOhMyZsh", nil)
+}
+
+// CulpritOhMyPosh says "oh-my-posh starts its program at every start; a simpler theme is faster."
+// in the language the app shows.
+//
+// Advice for a profile line that loads oh-my-posh.
+func CulpritOhMyPosh() string { return In(i18n.Locale()).CulpritOhMyPosh() }
+
+// CulpritOhMyPosh says "oh-my-posh starts its program at every start; a simpler theme is faster."
+// in the language of msgs.
+//
+// Advice for a profile line that loads oh-my-posh.
+func (msgs Messages) CulpritOhMyPosh() string {
+	return Catalog.Format(msgs.locale, "culpritOhMyPosh", nil)
+}
+
+// CulpritPoshGit says "posh-git loads a module at every start. Importing it only when you need it makes the start faster."
+// in the language the app shows.
+//
+// Advice for a profile line that imports posh-git.
+func CulpritPoshGit() string { return In(i18n.Locale()).CulpritPoshGit() }
+
+// CulpritPoshGit says "posh-git loads a module at every start. Importing it only when you need it makes the start faster."
+// in the language of msgs.
+//
+// Advice for a profile line that imports posh-git.
+func (msgs Messages) CulpritPoshGit() string {
+	return Catalog.Format(msgs.locale, "culpritPoshGit", nil)
+}
+
+// CulpritBrew says "brew --prefix starts Homebrew, which takes a while. Write the folder it prints in its place."
+// in the language the app shows.
+//
+// Advice for a startup line that runs brew --prefix.
+func CulpritBrew() string { return In(i18n.Locale()).CulpritBrew() }
+
+// CulpritBrew says "brew --prefix starts Homebrew, which takes a while. Write the folder it prints in its place."
+// in the language of msgs.
+//
+// Advice for a startup line that runs brew --prefix.
+func (msgs Messages) CulpritBrew() string {
+	return Catalog.Format(msgs.locale, "culpritBrew", nil)
+}
+
+// StartupHow says "How Hearth measures"
+// in the language the app shows.
+//
+// Startup tab: card of how Hearth measures.
+func StartupHow() string { return In(i18n.Locale()).StartupHow() }
+
+// StartupHow says "How Hearth measures"
+// in the language of msgs.
+//
+// Startup tab: card of how Hearth measures.
+func (msgs Messages) StartupHow() string {
+	return Catalog.Format(msgs.locale, "startupHow", nil)
+}
+
+// StartupWhole says "The whole start"
+// in the language the app shows.
+//
+// Startup tab: row of the whole start.
+func StartupWhole() string { return In(i18n.Locale()).StartupWhole() }
+
+// StartupWhole says "The whole start"
+// in the language of msgs.
+//
+// Startup tab: row of the whole start.
+func (msgs Messages) StartupWhole() string {
+	return Catalog.Format(msgs.locale, "startupWhole", nil)
+}
+
+// StartupWholeCaption says "{shell} -i -l, as a new terminal window starts it"
+// in the language the app shows.
+//
+// Startup tab: how the whole start is measured.
+func StartupWholeCaption(shell string) string { return In(i18n.Locale()).StartupWholeCaption(shell) }
+
+// StartupWholeCaption says "{shell} -i -l, as a new terminal window starts it"
+// in the language of msgs.
+//
+// Startup tab: how the whole start is measured.
+func (msgs Messages) StartupWholeCaption(shell string) string {
+	return Catalog.Format(msgs.locale, "startupWholeCaption", map[string]any{"shell": shell})
+}
+
+// StartupWholeProfile says "PowerShell with its profiles"
+// in the language the app shows.
+//
+// Startup tab on Windows: how the whole start is measured.
+func StartupWholeProfile() string { return In(i18n.Locale()).StartupWholeProfile() }
+
+// StartupWholeProfile says "PowerShell with its profiles"
+// in the language of msgs.
+//
+// Startup tab on Windows: how the whole start is measured.
+func (msgs Messages) StartupWholeProfile() string {
+	return Catalog.Format(msgs.locale, "startupWholeProfile", nil)
+}
+
+// StartupBare says "Without profiles"
+// in the language the app shows.
+//
+// Startup tab on Windows: row of the start without profiles.
+func StartupBare() string { return In(i18n.Locale()).StartupBare() }
+
+// StartupBare says "Without profiles"
+// in the language of msgs.
+//
+// Startup tab on Windows: row of the start without profiles.
+func (msgs Messages) StartupBare() string {
+	return Catalog.Format(msgs.locale, "startupBare", nil)
+}
+
+// StartupBareCaption says "PowerShell -NoProfile"
+// in the language the app shows.
+//
+// Startup tab on Windows: how the start without profiles is measured.
+func StartupBareCaption() string { return In(i18n.Locale()).StartupBareCaption() }
+
+// StartupBareCaption says "PowerShell -NoProfile"
+// in the language of msgs.
+//
+// Startup tab on Windows: how the start without profiles is measured.
+func (msgs Messages) StartupBareCaption() string {
+	return Catalog.Format(msgs.locale, "startupBareCaption", nil)
+}
+
+// StartupByLine says "Line by line"
+// in the language the app shows.
+//
+// Startup tab: row of the line by line trace.
+func StartupByLine() string { return In(i18n.Locale()).StartupByLine() }
+
+// StartupByLine says "Line by line"
+// in the language of msgs.
+//
+// Startup tab: row of the line by line trace.
+func (msgs Messages) StartupByLine() string {
+	return Catalog.Format(msgs.locale, "startupByLine", nil)
+}
+
+// StartupByLineCaption says "a trace, when the start takes {time} or longer"
+// in the language the app shows.
+//
+// Startup tab: when Hearth traces the start.
+func StartupByLineCaption(time_ string) string { return In(i18n.Locale()).StartupByLineCaption(time_) }
+
+// StartupByLineCaption says "a trace, when the start takes {time} or longer"
+// in the language of msgs.
+//
+// Startup tab: when Hearth traces the start.
+func (msgs Messages) StartupByLineCaption(time_ string) string {
+	return Catalog.Format(msgs.locale, "startupByLineCaption", map[string]any{"time": time_})
+}
+
+// StartupTarget says "Benchmark"
+// in the language the app shows.
+//
+// Startup tab: row of the benchmark.
+func StartupTarget() string { return In(i18n.Locale()).StartupTarget() }
+
+// StartupTarget says "Benchmark"
+// in the language of msgs.
+//
+// Startup tab: row of the benchmark.
+func (msgs Messages) StartupTarget() string {
+	return Catalog.Format(msgs.locale, "startupTarget", nil)
+}
+
+// StartupTargetCaption says "up to {time} the start goes almost unnoticed"
+// in the language the app shows.
+//
+// Startup tab: what the benchmark means.
+func StartupTargetCaption(time_ string) string { return In(i18n.Locale()).StartupTargetCaption(time_) }
+
+// StartupTargetCaption says "up to {time} the start goes almost unnoticed"
+// in the language of msgs.
+//
+// Startup tab: what the benchmark means.
+func (msgs Messages) StartupTargetCaption(time_ string) string {
+	return Catalog.Format(msgs.locale, "startupTargetCaption", map[string]any{"time": time_})
+}
+
+// StartupFiles says "Startup files"
+// in the language the app shows.
+//
+// Startup tab: card of the startup files.
+func StartupFiles() string { return In(i18n.Locale()).StartupFiles() }
+
+// StartupFiles says "Startup files"
+// in the language of msgs.
+//
+// Startup tab: card of the startup files.
+func (msgs Messages) StartupFiles() string {
+	return Catalog.Format(msgs.locale, "startupFiles", nil)
+}
+
+// StartupFilesOrder says "in order"
+// in the language the app shows.
+//
+// Startup tab: the files card lists them in the order they run.
+func StartupFilesOrder() string { return In(i18n.Locale()).StartupFilesOrder() }
+
+// StartupFilesOrder says "in order"
+// in the language of msgs.
+//
+// Startup tab: the files card lists them in the order they run.
+func (msgs Messages) StartupFilesOrder() string {
+	return Catalog.Format(msgs.locale, "startupFilesOrder", nil)
+}
+
+// IssueSlowStartupTitle says "The terminal takes {time} to start"
+// in the language the app shows.
+//
+// Issue: the terminal's shell starts slowly.
+func IssueSlowStartupTitle(time_ string) string {
+	return In(i18n.Locale()).IssueSlowStartupTitle(time_)
+}
+
+// IssueSlowStartupTitle says "The terminal takes {time} to start"
+// in the language of msgs.
+//
+// Issue: the terminal's shell starts slowly.
+func (msgs Messages) IssueSlowStartupTitle(time_ string) string {
+	return Catalog.Format(msgs.locale, "issueSlowStartupTitle", map[string]any{"time": time_})
+}
+
+// IssueSlowStartupLine says "Every new terminal window waits for {shell} to read its startup files. The slowest line is {line} ({time}); the PATH …"
+// in the language the app shows.
+//
+// Issue: a slow start with its slowest line.
+func IssueSlowStartupLine(shell string, line string, time_ string) string {
+	return In(i18n.Locale()).IssueSlowStartupLine(shell, line, time_)
+}
+
+// IssueSlowStartupLine says "Every new terminal window waits for {shell} to read its startup files. The slowest line is {line} ({time}); the PATH …"
+// in the language of msgs.
+//
+// Issue: a slow start with its slowest line.
+func (msgs Messages) IssueSlowStartupLine(shell string, line string, time_ string) string {
+	return Catalog.Format(msgs.locale, "issueSlowStartupLine", map[string]any{"shell": shell, "line": line, "time": time_})
+}
+
+// IssueSlowStartupExplain says "Every new terminal window waits for {shell} to read its startup files. The PATH page's Startup tab tells more."
+// in the language the app shows.
+//
+// Issue: a slow start without lines.
+func IssueSlowStartupExplain(shell string) string {
+	return In(i18n.Locale()).IssueSlowStartupExplain(shell)
+}
+
+// IssueSlowStartupExplain says "Every new terminal window waits for {shell} to read its startup files. The PATH page's Startup tab tells more."
+// in the language of msgs.
+//
+// Issue: a slow start without lines.
+func (msgs Messages) IssueSlowStartupExplain(shell string) string {
+	return Catalog.Format(msgs.locale, "issueSlowStartupExplain", map[string]any{"shell": shell})
+}
+
+// StartupLineChanged says "The startup file changed since the last scan. Scan again, then try once more."
+// in the language the app shows.
+//
+// Error: the startup file changed since the scan.
+func StartupLineChanged() string { return In(i18n.Locale()).StartupLineChanged() }
+
+// StartupLineChanged says "The startup file changed since the last scan. Scan again, then try once more."
+// in the language of msgs.
+//
+// Error: the startup file changed since the scan.
+func (msgs Messages) StartupLineChanged() string {
+	return Catalog.Format(msgs.locale, "startupLineChanged", nil)
+}
+
+// NvmMoveTitle says "Move from nvm to mise"
+// in the language the app shows.
+//
+// Title of the plan that moves from nvm to mise.
+func NvmMoveTitle() string { return In(i18n.Locale()).NvmMoveTitle() }
+
+// NvmMoveTitle says "Move from nvm to mise"
+// in the language of msgs.
+//
+// Title of the plan that moves from nvm to mise.
+func (msgs Messages) NvmMoveTitle() string {
+	return Catalog.Format(msgs.locale, "nvmMoveTitle", nil)
+}
+
+// NvmMoveWhy says "nvm loads in every new terminal, which takes time. mise switches Node versions without that: Hearth sets it up, has i…"
+// in the language the app shows.
+//
+// Why of the plan that moves from nvm to mise.
+func NvmMoveWhy() string { return In(i18n.Locale()).NvmMoveWhy() }
+
+// NvmMoveWhy says "nvm loads in every new terminal, which takes time. mise switches Node versions without that: Hearth sets it up, has i…"
+// in the language of msgs.
+//
+// Why of the plan that moves from nvm to mise.
+func (msgs Messages) NvmMoveWhy() string {
+	return Catalog.Format(msgs.locale, "nvmMoveWhy", nil)
+}
+
+// NvmMoveAction says "Move to mise"
+// in the language the app shows.
+//
+// Button of the plan that moves from nvm to mise.
+func NvmMoveAction() string { return In(i18n.Locale()).NvmMoveAction() }
+
+// NvmMoveAction says "Move to mise"
+// in the language of msgs.
+//
+// Button of the plan that moves from nvm to mise.
+func (msgs Messages) NvmMoveAction() string {
+	return Catalog.Format(msgs.locale, "nvmMoveAction", nil)
+}
+
+// NvmMoveComment says "Comment out {count, plural, one {# line} other {# lines}} that load nvm"
+// in the language the app shows.
+//
+// Change of the nvm plan: lines commented out.
+func NvmMoveComment(count int) string { return In(i18n.Locale()).NvmMoveComment(count) }
+
+// NvmMoveComment says "Comment out {count, plural, one {# line} other {# lines}} that load nvm"
+// in the language of msgs.
+//
+// Change of the nvm plan: lines commented out.
+func (msgs Messages) NvmMoveComment(count int) string {
+	return Catalog.Format(msgs.locale, "nvmMoveComment", map[string]any{"count": count})
+}
+
+// NvmMoveKeptTitle says "nvm's versions stay"
+// in the language the app shows.
+//
+// Note title of the nvm plan: nvm's versions stay.
+func NvmMoveKeptTitle() string { return In(i18n.Locale()).NvmMoveKeptTitle() }
+
+// NvmMoveKeptTitle says "nvm's versions stay"
+// in the language of msgs.
+//
+// Note title of the nvm plan: nvm's versions stay.
+func (msgs Messages) NvmMoveKeptTitle() string {
+	return Catalog.Format(msgs.locale, "nvmMoveKeptTitle", nil)
+}
+
+// NvmMoveKeptText says "The Node versions in ~/.nvm stay, with their global packages: install the packages you need again with mise's Node. R…"
+// in the language the app shows.
+//
+// Note of the nvm plan: what stays.
+func NvmMoveKeptText() string { return In(i18n.Locale()).NvmMoveKeptText() }
+
+// NvmMoveKeptText says "The Node versions in ~/.nvm stay, with their global packages: install the packages you need again with mise's Node. R…"
+// in the language of msgs.
+//
+// Note of the nvm plan: what stays.
+func (msgs Messages) NvmMoveKeptText() string {
+	return Catalog.Format(msgs.locale, "nvmMoveKeptText", nil)
+}

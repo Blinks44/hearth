@@ -63,6 +63,8 @@ func nodeSnap(ins ...inventory.Installation) *inventory.Snapshot {
 }
 
 // nodeLines has Node 18 out of support at now, and 22 supported.
+var slowStart = &inventory.ShellStartup{Shell: "zsh", Took: 1400 * time.Millisecond}
+
 var nodeLines = &versions.Node{Lines: map[int]versions.Line{
 	18: {LTS: time.Date(2022, 10, 25, 0, 0, 0, 0, time.UTC), End: time.Date(2025, 4, 30, 0, 0, 0, 0, time.UTC), Codename: "Hydrogen"},
 	22: {LTS: time.Date(2024, 10, 29, 0, 0, 0, 0, time.UTC), End: time.Date(2027, 4, 30, 0, 0, 0, 0, time.UTC), Codename: "Jod"},
@@ -190,6 +192,9 @@ func TestFind(t *testing.T) {
 		{name: "dotnet's tools before the first tool install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: "/home/ann/.dotnet/tools", Missing: true},
 			{Dir: `C:\Users\Ann\.dotnet\tools`, Missing: true}}}},
+		{name: "slow shell start", snap: &inventory.Snapshot{Startup: slowStart},
+			want: []Issue{{Kind: SlowStartup, Severity: Warning, Startup: slowStart}}},
+		{name: "shell starts in under a second", snap: &inventory.Snapshot{Startup: &inventory.ShellStartup{Shell: "zsh", Took: 900 * time.Millisecond}}},
 		{name: "PATH in order", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}, GUIPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}}}},
 
 		{name: "tool that failed to check",

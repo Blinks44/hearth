@@ -25,6 +25,7 @@ func (a *App) paths(c *ui.Context, p page) {
 		}
 		term, gui := a.Snapshot.TerminalPath, a.Snapshot.GUIPath
 		problems := pathProblemCount(term, gui)
+		st := a.Snapshot.Startup
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
@@ -38,15 +39,30 @@ func (a *App) paths(c *ui.Context, p page) {
 					stateCard(c, c.Theme().Success, locales.EnvPathTerminal(), strconv.Itoa(len(term)), locales.EnvPathEntries())
 					stateCard(c, pal.TextFaint, locales.EnvPathApps(), strconv.Itoa(len(gui)), locales.EnvPathEntries())
 					stateCard(c, c.Theme().Warning, locales.EnvPathProblems(), strconv.Itoa(problems), "")
+					if st != nil {
+						startupCard(c, st)
+					}
 				})
 				if problems > 0 {
 					a.pathBanner(c, term)
 				}
 				ui.Row(c).Gap(12).Children(func() {
-					segments(c, "path-tabs", &a.pathTab, []segment{{locales.EnvPathTerminal(), strconv.Itoa(len(term))}, {locales.EnvPathApps(), strconv.Itoa(len(gui))}, {locales.EnvPathVariables(), strconv.Itoa(len(a.Snapshot.Variables))}, {locales.EnvPathDifferences(), ""}})
+					tabs := []segment{{locales.EnvPathTerminal(), strconv.Itoa(len(term))}, {locales.EnvPathApps(), strconv.Itoa(len(gui))}, {locales.EnvPathVariables(), strconv.Itoa(len(a.Snapshot.Variables))}, {locales.EnvPathDifferences(), ""}}
+					if st != nil {
+						tabs = append(tabs, segment{locales.StartupLabel(), seconds(st.Took)})
+					} else if a.pathTab == startupTab {
+						a.pathTab = 0
+					}
+					segments(c, "path-tabs", &a.pathTab, tabs)
 					ui.Box(c).Grow(1)
-					ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Width(200)
+					if a.pathTab != startupTab {
+						ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Width(200)
+					}
 				})
+				if a.pathTab == startupTab {
+					columns(c, 14, func() { a.startupLines(c, st) }, func() { a.startupSide(c, st) })
+					return
+				}
 				columns(c, 14, func() {
 					switch a.pathTab {
 					case 0:
@@ -88,6 +104,9 @@ func (a *App) paths(c *ui.Context, p page) {
 		})
 	})
 }
+
+// startupTab is the index of the PATH page's tab of the shell's start.
+const startupTab = 4
 
 func hasPath(entries []inventory.PathEntry, dir string) bool {
 	for _, entry := range entries {

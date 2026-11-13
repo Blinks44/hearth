@@ -7823,5 +7823,293 @@
         "example": "5173"
       }
     }
+  },
+  "durationSeconds": "{seconds, number, ::.00} s",
+  "@durationSeconds": {
+    "description": "A duration in seconds, with two decimals.",
+    "placeholders": {
+      "seconds": {
+        "type": "double",
+        "example": "1.42"
+      }
+    }
+  },
+  "startupLabel": "Startup",
+  "@startupLabel": {
+    "description": "PATH page: the card and tab of the terminal shell's start."
+  },
+  "startupSlow": "{shell} · slow",
+  "@startupSlow": {
+    "description": "Startup card caption of a slow start.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "zsh"
+      }
+    }
+  },
+  "startupTime": "Time",
+  "@startupTime": {
+    "description": "Startup tab: column of a line's time."
+  },
+  "startupFile": "File",
+  "@startupFile": {
+    "description": "Startup tab: column of the startup file."
+  },
+  "startupLine": "What the line runs",
+  "@startupLine": {
+    "description": "Startup tab: column of the line of a startup file."
+  },
+  "startupShare": "{percent}% of the start",
+  "@startupShare": {
+    "description": "Startup tab: a line's part of the whole start.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "65"
+      }
+    }
+  },
+  "startupRest": "The rest, in {count, plural, one {# file} other {# files}}",
+  "@startupRest": {
+    "description": "Startup tab: the row of the lines not listed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "startupFast": "The shell starts quickly: there is nothing to look into line by line.",
+  "@startupFast": {
+    "description": "Startup tab: a fast start, not traced."
+  },
+  "startupProfileNoLines": "None of the profiles' lines is known to be slow. PowerShell gives no time per line: to find the slow one, comment lines out one at a time and scan again.",
+  "@startupProfileNoLines": {
+    "description": "Startup tab on Windows: no profile line known to be slow."
+  },
+  "startupNoTrace": "{shell} gave no trace with time, so Hearth cannot tell which lines are slow. macOS's own bash 3.2 has no such trace.",
+  "@startupNoTrace": {
+    "description": "Startup tab: zsh or bash gave no trace with time.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "bash"
+      }
+    }
+  },
+  "startupNoTraceShell": "Hearth breaks the start down line by line for zsh and bash; for {shell} it shows the whole time.",
+  "@startupNoTraceShell": {
+    "description": "Startup tab: a shell Hearth does not trace.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "fish"
+      }
+    }
+  },
+  "startupLineNumber": "line {line}",
+  "@startupLineNumber": {
+    "description": "Startup tab: chip with a line number.",
+    "placeholders": {
+      "line": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "startupSlowChip": "slow",
+  "@startupSlowChip": {
+    "description": "Startup tab: chip of a slow line."
+  },
+  "startupNote": "A line's time includes all it runs: the files it sources, the code it evaluates and the functions it calls. Measured at the last scan; Hearth does not change startup files to measure.",
+  "@startupNote": {
+    "description": "Startup tab: note under the lines."
+  },
+  "startupProfileNote": "PowerShell gives no time per line: these lines of the profiles are known to be slow.",
+  "@startupProfileNote": {
+    "description": "Startup tab on Windows: note under the profile lines."
+  },
+  "culpritNvm": "nvm loads at every start. fnm and mise switch Node without that.",
+  "@culpritNvm": {
+    "description": "Advice for a startup line that loads nvm."
+  },
+  "culpritConda": "conda activates its base environment at every start. conda config --set auto_activate_base false stops that; conda activate still works.",
+  "@culpritConda": {
+    "description": "Advice for a startup line that loads conda."
+  },
+  "culpritPyenv": "pyenv init rebuilds its shims at every start. pyenv init - --no-rehash skips that.",
+  "@culpritPyenv": {
+    "description": "Advice for a startup line that runs pyenv init."
+  },
+  "culpritRbenv": "rbenv init rebuilds its shims at every start. rbenv init - --no-rehash skips that.",
+  "@culpritRbenv": {
+    "description": "Advice for a startup line that runs rbenv init."
+  },
+  "culpritRvm": "RVM loads all its scripts at every start. rbenv and mise switch Ruby with far less.",
+  "@culpritRvm": {
+    "description": "Advice for a startup line that loads RVM."
+  },
+  "culpritSdkman": "SDKMAN! loads at every start. mise installs and switches Java without that.",
+  "@culpritSdkman": {
+    "description": "Advice for a startup line that loads SDKMAN!."
+  },
+  "culpritCompinit": "Checks the completion files at every start. With -C it uses the cache it made.",
+  "@culpritCompinit": {
+    "description": "Advice for a startup line that runs compinit."
+  },
+  "culpritOhMyZsh": "Oh My Zsh loads its plugins and theme at every start: each plugin turned off makes it faster.",
+  "@culpritOhMyZsh": {
+    "description": "Advice for a startup line that loads Oh My Zsh."
+  },
+  "culpritOhMyPosh": "oh-my-posh starts its program at every start; a simpler theme is faster.",
+  "@culpritOhMyPosh": {
+    "description": "Advice for a profile line that loads oh-my-posh."
+  },
+  "culpritPoshGit": "posh-git loads a module at every start. Importing it only when you need it makes the start faster.",
+  "@culpritPoshGit": {
+    "description": "Advice for a profile line that imports posh-git."
+  },
+  "culpritBrew": "brew --prefix starts Homebrew, which takes a while. Write the folder it prints in its place.",
+  "@culpritBrew": {
+    "description": "Advice for a startup line that runs brew --prefix."
+  },
+  "startupHow": "How Hearth measures",
+  "@startupHow": {
+    "description": "Startup tab: card of how Hearth measures."
+  },
+  "startupWhole": "The whole start",
+  "@startupWhole": {
+    "description": "Startup tab: row of the whole start."
+  },
+  "startupWholeCaption": "{shell} -i -l, as a new terminal window starts it",
+  "@startupWholeCaption": {
+    "description": "Startup tab: how the whole start is measured.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "zsh"
+      }
+    }
+  },
+  "startupWholeProfile": "PowerShell with its profiles",
+  "@startupWholeProfile": {
+    "description": "Startup tab on Windows: how the whole start is measured."
+  },
+  "startupBare": "Without profiles",
+  "@startupBare": {
+    "description": "Startup tab on Windows: row of the start without profiles."
+  },
+  "startupBareCaption": "PowerShell -NoProfile",
+  "@startupBareCaption": {
+    "description": "Startup tab on Windows: how the start without profiles is measured."
+  },
+  "startupByLine": "Line by line",
+  "@startupByLine": {
+    "description": "Startup tab: row of the line by line trace."
+  },
+  "startupByLineCaption": "a trace, when the start takes {time} or longer",
+  "@startupByLineCaption": {
+    "description": "Startup tab: when Hearth traces the start.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0.50 s"
+      }
+    }
+  },
+  "startupTarget": "Benchmark",
+  "@startupTarget": {
+    "description": "Startup tab: row of the benchmark."
+  },
+  "startupTargetCaption": "up to {time} the start goes almost unnoticed",
+  "@startupTargetCaption": {
+    "description": "Startup tab: what the benchmark means.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0.30 s"
+      }
+    }
+  },
+  "startupFiles": "Startup files",
+  "@startupFiles": {
+    "description": "Startup tab: card of the startup files."
+  },
+  "startupFilesOrder": "in order",
+  "@startupFilesOrder": {
+    "description": "Startup tab: the files card lists them in the order they run."
+  },
+  "issueSlowStartupTitle": "The terminal takes {time} to start",
+  "@issueSlowStartupTitle": {
+    "description": "Issue: the terminal's shell starts slowly.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "1.42 s"
+      }
+    }
+  },
+  "issueSlowStartupLine": "Every new terminal window waits for {shell} to read its startup files. The slowest line is {line} ({time}); the PATH page's Startup tab breaks it all down.",
+  "@issueSlowStartupLine": {
+    "description": "Issue: a slow start with its slowest line.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "zsh"
+      },
+      "line": {
+        "type": "String",
+        "example": "~/.zshrc:12"
+      },
+      "time": {
+        "type": "String",
+        "example": "0.92 s"
+      }
+    }
+  },
+  "issueSlowStartupExplain": "Every new terminal window waits for {shell} to read its startup files. The PATH page's Startup tab tells more.",
+  "@issueSlowStartupExplain": {
+    "description": "Issue: a slow start without lines.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "zsh"
+      }
+    }
+  },
+  "startupLineChanged": "The startup file changed since the last scan. Scan again, then try once more.",
+  "@startupLineChanged": {
+    "description": "Error: the startup file changed since the scan."
+  },
+  "nvmMoveTitle": "Move from nvm to mise",
+  "@nvmMoveTitle": {
+    "description": "Title of the plan that moves from nvm to mise."
+  },
+  "nvmMoveWhy": "nvm loads in every new terminal, which takes time. mise switches Node versions without that: Hearth sets it up, has it install the Node version nvm uses by default and comments out the lines that load nvm.",
+  "@nvmMoveWhy": {
+    "description": "Why of the plan that moves from nvm to mise."
+  },
+  "nvmMoveAction": "Move to mise",
+  "@nvmMoveAction": {
+    "description": "Button of the plan that moves from nvm to mise."
+  },
+  "nvmMoveComment": "Comment out {count, plural, one {# line} other {# lines}} that load nvm",
+  "@nvmMoveComment": {
+    "description": "Change of the nvm plan: lines commented out.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "nvmMoveKeptTitle": "nvm's versions stay",
+  "@nvmMoveKeptTitle": {
+    "description": "Note title of the nvm plan: nvm's versions stay."
+  },
+  "nvmMoveKeptText": "The Node versions in ~/.nvm stay, with their global packages: install the packages you need again with mise's Node. Remove the folder in Cleanup once nothing needs it.",
+  "@nvmMoveKeptText": {
+    "description": "Note of the nvm plan: what stays."
   }
 }

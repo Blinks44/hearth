@@ -62,7 +62,13 @@ const (
 	// not pick by default and no project asks for: likely left over, a
 	// cleanup candidate. Info: nothing runs them.
 	ExtraVersion Kind = "extra-version"
+	// SlowStartup is a terminal's shell that takes SlowStartupFrom or
+	// longer to start: each new terminal window waits for it.
+	SlowStartup Kind = "slow-startup"
 )
+
+// SlowStartupFrom is how long a shell start takes for SlowStartup.
+const SlowStartupFrom = time.Second
 
 // Severity is how much an issue matters.
 type Severity int
@@ -97,6 +103,8 @@ type Issue struct {
 	Skills []inventory.Skill
 	// MCP are the servers an MCP issue is about, in the order found.
 	MCP []inventory.MCPServer
+	// Startup is the shell start SlowStartup is about.
+	Startup *inventory.ShellStartup
 }
 
 // Find returns the issues of the scan s and the projects ps, the PATH's
@@ -224,6 +232,9 @@ func pathIssues(s *inventory.Snapshot) []Issue {
 		}
 	}
 	var out []Issue
+	if st := s.Startup; st != nil && st.Took >= SlowStartupFrom {
+		out = append(out, Issue{Kind: SlowStartup, Severity: Warning, Startup: st})
+	}
 	if len(current) > 0 {
 		out = append(out, Issue{Kind: PathCurrentDir, Severity: Warning, Dirs: current})
 	}

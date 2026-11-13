@@ -1,0 +1,875 @@
+bash: cannot set terminal process group (6210): Inappropriate ioctl for device
+bash: no job control in this shell
++M|1794598583.997637|/etc/profile|4|1|'[' '\s-\v\$ ' ']'
++M|1794598583.997651|/etc/profile|5|1|'[' /usr/bin/bash ']'
++M|1794598583.997659|/etc/profile|5|1|'[' /usr/bin/bash '!=' /bin/sh ']'
++M|1794598583.997665|/etc/profile|8|1|'[' -f /etc/bash.bashrc ']'
++M|1794598583.997673|/etc/profile|9|1|. /etc/bash.bashrc
+++M|1794598583.997689|/etc/bash.bashrc|7|2|'[' -z '\s-\v\$ ' ']'
+++M|1794598583.997698|/etc/bash.bashrc|11|2|shopt -s checkwinsize
+++M|1794598583.997712|/etc/bash.bashrc|14|2|'[' -z '' ']'
+++M|1794598583.997719|/etc/bash.bashrc|14|2|'[' -r /etc/debian_chroot ']'
+++M|1794598583.997733|/etc/bash.bashrc|20|2|'[' -n '' -a -n '' ']'
+++M|1794598583.997741|/etc/bash.bashrc|21|2|PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+++M|1794598583.997763|/etc/bash.bashrc|44|2|'[' '!' -e /home/u/.sudo_as_admin_successful ']'
+++M|1794598583.997772|/etc/bash.bashrc|44|2|'[' '!' -e /home/u/.hushlogin ']'
+++M|1794598583.997778|/etc/bash.bashrc|45|2|case " $(groups) " in
++++M|1794598583.997952|/etc/bash.bashrc|45|2|groups
+++M|1794598583.998333|/etc/bash.bashrc|46|2|'[' -x /usr/bin/sudo ']'
+++M|1794598583.998399|/etc/bash.bashrc|47|2|cat
+++M|1794598583.998919|/etc/bash.bashrc|57|2|'[' -x /usr/lib/command-not-found -o -x /usr/share/command-not-found/command-not-found ']'
++M|1794598583.998962|/etc/profile|20|1|'[' -d /etc/profile.d ']'
++M|1794598583.999006|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598583.999041|/etc/profile|22|1|'[' -r /etc/profile.d/01-locale-fix.sh ']'
++M|1794598583.999079|/etc/profile|23|1|. /etc/profile.d/01-locale-fix.sh
++++M|1794598583.999320|/etc/profile.d/01-locale-fix.sh|2|2|/usr/bin/locale-check C.UTF-8
+++M|1794598583.999700|/etc/profile.d/01-locale-fix.sh|2|2|eval 'LANG='\''C.UTF-8'\'''
++++M|1794598583.999720|/etc/profile.d/01-locale-fix.sh|2|2|LANG=C.UTF-8
++M|1794598583.999840|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598583.999854|/etc/profile|22|1|'[' -r /etc/profile.d/Z99-cloud-locale-test.sh ']'
++M|1794598583.999864|/etc/profile|23|1|. /etc/profile.d/Z99-cloud-locale-test.sh
+++M|1794598584.000022|/etc/profile.d/Z99-cloud-locale-test.sh|99|2|'[' -f /home/u/.cloud-locale-test.skip -o -f /var/lib/cloud/instance/locale-check.skip ']'
+++M|1794598584.000238|/etc/profile.d/Z99-cloud-locale-test.sh|100|2|locale
+++M|1794598584.000308|/etc/profile.d/Z99-cloud-locale-test.sh|100|2|locale_warn
+++M|1794598584.000375|/etc/profile.d/Z99-cloud-locale-test.sh|14|3|command -v local
+++M|1794598584.000406|/etc/profile.d/Z99-cloud-locale-test.sh|14|3|local _local=local
+++M|1794598584.000422|/etc/profile.d/Z99-cloud-locale-test.sh|17|3|local bad_names= bad_lcs= key= val= var= vars= bad_kv=
+++M|1794598584.000434|/etc/profile.d/Z99-cloud-locale-test.sh|18|3|local w1 w2 w3 w4 remain
+++M|1794598584.000446|/etc/profile.d/Z99-cloud-locale-test.sh|22|3|'[' '' = zsh ']'
+++M|1794598584.000457|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000679|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000695|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LANG
+++M|1794598584.000707|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val=C.UTF-8
+++M|1794598584.000714|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val=C.UTF-8
+++M|1794598584.000720|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.000727|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8'
+++M|1794598584.000736|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000747|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000756|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LANGUAGE
+++M|1794598584.000763|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val=
+++M|1794598584.000768|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val=
+++M|1794598584.000773|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=
+++M|1794598584.000779|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE='
+++M|1794598584.000787|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000806|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000815|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_CTYPE
+++M|1794598584.000822|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.000828|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.000835|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.000846|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8'
+++M|1794598584.000854|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000866|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000875|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_NUMERIC
+++M|1794598584.000882|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.000888|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.000894|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.000902|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8'
+++M|1794598584.000912|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000925|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000934|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_TIME
+++M|1794598584.000941|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.000947|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.000953|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.000961|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8'
+++M|1794598584.000968|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.000979|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.000987|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_COLLATE
+++M|1794598584.000995|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001001|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001007|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001015|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8'
+++M|1794598584.001022|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001033|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001041|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_MONETARY
+++M|1794598584.001047|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001053|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001059|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001066|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8'
+++M|1794598584.001073|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001084|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001091|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_MESSAGES
+++M|1794598584.001098|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001104|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001110|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001118|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8'
+++M|1794598584.001124|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001136|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001146|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_PAPER
+++M|1794598584.001152|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001158|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001163|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001172|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8'
+++M|1794598584.001178|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001189|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001196|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_NAME
+++M|1794598584.001202|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001208|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001214|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001222|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8'
+++M|1794598584.001229|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001240|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001247|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_ADDRESS
+++M|1794598584.001253|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001259|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001265|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001275|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8 LC_ADDRESS=C.UTF-8'
+++M|1794598584.001282|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001293|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001301|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_TELEPHONE
+++M|1794598584.001307|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001313|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001319|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001328|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8 LC_ADDRESS=C.UTF-8 LC_TELEPHONE=C.UTF-8'
+++M|1794598584.001336|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001348|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001355|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_MEASUREMENT
+++M|1794598584.001362|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001368|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001373|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001383|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8 LC_ADDRESS=C.UTF-8 LC_TELEPHONE=C.UTF-8 LC_MEASUREMENT=C.UTF-8'
+++M|1794598584.001389|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001402|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001410|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_IDENTIFICATION
+++M|1794598584.001416|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val='"C.UTF-8"'
+++M|1794598584.001422|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val='C.UTF-8"'
+++M|1794598584.001430|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=C.UTF-8
+++M|1794598584.001440|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8 LC_ADDRESS=C.UTF-8 LC_TELEPHONE=C.UTF-8 LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C.UTF-8'
+++M|1794598584.001449|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001457|/etc/profile.d/Z99-cloud-locale-test.sh|29|3|case "$w1" in
+++M|1794598584.001465|/etc/profile.d/Z99-cloud-locale-test.sh|32|3|key=LC_ALL
+++M|1794598584.001471|/etc/profile.d/Z99-cloud-locale-test.sh|33|3|val=
+++M|1794598584.001476|/etc/profile.d/Z99-cloud-locale-test.sh|34|3|val=
+++M|1794598584.001481|/etc/profile.d/Z99-cloud-locale-test.sh|35|3|val=
+++M|1794598584.001490|/etc/profile.d/Z99-cloud-locale-test.sh|36|3|vars=' LANG=C.UTF-8 LANGUAGE= LC_CTYPE=C.UTF-8 LC_NUMERIC=C.UTF-8 LC_TIME=C.UTF-8 LC_COLLATE=C.UTF-8 LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8 LC_PAPER=C.UTF-8 LC_NAME=C.UTF-8 LC_ADDRESS=C.UTF-8 LC_TELEPHONE=C.UTF-8 LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C.UTF-8 LC_ALL='
+++M|1794598584.001498|/etc/profile.d/Z99-cloud-locale-test.sh|28|3|read -r w1 w2 w3 w4 remain
+++M|1794598584.001507|/etc/profile.d/Z99-cloud-locale-test.sh|49|3|bad_lcs=
+++M|1794598584.001512|/etc/profile.d/Z99-cloud-locale-test.sh|50|3|bad_kv=
+++M|1794598584.001518|/etc/profile.d/Z99-cloud-locale-test.sh|51|3|'[' -n '' ']'
+++M|1794598584.001525|/etc/profile.d/Z99-cloud-locale-test.sh|51|3|return 0
+++M|1794598584.001672|/etc/profile.d/Z99-cloud-locale-test.sh|102|2|unset locale_warn
++M|1794598584.001702|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.001710|/etc/profile|22|1|'[' -r /etc/profile.d/Z99-cloudinit-warnings.sh ']'
++M|1794598584.001719|/etc/profile|23|1|. /etc/profile.d/Z99-cloudinit-warnings.sh
+++M|1794598584.001771|/etc/profile.d/Z99-cloudinit-warnings.sh|29|2|cloud_init_warnings
+++M|1794598584.001788|/etc/profile.d/Z99-cloudinit-warnings.sh|7|3|command -v local
+++M|1794598584.001813|/etc/profile.d/Z99-cloudinit-warnings.sh|7|3|local _local=local
+++M|1794598584.001824|/etc/profile.d/Z99-cloudinit-warnings.sh|9|3|local warning= idir=/var/lib/cloud/instance n=0
+++M|1794598584.001834|/etc/profile.d/Z99-cloudinit-warnings.sh|10|3|local warndir=/var/lib/cloud/instance/warnings
+++M|1794598584.001856|/etc/profile.d/Z99-cloudinit-warnings.sh|11|3|local ufile=/home/u/.cloud-warnings.skip sfile=/var/lib/cloud/instance/warnings/.skip
+++M|1794598584.001867|/etc/profile.d/Z99-cloudinit-warnings.sh|12|3|'[' -d /var/lib/cloud/instance/warnings ']'
+++M|1794598584.001877|/etc/profile.d/Z99-cloudinit-warnings.sh|12|3|return 0
+++M|1794598584.001892|/etc/profile.d/Z99-cloudinit-warnings.sh|30|2|unset cloud_init_warnings
++M|1794598584.001904|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.001911|/etc/profile|22|1|'[' -r /etc/profile.d/apps-bin-path.sh ']'
++M|1794598584.001919|/etc/profile|23|1|. /etc/profile.d/apps-bin-path.sh
+++M|1794598584.001931|/etc/profile.d/apps-bin-path.sh|3|2|snap_bin_path=/snap/bin
+++M|1794598584.002253|/etc/profile.d/apps-bin-path.sh|4|2|test -n :/home/user/.local/bin:/home/user/bin:/home/user/.grok/bin:/home/user/.cargo/bin:/home/user/.npm-global/bin:/home/user/.bun/bin:/home/user/.volta/bin:/home/user/.local/share/mise/shims:/home/user/.nvm/current/bin:/home/user/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:/home/linuxbrew/.linuxbrew/bin
+++M|1794598584.002272|/etc/profile.d/apps-bin-path.sh|4|2|test -n ''
+++M|1794598584.002283|/etc/profile.d/apps-bin-path.sh|10|2|test -z ''
+++M|1794598584.002291|/etc/profile.d/apps-bin-path.sh|11|2|export XDG_DATA_DIRS=/usr/local/share:/usr/share
+++M|1794598584.002296|/etc/profile.d/apps-bin-path.sh|11|2|XDG_DATA_DIRS=/usr/local/share:/usr/share
+++M|1794598584.002308|/etc/profile.d/apps-bin-path.sh|17|2|snap_xdg_path=/var/lib/snapd/desktop
+++M|1794598584.002328|/etc/profile.d/apps-bin-path.sh|18|2|test -n /usr/local/share:/usr/share
+++M|1794598584.002340|/etc/profile.d/apps-bin-path.sh|18|2|test -n /usr/local/share:/usr/share
+++M|1794598584.002350|/etc/profile.d/apps-bin-path.sh|19|2|export XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
+++M|1794598584.002354|/etc/profile.d/apps-bin-path.sh|19|2|XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
++M|1794598584.002361|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.002367|/etc/profile|22|1|'[' -r /etc/profile.d/bash_completion.sh ']'
++M|1794598584.002379|/etc/profile|23|1|. /etc/profile.d/bash_completion.sh
+++M|1794598584.002420|/etc/profile.d/bash_completion.sh|3|2|'[' 'x5.2.21(1)-release' '!=' x -a 'x${debian_chroot:+($debian_chroot)}\u@\h:\w\$ ' '!=' x -a x = x ']'
+++M|1794598584.002431|/etc/profile.d/bash_completion.sh|6|2|'[' 5 -gt 4 ']'
+++M|1794598584.002443|/etc/profile.d/bash_completion.sh|8|2|'[' -r /home/u/.config/bash_completion ']'
+++M|1794598584.002455|/etc/profile.d/bash_completion.sh|10|2|shopt -q progcomp
+++M|1794598584.002464|/etc/profile.d/bash_completion.sh|10|2|'[' -r /usr/share/bash-completion/bash_completion ']'
+++M|1794598584.002472|/etc/profile.d/bash_completion.sh|12|2|. /usr/share/bash-completion/bash_completion
++++M|1794598584.002530|/usr/share/bash-completion/bash_completion|26|3|BASH_COMPLETION_VERSINFO=(2 11)
++++M|1794598584.002546|/usr/share/bash-completion/bash_completion|28|3|[[ hixBHc == *v* ]]
++++M|1794598584.002552|/usr/share/bash-completion/bash_completion|31|3|BASH_COMPLETION_ORIGINAL_V_VALUE=+v
++++M|1794598584.002561|/usr/share/bash-completion/bash_completion|34|3|[[ -n '' ]]
++++M|1794598584.002566|/usr/share/bash-completion/bash_completion|37|3|set +v
++++M|1794598584.002575|/usr/share/bash-completion/bash_completion|42|3|_blacklist_glob='@(acroread.sh)'
++++M|1794598584.002587|/usr/share/bash-completion/bash_completion|45|3|shopt -s extglob progcomp
++++M|1794598584.002601|/usr/share/bash-completion/bash_completion|53|3|complete -u groups slay w sux
++++M|1794598584.002614|/usr/share/bash-completion/bash_completion|56|3|complete -A stopped -P '"%' -S '"' bg
++++M|1794598584.002626|/usr/share/bash-completion/bash_completion|59|3|complete -j -P '"%' -S '"' fg jobs disown
++++M|1794598584.002636|/usr/share/bash-completion/bash_completion|62|3|complete -v readonly unset
++++M|1794598584.002644|/usr/share/bash-completion/bash_completion|65|3|complete -A setopt set
++++M|1794598584.002652|/usr/share/bash-completion/bash_completion|68|3|complete -A shopt shopt
++++M|1794598584.002660|/usr/share/bash-completion/bash_completion|71|3|complete -A helptopic help
++++M|1794598584.002668|/usr/share/bash-completion/bash_completion|74|3|complete -a unalias
++++M|1794598584.002676|/usr/share/bash-completion/bash_completion|77|3|complete -c command type which
++++M|1794598584.002684|/usr/share/bash-completion/bash_completion|80|3|complete -b builtin
++++M|1794598584.003796|/usr/share/bash-completion/bash_completion|1121|3|[[ linux-gnu == *@(solaris|aix)* ]]
++++M|1794598584.003868|/usr/share/bash-completion/bash_completion|1222|3|_backup_glob='@(#*#|*@(~|.@(bak|orig|rej|swp|dpkg*|rpm@(orig|new|save))))'
++++M|1794598584.003951|/usr/share/bash-completion/bash_completion|1288|3|complete -F _service service
++++M|1794598584.003961|/usr/share/bash-completion/bash_completion|1289|3|_sysvdirs
++++M|1794598584.003968|/usr/share/bash-completion/bash_completion|97|4|sysvdirs=()
++++M|1794598584.003975|/usr/share/bash-completion/bash_completion|98|4|[[ -d /etc/rc.d/init.d ]]
++++M|1794598584.003983|/usr/share/bash-completion/bash_completion|99|4|[[ -d /etc/init.d ]]
++++M|1794598584.003990|/usr/share/bash-completion/bash_completion|99|4|sysvdirs+=(/etc/init.d)
++++M|1794598584.003998|/usr/share/bash-completion/bash_completion|101|4|[[ -f /etc/slackware-version ]]
++++M|1794598584.004004|/usr/share/bash-completion/bash_completion|102|4|return 0
++++M|1794598584.004020|/usr/share/bash-completion/bash_completion|1290|3|for svcdir in "${sysvdirs[@]}"
++++M|1794598584.004478|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004490|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/alsa-utils ]]
++++M|1794598584.004499|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/alsa-utils
++++M|1794598584.004509|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004513|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/anacron ]]
++++M|1794598584.004521|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/anacron
++++M|1794598584.004526|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004531|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/apparmor ]]
++++M|1794598584.004538|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/apparmor
++++M|1794598584.004543|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004548|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/apport ]]
++++M|1794598584.004555|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/apport
++++M|1794598584.004561|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004565|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/bluetooth ]]
++++M|1794598584.004572|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/bluetooth
++++M|1794598584.004577|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004582|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/console-setup.sh ]]
++++M|1794598584.004589|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/console-setup.sh
++++M|1794598584.004595|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004599|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/cron ]]
++++M|1794598584.004606|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/cron
++++M|1794598584.004612|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004616|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/cups ]]
++++M|1794598584.004623|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/cups
++++M|1794598584.004629|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004633|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/dbus ]]
++++M|1794598584.004640|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/dbus
++++M|1794598584.004646|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004650|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/gdm3 ]]
++++M|1794598584.004657|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/gdm3
++++M|1794598584.004662|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004667|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/grub-common ]]
++++M|1794598584.004674|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/grub-common
++++M|1794598584.004679|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004684|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/kerneloops ]]
++++M|1794598584.004691|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/kerneloops
++++M|1794598584.004696|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004701|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/keyboard-setup.sh ]]
++++M|1794598584.004709|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/keyboard-setup.sh
++++M|1794598584.004715|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004720|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/kmod ]]
++++M|1794598584.004726|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/kmod
++++M|1794598584.004732|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004736|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/openvpn ]]
++++M|1794598584.004743|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/openvpn
++++M|1794598584.004748|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004753|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/plymouth ]]
++++M|1794598584.004760|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/plymouth
++++M|1794598584.004765|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004770|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/plymouth-log ]]
++++M|1794598584.004777|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/plymouth-log
++++M|1794598584.004782|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004787|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/postgresql ]]
++++M|1794598584.004794|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/postgresql
++++M|1794598584.004799|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004803|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/procps ]]
++++M|1794598584.004810|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/procps
++++M|1794598584.004816|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004820|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/redis-server ]]
++++M|1794598584.004827|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/redis-server
++++M|1794598584.004832|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004837|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/rsync ]]
++++M|1794598584.004849|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/rsync
++++M|1794598584.004854|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004865|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/saned ]]
++++M|1794598584.004872|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/saned
++++M|1794598584.004877|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004882|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/speech-dispatcher ]]
++++M|1794598584.004889|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/speech-dispatcher
++++M|1794598584.004894|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004899|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/spice-vdagent ]]
++++M|1794598584.004906|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/spice-vdagent
++++M|1794598584.004912|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004916|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/sssd ]]
++++M|1794598584.004923|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/sssd
++++M|1794598584.004928|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004934|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/sysstat ]]
++++M|1794598584.004941|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/sysstat
++++M|1794598584.004947|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004951|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/ubuntu-fan ]]
++++M|1794598584.004958|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/ubuntu-fan
++++M|1794598584.004963|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004968|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/ufw ]]
++++M|1794598584.004975|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/ufw
++++M|1794598584.004980|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.004985|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/unattended-upgrades ]]
++++M|1794598584.004993|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/unattended-upgrades
++++M|1794598584.004998|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.005003|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/uuidd ]]
++++M|1794598584.005011|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/uuidd
++++M|1794598584.005016|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.005021|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/whoopsie ]]
++++M|1794598584.005028|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/whoopsie
++++M|1794598584.005033|/usr/share/bash-completion/bash_completion|1291|3|for svc in $svcdir/!($_backup_glob)
++++M|1794598584.005042|/usr/share/bash-completion/bash_completion|1292|3|[[ -x /etc/init.d/x11-common ]]
++++M|1794598584.005050|/usr/share/bash-completion/bash_completion|1292|3|complete -F _service /etc/init.d/x11-common
++++M|1794598584.005063|/usr/share/bash-completion/bash_completion|1295|3|unset svc svcdir sysvdirs
++++M|1794598584.005338|/usr/share/bash-completion/bash_completion|1534|3|[[ linux-gnu == *freebsd* ]]
++++M|1794598584.005368|/usr/share/bash-completion/bash_completion|1552|3|shopt -u hostcomplete
++++M|1794598584.005379|/usr/share/bash-completion/bash_completion|1552|3|complete -F _user_at_host talk ytalk finger
++++M|1794598584.005723|/usr/share/bash-completion/bash_completion|1827|3|complete -F _known_hosts traceroute traceroute6 fping fping6 telnet rsh rlogin ftp dig mtr ssh-installkeys showmount
++++M|1794598584.005797|/usr/share/bash-completion/bash_completion|1875|3|shopt -q cdable_vars
++++M|1794598584.005806|/usr/share/bash-completion/bash_completion|1878|3|complete -F _cd -o nospace cd pushd
++++M|1794598584.005968|/usr/share/bash-completion/bash_completion|1990|3|complete -F _command aoss command do else eval exec ltrace nice nohup padsp then time tsocks vsound xargs
++++M|1794598584.005994|/usr/share/bash-completion/bash_completion|1999|3|complete -F _root_command fakeroot gksu gksudo kdesudo really
++++M|1794598584.006116|/usr/share/bash-completion/bash_completion|2057|3|complete -F _longopt a2ps awk base64 bash bc bison cat chroot colordiff cp csplit cut date df diff dir du enscript env expand fmt fold gperf grep grub head irb ld ldd less ln ls m4 md5sum mkdir mkfifo mknod mv netstat nl nm objcopy objdump od paste pr ptx readelf rm rmdir sed seq shasum sha1sum sha224sum sha256sum sha384sum sha512sum shar sort split strip sum tac tail tee texindex touch tr uname unexpand uniq units vdir wc who
++++M|1794598584.006142|/usr/share/bash-completion/bash_completion|2064|3|declare -Ag _xspecs
++++M|1794598584.006235|/usr/share/bash-completion/bash_completion|2128|3|_install_xspec '!*.?(t)bz?(2)' bunzip2 bzcat pbunzip2 pbzcat lbunzip2 lbzcat
++++M|1794598584.006250|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.?(t)bz?(2)' cmd
++++M|1794598584.006258|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006271|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006277|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006284|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006289|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006295|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006300|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006306|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006310|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006316|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006321|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006326|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006331|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.?(t)bz?(2)'
++++M|1794598584.006348|/usr/share/bash-completion/bash_completion|2129|3|_install_xspec '!*.@(zip|[aegjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|aab|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl|[Ff][Cc][Ss]td)' unzip zipinfo
++++M|1794598584.006359|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(zip|[aegjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|aab|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl|[Ff][Cc][Ss]td)' cmd
++++M|1794598584.006366|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006372|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006379|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(zip|[aegjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|aab|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl|[Ff][Cc][Ss]td)'
++++M|1794598584.006385|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006391|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(zip|[aegjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|aab|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl|[Ff][Cc][Ss]td)'
++++M|1794598584.006402|/usr/share/bash-completion/bash_completion|2130|3|_install_xspec '*.Z' compress znew
++++M|1794598584.006411|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=*.Z' cmd
++++M|1794598584.006417|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006423|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006428|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.Z'
++++M|1794598584.006434|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006439|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.Z'
++++M|1794598584.006451|/usr/share/bash-completion/bash_completion|2132|3|_install_xspec '!*.@(Z|[gGd]z|t[ag]z)' gunzip zcat
++++M|1794598584.006459|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(Z|[gGd]z|t[ag]z)' cmd
++++M|1794598584.006465|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006471|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006476|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(Z|[gGd]z|t[ag]z)'
++++M|1794598584.006482|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006487|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(Z|[gGd]z|t[ag]z)'
++++M|1794598584.006497|/usr/share/bash-completion/bash_completion|2133|3|_install_xspec '!*.@(Z|[gGdz]z|t[ag]z)' unpigz
++++M|1794598584.006509|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(Z|[gGdz]z|t[ag]z)' cmd
++++M|1794598584.006515|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006521|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006526|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(Z|[gGdz]z|t[ag]z)'
++++M|1794598584.006535|/usr/share/bash-completion/bash_completion|2134|3|_install_xspec '!*.Z' uncompress
++++M|1794598584.006543|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.Z' cmd
++++M|1794598584.006549|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006554|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006559|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.Z'
++++M|1794598584.006574|/usr/share/bash-completion/bash_completion|2136|3|_install_xspec '!*.@(tlz|lzma)' lzcat lzegrep lzfgrep lzgrep lzless lzmore unlzma
++++M|1794598584.006584|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(tlz|lzma)' cmd
++++M|1794598584.006590|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006598|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006603|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006609|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006614|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006619|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006624|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006630|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006634|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006640|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006644|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006649|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006654|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006659|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006664|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(tlz|lzma)'
++++M|1794598584.006675|/usr/share/bash-completion/bash_completion|2137|3|_install_xspec '!*.@(?(t)xz|tlz|lzma)' unxz xzcat
++++M|1794598584.006685|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(?(t)xz|tlz|lzma)' cmd
++++M|1794598584.006691|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006697|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006702|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(t)xz|tlz|lzma)'
++++M|1794598584.006707|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006712|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(t)xz|tlz|lzma)'
++++M|1794598584.006722|/usr/share/bash-completion/bash_completion|2138|3|_install_xspec '!*.lrz' lrunzip
++++M|1794598584.006729|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.lrz' cmd
++++M|1794598584.006735|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006740|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006745|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.lrz'
++++M|1794598584.006757|/usr/share/bash-completion/bash_completion|2139|3|_install_xspec '!*.@(gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx)' ee
++++M|1794598584.006766|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx)' cmd
++++M|1794598584.006774|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006782|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006788|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx)'
++++M|1794598584.006800|/usr/share/bash-completion/bash_completion|2140|3|_install_xspec '!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|svg)' qiv
++++M|1794598584.006808|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|svg)' cmd
++++M|1794598584.006814|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006819|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006825|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|svg)'
++++M|1794598584.006838|/usr/share/bash-completion/bash_completion|2141|3|_install_xspec '!*.@(gif|jp?(e)g?(2)|j2[ck]|jp[2f]|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|?(e)ps)' xv
++++M|1794598584.006851|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(gif|jp?(e)g?(2)|j2[ck]|jp[2f]|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|?(e)ps)' cmd
++++M|1794598584.006857|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006862|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006868|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(gif|jp?(e)g?(2)|j2[ck]|jp[2f]|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|?(e)ps)'
++++M|1794598584.006880|/usr/share/bash-completion/bash_completion|2142|3|_install_xspec '!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))' gv ggv kghostview
++++M|1794598584.006889|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))' cmd
++++M|1794598584.006895|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006901|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006908|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))'
++++M|1794598584.006914|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006919|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))'
++++M|1794598584.006924|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006929|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))'
++++M|1794598584.006940|/usr/share/bash-completion/bash_completion|2143|3|_install_xspec '!*.@(dvi|DVI)?(.@(gz|Z|bz2))' xdvi kdvi
++++M|1794598584.006949|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(dvi|DVI)?(.@(gz|Z|bz2))' cmd
++++M|1794598584.006955|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.006961|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006966|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(dvi|DVI)?(.@(gz|Z|bz2))'
++++M|1794598584.006972|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.006977|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(dvi|DVI)?(.@(gz|Z|bz2))'
++++M|1794598584.006991|/usr/share/bash-completion/bash_completion|2144|3|_install_xspec '!*.dvi' dvips dviselect dvitype dvipdf advi dvipdfm dvipdfmx
++++M|1794598584.007000|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.dvi' cmd
++++M|1794598584.007006|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007014|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007019|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007025|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007033|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007038|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007043|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007049|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007056|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007113|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007128|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007137|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007143|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007150|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007157|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.dvi'
++++M|1794598584.007178|/usr/share/bash-completion/bash_completion|2145|3|_install_xspec '!*.[pf]df' acroread gpdf
++++M|1794598584.007192|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.[pf]df' cmd
++++M|1794598584.007203|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007211|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007218|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.[pf]df'
++++M|1794598584.007225|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007231|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.[pf]df'
++++M|1794598584.007246|/usr/share/bash-completion/bash_completion|2146|3|_install_xspec '!*.@(pdf|fdf)?(.@(gz|GZ|bz2|BZ2|Z))' xpdf
++++M|1794598584.007256|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(pdf|fdf)?(.@(gz|GZ|bz2|BZ2|Z))' cmd
++++M|1794598584.007265|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007272|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007280|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(pdf|fdf)?(.@(gz|GZ|bz2|BZ2|Z))'
++++M|1794598584.007293|/usr/share/bash-completion/bash_completion|2147|3|_install_xspec '!*.@(?(e)ps|pdf)' kpdf
++++M|1794598584.007305|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(?(e)ps|pdf)' cmd
++++M|1794598584.007313|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007320|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007327|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007355|/usr/share/bash-completion/bash_completion|2148|3|_install_xspec '!*.@(okular|@(?(e|x)ps|?(E|X)PS|[pf]df|[PF]DF|dvi|DVI|cb[rz]|CB[RZ]|djv?(u)|DJV?(U)|dvi|DVI|gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx|GIF|JP?(E)G|MIFF|TIF?(F)|PN[GM]|P[BGP]M|BMP|XPM|ICO|XWD|TGA|PCX|epub|EPUB|odt|ODT|fb?(2)|FB?(2)|mobi|MOBI|g3|G3|chm|CHM)?(.?(gz|GZ|bz2|BZ2|xz|XZ)))' okular
++++M|1794598584.007369|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(okular|@(?(e|x)ps|?(E|X)PS|[pf]df|[PF]DF|dvi|DVI|cb[rz]|CB[RZ]|djv?(u)|DJV?(U)|dvi|DVI|gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx|GIF|JP?(E)G|MIFF|TIF?(F)|PN[GM]|P[BGP]M|BMP|XPM|ICO|XWD|TGA|PCX|epub|EPUB|odt|ODT|fb?(2)|FB?(2)|mobi|MOBI|g3|G3|chm|CHM)?(.?(gz|GZ|bz2|BZ2|xz|XZ)))' cmd
++++M|1794598584.007379|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007386|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007394|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(okular|@(?(e|x)ps|?(E|X)PS|[pf]df|[PF]DF|dvi|DVI|cb[rz]|CB[RZ]|djv?(u)|DJV?(U)|dvi|DVI|gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx|GIF|JP?(E)G|MIFF|TIF?(F)|PN[GM]|P[BGP]M|BMP|XPM|ICO|XWD|TGA|PCX|epub|EPUB|odt|ODT|fb?(2)|FB?(2)|mobi|MOBI|g3|G3|chm|CHM)?(.?(gz|GZ|bz2|BZ2|xz|XZ)))'
++++M|1794598584.007419|/usr/share/bash-completion/bash_completion|2149|3|_install_xspec '!*.pdf' epdfview pdfunite
++++M|1794598584.007429|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.pdf' cmd
++++M|1794598584.007437|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007445|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007452|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.pdf'
++++M|1794598584.007459|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007466|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.pdf'
++++M|1794598584.007479|/usr/share/bash-completion/bash_completion|2150|3|_install_xspec '!*.@(cb[rz7t]|djv?(u)|?(e)ps|pdf)' zathura
++++M|1794598584.007490|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(cb[rz7t]|djv?(u)|?(e)ps|pdf)' cmd
++++M|1794598584.007498|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007505|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007512|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(cb[rz7t]|djv?(u)|?(e)ps|pdf)'
++++M|1794598584.007529|/usr/share/bash-completion/bash_completion|2151|3|_install_xspec '!*.@(?(e)ps|pdf)' ps2pdf ps2pdf12 ps2pdf13 ps2pdf14 ps2pdfwr
++++M|1794598584.007541|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(?(e)ps|pdf)' cmd
++++M|1794598584.007549|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007558|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007564|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007571|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007577|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007584|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007590|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007597|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007603|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007610|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007616|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(e)ps|pdf)'
++++M|1794598584.007630|/usr/share/bash-completion/bash_completion|2152|3|_install_xspec '!*.texi*' makeinfo texi2html
++++M|1794598584.007641|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.texi*' cmd
++++M|1794598584.007649|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007656|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007663|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.texi*'
++++M|1794598584.007670|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007676|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.texi*'
++++M|1794598584.007700|/usr/share/bash-completion/bash_completion|2153|3|_install_xspec '!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)' tex latex slitex jadetex pdfjadetex pdftex pdflatex texi2dvi xetex xelatex luatex lualatex
++++M|1794598584.007713|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)' cmd
++++M|1794598584.007720|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007735|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007742|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007749|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007755|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007764|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007771|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007777|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007783|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007790|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007796|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007803|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007809|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007816|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007822|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007829|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007835|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007849|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007855|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007862|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007868|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007875|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007881|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007887|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007893|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?(la)tex|texi|dtx|ins|ltx|dbj)'
++++M|1794598584.007909|/usr/share/bash-completion/bash_completion|2154|3|_install_xspec '!*.mp3' mpg123 mpg321 madplay
++++M|1794598584.007921|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.mp3' cmd
++++M|1794598584.007929|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.007937|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007944|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.mp3'
++++M|1794598584.007951|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007957|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.mp3'
++++M|1794598584.007964|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.007970|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.mp3'
++++M|1794598584.007998|/usr/share/bash-completion/bash_completion|2155|3|_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))' xine aaxine fbxine
++++M|1794598584.008011|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))' cmd
++++M|1794598584.008019|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008028|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008044|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008055|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008063|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008070|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008078|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008107|/usr/share/bash-completion/bash_completion|2156|3|_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))' kaffeine dragon totem
++++M|1794598584.008121|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))' cmd
++++M|1794598584.008130|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008138|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008146|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008154|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008162|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008169|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008177|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmvx]|OG[AGMVX]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.@(crdownload|part))'
++++M|1794598584.008193|/usr/share/bash-completion/bash_completion|2157|3|_install_xspec '!*.@(avi|asf|wmv)' aviplay
++++M|1794598584.008203|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(avi|asf|wmv)' cmd
++++M|1794598584.008211|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008218|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008224|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(avi|asf|wmv)'
++++M|1794598584.008238|/usr/share/bash-completion/bash_completion|2158|3|_install_xspec '!*.@(rm?(j)|ra?(m)|smi?(l))' realplay
++++M|1794598584.008248|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(rm?(j)|ra?(m)|smi?(l))' cmd
++++M|1794598584.008256|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008263|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008269|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(rm?(j)|ra?(m)|smi?(l))'
++++M|1794598584.008282|/usr/share/bash-completion/bash_completion|2159|3|_install_xspec '!*.@(mpg|mpeg|avi|mov|qt)' xanim
++++M|1794598584.008292|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(mpg|mpeg|avi|mov|qt)' cmd
++++M|1794598584.008300|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008307|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008313|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mpg|mpeg|avi|mov|qt)'
++++M|1794598584.008326|/usr/share/bash-completion/bash_completion|2160|3|_install_xspec '!*.@(og[ag]|m3u|flac|spx)' ogg123
++++M|1794598584.008335|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(og[ag]|m3u|flac|spx)' cmd
++++M|1794598584.008343|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008349|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008356|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(og[ag]|m3u|flac|spx)'
++++M|1794598584.008369|/usr/share/bash-completion/bash_completion|2161|3|_install_xspec '!*.@(mp3|og[ag]|pls|m3u)' gqmpeg freeamp
++++M|1794598584.008379|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(mp3|og[ag]|pls|m3u)' cmd
++++M|1794598584.008387|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008394|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008400|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mp3|og[ag]|pls|m3u)'
++++M|1794598584.008407|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008414|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mp3|og[ag]|pls|m3u)'
++++M|1794598584.008426|/usr/share/bash-completion/bash_completion|2162|3|_install_xspec '!*.fig' xfig
++++M|1794598584.008435|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.fig' cmd
++++M|1794598584.008443|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008450|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008456|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.fig'
++++M|1794598584.008468|/usr/share/bash-completion/bash_completion|2163|3|_install_xspec '!*.@(mid?(i)|cmf)' playmidi
++++M|1794598584.008478|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(mid?(i)|cmf)' cmd
++++M|1794598584.008486|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008492|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008499|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mid?(i)|cmf)'
++++M|1794598584.008513|/usr/share/bash-completion/bash_completion|2164|3|_install_xspec '!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)' timidity
++++M|1794598584.008524|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)' cmd
++++M|1794598584.008532|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008539|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008546|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)'
++++M|1794598584.008564|/usr/share/bash-completion/bash_completion|2165|3|_install_xspec '!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|oct|okt?(a)|p[st]m|s[3t]m|ult|umx|wav|xm)' modplugplay modplug123
++++M|1794598584.008575|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|oct|okt?(a)|p[st]m|s[3t]m|ult|umx|wav|xm)' cmd
++++M|1794598584.008583|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008590|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008597|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|oct|okt?(a)|p[st]m|s[3t]m|ult|umx|wav|xm)'
++++M|1794598584.008604|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008611|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|oct|okt?(a)|p[st]m|s[3t]m|ult|umx|wav|xm)'
++++M|1794598584.008638|/usr/share/bash-completion/bash_completion|2166|3|_install_xspec '*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)' vi vim gvim rvim view rview rgvim rgview gview emacs xemacs sxemacs kate kwrite
++++M|1794598584.008653|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)' cmd
++++M|1794598584.008661|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008675|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008683|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008690|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008696|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008704|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008710|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008717|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008723|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008730|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008737|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008743|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008749|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008756|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008762|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008769|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008775|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008783|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008790|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008797|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008803|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008809|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008816|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008822|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008829|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008835|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008845|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008852|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008858|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='*.@([ao]|so|so.!(conf|*/*)|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)'
++++M|1794598584.008872|/usr/share/bash-completion/bash_completion|2167|3|_install_xspec '!*.@(zip|z|gz|tgz)' bzme
++++M|1794598584.008884|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(zip|z|gz|tgz)' cmd
++++M|1794598584.008892|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008899|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008905|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(zip|z|gz|tgz)'
++++M|1794598584.008925|/usr/share/bash-completion/bash_completion|2169|3|_install_xspec '!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))' netscape mozilla lynx galeon dillo elinks amaya epiphany
++++M|1794598584.008937|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))' cmd
++++M|1794598584.008944|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.008955|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008961|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.008968|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008974|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.008981|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.008987|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.008994|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009000|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.009006|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009013|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.009020|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009026|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.009032|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009039|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.009045|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009052|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))'
++++M|1794598584.009072|/usr/share/bash-completion/bash_completion|2170|3|_install_xspec '!*.@(sxw|stw|sxg|sgl|doc?([mx])|dot?([mx])|rtf|txt|htm|html|?(f)odt|ott|odm|pdf)' oowriter lowriter
++++M|1794598584.009084|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(sxw|stw|sxg|sgl|doc?([mx])|dot?([mx])|rtf|txt|htm|html|?(f)odt|ott|odm|pdf)' cmd
++++M|1794598584.009092|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009099|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009106|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxw|stw|sxg|sgl|doc?([mx])|dot?([mx])|rtf|txt|htm|html|?(f)odt|ott|odm|pdf)'
++++M|1794598584.009113|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009120|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxw|stw|sxg|sgl|doc?([mx])|dot?([mx])|rtf|txt|htm|html|?(f)odt|ott|odm|pdf)'
++++M|1794598584.009135|/usr/share/bash-completion/bash_completion|2171|3|_install_xspec '!*.@(sxi|sti|pps?(x)|ppt?([mx])|pot?([mx])|?(f)odp|otp)' ooimpress loimpress
++++M|1794598584.009144|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(sxi|sti|pps?(x)|ppt?([mx])|pot?([mx])|?(f)odp|otp)' cmd
++++M|1794598584.009152|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009159|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009165|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxi|sti|pps?(x)|ppt?([mx])|pot?([mx])|?(f)odp|otp)'
++++M|1794598584.009173|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009179|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxi|sti|pps?(x)|ppt?([mx])|pot?([mx])|?(f)odp|otp)'
++++M|1794598584.009193|/usr/share/bash-completion/bash_completion|2172|3|_install_xspec '!*.@(sxc|stc|xls?([bmx])|xlw|xlt?([mx])|[ct]sv|?(f)ods|ots)' oocalc localc
++++M|1794598584.009203|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(sxc|stc|xls?([bmx])|xlw|xlt?([mx])|[ct]sv|?(f)ods|ots)' cmd
++++M|1794598584.009210|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009217|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009224|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxc|stc|xls?([bmx])|xlw|xlt?([mx])|[ct]sv|?(f)ods|ots)'
++++M|1794598584.009230|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009237|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxc|stc|xls?([bmx])|xlw|xlt?([mx])|[ct]sv|?(f)ods|ots)'
++++M|1794598584.009250|/usr/share/bash-completion/bash_completion|2173|3|_install_xspec '!*.@(sxd|std|sda|sdd|?(f)odg|otg)' oodraw lodraw
++++M|1794598584.009259|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(sxd|std|sda|sdd|?(f)odg|otg)' cmd
++++M|1794598584.009267|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009274|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009280|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxd|std|sda|sdd|?(f)odg|otg)'
++++M|1794598584.009287|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009293|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxd|std|sda|sdd|?(f)odg|otg)'
++++M|1794598584.009306|/usr/share/bash-completion/bash_completion|2174|3|_install_xspec '!*.@(sxm|smf|mml|odf)' oomath lomath
++++M|1794598584.009315|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(sxm|smf|mml|odf)' cmd
++++M|1794598584.009323|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009330|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009336|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxm|smf|mml|odf)'
++++M|1794598584.009343|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009351|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(sxm|smf|mml|odf)'
++++M|1794598584.009364|/usr/share/bash-completion/bash_completion|2175|3|_install_xspec '!*.odb' oobase lobase
++++M|1794598584.009373|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.odb' cmd
++++M|1794598584.009381|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009387|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009393|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.odb'
++++M|1794598584.009400|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009406|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.odb'
++++M|1794598584.009419|/usr/share/bash-completion/bash_completion|2176|3|_install_xspec '!*.[rs]pm' rpm2cpio
++++M|1794598584.009427|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.[rs]pm' cmd
++++M|1794598584.009435|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009441|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009447|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.[rs]pm'
++++M|1794598584.009460|/usr/share/bash-completion/bash_completion|2177|3|_install_xspec '!*.aux' bibtex
++++M|1794598584.009468|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.aux' cmd
++++M|1794598584.009475|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009482|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009488|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.aux'
++++M|1794598584.009502|/usr/share/bash-completion/bash_completion|2178|3|_install_xspec '!*.po' poedit gtranslator kbabel lokalize
++++M|1794598584.009512|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.po' cmd
++++M|1794598584.009519|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009528|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009535|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.po'
++++M|1794598584.009541|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009547|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.po'
++++M|1794598584.009554|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009561|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.po'
++++M|1794598584.009567|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009573|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.po'
++++M|1794598584.009588|/usr/share/bash-completion/bash_completion|2179|3|_install_xspec '!*.@([Pp][Rr][Gg]|[Cc][Ll][Pp])' harbour gharbour hbpp
++++M|1794598584.009599|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@([Pp][Rr][Gg]|[Cc][Ll][Pp])' cmd
++++M|1794598584.009607|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009615|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009621|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@([Pp][Rr][Gg]|[Cc][Ll][Pp])'
++++M|1794598584.009628|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009634|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@([Pp][Rr][Gg]|[Cc][Ll][Pp])'
++++M|1794598584.009641|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009647|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@([Pp][Rr][Gg]|[Cc][Ll][Pp])'
++++M|1794598584.009660|/usr/share/bash-completion/bash_completion|2180|3|_install_xspec '!*.[Hh][Rr][Bb]' hbrun
++++M|1794598584.009670|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.[Hh][Rr][Bb]' cmd
++++M|1794598584.009678|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009684|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009692|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.[Hh][Rr][Bb]'
++++M|1794598584.009705|/usr/share/bash-completion/bash_completion|2181|3|_install_xspec '!*.ly' lilypond ly2dvi
++++M|1794598584.009714|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.ly' cmd
++++M|1794598584.009721|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009728|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009735|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.ly'
++++M|1794598584.009742|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009748|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.ly'
++++M|1794598584.009761|/usr/share/bash-completion/bash_completion|2182|3|_install_xspec '!*.@(dif?(f)|?(d)patch)?(.@([gx]z|bz2|lzma))' cdiff
++++M|1794598584.009772|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(dif?(f)|?(d)patch)?(.@([gx]z|bz2|lzma))' cmd
++++M|1794598584.009780|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009786|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009792|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(dif?(f)|?(d)patch)?(.@([gx]z|bz2|lzma))'
++++M|1794598584.009809|/usr/share/bash-completion/bash_completion|2183|3|_install_xspec '!@(*.@(ks|jks|jceks|p12|pfx|bks|ubr|gkr|cer|crt|cert|p7b|pkipath|pem|p10|csr|crl)|cacerts)' portecle
++++M|1794598584.009819|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!@(*.@(ks|jks|jceks|p12|pfx|bks|ubr|gkr|cer|crt|cert|p7b|pkipath|pem|p10|csr|crl)|cacerts)' cmd
++++M|1794598584.009827|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009834|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009842|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!@(*.@(ks|jks|jceks|p12|pfx|bks|ubr|gkr|cer|crt|cert|p7b|pkipath|pem|p10|csr|crl)|cacerts)'
++++M|1794598584.009860|/usr/share/bash-completion/bash_completion|2184|3|_install_xspec '!*.@(mp[234c]|og[ag]|@(fl|a)ac|m4[abp]|spx|tta|w?(a)v|wma|aif?(f)|asf|ape)' kid3 kid3-qt
++++M|1794598584.009870|/usr/share/bash-completion/bash_completion|2121|4|local 'xspec=!*.@(mp[234c]|og[ag]|@(fl|a)ac|m4[abp]|spx|tta|w?(a)v|wma|aif?(f)|asf|ape)' cmd
++++M|1794598584.009878|/usr/share/bash-completion/bash_completion|2122|4|shift
++++M|1794598584.009885|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009893|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mp[234c]|og[ag]|@(fl|a)ac|m4[abp]|spx|tta|w?(a)v|wma|aif?(f)|asf|ape)'
++++M|1794598584.009900|/usr/share/bash-completion/bash_completion|2123|4|for cmd in "$@"
++++M|1794598584.009907|/usr/share/bash-completion/bash_completion|2124|4|_xspecs[$cmd]='!*.@(mp[234c]|og[ag]|@(fl|a)ac|m4[abp]|spx|tta|w?(a)v|wma|aif?(f)|asf|ape)'
++++M|1794598584.009919|/usr/share/bash-completion/bash_completion|2185|3|unset -f _install_xspec
++++M|1794598584.009948|/usr/share/bash-completion/bash_completion|2197|3|complete -F _minimal ''
++++M|1794598584.010061|/usr/share/bash-completion/bash_completion|2253|3|complete -D -F _completion_loader
++++M|1794598584.010096|/usr/share/bash-completion/bash_completion|2269|3|compat_dir=/etc/bash_completion.d
++++M|1794598584.010113|/usr/share/bash-completion/bash_completion|2270|3|[[ -d /etc/bash_completion.d ]]
++++M|1794598584.010124|/usr/share/bash-completion/bash_completion|2270|3|[[ -r /etc/bash_completion.d ]]
++++M|1794598584.010131|/usr/share/bash-completion/bash_completion|2270|3|[[ -x /etc/bash_completion.d ]]
++++M|1794598584.010166|/usr/share/bash-completion/bash_completion|2271|3|for i in "$compat_dir"/*
++++M|1794598584.010187|/usr/share/bash-completion/bash_completion|2273|3|[[ git-prompt != @(@(#*#|*@(~|.@(bak|orig|rej|swp|dpkg*|rpm@(orig|new|save))))|Makefile*|@(acroread.sh)) ]]
++++M|1794598584.010198|/usr/share/bash-completion/bash_completion|2273|3|[[ -f /etc/bash_completion.d/git-prompt ]]
++++M|1794598584.010208|/usr/share/bash-completion/bash_completion|2273|3|[[ -r /etc/bash_completion.d/git-prompt ]]
++++M|1794598584.010217|/usr/share/bash-completion/bash_completion|2273|3|. /etc/bash_completion.d/git-prompt
+++++M|1794598584.010242|/etc/bash_completion.d/git-prompt|9|4|[[ -e /usr/lib/git-core/git-sh-prompt ]]
+++++M|1794598584.010254|/etc/bash_completion.d/git-prompt|10|4|. /usr/lib/git-core/git-sh-prompt
++++++M|1794598584.010343|/usr/lib/git-core/git-sh-prompt|111|5|__git_printf_supports_v=
++++++M|1794598584.010363|/usr/lib/git-core/git-sh-prompt|112|5|printf -v __git_printf_supports_v -- %s yes
++++M|1794598584.011085|/usr/share/bash-completion/bash_completion|2276|3|unset compat_dir i _blacklist_glob
++++M|1794598584.011105|/usr/share/bash-completion/bash_completion|2279|3|user_completion=/home/u/.bash_completion
++++M|1794598584.011121|/usr/share/bash-completion/bash_completion|2280|3|[[ /usr/share/bash-completion/bash_completion != \/\t\m\p\/\b\h\/\.\b\a\s\h\_\c\o\m\p\l\e\t\i\o\n ]]
++++M|1794598584.011127|/usr/share/bash-completion/bash_completion|2280|3|[[ -r /home/u/.bash_completion ]]
++++M|1794598584.011144|/usr/share/bash-completion/bash_completion|2282|3|unset user_completion
++++M|1794598584.011153|/usr/share/bash-completion/bash_completion|2284|3|unset -f have
++++M|1794598584.011163|/usr/share/bash-completion/bash_completion|2285|3|unset have
++++M|1794598584.011172|/usr/share/bash-completion/bash_completion|2287|3|set +v
++++M|1794598584.011184|/usr/share/bash-completion/bash_completion|2288|3|unset BASH_COMPLETION_ORIGINAL_V_VALUE
++M|1794598584.011219|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.011228|/etc/profile|22|1|'[' -r /etc/profile.d/cedilla-portuguese.sh ']'
++M|1794598584.011239|/etc/profile|23|1|. /etc/profile.d/cedilla-portuguese.sh
+++M|1794598584.011283|/etc/profile.d/cedilla-portuguese.sh|22|2|'[' '' = pt -a C.UTF-8 '!=' pt ']'
++M|1794598584.011295|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.011302|/etc/profile|22|1|'[' -r /etc/profile.d/debuginfod.sh ']'
++M|1794598584.011313|/etc/profile|23|1|. /etc/profile.d/debuginfod.sh
+++M|1794598584.011344|/etc/profile.d/debuginfod.sh|7|2|'[' -z '' ']'
+++M|1794598584.011352|/etc/profile.d/debuginfod.sh|8|2|prefix=/usr
++++M|1794598584.012101|/etc/profile.d/debuginfod.sh|9|2|cat /dev/null /etc/debuginfod/elfutils.urls
++++M|1794598584.012192|/etc/profile.d/debuginfod.sh|9|2|tr '\n' ' '
+++M|1794598584.013095|/etc/profile.d/debuginfod.sh|9|2|DEBUGINFOD_URLS='https://debuginfod.ubuntu.com '
+++M|1794598584.013164|/etc/profile.d/debuginfod.sh|10|2|'[' -n 'https://debuginfod.ubuntu.com ' ']'
+++M|1794598584.013212|/etc/profile.d/debuginfod.sh|10|2|export DEBUGINFOD_URLS
+++M|1794598584.013239|/etc/profile.d/debuginfod.sh|11|2|unset prefix
++M|1794598584.013274|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.013284|/etc/profile|22|1|'[' -r /etc/profile.d/dotnet.sh ']'
++M|1794598584.013296|/etc/profile|23|1|. /etc/profile.d/dotnet.sh
+++M|1794598584.013321|/etc/profile.d/dotnet.sh|2|2|DOTNET_TOOLS_PATH=/home/u/.dotnet/tools
+++M|1794598584.013335|/etc/profile.d/dotnet.sh|3|2|case "$PATH" in
+++M|1794598584.013379|/etc/profile.d/dotnet.sh|5|2|PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/user/.local/bin:/home/user/bin:/home/user/.grok/bin:/home/user/.cargo/bin:/home/user/.npm-global/bin:/home/user/.bun/bin:/home/user/.volta/bin:/home/user/.local/share/mise/shims:/home/user/.nvm/current/bin:/home/user/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:/home/linuxbrew/.linuxbrew/bin:/home/u/.dotnet/tools
+++M|1794598584.013402|/etc/profile.d/dotnet.sh|10|2|'[' -z '' ']'
+++M|1794598584.013419|/etc/profile.d/dotnet.sh|10|2|export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/home/u/.cache/dotnet_bundle_extract
+++M|1794598584.013425|/etc/profile.d/dotnet.sh|10|2|DOTNET_BUNDLE_EXTRACT_BASE_DIR=/home/u/.cache/dotnet_bundle_extract
++M|1794598584.013440|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.013449|/etc/profile|22|1|'[' -r /etc/profile.d/flatpak.sh ']'
++M|1794598584.013458|/etc/profile|23|1|. /etc/profile.d/flatpak.sh
+++M|1794598584.013510|/etc/profile.d/flatpak.sh|1|2|command -v flatpak
++++M|1794598584.014192|/etc/profile.d/flatpak.sh|22|2|unset G_MESSAGES_DEBUG
++++M|1794598584.014269|/etc/profile.d/flatpak.sh|23|2|echo /home/u/.local/share/flatpak
++++M|1794598584.014287|/etc/profile.d/flatpak.sh|24|2|GIO_USE_VFS=local
++++M|1794598584.014293|/etc/profile.d/flatpak.sh|24|2|flatpak --installations
++++M|1794598584.014336|/etc/profile.d/flatpak.sh|24|2|new_dirs=
++++M|1794598584.014395|/etc/profile.d/flatpak.sh|25|2|read -r install_path
++++M|1794598584.014427|/etc/profile.d/flatpak.sh|26|2|share_path=/home/u/.local/share/flatpak/exports/share
++++M|1794598584.014436|/etc/profile.d/flatpak.sh|27|2|case ":$XDG_DATA_DIRS:" in
++++M|1794598584.014451|/etc/profile.d/flatpak.sh|35|2|new_dirs=/home/u/.local/share/flatpak/exports/share
++++M|1794598584.014458|/etc/profile.d/flatpak.sh|25|2|read -r install_path
++++M|1794598584.021830|/etc/profile.d/flatpak.sh|26|2|share_path=/var/lib/flatpak/exports/share
++++M|1794598584.021857|/etc/profile.d/flatpak.sh|27|2|case ":$XDG_DATA_DIRS:" in
++++M|1794598584.021883|/etc/profile.d/flatpak.sh|35|2|new_dirs=/home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share
++++M|1794598584.021892|/etc/profile.d/flatpak.sh|25|2|read -r install_path
++++M|1794598584.022391|/etc/profile.d/flatpak.sh|39|2|echo /home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share
+++M|1794598584.022900|/etc/profile.d/flatpak.sh|22|2|new_dirs=/home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share
+++M|1794598584.022959|/etc/profile.d/flatpak.sh|24|2|export XDG_DATA_DIRS
+++M|1794598584.022983|/etc/profile.d/flatpak.sh|25|2|XDG_DATA_DIRS=/home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop
++M|1794598584.023005|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.023014|/etc/profile|22|1|'[' -r /etc/profile.d/gnome-session_gnomerc.sh ']'
++M|1794598584.023027|/etc/profile|23|1|. /etc/profile.d/gnome-session_gnomerc.sh
+++M|1794598584.023084|/etc/profile.d/gnome-session_gnomerc.sh|7|2|'[' '' = wayland ']'
+++M|1794598584.023109|/etc/profile.d/gnome-session_gnomerc.sh|30|2|'[' -z /home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop ']'
+++M|1794598584.023207|/etc/profile.d/gnome-session_gnomerc.sh|32|2|'[' -n /home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop ']'
+++M|1794598584.023220|/etc/profile.d/gnome-session_gnomerc.sh|33|2|XDG_DATA_DIRS=/usr/share/gnome:/home/u/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop
+++M|1794598584.023230|/etc/profile.d/gnome-session_gnomerc.sh|35|2|export XDG_DATA_DIRS
++M|1794598584.023239|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.023246|/etc/profile|22|1|'[' -r /etc/profile.d/im-config_wayland.sh ']'
++M|1794598584.023255|/etc/profile|23|1|. /etc/profile.d/im-config_wayland.sh
+++M|1794598584.023274|/etc/profile.d/im-config_wayland.sh|5|2|'[' '' '!=' wayland ']'
+++M|1794598584.023282|/etc/profile.d/im-config_wayland.sh|6|2|return
++M|1794598584.023291|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.023298|/etc/profile|22|1|'[' -r /etc/profile.d/vte-2.91.sh ']'
++M|1794598584.023307|/etc/profile|23|1|. /etc/profile.d/vte-2.91.sh
+++M|1794598584.023345|/etc/profile.d/vte-2.91.sh|17|2|'[' -n '5.2.21(1)-release' -o -n '' ']'
+++M|1794598584.023360|/etc/profile.d/vte-2.91.sh|20|2|[[ hixBHc == *i* ]]
+++M|1794598584.023374|/etc/profile.d/vte-2.91.sh|23|2|'[' 0 -ge 3405 ']'
+++M|1794598584.023382|/etc/profile.d/vte-2.91.sh|23|2|return 0
++M|1794598584.023390|/etc/profile|21|1|for i in /etc/profile.d/*.sh
++M|1794598584.023398|/etc/profile|22|1|'[' -r /etc/profile.d/xdg_dirs_desktop_session.sh ']'
++M|1794598584.023414|/etc/profile|23|1|. /etc/profile.d/xdg_dirs_desktop_session.sh
+++M|1794598584.023429|/etc/profile.d/xdg_dirs_desktop_session.sh|3|2|DEFAULT_XDG_CONFIG_DIRS=/etc/xdg
+++M|1794598584.023439|/etc/profile.d/xdg_dirs_desktop_session.sh|4|2|DEFAULT_XDG_DATA_DIRS=/usr/local/share/:/usr/share/
+++M|1794598584.023473|/etc/profile.d/xdg_dirs_desktop_session.sh|6|2|'[' -n '' ']'
++M|1794598584.023485|/etc/profile|26|1|unset i
++M|1794598584.023509|/home/u/.bash_profile|1|1|export BAR=1
++M|1794598584.023515|/home/u/.bash_profile|1|1|BAR=1
++M|1794598584.023524|/home/u/.bash_profile|2|1|. /home/u/.bashrc
+++M|1794598584.023537|/home/u/.bashrc|1|2|export FOO=1
+++M|1794598584.023542|/home/u/.bashrc|1|2|FOO=1
+++M|1794598584.023553|/home/u/.bashrc|2|2|'[' -s /home/u/nvm.sh ']'
+++M|1794598584.023564|/home/u/.bashrc|2|2|. /home/u/nvm.sh
++++M|1794598584.023576|/home/u/nvm.sh|1|3|nvm_a=1
++++M|1794598584.023585|/home/u/nvm.sh|2|3|sleep 0.3
++++M|1794598584.328361|/home/u/nvm.sh|3|3|nvm_b=2
++++M|1794598584.329184|/home/u/.bashrc|3|2|printf 'x=1\nsleep 0.2\ny=2\n'
+++M|1794598584.329764|/home/u/.bashrc|3|2|eval 'x=1
+sleep 0.2
+y=2'
++++M|1794598584.329822|/home/u/.bashrc|3|2|x=1
++++M|1794598584.329856|/home/u/.bashrc|4|2|sleep 0.2
++++M|1794598584.535103|/home/u/.bashrc|5|2|y=2
+++M|1794598584.535478|/home/u/.bashrc|7|2|slowf
+++M|1794598584.535554|/home/u/.bashrc|5|3|sleep 0.1
+++M|1794598584.644190|/home/u/.bashrc|8|2|echo hello
++M|1794598584.644285||1|0|exit
+logout
