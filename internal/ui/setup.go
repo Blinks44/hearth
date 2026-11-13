@@ -30,6 +30,7 @@ type setupState struct {
 	// tab is the stepper's segment, which goes back to the choice; shown
 	// the step it showed, which tells the user's click from a new step.
 	tab, shown int
+	back       bool // the last step change went back, which the step comes in from
 	// choice is what the user switched on or off, by the catalog's ID;
 	// the others are as setupOffered says.
 	choice map[string]bool
@@ -286,6 +287,9 @@ func (a *App) setupView(c *ui.Context) {
 	if s.tab != s.shown && s.tab < s.step && s.step <= 1 {
 		s.step, s.diff = s.tab, ""
 	}
+	if s.step != s.shown {
+		s.back = s.step < s.shown
+	}
 	s.tab, s.shown = s.step, s.step
 	// Out of the wizard the choice is the catalog with a filter; the
 	// plan, the installation and the check are the wizard's.
@@ -299,7 +303,7 @@ func (a *App) setupView(c *ui.Context) {
 		}
 		a.headerWith(c, locales.InstallTitle(), subtitle, headerExtras{after: func() { a.setupButtons(c) }})
 		ui.Scroll(c).Grow(1).Children(func() {
-			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
+			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).ChildExit(ui.Motion{X: -stepShift(s.back)}).Children(func() {
 				if catalogView {
 					have, total := a.setupCounts()
 					ui.Row(c).Children(func() {
@@ -328,18 +332,21 @@ func (a *App) setupView(c *ui.Context) {
 						{"3 " + locales.SetupSegInstall(), ""}, {"4 " + locales.SetupSegCheck(), ""},
 					})
 				})
-				switch s.step {
-				case 0:
-					a.setupChoiceView(c)
-				case 1:
-					a.setupPlanView(c)
-				case 2:
-					a.operationProgress(c, s.op)
-					a.setupInstallView(c)
-				case 3:
-					a.operationProgress(c, s.op)
-					a.setupCheckView(c)
+				if s.step >= 2 {
+					a.operationProgress(c.Key("setup-progress"), s.op)
 				}
+				ui.Column(c.Key(s.step)).Gap(18).Transition(stepMotion(s.back)).Children(func() {
+					switch s.step {
+					case 0:
+						a.setupChoiceView(c)
+					case 1:
+						a.setupPlanView(c)
+					case 2:
+						a.setupInstallView(c)
+					case 3:
+						a.setupCheckView(c)
+					}
+				})
 			})
 		})
 	})
@@ -793,7 +800,7 @@ func (a *App) setupPartRow(c *ui.Context, i int, part ops.SetupPart) {
 		})
 		if installing {
 			label, bg, fg := stepTag(c, status)
-			aiTag(c, label, bg, fg)
+			aiTag(c, label, bg, fg).Transition(colorFade)
 			return
 		}
 		if admin {

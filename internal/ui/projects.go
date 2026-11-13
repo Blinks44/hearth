@@ -159,7 +159,8 @@ func (a *App) projectRows(c *ui.Context) {
 			dir := r.p.Dir
 			e := ui.ButtonBase(c.Key("project:"+dir)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(dir)).
-				ContextMenu(func(m *ui.Menu) { a.projectItems(m, dir, true) })
+				ContextMenu(func(m *ui.Menu) { a.projectItems(m, dir, true) }).
+				Transition(colorFade)
 			if e.Hovered() {
 				e.Background(pal.Subtle)
 			}

@@ -137,7 +137,7 @@ func stateCard(c *ui.Context, dot ui.Color, label, value, caption string) {
 			ui.Box(c).Size(7, 7).Radius(3.5).Background(dot)
 			ui.Text(c, label).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 		})
-		ui.Text(c, value).Font(FontMono).FontSize(14).SingleLine()
+		ui.Text(c, value).Font(FontMono).FontSize(14).SingleLine().ContentTransition(ui.ContentTransition{Numeric: true})
 		ui.Text(c, caption).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 	})
 }

@@ -182,7 +182,7 @@ func heroChip(c *ui.Context, dot, bg, text ui.Color, label string) {
 func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string, open func()) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).MinWidth(158).Gap(4).Padding(14, 16).Label(label).OnClick(open)
+	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).MinWidth(158).Gap(4).Padding(14, 16).Label(label).OnClick(open).Transition(colorFade)
 	if narrow(c) {
 		e.Grow(1).Padding(10, 14).Gap(2)
 	}
@@ -265,8 +265,8 @@ func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
 		}
 		ui.Grid(c).Columns(3).Gap(10).Children(func() {
 			if a.firstScan() {
-				for range 3 {
-					skeletonCard(c)
+				for i := range 3 {
+					skeletonCard(c.Key(i))
 				}
 			}
 			for _, ts := range tools {
@@ -300,7 +300,7 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 		}
 	}
 	e := ui.ButtonBase(c.Key("tool:" + ts.Tool)).Column().AlignItems(ui.Stretch).Gap(12).Padding(14).Radius(12).
-		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Label(name)
+		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Label(name).Transition(cardEnter)
 	if e.Hovered() {
 		e.Background(pal.Subtle)
 	}
@@ -386,7 +386,7 @@ func skeletonCard(c *ui.Context) {
 	bar := func(w, h float32) {
 		ui.Box(c).Width(w).Height(h).Radius(h / 2).Background(pal.Muted)
 	}
-	ui.Column(c).Gap(12).Padding(14).Radius(12).Height(122).
+	ui.Column(c).Transition(skeletonExit).Gap(12).Padding(14).Radius(12).Height(122).
 		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			ui.Box(c).Size(28, 28).Radius(7).Background(pal.Muted)
@@ -460,7 +460,7 @@ func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []proj
 	t := c.Theme()
 	pal := Colors(t)
 	e := ui.ButtonBase(c.Key("overview-project:"+p.Dir)).Gap(8).Padding(9, 14).AlignItems(ui.Center).
-		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(p.Dir))
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(p.Dir)).Transition(colorFade)
 	if e.Hovered() {
 		e.Background(pal.Subtle)
 	}

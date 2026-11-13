@@ -76,6 +76,9 @@ func TestSetupNext(t *testing.T) {
 	if built != 1 || a.setup.step != 1 || len(a.setup.parts) == 0 {
 		t.Fatalf("built %d, step %d, parts %+v", built, a.setup.step, a.setup.parts)
 	}
+	if a.setup.back {
+		t.Error("the plan comes in as a step back")
+	}
 	hasTexts(t, tt, "Step 2 of 4 · plan", "Installation order")
 	if err := tt.Click("Back"); err != nil {
 		t.Fatal(err)
@@ -83,6 +86,9 @@ func TestSetupNext(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.setup.step != 0 {
 		t.Error("Back stays on the plan")
+	}
+	if !a.setup.back {
+		t.Error("the choice comes back in as a step forward")
 	}
 }
 
@@ -244,6 +250,7 @@ func TestSetupCheckStep(t *testing.T) {
 	}
 	(*update)(ops.State{Phase: ops.Succeeded, Current: 6, Steps: done})
 	tt.Frame()
+	tt.Advance(time.Second) // the step comes in once the installation's has gone
 	if !a.Scanning || a.setup.step != 3 {
 		t.Fatalf("scanning %v, step %d", a.Scanning, a.setup.step)
 	}

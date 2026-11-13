@@ -270,8 +270,8 @@ func inScope(scope int, project string) bool {
 }
 
 // aiTag is a short label on a soft background.
-func aiTag(c *ui.Context, label string, bg, fg ui.Color) {
-	ui.Text(c, label).FontSize(10.5).FontWeight(500).TextColor(fg).Padding(1, 6).Radius(5).Background(bg).SingleLine()
+func aiTag(c *ui.Context, label string, bg, fg ui.Color) ui.Element {
+	return ui.Text(c, label).FontSize(10.5).FontWeight(500).TextColor(fg).Padding(1, 6).Radius(5).Background(bg).SingleLine()
 }
 
 // detailSection is the title of a section of an AI page's details.
@@ -380,7 +380,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 				where = in.Path
 			}
 			e := ui.ButtonBase(c.Key("agent:"+ag.ID)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(agentTitle(ag.ID))
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(agentTitle(ag.ID)).Transition(colorFade)
 			if e.Hovered() {
 				e.Background(pal.Subtle)
 			}
@@ -707,7 +707,7 @@ func (a *App) overviewAgents(c *ui.Context) {
 		for _, ag := range found {
 			skills, servers := a.agentCounts(ag.ID)
 			e := ui.ButtonBase(c.Key("overview-agent:"+ag.ID)).Gap(10).Padding(10, 14).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(agentTitle(ag.ID))
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(agentTitle(ag.ID)).Transition(colorFade)
 			if e.Hovered() {
 				e.Background(pal.Subtle)
 			}

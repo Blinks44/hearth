@@ -110,7 +110,7 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 		ui.Column(c).Children(func() {
 			ui.Column(c).Gap(4).Padding(20, 20, 14, 20).Children(func() {
 				ui.Text(c, op.plan.Title).FontSize(18).FontWeight(600)
-				ui.Text(c, operationCaption(op)).FontSize(12).TextColor(t.TextMuted)
+				ui.Text(c, operationCaption(op)).FontSize(12).TextColor(t.TextMuted).ContentTransition(ui.ContentTransition{})
 				if op.started {
 					a.operationProgress(c, op).Margin(10, 0, 0, 0)
 				}
@@ -188,7 +188,7 @@ func (a *App) operationProgress(c *ui.Context, op *operation) ui.Element {
 	// share its width.
 	value = min(value, 1)
 	return ui.Row(c).Height(4).AlignItems(ui.Stretch).Radius(2).Clip().Background(pal.Muted).Children(func() {
-		ui.Box(c).Grow(float32(value)).Background(color)
+		ui.Box(c).Grow(float32(value)).Background(color).Transition(barMotion)
 		ui.Box(c).Grow(float32(1 - value))
 	})
 }
@@ -349,7 +349,7 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				}
 				if s.Current >= 0 {
 					label, bg, fg := stepTag(c, status)
-					aiTag(c, label, bg, fg)
+					aiTag(c, label, bg, fg).Transition(colorFade)
 				}
 			})
 		}

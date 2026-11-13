@@ -175,7 +175,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 							if len(rows) == 0 {
 								continue
 							}
-							ui.Row(c.Key(cleanupGroupTitle(g))).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+							ui.Row(c.Key(cleanupGroupTitle(g))).Transition(rowMotion).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 								a.groupCheckbox(c, cleanupGroupTitle(g), rows)
 								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
@@ -298,7 +298,7 @@ func (a *App) groupCheckbox(c *ui.Context, title string, rows []cleanup.Candidat
 func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 	pal := Colors(c.Theme())
 	key := candidateKey(cand)
-	ui.Row(c.Key(key)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	ui.Row(c.Key(key)).Transition(rowMotion).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		on := a.chosen(cand)
 		title := a.candidateTitle(cand)
 		if ui.Checkbox(c.Key("check"), &on, "").Label(title).Disabled(!ops.Cleans(cand, a.Snapshot)).Changed() {
