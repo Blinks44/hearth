@@ -54,6 +54,8 @@ func TestNodeModules(t *testing.T) {
 	project(".vscode/extensions/ms-python.python-2024.0.0")
 	project("Library/Application Support/Code/User/globalStorage/x")
 	project("AppData/Roaming/npm/node_modules/pnpm")
+	project("Music/Music Library/x")
+	project("Pictures/Photos Library.photoslibrary/x")
 	project("go/pkg/mod/github.com/x/y@v1.0.0/web")
 	project("miniconda3/share/jupyter/lab/staging")
 	project("Applications/Tool.app/Contents/Resources/app")

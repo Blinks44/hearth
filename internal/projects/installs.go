@@ -15,9 +15,11 @@ var nodeFiles = []string{"package.json", "package-lock.json", "npm-shrinkwrap.js
 
 // homeSkipped are the folders under home that hold apps' and tools' own
 // files, never the user's projects: macOS's Library, Windows' AppData,
-// snap's data, Scoop's apps, Go's module cache and conda's installs.
+// snap's data, Scoop's apps, Go's module cache and conda's installs. The
+// media folders hold no projects either, and on macOS reading Music and
+// Pictures asks the user for access to Apple Music and Photos.
 var homeSkipped = []string{"Library", "AppData", "snap", "scoop", filepath.Join("go", "pkg"),
-	"miniconda3", "anaconda3", "miniforge3", "mambaforge"}
+	"miniconda3", "anaconda3", "miniforge3", "mambaforge", "Music", "Pictures", "Movies", "Videos"}
 
 // deviceOf is device, which tests replace to put a folder on a mount.
 var deviceOf = device
