@@ -24,6 +24,8 @@ func setupApp(t *testing.T) *App {
 		{Tool: "node", Installations: []inventory.Installation{{Tool: "node", Version: "24.11.0", Path: "/usr/local/bin/node", OnPath: 1}}},
 		{Tool: "packages"},
 	}, Agents: []inventory.Agent{{ID: "claude", Installations: []inventory.Installation{{Tool: "claude", Version: "2.0.1", Path: home + "/.local/bin/claude"}}}}}
+	// As the Overview's offer opens it.
+	a.setup.wizard = true
 	a.router.Push(setupPage)
 	return a
 }
@@ -35,8 +37,8 @@ func TestSetupChoice(t *testing.T) {
 	a := setupApp(t)
 	tt := newTester(a)
 	screenshot(t, tt, "setup-choice")
-	hasTexts(t, tt, "New computer", "Step 1 of 4 · choice", "Let's set up this computer",
-		"Languages and runtimes", "installed: 1", "Node.js LTS", "already there", "Python", "via mise", "via rustup, as Rust recommends",
+	hasTexts(t, tt, "Install", "Step 1 of 4 · choice", "Let's set up this computer",
+		"Languages and runtimes", "installed: 1 of 9", "Node.js LTS", "installed · 24.11.0", "/usr/local/bin/node", "Python", "via mise", "via rustup, as Rust recommends",
 		"Tools", "pnpm", "Docker engine", "Colima is open source", "Git", "via Xcode Command Line Tools",
 		"Base · installs first", "Homebrew", "via the official installer", "required", "mise", "via Homebrew",
 		"AI agents", "Claude Code", "Codex",

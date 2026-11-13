@@ -189,7 +189,10 @@ func (a *App) moveMenu(m *ui.Menu, in inventory.Installation) {
 // the one recommended, once the scan says what there is; nothing when
 // Hearth cannot.
 func (a *App) installHeader(c *ui.Context, tool, version string) {
-	st, _ := a.toolState(tool)
+	st, found := a.toolState(tool)
+	if !found && a.canInstallTool(tool) {
+		return
+	}
 	st.Tool = tool
 	manager := cmp.Or(a.installManager(st), "mise")
 	if a.Snapshot == nil || version == "" || manager == "mise" && a.installManager(st) == "" && a.BuildPlan == nil {

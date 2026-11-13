@@ -17,8 +17,9 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-// setupPage is the new computer wizard's path.
-const setupPage = "/setup"
+// setupPage is the Install page's path: the catalog to install from,
+// which is the new computer wizard on a computer with nothing set up.
+const setupPage = "/install"
 
 // goos is the system the wizard sets up; tests change it.
 var goos = runtime.GOOS
@@ -33,6 +34,13 @@ type setupState struct {
 	// the others are as setupOffered says.
 	choice map[string]bool
 	engine string // the Docker engine's package chosen; "" for the first
+	// filter is the choice's segment: all, not installed, installed;
+	// more are the groups whose every tool shows.
+	filter int
+	more   map[catalog.Group]bool
+	// wizard keeps the page the wizard once it opened as one, as the
+	// Overview's offer to set the computer up does.
+	wizard bool
 	// plan and parts are the plan made of the choice for step 2;
 	// building reports it is being made.
 	plan     ops.Plan
@@ -43,13 +51,25 @@ type setupState struct {
 	op *operation
 }
 
-// setupOffered are the tools switched on until the user says otherwise.
+// setupOffered are the tools the wizard switches on until the user says
+// otherwise.
 var setupOffered = []string{"node", "python", "pnpm", "git", "docker", "claude"}
+
+// setupFeatured is how many tools of a group show before "N more".
+const setupFeatured = 4
+
+// setupWizard reports that the Install page is the new computer wizard:
+// on a computer with nothing set up, it offers a set to start with and
+// installs the base with it.
+func (a *App) setupWizard() bool { return a.setup.wizard || a.bareComputer() }
 
 // setupChosen reports that the tool id is switched on.
 func (a *App) setupChosen(id string) bool {
 	if on, ok := a.setup.choice[id]; ok {
 		return on
+	}
+	if !a.setupWizard() {
+		return false
 	}
 	// An engine with terms to read, as Docker Desktop's on Windows, waits
 	// for the user to choose it.
@@ -71,6 +91,14 @@ func (a *App) setupHave(id string) bool {
 	case "mise":
 		m, ok := a.miseManager()
 		return ok && (m.Activated || m.Shims)
+	case "uv":
+		st, _ := a.Snapshot.Tool("python")
+		return slices.ContainsFunc(st.Managers, func(m inventory.Manager) bool { return m.Name == "uv" && m.Version != "" })
+	}
+	// Commands a language's scan finds beside it.
+	if lang, command, ok := languageCommand(id); ok {
+		st, _ := a.Snapshot.Tool(lang)
+		return st.Vars[command] != ""
 	}
 	e, _ := catalog.Find(id)
 	if e.Group == catalog.Agent {
@@ -89,6 +117,37 @@ func (a *App) setupHave(id string) bool {
 		})
 	}
 	return true
+}
+
+// languageCommand is the language whose scan finds the tool id, and the
+// command it finds; false for a tool with a scan of its own.
+func languageCommand(id string) (lang, command string, ok bool) {
+	switch id {
+	case "pipx":
+		return "python", "pipx", true
+	case "bundler":
+		return "ruby", "bundle", true
+	case "maven":
+		return "java", "mvn", true
+	case "gradle":
+		return "java", "gradle", true
+	}
+	return "", "", false
+}
+
+// setupSystemCopy is the system's own copy of the language id when that
+// is all there is: setupHave does not count it, and Hearth installs one to
+// work with beside it.
+func (a *App) setupSystemCopy(id string) (inventory.Installation, bool) {
+	if a.setupHave(id) {
+		return inventory.Installation{}, false
+	}
+	st, _ := a.Snapshot.Tool(id)
+	i := slices.IndexFunc(st.Installations, func(in inventory.Installation) bool { return !in.Stub && in.Source.Kind == inventory.KindSystem })
+	if i < 0 {
+		return inventory.Installation{}, false
+	}
+	return st.Installations[i], true
 }
 
 // systemManager reports that manager is the system's package manager,
@@ -128,8 +187,22 @@ func (a *App) packageManagers() []inventory.PackageManager {
 	return st.PackageManagers
 }
 
-// setupInput is what the wizard installs, as chosen: the base always.
+// setupInput is what the page installs, as chosen: the wizard's the base
+// always.
 func (a *App) setupInput() ops.Setup {
+	s := a.setupHere()
+	wizard := a.setupWizard()
+	for _, e := range a.setupEntries() {
+		if wizard && e.Group == catalog.Base || a.setupChosen(e.ID) {
+			s.Tools = append(s.Tools, e.ID)
+		}
+	}
+	return s
+}
+
+// setupHere is a setup of this computer, as the last scan found it,
+// that installs nothing yet.
+func (a *App) setupHere() ops.Setup {
 	s := ops.Setup{GOOS: goos, Managers: a.packageManagers(), Engine: a.setup.engine, Have: map[string]bool{}, Title: setupTitle}
 	// Rust on Windows needs a C++ compiler, which is not in the catalog.
 	if a.version("cpp") != "" {
@@ -138,9 +211,6 @@ func (a *App) setupInput() ops.Setup {
 	for _, e := range a.setupEntries() {
 		if a.setupHave(e.ID) {
 			s.Have[e.ID] = true
-		}
-		if e.Group == catalog.Base || a.setupChosen(e.ID) {
-			s.Tools = append(s.Tools, e.ID)
 		}
 	}
 	return s
@@ -210,13 +280,31 @@ func (a *App) setupView(c *ui.Context) {
 		s.step, s.diff = s.tab, ""
 	}
 	s.tab, s.shown = s.step, s.step
+	// Out of the wizard the choice is the catalog with a filter; the
+	// plan, the installation and the check are the wizard's.
+	catalogView := s.step == 0 && !a.setupWizard()
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
 		subtitle := []string{locales.SetupStepChoice(), locales.SetupStepPlan(), locales.SetupStepInstall(), locales.SetupStepCheck()}[s.step]
-		a.headerWith(c, locales.SetupTitle(), subtitle, headerExtras{after: func() { a.setupButtons(c) }})
+		if catalogView {
+			subtitle = locales.InstallSubtitle()
+		}
+		a.headerWith(c, locales.InstallTitle(), subtitle, headerExtras{after: func() { a.setupButtons(c) }})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
+				if catalogView {
+					have, total := a.setupCounts()
+					ui.Row(c).Children(func() {
+						segments(c, "install-filter", &s.filter, []segment{
+							{locales.InstallFilterAll(), strconv.Itoa(total)},
+							{locales.InstallFilterMissing(), strconv.Itoa(total - have)},
+							{locales.InstallFilterHave(), strconv.Itoa(have)},
+						})
+					})
+					a.setupChoiceView(c)
+					return
+				}
 				ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
 					ui.Box(c).Size(48, 48).Shrink(0).Radius(12).Background(pal.AccentSoft).Center().Children(func() {
 						ui.Icon(c, Icon("sparkles")).Size(26, 26).TextColor(Accent)
@@ -299,9 +387,14 @@ func (a *App) setupButtons(c *ui.Context) {
 		if a.Shell != nil && a.JournalPath != "" {
 			ui.Button(c.Key("setup-journal"), locales.OpOpenJournal()).OnClick(func() { a.openFile(c, a.JournalPath) })
 		}
+		// The wizard ends on the Overview; the page shows the catalog
+		// again, with what installed.
 		ui.PrimaryButton(c.Key("setup-done"), locales.OpDone()).OnClick(func() {
+			wizard := a.setupWizard()
 			a.setup = setupState{}
-			a.router.Push(overview.path)
+			if wizard {
+				a.router.Push(overview.path)
+			}
 		})
 	case s.step == 2 && !s.op.state.Phase.Over():
 		// The operation's toast shows it away from the wizard.
@@ -320,8 +413,17 @@ func (a *App) setupButtons(c *ui.Context) {
 		ui.Button(c.Key("setup-back"), locales.SetupBack()).OnClick(func() { s.step, s.diff = 0, "" })
 		ui.PrimaryButton(c.Key("setup-install"), s.plan.Action).Disabled(a.op.running()).OnClick(a.setupInstall)
 	default:
-		ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
 		label := locales.SetupNext()
+		if a.setupWizard() {
+			ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
+		} else if chosen := a.setupChosenTools(); len(chosen) > 0 {
+			ui.Button(c.Key("setup-clear"), locales.InstallClear()).OnClick(func() {
+				for _, id := range chosen {
+					s.choice[id] = false
+				}
+			})
+			label = locales.SetupNextCount(len(chosen))
+		}
 		if s.building {
 			label = locales.SetupBuilding()
 		}
@@ -363,93 +465,200 @@ func (a *App) setupInstall() {
 }
 
 // setupChoiceView is step 1: the languages and tools to switch on beside
-// the base, which installs first, and the AI agents.
+// the base, which installs first, and the AI agents. Out of the wizard
+// the filter picks the tools there or missing.
 func (a *App) setupChoiceView(c *ui.Context) {
 	in := a.setupInput()
-	entries := a.setupEntries()
-	group := func(g catalog.Group) []catalog.Entry {
-		return slices.DeleteFunc(slices.Clone(entries), func(e catalog.Entry) bool { return e.Group != g })
+	wizard := a.setupWizard()
+	shown := 0
+	card := func(title string, g catalog.Group) {
+		all := a.setupOffers(in, g)
+		var rows []catalog.Entry
+		have := 0
+		for _, e := range all {
+			h := a.setupHave(e.ID)
+			if h {
+				have++
+			}
+			if wizard || a.setup.filter == 0 || (a.setup.filter == 2) == h {
+				rows = append(rows, e)
+			}
+		}
+		if len(rows) == 0 {
+			return
+		}
+		shown++
+		// The base's title is long for its narrow column.
+		aside := locales.SetupHaveOf(have, len(all))
+		if g == catalog.Base {
+			aside = ""
+		}
+		listCard(c, title, aside, func() {
+			var more []string
+			for _, e := range rows {
+				// The first of a group, what is there and what is chosen
+				// show; the rest wait behind "N more".
+				_, system := a.setupSystemCopy(e.ID)
+				if a.setup.more[g] || g == catalog.Base || slices.IndexFunc(all, func(x catalog.Entry) bool { return x.ID == e.ID }) < setupFeatured || a.setupHave(e.ID) || system || a.setupChosen(e.ID) {
+					a.setupRow(c, in, e)
+				} else {
+					more = append(more, setupTitle(e.ID))
+				}
+			}
+			if len(more) > 0 {
+				listRow(c, locales.SetupMore(len(more)), false, strings.Join(more, ", "), func() {
+					ui.ButtonBase(c.Key("setup-more:" + strconv.Itoa(int(g)))).Label(locales.SetupShowMore()).OnClick(func() {
+						if a.setup.more == nil {
+							a.setup.more = map[catalog.Group]bool{}
+						}
+						a.setup.more[g] = true
+					}).Children(func() {
+						ui.Text(c, locales.SetupShowMore()).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+					})
+				})
+			}
+		})
+	}
+	note := func() {
+		if wizard {
+			toolNote(c, locales.SetupChoiceNote(len(in.Parts())))
+			return
+		}
+		chosen := a.setupChosenTools()
+		if len(chosen) == 0 {
+			toolNote(c, locales.InstallNoteNone())
+			return
+		}
+		names := make([]string, len(chosen))
+		for i, id := range chosen {
+			names[i] = setupTitle(id)
+		}
+		toolNote(c, locales.InstallNote(len(chosen), strings.Join(names, ", ")))
 	}
 	columns(c, 12, func() {
-		languages := group(catalog.Language)
-		have := 0
-		for _, e := range languages {
+		card(locales.SetupLanguages(), catalog.Language)
+		card(locales.SetupTools(), catalog.Tool)
+		note()
+	}, func() {
+		card(locales.SetupBase(), catalog.Base)
+		card(locales.SetupAgents(), catalog.Agent)
+		if shown == 0 {
+			cardNote(c, locales.InstallNothingHere())
+		}
+	})
+}
+
+// setupOffers are the tools of group g the page offers here: those that
+// install here, and those there already.
+func (a *App) setupOffers(in ops.Setup, g catalog.Group) []catalog.Entry {
+	var out []catalog.Entry
+	for _, e := range a.setupEntries() {
+		if e.Group == g && (a.setupHave(e.ID) || slices.ContainsFunc(e.On(goos), in.Usable)) {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// setupCounts are how many tools the page offers here, and how many of
+// them are there.
+func (a *App) setupCounts() (have, total int) {
+	in := a.setupInput()
+	for _, g := range []catalog.Group{catalog.Base, catalog.Language, catalog.Tool, catalog.Agent} {
+		for _, e := range a.setupOffers(in, g) {
+			total++
 			if a.setupHave(e.ID) {
 				have++
 			}
 		}
-		aside := locales.SetupHaveNone()
-		if have > 0 {
-			aside = locales.SetupHaveCount(have)
+	}
+	return have, total
+}
+
+// setupChosenTools are the tools switched on that are not there, in the
+// catalog's order.
+func (a *App) setupChosenTools() []string {
+	var out []string
+	for _, e := range a.setupEntries() {
+		if a.setupChosen(e.ID) && !a.setupHave(e.ID) {
+			out = append(out, e.ID)
 		}
-		listCard(c, locales.SetupLanguages(), aside, func() {
-			for _, e := range languages {
-				a.setupRow(c, in, e)
-			}
-		})
-		listCard(c, locales.SetupTools(), "", func() {
-			for _, e := range group(catalog.Tool) {
-				a.setupRow(c, in, e)
-			}
-		})
-		toolNote(c, locales.SetupChoiceNote(len(in.Parts())))
-	}, func() {
-		listCard(c, locales.SetupBase(), "", func() {
-			for _, e := range group(catalog.Base) {
-				a.setupRow(c, in, e)
-			}
-		})
-		listCard(c, locales.SetupAgents(), "", func() {
-			for _, e := range group(catalog.Agent) {
-				a.setupRow(c, in, e)
-			}
-		})
-	})
+	}
+	return out
 }
 
 // setupRow is a tool of the choice: its name, how it installs, and its
-// switch; what is there already or the base says so instead.
+// switch; one there already says where it is from and its version, the
+// wizard's base that it is required.
 func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	var methods []catalog.Method
 	for _, m := range e.On(goos) {
 		if in.Usable(m) {
 			methods = append(methods, m)
 		}
 	}
-	if len(methods) == 0 {
+	have := a.setupHave(e.ID)
+	if len(methods) == 0 && !have {
 		return
 	}
-	m := methods[0]
-	if e.ID == "docker" {
-		for _, em := range methods {
-			if em.Package == a.setup.engine {
-				m = em
+	about, caption := catalog.About(e.ID), ""
+	var m catalog.Method
+	if len(methods) > 0 {
+		m = methods[0]
+		if e.ID == "docker" {
+			for _, em := range methods {
+				if em.Package == a.setup.engine {
+					m = em
+				}
+			}
+		}
+		caption = locales.SetupVia(managerTitle(m))
+		switch {
+		case e.ID == "docker" && m.Terms != "":
+			caption = locales.SetupEngineTerms(m.Engine)
+		case e.ID == "docker":
+			caption = locales.SetupEngineOpen(m.Engine)
+		case e.ID == "rust" && m.Manager == "installer":
+			caption = locales.SetupViaRustup()
+		}
+	}
+	version := ""
+	if in, ok := a.setupSystemCopy(e.ID); ok {
+		about = locales.SetupSystemCopy(in.Version)
+	}
+	if have {
+		// Where it is from says more than what it is for.
+		about, caption = "", ""
+		if found, r := a.setupResult(e.ID); r != checkMissing {
+			version = found.Version
+			caption = strings.TrimPrefix(sourceName(found.Source)+" · "+tilde(found.Path, a.Home), " · ")
+			if found.Source == (inventory.Source{}) {
+				caption = tilde(found.Path, a.Home)
 			}
 		}
 	}
-	caption := locales.SetupVia(managerTitle(m))
-	switch {
-	case e.ID == "docker" && m.Terms != "":
-		caption = locales.SetupEngineTerms(m.Engine)
-	case e.ID == "docker":
-		caption = locales.SetupEngineOpen(m.Engine)
-	case e.ID == "rust" && m.Manager == "installer":
-		caption = locales.SetupViaRustup()
-	}
-	have := a.setupHave(e.ID)
 	ui.Row(c.Key("setup:"+e.ID)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, setupTitle(e.ID)).FontSize(13).SingleLine()
 			// What it is for, to someone new to it, then how it installs.
-			ui.Text(c, catalog.About(e.ID)).FontSize(11.5).TextColor(c.Theme().TextMuted)
-			ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			if about != "" {
+				ui.Text(c, about).FontSize(11.5).TextColor(t.TextMuted)
+			}
+			if caption != "" {
+				clipped(c, caption).FontSize(11.5).TextColor(pal.TextFaint)
+			}
 		})
 		switch {
 		case have:
-			ui.Text(c, locales.SetupHave()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-		case e.Group == catalog.Base:
+			label := locales.InstalledPlain()
+			if version != "" {
+				label = locales.InstalledVersion(version)
+			}
+			chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, label)
+		case e.Group == catalog.Base && a.setupWizard():
 			ui.Text(c, locales.SetupRequired()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 		default:
 			on := a.setupChosen(e.ID)
@@ -740,7 +949,8 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 	if id == "homebrew" {
 		for _, m := range a.packageManagers() {
 			if m.ID == "brew" {
-				return inventory.Installation{Version: m.Version, Path: m.Path}, checkWorks
+				// brew --version says "Homebrew 4.6.3".
+				return inventory.Installation{Version: strings.TrimPrefix(m.Version, "Homebrew "), Path: m.Path}, checkWorks
 			}
 		}
 		return inventory.Installation{}, checkMissing
@@ -749,7 +959,12 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 	var docker *inventory.DockerState
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		if i := slices.IndexFunc(a.Snapshot.Agents, func(ag inventory.Agent) bool { return ag.ID == id }); i >= 0 {
-			ins = a.Snapshot.Agents[i].Installations
+			ag := a.Snapshot.Agents[i]
+			ins = ag.Installations
+			// An agent that is an app alone, as Cursor, works as one.
+			if len(ins) == 0 && ag.App != "" {
+				return inventory.Installation{Version: ag.AppVersion, Path: ag.App}, checkWorks
+			}
 		}
 	} else {
 		st, _ := a.Snapshot.Tool(id)

@@ -495,11 +495,12 @@ func TestNodeOperations(t *testing.T) {
 	}
 }
 
-// With no version manager, Node installs through mise: Hearth sets it up
-// first, hooking it into the shell, then runs it.
+// With no Node, its page installs the catalog's Node LTS through mise:
+// Hearth sets mise up first, hooking it into the shell, then runs it.
 func TestNodeInstallThroughMise(t *testing.T) {
 	a := NewApp()
-	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node"}}}
+	// WinGet installs mise on Windows.
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "node"}, wingetState}}
 	home := t.TempDir()
 	mise := filepath.Join(home, "bin", "mise"+exeSuffix)
 	if err := os.MkdirAll(filepath.Dir(mise), 0o755); err != nil {
@@ -518,7 +519,10 @@ func TestNodeInstallThroughMise(t *testing.T) {
 	if !tt.HasText("Node.js is not installed on this computer") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
-	if err := tt.Click("Install version"); err != nil {
+	if tt.HasText("Install version") {
+		t.Error("the header offers a version beside the empty state's button")
+	}
+	if err := tt.Click("Install Node.js LTS"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -528,10 +532,10 @@ func TestNodeInstallThroughMise(t *testing.T) {
 	steps := a.op.plan.Steps
 	// Setting mise up comes first: shell files on Unix, the user's Path
 	// on Windows.
-	if len(steps) < 2 || !slices.Equal(steps[len(steps)-1].Argv, []string{mise, "install", "node@24.1.0"}) {
+	if len(steps) < 2 || !slices.Equal(steps[len(steps)-1].Argv, []string{mise, "use", "--global", "node@lts"}) {
 		t.Fatalf("steps %+v", steps)
 	}
-	if !strings.HasPrefix(a.op.plan.Why, "There is no version manager yet") {
+	if a.op.plan.Why != "First Hearth installs what Node.js LTS needs: mise. Then Node.js LTS through mise." {
 		t.Errorf("why %q", a.op.plan.Why)
 	}
 	screenshot(t, tt, "node-mise")

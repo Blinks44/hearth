@@ -1120,7 +1120,7 @@
   "@heroBare": {
     "description": "Overview: hero title when the scan found only what the system brings."
   },
-  "heroBareText": "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one plan.",
+  "heroBareText": "Hearth found only what comes with the system. The Install page sets up languages, tools and AI agents in one plan.",
   "@heroBareText": {
     "description": "Overview: hero text under heroBare, which leads to the new computer wizard."
   },
@@ -1128,7 +1128,7 @@
   "@heroBareAction": {
     "description": "Overview: hero button that opens the new computer wizard."
   },
-  "toolsNoneYet": "None yet: the new computer wizard installs what you need.",
+  "toolsNoneYet": "None yet: the Install page installs what you need.",
   "@toolsNoneYet": {
     "description": "Overview: under the Tools heading when the scan found none."
   },
@@ -5429,10 +5429,6 @@
   "@serviceStop": {
     "description": "Menu item of a database service, and the port conflict banner's button."
   },
-  "agentNpmInstallWhy": "Through npm, as a global package of the terminal's Node.",
-  "@agentNpmInstallWhy": {
-    "description": "How an agent installs through npm."
-  },
   "agentNpmUpdateWhy": "npm installs the latest release over this one, in the same npm folder.",
   "@agentNpmUpdateWhy": {
     "description": "How an agent npm installed updates."
@@ -6710,6 +6706,30 @@
   "@catalogYarn": {
     "description": "New computer: what the tool is for, under its name in the choice."
   },
+  "catalogComposer": "The package manager of PHP: Laravel, Symfony and other libraries.",
+  "@catalogComposer": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogUv": "A fast manager of Python, its packages, projects and tools from Astral.",
+  "@catalogUv": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogPipx": "Installs Python command-line tools, each in its own environment.",
+  "@catalogPipx": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogBundler": "Installs the gems of a Ruby project at the versions its Gemfile names.",
+  "@catalogBundler": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogMaven": "Builds Java projects and fetches their libraries, as pom.xml describes.",
+  "@catalogMaven": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
+  "catalogGradle": "Builds Java, Kotlin and Android projects.",
+  "@catalogGradle": {
+    "description": "New computer: what the tool is for, under its name in the choice."
+  },
   "catalogGit": "Keeps the history of your code and syncs it with GitHub and other hosts.",
   "@catalogGit": {
     "description": "New computer: what the tool is for, under its name in the choice."
@@ -6758,7 +6778,7 @@
   "@setupPlanTitle": {
     "description": "New computer: title of the plan that installs the tools chosen."
   },
-  "setupPlanWhy": "The base first, then languages and tools, each through the way the wizard showed.",
+  "setupPlanWhy": "What the rest needs first, then languages and tools, each through the way the Install page showed.",
   "@setupPlanWhy": {
     "description": "New computer: why under the plan's title."
   },
@@ -6782,6 +6802,14 @@
       }
     }
   },
+  "installWhy": "{tool} installs through {manager}.",
+  "@installWhy": {
+    "description": "Install plan of one tool: how it installs. tool is its name, manager what installs it (mise, Homebrew, npm…)."
+  },
+  "installNeedsWhy": "First Hearth installs what {tool} needs: {needs}. Then {tool} through {manager}.",
+  "@installNeedsWhy": {
+    "description": "Install plan of one tool that needs others first. needs lists them by name, comma-separated; manager is what installs the tool itself."
+  },
   "setupRustup": "downloads rustup from rust-lang.org and installs stable Rust",
   "@setupRustup": {
     "description": "New computer: what the rustup step does, after its command."
@@ -6800,13 +6828,97 @@
       }
     }
   },
-  "setupTitle": "New computer",
-  "@setupTitle": {
-    "description": "New computer wizard: its header title and the Overview's button that opens it."
+  "installTitle": "Install",
+  "@installTitle": {
+    "description": "Sidebar item and title of the Install page: everything Hearth can install, and the new computer wizard."
   },
-  "setupHint": "Choose languages, tools and AI agents, and install them in one plan",
-  "@setupHint": {
-    "description": "Tooltip of the Overview's button that opens the new computer wizard."
+  "installSubtitle": "Everything Hearth can install",
+  "@installSubtitle": {
+    "description": "Install page header subtitle and its description in search."
+  },
+  "installFilterAll": "All",
+  "@installFilterAll": {
+    "description": "Install page filter segment: every tool."
+  },
+  "installFilterMissing": "Not installed",
+  "@installFilterMissing": {
+    "description": "Install page filter segment: tools not on this computer."
+  },
+  "installFilterHave": "Installed",
+  "@installFilterHave": {
+    "description": "Install page filter segment: tools on this computer."
+  },
+  "installNothingHere": "Nothing matches this filter.",
+  "@installNothingHere": {
+    "description": "Install page: the filter leaves no tool."
+  },
+  "installedVersion": "installed · {version}",
+  "@installedVersion": {
+    "description": "Install page chip of a tool on this computer, with its version."
+  },
+  "installedPlain": "installed",
+  "@installedPlain": {
+    "description": "Install page chip of a tool on this computer whose version is unknown."
+  },
+  "setupHaveOf": "installed: {have} of {total}",
+  "@setupHaveOf": {
+    "description": "Install page card header aside: how many tools of the group are on this computer.",
+    "placeholders": {
+      "have": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "setupMore": "{count} more",
+  "@setupMore": {
+    "description": "Install page: row that stands for the tools of a group not shown yet.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "setupShowMore": "show ›",
+  "@setupShowMore": {
+    "description": "Install page: button of the row of tools not shown yet."
+  },
+  "setupSystemCopy": "The system has its own {version}: Hearth installs one to work with beside it.",
+  "@setupSystemCopy": {
+    "description": "Install page: a language whose only copy is the system's, which Hearth leaves alone; version is that copy's."
+  },
+  "installClear": "Clear selection",
+  "@installClear": {
+    "description": "Install page header button: switches off every tool chosen."
+  },
+  "setupNextCount": "Next: plan · {count}",
+  "@setupNextCount": {
+    "description": "Install page header button: makes the plan of the tools chosen; count is how many are chosen.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "installNoteNone": "Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before anything changes.",
+  "@installNoteNone": {
+    "description": "Install page note under the cards when nothing is chosen."
+  },
+  "installNote": "Chosen {count}: {names}. Hearth installs them with what they need and shows the plan first. It leaves what is installed alone: its updates are on the Updates page.",
+  "@installNote": {
+    "description": "Install page note under the cards. names lists the tools chosen, comma-separated.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   },
   "setupStepChoice": "Step 1 of 4 · choice",
   "@setupStepChoice": {
@@ -6879,24 +6991,6 @@
   "setupAgents": "AI agents",
   "@setupAgents": {
     "description": "New computer: card of AI agents to choose."
-  },
-  "setupHaveNone": "installed: none",
-  "@setupHaveNone": {
-    "description": "New computer: languages card aside when none is installed."
-  },
-  "setupHaveCount": "installed: {count}",
-  "@setupHaveCount": {
-    "description": "New computer: languages card aside, how many are installed.",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      }
-    }
-  },
-  "setupHave": "already there",
-  "@setupHave": {
-    "description": "New computer: a tool that is installed already, in place of its switch."
   },
   "setupRequired": "required",
   "@setupRequired": {

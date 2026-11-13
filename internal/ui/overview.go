@@ -27,10 +27,6 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 	items := needAttention(a.attentionItems(found))
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			ui.Button(c.Key("setup"), "").Label(locales.SetupTitle()).Tooltip(locales.SetupHint()).OnClick(func() { a.router.Push(setupPage) }).Children(func() {
-				ui.Icon(c, Icon("sparkles")).Size(13, 13).TextColor(c.Theme().TextMuted)
-				ui.Text(c, locales.SetupTitle()).SingleLine()
-			})
 			ui.Button(c.Key("copy-report"), "").Label(locales.CopyReport()).Tooltip(locales.CopyReportHint()).OnClick(func() {
 				c.WriteClipboard(a.report(found))
 				c.Toast(locales.ReportCopied())
@@ -135,7 +131,10 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 				txt.MaxWidth(380)
 			}
 			if bare {
-				ui.PrimaryButton(c.Key("hero-setup"), locales.HeroBareAction()).AlignSelf(ui.Start).OnClick(func() { a.router.Push(setupPage) })
+				ui.PrimaryButton(c.Key("hero-setup"), locales.HeroBareAction()).AlignSelf(ui.Start).OnClick(func() {
+					a.setup.wizard = true
+					a.router.Push(setupPage)
+				})
 			}
 			// What the last check changed opens the history.
 			if n := a.changesSince(); n > 0 {

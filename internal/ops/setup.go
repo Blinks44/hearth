@@ -3,6 +3,7 @@ package ops
 import (
 	"cmp"
 	"errors"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -55,25 +56,33 @@ var miseVersions = map[string]string{"node": "lts", "java": "temurin-25"}
 
 // Parts returns the tools s installs and how, in the order they install:
 // each after what it needs. A tool there already, or with no way to
-// install here, is left out.
+// install here, itself or what it needs, is left out.
 func (s Setup) Parts() []SetupPart {
 	var parts []SetupPart
-	seen := map[string]bool{}
-	var add func(id string)
-	add = func(id string) {
-		if seen[id] || s.Have[id] {
-			return
+	// ready are the tools there or installing, by whether they are.
+	ready := map[string]bool{}
+	var add func(id string) bool
+	add = func(id string) bool {
+		if s.Have[id] {
+			return true
 		}
-		seen[id] = true
+		if r, seen := ready[id]; seen {
+			return r
+		}
+		ready[id] = false
 		e, _ := catalog.Find(id)
 		m, ok := s.method(e)
 		if !ok {
-			return
+			return false
 		}
 		for _, need := range e.NeedsWith(m) {
-			add(need)
+			if !add(need) {
+				return false
+			}
 		}
+		ready[id] = true
 		parts = append(parts, SetupPart{Tool: id, Method: m})
+		return true
 	}
 	for _, e := range catalog.Tools {
 		if slices.Contains(s.Tools, e.ID) {
@@ -123,8 +132,11 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 	// npm and Corepack run through mise, which finds the Node it keeps
 	// though the terminal Hearth read has it on no PATH yet, as before
 	// mise's line in the shell's startup; without one of its own, the
-	// PATH's.
-	viaMise := []string{"mise", "exec", "--"}
+	// PATH's. Without mise, the terminal's Node runs them as it is.
+	var viaMise []string
+	if planned("mise") || s.Have["mise"] {
+		viaMise = []string{"mise", "exec", "--"}
+	}
 	brew, _, _ := homebrew(env)
 	mise := ""
 	// The system's packages go in one command with the first of them:
@@ -183,7 +195,9 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 				{Argv: append(slices.Clone(viaMise), "corepack", "disable")},
 				{Argv: append(slices.Clone(viaMise), "corepack", "enable", m.Package)},
 			}
-			steps = append(steps, Step{Argv: []string{"mise", "reshim"}})
+			if viaMise != nil {
+				steps = append(steps, Step{Argv: []string{"mise", "reshim"}})
+			}
 		default:
 			pm := inventory.PackageManager{ID: m.Manager, Name: m.Manager, Path: brew}
 			if i := slices.IndexFunc(s.Managers, func(f inventory.PackageManager) bool { return f.ID == m.Manager }); i >= 0 {
@@ -235,11 +249,15 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 		}
 		p.Changes = append(p.Changes, "+ "+title)
 	}
-	// The mise set up here is not on the terminal's PATH yet.
+	// The mise set up here is not on the terminal's PATH yet: its steps
+	// run it by path, with its folder on PATH for what it runs, as npm
+	// of the Node it keeps, which runs mise reshim.
 	if mise != "" {
+		path := "PATH=" + filepath.Dir(mise) + string(filepath.ListSeparator) + env.Get("PATH")
 		for i, step := range p.Steps {
 			if len(step.Argv) > 0 && step.Argv[0] == "mise" {
 				p.Steps[i].Argv = append([]string{mise}, step.Argv[1:]...)
+				p.Steps[i].Env = append(slices.Clone(step.Env), path)
 			}
 		}
 	}

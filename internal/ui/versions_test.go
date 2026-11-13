@@ -74,8 +74,8 @@ func TestRubyVersionMenu(t *testing.T) {
 	}
 }
 
-// With no version manager, Go installs through mise, set up first; its
-// releases name it by Temurin's version for Java.
+// With no copy, Go and Java install as the catalog says, through mise,
+// set up first.
 func TestInstallThroughMise(t *testing.T) {
 	home := t.TempDir()
 	mise := filepath.Join(home, "bin", "mise"+exeSuffix)
@@ -91,22 +91,22 @@ func TestInstallThroughMise(t *testing.T) {
 		set        func(a *App)
 		want       string
 	}{
-		{"go", "/tools/go", func(a *App) { a.GoVersions = &versions.Go{Releases: []string{"1.24.1", "1.23.7"}} }, "go@1.24.1"},
+		{"go", "/tools/go", func(a *App) { a.GoVersions = &versions.Go{Releases: []string{"1.24.1", "1.23.7"}} }, "go@latest"},
 		{"java", "/tools/java", func(a *App) {
 			a.JavaVersions = &versions.Java{Lines: []versions.Cycle{{Cycle: "21", Latest: "21.0.6+7"}}}
-		}, "java@temurin-21"},
+		}, "java@temurin-25"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.tool, func(t *testing.T) {
 			a := NewApp()
-			a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: tc.tool}}}
+			a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: tc.tool}, wingetState}}
 			a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
 				done(build(env, nil))
 			}
 			tc.set(a)
 			a.router.Push(tc.page)
 			tt := newTester(a)
-			if err := tt.Click("Install version"); err != nil {
+			if err := tt.Click("Install " + setupTitle(tc.tool)); err != nil {
 				t.Fatalf("%v: %q", err, tt.Texts())
 			}
 			tt.Advance(time.Second)
@@ -114,7 +114,7 @@ func TestInstallThroughMise(t *testing.T) {
 				t.Fatal("no plan")
 			}
 			steps := a.op.plan.Steps
-			if last := steps[len(steps)-1].Argv; !slices.Equal(last, []string{mise, "install", tc.want}) {
+			if last := steps[len(steps)-1].Argv; !slices.Equal(last, []string{mise, "use", "--global", tc.want}) {
 				t.Fatalf("steps %+v", steps)
 			}
 		})
@@ -240,3 +240,7 @@ func TestPHPInstallWinget(t *testing.T) {
 		t.Fatalf("no WinGet plan: %q", tt.Texts())
 	}
 }
+
+// wingetState is WinGet found, which installs mise on Windows; other
+// systems install it otherwise.
+var wingetState = inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "winget", Name: "WinGet", Path: "winget"}}}

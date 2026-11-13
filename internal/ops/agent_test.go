@@ -9,38 +9,6 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
-func TestAgentInstallPlan(t *testing.T) {
-	brew := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
-	winget := inventory.PackageManager{ID: "winget", Name: "WinGet", Path: "winget"}
-	apt := inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}
-	tests := []struct {
-		name     string
-		id       string
-		managers []inventory.PackageManager
-		npm      bool
-		want     []string // nil: Hearth does not install it so
-	}{
-		{"cask first", "claude", []inventory.PackageManager{brew}, true, []string{"/opt/homebrew/bin/brew", "install", "--cask", "claude-code"}},
-		{"formula", "gemini", []inventory.PackageManager{brew}, false, []string{"/opt/homebrew/bin/brew", "install", "--formula", "gemini-cli"}},
-		{"winget before npm", "copilot", []inventory.PackageManager{winget}, true,
-			[]string{"winget", "install", "--id", "GitHub.Copilot", "--exact", "--source", "winget", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"}},
-		{"npm when the system's manager has none", "codex", []inventory.PackageManager{apt}, true, []string{"npm", "install", "--global", "@openai/codex"}},
-		{"nothing without npm", "codex", []inventory.PackageManager{apt}, false, nil},
-		{"an agent Hearth does not install", "devin", []inventory.PackageManager{brew, winget}, true, nil},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p, ok := AgentInstallPlan(tt.id, "Agent", tt.managers, tt.npm, nil)
-			if ok != (tt.want != nil) {
-				t.Fatalf("ok = %v, want %v", ok, tt.want != nil)
-			}
-			if ok && (len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, tt.want)) {
-				t.Errorf("steps = %+v, want %q", p.Steps, tt.want)
-			}
-		})
-	}
-}
-
 func TestAgentNpmUpdatePlan(t *testing.T) {
 	linked := inventory.Installation{Path: "/home/ann/.local/share/fnm/aliases/default/bin/claude",
 		RealPath: "/home/ann/.local/share/fnm/node-versions/v22/installation/lib/node_modules/@anthropic-ai/claude-code/cli.js"}
@@ -80,12 +48,25 @@ func TestAgentFound(t *testing.T) {
 			return inventory.Agent{ID: "codex", Installations: []inventory.Installation{{Version: "0.167.1", OnPath: 1}}}, nil
 		}
 	}
-	p, _ := AgentInstallPlan("codex", "Codex", nil, true, find(true))
-	if found, err := p.Verify(context.Background()); err != nil || found != "Codex 0.167.1 found" {
+	if found, err := AgentFound("Codex", find(true))(context.Background()); err != nil || found != "Codex 0.167.1 found" {
 		t.Errorf("Verify = %q, %v", found, err)
 	}
-	p, _ = AgentInstallPlan("codex", "Codex", nil, true, find(false))
-	if _, err := p.Verify(context.Background()); err == nil {
+	if _, err := AgentFound("Codex", find(false))(context.Background()); err == nil {
 		t.Error("Verify passed with the agent not found")
+	}
+}
+
+func TestToolFound(t *testing.T) {
+	detect := func(ins ...inventory.Installation) Detect {
+		return func(context.Context) (inventory.ToolState, error) {
+			return inventory.ToolState{Tool: "pnpm", Installations: ins}, nil
+		}
+	}
+	if found, err := ToolFound("pnpm", detect(inventory.Installation{Version: "10.20.0", OnPath: 1}))(context.Background()); err != nil || found != "pnpm 10.20.0 found" {
+		t.Errorf("Verify = %q, %v", found, err)
+	}
+	// A copy off the terminal's PATH is not what a new terminal runs.
+	if _, err := ToolFound("pnpm", detect(inventory.Installation{Version: "10.20.0"}))(context.Background()); err == nil {
+		t.Error("Verify passed with no copy on PATH")
 	}
 }

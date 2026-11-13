@@ -169,7 +169,9 @@ func (a *App) composerCard(c *ui.Context) {
 	st, ok := a.toolState("composer")
 	active := inventory.TerminalCopy(st.Installations)
 	if !ok || active < 0 {
-		listCard(c, "Composer", "", func() { cardNote(c, locales.ToolNotInstalled("Composer")) })
+		listCard(c, "Composer", "", func() {
+			listRow(c, locales.ToolNotInstalled("Composer"), false, "", func() { a.installToolButton(c, "composer") })
+		})
 		return
 	}
 	in := st.Installations[active]

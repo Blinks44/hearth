@@ -126,3 +126,22 @@ func TestRefresh(t *testing.T) {
 		t.Fatalf("%+v %+v", snap, old)
 	}
 }
+
+// An operation's check reads the terminal anew: the operation may have
+// hooked mise into the shell, which the last scan's terminal lacks.
+func TestDetectReadsNewTerminal(t *testing.T) {
+	path := "/usr/bin"
+	s := &Scanner{Runner: &run.Fake{}, Env: func(context.Context, run.Runner) (term, gui sysenv.Env) {
+		return sysenv.Env{"PATH=" + path}, nil
+	}, Detectors: []Detector{{"pnpm", func(_ context.Context, _ run.Runner, term, _ sysenv.Env) (inventory.ToolState, error) {
+		return inventory.ToolState{Vars: map[string]string{"PATH": term.Get("PATH")}}, nil
+	}}}}
+	done := make(chan inventory.Snapshot, 1)
+	s.Start(func(snap inventory.Snapshot) { done <- snap })
+	<-done
+	path = "/home/ann/.local/share/mise/shims:/usr/bin"
+	st, err := s.Detect(context.Background(), "pnpm")
+	if err != nil || st.Vars["PATH"] != path {
+		t.Errorf("checked in %q, %v", st.Vars["PATH"], err)
+	}
+}

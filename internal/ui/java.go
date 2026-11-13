@@ -46,6 +46,11 @@ func (a *App) javaPage(c *ui.Context, p page) {
 							}
 							if !found {
 								cardNote(c, locales.JavaNoBuilders())
+								for _, id := range []string{"gradle", "maven"} {
+									if a.canInstallTool(id) {
+										listRow(c, setupTitle(id), false, "", func() { a.installToolButton(c, id) })
+									}
+								}
 							}
 						})
 					})

@@ -147,19 +147,12 @@ func (s *Scanner) Refresh(tools []string, done func([]inventory.ToolState)) {
 	}()
 }
 
-// Detect runs the detector of tool alone, in the environment of the last
-// scan, and returns what it found: an operation checks its result so.
+// Detect runs the detector of tool alone, in a new terminal's
+// environment, and returns what it found: an operation checks its result
+// so, and the operation may have changed the shell's startup files, as
+// installing mise does.
 func (s *Scanner) Detect(ctx context.Context, tool string) (inventory.ToolState, error) {
-	s.mu.Lock()
-	term, gui := s.term, s.gui
-	s.mu.Unlock()
-	if term == nil {
-		env := s.Env
-		if env == nil {
-			env = systemEnv
-		}
-		term, gui = env(ctx, s.Runner)
-	}
+	term, gui := s.freshEnv(ctx)
 	for _, d := range s.Detectors {
 		if d.Tool == tool {
 			st, err := d.Detect(ctx, s.Runner, term, gui)
@@ -170,25 +163,25 @@ func (s *Scanner) Detect(ctx context.Context, tool string) (inventory.ToolState,
 	return inventory.ToolState{}, fmt.Errorf("detect %s: no detector", tool)
 }
 
-// Agent finds the agent id alone, in the environment of the last scan:
-// an operation checks its result so.
+// Agent finds the agent id alone, in a new terminal's environment, as
+// Detect finds a tool.
 func (s *Scanner) Agent(ctx context.Context, id string) (inventory.Agent, error) {
-	s.mu.Lock()
-	term, gui := s.term, s.gui
-	s.mu.Unlock()
-	if term == nil {
-		env := s.Env
-		if env == nil {
-			env = systemEnv
-		}
-		term, gui = env(ctx, s.Runner)
-	}
+	term, gui := s.freshEnv(ctx)
 	for _, ag := range ai.Detect(ctx, s.Runner, term, gui) {
 		if ag.ID == id {
 			return ag, ctx.Err()
 		}
 	}
 	return inventory.Agent{}, fmt.Errorf("detect agent %s: unknown", id)
+}
+
+// freshEnv reads the terminal's and the apps' environments anew.
+func (s *Scanner) freshEnv(ctx context.Context) (term, gui sysenv.Env) {
+	env := s.Env
+	if env == nil {
+		env = systemEnv
+	}
+	return env(ctx, s.Runner)
 }
 
 // Replace returns snap with the tools' states replaced by those of

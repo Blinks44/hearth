@@ -54,6 +54,10 @@ func TestSetupPlanMac(t *testing.T) {
 	if got := part("grok")[0].Argv; !slices.Equal(got, []string{mise, "exec", "--", "npm", "install", "--global", "@xai-official/grok"}) {
 		t.Errorf("Grok through the Node mise installs: %v", got)
 	}
+	// npm of mise's Node runs mise reshim, which needs mise on PATH.
+	if env := part("grok")[0].Env; len(env) != 1 || !strings.HasPrefix(env[0], "PATH="+filepath.Dir(mise)+":") {
+		t.Errorf("Grok's PATH: %v", env)
+	}
 	if git := part("git"); len(git) != 0 {
 		t.Errorf("Homebrew's part installs the Command Line Tools: %+v", git)
 	}

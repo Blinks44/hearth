@@ -894,6 +894,7 @@ var toolTitles = map[string]string{
 	"node": "Node", "npm": "npm", "pnpm": "pnpm", "yarn": "Yarn", "bun": "Bun", "deno": "Deno",
 	"python": "Python", "uv": "uv", "rust": "Rust", "go": "Go", "java": "Java", "ruby": "Ruby",
 	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker", "git": "Git", "cpp": "C/C++",
+	"pipx": "pipx", "bundler": "Bundler", "maven": "Maven", "gradle": "Gradle",
 }
 
 func toolTitle(id string) string {

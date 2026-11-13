@@ -119,3 +119,16 @@ func TestSetupPlanNpmThroughMise(t *testing.T) {
 		t.Errorf("Gemini: %v", got)
 	}
 }
+
+// A Node there without mise is the terminal's: its npm installs.
+func TestSetupPlanNpmWithoutMise(t *testing.T) {
+	s := Setup{GOOS: "linux", Tools: []string{"gemini"}, Have: map[string]bool{"node": true},
+		Title: func(id string) string { return id }}
+	p, parts, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(parts) != 1 || !slices.Equal(p.Steps[0].Argv, []string{"npm", "install", "--global", "@google/gemini-cli"}) {
+		t.Errorf("Gemini: %v, %+v", p.Steps, parts)
+	}
+}

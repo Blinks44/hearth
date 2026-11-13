@@ -344,7 +344,10 @@ func (a *App) agentsPage(c *ui.Context, p page) {
 				if len(found) > 0 {
 					a.agentTable(c, found)
 				} else {
-					listFrame(c, func() { cardNote(c, locales.NoAgents()) })
+					listFrame(c, func() {
+						cardNote(c, locales.NoAgents())
+						ui.Row(c).Padding(0, 14, 12, 14).Children(func() { a.installPrimary(c, "claude") })
+					})
 				}
 				a.agentsNotFound(c)
 			})
@@ -473,9 +476,7 @@ func (a *App) agentsNotFound(c *ui.Context) {
 				caption = locales.SettingsLeft(tilde(ag.Dir, a.Home))
 			}
 			listRow(c, agentTitle(ag.ID), false, caption, func() {
-				if plan, ok := a.agentInstallPlan(ag.ID); ok {
-					ui.Button(c.Key("install:"+ag.ID), locales.AgentInstall()).OnClick(func() { a.Propose(plan) })
-				}
+				a.installToolButton(c, ag.ID)
 			})
 		}
 	})
@@ -556,9 +557,7 @@ func (a *App) installCard(c *ui.Context, ag inventory.Agent) {
 	listCard(c, locales.InstallationCard(), "", func() {
 		if len(ag.Installations) == 0 && ag.App == "" {
 			listRow(c, locales.ToolNotInstalled(agentTitle(ag.ID)), false, "", func() {
-				if plan, ok := a.agentInstallPlan(ag.ID); ok {
-					ui.Button(c.Key("install:"+ag.ID), locales.AgentInstall()).OnClick(func() { a.Propose(plan) })
-				}
+				a.installToolButton(c, ag.ID)
 			})
 		}
 		for _, in := range ag.Installations {
@@ -744,18 +743,6 @@ func (a *App) findAgent(id string) ops.FindAgent {
 		return nil
 	}
 	return func(ctx context.Context) (inventory.Agent, error) { return d(ctx, id) }
-}
-
-// agentInstallPlan is the plan that installs the agent id through the
-// system's package manager, else the terminal's npm.
-func (a *App) agentInstallPlan(id string) (ops.Plan, bool) {
-	var managers []inventory.PackageManager
-	if st, ok := a.Snapshot.Tool("packages"); ok {
-		managers = st.PackageManagers
-	}
-	st, _ := a.Snapshot.Tool("npm")
-	npm := inventory.TerminalCopy(st.Installations) >= 0
-	return ops.AgentInstallPlan(id, agentTitle(id), managers, npm, a.findAgent(id))
 }
 
 // agentCopyMenu is the menu of in, a copy of the agent id: update it,

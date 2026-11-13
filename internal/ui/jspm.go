@@ -157,6 +157,12 @@ func (a *App) jsTable(c *ui.Context) {
 		}
 		if count == 0 {
 			cardNote(c, locales.JsNoManagers())
+			ui.Row(c).Padding(0, 14, 12, 14).Children(func() { a.installPrimary(c, "node") })
+		}
+		for _, id := range []string{"pnpm", "yarn"} {
+			if a.canInstallTool(id) {
+				listRow(c, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolButton(c, id) })
+			}
 		}
 	})
 }
@@ -287,8 +293,9 @@ func (a *App) jsUpdates(c *ui.Context) {
 				caption = locales.NoteUpdateFor(versionText(current))
 			}
 			listRow(c, p.name+" "+p.latest.Version, true, caption, func() {
-				// npm comes with Node.
-				if p.name != "npm" {
+				// npm comes with Node; pnpm and Yarn not there install from
+				// the managers' table.
+				if p.name != "npm" && current != "" {
 					st.Tool = p.name
 					a.installButton(c, st, p.latest.Version, p.name+" "+p.latest.Version)
 				}

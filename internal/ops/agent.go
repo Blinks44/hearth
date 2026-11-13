@@ -16,40 +16,6 @@ import (
 // uses it.
 type FindAgent func(ctx context.Context) (inventory.Agent, error)
 
-// AgentInstallPlan returns the plan that installs the agent id, named
-// title, through the first of its catalog's methods a manager here has:
-// managers are the system's package managers found, npm reports npm on
-// the terminal's PATH. ok is false when none has it.
-func AgentInstallPlan(id, title string, managers []inventory.PackageManager, npm bool, find FindAgent) (p Plan, ok bool) {
-	e, _ := catalog.Find(id)
-	for _, method := range e.Methods {
-		if method.Manager == "npm" {
-			if !npm {
-				continue
-			}
-			p = Plan{
-				Title:   locales.PkgInstallTitle(title),
-				Why:     locales.AgentNpmInstallWhy(),
-				Steps:   []Step{{Argv: []string{"npm", "install", "--global", method.Package}}},
-				Changes: []string{"+ " + title + " · npm"},
-			}
-			ok = true
-		}
-		for _, m := range managers {
-			if ok || m.ID != method.Manager {
-				continue
-			}
-			p, ok = PackagePlan(PackageInstall, m, []inventory.SystemPackage{{Name: method.Package, Kind: method.Kind}}, nil)
-			p.Title = locales.PkgInstallTitle(title)
-		}
-		if ok {
-			p.Verify = agentFound(title, find)
-			return p, true
-		}
-	}
-	return Plan{}, false
-}
-
 // AgentNpmUpdatePlan returns the plan that updates in, a copy of the
 // agent id npm installed, to the latest release in the npm prefix that
 // holds it, which may be another Node's than the terminal's npm; ok is
@@ -86,13 +52,13 @@ func AgentNpmUpdatePlan(id, title string, in inventory.Installation, find FindAg
 		Steps:   []Step{{Argv: []string{"npm", "install", "--global", "--prefix", prefix, name + "@latest"}, Timeout: 10 * time.Minute}},
 		Changes: []string{title + " " + in.Version + " → latest · npm"},
 	}
-	p.Verify = agentFound(title, find)
+	p.Verify = AgentFound(title, find)
 	return p, true
 }
 
-// agentFound is a check that finds the agent title again; nil when find
+// AgentFound is a check that finds the agent title again; nil when find
 // is.
-func agentFound(title string, find FindAgent) func(context.Context) (string, error) {
+func AgentFound(title string, find FindAgent) func(context.Context) (string, error) {
 	if find == nil {
 		return nil
 	}
@@ -112,5 +78,24 @@ func agentFound(title string, find FindAgent) func(context.Context) (string, err
 			}
 		}
 		return locales.AgentCheckFound(title, version), nil
+	}
+}
+
+// ToolFound is a check that finds the tool title again, with a copy the
+// terminal runs; nil when detect is.
+func ToolFound(title string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		i := inventory.TerminalCopy(st.Installations)
+		if i < 0 {
+			return "", errors.New(locales.AgentCheckMissing(title))
+		}
+		return locales.AgentCheckFound(title, st.Installations[i].Version), nil
 	}
 }

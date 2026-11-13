@@ -278,11 +278,6 @@ func (a *App) View(c *ui.Context) {
 				a.agentDetail(c, id)
 				return
 			}
-			if r.Match(setupPage) {
-				r.Title(locales.SetupTitle())
-				a.setupView(c)
-				return
-			}
 			if r.Match(changesPage.path) {
 				r.Title(changesPage.title())
 				a.changesView(c, changesPage)
@@ -300,6 +295,8 @@ func (a *App) View(c *ui.Context) {
 					switch p.path {
 					case settings.path:
 						a.settingsPage(c)
+					case setupPage:
+						a.setupView(c)
 					case "/tools/node":
 						a.node(c, p)
 					case "/tools/jspm":
@@ -459,6 +456,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)
+				a.item(c, installNav, nil)
 				a.item(c, problemsNav, a.problemsEnd(c))
 				a.item(c, updatesNav, a.updatesEnd(c))
 				a.item(c, projectsPage, func() {

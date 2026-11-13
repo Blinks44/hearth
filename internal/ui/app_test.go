@@ -18,7 +18,7 @@ func TestSidebarOpensPages(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = found("node", "bun", "python", "php")
 	// Tall enough for every item without scrolling the sidebar.
-	tt := ui.NewTester(a.View, 1280, 1200)
+	tt := ui.NewTester(a.View, 1280, 1300)
 	if tt.HasText("Rust") {
 		t.Error("a language not found shows before opening the rest")
 	}
@@ -33,7 +33,7 @@ func TestSidebarOpensPages(t *testing.T) {
 		if a.router.Path() != p.path || a.router.Title() != p.title() {
 			t.Errorf("clicked %q: page %q titled %q", p.title(), a.router.Path(), a.router.Title())
 		}
-		built := slices.Contains([]string{settings.path, pathPage, "/system/packages", "/tools/databases", "/tools/docker", "/tools/jspm", "/tools/node", "/tools/bun", "/tools/go", "/tools/python", "/tools/php", "/tools/rust", "/tools/java", "/tools/ruby", "/tools/dotnet", projectsPage.path, cleanupPage, problemsPage, updatesPage, gitPage, cliPage, mobilePage, editorsPage, cppPage, modelsPage, overview.path, "/ai/agents", skillsPage, mcpPage}, p.path)
+		built := slices.Contains([]string{settings.path, setupPage, pathPage, "/system/packages", "/tools/databases", "/tools/docker", "/tools/jspm", "/tools/node", "/tools/bun", "/tools/go", "/tools/python", "/tools/php", "/tools/rust", "/tools/java", "/tools/ruby", "/tools/dotnet", projectsPage.path, cleanupPage, problemsPage, updatesPage, gitPage, cliPage, mobilePage, editorsPage, cppPage, modelsPage, overview.path, "/ai/agents", skillsPage, mcpPage}, p.path)
 		if !tt.HasText(p.subtitle()) || !built && !tt.HasText("Coming soon") {
 			t.Errorf("%s: header missing, texts %q", p.title(), tt.Texts())
 		}

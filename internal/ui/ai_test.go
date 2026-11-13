@@ -234,6 +234,12 @@ func TestAgentOperations(t *testing.T) {
 	a.Snapshot.Agents[0].Installations[0].Source.Root = root
 	a.Snapshot.Tools = []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew",
 		Packages: []inventory.SystemPackage{{Name: "claude-code", Kind: "cask", Version: "2.1.308", Available: "2.1.322", Path: root}}}}}}
+	g := goos
+	t.Cleanup(func() { goos = g })
+	goos = "darwin"
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"}, nil))
+	}
 	tt := openAI(t, a, "/ai/agents")
 	screenshot(t, tt, "agents-actions")
 	hasTexts(t, tt, "2.1.322 available")

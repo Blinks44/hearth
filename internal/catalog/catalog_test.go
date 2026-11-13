@@ -95,6 +95,14 @@ func TestRecommended(t *testing.T) {
 		{"claude", "linux", "installer", nil},
 		{"claude", "windows", "winget", nil},
 		{"gemini", "linux", "npm", []string{"node"}},
+		{"composer", "darwin", "brew", []string{"php", "homebrew"}},
+		{"composer", "windows", "scoop", []string{"php"}},
+		{"composer", "linux", "apt", []string{"php"}},
+		{"uv", "windows", "mise", []string{"mise"}},
+		{"pipx", "darwin", "mise", []string{"python", "mise"}},
+		{"bundler", "linux", "mise", []string{"ruby", "mise"}},
+		{"maven", "windows", "mise", []string{"java", "mise"}},
+		{"gradle", "darwin", "mise", []string{"java", "mise"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.id+" on "+tt.goos, func(t *testing.T) {

@@ -36,6 +36,9 @@ func Ruby(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		}
 	}
 	st := inventory.ToolState{Tool: "ruby", Installations: f.ins}
+	if found := sysenv.LookPathAll("bundle", term); len(found) > 0 {
+		st.Vars = map[string]string{"bundle": found[0]}
+	}
 	var miseVersions []string
 	for i := range st.Installations {
 		in := &st.Installations[i]

@@ -41,6 +41,9 @@ func Python(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 	tools := slices.Concat(uvTools(uvToolDir(term, dirs.Home)), pipxTools(pipxHome(term, dirs.Home)))
 	installed := map[string][]string{}
 	state := inventory.ToolState{Tool: "python", Installations: f.ins}
+	if found := sysenv.LookPathAll("pipx", term); len(found) > 0 {
+		state.Vars = map[string]string{"pipx": found[0]}
+	}
 	for i := range state.Installations {
 		in := &state.Installations[i]
 		if pythonManagerAlias(in.Path) {

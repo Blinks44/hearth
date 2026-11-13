@@ -240,6 +240,23 @@ var Tools = []Entry{
 		"Docker Engine", "apt", "Docker Engine", "dnf", "Docker Engine", "zypper", "Docker Engine", "pacman", "Docker Engine", "apk",
 	)},
 
+	// Each language's own tools, after the language. mise has no
+	// Composer: the system's manager installs it, as it does PHP.
+	{ID: "composer", Group: Tool, Needs: []string{"php"}, Methods: []Method{
+		{Manager: "brew", Package: "composer", Kind: "formula"},
+		{Manager: "scoop", Package: "composer"},
+		{Manager: "apt", Package: "composer"},
+		{Manager: "dnf", Package: "composer"},
+		{Manager: "pacman", Package: "composer"},
+		{Manager: "zypper", Package: "php-composer2"},
+		{Manager: "apk", Package: "composer"},
+	}},
+	{ID: "uv", Group: Tool, Methods: mise("uv")},
+	{ID: "pipx", Group: Tool, Methods: mise("pipx"), Needs: []string{"python"}},
+	{ID: "bundler", Group: Tool, Methods: mise("gem:bundler"), Needs: []string{"ruby"}},
+	{ID: "maven", Group: Tool, Methods: mise("maven"), Needs: []string{"java"}},
+	{ID: "gradle", Group: Tool, Methods: mise("gradle"), Needs: []string{"java"}},
+
 	// Agents install through the system's manager first, as a tool that
 	// is not a language, then npm. Claude Code's own installer comes
 	// first: it is how Anthropic says to install it, and it updates
@@ -304,6 +321,12 @@ func About(id string) string {
 		"java":     locales.CatalogJava,
 		"ruby":     locales.CatalogRuby,
 		"dotnet":   locales.CatalogDotnet,
+		"composer": locales.CatalogComposer,
+		"uv":       locales.CatalogUv,
+		"pipx":     locales.CatalogPipx,
+		"bundler":  locales.CatalogBundler,
+		"maven":    locales.CatalogMaven,
+		"gradle":   locales.CatalogGradle,
 		"pnpm":     locales.CatalogPnpm,
 		"yarn":     locales.CatalogYarn,
 		"git":      locales.CatalogGit,

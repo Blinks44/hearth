@@ -63,6 +63,7 @@ const pathPage = "/system/path"
 
 var (
 	overview     = page{"/overview", "lucide/layout-dashboard", locales.OverviewTitle, locales.OverviewSubtitle}
+	installNav   = page{setupPage, "lucide/download", locales.InstallTitle, locales.InstallSubtitle}
 	problemsNav  = page{problemsPage, "lucide/triangle-alert", locales.ProblemsTitle, locales.ProblemsSubtitle}
 	updatesNav   = page{updatesPage, "lucide/circle-arrow-up", locales.UpdatesTitle, locales.UpdatesSubtitle}
 	projectsPage = page{"/projects", "lucide/folder-git-2", locales.ProjectsTitle, locales.ProjectsSubtitle}
@@ -111,7 +112,7 @@ var (
 
 // pages lists every page, for the router.
 func pages() []page {
-	all := []page{overview, problemsNav, updatesNav, projectsPage, cleanupNav}
+	all := []page{overview, installNav, problemsNav, updatesNav, projectsPage, cleanupNav}
 	for _, l := range languages {
 		all = append(all, l.page)
 	}

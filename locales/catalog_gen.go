@@ -2566,14 +2566,14 @@ func (msgs Messages) HeroBare() string {
 	return Catalog.Format(msgs.locale, "heroBare", nil)
 }
 
-// HeroBareText says "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one …"
+// HeroBareText says "Hearth found only what comes with the system. The Install page sets up languages, tools and AI agents in one plan."
 // in the language the app shows.
 //
 // Overview: hero text under heroBare, which leads to the new computer
 // wizard.
 func HeroBareText() string { return In(i18n.Locale()).HeroBareText() }
 
-// HeroBareText says "Hearth found only what comes with the system. The new computer wizard installs languages, tools and AI agents in one …"
+// HeroBareText says "Hearth found only what comes with the system. The Install page sets up languages, tools and AI agents in one plan."
 // in the language of msgs.
 //
 // Overview: hero text under heroBare, which leads to the new computer
@@ -2596,13 +2596,13 @@ func (msgs Messages) HeroBareAction() string {
 	return Catalog.Format(msgs.locale, "heroBareAction", nil)
 }
 
-// ToolsNoneYet says "None yet: the new computer wizard installs what you need."
+// ToolsNoneYet says "None yet: the Install page installs what you need."
 // in the language the app shows.
 //
 // Overview: under the Tools heading when the scan found none.
 func ToolsNoneYet() string { return In(i18n.Locale()).ToolsNoneYet() }
 
-// ToolsNoneYet says "None yet: the new computer wizard installs what you need."
+// ToolsNoneYet says "None yet: the Install page installs what you need."
 // in the language of msgs.
 //
 // Overview: under the Tools heading when the scan found none.
@@ -14018,20 +14018,6 @@ func (msgs Messages) ServiceStop() string {
 	return Catalog.Format(msgs.locale, "serviceStop", nil)
 }
 
-// AgentNpmInstallWhy says "Through npm, as a global package of the terminal's Node."
-// in the language the app shows.
-//
-// How an agent installs through npm.
-func AgentNpmInstallWhy() string { return In(i18n.Locale()).AgentNpmInstallWhy() }
-
-// AgentNpmInstallWhy says "Through npm, as a global package of the terminal's Node."
-// in the language of msgs.
-//
-// How an agent installs through npm.
-func (msgs Messages) AgentNpmInstallWhy() string {
-	return Catalog.Format(msgs.locale, "agentNpmInstallWhy", nil)
-}
-
 // AgentNpmUpdateWhy says "npm installs the latest release over this one, in the same npm folder."
 // in the language the app shows.
 //
@@ -16840,6 +16826,90 @@ func (msgs Messages) CatalogYarn() string {
 	return Catalog.Format(msgs.locale, "catalogYarn", nil)
 }
 
+// CatalogComposer says "The package manager of PHP: Laravel, Symfony and other libraries."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogComposer() string { return In(i18n.Locale()).CatalogComposer() }
+
+// CatalogComposer says "The package manager of PHP: Laravel, Symfony and other libraries."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogComposer() string {
+	return Catalog.Format(msgs.locale, "catalogComposer", nil)
+}
+
+// CatalogUv says "A fast manager of Python, its packages, projects and tools from Astral."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogUv() string { return In(i18n.Locale()).CatalogUv() }
+
+// CatalogUv says "A fast manager of Python, its packages, projects and tools from Astral."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogUv() string {
+	return Catalog.Format(msgs.locale, "catalogUv", nil)
+}
+
+// CatalogPipx says "Installs Python command-line tools, each in its own environment."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogPipx() string { return In(i18n.Locale()).CatalogPipx() }
+
+// CatalogPipx says "Installs Python command-line tools, each in its own environment."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogPipx() string {
+	return Catalog.Format(msgs.locale, "catalogPipx", nil)
+}
+
+// CatalogBundler says "Installs the gems of a Ruby project at the versions its Gemfile names."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogBundler() string { return In(i18n.Locale()).CatalogBundler() }
+
+// CatalogBundler says "Installs the gems of a Ruby project at the versions its Gemfile names."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogBundler() string {
+	return Catalog.Format(msgs.locale, "catalogBundler", nil)
+}
+
+// CatalogMaven says "Builds Java projects and fetches their libraries, as pom.xml describes."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogMaven() string { return In(i18n.Locale()).CatalogMaven() }
+
+// CatalogMaven says "Builds Java projects and fetches their libraries, as pom.xml describes."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogMaven() string {
+	return Catalog.Format(msgs.locale, "catalogMaven", nil)
+}
+
+// CatalogGradle says "Builds Java, Kotlin and Android projects."
+// in the language the app shows.
+//
+// New computer: what the tool is for, under its name in the choice.
+func CatalogGradle() string { return In(i18n.Locale()).CatalogGradle() }
+
+// CatalogGradle says "Builds Java, Kotlin and Android projects."
+// in the language of msgs.
+//
+// New computer: what the tool is for, under its name in the choice.
+func (msgs Messages) CatalogGradle() string {
+	return Catalog.Format(msgs.locale, "catalogGradle", nil)
+}
+
 // CatalogGit says "Keeps the history of your code and syncs it with GitHub and other hosts."
 // in the language the app shows.
 //
@@ -17010,13 +17080,13 @@ func (msgs Messages) SetupPlanTitle() string {
 	return Catalog.Format(msgs.locale, "setupPlanTitle", nil)
 }
 
-// SetupPlanWhy says "The base first, then languages and tools, each through the way the wizard showed."
+// SetupPlanWhy says "What the rest needs first, then languages and tools, each through the way the Install page showed."
 // in the language the app shows.
 //
 // New computer: why under the plan's title.
 func SetupPlanWhy() string { return In(i18n.Locale()).SetupPlanWhy() }
 
-// SetupPlanWhy says "The base first, then languages and tools, each through the way the wizard showed."
+// SetupPlanWhy says "What the rest needs first, then languages and tools, each through the way the Install page showed."
 // in the language of msgs.
 //
 // New computer: why under the plan's title.
@@ -17050,6 +17120,42 @@ func SetupInstall(count int) string { return In(i18n.Locale()).SetupInstall(coun
 // New computer: the button that installs the plan, with how many tools.
 func (msgs Messages) SetupInstall(count int) string {
 	return Catalog.Format(msgs.locale, "setupInstall", map[string]any{"count": count})
+}
+
+// InstallWhy says "{tool} installs through {manager}."
+// in the language the app shows.
+//
+// Install plan of one tool: how it installs. tool is its name, manager what
+// installs it (mise, Homebrew, npm…).
+func InstallWhy(tool string, manager string) string {
+	return In(i18n.Locale()).InstallWhy(tool, manager)
+}
+
+// InstallWhy says "{tool} installs through {manager}."
+// in the language of msgs.
+//
+// Install plan of one tool: how it installs. tool is its name, manager what
+// installs it (mise, Homebrew, npm…).
+func (msgs Messages) InstallWhy(tool string, manager string) string {
+	return Catalog.Format(msgs.locale, "installWhy", map[string]any{"tool": tool, "manager": manager})
+}
+
+// InstallNeedsWhy says "First Hearth installs what {tool} needs: {needs}. Then {tool} through {manager}."
+// in the language the app shows.
+//
+// Install plan of one tool that needs others first. needs lists them by
+// name, comma-separated; manager is what installs the tool itself.
+func InstallNeedsWhy(tool string, needs string, manager string) string {
+	return In(i18n.Locale()).InstallNeedsWhy(tool, needs, manager)
+}
+
+// InstallNeedsWhy says "First Hearth installs what {tool} needs: {needs}. Then {tool} through {manager}."
+// in the language of msgs.
+//
+// Install plan of one tool that needs others first. needs lists them by
+// name, comma-separated; manager is what installs the tool itself.
+func (msgs Messages) InstallNeedsWhy(tool string, needs string, manager string) string {
+	return Catalog.Format(msgs.locale, "installNeedsWhy", map[string]any{"tool": tool, "needs": needs, "manager": manager})
 }
 
 // SetupRustup says "downloads rustup from rust-lang.org and installs stable Rust"
@@ -17096,34 +17202,238 @@ func (msgs Messages) SetupShellUnsupported(shell string) string {
 	return Catalog.Format(msgs.locale, "setupShellUnsupported", map[string]any{"shell": shell})
 }
 
-// SetupTitle says "New computer"
+// InstallTitle says "Install"
 // in the language the app shows.
 //
-// New computer wizard: its header title and the Overview's button that
-// opens it.
-func SetupTitle() string { return In(i18n.Locale()).SetupTitle() }
+// Sidebar item and title of the Install page: everything Hearth can
+// install, and the new computer wizard.
+func InstallTitle() string { return In(i18n.Locale()).InstallTitle() }
 
-// SetupTitle says "New computer"
+// InstallTitle says "Install"
 // in the language of msgs.
 //
-// New computer wizard: its header title and the Overview's button that
-// opens it.
-func (msgs Messages) SetupTitle() string {
-	return Catalog.Format(msgs.locale, "setupTitle", nil)
+// Sidebar item and title of the Install page: everything Hearth can
+// install, and the new computer wizard.
+func (msgs Messages) InstallTitle() string {
+	return Catalog.Format(msgs.locale, "installTitle", nil)
 }
 
-// SetupHint says "Choose languages, tools and AI agents, and install them in one plan"
+// InstallSubtitle says "Everything Hearth can install"
 // in the language the app shows.
 //
-// Tooltip of the Overview's button that opens the new computer wizard.
-func SetupHint() string { return In(i18n.Locale()).SetupHint() }
+// Install page header subtitle and its description in search.
+func InstallSubtitle() string { return In(i18n.Locale()).InstallSubtitle() }
 
-// SetupHint says "Choose languages, tools and AI agents, and install them in one plan"
+// InstallSubtitle says "Everything Hearth can install"
 // in the language of msgs.
 //
-// Tooltip of the Overview's button that opens the new computer wizard.
-func (msgs Messages) SetupHint() string {
-	return Catalog.Format(msgs.locale, "setupHint", nil)
+// Install page header subtitle and its description in search.
+func (msgs Messages) InstallSubtitle() string {
+	return Catalog.Format(msgs.locale, "installSubtitle", nil)
+}
+
+// InstallFilterAll says "All"
+// in the language the app shows.
+//
+// Install page filter segment: every tool.
+func InstallFilterAll() string { return In(i18n.Locale()).InstallFilterAll() }
+
+// InstallFilterAll says "All"
+// in the language of msgs.
+//
+// Install page filter segment: every tool.
+func (msgs Messages) InstallFilterAll() string {
+	return Catalog.Format(msgs.locale, "installFilterAll", nil)
+}
+
+// InstallFilterMissing says "Not installed"
+// in the language the app shows.
+//
+// Install page filter segment: tools not on this computer.
+func InstallFilterMissing() string { return In(i18n.Locale()).InstallFilterMissing() }
+
+// InstallFilterMissing says "Not installed"
+// in the language of msgs.
+//
+// Install page filter segment: tools not on this computer.
+func (msgs Messages) InstallFilterMissing() string {
+	return Catalog.Format(msgs.locale, "installFilterMissing", nil)
+}
+
+// InstallFilterHave says "Installed"
+// in the language the app shows.
+//
+// Install page filter segment: tools on this computer.
+func InstallFilterHave() string { return In(i18n.Locale()).InstallFilterHave() }
+
+// InstallFilterHave says "Installed"
+// in the language of msgs.
+//
+// Install page filter segment: tools on this computer.
+func (msgs Messages) InstallFilterHave() string {
+	return Catalog.Format(msgs.locale, "installFilterHave", nil)
+}
+
+// InstallNothingHere says "Nothing matches this filter."
+// in the language the app shows.
+//
+// Install page: the filter leaves no tool.
+func InstallNothingHere() string { return In(i18n.Locale()).InstallNothingHere() }
+
+// InstallNothingHere says "Nothing matches this filter."
+// in the language of msgs.
+//
+// Install page: the filter leaves no tool.
+func (msgs Messages) InstallNothingHere() string {
+	return Catalog.Format(msgs.locale, "installNothingHere", nil)
+}
+
+// InstalledVersion says "installed · {version}"
+// in the language the app shows.
+//
+// Install page chip of a tool on this computer, with its version.
+func InstalledVersion(version string) string { return In(i18n.Locale()).InstalledVersion(version) }
+
+// InstalledVersion says "installed · {version}"
+// in the language of msgs.
+//
+// Install page chip of a tool on this computer, with its version.
+func (msgs Messages) InstalledVersion(version string) string {
+	return Catalog.Format(msgs.locale, "installedVersion", map[string]any{"version": version})
+}
+
+// InstalledPlain says "installed"
+// in the language the app shows.
+//
+// Install page chip of a tool on this computer whose version is unknown.
+func InstalledPlain() string { return In(i18n.Locale()).InstalledPlain() }
+
+// InstalledPlain says "installed"
+// in the language of msgs.
+//
+// Install page chip of a tool on this computer whose version is unknown.
+func (msgs Messages) InstalledPlain() string {
+	return Catalog.Format(msgs.locale, "installedPlain", nil)
+}
+
+// SetupHaveOf says "installed: {have} of {total}"
+// in the language the app shows.
+//
+// Install page card header aside: how many tools of the group are on this
+// computer.
+func SetupHaveOf(have int, total int) string { return In(i18n.Locale()).SetupHaveOf(have, total) }
+
+// SetupHaveOf says "installed: {have} of {total}"
+// in the language of msgs.
+//
+// Install page card header aside: how many tools of the group are on this
+// computer.
+func (msgs Messages) SetupHaveOf(have int, total int) string {
+	return Catalog.Format(msgs.locale, "setupHaveOf", map[string]any{"have": have, "total": total})
+}
+
+// SetupMore says "{count} more"
+// in the language the app shows.
+//
+// Install page: row that stands for the tools of a group not shown yet.
+func SetupMore(count int) string { return In(i18n.Locale()).SetupMore(count) }
+
+// SetupMore says "{count} more"
+// in the language of msgs.
+//
+// Install page: row that stands for the tools of a group not shown yet.
+func (msgs Messages) SetupMore(count int) string {
+	return Catalog.Format(msgs.locale, "setupMore", map[string]any{"count": count})
+}
+
+// SetupShowMore says "show ›"
+// in the language the app shows.
+//
+// Install page: button of the row of tools not shown yet.
+func SetupShowMore() string { return In(i18n.Locale()).SetupShowMore() }
+
+// SetupShowMore says "show ›"
+// in the language of msgs.
+//
+// Install page: button of the row of tools not shown yet.
+func (msgs Messages) SetupShowMore() string {
+	return Catalog.Format(msgs.locale, "setupShowMore", nil)
+}
+
+// SetupSystemCopy says "The system has its own {version}: Hearth installs one to work with beside it."
+// in the language the app shows.
+//
+// Install page: a language whose only copy is the system's, which Hearth
+// leaves alone; version is that copy's.
+func SetupSystemCopy(version string) string { return In(i18n.Locale()).SetupSystemCopy(version) }
+
+// SetupSystemCopy says "The system has its own {version}: Hearth installs one to work with beside it."
+// in the language of msgs.
+//
+// Install page: a language whose only copy is the system's, which Hearth
+// leaves alone; version is that copy's.
+func (msgs Messages) SetupSystemCopy(version string) string {
+	return Catalog.Format(msgs.locale, "setupSystemCopy", map[string]any{"version": version})
+}
+
+// InstallClear says "Clear selection"
+// in the language the app shows.
+//
+// Install page header button: switches off every tool chosen.
+func InstallClear() string { return In(i18n.Locale()).InstallClear() }
+
+// InstallClear says "Clear selection"
+// in the language of msgs.
+//
+// Install page header button: switches off every tool chosen.
+func (msgs Messages) InstallClear() string {
+	return Catalog.Format(msgs.locale, "installClear", nil)
+}
+
+// SetupNextCount says "Next: plan · {count}"
+// in the language the app shows.
+//
+// Install page header button: makes the plan of the tools chosen; count is
+// how many are chosen.
+func SetupNextCount(count int) string { return In(i18n.Locale()).SetupNextCount(count) }
+
+// SetupNextCount says "Next: plan · {count}"
+// in the language of msgs.
+//
+// Install page header button: makes the plan of the tools chosen; count is
+// how many are chosen.
+func (msgs Messages) SetupNextCount(count int) string {
+	return Catalog.Format(msgs.locale, "setupNextCount", map[string]any{"count": count})
+}
+
+// InstallNoteNone says "Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before any…"
+// in the language the app shows.
+//
+// Install page note under the cards when nothing is chosen.
+func InstallNoteNone() string { return In(i18n.Locale()).InstallNoteNone() }
+
+// InstallNoteNone says "Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before any…"
+// in the language of msgs.
+//
+// Install page note under the cards when nothing is chosen.
+func (msgs Messages) InstallNoteNone() string {
+	return Catalog.Format(msgs.locale, "installNoteNone", nil)
+}
+
+// InstallNote says "Chosen {count}: {names}. Hearth installs them with what they need and shows the plan first. It leaves what is install…"
+// in the language the app shows.
+//
+// Install page note under the cards. names lists the tools chosen,
+// comma-separated.
+func InstallNote(count int, names string) string { return In(i18n.Locale()).InstallNote(count, names) }
+
+// InstallNote says "Chosen {count}: {names}. Hearth installs them with what they need and shows the plan first. It leaves what is install…"
+// in the language of msgs.
+//
+// Install page note under the cards. names lists the tools chosen,
+// comma-separated.
+func (msgs Messages) InstallNote(count int, names string) string {
+	return Catalog.Format(msgs.locale, "installNote", map[string]any{"count": count, "names": names})
 }
 
 // SetupStepChoice says "Step 1 of 4 · choice"
@@ -17376,48 +17686,6 @@ func SetupAgents() string { return In(i18n.Locale()).SetupAgents() }
 // New computer: card of AI agents to choose.
 func (msgs Messages) SetupAgents() string {
 	return Catalog.Format(msgs.locale, "setupAgents", nil)
-}
-
-// SetupHaveNone says "installed: none"
-// in the language the app shows.
-//
-// New computer: languages card aside when none is installed.
-func SetupHaveNone() string { return In(i18n.Locale()).SetupHaveNone() }
-
-// SetupHaveNone says "installed: none"
-// in the language of msgs.
-//
-// New computer: languages card aside when none is installed.
-func (msgs Messages) SetupHaveNone() string {
-	return Catalog.Format(msgs.locale, "setupHaveNone", nil)
-}
-
-// SetupHaveCount says "installed: {count}"
-// in the language the app shows.
-//
-// New computer: languages card aside, how many are installed.
-func SetupHaveCount(count int) string { return In(i18n.Locale()).SetupHaveCount(count) }
-
-// SetupHaveCount says "installed: {count}"
-// in the language of msgs.
-//
-// New computer: languages card aside, how many are installed.
-func (msgs Messages) SetupHaveCount(count int) string {
-	return Catalog.Format(msgs.locale, "setupHaveCount", map[string]any{"count": count})
-}
-
-// SetupHave says "already there"
-// in the language the app shows.
-//
-// New computer: a tool that is installed already, in place of its switch.
-func SetupHave() string { return In(i18n.Locale()).SetupHave() }
-
-// SetupHave says "already there"
-// in the language of msgs.
-//
-// New computer: a tool that is installed already, in place of its switch.
-func (msgs Messages) SetupHave() string {
-	return Catalog.Format(msgs.locale, "setupHave", nil)
 }
 
 // SetupRequired says "required"
