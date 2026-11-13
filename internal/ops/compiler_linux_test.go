@@ -14,7 +14,7 @@ func TestCompilerPlanLinux(t *testing.T) {
 		manager inventory.PackageManager
 		want    []string // nil: no plan
 	}{
-		{inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}, []string{"/usr/bin/apt-get", "-oDPkg::Lock::Timeout=600", "install", "-y", "build-essential"}},
+		{inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}, []string{"/bin/sh", "-c", "/usr/bin/apt-get -oDPkg::Lock::Timeout=600 update && /usr/bin/apt-get -oDPkg::Lock::Timeout=600 install -y build-essential"}},
 		{inventory.PackageManager{ID: "dnf", Name: "DNF", Path: "/usr/bin/dnf"}, []string{"/usr/bin/dnf", "install", "-y", "gcc", "gcc-c++", "make"}},
 		{inventory.PackageManager{ID: "zypper", Name: "Zypper", Path: "/usr/bin/zypper"}, []string{"/usr/bin/zypper", "--non-interactive", "install", "gcc", "gcc-c++", "make"}},
 		{inventory.PackageManager{ID: "pacman", Name: "pacman", Path: "/usr/bin/pacman"}, []string{"/usr/bin/pacman", "-S", "--needed", "--noconfirm", "base-devel"}},

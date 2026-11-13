@@ -132,3 +132,49 @@ func TestSetupPlanNpmWithoutMise(t *testing.T) {
 		t.Errorf("Gemini: %v, %+v", p.Steps, parts)
 	}
 }
+
+// Homebrew installs a server without starting it: brew services starts
+// it, by the formula's name without its tap. apt's packages start their
+// own.
+func TestSetupPlanDatabases(t *testing.T) {
+	brew := []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}
+	s := Setup{GOOS: "darwin", Tools: []string{"postgresql", "mongodb"}, Have: map[string]bool{"homebrew": true}, Managers: brew, Title: func(id string) string { return id }}
+	p, parts, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{
+		{"/opt/homebrew/bin/brew", "install", "--formula", "postgresql@17"},
+		{"/opt/homebrew/bin/brew", "services", "start", "postgresql@17"},
+		{"/opt/homebrew/bin/brew", "install", "--formula", "mongodb/brew/mongodb-community"},
+		{"/opt/homebrew/bin/brew", "services", "start", "mongodb-community"},
+	}
+	if len(parts) != 2 || len(p.Steps) != len(want) {
+		t.Fatalf("parts %+v, steps %+v", parts, p.Steps)
+	}
+	for i, step := range p.Steps {
+		if !slices.Equal(step.Argv, want[i]) {
+			t.Errorf("step %d: %q, want %q", i, step.Argv, want[i])
+		}
+	}
+
+	apt := []inventory.PackageManager{{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}}
+	s = Setup{GOOS: "linux", Tools: []string{"redis"}, Managers: apt, Title: func(id string) string { return id }}
+	p, _, err = SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash"})
+	if err != nil || len(p.Steps) != 1 || !strings.Contains(strings.Join(p.Steps[0].Argv, " "), "install -y redis-server") {
+		t.Errorf("Redis through apt: %+v, %v", p.Steps, err)
+	}
+}
+
+// MariaDB does not install beside MySQL, there or chosen with it.
+func TestSetupPartsConflicts(t *testing.T) {
+	brew := []inventory.PackageManager{{ID: "brew"}}
+	s := Setup{GOOS: "darwin", Tools: []string{"mariadb"}, Have: map[string]bool{"homebrew": true, "mysql": true}, Managers: brew}
+	if parts := s.Parts(); len(parts) != 0 {
+		t.Errorf("MariaDB beside MySQL: %+v", parts)
+	}
+	s = Setup{GOOS: "darwin", Tools: []string{"mysql", "mariadb"}, Have: map[string]bool{"homebrew": true}, Managers: brew}
+	if parts := s.Parts(); len(parts) != 1 || parts[0].Tool != "mysql" {
+		t.Errorf("both chosen: %+v", parts)
+	}
+}

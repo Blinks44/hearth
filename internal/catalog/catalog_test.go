@@ -103,6 +103,10 @@ func TestRecommended(t *testing.T) {
 		{"bundler", "linux", "mise", []string{"ruby", "mise"}},
 		{"maven", "windows", "mise", []string{"java", "mise"}},
 		{"gradle", "darwin", "mise", []string{"java", "mise"}},
+		{"postgresql", "darwin", "brew", []string{"homebrew"}},
+		{"postgresql", "windows", "winget", nil},
+		{"postgresql", "linux", "apt", nil},
+		{"mongodb", "darwin", "brew", []string{"homebrew"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.id+" on "+tt.goos, func(t *testing.T) {
@@ -122,7 +126,7 @@ func TestRecommended(t *testing.T) {
 }
 
 func TestToolsNotOnASystem(t *testing.T) {
-	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}} {
+	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}, {"redis", "windows"}, {"mysql", "windows"}, {"mariadb", "windows"}, {"mongodb", "linux"}} {
 		e, _ := Find(tt.id)
 		if slices.Contains(e.Systems(), tt.goos) {
 			t.Errorf("%s installs on %s", tt.id, tt.goos)
@@ -142,6 +146,23 @@ func TestDockerEngines(t *testing.T) {
 		}
 		if got, ok := EngineMethod(m.Engine, m.Manager); !ok || got.Package != m.Package {
 			t.Errorf("%s through %s: %+v", m.Engine, m.Manager, got)
+		}
+	}
+}
+
+// Each database has its kind, and what it clashes with clashes with it.
+func TestDatabases(t *testing.T) {
+	for _, e := range Tools {
+		if e.Group != Database {
+			continue
+		}
+		if DatabaseKinds[e.ID] == "" {
+			t.Errorf("%s has no kind", e.ID)
+		}
+		for _, id := range e.Conflicts {
+			if other, _ := Find(id); !slices.Contains(other.Conflicts, e.ID) {
+				t.Errorf("%s clashes with %s, not back", e.ID, id)
+			}
 		}
 	}
 }

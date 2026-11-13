@@ -222,6 +222,7 @@ func TestCommand(t *testing.T) {
 		"brew\x00install\x00--cask\x00docker": "brew install --cask docker",
 		"open\x00-a\x00Docker Desktop":        `open -a "Docker Desktop"`,
 		"echo\x00":                            `echo ""`,
+		"apt-get\x00update\x00&&\x00apt-get\x00install\x00-y\x00jq": "apt-get update && apt-get install -y jq",
 	} {
 		if got := Command(strings.Split(argv, "\x00")); got != want {
 			t.Errorf("Command(%q) = %s, want %s", argv, got, want)

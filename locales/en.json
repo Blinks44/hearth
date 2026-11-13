@@ -2104,7 +2104,7 @@
   "DatabaseUnknown": "status unknown",
   "DatabaseError": "service error",
   "DatabaseServer": "Server",
-  "DatabaseAddress": "Path, ports and status",
+  "DatabaseAddress": "Connection and status",
   "DatabaseNone": "No matching database servers found.",
   "DatabaseProjects": "Databases in projects",
   "DatabaseNoProjects": "No local database references found.",
@@ -7461,5 +7461,119 @@
   },
   "@setupStoppedLead": {
     "description": "New computer: step 3 lead when the user stopped the installation."
+  },
+  "catalogPostgresql": "A relational database server, the default of many web frameworks.",
+  "@catalogPostgresql": {
+    "description": "Install page: what PostgreSQL is for."
+  },
+  "catalogRedis": "An in-memory key-value store for caches, queues and sessions.",
+  "@catalogRedis": {
+    "description": "Install page: what Redis is for."
+  },
+  "catalogMysql": "A popular relational database server, as many PHP and WordPress projects use.",
+  "@catalogMysql": {
+    "description": "Install page: what MySQL is for."
+  },
+  "catalogMariadb": "A community fork of MySQL that works with the same clients and drivers.",
+  "@catalogMariadb": {
+    "description": "Install page: what MariaDB is for."
+  },
+  "catalogMongodb": "A document database that keeps JSON-like records. Community Server, under the SSPL license.",
+  "@catalogMongodb": {
+    "description": "Install page: what MongoDB is for."
+  },
+  "setupDatabases": "Databases",
+  "@setupDatabases": {
+    "description": "Install page: title of the card of database servers."
+  },
+  "setupConflicts": "Does not install beside {name}",
+  "@setupConflicts": {
+    "description": "Install page and the Databases page's menu: a server whose packages clash with one installed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "MySQL"
+      }
+    }
+  },
+  "autostartOnTitle": "Start {name} automatically",
+  "@autostartOnTitle": {
+    "description": "Title of the plan that turns a database service's autostart on.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "autostartOffTitle": "Stop starting {name} automatically",
+  "@autostartOffTitle": {
+    "description": "Title of the plan that turns a database service's autostart off.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "autostartOnChange": "{name} starts with the system or at login",
+  "@autostartOnChange": {
+    "description": "Plan change: a service's autostart is on.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "autostartOffChange": "{name} no longer starts by itself",
+  "@autostartOffChange": {
+    "description": "Plan change: a service's autostart is off.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "autostartCheckFailed": "Autostart of {name} did not change",
+  "@autostartCheckFailed": {
+    "description": "Plan check failed: the service's autostart is not as the plan set it.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "databaseInstall": "Install server",
+  "@databaseInstall": {
+    "description": "Databases page: header button whose menu installs a database server."
+  },
+  "databaseAutostart": "Autostart",
+  "@databaseAutostart": {
+    "description": "Databases page: card of the services with a switch each for starting with the system or at login."
+  },
+  "databaseAutostartFor": "Start {name} automatically",
+  "@databaseAutostartFor": {
+    "description": "Databases page: accessible label of a service's autostart switch.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "databaseCopyURL": "Copy connection string",
+  "@databaseCopyURL": {
+    "description": "Databases page: tooltip of the button that copies a server's connection string."
+  },
+  "databaseURLCopied": "Connection string copied",
+  "@databaseURLCopied": {
+    "description": "Toast after copying a connection string."
+  },
+  "databasePassword": "password as set on the server",
+  "@databasePassword": {
+    "description": "Databases page: under a connection string the server asks a password for, which Hearth does not know."
   }
 }

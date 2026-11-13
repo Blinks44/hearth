@@ -150,6 +150,11 @@ func Command(argv []string) string {
 	parts := make([]string, len(argv))
 	for i, a := range argv {
 		parts[i] = quoteArg(a)
+		// A step's Runs shows && between the commands it runs one after
+		// the other, as a shell does.
+		if a == "&&" {
+			parts[i] = a
+		}
 	}
 	return strings.Join(parts, " ")
 }

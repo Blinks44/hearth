@@ -201,12 +201,16 @@ func packageSteps(action PackageAction, m inventory.PackageManager, pkgs []inven
 		return []Step{{Argv: append(append([]string{"powershell.exe"}, script...), names...)}}, nil
 	case "apt":
 		// A new Ubuntu updates itself in the background for a while: apt
-		// waits for dpkg's lock instead of failing at once.
-		// The plan shows the command without it.
+		// waits for dpkg's lock instead of failing at once. The package
+		// lists of a computer that has not updated them in a while name
+		// versions the mirrors no longer keep: apt-get update reads them
+		// first, in the same command, for one password. The plan shows
+		// the commands without the lock's option.
 		waiting := func(argv ...string) ([]Step, []Note) {
-			steps, notes := admin(append([]string{argv[0], "-oDPkg::Lock::Timeout=600"}, argv[1:]...)...)
-			steps[0].Runs = append(argv, names...)
-			return steps, notes
+			lock := "-oDPkg::Lock::Timeout=600"
+			script := argv[0] + " " + lock + " update && " + strings.Join(append(append([]string{argv[0], lock}, argv[1:]...), names...), " ")
+			runs := append(append([]string{argv[0], "update", "&&"}, argv...), names...)
+			return []Step{{Argv: []string{"/bin/sh", "-c", script}, Runs: runs, Admin: true}}, nil
 		}
 		switch action {
 		case PackageInstall:

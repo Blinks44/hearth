@@ -21,10 +21,12 @@ func TestDatabaseSystemd(t *testing.T) {
 	r := &run.Fake{}
 	r.Stdout("postgresql.service loaded active exited PostgreSQL RDBMS\npostgresql@17-main.service loaded active running PostgreSQL\nmysql.service loaded inactive dead MySQL\nmongod.service loaded failed failed MongoDB\nmssql-server.service loaded inactive dead SQL Server\npostgres-exporter.service loaded active running Metrics", exe, "list-units", "--all", "--type=service", "--no-legend", "--plain", "--no-pager")
 	r.Stdout("LISTEN 0 100 127.0.0.1:5432 0.0.0.0:*\nLISTEN 0 100 [::1]:6379 [::]:*", ss, "-ltnH")
+	r.Set(run.Result{ExitCode: 1, Stdout: []byte("enabled\ndisabled\nenabled\nstatic\n")}, nil, exe, "is-enabled", "postgresql.service", "mysql.service", "mongod.service", "mssql-server.service")
 	d := &inventory.DatabaseState{}
 	databaseServices(t.Context(), r, env, d)
 	databaseListeners(t.Context(), r, env, d)
-	if len(d.Servers) != 4 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || d.Servers[2].Kind != "MongoDB" || d.Servers[2].Status != "error" || d.Servers[3].Status != "stopped" || len(d.Listeners) != 2 {
+	if len(d.Servers) != 4 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || d.Servers[2].Kind != "MongoDB" || d.Servers[2].Status != "error" || d.Servers[3].Status != "stopped" || len(d.Listeners) != 2 ||
+		d.Servers[0].Autostart != "on" || d.Servers[1].Autostart != "off" || d.Servers[3].Autostart != "" {
 		t.Fatal(d)
 	}
 }

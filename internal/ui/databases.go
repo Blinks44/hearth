@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -16,7 +18,7 @@ import (
 
 func (a *App) databases(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.databaseInstallMenu(c) }})
 		st, ok := a.Snapshot.Tool("databases")
 		if !ok || st.Databases == nil {
 			a.toolEmpty(c, "databases", p.title())
@@ -100,7 +102,7 @@ func (a *App) databases(c *ui.Context, p page) {
 							cardNote(c, locales.DatabaseNoClients())
 						}
 					})
-					listCard(c, locales.DatabaseServices(), "", func() {
+					listCard(c, locales.DatabaseAutostart(), "", func() {
 						shown := 0
 						for _, db := range servers {
 							if db.Service == "" || db.Source == "docker" {
@@ -108,7 +110,7 @@ func (a *App) databases(c *ui.Context, p page) {
 							}
 							shown++
 							text, _ := databaseStatus(c, db.Status)
-							listRow(c, db.Service, false, text, func() {})
+							listRow(c, db.Service, false, text, func() { a.autostartSwitch(c, db) })
 						}
 						if shown == 0 {
 							cardNote(c, locales.DatabaseNoServices())
@@ -164,7 +166,8 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 				})
 				ui.Text(c, databaseSource(db.Source)).Width(68).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-					address := tilde(db.Path, a.Home)
+					url, password := databaseURL(db, filepath.Base(a.Home))
+					address := cmp.Or(url, tilde(db.Path, a.Home))
 					if db.Source == "docker" {
 						address = strings.Join(db.Ports, ", ")
 					}
@@ -172,6 +175,9 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						address = "—"
 					}
 					clipped(c, address).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
+					if password && db.Source != "docker" {
+						ui.Text(c, locales.DatabasePassword()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					}
 					text, dot := databaseStatus(c, db.Status)
 					bg, ink := pal.Muted, pal.MonoText
 					if db.Status == "running" {
@@ -185,20 +191,29 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						ui.Text(c, locales.DatabaseClient(client.Tool+" "+client.Version)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				if db.Path != "" {
+				if url, _ := databaseURL(db, filepath.Base(a.Home)); url != "" && db.Source != "docker" {
+					iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
+				} else if db.Path != "" {
 					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(db.Path); c.Toast(locales.PathCopied()) })
-					if a.Shell != nil {
-						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
-					}
 				}
-				if plan, ok := a.servicePlan(db); ok {
+				if db.Path != "" && a.Shell != nil {
+					iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
+				}
+				plan, canService := a.servicePlan(db)
+				if canService || db.Path != "" && db.Source != "docker" {
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-						label := locales.ServiceStart()
-						if db.Status == "running" {
-							label = locales.ServiceStop()
+						if canService {
+							label := locales.ServiceStart()
+							if db.Status == "running" {
+								label = locales.ServiceStop()
+							}
+							if menu.Item(label).Chosen() {
+								a.Propose(plan)
+							}
 						}
-						if menu.Item(label).Chosen() {
-							a.Propose(plan)
+						if db.Path != "" && menu.Item(locales.CopyPath()).Chosen() {
+							c.WriteClipboard(db.Path)
+							c.Toast(locales.PathCopied())
 						}
 					})
 				}
@@ -320,4 +335,93 @@ func (a *App) conflictPlan(is issues.Issue, servers []inventory.Database) (ops.P
 		return ops.Plan{}, false
 	}
 	return ops.ServicePlan(ops.ServiceStop, holder[0], a.detect("databases"))
+}
+
+// databaseServer is the first server of kind the system or a package
+// manager keeps, not a container's; false when there is none.
+func (a *App) databaseServer(kind string) (inventory.Database, bool) {
+	for _, db := range inventory.DatabaseServers(a.Snapshot) {
+		if db.Kind == kind && db.Source != "docker" {
+			return db, true
+		}
+	}
+	return inventory.Database{}, false
+}
+
+// databaseInstallMenu is the header's button whose menu installs the
+// catalog's database servers that install here: those there show their
+// version, one that clashes with a server there says so.
+func (a *App) databaseInstallMenu(c *ui.Context) {
+	in := a.setupHere()
+	offers := a.setupOffers(in, catalog.Database)
+	if a.BuildPlan == nil || len(offers) == 0 {
+		return
+	}
+	ui.PrimaryButton(c.Key("database-install"), locales.DatabaseInstall()).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
+		for _, e := range offers {
+			title := setupTitle(e.ID)
+			item := m.Item(title).ID(e.ID)
+			switch db, have := a.databaseServer(catalog.DatabaseKinds[e.ID]); {
+			case have:
+				item.Disabled(true).Trailing(locales.InstalledVersion(db.Version))
+				continue
+			case a.setupConflict(e) != "":
+				item.Disabled(true).Subtitle(locales.SetupConflicts(setupTitle(a.setupConflict(e))))
+				continue
+			}
+			if ms := e.On(goos); len(ms) > 0 {
+				i := slices.IndexFunc(ms, in.Usable)
+				if i < 0 {
+					item.Disabled(true)
+					continue
+				}
+				item.Subtitle(locales.SetupVia(managerTitle(ms[i])))
+			}
+			if item.Trailing(locales.AgentInstall()).Chosen() {
+				a.installTool(e.ID)
+			}
+		}
+	})
+}
+
+// autostartSwitch is the switch that turns db's service's autostart on
+// and off through a plan; a service whose autostart is not known, or
+// Hearth cannot change, shows none.
+func (a *App) autostartSwitch(c *ui.Context, db inventory.Database) {
+	if db.Autostart == "" {
+		return
+	}
+	plan, ok := ops.AutostartPlan(db.Autostart != "on", db, a.detect("databases"))
+	if !ok {
+		return
+	}
+	on := db.Autostart == "on"
+	if toggle(c, "autostart:"+db.Service, &on).Label(locales.DatabaseAutostartFor(db.Service)).Changed() {
+		a.Propose(plan)
+	}
+}
+
+// databaseURL is the string a client connects to db with, at its kind's
+// port, as the server sets its users up: Homebrew's PostgreSQL lets the
+// user in as themselves, its MySQL root, without a password; password
+// reports a server that asks one. "" for a kind Hearth has none for.
+func databaseURL(db inventory.Database, user string) (url string, password bool) {
+	switch db.Kind {
+	case "PostgreSQL":
+		if db.Source == "brew" && user != "" {
+			return "postgresql://" + user + "@localhost:5432/postgres", false
+		}
+		return "postgresql://postgres@localhost:5432/postgres", true
+	case "MySQL":
+		return "mysql://root@localhost:3306", db.Source != "brew"
+	case "MariaDB":
+		return "mysql://root@localhost:3306", true
+	case "Redis":
+		return "redis://localhost:6379", false
+	case "MongoDB":
+		return "mongodb://localhost:27017", false
+	case "SQL Server":
+		return "sqlserver://sa@localhost:1433", true
+	}
+	return "", false
 }

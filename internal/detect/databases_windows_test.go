@@ -19,14 +19,15 @@ func init() {
 func TestDatabaseWindowsServices(t *testing.T) {
 	d := &inventory.DatabaseState{}
 	addDatabaseServices(d, []winService{
-		{"postgresql-x64-17", windows.SERVICE_RUNNING},
-		{"EventLog", windows.SERVICE_RUNNING},
-		{"MySQL80", windows.SERVICE_STOPPED},
-		{"MongoDB", windows.SERVICE_RUNNING},
-		{"MSSQL$SQLEXPRESS", windows.SERVICE_RUNNING},
-		{"SQLBrowser", windows.SERVICE_STOPPED},
+		{"postgresql-x64-17", windows.SERVICE_RUNNING, windows.SERVICE_AUTO_START},
+		{"EventLog", windows.SERVICE_RUNNING, 0},
+		{"MySQL80", windows.SERVICE_STOPPED, windows.SERVICE_DEMAND_START},
+		{"MongoDB", windows.SERVICE_RUNNING, 0},
+		{"MSSQL$SQLEXPRESS", windows.SERVICE_RUNNING, windows.SERVICE_AUTO_START},
+		{"SQLBrowser", windows.SERVICE_STOPPED, 0},
 	})
-	if len(d.Servers) != 4 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || d.Servers[2].Kind != "MongoDB" || d.Servers[3].Kind != "SQL Server" {
+	if len(d.Servers) != 4 || d.Servers[0].Status != "running" || d.Servers[1].Status != "stopped" || d.Servers[2].Kind != "MongoDB" || d.Servers[3].Kind != "SQL Server" ||
+		d.Servers[0].Autostart != "on" || d.Servers[1].Autostart != "off" || d.Servers[2].Autostart != "" {
 		t.Fatal(d)
 	}
 }

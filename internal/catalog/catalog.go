@@ -19,6 +19,7 @@ const (
 	Language
 	Tool
 	Agent
+	Database
 )
 
 // Method is a way to install a tool.
@@ -135,6 +136,9 @@ type Entry struct {
 	Methods []Method
 	// Needs are the tools it needs first beyond its manager.
 	Needs []string
+	// Conflicts are the tools it does not install beside: their packages
+	// put the same commands in the same place.
+	Conflicts []string
 }
 
 // Systems are the systems e installs on.
@@ -257,6 +261,36 @@ var Tools = []Entry{
 	{ID: "maven", Group: Tool, Methods: mise("maven"), Needs: []string{"java"}},
 	{ID: "gradle", Group: Tool, Methods: mise("gradle"), Needs: []string{"java"}},
 
+	// Database servers install through the system's manager, which
+	// sets their service up; Homebrew's starts with brew services. On
+	// Linux only Debian's and Ubuntu's packages create a server that runs
+	// as installed: elsewhere it waits for its first setup. On Windows
+	// only EDB's PostgreSQL and MongoDB's installers set a service up:
+	// WinGet's MySQL and MariaDB come without one, and Redis has no
+	// Windows build of its own. MongoDB is in no Linux distribution and in
+	// Homebrew only through MongoDB's tap.
+	{ID: "postgresql", Group: Database, Methods: []Method{
+		{Manager: "brew", Package: "postgresql@17", Kind: "formula"},
+		{Manager: "winget", Package: "PostgreSQL.PostgreSQL.17"},
+		{Manager: "apt", Package: "postgresql"},
+	}},
+	{ID: "redis", Group: Database, OS: []string{"darwin", "linux"}, Methods: []Method{
+		{Manager: "brew", Package: "redis", Kind: "formula"},
+		{Manager: "apt", Package: "redis-server"},
+	}},
+	{ID: "mysql", Group: Database, OS: []string{"darwin", "linux"}, Conflicts: []string{"mariadb"}, Methods: []Method{
+		{Manager: "brew", Package: "mysql@8.4", Kind: "formula"},
+		{Manager: "apt", Package: "mysql-server"},
+	}},
+	{ID: "mariadb", Group: Database, OS: []string{"darwin", "linux"}, Conflicts: []string{"mysql"}, Methods: []Method{
+		{Manager: "brew", Package: "mariadb", Kind: "formula"},
+		{Manager: "apt", Package: "mariadb-server"},
+	}},
+	{ID: "mongodb", Group: Database, OS: []string{"darwin", "windows"}, Methods: []Method{
+		{Manager: "brew", Package: "mongodb/brew/mongodb-community", Kind: "formula"},
+		{Manager: "winget", Package: "MongoDB.Server"},
+	}},
+
 	// Agents install through the system's manager first, as a tool that
 	// is not a language, then npm. Claude Code's own installer comes
 	// first: it is how Anthropic says to install it, and it updates
@@ -297,6 +331,10 @@ var Tools = []Entry{
 	}},
 }
 
+// DatabaseKinds are the kinds of server, as inventory.DatabaseKind names
+// them, of the catalog's databases.
+var DatabaseKinds = map[string]string{"postgresql": "PostgreSQL", "redis": "Redis", "mysql": "MySQL", "mariadb": "MariaDB", "mongodb": "MongoDB"}
+
 // Find returns the entry of the tool id.
 func Find(id string) (Entry, bool) {
 	i := slices.IndexFunc(Tools, func(e Entry) bool { return e.ID == id })
@@ -310,35 +348,40 @@ func Find(id string) (Entry, bool) {
 // tool not in the catalog.
 func About(id string) string {
 	about, ok := map[string]func() string{
-		"homebrew": locales.CatalogHomebrew,
-		"mise":     locales.CatalogMise,
-		"node":     locales.CatalogNode,
-		"python":   locales.CatalogPython,
-		"go":       locales.CatalogGo,
-		"rust":     locales.CatalogRust,
-		"bun":      locales.CatalogBun,
-		"php":      locales.CatalogPhp,
-		"java":     locales.CatalogJava,
-		"ruby":     locales.CatalogRuby,
-		"dotnet":   locales.CatalogDotnet,
-		"composer": locales.CatalogComposer,
-		"uv":       locales.CatalogUv,
-		"pipx":     locales.CatalogPipx,
-		"bundler":  locales.CatalogBundler,
-		"maven":    locales.CatalogMaven,
-		"gradle":   locales.CatalogGradle,
-		"pnpm":     locales.CatalogPnpm,
-		"yarn":     locales.CatalogYarn,
-		"git":      locales.CatalogGit,
-		"docker":   locales.CatalogDocker,
-		"claude":   locales.CatalogClaude,
-		"codex":    locales.CatalogCodex,
-		"copilot":  locales.CatalogCopilot,
-		"gemini":   locales.CatalogGemini,
-		"cursor":   locales.CatalogCursor,
-		"opencode": locales.CatalogOpencode,
-		"grok":     locales.CatalogGrok,
-		"kimi":     locales.CatalogKimi,
+		"homebrew":   locales.CatalogHomebrew,
+		"mise":       locales.CatalogMise,
+		"node":       locales.CatalogNode,
+		"python":     locales.CatalogPython,
+		"go":         locales.CatalogGo,
+		"rust":       locales.CatalogRust,
+		"bun":        locales.CatalogBun,
+		"php":        locales.CatalogPhp,
+		"java":       locales.CatalogJava,
+		"ruby":       locales.CatalogRuby,
+		"dotnet":     locales.CatalogDotnet,
+		"composer":   locales.CatalogComposer,
+		"uv":         locales.CatalogUv,
+		"pipx":       locales.CatalogPipx,
+		"bundler":    locales.CatalogBundler,
+		"maven":      locales.CatalogMaven,
+		"gradle":     locales.CatalogGradle,
+		"pnpm":       locales.CatalogPnpm,
+		"yarn":       locales.CatalogYarn,
+		"git":        locales.CatalogGit,
+		"docker":     locales.CatalogDocker,
+		"claude":     locales.CatalogClaude,
+		"codex":      locales.CatalogCodex,
+		"copilot":    locales.CatalogCopilot,
+		"gemini":     locales.CatalogGemini,
+		"cursor":     locales.CatalogCursor,
+		"opencode":   locales.CatalogOpencode,
+		"grok":       locales.CatalogGrok,
+		"kimi":       locales.CatalogKimi,
+		"postgresql": locales.CatalogPostgresql,
+		"redis":      locales.CatalogRedis,
+		"mysql":      locales.CatalogMysql,
+		"mariadb":    locales.CatalogMariadb,
+		"mongodb":    locales.CatalogMongodb,
 	}[id]
 	if !ok {
 		return ""

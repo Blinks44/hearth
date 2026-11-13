@@ -47,6 +47,13 @@ func detectDatabases(ctx context.Context, r run.Runner, term, gui sysenv.Env, gl
 			if strings.Contains(v, "MariaDB") {
 				kind = "MariaDB"
 			}
+			// MariaDB's Windows installer puts a copy of mariadbd.exe
+			// beside it as mysqld.exe, not a link.
+			if slices.ContainsFunc(d.Servers, func(db inventory.Database) bool {
+				return db.Kind == kind && filepath.Dir(db.Path) == filepath.Dir(in.RealPath)
+			}) {
+				continue
+			}
 			source := in.Source.Manager
 			if source == "" && in.Source.Kind == inventory.KindInstaller {
 				source = "installer" // as EDB's PostgreSQL in Program Files
@@ -117,7 +124,7 @@ func databaseBrewServices(ctx context.Context, r run.Runner, env sysenv.Env, d *
 		return
 	}
 	data, ok := databaseRun(ctx, r, append(slices.Clone(env), "HOMEBREW_NO_AUTO_UPDATE=1", "HOMEBREW_NO_ANALYTICS=1"), "brew", "services", "list", "--json")
-	var rows []struct{ Name, Status string }
+	var rows []struct{ Name, Status, File string }
 	if !ok || json.Unmarshal(data, &rows) != nil {
 		d.Warnings = append(d.Warnings, "brew services")
 		return
@@ -136,11 +143,18 @@ func databaseBrewServices(ctx context.Context, r run.Runner, env sysenv.Env, d *
 		case "error":
 			status = "error"
 		}
-		databaseService(d, kind, row.Name, "brew", status)
+		// A service started at login is a launchd agent of the user's,
+		// or a daemon of the system's for one started as root; one run
+		// for now only has the formula's own file.
+		autostart := "off"
+		if strings.Contains(row.File, "/LaunchAgents/") || strings.Contains(row.File, "/LaunchDaemons/") {
+			autostart = "on"
+		}
+		databaseService(d, kind, row.Name, "brew", status, autostart)
 	}
 }
 
-func databaseService(d *inventory.DatabaseState, kind, name, source, status string) {
+func databaseService(d *inventory.DatabaseState, kind, name, source, status, autostart string) {
 	candidate := -1
 	for i, s := range d.Servers {
 		if s.Service != "" || s.Kind != kind || (s.Source != source && source != "system") || (source == "brew" && !strings.Contains(filepath.ToSlash(s.Path), "/"+name+"/")) {
@@ -155,9 +169,10 @@ func databaseService(d *inventory.DatabaseState, kind, name, source, status stri
 	if candidate >= 0 {
 		d.Servers[candidate].Service = name
 		d.Servers[candidate].Status = status
+		d.Servers[candidate].Autostart = autostart
 		return
 	}
-	d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: name, Service: name, Source: source, Status: status})
+	d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: name, Service: name, Source: source, Status: status, Autostart: autostart})
 }
 
 // dockerDatabases asks only for selected non-secret container fields.

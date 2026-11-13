@@ -100,6 +100,10 @@ func (a *App) setupHave(id string) bool {
 		st, _ := a.Snapshot.Tool(lang)
 		return st.Vars[command] != ""
 	}
+	if kind, ok := catalog.DatabaseKinds[id]; ok {
+		_, found := a.databaseServer(kind)
+		return found
+	}
 	e, _ := catalog.Find(id)
 	if e.Group == catalog.Agent {
 		return slices.Contains(a.foundIDs(), id)
@@ -241,6 +245,9 @@ func setupTitle(id string) string {
 	}
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		return agentTitle(id)
+	}
+	if kind, ok := catalog.DatabaseKinds[id]; ok {
+		return kind
 	}
 	return toolName(id)
 }
@@ -542,10 +549,22 @@ func (a *App) setupChoiceView(c *ui.Context) {
 	}, func() {
 		card(locales.SetupBase(), catalog.Base)
 		card(locales.SetupAgents(), catalog.Agent)
+		card(locales.SetupDatabases(), catalog.Database)
 		if shown == 0 {
 			cardNote(c, locales.InstallNothingHere())
 		}
 	})
+}
+
+// setupConflict is the tool there or chosen that e does not install
+// beside; "" for none.
+func (a *App) setupConflict(e catalog.Entry) string {
+	for _, id := range e.Conflicts {
+		if a.setupHave(id) || a.setupChosen(id) {
+			return id
+		}
+	}
+	return ""
 }
 
 // setupOffers are the tools of group g the page offers here: those that
@@ -564,7 +583,7 @@ func (a *App) setupOffers(in ops.Setup, g catalog.Group) []catalog.Entry {
 // them are there.
 func (a *App) setupCounts() (have, total int) {
 	in := a.setupInput()
-	for _, g := range []catalog.Group{catalog.Base, catalog.Language, catalog.Tool, catalog.Agent} {
+	for _, g := range []catalog.Group{catalog.Base, catalog.Language, catalog.Tool, catalog.Agent, catalog.Database} {
 		for _, e := range a.setupOffers(in, g) {
 			total++
 			if a.setupHave(e.ID) {
@@ -660,6 +679,8 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 			chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, label)
 		case e.Group == catalog.Base && a.setupWizard():
 			ui.Text(c, locales.SetupRequired()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		case a.setupConflict(e) != "":
+			ui.Text(c, locales.SetupConflicts(setupTitle(a.setupConflict(e)))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 		default:
 			on := a.setupChosen(e.ID)
 			if e.ID == "docker" && on && len(methods) > 1 {
@@ -954,6 +975,17 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 			}
 		}
 		return inventory.Installation{}, checkMissing
+	}
+	if kind, ok := catalog.DatabaseKinds[id]; ok {
+		db, found := a.databaseServer(kind)
+		if !found {
+			return inventory.Installation{}, checkMissing
+		}
+		in := inventory.Installation{Version: db.Version, Path: cmp.Or(db.Path, db.Service)}
+		if db.Source == "brew" {
+			in.Source = inventory.Source{Manager: "brew"}
+		}
+		return in, checkWorks
 	}
 	var ins []inventory.Installation
 	var docker *inventory.DockerState

@@ -53,7 +53,7 @@ func (a *App) toolEmpty(c *ui.Context, id, name string) {
 // emptyInstalls are the catalog's tools a page offers to install when
 // its scan found nothing, by the page's tool; the tool itself when not
 // named.
-var emptyInstalls = map[string]string{"packages": "homebrew", "cpp": "", "databases": ""}
+var emptyInstalls = map[string]string{"packages": "homebrew", "cpp": "", "databases": "postgresql"}
 
 // toolHead is the top of a tool's page: its logo, its name with what
 // badge adds beside it, and subtitle under them; on the right, the cards

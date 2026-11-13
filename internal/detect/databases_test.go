@@ -71,10 +71,10 @@ func TestDatabaseBrewServices(t *testing.T) {
 	}
 	env := sysenv.Env{"PATH=" + dir, "PATHEXT=.EXE"}
 	r := &run.Fake{}
-	r.Stdout(`[{"name":"postgresql@17","status":"started"},{"name":"redis","status":"none"},{"name":"postgres-exporter","status":"started"},{"name":"mongodb-community","status":"started"}]`, exe, "services", "list", "--json")
+	r.Stdout(`[{"name":"postgresql@17","status":"started","file":"/Users/ann/Library/LaunchAgents/homebrew.mxcl.postgresql@17.plist"},{"name":"redis","status":"none","file":"/opt/homebrew/opt/redis/homebrew.mxcl.redis.plist"},{"name":"postgres-exporter","status":"started"},{"name":"mongodb-community","status":"started"}]`, exe, "services", "list", "--json")
 	d := &inventory.DatabaseState{Servers: []inventory.Database{{Kind: "PostgreSQL", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Source: "brew"}, {Kind: "MongoDB", Path: "/opt/homebrew/Cellar/mongodb-community/8.0.4/bin/mongod", Source: "brew"}}}
 	databaseBrewServices(t.Context(), r, env, d)
-	if len(d.Servers) != 3 || d.Servers[0].Status != "running" || d.Servers[1].Service != "mongodb-community" || d.Servers[2].Status != "stopped" {
+	if len(d.Servers) != 3 || d.Servers[0].Status != "running" || d.Servers[0].Autostart != "on" || d.Servers[1].Service != "mongodb-community" || d.Servers[2].Status != "stopped" || d.Servers[2].Autostart != "off" {
 		t.Fatal(d)
 	}
 }
@@ -108,6 +108,24 @@ func TestMariaDBLinks(t *testing.T) {
 	st, _ := detectDatabases(t.Context(), r, env, env, func(sysenv.Env, string) []string { return nil })
 	if len(st.Databases.Servers) != 1 || st.Databases.Servers[0].Kind != "MariaDB" || len(st.Databases.Clients) != 1 {
 		t.Fatalf("%+v", st.Databases)
+	}
+}
+
+// MariaDB's Windows installer copies mariadbd to mysqld: one server.
+func TestMariaDBCopies(t *testing.T) {
+	dir := t.TempDir()
+	r := &run.Fake{}
+	for _, name := range []string{"mariadbd", "mysqld"} {
+		path := filepath.Join(dir, name+dockerSuffix)
+		if err := os.WriteFile(path, []byte("fake"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		r.Stdout(path+"  Ver 13.0.2-MariaDB for Win64", path, "--version")
+	}
+	env := sysenv.Env{"PATH=" + dir, "HOME=" + dir, "USERPROFILE=" + dir, "PATHEXT=.EXE"}
+	st, _ := detectDatabases(t.Context(), r, env, env, func(sysenv.Env, string) []string { return nil })
+	if len(st.Databases.Servers) != 1 || st.Databases.Servers[0].Kind != "MariaDB" {
+		t.Fatalf("%+v", st.Databases.Servers)
 	}
 }
 

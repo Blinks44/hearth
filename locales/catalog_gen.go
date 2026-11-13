@@ -5824,11 +5824,11 @@ func (msgs Messages) DatabaseServer() string {
 	return Catalog.Format(msgs.locale, "DatabaseServer", nil)
 }
 
-// DatabaseAddress says "Path, ports and status"
+// DatabaseAddress says "Connection and status"
 // in the language the app shows.
 func DatabaseAddress() string { return In(i18n.Locale()).DatabaseAddress() }
 
-// DatabaseAddress says "Path, ports and status"
+// DatabaseAddress says "Connection and status"
 // in the language of msgs.
 func (msgs Messages) DatabaseAddress() string {
 	return Catalog.Format(msgs.locale, "DatabaseAddress", nil)
@@ -18824,4 +18824,264 @@ func SetupStoppedLead() string { return In(i18n.Locale()).SetupStoppedLead() }
 // New computer: step 3 lead when the user stopped the installation.
 func (msgs Messages) SetupStoppedLead() string {
 	return Catalog.Format(msgs.locale, "setupStoppedLead", nil)
+}
+
+// CatalogPostgresql says "A relational database server, the default of many web frameworks."
+// in the language the app shows.
+//
+// Install page: what PostgreSQL is for.
+func CatalogPostgresql() string { return In(i18n.Locale()).CatalogPostgresql() }
+
+// CatalogPostgresql says "A relational database server, the default of many web frameworks."
+// in the language of msgs.
+//
+// Install page: what PostgreSQL is for.
+func (msgs Messages) CatalogPostgresql() string {
+	return Catalog.Format(msgs.locale, "catalogPostgresql", nil)
+}
+
+// CatalogRedis says "An in-memory key-value store for caches, queues and sessions."
+// in the language the app shows.
+//
+// Install page: what Redis is for.
+func CatalogRedis() string { return In(i18n.Locale()).CatalogRedis() }
+
+// CatalogRedis says "An in-memory key-value store for caches, queues and sessions."
+// in the language of msgs.
+//
+// Install page: what Redis is for.
+func (msgs Messages) CatalogRedis() string {
+	return Catalog.Format(msgs.locale, "catalogRedis", nil)
+}
+
+// CatalogMysql says "A popular relational database server, as many PHP and WordPress projects use."
+// in the language the app shows.
+//
+// Install page: what MySQL is for.
+func CatalogMysql() string { return In(i18n.Locale()).CatalogMysql() }
+
+// CatalogMysql says "A popular relational database server, as many PHP and WordPress projects use."
+// in the language of msgs.
+//
+// Install page: what MySQL is for.
+func (msgs Messages) CatalogMysql() string {
+	return Catalog.Format(msgs.locale, "catalogMysql", nil)
+}
+
+// CatalogMariadb says "A community fork of MySQL that works with the same clients and drivers."
+// in the language the app shows.
+//
+// Install page: what MariaDB is for.
+func CatalogMariadb() string { return In(i18n.Locale()).CatalogMariadb() }
+
+// CatalogMariadb says "A community fork of MySQL that works with the same clients and drivers."
+// in the language of msgs.
+//
+// Install page: what MariaDB is for.
+func (msgs Messages) CatalogMariadb() string {
+	return Catalog.Format(msgs.locale, "catalogMariadb", nil)
+}
+
+// CatalogMongodb says "A document database that keeps JSON-like records. Community Server, under the SSPL license."
+// in the language the app shows.
+//
+// Install page: what MongoDB is for.
+func CatalogMongodb() string { return In(i18n.Locale()).CatalogMongodb() }
+
+// CatalogMongodb says "A document database that keeps JSON-like records. Community Server, under the SSPL license."
+// in the language of msgs.
+//
+// Install page: what MongoDB is for.
+func (msgs Messages) CatalogMongodb() string {
+	return Catalog.Format(msgs.locale, "catalogMongodb", nil)
+}
+
+// SetupDatabases says "Databases"
+// in the language the app shows.
+//
+// Install page: title of the card of database servers.
+func SetupDatabases() string { return In(i18n.Locale()).SetupDatabases() }
+
+// SetupDatabases says "Databases"
+// in the language of msgs.
+//
+// Install page: title of the card of database servers.
+func (msgs Messages) SetupDatabases() string {
+	return Catalog.Format(msgs.locale, "setupDatabases", nil)
+}
+
+// SetupConflicts says "Does not install beside {name}"
+// in the language the app shows.
+//
+// Install page and the Databases page's menu: a server whose packages clash
+// with one installed.
+func SetupConflicts(name string) string { return In(i18n.Locale()).SetupConflicts(name) }
+
+// SetupConflicts says "Does not install beside {name}"
+// in the language of msgs.
+//
+// Install page and the Databases page's menu: a server whose packages clash
+// with one installed.
+func (msgs Messages) SetupConflicts(name string) string {
+	return Catalog.Format(msgs.locale, "setupConflicts", map[string]any{"name": name})
+}
+
+// AutostartOnTitle says "Start {name} automatically"
+// in the language the app shows.
+//
+// Title of the plan that turns a database service's autostart on.
+func AutostartOnTitle(name string) string { return In(i18n.Locale()).AutostartOnTitle(name) }
+
+// AutostartOnTitle says "Start {name} automatically"
+// in the language of msgs.
+//
+// Title of the plan that turns a database service's autostart on.
+func (msgs Messages) AutostartOnTitle(name string) string {
+	return Catalog.Format(msgs.locale, "autostartOnTitle", map[string]any{"name": name})
+}
+
+// AutostartOffTitle says "Stop starting {name} automatically"
+// in the language the app shows.
+//
+// Title of the plan that turns a database service's autostart off.
+func AutostartOffTitle(name string) string { return In(i18n.Locale()).AutostartOffTitle(name) }
+
+// AutostartOffTitle says "Stop starting {name} automatically"
+// in the language of msgs.
+//
+// Title of the plan that turns a database service's autostart off.
+func (msgs Messages) AutostartOffTitle(name string) string {
+	return Catalog.Format(msgs.locale, "autostartOffTitle", map[string]any{"name": name})
+}
+
+// AutostartOnChange says "{name} starts with the system or at login"
+// in the language the app shows.
+//
+// Plan change: a service's autostart is on.
+func AutostartOnChange(name string) string { return In(i18n.Locale()).AutostartOnChange(name) }
+
+// AutostartOnChange says "{name} starts with the system or at login"
+// in the language of msgs.
+//
+// Plan change: a service's autostart is on.
+func (msgs Messages) AutostartOnChange(name string) string {
+	return Catalog.Format(msgs.locale, "autostartOnChange", map[string]any{"name": name})
+}
+
+// AutostartOffChange says "{name} no longer starts by itself"
+// in the language the app shows.
+//
+// Plan change: a service's autostart is off.
+func AutostartOffChange(name string) string { return In(i18n.Locale()).AutostartOffChange(name) }
+
+// AutostartOffChange says "{name} no longer starts by itself"
+// in the language of msgs.
+//
+// Plan change: a service's autostart is off.
+func (msgs Messages) AutostartOffChange(name string) string {
+	return Catalog.Format(msgs.locale, "autostartOffChange", map[string]any{"name": name})
+}
+
+// AutostartCheckFailed says "Autostart of {name} did not change"
+// in the language the app shows.
+//
+// Plan check failed: the service's autostart is not as the plan set it.
+func AutostartCheckFailed(name string) string { return In(i18n.Locale()).AutostartCheckFailed(name) }
+
+// AutostartCheckFailed says "Autostart of {name} did not change"
+// in the language of msgs.
+//
+// Plan check failed: the service's autostart is not as the plan set it.
+func (msgs Messages) AutostartCheckFailed(name string) string {
+	return Catalog.Format(msgs.locale, "autostartCheckFailed", map[string]any{"name": name})
+}
+
+// DatabaseInstall says "Install server"
+// in the language the app shows.
+//
+// Databases page: header button whose menu installs a database server.
+func DatabaseInstall() string { return In(i18n.Locale()).DatabaseInstall() }
+
+// DatabaseInstall says "Install server"
+// in the language of msgs.
+//
+// Databases page: header button whose menu installs a database server.
+func (msgs Messages) DatabaseInstall() string {
+	return Catalog.Format(msgs.locale, "databaseInstall", nil)
+}
+
+// DatabaseAutostart says "Autostart"
+// in the language the app shows.
+//
+// Databases page: card of the services with a switch each for starting with
+// the system or at login.
+func DatabaseAutostart() string { return In(i18n.Locale()).DatabaseAutostart() }
+
+// DatabaseAutostart says "Autostart"
+// in the language of msgs.
+//
+// Databases page: card of the services with a switch each for starting with
+// the system or at login.
+func (msgs Messages) DatabaseAutostart() string {
+	return Catalog.Format(msgs.locale, "databaseAutostart", nil)
+}
+
+// DatabaseAutostartFor says "Start {name} automatically"
+// in the language the app shows.
+//
+// Databases page: accessible label of a service's autostart switch.
+func DatabaseAutostartFor(name string) string { return In(i18n.Locale()).DatabaseAutostartFor(name) }
+
+// DatabaseAutostartFor says "Start {name} automatically"
+// in the language of msgs.
+//
+// Databases page: accessible label of a service's autostart switch.
+func (msgs Messages) DatabaseAutostartFor(name string) string {
+	return Catalog.Format(msgs.locale, "databaseAutostartFor", map[string]any{"name": name})
+}
+
+// DatabaseCopyURL says "Copy connection string"
+// in the language the app shows.
+//
+// Databases page: tooltip of the button that copies a server's connection
+// string.
+func DatabaseCopyURL() string { return In(i18n.Locale()).DatabaseCopyURL() }
+
+// DatabaseCopyURL says "Copy connection string"
+// in the language of msgs.
+//
+// Databases page: tooltip of the button that copies a server's connection
+// string.
+func (msgs Messages) DatabaseCopyURL() string {
+	return Catalog.Format(msgs.locale, "databaseCopyURL", nil)
+}
+
+// DatabaseURLCopied says "Connection string copied"
+// in the language the app shows.
+//
+// Toast after copying a connection string.
+func DatabaseURLCopied() string { return In(i18n.Locale()).DatabaseURLCopied() }
+
+// DatabaseURLCopied says "Connection string copied"
+// in the language of msgs.
+//
+// Toast after copying a connection string.
+func (msgs Messages) DatabaseURLCopied() string {
+	return Catalog.Format(msgs.locale, "databaseURLCopied", nil)
+}
+
+// DatabasePassword says "password as set on the server"
+// in the language the app shows.
+//
+// Databases page: under a connection string the server asks a password for,
+// which Hearth does not know.
+func DatabasePassword() string { return In(i18n.Locale()).DatabasePassword() }
+
+// DatabasePassword says "password as set on the server"
+// in the language of msgs.
+//
+// Databases page: under a connection string the server asks a password for,
+// which Hearth does not know.
+func (msgs Messages) DatabasePassword() string {
+	return Catalog.Format(msgs.locale, "databasePassword", nil)
 }

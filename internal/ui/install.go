@@ -38,6 +38,9 @@ func (a *App) installTool(id string) {
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		verify = ops.AgentFound(title, a.findAgent(id))
 	}
+	if kind, ok := catalog.DatabaseKinds[id]; ok {
+		verify = ops.DatabaseFound(title, kind, a.detect("databases"))
+	}
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		p, parts, err := ops.SetupPlan(s, env)
 		if err != nil {

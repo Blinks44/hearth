@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -72,7 +73,7 @@ func (s Setup) Parts() []SetupPart {
 		ready[id] = false
 		e, _ := catalog.Find(id)
 		m, ok := s.method(e)
-		if !ok {
+		if !ok || slices.ContainsFunc(e.Conflicts, func(c string) bool { return s.Have[c] || ready[c] }) {
 			return false
 		}
 		for _, need := range e.NeedsWith(m) {
@@ -214,7 +215,11 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 				// needs no quoting.
 				if user := env.Get("USER"); ok && docker && unixUser.MatchString(user) && len(pp.Steps) == 1 && pp.Steps[0].Admin {
 					install := pp.Steps[0]
-					script := strings.Join(install.Argv, " ") + " && /usr/sbin/usermod -aG docker " + user
+					line := strings.Join(install.Argv, " ")
+					if len(install.Argv) == 3 && install.Argv[0] == "/bin/sh" {
+						line = install.Argv[2] // apt's, after its update
+					}
+					script := line + " && /usr/sbin/usermod -aG docker " + user
 					pp.Steps = []Step{{Argv: []string{"/bin/sh", "-c", script}, Runs: install.Shown(), Admin: true}}
 					pp.Notes = append(pp.Notes, Note{Title: locales.SetupDockerGroupTitle(), Text: locales.SetupDockerGroupText(user)})
 				}
@@ -226,6 +231,12 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 				pp, ok = PackagePlan(PackageInstall, pm, []inventory.SystemPackage{{Name: m.Package, Kind: m.Kind}}, nil)
 			}
 			steps, notes = pp.Steps, pp.Notes
+			// Homebrew installs a server without starting it: brew
+			// services starts it now and at each login, as the system's
+			// managers do with their packages' services.
+			if e, _ := catalog.Find(part.Tool); ok && e.Group == catalog.Database && m.Manager == "brew" {
+				steps = append(steps, Step{Argv: []string{pm.Path, "services", "start", m.Package[strings.LastIndex(m.Package, "/")+1:]}, Timeout: 2 * time.Minute})
+			}
 			// Rust builds on Windows with Microsoft's linker, which Visual
 			// Studio Build Tools bring: rustup warns without them.
 			if part.Tool == "rust" && s.GOOS == "windows" && !s.Have["cpp"] {

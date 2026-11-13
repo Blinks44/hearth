@@ -99,3 +99,26 @@ func ToolFound(title string, detect Detect) func(context.Context) (string, error
 		return locales.AgentCheckFound(title, st.Installations[i].Version), nil
 	}
 }
+
+// DatabaseFound is the check of a plan that installs a server of kind,
+// as inventory.DatabaseKind names it: detect finds one the system or a
+// package manager keeps, not a container's.
+func DatabaseFound(title, kind string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		if st.Databases != nil {
+			for _, db := range st.Databases.Servers {
+				if db.Kind == kind && db.Source != "docker" {
+					return locales.AgentCheckFound(title, db.Version), nil
+				}
+			}
+		}
+		return "", errors.New(locales.AgentCheckMissing(title))
+	}
+}

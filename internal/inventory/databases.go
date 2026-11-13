@@ -7,6 +7,19 @@ import "strings"
 type Database struct {
 	Kind, Name, Version, Path, Source, Status, Service, Project string
 	Ports                                                       []string
+	// Autostart is whether the service starts with the system or at
+	// login: "on", "off", or "" when not known.
+	Autostart string
+}
+
+// SystemdAutostartUnit is the unit whose being enabled starts the
+// service name with the system. Debian starts each PostgreSQL cluster,
+// postgresql@17-main.service, through postgresql.service.
+func SystemdAutostartUnit(name string) string {
+	if strings.HasPrefix(name, "postgresql@") {
+		return "postgresql.service"
+	}
+	return name
 }
 
 // DatabaseState holds local servers, client-only commands and observed TCP listeners.

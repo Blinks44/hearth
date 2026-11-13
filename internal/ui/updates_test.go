@@ -136,7 +136,7 @@ func TestUpdatesRun(t *testing.T) {
 	}
 	want := [][]string{
 		{"mise", "upgrade", "--prune", "go"},
-		{"/opt/homebrew/bin/brew", "upgrade", "--formula", "git", "jq"}, {"/usr/bin/apt-get", "install", "--only-upgrade", "-y", "curl"},
+		{"/opt/homebrew/bin/brew", "upgrade", "--formula", "git", "jq"}, {"/usr/bin/apt-get", "update", "&&", "/usr/bin/apt-get", "install", "--only-upgrade", "-y", "curl"},
 	}
 	if p.Title != "Update the chosen · 4" || !slices.EqualFunc(argvs, want, slices.Equal) {
 		t.Errorf("plan %q: %q", p.Title, argvs)

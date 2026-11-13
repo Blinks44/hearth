@@ -15,3 +15,16 @@ func systemService(action ServiceAction, name string) (Step, bool) {
 	s.Timeout = 2 * time.Minute
 	return s, true
 }
+
+// systemAutostart is the step that sets the Windows service name to
+// start with the system, or when asked, as the administrator through UAC.
+// sc takes each option's value as an argument of its own after "start=".
+func systemAutostart(on bool, name string) (Step, bool) {
+	start := "demand"
+	if on {
+		start = "auto"
+	}
+	s := runAs("sc.exe", []string{"config", name, "start=", start})
+	s.Timeout = time.Minute
+	return s, true
+}

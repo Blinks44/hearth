@@ -9,7 +9,9 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 func TestDatabasesPage(t *testing.T) {
@@ -86,5 +88,79 @@ func TestDatabaseServiceOperations(t *testing.T) {
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker", Docker: &inventory.DockerState{Databases: []inventory.Database{{Kind: "PostgreSQL", Name: "other-db", Source: "docker", Status: "running", Ports: []string{"5432"}}}}})
 	if _, ok := a.conflictPlan(issues.Issue{Project: home + "/dev/shop-web", Dirs: []string{"5432"}}, inventory.DatabaseServers(a.Snapshot)); ok {
 		t.Error("offers to stop a service for a port a container holds")
+	}
+}
+
+// The header's menu installs a server, each row's string connects to it,
+// and a service's switch sets its autostart, each through a plan.
+func TestDatabaseInstallAndAutostart(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "databases", Databases: &inventory.DatabaseState{Servers: []inventory.Database{
+			{Kind: "PostgreSQL", Name: "PostgreSQL", Version: "17.2", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Source: "brew", Status: "running", Service: "postgresql@17", Autostart: "on"},
+			{Kind: "MySQL", Name: "MySQL", Version: "8.4.3", Path: "/opt/homebrew/Cellar/mysql@8.4/8.4.3/bin/mysqld", Source: "brew", Status: "stopped", Service: "mysql@8.4", Autostart: "off"},
+		}}},
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}},
+	}}
+	g := goos
+	t.Cleanup(func() { goos = g })
+	goos = "darwin"
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"}, nil))
+	}
+	a.router.Push("/tools/databases")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "databases-install")
+	hasTexts(t, tt, "postgresql://dev@localhost:5432/postgres", "mysql://root@localhost:3306", "Autostart")
+
+	if err := tt.Click("Install server"); err != nil {
+		t.Fatal(err)
+	}
+	if menu := tt.Menu(); !slices.Equal(menu, []string{"PostgreSQL", "Redis", "MySQL", "MariaDB", "MongoDB"}) {
+		t.Fatalf("menu %q", menu)
+	}
+	if err := tt.ChooseMenuItem("MariaDB"); err == nil {
+		t.Error("MariaDB offered beside MySQL")
+	}
+	if err := tt.ChooseMenuItem("Redis"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	want := [][]string{{"/opt/homebrew/bin/brew", "install", "--formula", "redis"}, {"/opt/homebrew/bin/brew", "services", "start", "redis"}}
+	if a.op == nil || len(a.op.plan.Steps) != 2 || !slices.Equal(a.op.plan.Steps[0].Argv, want[0]) || !slices.Equal(a.op.plan.Steps[1].Argv, want[1]) {
+		t.Fatalf("plan %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	if err := tt.Click("Start mysql@8.4 automatically"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"brew", "services", "start", "mysql@8.4"}) {
+		t.Fatalf("plan %+v", a.op)
+	}
+}
+
+func TestDatabaseURL(t *testing.T) {
+	for _, tt := range []struct {
+		db       inventory.Database
+		url      string
+		password bool
+	}{
+		{inventory.Database{Kind: "PostgreSQL", Source: "brew"}, "postgresql://ann@localhost:5432/postgres", false},
+		{inventory.Database{Kind: "PostgreSQL", Source: "system"}, "postgresql://postgres@localhost:5432/postgres", true},
+		{inventory.Database{Kind: "MySQL", Source: "brew"}, "mysql://root@localhost:3306", false},
+		{inventory.Database{Kind: "MySQL", Source: "system"}, "mysql://root@localhost:3306", true},
+		{inventory.Database{Kind: "Redis", Source: "system"}, "redis://localhost:6379", false},
+		{inventory.Database{Kind: "Cassandra"}, "", false},
+	} {
+		if url, password := databaseURL(tt.db, "ann"); url != tt.url || password != tt.password {
+			t.Errorf("%+v: %q %v, want %q %v", tt.db, url, password, tt.url, tt.password)
+		}
 	}
 }

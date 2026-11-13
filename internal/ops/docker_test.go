@@ -27,7 +27,7 @@ func TestEngineInstallPlan(t *testing.T) {
 		{"Colima brings the CLI it needs", "Colima", brew, false, [][]string{{"/opt/homebrew/bin/brew", "install", "--formula", "colima", "docker"}}, false},
 		{"Colima beside a CLI", "Colima", brew, true, [][]string{{"/opt/homebrew/bin/brew", "install", "--formula", "colima"}}, false},
 		{"Docker Desktop through WinGet", "Docker Desktop", winget, false, [][]string{{"winget", "install", "--id", "Docker.DockerDesktop", "--exact", "--source", "winget", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"}}, true},
-		{"Docker Engine from the distribution", "Docker Engine", apt, false, [][]string{{"/usr/bin/apt-get", "-oDPkg::Lock::Timeout=600", "install", "-y", "docker.io"}}, false},
+		{"Docker Engine from the distribution", "Docker Engine", apt, false, [][]string{{"/bin/sh", "-c", "/usr/bin/apt-get -oDPkg::Lock::Timeout=600 update && /usr/bin/apt-get -oDPkg::Lock::Timeout=600 install -y docker.io"}}, false},
 		{"Docker Desktop has no APT package", "Docker Desktop", apt, false, nil, false},
 		{"OrbStack only for macOS", "OrbStack", winget, false, nil, false},
 	}

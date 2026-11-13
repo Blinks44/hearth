@@ -63,10 +63,11 @@ func databaseServices(_ context.Context, _ run.Runner, _ sysenv.Env, d *inventor
 	addDatabaseServices(d, services)
 }
 
-// winService is a Windows service's name and state.
+// winService is a Windows service's name, state and start type; the
+// start type is read of databases' services alone, 0 when it is not.
 type winService struct {
-	name  string
-	state uint32
+	name         string
+	state, start uint32
 }
 
 // addDatabaseServices adds the services of databases among services.
@@ -83,7 +84,14 @@ func addDatabaseServices(d *inventory.DatabaseState, services []winService) {
 		case windows.SERVICE_STOPPED:
 			status = "stopped"
 		}
-		databaseService(d, kind, s.name, "system", status)
+		autostart := ""
+		switch s.start {
+		case windows.SERVICE_AUTO_START:
+			autostart = "on"
+		case windows.SERVICE_DEMAND_START, windows.SERVICE_DISABLED:
+			autostart = "off"
+		}
+		databaseService(d, kind, s.name, "system", status, autostart)
 	}
 }
 
@@ -118,9 +126,37 @@ func windowsServices() ([]winService, error) {
 	entries := unsafe.Slice((*windows.ENUM_SERVICE_STATUS_PROCESS)(unsafe.Pointer(&buf[0])), int(count))
 	services := make([]winService, 0, len(entries))
 	for _, e := range entries {
-		services = append(services, winService{name: windows.UTF16PtrToString(e.ServiceName), state: e.ServiceStatusProcess.CurrentState})
+		s := winService{name: windows.UTF16PtrToString(e.ServiceName), state: e.ServiceStatusProcess.CurrentState}
+		if inventory.DatabaseKind(s.name) != "" {
+			s.start = serviceStartType(h, s.name)
+		}
+		services = append(services, s)
 	}
 	return services, nil
+}
+
+// serviceStartType is how the service name starts, as its configuration
+// says; 0 when it cannot be read. Reading it needs no administrator.
+func serviceStartType(manager windows.Handle, name string) uint32 {
+	p, err := windows.UTF16PtrFromString(name)
+	if err != nil {
+		return 0
+	}
+	h, err := windows.OpenService(manager, p, windows.SERVICE_QUERY_CONFIG)
+	if err != nil {
+		return 0
+	}
+	defer windows.CloseServiceHandle(h) //nolint:errcheck // a handle opened for reading only
+	var needed uint32
+	if err := windows.QueryServiceConfig(h, nil, 0, &needed); !errors.Is(err, windows.ERROR_INSUFFICIENT_BUFFER) {
+		return 0
+	}
+	buf := make([]byte, needed)
+	config := (*windows.QUERY_SERVICE_CONFIG)(unsafe.Pointer(&buf[0]))
+	if err := windows.QueryServiceConfig(h, config, needed, &needed); err != nil {
+		return 0
+	}
+	return config.StartType
 }
 
 func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inventory.DatabaseState) {

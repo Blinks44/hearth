@@ -16,3 +16,11 @@ func TestServicePlanWindows(t *testing.T) {
 		t.Errorf("plan = %+v, %v", p.Steps, ok)
 	}
 }
+
+func TestAutostartPlanWindows(t *testing.T) {
+	db := inventory.Database{Kind: "PostgreSQL", Source: "installer", Service: "postgresql-x64-17"}
+	p, ok := AutostartPlan(true, db, nil)
+	if !ok || len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Shown(), []string{"sc.exe", "config", "postgresql-x64-17", "start=", "auto"}) {
+		t.Errorf("plan = %+v, %v", p.Steps, ok)
+	}
+}
