@@ -10,10 +10,11 @@ import "embed"
 //go:embed fonts/*.ttf
 var Fonts embed.FS
 
-// Icons holds Lucide icons as icons/lucide/<name>.svg and tool logos as
-// icons/brand/<slug>.svg; sources and licenses are in icons/LICENSES.md.
+// Icons holds Lucide icons as icons/lucide/<name>.svg, tool logos in one
+// color as icons/brand/<slug>.svg and in their own colors as
+// icons/logo/<slug>.svg; sources and licenses are in icons/LICENSES.md.
 //
-//go:embed icons/lucide/*.svg icons/brand/*.svg
+//go:embed icons/lucide/*.svg icons/brand/*.svg icons/logo/*.svg
 var Icons embed.FS
 
 // Logo is the app icon's tile without its margin, small, for the sidebar.

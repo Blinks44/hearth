@@ -539,7 +539,7 @@
   "settingsDevelopment": "Compilación de desarrollo",
   "settingsFree": "Gratis · local · sin telemetría",
   "settingsLicenses": "Licencias",
-  "settingsLicensesHint": "Inter, JetBrains Mono, Lucide, Simple Icons",
+  "settingsLicensesHint": "Inter, JetBrains Mono, Lucide, Simple Icons, theSVG",
   "settingsOpen": "Abrir",
   "settingsClose": "Cerrar",
   "settingsError": "No se pudieron guardar los ajustes: {error}",

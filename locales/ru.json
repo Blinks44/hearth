@@ -560,7 +560,7 @@
   "settingsDevelopment": "Сборка для разработки",
   "settingsFree": "Бесплатно · локально · без телеметрии",
   "settingsLicenses": "Лицензии",
-  "settingsLicensesHint": "Inter, JetBrains Mono, Lucide, Simple Icons",
+  "settingsLicensesHint": "Inter, JetBrains Mono, Lucide, Simple Icons, theSVG",
   "settingsOpen": "Открыть",
   "settingsClose": "Закрыть",
   "settingsError": "Не удалось сохранить настройки: {error}",

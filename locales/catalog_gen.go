@@ -6910,11 +6910,11 @@ func (msgs Messages) SettingsLicenses() string {
 	return Catalog.Format(msgs.locale, "settingsLicenses", nil)
 }
 
-// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons"
+// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons, theSVG"
 // in the language the app shows.
 func SettingsLicensesHint() string { return In(i18n.Locale()).SettingsLicensesHint() }
 
-// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons"
+// SettingsLicensesHint says "Inter, JetBrains Mono, Lucide, Simple Icons, theSVG"
 // in the language of msgs.
 func (msgs Messages) SettingsLicensesHint() string {
 	return Catalog.Format(msgs.locale, "settingsLicensesHint", nil)

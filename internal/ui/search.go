@@ -228,7 +228,7 @@ func (a *App) searchDialog(c *ui.Context) {
 							row.Background(pal.Subtle)
 						}
 						row.Children(func() {
-							ui.Icon(c, mustIcon(r.icon)).Size(16, 16).TextColor(t.TextMuted)
+							iconOrLogo(c, r.icon, 16, t.TextMuted)
 							ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 								ui.Text(c, r.title).FontSize(13).SingleLine()
 								ui.Text(c, r.detail).FontSize(11).TextColor(pal.TextFaint).SingleLine()

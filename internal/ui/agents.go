@@ -33,9 +33,6 @@ var agentInfos = []agentInfo{
 	{"aider", "Aider", ""},
 }
 
-// brandColors tint the logos of the agents whose brand has a color.
-var brandColors = map[string]ui.Color{"claude": ui.Hex("#D97757"), "gemini": ui.Hex("#4285F4")}
-
 func agentTitle(id string) string {
 	for _, ag := range agentInfos {
 		if ag.id == id {
@@ -50,19 +47,15 @@ const agentPage = "/ai/agents/agent"
 
 func agentPath(id string) string { return agentPage + "?id=" + url.QueryEscape(id) }
 
-// agentLogo is an agent's logo, size wide, in its brand's color.
+// agentLogo is an agent's logo, size wide, in its colors.
 func agentLogo(c *ui.Context, id string, size float32) {
-	icon := Icon("bot")
+	key := "lucide/bot"
 	for _, ag := range agentInfos {
 		if ag.id == id && ag.brand != "" {
-			icon = Brand(ag.brand)
+			key = "brand/" + ag.brand
 		}
 	}
-	color, ok := brandColors[id]
-	if !ok {
-		color = c.Theme().Text
-	}
-	ui.Icon(c, icon).Size(size, size).TextColor(color)
+	iconOrLogo(c, key, size, c.Theme().Text)
 }
 
 // agentTile is an agent's logo on a tile size wide.

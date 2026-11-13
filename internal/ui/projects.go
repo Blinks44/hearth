@@ -180,7 +180,7 @@ func (a *App) projectRows(c *ui.Context) {
 					for _, ag := range projectAgents(r.p) {
 						ui.Box(c).Size(20, 20).Radius(10).Center().BorderWidth(1).BorderColor(pal.Line).
 							Tooltip(ag.name).Children(func() {
-							ui.Icon(c, Brand(ag.brand)).Size(12, 12).TextColor(t.TextMuted)
+							iconOrLogo(c, "brand/"+ag.brand, 12, t.TextMuted)
 						})
 					}
 				})
@@ -455,7 +455,7 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 			first := st.Checks[0]
 			ui.Row(c).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Row(c).Grow(columnGrow[0]).Basis(0).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
-					ui.Icon(c, toolIcon(st.Tool)).Size(16, 16).TextColor(t.TextMuted)
+					iconOrLogo(c, toolIcon(st.Tool), 16, t.TextMuted)
 					ui.Text(c, toolTitle(st.Tool)).FontSize(13.5).SingleLine()
 				})
 				want := statusWant(st)
@@ -904,18 +904,19 @@ func toolTitle(id string) string {
 	return id
 }
 
-// toolIcon is a tool's logo, or a package for a tool without one.
-func toolIcon(id string) *ui.SVG {
+// toolIcon is the icon key of a tool's logo, or of a package for a tool
+// without one.
+func toolIcon(id string) string {
 	for _, l := range languages {
 		if l.id == id {
-			return mustIcon(l.icon)
+			return l.icon
 		}
 	}
 	switch id {
 	case "npm", "pnpm", "docker", "git":
-		return Brand(id)
+		return "brand/" + id
 	}
-	return Icon("package")
+	return "lucide/package"
 }
 
 // folderTile is a project's folder icon on a tile of size.

@@ -539,7 +539,7 @@
   "settingsDevelopment": "开发版构建",
   "settingsFree": "免费 · 本地 · 无遥测",
   "settingsLicenses": "许可证",
-  "settingsLicensesHint": "Inter、JetBrains Mono、Lucide、Simple Icons",
+  "settingsLicensesHint": "Inter、JetBrains Mono、Lucide、Simple Icons、theSVG",
   "settingsOpen": "打开",
   "settingsClose": "关闭",
   "settingsError": "无法保存设置：{error}",

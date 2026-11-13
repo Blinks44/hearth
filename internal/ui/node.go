@@ -13,15 +13,6 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-// Node's brand green, on a tile tinted with it.
-var (
-	nodeGreen = ui.Hex("#5FA04E")
-	nodeTile  = [2]struct{ bg, border ui.Color }{
-		{ui.Hex("#EEF6EA"), ui.Hex("#DDEBD6")}, // light
-		{ui.Hex("#1F2B1C"), ui.Hex("#2F4128")}, // dark
-	}
-)
-
 // node is the Node.js page: the tool's header with where it stands, and
 // the installed versions.
 func (a *App) node(c *ui.Context, p page) {

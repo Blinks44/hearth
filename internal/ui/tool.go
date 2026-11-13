@@ -40,7 +40,7 @@ func (a *App) toolEmpty(c *ui.Context, id, name string) {
 		}
 	}
 	ui.Column(c).Grow(1).Center().Gap(8).Padding(0, 28).Children(func() {
-		ui.Icon(c, toolIcon(id)).Size(28, 28).TextColor(Colors(c.Theme()).TextFaint)
+		ui.Icon(c, mustIcon(toolIcon(id))).Size(28, 28).TextColor(Colors(c.Theme()).TextFaint)
 		ui.Text(c, text).TextColor(c.Theme().TextMuted).TextAlign(ui.Center)
 		install, named := emptyInstalls[id]
 		if !named {

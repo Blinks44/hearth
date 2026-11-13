@@ -37,8 +37,24 @@ var icons = sync.OnceValues(func() (map[string]*ui.SVG, error) {
 // icon/<name>. ui.Icon draws it in the color of the text.
 func Icon(name string) *ui.SVG { return mustIcon("lucide/" + name) }
 
-// Brand returns a tool's logo by its Simple Icons slug, as in brand/<slug>.
-func Brand(slug string) *ui.SVG { return mustIcon("brand/" + slug) }
+// iconOrLogo draws the icon of key ("lucide/<name>" or "brand/<slug>") size
+// wide: a brand with a logo in colors, logo/<slug>, shows in them, in its
+// logo/<slug>-dark variant on a dark theme when it has one; anything else is
+// an icon in color.
+func iconOrLogo(c *ui.Context, key string, size float32, color ui.Color) {
+	if slug, ok := strings.CutPrefix(key, "brand/"); ok {
+		m, _ := icons()
+		logo, ok := m["logo/"+slug]
+		if dark, has := m["logo/"+slug+"-dark"]; has && c.Theme().Dark {
+			logo = dark
+		}
+		if ok {
+			ui.Image(c, logo).Size(size, size)
+			return
+		}
+	}
+	ui.Icon(c, mustIcon(key)).Size(size, size).TextColor(color)
+}
 
 func mustIcon(key string) *ui.SVG {
 	m, err := icons()
