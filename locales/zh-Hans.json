@@ -1537,5 +1537,19 @@
   "reasonForgotten": "将从“用量”中消失，且无法再继续",
   "cleanupHistoryNote": "旧会话将被永久删除",
   "cleanupHistoryNoteText": "删除的会话将从“用量”中消失，claude --resume 或 codex resume 也无法再找到它们。代理的设置、指令和记忆会保留。",
-  "usageOpenCleanup": "在清理中打开"
+  "usageOpenCleanup": "在清理中打开",
+  "mcpCheckSection": "检查",
+  "mcpCheck": "检查",
+  "mcpCheckAgain": "再次检查",
+  "mcpCheckHint": "Hearth 会像 {agent} 一样启动或连接该服务器，并获取其工具列表。",
+  "mcpChecking": "正在等待服务器响应。首次通过 npx 或 uvx 启动会先下载，可能需要一分钟。",
+  "mcpAnswered": "{server} 在 {time} 内响应 · {count} 个工具",
+  "mcpNoTools": "它没有提供任何工具。",
+  "mcpMoreTools": "再显示 {count} 个",
+  "mcpFailNotFound": "找不到该命令，代理同样无法启动它。请安装它，或修正文件中的路径。",
+  "mcpFailExited": "服务器在响应前就退出了。它的输出：",
+  "mcpFailTimedOut": "服务器在一分钟内没有响应。它可能在等待浏览器登录，或仍在下载。",
+  "mcpFailUnreachable": "该地址没有响应：服务器未运行，或地址有误。",
+  "mcpFailDenied": "服务器拒绝访问：声明中的令牌或密钥缺失、错误或已过期。通过浏览器登录的服务器只能由代理自身检查。",
+  "mcpFailed": "检查失败："
 }

@@ -161,6 +161,19 @@ func Lines(ctx context.Context, c Cmd, line func(string)) error {
 	return nil
 }
 
+// Command is c as an exec.Cmd for a caller that talks to the program
+// over its pipes, as an MCP client does: no shell, no console window on
+// Windows, and ended with ctx. c.Timeout, c.MaxOutput and c.Output do not
+// apply.
+func Command(ctx context.Context, c Cmd) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, c.Args[0], c.Args[1:]...)
+	cmd.Env = c.Env
+	cmd.Dir = c.Dir
+	cmd.WaitDelay = time.Second
+	detach(cmd)
+	return cmd
+}
+
 // capped keeps the first limit bytes written to it and drops the rest.
 type capped struct {
 	buf     bytes.Buffer

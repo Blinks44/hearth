@@ -8361,5 +8361,87 @@
   "usageOpenCleanup": "Open in Cleanup",
   "@usageOpenCleanup": {
     "description": "Usage: the button opening the old sessions in Cleanup."
+  },
+  "mcpCheckSection": "Check",
+  "@mcpCheckSection": {
+    "description": "MCP details section: checking the server."
+  },
+  "mcpCheck": "Check",
+  "@mcpCheck": {
+    "description": "MCP details: button that starts the server and asks for its tools."
+  },
+  "mcpCheckAgain": "Check again",
+  "@mcpCheckAgain": {
+    "description": "MCP details: the check button after a check."
+  },
+  "mcpCheckHint": "Hearth starts the server, or connects to it, as {agent} does, and asks for its tools.",
+  "@mcpCheckHint": {
+    "description": "MCP details: what the check does, before it runs.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "mcpChecking": "Waiting for the server. A first start through npx or uvx downloads it and can take a minute.",
+  "@mcpChecking": {
+    "description": "MCP details: the check is running."
+  },
+  "mcpAnswered": "{server} answered in {time} · {count, plural, one {# tool} other {# tools}}",
+  "@mcpAnswered": {
+    "description": "MCP details: the server answered the check.",
+    "placeholders": {
+      "server": {
+        "type": "String",
+        "example": "github-mcp-server 0.5.0"
+      },
+      "time": {
+        "type": "String",
+        "example": "1.20 s"
+      },
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "mcpNoTools": "It offers no tools.",
+  "@mcpNoTools": {
+    "description": "MCP details: the server answered with no tools."
+  },
+  "mcpMoreTools": "Show {count} more",
+  "@mcpMoreTools": {
+    "description": "MCP details: shows the rest of the tools.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "40"
+      }
+    }
+  },
+  "mcpFailNotFound": "The command is not found, so the agent cannot start it either. Install it, or fix the path in the file.",
+  "@mcpFailNotFound": {
+    "description": "MCP check: the command is not there."
+  },
+  "mcpFailExited": "The server stopped before it answered. What it wrote:",
+  "@mcpFailExited": {
+    "description": "MCP check: the process ended before it answered; its output follows."
+  },
+  "mcpFailTimedOut": "The server did not answer within a minute. It may wait for a sign-in in the browser, or still be downloading.",
+  "@mcpFailTimedOut": {
+    "description": "MCP check: no answer in time."
+  },
+  "mcpFailUnreachable": "Nothing answers at this address: the server is down, or the address is wrong.",
+  "@mcpFailUnreachable": {
+    "description": "MCP check: nothing answers at the URL."
+  },
+  "mcpFailDenied": "The server refused access: the token or key in the declaration is missing, wrong or expired. Servers that sign in through the browser are checked by the agent itself.",
+  "@mcpFailDenied": {
+    "description": "MCP check: HTTP 401 or 403."
+  },
+  "mcpFailed": "The check failed:",
+  "@mcpFailed": {
+    "description": "MCP check: any other failure; the error follows."
   }
 }

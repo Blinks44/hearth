@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo/ui/markdown"
 	"golang.org/x/text/collate"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -134,6 +135,11 @@ type App struct {
 	// background, and gives them to done through Window.Update; nil shows
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
+	// CheckMCP starts or reaches an MCP server as its agent would, with
+	// the terminal's environment, and asks for its tools, in the
+	// background, giving done the answer through Window.Update; nil hides
+	// the check.
+	CheckMCP func(s inventory.MCPServer, done func(ai.MCPCheck, error))
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -249,6 +255,7 @@ type App struct {
 	skillQuery, mcpQuery   string
 	skillChosen, mcpChosen string
 	skillFolder            skillFolder // what was read of the skill shown
+	mcpCheck               mcpCheck    // the last check of an MCP server
 	markdown               markdown.Options
 }
 

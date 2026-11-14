@@ -1537,5 +1537,19 @@
   "reasonForgotten": "sie verschwinden aus „Verbrauch“ und lassen sich nicht mehr fortsetzen",
   "cleanupHistoryNote": "Alte Sitzungen werden endgültig entfernt",
   "cleanupHistoryNoteText": "Entfernte Sitzungen verschwinden aus „Verbrauch“, und claude --resume oder codex resume findet sie nicht mehr. Einstellungen, Anweisungen und Gedächtnis der Agenten bleiben.",
-  "usageOpenCleanup": "Unter „Aufräumen“ öffnen"
+  "usageOpenCleanup": "Unter „Aufräumen“ öffnen",
+  "mcpCheckSection": "Prüfung",
+  "mcpCheck": "Prüfen",
+  "mcpCheckAgain": "Erneut prüfen",
+  "mcpCheckHint": "Hearth startet den Server oder verbindet sich mit ihm wie {agent} und fragt nach seinen Werkzeugen.",
+  "mcpChecking": "Warte auf den Server. Ein erster Start über npx oder uvx lädt ihn herunter und kann eine Minute dauern.",
+  "mcpAnswered": "{server} hat in {time} geantwortet · {count, plural, one {# Werkzeug} other {# Werkzeuge}}",
+  "mcpNoTools": "Er bietet keine Werkzeuge an.",
+  "mcpMoreTools": "{count} weitere anzeigen",
+  "mcpFailNotFound": "Der Befehl wurde nicht gefunden, also kann auch der Agent ihn nicht starten. Installieren Sie ihn oder korrigieren Sie den Pfad in der Datei.",
+  "mcpFailExited": "Der Server wurde beendet, bevor er antwortete. Seine Ausgabe:",
+  "mcpFailTimedOut": "Der Server hat nicht innerhalb einer Minute geantwortet. Vielleicht wartet er auf eine Anmeldung im Browser oder lädt noch herunter.",
+  "mcpFailUnreachable": "Unter dieser Adresse antwortet nichts: Der Server läuft nicht oder die Adresse ist falsch.",
+  "mcpFailDenied": "Der Server hat den Zugriff verweigert: Token oder Schlüssel in der Deklaration fehlt, ist falsch oder abgelaufen. Server mit Anmeldung im Browser prüft nur der Agent selbst.",
+  "mcpFailed": "Die Prüfung ist fehlgeschlagen:"
 }

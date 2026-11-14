@@ -4,11 +4,13 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -393,4 +395,53 @@ func TestMCPOperations(t *testing.T) {
 	if built != 3 {
 		t.Errorf("plans asked for: %d, want 3", built)
 	}
+}
+
+// The check starts the declaration in use and lists the tools the server
+// answered with, the rest on a button; a failure says why and shows what
+// the server wrote.
+func TestMCPCheck(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	var checked []inventory.MCPServer
+	var done func(ai.MCPCheck, error)
+	a.CheckMCP = func(s inventory.MCPServer, d func(ai.MCPCheck, error)) {
+		checked, done = append(checked, s), d
+	}
+	tt := openAI(t, a, mcpPage)
+	hasTexts(t, tt, "Hearth starts the server, or connects to it, as Claude Code does, and asks for its tools.")
+	screenshot(t, tt, "mcp-check-idle")
+	if err := tt.Click("Check"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(checked) != 1 || checked[0].Name != "github" || checked[0].Agent != "claude" {
+		t.Fatalf("checked %+v, want github of Claude Code", checked)
+	}
+	hasTexts(t, tt, "Waiting for the server. A first start through npx or uvx downloads it and can take a minute.")
+	var tools []ai.MCPTool
+	for i := range 10 {
+		tools = append(tools, ai.MCPTool{Name: "tool_" + strconv.Itoa(i), Description: "Does " + strconv.Itoa(i) + "."})
+	}
+	done(ai.MCPCheck{Server: "github-mcp-server", Version: "0.5.0", Tools: tools, Took: 1200 * time.Millisecond}, nil)
+	tt.Frame()
+	hasTexts(t, tt, "github-mcp-server 0.5.0 answered in 1.20 s · 10 tools", "tool_0", "Does 0.", "Show 2 more")
+	if tt.HasText("tool_9") {
+		t.Error("shows all 10 tools at once")
+	}
+	if err := tt.Click("Show 2 more"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "tool_9")
+	screenshot(t, tt, "mcp-check-tools")
+
+	if err := tt.Click("Check again"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	done(ai.MCPCheck{}, &ai.MCPError{Kind: ai.MCPExited, Detail: "Error: GITHUB_PERSONAL_ACCESS_TOKEN not set"})
+	tt.Frame()
+	hasTexts(t, tt, "The server stopped before it answered. What it wrote:", "Error: GITHUB_PERSONAL_ACCESS_TOKEN not set")
+	screenshot(t, tt, "mcp-check-failed")
 }

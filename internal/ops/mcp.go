@@ -44,112 +44,15 @@ func formatOf(agent, path string) mcpFormat {
 	return mcpJSON
 }
 
-// mcpDef is a server as its file declares it, the values of its
-// variables and headers too.
-type mcpDef struct {
-	Transport, Command, URL string
-	Args                    []string
-	Env, Headers            map[string]string
-}
-
-// readDef reads s's declaration from its file.
-func readDef(s inventory.MCPServer) (mcpDef, error) {
-	data, err := os.ReadFile(s.File)
-	if err != nil {
-		return mcpDef{}, fmt.Errorf("read %s: %w", s.File, err)
+// readDef reads s's declaration from its file, for a copy: variables
+// Codex passes by name have no counterpart the other agents write the
+// same way.
+func readDef(s inventory.MCPServer) (ai.MCPDef, error) {
+	def, err := ai.ReadMCPDef(s)
+	if err == nil && (len(def.EnvVars) > 0 || len(def.EnvHeaders) > 0 || def.BearerVar != "") {
+		return def, errors.New(locales.McpCannotCopy(s.Name))
 	}
-	def := mcpDef{Transport: s.Transport}
-	switch formatOf(s.Agent, s.File) {
-	case mcpTOML:
-		var cfg struct {
-			MCPServers map[string]map[string]any `toml:"mcp_servers"`
-		}
-		if _, err := toml.Decode(string(data), &cfg); err != nil {
-			return def, fmt.Errorf("read %s: %w", s.File, err)
-		}
-		c := cfg.MCPServers[s.Name]
-		// Variables passed from the environment by name have no
-		// counterpart the other agents write the same way.
-		for _, key := range []string{"env_vars", "env_http_headers", "bearer_token_env_var"} {
-			if _, ok := c[key]; ok {
-				return def, errors.New(locales.McpCannotCopy(s.Name))
-			}
-		}
-		def.Command, _ = c["command"].(string)
-		def.URL, _ = c["url"].(string)
-		if args, ok := c["args"].([]any); ok {
-			for _, a := range args {
-				def.Args = append(def.Args, fmt.Sprint(a))
-			}
-		}
-		def.Env, def.Headers = stringMap(c["env"]), stringMap(c["http_headers"])
-		return def, nil
-	}
-	var file map[string]json.RawMessage
-	if err := json.Unmarshal(data, &file); err != nil {
-		return def, fmt.Errorf("read %s: %w", s.File, err)
-	}
-	key := "mcpServers"
-	if s.Agent == "opencode" {
-		key = "mcp"
-	}
-	servers := file[key]
-	if formatOf(s.Agent, s.File) == mcpClaude && s.Project != "" {
-		var projects map[string]struct {
-			MCPServers json.RawMessage `json:"mcpServers"`
-		}
-		_ = json.Unmarshal(file["projects"], &projects)
-		servers = projects[s.Project].MCPServers
-	}
-	var byName map[string]struct {
-		Command     json.RawMessage   `json:"command"`
-		Args        []string          `json:"args"`
-		Env         map[string]string `json:"env"`
-		Environment map[string]string `json:"environment"`
-		Headers     map[string]string `json:"headers"`
-		URL         string            `json:"url"`
-		HTTPURL     string            `json:"httpUrl"`
-		ServerURL   string            `json:"serverUrl"`
-	}
-	if err := json.Unmarshal(servers, &byName); err != nil {
-		return def, fmt.Errorf("read %s: %w", s.File, err)
-	}
-	j, ok := byName[s.Name]
-	if !ok {
-		return def, fmt.Errorf("read %s: no server %s", s.File, s.Name)
-	}
-	var cmd []string
-	if json.Unmarshal(j.Command, &def.Command) != nil && json.Unmarshal(j.Command, &cmd) == nil && len(cmd) > 0 {
-		def.Command, def.Args = cmd[0], cmd[1:]
-	}
-	def.Args = append(def.Args, j.Args...)
-	def.URL = firstOf(j.HTTPURL, j.URL, j.ServerURL)
-	def.Env, def.Headers = j.Env, j.Headers
-	if j.Environment != nil {
-		def.Env = j.Environment
-	}
-	return def, nil
-}
-
-func stringMap(v any) map[string]string {
-	m, ok := v.(map[string]any)
-	if !ok {
-		return nil
-	}
-	out := map[string]string{}
-	for k, v := range m {
-		out[k] = fmt.Sprint(v)
-	}
-	return out
-}
-
-func firstOf(vs ...string) string {
-	for _, v := range vs {
-		if v != "" {
-			return v
-		}
-	}
-	return ""
+	return def, err
 }
 
 // object writes a JSON object with its members in the order given,
@@ -188,7 +91,7 @@ func object(pairs ...any) json.RawMessage {
 
 // jsonDef is def as agent's JSON file declares a server: the keys differ
 // a little between the agents.
-func jsonDef(def mcpDef, agent string, format mcpFormat) json.RawMessage {
+func jsonDef(def ai.MCPDef, agent string, format mcpFormat) json.RawMessage {
 	if format == mcpOpenCode {
 		if def.Transport == "stdio" {
 			return object("type", "local", "command", append([]string{def.Command}, def.Args...), "environment", def.Env)
@@ -223,7 +126,7 @@ func serverTable(name string) string {
 
 // tomlDef is def as a Codex config declares a server, its table and those
 // in it, without the [mcp_servers] line.
-func tomlDef(name string, def mcpDef) (string, error) {
+func tomlDef(name string, def ai.MCPDef) (string, error) {
 	server := map[string]any{}
 	if def.Command != "" {
 		server["command"] = def.Command
@@ -274,7 +177,7 @@ func removeTOMLTable(text, table string) string {
 
 // secrets are the values in def that s, as the snapshot keeps it, hides:
 // the variables', the headers', and the arguments and URL it masked.
-func secrets(def mcpDef, s inventory.MCPServer) []string {
+func secrets(def ai.MCPDef, s inventory.MCPServer) []string {
 	var out []string
 	for _, v := range def.Env {
 		out = append(out, v)

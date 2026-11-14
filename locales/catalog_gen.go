@@ -20983,3 +20983,201 @@ func UsageOpenCleanup() string { return In(i18n.Locale()).UsageOpenCleanup() }
 func (msgs Messages) UsageOpenCleanup() string {
 	return Catalog.Format(msgs.locale, "usageOpenCleanup", nil)
 }
+
+// McpCheckSection says "Check"
+// in the language the app shows.
+//
+// MCP details section: checking the server.
+func McpCheckSection() string { return In(i18n.Locale()).McpCheckSection() }
+
+// McpCheckSection says "Check"
+// in the language of msgs.
+//
+// MCP details section: checking the server.
+func (msgs Messages) McpCheckSection() string {
+	return Catalog.Format(msgs.locale, "mcpCheckSection", nil)
+}
+
+// McpCheck says "Check"
+// in the language the app shows.
+//
+// MCP details: button that starts the server and asks for its tools.
+func McpCheck() string { return In(i18n.Locale()).McpCheck() }
+
+// McpCheck says "Check"
+// in the language of msgs.
+//
+// MCP details: button that starts the server and asks for its tools.
+func (msgs Messages) McpCheck() string {
+	return Catalog.Format(msgs.locale, "mcpCheck", nil)
+}
+
+// McpCheckAgain says "Check again"
+// in the language the app shows.
+//
+// MCP details: the check button after a check.
+func McpCheckAgain() string { return In(i18n.Locale()).McpCheckAgain() }
+
+// McpCheckAgain says "Check again"
+// in the language of msgs.
+//
+// MCP details: the check button after a check.
+func (msgs Messages) McpCheckAgain() string {
+	return Catalog.Format(msgs.locale, "mcpCheckAgain", nil)
+}
+
+// McpCheckHint says "Hearth starts the server, or connects to it, as {agent} does, and asks for its tools."
+// in the language the app shows.
+//
+// MCP details: what the check does, before it runs.
+func McpCheckHint(agent string) string { return In(i18n.Locale()).McpCheckHint(agent) }
+
+// McpCheckHint says "Hearth starts the server, or connects to it, as {agent} does, and asks for its tools."
+// in the language of msgs.
+//
+// MCP details: what the check does, before it runs.
+func (msgs Messages) McpCheckHint(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckHint", map[string]any{"agent": agent})
+}
+
+// McpChecking says "Waiting for the server. A first start through npx or uvx downloads it and can take a minute."
+// in the language the app shows.
+//
+// MCP details: the check is running.
+func McpChecking() string { return In(i18n.Locale()).McpChecking() }
+
+// McpChecking says "Waiting for the server. A first start through npx or uvx downloads it and can take a minute."
+// in the language of msgs.
+//
+// MCP details: the check is running.
+func (msgs Messages) McpChecking() string {
+	return Catalog.Format(msgs.locale, "mcpChecking", nil)
+}
+
+// McpAnswered says "{server} answered in {time} · {count, plural, one {# tool} other {# tools}}"
+// in the language the app shows.
+//
+// MCP details: the server answered the check.
+func McpAnswered(server string, time_ string, count int) string {
+	return In(i18n.Locale()).McpAnswered(server, time_, count)
+}
+
+// McpAnswered says "{server} answered in {time} · {count, plural, one {# tool} other {# tools}}"
+// in the language of msgs.
+//
+// MCP details: the server answered the check.
+func (msgs Messages) McpAnswered(server string, time_ string, count int) string {
+	return Catalog.Format(msgs.locale, "mcpAnswered", map[string]any{"server": server, "time": time_, "count": count})
+}
+
+// McpNoTools says "It offers no tools."
+// in the language the app shows.
+//
+// MCP details: the server answered with no tools.
+func McpNoTools() string { return In(i18n.Locale()).McpNoTools() }
+
+// McpNoTools says "It offers no tools."
+// in the language of msgs.
+//
+// MCP details: the server answered with no tools.
+func (msgs Messages) McpNoTools() string {
+	return Catalog.Format(msgs.locale, "mcpNoTools", nil)
+}
+
+// McpMoreTools says "Show {count} more"
+// in the language the app shows.
+//
+// MCP details: shows the rest of the tools.
+func McpMoreTools(count int) string { return In(i18n.Locale()).McpMoreTools(count) }
+
+// McpMoreTools says "Show {count} more"
+// in the language of msgs.
+//
+// MCP details: shows the rest of the tools.
+func (msgs Messages) McpMoreTools(count int) string {
+	return Catalog.Format(msgs.locale, "mcpMoreTools", map[string]any{"count": count})
+}
+
+// McpFailNotFound says "The command is not found, so the agent cannot start it either. Install it, or fix the path in the file."
+// in the language the app shows.
+//
+// MCP check: the command is not there.
+func McpFailNotFound() string { return In(i18n.Locale()).McpFailNotFound() }
+
+// McpFailNotFound says "The command is not found, so the agent cannot start it either. Install it, or fix the path in the file."
+// in the language of msgs.
+//
+// MCP check: the command is not there.
+func (msgs Messages) McpFailNotFound() string {
+	return Catalog.Format(msgs.locale, "mcpFailNotFound", nil)
+}
+
+// McpFailExited says "The server stopped before it answered. What it wrote:"
+// in the language the app shows.
+//
+// MCP check: the process ended before it answered; its output follows.
+func McpFailExited() string { return In(i18n.Locale()).McpFailExited() }
+
+// McpFailExited says "The server stopped before it answered. What it wrote:"
+// in the language of msgs.
+//
+// MCP check: the process ended before it answered; its output follows.
+func (msgs Messages) McpFailExited() string {
+	return Catalog.Format(msgs.locale, "mcpFailExited", nil)
+}
+
+// McpFailTimedOut says "The server did not answer within a minute. It may wait for a sign-in in the browser, or still be downloading."
+// in the language the app shows.
+//
+// MCP check: no answer in time.
+func McpFailTimedOut() string { return In(i18n.Locale()).McpFailTimedOut() }
+
+// McpFailTimedOut says "The server did not answer within a minute. It may wait for a sign-in in the browser, or still be downloading."
+// in the language of msgs.
+//
+// MCP check: no answer in time.
+func (msgs Messages) McpFailTimedOut() string {
+	return Catalog.Format(msgs.locale, "mcpFailTimedOut", nil)
+}
+
+// McpFailUnreachable says "Nothing answers at this address: the server is down, or the address is wrong."
+// in the language the app shows.
+//
+// MCP check: nothing answers at the URL.
+func McpFailUnreachable() string { return In(i18n.Locale()).McpFailUnreachable() }
+
+// McpFailUnreachable says "Nothing answers at this address: the server is down, or the address is wrong."
+// in the language of msgs.
+//
+// MCP check: nothing answers at the URL.
+func (msgs Messages) McpFailUnreachable() string {
+	return Catalog.Format(msgs.locale, "mcpFailUnreachable", nil)
+}
+
+// McpFailDenied says "The server refused access: the token or key in the declaration is missing, wrong or expired. Servers that sign in thr…"
+// in the language the app shows.
+//
+// MCP check: HTTP 401 or 403.
+func McpFailDenied() string { return In(i18n.Locale()).McpFailDenied() }
+
+// McpFailDenied says "The server refused access: the token or key in the declaration is missing, wrong or expired. Servers that sign in thr…"
+// in the language of msgs.
+//
+// MCP check: HTTP 401 or 403.
+func (msgs Messages) McpFailDenied() string {
+	return Catalog.Format(msgs.locale, "mcpFailDenied", nil)
+}
+
+// McpFailed says "The check failed:"
+// in the language the app shows.
+//
+// MCP check: any other failure; the error follows.
+func McpFailed() string { return In(i18n.Locale()).McpFailed() }
+
+// McpFailed says "The check failed:"
+// in the language of msgs.
+//
+// MCP check: any other failure; the error follows.
+func (msgs Messages) McpFailed() string {
+	return Catalog.Format(msgs.locale, "mcpFailed", nil)
+}

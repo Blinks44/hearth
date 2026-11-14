@@ -2,6 +2,7 @@ package ui
 
 import (
 	"cmp"
+	"errors"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -293,6 +295,7 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				})
 			})
 		})
+		a.mcpCheckView(c, m)
 		detailSection(c, locales.VariablesHidden())
 		var env, headers []string
 		for _, s := range m.decls {
@@ -423,4 +426,126 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 			}
 		})
 	})
+}
+
+// mcpCheck is the last check of an MCP server: the key of its item, and,
+// once it is done, what the server answered or why it failed.
+type mcpCheck struct {
+	key      string
+	running  bool
+	res      ai.MCPCheck
+	err      error
+	allTools bool
+}
+
+const (
+	// shownTools is how many tools a check lists before "Show N more".
+	shownTools = 8
+	// shownErrLines is how many last lines of a failure it shows.
+	shownErrLines = 12
+)
+
+// mcpCheckView checks m on a button: Hearth starts, or reaches, its first
+// declaration in use as the agent would, and lists its tools or says why
+// it does not answer.
+func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
+	if a.CheckMCP == nil {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	s := m.decls[0]
+	if i := slices.IndexFunc(m.decls, func(s inventory.MCPServer) bool { return !s.Disabled }); i >= 0 {
+		s = m.decls[i]
+	}
+	ch := a.mcpCheck
+	if ch.key != m.key() {
+		ch = mcpCheck{}
+	}
+	check := func() {
+		key := m.key()
+		a.mcpCheck = mcpCheck{key: key, running: true}
+		a.CheckMCP(s, func(res ai.MCPCheck, err error) {
+			if a.mcpCheck.key == key {
+				a.mcpCheck = mcpCheck{key: key, res: res, err: err}
+			}
+		})
+	}
+	detailSection(c, locales.McpCheckSection())
+	// The icon stays by the first line of a long message.
+	ui.Row(c).Gap(8).Padding(0, 16, 10, 16).AlignItems(ui.Start).Children(func() {
+		text := func(s string, color ui.Color) {
+			ui.Text(c, s).FontSize(12.5).TextColor(color).Grow(1).MinWidth(0)
+		}
+		switch {
+		case ch.running:
+			ui.Spinner(c).Label(locales.McpChecking())
+			text(locales.McpChecking(), t.TextMuted)
+		case ch.key == "":
+			text(locales.McpCheckHint(agentTitle(s.Agent)), t.TextMuted)
+		case ch.err == nil:
+			ui.Icon(c, Icon("circle-check")).Size(14, 14).Shrink(0).Margin(2, 0, 0, 0).TextColor(t.Success)
+			name := strings.TrimSpace(ch.res.Server + " " + ch.res.Version)
+			text(locales.McpAnswered(cmp.Or(name, m.name), seconds(ch.res.Took), len(ch.res.Tools)), t.Text)
+		default:
+			ui.Icon(c, Icon("circle-alert")).Size(14, 14).Shrink(0).Margin(2, 0, 0, 0).TextColor(pal.WarningText)
+			text(mcpFailure(ch.err), pal.WarningText)
+		}
+		if !ch.running {
+			label := locales.McpCheck()
+			if ch.key != "" {
+				label = locales.McpCheckAgain()
+			}
+			ui.Button(c.Key("mcp-check"), label).Shrink(0).OnClick(check)
+		}
+	})
+	switch {
+	case ch.running || ch.key == "":
+	case ch.err != nil:
+		lines := strings.Split(ch.err.Error(), "\n")
+		lines = lines[max(0, len(lines)-shownErrLines):]
+		ui.Text(c, strings.Join(lines, "\n")).Font(FontMono).FontSize(11).TextColor(pal.MonoText).
+			Margin(0, 16, 12, 16).Padding(8, 10).Radius(6).Background(pal.Subtle).Selectable()
+	case len(ch.res.Tools) == 0:
+		ui.Text(c, locales.McpNoTools()).FontSize(12).TextColor(pal.TextFaint).Padding(0, 16, 10, 16)
+	default:
+		tools := ch.res.Tools
+		if !ch.allTools && len(tools) > shownTools {
+			tools = tools[:shownTools]
+		}
+		for _, tool := range tools {
+			ui.Row(c).Gap(10).Padding(3, 16).AlignItems(ui.Baseline).Children(func() {
+				clipped(c, tool.Name).Font(FontMono).FontSize(12).Shrink(0).MaxWidth(200)
+				clipped(c, tool.Description).FontSize(11.5).TextColor(pal.TextFaint).Shrink(1).MinWidth(0)
+			})
+		}
+		if more := len(ch.res.Tools) - len(tools); more > 0 {
+			ui.Row(c).Padding(4, 16, 10, 16).Children(func() {
+				ui.Button(c.Key("mcp-tools-more"), locales.McpMoreTools(more)).OnClick(func() { a.mcpCheck.allTools = true })
+			})
+		} else {
+			ui.Box(c).Height(8)
+		}
+	}
+}
+
+// mcpFailure says why a check failed.
+func mcpFailure(err error) string {
+	e, ok := errors.AsType[*ai.MCPError](err)
+	if !ok {
+		return locales.McpFailed()
+	}
+	switch e.Kind {
+	case ai.MCPNotFound:
+		return locales.McpFailNotFound()
+	case ai.MCPExited:
+		return locales.McpFailExited()
+	case ai.MCPTimedOut:
+		return locales.McpFailTimedOut()
+	case ai.MCPUnreachable:
+		return locales.McpFailUnreachable()
+	case ai.MCPDenied:
+		return locales.McpFailDenied()
+	}
+	return locales.McpFailed()
 }

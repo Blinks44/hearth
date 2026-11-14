@@ -89,6 +89,15 @@ func main() {
 				win.Update(func() { done(entries, text, err) })
 			}()
 		}
+		a.CheckMCP = func(s inventory.MCPServer, done func(ai.MCPCheck, error)) {
+			env := scanner.Terminal()
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), ai.MCPCheckTimeout)
+				defer cancel()
+				res, err := ai.CheckMCP(ctx, s, env)
+				win.Update(func() { done(res, err) })
+			}()
+		}
 		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
 		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
 		// Operations run one at a time in the background, as the user's

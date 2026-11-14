@@ -1537,5 +1537,19 @@
   "reasonForgotten": "desaparecen de Consumo y ya no se pueden reanudar",
   "cleanupHistoryNote": "Las sesiones antiguas se eliminan para siempre",
   "cleanupHistoryNoteText": "Las sesiones eliminadas desaparecen de Consumo y claude --resume o codex resume ya no las encuentran. Los ajustes, instrucciones y memoria de los agentes se conservan.",
-  "usageOpenCleanup": "Abrir en Limpieza"
+  "usageOpenCleanup": "Abrir en Limpieza",
+  "mcpCheckSection": "Comprobación",
+  "mcpCheck": "Comprobar",
+  "mcpCheckAgain": "Comprobar de nuevo",
+  "mcpCheckHint": "Hearth inicia el servidor o se conecta a él como {agent} y le pide sus herramientas.",
+  "mcpChecking": "Esperando al servidor. El primer inicio con npx o uvx lo descarga y puede tardar un minuto.",
+  "mcpAnswered": "{server} respondió en {time} · {count, plural, one {# herramienta} many {# herramientas} other {# herramientas}}",
+  "mcpNoTools": "No ofrece herramientas.",
+  "mcpMoreTools": "Mostrar {count} más",
+  "mcpFailNotFound": "No se encuentra el comando, así que el agente tampoco puede iniciarlo. Instálalo o corrige la ruta en el archivo.",
+  "mcpFailExited": "El servidor se detuvo antes de responder. Lo que escribió:",
+  "mcpFailTimedOut": "El servidor no respondió en un minuto. Puede que espere un inicio de sesión en el navegador o que aún se esté descargando.",
+  "mcpFailUnreachable": "Nada responde en esta dirección: el servidor no está en marcha o la dirección es incorrecta.",
+  "mcpFailDenied": "El servidor denegó el acceso: el token o la clave de la declaración falta, es incorrecto o ha caducado. Los servidores con inicio de sesión en el navegador solo los comprueba el propio agente.",
+  "mcpFailed": "La comprobación falló:"
 }

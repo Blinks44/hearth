@@ -1537,5 +1537,19 @@
   "reasonForgotten": "elles quittent Consommation et ne peuvent plus être reprises",
   "cleanupHistoryNote": "Les anciennes sessions sont supprimées définitivement",
   "cleanupHistoryNoteText": "Les sessions supprimées quittent Consommation, et claude --resume ou codex resume ne les trouvent plus. Les réglages, instructions et la mémoire des agents restent.",
-  "usageOpenCleanup": "Ouvrir dans Nettoyage"
+  "usageOpenCleanup": "Ouvrir dans Nettoyage",
+  "mcpCheckSection": "Vérification",
+  "mcpCheck": "Vérifier",
+  "mcpCheckAgain": "Vérifier à nouveau",
+  "mcpCheckHint": "Hearth démarre le serveur ou s’y connecte comme {agent}, puis demande ses outils.",
+  "mcpChecking": "En attente du serveur. Un premier démarrage via npx ou uvx le télécharge et peut prendre une minute.",
+  "mcpAnswered": "{server} a répondu en {time} · {count, plural, one {# outil} many {# outils} other {# outils}}",
+  "mcpNoTools": "Il ne propose aucun outil.",
+  "mcpMoreTools": "Afficher {count} de plus",
+  "mcpFailNotFound": "La commande est introuvable : l’agent ne peut pas la lancer non plus. Installez-la ou corrigez le chemin dans le fichier.",
+  "mcpFailExited": "Le serveur s’est arrêté avant de répondre. Ce qu’il a écrit :",
+  "mcpFailTimedOut": "Le serveur n’a pas répondu en une minute. Il attend peut-être une connexion dans le navigateur, ou se télécharge encore.",
+  "mcpFailUnreachable": "Rien ne répond à cette adresse : le serveur est arrêté, ou l’adresse est fausse.",
+  "mcpFailDenied": "Le serveur a refusé l’accès : le jeton ou la clé de la déclaration manque, est faux ou a expiré. Les serveurs qui se connectent via le navigateur ne sont vérifiés que par l’agent lui-même.",
+  "mcpFailed": "La vérification a échoué :"
 }
