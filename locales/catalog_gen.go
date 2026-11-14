@@ -20421,3 +20421,565 @@ func NvmMoveKeptText() string { return In(i18n.Locale()).NvmMoveKeptText() }
 func (msgs Messages) NvmMoveKeptText() string {
 	return Catalog.Format(msgs.locale, "nvmMoveKeptText", nil)
 }
+
+// UsageTitle says "Usage"
+// in the language the app shows.
+//
+// Sidebar item and header of the agents' usage page.
+func UsageTitle() string { return In(i18n.Locale()).UsageTitle() }
+
+// UsageTitle says "Usage"
+// in the language of msgs.
+//
+// Sidebar item and header of the agents' usage page.
+func (msgs Messages) UsageTitle() string {
+	return Catalog.Format(msgs.locale, "usageTitle", nil)
+}
+
+// UsageSubtitle says "Tokens and approximate cost of agent sessions"
+// in the language the app shows.
+//
+// Under the usage page's title.
+func UsageSubtitle() string { return In(i18n.Locale()).UsageSubtitle() }
+
+// UsageSubtitle says "Tokens and approximate cost of agent sessions"
+// in the language of msgs.
+//
+// Under the usage page's title.
+func (msgs Messages) UsageSubtitle() string {
+	return Catalog.Format(msgs.locale, "usageSubtitle", nil)
+}
+
+// UsageLead says "Claude Code and Codex, from their local history"
+// in the language the app shows.
+//
+// Usage page: what the numbers come from.
+func UsageLead() string { return In(i18n.Locale()).UsageLead() }
+
+// UsageLead says "Claude Code and Codex, from their local history"
+// in the language of msgs.
+//
+// Usage page: what the numbers come from.
+func (msgs Messages) UsageLead() string {
+	return Catalog.Format(msgs.locale, "usageLead", nil)
+}
+
+// UsageToday says "Today"
+// in the language the app shows.
+//
+// Usage card: today's cost.
+func UsageToday() string { return In(i18n.Locale()).UsageToday() }
+
+// UsageToday says "Today"
+// in the language of msgs.
+//
+// Usage card: today's cost.
+func (msgs Messages) UsageToday() string {
+	return Catalog.Format(msgs.locale, "usageToday", nil)
+}
+
+// UsagePeriod says "{days, plural, one {Last day} other {Last # days}}"
+// in the language the app shows.
+//
+// Usage card: the cost of the period's days.
+func UsagePeriod(days int) string { return In(i18n.Locale()).UsagePeriod(days) }
+
+// UsagePeriod says "{days, plural, one {Last day} other {Last # days}}"
+// in the language of msgs.
+//
+// Usage card: the cost of the period's days.
+func (msgs Messages) UsagePeriod(days int) string {
+	return Catalog.Format(msgs.locale, "usagePeriod", map[string]any{"days": days})
+}
+
+// UsageAllTime says "All time"
+// in the language the app shows.
+//
+// Usage: the period of all the history.
+func UsageAllTime() string { return In(i18n.Locale()).UsageAllTime() }
+
+// UsageAllTime says "All time"
+// in the language of msgs.
+//
+// Usage: the period of all the history.
+func (msgs Messages) UsageAllTime() string {
+	return Catalog.Format(msgs.locale, "usageAllTime", nil)
+}
+
+// UsageDays says "{days, plural, one {# day} other {# days}}"
+// in the language the app shows.
+//
+// Usage: a period's tab.
+func UsageDays(days int) string { return In(i18n.Locale()).UsageDays(days) }
+
+// UsageDays says "{days, plural, one {# day} other {# days}}"
+// in the language of msgs.
+//
+// Usage: a period's tab.
+func (msgs Messages) UsageDays(days int) string {
+	return Catalog.Format(msgs.locale, "usageDays", map[string]any{"days": days})
+}
+
+// UsageSessions says "Sessions"
+// in the language the app shows.
+//
+// Usage card: how many sessions in the period.
+func UsageSessions() string { return In(i18n.Locale()).UsageSessions() }
+
+// UsageSessions says "Sessions"
+// in the language of msgs.
+//
+// Usage card: how many sessions in the period.
+func (msgs Messages) UsageSessions() string {
+	return Catalog.Format(msgs.locale, "usageSessions", nil)
+}
+
+// UsageFolders says "{count, plural, one {in # folder} other {in # folders}}"
+// in the language the app shows.
+//
+// Usage card caption: how many projects or folders the sessions ran in.
+func UsageFolders(count int) string { return In(i18n.Locale()).UsageFolders(count) }
+
+// UsageFolders says "{count, plural, one {in # folder} other {in # folders}}"
+// in the language of msgs.
+//
+// Usage card caption: how many projects or folders the sessions ran in.
+func (msgs Messages) UsageFolders(count int) string {
+	return Catalog.Format(msgs.locale, "usageFolders", map[string]any{"count": count})
+}
+
+// UsageOnDisk says "On disk"
+// in the language the app shows.
+//
+// Usage card: what the agents' history takes.
+func UsageOnDisk() string { return In(i18n.Locale()).UsageOnDisk() }
+
+// UsageOnDisk says "On disk"
+// in the language of msgs.
+//
+// Usage card: what the agents' history takes.
+func (msgs Messages) UsageOnDisk() string {
+	return Catalog.Format(msgs.locale, "usageOnDisk", nil)
+}
+
+// UsageOld says "old: {size}"
+// in the language the app shows.
+//
+// Usage card caption: what the old sessions take.
+func UsageOld(size string) string { return In(i18n.Locale()).UsageOld(size) }
+
+// UsageOld says "old: {size}"
+// in the language of msgs.
+//
+// Usage card caption: what the old sessions take.
+func (msgs Messages) UsageOld(size string) string {
+	return Catalog.Format(msgs.locale, "usageOld", map[string]any{"size": size})
+}
+
+// UsageCost says "≈ ${usd, number, ::.00}"
+// in the language the app shows.
+//
+// An approximate cost in US dollars.
+func UsageCost(usd float64) string { return In(i18n.Locale()).UsageCost(usd) }
+
+// UsageCost says "≈ ${usd, number, ::.00}"
+// in the language of msgs.
+//
+// An approximate cost in US dollars.
+func (msgs Messages) UsageCost(usd float64) string {
+	return Catalog.Format(msgs.locale, "usageCost", map[string]any{"usd": usd})
+}
+
+// UsageCostSmall says "< $0.01"
+// in the language the app shows.
+//
+// A cost below a cent.
+func UsageCostSmall() string { return In(i18n.Locale()).UsageCostSmall() }
+
+// UsageCostSmall says "< $0.01"
+// in the language of msgs.
+//
+// A cost below a cent.
+func (msgs Messages) UsageCostSmall() string {
+	return Catalog.Format(msgs.locale, "usageCostSmall", nil)
+}
+
+// UsageTokens says "{count, plural, one {# token} other {# tokens}}"
+// in the language the app shows.
+//
+// A count of tokens under a thousand.
+func UsageTokens(count int) string { return In(i18n.Locale()).UsageTokens(count) }
+
+// UsageTokens says "{count, plural, one {# token} other {# tokens}}"
+// in the language of msgs.
+//
+// A count of tokens under a thousand.
+func (msgs Messages) UsageTokens(count int) string {
+	return Catalog.Format(msgs.locale, "usageTokens", map[string]any{"count": count})
+}
+
+// UsageTokensK says "{n, number, ::.0}K tokens"
+// in the language the app shows.
+//
+// Thousands of tokens, with one decimal.
+func UsageTokensK(n float64) string { return In(i18n.Locale()).UsageTokensK(n) }
+
+// UsageTokensK says "{n, number, ::.0}K tokens"
+// in the language of msgs.
+//
+// Thousands of tokens, with one decimal.
+func (msgs Messages) UsageTokensK(n float64) string {
+	return Catalog.Format(msgs.locale, "usageTokensK", map[string]any{"n": n})
+}
+
+// UsageTokensM says "{n, number, ::.0}M tokens"
+// in the language the app shows.
+//
+// Millions of tokens, with one decimal.
+func UsageTokensM(n float64) string { return In(i18n.Locale()).UsageTokensM(n) }
+
+// UsageTokensM says "{n, number, ::.0}M tokens"
+// in the language of msgs.
+//
+// Millions of tokens, with one decimal.
+func (msgs Messages) UsageTokensM(n float64) string {
+	return Catalog.Format(msgs.locale, "usageTokensM", map[string]any{"n": n})
+}
+
+// UsageTokensB says "{n, number, ::.0}B tokens"
+// in the language the app shows.
+//
+// Billions of tokens, with one decimal.
+func UsageTokensB(n float64) string { return In(i18n.Locale()).UsageTokensB(n) }
+
+// UsageTokensB says "{n, number, ::.0}B tokens"
+// in the language of msgs.
+//
+// Billions of tokens, with one decimal.
+func (msgs Messages) UsageTokensB(n float64) string {
+	return Catalog.Format(msgs.locale, "usageTokensB", map[string]any{"n": n})
+}
+
+// UsageNote says "Approximate cost: API prices as of {month, date, ::yMMMM}, a subscription is not counted"
+// in the language the app shows.
+//
+// Usage: how the cost is counted.
+func UsageNote(month time.Time) string { return In(i18n.Locale()).UsageNote(month) }
+
+// UsageNote says "Approximate cost: API prices as of {month, date, ::yMMMM}, a subscription is not counted"
+// in the language of msgs.
+//
+// Usage: how the cost is counted.
+func (msgs Messages) UsageNote(month time.Time) string {
+	return Catalog.Format(msgs.locale, "usageNote", map[string]any{"month": month})
+}
+
+// UsageByDay says "By day"
+// in the language the app shows.
+//
+// Usage chart title.
+func UsageByDay() string { return In(i18n.Locale()).UsageByDay() }
+
+// UsageByDay says "By day"
+// in the language of msgs.
+//
+// Usage chart title.
+func (msgs Messages) UsageByDay() string {
+	return Catalog.Format(msgs.locale, "usageByDay", nil)
+}
+
+// UsageByMonth says "By month"
+// in the language the app shows.
+//
+// Usage chart title for all time.
+func UsageByMonth() string { return In(i18n.Locale()).UsageByMonth() }
+
+// UsageByMonth says "By month"
+// in the language of msgs.
+//
+// Usage chart title for all time.
+func (msgs Messages) UsageByMonth() string {
+	return Catalog.Format(msgs.locale, "usageByMonth", nil)
+}
+
+// UsageMonth says "{date, date, ::yMMM}"
+// in the language the app shows.
+//
+// A month under the usage chart.
+func UsageMonth(date time.Time) string { return In(i18n.Locale()).UsageMonth(date) }
+
+// UsageMonth says "{date, date, ::yMMM}"
+// in the language of msgs.
+//
+// A month under the usage chart.
+func (msgs Messages) UsageMonth(date time.Time) string {
+	return Catalog.Format(msgs.locale, "usageMonth", map[string]any{"date": date})
+}
+
+// UsageByProject says "By project"
+// in the language the app shows.
+//
+// Usage card: the cost of each project.
+func UsageByProject() string { return In(i18n.Locale()).UsageByProject() }
+
+// UsageByProject says "By project"
+// in the language of msgs.
+//
+// Usage card: the cost of each project.
+func (msgs Messages) UsageByProject() string {
+	return Catalog.Format(msgs.locale, "usageByProject", nil)
+}
+
+// UsageByModel says "By model"
+// in the language the app shows.
+//
+// Usage card: the cost of each model.
+func UsageByModel() string { return In(i18n.Locale()).UsageByModel() }
+
+// UsageByModel says "By model"
+// in the language of msgs.
+//
+// Usage card: the cost of each model.
+func (msgs Messages) UsageByModel() string {
+	return Catalog.Format(msgs.locale, "usageByModel", nil)
+}
+
+// UsageWhere says "Where the history is"
+// in the language the app shows.
+//
+// Usage card: where the agents keep their history.
+func UsageWhere() string { return In(i18n.Locale()).UsageWhere() }
+
+// UsageWhere says "Where the history is"
+// in the language of msgs.
+//
+// Usage card: where the agents keep their history.
+func (msgs Messages) UsageWhere() string {
+	return Catalog.Format(msgs.locale, "usageWhere", nil)
+}
+
+// UsageOutside says "Outside projects"
+// in the language the app shows.
+//
+// Usage: sessions in the home folder or no known folder.
+func UsageOutside() string { return In(i18n.Locale()).UsageOutside() }
+
+// UsageOutside says "Outside projects"
+// in the language of msgs.
+//
+// Usage: sessions in the home folder or no known folder.
+func (msgs Messages) UsageOutside() string {
+	return Catalog.Format(msgs.locale, "usageOutside", nil)
+}
+
+// UsageOutsideCaption says "home folder and others"
+// in the language the app shows.
+//
+// Usage: what the sessions outside projects are.
+func UsageOutsideCaption() string { return In(i18n.Locale()).UsageOutsideCaption() }
+
+// UsageOutsideCaption says "home folder and others"
+// in the language of msgs.
+//
+// Usage: what the sessions outside projects are.
+func (msgs Messages) UsageOutsideCaption() string {
+	return Catalog.Format(msgs.locale, "usageOutsideCaption", nil)
+}
+
+// UsageSessionCount says "{count, plural, one {# session} other {# sessions}}"
+// in the language the app shows.
+//
+// A count of agent sessions.
+func UsageSessionCount(count int) string { return In(i18n.Locale()).UsageSessionCount(count) }
+
+// UsageSessionCount says "{count, plural, one {# session} other {# sessions}}"
+// in the language of msgs.
+//
+// A count of agent sessions.
+func (msgs Messages) UsageSessionCount(count int) string {
+	return Catalog.Format(msgs.locale, "usageSessionCount", map[string]any{"count": count})
+}
+
+// UsagePriceUnknown says "price unknown"
+// in the language the app shows.
+//
+// Usage: a model Hearth has no price of.
+func UsagePriceUnknown() string { return In(i18n.Locale()).UsagePriceUnknown() }
+
+// UsagePriceUnknown says "price unknown"
+// in the language of msgs.
+//
+// Usage: a model Hearth has no price of.
+func (msgs Messages) UsagePriceUnknown() string {
+	return Catalog.Format(msgs.locale, "usagePriceUnknown", nil)
+}
+
+// UsageOldRow says "{days, plural, one {Older than # day} other {Older than # days}}"
+// in the language the app shows.
+//
+// Usage: the sessions Cleanup offers.
+func UsageOldRow(days int) string { return In(i18n.Locale()).UsageOldRow(days) }
+
+// UsageOldRow says "{days, plural, one {Older than # day} other {Older than # days}}"
+// in the language of msgs.
+//
+// Usage: the sessions Cleanup offers.
+func (msgs Messages) UsageOldRow(days int) string {
+	return Catalog.Format(msgs.locale, "usageOldRow", map[string]any{"days": days})
+}
+
+// UsageOldCaption says "can be removed in Cleanup"
+// in the language the app shows.
+//
+// Usage: where to remove old sessions.
+func UsageOldCaption() string { return In(i18n.Locale()).UsageOldCaption() }
+
+// UsageOldCaption says "can be removed in Cleanup"
+// in the language of msgs.
+//
+// Usage: where to remove old sessions.
+func (msgs Messages) UsageOldCaption() string {
+	return Catalog.Format(msgs.locale, "usageOldCaption", nil)
+}
+
+// UsageNone says "No Claude Code or Codex sessions in this period."
+// in the language the app shows.
+//
+// Usage: no sessions in the period.
+func UsageNone() string { return In(i18n.Locale()).UsageNone() }
+
+// UsageNone says "No Claude Code or Codex sessions in this period."
+// in the language of msgs.
+//
+// Usage: no sessions in the period.
+func (msgs Messages) UsageNone() string {
+	return Catalog.Format(msgs.locale, "usageNone", nil)
+}
+
+// UsageEmpty says "Hearth found no history of Claude Code or Codex on this computer."
+// in the language the app shows.
+//
+// Usage: no history at all.
+func UsageEmpty() string { return In(i18n.Locale()).UsageEmpty() }
+
+// UsageEmpty says "Hearth found no history of Claude Code or Codex on this computer."
+// in the language of msgs.
+//
+// Usage: no history at all.
+func (msgs Messages) UsageEmpty() string {
+	return Catalog.Format(msgs.locale, "usageEmpty", nil)
+}
+
+// CleanupGroupHistory says "Agent history"
+// in the language the app shows.
+//
+// Cleanup tab and group: the agents' old sessions.
+func CleanupGroupHistory() string { return In(i18n.Locale()).CleanupGroupHistory() }
+
+// CleanupGroupHistory says "Agent history"
+// in the language of msgs.
+//
+// Cleanup tab and group: the agents' old sessions.
+func (msgs Messages) CleanupGroupHistory() string {
+	return Catalog.Format(msgs.locale, "cleanupGroupHistory", nil)
+}
+
+// CleanupHistoryRow says "Old agent history"
+// in the language the app shows.
+//
+// Cleanup, the user's choice: the agents' old sessions.
+func CleanupHistoryRow() string { return In(i18n.Locale()).CleanupHistoryRow() }
+
+// CleanupHistoryRow says "Old agent history"
+// in the language of msgs.
+//
+// Cleanup, the user's choice: the agents' old sessions.
+func (msgs Messages) CleanupHistoryRow() string {
+	return Catalog.Format(msgs.locale, "cleanupHistoryRow", nil)
+}
+
+// CleanupHistoryTitle says "{agent}: old sessions"
+// in the language the app shows.
+//
+// Cleanup: an agent's old sessions.
+func CleanupHistoryTitle(agent string) string { return In(i18n.Locale()).CleanupHistoryTitle(agent) }
+
+// CleanupHistoryTitle says "{agent}: old sessions"
+// in the language of msgs.
+//
+// Cleanup: an agent's old sessions.
+func (msgs Messages) CleanupHistoryTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "cleanupHistoryTitle", map[string]any{"agent": agent})
+}
+
+// CleanupHistoryOld says "{days, plural, one {older than # day} other {older than # days}}"
+// in the language the app shows.
+//
+// Cleanup: how old the sessions are.
+func CleanupHistoryOld(days int) string { return In(i18n.Locale()).CleanupHistoryOld(days) }
+
+// CleanupHistoryOld says "{days, plural, one {older than # day} other {older than # days}}"
+// in the language of msgs.
+//
+// Cleanup: how old the sessions are.
+func (msgs Messages) CleanupHistoryOld(days int) string {
+	return Catalog.Format(msgs.locale, "cleanupHistoryOld", map[string]any{"days": days})
+}
+
+// ReasonForgotten says "they leave Usage and can no longer be resumed"
+// in the language the app shows.
+//
+// Cleanup reason: removed sessions leave Usage and cannot be resumed.
+func ReasonForgotten() string { return In(i18n.Locale()).ReasonForgotten() }
+
+// ReasonForgotten says "they leave Usage and can no longer be resumed"
+// in the language of msgs.
+//
+// Cleanup reason: removed sessions leave Usage and cannot be resumed.
+func (msgs Messages) ReasonForgotten() string {
+	return Catalog.Format(msgs.locale, "reasonForgotten", nil)
+}
+
+// CleanupHistoryNote says "Old sessions go for good"
+// in the language the app shows.
+//
+// Note of a cleanup plan removing agents' sessions.
+func CleanupHistoryNote() string { return In(i18n.Locale()).CleanupHistoryNote() }
+
+// CleanupHistoryNote says "Old sessions go for good"
+// in the language of msgs.
+//
+// Note of a cleanup plan removing agents' sessions.
+func (msgs Messages) CleanupHistoryNote() string {
+	return Catalog.Format(msgs.locale, "cleanupHistoryNote", nil)
+}
+
+// CleanupHistoryNoteText says "Removed sessions leave Usage, and claude --resume or codex resume no longer finds them. The agents' settings, instruc…"
+// in the language the app shows.
+//
+// Note of a cleanup plan removing agents' sessions: what goes and what
+// stays.
+func CleanupHistoryNoteText() string { return In(i18n.Locale()).CleanupHistoryNoteText() }
+
+// CleanupHistoryNoteText says "Removed sessions leave Usage, and claude --resume or codex resume no longer finds them. The agents' settings, instruc…"
+// in the language of msgs.
+//
+// Note of a cleanup plan removing agents' sessions: what goes and what
+// stays.
+func (msgs Messages) CleanupHistoryNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupHistoryNoteText", nil)
+}
+
+// UsageOpenCleanup says "Open in Cleanup"
+// in the language the app shows.
+//
+// Usage: the button opening the old sessions in Cleanup.
+func UsageOpenCleanup() string { return In(i18n.Locale()).UsageOpenCleanup() }
+
+// UsageOpenCleanup says "Open in Cleanup"
+// in the language of msgs.
+//
+// Usage: the button opening the old sessions in Cleanup.
+func (msgs Messages) UsageOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "usageOpenCleanup", nil)
+}

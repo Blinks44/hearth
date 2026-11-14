@@ -197,8 +197,9 @@ func Replace(snap inventory.Snapshot, states []inventory.ToolState) inventory.Sn
 }
 
 // Run runs the detectors, a few at once, and returns what they found in
-// their order, with the AI agents, the user's skills and MCP servers and
-// the time the terminal's shell takes to start, found beside them. A detector's error
+// their order, with the AI agents, the user's skills and MCP servers, the
+// agents' sessions and the time the terminal's shell takes to start,
+// found beside them. A detector's error
 // leaves the others alone: its tool gets the error and whatever it found
 // before it.
 func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector) inventory.Snapshot {
@@ -208,15 +209,17 @@ func Run(ctx context.Context, r run.Runner, term, gui sysenv.Env, ds []Detector)
 	var mcp []inventory.MCPServer
 	var mcpErrs []string
 	var startup *inventory.ShellStartup
+	var sessions []inventory.AgentSession
 	wg.Go(func() { agents = ai.Detect(ctx, r, term, gui) })
 	wg.Go(func() { startup = sysenv.Startup(ctx, r, term, gui) })
 	wg.Go(func() { skills = ai.Skills(term) })
 	wg.Go(func() { mcp, mcpErrs = ai.MCP(term) })
+	wg.Go(func() { sessions = ai.Sessions(term) })
 	tools := detectTools(ctx, r, term, gui, ds)
 	wg.Wait()
 	return inventory.Snapshot{Taken: time.Now(), Tools: tools, Agents: agents, Skills: skills, MCP: mcp, MCPErrs: mcpErrs,
 		TerminalPath: sysenv.Paths(term), GUIPath: sysenv.Paths(gui), Variables: sysenv.Variables(term, gui),
-		AppsAgent: appsAgent(term.Get("HOME")), Startup: startup}
+		AppsAgent: appsAgent(term.Get("HOME")), Startup: startup, Sessions: sessions}
 }
 
 // appsAgent is the file of Hearth's launch agent for the user of home,

@@ -205,6 +205,7 @@ type App struct {
 	cliTab         int    // the CLI & clouds page's tab
 	cliFilter      string // the CLI & clouds table's filter
 	portsFilter    string // the Ports table's filter
+	usageTab       int    // the Usage page's period, by usagePeriods
 	mobileTab      int    // the mobile page's tab: all, then a group each
 	mobileFilter   string // the mobile table's filter
 	editorsTab     int    // the editors page's tab: all, extensions, commands
@@ -253,7 +254,7 @@ type App struct {
 
 // NewApp returns the app showing the overview.
 func NewApp() *App {
-	return &App{router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en"}
+	return &App{router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en", usageTab: 1}
 }
 
 // View builds the window: the sidebar and the page shown beside it.
@@ -325,6 +326,8 @@ func (a *App) View(c *ui.Context) {
 						a.cliView(c, p)
 					case portsPage:
 						a.portsView(c, p)
+					case usagePage:
+						a.usageView(c, p)
 					case mobilePage:
 						a.mobileView(c, p)
 					case editorsPage:

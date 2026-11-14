@@ -13,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // pathWith is an environment whose PATH has programs of these names.
@@ -281,5 +282,26 @@ func TestCleanupModels(t *testing.T) {
 	}
 	if got := freed(t.Context(), cands, nil); got != 5e9 {
 		t.Errorf("freed %d, want 5e9", got)
+	}
+}
+
+// An agent's old sessions go as their files and folders, with a note
+// that they leave Usage and cannot be resumed.
+func TestCleanupPlanHistory(t *testing.T) {
+	c := cleanup.Candidate{Kind: cleanup.AgentHistory, ID: "claude", Count: 2, Usage: inventory.Usage{Bytes: 5e6},
+		Paths: []string{"/h/.claude/projects/p/a.jsonl", "/h/.claude/projects/p/a", "/h/.claude/projects/p/b.jsonl"}}
+	p, err := CleanupPlan([]cleanup.Candidate{c}, []string{"Claude Code: old sessions"}, nil, nil, DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var removed []string
+	for _, s := range p.Steps {
+		removed = append(removed, s.Remove)
+	}
+	if !slices.Equal(removed, c.Paths) {
+		t.Errorf("removes %q", removed)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.CleanupHistoryNote() }) {
+		t.Errorf("notes %+v", p.Notes)
 	}
 }

@@ -237,6 +237,43 @@ type Snapshot struct {
 	// Startup is how long a new terminal's shell takes to start; nil when
 	// it could not be measured.
 	Startup *ShellStartup `json:",omitempty"`
+	// Sessions are the AI agents' sessions in their local history.
+	Sessions []AgentSession `json:",omitempty"`
+}
+
+// AgentSession is a session of an AI agent from its local history: the
+// folder it ran in, its files and the tokens it used.
+type AgentSession struct {
+	// Agent is the agent's ID, as "claude" or "codex".
+	Agent string
+	ID    string
+	// Dir is the folder the session ran in; "" when the history does not
+	// say.
+	Dir string `json:",omitempty"`
+	// Files are its transcript and the folder of what it kept beside it,
+	// which go together.
+	Files []string
+	// Size is what Files take; Modified is when it last wrote to them.
+	Size     int64
+	Modified time.Time
+	// Usage is the tokens it used, a day and model each.
+	Usage []TokenUsage `json:",omitempty"`
+}
+
+// TokenUsage is the tokens of a model on a day: those read anew, written
+// to the prompt cache for 5 minutes and for an hour, read from it, and
+// written out, thinking with them.
+type TokenUsage struct {
+	// Day is the local date, as "2026-11-13".
+	Day   string
+	Model string
+	// Input leaves out what the cache gave.
+	Input, CacheWrite, CacheWrite1h, CacheRead, Output int64
+}
+
+// Tokens is all of u's tokens.
+func (u TokenUsage) Tokens() int64 {
+	return u.Input + u.CacheWrite + u.CacheWrite1h + u.CacheRead + u.Output
 }
 
 // ShellStartup is how long the shell a new terminal opens takes to start,

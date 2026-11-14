@@ -210,3 +210,26 @@ func TestOldExtensions(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 }
+
+func TestHistory(t *testing.T) {
+	old, recent := now.Add(-HistoryAfter-time.Hour), now.Add(-HistoryAfter+time.Hour)
+	s := &inventory.Snapshot{Sessions: []inventory.AgentSession{
+		{Agent: "claude", Files: []string{"/h/.claude/projects/p/a.jsonl", "/h/.claude/projects/p/a"}, Size: 3_000_000, Modified: old},
+		{Agent: "claude", Files: []string{"/h/.claude/projects/p/b.jsonl"}, Size: 2_000_000, Modified: old},
+		// Resumed lately: it stays.
+		{Agent: "claude", Files: []string{"/h/.claude/projects/p/c.jsonl"}, Size: 9_000_000, Modified: recent},
+		// Too little to be worth a look.
+		{Agent: "codex", Files: []string{"/h/.codex/sessions/r.jsonl"}, Size: 500, Modified: old},
+	}}
+	var got []Candidate
+	for _, c := range Find(s, nil, nil, nil, now) {
+		if c.Kind == AgentHistory {
+			got = append(got, c)
+		}
+	}
+	want := []string{"/h/.claude/projects/p/a.jsonl", "/h/.claude/projects/p/a", "/h/.claude/projects/p/b.jsonl"}
+	if len(got) != 1 || got[0].ID != "claude" || got[0].Count != 2 || got[0].Frees() != 5_000_000 || got[0].Selected ||
+		!slices.Equal(got[0].Paths, want) || got[0].Kind.Group() != History {
+		t.Fatalf("%+v", got)
+	}
+}

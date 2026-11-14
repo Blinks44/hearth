@@ -8111,5 +8111,255 @@
   "nvmMoveKeptText": "The Node versions in ~/.nvm stay, with their global packages: install the packages you need again with mise's Node. Remove the folder in Cleanup once nothing needs it.",
   "@nvmMoveKeptText": {
     "description": "Note of the nvm plan: what stays."
+  },
+  "usageTitle": "Usage",
+  "@usageTitle": {
+    "description": "Sidebar item and header of the agents' usage page."
+  },
+  "usageSubtitle": "Tokens and approximate cost of agent sessions",
+  "@usageSubtitle": {
+    "description": "Under the usage page's title."
+  },
+  "usageLead": "Claude Code and Codex, from their local history",
+  "@usageLead": {
+    "description": "Usage page: what the numbers come from."
+  },
+  "usageToday": "Today",
+  "@usageToday": {
+    "description": "Usage card: today's cost."
+  },
+  "usagePeriod": "{days, plural, one {Last day} other {Last # days}}",
+  "@usagePeriod": {
+    "description": "Usage card: the cost of the period's days.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "usageAllTime": "All time",
+  "@usageAllTime": {
+    "description": "Usage: the period of all the history."
+  },
+  "usageDays": "{days, plural, one {# day} other {# days}}",
+  "@usageDays": {
+    "description": "Usage: a period's tab.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "usageSessions": "Sessions",
+  "@usageSessions": {
+    "description": "Usage card: how many sessions in the period."
+  },
+  "usageFolders": "{count, plural, one {in # folder} other {in # folders}}",
+  "@usageFolders": {
+    "description": "Usage card caption: how many projects or folders the sessions ran in.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "8"
+      }
+    }
+  },
+  "usageOnDisk": "On disk",
+  "@usageOnDisk": {
+    "description": "Usage card: what the agents' history takes."
+  },
+  "usageOld": "old: {size}",
+  "@usageOld": {
+    "description": "Usage card caption: what the old sessions take.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "310 MB"
+      }
+    }
+  },
+  "usageCost": "≈ ${usd, number, ::.00}",
+  "@usageCost": {
+    "description": "An approximate cost in US dollars.",
+    "placeholders": {
+      "usd": {
+        "type": "double",
+        "example": "4.8"
+      }
+    }
+  },
+  "usageCostSmall": "< $0.01",
+  "@usageCostSmall": {
+    "description": "A cost below a cent."
+  },
+  "usageTokens": "{count, plural, one {# token} other {# tokens}}",
+  "@usageTokens": {
+    "description": "A count of tokens under a thousand.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "120"
+      }
+    }
+  },
+  "usageTokensK": "{n, number, ::.0}K tokens",
+  "@usageTokensK": {
+    "description": "Thousands of tokens, with one decimal.",
+    "placeholders": {
+      "n": {
+        "type": "double",
+        "example": "4.2"
+      }
+    }
+  },
+  "usageTokensM": "{n, number, ::.0}M tokens",
+  "@usageTokensM": {
+    "description": "Millions of tokens, with one decimal.",
+    "placeholders": {
+      "n": {
+        "type": "double",
+        "example": "1.2"
+      }
+    }
+  },
+  "usageTokensB": "{n, number, ::.0}B tokens",
+  "@usageTokensB": {
+    "description": "Billions of tokens, with one decimal.",
+    "placeholders": {
+      "n": {
+        "type": "double",
+        "example": "3.6"
+      }
+    }
+  },
+  "usageNote": "Approximate cost: API prices as of {month, date, ::yMMMM}, a subscription is not counted",
+  "@usageNote": {
+    "description": "Usage: how the cost is counted.",
+    "placeholders": {
+      "month": {
+        "type": "DateTime",
+        "example": "2026-11-01"
+      }
+    }
+  },
+  "usageByDay": "By day",
+  "@usageByDay": {
+    "description": "Usage chart title."
+  },
+  "usageByMonth": "By month",
+  "@usageByMonth": {
+    "description": "Usage chart title for all time."
+  },
+  "usageMonth": "{date, date, ::yMMM}",
+  "@usageMonth": {
+    "description": "A month under the usage chart.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-11-01"
+      }
+    }
+  },
+  "usageByProject": "By project",
+  "@usageByProject": {
+    "description": "Usage card: the cost of each project."
+  },
+  "usageByModel": "By model",
+  "@usageByModel": {
+    "description": "Usage card: the cost of each model."
+  },
+  "usageWhere": "Where the history is",
+  "@usageWhere": {
+    "description": "Usage card: where the agents keep their history."
+  },
+  "usageOutside": "Outside projects",
+  "@usageOutside": {
+    "description": "Usage: sessions in the home folder or no known folder."
+  },
+  "usageOutsideCaption": "home folder and others",
+  "@usageOutsideCaption": {
+    "description": "Usage: what the sessions outside projects are."
+  },
+  "usageSessionCount": "{count, plural, one {# session} other {# sessions}}",
+  "@usageSessionCount": {
+    "description": "A count of agent sessions.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "64"
+      }
+    }
+  },
+  "usagePriceUnknown": "price unknown",
+  "@usagePriceUnknown": {
+    "description": "Usage: a model Hearth has no price of."
+  },
+  "usageOldRow": "{days, plural, one {Older than # day} other {Older than # days}}",
+  "@usageOldRow": {
+    "description": "Usage: the sessions Cleanup offers.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "90"
+      }
+    }
+  },
+  "usageOldCaption": "can be removed in Cleanup",
+  "@usageOldCaption": {
+    "description": "Usage: where to remove old sessions."
+  },
+  "usageNone": "No Claude Code or Codex sessions in this period.",
+  "@usageNone": {
+    "description": "Usage: no sessions in the period."
+  },
+  "usageEmpty": "Hearth found no history of Claude Code or Codex on this computer.",
+  "@usageEmpty": {
+    "description": "Usage: no history at all."
+  },
+  "cleanupGroupHistory": "Agent history",
+  "@cleanupGroupHistory": {
+    "description": "Cleanup tab and group: the agents' old sessions."
+  },
+  "cleanupHistoryRow": "Old agent history",
+  "@cleanupHistoryRow": {
+    "description": "Cleanup, the user's choice: the agents' old sessions."
+  },
+  "cleanupHistoryTitle": "{agent}: old sessions",
+  "@cleanupHistoryTitle": {
+    "description": "Cleanup: an agent's old sessions.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "cleanupHistoryOld": "{days, plural, one {older than # day} other {older than # days}}",
+  "@cleanupHistoryOld": {
+    "description": "Cleanup: how old the sessions are.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "90"
+      }
+    }
+  },
+  "reasonForgotten": "they leave Usage and can no longer be resumed",
+  "@reasonForgotten": {
+    "description": "Cleanup reason: removed sessions leave Usage and cannot be resumed."
+  },
+  "cleanupHistoryNote": "Old sessions go for good",
+  "@cleanupHistoryNote": {
+    "description": "Note of a cleanup plan removing agents' sessions."
+  },
+  "cleanupHistoryNoteText": "Removed sessions leave Usage, and claude --resume or codex resume no longer finds them. The agents' settings, instructions and memory stay.",
+  "@cleanupHistoryNoteText": {
+    "description": "Note of a cleanup plan removing agents' sessions: what goes and what stays."
+  },
+  "usageOpenCleanup": "Open in Cleanup",
+  "@usageOpenCleanup": {
+    "description": "Usage: the button opening the old sessions in Cleanup."
   }
 }

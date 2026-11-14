@@ -45,6 +45,8 @@ const (
 	// OldExtensions are the older versions of an editor's extensions an
 	// update left behind.
 	OldExtensions Kind = "old-extensions"
+	// AgentHistory is an AI agent's sessions not written to for long.
+	AgentHistory Kind = "agent-history"
 )
 
 // Group is a section candidates come in, in this order.
@@ -56,6 +58,7 @@ const (
 	Docker
 	Projects
 	Models
+	History
 )
 
 // Group returns the section of the kind.
@@ -69,6 +72,8 @@ func (k Kind) Group() Group {
 		return Projects
 	case Model:
 		return Models
+	case AgentHistory:
+		return History
 	}
 	return Copies
 }
@@ -107,6 +112,9 @@ const (
 	Downloaded Reason = "downloaded"
 	// Superseded: a newer version of it is installed.
 	Superseded Reason = "superseded"
+	// Forgotten: the sessions leave the usage page, and the agent can no
+	// longer resume them.
+	Forgotten Reason = "forgotten"
 )
 
 // Candidate is something the user may remove to free space.
@@ -127,8 +135,8 @@ type Candidate struct {
 	// when it last changed.
 	Project string
 	Changed time.Time
-	// Count is how many of Docker's images or containers, or of the
-	// folders of OldExtensions.
+	// Count is how many of Docker's images or containers, of the folders
+	// of OldExtensions, or of the sessions of AgentHistory.
 	Count int
 	// Usage is the space it takes, when Known; Docker's is what pruning
 	// frees.
@@ -192,6 +200,7 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 	out = append(out, models(s, ps)...)
 	out = append(out, oldExtensions(s, usage)...)
 	out = append(out, installs(sizes, ps, usage, now)...)
+	out = append(out, history(s.Sessions, now)...)
 	slices.SortStableFunc(out, func(a, b Candidate) int {
 		return cmp.Or(cmp.Compare(a.Kind.Group(), b.Kind.Group()), cmp.Compare(b.Frees(), a.Frees()))
 	})
@@ -432,6 +441,33 @@ func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
 		}
 	}
 	return out
+}
+
+// HistoryAfter is how long an agent's session goes unwritten before
+// Cleanup offers it.
+const HistoryAfter = 90 * 24 * time.Hour
+
+// history offers the sessions of each agent not written to for
+// HistoryAfter, never chosen at once: the user may want to resume one.
+func history(sessions []inventory.AgentSession, now time.Time) []Candidate {
+	var out []Candidate
+	at := map[string]int{}
+	for _, s := range sessions {
+		if now.Sub(s.Modified) < HistoryAfter {
+			continue
+		}
+		i, ok := at[s.Agent]
+		if !ok {
+			at[s.Agent] = len(out)
+			out = append(out, Candidate{Kind: AgentHistory, ID: s.Agent, Known: true, Reasons: []Reason{Forgotten}})
+			i = len(out) - 1
+		}
+		c := &out[i]
+		c.Paths = append(c.Paths, s.Files...)
+		c.Count++
+		c.Usage.Bytes += s.Size
+	}
+	return slices.DeleteFunc(out, func(c Candidate) bool { return c.Usage.Bytes < minFrees })
 }
 
 // oldExtensions are the folders of extensions' older versions, an

@@ -44,7 +44,7 @@ var caches = map[string]string{
 }
 
 // cleanupGroups are the Cleanup page's groups, a tab each after All.
-var cleanupGroups = []cleanup.Group{cleanup.Caches, cleanup.Copies, cleanup.Docker, cleanup.Projects, cleanup.Models}
+var cleanupGroups = []cleanup.Group{cleanup.Caches, cleanup.Copies, cleanup.Docker, cleanup.Projects, cleanup.Models, cleanup.History}
 
 // candidates are what the last scan and count offer to clean up; nil
 // before the first scan.
@@ -144,6 +144,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						{"Docker", count(cleanup.Docker)},
 						{locales.ProjectsTitle(), count(cleanup.Projects)},
 						{locales.CleanupModels(), count(cleanup.Models)},
+						{locales.CleanupGroupHistory(), count(cleanup.History)},
 					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
@@ -209,6 +210,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						listRow(c, locales.CleanupDockerRow(), false, locales.CleanupDockerCaption(), func() {})
 						listRow(c, locales.CleanupGroupProjects(), false, locales.CleanupProjectsCaption(), func() {})
 						listRow(c, locales.CleanupModelsRow(), false, locales.CleanupModelsCaption(), func() {})
+						listRow(c, locales.CleanupHistoryRow(), false, locales.ReasonForgotten(), func() {})
 					})
 					listCard(c, locales.CleanupNotOffered(), "", func() {
 						listRow(c, locales.CleanupVolumes(), false, locales.CleanupVolumesCaption(), func() {})
@@ -344,6 +346,8 @@ func (a *App) candidateTitle(cand cleanup.Candidate) string {
 		return cand.ID + " · " + cand.Manager
 	case cleanup.OldExtensions:
 		return locales.EditorsOldTitle(cand.ID)
+	case cleanup.AgentHistory:
+		return locales.CleanupHistoryTitle(agentTitle(cand.ID))
 	}
 	return cand.ID
 }
@@ -368,6 +372,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		parts = append(parts, tilde(cand.Project, a.Home))
 	case cleanup.OldExtensions:
 		parts = append(parts, locales.EditorsFolders(cand.Count))
+	case cleanup.AgentHistory:
+		parts = append(parts, locales.UsageSessionCount(cand.Count), locales.CleanupHistoryOld(int(cleanup.HistoryAfter.Hours()/24)))
 	case cleanup.Model:
 		if !cand.Changed.IsZero() {
 			parts = append(parts, locales.ModelsDownloaded(locales.AgoOn(cand.Changed)))
@@ -403,6 +409,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 			parts = append(parts, locales.ReasonDownloaded())
 		case cleanup.Superseded:
 			parts = append(parts, locales.ReasonSuperseded())
+		case cleanup.Forgotten:
+			parts = append(parts, locales.ReasonForgotten())
 		}
 	}
 	return strings.Join(parts, " · ")
@@ -445,6 +453,8 @@ func cleanupGroupTitle(g cleanup.Group) string {
 		return "Docker"
 	case cleanup.Models:
 		return locales.CleanupGroupModels()
+	case cleanup.History:
+		return locales.CleanupGroupHistory()
 	}
 	return locales.CleanupGroupProjects()
 }
