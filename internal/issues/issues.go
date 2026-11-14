@@ -53,6 +53,13 @@ const (
 	// MCPMissing is a command MCP servers start that is not there: the
 	// agents cannot start them.
 	MCPMissing Kind = "mcp-missing"
+	// PlainSecret is a secret an MCP server's file writes out, as a token
+	// in its env, headers, arguments or URL: whoever reads or copies the
+	// file, or the project it is in, has the secret.
+	PlainSecret Kind = "plain-secret"
+	// SettingsSecret is a secret an agent's settings file writes out, as
+	// an API key in the "env" of Claude Code's settings.json.
+	SettingsSecret Kind = "settings-secret"
 	// StubOnPath is a stand-in on the terminal's PATH that does not run
 	// the tool, as Microsoft Store's python.exe: a warning when it comes
 	// first, since the command then opens the Store; else it takes over
@@ -105,6 +112,8 @@ type Issue struct {
 	MCP []inventory.MCPServer
 	// Startup is the shell start SlowStartup is about.
 	Startup *inventory.ShellStartup
+	// Agent is the agent whose settings SettingsSecret is about.
+	Agent *inventory.Agent
 }
 
 // Find returns the issues of the scan s and the projects ps, the PATH's
@@ -154,9 +163,16 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 	out = append(out, extraVersions(s, ps, lines, now)...)
 	out = append(out, skillIssues(s.Skills)...)
 	out = append(out, mcpMissing(s.MCP)...)
+	out = append(out, plainSecrets(s.MCP)...)
+	for i, a := range s.Agents {
+		if len(a.PlainEnv) > 0 {
+			out = append(out, Issue{Kind: SettingsSecret, Severity: Warning, Agent: &s.Agents[i]})
+		}
+	}
 	for _, p := range ps {
 		out = append(out, skillIssues(p.Skills)...)
 		out = append(out, mcpMissing(p.MCP)...)
+		out = append(out, plainSecrets(p.MCP)...)
 		for _, st := range projects.Resolve(p, s, lines) {
 			ch, ok := st.Unmet()
 			if !ok {
@@ -414,4 +430,17 @@ func OSDir(dir string) bool {
 	return slices.ContainsFunc(osDirs, func(p string) bool { return strings.HasPrefix(dir+"/", p) }) ||
 		strings.HasSuffix(strings.ToLower(strings.TrimRight(dir, `\`)), `\appdata\roaming\npm`) ||
 		strings.HasSuffix(strings.ReplaceAll(dir, `\`, "/"), "/.dotnet/tools")
+}
+
+// plainSecrets are the servers whose files write out a secret, an issue
+// each, in the order found; one turned off too, since the file still has
+// the secret.
+func plainSecrets(servers []inventory.MCPServer) []Issue {
+	var out []Issue
+	for _, sv := range servers {
+		if sv.PlainSecret() {
+			out = append(out, Issue{Kind: PlainSecret, Severity: Warning, Project: sv.Project, MCP: []inventory.MCPServer{sv}})
+		}
+	}
+	return out
 }

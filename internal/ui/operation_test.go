@@ -2,6 +2,7 @@ package ui
 
 import (
 	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -255,5 +256,17 @@ func TestFailReason(t *testing.T) {
 				t.Errorf("failReason = %q, want %q", got, tc.want)
 			}
 		})
+	}
+}
+
+// A variable set in the Windows registry shows as a setting edited, its
+// value hidden.
+func TestStepEditUserVar(t *testing.T) {
+	e, setting, ok := stepEdit(ops.Step{UserVar: &ops.UserVarEdit{Name: "LINEAR_TOKEN", Value: "lin_s3cr3t"}})
+	if !ok || !setting || e.Path != `HKCU\Environment\LINEAR_TOKEN` {
+		t.Fatalf("stepEdit: %+v %v %v", e, setting, ok)
+	}
+	if shown := e.Masked(e.After); strings.Contains(shown, "s3cr3t") || !strings.Contains(shown, "LINEAR_TOKEN=") {
+		t.Errorf("shown: %q", shown)
 	}
 }

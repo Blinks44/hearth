@@ -297,6 +297,29 @@ func TestMCPMissing(t *testing.T) {
 	}
 }
 
+// A secret written out is an issue a server, of the user's or a
+// project's, turned off too; an agent's settings with one are another.
+func TestPlainSecrets(t *testing.T) {
+	plain := inventory.MCPServer{Name: "github", Agent: "claude", PlainEnv: []string{"GITHUB_TOKEN"}}
+	off := inventory.MCPServer{Name: "linear", Agent: "codex", PlainArgs: true, Disabled: true}
+	clean := inventory.MCPServer{Name: "fs", Agent: "codex", Env: []string{"GITHUB_TOKEN"}}
+	inProject := inventory.MCPServer{Name: "db", Agent: "claude", Project: "/src/app", PlainHeaders: []string{"Authorization"}}
+	snap := &inventory.Snapshot{
+		MCP:    []inventory.MCPServer{plain, clean, off},
+		Agents: []inventory.Agent{{ID: "claude", PlainEnv: []string{"ANTHROPIC_API_KEY"}}, {ID: "codex"}},
+	}
+	got := Find(snap, []projects.Project{{Dir: "/src/app", MCP: []inventory.MCPServer{inProject}}}, nil, now)
+	want := []Issue{
+		{Kind: PlainSecret, Severity: Warning, MCP: []inventory.MCPServer{plain}},
+		{Kind: PlainSecret, Severity: Warning, MCP: []inventory.MCPServer{off}},
+		{Kind: SettingsSecret, Severity: Warning, Agent: &snap.Agents[0]},
+		{Kind: PlainSecret, Severity: Warning, Project: "/src/app", MCP: []inventory.MCPServer{inProject}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got  %+v\nwant %+v", got, want)
+	}
+}
+
 // A Store stub on PATH is no duplicate: it is its own issue, a warning
 // when it comes first and something needs the tool.
 func TestStubOnPath(t *testing.T) {

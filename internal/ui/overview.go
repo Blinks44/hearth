@@ -616,6 +616,19 @@ type attentionItem struct {
 	fix                       func() // proposes the plan that fixes it; nil for none
 }
 
+// issueKey names is among the scan's issues, for the hidden ones: its
+// kind, tool and project, and the server or agent of one about secrets.
+func issueKey(is issues.Issue) string {
+	key := string(is.Kind) + ":" + is.Tool + ":" + is.Project
+	switch {
+	case is.Kind == issues.PlainSecret:
+		key += ":" + is.MCP[0].Agent + ":" + is.MCP[0].Name
+	case is.Agent != nil:
+		key += ":" + is.Agent.ID
+	}
+	return key
+}
+
 // grouped are the kinds whose issues the card shows as one when there are
 // several: each is the same advice about another skill or server.
 var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
@@ -643,7 +656,7 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		group := byKind[is.Kind]
 		if len(group) < 2 {
 			title, explain := issueText(is, a.Home)
-			out = append(out, attentionItem{title, explain, issuePage(is), string(is.Kind) + ":" + is.Tool + ":" + is.Project, is.Severity, issueArea(is), a.issueFix(is, found)})
+			out = append(out, attentionItem{title, explain, issuePage(is), issueKey(is), is.Severity, issueArea(is), a.issueFix(is, found)})
 			continue
 		}
 		if done[is.Kind] {

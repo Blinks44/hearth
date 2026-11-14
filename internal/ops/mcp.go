@@ -154,10 +154,18 @@ func tomlDef(name string, def ai.MCPDef) (string, error) {
 
 // removeTOMLTable is text without the table and those in it.
 func removeTOMLTable(text, table string) string {
+	after, _ := replaceTOMLTable(text, table, "")
+	return after
+}
+
+// replaceTOMLTable is text with body, a table's lines, in place of the
+// table and those in it; body "" removes them. ok is false and text as it
+// is when there is no such table.
+func replaceTOMLTable(text, table, body string) (string, bool) {
 	lines := splitLines(text)
 	start := slices.IndexFunc(lines, func(l string) bool { return tomlTable(l) == table })
 	if start < 0 {
-		return text
+		return text, false
 	}
 	end := start + 1
 	for end < len(lines) {
@@ -167,12 +175,19 @@ func removeTOMLTable(text, table string) string {
 		}
 		end++
 	}
+	if body != "" {
+		// The blank line before the next table stays.
+		for end > start+1 && lines[end-1] == "" && end < len(lines) {
+			end--
+		}
+		return joinLines(slices.Replace(lines, start, end, splitLines(body)...)), true
+	}
 	lines = slices.Delete(lines, start, end)
 	// No two blank lines where the table was.
 	if start > 0 && lines[start-1] == "" && (start == len(lines) || lines[start] == "") {
 		lines = slices.Delete(lines, start-1, start)
 	}
-	return joinLines(lines)
+	return joinLines(lines), true
 }
 
 // secrets are the values in def that s, as the snapshot keeps it, hides:

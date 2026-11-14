@@ -8443,5 +8443,213 @@
   "mcpFailed": "The check failed:",
   "@mcpFailed": {
     "description": "MCP check: any other failure; the error follows."
+  },
+  "issueSecretTitle": "MCP: {name} has a secret in plain text",
+  "@issueSecretTitle": {
+    "description": "Issue title: an MCP server's file writes out a secret.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      }
+    }
+  },
+  "issueSecretExplain": "{file} holds {what} in plain text. Anyone who reads or copies the file, or the repository it is in, gets the secret. Keep it in an environment variable and let the file refer to it.",
+  "@issueSecretExplain": {
+    "description": "Issue explanation: what of the server is written out, in which file.",
+    "placeholders": {
+      "what": {
+        "type": "String",
+        "example": "GITHUB_TOKEN, Authorization"
+      },
+      "file": {
+        "type": "String",
+        "example": "~/.claude.json"
+      }
+    }
+  },
+  "secretInArgs": "a value in the arguments or URL",
+  "@secretInArgs": {
+    "description": "Part of a list of what an MCP server writes out: a secret in its arguments or URL."
+  },
+  "secretByHand": "Hearth cannot move it here: edit the file by hand.",
+  "@secretByHand": {
+    "description": "Added to an issue explanation: Hearth does not move this secret itself."
+  },
+  "issueSettingsSecretTitle": "{agent}: a key in plain text in its settings",
+  "@issueSettingsSecretTitle": {
+    "description": "Issue title: an agent's settings file writes out an API key.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "issueSettingsSecretExplain": "{file} sets {names} in \"env\" in plain text. Anyone who reads or copies the file gets the key. Keep it in an environment variable of the terminal: the agent started there gets it just the same.",
+  "@issueSettingsSecretExplain": {
+    "description": "Issue explanation: the variables an agent's settings set to secrets in plain text.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude/settings.json"
+      },
+      "names": {
+        "type": "String",
+        "example": "ANTHROPIC_API_KEY"
+      }
+    }
+  },
+  "secretMove": "Move to variables…",
+  "@secretMove": {
+    "description": "Button: move an MCP server's or agent's secrets into environment variables."
+  },
+  "secretNoRef": "Hearth does not know how {agent} takes values from environment variables: move the secret by hand",
+  "@secretNoRef": {
+    "description": "Why Hearth does not move a secret: it does not know how the agent reads variables.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Copilot CLI"
+      }
+    }
+  },
+  "secretMcpTitle": "Move the secrets of {name} to environment variables",
+  "@secretMcpTitle": {
+    "description": "Plan title: move an MCP server's secrets into environment variables.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "github"
+      }
+    }
+  },
+  "secretMcpWhy": "{file} will refer to variables instead of holding the values; the values go to {where}. There they stay readable to your user, but no longer travel with the agent's file or the project. Restart the terminal and {agent} so they pick the variables up.",
+  "@secretMcpWhy": {
+    "description": "Plan explanation: the file refers to variables, the values go elsewhere.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.cursor/mcp.json"
+      },
+      "where": {
+        "type": "String",
+        "example": "~/.zshrc"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Cursor"
+      }
+    }
+  },
+  "secretSettingsTitle": "Move {agent}'s keys to environment variables",
+  "@secretSettingsTitle": {
+    "description": "Plan title: move the keys in an agent's settings into environment variables.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "secretSettingsWhy": "The keys leave \"env\" in {file} and go to {where}. Restart the terminal and {agent}: started from the terminal, it gets them as before.",
+  "@secretSettingsWhy": {
+    "description": "Plan explanation: keys leave the agent's settings for the user's environment.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude/settings.json"
+      },
+      "where": {
+        "type": "String",
+        "example": "~/.zshrc"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "secretChange": "{name} in {where}",
+  "@secretChange": {
+    "description": "What a plan changes: a variable and where it is set.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "GITHUB_TOKEN"
+      },
+      "where": {
+        "type": "String",
+        "example": "~/.zshrc"
+      }
+    }
+  },
+  "secretTaken": "The terminal already has {name} at another value: rename or remove it first",
+  "@secretTaken": {
+    "description": "Why a secret cannot move: the terminal has the variable at another value.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "GITHUB_TOKEN"
+      }
+    }
+  },
+  "secretShellUnsupported": "Hearth cannot set variables for the {shell} shell: set them in its startup file by hand",
+  "@secretShellUnsupported": {
+    "description": "Why Hearth cannot set variables for the user's shell.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "tcsh"
+      }
+    }
+  },
+  "secretNotInTerminal": "A new terminal does not see {name}",
+  "@secretNotInTerminal": {
+    "description": "Why the check after moving a secret failed: a new terminal lacks the variable.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "GITHUB_TOKEN"
+      }
+    }
+  },
+  "secretStill": "{file} still holds a secret in plain text",
+  "@secretStill": {
+    "description": "Why the check after moving a secret failed: the file still holds one.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.cursor/mcp.json"
+      }
+    }
+  },
+  "secretMoved": "The terminal has {names}, and the file no longer holds the values",
+  "@secretMoved": {
+    "description": "What the check after moving secrets found.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "GITHUB_TOKEN, LINEAR_TOKEN"
+      }
+    }
+  },
+  "mcpSecretTitle": "Secret in plain text",
+  "@mcpSecretTitle": {
+    "description": "Banner title in an MCP server's details: its file writes out a secret."
+  },
+  "plainText": "in plain text",
+  "@plainText": {
+    "description": "Caption of a variable in an MCP server's details whose value its file writes out."
+  },
+  "opBackupDropText": "{file} · comes back if the plan does not get through; removed once it does, since it holds the secret",
+  "@opBackupDropText": {
+    "description": "Note in a plan: the copy of a file holding a secret, removed after success.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.cursor/mcp.json.hearth-2026-11-14….bak"
+      }
+    }
   }
 }

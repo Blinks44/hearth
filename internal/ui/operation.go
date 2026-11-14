@@ -218,7 +218,11 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 		// A setting's value that was goes to the log, as Why says.
 		if !e.New && !setting {
 			backup := tilde(e.Path, a.Home) + ".hearth-" + c.Now().Format("2006-01-02") + "….bak"
-			notes = append(notes, ops.Note{Title: locales.OpBackup(), Text: locales.OpBackupText(backup), Tag: locales.OpTagBackup()})
+			text := locales.OpBackupText(backup)
+			if e.DropCopy {
+				text = locales.OpBackupDropText(backup)
+			}
+			notes = append(notes, ops.Note{Title: locales.OpBackup(), Text: text, Tag: locales.OpTagBackup()})
 		}
 	}
 	if len(notes) == 0 {
@@ -249,7 +253,8 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 
 // stepEdit is the change step makes to a file or, setting, to a setting
 // of the user's, as its diff shows it: the user's Path in the Windows
-// registry, an entry a line; false for a step that runs a command.
+// registry, an entry a line, or a variable there; false for a step that
+// runs a command.
 func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 	switch {
 	case step.Edit != nil:
@@ -257,6 +262,9 @@ func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 	case step.UserPath != nil:
 		lines := func(value string) string { return strings.ReplaceAll(value, ";", "\n") }
 		return ops.FileEdit{Path: ops.UserPathName, Before: lines(step.UserPath.Before), After: lines(step.UserPath.After)}, true, true
+	case step.UserVar != nil:
+		v := step.UserVar
+		return ops.FileEdit{Path: ops.UserVarsName + `\` + v.Name, After: v.Name + "=" + v.Value + "\n", Hide: []string{v.Value}}, true, true
 	}
 	return ops.FileEdit{}, false, false
 }

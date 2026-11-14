@@ -13,3 +13,14 @@ type UserPathEdit struct {
 	Before, After string
 	Add           string
 }
+
+// UserVarsName names the user's environment variables in the Windows
+// registry.
+const UserVarsName = `HKCU\Environment`
+
+// UserVarEdit sets the user's environment variable Name to Value in the
+// Windows registry, as a step of a plan: one there already, at another
+// value, is not changed. It comes back as an Edit does.
+type UserVarEdit struct {
+	Name, Value string
+}

@@ -298,14 +298,15 @@ func findProgram(command string, s inventory.MCPServer, term sysenv.Env) (string
 	return command, nil
 }
 
-// varRef is ${NAME} or ${NAME:-default} in a declared value.
-var varRef = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}`)
+// varRef is ${NAME} or ${NAME:-default} in a declared value, Cursor's
+// ${env:NAME} or OpenCode's {env:NAME}.
+var varRef = regexp.MustCompile(`\$\{(?:env:)?([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}|\{env:([A-Za-z_][A-Za-z0-9_]*)\}`)
 
 // expandVars puts env's values for the variables v refers to.
 func expandVars(v string, env sysenv.Env) string {
 	return varRef.ReplaceAllStringFunc(v, func(ref string) string {
 		m := varRef.FindStringSubmatch(ref)
-		if val := env.Get(m[1]); val != "" {
+		if val := env.Get(m[1] + m[3]); val != "" {
 			return val
 		}
 		return m[2]

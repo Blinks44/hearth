@@ -295,6 +295,7 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				})
 			})
 		})
+		a.mcpSecrets(c, m)
 		a.mcpCheckView(c, m)
 		detailSection(c, locales.VariablesHidden())
 		var env, headers []string
@@ -313,17 +314,30 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 		if len(env)+len(headers) == 0 {
 			ui.Text(c, locales.NoVariables()).FontSize(12).TextColor(pal.TextFaint).Padding(4, 16, 10, 16)
 		}
-		variable := func(name, caption string) {
+		// plain reports a value of the name some declaration writes out.
+		plain := func(name string, header bool) bool {
+			return slices.ContainsFunc(m.decls, func(s inventory.MCPServer) bool {
+				if header {
+					return slices.Contains(s.PlainHeaders, name)
+				}
+				return slices.Contains(s.PlainEnv, name)
+			})
+		}
+		variable := func(name, caption string, plain bool) {
 			ui.Row(c).Gap(8).Padding(5, 16).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, name).Font(FontMono).FontSize(12).Grow(1).MinWidth(0).SingleLine()
-				ui.Text(c, "••••••"+caption).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+				color := pal.TextFaint
+				if plain {
+					caption, color = "  "+locales.PlainText(), pal.WarningText
+				}
+				ui.Text(c, "••••••"+caption).Font(FontMono).FontSize(11).TextColor(color).SingleLine()
 			})
 		}
 		for _, n := range env {
-			variable(n, "")
+			variable(n, "", plain(n, false))
 		}
 		for _, n := range headers {
-			variable(n, "  "+locales.HeaderCaption())
+			variable(n, "  "+locales.HeaderCaption(), plain(n, true))
 		}
 		detailSection(c, locales.WhereDeclared())
 		ids := a.foundIDs()
@@ -374,6 +388,36 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			})
 		}
 	})
+}
+
+// mcpSecrets warns of the secrets m's declarations write out, each with
+// the button that moves them into variables where Hearth can.
+func (a *App) mcpSecrets(c *ui.Context, m mcpItem) {
+	t := c.Theme()
+	pal := Colors(t)
+	for _, s := range m.decls {
+		if !s.PlainSecret() {
+			continue
+		}
+		ui.Row(c).Gap(10).Margin(0, 16, 12, 16).Padding(10, 10, 10, 12).Radius(10).AlignItems(ui.Center).
+			Background(pal.WarningSoft).Children(func() {
+			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(t.Warning)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+				ui.Text(c, locales.McpSecretTitle()+" · "+agentTitle(s.Agent)).FontSize(12.5).FontWeight(500).TextColor(pal.WarningText)
+				text := a.declFile(s) + " · " + secretWhat(s)
+				if !ops.SecretMovable(s) || s.PlainArgs {
+					text += ". " + locales.SecretByHand()
+				}
+				ui.Text(c, text).FontSize(11.5).TextColor(pal.WarningText)
+			})
+			if a.BuildPlan != nil && ops.SecretMovable(s) {
+				ui.Button(c.Key("mcp-secret:"+s.Agent), "").Height(24).Padding(0, 10).Shrink(0).Background(t.Text).BorderColor(t.Text).
+					Label(locales.SecretMove()).OnClick(func() { a.moveSecrets(s) }).Children(func() {
+					ui.Text(c, locales.SecretMove()).FontSize(12).TextColor(t.Background).SingleLine()
+				})
+			}
+		})
+	}
 }
 
 // mcpAgentControl is what the agent id can do with m, i its declaration

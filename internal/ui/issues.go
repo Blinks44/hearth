@@ -113,6 +113,13 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			return locales.IssueSkillCopiesTitle(name, len(is.Skills)), locales.IssueSkillCopiesExplain(strings.Join(dirs, ", "))
 		}
 		return locales.IssueSkillDiffersTitle(name), locales.IssueSkillDiffersExplain(strings.Join(dirs, ", "))
+	case issues.PlainSecret:
+		sv := is.MCP[0]
+		return locales.IssueSecretTitle(sv.Name), secretExplain(sv, home)
+	case issues.SettingsSecret:
+		ag := is.Agent
+		return locales.IssueSettingsSecretTitle(agentTitle(ag.ID)),
+			locales.IssueSettingsSecretExplain(tilde(ag.Settings, home), strings.Join(ag.PlainEnv, ", "))
 	case issues.MCPMissing:
 		// Servers by name, each with the agents declaring it.
 		var names []string
@@ -137,6 +144,26 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 	return "", ""
 }
 
+// secretExplain says which secrets of sv its file writes out, and that
+// Hearth does not move them when it cannot.
+func secretExplain(sv inventory.MCPServer, home string) string {
+	text := locales.IssueSecretExplain(secretWhat(sv), tilde(sv.File, home))
+	if !ops.SecretMovable(sv) || sv.PlainArgs {
+		text += " " + locales.SecretByHand()
+	}
+	return text
+}
+
+// secretWhat lists the secrets sv's file writes out: variables, headers,
+// and those in its arguments or URL.
+func secretWhat(sv inventory.MCPServer) string {
+	what := slices.Concat(sv.PlainEnv, sv.PlainHeaders)
+	if sv.PlainArgs {
+		what = append(what, locales.SecretInArgs())
+	}
+	return strings.Join(what, ", ")
+}
+
 // skillsPage and mcpPage are where skills' and MCP servers' issues live.
 const (
 	skillsPage = "/ai/skills"
@@ -159,6 +186,8 @@ func issuePage(is issues.Issue) string {
 		return skillsPage
 	case len(is.MCP) > 0:
 		return mcpPage
+	case is.Agent != nil:
+		return agentPath(is.Agent.ID)
 	case is.Tool == "databases":
 		return "/tools/databases"
 	case is.Project != "":
@@ -235,6 +264,19 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 		if plan, ok := a.conflictPlan(is, inventory.DatabaseServers(a.Snapshot)); ok {
 			return func() { a.Propose(plan) }
 		}
+	case issues.PlainSecret:
+		if sv := is.MCP[0]; a.BuildPlan != nil && ops.SecretMovable(sv) {
+			return func() { a.moveSecrets(sv) }
+		}
+	case issues.SettingsSecret:
+		if a.BuildPlan != nil {
+			ag := *is.Agent
+			return func() {
+				a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
+					return ops.SettingsSecretPlan(ag, env, terminal, agentTitle)
+				}, a.proposeOrSay)
+			}
+		}
 	case issues.SkillCopies:
 		if a.BuildPlan == nil || a.SkillBackups == "" {
 			return nil
@@ -253,4 +295,12 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 		}
 	}
 	return nil
+}
+
+// moveSecrets proposes the plan that moves the secrets sv's file writes
+// out into environment variables.
+func (a *App) moveSecrets(sv inventory.MCPServer) {
+	a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
+		return ops.MCPSecretPlan(sv, env, terminal, agentTitle)
+	}, a.proposeOrSay)
 }

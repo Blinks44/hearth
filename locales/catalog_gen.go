@@ -21181,3 +21181,329 @@ func McpFailed() string { return In(i18n.Locale()).McpFailed() }
 func (msgs Messages) McpFailed() string {
 	return Catalog.Format(msgs.locale, "mcpFailed", nil)
 }
+
+// IssueSecretTitle says "MCP: {name} has a secret in plain text"
+// in the language the app shows.
+//
+// Issue title: an MCP server's file writes out a secret.
+func IssueSecretTitle(name string) string { return In(i18n.Locale()).IssueSecretTitle(name) }
+
+// IssueSecretTitle says "MCP: {name} has a secret in plain text"
+// in the language of msgs.
+//
+// Issue title: an MCP server's file writes out a secret.
+func (msgs Messages) IssueSecretTitle(name string) string {
+	return Catalog.Format(msgs.locale, "issueSecretTitle", map[string]any{"name": name})
+}
+
+// IssueSecretExplain says "{file} holds {what} in plain text. Anyone who reads or copies the file, or the repository it is in, gets the secret. …"
+// in the language the app shows.
+//
+// Issue explanation: what of the server is written out, in which file.
+func IssueSecretExplain(what string, file string) string {
+	return In(i18n.Locale()).IssueSecretExplain(what, file)
+}
+
+// IssueSecretExplain says "{file} holds {what} in plain text. Anyone who reads or copies the file, or the repository it is in, gets the secret. …"
+// in the language of msgs.
+//
+// Issue explanation: what of the server is written out, in which file.
+func (msgs Messages) IssueSecretExplain(what string, file string) string {
+	return Catalog.Format(msgs.locale, "issueSecretExplain", map[string]any{"what": what, "file": file})
+}
+
+// SecretInArgs says "a value in the arguments or URL"
+// in the language the app shows.
+//
+// Part of a list of what an MCP server writes out: a secret in its
+// arguments or URL.
+func SecretInArgs() string { return In(i18n.Locale()).SecretInArgs() }
+
+// SecretInArgs says "a value in the arguments or URL"
+// in the language of msgs.
+//
+// Part of a list of what an MCP server writes out: a secret in its
+// arguments or URL.
+func (msgs Messages) SecretInArgs() string {
+	return Catalog.Format(msgs.locale, "secretInArgs", nil)
+}
+
+// SecretByHand says "Hearth cannot move it here: edit the file by hand."
+// in the language the app shows.
+//
+// Added to an issue explanation: Hearth does not move this secret itself.
+func SecretByHand() string { return In(i18n.Locale()).SecretByHand() }
+
+// SecretByHand says "Hearth cannot move it here: edit the file by hand."
+// in the language of msgs.
+//
+// Added to an issue explanation: Hearth does not move this secret itself.
+func (msgs Messages) SecretByHand() string {
+	return Catalog.Format(msgs.locale, "secretByHand", nil)
+}
+
+// IssueSettingsSecretTitle says "{agent}: a key in plain text in its settings"
+// in the language the app shows.
+//
+// Issue title: an agent's settings file writes out an API key.
+func IssueSettingsSecretTitle(agent string) string {
+	return In(i18n.Locale()).IssueSettingsSecretTitle(agent)
+}
+
+// IssueSettingsSecretTitle says "{agent}: a key in plain text in its settings"
+// in the language of msgs.
+//
+// Issue title: an agent's settings file writes out an API key.
+func (msgs Messages) IssueSettingsSecretTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "issueSettingsSecretTitle", map[string]any{"agent": agent})
+}
+
+// IssueSettingsSecretExplain says "{file} sets {names} in \"env\" in plain text. Anyone who reads or copies the file gets the key. Keep it in an environme…"
+// in the language the app shows.
+//
+// Issue explanation: the variables an agent's settings set to secrets in
+// plain text.
+func IssueSettingsSecretExplain(file string, names string) string {
+	return In(i18n.Locale()).IssueSettingsSecretExplain(file, names)
+}
+
+// IssueSettingsSecretExplain says "{file} sets {names} in \"env\" in plain text. Anyone who reads or copies the file gets the key. Keep it in an environme…"
+// in the language of msgs.
+//
+// Issue explanation: the variables an agent's settings set to secrets in
+// plain text.
+func (msgs Messages) IssueSettingsSecretExplain(file string, names string) string {
+	return Catalog.Format(msgs.locale, "issueSettingsSecretExplain", map[string]any{"file": file, "names": names})
+}
+
+// SecretMove says "Move to variables…"
+// in the language the app shows.
+//
+// Button: move an MCP server's or agent's secrets into environment
+// variables.
+func SecretMove() string { return In(i18n.Locale()).SecretMove() }
+
+// SecretMove says "Move to variables…"
+// in the language of msgs.
+//
+// Button: move an MCP server's or agent's secrets into environment
+// variables.
+func (msgs Messages) SecretMove() string {
+	return Catalog.Format(msgs.locale, "secretMove", nil)
+}
+
+// SecretNoRef says "Hearth does not know how {agent} takes values from environment variables: move the secret by hand"
+// in the language the app shows.
+//
+// Why Hearth does not move a secret: it does not know how the agent reads
+// variables.
+func SecretNoRef(agent string) string { return In(i18n.Locale()).SecretNoRef(agent) }
+
+// SecretNoRef says "Hearth does not know how {agent} takes values from environment variables: move the secret by hand"
+// in the language of msgs.
+//
+// Why Hearth does not move a secret: it does not know how the agent reads
+// variables.
+func (msgs Messages) SecretNoRef(agent string) string {
+	return Catalog.Format(msgs.locale, "secretNoRef", map[string]any{"agent": agent})
+}
+
+// SecretMcpTitle says "Move the secrets of {name} to environment variables"
+// in the language the app shows.
+//
+// Plan title: move an MCP server's secrets into environment variables.
+func SecretMcpTitle(name string) string { return In(i18n.Locale()).SecretMcpTitle(name) }
+
+// SecretMcpTitle says "Move the secrets of {name} to environment variables"
+// in the language of msgs.
+//
+// Plan title: move an MCP server's secrets into environment variables.
+func (msgs Messages) SecretMcpTitle(name string) string {
+	return Catalog.Format(msgs.locale, "secretMcpTitle", map[string]any{"name": name})
+}
+
+// SecretMcpWhy says "{file} will refer to variables instead of holding the values; the values go to {where}. There they stay readable to y…"
+// in the language the app shows.
+//
+// Plan explanation: the file refers to variables, the values go elsewhere.
+func SecretMcpWhy(file string, where string, agent string) string {
+	return In(i18n.Locale()).SecretMcpWhy(file, where, agent)
+}
+
+// SecretMcpWhy says "{file} will refer to variables instead of holding the values; the values go to {where}. There they stay readable to y…"
+// in the language of msgs.
+//
+// Plan explanation: the file refers to variables, the values go elsewhere.
+func (msgs Messages) SecretMcpWhy(file string, where string, agent string) string {
+	return Catalog.Format(msgs.locale, "secretMcpWhy", map[string]any{"file": file, "where": where, "agent": agent})
+}
+
+// SecretSettingsTitle says "Move {agent}'s keys to environment variables"
+// in the language the app shows.
+//
+// Plan title: move the keys in an agent's settings into environment
+// variables.
+func SecretSettingsTitle(agent string) string { return In(i18n.Locale()).SecretSettingsTitle(agent) }
+
+// SecretSettingsTitle says "Move {agent}'s keys to environment variables"
+// in the language of msgs.
+//
+// Plan title: move the keys in an agent's settings into environment
+// variables.
+func (msgs Messages) SecretSettingsTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "secretSettingsTitle", map[string]any{"agent": agent})
+}
+
+// SecretSettingsWhy says "The keys leave \"env\" in {file} and go to {where}. Restart the terminal and {agent}: started from the terminal, it get…"
+// in the language the app shows.
+//
+// Plan explanation: keys leave the agent's settings for the user's
+// environment.
+func SecretSettingsWhy(file string, where string, agent string) string {
+	return In(i18n.Locale()).SecretSettingsWhy(file, where, agent)
+}
+
+// SecretSettingsWhy says "The keys leave \"env\" in {file} and go to {where}. Restart the terminal and {agent}: started from the terminal, it get…"
+// in the language of msgs.
+//
+// Plan explanation: keys leave the agent's settings for the user's
+// environment.
+func (msgs Messages) SecretSettingsWhy(file string, where string, agent string) string {
+	return Catalog.Format(msgs.locale, "secretSettingsWhy", map[string]any{"file": file, "where": where, "agent": agent})
+}
+
+// SecretChange says "{name} in {where}"
+// in the language the app shows.
+//
+// What a plan changes: a variable and where it is set.
+func SecretChange(name string, where string) string {
+	return In(i18n.Locale()).SecretChange(name, where)
+}
+
+// SecretChange says "{name} in {where}"
+// in the language of msgs.
+//
+// What a plan changes: a variable and where it is set.
+func (msgs Messages) SecretChange(name string, where string) string {
+	return Catalog.Format(msgs.locale, "secretChange", map[string]any{"name": name, "where": where})
+}
+
+// SecretTaken says "The terminal already has {name} at another value: rename or remove it first"
+// in the language the app shows.
+//
+// Why a secret cannot move: the terminal has the variable at another value.
+func SecretTaken(name string) string { return In(i18n.Locale()).SecretTaken(name) }
+
+// SecretTaken says "The terminal already has {name} at another value: rename or remove it first"
+// in the language of msgs.
+//
+// Why a secret cannot move: the terminal has the variable at another value.
+func (msgs Messages) SecretTaken(name string) string {
+	return Catalog.Format(msgs.locale, "secretTaken", map[string]any{"name": name})
+}
+
+// SecretShellUnsupported says "Hearth cannot set variables for the {shell} shell: set them in its startup file by hand"
+// in the language the app shows.
+//
+// Why Hearth cannot set variables for the user's shell.
+func SecretShellUnsupported(shell string) string {
+	return In(i18n.Locale()).SecretShellUnsupported(shell)
+}
+
+// SecretShellUnsupported says "Hearth cannot set variables for the {shell} shell: set them in its startup file by hand"
+// in the language of msgs.
+//
+// Why Hearth cannot set variables for the user's shell.
+func (msgs Messages) SecretShellUnsupported(shell string) string {
+	return Catalog.Format(msgs.locale, "secretShellUnsupported", map[string]any{"shell": shell})
+}
+
+// SecretNotInTerminal says "A new terminal does not see {name}"
+// in the language the app shows.
+//
+// Why the check after moving a secret failed: a new terminal lacks the
+// variable.
+func SecretNotInTerminal(name string) string { return In(i18n.Locale()).SecretNotInTerminal(name) }
+
+// SecretNotInTerminal says "A new terminal does not see {name}"
+// in the language of msgs.
+//
+// Why the check after moving a secret failed: a new terminal lacks the
+// variable.
+func (msgs Messages) SecretNotInTerminal(name string) string {
+	return Catalog.Format(msgs.locale, "secretNotInTerminal", map[string]any{"name": name})
+}
+
+// SecretStill says "{file} still holds a secret in plain text"
+// in the language the app shows.
+//
+// Why the check after moving a secret failed: the file still holds one.
+func SecretStill(file string) string { return In(i18n.Locale()).SecretStill(file) }
+
+// SecretStill says "{file} still holds a secret in plain text"
+// in the language of msgs.
+//
+// Why the check after moving a secret failed: the file still holds one.
+func (msgs Messages) SecretStill(file string) string {
+	return Catalog.Format(msgs.locale, "secretStill", map[string]any{"file": file})
+}
+
+// SecretMoved says "The terminal has {names}, and the file no longer holds the values"
+// in the language the app shows.
+//
+// What the check after moving secrets found.
+func SecretMoved(names string) string { return In(i18n.Locale()).SecretMoved(names) }
+
+// SecretMoved says "The terminal has {names}, and the file no longer holds the values"
+// in the language of msgs.
+//
+// What the check after moving secrets found.
+func (msgs Messages) SecretMoved(names string) string {
+	return Catalog.Format(msgs.locale, "secretMoved", map[string]any{"names": names})
+}
+
+// McpSecretTitle says "Secret in plain text"
+// in the language the app shows.
+//
+// Banner title in an MCP server's details: its file writes out a secret.
+func McpSecretTitle() string { return In(i18n.Locale()).McpSecretTitle() }
+
+// McpSecretTitle says "Secret in plain text"
+// in the language of msgs.
+//
+// Banner title in an MCP server's details: its file writes out a secret.
+func (msgs Messages) McpSecretTitle() string {
+	return Catalog.Format(msgs.locale, "mcpSecretTitle", nil)
+}
+
+// PlainText says "in plain text"
+// in the language the app shows.
+//
+// Caption of a variable in an MCP server's details whose value its file
+// writes out.
+func PlainText() string { return In(i18n.Locale()).PlainText() }
+
+// PlainText says "in plain text"
+// in the language of msgs.
+//
+// Caption of a variable in an MCP server's details whose value its file
+// writes out.
+func (msgs Messages) PlainText() string {
+	return Catalog.Format(msgs.locale, "plainText", nil)
+}
+
+// OpBackupDropText says "{file} · comes back if the plan does not get through; removed once it does, since it holds the secret"
+// in the language the app shows.
+//
+// Note in a plan: the copy of a file holding a secret, removed after
+// success.
+func OpBackupDropText(file string) string { return In(i18n.Locale()).OpBackupDropText(file) }
+
+// OpBackupDropText says "{file} · comes back if the plan does not get through; removed once it does, since it holds the secret"
+// in the language of msgs.
+//
+// Note in a plan: the copy of a file holding a secret, removed after
+// success.
+func (msgs Messages) OpBackupDropText(file string) string {
+	return Catalog.Format(msgs.locale, "opBackupDropText", map[string]any{"file": file})
+}

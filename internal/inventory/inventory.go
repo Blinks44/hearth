@@ -339,6 +339,17 @@ type MCPServer struct {
 	// is set when Command was not checked.
 	CommandPath string `json:",omitempty"`
 	Missing     bool   `json:",omitempty"`
+	// PlainEnv and PlainHeaders are the variables and headers whose
+	// secret values File writes out, not takes from the environment;
+	// PlainArgs reports one in Args or URL, which Hidden hides there.
+	PlainEnv     []string `json:",omitempty"`
+	PlainHeaders []string `json:",omitempty"`
+	PlainArgs    bool     `json:",omitempty"`
+}
+
+// PlainSecret reports that s's file writes out a secret of it.
+func (s MCPServer) PlainSecret() bool {
+	return len(s.PlainEnv) > 0 || len(s.PlainHeaders) > 0 || s.PlainArgs
 }
 
 // Entry is a file or folder in another folder, as a skill's.
@@ -408,6 +419,11 @@ type Agent struct {
 	// Files are the user's files of it that are there.
 	Dir   string      `json:",omitempty"`
 	Files []AgentFile `json:",omitempty"`
+	// PlainEnv are the variables its settings file sets to secret values
+	// written out, as ANTHROPIC_API_KEY in Claude Code's "env"; Settings
+	// is that file.
+	PlainEnv []string `json:",omitempty"`
+	Settings string   `json:",omitempty"`
 }
 
 // Found reports that the agent is on the computer: its command or its

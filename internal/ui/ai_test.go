@@ -12,6 +12,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -444,4 +445,44 @@ func TestMCPCheck(t *testing.T) {
 	tt.Frame()
 	hasTexts(t, tt, "The server stopped before it answered. What it wrote:", "Error: GITHUB_PERSONAL_ACCESS_TOKEN not set")
 	screenshot(t, tt, "mcp-check-failed")
+}
+
+// A server whose file writes out a secret is warned of in its details,
+// its variable marked, with the button that moves it; the Issues page has
+// it, and the agent's settings with a key, each with a fix.
+func TestPlainSecrets(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.Snapshot.MCP[0].PlainEnv = []string{"GITHUB_TOKEN"}
+	a.Snapshot.Agents[0].Settings = home + "/.claude/settings.json"
+	a.Snapshot.Agents[0].PlainEnv = []string{"ANTHROPIC_API_KEY"}
+	built := 0
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) { built++ }
+	tt := openAI(t, a, mcpPage)
+	hasTexts(t, tt, "Secret in plain text · Claude Code", "~/.claude.json · GITHUB_TOKEN", "••••••  in plain text", "Move to variables…")
+	screenshot(t, tt, "mcp-secret")
+	if err := tt.Click("Move to variables…"); err != nil {
+		t.Fatal(err)
+	}
+	if built != 1 {
+		t.Errorf("plans asked for: %d, want 1", built)
+	}
+
+	tt = openAI(t, a, problemsPage)
+	hasTexts(t, tt, "MCP: github has a secret in plain text",
+		"~/.claude.json holds GITHUB_TOKEN in plain text. Anyone who reads or copies the file, or the repository it is in, gets the secret. Keep it in an environment variable and let the file refer to it.",
+		"Claude Code: a key in plain text in its settings",
+		`~/.claude/settings.json sets ANTHROPIC_API_KEY in "env" in plain text. Anyone who reads or copies the file gets the key. Keep it in an environment variable of the terminal: the agent started there gets it just the same.`)
+	screenshot(t, tt, "problems-secrets")
+	found := issues.Find(a.Snapshot, nil, nil, time.Now())
+	for _, is := range found {
+		if is.Kind == issues.PlainSecret || is.Kind == issues.SettingsSecret {
+			if fix := a.issueFix(is, found); fix != nil {
+				fix()
+			}
+		}
+	}
+	if built != 3 {
+		t.Errorf("plans asked for: %d, want 3", built)
+	}
 }

@@ -134,6 +134,14 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 	for _, s := range a.skills {
 		add(s, skills)
 	}
+	// Claude Code sets the "env" of its settings in its own environment,
+	// API keys among them.
+	if a.id == "claude" && found.Dir != "" {
+		found.Settings = filepath.Join(found.Dir, "settings.json")
+		// A file that does not read shows no secrets: the agent page says
+		// what is in it.
+		found.PlainEnv, _ = SettingsSecrets(found.Settings)
+	}
 	return found
 }
 

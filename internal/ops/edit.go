@@ -25,6 +25,9 @@ type FileEdit struct {
 	// Hide are values that show as inventory.Hidden in the diff, as the
 	// tokens of an MCP server copied: they go in the file, not on screen.
 	Hide []string
+	// DropCopy removes the copy of the file once the plan got through, as
+	// one holding a secret the plan takes out of it would keep it.
+	DropCopy bool
 }
 
 // Masked is text with e.Hide's values hidden, as the diff shows it.

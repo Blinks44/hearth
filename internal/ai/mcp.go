@@ -224,6 +224,8 @@ func jsonServer(data json.RawMessage) (inventory.MCPServer, error) {
 	s.URL = first(j.HTTPURL, j.URL, j.ServerURL)
 	s.Env = names(j.Env, j.Environment)
 	s.Headers = names(j.Headers)
+	s.PlainEnv = append(plainNames(j.Env), plainNames(j.Environment)...)
+	s.PlainHeaders = plainNames(j.Headers)
 	switch strings.ToLower(j.Type) {
 	case "sse":
 		s.Transport = "sse"
@@ -237,7 +239,9 @@ func jsonServer(data json.RawMessage) (inventory.MCPServer, error) {
 			s.Transport = "http"
 		}
 	}
-	return masked(s), nil
+	m := masked(s)
+	m.PlainArgs = plainArgs(m, s.Args, s.URL)
+	return m, nil
 }
 
 // readCodex reads the [mcp_servers] of Codex's config.toml.
@@ -284,7 +288,10 @@ func readCodex(data []byte, agent, path string) ([]inventory.MCPServer, error) {
 			headers["Authorization"] = nil
 		}
 		s.Headers = names(c.HTTPHeaders, c.EnvHTTPHeaders, headers)
-		out = append(out, masked(s))
+		s.PlainEnv, s.PlainHeaders = plainNames(c.Env), plainNames(c.HTTPHeaders)
+		m := masked(s)
+		m.PlainArgs = plainArgs(m, s.Args, s.URL)
+		out = append(out, m)
 	}
 	return out, nil
 }

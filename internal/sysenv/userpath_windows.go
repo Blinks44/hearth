@@ -45,6 +45,52 @@ func SetUserPath(value string) error {
 	return broadcastEnvironment()
 }
 
+// UserVar returns the user's environment variable name from the registry,
+// ok false when the user has none.
+func UserVar(name string) (value string, ok bool, err error) {
+	k, err := registry.OpenKey(registry.CURRENT_USER, `Environment`, registry.QUERY_VALUE)
+	if err != nil {
+		return "", false, fmt.Errorf("open HKCU\\Environment: %w", err)
+	}
+	defer k.Close() //nolint:errcheck // a read-only key: nothing to lose on close
+	v, _, err := k.GetStringValue(name)
+	if errors.Is(err, registry.ErrNotExist) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("read HKCU\\Environment\\%s: %w", name, err)
+	}
+	return v, true, nil
+}
+
+// SetUserVar writes the user's environment variable name as a plain
+// string and tells the running apps, as SetUserPath does.
+func SetUserVar(name, value string) error {
+	return editUserVars(name, func(k registry.Key) error { return k.SetStringValue(name, value) })
+}
+
+// DeleteUserVar removes the user's environment variable name and tells the
+// running apps.
+func DeleteUserVar(name string) error {
+	return editUserVars(name, func(k registry.Key) error { return k.DeleteValue(name) })
+}
+
+// editUserVars changes HKCU\Environment by edit, then broadcasts it.
+func editUserVars(name string, edit func(registry.Key) error) error {
+	k, err := registry.OpenKey(registry.CURRENT_USER, `Environment`, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("open HKCU\\Environment: %w", err)
+	}
+	err = edit(k)
+	if cerr := k.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		return fmt.Errorf("write HKCU\\Environment\\%s: %w", name, err)
+	}
+	return broadcastEnvironment()
+}
+
 // SystemPath returns the Path of the computer, before the user's in every
 // new process, %VARIABLES% expanded.
 func SystemPath() (string, error) {

@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -45,6 +46,9 @@ type Step struct {
 	// UserPath, in place of Argv, sets the user's Path in the Windows
 	// registry, which comes back as an Edit does.
 	UserPath *UserPathEdit
+	// UserVar, in place of Argv, sets one of the user's environment
+	// variables in the Windows registry, which comes back as an Edit does.
+	UserVar *UserVarEdit
 	// Remove, in place of Argv, removes this folder and all in it for
 	// good: it does not come back if the plan does not get through.
 	Remove string
@@ -175,6 +179,8 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		restore func() error
 	}
 	var changes []applied
+	// dropped are the copies of the files that go once the plan got through.
+	var dropped []string
 	undo := func() {
 		for _, a := range slices.Backward(changes) {
 			err := a.restore()
@@ -213,14 +219,25 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.emit()
 			continue
 		}
-		if step.Edit != nil || step.UserPath != nil {
+		if step.Edit != nil || step.UserPath != nil || step.UserVar != nil {
 			var err error
-			if edit := step.Edit; edit != nil {
+			if v := step.UserVar; v != nil {
+				name := UserVarsName + `\` + v.Name
+				e.printf("edit %s\n", name)
+				e.emit()
+				var undo func() error
+				if undo, err = applyUserVar(*v); err == nil {
+					changes = append(changes, applied{name, undo})
+				}
+			} else if edit := step.Edit; edit != nil {
 				e.printf("edit %s\n", edit.Path)
 				e.emit()
 				var backup string
 				if backup, err = applyEdit(*edit, time.Now()); err == nil {
 					changes = append(changes, applied{edit.Path, func() error { return restoreEdit(*edit, backup) }})
+					if edit.DropCopy && backup != "" {
+						dropped = append(dropped, backup)
+					}
 					e.printf("backup %s\n", backup)
 				}
 			} else {
@@ -318,6 +335,12 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Phase = Succeeded
 		e.mu.Unlock()
+	}
+	if e.state.Phase == Succeeded {
+		for _, b := range dropped {
+			err := os.Remove(b)
+			e.printf("remove %s%s\n", b, errText(err))
+		}
 	}
 	e.emit()
 	return e.snapshot()
