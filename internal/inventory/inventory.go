@@ -424,6 +424,52 @@ type Agent struct {
 	// is that file.
 	PlainEnv []string `json:",omitempty"`
 	Settings string   `json:",omitempty"`
+	// Rules are what the user's settings let it do without asking, make
+	// it ask for or forbid; Hooks the commands they run on its events.
+	Rules []AgentRule `json:",omitempty"`
+	Hooks []AgentHook `json:",omitempty"`
+}
+
+// RuleKind is what an agent's rule decides.
+type RuleKind int
+
+const (
+	RuleMode  RuleKind = iota // a mode for everything, as Claude Code's defaultMode
+	RuleAllow                 // done without asking
+	RuleAsk                   // asked for each time
+	RuleDeny                  // never done
+)
+
+// AgentRule is a permission of an agent's settings, as Claude Code's
+// "Bash(npm run *)" or Codex's approval_policy.
+type AgentRule struct {
+	// Agent is the agent's ID, as "claude".
+	Agent string
+	Kind  RuleKind
+	// Rule is the rule as the file writes it; a mode's is "key: value",
+	// as "defaultMode: bypassPermissions".
+	Rule string
+	// Risky is a mode that does everything without asking, or a rule
+	// allowing any command.
+	Risky bool `json:",omitempty"`
+	File  string
+	// Project is the folder of the project whose file it is in; "" for
+	// the user's.
+	Project string `json:",omitempty"`
+}
+
+// AgentHook is a command an agent's settings run on one of its events.
+type AgentHook struct {
+	Agent string
+	// Event is the event as the agent names it, as "PreToolUse";
+	// Matcher what of it, as "Bash"; "" for all.
+	Event   string
+	Matcher string `json:",omitempty"`
+	// Command is what runs: a command, or a URL, an MCP tool or a prompt
+	// for hooks of those types.
+	Command string
+	File    string
+	Project string `json:",omitempty"`
 }
 
 // Found reports that the agent is on the computer: its command or its

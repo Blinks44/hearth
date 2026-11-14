@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
@@ -499,10 +500,16 @@ func (a *App) agentDetail(c *ui.Context, id string) {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						a.installCard(c, ag)
 						a.agentFilesCard(c, ag)
+						if ai.AccessKnown(ag.ID) {
+							a.agentRulesCard(c, ag)
+						}
 					})
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						a.agentSkillsCard(c, ag.ID)
 						a.agentServersCard(c, ag.ID)
+						if ai.AccessKnown(ag.ID) {
+							a.agentHooksCard(c, ag)
+						}
 					})
 				})
 			})
@@ -664,6 +671,79 @@ func (a *App) agentServersCard(c *ui.Context, id string) {
 		for _, s := range servers {
 			listRow(c, s.Name, false, strings.ToLower(scopeName(s.Project))+" · "+tilde(s.File, a.Home), func() {
 				ui.Text(c, s.Transport).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+			})
+		}
+	})
+}
+
+// agentRulesCard lists what the agent may do without asking, must ask
+// for or may not do: the user's settings, then the projects'.
+func (a *App) agentRulesCard(c *ui.Context, ag inventory.Agent) {
+	rules := slices.Clone(ag.Rules)
+	files := map[string]bool{}
+	for _, p := range a.Projects {
+		for _, r := range p.Rules {
+			if r.Agent == ag.ID {
+				rules = append(rules, r)
+			}
+		}
+	}
+	for _, r := range rules {
+		files[r.File] = true
+	}
+	aside := ""
+	if len(rules) > 0 {
+		aside = locales.RulesCount(len(rules)) + " · " + locales.FilesCount(len(files))
+	}
+	listCard(c, locales.RulesCard(), aside, func() {
+		if len(rules) == 0 {
+			cardNote(c, locales.NoRulesFor())
+		}
+		for _, r := range rules {
+			listRow(c, r.Rule, true, strings.ToLower(scopeName(r.Project))+" · "+tilde(r.File, a.Home), func() {
+				t := c.Theme()
+				pal := Colors(t)
+				label, color := locales.RuleAllowed(), pal.SuccessText
+				switch r.Kind {
+				case inventory.RuleMode:
+					label, color = locales.RuleMode(), pal.TextFaint
+				case inventory.RuleAsk:
+					label, color = locales.RuleAsks(), pal.TextFaint
+				case inventory.RuleDeny:
+					label, color = locales.RuleDenied(), pal.DangerText
+				}
+				if r.Risky {
+					aiTag(c, locales.RuleUnasked(), pal.WarningSoft, pal.WarningText)
+					return
+				}
+				ui.Text(c, label).Font(FontMono).FontSize(11).TextColor(color).SingleLine()
+			})
+		}
+	})
+}
+
+// agentHooksCard lists the commands the agent's settings run on its
+// events: the user's, then the projects'.
+func (a *App) agentHooksCard(c *ui.Context, ag inventory.Agent) {
+	hooks := slices.Clone(ag.Hooks)
+	for _, p := range a.Projects {
+		for _, h := range p.Hooks {
+			if h.Agent == ag.ID {
+				hooks = append(hooks, h)
+			}
+		}
+	}
+	listCard(c, locales.HooksCard(), locales.HooksCount(len(hooks)), func() {
+		if len(hooks) == 0 {
+			cardNote(c, locales.NoHooksFor())
+		}
+		for _, h := range hooks {
+			caption := strings.ToLower(scopeName(h.Project)) + " · " + tilde(h.File, a.Home)
+			if h.Matcher != "" {
+				caption = h.Matcher + " · " + caption
+			}
+			listRow(c, h.Command, true, caption, func() {
+				ui.Text(c, h.Event).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 			})
 		}
 	})

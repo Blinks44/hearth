@@ -8651,5 +8651,109 @@
         "example": "~/.cursor/mcp.json.hearth-2026-11-14….bak"
       }
     }
+  },
+  "rulesCard": "Without asking",
+  "@rulesCard": {
+    "description": "Agent page: card of what the agent may do without asking, must ask for or may not do."
+  },
+  "rulesCount": "{count, plural, one {# rule} other {# rules}}",
+  "@rulesCount": {
+    "description": "A count of an agent's permission rules.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "noRulesFor": "Asks as usual: no rules in its settings",
+  "@noRulesFor": {
+    "description": "Agent page: no permission rules, so the agent asks as it does by default."
+  },
+  "ruleAllowed": "allowed",
+  "@ruleAllowed": {
+    "description": "An agent's rule: done without asking."
+  },
+  "ruleAsks": "asks",
+  "@ruleAsks": {
+    "description": "An agent's rule: asked for each time."
+  },
+  "ruleDenied": "denied",
+  "@ruleDenied": {
+    "description": "An agent's rule: never done."
+  },
+  "ruleMode": "mode",
+  "@ruleMode": {
+    "description": "An agent's rule that is a mode for everything, as Claude Code's defaultMode."
+  },
+  "ruleUnasked": "no confirmation",
+  "@ruleUnasked": {
+    "description": "Tag of a mode or rule that lets the agent do anything without asking."
+  },
+  "hooksCard": "Hooks",
+  "@hooksCard": {
+    "description": "Agent page: card of the commands its settings run on its events."
+  },
+  "hooksCount": "{count, plural, one {# hook} other {# hooks}}",
+  "@hooksCount": {
+    "description": "A count of an agent's hooks.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "noHooksFor": "No hooks",
+  "@noHooksFor": {
+    "description": "Agent page: no hooks."
+  },
+  "issueUnaskedModeTitle": "{agent} works without confirmation",
+  "@issueUnaskedModeTitle": {
+    "description": "Issue title: an agent's mode lets it do everything without asking.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "issueUnaskedModeExplain": "{file} sets {rule}: the agent runs commands and edits files without asking. That suits a sandbox, but nothing stops a wrong command.",
+  "@issueUnaskedModeExplain": {
+    "description": "Issue explanation: the file and setting of a mode without confirmation.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude/settings.json"
+      },
+      "rule": {
+        "type": "String",
+        "example": "defaultMode: bypassPermissions"
+      }
+    }
+  },
+  "issueUnaskedRuleTitle": "{agent} runs any command without asking",
+  "@issueUnaskedRuleTitle": {
+    "description": "Issue title: an agent's rule allows any command without asking.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "issueUnaskedRuleExplain": "{file} allows {rule}: any terminal command runs without confirmation, and nothing stops a wrong one. Narrow the rule to the commands you need.",
+  "@issueUnaskedRuleExplain": {
+    "description": "Issue explanation: the file and rule allowing any command.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.claude/settings.json"
+      },
+      "rule": {
+        "type": "String",
+        "example": "Bash"
+      }
+    }
   }
 }

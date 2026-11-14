@@ -120,6 +120,12 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 		ag := is.Agent
 		return locales.IssueSettingsSecretTitle(agentTitle(ag.ID)),
 			locales.IssueSettingsSecretExplain(tilde(ag.Settings, home), strings.Join(ag.PlainEnv, ", "))
+	case issues.AgentUnasked:
+		r := is.Rule
+		if r.Kind == inventory.RuleMode {
+			return locales.IssueUnaskedModeTitle(agentTitle(r.Agent)), locales.IssueUnaskedModeExplain(tilde(r.File, home), r.Rule)
+		}
+		return locales.IssueUnaskedRuleTitle(agentTitle(r.Agent)), locales.IssueUnaskedRuleExplain(tilde(r.File, home), r.Rule)
 	case issues.MCPMissing:
 		// Servers by name, each with the agents declaring it.
 		var names []string
@@ -188,6 +194,8 @@ func issuePage(is issues.Issue) string {
 		return mcpPage
 	case is.Agent != nil:
 		return agentPath(is.Agent.ID)
+	case is.Rule != nil:
+		return agentPath(is.Rule.Agent)
 	case is.Tool == "databases":
 		return "/tools/databases"
 	case is.Project != "":

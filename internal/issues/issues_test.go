@@ -320,6 +320,27 @@ func TestPlainSecrets(t *testing.T) {
 	}
 }
 
+// A risky rule of an agent found is worth knowing, the user's and a
+// project's; others, and those of an agent not found, are no issue.
+func TestAgentUnasked(t *testing.T) {
+	bypass := inventory.AgentRule{Agent: "claude", Kind: inventory.RuleMode, Rule: "defaultMode: bypassPermissions", Risky: true}
+	safe := inventory.AgentRule{Agent: "claude", Kind: inventory.RuleAllow, Rule: "Bash(npm run *)"}
+	gone := inventory.AgentRule{Agent: "cursor", Kind: inventory.RuleMode, Rule: "approvalMode: unrestricted", Risky: true}
+	shell := inventory.AgentRule{Agent: "claude", Kind: inventory.RuleAllow, Rule: "Bash", Risky: true, Project: "/src/app"}
+	snap := &inventory.Snapshot{Agents: []inventory.Agent{
+		{ID: "claude", Installations: []inventory.Installation{{Path: "/bin/claude"}}, Rules: []inventory.AgentRule{bypass, safe}},
+		{ID: "cursor", Rules: []inventory.AgentRule{gone}},
+	}}
+	got := Find(snap, []projects.Project{{Dir: "/src/app", Rules: []inventory.AgentRule{shell}}}, nil, now)
+	want := []Issue{
+		{Kind: AgentUnasked, Severity: Info, Rule: &snap.Agents[0].Rules[0]},
+		{Kind: AgentUnasked, Severity: Info, Project: "/src/app", Rule: &shell},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got  %+v\nwant %+v", got, want)
+	}
+}
+
 // A Store stub on PATH is no duplicate: it is its own issue, a warning
 // when it comes first and something needs the tool.
 func TestStubOnPath(t *testing.T) {

@@ -1572,5 +1572,20 @@
   "secretMoved": "El terminal tiene {names} y el archivo ya no guarda los valores",
   "mcpSecretTitle": "Secreto en texto plano",
   "plainText": "en texto plano",
-  "opBackupDropText": "{file} · vuelve si el plan no sale bien; se borra cuando sale, porque guarda el secreto"
+  "opBackupDropText": "{file} · vuelve si el plan no sale bien; se borra cuando sale, porque guarda el secreto",
+  "rulesCard": "Sin preguntar",
+  "rulesCount": "{count, plural, one {# regla} many {# reglas} other {# reglas}}",
+  "noRulesFor": "Pregunta como siempre: no hay reglas en su configuración",
+  "ruleAllowed": "permitido",
+  "ruleAsks": "pregunta",
+  "ruleDenied": "prohibido",
+  "ruleMode": "modo",
+  "ruleUnasked": "sin confirmación",
+  "hooksCard": "Hooks",
+  "hooksCount": "{count, plural, one {# hook} many {# hooks} other {# hooks}}",
+  "noHooksFor": "Sin hooks",
+  "issueUnaskedModeTitle": "{agent} trabaja sin confirmación",
+  "issueUnaskedModeExplain": "{file} define {rule}: el agente ejecuta comandos y edita archivos sin preguntar. Es cómodo en un entorno aislado, pero nada detiene un comando equivocado.",
+  "issueUnaskedRuleTitle": "{agent} ejecuta cualquier comando sin preguntar",
+  "issueUnaskedRuleExplain": "{file} permite {rule}: cualquier comando de terminal se ejecuta sin confirmación y nada detiene uno equivocado. Limite la regla a los comandos que necesita."
 }

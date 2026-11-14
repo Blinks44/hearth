@@ -617,7 +617,8 @@ type attentionItem struct {
 }
 
 // issueKey names is among the scan's issues, for the hidden ones: its
-// kind, tool and project, and the server or agent of one about secrets.
+// kind, tool and project, the server or agent of one about secrets, and
+// the rule of one about an agent's permissions.
 func issueKey(is issues.Issue) string {
 	key := string(is.Kind) + ":" + is.Tool + ":" + is.Project
 	switch {
@@ -625,6 +626,8 @@ func issueKey(is issues.Issue) string {
 		key += ":" + is.MCP[0].Agent + ":" + is.MCP[0].Name
 	case is.Agent != nil:
 		key += ":" + is.Agent.ID
+	case is.Rule != nil:
+		key += ":" + is.Rule.Agent + ":" + is.Rule.File + ":" + is.Rule.Rule
 	}
 	return key
 }

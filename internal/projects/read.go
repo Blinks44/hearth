@@ -53,6 +53,11 @@ type Project struct {
 	Skills []inventory.Skill
 	// MCP are the MCP servers in the agents' files of the project.
 	MCP []inventory.MCPServer
+	// Rules are what the agents' settings of the project let them do
+	// without asking, make them ask for or forbid; Hooks the commands
+	// they run on the agents' events.
+	Rules []inventory.AgentRule
+	Hooks []inventory.AgentHook
 	// Databases are the local databases Compose and .env refer to.
 	Databases []DatabaseReference
 	// Changed is when the project last changed, as its files and git's
@@ -171,6 +176,8 @@ func Read(dir string) Project {
 	p.Skills = ai.ProjectSkills(dir)
 	mcp, errs := ai.ProjectMCP(dir)
 	p.MCP, p.Errs = mcp, append(p.Errs, errs...)
+	p.Rules, p.Hooks, errs = ai.ProjectAccess(dir)
+	p.Errs = append(p.Errs, errs...)
 	return p
 }
 

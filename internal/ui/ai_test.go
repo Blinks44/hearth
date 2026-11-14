@@ -486,3 +486,45 @@ func TestPlainSecrets(t *testing.T) {
 		t.Errorf("plans asked for: %d, want 3", built)
 	}
 }
+
+// An agent's page lists its rules, the user's then the projects', a risky
+// one tagged, and its hooks; the risky rule is worth knowing on the
+// Issues page. An agent whose rules Hearth does not read gets no cards.
+func TestAgentRulesAndHooks(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	settings := home + "/.claude/settings.json"
+	a.Snapshot.Agents[0].Rules = []inventory.AgentRule{
+		{Agent: "claude", Kind: inventory.RuleMode, Rule: "defaultMode: bypassPermissions", Risky: true, File: settings},
+		{Agent: "claude", Kind: inventory.RuleAllow, Rule: "Bash(npm run *)", File: settings},
+		{Agent: "claude", Kind: inventory.RuleDeny, Rule: "Read(./.env)", File: settings},
+	}
+	a.Snapshot.Agents[0].Hooks = []inventory.AgentHook{
+		{Agent: "claude", Event: "PreToolUse", Matcher: "Bash", Command: "~/.claude/hooks/check-bash.sh", File: settings},
+	}
+	app := home + "/dev/app"
+	a.Projects = []projects.Project{{Dir: app,
+		Rules: []inventory.AgentRule{{Agent: "claude", Kind: inventory.RuleAsk, Rule: "Bash(git push *)", File: app + "/.claude/settings.json", Project: app}},
+		Hooks: []inventory.AgentHook{{Agent: "claude", Event: "SessionStart", Command: "make setup", File: app + "/.claude/settings.json", Project: app}},
+	}}
+	tt := openAI(t, a, agentPath("claude"))
+	hasTexts(t, tt, "Without asking", "4 rules · 2 files",
+		"defaultMode: bypassPermissions", "no confirmation", "Bash(npm run *)", "allowed", "Read(./.env)", "denied",
+		"Bash(git push *)", "asks", "project · app · ~/dev/app/.claude/settings.json",
+		"Hooks", "2 hooks", "~/.claude/hooks/check-bash.sh", "Bash · user · ~/.claude/settings.json", "PreToolUse",
+		"make setup", "SessionStart")
+	screenshot(t, tt, "agent-rules")
+
+	tt = openAI(t, a, agentPath("codex"))
+	hasTexts(t, tt, "Asks as usual: no rules in its settings", "No hooks")
+
+	tt = openAI(t, a, problemsPage)
+	hasTexts(t, tt, "Claude Code works without confirmation",
+		"~/.claude/settings.json sets defaultMode: bypassPermissions: the agent runs commands and edits files without asking. That suits a sandbox, but nothing stops a wrong command.")
+
+	a.Snapshot.Agents = append(a.Snapshot.Agents, inventory.Agent{ID: "aider", Installations: []inventory.Installation{{Tool: "aider", Path: "/usr/local/bin/aider", OnPath: 1}}})
+	tt = openAI(t, a, agentPath("aider"))
+	if tt.HasText("Without asking") || tt.HasText("Hooks") {
+		t.Error("an agent whose rules Hearth does not read has the cards")
+	}
+}

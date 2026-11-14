@@ -1572,5 +1572,20 @@
   "secretMoved": "Das Terminal hat {names}, und die Datei enthält die Werte nicht mehr",
   "mcpSecretTitle": "Geheimnis im Klartext",
   "plainText": "im Klartext",
-  "opBackupDropText": "{file} · kommt zurück, wenn der Plan scheitert; wird nach Erfolg gelöscht, weil sie das Geheimnis enthält"
+  "opBackupDropText": "{file} · kommt zurück, wenn der Plan scheitert; wird nach Erfolg gelöscht, weil sie das Geheimnis enthält",
+  "rulesCard": "Ohne Nachfrage",
+  "rulesCount": "{count, plural, one {# Regel} other {# Regeln}}",
+  "noRulesFor": "Fragt wie üblich nach: keine Regeln in den Einstellungen",
+  "ruleAllowed": "erlaubt",
+  "ruleAsks": "fragt",
+  "ruleDenied": "verboten",
+  "ruleMode": "Modus",
+  "ruleUnasked": "ohne Bestätigung",
+  "hooksCard": "Hooks",
+  "hooksCount": "{count, plural, one {# Hook} other {# Hooks}}",
+  "noHooksFor": "Keine Hooks",
+  "issueUnaskedModeTitle": "{agent} arbeitet ohne Bestätigung",
+  "issueUnaskedModeExplain": "{file} setzt {rule}: Der Agent führt Befehle aus und ändert Dateien, ohne zu fragen. In einer Sandbox ist das praktisch, aber nichts hält einen falschen Befehl auf.",
+  "issueUnaskedRuleTitle": "{agent} führt jeden Befehl ohne Nachfrage aus",
+  "issueUnaskedRuleExplain": "{file} erlaubt {rule}: Jeder Terminalbefehl läuft ohne Bestätigung, und nichts hält einen falschen auf. Beschränken Sie die Regel auf die Befehle, die Sie brauchen."
 }

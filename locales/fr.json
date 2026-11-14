@@ -1572,5 +1572,20 @@
   "secretMoved": "Le terminal a {names} et le fichier ne contient plus les valeurs",
   "mcpSecretTitle": "Secret en clair",
   "plainText": "en clair",
-  "opBackupDropText": "{file} · revient si le plan échoue ; supprimée une fois réussi, car elle contient le secret"
+  "opBackupDropText": "{file} · revient si le plan échoue ; supprimée une fois réussi, car elle contient le secret",
+  "rulesCard": "Sans demander",
+  "rulesCount": "{count, plural, one {# règle} many {# règles} other {# règles}}",
+  "noRulesFor": "Demande comme d'habitude : aucune règle dans ses réglages",
+  "ruleAllowed": "autorisé",
+  "ruleAsks": "demande",
+  "ruleDenied": "interdit",
+  "ruleMode": "mode",
+  "ruleUnasked": "sans confirmation",
+  "hooksCard": "Hooks",
+  "hooksCount": "{count, plural, one {# hook} many {# hooks} other {# hooks}}",
+  "noHooksFor": "Aucun hook",
+  "issueUnaskedModeTitle": "{agent} travaille sans confirmation",
+  "issueUnaskedModeExplain": "{file} définit {rule} : l'agent exécute des commandes et modifie des fichiers sans demander. C'est pratique dans un bac à sable, mais rien n'arrête une commande erronée.",
+  "issueUnaskedRuleTitle": "{agent} exécute n'importe quelle commande sans demander",
+  "issueUnaskedRuleExplain": "{file} autorise {rule} : toute commande du terminal s'exécute sans confirmation, et rien n'arrête une commande erronée. Limitez la règle aux commandes nécessaires."
 }

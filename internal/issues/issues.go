@@ -60,6 +60,10 @@ const (
 	// SettingsSecret is a secret an agent's settings file writes out, as
 	// an API key in the "env" of Claude Code's settings.json.
 	SettingsSecret Kind = "settings-secret"
+	// AgentUnasked is an agent's setting that lets it do anything without
+	// asking, as Claude Code's bypassPermissions or an allowed Bash:
+	// worth knowing, since nothing then stops a wrong command.
+	AgentUnasked Kind = "agent-unasked"
 	// StubOnPath is a stand-in on the terminal's PATH that does not run
 	// the tool, as Microsoft Store's python.exe: a warning when it comes
 	// first, since the command then opens the Store; else it takes over
@@ -114,6 +118,8 @@ type Issue struct {
 	Startup *inventory.ShellStartup
 	// Agent is the agent whose settings SettingsSecret is about.
 	Agent *inventory.Agent
+	// Rule is the setting AgentUnasked is about.
+	Rule *inventory.AgentRule
 }
 
 // Find returns the issues of the scan s and the projects ps, the PATH's
@@ -164,15 +170,19 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 	out = append(out, skillIssues(s.Skills)...)
 	out = append(out, mcpMissing(s.MCP)...)
 	out = append(out, plainSecrets(s.MCP)...)
+	found := map[string]bool{}
 	for i, a := range s.Agents {
 		if len(a.PlainEnv) > 0 {
 			out = append(out, Issue{Kind: SettingsSecret, Severity: Warning, Agent: &s.Agents[i]})
 		}
+		found[a.ID] = a.Found()
+		out = append(out, unasked(a.Rules, found)...)
 	}
 	for _, p := range ps {
 		out = append(out, skillIssues(p.Skills)...)
 		out = append(out, mcpMissing(p.MCP)...)
 		out = append(out, plainSecrets(p.MCP)...)
+		out = append(out, unasked(p.Rules, found)...)
 		for _, st := range projects.Resolve(p, s, lines) {
 			ch, ok := st.Unmet()
 			if !ok {
@@ -440,6 +450,17 @@ func plainSecrets(servers []inventory.MCPServer) []Issue {
 	for _, sv := range servers {
 		if sv.PlainSecret() {
 			out = append(out, Issue{Kind: PlainSecret, Severity: Warning, Project: sv.Project, MCP: []inventory.MCPServer{sv}})
+		}
+	}
+	return out
+}
+
+// unasked are the risky rules of the agents found: one issue each.
+func unasked(rules []inventory.AgentRule, found map[string]bool) []Issue {
+	var out []Issue
+	for i, r := range rules {
+		if r.Risky && found[r.Agent] {
+			out = append(out, Issue{Kind: AgentUnasked, Severity: Info, Project: r.Project, Rule: &rules[i]})
 		}
 	}
 	return out

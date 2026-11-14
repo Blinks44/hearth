@@ -1572,5 +1572,20 @@
   "secretMoved": "终端中已有 {names}，文件中不再保存这些值",
   "mcpSecretTitle": "明文密钥",
   "plainText": "明文",
-  "opBackupDropText": "{file} · 计划未成功时恢复；成功后删除，因为其中含有密钥"
+  "opBackupDropText": "{file} · 计划未成功时恢复；成功后删除，因为其中含有密钥",
+  "rulesCard": "无需确认",
+  "rulesCount": "{count, plural, other {# 条规则}}",
+  "noRulesFor": "照常询问：设置中没有规则",
+  "ruleAllowed": "允许",
+  "ruleAsks": "询问",
+  "ruleDenied": "禁止",
+  "ruleMode": "模式",
+  "ruleUnasked": "无需确认",
+  "hooksCard": "钩子",
+  "hooksCount": "{count, plural, other {# 个钩子}}",
+  "noHooksFor": "没有钩子",
+  "issueUnaskedModeTitle": "{agent} 无需确认即可执行",
+  "issueUnaskedModeExplain": "{file} 设置了 {rule}：代理会不经询问地运行命令和修改文件。在沙盒中这很方便，但没有什么能阻止错误的命令。",
+  "issueUnaskedRuleTitle": "{agent} 不经询问即可运行任何命令",
+  "issueUnaskedRuleExplain": "{file} 允许 {rule}：任何终端命令都会不经确认地运行，错误的命令也无法被阻止。请将规则缩小到您需要的命令。"
 }

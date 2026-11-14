@@ -21507,3 +21507,225 @@ func OpBackupDropText(file string) string { return In(i18n.Locale()).OpBackupDro
 func (msgs Messages) OpBackupDropText(file string) string {
 	return Catalog.Format(msgs.locale, "opBackupDropText", map[string]any{"file": file})
 }
+
+// RulesCard says "Without asking"
+// in the language the app shows.
+//
+// Agent page: card of what the agent may do without asking, must ask for or
+// may not do.
+func RulesCard() string { return In(i18n.Locale()).RulesCard() }
+
+// RulesCard says "Without asking"
+// in the language of msgs.
+//
+// Agent page: card of what the agent may do without asking, must ask for or
+// may not do.
+func (msgs Messages) RulesCard() string {
+	return Catalog.Format(msgs.locale, "rulesCard", nil)
+}
+
+// RulesCount says "{count, plural, one {# rule} other {# rules}}"
+// in the language the app shows.
+//
+// A count of an agent's permission rules.
+func RulesCount(count int) string { return In(i18n.Locale()).RulesCount(count) }
+
+// RulesCount says "{count, plural, one {# rule} other {# rules}}"
+// in the language of msgs.
+//
+// A count of an agent's permission rules.
+func (msgs Messages) RulesCount(count int) string {
+	return Catalog.Format(msgs.locale, "rulesCount", map[string]any{"count": count})
+}
+
+// NoRulesFor says "Asks as usual: no rules in its settings"
+// in the language the app shows.
+//
+// Agent page: no permission rules, so the agent asks as it does by default.
+func NoRulesFor() string { return In(i18n.Locale()).NoRulesFor() }
+
+// NoRulesFor says "Asks as usual: no rules in its settings"
+// in the language of msgs.
+//
+// Agent page: no permission rules, so the agent asks as it does by default.
+func (msgs Messages) NoRulesFor() string {
+	return Catalog.Format(msgs.locale, "noRulesFor", nil)
+}
+
+// RuleAllowed says "allowed"
+// in the language the app shows.
+//
+// An agent's rule: done without asking.
+func RuleAllowed() string { return In(i18n.Locale()).RuleAllowed() }
+
+// RuleAllowed says "allowed"
+// in the language of msgs.
+//
+// An agent's rule: done without asking.
+func (msgs Messages) RuleAllowed() string {
+	return Catalog.Format(msgs.locale, "ruleAllowed", nil)
+}
+
+// RuleAsks says "asks"
+// in the language the app shows.
+//
+// An agent's rule: asked for each time.
+func RuleAsks() string { return In(i18n.Locale()).RuleAsks() }
+
+// RuleAsks says "asks"
+// in the language of msgs.
+//
+// An agent's rule: asked for each time.
+func (msgs Messages) RuleAsks() string {
+	return Catalog.Format(msgs.locale, "ruleAsks", nil)
+}
+
+// RuleDenied says "denied"
+// in the language the app shows.
+//
+// An agent's rule: never done.
+func RuleDenied() string { return In(i18n.Locale()).RuleDenied() }
+
+// RuleDenied says "denied"
+// in the language of msgs.
+//
+// An agent's rule: never done.
+func (msgs Messages) RuleDenied() string {
+	return Catalog.Format(msgs.locale, "ruleDenied", nil)
+}
+
+// RuleMode says "mode"
+// in the language the app shows.
+//
+// An agent's rule that is a mode for everything, as Claude Code's
+// defaultMode.
+func RuleMode() string { return In(i18n.Locale()).RuleMode() }
+
+// RuleMode says "mode"
+// in the language of msgs.
+//
+// An agent's rule that is a mode for everything, as Claude Code's
+// defaultMode.
+func (msgs Messages) RuleMode() string {
+	return Catalog.Format(msgs.locale, "ruleMode", nil)
+}
+
+// RuleUnasked says "no confirmation"
+// in the language the app shows.
+//
+// Tag of a mode or rule that lets the agent do anything without asking.
+func RuleUnasked() string { return In(i18n.Locale()).RuleUnasked() }
+
+// RuleUnasked says "no confirmation"
+// in the language of msgs.
+//
+// Tag of a mode or rule that lets the agent do anything without asking.
+func (msgs Messages) RuleUnasked() string {
+	return Catalog.Format(msgs.locale, "ruleUnasked", nil)
+}
+
+// HooksCard says "Hooks"
+// in the language the app shows.
+//
+// Agent page: card of the commands its settings run on its events.
+func HooksCard() string { return In(i18n.Locale()).HooksCard() }
+
+// HooksCard says "Hooks"
+// in the language of msgs.
+//
+// Agent page: card of the commands its settings run on its events.
+func (msgs Messages) HooksCard() string {
+	return Catalog.Format(msgs.locale, "hooksCard", nil)
+}
+
+// HooksCount says "{count, plural, one {# hook} other {# hooks}}"
+// in the language the app shows.
+//
+// A count of an agent's hooks.
+func HooksCount(count int) string { return In(i18n.Locale()).HooksCount(count) }
+
+// HooksCount says "{count, plural, one {# hook} other {# hooks}}"
+// in the language of msgs.
+//
+// A count of an agent's hooks.
+func (msgs Messages) HooksCount(count int) string {
+	return Catalog.Format(msgs.locale, "hooksCount", map[string]any{"count": count})
+}
+
+// NoHooksFor says "No hooks"
+// in the language the app shows.
+//
+// Agent page: no hooks.
+func NoHooksFor() string { return In(i18n.Locale()).NoHooksFor() }
+
+// NoHooksFor says "No hooks"
+// in the language of msgs.
+//
+// Agent page: no hooks.
+func (msgs Messages) NoHooksFor() string {
+	return Catalog.Format(msgs.locale, "noHooksFor", nil)
+}
+
+// IssueUnaskedModeTitle says "{agent} works without confirmation"
+// in the language the app shows.
+//
+// Issue title: an agent's mode lets it do everything without asking.
+func IssueUnaskedModeTitle(agent string) string {
+	return In(i18n.Locale()).IssueUnaskedModeTitle(agent)
+}
+
+// IssueUnaskedModeTitle says "{agent} works without confirmation"
+// in the language of msgs.
+//
+// Issue title: an agent's mode lets it do everything without asking.
+func (msgs Messages) IssueUnaskedModeTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "issueUnaskedModeTitle", map[string]any{"agent": agent})
+}
+
+// IssueUnaskedModeExplain says "{file} sets {rule}: the agent runs commands and edits files without asking. That suits a sandbox, but nothing stops a…"
+// in the language the app shows.
+//
+// Issue explanation: the file and setting of a mode without confirmation.
+func IssueUnaskedModeExplain(file string, rule string) string {
+	return In(i18n.Locale()).IssueUnaskedModeExplain(file, rule)
+}
+
+// IssueUnaskedModeExplain says "{file} sets {rule}: the agent runs commands and edits files without asking. That suits a sandbox, but nothing stops a…"
+// in the language of msgs.
+//
+// Issue explanation: the file and setting of a mode without confirmation.
+func (msgs Messages) IssueUnaskedModeExplain(file string, rule string) string {
+	return Catalog.Format(msgs.locale, "issueUnaskedModeExplain", map[string]any{"file": file, "rule": rule})
+}
+
+// IssueUnaskedRuleTitle says "{agent} runs any command without asking"
+// in the language the app shows.
+//
+// Issue title: an agent's rule allows any command without asking.
+func IssueUnaskedRuleTitle(agent string) string {
+	return In(i18n.Locale()).IssueUnaskedRuleTitle(agent)
+}
+
+// IssueUnaskedRuleTitle says "{agent} runs any command without asking"
+// in the language of msgs.
+//
+// Issue title: an agent's rule allows any command without asking.
+func (msgs Messages) IssueUnaskedRuleTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "issueUnaskedRuleTitle", map[string]any{"agent": agent})
+}
+
+// IssueUnaskedRuleExplain says "{file} allows {rule}: any terminal command runs without confirmation, and nothing stops a wrong one. Narrow the rule …"
+// in the language the app shows.
+//
+// Issue explanation: the file and rule allowing any command.
+func IssueUnaskedRuleExplain(file string, rule string) string {
+	return In(i18n.Locale()).IssueUnaskedRuleExplain(file, rule)
+}
+
+// IssueUnaskedRuleExplain says "{file} allows {rule}: any terminal command runs without confirmation, and nothing stops a wrong one. Narrow the rule …"
+// in the language of msgs.
+//
+// Issue explanation: the file and rule allowing any command.
+func (msgs Messages) IssueUnaskedRuleExplain(file string, rule string) string {
+	return Catalog.Format(msgs.locale, "issueUnaskedRuleExplain", map[string]any{"file": file, "rule": rule})
+}

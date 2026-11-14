@@ -142,6 +142,9 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 		// what is in it.
 		found.PlainEnv, _ = SettingsSecrets(found.Settings)
 	}
+	// As with the secrets, a file that does not read shows nothing: the
+	// agent page lists the files.
+	found.Rules, found.Hooks, _ = access(a.id, found.Dir, accessFiles[a.id].user, "")
 	return found
 }
 
