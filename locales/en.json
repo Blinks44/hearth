@@ -8951,8 +8951,9 @@
   "@hearthMCPAvailable": {
     "description": "Built-in read-only Hearth MCP server."
   },
-  "hearthMCPDescription": "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration changes can be requested by the agent.",
+  "hearthMCPDescription": "Hearth shares local tools, project versions, issues and agent metadata. Agents can request a fix plan; only you can confirm it in this window.",
   "@hearthMCPDescription": {
     "description": "Built-in read-only Hearth MCP server."
-  }
+  },
+  "mcpProposalOrigin": "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it."
 }

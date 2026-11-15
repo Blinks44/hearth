@@ -1631,5 +1631,6 @@
   "skillCatalogBinary": "Fichier binaire. Il sera copié sans modification.",
   "skillCatalogTruncated": "Aperçu limité à 64 Kio. Le fichier complet sera installé.",
   "hearthMCPAvailable": "Disponible",
-  "hearthMCPDescription": "Hearth partage les outils locaux, versions des projets, problèmes et métadonnées des agents. Lecture seule : l’agent ne peut demander ni commandes ni modifications."
+  "hearthMCPDescription": "Hearth partage les outils, versions des projets, problèmes et données des agents. Les agents peuvent demander un plan ; vous seul pouvez le confirmer ici.",
+  "mcpProposalOrigin": "Demandé par un agent IA via MCP. Vérifiez le plan ; seule votre confirmation ici peut le lancer."
 }

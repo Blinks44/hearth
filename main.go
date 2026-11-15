@@ -24,6 +24,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/proposals"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/scan"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
@@ -96,6 +97,33 @@ func main() {
 				win.Update(func() { done(skills, dirs, err) })
 			}()
 			return cancel
+		}
+		// IPC is a request to select a plan, never an execution endpoint.
+		stopProposals, err := proposals.Listen(list.dir, func(ctx context.Context, q proposals.Request) error {
+			done := make(chan error, 1)
+			win.Update(func() {
+				if ctx.Err() != nil {
+					done <- ctx.Err()
+					return
+				}
+				err := a.RequestFix(q)
+				if err == nil {
+					win.Show()
+					win.Focus()
+				}
+				done <- err
+			})
+			select {
+			case err := <-done:
+				return err
+			case <-ctx.Done():
+				return errors.New("hearth window did not respond; retry in the desktop")
+			}
+		})
+		if err != nil {
+			log.Print(err)
+		} else {
+			win.OnClosed(stopProposals)
 		}
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove

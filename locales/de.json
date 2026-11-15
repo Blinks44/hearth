@@ -1631,5 +1631,6 @@
   "skillCatalogBinary": "Binärdatei. Wird unverändert kopiert.",
   "skillCatalogTruncated": "Vorschau auf 64 KiB begrenzt. Die vollständige Datei wird installiert.",
   "hearthMCPAvailable": "Verfügbar",
-  "hearthMCPDescription": "Hearth stellt lokale Werkzeuge, Projektversionen, Probleme und Agent-Metadaten bereit. Nur lesend: Der Agent kann keine Befehle oder Konfigurationsänderungen anfordern."
+  "hearthMCPDescription": "Hearth teilt lokale Werkzeuge, Projektversionen, Probleme und Agentendaten. Agenten können einen Plan anfragen; nur Sie können ihn hier bestätigen.",
+  "mcpProposalOrigin": "Von einem KI-Agenten über MCP angefragt. Prüfen Sie den Plan; nur Ihre Bestätigung hier kann ihn starten."
 }

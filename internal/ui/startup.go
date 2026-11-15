@@ -217,9 +217,13 @@ func (a *App) startupSide(c *ui.Context, s *inventory.ShellStartup) {
 // nvmMove offers the plan that stops line from loading nvm, Node's
 // default moved to mise.
 func (a *App) nvmMove(l inventory.StartupLine) {
+	a.nvmMovePlan(l, a.proposeOrSay)
+}
+
+func (a *App) nvmMovePlan(l inventory.StartupLine, done func(ops.Plan, error)) {
 	node, _ := a.toolState("node")
 	detect := a.detect("node")
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		return ops.NvmMovePlan(l, node, toolTitle("node"), env, detect)
-	}, a.proposeOrSay)
+	}, done)
 }

@@ -225,6 +225,10 @@ func issuePage(is issues.Issue) string {
 // issue without one: the page it lives on tells what to do then. found
 // are the scan's issues, for the skills' copies, which merge at once.
 func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
+	return a.issueFixPlan(is, found, a.proposeOrSay)
+}
+
+func (a *App) issueFixPlan(is issues.Issue, found []issues.Issue, done func(ops.Plan, error)) func() {
 	switch is.Kind {
 	case issues.PathMissing:
 		term := a.Snapshot.TerminalPath
@@ -242,7 +246,7 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 				if errors.Is(err, ops.ErrNoFix) {
 					err = errors.New(locales.PathNoFix())
 				}
-				a.proposeOrSay(p, err)
+				done(p, err)
 			})
 		}
 	case issues.SlowStartup:
@@ -251,7 +255,7 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 		}
 		for _, l := range is.Startup.Lines {
 			if sysenv.StartupCulprit(l.Text) == sysenv.CulpritNvm {
-				return func() { a.nvmMove(l) }
+				return func() { a.nvmMovePlan(l, done) }
 			}
 		}
 	case issues.ProjectMissing:
@@ -264,21 +268,21 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 					continue
 				}
 				if plan, ok := a.projectInstall(st); ok {
-					return func() { a.Propose(plan) }
+					return func() { done(plan, nil) }
 				}
 			}
 		}
 	case issues.DockerUnavailable:
 		if plan, ok := a.engineStartPlan(); ok {
-			return func() { a.Propose(plan) }
+			return func() { done(plan, nil) }
 		}
 	case issues.DatabasePortConflict:
 		if plan, ok := a.conflictPlan(is, inventory.DatabaseServers(a.Snapshot)); ok {
-			return func() { a.Propose(plan) }
+			return func() { done(plan, nil) }
 		}
 	case issues.PlainSecret:
 		if sv := is.MCP[0]; a.BuildPlan != nil && ops.SecretMovable(sv) {
-			return func() { a.moveSecrets(sv) }
+			return func() { a.moveSecretsPlan(sv, done) }
 		}
 	case issues.SettingsSecret:
 		if a.BuildPlan != nil {
@@ -286,7 +290,7 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 			return func() {
 				a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
 					return ops.SettingsSecretPlan(ag, env, terminal, agentTitle)
-				}, a.proposeOrSay)
+				}, done)
 			}
 		}
 	case issues.SkillCopies:
@@ -303,7 +307,7 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 		return func() {
 			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 				return ops.SkillMergePlan(groups, backups, env, time.Now())
-			}, a.proposeOrSay)
+			}, done)
 		}
 	}
 	return nil
@@ -312,7 +316,11 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 // moveSecrets proposes the plan that moves the secrets sv's file writes
 // out into environment variables.
 func (a *App) moveSecrets(sv inventory.MCPServer) {
+	a.moveSecretsPlan(sv, a.proposeOrSay)
+}
+
+func (a *App) moveSecretsPlan(sv inventory.MCPServer, done func(ops.Plan, error)) {
 	a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
 		return ops.MCPSecretPlan(sv, env, terminal, agentTitle)
-	}, a.proposeOrSay)
+	}, done)
 }

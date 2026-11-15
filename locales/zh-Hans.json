@@ -1631,5 +1631,6 @@
   "skillCatalogBinary": "二进制文件。将原样复制。",
   "skillCatalogTruncated": "预览限制为 64 KiB。将安装完整文件。",
   "hearthMCPAvailable": "可用",
-  "hearthMCPDescription": "Hearth 提供本地工具、项目版本、问题和代理信息。只读：代理无法请求执行命令或修改配置。"
+  "hearthMCPDescription": "Hearth 提供本地工具、项目版本、问题和代理信息。代理可以请求修复计划；只有您能在此窗口确认执行。",
+  "mcpProposalOrigin": "AI 代理通过 MCP 请求了此计划。请检查计划；只有您在此确认后才能执行。"
 }

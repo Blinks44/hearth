@@ -55,11 +55,11 @@ func TestTools(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 4 {
+	if len(list.Tools) != 5 {
 		t.Fatalf("tools: %+v", list.Tools)
 	}
 	for _, tool := range list.Tools {
-		if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint {
+		if tool.Name != "propose_fix" && (tool.Annotations == nil || !tool.Annotations.ReadOnlyHint) {
 			t.Fatalf("not read-only: %s", tool.Name)
 		}
 	}

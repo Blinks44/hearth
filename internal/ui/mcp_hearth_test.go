@@ -26,7 +26,7 @@ func TestHearthMCPPreset(t *testing.T) {
 		done(build(sysenv.Env{"HOME=" + dir, "USERPROFILE=" + dir}, nil))
 	}
 	tt := openAI(t, a, mcpPage)
-	hasTexts(t, tt, "hearth", "Available", "Read-only")
+	hasTexts(t, tt, "hearth", "Available", "Agents can request")
 	screenshot(t, tt, "mcp-hearth")
 	if err := tt.Click("Connect"); err != nil {
 		t.Fatal(err)

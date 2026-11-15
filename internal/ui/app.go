@@ -27,6 +27,7 @@ import (
 
 // App is the state of Hearth's main window.
 type App struct {
+	mcpPending bool // a requested MCP plan is being prepared, never confirmed
 	// Machine is the caption under the logo, as "studio · macOS 15.4".
 	Machine string
 	// OS is the system for the report, without the computer's name, as

@@ -11,6 +11,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/Blinks44/hearth/internal/mcpserver"
+	"github.com/Blinks44/hearth/internal/proposals"
 )
 
 // serveMCP is selected before font registration or window initialization.
@@ -31,7 +32,9 @@ func serveMCP(args []string, stderr io.Writer) int {
 	if version == "" {
 		version = "dev"
 	}
-	if err = mcpserver.New(source, version).Run(ctx, &mcp.StdioTransport{}); err != nil && ctx.Err() == nil {
+	if err = mcpserver.New(source, version, func(ctx context.Context, q proposals.Request) error {
+		return proposals.Send(ctx, source.SettingsDir, q)
+	}).Run(ctx, &mcp.StdioTransport{}); err != nil && ctx.Err() == nil {
 		_, _ = fmt.Fprintln(stderr, "Hearth MCP session ended with an error.")
 		return 1
 	}

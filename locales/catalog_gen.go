@@ -22338,16 +22338,26 @@ func (msgs Messages) HearthMCPAvailable() string {
 	return Catalog.Format(msgs.locale, "hearthMCPAvailable", nil)
 }
 
-// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration chang…"
+// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Agents can request a fix plan; only you can c…"
 // in the language the app shows.
 //
 // Built-in read-only Hearth MCP server.
 func HearthMCPDescription() string { return In(i18n.Locale()).HearthMCPDescription() }
 
-// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration chang…"
+// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Agents can request a fix plan; only you can c…"
 // in the language of msgs.
 //
 // Built-in read-only Hearth MCP server.
 func (msgs Messages) HearthMCPDescription() string {
 	return Catalog.Format(msgs.locale, "hearthMCPDescription", nil)
+}
+
+// McpProposalOrigin says "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it."
+// in the language the app shows.
+func McpProposalOrigin() string { return In(i18n.Locale()).McpProposalOrigin() }
+
+// McpProposalOrigin says "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it."
+// in the language of msgs.
+func (msgs Messages) McpProposalOrigin() string {
+	return Catalog.Format(msgs.locale, "mcpProposalOrigin", nil)
 }
