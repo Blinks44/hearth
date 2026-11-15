@@ -43,6 +43,8 @@ type Step struct {
 	// of it, which comes back if the plan does not get through: a later
 	// step fails or is stopped, or the check does not pass.
 	Edit *FileEdit
+	// Skill installs previewed files into a new directory.
+	Skill *SkillInstall
 	// UserPath, in place of Argv, sets the user's Path in the Windows
 	// registry, which comes back as an Edit does.
 	UserPath *UserPathEdit
@@ -200,6 +202,28 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
+		if step.Skill != nil {
+			e.printf("install skill %s\n", step.Skill.Path)
+			e.emit()
+			restore, err := applySkillInstall(ctx, *step.Skill)
+			if err == nil {
+				changes = append(changes, applied{step.Skill.Path, restore})
+			}
+			e.mu.Lock()
+			if err != nil {
+				e.end(i, StepFailed, Failed, -1, err.Error())
+			} else {
+				e.state.Steps[i] = Done
+			}
+			e.mu.Unlock()
+			if err != nil {
+				undo()
+				e.emit()
+				return e.snapshot()
+			}
+			e.emit()
+			continue
+		}
 		if step.Remove != "" {
 			e.printf("remove %s\n", step.Remove)
 			e.emit()

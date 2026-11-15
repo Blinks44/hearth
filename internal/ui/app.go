@@ -18,6 +18,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/skillcatalog"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -135,6 +136,11 @@ type App struct {
 	// background, and gives them to done through Window.Update; nil shows
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
+	// LoadCatalog downloads on request and publishes through Window.Update.
+	// The returned function cancels a superseded request.
+	LoadCatalog      func(repo skillcatalog.Repository, done func([]skillcatalog.Skill, map[string]string, error)) func()
+	skillCatalogOpen bool
+	skillCatalog     *skillCatalogState
 	// CheckMCP starts or reaches an MCP server as its agent would, with
 	// the terminal's environment, and asks for its tools, in the
 	// background, giving done the answer through Window.Update; nil hides

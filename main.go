@@ -26,6 +26,7 @@ import (
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/scan"
+	"github.com/Blinks44/hearth/internal/skillcatalog"
 	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
@@ -80,6 +81,18 @@ func main() {
 			Vibrancy: mygo.VibrancySidebar,
 			Content:  ui.View(a.View),
 		})
+		catalogCtx, stopCatalog := context.WithCancel(context.Background())
+		a.LoadCatalog = func(repo skillcatalog.Repository, done func([]skillcatalog.Skill, map[string]string, error)) func() {
+			ctx, cancel := context.WithTimeout(catalogCtx, 2*time.Minute)
+			env := scanner.Terminal()
+			go func() {
+				defer cancel()
+				skills, err := skillcatalog.Fetch(ctx, nil, repo)
+				dirs := ai.SkillDirectories(env)
+				win.Update(func() { done(skills, dirs, err) })
+			}()
+			return cancel
+		}
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
 		a.FindProjects = list.find
@@ -369,6 +382,7 @@ func main() {
 		}
 		a.CachePath = lists.Dir
 		win.OnClosed(func() {
+			stopCatalog()
 			if cancelVersions != nil {
 				cancelVersions()
 			}

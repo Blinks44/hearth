@@ -339,6 +339,9 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				if edit {
 					command = locales.OpEditStep(tilde(e.Path, home))
 				}
+				if step.Skill != nil {
+					command = locales.SkillInstallStep(tilde(step.Skill.Path, home))
+				}
 				if step.Remove != "" {
 					command = locales.OpRemoveStep(tilde(step.Remove, home))
 				}

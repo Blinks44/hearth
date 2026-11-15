@@ -353,3 +353,14 @@ func SkillFolder(dir string) (entries []inventory.Entry, skillMD string, err err
 	}
 	return entries, string(data), nil
 }
+
+// SkillDirectories returns the user directories for agents that support skills.
+func SkillDirectories(env sysenv.Env) map[string]string {
+	out := map[string]string{}
+	for _, a := range agents {
+		if dir, _ := SkillsDir(a.id, env, ""); dir != "" {
+			out[a.id] = dir
+		}
+	}
+	return out
+}

@@ -45,8 +45,14 @@ func skillKey(sk inventory.Skill) string {
 // skillsPage lists the skills of the user and of the projects, filtered by
 // agent, scope and text, with the chosen one's details beside them.
 func (a *App) skillsPage(c *ui.Context, p page) {
+	if a.skillCatalogOpen {
+		a.skillCatalogView(c, p)
+		return
+	}
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			ui.PrimaryButton(c.Key("skill-catalog"), locales.SkillCatalogTitle()).OnClick(func() { a.openSkillCatalog(0) })
+		}})
 		all := a.allSkills()
 		if len(all) == 0 {
 			a.aiEmpty(c, "puzzle", locales.NoSkills())

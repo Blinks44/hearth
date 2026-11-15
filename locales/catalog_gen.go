@@ -22055,3 +22055,271 @@ func InstructionsPreview() string { return In(i18n.Locale()).InstructionsPreview
 func (msgs Messages) InstructionsPreview() string {
 	return Catalog.Format(msgs.locale, "instructionsPreview", nil)
 }
+
+// SkillCatalogTitle says "Skill catalog"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogTitle() string { return In(i18n.Locale()).SkillCatalogTitle() }
+
+// SkillCatalogTitle says "Skill catalog"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogTitle() string {
+	return Catalog.Format(msgs.locale, "skillCatalogTitle", nil)
+}
+
+// SkillCatalogText says "Skills from public repositories.\nRead the instructions and files before installing."
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogText() string { return In(i18n.Locale()).SkillCatalogText() }
+
+// SkillCatalogText says "Skills from public repositories.\nRead the instructions and files before installing."
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogText() string {
+	return Catalog.Format(msgs.locale, "skillCatalogText", nil)
+}
+
+// SkillCatalogInstalled says "Installed"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogInstalled() string { return In(i18n.Locale()).SkillCatalogInstalled() }
+
+// SkillCatalogInstalled says "Installed"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogInstalled() string {
+	return Catalog.Format(msgs.locale, "skillCatalogInstalled", nil)
+}
+
+// SkillCatalogRefresh says "Refresh"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogRefresh() string { return In(i18n.Locale()).SkillCatalogRefresh() }
+
+// SkillCatalogRefresh says "Refresh"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogRefresh() string {
+	return Catalog.Format(msgs.locale, "skillCatalogRefresh", nil)
+}
+
+// SkillCatalogError says "Could not load the catalog. Check your connection and try Refresh."
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogError() string { return In(i18n.Locale()).SkillCatalogError() }
+
+// SkillCatalogError says "Could not load the catalog. Check your connection and try Refresh."
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogError() string {
+	return Catalog.Format(msgs.locale, "skillCatalogError", nil)
+}
+
+// SkillCatalogHint says "Choose a skill, read its instructions and select an agent.\nNext, Hearth will show the installation plan and files."
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogHint() string { return In(i18n.Locale()).SkillCatalogHint() }
+
+// SkillCatalogHint says "Choose a skill, read its instructions and select an agent.\nNext, Hearth will show the installation plan and files."
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogHint() string {
+	return Catalog.Format(msgs.locale, "skillCatalogHint", nil)
+}
+
+// SkillCatalogFor says "Install for"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogFor() string { return In(i18n.Locale()).SkillCatalogFor() }
+
+// SkillCatalogFor says "Install for"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogFor() string {
+	return Catalog.Format(msgs.locale, "skillCatalogFor", nil)
+}
+
+// SkillCatalogNoAgent says "No skill directory is available."
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogNoAgent() string { return In(i18n.Locale()).SkillCatalogNoAgent() }
+
+// SkillCatalogNoAgent says "No skill directory is available."
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogNoAgent() string {
+	return Catalog.Format(msgs.locale, "skillCatalogNoAgent", nil)
+}
+
+// SkillCatalogPlan says "Next: plan…"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogPlan() string { return In(i18n.Locale()).SkillCatalogPlan() }
+
+// SkillCatalogPlan says "Next: plan…"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogPlan() string {
+	return Catalog.Format(msgs.locale, "skillCatalogPlan", nil)
+}
+
+// SkillCatalogGitHub says "On GitHub"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogGitHub() string { return In(i18n.Locale()).SkillCatalogGitHub() }
+
+// SkillCatalogGitHub says "On GitHub"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogGitHub() string {
+	return Catalog.Format(msgs.locale, "skillCatalogGitHub", nil)
+}
+
+// SkillCatalogInstall says "Install skill"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillCatalogInstall() string { return In(i18n.Locale()).SkillCatalogInstall() }
+
+// SkillCatalogInstall says "Install skill"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillCatalogInstall() string {
+	return Catalog.Format(msgs.locale, "skillCatalogInstall", nil)
+}
+
+// SkillInstallTitle says "Install {skill} for {agent}"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallTitle(skill string, agent string) string {
+	return In(i18n.Locale()).SkillInstallTitle(skill, agent)
+}
+
+// SkillInstallTitle says "Install {skill} for {agent}"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallTitle(skill string, agent string) string {
+	return Catalog.Format(msgs.locale, "skillInstallTitle", map[string]any{"skill": skill, "agent": agent})
+}
+
+// SkillInstallWhy says "Copy the previewed files into a new skill folder. Existing files will not be replaced."
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallWhy() string { return In(i18n.Locale()).SkillInstallWhy() }
+
+// SkillInstallWhy says "Copy the previewed files into a new skill folder. Existing files will not be replaced."
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallWhy() string {
+	return Catalog.Format(msgs.locale, "skillInstallWhy", nil)
+}
+
+// SkillInstallSource says "Repository and version"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallSource() string { return In(i18n.Locale()).SkillInstallSource() }
+
+// SkillInstallSource says "Repository and version"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallSource() string {
+	return Catalog.Format(msgs.locale, "skillInstallSource", nil)
+}
+
+// SkillInstallReview says "Instructions and scripts"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallReview() string { return In(i18n.Locale()).SkillInstallReview() }
+
+// SkillInstallReview says "Instructions and scripts"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallReview() string {
+	return Catalog.Format(msgs.locale, "skillInstallReview", nil)
+}
+
+// SkillInstallReviewText says "The agent may follow these instructions and run included scripts when using the skill. Review the files and their lic…"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallReviewText() string { return In(i18n.Locale()).SkillInstallReviewText() }
+
+// SkillInstallReviewText says "The agent may follow these instructions and run included scripts when using the skill. Review the files and their lic…"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallReviewText() string {
+	return Catalog.Format(msgs.locale, "skillInstallReviewText", nil)
+}
+
+// SkillInstallStep says "Create skill folder {path}"
+// in the language the app shows.
+//
+// Skill repository catalog and installation.
+func SkillInstallStep(path string) string { return In(i18n.Locale()).SkillInstallStep(path) }
+
+// SkillInstallStep says "Create skill folder {path}"
+// in the language of msgs.
+//
+// Skill repository catalog and installation.
+func (msgs Messages) SkillInstallStep(path string) string {
+	return Catalog.Format(msgs.locale, "skillInstallStep", map[string]any{"path": path})
+}
+
+// SkillCatalogBinary says "Binary file. It will be copied without changes."
+// in the language the app shows.
+//
+// Skill file preview.
+func SkillCatalogBinary() string { return In(i18n.Locale()).SkillCatalogBinary() }
+
+// SkillCatalogBinary says "Binary file. It will be copied without changes."
+// in the language of msgs.
+//
+// Skill file preview.
+func (msgs Messages) SkillCatalogBinary() string {
+	return Catalog.Format(msgs.locale, "skillCatalogBinary", nil)
+}
+
+// SkillCatalogTruncated says "Preview limited to 64 KiB. The complete file will be installed."
+// in the language the app shows.
+//
+// Skill file preview.
+func SkillCatalogTruncated() string { return In(i18n.Locale()).SkillCatalogTruncated() }
+
+// SkillCatalogTruncated says "Preview limited to 64 KiB. The complete file will be installed."
+// in the language of msgs.
+//
+// Skill file preview.
+func (msgs Messages) SkillCatalogTruncated() string {
+	return Catalog.Format(msgs.locale, "skillCatalogTruncated", nil)
+}

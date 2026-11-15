@@ -8857,5 +8857,94 @@
   "instructionsPreview": "Instruction files",
   "@instructionsPreview": {
     "description": "Project instructions page and operation."
+  },
+  "skillCatalogTitle": "Skill catalog",
+  "@skillCatalogTitle": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogText": "Skills from public repositories.\nRead the instructions and files before installing.",
+  "@skillCatalogText": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogInstalled": "Installed",
+  "@skillCatalogInstalled": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogRefresh": "Refresh",
+  "@skillCatalogRefresh": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogError": "Could not load the catalog. Check your connection and try Refresh.",
+  "@skillCatalogError": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogHint": "Choose a skill, read its instructions and select an agent.\nNext, Hearth will show the installation plan and files.",
+  "@skillCatalogHint": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogFor": "Install for",
+  "@skillCatalogFor": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogNoAgent": "No skill directory is available.",
+  "@skillCatalogNoAgent": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogPlan": "Next: plan…",
+  "@skillCatalogPlan": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogGitHub": "On GitHub",
+  "@skillCatalogGitHub": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillCatalogInstall": "Install skill",
+  "@skillCatalogInstall": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillInstallTitle": "Install {skill} for {agent}",
+  "@skillInstallTitle": {
+    "description": "Skill repository catalog and installation.",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      },
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "skillInstallWhy": "Copy the previewed files into a new skill folder. Existing files will not be replaced.",
+  "@skillInstallWhy": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillInstallSource": "Repository and version",
+  "@skillInstallSource": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillInstallReview": "Instructions and scripts",
+  "@skillInstallReview": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillInstallReviewText": "The agent may follow these instructions and run included scripts when using the skill. Review the files and their license. Hearth only copies them; dependencies are not installed.",
+  "@skillInstallReviewText": {
+    "description": "Skill repository catalog and installation."
+  },
+  "skillInstallStep": "Create skill folder {path}",
+  "@skillInstallStep": {
+    "description": "Skill repository catalog and installation.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCatalogBinary": "Binary file. It will be copied without changes.",
+  "@skillCatalogBinary": {
+    "description": "Skill file preview."
+  },
+  "skillCatalogTruncated": "Preview limited to 64 KiB. The complete file will be installed.",
+  "@skillCatalogTruncated": {
+    "description": "Skill file preview."
   }
 }
