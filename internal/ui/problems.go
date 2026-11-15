@@ -26,7 +26,7 @@ const (
 // a project's in Projects, the PATH's in PATH, the rest in Tools.
 func issueArea(is issues.Issue) int {
 	switch page := issuePage(is); {
-	case page == skillsPage || page == mcpPage || strings.HasPrefix(page, agentPage+"?"):
+	case page == instructionsPage || page == skillsPage || page == mcpPage || strings.HasPrefix(page, agentPage+"?"):
 		return areaAI
 	case page == pathPage:
 		return areaPath

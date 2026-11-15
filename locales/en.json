@@ -8755,5 +8755,107 @@
         "example": "Bash"
       }
     }
+  },
+  "instructionsTitle": "Instructions",
+  "@instructionsTitle": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsSubtitle": "AI · Project instruction files",
+  "@instructionsSubtitle": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsLead": "Compare root AGENTS.md and CLAUDE.md files. Share one text through an @AGENTS.md import.",
+  "@instructionsLead": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsScope": "Root files only. Agent settings, parent and nested instructions can change what a session loads. Claude Code 2.1.277+ can also read AGENTS.md directly.",
+  "@instructionsScope": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsMissing": "No instructions",
+  "@instructionsMissing": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsAgents": "AGENTS.md only",
+  "@instructionsAgents": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsClaude": "CLAUDE.md only",
+  "@instructionsClaude": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsSame": "Same text",
+  "@instructionsSame": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsLinked": "Connected",
+  "@instructionsLinked": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsDifferent": "Different texts",
+  "@instructionsDifferent": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsUnreadable": "Could not read",
+  "@instructionsUnreadable": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsConnect": "Connect…",
+  "@instructionsConnect": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsPlanTitle": "Share instructions · {project}",
+  "@instructionsPlanTitle": {
+    "description": "Project instructions page and operation.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "instructionsPlanWhy": "AGENTS.md becomes the shared source. The original CLAUDE.md text stays in a comment and a backup. Review both diffs before running.",
+  "@instructionsPlanWhy": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsReview": "Review the instructions",
+  "@instructionsReview": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsReviewText": "Different files may intentionally contain agent-specific rules. Moving Claude rules to AGENTS.md shares them with other agents. Imports are applied in new sessions.",
+  "@instructionsReviewText": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsPlanChange": "CLAUDE.md imports AGENTS.md; original files have backups.",
+  "@instructionsPlanChange": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsCannotChange": "These instructions cannot be connected automatically. Review the files.",
+  "@instructionsCannotChange": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsManual": "CLAUDE.md contains imports or HTML comments. Review and connect it manually to preserve their meaning.",
+  "@instructionsManual": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsSearch": "Find a project…",
+  "@instructionsSearch": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsIssueTitle": "Different instruction texts · {project}",
+  "@instructionsIssueTitle": {
+    "description": "Project instructions page and operation.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "instructionsIssueExplain": "Root AGENTS.md and CLAUDE.md differ. This may be intentional; compare them before sharing rules.",
+  "@instructionsIssueExplain": {
+    "description": "Project instructions page and operation."
+  },
+  "instructionsPreview": "Instruction files",
+  "@instructionsPreview": {
+    "description": "Project instructions page and operation."
   }
 }

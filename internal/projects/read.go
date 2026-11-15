@@ -39,7 +39,8 @@ type Requirement struct {
 
 // Project is what Read found in a project folder.
 type Project struct {
-	Dir string
+	Dir          string
+	Instructions Instructions
 	// Requirements come in the order of the files, as reader lists them.
 	Requirements []Requirement
 	// Files are the project files Read knows that the folder has, in the
@@ -160,6 +161,7 @@ func Read(dir string) Project {
 			p.Requirements = append(p.Requirements, req)
 		}
 	}
+	p.Instructions = ReadInstructions(dir)
 	readDatabases(&p)
 	readInheritedGlobalJSON(&p)
 	for _, name := range aiFiles {

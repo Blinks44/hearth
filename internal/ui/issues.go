@@ -21,6 +21,8 @@ import (
 func issueText(is issues.Issue, home string) (title, explain string) {
 	tool := toolTitle(is.Tool)
 	switch is.Kind {
+	case issues.InstructionDiffers:
+		return locales.InstructionsIssueTitle(filepath.Base(is.Project)), locales.InstructionsIssueExplain()
 	case issues.DatabasePortConflict:
 		return locales.DatabaseConflictTitle(is.Dirs[0]), locales.DatabaseConflictExplain(filepath.Base(is.Project))
 	case issues.DockerUnavailable:
@@ -188,6 +190,8 @@ func copySource(in inventory.Installation) string {
 // project's, its tool's, or the PATH's.
 func issuePage(is issues.Issue) string {
 	switch {
+	case is.Kind == issues.InstructionDiffers:
+		return instructionsPage
 	case len(is.Skills) > 0:
 		return skillsPage
 	case len(is.MCP) > 0:

@@ -18,6 +18,7 @@ import (
 type Kind string
 
 const (
+	InstructionDiffers Kind = "instruction-differs"
 	// DockerUnavailable is an unsuccessful probe of the selected local engine.
 	DockerUnavailable Kind = "docker-unavailable"
 	// DockerDenied is a selected local engine whose socket refused this user.
@@ -179,6 +180,9 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 		out = append(out, unasked(a.Rules, found)...)
 	}
 	for _, p := range ps {
+		if p.Instructions.State() == "different" {
+			out = append(out, Issue{Kind: InstructionDiffers, Severity: Info, Project: p.Dir})
+		}
 		out = append(out, skillIssues(p.Skills)...)
 		out = append(out, mcpMissing(p.MCP)...)
 		out = append(out, plainSecrets(p.MCP)...)

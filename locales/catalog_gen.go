@@ -21729,3 +21729,329 @@ func IssueUnaskedRuleExplain(file string, rule string) string {
 func (msgs Messages) IssueUnaskedRuleExplain(file string, rule string) string {
 	return Catalog.Format(msgs.locale, "issueUnaskedRuleExplain", map[string]any{"file": file, "rule": rule})
 }
+
+// InstructionsTitle says "Instructions"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsTitle() string { return In(i18n.Locale()).InstructionsTitle() }
+
+// InstructionsTitle says "Instructions"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsTitle() string {
+	return Catalog.Format(msgs.locale, "instructionsTitle", nil)
+}
+
+// InstructionsSubtitle says "AI · Project instruction files"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsSubtitle() string { return In(i18n.Locale()).InstructionsSubtitle() }
+
+// InstructionsSubtitle says "AI · Project instruction files"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsSubtitle() string {
+	return Catalog.Format(msgs.locale, "instructionsSubtitle", nil)
+}
+
+// InstructionsLead says "Compare root AGENTS.md and CLAUDE.md files. Share one text through an @AGENTS.md import."
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsLead() string { return In(i18n.Locale()).InstructionsLead() }
+
+// InstructionsLead says "Compare root AGENTS.md and CLAUDE.md files. Share one text through an @AGENTS.md import."
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsLead() string {
+	return Catalog.Format(msgs.locale, "instructionsLead", nil)
+}
+
+// InstructionsScope says "Root files only. Agent settings, parent and nested instructions can change what a session loads. Claude Code 2.1.277+…"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsScope() string { return In(i18n.Locale()).InstructionsScope() }
+
+// InstructionsScope says "Root files only. Agent settings, parent and nested instructions can change what a session loads. Claude Code 2.1.277+…"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsScope() string {
+	return Catalog.Format(msgs.locale, "instructionsScope", nil)
+}
+
+// InstructionsMissing says "No instructions"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsMissing() string { return In(i18n.Locale()).InstructionsMissing() }
+
+// InstructionsMissing says "No instructions"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsMissing() string {
+	return Catalog.Format(msgs.locale, "instructionsMissing", nil)
+}
+
+// InstructionsAgents says "AGENTS.md only"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsAgents() string { return In(i18n.Locale()).InstructionsAgents() }
+
+// InstructionsAgents says "AGENTS.md only"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsAgents() string {
+	return Catalog.Format(msgs.locale, "instructionsAgents", nil)
+}
+
+// InstructionsClaude says "CLAUDE.md only"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsClaude() string { return In(i18n.Locale()).InstructionsClaude() }
+
+// InstructionsClaude says "CLAUDE.md only"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsClaude() string {
+	return Catalog.Format(msgs.locale, "instructionsClaude", nil)
+}
+
+// InstructionsSame says "Same text"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsSame() string { return In(i18n.Locale()).InstructionsSame() }
+
+// InstructionsSame says "Same text"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsSame() string {
+	return Catalog.Format(msgs.locale, "instructionsSame", nil)
+}
+
+// InstructionsLinked says "Connected"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsLinked() string { return In(i18n.Locale()).InstructionsLinked() }
+
+// InstructionsLinked says "Connected"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsLinked() string {
+	return Catalog.Format(msgs.locale, "instructionsLinked", nil)
+}
+
+// InstructionsDifferent says "Different texts"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsDifferent() string { return In(i18n.Locale()).InstructionsDifferent() }
+
+// InstructionsDifferent says "Different texts"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsDifferent() string {
+	return Catalog.Format(msgs.locale, "instructionsDifferent", nil)
+}
+
+// InstructionsUnreadable says "Could not read"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsUnreadable() string { return In(i18n.Locale()).InstructionsUnreadable() }
+
+// InstructionsUnreadable says "Could not read"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsUnreadable() string {
+	return Catalog.Format(msgs.locale, "instructionsUnreadable", nil)
+}
+
+// InstructionsConnect says "Connect…"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsConnect() string { return In(i18n.Locale()).InstructionsConnect() }
+
+// InstructionsConnect says "Connect…"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsConnect() string {
+	return Catalog.Format(msgs.locale, "instructionsConnect", nil)
+}
+
+// InstructionsPlanTitle says "Share instructions · {project}"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsPlanTitle(project string) string {
+	return In(i18n.Locale()).InstructionsPlanTitle(project)
+}
+
+// InstructionsPlanTitle says "Share instructions · {project}"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsPlanTitle(project string) string {
+	return Catalog.Format(msgs.locale, "instructionsPlanTitle", map[string]any{"project": project})
+}
+
+// InstructionsPlanWhy says "AGENTS.md becomes the shared source. The original CLAUDE.md text stays in a comment and a backup. Review both diffs b…"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsPlanWhy() string { return In(i18n.Locale()).InstructionsPlanWhy() }
+
+// InstructionsPlanWhy says "AGENTS.md becomes the shared source. The original CLAUDE.md text stays in a comment and a backup. Review both diffs b…"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsPlanWhy() string {
+	return Catalog.Format(msgs.locale, "instructionsPlanWhy", nil)
+}
+
+// InstructionsReview says "Review the instructions"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsReview() string { return In(i18n.Locale()).InstructionsReview() }
+
+// InstructionsReview says "Review the instructions"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsReview() string {
+	return Catalog.Format(msgs.locale, "instructionsReview", nil)
+}
+
+// InstructionsReviewText says "Different files may intentionally contain agent-specific rules. Moving Claude rules to AGENTS.md shares them with oth…"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsReviewText() string { return In(i18n.Locale()).InstructionsReviewText() }
+
+// InstructionsReviewText says "Different files may intentionally contain agent-specific rules. Moving Claude rules to AGENTS.md shares them with oth…"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsReviewText() string {
+	return Catalog.Format(msgs.locale, "instructionsReviewText", nil)
+}
+
+// InstructionsPlanChange says "CLAUDE.md imports AGENTS.md; original files have backups."
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsPlanChange() string { return In(i18n.Locale()).InstructionsPlanChange() }
+
+// InstructionsPlanChange says "CLAUDE.md imports AGENTS.md; original files have backups."
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsPlanChange() string {
+	return Catalog.Format(msgs.locale, "instructionsPlanChange", nil)
+}
+
+// InstructionsCannotChange says "These instructions cannot be connected automatically. Review the files."
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsCannotChange() string { return In(i18n.Locale()).InstructionsCannotChange() }
+
+// InstructionsCannotChange says "These instructions cannot be connected automatically. Review the files."
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsCannotChange() string {
+	return Catalog.Format(msgs.locale, "instructionsCannotChange", nil)
+}
+
+// InstructionsManual says "CLAUDE.md contains imports or HTML comments. Review and connect it manually to preserve their meaning."
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsManual() string { return In(i18n.Locale()).InstructionsManual() }
+
+// InstructionsManual says "CLAUDE.md contains imports or HTML comments. Review and connect it manually to preserve their meaning."
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsManual() string {
+	return Catalog.Format(msgs.locale, "instructionsManual", nil)
+}
+
+// InstructionsSearch says "Find a project…"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsSearch() string { return In(i18n.Locale()).InstructionsSearch() }
+
+// InstructionsSearch says "Find a project…"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsSearch() string {
+	return Catalog.Format(msgs.locale, "instructionsSearch", nil)
+}
+
+// InstructionsIssueTitle says "Different instruction texts · {project}"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsIssueTitle(project string) string {
+	return In(i18n.Locale()).InstructionsIssueTitle(project)
+}
+
+// InstructionsIssueTitle says "Different instruction texts · {project}"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsIssueTitle(project string) string {
+	return Catalog.Format(msgs.locale, "instructionsIssueTitle", map[string]any{"project": project})
+}
+
+// InstructionsIssueExplain says "Root AGENTS.md and CLAUDE.md differ. This may be intentional; compare them before sharing rules."
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsIssueExplain() string { return In(i18n.Locale()).InstructionsIssueExplain() }
+
+// InstructionsIssueExplain says "Root AGENTS.md and CLAUDE.md differ. This may be intentional; compare them before sharing rules."
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsIssueExplain() string {
+	return Catalog.Format(msgs.locale, "instructionsIssueExplain", nil)
+}
+
+// InstructionsPreview says "Instruction files"
+// in the language the app shows.
+//
+// Project instructions page and operation.
+func InstructionsPreview() string { return In(i18n.Locale()).InstructionsPreview() }
+
+// InstructionsPreview says "Instruction files"
+// in the language of msgs.
+//
+// Project instructions page and operation.
+func (msgs Messages) InstructionsPreview() string {
+	return Catalog.Format(msgs.locale, "instructionsPreview", nil)
+}

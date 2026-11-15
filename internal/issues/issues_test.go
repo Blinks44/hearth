@@ -394,3 +394,15 @@ func TestMiseActivateCopies(t *testing.T) {
 		t.Fatalf("issues %+v", got)
 	}
 }
+
+func TestInstructionDiffers(t *testing.T) {
+	ps := []projects.Project{
+		{Dir: "/projects/different", Instructions: projects.Instructions{Agents: projects.InstructionFile{Text: "Build"}, Claude: projects.InstructionFile{Text: "Test"}}},
+		{Dir: "/projects/missing"},
+		{Dir: "/projects/linked", Instructions: projects.Instructions{Agents: projects.InstructionFile{Text: "Build"}, Claude: projects.InstructionFile{Text: "@AGENTS.md"}}},
+	}
+	got := Find(&inventory.Snapshot{}, ps, nil, time.Now())
+	if len(got) != 1 || got[0].Kind != InstructionDiffers || got[0].Severity != Info || got[0].Project != ps[0].Dir {
+		t.Fatalf("issues: %+v", got)
+	}
+}

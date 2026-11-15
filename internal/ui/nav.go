@@ -102,6 +102,7 @@ var (
 			{"/ai/skills", "lucide/puzzle", locales.SkillsTitle, locales.SectionAI},
 			{"/ai/mcp", "lucide/plug", name("MCP"), locales.SectionAI},
 			{modelsPage, "lucide/brain", locales.ModelsTitle, locales.ModelsSubtitle},
+			{instructionsPage, "lucide/file-text", locales.InstructionsTitle, locales.InstructionsSubtitle},
 			{usagePage, "lucide/chart-column", locales.UsageTitle, locales.UsageSubtitle},
 		}},
 		{locales.SectionSystem, []page{
