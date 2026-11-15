@@ -1629,5 +1629,7 @@
   "skillInstallReviewText": "Der Agent kann diese Anweisungen befolgen und Skripte ausführen. Dateien und Lizenz prüfen. Hearth kopiert sie nur; Abhängigkeiten werden nicht installiert.",
   "skillInstallStep": "Skill-Ordner {path} erstellen",
   "skillCatalogBinary": "Binärdatei. Wird unverändert kopiert.",
-  "skillCatalogTruncated": "Vorschau auf 64 KiB begrenzt. Die vollständige Datei wird installiert."
+  "skillCatalogTruncated": "Vorschau auf 64 KiB begrenzt. Die vollständige Datei wird installiert.",
+  "hearthMCPAvailable": "Verfügbar",
+  "hearthMCPDescription": "Hearth stellt lokale Werkzeuge, Projektversionen, Probleme und Agent-Metadaten bereit. Nur lesend: Der Agent kann keine Befehle oder Konfigurationsänderungen anfordern."
 }

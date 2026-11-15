@@ -248,6 +248,34 @@ func findServer(servers []inventory.MCPServer, agent, name, project string) (inv
 // headers go along and show hidden. It reads the disk: call it in the
 // background. names gives the agents' names.
 func MCPConnectPlan(s inventory.MCPServer, id string, env sysenv.Env, names func(string) string) (Plan, error) {
+	def, err := readDef(s)
+	if err != nil {
+		return Plan{}, err
+	}
+	return mcpAddPlan(s, def, id, env, names)
+}
+
+// HearthMCPPlan connects this installed binary using the existing MCP operation.
+// The server is read-only; the config edit still requires desktop confirmation.
+func HearthMCPPlan(executable, id string, env sysenv.Env, names func(string) string) (Plan, error) {
+	if !filepath.IsAbs(executable) {
+		return Plan{}, errors.New("hearth executable must have an absolute path")
+	}
+	info, err := os.Stat(executable)
+	if err != nil {
+		return Plan{}, fmt.Errorf("locate Hearth executable: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return Plan{}, errors.New("hearth executable is not a regular file")
+	}
+	p, err := mcpAddPlan(inventory.MCPServer{Name: "hearth", Agent: "hearth", Transport: "stdio"}, ai.MCPDef{Transport: "stdio", Command: executable, Args: []string{"mcp"}}, id, env, names)
+	if err == nil {
+		p.Why = locales.HearthMCPDescription()
+	}
+	return p, err
+}
+
+func mcpAddPlan(s inventory.MCPServer, def ai.MCPDef, id string, env sysenv.Env, names func(string) string) (Plan, error) {
 	title := names(id)
 	path := ai.MCPFile(id, env, s.Project)
 	if path == "" {
@@ -255,10 +283,6 @@ func MCPConnectPlan(s inventory.MCPServer, id string, env sysenv.Env, names func
 	}
 	if _, ok := findServer(readServers(env, s.Project), id, s.Name, s.Project); ok {
 		return Plan{}, errors.New(locales.McpAlready(s.Name, title))
-	}
-	def, err := readDef(s)
-	if err != nil {
-		return Plan{}, err
 	}
 	hide := secrets(def, s)
 	p := Plan{

@@ -1629,5 +1629,7 @@
   "skillInstallReviewText": "L’agent peut suivre ces instructions et exécuter les scripts. Vérifiez les fichiers et leur licence. Hearth les copie seulement ; les dépendances ne sont pas installées.",
   "skillInstallStep": "Créer le dossier du skill {path}",
   "skillCatalogBinary": "Fichier binaire. Il sera copié sans modification.",
-  "skillCatalogTruncated": "Aperçu limité à 64 Kio. Le fichier complet sera installé."
+  "skillCatalogTruncated": "Aperçu limité à 64 Kio. Le fichier complet sera installé.",
+  "hearthMCPAvailable": "Disponible",
+  "hearthMCPDescription": "Hearth partage les outils locaux, versions des projets, problèmes et métadonnées des agents. Lecture seule : l’agent ne peut demander ni commandes ni modifications."
 }

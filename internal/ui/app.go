@@ -163,6 +163,8 @@ type App struct {
 	RunPlan func(p ops.Plan, update func(ops.State)) (stop func())
 	// JournalPath is the log of operations, which their dialog opens.
 	JournalPath string
+	// HearthExecutable is the installed binary offered as a read-only MCP server.
+	HearthExecutable string
 	// DetectTool finds a tool again, as a scan would, for an operation's
 	// check; it runs on the operation's goroutine.
 	DetectTool func(ctx context.Context, tool string) (inventory.ToolState, error)

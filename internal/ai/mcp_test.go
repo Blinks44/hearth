@@ -149,3 +149,23 @@ func TestMaskArg(t *testing.T) {
 		}
 	}
 }
+
+func TestMCPClaudeConfigDir(t *testing.T) {
+	home := t.TempDir()
+	config := filepath.Join(home, "custom claude")
+	if err := os.MkdirAll(config, 0755); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(config, ".claude.json")
+	if err := os.WriteFile(state, []byte(`{"mcpServers":{"hearth":{"type":"stdio","command":"hearth","args":["mcp"]}}}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "CLAUDE_CONFIG_DIR=" + config}
+	if got := MCPFile("claude", env, ""); got != state {
+		t.Fatalf("path %s", got)
+	}
+	servers, errs := MCP(env)
+	if len(errs) != 0 || len(servers) != 1 || servers[0].File != state {
+		t.Fatalf("servers %+v errors %v", servers, errs)
+	}
+}

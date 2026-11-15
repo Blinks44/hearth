@@ -23,6 +23,7 @@ import (
 // with each agent's declaration of it.
 type mcpItem struct {
 	name, project string
+	builtin       bool
 	decls         []inventory.MCPServer
 }
 
@@ -46,7 +47,7 @@ func (m mcpItem) off() bool {
 func (m mcpItem) agents() []string {
 	var out []string
 	for _, s := range m.decls {
-		if !slices.Contains(out, s.Agent) {
+		if s.Agent != "" && !slices.Contains(out, s.Agent) {
 			out = append(out, s.Agent)
 		}
 	}
@@ -73,6 +74,9 @@ func (a *App) mcpItems() []mcpItem {
 			i = len(items) - 1
 		}
 		items[i].decls = append(items[i].decls, s)
+	}
+	if a.HearthExecutable != "" && !slices.ContainsFunc(items, func(m mcpItem) bool { return m.name == "hearth" && m.project == "" }) {
+		items = append(items, mcpItem{name: "hearth", builtin: true, decls: []inventory.MCPServer{{Name: "hearth", Transport: "stdio", Command: a.HearthExecutable, Args: []string{"mcp"}}}})
 	}
 	rank := func(m mcpItem) int {
 		if m.project == "" {
@@ -197,6 +201,8 @@ func (a *App) mcpList(c *ui.Context, shown []mcpItem, chosen int) {
 						TextColor(pal.TextFaint).SingleLine()
 				})
 				switch {
+				case m.builtin:
+					aiTag(c, locales.HearthMCPAvailable(), pal.Info.Alpha(0.12), pal.Info)
 				case m.missing():
 					aiTag(c, locales.TagNoCommand(), pal.WarningSoft, pal.WarningText)
 				case m.conflict():
@@ -219,7 +225,7 @@ func (a *App) mcpList(c *ui.Context, shown []mcpItem, chosen int) {
 func (a *App) mcpFiles(items []mcpItem, project string) string {
 	var out []string
 	for _, m := range items {
-		if m.project != project {
+		if m.project != project || m.builtin {
 			continue
 		}
 		for _, s := range m.decls {
@@ -281,6 +287,9 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				aiTag(c, scopeName(m.project)+" · "+first.Transport, pal.AccentSoft, pal.AccentInk)
 			})
 			text := locales.DeclaredBy(len(m.agents()))
+			if m.builtin {
+				text = locales.HearthMCPDescription()
+			}
 			if m.conflict() {
 				text += " " + locales.CommandsDiffer()
 			}
@@ -296,7 +305,9 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			})
 		})
 		a.mcpSecrets(c, m)
-		a.mcpCheckView(c, m)
+		if !m.builtin {
+			a.mcpCheckView(c, m)
+		}
 		detailSection(c, locales.VariablesHidden())
 		var env, headers []string
 		for _, s := range m.decls {
@@ -375,7 +386,7 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				a.mcpAgentControl(c, m, id, i)
 			})
 		}
-		if a.Shell != nil {
+		if a.Shell != nil && !m.builtin {
 			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Button(c.Key("mcp-open"), "").OnClick(func() { a.openFile(c, first.File) }).Children(func() {
 					ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
@@ -434,7 +445,12 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 		if plans {
 			from := m.decls[0]
 			ui.Button(c.Key("mcp-connect:"+id), locales.SkillConnect()).Shrink(0).OnClick(func() {
-				propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPConnectPlan(from, id, env, agentTitle) })
+				propose(func(env sysenv.Env) (ops.Plan, error) {
+					if m.builtin {
+						return ops.HearthMCPPlan(a.HearthExecutable, id, env, agentTitle)
+					}
+					return ops.MCPConnectPlan(from, id, env, agentTitle)
+				})
 			})
 		}
 		return

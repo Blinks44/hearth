@@ -36,6 +36,9 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "mcp" {
+		os.Exit(serveMCP(os.Args[2:], os.Stderr))
+	}
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)
 	}
@@ -43,6 +46,7 @@ func main() {
 	a.Machine, a.OS = machine()
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
+	a.HearthExecutable, _ = os.Executable()
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
 	list := &projectList{app: a, settings: store.DefaultSettings()}
 	if dir, err := mygo.App.Path(mygo.PathUserData); err != nil {

@@ -8946,5 +8946,13 @@
   "skillCatalogTruncated": "Preview limited to 64 KiB. The complete file will be installed.",
   "@skillCatalogTruncated": {
     "description": "Skill file preview."
+  },
+  "hearthMCPAvailable": "Available",
+  "@hearthMCPAvailable": {
+    "description": "Built-in read-only Hearth MCP server."
+  },
+  "hearthMCPDescription": "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration changes can be requested by the agent.",
+  "@hearthMCPDescription": {
+    "description": "Built-in read-only Hearth MCP server."
   }
 }

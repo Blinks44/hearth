@@ -22323,3 +22323,31 @@ func SkillCatalogTruncated() string { return In(i18n.Locale()).SkillCatalogTrunc
 func (msgs Messages) SkillCatalogTruncated() string {
 	return Catalog.Format(msgs.locale, "skillCatalogTruncated", nil)
 }
+
+// HearthMCPAvailable says "Available"
+// in the language the app shows.
+//
+// Built-in read-only Hearth MCP server.
+func HearthMCPAvailable() string { return In(i18n.Locale()).HearthMCPAvailable() }
+
+// HearthMCPAvailable says "Available"
+// in the language of msgs.
+//
+// Built-in read-only Hearth MCP server.
+func (msgs Messages) HearthMCPAvailable() string {
+	return Catalog.Format(msgs.locale, "hearthMCPAvailable", nil)
+}
+
+// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration chang…"
+// in the language the app shows.
+//
+// Built-in read-only Hearth MCP server.
+func HearthMCPDescription() string { return In(i18n.Locale()).HearthMCPDescription() }
+
+// HearthMCPDescription says "Hearth shares local tools, project versions, issues and agent metadata. Read-only: no commands or configuration chang…"
+// in the language of msgs.
+//
+// Built-in read-only Hearth MCP server.
+func (msgs Messages) HearthMCPDescription() string {
+	return Catalog.Format(msgs.locale, "hearthMCPDescription", nil)
+}

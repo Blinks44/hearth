@@ -70,6 +70,9 @@ func MCPFile(id string, env sysenv.Env, project string) string {
 		return ""
 	}
 	home := homeDir(env)
+	if id == "claude" {
+		return claudeStatePath(env)
+	}
 	for _, a := range agents {
 		if a.id == id {
 			return resolve(files.user[0].path, dir(a.dir, env, home), home)
@@ -86,7 +89,11 @@ func MCP(env sysenv.Env) (servers []inventory.MCPServer, errs []string) {
 	for _, a := range agents {
 		d := dir(a.dir, env, home)
 		for _, f := range mcpFiles[a.id].user {
-			ss, err := readMCP(resolve(f.path, d, home), f.format, a.id)
+			path := resolve(f.path, d, home)
+			if a.id == "claude" && f.format == claudeState {
+				path = claudeStatePath(env)
+			}
+			ss, err := readMCP(path, f.format, a.id)
 			if err != nil {
 				errs = append(errs, err.Error())
 			}
@@ -416,4 +423,16 @@ func checkCommand(s *inventory.MCPServer, env sysenv.Env) {
 			s.Missing = true
 		}
 	}
+}
+
+// Claude Code relocates its state file inside an explicitly configured directory.
+// Without CLAUDE_CONFIG_DIR the legacy state remains at ~/.claude.json.
+func claudeStatePath(env sysenv.Env) string {
+	if dir := env.Get("CLAUDE_CONFIG_DIR"); dir != "" {
+		return filepath.Join(dir, ".claude.json")
+	}
+	if home := homeDir(env); home != "" {
+		return filepath.Join(home, ".claude.json")
+	}
+	return ""
 }

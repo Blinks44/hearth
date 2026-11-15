@@ -1629,5 +1629,7 @@
   "skillInstallReviewText": "代理使用技能时可能遵循这些说明并运行脚本。请检查文件和许可证。Hearth 仅复制文件，不安装依赖。",
   "skillInstallStep": "创建技能文件夹 {path}",
   "skillCatalogBinary": "二进制文件。将原样复制。",
-  "skillCatalogTruncated": "预览限制为 64 KiB。将安装完整文件。"
+  "skillCatalogTruncated": "预览限制为 64 KiB。将安装完整文件。",
+  "hearthMCPAvailable": "可用",
+  "hearthMCPDescription": "Hearth 提供本地工具、项目版本、问题和代理信息。只读：代理无法请求执行命令或修改配置。"
 }
