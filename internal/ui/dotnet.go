@@ -2,7 +2,6 @@ package ui
 
 import (
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -27,7 +26,7 @@ func (a *App) dotnet(c *ui.Context, p page) {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
 				toolHead(c, "dotnet", ".NET", func() {}, locales.DotnetSubtitle(), func() {
-					stateCard(c, pal.TextFaint, locales.Installed(), locales.DotnetSDKCount(strconv.Itoa(sdks)), locales.DotnetRuntimeCount(strconv.Itoa(runtimes)))
+					stateCard(c, pal.TextFaint, locales.Installed(), locales.DotnetSDKCount(sdks), locales.DotnetRuntimeCount(runtimes))
 					v := "—"
 					if i := inventory.TerminalCopy(st.Installations); i >= 0 && st.Installations[i].Version != "" {
 						v = st.Installations[i].Version

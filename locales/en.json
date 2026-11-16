@@ -301,7 +301,7 @@
       }
     }
   },
-  "guiNotFound": "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrains IDEs usually take the terminal's PATH themselves.",
+  "guiNotFound": "Apps opened outside the terminal cannot find {command}. This can prevent desktop AI clients from starting MCP servers. VS Code and JetBrains IDEs usually load the terminal’s PATH themselves.",
   "@guiNotFound": {
     "description": "Warning: apps started from the Dock or a desktop menu find no copy of the command.",
     "placeholders": {
@@ -377,7 +377,7 @@
   "@defaultVersion": {
     "description": "Version manager card: the version a new terminal gets."
   },
-  "switchOnCd": "Switch on cd",
+  "switchOnCd": "Switch when entering a folder",
   "@switchOnCd": {
     "description": "Version manager card: the manager picks the version a folder asks for as the terminal enters it."
   },
@@ -763,7 +763,7 @@
       }
     }
   },
-  "problemTerminal": "terminal runs not {tool}",
+  "problemTerminal": "terminal uses another version of {tool}",
   "@problemTerminal": {
     "description": "Project problem: installed, but the terminal runs another version in the folder.",
     "placeholders": {
@@ -850,7 +850,7 @@
     }
   },
   "copyOfUnknownVersion": "a copy of unknown version",
-  "issueDuplicateExplain": "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wrong one.",
+  "issueDuplicateExplain": "The terminal finds {first} ({source}) first. Other copies on PATH ({others}) are hidden behind it for this command, so it is easy to update the wrong copy.",
   "@issueDuplicateExplain": {
     "description": "Issue explanation: which copy runs, and that the others never do.",
     "placeholders": {
@@ -1116,7 +1116,7 @@
   "@heroAlmost": {
     "description": "Overview hero title with one or two issues."
   },
-  "heroBare": "A clean slate",
+  "heroBare": "A clean computer",
   "@heroBare": {
     "description": "Overview: hero title when the scan found only what the system brings."
   },
@@ -1274,7 +1274,7 @@
   "@statFound": {
     "description": "Agents page stat: agents found."
   },
-  "statSkills": "skills",
+  "statSkills": "{count, plural, one {skill} other {skills}}",
   "@statSkills": {
     "description": "Stat: skills."
   },
@@ -1290,11 +1290,11 @@
   "@statWithCopies": {
     "description": "Skills stat: skills with copies."
   },
-  "statServers": "servers",
+  "statServers": "{count, plural, one {server} other {servers}}",
   "@statServers": {
     "description": "MCP stat: servers."
   },
-  "statProblems": "issues",
+  "statProblems": "{count, plural, one {issue} other {issues}}",
   "@statProblems": {
     "description": "MCP stat: issues."
   },
@@ -1646,7 +1646,7 @@
   "@skillsAndMcp": {
     "description": "Overview AI card: link."
   },
-  "agentCounts": "{skills} skills · {mcp} MCP",
+  "agentCounts": "{skills, plural, one {# skill} other {# skills}} · {mcp} MCP",
   "@agentCounts": {
     "description": "Overview AI card: an agent's skills and servers.",
     "placeholders": {
@@ -1937,7 +1937,7 @@
       }
     }
   },
-  "rustToolchainNote": "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, then an override, then the default.",
+  "rustToolchainNote": "rustup manages toolchains. The active one depends on command options, RUSTUP_TOOLCHAIN, directory overrides and rust-toolchain files, then the default. Run rustup show in the project to confirm.",
   "@rustToolchainNote": {
     "description": "Note under the Rust table: how rustup picks a toolchain."
   },
@@ -2029,9 +2029,9 @@
     }
   },
   "DotnetSubtitle": "SDKs and runtimes live side by side · global.json selects the SDK for a folder",
-  "DotnetSDKCount": "{count} SDKs",
-  "DotnetRuntimeCount": "+ {count} runtimes",
-  "DotnetNote": ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-uninstall-tool — Hearth will show the command.",
+  "DotnetSDKCount": "{count, plural, one {# SDK} other {# SDKs}}",
+  "DotnetRuntimeCount": "+ {count, plural, one {# runtime} other {# runtimes}}",
+  "DotnetNote": ".NET keeps SDKs side by side. A runtime runs apps; building requires an SDK. Available removal actions depend on how each copy was installed.",
   "DotnetSelection": "Which SDK dotnet selects",
   "DotnetDefault": "Other folders → newest SDK",
   "DotnetNoProjects": "No added projects with global.json",
@@ -2612,7 +2612,7 @@
   "@cleanupProjectVersionsCaption": {
     "description": "Cleanup side card caption."
   },
-  "cleanupReadOnly": "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as winget's or rustup's, are not removed from here.",
+  "cleanupReadOnly": "These are cleanup candidates, not proof that files are unused. Only selectable items can be removed through Hearth. Review the plan before confirming.",
   "@cleanupReadOnly": {
     "description": "Note under the Cleanup table."
   },
@@ -3052,7 +3052,7 @@
   "@gitCredentials": {
     "description": "Git page card: credential helpers and GitHub CLI."
   },
-  "gitNoHelper": "No credential helper: git asks for passwords each time.",
+  "gitNoHelper": "No credential helper configured. HTTPS sign-in may ask for credentials again; SSH uses its own authentication.",
   "@gitNoHelper": {
     "description": "Git page card without helpers."
   },
@@ -6518,7 +6518,7 @@
   "@updatesAtOnceRow": {
     "description": "Updates side card row: what is checked at once."
   },
-  "updatesAtOnceCaption": "compatible: projects will not notice",
+  "updatesAtOnceCaption": "review the plan and check your projects afterwards",
   "@updatesAtOnceCaption": {
     "description": "Updates side card caption."
   },
@@ -6612,7 +6612,7 @@
       }
     }
   },
-  "versionReplaceWhy": "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice.",
+  "versionReplaceWhy": "Through {manager}: installs the new version and removes the old one. Check your projects afterwards; an update can change their behavior.",
   "@versionReplaceWhy": {
     "description": "Why of the plan that replaces a copy with a newer release of its line.",
     "placeholders": {
@@ -7076,7 +7076,7 @@
       }
     }
   },
-  "setupStopNote": "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it was. The log shows it all.",
+  "setupStopNote": "You can stop at any time. Completed installations stay. Hearth rolls back its file edits for an unfinished step where possible, but software installed by that step may remain. Review the log.",
   "@setupStopNote": {
     "description": "New computer: note under the plan."
   },
@@ -7280,11 +7280,11 @@
   "@setupHideText": {
     "description": "New computer: under the leave-this-page note."
   },
-  "setupNothingChanged": "Nothing changed: the computer is as it was.",
+  "setupNothingChanged": "No tool finished installing. The interrupted step may have made changes; check the log.",
   "@setupNothingChanged": {
     "description": "New computer: note under the order when the installation failed or stopped before a tool installed."
   },
-  "setupNothingYet": "Nothing changed yet: stopping now leaves the computer as it was.",
+  "setupNothingYet": "No tool has finished installing yet. Stopping now may leave changes made by the current step.",
   "@setupNothingYet": {
     "description": "New computer: note under the order before a tool installed."
   },
@@ -7792,7 +7792,7 @@
       }
     }
   },
-  "processWhyUnix": "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first.",
+  "processWhyUnix": "Sends SIGTERM to request that the process stop. How it handles the signal depends on the program; unsaved work may be lost.",
   "@processWhyUnix": {
     "description": "How the plan that stops a process goes on macOS and Linux."
   },
@@ -8666,7 +8666,7 @@
       }
     }
   },
-  "noRulesFor": "Asks as usual: no rules in its settings",
+  "noRulesFor": "No explicit permission rules found. The agent’s defaults and session options still apply.",
   "@noRulesFor": {
     "description": "Agent page: no permission rules, so the agent asks as it does by default."
   },
@@ -8955,5 +8955,125 @@
   "@hearthMCPDescription": {
     "description": "Built-in read-only Hearth MCP server."
   },
-  "mcpProposalOrigin": "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it."
+  "mcpProposalOrigin": "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it.",
+  "globalInstructionsTitle": "Global instructions",
+  "@globalInstructionsTitle": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsLead": "Codex reads instructions from its own directory. The shared file is not connected automatically.",
+  "@globalInstructionsLead": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsSharedFile": "Shared file",
+  "@globalInstructionsSharedFile": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCodexFile": "Codex file",
+  "@globalInstructionsCodexFile": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsOverrideFile": "Override",
+  "@globalInstructionsOverrideFile": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsFound": "found",
+  "@globalInstructionsFound": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsNotFound": "no file",
+  "@globalInstructionsNotFound": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsActive": "read by Codex",
+  "@globalInstructionsActive": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsEmpty": "Empty file: review it manually; Hearth will not replace it.",
+  "@globalInstructionsEmpty": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsShared": "Shared instructions are available to connect.",
+  "@globalInstructionsShared": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsReady": "Global instructions are configured.",
+  "@globalInstructionsReady": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsOverride": "Codex reads AGENTS.override.md instead of AGENTS.md when it is not empty. Open the files to review which instructions should apply.",
+  "@globalInstructionsOverride": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsLinked": "The shared file is connected.",
+  "@globalInstructionsLinked": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsSame": "The texts match; the files are independent.",
+  "@globalInstructionsSame": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsConnect": "Connect…",
+  "@globalInstructionsConnect": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCreate": "Create…",
+  "@globalInstructionsCreate": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCopy": "Create independent copy…",
+  "@globalInstructionsCopy": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCompare": "Compare texts…",
+  "@globalInstructionsCompare": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCompareWhy": "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed.",
+  "@globalInstructionsCompareWhy": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsLinkWhy": "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; only you can confirm it in the window.",
+  "@globalInstructionsLinkWhy": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCreateWhy": "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directory. Start a new Codex session to load it.",
+  "@globalInstructionsCreateWhy": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsCopyWhy": "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new plan to create the copy.",
+  "@globalInstructionsCopyWhy": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsProtection": "Existing files are protected",
+  "@globalInstructionsProtection": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsProtectionText": "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so no backup is needed. A failed plan removes only the new file it created. Start a new Codex session afterwards.",
+  "@globalInstructionsProtectionText": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsChanged": "Instructions changed or an existing file prevents this action. Scan again and review the files.",
+  "@globalInstructionsChanged": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsTextLimit": "Use non-empty UTF-8 text up to 32 KiB and 500 lines. Review larger instructions manually.",
+  "@globalInstructionsTextLimit": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsPlan": "Review plan",
+  "@globalInstructionsPlan": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsTemplate": "# Global instructions\n\n- Explain changes and how they were checked.\n",
+  "@globalInstructionsTemplate": {
+    "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "instructionsEmpty": "Add a project to compare its AGENTS.md and CLAUDE.md files.",
+  "@instructionsEmpty": {
+    "description": "User-facing guidance or status, reviewed during the pre-release check."
+  },
+  "globalInstructionsEmptyFile": "empty",
+  "@globalInstructionsEmptyFile": {
+    "description": "User-facing guidance or status, reviewed during the pre-release check."
+  }
 }

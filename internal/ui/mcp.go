@@ -130,9 +130,9 @@ func (a *App) mcpPageView(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				aiIntro(c, "plug", locales.McpTitle(), locales.McpText(), []aiStat{
-					{strconv.Itoa(len(all)), locales.StatServers()},
+					{strconv.Itoa(len(all)), locales.StatServers(len(all))},
 					{strconv.Itoa(inProjects), locales.StatProjects()},
-					{strconv.Itoa(len(found)), locales.StatProblems()},
+					{strconv.Itoa(len(found)), locales.StatProblems(len(found))},
 				})
 				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 					a.agentFilter(c, "mcp-agent", &a.mcpAgent, func(id string) int {

@@ -257,6 +257,8 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 // runs a command.
 func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 	switch {
+	case step.Instructions != nil:
+		return step.Instructions.Preview(), false, true
 	case step.Edit != nil:
 		return *step.Edit, false, true
 	case step.UserPath != nil:
@@ -565,6 +567,9 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 		ui.PrimaryButton(c.Key("op-again"), locales.OpRestart()).OnClick(a.startOperation)
 	default:
+		if op.state.InstructionCopyAvailable && a.BuildPlan != nil {
+			ui.Button(c.Key("op-instructions-copy"), locales.GlobalInstructionsCopy()).OnClick(func() { a.globalInstructionPlan("copy", "") })
+		}
 		ui.Button(c.Key("op-copy"), locales.OpCopyLog()).OnClick(func() {
 			c.WriteClipboard(strings.Join(op.state.Log, "\n"))
 			c.Toast(locales.OpLogCopied())

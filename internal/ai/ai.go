@@ -122,6 +122,10 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 		found.App, found.AppVersion = cursorApp(term, home)
 	}
 	found.Dir = dir(a.dir, term, home)
+	if a.id == "codex" {
+		instructions := CodexInstructions(term)
+		found.Instructions = &instructions
+	}
 	add := func(path string, kind inventory.FileKind) {
 		p := resolve(path, found.Dir, home)
 		if _, err := os.Stat(p); p != "" && err == nil {

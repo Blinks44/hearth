@@ -81,7 +81,7 @@ func TestOverviewBare(t *testing.T) {
 	}}}}
 	tt := openOverview(t, a)
 	screenshot(t, tt, "overview-bare")
-	hasTexts(t, tt, "Ready to set up", "A clean slate", "Hearth found only what comes with the system. The Install page sets up languages, tools and AI agents in one plan.")
+	hasTexts(t, tt, "Ready to set up", "A clean computer", "Hearth found only what comes with the system. The Install page sets up languages, tools and AI agents in one plan.")
 	if err := tt.Click("Set up this computer"); err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestOverviewBare(t *testing.T) {
 	}
 	a.Snapshot = calmSnapshot()
 	tt.Frame()
-	if tt.HasText("A clean slate") {
+	if tt.HasText("A clean computer") {
 		t.Error("a computer with Node is bare")
 	}
 }

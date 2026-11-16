@@ -117,7 +117,7 @@ func TestVersionUpdatePlanText(t *testing.T) {
 		Globals: true,
 	}
 	p, _ := VersionUpdatePlan(u, nil)
-	if p.Title != "Update Node.js v22.12.0 to v22.23.4" || !strings.Contains(p.Why, "old one removed") ||
+	if p.Title != "Update Node.js v22.12.0 to v22.23.4" || !strings.Contains(p.Why, "removes the old one") ||
 		!slices.Equal(p.Changes, []string{"Node.js v22.12.0 → v22.23.4 · fnm"}) {
 		t.Errorf("plan %q, %q, %q", p.Title, p.Why, p.Changes)
 	}

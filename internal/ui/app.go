@@ -64,7 +64,8 @@ type App struct {
 	SettingsError  string
 	SettingsNotice string
 	// Home is the user's home directory, which paths show as ~.
-	Home string
+	Home               string
+	globalInstructions *globalInstructionPreview
 	// Snapshot is what the last scan found; nil before the first.
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
@@ -400,8 +401,10 @@ func (a *App) View(c *ui.Context) {
 			a.overviewPage(c, overview)
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
+	a.addDialog(c)
 	a.searchDialog(c)
 	a.operationView(c)
+	a.globalInstructionsDialog(c)
 }
 
 // Scan starts a scan, as the header and the sidebar do, unless one is

@@ -332,7 +332,7 @@ func (a *App) agentsPage(c *ui.Context, p page) {
 				}
 				aiIntro(c, "bot", locales.AiAgentsTitle(), locales.AiAgentsText(), []aiStat{
 					{strconv.Itoa(len(found)), locales.StatFound()},
-					{strconv.Itoa(len(a.allSkills())), locales.StatSkills()},
+					{strconv.Itoa(len(a.allSkills())), locales.StatSkills(len(a.allSkills()))},
 					{strconv.Itoa(len(servers)), "MCP"},
 				})
 				if len(found) > 0 {
@@ -496,6 +496,9 @@ func (a *App) agentDetail(c *ui.Context, id string) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.agentHero(c, ag)
+				if ag.ID == "codex" {
+					a.globalInstructionsCard(c, ag.Instructions)
+				}
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						a.installCard(c, ag)

@@ -79,7 +79,6 @@ func (a *App) projectList(c *ui.Context, p page) {
 				})
 			})
 		}
-		a.addDialog(c)
 	})
 }
 

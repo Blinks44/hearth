@@ -426,8 +426,9 @@ type Agent struct {
 	Settings string   `json:",omitempty"`
 	// Rules are what the user's settings let it do without asking, make
 	// it ask for or forbid; Hooks the commands they run on its events.
-	Rules []AgentRule `json:",omitempty"`
-	Hooks []AgentHook `json:",omitempty"`
+	Rules        []AgentRule         `json:",omitempty"`
+	Hooks        []AgentHook         `json:",omitempty"`
+	Instructions *GlobalInstructions `json:",omitempty"`
 }
 
 // RuleKind is what an agent's rule decides.

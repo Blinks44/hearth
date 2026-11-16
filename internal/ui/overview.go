@@ -59,7 +59,6 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 				})
 			})
 		})
-		a.addDialog(c)
 	})
 }
 

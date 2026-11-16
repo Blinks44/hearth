@@ -45,6 +45,8 @@ type Step struct {
 	Edit *FileEdit
 	// Skill installs previewed files into a new directory.
 	Skill *SkillInstall
+	// Instructions creates a global instruction file or file symlink.
+	Instructions *InstructionInstall
 	// UserPath, in place of Argv, sets the user's Path in the Windows
 	// registry, which comes back as an Edit does.
 	UserPath *UserPathEdit
@@ -148,6 +150,8 @@ type State struct {
 	// Restored are the files put back from their copies as the plan did
 	// not get through.
 	Restored []string
+	// InstructionCopyAvailable reports a refused file symlink on Windows.
+	InstructionCopyAvailable bool
 }
 
 // Command shows argv as a terminal would take it, quoting the arguments
@@ -202,12 +206,26 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
-		if step.Skill != nil {
-			e.printf("install skill %s\n", step.Skill.Path)
-			e.emit()
-			restore, err := applySkillInstall(ctx, *step.Skill)
+		if step.Skill != nil || step.Instructions != nil {
+			var name string
+			var restore func() error
+			var err error
+			if in := step.Instructions; in != nil {
+				name = in.Observed.Native.Path
+				e.printf("create instructions %s\n", name)
+				e.emit()
+				restore, err = applyInstructionInstall(ctx, *in)
+				e.mu.Lock()
+				e.state.InstructionCopyAvailable = in.Mode == "link" && instructionLinkDenied(err)
+				e.mu.Unlock()
+			} else {
+				name = step.Skill.Path
+				e.printf("install skill %s\n", name)
+				e.emit()
+				restore, err = applySkillInstall(ctx, *step.Skill)
+			}
 			if err == nil {
-				changes = append(changes, applied{step.Skill.Path, restore})
+				changes = append(changes, applied{name, restore})
 			}
 			e.mu.Lock()
 			if err != nil {

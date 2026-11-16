@@ -123,7 +123,6 @@ func (a *App) settingsPage(c *ui.Context) {
 			})
 		})
 	})
-	a.addDialog(c)
 	a.licensesDialog(c)
 }
 
@@ -157,9 +156,9 @@ func (a *App) savePreferences() {
 func settingRow(c *ui.Context, title, hint string, end func()) {
 	ui.Row(c).MinHeight(48).Padding(8, 14).Gap(8).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(Colors(c.Theme()).Divider).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, title).FontSize(13).SingleLine()
+			ui.Text(c, title).FontSize(13)
 			if hint != "" {
-				ui.Text(c, hint).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+				ui.Text(c, hint).FontSize(11).TextColor(Colors(c.Theme()).TextFaint)
 			}
 		})
 		if end != nil {

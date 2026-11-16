@@ -85,7 +85,7 @@ func TestPythonPage(t *testing.T) {
 		}
 	}
 	// The system's copy behind Homebrew's is no duplicate: the OS needs it.
-	for _, s := range []string{"3.15.0a1", "3.9.21", "Switch on cd", "Default version", "duplicate in PATH", "is not used"} {
+	for _, s := range []string{"3.15.0a1", "3.9.21", "Switch when entering a folder", "Default version", "duplicate in PATH", "is not used"} {
 		if tt.HasText(s) {
 			t.Errorf("shows %q", s)
 		}

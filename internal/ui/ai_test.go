@@ -516,7 +516,7 @@ func TestAgentRulesAndHooks(t *testing.T) {
 	screenshot(t, tt, "agent-rules")
 
 	tt = openAI(t, a, agentPath("codex"))
-	hasTexts(t, tt, "Asks as usual: no rules in its settings", "No hooks")
+	hasTexts(t, tt, "No explicit permission rules found. The agent’s defaults and session options still apply.", "No hooks")
 
 	tt = openAI(t, a, problemsPage)
 	hasTexts(t, tt, "Claude Code works without confirmation",

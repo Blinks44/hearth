@@ -52,8 +52,20 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 						connected++
 					}
 				}
-				aiIntro(c, "file-text", locales.InstructionsTitle(), locales.InstructionsLead(), []aiStat{{strconv.Itoa(len(a.Projects)), locales.StatProjects()}, {strconv.Itoa(connected), locales.InstructionsLinked()}, {strconv.Itoa(different), locales.StatProblems()}})
+				aiIntro(c, "file-text", locales.InstructionsTitle(), locales.InstructionsLead(), []aiStat{{strconv.Itoa(len(a.Projects)), locales.StatProjects()}, {strconv.Itoa(connected), locales.InstructionsLinked()}, {strconv.Itoa(different), locales.StatProblems(different)}})
 				toolNote(c, locales.InstructionsScope())
+				if len(a.Projects) == 0 {
+					listFrame(c, func() {
+						ui.Column(c).Padding(16).Gap(12).Children(func() {
+							ui.Text(c, locales.NoProjectsHeading()).FontSize(14).FontWeight(600)
+							ui.Text(c, locales.InstructionsEmpty()).FontSize(12).TextColor(c.Theme().TextMuted)
+							if a.ChooseFolder != nil {
+								ui.Button(c, locales.AddFolder()).OnClick(a.ChooseFolder)
+							}
+						})
+					})
+					return
+				}
 				var shown []projects.Project
 				for _, pr := range a.Projects {
 					if strings.Contains(strings.ToLower(pr.Dir), strings.ToLower(a.instructionsQuery)) {
@@ -132,7 +144,7 @@ func (a *App) instructionDetail(c *ui.Context, p projects.Project) {
 		cardNote(c, locales.InstructionsReviewText())
 		if state := in.State(); a.BuildPlan != nil && state != "missing" && state != "linked" && state != "unreadable" && !in.Agents.Link && !in.Claude.Link {
 			ui.Row(c).Padding(12, 16).Children(func() {
-				if ui.Button(c, locales.InstructionsConnect()).Clicked() {
+				if ui.Button(c.Key("instructions-connect:"+p.Dir), locales.InstructionsConnect()).Clicked() {
 					a.connectInstructions(p.Dir)
 				}
 			})

@@ -81,4 +81,41 @@ func TestInstructionsProposePlan(t *testing.T) {
 		t.Fatal("preview changed the source")
 	}
 	hasTexts(t, tt, "@AGENTS.md")
+	first := a.op
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Connect…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == first || !a.op.open || a.op.started {
+		t.Fatal("cannot propose again after cancelling")
+	}
+}
+
+func TestInstructionsEmptyOffersProject(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	chosen := false
+	a.ChooseFolder = func() {
+		chosen = true
+		a.Offer(projects.Project{Dir: filepath.Join(home, "demo")}, nil)
+	}
+	tt := openAI(t, a, instructionsPage)
+	hasTexts(t, tt, "No projects yet", "Add a project to compare its AGENTS.md and CLAUDE.md files.")
+	if tt.HasText("Nothing matches") {
+		t.Fatal("empty project list described as an unsuccessful search")
+	}
+	screenshot(t, tt, "instructions-empty")
+	if err := tt.Click("Add folder"); err != nil {
+		t.Fatal(err)
+	}
+	if !chosen {
+		t.Fatal("add folder did not open the folder chooser")
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Add project", "demo", "Add 1 project")
+	screenshot(t, tt, "instructions-add-project")
 }

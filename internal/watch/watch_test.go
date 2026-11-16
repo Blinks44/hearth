@@ -128,8 +128,7 @@ func TestProjectsSet(t *testing.T) {
 	}
 }
 
-// A change of a startup file asks for a scan; a missing one is not
-// watched.
+// Existing and newly created startup files ask for a scan, unrelated files do not.
 func TestStartupFileChange(t *testing.T) {
 	home := t.TempDir()
 	zshrc := filepath.Join(home, ".zshrc")
@@ -140,9 +139,9 @@ func TestStartupFileChange(t *testing.T) {
 	scans := make(chan struct{}, 1)
 	s := &Service{Start: f.start, Shell: func() { scans <- struct{}{} }}
 	defer s.Close()
-	s.StartupFiles([]string{zshrc, filepath.Join(home, ".bashrc")})
-	w, _ := f.watcher(t, zshrc)
-	w.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: "."}}
+	s.StartupFiles([]string{zshrc})
+	w, _ := f.watcher(t, home)
+	w.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: ".zshrc"}}
 	select {
 	case <-scans:
 	case <-time.After(2 * time.Second):
@@ -152,7 +151,7 @@ func TestStartupFileChange(t *testing.T) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.starts != 1 {
-		t.Errorf("%d watches started, want .zshrc's alone", f.starts)
+		t.Errorf("%d watches started, want one parent directory", f.starts)
 	}
 }
 
@@ -214,5 +213,47 @@ func TestDocker(t *testing.T) {
 	case <-ctx.Done():
 	case <-time.After(5 * time.Second):
 		t.Fatal("still following a stopped engine")
+	}
+}
+
+func TestStartupFileCreatedAfterLaunch(t *testing.T) {
+	home := t.TempDir()
+	path := filepath.Join(home, "PowerShell", "profile.ps1")
+	f := &fakeStart{}
+	scans := make(chan struct{}, 4)
+	s := &Service{Start: f.start, Shell: func() { scans <- struct{}{} }}
+	defer s.Close()
+	s.StartupFiles([]string{path})
+	w, _ := f.watcher(t, home)
+	w.events <- []mygo.FileEvent{{Op: mygo.FileCreate, Path: "unrelated.txt"}}
+	select {
+	case <-scans:
+		t.Fatal("unrelated file triggered a scan")
+	default:
+	}
+	if err := os.Mkdir(filepath.Dir(path), 0755); err != nil {
+		t.Fatal(err)
+	}
+	w.events <- []mygo.FileEvent{{Op: mygo.FileCreate, Path: "PowerShell", IsDir: true}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("new parent was not noticed")
+	}
+	nested, _ := f.watcher(t, filepath.Dir(path))
+	if err := os.WriteFile(path, []byte("# profile"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	nested.events <- []mygo.FileEvent{{Op: mygo.FileCreate, Path: "profile.ps1"}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("new profile was not noticed")
+	}
+	nested.events <- []mygo.FileEvent{{Op: mygo.FileRename, Path: "saved.ps1", OldPath: "profile.ps1"}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("renamed profile was not noticed")
 	}
 }

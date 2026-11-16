@@ -792,14 +792,14 @@ func (msgs Messages) GuiRunsOther(source string, gui string, terminal string) st
 	return Catalog.Format(msgs.locale, "guiRunsOther", map[string]any{"source": source, "gui": gui, "terminal": terminal})
 }
 
-// GuiNotFound says "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrain…"
+// GuiNotFound says "Apps opened outside the terminal cannot find {command}. This can prevent desktop AI clients from starting MCP servers…"
 // in the language the app shows.
 //
 // Warning: apps started from the Dock or a desktop menu find no copy of the
 // command.
 func GuiNotFound(command string) string { return In(i18n.Locale()).GuiNotFound(command) }
 
-// GuiNotFound says "Apps started outside the terminal do not find {command}, MCP servers in desktop clients for one. VS Code and JetBrain…"
+// GuiNotFound says "Apps opened outside the terminal cannot find {command}. This can prevent desktop AI clients from starting MCP servers…"
 // in the language of msgs.
 //
 // Warning: apps started from the Dock or a desktop menu find no copy of the
@@ -964,14 +964,14 @@ func (msgs Messages) DefaultVersion() string {
 	return Catalog.Format(msgs.locale, "defaultVersion", nil)
 }
 
-// SwitchOnCd says "Switch on cd"
+// SwitchOnCd says "Switch when entering a folder"
 // in the language the app shows.
 //
 // Version manager card: the manager picks the version a folder asks for as
 // the terminal enters it.
 func SwitchOnCd() string { return In(i18n.Locale()).SwitchOnCd() }
 
-// SwitchOnCd says "Switch on cd"
+// SwitchOnCd says "Switch when entering a folder"
 // in the language of msgs.
 //
 // Version manager card: the manager picks the version a folder asks for as
@@ -1984,14 +1984,14 @@ func (msgs Messages) ProblemMissing(tool string) string {
 	return Catalog.Format(msgs.locale, "problemMissing", map[string]any{"tool": tool})
 }
 
-// ProblemTerminal says "terminal runs not {tool}"
+// ProblemTerminal says "terminal uses another version of {tool}"
 // in the language the app shows.
 //
 // Project problem: installed, but the terminal runs another version in the
 // folder.
 func ProblemTerminal(tool string) string { return In(i18n.Locale()).ProblemTerminal(tool) }
 
-// ProblemTerminal says "terminal runs not {tool}"
+// ProblemTerminal says "terminal uses another version of {tool}"
 // in the language of msgs.
 //
 // Project problem: installed, but the terminal runs another version in the
@@ -2126,7 +2126,7 @@ func (msgs Messages) CopyOfUnknownVersion() string {
 	return Catalog.Format(msgs.locale, "copyOfUnknownVersion", nil)
 }
 
-// IssueDuplicateExplain says "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wro…"
+// IssueDuplicateExplain says "The terminal finds {first} ({source}) first. Other copies on PATH ({others}) are hidden behind it for this command, s…"
 // in the language the app shows.
 //
 // Issue explanation: which copy runs, and that the others never do.
@@ -2134,7 +2134,7 @@ func IssueDuplicateExplain(first string, source string, others string) string {
 	return In(i18n.Locale()).IssueDuplicateExplain(first, source, others)
 }
 
-// IssueDuplicateExplain says "The terminal runs {first} ({source}). The other copies on PATH ({others}) never run, and it is easy to update the wro…"
+// IssueDuplicateExplain says "The terminal finds {first} ({source}) first. Other copies on PATH ({others}) are hidden behind it for this command, s…"
 // in the language of msgs.
 //
 // Issue explanation: which copy runs, and that the others never do.
@@ -2556,13 +2556,13 @@ func (msgs Messages) HeroAlmost() string {
 	return Catalog.Format(msgs.locale, "heroAlmost", nil)
 }
 
-// HeroBare says "A clean slate"
+// HeroBare says "A clean computer"
 // in the language the app shows.
 //
 // Overview: hero title when the scan found only what the system brings.
 func HeroBare() string { return In(i18n.Locale()).HeroBare() }
 
-// HeroBare says "A clean slate"
+// HeroBare says "A clean computer"
 // in the language of msgs.
 //
 // Overview: hero title when the scan found only what the system brings.
@@ -2964,18 +2964,18 @@ func (msgs Messages) StatFound() string {
 	return Catalog.Format(msgs.locale, "statFound", nil)
 }
 
-// StatSkills says "skills"
+// StatSkills says "{count, plural, one {skill} other {skills}}"
 // in the language the app shows.
 //
 // Stat: skills.
-func StatSkills() string { return In(i18n.Locale()).StatSkills() }
+func StatSkills(count int) string { return In(i18n.Locale()).StatSkills(count) }
 
-// StatSkills says "skills"
+// StatSkills says "{count, plural, one {skill} other {skills}}"
 // in the language of msgs.
 //
 // Stat: skills.
-func (msgs Messages) StatSkills() string {
-	return Catalog.Format(msgs.locale, "statSkills", nil)
+func (msgs Messages) StatSkills(count int) string {
+	return Catalog.Format(msgs.locale, "statSkills", map[string]any{"count": count})
 }
 
 // StatTotal says "total"
@@ -3020,32 +3020,32 @@ func (msgs Messages) StatWithCopies() string {
 	return Catalog.Format(msgs.locale, "statWithCopies", nil)
 }
 
-// StatServers says "servers"
+// StatServers says "{count, plural, one {server} other {servers}}"
 // in the language the app shows.
 //
 // MCP stat: servers.
-func StatServers() string { return In(i18n.Locale()).StatServers() }
+func StatServers(count int) string { return In(i18n.Locale()).StatServers(count) }
 
-// StatServers says "servers"
+// StatServers says "{count, plural, one {server} other {servers}}"
 // in the language of msgs.
 //
 // MCP stat: servers.
-func (msgs Messages) StatServers() string {
-	return Catalog.Format(msgs.locale, "statServers", nil)
+func (msgs Messages) StatServers(count int) string {
+	return Catalog.Format(msgs.locale, "statServers", map[string]any{"count": count})
 }
 
-// StatProblems says "issues"
+// StatProblems says "{count, plural, one {issue} other {issues}}"
 // in the language the app shows.
 //
 // MCP stat: issues.
-func StatProblems() string { return In(i18n.Locale()).StatProblems() }
+func StatProblems(count int) string { return In(i18n.Locale()).StatProblems(count) }
 
-// StatProblems says "issues"
+// StatProblems says "{count, plural, one {issue} other {issues}}"
 // in the language of msgs.
 //
 // MCP stat: issues.
-func (msgs Messages) StatProblems() string {
-	return Catalog.Format(msgs.locale, "statProblems", nil)
+func (msgs Messages) StatProblems(count int) string {
+	return Catalog.Format(msgs.locale, "statProblems", map[string]any{"count": count})
 }
 
 // ColumnAgent says "Agent"
@@ -4006,13 +4006,13 @@ func (msgs Messages) SkillsAndMcp() string {
 	return Catalog.Format(msgs.locale, "skillsAndMcp", nil)
 }
 
-// AgentCounts says "{skills} skills · {mcp} MCP"
+// AgentCounts says "{skills, plural, one {# skill} other {# skills}} · {mcp} MCP"
 // in the language the app shows.
 //
 // Overview AI card: an agent's skills and servers.
 func AgentCounts(skills int, mcp int) string { return In(i18n.Locale()).AgentCounts(skills, mcp) }
 
-// AgentCounts says "{skills} skills · {mcp} MCP"
+// AgentCounts says "{skills, plural, one {# skill} other {# skills}} · {mcp} MCP"
 // in the language of msgs.
 //
 // Overview AI card: an agent's skills and servers.
@@ -4830,13 +4830,13 @@ func (msgs Messages) RustToolchainsCount(count int) string {
 	return Catalog.Format(msgs.locale, "rustToolchainsCount", map[string]any{"count": count})
 }
 
-// RustToolchainNote says "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, t…"
+// RustToolchainNote says "rustup manages toolchains. The active one depends on command options, RUSTUP_TOOLCHAIN, directory overrides and rust-…"
 // in the language the app shows.
 //
 // Note under the Rust table: how rustup picks a toolchain.
 func RustToolchainNote() string { return In(i18n.Locale()).RustToolchainNote() }
 
-// RustToolchainNote says "rustup installs and removes toolchains. Which one runs in a folder is decided by the project's rust-toolchain.toml, t…"
+// RustToolchainNote says "rustup manages toolchains. The active one depends on command options, RUSTUP_TOOLCHAIN, directory overrides and rust-…"
 // in the language of msgs.
 //
 // Note under the Rust table: how rustup picks a toolchain.
@@ -5100,31 +5100,31 @@ func (msgs Messages) DotnetSubtitle() string {
 	return Catalog.Format(msgs.locale, "DotnetSubtitle", nil)
 }
 
-// DotnetSDKCount says "{count} SDKs"
+// DotnetSDKCount says "{count, plural, one {# SDK} other {# SDKs}}"
 // in the language the app shows.
-func DotnetSDKCount(count string) string { return In(i18n.Locale()).DotnetSDKCount(count) }
+func DotnetSDKCount(count int) string { return In(i18n.Locale()).DotnetSDKCount(count) }
 
-// DotnetSDKCount says "{count} SDKs"
+// DotnetSDKCount says "{count, plural, one {# SDK} other {# SDKs}}"
 // in the language of msgs.
-func (msgs Messages) DotnetSDKCount(count string) string {
+func (msgs Messages) DotnetSDKCount(count int) string {
 	return Catalog.Format(msgs.locale, "DotnetSDKCount", map[string]any{"count": count})
 }
 
-// DotnetRuntimeCount says "+ {count} runtimes"
+// DotnetRuntimeCount says "+ {count, plural, one {# runtime} other {# runtimes}}"
 // in the language the app shows.
-func DotnetRuntimeCount(count string) string { return In(i18n.Locale()).DotnetRuntimeCount(count) }
+func DotnetRuntimeCount(count int) string { return In(i18n.Locale()).DotnetRuntimeCount(count) }
 
-// DotnetRuntimeCount says "+ {count} runtimes"
+// DotnetRuntimeCount says "+ {count, plural, one {# runtime} other {# runtimes}}"
 // in the language of msgs.
-func (msgs Messages) DotnetRuntimeCount(count string) string {
+func (msgs Messages) DotnetRuntimeCount(count int) string {
 	return Catalog.Format(msgs.locale, "DotnetRuntimeCount", map[string]any{"count": count})
 }
 
-// DotnetNote says ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-un…"
+// DotnetNote says ".NET keeps SDKs side by side. A runtime runs apps; building requires an SDK. Available removal actions depend on how …"
 // in the language the app shows.
 func DotnetNote() string { return In(i18n.Locale()).DotnetNote() }
 
-// DotnetNote says ".NET keeps SDKs side by side. A runtime runs applications; building a project requires an SDK. Removal uses dotnet-un…"
+// DotnetNote says ".NET keeps SDKs side by side. A runtime runs apps; building requires an SDK. Available removal actions depend on how …"
 // in the language of msgs.
 func (msgs Messages) DotnetNote() string {
 	return Catalog.Format(msgs.locale, "DotnetNote", nil)
@@ -7900,13 +7900,13 @@ func (msgs Messages) CleanupProjectVersionsCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupProjectVersionsCaption", nil)
 }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as win…"
+// CleanupReadOnly says "These are cleanup candidates, not proof that files are unused. Only selectable items can be removed through Hearth. R…"
 // in the language the app shows.
 //
 // Note under the Cleanup table.
 func CleanupReadOnly() string { return In(i18n.Locale()).CleanupReadOnly() }
 
-// CleanupReadOnly says "Hearth offers candidates; it does not claim they are unused. Copies Hearth cannot remove through their source, as win…"
+// CleanupReadOnly says "These are cleanup candidates, not proof that files are unused. Only selectable items can be removed through Hearth. R…"
 // in the language of msgs.
 //
 // Note under the Cleanup table.
@@ -8876,13 +8876,13 @@ func (msgs Messages) GitCredentials() string {
 	return Catalog.Format(msgs.locale, "gitCredentials", nil)
 }
 
-// GitNoHelper says "No credential helper: git asks for passwords each time."
+// GitNoHelper says "No credential helper configured. HTTPS sign-in may ask for credentials again; SSH uses its own authentication."
 // in the language the app shows.
 //
 // Git page card without helpers.
 func GitNoHelper() string { return In(i18n.Locale()).GitNoHelper() }
 
-// GitNoHelper says "No credential helper: git asks for passwords each time."
+// GitNoHelper says "No credential helper configured. HTTPS sign-in may ask for credentials again; SSH uses its own authentication."
 // in the language of msgs.
 //
 // Git page card without helpers.
@@ -16356,13 +16356,13 @@ func (msgs Messages) UpdatesAtOnceRow() string {
 	return Catalog.Format(msgs.locale, "updatesAtOnceRow", nil)
 }
 
-// UpdatesAtOnceCaption says "compatible: projects will not notice"
+// UpdatesAtOnceCaption says "review the plan and check your projects afterwards"
 // in the language the app shows.
 //
 // Updates side card caption.
 func UpdatesAtOnceCaption() string { return In(i18n.Locale()).UpdatesAtOnceCaption() }
 
-// UpdatesAtOnceCaption says "compatible: projects will not notice"
+// UpdatesAtOnceCaption says "review the plan and check your projects afterwards"
 // in the language of msgs.
 //
 // Updates side card caption.
@@ -16598,13 +16598,13 @@ func (msgs Messages) VersionUpdateTitle(tool string, from string, to string) str
 	return Catalog.Format(msgs.locale, "versionUpdateTitle", map[string]any{"tool": tool, "from": from, "to": to})
 }
 
-// VersionReplaceWhy says "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice."
+// VersionReplaceWhy says "Through {manager}: installs the new version and removes the old one. Check your projects afterwards; an update can ch…"
 // in the language the app shows.
 //
 // Why of the plan that replaces a copy with a newer release of its line.
 func VersionReplaceWhy(manager string) string { return In(i18n.Locale()).VersionReplaceWhy(manager) }
 
-// VersionReplaceWhy says "Through {manager}: the new version is installed and the old one removed. Projects of the same line will not notice."
+// VersionReplaceWhy says "Through {manager}: installs the new version and removes the old one. Check your projects afterwards; an update can ch…"
 // in the language of msgs.
 //
 // Why of the plan that replaces a copy with a newer release of its line.
@@ -17862,13 +17862,13 @@ func (msgs Messages) SetupSteps(count int) string {
 	return Catalog.Format(msgs.locale, "setupSteps", map[string]any{"count": count})
 }
 
-// SetupStopNote says "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it wa…"
+// SetupStopNote says "You can stop at any time. Completed installations stay. Hearth rolls back its file edits for an unfinished step where…"
 // in the language the app shows.
 //
 // New computer: note under the plan.
 func SetupStopNote() string { return In(i18n.Locale()).SetupStopNote() }
 
-// SetupStopNote says "You can stop at any time: what installed stays with its lines in your files, and what was underway goes back as it wa…"
+// SetupStopNote says "You can stop at any time. Completed installations stay. Hearth rolls back its file edits for an unfinished step where…"
 // in the language of msgs.
 //
 // New computer: note under the plan.
@@ -18302,14 +18302,14 @@ func (msgs Messages) SetupHideText() string {
 	return Catalog.Format(msgs.locale, "setupHideText", nil)
 }
 
-// SetupNothingChanged says "Nothing changed: the computer is as it was."
+// SetupNothingChanged says "No tool finished installing. The interrupted step may have made changes; check the log."
 // in the language the app shows.
 //
 // New computer: note under the order when the installation failed or
 // stopped before a tool installed.
 func SetupNothingChanged() string { return In(i18n.Locale()).SetupNothingChanged() }
 
-// SetupNothingChanged says "Nothing changed: the computer is as it was."
+// SetupNothingChanged says "No tool finished installing. The interrupted step may have made changes; check the log."
 // in the language of msgs.
 //
 // New computer: note under the order when the installation failed or
@@ -18318,13 +18318,13 @@ func (msgs Messages) SetupNothingChanged() string {
 	return Catalog.Format(msgs.locale, "setupNothingChanged", nil)
 }
 
-// SetupNothingYet says "Nothing changed yet: stopping now leaves the computer as it was."
+// SetupNothingYet says "No tool has finished installing yet. Stopping now may leave changes made by the current step."
 // in the language the app shows.
 //
 // New computer: note under the order before a tool installed.
 func SetupNothingYet() string { return In(i18n.Locale()).SetupNothingYet() }
 
-// SetupNothingYet says "Nothing changed yet: stopping now leaves the computer as it was."
+// SetupNothingYet says "No tool has finished installing yet. Stopping now may leave changes made by the current step."
 // in the language of msgs.
 //
 // New computer: note under the order before a tool installed.
@@ -19672,13 +19672,13 @@ func (msgs Messages) ProcessStopTitle(name string, port string) string {
 	return Catalog.Format(msgs.locale, "processStopTitle", map[string]any{"name": name, "port": port})
 }
 
-// ProcessWhyUnix says "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first."
+// ProcessWhyUnix says "Sends SIGTERM to request that the process stop. How it handles the signal depends on the program; unsaved work may be…"
 // in the language the app shows.
 //
 // How the plan that stops a process goes on macOS and Linux.
 func ProcessWhyUnix() string { return In(i18n.Locale()).ProcessWhyUnix() }
 
-// ProcessWhyUnix says "kill asks the process to quit, as Ctrl+C in its terminal would: it closes what it has open first."
+// ProcessWhyUnix says "Sends SIGTERM to request that the process stop. How it handles the signal depends on the program; unsaved work may be…"
 // in the language of msgs.
 //
 // How the plan that stops a process goes on macOS and Linux.
@@ -21538,13 +21538,13 @@ func (msgs Messages) RulesCount(count int) string {
 	return Catalog.Format(msgs.locale, "rulesCount", map[string]any{"count": count})
 }
 
-// NoRulesFor says "Asks as usual: no rules in its settings"
+// NoRulesFor says "No explicit permission rules found. The agent’s defaults and session options still apply."
 // in the language the app shows.
 //
 // Agent page: no permission rules, so the agent asks as it does by default.
 func NoRulesFor() string { return In(i18n.Locale()).NoRulesFor() }
 
-// NoRulesFor says "Asks as usual: no rules in its settings"
+// NoRulesFor says "No explicit permission rules found. The agent’s defaults and session options still apply."
 // in the language of msgs.
 //
 // Agent page: no permission rules, so the agent asks as it does by default.
@@ -22360,4 +22360,428 @@ func McpProposalOrigin() string { return In(i18n.Locale()).McpProposalOrigin() }
 // in the language of msgs.
 func (msgs Messages) McpProposalOrigin() string {
 	return Catalog.Format(msgs.locale, "mcpProposalOrigin", nil)
+}
+
+// GlobalInstructionsTitle says "Global instructions"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsTitle() string { return In(i18n.Locale()).GlobalInstructionsTitle() }
+
+// GlobalInstructionsTitle says "Global instructions"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsTitle() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsTitle", nil)
+}
+
+// GlobalInstructionsLead says "Codex reads instructions from its own directory. The shared file is not connected automatically."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsLead() string { return In(i18n.Locale()).GlobalInstructionsLead() }
+
+// GlobalInstructionsLead says "Codex reads instructions from its own directory. The shared file is not connected automatically."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsLead() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLead", nil)
+}
+
+// GlobalInstructionsSharedFile says "Shared file"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsSharedFile() string { return In(i18n.Locale()).GlobalInstructionsSharedFile() }
+
+// GlobalInstructionsSharedFile says "Shared file"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsSharedFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsSharedFile", nil)
+}
+
+// GlobalInstructionsCodexFile says "Codex file"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCodexFile() string { return In(i18n.Locale()).GlobalInstructionsCodexFile() }
+
+// GlobalInstructionsCodexFile says "Codex file"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCodexFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCodexFile", nil)
+}
+
+// GlobalInstructionsOverrideFile says "Override"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsOverrideFile() string {
+	return In(i18n.Locale()).GlobalInstructionsOverrideFile()
+}
+
+// GlobalInstructionsOverrideFile says "Override"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsOverrideFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsOverrideFile", nil)
+}
+
+// GlobalInstructionsFound says "found"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsFound() string { return In(i18n.Locale()).GlobalInstructionsFound() }
+
+// GlobalInstructionsFound says "found"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsFound() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsFound", nil)
+}
+
+// GlobalInstructionsNotFound says "no file"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsNotFound() string { return In(i18n.Locale()).GlobalInstructionsNotFound() }
+
+// GlobalInstructionsNotFound says "no file"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsNotFound() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsNotFound", nil)
+}
+
+// GlobalInstructionsActive says "read by Codex"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsActive() string { return In(i18n.Locale()).GlobalInstructionsActive() }
+
+// GlobalInstructionsActive says "read by Codex"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsActive() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsActive", nil)
+}
+
+// GlobalInstructionsEmpty says "Empty file: review it manually; Hearth will not replace it."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsEmpty() string { return In(i18n.Locale()).GlobalInstructionsEmpty() }
+
+// GlobalInstructionsEmpty says "Empty file: review it manually; Hearth will not replace it."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsEmpty() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsEmpty", nil)
+}
+
+// GlobalInstructionsShared says "Shared instructions are available to connect."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsShared() string { return In(i18n.Locale()).GlobalInstructionsShared() }
+
+// GlobalInstructionsShared says "Shared instructions are available to connect."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsShared() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsShared", nil)
+}
+
+// GlobalInstructionsReady says "Global instructions are configured."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsReady() string { return In(i18n.Locale()).GlobalInstructionsReady() }
+
+// GlobalInstructionsReady says "Global instructions are configured."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsReady() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsReady", nil)
+}
+
+// GlobalInstructionsOverride says "Codex reads AGENTS.override.md instead of AGENTS.md when it is not empty. Open the files to review which instructions…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsOverride() string { return In(i18n.Locale()).GlobalInstructionsOverride() }
+
+// GlobalInstructionsOverride says "Codex reads AGENTS.override.md instead of AGENTS.md when it is not empty. Open the files to review which instructions…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsOverride() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsOverride", nil)
+}
+
+// GlobalInstructionsLinked says "The shared file is connected."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsLinked() string { return In(i18n.Locale()).GlobalInstructionsLinked() }
+
+// GlobalInstructionsLinked says "The shared file is connected."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsLinked() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinked", nil)
+}
+
+// GlobalInstructionsSame says "The texts match; the files are independent."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsSame() string { return In(i18n.Locale()).GlobalInstructionsSame() }
+
+// GlobalInstructionsSame says "The texts match; the files are independent."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsSame() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsSame", nil)
+}
+
+// GlobalInstructionsConnect says "Connect…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsConnect() string { return In(i18n.Locale()).GlobalInstructionsConnect() }
+
+// GlobalInstructionsConnect says "Connect…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsConnect() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsConnect", nil)
+}
+
+// GlobalInstructionsCreate says "Create…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCreate() string { return In(i18n.Locale()).GlobalInstructionsCreate() }
+
+// GlobalInstructionsCreate says "Create…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCreate() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCreate", nil)
+}
+
+// GlobalInstructionsCopy says "Create independent copy…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCopy() string { return In(i18n.Locale()).GlobalInstructionsCopy() }
+
+// GlobalInstructionsCopy says "Create independent copy…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCopy() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCopy", nil)
+}
+
+// GlobalInstructionsCompare says "Compare texts…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCompare() string { return In(i18n.Locale()).GlobalInstructionsCompare() }
+
+// GlobalInstructionsCompare says "Compare texts…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCompare() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCompare", nil)
+}
+
+// GlobalInstructionsCompareWhy says "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCompareWhy() string { return In(i18n.Locale()).GlobalInstructionsCompareWhy() }
+
+// GlobalInstructionsCompareWhy says "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCompareWhy() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCompareWhy", nil)
+}
+
+// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; on…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsLinkWhy() string { return In(i18n.Locale()).GlobalInstructionsLinkWhy() }
+
+// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; on…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsLinkWhy() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinkWhy", nil)
+}
+
+// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directo…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCreateWhy() string { return In(i18n.Locale()).GlobalInstructionsCreateWhy() }
+
+// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directo…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCreateWhy() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCreateWhy", nil)
+}
+
+// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new p…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCopyWhy() string { return In(i18n.Locale()).GlobalInstructionsCopyWhy() }
+
+// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new p…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCopyWhy() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCopyWhy", nil)
+}
+
+// GlobalInstructionsProtection says "Existing files are protected"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsProtection() string { return In(i18n.Locale()).GlobalInstructionsProtection() }
+
+// GlobalInstructionsProtection says "Existing files are protected"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsProtection() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsProtection", nil)
+}
+
+// GlobalInstructionsProtectionText says "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so n…"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsProtectionText() string {
+	return In(i18n.Locale()).GlobalInstructionsProtectionText()
+}
+
+// GlobalInstructionsProtectionText says "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so n…"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsProtectionText() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsProtectionText", nil)
+}
+
+// GlobalInstructionsChanged says "Instructions changed or an existing file prevents this action. Scan again and review the files."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsChanged() string { return In(i18n.Locale()).GlobalInstructionsChanged() }
+
+// GlobalInstructionsChanged says "Instructions changed or an existing file prevents this action. Scan again and review the files."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsChanged() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChanged", nil)
+}
+
+// GlobalInstructionsTextLimit says "Use non-empty UTF-8 text up to 32 KiB and 500 lines. Review larger instructions manually."
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsTextLimit() string { return In(i18n.Locale()).GlobalInstructionsTextLimit() }
+
+// GlobalInstructionsTextLimit says "Use non-empty UTF-8 text up to 32 KiB and 500 lines. Review larger instructions manually."
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsTextLimit() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsTextLimit", nil)
+}
+
+// GlobalInstructionsPlan says "Review plan"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsPlan() string { return In(i18n.Locale()).GlobalInstructionsPlan() }
+
+// GlobalInstructionsPlan says "Review plan"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsPlan() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsPlan", nil)
+}
+
+// GlobalInstructionsTemplate says "# Global instructions\n\n- Explain changes and how they were checked.\n"
+// in the language the app shows.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsTemplate() string { return In(i18n.Locale()).GlobalInstructionsTemplate() }
+
+// GlobalInstructionsTemplate says "# Global instructions\n\n- Explain changes and how they were checked.\n"
+// in the language of msgs.
+//
+// Codex global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsTemplate() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsTemplate", nil)
+}
+
+// InstructionsEmpty says "Add a project to compare its AGENTS.md and CLAUDE.md files."
+// in the language the app shows.
+//
+// User-facing guidance or status, reviewed during the pre-release check.
+func InstructionsEmpty() string { return In(i18n.Locale()).InstructionsEmpty() }
+
+// InstructionsEmpty says "Add a project to compare its AGENTS.md and CLAUDE.md files."
+// in the language of msgs.
+//
+// User-facing guidance or status, reviewed during the pre-release check.
+func (msgs Messages) InstructionsEmpty() string {
+	return Catalog.Format(msgs.locale, "instructionsEmpty", nil)
+}
+
+// GlobalInstructionsEmptyFile says "empty"
+// in the language the app shows.
+//
+// User-facing guidance or status, reviewed during the pre-release check.
+func GlobalInstructionsEmptyFile() string { return In(i18n.Locale()).GlobalInstructionsEmptyFile() }
+
+// GlobalInstructionsEmptyFile says "empty"
+// in the language of msgs.
+//
+// User-facing guidance or status, reviewed during the pre-release check.
+func (msgs Messages) GlobalInstructionsEmptyFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsEmptyFile", nil)
 }

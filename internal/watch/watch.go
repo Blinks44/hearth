@@ -7,6 +7,7 @@ package watch
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -63,13 +64,57 @@ func (s *Service) Projects(dirs []string) {
 }
 
 // StartupFiles watches the shells' startup files at paths, and stops
-// watching the others. A file missing is not watched.
+// watching the others. Watching their directory also catches files created
+// after Hearth starts and files replaced by an editor's atomic save.
 func (s *Service) StartupFiles(paths []string) {
 	s.set("shell:", paths, func(ctx context.Context, p string) {
-		if _, err := os.Stat(p); err != nil {
-			return
+		for ctx.Err() == nil {
+			dir := filepath.Dir(p)
+			for {
+				if info, err := os.Stat(dir); err == nil && info.IsDir() {
+					break
+				}
+				parent := filepath.Dir(dir)
+				if parent == dir {
+					return
+				}
+				dir = parent
+			}
+			rel, err := filepath.Rel(dir, p)
+			if err != nil {
+				s.report(err)
+				return
+			}
+			rel = filepath.ToSlash(rel)
+			w, err := s.Start(ctx, dir)
+			if err != nil {
+				s.report(err)
+				return
+			}
+			restart := false
+			for !restart && ctx.Err() == nil {
+				events, nextErr := w.Next(ctx)
+				for _, e := range events {
+					matches := func(path string) bool {
+						return path == "." || path == rel || path != "" && strings.HasPrefix(rel, path+"/")
+					}
+					if ctx.Err() == nil && (matches(e.Path) || matches(e.OldPath)) {
+						s.Shell()
+						// A missing parent may now exist: follow the closer directory.
+						restart = dir != filepath.Dir(p)
+						break
+					}
+				}
+				if nextErr != nil {
+					_ = w.Close()
+					if ctx.Err() == nil {
+						s.report(nextErr)
+					}
+					return
+				}
+			}
+			_ = w.Close()
 		}
-		s.run(ctx, p, func([]mygo.FileEvent) { s.Shell() })
 	})
 }
 

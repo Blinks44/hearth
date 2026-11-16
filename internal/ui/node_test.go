@@ -313,7 +313,7 @@ func TestNodeManager(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = nodeSnapshot()
 	tt := openNode(t, a)
-	for _, s := range []string{"Version manager · fnm", "Default version", "Switch on cd", "reads .node-version, .nvmrc",
+	for _, s := range []string{"Version manager · fnm", "Default version", "Switch when entering a folder", "reads .node-version, .nvmrc",
 		"Corepack", "Global packages", "npm -g · v22.12.0", "typescript", "commands: tsc, tsserver", "5.7.2"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
@@ -338,7 +338,7 @@ func TestNodeNoManager(t *testing.T) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
 	}
-	if tt.HasText("Switch on cd") {
+	if tt.HasText("Switch when entering a folder") {
 		t.Error("a manager's settings without a manager")
 	}
 }
