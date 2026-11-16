@@ -16,6 +16,7 @@ import (
 // operation is a plan the operation dialog shows, and how it goes once
 // the user confirmed it.
 type operation struct {
+	project *ops.ProjectPreparation
 	plan    ops.Plan
 	state   ops.State
 	started bool   // confirmed: state says how it goes
@@ -121,6 +122,9 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 			})
 			ui.Scroll(c).MaxHeight(440).Children(func() {
 				if !op.started {
+					if op.project != nil {
+						a.projectPreparationItems(c, op.project, false)
+					}
 					a.operationPlan(c, op.plan)
 					return
 				}
@@ -139,6 +143,9 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 // then where the operation is and how it ended.
 func operationCaption(op *operation) string {
 	s := op.state
+	if op.project != nil && op.started && s.Phase == ops.Succeeded {
+		return locales.PrepareCommandsDone()
+	}
 	n, total := s.Current+1, len(op.plan.Steps)
 	switch {
 	case !op.started:
@@ -397,6 +404,14 @@ func stepTag(c *ui.Context, st ops.StepStatus) (label string, bg, fg ui.Color) {
 func (a *App) operationResult(c *ui.Context, op *operation) {
 	s := op.state
 	pal := Colors(c.Theme())
+	if op.project != nil && s.Phase.Over() {
+		text := locales.PrepareCommandsDone()
+		if s.Phase != ops.Succeeded {
+			text = locales.PreparePartial()
+		}
+		logBlock(c, []string{text}, c.Theme().TextMuted, "", true)
+		a.projectPreparationItems(c, op.project, true)
+	}
 	switch s.Phase {
 	case ops.Running, ops.Verifying:
 		command := ""
@@ -544,6 +559,10 @@ func logBlock(c *ui.Context, lines []string, color ui.Color, footnote string, wr
 
 // operationButtons are the dialog's actions for where the operation is.
 func (a *App) operationButtons(c *ui.Context, op *operation) {
+	if op.project != nil && (!op.started && len(op.plan.Steps) == 0 || op.started && op.state.Phase.Over()) {
+		a.projectPreparationButtons(c, op)
+		return
+	}
 	openJournal := func() {
 		if a.Shell != nil && a.JournalPath != "" {
 			a.openFile(c, a.JournalPath)

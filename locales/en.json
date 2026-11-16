@@ -9221,5 +9221,118 @@
   "startAIHint": "Agents, shared skills and MCP connections.",
   "@startAIHint": {
     "description": "Overview introductory action: startAIHint."
-  }
+  },
+  "prepareTitle": "Prepare environment · {name}",
+  "@prepareTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareWhy": "One plan for the supported requirements of this project. Review manual steps too.",
+  "prepareRun": "Prepare environment",
+  "prepareButton": "Prepare environment…",
+  "prepareUnchecked": "{tool}: could not check. Open the tool and scan again.",
+  "@prepareUnchecked": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareReady": "{tool}: requirements met",
+  "@prepareReady": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareChoose": "{tool} {version} is installed. Its selection in this folder still needs attention.",
+  "@prepareChoose": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareNoVersion": "{tool}: no compatible version could be selected. Check the source files and available versions. {reason}",
+  "@prepareNoVersion": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareInstall": "Install {tool} {version} through {manager}.",
+  "@prepareInstall": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareManual": "{tool}: open the tool to choose a supported installation or configuration plan.",
+  "@prepareManual": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareCommandInFolder": "This command applies to your terminal. Hearth cannot inspect an already open terminal; it checks selection for new terminals.",
+  "prepareDockerManual": "A local Docker engine is not ready. Open Docker to install an engine, choose a local context or resolve access permissions.",
+  "prepareDockerStart": "Start the existing local Docker engine. Project containers will not be started.",
+  "prepareScope": "What is included",
+  "prepareScopeText": "Global versions stay as they are. Application dependencies, virtual environments, migrations and project scripts are not run. Installed tools alone do not confirm that the application works.",
+  "prepareFilesChanged": "Project requirements changed. Check again to review a new plan before making changes.",
+  "prepareChecking": "Reading project requirements and checking tools…",
+  "prepareItems": "PROJECT REQUIREMENTS AND NEXT STEPS",
+  "prepareCopy": "Copy command",
+  "prepareCopied": "Command copied. Run it in the project folder, then check again.",
+  "prepareOpenTool": "Open tool",
+  "prepareOpenFolder": "Open folder",
+  "prepareAgain": "Check again",
+  "prepareContinue": "Continue preparation…",
+  "prepareCommandsDone": "Commands completed. Check the project requirements to confirm what is ready.",
+  "preparePartial": "Some changes may remain; restored files are listed below. Continue with a fresh check and a new plan for the remaining steps.",
+  "prepareNoRequirements": "No supported tool requirements found. Open the project folder and its setup instructions.",
+  "prepareReadErrors": "Some project files could not be read. Resolve these errors before preparing the environment.",
+  "prepareGuide": "Instructions ↗",
+  "preparePythonNote": "Python installation does not select python3 or create .venv. Follow the uv project guide for the application environment.",
+  "prepareBefore": "State before this operation. Check again after it finishes.",
+  "prepareMissingProject": "This project is no longer in the list. Add its folder again to continue.",
+  "preparePythonAvailable": "Python {version} is available to uv. This does not change python3; use the project guide for .venv and application dependencies.",
+  "@preparePythonAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareMiseSetting": "Set this tool version in the [tools] section of {file}, then check again.",
+  "@prepareMiseSetting": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareCopySetting": "Copy setting",
+  "prepareSettingCopied": "Setting copied. Add it to [tools] in the shown config file, then check again.",
+  "prepareGlobalSelection": "This manager changes the version for other projects too. Open the tool to review that change as a separate plan.",
+  "prepareDockerInstall": "Install a local Docker engine. Check again afterwards to review a start plan for the detected engine."
 }

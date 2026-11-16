@@ -193,6 +193,7 @@ type App struct {
 	// runs on the operation's goroutine.
 	RereadPackages func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error)
 
+	preparing      *preparing
 	op             *operation // the operation shown or running; nil when none
 	setup          setupState // where the new computer wizard is
 	search         searchState
@@ -405,6 +406,7 @@ func (a *App) View(c *ui.Context) {
 	})
 	a.addDialog(c)
 	a.searchDialog(c)
+	a.preparationView(c)
 	a.operationView(c)
 	a.globalInstructionsDialog(c)
 }

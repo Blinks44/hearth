@@ -85,8 +85,12 @@ type Plan struct {
 	// Title names the change, as "Install Docker Desktop"; Why says how
 	// it goes and why.
 	Title, Why string
-	Steps      []Step
-	Notes      []Note
+	// Before refuses a stale plan before its first side effect.
+	Before func(context.Context) error
+	// Isolated runs commands outside project directories to avoid config hooks.
+	Isolated bool
+	Steps    []Step
+	Notes    []Note
 	// Action labels the button that runs it, as "Accept the terms and
 	// install"; empty is a plain "Run".
 	Action string
@@ -178,6 +182,29 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 	e.state = State{Phase: Running, Steps: make([]StepStatus, len(p.Steps))}
 	e.printf("== %s  %s\n", time.Now().Format("2006-01-02 15:04:05"), p.Title)
 	e.emit()
+	if p.Before != nil {
+		if err := p.Before(ctx); err != nil {
+			e.mu.Lock()
+			e.state.Phase, e.state.Err = NotVerified, err.Error()
+			for i := range e.state.Steps {
+				e.state.Steps[i] = Skipped
+			}
+			e.mu.Unlock()
+			e.emit()
+			return e.snapshot()
+		}
+	}
+	commandDir := ""
+	if p.Isolated {
+		dir, err := os.MkdirTemp("", "hearth-operation-")
+		if err != nil {
+			e.state.Phase, e.state.Err = Failed, err.Error()
+			e.emit()
+			return e.snapshot()
+		}
+		commandDir = dir
+		defer func() { _ = os.RemoveAll(dir) }()
+	}
 	// applied are the changes to the user's files and settings, which a
 	// plan that does not get through puts back.
 	type applied struct {
@@ -322,7 +349,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.Admin {
 			argv = elevate(argv, p.Title)
 		}
-		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Timeout: timeout, Output: e})
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: commandDir, Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
 		refused := ""

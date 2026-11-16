@@ -257,7 +257,7 @@ func heroChip(c *ui.Context, dot, bg, text ui.Color, label string) {
 func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string, open func()) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.ButtonBase(c.Key(key)).Row().AlignItems(ui.Center).MinWidth(178).MinHeight(96).Gap(8).Padding(14, 16).Label(label).OnClick(open).Transition(colorFade)
+	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).MinWidth(178).MinHeight(96).Gap(4).Padding(14, 16).Label(label).OnClick(open).Transition(colorFade)
 	if narrow(c) {
 		e.Grow(1).Padding(10, 14).MinHeight(88)
 	}
@@ -268,19 +268,19 @@ func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string,
 	}
 	e.Radius(10).Background(bg).
 		BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			fontSize := float32(26)
 			if len([]rune(value)) > 8 {
 				fontSize = 22
 			}
-			ui.Text(c, value).FontSize(fontSize).SingleLine()
-			ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
-				ui.Box(c).Size(8, 8).Radius(4).Background(dot)
-				ui.Text(c, label).FontSize(12.5).FontWeight(500).SingleLine()
-			})
-			ui.Text(c, caption).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, value).FontSize(fontSize).Grow(1).MinWidth(0).SingleLine()
+			ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevron)
 		})
-		ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevron)
+		ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
+			ui.Box(c).Size(8, 8).Radius(4).Background(dot)
+			ui.Text(c, label).FontSize(12.5).FontWeight(500).SingleLine()
+		})
+		ui.Text(c, caption).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 	})
 }
 

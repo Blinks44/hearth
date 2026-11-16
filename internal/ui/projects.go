@@ -250,6 +250,11 @@ func (a *App) project(c *ui.Context, dir string) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, name, projectsPage.title()+" · "+tilde(dir, a.Home), headerExtras{
 			back: func() { a.router.Push(projectsPage.path) },
+			after: func() {
+				if i >= 0 {
+					ui.PrimaryButton(c.Key("prepare-project"), locales.PrepareButton()).Disabled(a.Snapshot == nil || a.BuildPlan == nil || a.preparing != nil).OnClick(func() { a.prepareProject(dir) })
+				}
+			},
 			before: func() {
 				if i >= 0 {
 					a.projectMenu(c, dir)
@@ -371,22 +376,15 @@ func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
 	if !ok || ch.Installed != nil || st.Tool != "node" || nv == nil {
 		return ops.Plan{}, false
 	}
-	var version string
-	if ch.Want == "" {
-		r, ok := nv.Recommended()
-		if !ok {
-			return ops.Plan{}, false
-		}
-		version = r.Version
-	} else {
-		releases := make([]string, len(nv.Releases))
-		for i, r := range nv.Releases {
-			releases[i] = r.Version
-		}
-		if version, ok = projects.Pick("node", ch.Want, releases, nv.Lines); !ok {
-			return ops.Plan{}, false
-		}
+	releases := make([]string, len(nv.Releases))
+	for i, r := range nv.Releases {
+		releases[i] = r.Version
 	}
+	selection, err := projects.SelectVersion(st, releases, nv.Lines)
+	if err != nil || selection.Installed != nil {
+		return ops.Plan{}, false
+	}
+	version := selection.Version
 	node, _ := a.toolState("node")
 	return a.versionPlan(ops.VersionInstall, "node", a.installManager(node), version, versionText(version), "")
 }

@@ -385,6 +385,7 @@ func main() {
 		}
 		a.CachePath = lists.Dir
 		win.OnClosed(func() {
+			a.CancelPreparation()
 			stopCatalog()
 			if cancelVersions != nil {
 				cancelVersions()

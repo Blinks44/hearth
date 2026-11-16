@@ -23221,3 +23221,391 @@ func StartAIHint() string { return In(i18n.Locale()).StartAIHint() }
 func (msgs Messages) StartAIHint() string {
 	return Catalog.Format(msgs.locale, "startAIHint", nil)
 }
+
+// PrepareTitle says "Prepare environment · {name}"
+// in the language the app shows.
+func PrepareTitle(name string) string { return In(i18n.Locale()).PrepareTitle(name) }
+
+// PrepareTitle says "Prepare environment · {name}"
+// in the language of msgs.
+func (msgs Messages) PrepareTitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareTitle", map[string]any{"name": name})
+}
+
+// PrepareWhy says "One plan for the supported requirements of this project. Review manual steps too."
+// in the language the app shows.
+func PrepareWhy() string { return In(i18n.Locale()).PrepareWhy() }
+
+// PrepareWhy says "One plan for the supported requirements of this project. Review manual steps too."
+// in the language of msgs.
+func (msgs Messages) PrepareWhy() string {
+	return Catalog.Format(msgs.locale, "prepareWhy", nil)
+}
+
+// PrepareRun says "Prepare environment"
+// in the language the app shows.
+func PrepareRun() string { return In(i18n.Locale()).PrepareRun() }
+
+// PrepareRun says "Prepare environment"
+// in the language of msgs.
+func (msgs Messages) PrepareRun() string {
+	return Catalog.Format(msgs.locale, "prepareRun", nil)
+}
+
+// PrepareButton says "Prepare environment…"
+// in the language the app shows.
+func PrepareButton() string { return In(i18n.Locale()).PrepareButton() }
+
+// PrepareButton says "Prepare environment…"
+// in the language of msgs.
+func (msgs Messages) PrepareButton() string {
+	return Catalog.Format(msgs.locale, "prepareButton", nil)
+}
+
+// PrepareUnchecked says "{tool}: could not check. Open the tool and scan again."
+// in the language the app shows.
+func PrepareUnchecked(tool string) string { return In(i18n.Locale()).PrepareUnchecked(tool) }
+
+// PrepareUnchecked says "{tool}: could not check. Open the tool and scan again."
+// in the language of msgs.
+func (msgs Messages) PrepareUnchecked(tool string) string {
+	return Catalog.Format(msgs.locale, "prepareUnchecked", map[string]any{"tool": tool})
+}
+
+// PrepareReady says "{tool}: requirements met"
+// in the language the app shows.
+func PrepareReady(tool string) string { return In(i18n.Locale()).PrepareReady(tool) }
+
+// PrepareReady says "{tool}: requirements met"
+// in the language of msgs.
+func (msgs Messages) PrepareReady(tool string) string {
+	return Catalog.Format(msgs.locale, "prepareReady", map[string]any{"tool": tool})
+}
+
+// PrepareChoose says "{tool} {version} is installed. Its selection in this folder still needs attention."
+// in the language the app shows.
+func PrepareChoose(tool string, version string) string {
+	return In(i18n.Locale()).PrepareChoose(tool, version)
+}
+
+// PrepareChoose says "{tool} {version} is installed. Its selection in this folder still needs attention."
+// in the language of msgs.
+func (msgs Messages) PrepareChoose(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "prepareChoose", map[string]any{"tool": tool, "version": version})
+}
+
+// PrepareNoVersion says "{tool}: no compatible version could be selected. Check the source files and available versions. {reason}"
+// in the language the app shows.
+func PrepareNoVersion(tool string, reason string) string {
+	return In(i18n.Locale()).PrepareNoVersion(tool, reason)
+}
+
+// PrepareNoVersion says "{tool}: no compatible version could be selected. Check the source files and available versions. {reason}"
+// in the language of msgs.
+func (msgs Messages) PrepareNoVersion(tool string, reason string) string {
+	return Catalog.Format(msgs.locale, "prepareNoVersion", map[string]any{"tool": tool, "reason": reason})
+}
+
+// PrepareInstall says "Install {tool} {version} through {manager}."
+// in the language the app shows.
+func PrepareInstall(tool string, version string, manager string) string {
+	return In(i18n.Locale()).PrepareInstall(tool, version, manager)
+}
+
+// PrepareInstall says "Install {tool} {version} through {manager}."
+// in the language of msgs.
+func (msgs Messages) PrepareInstall(tool string, version string, manager string) string {
+	return Catalog.Format(msgs.locale, "prepareInstall", map[string]any{"tool": tool, "version": version, "manager": manager})
+}
+
+// PrepareManual says "{tool}: open the tool to choose a supported installation or configuration plan."
+// in the language the app shows.
+func PrepareManual(tool string) string { return In(i18n.Locale()).PrepareManual(tool) }
+
+// PrepareManual says "{tool}: open the tool to choose a supported installation or configuration plan."
+// in the language of msgs.
+func (msgs Messages) PrepareManual(tool string) string {
+	return Catalog.Format(msgs.locale, "prepareManual", map[string]any{"tool": tool})
+}
+
+// PrepareCommandInFolder says "This command applies to your terminal. Hearth cannot inspect an already open terminal; it checks selection for new te…"
+// in the language the app shows.
+func PrepareCommandInFolder() string { return In(i18n.Locale()).PrepareCommandInFolder() }
+
+// PrepareCommandInFolder says "This command applies to your terminal. Hearth cannot inspect an already open terminal; it checks selection for new te…"
+// in the language of msgs.
+func (msgs Messages) PrepareCommandInFolder() string {
+	return Catalog.Format(msgs.locale, "prepareCommandInFolder", nil)
+}
+
+// PrepareDockerManual says "A local Docker engine is not ready. Open Docker to install an engine, choose a local context or resolve access permis…"
+// in the language the app shows.
+func PrepareDockerManual() string { return In(i18n.Locale()).PrepareDockerManual() }
+
+// PrepareDockerManual says "A local Docker engine is not ready. Open Docker to install an engine, choose a local context or resolve access permis…"
+// in the language of msgs.
+func (msgs Messages) PrepareDockerManual() string {
+	return Catalog.Format(msgs.locale, "prepareDockerManual", nil)
+}
+
+// PrepareDockerStart says "Start the existing local Docker engine. Project containers will not be started."
+// in the language the app shows.
+func PrepareDockerStart() string { return In(i18n.Locale()).PrepareDockerStart() }
+
+// PrepareDockerStart says "Start the existing local Docker engine. Project containers will not be started."
+// in the language of msgs.
+func (msgs Messages) PrepareDockerStart() string {
+	return Catalog.Format(msgs.locale, "prepareDockerStart", nil)
+}
+
+// PrepareScope says "What is included"
+// in the language the app shows.
+func PrepareScope() string { return In(i18n.Locale()).PrepareScope() }
+
+// PrepareScope says "What is included"
+// in the language of msgs.
+func (msgs Messages) PrepareScope() string {
+	return Catalog.Format(msgs.locale, "prepareScope", nil)
+}
+
+// PrepareScopeText says "Global versions stay as they are. Application dependencies, virtual environments, migrations and project scripts are …"
+// in the language the app shows.
+func PrepareScopeText() string { return In(i18n.Locale()).PrepareScopeText() }
+
+// PrepareScopeText says "Global versions stay as they are. Application dependencies, virtual environments, migrations and project scripts are …"
+// in the language of msgs.
+func (msgs Messages) PrepareScopeText() string {
+	return Catalog.Format(msgs.locale, "prepareScopeText", nil)
+}
+
+// PrepareFilesChanged says "Project requirements changed. Check again to review a new plan before making changes."
+// in the language the app shows.
+func PrepareFilesChanged() string { return In(i18n.Locale()).PrepareFilesChanged() }
+
+// PrepareFilesChanged says "Project requirements changed. Check again to review a new plan before making changes."
+// in the language of msgs.
+func (msgs Messages) PrepareFilesChanged() string {
+	return Catalog.Format(msgs.locale, "prepareFilesChanged", nil)
+}
+
+// PrepareChecking says "Reading project requirements and checking tools…"
+// in the language the app shows.
+func PrepareChecking() string { return In(i18n.Locale()).PrepareChecking() }
+
+// PrepareChecking says "Reading project requirements and checking tools…"
+// in the language of msgs.
+func (msgs Messages) PrepareChecking() string {
+	return Catalog.Format(msgs.locale, "prepareChecking", nil)
+}
+
+// PrepareItems says "PROJECT REQUIREMENTS AND NEXT STEPS"
+// in the language the app shows.
+func PrepareItems() string { return In(i18n.Locale()).PrepareItems() }
+
+// PrepareItems says "PROJECT REQUIREMENTS AND NEXT STEPS"
+// in the language of msgs.
+func (msgs Messages) PrepareItems() string {
+	return Catalog.Format(msgs.locale, "prepareItems", nil)
+}
+
+// PrepareCopy says "Copy command"
+// in the language the app shows.
+func PrepareCopy() string { return In(i18n.Locale()).PrepareCopy() }
+
+// PrepareCopy says "Copy command"
+// in the language of msgs.
+func (msgs Messages) PrepareCopy() string {
+	return Catalog.Format(msgs.locale, "prepareCopy", nil)
+}
+
+// PrepareCopied says "Command copied. Run it in the project folder, then check again."
+// in the language the app shows.
+func PrepareCopied() string { return In(i18n.Locale()).PrepareCopied() }
+
+// PrepareCopied says "Command copied. Run it in the project folder, then check again."
+// in the language of msgs.
+func (msgs Messages) PrepareCopied() string {
+	return Catalog.Format(msgs.locale, "prepareCopied", nil)
+}
+
+// PrepareOpenTool says "Open tool"
+// in the language the app shows.
+func PrepareOpenTool() string { return In(i18n.Locale()).PrepareOpenTool() }
+
+// PrepareOpenTool says "Open tool"
+// in the language of msgs.
+func (msgs Messages) PrepareOpenTool() string {
+	return Catalog.Format(msgs.locale, "prepareOpenTool", nil)
+}
+
+// PrepareOpenFolder says "Open folder"
+// in the language the app shows.
+func PrepareOpenFolder() string { return In(i18n.Locale()).PrepareOpenFolder() }
+
+// PrepareOpenFolder says "Open folder"
+// in the language of msgs.
+func (msgs Messages) PrepareOpenFolder() string {
+	return Catalog.Format(msgs.locale, "prepareOpenFolder", nil)
+}
+
+// PrepareAgain says "Check again"
+// in the language the app shows.
+func PrepareAgain() string { return In(i18n.Locale()).PrepareAgain() }
+
+// PrepareAgain says "Check again"
+// in the language of msgs.
+func (msgs Messages) PrepareAgain() string {
+	return Catalog.Format(msgs.locale, "prepareAgain", nil)
+}
+
+// PrepareContinue says "Continue preparation…"
+// in the language the app shows.
+func PrepareContinue() string { return In(i18n.Locale()).PrepareContinue() }
+
+// PrepareContinue says "Continue preparation…"
+// in the language of msgs.
+func (msgs Messages) PrepareContinue() string {
+	return Catalog.Format(msgs.locale, "prepareContinue", nil)
+}
+
+// PrepareCommandsDone says "Commands completed. Check the project requirements to confirm what is ready."
+// in the language the app shows.
+func PrepareCommandsDone() string { return In(i18n.Locale()).PrepareCommandsDone() }
+
+// PrepareCommandsDone says "Commands completed. Check the project requirements to confirm what is ready."
+// in the language of msgs.
+func (msgs Messages) PrepareCommandsDone() string {
+	return Catalog.Format(msgs.locale, "prepareCommandsDone", nil)
+}
+
+// PreparePartial says "Some changes may remain; restored files are listed below. Continue with a fresh check and a new plan for the remainin…"
+// in the language the app shows.
+func PreparePartial() string { return In(i18n.Locale()).PreparePartial() }
+
+// PreparePartial says "Some changes may remain; restored files are listed below. Continue with a fresh check and a new plan for the remainin…"
+// in the language of msgs.
+func (msgs Messages) PreparePartial() string {
+	return Catalog.Format(msgs.locale, "preparePartial", nil)
+}
+
+// PrepareNoRequirements says "No supported tool requirements found. Open the project folder and its setup instructions."
+// in the language the app shows.
+func PrepareNoRequirements() string { return In(i18n.Locale()).PrepareNoRequirements() }
+
+// PrepareNoRequirements says "No supported tool requirements found. Open the project folder and its setup instructions."
+// in the language of msgs.
+func (msgs Messages) PrepareNoRequirements() string {
+	return Catalog.Format(msgs.locale, "prepareNoRequirements", nil)
+}
+
+// PrepareReadErrors says "Some project files could not be read. Resolve these errors before preparing the environment."
+// in the language the app shows.
+func PrepareReadErrors() string { return In(i18n.Locale()).PrepareReadErrors() }
+
+// PrepareReadErrors says "Some project files could not be read. Resolve these errors before preparing the environment."
+// in the language of msgs.
+func (msgs Messages) PrepareReadErrors() string {
+	return Catalog.Format(msgs.locale, "prepareReadErrors", nil)
+}
+
+// PrepareGuide says "Instructions ↗"
+// in the language the app shows.
+func PrepareGuide() string { return In(i18n.Locale()).PrepareGuide() }
+
+// PrepareGuide says "Instructions ↗"
+// in the language of msgs.
+func (msgs Messages) PrepareGuide() string {
+	return Catalog.Format(msgs.locale, "prepareGuide", nil)
+}
+
+// PreparePythonNote says "Python installation does not select python3 or create .venv. Follow the uv project guide for the application environm…"
+// in the language the app shows.
+func PreparePythonNote() string { return In(i18n.Locale()).PreparePythonNote() }
+
+// PreparePythonNote says "Python installation does not select python3 or create .venv. Follow the uv project guide for the application environm…"
+// in the language of msgs.
+func (msgs Messages) PreparePythonNote() string {
+	return Catalog.Format(msgs.locale, "preparePythonNote", nil)
+}
+
+// PrepareBefore says "State before this operation. Check again after it finishes."
+// in the language the app shows.
+func PrepareBefore() string { return In(i18n.Locale()).PrepareBefore() }
+
+// PrepareBefore says "State before this operation. Check again after it finishes."
+// in the language of msgs.
+func (msgs Messages) PrepareBefore() string {
+	return Catalog.Format(msgs.locale, "prepareBefore", nil)
+}
+
+// PrepareMissingProject says "This project is no longer in the list. Add its folder again to continue."
+// in the language the app shows.
+func PrepareMissingProject() string { return In(i18n.Locale()).PrepareMissingProject() }
+
+// PrepareMissingProject says "This project is no longer in the list. Add its folder again to continue."
+// in the language of msgs.
+func (msgs Messages) PrepareMissingProject() string {
+	return Catalog.Format(msgs.locale, "prepareMissingProject", nil)
+}
+
+// PreparePythonAvailable says "Python {version} is available to uv. This does not change python3; use the project guide for .venv and application de…"
+// in the language the app shows.
+func PreparePythonAvailable(version string) string {
+	return In(i18n.Locale()).PreparePythonAvailable(version)
+}
+
+// PreparePythonAvailable says "Python {version} is available to uv. This does not change python3; use the project guide for .venv and application de…"
+// in the language of msgs.
+func (msgs Messages) PreparePythonAvailable(version string) string {
+	return Catalog.Format(msgs.locale, "preparePythonAvailable", map[string]any{"version": version})
+}
+
+// PrepareMiseSetting says "Set this tool version in the [tools] section of {file}, then check again."
+// in the language the app shows.
+func PrepareMiseSetting(file string) string { return In(i18n.Locale()).PrepareMiseSetting(file) }
+
+// PrepareMiseSetting says "Set this tool version in the [tools] section of {file}, then check again."
+// in the language of msgs.
+func (msgs Messages) PrepareMiseSetting(file string) string {
+	return Catalog.Format(msgs.locale, "prepareMiseSetting", map[string]any{"file": file})
+}
+
+// PrepareCopySetting says "Copy setting"
+// in the language the app shows.
+func PrepareCopySetting() string { return In(i18n.Locale()).PrepareCopySetting() }
+
+// PrepareCopySetting says "Copy setting"
+// in the language of msgs.
+func (msgs Messages) PrepareCopySetting() string {
+	return Catalog.Format(msgs.locale, "prepareCopySetting", nil)
+}
+
+// PrepareSettingCopied says "Setting copied. Add it to [tools] in the shown config file, then check again."
+// in the language the app shows.
+func PrepareSettingCopied() string { return In(i18n.Locale()).PrepareSettingCopied() }
+
+// PrepareSettingCopied says "Setting copied. Add it to [tools] in the shown config file, then check again."
+// in the language of msgs.
+func (msgs Messages) PrepareSettingCopied() string {
+	return Catalog.Format(msgs.locale, "prepareSettingCopied", nil)
+}
+
+// PrepareGlobalSelection says "This manager changes the version for other projects too. Open the tool to review that change as a separate plan."
+// in the language the app shows.
+func PrepareGlobalSelection() string { return In(i18n.Locale()).PrepareGlobalSelection() }
+
+// PrepareGlobalSelection says "This manager changes the version for other projects too. Open the tool to review that change as a separate plan."
+// in the language of msgs.
+func (msgs Messages) PrepareGlobalSelection() string {
+	return Catalog.Format(msgs.locale, "prepareGlobalSelection", nil)
+}
+
+// PrepareDockerInstall says "Install a local Docker engine. Check again afterwards to review a start plan for the detected engine."
+// in the language the app shows.
+func PrepareDockerInstall() string { return In(i18n.Locale()).PrepareDockerInstall() }
+
+// PrepareDockerInstall says "Install a local Docker engine. Check again afterwards to review a start plan for the detected engine."
+// in the language of msgs.
+func (msgs Messages) PrepareDockerInstall() string {
+	return Catalog.Format(msgs.locale, "prepareDockerInstall", nil)
+}
