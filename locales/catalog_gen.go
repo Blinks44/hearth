@@ -22855,3 +22855,369 @@ func UpdatesSelectGroup(group string) string { return In(i18n.Locale()).UpdatesS
 func (msgs Messages) UpdatesSelectGroup(group string) string {
 	return Catalog.Format(msgs.locale, "updatesSelectGroup", map[string]any{"group": group})
 }
+
+// CleanupUpTo says "up to {size}"
+// in the language the app shows.
+//
+// Cleanup: cleanupUpTo.
+func CleanupUpTo(size string) string { return In(i18n.Locale()).CleanupUpTo(size) }
+
+// CleanupUpTo says "up to {size}"
+// in the language of msgs.
+//
+// Cleanup: cleanupUpTo.
+func (msgs Messages) CleanupUpTo(size string) string {
+	return Catalog.Format(msgs.locale, "cleanupUpTo", map[string]any{"size": size})
+}
+
+// CleanupPnpmCaption says "pnpm store prune · keeps packages still in use"
+// in the language the app shows.
+//
+// Cleanup: cleanupPnpmCaption.
+func CleanupPnpmCaption() string { return In(i18n.Locale()).CleanupPnpmCaption() }
+
+// CleanupPnpmCaption says "pnpm store prune · keeps packages still in use"
+// in the language of msgs.
+//
+// Cleanup: cleanupPnpmCaption.
+func (msgs Messages) CleanupPnpmCaption() string {
+	return Catalog.Format(msgs.locale, "cleanupPnpmCaption", nil)
+}
+
+// CleanupPnpmNote says "pnpm keeps packages still in use"
+// in the language the app shows.
+//
+// Cleanup: cleanupPnpmNote.
+func CleanupPnpmNote() string { return In(i18n.Locale()).CleanupPnpmNote() }
+
+// CleanupPnpmNote says "pnpm keeps packages still in use"
+// in the language of msgs.
+//
+// Cleanup: cleanupPnpmNote.
+func (msgs Messages) CleanupPnpmNote() string {
+	return Catalog.Format(msgs.locale, "cleanupPnpmNote", nil)
+}
+
+// CleanupPnpmNoteText says "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space o…"
+// in the language the app shows.
+//
+// Cleanup: cleanupPnpmNoteText.
+func CleanupPnpmNoteText() string { return In(i18n.Locale()).CleanupPnpmNoteText() }
+
+// CleanupPnpmNoteText says "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space o…"
+// in the language of msgs.
+//
+// Cleanup: cleanupPnpmNoteText.
+func (msgs Messages) CleanupPnpmNoteText() string {
+	return Catalog.Format(msgs.locale, "cleanupPnpmNoteText", nil)
+}
+
+// CleanupFreedNone says "No additional space was freed."
+// in the language the app shows.
+//
+// Cleanup: cleanupFreedNone.
+func CleanupFreedNone() string { return In(i18n.Locale()).CleanupFreedNone() }
+
+// CleanupFreedNone says "No additional space was freed."
+// in the language of msgs.
+//
+// Cleanup: cleanupFreedNone.
+func (msgs Messages) CleanupFreedNone() string {
+	return Catalog.Format(msgs.locale, "cleanupFreedNone", nil)
+}
+
+// KubeContexts says "Kubernetes contexts"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContexts.
+func KubeContexts() string { return In(i18n.Locale()).KubeContexts() }
+
+// KubeContexts says "Kubernetes contexts"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContexts.
+func (msgs Messages) KubeContexts() string {
+	return Catalog.Format(msgs.locale, "kubeContexts", nil)
+}
+
+// KubeContextCurrent says "Current"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextCurrent.
+func KubeContextCurrent() string { return In(i18n.Locale()).KubeContextCurrent() }
+
+// KubeContextCurrent says "Current"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextCurrent.
+func (msgs Messages) KubeContextCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeContextCurrent", nil)
+}
+
+// KubeContextSwitch says "Switch…"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextSwitch.
+func KubeContextSwitch() string { return In(i18n.Locale()).KubeContextSwitch() }
+
+// KubeContextSwitch says "Switch…"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextSwitch.
+func (msgs Messages) KubeContextSwitch() string {
+	return Catalog.Format(msgs.locale, "kubeContextSwitch", nil)
+}
+
+// KubeContextDetails says "Cluster: {cluster} · namespace: {namespace}"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextDetails.
+func KubeContextDetails(cluster string, namespace string) string {
+	return In(i18n.Locale()).KubeContextDetails(cluster, namespace)
+}
+
+// KubeContextDetails says "Cluster: {cluster} · namespace: {namespace}"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextDetails.
+func (msgs Messages) KubeContextDetails(cluster string, namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeContextDetails", map[string]any{"cluster": cluster, "namespace": namespace})
+}
+
+// KubeContextTitle says "Use Kubernetes context {name}"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextTitle.
+func KubeContextTitle(name string) string { return In(i18n.Locale()).KubeContextTitle(name) }
+
+// KubeContextTitle says "Use Kubernetes context {name}"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextTitle.
+func (msgs Messages) KubeContextTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeContextTitle", map[string]any{"name": name})
+}
+
+// KubeContextWhy says "Changes the default context for future kubectl commands using these kubeconfig files. Existing terminals using the sa…"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextWhy.
+func KubeContextWhy() string { return In(i18n.Locale()).KubeContextWhy() }
+
+// KubeContextWhy says "Changes the default context for future kubectl commands using these kubeconfig files. Existing terminals using the sa…"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextWhy.
+func (msgs Messages) KubeContextWhy() string {
+	return Catalog.Format(msgs.locale, "kubeContextWhy", nil)
+}
+
+// KubeContextInvalid says "Choose a valid Kubernetes context."
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextInvalid.
+func KubeContextInvalid() string { return In(i18n.Locale()).KubeContextInvalid() }
+
+// KubeContextInvalid says "Choose a valid Kubernetes context."
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextInvalid.
+func (msgs Messages) KubeContextInvalid() string {
+	return Catalog.Format(msgs.locale, "kubeContextInvalid", nil)
+}
+
+// KubeContextMismatch says "The active Kubernetes context is not {name}."
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextMismatch.
+func KubeContextMismatch(name string) string { return In(i18n.Locale()).KubeContextMismatch(name) }
+
+// KubeContextMismatch says "The active Kubernetes context is not {name}."
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextMismatch.
+func (msgs Messages) KubeContextMismatch(name string) string {
+	return Catalog.Format(msgs.locale, "kubeContextMismatch", map[string]any{"name": name})
+}
+
+// KubeContextSelected says "Kubernetes context: {name}"
+// in the language the app shows.
+//
+// Kubernetes context selection: kubeContextSelected.
+func KubeContextSelected(name string) string { return In(i18n.Locale()).KubeContextSelected(name) }
+
+// KubeContextSelected says "Kubernetes context: {name}"
+// in the language of msgs.
+//
+// Kubernetes context selection: kubeContextSelected.
+func (msgs Messages) KubeContextSelected(name string) string {
+	return Catalog.Format(msgs.locale, "kubeContextSelected", map[string]any{"name": name})
+}
+
+// StartTitle says "Getting started"
+// in the language the app shows.
+//
+// Overview introductory action: startTitle.
+func StartTitle() string { return In(i18n.Locale()).StartTitle() }
+
+// StartTitle says "Getting started"
+// in the language of msgs.
+//
+// Overview introductory action: startTitle.
+func (msgs Messages) StartTitle() string {
+	return Catalog.Format(msgs.locale, "startTitle", nil)
+}
+
+// StartDismiss says "Hide tips"
+// in the language the app shows.
+//
+// Overview introductory action: startDismiss.
+func StartDismiss() string { return In(i18n.Locale()).StartDismiss() }
+
+// StartDismiss says "Hide tips"
+// in the language of msgs.
+//
+// Overview introductory action: startDismiss.
+func (msgs Messages) StartDismiss() string {
+	return Catalog.Format(msgs.locale, "startDismiss", nil)
+}
+
+// StartProject says "Check a project"
+// in the language the app shows.
+//
+// Overview introductory action: startProject.
+func StartProject() string { return In(i18n.Locale()).StartProject() }
+
+// StartProject says "Check a project"
+// in the language of msgs.
+//
+// Overview introductory action: startProject.
+func (msgs Messages) StartProject() string {
+	return Catalog.Format(msgs.locale, "startProject", nil)
+}
+
+// StartProjectHint says "Versions and requirements of added projects."
+// in the language the app shows.
+//
+// Overview introductory action: startProjectHint.
+func StartProjectHint() string { return In(i18n.Locale()).StartProjectHint() }
+
+// StartProjectHint says "Versions and requirements of added projects."
+// in the language of msgs.
+//
+// Overview introductory action: startProjectHint.
+func (msgs Messages) StartProjectHint() string {
+	return Catalog.Format(msgs.locale, "startProjectHint", nil)
+}
+
+// StartAddProjectHint says "Choose a folder and check its tool requirements."
+// in the language the app shows.
+//
+// Overview introductory action: startAddProjectHint.
+func StartAddProjectHint() string { return In(i18n.Locale()).StartAddProjectHint() }
+
+// StartAddProjectHint says "Choose a folder and check its tool requirements."
+// in the language of msgs.
+//
+// Overview introductory action: startAddProjectHint.
+func (msgs Messages) StartAddProjectHint() string {
+	return Catalog.Format(msgs.locale, "startAddProjectHint", nil)
+}
+
+// StartIssues says "Review issues"
+// in the language the app shows.
+//
+// Overview introductory action: startIssues.
+func StartIssues() string { return In(i18n.Locale()).StartIssues() }
+
+// StartIssues says "Review issues"
+// in the language of msgs.
+//
+// Overview introductory action: startIssues.
+func (msgs Messages) StartIssues() string {
+	return Catalog.Format(msgs.locale, "startIssues", nil)
+}
+
+// StartIssuesHint says "What needs attention and how to fix it."
+// in the language the app shows.
+//
+// Overview introductory action: startIssuesHint.
+func StartIssuesHint() string { return In(i18n.Locale()).StartIssuesHint() }
+
+// StartIssuesHint says "What needs attention and how to fix it."
+// in the language of msgs.
+//
+// Overview introductory action: startIssuesHint.
+func (msgs Messages) StartIssuesHint() string {
+	return Catalog.Format(msgs.locale, "startIssuesHint", nil)
+}
+
+// StartCheckingHint says "Results appear after the check."
+// in the language the app shows.
+//
+// Overview introductory action: startCheckingHint.
+func StartCheckingHint() string { return In(i18n.Locale()).StartCheckingHint() }
+
+// StartCheckingHint says "Results appear after the check."
+// in the language of msgs.
+//
+// Overview introductory action: startCheckingHint.
+func (msgs Messages) StartCheckingHint() string {
+	return Catalog.Format(msgs.locale, "startCheckingHint", nil)
+}
+
+// StartInstall says "Install tools"
+// in the language the app shows.
+//
+// Overview introductory action: startInstall.
+func StartInstall() string { return In(i18n.Locale()).StartInstall() }
+
+// StartInstall says "Install tools"
+// in the language of msgs.
+//
+// Overview introductory action: startInstall.
+func (msgs Messages) StartInstall() string {
+	return Catalog.Format(msgs.locale, "startInstall", nil)
+}
+
+// StartInstallHint says "Choose tools and review one plan."
+// in the language the app shows.
+//
+// Overview introductory action: startInstallHint.
+func StartInstallHint() string { return In(i18n.Locale()).StartInstallHint() }
+
+// StartInstallHint says "Choose tools and review one plan."
+// in the language of msgs.
+//
+// Overview introductory action: startInstallHint.
+func (msgs Messages) StartInstallHint() string {
+	return Catalog.Format(msgs.locale, "startInstallHint", nil)
+}
+
+// StartAI says "Set up AI"
+// in the language the app shows.
+//
+// Overview introductory action: startAI.
+func StartAI() string { return In(i18n.Locale()).StartAI() }
+
+// StartAI says "Set up AI"
+// in the language of msgs.
+//
+// Overview introductory action: startAI.
+func (msgs Messages) StartAI() string {
+	return Catalog.Format(msgs.locale, "startAI", nil)
+}
+
+// StartAIHint says "Agents, shared skills and MCP connections."
+// in the language the app shows.
+//
+// Overview introductory action: startAIHint.
+func StartAIHint() string { return In(i18n.Locale()).StartAIHint() }
+
+// StartAIHint says "Agents, shared skills and MCP connections."
+// in the language of msgs.
+//
+// Overview introductory action: startAIHint.
+func (msgs Messages) StartAIHint() string {
+	return Catalog.Format(msgs.locale, "startAIHint", nil)
+}

@@ -149,9 +149,13 @@ type Candidate struct {
 	Reasons  []Reason
 }
 
-// Frees is the space removing it frees: what files linked from elsewhere
+// Frees is the maximum space removing it frees: what files linked from elsewhere
 // keep aside.
 func (c Candidate) Frees() int64 { return c.Usage.Bytes - c.Usage.Shared }
+
+// Estimated reports that the tool may keep unshared files still in use.
+// pnpm can import packages by cloning, without hard links to reveal usage.
+func (c Candidate) Estimated() bool { return c.Kind == Cache && c.ID == "pnpm" }
 
 // minFrees is the least a cache or Docker's data must free to be offered:
 // less is not worth a look.

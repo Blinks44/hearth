@@ -8,6 +8,8 @@ type CliState struct {
 	Tools []Installation `json:",omitempty"`
 	// HelmRepos is how many chart repositories helm has added.
 	HelmRepos int `json:",omitempty"`
+	// KubeContexts are the merged named contexts, without credentials or servers.
+	KubeContexts []KubeContext `json:",omitempty"`
 	// Contexts are the tools' current cluster, profile, project or
 	// subscription, read from their settings; keys are never read.
 	Contexts []CliContext `json:",omitempty"`
@@ -23,4 +25,10 @@ type CliContext struct {
 	Region string `json:",omitempty"`
 	// File is the settings file it is read from.
 	File string
+}
+
+// KubeContext names a local kubectl context and the cluster and namespace it selects.
+// File is the source of this context in the merged kubeconfig.
+type KubeContext struct {
+	Name, Cluster, Namespace, File string
 }

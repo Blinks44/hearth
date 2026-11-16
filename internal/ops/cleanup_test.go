@@ -74,11 +74,11 @@ func TestCleanupPlan(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Errorf("steps\n%q\nwant\n%q", got, want)
 	}
-	if len(p.Changes) != 9 || p.Changes[0] != "− pnpm cache · 2.0 GB" {
+	if len(p.Changes) != 0 {
 		t.Errorf("changes %q", p.Changes)
 	}
-	if len(p.Notes) != 3 {
-		t.Errorf("notes %+v, want the folders', pub's and the projects'", p.Notes)
+	if len(p.Notes) != 4 {
+		t.Errorf("notes %+v, want the folders', pnpm's, pub's and the projects'", p.Notes)
 	}
 	// Without an engine Docker's are left out; with nothing left, no plan.
 	p, err = CleanupPlan(cands[4:5], titles[4:5], nil, env, DockerTarget{}, nil)
@@ -223,7 +223,7 @@ func TestCleanupCopies(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Errorf("steps\n%q\nwant\n%q", got, want)
 	}
-	if len(p.Changes) != 6 {
+	if len(p.Changes) != 0 {
 		t.Errorf("changes %q", p.Changes)
 	}
 	var notes []string
@@ -303,5 +303,32 @@ func TestCleanupPlanHistory(t *testing.T) {
 	}
 	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.CleanupHistoryNote() }) {
 		t.Errorf("notes %+v", p.Notes)
+	}
+}
+
+// A successful prune can keep the whole store. Its outcome must not claim
+// that the estimated candidate size was actually removed.
+func TestCleanupPruneKeepsUsedPackages(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "used"), make([]byte, 10000), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	usage, err := disk.Measure(t.Context(), dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := cleanup.Candidate{Kind: cleanup.Cache, ID: "pnpm", Paths: []string{dir}, Usage: usage}
+	p, err := CleanupPlan([]cleanup.Candidate{c}, []string{"pnpm cache"}, nil, pathWith(t, "pnpm"), DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := p.Verify(t.Context()); err != nil || got != locales.CleanupFreedNone() {
+		t.Fatalf("verify %q, %v", got, err)
+	}
+	if len(p.Changes) != 0 {
+		t.Fatalf("estimated removals presented as actual: %v", p.Changes)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.CleanupPnpmNote() }) {
+		t.Fatal("missing prune explanation")
 	}
 }

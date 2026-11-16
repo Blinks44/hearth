@@ -9083,5 +9083,143 @@
   "skillStorageFolder": "Shared skill folder",
   "skillStorageLinks": "Links to the shared folder",
   "updatesSelectGroup": "Select group: {group}",
-  "@updatesSelectGroup": {"placeholders": {"group": {"type": "String"}}}
+  "@updatesSelectGroup": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupUpTo": "up to {size}",
+  "@cleanupUpTo": {
+    "description": "Cleanup: cleanupUpTo.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupPnpmCaption": "pnpm store prune · keeps packages still in use",
+  "@cleanupPnpmCaption": {
+    "description": "Cleanup: cleanupPnpmCaption."
+  },
+  "cleanupPnpmNote": "pnpm keeps packages still in use",
+  "@cleanupPnpmNote": {
+    "description": "Cleanup: cleanupPnpmNote."
+  },
+  "cleanupPnpmNoteText": "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space or none. Other store versions are not cleared.",
+  "@cleanupPnpmNoteText": {
+    "description": "Cleanup: cleanupPnpmNoteText."
+  },
+  "cleanupFreedNone": "No additional space was freed.",
+  "@cleanupFreedNone": {
+    "description": "Cleanup: cleanupFreedNone."
+  },
+  "kubeContexts": "Kubernetes contexts",
+  "@kubeContexts": {
+    "description": "Kubernetes context selection: kubeContexts."
+  },
+  "kubeContextCurrent": "Current",
+  "@kubeContextCurrent": {
+    "description": "Kubernetes context selection: kubeContextCurrent."
+  },
+  "kubeContextSwitch": "Switch…",
+  "@kubeContextSwitch": {
+    "description": "Kubernetes context selection: kubeContextSwitch."
+  },
+  "kubeContextDetails": "Cluster: {cluster} · namespace: {namespace}",
+  "@kubeContextDetails": {
+    "description": "Kubernetes context selection: kubeContextDetails.",
+    "placeholders": {
+      "cluster": {
+        "type": "String"
+      },
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeContextTitle": "Use Kubernetes context {name}",
+  "@kubeContextTitle": {
+    "description": "Kubernetes context selection: kubeContextTitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeContextWhy": "Changes the default context for future kubectl commands using these kubeconfig files. Existing terminals using the same files will use it too. No cluster resources are changed.",
+  "@kubeContextWhy": {
+    "description": "Kubernetes context selection: kubeContextWhy."
+  },
+  "kubeContextInvalid": "Choose a valid Kubernetes context.",
+  "@kubeContextInvalid": {
+    "description": "Kubernetes context selection: kubeContextInvalid."
+  },
+  "kubeContextMismatch": "The active Kubernetes context is not {name}.",
+  "@kubeContextMismatch": {
+    "description": "Kubernetes context selection: kubeContextMismatch.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeContextSelected": "Kubernetes context: {name}",
+  "@kubeContextSelected": {
+    "description": "Kubernetes context selection: kubeContextSelected.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "startTitle": "Getting started",
+  "@startTitle": {
+    "description": "Overview introductory action: startTitle."
+  },
+  "startDismiss": "Hide tips",
+  "@startDismiss": {
+    "description": "Overview introductory action: startDismiss."
+  },
+  "startProject": "Check a project",
+  "@startProject": {
+    "description": "Overview introductory action: startProject."
+  },
+  "startProjectHint": "Versions and requirements of added projects.",
+  "@startProjectHint": {
+    "description": "Overview introductory action: startProjectHint."
+  },
+  "startAddProjectHint": "Choose a folder and check its tool requirements.",
+  "@startAddProjectHint": {
+    "description": "Overview introductory action: startAddProjectHint."
+  },
+  "startIssues": "Review issues",
+  "@startIssues": {
+    "description": "Overview introductory action: startIssues."
+  },
+  "startIssuesHint": "What needs attention and how to fix it.",
+  "@startIssuesHint": {
+    "description": "Overview introductory action: startIssuesHint."
+  },
+  "startCheckingHint": "Results appear after the check.",
+  "@startCheckingHint": {
+    "description": "Overview introductory action: startCheckingHint."
+  },
+  "startInstall": "Install tools",
+  "@startInstall": {
+    "description": "Overview introductory action: startInstall."
+  },
+  "startInstallHint": "Choose tools and review one plan.",
+  "@startInstallHint": {
+    "description": "Overview introductory action: startInstallHint."
+  },
+  "startAI": "Set up AI",
+  "@startAI": {
+    "description": "Overview introductory action: startAI."
+  },
+  "startAIHint": "Agents, shared skills and MCP connections.",
+  "@startAIHint": {
+    "description": "Overview introductory action: startAIHint."
+  }
 }

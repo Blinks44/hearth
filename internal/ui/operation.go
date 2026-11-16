@@ -50,6 +50,10 @@ func (a *App) startOperation() {
 		}
 		op.state = s
 		if s.Phase.Over() && a.OnScan != nil {
+			// Cached sizes describe the system before this operation. Do not
+			// offer them again while the automatic refresh is running.
+			a.Sizes = nil
+			a.Counting = true
 			a.Scanning = true
 			a.OnScan()
 		}

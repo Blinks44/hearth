@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/run"
 )
@@ -280,4 +282,26 @@ func TestSkillStoragePreview(t *testing.T) {
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "Shared skill folder · rex", "/home/dev/.agents/skills/rex", "Links to the shared folder")
 	screenshot(t, tt, "skill-storage-preview")
+}
+
+// All terminal outcomes refresh inventory, and discard sizes from before the
+// operation. Repeated final notifications cannot restart the refresh.
+func TestOperationInvalidatesSizes(t *testing.T) {
+	for _, phase := range []ops.Phase{ops.Succeeded, ops.Failed, ops.Stopped, ops.NotVerified} {
+		t.Run(fmt.Sprint(phase), func(t *testing.T) {
+			a := NewApp()
+			a.Sizes = &inventory.Sizes{Paths: map[string]inventory.Usage{"old": {Bytes: 11e9}}}
+			scans := 0
+			a.OnScan = func() { scans++ }
+			var update func(ops.State)
+			a.RunPlan = func(_ ops.Plan, u func(ops.State)) func() { update = u; return func() {} }
+			a.Propose(dockerPlan())
+			a.startOperation()
+			update(ops.State{Phase: phase})
+			update(ops.State{Phase: phase})
+			if scans != 1 || !a.Scanning || !a.Counting || a.Sizes != nil {
+				t.Fatalf("refresh: scans=%d scanning=%v counting=%v sizes=%v", scans, a.Scanning, a.Counting, a.Sizes)
+			}
+		})
+	}
 }

@@ -38,6 +38,9 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.hero(c, items)
+				if !a.StartHidden {
+					a.startActions(c)
+				}
 				// A narrow window has one column: what needs attention
 				// right under the summary, then the rest.
 				if narrow(c) {
@@ -59,6 +62,79 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 				})
 			})
 		})
+	})
+}
+
+// startActions introduces the existing pages until the user dismisses it.
+// Following a link does not imply the task succeeded or hide the other choices.
+func (a *App) startActions(c *ui.Context) {
+	pal := Colors(c.Theme())
+	ui.Column(c.Key("start-actions")).Gap(10).Children(func() {
+		ui.Row(c).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.StartTitle()).FontSize(14).FontWeight(600).Grow(1)
+			ui.ButtonBase(c.Key("start-dismiss")).Label(locales.StartDismiss()).OnClick(func() {
+				a.StartHidden = true
+				a.savePreferences()
+			}).Children(func() {
+				ui.Text(c, locales.StartDismiss()).FontSize(12).TextColor(pal.TextFaint)
+			})
+		})
+		columns := 4
+		if narrow(c) {
+			columns = 2
+		}
+		ui.Grid(c).Columns(columns).Gap(12).Children(func() {
+			install := func() {
+				a.startCard(c, "start-install", locales.StartInstall(), locales.StartInstallHint(), true, func() {
+					a.setup.wizard = a.bareComputer()
+					a.router.Push(setupPage)
+				})
+			}
+			if a.bareComputer() {
+				install()
+			}
+			title, hint := locales.StartProject(), locales.StartProjectHint()
+			if len(a.Projects) == 0 {
+				title, hint = locales.AddProjectTitle(), locales.StartAddProjectHint()
+			}
+			a.startCard(c, "start-project", title, hint, len(a.Projects) > 0 || a.ChooseFolder != nil, func() {
+				if len(a.Projects) == 0 {
+					a.ChooseFolder()
+				} else {
+					a.router.Push(projectsPage.path)
+				}
+			})
+			hint = locales.StartIssuesHint()
+			if a.firstScan() {
+				hint = locales.StartCheckingHint()
+			}
+			a.startCard(c, "start-issues", locales.StartIssues(), hint, !a.firstScan(), func() { a.router.Push(problemsPage) })
+			if !a.bareComputer() {
+				install()
+			}
+			a.startCard(c, "start-ai", locales.StartAI(), locales.StartAIHint(), true, func() { a.router.Push("/ai/agents") })
+		})
+	})
+}
+
+func (a *App) startCard(c *ui.Context, key, title, hint string, enabled bool, open func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).TextAlign(ui.Start).
+		Gap(8).Padding(16).MinHeight(104).MinWidth(0).
+		Label(title).Disabled(!enabled).OnClick(open).Radius(12).Background(t.Background).
+		BorderWidth(1).BorderColor(pal.Divider).Transition(colorFade)
+	chevron := pal.TextFaint
+	if e.Hovered() && enabled {
+		e.Background(pal.Subtle)
+		chevron = Accent
+	}
+	e.Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, title).FontSize(13).FontWeight(600).Grow(1).MinWidth(0)
+			ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevron)
+		})
+		ui.Text(c, hint).FontSize(12).TextColor(t.TextMuted)
 	})
 }
 
@@ -161,7 +237,7 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 			stat(c, "stat-updates", pal.Info, a.updateCount(c), locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() { a.router.Push(updatesPage) })
 			free, caption := "—", locales.CleanupCounting()
 			if a.Sizes != nil {
-				free, caption = formatBytes(freeable(a.candidates(c))), locales.StatFreeCaption()
+				free, caption = cleanupAmount(a.candidates(c)), locales.StatFreeCaption()
 			}
 			stat(c, "stat-free", Accent, free, locales.StatFree(), caption, func() { a.router.Push(cleanupPage) })
 		})
@@ -181,9 +257,9 @@ func heroChip(c *ui.Context, dot, bg, text ui.Color, label string) {
 func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string, open func()) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.ButtonBase(c.Key(key)).Column().AlignItems(ui.Stretch).MinWidth(158).Gap(4).Padding(14, 16).Label(label).OnClick(open).Transition(colorFade)
+	e := ui.ButtonBase(c.Key(key)).Row().AlignItems(ui.Center).MinWidth(178).MinHeight(96).Gap(8).Padding(14, 16).Label(label).OnClick(open).Transition(colorFade)
 	if narrow(c) {
-		e.Grow(1).Padding(10, 14).Gap(2)
+		e.Grow(1).Padding(10, 14).MinHeight(88)
 	}
 	bg, chevron := pal.StatBg, pal.TextFaint
 	if e.Hovered() {
@@ -192,15 +268,19 @@ func stat(c *ui.Context, key string, dot ui.Color, value, label, caption string,
 	}
 	e.Radius(10).Background(bg).
 		BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
-		ui.Row(c).AlignItems(ui.Start).Children(func() {
-			ui.Text(c, value).FontSize(26).Grow(1).SingleLine()
-			ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(chevron)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+			fontSize := float32(26)
+			if len([]rune(value)) > 8 {
+				fontSize = 22
+			}
+			ui.Text(c, value).FontSize(fontSize).SingleLine()
+			ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
+				ui.Box(c).Size(8, 8).Radius(4).Background(dot)
+				ui.Text(c, label).FontSize(12.5).FontWeight(500).SingleLine()
+			})
+			ui.Text(c, caption).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 		})
-		ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
-			ui.Box(c).Size(8, 8).Radius(4).Background(dot)
-			ui.Text(c, label).FontSize(12.5).FontWeight(500).SingleLine()
-		})
-		ui.Text(c, caption).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevron)
 	})
 }
 
@@ -507,6 +587,9 @@ func (a *App) noProjects(c *ui.Context) {
 				OnClick(a.ChooseFolder).Children(func() {
 				ui.Text(c, locales.AddFolder()).FontSize(12).SingleLine()
 			})
+		}
+		if a.FindProjects != nil {
+			ui.Button(c.Key("overview-find-projects"), locales.FindProjects()).OnClick(a.FindProjects)
 		}
 	})
 }

@@ -84,6 +84,17 @@ func freeable(cands []cleanup.Candidate) int64 {
 	return n
 }
 
+// cleanupAmount marks a sum containing a partially pruned store as an upper bound.
+func cleanupAmount(cands []cleanup.Candidate) string {
+	size := formatBytes(freeable(cands))
+	for _, cand := range cands {
+		if cand.Estimated() {
+			return locales.CleanupUpTo(size)
+		}
+	}
+	return size
+}
+
 func (a *App) cleanupView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
@@ -109,7 +120,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				}, func() {
 					found, chosen := "—", "—"
 					if a.Sizes != nil {
-						found, chosen = formatBytes(freeable(cands)), formatBytes(freeable(selected))
+						found, chosen = cleanupAmount(cands), cleanupAmount(selected)
 					}
 					stateCard(c, pal.TextFaint, locales.CleanupFound(), found, locales.CleanupCandidates(len(cands)))
 					stateCard(c, Accent, locales.CleanupSelected(), chosen, locales.CleanupCandidates(len(selected)))
@@ -151,7 +162,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				})
 				columns(c, 12, func() {
 					switch {
-					case a.Snapshot == nil || a.Sizes == nil:
+					case a.Snapshot == nil || a.Sizes == nil || a.Counting && len(cands) == 0:
 						toolNote(c, locales.CleanupWaiting())
 						return
 					case len(cands) == 0:
@@ -166,11 +177,9 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 								continue
 							}
 							var rows []cleanup.Candidate
-							var total int64
 							for _, cand := range cands {
 								if cand.Kind.Group() == g && strings.Contains(strings.ToLower(a.candidateTitle(cand)+" "+a.candidateCaption(cand)), filter) {
 									rows = append(rows, cand)
-									total += cand.Frees()
 								}
 							}
 							if len(rows) == 0 {
@@ -179,7 +188,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 							ui.Row(c.Key(cleanupGroupTitle(g))).Transition(rowMotion).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 								a.groupCheckbox(c, cleanupGroupTitle(g), rows)
 								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
-								ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+								ui.Text(c, cleanupAmount(rows)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 							})
 							for _, cand := range rows {
 								shown++
@@ -192,16 +201,16 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 					})
 					toolNote(c, locales.CleanupReadOnly())
 				}, func() {
-					var restorable int64
+					var restorable []cleanup.Candidate
 					for _, cand := range cands {
 						if cand.Selected && cand.Kind.Group() != cleanup.Projects {
-							restorable += cand.Frees()
+							restorable = append(restorable, cand)
 						}
 					}
 					listCard(c, locales.CleanupAtOnce(), "", func() {
 						size := "—"
 						if a.Sizes != nil {
-							size = formatBytes(restorable)
+							size = cleanupAmount(restorable)
 						}
 						listRow(c, locales.CleanupAtOnceRow(), false, locales.CleanupAtOnceCaption(size), func() {})
 					})
@@ -231,17 +240,15 @@ func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
 	}
 	var cands []cleanup.Candidate
 	var titles []string
-	var frees int64
 	for _, cand := range selected {
 		if ops.Cleans(cand, a.Snapshot) {
 			cands, titles = append(cands, cand), append(titles, a.candidateTitle(cand))
-			frees += cand.Frees()
 		}
 	}
 	if len(cands) == 0 {
 		return
 	}
-	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(formatBytes(frees))).OnClick(func() {
+	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(cleanupAmount(cands))).OnClick(func() {
 		target, snap, count := a.dockerTarget(), a.Snapshot, a.CountDocker
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 			var docker ops.CountDocker
@@ -316,6 +323,9 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 		size := "—"
 		if cand.Known {
 			size = formatUsage(inventory.Usage{Bytes: cand.Frees(), Partial: cand.Usage.Partial})
+			if cand.Estimated() {
+				size = locales.CleanupUpTo(size)
+			}
 		}
 		ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
 	})
@@ -358,6 +368,9 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 	var parts []string
 	switch cand.Kind {
 	case cleanup.Cache:
+		if cand.Estimated() {
+			return locales.CleanupPnpmCaption()
+		}
 		if argv := ops.CacheCommand(cand.ID); argv != nil {
 			return ops.Command(argv)
 		}
@@ -484,11 +497,11 @@ func (a *App) cleanupEnd(c *ui.Context) func() {
 	if a.Sizes == nil {
 		return nil
 	}
-	n := freeable(a.candidates(c))
-	if n == 0 {
+	cands := a.candidates(c)
+	if freeable(cands) == 0 {
 		return nil
 	}
 	return func() {
-		ui.Text(c, formatBytes(n)).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+		ui.Text(c, cleanupAmount(cands)).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 	}
 }

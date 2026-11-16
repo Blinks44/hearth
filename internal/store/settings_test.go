@@ -16,7 +16,8 @@ func TestSettingsRoundTrip(t *testing.T) {
 	}
 	want := Settings{
 		Format: settingsFormat, Theme: "dark", VersionLists: false,
-		Projects: []Project{{Path: "/Users/me/code/shop"}, {Path: "/Users/me/code/admin"}},
+		StartHidden: true,
+		Projects:    []Project{{Path: "/Users/me/code/shop"}, {Path: "/Users/me/code/admin"}},
 	}
 	for range 2 { // the second save replaces the first
 		if err := SaveSettings(dir, want); err != nil {

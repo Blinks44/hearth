@@ -56,3 +56,6 @@ func stepMotion(back bool) ui.ElementTransition {
 
 // barMotion moves a progress bar's fill to its new share and color.
 var barMotion = ui.ElementTransition{Width: true, Colors: true, Animation: &ui.Smooth}
+
+// sidebarMotion follows the rows moved by the expanding language group.
+var sidebarMotion = ui.ElementTransition{Position: true, Colors: true, Shadows: true, Duration: 200 * time.Millisecond}

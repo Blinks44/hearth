@@ -8,6 +8,9 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -183,6 +186,7 @@ func (a *App) cliView(c *ui.Context, p page) {
 					}
 					a.cliTable(c, cli, tools)
 				}, func() {
+					a.kubeContexts(c, cli)
 					if len(cli.Contexts) > 0 {
 						listCard(c, locales.CliContexts(), "", func() {
 							for _, cc := range cli.Contexts {
@@ -340,4 +344,36 @@ func (a *App) miseToolRow(c *ui.Context, mt inventory.MiseTool) {
 		parts = append(parts, locales.CliMoreVersions(n, strings.Join(others, ", ")))
 	}
 	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version, nil)
+}
+
+// kubeContexts lists every locally configured context, with explicit selection.
+func (a *App) kubeContexts(c *ui.Context, cli inventory.CliState) {
+	if len(cli.KubeContexts) == 0 {
+		return
+	}
+	current := ""
+	if cc := cliContext(cli, "kubectl"); cc != nil {
+		current = cc.Name
+	}
+	in, found := cliCopy(cli, "kubectl")
+	listCard(c, locales.KubeContexts(), "", func() {
+		for _, cc := range cli.KubeContexts {
+			namespace := cc.Namespace
+			if namespace == "" {
+				namespace = "default"
+			}
+			caption := locales.KubeContextDetails(cc.Cluster, namespace)
+			listRow(c, cc.Name, true, caption, func() {
+				if cc.Name == current {
+					aiTag(c, locales.KubeContextCurrent(), Colors(c.Theme()).SuccessSoft, Colors(c.Theme()).SuccessText)
+					return
+				}
+				ui.Button(c.Key("kube:"+cc.Name), locales.KubeContextSwitch()).Disabled(!found || a.BuildPlan == nil).OnClick(func() {
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.KubeContextPlan(in.Path, current, cc.Name, env, run.Exec{})
+					}, a.proposeOrSay)
+				})
+			})
+		}
+	})
 }

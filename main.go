@@ -61,6 +61,7 @@ func main() {
 		}
 	}
 	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
+	a.StartHidden = list.settings.StartHidden
 	// The native parts follow it too: the sidebar's material, the window
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
@@ -220,19 +221,15 @@ func main() {
 			},
 			Err: func(err error) { log.Print(err) },
 		}
-		list.watch.StartupFiles(detect.StartupFiles(sysenv.GUI(), a.Home))
+		list.watch.StartupFiles(append(detect.StartupFiles(sysenv.GUI(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
 		list.read()
-		// The first start offers the projects in the usual code folders.
-		if !list.settings.Suggested && len(list.settings.Projects) == 0 {
-			list.find()
-		}
 		cache, err := mygo.App.Path(mygo.PathCache)
 		if err != nil {
 			log.Print(err)
 		}
 		var fetchPackages func()
 		// Disk space is counted after each scan, apart from it: a walk of
-		// big caches takes long. The last count shows until it ends.
+		// big caches takes long. Each result replaces the previous count.
 		var cancelSizes context.CancelFunc
 		countSizes := func(s *inventory.Snapshot) {
 			if cancelSizes != nil {
@@ -248,50 +245,23 @@ func main() {
 					installs = append(installs, filepath.Join(p.Dir, name))
 				}
 			}
-			home := a.Home
 			go func() {
-				// Every project's node_modules under home is counted too.
-				found, err := projects.NodeModules(ctx, home)
-				if ctx.Err() != nil {
-					return
-				}
-				if err != nil {
-					log.Print(err)
-				}
-				// The view offers them at once; their sizes come as they
-				// are counted.
-				win.Update(func() {
-					if ctx.Err() != nil {
-						return
-					}
-					if a.Sizes == nil {
-						a.Sizes = &inventory.Sizes{}
-					}
-					a.Sizes.Installs = found
-				})
-				for _, in := range found {
-					if path := filepath.Join(in.Project, in.Name); !slices.Contains(installs, path) {
-						installs = append(installs, path)
-					}
-				}
-				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(path string, u inventory.Usage) {
+				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(next inventory.Sizes) {
 					win.Update(func() {
-						if ctx.Err() != nil {
-							return
+						if ctx.Err() == nil {
+							a.Sizes = &next
 						}
-						if a.Sizes == nil {
-							a.Sizes = &inventory.Sizes{}
-						}
-						if a.Sizes.Paths == nil {
-							a.Sizes.Paths = map[string]inventory.Usage{}
-						}
-						a.Sizes.Paths[path] = u
 					})
 				})
 				if err != nil {
+					win.Update(func() {
+						if ctx.Err() == nil {
+							a.Counting = false
+							log.Print(err)
+						}
+					})
 					return
 				}
-				sizes.Installs = found
 				// Saved before the view gets them: the next count adds to
 				// the map the view has.
 				if cache != "" {
@@ -325,6 +295,7 @@ func main() {
 					fetchPackages()
 				}
 				countSizes(&s)
+				list.watch.StartupFiles(append(detect.StartupFiles(scanner.Terminal(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
 				list.watch.Docker(&s, scanner.Terminal())
 			})
 			if cache != "" {
@@ -428,6 +399,7 @@ func main() {
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
 			list.settings.Theme, list.settings.VersionLists, list.settings.Hidden = a.ThemeMode, a.VersionLists, a.Hidden
+			list.settings.StartHidden = a.StartHidden
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 			list.save()
 			if onlineChanged {
@@ -485,6 +457,9 @@ func main() {
 			}()
 		}
 		a.OnScan = func() {
+			if cancelSizes != nil {
+				cancelSizes()
+			}
 			if cancelPackages != nil {
 				cancelPackages()
 			}

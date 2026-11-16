@@ -53,7 +53,9 @@ type App struct {
 	// Hidden are the keys of the issues worth knowing the user hid: they
 	// leave the Issues page.
 	Hidden []string
-	// OnSettings saves ThemeMode, VersionLists and Hidden after the user
+	// StartHidden keeps the introductory actions dismissed across launches.
+	StartHidden bool
+	// OnSettings saves ThemeMode, VersionLists, Hidden and StartHidden after the user
 	// changed them; OnLocale shows and keeps another language.
 	OnSettings func()
 	OnLocale   func(string)
@@ -689,22 +691,28 @@ func (a *App) languages(c *ui.Context) {
 	if len(rest) == 0 {
 		return
 	}
-	more := ui.ButtonBase(c.Key("more-languages")).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
+	more := ui.ButtonBase(c.Key("more-languages")).Expanded(a.moreOpen).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
 	if more.Hovered() {
 		more.Background(pal.SidebarHover)
 	}
 	more.Children(func() {
 		ui.Icon(c, Icon("layers")).Size(16, 16).TextColor(pal.TextFaint)
 		ui.Text(c, locales.MoreLanguages(len(rest))).FontSize(13).TextColor(pal.TextFaint).Grow(1).SingleLine()
-		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(pal.TextFaint)
+		chevron := "chevron-right"
+		if a.moreOpen {
+			chevron = "chevron-down"
+		}
+		ui.Icon(c, Icon(chevron)).Size(14, 14).TextColor(pal.TextFaint)
 	})
 	if more.Clicked() {
 		a.moreOpen = !a.moreOpen
 	}
 	if a.moreOpen {
-		for _, p := range rest {
-			a.item(c, p, plus)
-		}
+		ui.Column(c.Key("extra-languages")).Gap(1).Shrink(0).Transition(rowMotion).Children(func() {
+			for _, p := range rest {
+				a.item(c, p, plus)
+			}
+		})
 	}
 }
 
@@ -744,7 +752,7 @@ func (a *App) item(c *ui.Context, p page, end func()) {
 	t := c.Theme()
 	pal := Colors(t)
 	chosen := within(a.router.Path(), p.path)
-	e := ui.ButtonBase(c.Key(p.path)).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
+	e := ui.ButtonBase(c.Key(p.path)).Transition(sidebarMotion).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
 	iconColor := t.TextMuted
 	switch {
 	case chosen:
@@ -766,7 +774,7 @@ func (a *App) item(c *ui.Context, p page, end func()) {
 }
 
 func sectionTitle(c *ui.Context, title string) {
-	ui.Text(c, title).FontSize(11).FontWeight(500).TextColor(Colors(c.Theme()).TextFaint).
+	ui.Text(c.Key("section:"+title), title).Transition(sidebarMotion).FontSize(11).FontWeight(500).TextColor(Colors(c.Theme()).TextFaint).
 		Padding(12, 8, 5, 8).SingleLine()
 }
 

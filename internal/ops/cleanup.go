@@ -161,13 +161,13 @@ var dockerPrune = map[cleanup.Kind][]string{
 // folders. Candidates it does not remove are left out. Its check counts
 // again what they take and says what was freed; docker, nil without an
 // engine, asks Docker.
-func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapshot, env sysenv.Env, target DockerTarget, docker CountDocker) (Plan, error) {
+func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, env sysenv.Env, target DockerTarget, docker CountDocker) (Plan, error) {
 	p := Plan{Title: locales.CleanupPlanTitle(), Why: locales.CleanupPlanWhy()}
 	var done []cleanup.Candidate
 	var brew inventory.PackageManager
 	var pkgs []inventory.SystemPackage
-	removes, pub, versions, admin, installs, models, history := false, false, false, false, false, false, false
-	for i, c := range cands {
+	removes, pub, versions, admin, installs, models, history, pnpm := false, false, false, false, false, false, false, false
+	for _, c := range cands {
 		if !Cleans(c, s) {
 			continue
 		}
@@ -178,6 +178,7 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 			if len(argv) > 0 && len(sysenv.LookPathAll(argv[0], env)) > 0 {
 				steps = []Step{{Argv: argv}}
 				pub = pub || c.ID == "pub"
+				pnpm = pnpm || c.ID == "pnpm"
 			} else {
 				steps = []Step{{Remove: c.Paths[0]}}
 				removes = true
@@ -229,7 +230,6 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 			step.Timeout = cleanupTimeout
 			p.Steps = append(p.Steps, step)
 		}
-		p.Changes = append(p.Changes, "− "+titles[i]+" · "+FormatSize(c.Frees()))
 		done = append(done, c)
 	}
 	if len(pkgs) > 0 {
@@ -247,6 +247,9 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 	}
 	if removes {
 		p.Notes = append(p.Notes, Note{Title: locales.CleanupRemoveNote(), Text: locales.CleanupRemoveNoteText()})
+	}
+	if pnpm {
+		p.Notes = append(p.Notes, Note{Title: locales.CleanupPnpmNote(), Text: locales.CleanupPnpmNoteText()})
 	}
 	if pub {
 		p.Notes = append(p.Notes, Note{Title: locales.CleanupPubNote(), Text: locales.CleanupPubNoteText()})
@@ -267,7 +270,14 @@ func CleanupPlan(cands []cleanup.Candidate, titles []string, s *inventory.Snapsh
 		p.Notes = append(p.Notes, AdminNote())
 	}
 	p.Verify = func(ctx context.Context) (string, error) {
-		return locales.CleanupFreed(FormatSize(freed(ctx, done, docker))), nil
+		n := freed(ctx, done, docker)
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+		if n == 0 {
+			return locales.CleanupFreedNone(), nil
+		}
+		return locales.CleanupFreed(FormatSize(n)), nil
 	}
 	return p, nil
 }

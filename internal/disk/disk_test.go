@@ -181,3 +181,93 @@ func TestDocker(t *testing.T) {
 		t.Fatal("unknown unit read")
 	}
 }
+
+// Count refreshes caches before discovering projects and gives each callback
+// its own map, so a background walk never mutates data already shown by the UI.
+func TestCountProgress(t *testing.T) {
+	home := t.TempDir()
+	cache := filepath.Join(home, "cache")
+	modules := filepath.Join(home, "project", "node_modules")
+	write(t, filepath.Join(cache, "data"), 2<<20)
+	write(t, filepath.Join(home, "project", "package.json"), 2)
+	write(t, filepath.Join(modules, "package", "data"), 1<<20)
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "UV_CACHE_DIR=" + cache}
+	var updates []inventory.Sizes
+	got, err := Count(t.Context(), &run.Fake{}, env, &inventory.Snapshot{}, nil, func(s inventory.Sizes) { updates = append(updates, s) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(updates) < 3 {
+		t.Fatalf("no incremental progress: %d", len(updates))
+	}
+	if len(updates[0].Paths) != 0 {
+		t.Fatal("initial result was mutated")
+	}
+	first := updates[1]
+	if first.Paths[cache].Bytes < 2<<20 || len(first.Installs) != 0 || len(first.Paths) != 1 {
+		t.Fatalf("cache not published first: %+v", first)
+	}
+	if got.Paths[modules].Bytes < 1<<20 || len(got.Installs) != 1 || got.Taken.IsZero() {
+		t.Fatalf("final result: %+v", got)
+	}
+	// Removing the cache must remove its old size, including from progress.
+	if err := os.RemoveAll(cache); err != nil {
+		t.Fatal(err)
+	}
+	got, err = Count(t.Context(), &run.Fake{}, env, &inventory.Snapshot{}, nil, func(s inventory.Sizes) {
+		if _, ok := s.Paths[cache]; ok {
+			t.Error("removed cache returned during refresh")
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := got.Paths[cache]; ok {
+		t.Fatal("removed cache remains")
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	calls := 0
+	_, err = Count(ctx, &run.Fake{}, env, &inventory.Snapshot{}, nil, func(inventory.Sizes) { calls++; cancel() })
+	if !errors.Is(err, context.Canceled) || calls != 1 {
+		t.Fatalf("cancelled refresh: %d updates, %v", calls, err)
+	}
+}
+
+// Only the active store is counted, including a configured path outside the
+// defaults. A failed lookup must not substitute the whole parent store.
+func TestActivePnpmStore(t *testing.T) {
+	home := t.TempDir()
+	bin := filepath.Join(home, "bin")
+	executable := "pnpm"
+	if filepath.Separator == '\\' {
+		executable += ".exe"
+	}
+	command := filepath.Join(bin, executable)
+	write(t, command, 0)
+	if err := os.Chmod(command, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	store := filepath.Join(home, "custom-store", "v11")
+	write(t, filepath.Join(store, "data"), 4096)
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "PATH=" + bin}
+	for _, tc := range []struct {
+		name, output string
+		exit         int
+		want         bool
+	}{
+		{"active", store + "\n", 0, true},
+		{"failed", store, 1, false},
+		{"relative", "store/v11", 0, false},
+		{"multiline", store + "\nwarning", 0, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := &run.Fake{}
+			f.Set(run.Result{Stdout: []byte(tc.output), ExitCode: tc.exit}, nil, command, "store", "path")
+			got := activeCaches(t.Context(), f, env, &inventory.Snapshot{})
+			i := slices.IndexFunc(got, func(c inventory.Cache) bool { return c.ID == "pnpm" })
+			if (i >= 0) != tc.want || i >= 0 && got[i].Path != store {
+				t.Fatalf("caches: %+v", got)
+			}
+		})
+	}
+}

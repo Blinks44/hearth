@@ -62,6 +62,8 @@ esac
 	cmd := exec.Command(app)
 	cmd.Env = []string{
 		"HOME=" + home, "SHELL=/bin/sh", "MYGO_LOCALE=en",
+		// Exercise the app independently of native GPU frame scheduling.
+		"MYGO_GPU=0",
 		"PATH=" + bin + ":/usr/bin:/bin", "MYGO_AUTOMATION=" + sock,
 	}
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr

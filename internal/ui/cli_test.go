@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
+
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -70,4 +73,31 @@ func TestCliPage(t *testing.T) {
 	if !tt.HasText("aws") || tt.HasText("1.31.4") || tt.HasText("deno") {
 		t.Errorf("clouds tab: %q", tt.Texts())
 	}
+}
+
+func TestKubeContextsSwitch(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "cli", Cli: &inventory.CliState{
+		Tools:        []inventory.Installation{{Tool: "kubectl", Path: "/bin/kubectl", OnPath: 1}},
+		Contexts:     []inventory.CliContext{{Tool: "kubectl", Name: "staging"}},
+		KubeContexts: []inventory.KubeContext{{Name: "production", Cluster: "prod", Namespace: "digital"}, {Name: "staging", Cluster: "stage"}},
+	}}}}
+	env := sysenv.Env{"KUBECONFIG=/tmp/test-config"}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	a.router.Push(cliPage)
+	tt := ui.NewTester(a.View, 1280, 1000)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Kubernetes contexts", "production", "staging", "Current", "Cluster: prod · namespace: digital", "Cluster: stage · namespace: default")
+	screenshot(t, tt, "kube-contexts")
+	if err := tt.Click("Switch…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Use Kubernetes context production", "/bin/kubectl config use-context -- production")
+	if a.op == nil || a.op.started || a.op.plan.Env[0] != env[0] {
+		t.Fatalf("unexpected operation: %+v", a.op)
+	}
+	screenshot(t, tt, "kube-context-plan")
 }

@@ -197,3 +197,28 @@ func TestShortcuts(t *testing.T) {
 		t.Errorf("filter %q after / and typing, want %q", a.pathFilter, "usr/")
 	}
 }
+
+func TestSidebarLanguagesCollapse(t *testing.T) {
+	a := NewApp()
+	tt := ui.NewTester(a.View, 1280, 1400)
+	for range 3 {
+		if err := tt.Click("10 more languages"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(80 * time.Millisecond)
+		tt.Advance(time.Second)
+		if !a.moreOpen || !tt.HasText("Rust") {
+			t.Fatal("languages did not open")
+		}
+		screenshot(t, tt, "sidebar-languages-open")
+		if err := tt.Click("10 more languages"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(80 * time.Millisecond)
+		tt.Advance(time.Second)
+		if a.moreOpen || tt.HasText("Rust") {
+			t.Fatal("languages did not close")
+		}
+	}
+	screenshot(t, tt, "sidebar-languages-closed")
+}

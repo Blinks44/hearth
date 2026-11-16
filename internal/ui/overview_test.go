@@ -3,6 +3,7 @@ package ui
 import (
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
@@ -30,6 +32,168 @@ func calmSnapshot() *inventory.Snapshot {
 		{Tool: "node", Version: "22.12.0", Path: "/opt/homebrew/bin/node", OnPath: 1, InGUI: 1,
 			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
 	}}}}
+}
+
+func TestStartActions(t *testing.T) {
+	for _, tc := range []struct {
+		name, label, path string
+		bare, project     bool
+	}{
+		{name: "choose a folder", label: "Add project", path: overview.path},
+		{name: "check added projects", label: "Check a project", path: projectsPage.path, project: true},
+		{name: "review issues", label: "Review issues", path: problemsPage},
+		{name: "install on an existing computer", label: "Install tools", path: setupPage},
+		{name: "set up a clean computer", label: "Install tools", path: setupPage, bare: true},
+		{name: "set up agents", label: "Set up AI", path: "/ai/agents"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := NewApp()
+			a.Snapshot, a.Counting = calmSnapshot(), true
+			if tc.bare {
+				a.Snapshot = &inventory.Snapshot{}
+			}
+			if tc.project {
+				a.Projects = testProjects()[:1]
+			}
+			chosen, saved := 0, 0
+			a.ChooseFolder = func() { chosen++ }
+			a.OnSettings = func() { saved++ }
+			tt := openOverview(t, a)
+			if err := tt.Click(tc.label); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			if a.router.Path() != tc.path {
+				t.Errorf("opened %q, want %q", a.router.Path(), tc.path)
+			}
+			if tc.label == "Add project" && chosen != 1 {
+				t.Error("did not ask for a folder")
+			}
+			if tc.path == setupPage && a.setup.wizard != tc.bare {
+				t.Error("installation did not follow the computer's state")
+			}
+			if a.StartHidden || saved != 0 {
+				t.Error("following a link dismissed the other introductory actions")
+			}
+			a.router.Push(overview.path)
+			tt.Advance(time.Second)
+			hasTexts(t, tt, "Getting started", "Hide tips")
+		})
+	}
+}
+
+func TestStartActionsDismissPersists(t *testing.T) {
+	dir := t.TempDir()
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	a.OnSettings = func() {
+		s := store.DefaultSettings()
+		s.StartHidden = a.StartHidden
+		if err := store.SaveSettings(dir, s); err != nil {
+			t.Fatal(err)
+		}
+	}
+	tt := openOverview(t, a)
+	if err := tt.Click("Hide tips"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if tt.HasText("Getting started") || !a.StartHidden {
+		t.Fatal("introductory actions did not disappear")
+	}
+	s, err := store.LoadSettings(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restarted := NewApp()
+	restarted.StartHidden, restarted.Snapshot = s.StartHidden, calmSnapshot()
+	tt = openOverview(t, restarted)
+	if tt.HasText("Getting started") {
+		t.Error("dismissed actions returned after restarting")
+	}
+}
+
+func TestStartActionsDuringScan(t *testing.T) {
+	a := NewApp()
+	a.Scanning = true
+	a.ChooseFolder = func() {}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "Getting started", "Results appear after the check.")
+	box, ok := tt.Find("Review issues")
+	if !ok {
+		t.Fatal("missing diagnosis action")
+	}
+	tt.ClickAt(box.X+box.W/2, box.Y+box.H/2)
+	if a.router.Path() != overview.path {
+		t.Error("unavailable diagnosis opened before a snapshot existed")
+	}
+	a.Snapshot, a.Counting = calmSnapshot(), true
+	tt.Frame()
+	if err := tt.Click("Review issues"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != problemsPage {
+		t.Error("counting disk space blocked diagnosis")
+	}
+}
+
+func TestStartActionsAppearance(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	for _, tc := range []struct {
+		name          string
+		width, height int
+		dark, bare    bool
+	}{
+		{"start-light", 1280, 820, false, false},
+		{"start-dark", 1280, 820, true, false},
+		{"start-narrow", 1000, 680, false, false},
+		{"start-clean", 1280, 820, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := NewApp()
+			a.Snapshot = calmSnapshot()
+			a.Projects = testProjects()
+			a.ChooseFolder = func() {}
+			if tc.bare {
+				a.Snapshot, a.Projects = &inventory.Snapshot{}, nil
+			}
+			tt := ui.NewTesterWith(a.View, tc.width, tc.height, ui.TesterOptions{Dark: tc.dark})
+			tt.Advance(time.Second)
+			hasTexts(t, tt, "С чего начать", "Скрыть подсказки", "Установить инструменты", "Настроить AI")
+			screenshot(t, tt, tc.name)
+			project, ok := tt.Find("Проверить проект")
+			if tc.bare {
+				project, ok = tt.Find("Добавить проект")
+			}
+			ai, aiOK := tt.Find("Настроить AI")
+			if !ok || !aiOK || project.X < 0 || ai.X+ai.W > float32(tc.width) {
+				t.Fatal("actions do not fit the viewport")
+			}
+			if tc.width == 1000 && ai.Y <= project.Y {
+				t.Error("narrow actions did not wrap to a second row")
+			}
+		})
+	}
+}
+
+func TestOverviewFindProjectsExplicit(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	calls := 0
+	a.FindProjects = func() { calls++ }
+	tt := ui.NewTester(a.View, 1280, 1200)
+	tt.Advance(time.Second)
+	if calls != 0 {
+		t.Fatal("the overview searched projects without an action")
+	}
+	if err := tt.Click("Find projects"); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Error("the explicit search did not run")
+	}
 }
 
 // Before the first scan the overview says it is getting to know the
@@ -152,6 +316,32 @@ func TestOverviewCountsOpenPages(t *testing.T) {
 		if a.router.Path() != tc.path {
 			t.Errorf("%s went to %q, want %q", tc.label, a.router.Path(), tc.path)
 		}
+	}
+}
+
+func TestOverviewSummaryLongAmount(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	for _, width := range []int{1280, 1000} {
+		t.Run(strconv.Itoa(width), func(t *testing.T) {
+			a := NewApp()
+			a.Snapshot, a.StartHidden = calmSnapshot(), true
+			a.Sizes = &inventory.Sizes{
+				Caches: []inventory.Cache{{ID: "pnpm", Path: home + "/store"}},
+				Paths:  map[string]inventory.Usage{home + "/store": {Bytes: 29_900_000_000}},
+			}
+			tt := ui.NewTester(a.View, width, 820)
+			tt.Advance(time.Second)
+			amount, ok := tt.Find("до 29,9 ГБ")
+			card, cardOK := tt.Find("Можно освободить")
+			if !ok || !cardOK {
+				t.Fatal("missing upper-bound estimate or cleanup card")
+			}
+			if amount.X+amount.W > card.X+card.W-14-8-14 {
+				t.Errorf("estimate reaches the chevron: amount=%v card=%v", amount, card)
+			}
+			screenshot(t, tt, "summary-long-"+strconv.Itoa(width))
+		})
 	}
 }
 
