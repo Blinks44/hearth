@@ -270,3 +270,14 @@ func TestStepEditUserVar(t *testing.T) {
 		t.Errorf("shown: %q", shown)
 	}
 }
+
+func TestSkillStoragePreview(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = found("node")
+	plan := ops.Plan{Title: "Merge copies of 1 skill", Why: "Other copies move to backups; their paths become links.", Steps: []ops.Step{{Argv: []string{"mv", "/home/dev/.claude/skills/rex", "/home/dev/backups/rex"}}, {Argv: []string{"ln", "-s", "/home/dev/.agents/skills/rex", "/home/dev/.claude/skills/rex"}}}, Notes: []ops.Note{{Title: "Shared skill folder · rex", Text: "/home/dev/.agents/skills/rex"}, {Title: "Links to the shared folder", Text: "/home/dev/.claude/skills/rex → /home/dev/.agents/skills/rex"}}}
+	a.Propose(plan)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Shared skill folder · rex", "/home/dev/.agents/skills/rex", "Links to the shared folder")
+	screenshot(t, tt, "skill-storage-preview")
+}

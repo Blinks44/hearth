@@ -263,7 +263,8 @@ func (a *App) updatesView(c *ui.Context, p page) {
 							if len(rows) == 0 {
 								continue
 							}
-							ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+							ui.Row(c.Key("group:"+g.title)).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+								a.updateGroupCheckbox(c, g.title, rows)
 								ui.Text(c, strings.ToUpper(g.title)).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								ui.Text(c, strconv.Itoa(len(rows))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 							})
@@ -294,6 +295,34 @@ func (a *App) updatesView(c *ui.Context, p page) {
 			})
 		})
 	})
+}
+
+// updateGroupCheckbox changes only the visible, supported rows of a group.
+func (a *App) updateGroupCheckbox(c *ui.Context, title string, rows []updateRow) {
+	var keys []string
+	selected := 0
+	for _, r := range rows {
+		if r.choosable {
+			keys = append(keys, r.key)
+			if a.updateChosen(r) {
+				selected++
+			}
+		}
+	}
+	state := ui.CheckOff
+	if selected > 0 && selected == len(keys) {
+		state = ui.CheckOn
+	} else if selected > 0 {
+		state = ui.CheckMixed
+	}
+	if ui.CheckboxState(c.Key("all"), &state, "").Label(locales.UpdatesSelectGroup(title)).Disabled(len(keys) == 0).Changed() {
+		if a.updateChoice == nil {
+			a.updateChoice = map[string]bool{}
+		}
+		for _, key := range keys {
+			a.updateChoice[key] = state == ui.CheckOn
+		}
+	}
 }
 
 // updatesChecked is when the package managers' updates were checked, the

@@ -26,6 +26,9 @@ func TestSkillInstall(t *testing.T) {
 		t.Fatal(err)
 	}
 	dest := p.Steps[0].Skill.Path
+	if dest != filepath.Join(home, ".agents", "skills", "example") || p.Steps[0].Skill.Link != filepath.Join(home, ".claude", "skills", "example") {
+		t.Fatal("installation must use common storage and a Claude link")
+	}
 	if _, err := os.Stat(dest); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("plan created destination")
 	}
@@ -96,6 +99,9 @@ func TestSkillInstallProtection(t *testing.T) {
 					t.Fatal("changed file lost")
 				}
 			default:
+				if _, err := os.Lstat(filepath.Join(home, ".claude", "skills", "example")); !errors.Is(err, os.ErrNotExist) {
+					t.Fatal("rollback left an agent link")
+				}
 				if _, err := os.Stat(dest); !errors.Is(err, os.ErrNotExist) {
 					t.Fatalf("destination remains: %v", err)
 				}

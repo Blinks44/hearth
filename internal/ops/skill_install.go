@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -22,6 +24,7 @@ import (
 type SkillInstall struct {
 	Path  string
 	Skill skillcatalog.Skill
+	Link  string
 }
 
 // SkillInstallPlan reads the destination without creating it.
@@ -29,11 +32,17 @@ func SkillInstallPlan(sk skillcatalog.Skill, id string, env sysenv.Env, names fu
 	if err := sk.Validate(); err != nil {
 		return Plan{}, fmt.Errorf("prepare skill: %w", err)
 	}
-	dir, readers := ai.SkillsDir(id, env, "")
+	dir, _ := ai.SkillsDir(id, env, "")
 	if dir == "" || !filepath.IsAbs(dir) {
 		return Plan{}, errors.New(locales.SkillNoDir(names(id)))
 	}
-	dest := filepath.Join(dir, sk.Dir)
+	dest := filepath.Join(ai.SharedSkillsDir(env, ""), sk.Dir)
+	link := filepath.Join(dir, sk.Dir)
+	if link != dest {
+		if _, err := os.Lstat(link); !errors.Is(err, os.ErrNotExist) {
+			return Plan{}, errors.New(locales.SkillLinkTaken(link))
+		}
+	}
 	if _, err := os.Lstat(dest); !errors.Is(err, os.ErrNotExist) {
 		return Plan{}, errors.New(locales.SkillLinkTaken(dest))
 	}
@@ -44,8 +53,15 @@ func SkillInstallPlan(sk skillcatalog.Skill, id string, env sysenv.Env, names fu
 		sk.Files[i].Data = bytes.Clone(sk.Files[i].Data)
 		files = append(files, sk.Files[i].Path)
 	}
-	p := Plan{Title: locales.SkillInstallTitle(sk.Name, names(id)), Why: locales.SkillInstallWhy(), Action: locales.SkillCatalogInstall(), Steps: []Step{{Skill: &SkillInstall{dest, sk}}}, Changes: []string{dest}}
+	p := Plan{Title: locales.SkillInstallTitle(sk.Name, names(id)), Why: locales.SkillInstallWhy(), Action: locales.SkillCatalogInstall(), Steps: []Step{{Skill: &SkillInstall{Path: dest, Skill: sk}}}, Changes: []string{dest}}
 	p.Notes = []Note{{Title: locales.SkillInstallSource(), Text: sk.Repository + " · " + sk.Commit, URL: sk.URL()}, {Title: locales.FilesSection(), Text: strings.Join(files, "\n")}, {Title: locales.SkillInstallReview(), Text: locales.SkillInstallReviewText()}}
+	p.Notes = append(p.Notes, skillStorageNotes(sk.Name, dest, nil)...)
+	if link != dest {
+		p.Steps[0].Skill.Link = link
+		p.Notes = append(p.Notes, Note{Title: locales.SkillStorageLinks(), Text: link + " → " + dest})
+	}
+	// Common storage is visible to every agent that reads it.
+	_, readers := ai.SkillsDir("codex", env, "")
 	if len(readers) > 1 {
 		var titles []string
 		for _, r := range readers {
@@ -188,17 +204,43 @@ func applySkillInstall(ctx context.Context, in SkillInstall) (func() error, erro
 		}
 		return nil, fmt.Errorf("install skill: %w", errors.Join(err, cleanErr))
 	}
+	if in.Link != "" {
+		linkErr := os.MkdirAll(filepath.Dir(in.Link), 0755)
+		if linkErr == nil {
+			result, err := (run.Exec{}).Run(ctx, run.Cmd{Args: linkCommand(in.Path, in.Link), Timeout: time.Minute})
+			linkErr = err
+			if linkErr == nil && result.ExitCode != 0 {
+				linkErr = fmt.Errorf("create skill link: exit %d: %s", result.ExitCode, result.Stderr)
+			}
+		}
+		if linkErr != nil {
+			cleanErr := cleanup(root)
+			if cleanErr == nil {
+				_ = root.Close()
+				cleanErr = base.Remove(name)
+			}
+			return nil, errors.Join(linkErr, cleanErr)
+		}
+	}
 	undo := func() error {
 		root, err := os.OpenRoot(in.Path)
 		if err != nil {
 			return err
 		}
 		defer func() { _ = root.Close() }()
+		if in.Link != "" && !sameSkillPath(in.Link, in.Path) {
+			return ErrChanged
+		}
 		if err = cleanup(root); err != nil {
 			return err
 		}
 		if err = root.Close(); err != nil {
 			return err
+		}
+		if in.Link != "" {
+			if e := os.Remove(in.Link); e != nil {
+				return e
+			}
 		}
 		return os.Remove(in.Path)
 	}

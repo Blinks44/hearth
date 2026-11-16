@@ -270,3 +270,40 @@ func TestFlatpakBuild(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdatesGroupSelection(t *testing.T) {
+	a := updatesApp()
+	a.router.Push(updatesPage)
+	tt := ui.NewTester(a.View, 1280, 1100)
+	tt.Advance(time.Second)
+	if err := tt.Click("Select group: Homebrew · apps"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Update selected · 4")
+	if err := tt.Click("orbstack"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Update selected · 3")
+	if err := tt.Click("Select group: Homebrew · apps"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Update selected · 4")
+	if err := tt.Click("Select group: Homebrew · apps"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Update selected · 2")
+	a.updatesFilter = "cursor"
+	tt.Frame()
+	if err := tt.Click("Select group: Homebrew · apps"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	a.updatesFilter = ""
+	tt.Frame()
+	hasTexts(t, tt, "Update selected · 3")
+	screenshot(t, tt, "updates-groups")
+}

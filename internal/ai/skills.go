@@ -100,7 +100,16 @@ func ProjectSkills(dir string) []inventory.Skill {
 	return readSkills(roots, dir)
 }
 
-// SkillsDir is the skills directory the agent id reads first, the user's
+// SharedSkillsDir is the canonical storage for user or project skills.
+func SharedSkillsDir(env sysenv.Env, project string) string {
+	if project != "" {
+		return filepath.Join(project, ".agents", "skills")
+	}
+	return filepath.Join(homeDir(env), ".agents", "skills")
+}
+
+// SkillsDir prefers common storage when the agent reads it, otherwise its
+// own skills directory, the user's
 // or, when project is not "", that project's, with the agents that read
 // it: a skill linked there is theirs too. "" when the agent reads none.
 func SkillsDir(id string, env sysenv.Env, project string) (skills string, readers []string) {
@@ -125,6 +134,9 @@ func SkillsDir(id string, env sysenv.Env, project string) (skills string, reader
 		if a.id == id {
 			if p := paths(a); len(p) > 0 {
 				skills = p[0]
+				if shared := SharedSkillsDir(env, project); slices.Contains(p, shared) {
+					skills = shared
+				}
 			}
 		}
 	}

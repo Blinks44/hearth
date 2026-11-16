@@ -9079,5 +9079,9 @@
   "databaseWindowsSetup": "Configure the database server",
   "databaseWindowsSetupText": "The official setup wizard will ask for a root password and initialize the server. Create a Windows service, enable TCP/IP and start the server before closing the wizard. Keep remote root access disabled and restrict network access to this computer. Hearth does not read or save the password. Cancelling or failing setup can leave installed files; existing databases are not removed.",
   "databaseWindowsGuard": "Check for existing MySQL and MariaDB services",
-  "databaseWindowsVerify": "Verify the running database service and connection"
+  "databaseWindowsVerify": "Verify the running database service and connection",
+  "skillStorageFolder": "Shared skill folder",
+  "skillStorageLinks": "Links to the shared folder",
+  "updatesSelectGroup": "Select group: {group}",
+  "@updatesSelectGroup": {"placeholders": {"group": {"type": "String"}}}
 }

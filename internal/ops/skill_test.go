@@ -69,35 +69,33 @@ func TestSkillLinkAndUnlink(t *testing.T) {
 	}
 	link := filepath.Join(home, ".agents", "skills", "pdf")
 	// Cursor reads ~/.claude/skills too: it has pdf already.
-	if len(p.Notes) != 1 || !strings.Contains(p.Notes[0].Text, "copilot") || strings.Contains(p.Notes[0].Text, "cursor") {
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return strings.Contains(n.Text, "copilot") && !strings.Contains(n.Text, "cursor") }) {
 		t.Errorf("notes = %+v, want the other readers of ~/.agents/skills without pdf", p.Notes)
 	}
 	runPlan(t, p, env)
 	pdf = skillNamed(t, env, "pdf")[0]
-	if !slices.ContainsFunc(pdf.Paths, func(sp inventory.SkillPath) bool { return sp.Path == link && sp.Link }) {
-		t.Fatalf("paths after linking: %+v", pdf.Paths)
+	if !sameSkillPath(pdf.Dir, link) {
+		t.Fatalf("main folder = %s", pdf.Dir)
+	}
+	private := filepath.Join(home, ".claude", "skills", "pdf")
+	if !slices.ContainsFunc(pdf.Paths, func(sp inventory.SkillPath) bool { return sameSkillPath(sp.Path, private) && sp.Link }) {
+		t.Fatalf("private path must be a link: %+v", pdf.Paths)
 	}
 	if _, err := SkillLinkPlan(pdf, "codex", env, title); err == nil {
-		t.Error("a plan for a place already taken")
+		t.Error("accepted existing destination")
 	}
 	if _, err := SkillUnlinkPlan(pdf, pdf.Dir, env, title); err == nil {
-		t.Error("a plan that would delete the skill's own folder")
+		t.Error("accepted removal of shared folder")
 	}
-	p, err = SkillUnlinkPlan(pdf, link, env, title)
+	p, err = SkillUnlinkPlan(pdf, private, env, title)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Cursor keeps it by ~/.claude/skills: Codex loses it, Cursor does not.
-	if !strings.Contains(p.Title, "codex") || strings.Contains(p.Title, "cursor") {
-		t.Errorf("title %q, want the agents that lose it alone", p.Title)
-	}
 	runPlan(t, p, env)
 	if _, err := os.Stat(filepath.Join(pdf.Dir, "SKILL.md")); err != nil {
-		t.Errorf("the skill's folder went: %v", err)
+		t.Fatal(err)
 	}
-	if _, err := os.Lstat(link); err == nil {
-		t.Error("the link stayed")
-	}
+
 }
 
 // Identical copies merge into one folder: the other copy moves to the
@@ -115,7 +113,7 @@ func TestSkillMerge(t *testing.T) {
 	}
 	runPlan(t, p, env)
 	after := skillNamed(t, env, "plan")
-	if len(after) != 1 || after[0].Dir != copies[0].Dir || len(after[0].Paths) != 2 {
+	if len(after) != 1 || !sameSkillPath(after[0].Dir, filepath.Join(home, ".agents", "skills", "plan")) || len(after[0].Paths) != 2 {
 		t.Fatalf("after the merge: %+v", after)
 	}
 	if _, err := os.Stat(filepath.Join(backups, "plan-2026-11-11-090000", "SKILL.md")); err != nil {
@@ -125,5 +123,90 @@ func TestSkillMerge(t *testing.T) {
 	differ[1].Sum = "other"
 	if _, err := SkillMergePlan([][]inventory.Skill{differ}, backups, env, time.Now()); err == nil {
 		t.Error("a merge of copies that differ")
+	}
+}
+
+func TestSkillMergeCommonStorage(t *testing.T) {
+	for _, name := range []string{"private copies", "shared link", "project copies", "shared copy last"} {
+		t.Run(name, func(t *testing.T) {
+			home := t.TempDir()
+			env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home}
+			scope := ""
+			base := home
+			if name == "project copies" {
+				base = filepath.Join(home, "repo")
+				scope = base
+			}
+			roots := []string{filepath.Join(base, ".claude", "skills", "example"), filepath.Join(base, ".gemini", "skills", "example")}
+			shared := filepath.Join(base, ".agents", "skills", "example")
+			if name == "shared copy last" {
+				roots[1] = shared
+			}
+			for _, root := range roots {
+				if err := os.MkdirAll(root, 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(root, "SKILL.md"), []byte("---\nname: example\n---\nbody"), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if name == "shared link" {
+				if err := os.MkdirAll(filepath.Dir(shared), 0755); err != nil {
+					t.Fatal(err)
+				}
+				res, err := (run.Exec{}).Run(t.Context(), run.Cmd{Args: linkCommand(roots[0], shared), Timeout: time.Minute})
+				if err != nil || res.ExitCode != 0 {
+					t.Fatalf("create shared link: %v %s", err, res.Stderr)
+				}
+			}
+			copies := readSkills(env, scope)
+			slices.SortFunc(copies, func(a, b inventory.Skill) int { return strings.Compare(b.Dir, a.Dir) })
+			p, err := SkillMergePlan([][]inventory.Skill{copies}, filepath.Join(home, "backups"), env, time.Now())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(p.Notes) == 0 || !strings.Contains(p.Notes[0].Text, ".agents") {
+				t.Fatal("common path missing from preview")
+			}
+			runPlan(t, p, env)
+			info, err := os.Lstat(shared)
+			if err != nil || info.Mode()&linkMode != 0 {
+				t.Fatalf("shared folder is not physical: %v", err)
+			}
+			after := readSkills(env, scope)
+			if len(after) != 1 || !sameSkillPath(after[0].Dir, shared) {
+				t.Fatalf("skills: %+v", after)
+			}
+			for _, root := range roots {
+				if root != shared {
+					info, err := os.Lstat(root)
+					if err != nil || info.Mode()&linkMode == 0 {
+						t.Fatalf("private folder is not a link: %s %v", root, err)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestSkillCommonDestinationConflict(t *testing.T) {
+	home, env := skillHome(t)
+	sk := skillNamed(t, env, "pdf")[0]
+	dest := filepath.Join(home, ".agents", "skills", "pdf")
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dest, "SKILL.md"), []byte("keep different content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SkillLinkPlan(sk, "codex", env, title); err == nil {
+		t.Fatal("accepted occupied common destination")
+	}
+	data, err := os.ReadFile(filepath.Join(dest, "SKILL.md"))
+	if err != nil || string(data) != "keep different content" {
+		t.Fatal("changed existing common copy")
+	}
+	if _, err := os.Stat(filepath.Join(sk.Dir, "SKILL.md")); err != nil {
+		t.Fatal("changed original before confirmation")
 	}
 }

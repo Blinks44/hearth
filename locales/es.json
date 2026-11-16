@@ -1666,5 +1666,8 @@
   "databaseWindowsSetup": "Configurar el servidor de base de datos",
   "databaseWindowsSetupText": "El asistente oficial te pedirá una contraseña de root y preparará el servidor. Crea un servicio de Windows, activa TCP/IP e inicia el servidor antes de cerrar el asistente. Desactiva el acceso remoto de root y limita el acceso de red a este equipo. Hearth no lee ni guarda la contraseña. Si cancelas, pueden quedar archivos instalados; no se eliminan las bases de datos existentes.",
   "databaseWindowsGuard": "Comprobar los servicios existentes de MySQL y MariaDB",
-  "databaseWindowsVerify": "Comprobar el servicio y la conexión al servidor"
+  "databaseWindowsVerify": "Comprobar el servicio y la conexión al servidor",
+  "skillStorageFolder": "Carpeta compartida de la habilidad",
+  "skillStorageLinks": "Enlaces a la carpeta compartida",
+  "updatesSelectGroup": "Seleccionar grupo: {group}"
 }

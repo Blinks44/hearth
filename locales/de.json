@@ -1666,5 +1666,8 @@
   "databaseWindowsSetup": "Datenbankserver einrichten",
   "databaseWindowsSetupText": "Der offizielle Assistent fragt nach einem root-Passwort und richtet den Server ein. Erstellen Sie einen Windows-Dienst, aktivieren Sie TCP/IP und starten Sie den Server, bevor Sie den Assistenten schließen. Deaktivieren Sie den root-Fernzugriff und beschränken Sie den Netzwerkzugriff auf diesen Computer. Hearth liest oder speichert das Passwort nicht. Bei Abbruch können installierte Dateien zurückbleiben; vorhandene Datenbanken werden nicht entfernt.",
   "databaseWindowsGuard": "Vorhandene MySQL- und MariaDB-Dienste prüfen",
-  "databaseWindowsVerify": "Laufenden Datenbankdienst und Verbindung prüfen"
+  "databaseWindowsVerify": "Laufenden Datenbankdienst und Verbindung prüfen",
+  "skillStorageFolder": "Gemeinsamer Skill-Ordner",
+  "skillStorageLinks": "Verknüpfungen zum gemeinsamen Ordner",
+  "updatesSelectGroup": "Gruppe auswählen: {group}"
 }

@@ -1666,5 +1666,8 @@
   "databaseWindowsSetup": "配置数据库服务器",
   "databaseWindowsSetupText": "官方向导会要求设置 root 密码并初始化服务器。请创建 Windows 服务、启用 TCP/IP，并在关闭向导前启动服务器。请禁用 root 远程访问，并将网络访问限制为本机。Hearth 不会读取或保存密码。取消或配置失败后可能会留下已安装的文件；不会删除现有数据库。",
   "databaseWindowsGuard": "检查现有的 MySQL 和 MariaDB 服务",
-  "databaseWindowsVerify": "验证数据库服务运行状态和连接"
+  "databaseWindowsVerify": "验证数据库服务运行状态和连接",
+  "skillStorageFolder": "共享技能目录",
+  "skillStorageLinks": "指向共享目录的链接",
+  "updatesSelectGroup": "选择分组：{group}"
 }

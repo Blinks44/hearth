@@ -22825,3 +22825,33 @@ func DatabaseWindowsVerify() string { return In(i18n.Locale()).DatabaseWindowsVe
 func (msgs Messages) DatabaseWindowsVerify() string {
 	return Catalog.Format(msgs.locale, "databaseWindowsVerify", nil)
 }
+
+// SkillStorageFolder says "Shared skill folder"
+// in the language the app shows.
+func SkillStorageFolder() string { return In(i18n.Locale()).SkillStorageFolder() }
+
+// SkillStorageFolder says "Shared skill folder"
+// in the language of msgs.
+func (msgs Messages) SkillStorageFolder() string {
+	return Catalog.Format(msgs.locale, "skillStorageFolder", nil)
+}
+
+// SkillStorageLinks says "Links to the shared folder"
+// in the language the app shows.
+func SkillStorageLinks() string { return In(i18n.Locale()).SkillStorageLinks() }
+
+// SkillStorageLinks says "Links to the shared folder"
+// in the language of msgs.
+func (msgs Messages) SkillStorageLinks() string {
+	return Catalog.Format(msgs.locale, "skillStorageLinks", nil)
+}
+
+// UpdatesSelectGroup says "Select group: {group}"
+// in the language the app shows.
+func UpdatesSelectGroup(group string) string { return In(i18n.Locale()).UpdatesSelectGroup(group) }
+
+// UpdatesSelectGroup says "Select group: {group}"
+// in the language of msgs.
+func (msgs Messages) UpdatesSelectGroup(group string) string {
+	return Catalog.Format(msgs.locale, "updatesSelectGroup", map[string]any{"group": group})
+}
