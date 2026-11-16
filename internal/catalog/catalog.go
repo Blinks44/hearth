@@ -265,8 +265,9 @@ var Tools = []Entry{
 	// sets their service up; Homebrew's starts with brew services. On
 	// Linux only Debian's and Ubuntu's packages create a server that runs
 	// as installed: elsewhere it waits for its first setup. On Windows
-	// only EDB's PostgreSQL and MongoDB's installers set a service up:
-	// WinGet's MySQL and MariaDB come without one, and Redis has no
+	// EDB's PostgreSQL and MongoDB's installers set a service up:
+	// MySQL needs its configuration wizard. MariaDB requires additional
+	// server setup and is not offered on Windows; Redis has no
 	// Windows build of its own. MongoDB is in no Linux distribution and in
 	// Homebrew only through MongoDB's tap.
 	{ID: "postgresql", Group: Database, Methods: []Method{
@@ -278,9 +279,10 @@ var Tools = []Entry{
 		{Manager: "brew", Package: "redis", Kind: "formula"},
 		{Manager: "apt", Package: "redis-server"},
 	}},
-	{ID: "mysql", Group: Database, OS: []string{"darwin", "linux"}, Conflicts: []string{"mariadb"}, Methods: []Method{
+	{ID: "mysql", Group: Database, Conflicts: []string{"mariadb"}, Methods: []Method{
 		{Manager: "brew", Package: "mysql@8.4", Kind: "formula"},
 		{Manager: "apt", Package: "mysql-server"},
+		{Manager: "winget", Package: "Oracle.MySQL"},
 	}},
 	{ID: "mariadb", Group: Database, OS: []string{"darwin", "linux"}, Conflicts: []string{"mysql"}, Methods: []Method{
 		{Manager: "brew", Package: "mariadb", Kind: "formula"},

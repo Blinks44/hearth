@@ -127,7 +127,7 @@ func TestRecommended(t *testing.T) {
 }
 
 func TestToolsNotOnASystem(t *testing.T) {
-	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}, {"redis", "windows"}, {"mysql", "windows"}, {"mariadb", "windows"}, {"mongodb", "linux"}} {
+	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}, {"redis", "windows"}, {"mariadb", "windows"}, {"mongodb", "linux"}} {
 		e, _ := Find(tt.id)
 		if slices.Contains(e.Systems(), tt.goos) {
 			t.Errorf("%s installs on %s", tt.id, tt.goos)

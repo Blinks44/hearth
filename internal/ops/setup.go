@@ -231,6 +231,9 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 				pp, ok = PackagePlan(PackageInstall, pm, []inventory.SystemPackage{{Name: m.Package, Kind: m.Kind}}, nil)
 			}
 			steps, notes = pp.Steps, pp.Notes
+			if m.Manager == "winget" {
+				steps, notes = windowsDatabaseSetup(part.Tool, steps, notes)
+			}
 			// Homebrew installs a server without starting it: brew
 			// services starts it now and at each login, as the system's
 			// managers do with their packages' services.

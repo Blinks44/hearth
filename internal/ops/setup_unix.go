@@ -91,3 +91,5 @@ func startupEdits(env sysenv.Env, posix, fish string) ([]Step, error) {
 	}
 	return steps, nil
 }
+
+func windowsDatabaseSetup(_ string, steps []Step, notes []Note) ([]Step, []Note) { return steps, notes }

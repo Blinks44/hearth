@@ -164,3 +164,33 @@ func TestDatabaseURL(t *testing.T) {
 		}
 	}
 }
+
+// Windows offers MySQL, but selecting it only proposes a plan.
+func TestWindowsDatabaseInstallMenu(t *testing.T) {
+	previous := goos
+	goos = "windows"
+	t.Cleanup(func() { goos = previous })
+	a := cleanApp(t)
+	tt := openAI(t, a, "/tools/databases")
+	if err := tt.Click("Install server"); err != nil {
+		t.Fatal(err)
+	}
+	menu := tt.Menu()
+	if !slices.Contains(menu, "MySQL") || slices.Contains(menu, "MariaDB") {
+		t.Fatalf("unexpected Windows database menu: %v", menu)
+	}
+	if err := tt.ChooseMenuItem("MySQL"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) == 0 {
+		t.Fatal("selection did not create a pending plan")
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op.started {
+		t.Fatal("cancelling installation started the operation")
+	}
+}

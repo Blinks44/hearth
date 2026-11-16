@@ -22785,3 +22785,43 @@ func GlobalInstructionsEmptyFile() string { return In(i18n.Locale()).GlobalInstr
 func (msgs Messages) GlobalInstructionsEmptyFile() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsEmptyFile", nil)
 }
+
+// DatabaseWindowsSetup says "Configure the database server"
+// in the language the app shows.
+func DatabaseWindowsSetup() string { return In(i18n.Locale()).DatabaseWindowsSetup() }
+
+// DatabaseWindowsSetup says "Configure the database server"
+// in the language of msgs.
+func (msgs Messages) DatabaseWindowsSetup() string {
+	return Catalog.Format(msgs.locale, "databaseWindowsSetup", nil)
+}
+
+// DatabaseWindowsSetupText says "The official setup wizard will ask for a root password and initialize the server. Create a Windows service, enable TC…"
+// in the language the app shows.
+func DatabaseWindowsSetupText() string { return In(i18n.Locale()).DatabaseWindowsSetupText() }
+
+// DatabaseWindowsSetupText says "The official setup wizard will ask for a root password and initialize the server. Create a Windows service, enable TC…"
+// in the language of msgs.
+func (msgs Messages) DatabaseWindowsSetupText() string {
+	return Catalog.Format(msgs.locale, "databaseWindowsSetupText", nil)
+}
+
+// DatabaseWindowsGuard says "Check for existing MySQL and MariaDB services"
+// in the language the app shows.
+func DatabaseWindowsGuard() string { return In(i18n.Locale()).DatabaseWindowsGuard() }
+
+// DatabaseWindowsGuard says "Check for existing MySQL and MariaDB services"
+// in the language of msgs.
+func (msgs Messages) DatabaseWindowsGuard() string {
+	return Catalog.Format(msgs.locale, "databaseWindowsGuard", nil)
+}
+
+// DatabaseWindowsVerify says "Verify the running database service and connection"
+// in the language the app shows.
+func DatabaseWindowsVerify() string { return In(i18n.Locale()).DatabaseWindowsVerify() }
+
+// DatabaseWindowsVerify says "Verify the running database service and connection"
+// in the language of msgs.
+func (msgs Messages) DatabaseWindowsVerify() string {
+	return Catalog.Format(msgs.locale, "databaseWindowsVerify", nil)
+}
