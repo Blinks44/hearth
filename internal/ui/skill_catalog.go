@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -17,6 +18,7 @@ import (
 
 type skillCatalogState struct {
 	repo                 int
+	tab                  int // the repository chosen in the toolbar; repo is the one loaded
 	loading              bool
 	skills               []skillcatalog.Skill
 	dirs                 map[string]string
@@ -31,7 +33,7 @@ func (a *App) openSkillCatalog(repo int) {
 	if a.skillCatalog != nil && a.skillCatalog.cancel != nil {
 		a.skillCatalog.cancel()
 	}
-	state := &skillCatalogState{repo: repo, loading: true, agent: "claude"}
+	state := &skillCatalogState{repo: repo, tab: repo, loading: true, agent: "claude"}
 	if a.skillCatalog != nil {
 		state.agent = a.skillCatalog.agent
 		state.agentLabel = a.skillCatalog.agentLabel
@@ -65,9 +67,27 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				aiIntro(c, "puzzle", locales.SkillCatalogTitle(), locales.SkillCatalogText(), nil)
-				ui.Row(c).Justify(ui.End).Children(func() {
-					ui.Segmented(c.Key("catalog-repository"), &s.repo, "Anthropic", "Vercel").OnChange(func() { a.openSkillCatalog(s.repo) })
+				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
+					var segs []segment
+					for i, r := range skillcatalog.Repositories() {
+						count := ""
+						if i == s.repo && !s.loading && s.err == "" {
+							count = strconv.Itoa(len(s.skills))
+						}
+						segs = append(segs, segment{r.Name, count})
+					}
+					segments(c, "catalog-repository", &s.tab, segs)
+					ui.Box(c).Grow(1).Height(1)
+					ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Width(240)
 				})
+				if s.tab != s.repo {
+					a.openSkillCatalog(s.tab)
+					return
+				}
 				if s.loading {
 					cardNote(c, locales.Loading())
 					return
@@ -90,7 +110,6 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						listFrame(c, func() {
-							ui.Row(c).Padding(6, 10).Children(func() { ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Grow(1) })
 							groupTitle(c, skillcatalog.Repositories()[s.repo].Slug, "GitHub")
 							if len(shown) == 0 {
 								cardNote(c, locales.NothingMatches())
@@ -135,7 +154,7 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, sk skillca
 				ui.Text(c, sk.Name).FontSize(17).FontWeight(500).SingleLine()
 				aiTag(c, skillcatalog.Repositories()[s.repo].Name, pal.AccentSoft, pal.AccentInk)
 			})
-			ui.Text(c, sk.Description).FontSize(12.5).TextColor(t.TextMuted).MaxHeight(64).Clip()
+			ui.Text(c, sk.Description).FontSize(12.5).TextColor(t.TextMuted).MaxLines(4)
 			pathChip(c, sk.Repository+" · "+sk.Dir, sk.URL())
 		})
 		detailSection(c, locales.SkillCatalogFor())

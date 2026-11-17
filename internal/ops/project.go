@@ -70,14 +70,15 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		case st.Tool == "docker":
 			p, ready := projectDocker(state, in.Detect)
 			item.Ready = ready
+			install := false
 			if !ready && len(p.Steps) == 0 && state.Err == "" {
 				setup := in.Setup
 				setup.Have = cloneHave(in.Setup.Have)
 				setup.Tools = []string{"docker"}
 				if state.Docker == nil || len(state.Docker.Engines) == 0 || !slices.ContainsFunc(state.Docker.Engines, func(e inventory.DockerEngine) bool { return e.Path != "" }) {
 					setup.Have["docker"] = false
-					if install, _, err := SetupPlan(setup, env); err == nil {
-						p = install
+					if plan, _, err := SetupPlan(setup, env); err == nil {
+						p, install = plan, true
 					}
 				}
 			}
@@ -89,7 +90,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 			if len(p.Steps) > 0 {
 				plans = append(plans, p)
 				item.Text = locales.PrepareDockerStart()
-				if p.Title == locales.SetupPlanTitle() {
+				if install {
 					item.Text = locales.PrepareDockerInstall()
 				}
 			}

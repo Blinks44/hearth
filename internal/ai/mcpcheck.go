@@ -244,6 +244,10 @@ func CheckMCP(ctx context.Context, s inventory.MCPServer, term sysenv.Env) (MCPC
 			headers["Authorization"] = "Bearer " + term.Get(def.BearerVar)
 		}
 		maps.DeleteFunc(headers, func(_, v string) bool { return v == "" })
+		// Values taken from the terminal by name are secrets as well.
+		for _, v := range headers {
+			secrets = append(secrets, v, strings.TrimPrefix(v, "Bearer "))
+		}
 		status.headers, status.base = headers, http.DefaultTransport
 		client := &http.Client{Transport: &status}
 		if def.Transport == "sse" {

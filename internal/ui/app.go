@@ -66,7 +66,8 @@ type App struct {
 	SettingsError  string
 	SettingsNotice string
 	// Home is the user's home directory, which paths show as ~.
-	Home               string
+	Home string
+	// globalInstructions is the open Codex instructions preview; nil when none.
 	globalInstructions *globalInstructionPreview
 	// Snapshot is what the last scan found; nil before the first.
 	Snapshot *inventory.Snapshot
@@ -224,8 +225,8 @@ type App struct {
 	cliTab             int    // the CLI & clouds page's tab
 	cliFilter          string // the CLI & clouds table's filter
 	portsFilter        string // the Ports table's filter
-	instructionsQuery  string
-	instructionsChosen string
+	instructionsQuery  string // the Instructions page's filter
+	instructionsChosen string // the project shown on the Instructions page
 	usageTab           int    // the Usage page's period, by usagePeriods
 	mobileTab          int    // the mobile page's tab: all, then a group each
 	mobileFilter       string // the mobile table's filter

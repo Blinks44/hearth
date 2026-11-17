@@ -21856,6 +21856,20 @@ func (msgs Messages) InstructionsLinked() string {
 	return Catalog.Format(msgs.locale, "instructionsLinked", nil)
 }
 
+// StatLinked says "connected"
+// in the language the app shows.
+//
+// Stat on the Instructions page: projects whose instructions are connected.
+func StatLinked() string { return In(i18n.Locale()).StatLinked() }
+
+// StatLinked says "connected"
+// in the language of msgs.
+//
+// Stat on the Instructions page: projects whose instructions are connected.
+func (msgs Messages) StatLinked() string {
+	return Catalog.Format(msgs.locale, "statLinked", nil)
+}
+
 // InstructionsDifferent says "Different texts"
 // in the language the app shows.
 //
@@ -22374,6 +22388,104 @@ func GlobalInstructionsTitle() string { return In(i18n.Locale()).GlobalInstructi
 // Codex global instruction files, preview and confirmed installation plan.
 func (msgs Messages) GlobalInstructionsTitle() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsTitle", nil)
+}
+
+// GlobalInstructionsLinkedLead says "Codex reads the shared file through a link: edits to it are visible to Codex at once."
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsLinkedLead() string { return In(i18n.Locale()).GlobalInstructionsLinkedLead() }
+
+// GlobalInstructionsLinkedLead says "Codex reads the shared file through a link: edits to it are visible to Codex at once."
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsLinkedLead() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinkedLead", nil)
+}
+
+// GlobalInstructionsLinkFile says "link to the shared file"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsLinkFile() string { return In(i18n.Locale()).GlobalInstructionsLinkFile() }
+
+// GlobalInstructionsLinkFile says "link to the shared file"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsLinkFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinkFile", nil)
+}
+
+// GlobalInstructionsChipLinked says "connected"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsChipLinked() string { return In(i18n.Locale()).GlobalInstructionsChipLinked() }
+
+// GlobalInstructionsChipLinked says "connected"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsChipLinked() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChipLinked", nil)
+}
+
+// GlobalInstructionsChipReady says "configured"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsChipReady() string { return In(i18n.Locale()).GlobalInstructionsChipReady() }
+
+// GlobalInstructionsChipReady says "configured"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsChipReady() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChipReady", nil)
+}
+
+// GlobalInstructionsChipShared says "can be connected"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsChipShared() string { return In(i18n.Locale()).GlobalInstructionsChipShared() }
+
+// GlobalInstructionsChipShared says "can be connected"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsChipShared() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChipShared", nil)
+}
+
+// GlobalInstructionsChipCheck says "needs a look"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsChipCheck() string { return In(i18n.Locale()).GlobalInstructionsChipCheck() }
+
+// GlobalInstructionsChipCheck says "needs a look"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsChipCheck() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChipCheck", nil)
+}
+
+// GlobalInstructionsChipMissing says "none"
+// in the language the app shows.
+//
+// Global Codex instructions card on the agent page.
+func GlobalInstructionsChipMissing() string { return In(i18n.Locale()).GlobalInstructionsChipMissing() }
+
+// GlobalInstructionsChipMissing says "none"
+// in the language of msgs.
+//
+// Global Codex instructions card on the agent page.
+func (msgs Messages) GlobalInstructionsChipMissing() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsChipMissing", nil)
 }
 
 // GlobalInstructionsLead says "Codex reads instructions from its own directory. The shared file is not connected automatically."

@@ -21,11 +21,17 @@ import (
 )
 
 // Repository is a supported public source. Requests never carry credentials.
-type Repository struct{ Name, Slug string }
+// Root is the folder that holds one directory per skill.
+type Repository struct{ Name, Slug, Root string }
 
-// Repositories returns the sources offered in the catalog.
+// Repositories returns the sources offered in the catalog. OpenAI keeps its
+// installable skills in .curated; .system ships with Codex itself.
 func Repositories() []Repository {
-	return []Repository{{"Anthropic", "anthropics/skills"}, {"Vercel", "vercel-labs/agent-skills"}}
+	return []Repository{
+		{"Anthropic", "anthropics/skills", "skills"},
+		{"OpenAI", "openai/skills", "skills/.curated"},
+		{"Vercel", "vercel-labs/agent-skills", "skills"},
+	}
 }
 
 // File is a repository file relative to a skill's directory.
@@ -37,13 +43,13 @@ type File struct {
 
 // Skill holds the exact files shown in the preview and later installed.
 type Skill struct {
-	Name, Description, Dir, Repository, Commit string
-	Files                                      []File
+	Name, Description, Dir, Repository, Root, Commit string
+	Files                                            []File
 }
 
 // URL links to this immutable version of the skill.
 func (s Skill) URL() string {
-	return "https://github.com/" + s.Repository + "/tree/" + s.Commit + "/skills/" + s.Dir
+	return "https://github.com/" + s.Repository + "/tree/" + s.Commit + "/" + s.Root + "/" + s.Dir
 }
 
 // Text returns SKILL.md, whose encoding is checked during loading.
@@ -85,7 +91,7 @@ func Fetch(ctx context.Context, client *http.Client, repo Repository) ([]Skill, 
 	if err != nil {
 		return nil, err
 	}
-	return readArchive(ctx, data, repo.Slug, commit.SHA)
+	return readArchive(ctx, data, repo.Slug, repo.Root, commit.SHA)
 }
 
 func get(ctx context.Context, client *http.Client, url string, limit int64) ([]byte, error) {
@@ -129,7 +135,7 @@ func ValidPath(name string) bool {
 	return true
 }
 
-func readArchive(ctx context.Context, data []byte, repo, commit string) ([]Skill, error) {
+func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([]Skill, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("open skill archive: %w", err)
@@ -160,11 +166,12 @@ func readArchive(ctx context.Context, data []byte, repo, commit string) ([]Skill
 		if count > 10000 || total > maxExpanded {
 			return nil, errors.New("skill archive exceeds size limit")
 		}
-		_, rel, ok := strings.Cut(h.Name, "/")
-		if !ok || !strings.HasPrefix(rel, "skills/") {
+		_, rel, _ := strings.Cut(h.Name, "/")
+		inside, ok := strings.CutPrefix(rel, root+"/")
+		if !ok {
 			continue
 		}
-		dir, file, ok := strings.Cut(strings.TrimPrefix(rel, "skills/"), "/")
+		dir, file, ok := strings.Cut(inside, "/")
 		if !ok || file == "" || h.Typeflag == tar.TypeDir {
 			continue
 		}
@@ -188,7 +195,7 @@ func readArchive(ctx context.Context, data []byte, repo, commit string) ([]Skill
 		if blocked[dir] {
 			continue
 		}
-		s := Skill{Dir: dir, Repository: repo, Commit: commit, Files: files}
+		s := Skill{Dir: dir, Repository: repo, Root: root, Commit: commit, Files: files}
 		text := strings.ReplaceAll(strings.TrimPrefix(s.Text(), "\ufeff"), "\r\n", "\n")
 		rest, ok := strings.CutPrefix(text, "---\n")
 		front, _, closed := strings.Cut(rest, "\n---")

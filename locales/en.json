@@ -8792,6 +8792,10 @@
   "@instructionsLinked": {
     "description": "Project instructions page and operation."
   },
+  "statLinked": "connected",
+  "@statLinked": {
+    "description": "Stat on the Instructions page: projects whose instructions are connected."
+  },
   "instructionsDifferent": "Different texts",
   "@instructionsDifferent": {
     "description": "Project instructions page and operation."
@@ -8959,6 +8963,34 @@
   "globalInstructionsTitle": "Global instructions",
   "@globalInstructionsTitle": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
+  },
+  "globalInstructionsLinkedLead": "Codex reads the shared file through a link: edits to it are visible to Codex at once.",
+  "@globalInstructionsLinkedLead": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsLinkFile": "link to the shared file",
+  "@globalInstructionsLinkFile": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsChipLinked": "connected",
+  "@globalInstructionsChipLinked": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsChipReady": "configured",
+  "@globalInstructionsChipReady": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsChipShared": "can be connected",
+  "@globalInstructionsChipShared": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsChipCheck": "needs a look",
+  "@globalInstructionsChipCheck": {
+    "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsChipMissing": "none",
+  "@globalInstructionsChipMissing": {
+    "description": "Global Codex instructions card on the agent page."
   },
   "globalInstructionsLead": "Codex reads instructions from its own directory. The shared file is not connected automatically.",
   "@globalInstructionsLead": {

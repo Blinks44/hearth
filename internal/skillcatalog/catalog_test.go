@@ -56,7 +56,7 @@ func TestReadArchive(t *testing.T) {
 		{"bad frontmatter", []File{{"example/SKILL.md", []byte("no frontmatter"), false}}, "", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := readArchive(t.Context(), archive(t, tc.files, tc.special), "owner/repo", "sha")
+			got, err := readArchive(t.Context(), archive(t, tc.files, tc.special), "owner/repo", "skills", "sha")
 			if (err == nil) != tc.ok {
 				t.Fatalf("skills=%v error=%v", got, err)
 			}
@@ -103,7 +103,7 @@ func TestFetch(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	if _, err := readArchive(ctx, data, "repo", sha); err == nil {
+	if _, err := readArchive(ctx, data, "repo", "skills", sha); err == nil {
 		t.Fatal("cancellation ignored")
 	}
 	client.Transport = transport(func(r *http.Request) (*http.Response, error) {
@@ -150,5 +150,17 @@ func TestValidate(t *testing.T) {
 				t.Fatal("invalid bundle accepted")
 			}
 		})
+	}
+}
+
+func TestReadArchiveNestedRoot(t *testing.T) {
+	md := []byte("---\nname: gh-fix-ci\ndescription: Fix CI\n---\n")
+	data := archive(t, []File{{".curated/gh-fix-ci/SKILL.md", md, false}, {".system/skill-installer/SKILL.md", md, false}}, "")
+	got, err := readArchive(t.Context(), data, "openai/skills", "skills/.curated", "sha")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Dir != "gh-fix-ci" || got[0].URL() != "https://github.com/openai/skills/tree/sha/skills/.curated/gh-fix-ci" {
+		t.Fatalf("got %+v", got)
 	}
 }

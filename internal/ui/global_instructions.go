@@ -46,60 +46,85 @@ func (a *App) globalInstructionsCard(c *ui.Context, in *inventory.GlobalInstruct
 	if in == nil {
 		return
 	}
-	t := c.Theme()
+	t, pal := c.Theme(), Colors(c.Theme())
 	listFrame(c, func() {
-		ui.Column(c).Padding(16).Gap(10).Children(func() {
-			ui.Text(c, locales.GlobalInstructionsTitle()).FontSize(14).FontWeight(600)
-			ui.Text(c, locales.GlobalInstructionsLead()).FontSize(12.5).TextColor(t.TextMuted)
-			for _, row := range []struct {
-				label string
-				f     inventory.InstructionFile
-			}{
-				{locales.GlobalInstructionsSharedFile(), in.Shared}, {locales.GlobalInstructionsCodexFile(), in.Native}, {locales.GlobalInstructionsOverrideFile(), in.Override},
-			} {
-				if row.f == in.Override && !row.f.Exists && row.f.Err == "" {
-					continue
-				}
-				ui.Row(c.Key(row.label)).Gap(10).AlignItems(ui.Center).Children(func() {
-					status := locales.GlobalInstructionsNotFound()
-					if row.f.Exists {
-						status = locales.GlobalInstructionsFound()
-					}
-					if row.f.Exists && row.f.Empty {
-						status = locales.GlobalInstructionsEmptyFile()
-					}
-					if row.f.Path == in.Active {
-						status = locales.GlobalInstructionsActive()
-					}
-					if row.f.Err != "" {
-						status = locales.InstructionsUnreadable()
-					}
-					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-						ui.Text(c, row.label+" · "+status).FontSize(12).TextColor(t.TextMuted)
-						clipped(c, tilde(row.f.Path, a.Home)).Font(FontMono).FontSize(12)
-					})
-					if row.f.Exists && a.Shell != nil {
-						path := row.f.Path
-						iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
-					}
-				})
+		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.GlobalInstructionsTitle()).FontSize(14).FontWeight(600).Grow(1).SingleLine()
+			switch in.State {
+			case "linked":
+				chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.GlobalInstructionsChipLinked())
+			case "native", "same":
+				chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.GlobalInstructionsChipReady())
+			case "shared":
+				chip(c, Accent, pal.AccentSoft, pal.AccentInk, locales.GlobalInstructionsChipShared())
+			case "missing":
+				chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.GlobalInstructionsChipMissing())
+			default:
+				chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.GlobalInstructionsChipCheck())
 			}
-			if in.State == "shared" {
-				ui.Text(c, locales.GlobalInstructionsLinkWhy()).FontSize(12).TextColor(t.TextMuted)
-			} else {
-				ui.Text(c, globalInstructionState(in.State)).FontSize(12).TextColor(t.TextMuted)
+		})
+		// One sentence says what the state means and what to do.
+		lead := globalInstructionState(in.State)
+		switch in.State {
+		case "linked":
+			lead = locales.GlobalInstructionsLinkedLead()
+		case "shared":
+			lead = locales.GlobalInstructionsLead()
+		}
+		ui.Text(c, lead).FontSize(12.5).TextColor(t.TextMuted).Padding(0, 14, 12, 14)
+		for _, row := range []struct {
+			label string
+			f     inventory.InstructionFile
+		}{
+			{locales.GlobalInstructionsSharedFile(), in.Shared}, {locales.GlobalInstructionsCodexFile(), in.Native}, {locales.GlobalInstructionsOverrideFile(), in.Override},
+		} {
+			if row.f == in.Override && !row.f.Exists && row.f.Err == "" {
+				continue
 			}
-			ui.Row(c).Gap(8).Children(func() {
-				switch in.State {
-				case "shared":
-					ui.Button(c, locales.GlobalInstructionsConnect()).Height(24).Padding(0, 10).Background(t.Text).TextColor(t.Background).BorderColor(t.Text).Disabled(a.BuildPlan == nil).OnClick(func() { a.globalInstructionPlan("link", "") })
-				case "missing":
-					ui.Button(c, locales.GlobalInstructionsCreate()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(true) })
+			status := locales.GlobalInstructionsNotFound()
+			switch {
+			case row.f.Err != "":
+				status = locales.InstructionsUnreadable()
+			case row.f.Link && in.State == "linked":
+				status = locales.GlobalInstructionsLinkFile()
+			case row.f.Path == in.Active:
+				status = locales.GlobalInstructionsActive()
+			case row.f.Exists && row.f.Empty:
+				status = locales.GlobalInstructionsEmptyFile()
+			case row.f.Exists:
+				status = locales.GlobalInstructionsFound()
+			}
+			ui.Row(c.Key(row.label)).Gap(10).Padding(8, 12, 8, 14).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, row.label).FontSize(12.5).Width(120).Shrink(0).SingleLine()
+				clipped(c, tilde(row.f.Path, a.Home)).Font(FontMono).FontSize(12).Grow(1)
+				color := pal.TextFaint
+				if row.f.Path == in.Active {
+					color = t.TextMuted
 				}
-				if in.Shared.Exists && in.Native.Exists && in.State != "unreadable" {
-					ui.Button(c, locales.GlobalInstructionsCompare()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(false) })
+				ui.Text(c, status).FontSize(11.5).TextColor(color).SingleLine()
+				if row.f.Exists && a.Shell != nil {
+					path := row.f.Path
+					iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
+				} else {
+					ui.Box(c).Size(24, 24).Shrink(0)
 				}
 			})
+		}
+		// A linked file is the shared one: comparing it with itself says nothing.
+		compare := in.Shared.Exists && in.Native.Exists && in.State != "unreadable" && in.State != "linked"
+		if in.State != "shared" && in.State != "missing" && !compare {
+			return
+		}
+		ui.Row(c).Gap(8).Padding(10, 14, 12, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+			switch in.State {
+			case "shared":
+				ui.PrimaryButton(c.Key("global-connect"), locales.GlobalInstructionsConnect()).Disabled(a.BuildPlan == nil).OnClick(func() { a.globalInstructionPlan("link", "") })
+			case "missing":
+				ui.Button(c.Key("global-create"), locales.GlobalInstructionsCreate()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(true) })
+			}
+			if compare {
+				ui.Button(c.Key("global-compare"), locales.GlobalInstructionsCompare()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(false) })
+			}
 		})
 	})
 }

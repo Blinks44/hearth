@@ -16,7 +16,7 @@ func (a *App) RequestFix(q proposals.Request) error {
 	if !q.Valid() {
 		return errors.New("invalid issue ID; call get_issues again")
 	}
-	if a.mcpPending || a.op != nil && (a.op.open || a.op.running()) || a.setup.op.running() {
+	if a.mcpPending || a.preparing != nil || a.op != nil && (a.op.open || a.op.running()) || a.setup.op.running() {
 		return errors.New("hearth is showing or preparing another operation; finish or dismiss it first")
 	}
 	if a.Scanning {

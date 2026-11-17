@@ -52,18 +52,15 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 						connected++
 					}
 				}
-				aiIntro(c, "file-text", locales.InstructionsTitle(), locales.InstructionsLead(), []aiStat{{strconv.Itoa(len(a.Projects)), locales.StatProjects()}, {strconv.Itoa(connected), locales.InstructionsLinked()}, {strconv.Itoa(different), locales.StatProblems(different)}})
+				// Counters of nothing only add noise before the first project.
+				var stats []aiStat
+				if len(a.Projects) > 0 {
+					stats = []aiStat{{strconv.Itoa(len(a.Projects)), locales.StatProjects()}, {strconv.Itoa(connected), locales.StatLinked()}, {strconv.Itoa(different), locales.StatProblems(different)}}
+				}
+				aiIntro(c, "file-text", locales.InstructionsTitle(), locales.InstructionsLead(), stats)
 				toolNote(c, locales.InstructionsScope())
 				if len(a.Projects) == 0 {
-					listFrame(c, func() {
-						ui.Column(c).Padding(16).Gap(12).Children(func() {
-							ui.Text(c, locales.NoProjectsHeading()).FontSize(14).FontWeight(600)
-							ui.Text(c, locales.InstructionsEmpty()).FontSize(12).TextColor(c.Theme().TextMuted)
-							if a.ChooseFolder != nil {
-								ui.Button(c, locales.AddFolder()).OnClick(a.ChooseFolder)
-							}
-						})
-					})
+					listFrame(c, func() { a.noProjects(c, locales.InstructionsEmpty()) })
 					return
 				}
 				var shown []projects.Project

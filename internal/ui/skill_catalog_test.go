@@ -118,7 +118,7 @@ func TestSkillCatalogSelections(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if a.skillCatalog.repo != 1 {
+	if a.skillCatalog.repo != 2 {
 		t.Fatal("repository selection was lost")
 	}
 	if err := tt.Click("Install for"); err != nil {

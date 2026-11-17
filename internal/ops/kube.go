@@ -22,7 +22,7 @@ func KubeContextPlan(cli, from, to string, env sysenv.Env, r run.Runner) (Plan, 
 		Title: locales.KubeContextTitle(to), Why: locales.KubeContextWhy(),
 		Env:     append([]string{}, env...),
 		Steps:   []Step{{Argv: []string{cli, "config", "use-context", "--", to}, Timeout: time.Minute}},
-		Changes: []string{"kubectl context: " + from + " → " + to},
+		Changes: []string{locales.KubeContextSelected(from + " → " + to)},
 	}
 	p.Verify = func(ctx context.Context) (string, error) {
 		res, err := r.Run(ctx, run.Cmd{Args: []string{cli, "config", "current-context"}, Env: env})

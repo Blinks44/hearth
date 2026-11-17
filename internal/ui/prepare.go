@@ -62,6 +62,8 @@ func (a *App) prepareProject(dir string) {
 					tools = append(tools, req.Tool)
 				}
 			}
+			// Never mutate the snapshot owned by the UI.
+			snapshot.Tools = slices.Clone(snapshot.Tools)
 			for _, tool := range tools {
 				if ctx.Err() != nil {
 					return ops.Plan{}, ctx.Err()
@@ -72,8 +74,6 @@ func (a *App) prepareProject(dir string) {
 					st.Err = err.Error()
 				}
 				i := slices.IndexFunc(snapshot.Tools, func(s inventory.ToolState) bool { return s.Tool == tool })
-				// Never mutate the snapshot owned by the UI.
-				snapshot.Tools = slices.Clone(snapshot.Tools)
 				if i < 0 {
 					snapshot.Tools = append(snapshot.Tools, st)
 				} else {

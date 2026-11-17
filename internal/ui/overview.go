@@ -45,19 +45,21 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 				// right under the summary, then the rest.
 				if narrow(c) {
 					a.attention(c, items)
-					a.toolCards(c, found)
 					a.overviewProjects(c)
+					a.toolCards(c, found)
 					a.overviewAgents(c)
 					return
 				}
+				// Projects sit in the side column: the tool grid grows with
+				// every install and would push them out of sight.
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(18).Children(func() {
 						a.toolCards(c, found)
-						a.overviewProjects(c)
 					})
 					ui.Column(c).Width(342).Shrink(0).Padding(27, 0, 0, 0).Gap(18).Children(func() {
 						a.attention(c, items)
 						a.overviewAgents(c)
+						a.overviewProjects(c)
 					})
 				})
 			})
@@ -523,7 +525,7 @@ func (a *App) overviewProjects(c *ui.Context) {
 	}
 	card(c, projectsPage.title(), count, add, func() {
 		if len(a.Projects) == 0 {
-			a.noProjects(c)
+			a.noProjects(c, locales.NoProjectsYet())
 			return
 		}
 		lines := a.nodeLines()
@@ -543,27 +545,35 @@ func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []proj
 	if e.Hovered() {
 		e.Background(pal.Subtle)
 	}
-	e.Children(func() {
+	problem := projectProblem(statuses)
+	if problem == "" && len(p.Errs) > 0 {
+		problem = locales.ChipReadFailed()
+	}
+	e.AlignItems(ui.Start).Children(func() {
 		folderTile(c, 28)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+		// The side column is narrow: the tools wrap under the name, and
+		// the state is a line of its own rather than a chip.
+		ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 			ui.Text(c, filepath.Base(p.Dir)).FontSize(13.5).SingleLine()
-			clipped(c, tilde(p.Dir, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+			if len(statuses) > 0 {
+				ui.Row(c).Gap(4).Wrap().Children(func() {
+					for _, st := range statuses {
+						toolTag(c, st)
+					}
+				})
+			}
+			switch {
+			case problem != "":
+				ui.Text(c, problem).FontSize(11.5).TextColor(pal.WarningText).MaxLines(2)
+			case !anyChecked(statuses):
+				ui.Text(c, locales.ChipNotChecked()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
 		})
-		for _, st := range statuses {
-			toolTag(c, st)
-		}
-		problem := projectProblem(statuses)
-		if problem == "" && len(p.Errs) > 0 {
-			problem = locales.ChipReadFailed()
-		}
 		switch {
 		case problem != "":
-			ui.Text(c, problem).FontSize(11.5).TextColor(pal.WarningText).SingleLine()
-			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).TextColor(t.Warning)
+			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).Margin(6, 0, 0, 0).TextColor(t.Warning)
 		case anyChecked(statuses):
-			ui.Icon(c, Icon("circle-check")).Size(16, 16).TextColor(t.Success)
-		default:
-			ui.Text(c, locales.ChipNotChecked()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Icon(c, Icon("circle-check")).Size(16, 16).Shrink(0).Margin(6, 0, 0, 0).TextColor(t.Success)
 		}
 	})
 	if e.Clicked() {
@@ -571,8 +581,8 @@ func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []proj
 	}
 }
 
-// noProjects asks to add the first project.
-func (a *App) noProjects(c *ui.Context) {
+// noProjects asks to add the first project; text says what it gives.
+func (a *App) noProjects(c *ui.Context, text string) {
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Gap(6).Padding(18, 24, 24, 24).AlignItems(ui.Center).Children(func() {
@@ -581,16 +591,15 @@ func (a *App) noProjects(c *ui.Context) {
 			ui.Icon(c, Icon("folder-open")).Size(18, 18).TextColor(t.TextMuted)
 		})
 		ui.Text(c, locales.NoProjectsHeading()).FontSize(13.5).FontWeight(500).SingleLine()
-		ui.Text(c, locales.NoProjectsYet()).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(340)
-		if a.ChooseFolder != nil {
-			ui.Button(c, "").Height(24).Padding(0, 10).Margin(6, 0, 0, 0).Label(locales.AddFolder()).
-				OnClick(a.ChooseFolder).Children(func() {
-				ui.Text(c, locales.AddFolder()).FontSize(12).SingleLine()
-			})
-		}
-		if a.FindProjects != nil {
-			ui.Button(c.Key("overview-find-projects"), locales.FindProjects()).OnClick(a.FindProjects)
-		}
+		ui.Text(c, text).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(340)
+		ui.Row(c).Gap(8).Margin(8, 0, 0, 0).Children(func() {
+			if a.ChooseFolder != nil {
+				ui.Button(c.Key("overview-add-folder"), locales.AddFolder()).OnClick(a.ChooseFolder)
+			}
+			if a.FindProjects != nil {
+				ui.Button(c.Key("overview-find-projects"), locales.FindProjects()).OnClick(a.FindProjects)
+			}
+		})
 	})
 }
 

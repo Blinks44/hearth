@@ -100,3 +100,16 @@ func TestMCPProposalRejectsStaleAndUnsupported(t *testing.T) {
 		t.Fatal("rejected request proposed plan")
 	}
 }
+
+func TestMCPProposalWaitsForProjectPreparation(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: "/missing", Missing: true, Sources: []inventory.PathSource{{File: "/home/u/.bashrc", Line: 1}}}}}
+	a.PlanPath = func([]inventory.PathEntry, []string, func(ops.Plan, error)) {
+		t.Fatal("plan requested during preparation")
+	}
+	a.preparing = &preparing{dir: "/project", open: true, cancel: func() {}}
+	found := issues.Find(a.Snapshot, nil, nil, time.Now())
+	if err := a.RequestFix(proposals.Request{IssueID: issues.ID(found[0])}); err == nil {
+		t.Fatal("proposal accepted while a project plan was being prepared")
+	}
+}
