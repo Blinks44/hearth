@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,6 +68,7 @@ func LoadSettings(dir string) (Settings, error) {
 	if err != nil {
 		return s, fmt.Errorf("read settings: %w", err)
 	}
+	data = bytes.TrimPrefix(data, []byte("\ufeff")) // PowerShell 5 writes UTF-8 with a BOM
 	if err = json.Unmarshal(data, &s); err == nil && s.Format > settingsFormat {
 		err = fmt.Errorf("format %d is newer than %d", s.Format, settingsFormat)
 	}

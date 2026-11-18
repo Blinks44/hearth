@@ -50,6 +50,11 @@ func TestLoadSettings(t *testing.T) {
 			want: Settings{Format: 1, Theme: "light", VersionLists: true},
 		},
 		{
+			name: "byte order mark",
+			file: "\ufeff" + `{"format": 1, "theme": "dark"}`,
+			want: Settings{Format: 1, Theme: "dark", VersionLists: true},
+		},
+		{
 			name:    "broken",
 			file:    `{"theme": "light",`,
 			want:    DefaultSettings(),
