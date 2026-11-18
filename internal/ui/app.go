@@ -233,6 +233,7 @@ type App struct {
 	kubeFilter         string // the Kubernetes page's filter
 	kubeNS             kubeNamespaceDialog
 	kubeChecks         map[string]kubeCheck
+	kind               kindCreateDialog
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page

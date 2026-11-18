@@ -24479,3 +24479,723 @@ func PrepareDockerInstall() string { return In(i18n.Locale()).PrepareDockerInsta
 func (msgs Messages) PrepareDockerInstall() string {
 	return Catalog.Format(msgs.locale, "prepareDockerInstall", nil)
 }
+
+// KindNameInvalid says "A cluster name is lowercase letters, digits and hyphens, up to 32 characters."
+// in the language the app shows.
+//
+// kind cluster name is invalid.
+func KindNameInvalid() string { return In(i18n.Locale()).KindNameInvalid() }
+
+// KindNameInvalid says "A cluster name is lowercase letters, digits and hyphens, up to 32 characters."
+// in the language of msgs.
+//
+// kind cluster name is invalid.
+func (msgs Messages) KindNameInvalid() string {
+	return Catalog.Format(msgs.locale, "kindNameInvalid", nil)
+}
+
+// KindCreateTitle says "Create kind cluster {name}"
+// in the language the app shows.
+//
+// kind create plan title.
+func KindCreateTitle(name string) string { return In(i18n.Locale()).KindCreateTitle(name) }
+
+// KindCreateTitle says "Create kind cluster {name}"
+// in the language of msgs.
+//
+// kind create plan title.
+func (msgs Messages) KindCreateTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kindCreateTitle", map[string]any{"name": name})
+}
+
+// KindCreateWhy says "kind starts the cluster's nodes as containers in the Docker engine and adds the cluster's context to kubeconfig. If c…"
+// in the language the app shows.
+//
+// kind create plan explanation.
+func KindCreateWhy() string { return In(i18n.Locale()).KindCreateWhy() }
+
+// KindCreateWhy says "kind starts the cluster's nodes as containers in the Docker engine and adds the cluster's context to kubeconfig. If c…"
+// in the language of msgs.
+//
+// kind create plan explanation.
+func (msgs Messages) KindCreateWhy() string {
+	return Catalog.Format(msgs.locale, "kindCreateWhy", nil)
+}
+
+// KindCreateAction says "Create cluster"
+// in the language the app shows.
+//
+// kind create plan button.
+func KindCreateAction() string { return In(i18n.Locale()).KindCreateAction() }
+
+// KindCreateAction says "Create cluster"
+// in the language of msgs.
+//
+// kind create plan button.
+func (msgs Messages) KindCreateAction() string {
+	return Catalog.Format(msgs.locale, "kindCreateAction", nil)
+}
+
+// KindImageNote says "Node image"
+// in the language the app shows.
+//
+// kind create plan note title.
+func KindImageNote() string { return In(i18n.Locale()).KindImageNote() }
+
+// KindImageNote says "Node image"
+// in the language of msgs.
+//
+// kind create plan note title.
+func (msgs Messages) KindImageNote() string {
+	return Catalog.Format(msgs.locale, "kindImageNote", nil)
+}
+
+// KindImageNoteText says "The first cluster downloads kind's node image, several hundred megabytes. Each node is a container that uses memory w…"
+// in the language the app shows.
+//
+// kind create plan note.
+func KindImageNoteText() string { return In(i18n.Locale()).KindImageNoteText() }
+
+// KindImageNoteText says "The first cluster downloads kind's node image, several hundred megabytes. Each node is a container that uses memory w…"
+// in the language of msgs.
+//
+// kind create plan note.
+func (msgs Messages) KindImageNoteText() string {
+	return Catalog.Format(msgs.locale, "kindImageNoteText", nil)
+}
+
+// KindConfigNote says "Cluster config: {file}"
+// in the language the app shows.
+//
+// kind create plan note: the config file.
+func KindConfigNote(file string) string { return In(i18n.Locale()).KindConfigNote(file) }
+
+// KindConfigNote says "Cluster config: {file}"
+// in the language of msgs.
+//
+// kind create plan note: the config file.
+func (msgs Messages) KindConfigNote(file string) string {
+	return Catalog.Format(msgs.locale, "kindConfigNote", map[string]any{"file": file})
+}
+
+// KindCreatedChange says "Cluster {name}: {count, plural, one {# node} other {# nodes}} in Docker"
+// in the language the app shows.
+//
+// kind create plan change line.
+func KindCreatedChange(name string, count int) string {
+	return In(i18n.Locale()).KindCreatedChange(name, count)
+}
+
+// KindCreatedChange says "Cluster {name}: {count, plural, one {# node} other {# nodes}} in Docker"
+// in the language of msgs.
+//
+// kind create plan change line.
+func (msgs Messages) KindCreatedChange(name string, count int) string {
+	return Catalog.Format(msgs.locale, "kindCreatedChange", map[string]any{"name": name, "count": count})
+}
+
+// KindContextAdded says "Context {context} in kubeconfig"
+// in the language the app shows.
+//
+// kind create plan change line.
+func KindContextAdded(context string) string { return In(i18n.Locale()).KindContextAdded(context) }
+
+// KindContextAdded says "Context {context} in kubeconfig"
+// in the language of msgs.
+//
+// kind create plan change line.
+func (msgs Messages) KindContextAdded(context string) string {
+	return Catalog.Format(msgs.locale, "kindContextAdded", map[string]any{"context": context})
+}
+
+// KindContextBack says "puts back kubectl's current context {name}"
+// in the language the app shows.
+//
+// kind create plan step note.
+func KindContextBack(name string) string { return In(i18n.Locale()).KindContextBack(name) }
+
+// KindContextBack says "puts back kubectl's current context {name}"
+// in the language of msgs.
+//
+// kind create plan step note.
+func (msgs Messages) KindContextBack(name string) string {
+	return Catalog.Format(msgs.locale, "kindContextBack", map[string]any{"name": name})
+}
+
+// KindContextKept says "kubectl's current context stays {name}"
+// in the language the app shows.
+//
+// kind create: kubectl's context stays.
+func KindContextKept(name string) string { return In(i18n.Locale()).KindContextKept(name) }
+
+// KindContextKept says "kubectl's current context stays {name}"
+// in the language of msgs.
+//
+// kind create: kubectl's context stays.
+func (msgs Messages) KindContextKept(name string) string {
+	return Catalog.Format(msgs.locale, "kindContextKept", map[string]any{"name": name})
+}
+
+// KindContextNow says "kubectl's current context becomes {context}"
+// in the language the app shows.
+//
+// kind create: kubectl's context becomes the cluster's.
+func KindContextNow(context string) string { return In(i18n.Locale()).KindContextNow(context) }
+
+// KindContextNow says "kubectl's current context becomes {context}"
+// in the language of msgs.
+//
+// kind create: kubectl's context becomes the cluster's.
+func (msgs Messages) KindContextNow(context string) string {
+	return Catalog.Format(msgs.locale, "kindContextNow", map[string]any{"context": context})
+}
+
+// KindExists says "A kind cluster named {name} already exists."
+// in the language the app shows.
+//
+// kind create refused: the name is taken.
+func KindExists(name string) string { return In(i18n.Locale()).KindExists(name) }
+
+// KindExists says "A kind cluster named {name} already exists."
+// in the language of msgs.
+//
+// kind create refused: the name is taken.
+func (msgs Messages) KindExists(name string) string {
+	return Catalog.Format(msgs.locale, "kindExists", map[string]any{"name": name})
+}
+
+// KindMissing says "kind does not list cluster {name}."
+// in the language the app shows.
+//
+// kind create check failed.
+func KindMissing(name string) string { return In(i18n.Locale()).KindMissing(name) }
+
+// KindMissing says "kind does not list cluster {name}."
+// in the language of msgs.
+//
+// kind create check failed.
+func (msgs Messages) KindMissing(name string) string {
+	return Catalog.Format(msgs.locale, "kindMissing", map[string]any{"name": name})
+}
+
+// KindCreated says "kind lists cluster {name}"
+// in the language the app shows.
+//
+// kind create check passed.
+func KindCreated(name string) string { return In(i18n.Locale()).KindCreated(name) }
+
+// KindCreated says "kind lists cluster {name}"
+// in the language of msgs.
+//
+// kind create check passed.
+func (msgs Messages) KindCreated(name string) string {
+	return Catalog.Format(msgs.locale, "kindCreated", map[string]any{"name": name})
+}
+
+// KindDeleteTitle says "Delete kind cluster {name}"
+// in the language the app shows.
+//
+// kind delete plan title.
+func KindDeleteTitle(name string) string { return In(i18n.Locale()).KindDeleteTitle(name) }
+
+// KindDeleteTitle says "Delete kind cluster {name}"
+// in the language of msgs.
+//
+// kind delete plan title.
+func (msgs Messages) KindDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kindDeleteTitle", map[string]any{"name": name})
+}
+
+// KindDeleteWhy says "kind removes the cluster's node containers and its context from kubeconfig. kind has no separate stop and start: dele…"
+// in the language the app shows.
+//
+// kind delete plan explanation.
+func KindDeleteWhy() string { return In(i18n.Locale()).KindDeleteWhy() }
+
+// KindDeleteWhy says "kind removes the cluster's node containers and its context from kubeconfig. kind has no separate stop and start: dele…"
+// in the language of msgs.
+//
+// kind delete plan explanation.
+func (msgs Messages) KindDeleteWhy() string {
+	return Catalog.Format(msgs.locale, "kindDeleteWhy", nil)
+}
+
+// KindDeleteAction says "Delete cluster"
+// in the language the app shows.
+//
+// kind delete plan button.
+func KindDeleteAction() string { return In(i18n.Locale()).KindDeleteAction() }
+
+// KindDeleteAction says "Delete cluster"
+// in the language of msgs.
+//
+// kind delete plan button.
+func (msgs Messages) KindDeleteAction() string {
+	return Catalog.Format(msgs.locale, "kindDeleteAction", nil)
+}
+
+// KindDataLost says "Everything in the cluster is lost"
+// in the language the app shows.
+//
+// kind delete plan warning title.
+func KindDataLost() string { return In(i18n.Locale()).KindDataLost() }
+
+// KindDataLost says "Everything in the cluster is lost"
+// in the language of msgs.
+//
+// kind delete plan warning title.
+func (msgs Messages) KindDataLost() string {
+	return Catalog.Format(msgs.locale, "kindDataLost", nil)
+}
+
+// KindDataLostText says "Workloads, volumes, secrets and images loaded into {name} are deleted with its nodes and cannot be brought back."
+// in the language the app shows.
+//
+// kind delete plan warning.
+func KindDataLostText(name string) string { return In(i18n.Locale()).KindDataLostText(name) }
+
+// KindDataLostText says "Workloads, volumes, secrets and images loaded into {name} are deleted with its nodes and cannot be brought back."
+// in the language of msgs.
+//
+// kind delete plan warning.
+func (msgs Messages) KindDataLostText(name string) string {
+	return Catalog.Format(msgs.locale, "kindDataLostText", map[string]any{"name": name})
+}
+
+// KindDeleted says "Cluster {name} deleted"
+// in the language the app shows.
+//
+// kind delete change line and check.
+func KindDeleted(name string) string { return In(i18n.Locale()).KindDeleted(name) }
+
+// KindDeleted says "Cluster {name} deleted"
+// in the language of msgs.
+//
+// kind delete change line and check.
+func (msgs Messages) KindDeleted(name string) string {
+	return Catalog.Format(msgs.locale, "kindDeleted", map[string]any{"name": name})
+}
+
+// KindContextRemoved says "Context {context} removed from kubeconfig"
+// in the language the app shows.
+//
+// kind delete change line.
+func KindContextRemoved(context string) string { return In(i18n.Locale()).KindContextRemoved(context) }
+
+// KindContextRemoved says "Context {context} removed from kubeconfig"
+// in the language of msgs.
+//
+// kind delete change line.
+func (msgs Messages) KindContextRemoved(context string) string {
+	return Catalog.Format(msgs.locale, "kindContextRemoved", map[string]any{"context": context})
+}
+
+// KindNoCurrent says "kubectl has no current context until you choose one"
+// in the language the app shows.
+//
+// kind delete change line: it was the current context.
+func KindNoCurrent() string { return In(i18n.Locale()).KindNoCurrent() }
+
+// KindNoCurrent says "kubectl has no current context until you choose one"
+// in the language of msgs.
+//
+// kind delete change line: it was the current context.
+func (msgs Messages) KindNoCurrent() string {
+	return Catalog.Format(msgs.locale, "kindNoCurrent", nil)
+}
+
+// KindStillThere says "kind still lists cluster {name}."
+// in the language the app shows.
+//
+// kind delete check failed.
+func KindStillThere(name string) string { return In(i18n.Locale()).KindStillThere(name) }
+
+// KindStillThere says "kind still lists cluster {name}."
+// in the language of msgs.
+//
+// kind delete check failed.
+func (msgs Messages) KindStillThere(name string) string {
+	return Catalog.Format(msgs.locale, "kindStillThere", map[string]any{"name": name})
+}
+
+// KindLocalClusters says "Local clusters"
+// in the language the app shows.
+//
+// Kubernetes page card title.
+func KindLocalClusters() string { return In(i18n.Locale()).KindLocalClusters() }
+
+// KindLocalClusters says "Local clusters"
+// in the language of msgs.
+//
+// Kubernetes page card title.
+func (msgs Messages) KindLocalClusters() string {
+	return Catalog.Format(msgs.locale, "kindLocalClusters", nil)
+}
+
+// KindNodes says "{count, plural, one {# node} other {# nodes}}"
+// in the language the app shows.
+//
+// Local cluster row: node count.
+func KindNodes(count int) string { return In(i18n.Locale()).KindNodes(count) }
+
+// KindNodes says "{count, plural, one {# node} other {# nodes}}"
+// in the language of msgs.
+//
+// Local cluster row: node count.
+func (msgs Messages) KindNodes(count int) string {
+	return Catalog.Format(msgs.locale, "kindNodes", map[string]any{"count": count})
+}
+
+// KindRunning says "running"
+// in the language the app shows.
+//
+// Local cluster row: all nodes run.
+func KindRunning() string { return In(i18n.Locale()).KindRunning() }
+
+// KindRunning says "running"
+// in the language of msgs.
+//
+// Local cluster row: all nodes run.
+func (msgs Messages) KindRunning() string {
+	return Catalog.Format(msgs.locale, "kindRunning", nil)
+}
+
+// KindStopped says "stopped"
+// in the language the app shows.
+//
+// Local cluster row: no node runs.
+func KindStopped() string { return In(i18n.Locale()).KindStopped() }
+
+// KindStopped says "stopped"
+// in the language of msgs.
+//
+// Local cluster row: no node runs.
+func (msgs Messages) KindStopped() string {
+	return Catalog.Format(msgs.locale, "kindStopped", nil)
+}
+
+// KindPartly says "{running} of {count} nodes running"
+// in the language the app shows.
+//
+// Local cluster row: some nodes run.
+func KindPartly(running string, count string) string {
+	return In(i18n.Locale()).KindPartly(running, count)
+}
+
+// KindPartly says "{running} of {count} nodes running"
+// in the language of msgs.
+//
+// Local cluster row: some nodes run.
+func (msgs Messages) KindPartly(running string, count string) string {
+	return Catalog.Format(msgs.locale, "kindPartly", map[string]any{"running": running, "count": count})
+}
+
+// KindInDocker says "in Docker ({engine})"
+// in the language the app shows.
+//
+// Local cluster row: where it runs.
+func KindInDocker(engine string) string { return In(i18n.Locale()).KindInDocker(engine) }
+
+// KindInDocker says "in Docker ({engine})"
+// in the language of msgs.
+//
+// Local cluster row: where it runs.
+func (msgs Messages) KindInDocker(engine string) string {
+	return Catalog.Format(msgs.locale, "kindInDocker", map[string]any{"engine": engine})
+}
+
+// KindDelete says "Delete…"
+// in the language the app shows.
+//
+// Local cluster row button.
+func KindDelete() string { return In(i18n.Locale()).KindDelete() }
+
+// KindDelete says "Delete…"
+// in the language of msgs.
+//
+// Local cluster row button.
+func (msgs Messages) KindDelete() string {
+	return Catalog.Format(msgs.locale, "kindDelete", nil)
+}
+
+// KindNoClusters says "No kind clusters in Docker"
+// in the language the app shows.
+//
+// Local clusters card: none.
+func KindNoClusters() string { return In(i18n.Locale()).KindNoClusters() }
+
+// KindNoClusters says "No kind clusters in Docker"
+// in the language of msgs.
+//
+// Local clusters card: none.
+func (msgs Messages) KindNoClusters() string {
+	return Catalog.Format(msgs.locale, "kindNoClusters", nil)
+}
+
+// KindEngineDown says "Docker engine is not running"
+// in the language the app shows.
+//
+// Local clusters: the Docker engine does not answer.
+func KindEngineDown() string { return In(i18n.Locale()).KindEngineDown() }
+
+// KindEngineDown says "Docker engine is not running"
+// in the language of msgs.
+//
+// Local clusters: the Docker engine does not answer.
+func (msgs Messages) KindEngineDown() string {
+	return Catalog.Format(msgs.locale, "kindEngineDown", nil)
+}
+
+// KindEngineDownCaption says "kind clusters are listed once it runs"
+// in the language the app shows.
+//
+// Local clusters card: why none are listed.
+func KindEngineDownCaption() string { return In(i18n.Locale()).KindEngineDownCaption() }
+
+// KindEngineDownCaption says "kind clusters are listed once it runs"
+// in the language of msgs.
+//
+// Local clusters card: why none are listed.
+func (msgs Messages) KindEngineDownCaption() string {
+	return Catalog.Format(msgs.locale, "kindEngineDownCaption", nil)
+}
+
+// KindCreateButton says "Create local cluster…"
+// in the language the app shows.
+//
+// Kubernetes header button.
+func KindCreateButton() string { return In(i18n.Locale()).KindCreateButton() }
+
+// KindCreateButton says "Create local cluster…"
+// in the language of msgs.
+//
+// Kubernetes header button.
+func (msgs Messages) KindCreateButton() string {
+	return Catalog.Format(msgs.locale, "kindCreateButton", nil)
+}
+
+// KindDialogTitle says "Create local cluster"
+// in the language the app shows.
+//
+// kind create dialog title.
+func KindDialogTitle() string { return In(i18n.Locale()).KindDialogTitle() }
+
+// KindDialogTitle says "Create local cluster"
+// in the language of msgs.
+//
+// kind create dialog title.
+func (msgs Messages) KindDialogTitle() string {
+	return Catalog.Format(msgs.locale, "kindDialogTitle", nil)
+}
+
+// KindDialogLead says "The cluster runs in containers of the Docker engine on this computer. It can be deleted in one step together with its…"
+// in the language the app shows.
+//
+// kind create dialog lead.
+func KindDialogLead() string { return In(i18n.Locale()).KindDialogLead() }
+
+// KindDialogLead says "The cluster runs in containers of the Docker engine on this computer. It can be deleted in one step together with its…"
+// in the language of msgs.
+//
+// kind create dialog lead.
+func (msgs Messages) KindDialogLead() string {
+	return Catalog.Format(msgs.locale, "kindDialogLead", nil)
+}
+
+// KindTool says "Tool"
+// in the language the app shows.
+//
+// kind create dialog label.
+func KindTool() string { return In(i18n.Locale()).KindTool() }
+
+// KindTool says "Tool"
+// in the language of msgs.
+//
+// kind create dialog label.
+func (msgs Messages) KindTool() string {
+	return Catalog.Format(msgs.locale, "kindTool", nil)
+}
+
+// KindNameLabel says "Name"
+// in the language the app shows.
+//
+// kind create dialog label.
+func KindNameLabel() string { return In(i18n.Locale()).KindNameLabel() }
+
+// KindNameLabel says "Name"
+// in the language of msgs.
+//
+// kind create dialog label.
+func (msgs Messages) KindNameLabel() string {
+	return Catalog.Format(msgs.locale, "kindNameLabel", nil)
+}
+
+// KindNodesLabel says "Nodes"
+// in the language the app shows.
+//
+// kind create dialog label.
+func KindNodesLabel() string { return In(i18n.Locale()).KindNodesLabel() }
+
+// KindNodesLabel says "Nodes"
+// in the language of msgs.
+//
+// kind create dialog label.
+func (msgs Messages) KindNodesLabel() string {
+	return Catalog.Format(msgs.locale, "kindNodesLabel", nil)
+}
+
+// KindEngine says "Engine"
+// in the language the app shows.
+//
+// kind create dialog label.
+func KindEngine() string { return In(i18n.Locale()).KindEngine() }
+
+// KindEngine says "Engine"
+// in the language of msgs.
+//
+// kind create dialog label.
+func (msgs Messages) KindEngine() string {
+	return Catalog.Format(msgs.locale, "kindEngine", nil)
+}
+
+// KindOneNode says "1 node"
+// in the language the app shows.
+//
+// kind create dialog: nodes segment.
+func KindOneNode() string { return In(i18n.Locale()).KindOneNode() }
+
+// KindOneNode says "1 node"
+// in the language of msgs.
+//
+// kind create dialog: nodes segment.
+func (msgs Messages) KindOneNode() string {
+	return Catalog.Format(msgs.locale, "kindOneNode", nil)
+}
+
+// KindWithWorkers says "1 + 2 workers"
+// in the language the app shows.
+//
+// kind create dialog: nodes segment.
+func KindWithWorkers() string { return In(i18n.Locale()).KindWithWorkers() }
+
+// KindWithWorkers says "1 + 2 workers"
+// in the language of msgs.
+//
+// kind create dialog: nodes segment.
+func (msgs Messages) KindWithWorkers() string {
+	return Catalog.Format(msgs.locale, "kindWithWorkers", nil)
+}
+
+// KindVersionDefault says "kind {version} default node image"
+// in the language the app shows.
+//
+// kind create dialog: the Kubernetes version.
+func KindVersionDefault(version string) string { return In(i18n.Locale()).KindVersionDefault(version) }
+
+// KindVersionDefault says "kind {version} default node image"
+// in the language of msgs.
+//
+// kind create dialog: the Kubernetes version.
+func (msgs Messages) KindVersionDefault(version string) string {
+	return Catalog.Format(msgs.locale, "kindVersionDefault", map[string]any{"version": version})
+}
+
+// KindContextHint says "context {context}"
+// in the language the app shows.
+//
+// kind create dialog: the context name.
+func KindContextHint(context string) string { return In(i18n.Locale()).KindContextHint(context) }
+
+// KindContextHint says "context {context}"
+// in the language of msgs.
+//
+// kind create dialog: the context name.
+func (msgs Messages) KindContextHint(context string) string {
+	return Catalog.Format(msgs.locale, "kindContextHint", map[string]any{"context": context})
+}
+
+// KindEngineReady says "Docker · {engine} running"
+// in the language the app shows.
+//
+// kind create dialog: the engine runs.
+func KindEngineReady(engine string) string { return In(i18n.Locale()).KindEngineReady(engine) }
+
+// KindEngineReady says "Docker · {engine} running"
+// in the language of msgs.
+//
+// kind create dialog: the engine runs.
+func (msgs Messages) KindEngineReady(engine string) string {
+	return Catalog.Format(msgs.locale, "kindEngineReady", map[string]any{"engine": engine})
+}
+
+// KindNotInstalled says "kind is not installed: install it on the Tools tab"
+// in the language the app shows.
+//
+// kind create dialog: kind is not found.
+func KindNotInstalled() string { return In(i18n.Locale()).KindNotInstalled() }
+
+// KindNotInstalled says "kind is not installed: install it on the Tools tab"
+// in the language of msgs.
+//
+// kind create dialog: kind is not found.
+func (msgs Messages) KindNotInstalled() string {
+	return Catalog.Format(msgs.locale, "kindNotInstalled", nil)
+}
+
+// KindWhatHappens says "What will happen"
+// in the language the app shows.
+//
+// kind create dialog section.
+func KindWhatHappens() string { return In(i18n.Locale()).KindWhatHappens() }
+
+// KindWhatHappens says "What will happen"
+// in the language of msgs.
+//
+// kind create dialog section.
+func (msgs Messages) KindWhatHappens() string {
+	return Catalog.Format(msgs.locale, "kindWhatHappens", nil)
+}
+
+// OpUndone says "Put back with: {command}"
+// in the language the app shows.
+//
+// Operation result: an undo command ran after a step that did not get
+// through.
+func OpUndone(command string) string { return In(i18n.Locale()).OpUndone(command) }
+
+// OpUndone says "Put back with: {command}"
+// in the language of msgs.
+//
+// Operation result: an undo command ran after a step that did not get
+// through.
+func (msgs Messages) OpUndone(command string) string {
+	return Catalog.Format(msgs.locale, "opUndone", map[string]any{"command": command})
+}
+
+// KindCurrentNote says "kubectl uses {context} now"
+// in the language the app shows.
+//
+// kind delete plan note title: the cluster is kubectl's current context.
+func KindCurrentNote(context string) string { return In(i18n.Locale()).KindCurrentNote(context) }
+
+// KindCurrentNote says "kubectl uses {context} now"
+// in the language of msgs.
+//
+// kind delete plan note title: the cluster is kubectl's current context.
+func (msgs Messages) KindCurrentNote(context string) string {
+	return Catalog.Format(msgs.locale, "kindCurrentNote", map[string]any{"context": context})
+}
+
+// KindCurrentNoteText says "After the delete kubectl has no current context: its commands fail until you choose another one."
+// in the language the app shows.
+//
+// kind delete plan note.
+func KindCurrentNoteText() string { return In(i18n.Locale()).KindCurrentNoteText() }
+
+// KindCurrentNoteText says "After the delete kubectl has no current context: its commands fail until you choose another one."
+// in the language of msgs.
+//
+// kind delete plan note.
+func (msgs Messages) KindCurrentNoteText() string {
+	return Catalog.Format(msgs.locale, "kindCurrentNoteText", nil)
+}

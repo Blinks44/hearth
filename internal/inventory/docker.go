@@ -14,6 +14,20 @@ type DockerState struct {
 	// it answered; DatabaseErr reports that they could not all be listed.
 	Databases   []Database
 	DatabaseErr bool
+	// KindClusters are the kind clusters whose nodes are the selected
+	// engine's containers, read from the same list as Databases.
+	KindClusters []KindCluster `json:",omitempty"`
+}
+
+// KindCluster is a local kind cluster, as its node containers show it.
+type KindCluster struct {
+	Name string
+	// Nodes is how many node containers it has; Running how many of them
+	// run.
+	Nodes, Running int
+	// Version is Kubernetes' of the control plane's node image, as
+	// "v1.31.2"; "" when the image does not say.
+	Version string `json:",omitempty"`
 }
 
 // DockerContext is a configured endpoint. Remote addresses are kept only

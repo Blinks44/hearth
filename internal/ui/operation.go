@@ -441,7 +441,7 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		dialogSection(c, strings.ToUpper(locales.OpLeft()))
 		var left []string
 		switch {
-		case len(s.Restored) > 0:
+		case len(s.Restored) > 0 || len(s.Undone) > 0:
 		case done > 0:
 			left = append(left, locales.OpLeftSteps(done))
 		default:
@@ -449,17 +449,21 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		}
 		logBlock(c, append(left, a.restored(s)...), c.Theme().Text, "", true)
 	}
-	if (s.Phase == ops.Failed || s.Phase == ops.NotVerified) && len(s.Restored) > 0 {
+	if (s.Phase == ops.Failed || s.Phase == ops.NotVerified) && len(s.Restored)+len(s.Undone) > 0 {
 		dialogSection(c, strings.ToUpper(locales.OpLeft()))
 		logBlock(c, a.restored(s), c.Theme().Text, "", true)
 	}
 }
 
-// restored says which files came back from their copies.
+// restored says which files came back from their copies and which
+// undo commands ran.
 func (a *App) restored(s ops.State) []string {
 	var lines []string
 	for _, path := range s.Restored {
 		lines = append(lines, locales.OpRestored(tilde(path, a.Home)))
+	}
+	for _, cmd := range s.Undone {
+		lines = append(lines, locales.OpUndone(cmd))
 	}
 	return lines
 }
@@ -487,7 +491,8 @@ func failReason(s ops.State) string {
 		if strings.HasPrefix(line, "$ ") {
 			break
 		}
-		if line == "" {
+		// Docker's and kubectl's usage hint after any error says nothing.
+		if line == "" || strings.HasSuffix(line, "--help' for more information") {
 			continue
 		}
 		if m := offlineRe.FindStringSubmatch(line); m != nil {

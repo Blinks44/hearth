@@ -67,8 +67,13 @@ func namespaceOf(k inventory.KubeContext) string {
 
 func (a *App) kubeView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if a.Snapshot != nil {
+				ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
+			}
+		}})
 		a.kubeNamespaceDialog(c)
+		a.kindDialog(c)
 		t := c.Theme()
 		pal := Colors(t)
 		cli := a.cliState()
@@ -133,6 +138,9 @@ func (a *App) kubeView(c *ui.Context, p page) {
 						a.kubeContextTable(c, cli, current)
 					}
 				}, func() {
+					if a.Snapshot != nil {
+						a.kindClustersCard(c, cli, current)
+					}
 					a.kubeTerminalCard(c, cli, current)
 					listCard(c, locales.KubeHow(), "", func() {
 						listRow(c, locales.KubeHowScan(), false, locales.KubeHowScanCaption(), func() {})
@@ -423,6 +431,222 @@ func (a *App) kubeNamespaceDialog(c *ui.Context) {
 					ui.Text(c, locales.KubeNamespaceInvalid()).FontSize(12).TextColor(pal.WarningText)
 				}
 			})
+			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Box(c).Grow(1).Height(1)
+				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })
+				ui.PrimaryButton(c, locales.Next()).Disabled(!ok).OnClick(next)
+			})
+		})
+	})
+}
+
+// kindEngine is the selected local Docker context, the engine kind runs
+// its nodes in, the Docker state the scan found, and whether the engine
+// answered the scan.
+func (a *App) kindEngine() (inventory.DockerContext, *inventory.DockerState, bool) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil {
+		return inventory.DockerContext{}, nil, false
+	}
+	for _, ctx := range st.Docker.Contexts {
+		if ctx.Name == st.Docker.Selected && ctx.Local {
+			return ctx, st.Docker, ctx.Status == "available"
+		}
+	}
+	return inventory.DockerContext{}, st.Docker, false
+}
+
+// engineName names a Docker context's engine, its context's name when
+// the engine is not known.
+func engineName(ctx inventory.DockerContext) string {
+	if ctx.Engine != "" {
+		return ctx.Engine
+	}
+	return ctx.Name
+}
+
+// kindState says how many of a cluster's nodes run.
+func kindState(k inventory.KindCluster) string {
+	switch k.Running {
+	case k.Nodes:
+		return locales.KindRunning()
+	case 0:
+		return locales.KindStopped()
+	}
+	return locales.KindPartly(strconv.Itoa(k.Running), strconv.Itoa(k.Nodes))
+}
+
+// kindClustersCard lists the kind clusters in the Docker engine, each
+// deleted through a plan.
+func (a *App) kindClustersCard(c *ui.Context, cli inventory.CliState, current *inventory.KubeContext) {
+	engine, d, up := a.kindEngine()
+	in, found := cliCopy(cli, "kind")
+	aside := ""
+	if up {
+		aside = locales.KindInDocker(engineName(engine))
+	}
+	listCard(c, locales.KindLocalClusters(), aside, func() {
+		switch {
+		case !up:
+			listRow(c, locales.KindEngineDown(), false, locales.KindEngineDownCaption(), func() {})
+			return
+		case len(d.KindClusters) == 0:
+			cardNote(c, locales.KindNoClusters())
+			return
+		}
+		cur := ""
+		if current != nil {
+			cur = current.Name
+		}
+		for _, k := range d.KindClusters {
+			parts := []string{"kind"}
+			if k.Version != "" {
+				parts = append(parts, k.Version)
+			}
+			parts = append(parts, locales.KindNodes(k.Nodes), kindState(k))
+			kc := c.Key("kind:" + k.Name)
+			listRow(kc, k.Name, false, strings.Join(parts, " · "), func() {
+				if !found || a.BuildPlan == nil {
+					return
+				}
+				ui.Button(kc.Key("delete"), locales.KindDelete()).Shrink(0).OnClick(func() {
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.KindDeletePlan(in.Path, k.Name, cur, env, run.Exec{})
+					}, a.proposeOrSay)
+				})
+			})
+		}
+	})
+}
+
+// kindCreateDialog is the dialog that creates a local kind cluster.
+type kindCreateDialog struct {
+	open bool
+	name string
+	// nodes is the nodes segment: 0 one node, 1 one and two workers.
+	nodes int
+}
+
+// openKindDialog opens the dialog with the first free name of dev,
+// dev-2, dev-3…
+func (a *App) openKindDialog() {
+	var taken []inventory.KindCluster
+	if _, d, _ := a.kindEngine(); d != nil {
+		taken = d.KindClusters
+	}
+	name := "dev"
+	for i := 2; slices.ContainsFunc(taken, func(k inventory.KindCluster) bool { return k.Name == name }); i++ {
+		name = "dev-" + strconv.Itoa(i)
+	}
+	a.kind = kindCreateDialog{open: true, name: name}
+}
+
+// kindDialog asks for the new cluster's name and nodes, says what will
+// happen, then proposes the plan that creates it.
+func (a *App) kindDialog(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	d := &a.kind
+	dialogBase(c.Key("kind-create"), &d.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(600).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		cli := a.cliState()
+		kind, found := cliCopy(cli, "kind")
+		kubectl, _ := cliCopy(cli, "kubectl")
+		engine, docker, up := a.kindEngine()
+		from := ""
+		if current := kubeCurrent(cli); current != nil && kubectl.Path != "" {
+			from = current.Name
+		}
+		name := strings.TrimSpace(d.name)
+		valid := ops.KindNameValid(name)
+		taken := docker != nil && slices.ContainsFunc(docker.KindClusters, func(k inventory.KindCluster) bool { return k.Name == name })
+		workers := 2 * d.nodes
+		ok := found && up && a.BuildPlan != nil && valid && !taken
+		next := func() {
+			if !ok {
+				return
+			}
+			d.open = false
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.KindCreatePlan(kind.Path, kubectl.Path, name, workers, from, env, run.Exec{})
+			}, a.proposeOrSay)
+		}
+		row := func(label string, body func()) {
+			ui.Row(c).Gap(12).MinHeight(32).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, label).FontSize(13).Width(150).Shrink(0)
+				body()
+			})
+		}
+		ui.Column(c).Children(func() {
+			ui.Column(c).Gap(4).Padding(20, 20, 12, 20).Children(func() {
+				ui.Text(c, locales.KindDialogTitle()).FontSize(18).FontWeight(600)
+				ui.Text(c, locales.KindDialogLead()).FontSize(12).TextColor(t.TextMuted)
+			})
+			ui.Column(c).Gap(4).Padding(4, 20, 14, 20).Children(func() {
+				row(locales.KindTool(), func() {
+					if found {
+						ui.Text(c, "kind "+kind.Version+" · "+sourceName(kind.Source)).FontSize(12.5)
+					} else {
+						ui.Text(c, locales.KindNotInstalled()).FontSize(12).TextColor(pal.WarningText)
+					}
+				})
+				row(locales.KindNameLabel(), func() {
+					field := ui.TextInput(c.Key("kind-name"), &d.name).Placeholder("dev").Label(locales.KindNameLabel()).Width(200).AutoFocus()
+					if field.Submitted() {
+						next()
+					}
+					hint, color := locales.KindContextHint("kind-"+name), pal.TextFaint
+					switch {
+					case name != "" && !valid:
+						hint, color = locales.KindNameInvalid(), pal.WarningText
+					case taken:
+						hint, color = locales.KindExists(name), pal.WarningText
+					}
+					ui.Text(c, hint).FontSize(11.5).TextColor(color).Grow(1).MinWidth(0)
+				})
+				row(locales.KindNodesLabel(), func() {
+					segments(c, "kind-nodes", &d.nodes, []segment{{locales.KindOneNode(), ""}, {locales.KindWithWorkers(), ""}})
+				})
+				if found {
+					row("Kubernetes", func() {
+						ui.Text(c, locales.KindVersionDefault(kind.Version)).FontSize(12.5).TextColor(t.TextMuted)
+					})
+				}
+				row(locales.KindEngine(), func() {
+					if up {
+						aiTag(c, locales.KindEngineReady(engineName(engine)), pal.SuccessSoft, pal.SuccessText)
+					} else {
+						aiTag(c, locales.KindEngineDown(), pal.WarningSoft, pal.WarningText)
+					}
+				})
+			})
+			if found && valid {
+				argv := []string{"kind", "create", "cluster", "--name", name, "--wait", "3m"}
+				if workers > 0 {
+					argv = append(argv, "--config", "…")
+				}
+				lines := []string{ops.Command(argv), locales.KindContextAdded("kind-" + name)}
+				if from != "" {
+					lines = append(lines, locales.KindContextKept(from))
+				} else {
+					lines = append(lines, locales.KindContextNow("kind-"+name))
+				}
+				lines = append(lines, locales.KindImageNoteText())
+				ui.Column(c).Gap(6).Padding(12, 20, 14, 20).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+					ui.Text(c, strings.ToUpper(locales.KindWhatHappens())).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint)
+					for i, line := range lines {
+						ui.Row(c).Gap(12).Children(func() {
+							ui.Text(c, strconv.Itoa(i+1)).FontSize(12).TextColor(pal.TextFaint).Width(10).Shrink(0)
+							text := ui.Text(c, line).FontSize(12.5).Grow(1).MinWidth(0)
+							if i == 0 {
+								text.Font(FontMono).FontSize(11.5).SingleLine()
+							}
+						})
+					}
+				})
+			}
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Box(c).Grow(1).Height(1)
 				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })

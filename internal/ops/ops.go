@@ -65,6 +65,13 @@ type Step struct {
 	// the plan does not get through, as an Edit's copy does; its Note,
 	// if any, names what came back in State.Restored.
 	Undo *Step
+	// UndoAlways runs Undo also when this step itself fails or is
+	// stopped: it may leave part of its work, as kind's first nodes.
+	UndoAlways bool
+	// Again, for an Undo, reports a moment after it ran that it must run
+	// once more: what its step started may still be coming, as nodes kind
+	// was making as it failed.
+	Again func(context.Context) bool
 }
 
 // Shown is the command a step shows: what it runs.
@@ -158,6 +165,9 @@ type State struct {
 	// Restored are the files put back from their copies as the plan did
 	// not get through.
 	Restored []string
+	// Undone are the undo commands that ran and passed, as shown, which
+	// name no file: what their steps did is gone.
+	Undone []string
 	// InstructionCopyAvailable reports a refused file symlink on Windows.
 	InstructionCopyAvailable bool
 }
@@ -224,7 +234,11 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.printf("restore %s%s\n", a.name, errText(err))
 			e.mu.Lock()
 			// An undo command that names nothing is not a thing put back.
-			if err == nil && !strings.HasPrefix(a.name, "$ ") {
+			switch cmd, ok := strings.CutPrefix(a.name, "$ "); {
+			case err != nil:
+			case ok:
+				e.state.Undone = append(e.state.Undone, cmd)
+			default:
 				e.state.Restored = append(e.state.Restored, a.name)
 			}
 			e.mu.Unlock()
@@ -354,6 +368,22 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.Admin {
 			argv = elevate(argv, p.Title)
 		}
+		undoStep := func() {
+			u := step.Undo
+			if u == nil {
+				return
+			}
+			name := u.Note
+			if name == "" {
+				name = "$ " + Command(u.Shown())
+			}
+			changes = append(changes, applied{name, func() error {
+				return runUndo(ctx, r, *u, env, commandDir)
+			}})
+		}
+		if step.UndoAlways {
+			undoStep()
+		}
 		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: commandDir, Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
@@ -374,14 +404,8 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.state.Steps[i] = Done
 			e.mu.Unlock()
 			e.printf("exit 0\n")
-			if u := step.Undo; u != nil {
-				name := u.Note
-				if name == "" {
-					name = "$ " + Command(u.Shown())
-				}
-				changes = append(changes, applied{name, func() error {
-					return runUndo(ctx, r, *u, env, commandDir)
-				}})
+			if !step.UndoAlways {
+				undoStep()
 			}
 			e.emit()
 			continue
@@ -478,12 +502,29 @@ func runUndo(ctx context.Context, r run.Runner, u Step, env []string, dir string
 		timeout = DefaultTimeout
 	}
 	env = slices.Concat(env, u.Env)
-	res, err := r.Run(context.WithoutCancel(ctx), run.Cmd{Args: fullPath(u.Argv, env), Env: env, Dir: dir, Timeout: timeout})
-	if err == nil && res.ExitCode != 0 {
-		err = fmt.Errorf("%s: exit code %d", Command(u.Shown()), res.ExitCode)
+	ctx = context.WithoutCancel(ctx)
+	for range undoTries {
+		res, err := r.Run(ctx, run.Cmd{Args: fullPath(u.Argv, env), Env: env, Dir: dir, Timeout: timeout})
+		if err == nil && res.ExitCode != 0 {
+			err = fmt.Errorf("%s: exit code %d", Command(u.Shown()), res.ExitCode)
+		}
+		if err != nil || u.Again == nil {
+			return err
+		}
+		time.Sleep(undoPause)
+		if !u.Again(ctx) {
+			return nil
+		}
 	}
-	return err
+	return fmt.Errorf("%s: what it undoes is still there", Command(u.Shown()))
 }
+
+// undoTries and undoPause are how often and how far apart an Undo with
+// Again runs; tests shorten the pause.
+var (
+	undoTries = 30
+	undoPause = 2 * time.Second
+)
 
 func errText(err error) string {
 	if err == nil {
@@ -605,6 +646,7 @@ func (e *execution) snapshot() State {
 	s.Steps = append([]StepStatus(nil), s.Steps...)
 	s.Log = append([]string(nil), s.Log...)
 	s.Restored = append([]string(nil), s.Restored...)
+	s.Undone = append([]string(nil), s.Undone...)
 	if len(e.line) > 0 {
 		s.Log = append(s.Log, string(e.line))
 	}

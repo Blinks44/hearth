@@ -9687,5 +9687,332 @@
   "prepareCopySetting": "Copy setting",
   "prepareSettingCopied": "Setting copied. Add it to [tools] in the shown config file, then check again.",
   "prepareGlobalSelection": "This manager changes the version for other projects too. Open the tool to review that change as a separate plan.",
-  "prepareDockerInstall": "Install a local Docker engine. Check again afterwards to review a start plan for the detected engine."
+  "prepareDockerInstall": "Install a local Docker engine. Check again afterwards to review a start plan for the detected engine.",
+  "kindNameInvalid": "A cluster name is lowercase letters, digits and hyphens, up to 32 characters.",
+  "@kindNameInvalid": {
+    "description": "kind cluster name is invalid."
+  },
+  "kindCreateTitle": "Create kind cluster {name}",
+  "@kindCreateTitle": {
+    "description": "kind create plan title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindCreateWhy": "kind starts the cluster's nodes as containers in the Docker engine and adds the cluster's context to kubeconfig. If creating fails or is stopped, the nodes made so far are deleted.",
+  "@kindCreateWhy": {
+    "description": "kind create plan explanation."
+  },
+  "kindCreateAction": "Create cluster",
+  "@kindCreateAction": {
+    "description": "kind create plan button."
+  },
+  "kindImageNote": "Node image",
+  "@kindImageNote": {
+    "description": "kind create plan note title."
+  },
+  "kindImageNoteText": "The first cluster downloads kind's node image, several hundred megabytes. Each node is a container that uses memory while it runs.",
+  "@kindImageNoteText": {
+    "description": "kind create plan note."
+  },
+  "kindConfigNote": "Cluster config: {file}",
+  "@kindConfigNote": {
+    "description": "kind create plan note: the config file.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kindCreatedChange": "Cluster {name}: {count, plural, one {# node} other {# nodes}} in Docker",
+  "@kindCreatedChange": {
+    "description": "kind create plan change line.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kindContextAdded": "Context {context} in kubeconfig",
+  "@kindContextAdded": {
+    "description": "kind create plan change line.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kindContextBack": "puts back kubectl's current context {name}",
+  "@kindContextBack": {
+    "description": "kind create plan step note.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindContextKept": "kubectl's current context stays {name}",
+  "@kindContextKept": {
+    "description": "kind create: kubectl's context stays.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindContextNow": "kubectl's current context becomes {context}",
+  "@kindContextNow": {
+    "description": "kind create: kubectl's context becomes the cluster's.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kindExists": "A kind cluster named {name} already exists.",
+  "@kindExists": {
+    "description": "kind create refused: the name is taken.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindMissing": "kind does not list cluster {name}.",
+  "@kindMissing": {
+    "description": "kind create check failed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindCreated": "kind lists cluster {name}",
+  "@kindCreated": {
+    "description": "kind create check passed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindDeleteTitle": "Delete kind cluster {name}",
+  "@kindDeleteTitle": {
+    "description": "kind delete plan title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindDeleteWhy": "kind removes the cluster's node containers and its context from kubeconfig. kind has no separate stop and start: deleting frees the memory and disk the cluster takes.",
+  "@kindDeleteWhy": {
+    "description": "kind delete plan explanation."
+  },
+  "kindDeleteAction": "Delete cluster",
+  "@kindDeleteAction": {
+    "description": "kind delete plan button."
+  },
+  "kindDataLost": "Everything in the cluster is lost",
+  "@kindDataLost": {
+    "description": "kind delete plan warning title."
+  },
+  "kindDataLostText": "Workloads, volumes, secrets and images loaded into {name} are deleted with its nodes and cannot be brought back.",
+  "@kindDataLostText": {
+    "description": "kind delete plan warning.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindDeleted": "Cluster {name} deleted",
+  "@kindDeleted": {
+    "description": "kind delete change line and check.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindContextRemoved": "Context {context} removed from kubeconfig",
+  "@kindContextRemoved": {
+    "description": "kind delete change line.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kindNoCurrent": "kubectl has no current context until you choose one",
+  "@kindNoCurrent": {
+    "description": "kind delete change line: it was the current context."
+  },
+  "kindStillThere": "kind still lists cluster {name}.",
+  "@kindStillThere": {
+    "description": "kind delete check failed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kindLocalClusters": "Local clusters",
+  "@kindLocalClusters": {
+    "description": "Kubernetes page card title."
+  },
+  "kindNodes": "{count, plural, one {# node} other {# nodes}}",
+  "@kindNodes": {
+    "description": "Local cluster row: node count.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kindRunning": "running",
+  "@kindRunning": {
+    "description": "Local cluster row: all nodes run."
+  },
+  "kindStopped": "stopped",
+  "@kindStopped": {
+    "description": "Local cluster row: no node runs."
+  },
+  "kindPartly": "{running} of {count} nodes running",
+  "@kindPartly": {
+    "description": "Local cluster row: some nodes run.",
+    "placeholders": {
+      "running": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kindInDocker": "in Docker ({engine})",
+  "@kindInDocker": {
+    "description": "Local cluster row: where it runs.",
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "kindDelete": "Delete…",
+  "@kindDelete": {
+    "description": "Local cluster row button."
+  },
+  "kindNoClusters": "No kind clusters in Docker",
+  "@kindNoClusters": {
+    "description": "Local clusters card: none."
+  },
+  "kindEngineDown": "Docker engine is not running",
+  "@kindEngineDown": {
+    "description": "Local clusters: the Docker engine does not answer."
+  },
+  "kindEngineDownCaption": "kind clusters are listed once it runs",
+  "@kindEngineDownCaption": {
+    "description": "Local clusters card: why none are listed."
+  },
+  "kindCreateButton": "Create local cluster…",
+  "@kindCreateButton": {
+    "description": "Kubernetes header button."
+  },
+  "kindDialogTitle": "Create local cluster",
+  "@kindDialogTitle": {
+    "description": "kind create dialog title."
+  },
+  "kindDialogLead": "The cluster runs in containers of the Docker engine on this computer. It can be deleted in one step together with its data.",
+  "@kindDialogLead": {
+    "description": "kind create dialog lead."
+  },
+  "kindTool": "Tool",
+  "@kindTool": {
+    "description": "kind create dialog label."
+  },
+  "kindNameLabel": "Name",
+  "@kindNameLabel": {
+    "description": "kind create dialog label."
+  },
+  "kindNodesLabel": "Nodes",
+  "@kindNodesLabel": {
+    "description": "kind create dialog label."
+  },
+  "kindEngine": "Engine",
+  "@kindEngine": {
+    "description": "kind create dialog label."
+  },
+  "kindOneNode": "1 node",
+  "@kindOneNode": {
+    "description": "kind create dialog: nodes segment."
+  },
+  "kindWithWorkers": "1 + 2 workers",
+  "@kindWithWorkers": {
+    "description": "kind create dialog: nodes segment."
+  },
+  "kindVersionDefault": "kind {version} default node image",
+  "@kindVersionDefault": {
+    "description": "kind create dialog: the Kubernetes version.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "kindContextHint": "context {context}",
+  "@kindContextHint": {
+    "description": "kind create dialog: the context name.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kindEngineReady": "Docker · {engine} running",
+  "@kindEngineReady": {
+    "description": "kind create dialog: the engine runs.",
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "kindNotInstalled": "kind is not installed: install it on the Tools tab",
+  "@kindNotInstalled": {
+    "description": "kind create dialog: kind is not found."
+  },
+  "kindWhatHappens": "What will happen",
+  "@kindWhatHappens": {
+    "description": "kind create dialog section."
+  },
+  "opUndone": "Put back with: {command}",
+  "@opUndone": {
+    "description": "Operation result: an undo command ran after a step that did not get through.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "kindCurrentNote": "kubectl uses {context} now",
+  "@kindCurrentNote": {
+    "description": "kind delete plan note title: the cluster is kubectl's current context.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kindCurrentNoteText": "After the delete kubectl has no current context: its commands fail until you choose another one.",
+  "@kindCurrentNoteText": {
+    "description": "kind delete plan note."
+  }
 }

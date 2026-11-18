@@ -175,18 +175,44 @@ func databaseService(d *inventory.DatabaseState, kind, name, source, status, aut
 	d.Servers = append(d.Servers, inventory.Database{Kind: kind, Name: name, Service: name, Source: source, Status: status, Autostart: autostart})
 }
 
-// dockerDatabases asks only for selected non-secret container fields.
+// kindNode counts a node container into its kind cluster.
+func kindNode(d *inventory.DockerState, cluster, role, image string, running bool) {
+	i := slices.IndexFunc(d.KindClusters, func(k inventory.KindCluster) bool { return k.Name == cluster })
+	if i < 0 {
+		d.KindClusters = append(d.KindClusters, inventory.KindCluster{Name: cluster})
+		i = len(d.KindClusters) - 1
+	}
+	k := &d.KindClusters[i]
+	k.Nodes++
+	if running {
+		k.Running++
+	}
+	// kindest/node:v1.31.2@sha256:…
+	if _, tag, ok := strings.Cut(image, ":"); ok && role == "control-plane" {
+		tag, _, _ = strings.Cut(tag, "@")
+		if strings.HasPrefix(tag, "v") {
+			k.Version = tag
+		}
+	}
+}
+
+// dockerDatabases asks only for selected non-secret container fields: it
+// finds the database containers and kind's node containers.
 func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, endpoint string, d *inventory.DockerState) {
-	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"Service":{{json (.Label "com.docker.compose.service")}}}`
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"Service":{{json (.Label "com.docker.compose.service")}},"Kind":{{json (.Label "io.x-k8s.kind.cluster")}},"Role":{{json (.Label "io.x-k8s.kind.role")}}}`
 	res, err := r.Run(ctx, run.Cmd{Args: []string{exe, "--host", endpoint, "ps", "--all", "--format", format}, Timeout: 3 * time.Second, Env: append(slices.Clone(env), "DOCKER_CONTEXT=")})
 	if err != nil || res.ExitCode != 0 || res.Truncated {
 		d.DatabaseErr = true
 		return
 	}
 	for line := range strings.Lines(string(res.Stdout)) {
-		var row struct{ ID, Name, Image, State, Ports, Project, Service string }
+		var row struct{ ID, Name, Image, State, Ports, Project, Service, Kind, Role string }
 		if json.Unmarshal([]byte(line), &row) != nil {
 			d.DatabaseErr = true
+			continue
+		}
+		if row.Kind != "" {
+			kindNode(d, row.Kind, row.Role, row.Image, row.State == "running")
 			continue
 		}
 		kind := inventory.DatabaseKind(row.Image)

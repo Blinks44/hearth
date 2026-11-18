@@ -247,6 +247,7 @@ func TestFailReason(t *testing.T) {
 		{"last line of the step", ops.State{ExitCode: 1, Log: []string{"$ a", "earlier", "$ brew install mise", "Error: No such keg: mise.", ""}}, "Error: No such keg: mise"},
 		{"no network", ops.State{ExitCode: 28, Log: []string{"$ /bin/sh -c …", "curl: (28) Failed to connect to api.github.com port 443 after 75073 ms: Couldn't connect to server"}}, "no connection to api.github.com, check the internet"},
 		{"no host", ops.State{ExitCode: 6, Log: []string{"$ /bin/sh -c …", "curl: (6) Could not resolve host: mise.run"}}, "no connection to mise.run, check the internet"},
+		{"usage hint", ops.State{ExitCode: 1, Log: []string{"$ kind create cluster", "Command Output: docker: Error response from daemon: Conflict.", "", "Run 'docker run --help' for more information"}}, "Command Output: docker: Error response from daemon: Conflict"},
 		{"no output", ops.State{ExitCode: 2, Log: []string{"$ a", "earlier", "$ b"}}, "exit code 2"},
 		{"HRESULT", ops.State{ExitCode: 0x8a150006, Log: []string{"$ winget install"}}, "exit code 0x8a150006"},
 		{"WinGet cancelled", ops.State{ExitCode: 0x8a15010c, Log: []string{"$ winget install"}},

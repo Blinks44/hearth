@@ -37,7 +37,9 @@ func plan(steps ...[]string) Plan {
 	return p
 }
 
-func init() { verifyPause, engineStartPause = time.Millisecond, time.Millisecond }
+func init() {
+	verifyPause, engineStartPause, undoPause = time.Millisecond, time.Millisecond, time.Millisecond
+}
 
 func TestExecute(t *testing.T) {
 	fail := errors.New("broken")
@@ -191,6 +193,9 @@ type blocking struct {
 
 func (b *blocking) Run(ctx context.Context, c run.Cmd) (run.Result, error) {
 	b.calls++
+	if b.calls > 1 {
+		return run.Result{}, nil
+	}
 	_, _ = c.Output.Write([]byte("downloading\n"))
 	close(b.started)
 	<-ctx.Done()
@@ -246,5 +251,68 @@ func TestExecuteFindsProgramInPlanPath(t *testing.T) {
 	Execute(context.Background(), r, p, io.Discard, func(State) {})
 	if calls, want := r.Calls(), filepath.Join(dir, name); len(calls) != 1 || !strings.EqualFold(calls[0].Args[0], want) {
 		t.Errorf("ran %+v, want %q", calls, want)
+	}
+}
+
+// A step that may leave part of its work puts it back when it fails or
+// is stopped itself; another step's Undo runs only once it got through.
+func TestExecuteUndoAlways(t *testing.T) {
+	create := Step{Argv: []string{"kind", "create", "cluster"}, UndoAlways: true, Undo: &Step{Argv: []string{"kind", "delete", "cluster"}}}
+	other := Step{Argv: []string{"kind", "load"}, Undo: &Step{Argv: []string{"kind", "unload"}}}
+	f := &run.Fake{}
+	f.Set(run.Result{ExitCode: 1}, nil, "kind", "create", "cluster")
+	f.Set(run.Result{}, nil, "kind", "delete", "cluster")
+	got := Execute(t.Context(), f, Plan{Steps: []Step{create}}, io.Discard, func(State) {})
+	if got.Phase != Failed || !slices.ContainsFunc(f.Calls(), func(c run.Cmd) bool { return slices.Equal(c.Args, []string{"kind", "delete", "cluster"}) }) {
+		t.Fatalf("failed step not undone: %v %v", got.Phase, f.Calls())
+	}
+	if !slices.Equal(got.Undone, []string{"kind delete cluster"}) || len(got.Restored) != 0 {
+		t.Fatalf("undone %q, restored %q", got.Undone, got.Restored)
+	}
+	f = &run.Fake{}
+	f.Set(run.Result{ExitCode: 1}, nil, "kind", "load")
+	Execute(t.Context(), f, Plan{Steps: []Step{other}}, io.Discard, func(State) {})
+	if len(f.Calls()) != 1 {
+		t.Fatalf("undid a step that did nothing: %v", f.Calls())
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	b := &blocking{started: make(chan struct{})}
+	go func() {
+		<-b.started
+		cancel()
+	}()
+	got = Execute(ctx, b, Plan{Steps: []Step{create}}, io.Discard, func(State) {})
+	if got.Phase != Stopped || b.calls != 2 {
+		t.Fatalf("stopped step not undone: %v, %d calls", got.Phase, b.calls)
+	}
+}
+
+// An Undo runs again while what its step started is still coming.
+func TestExecuteUndoAgain(t *testing.T) {
+	left := 2
+	create := Step{Argv: []string{"kind", "create", "cluster"}, UndoAlways: true, Undo: &Step{
+		Argv:  []string{"kind", "delete", "cluster"},
+		Again: func(context.Context) bool { left--; return left > 0 },
+	}}
+	f := &run.Fake{}
+	f.Set(run.Result{ExitCode: 1}, nil, "kind", "create", "cluster")
+	f.Set(run.Result{}, nil, "kind", "delete", "cluster")
+	got := Execute(t.Context(), f, Plan{Steps: []Step{create}}, io.Discard, func(State) {})
+	deletes := 0
+	for _, c := range f.Calls() {
+		if slices.Equal(c.Args, []string{"kind", "delete", "cluster"}) {
+			deletes++
+		}
+	}
+	if deletes != 2 || len(got.Undone) != 1 {
+		t.Fatalf("deleted %d times, undone %q", deletes, got.Undone)
+	}
+
+	// What never goes is not reported undone.
+	create.Undo.Again = func(context.Context) bool { return true }
+	got = Execute(t.Context(), f, Plan{Steps: []Step{create}}, io.Discard, func(State) {})
+	if len(got.Undone) != 0 {
+		t.Fatalf("undone %q", got.Undone)
 	}
 }

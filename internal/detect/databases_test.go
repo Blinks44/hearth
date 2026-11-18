@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -59,6 +60,21 @@ func TestDockerDatabases(t *testing.T) {
 	d = &inventory.DockerState{}
 	dockerDatabases(t.Context(), r, nil, "docker", "unix:///local", d)
 	if d.DatabaseErr || len(d.Databases) != 4 || d.Databases[2].Kind != "MongoDB" || d.Databases[3].Kind != "SQL Server" || d.Databases[3].Ports[0] != "1433" || len(d.Databases[0].Ports) != 1 || d.Databases[0].Ports[0] != "5433" || d.Databases[1].Status != "stopped" {
+		t.Fatalf("%+v", d)
+	}
+}
+
+func TestDockerKindClusters(t *testing.T) {
+	r := &run.Fake{}
+	d := &inventory.DockerState{}
+	dockerDatabases(t.Context(), r, nil, "docker", "unix:///local", d)
+	r.Stdout(`{"Name":"dev-worker","Image":"kindest/node:v1.31.2@sha256:18fbefc2","State":"exited","Kind":"dev","Role":"worker"}
+{"Name":"dev-control-plane","Image":"kindest/node:v1.31.2@sha256:18fbefc2","State":"running","Kind":"dev","Role":"control-plane"}
+{"Name":"ci-control-plane","Image":"my/node","State":"exited","Kind":"ci","Role":"control-plane"}
+{"Name":"db","Image":"postgres:16","State":"running"}`, r.Calls()[0].Args...)
+	dockerDatabases(t.Context(), r, nil, "docker", "unix:///local", d)
+	want := []inventory.KindCluster{{Name: "dev", Nodes: 2, Running: 1, Version: "v1.31.2"}, {Name: "ci", Nodes: 1}}
+	if !slices.Equal(d.KindClusters, want) || len(d.Databases) != 1 {
 		t.Fatalf("%+v", d)
 	}
 }

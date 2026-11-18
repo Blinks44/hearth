@@ -271,3 +271,81 @@ func TestKubeInstall(t *testing.T) {
 		t.Errorf("verify %q, %v", found, err)
 	}
 }
+
+// kindApp is kubeApp with kind and OrbStack's engine running a cluster.
+func kindApp() *App {
+	a := kubeApp()
+	cli := a.Snapshot.Tools[0].Cli
+	cli.Tools = append(cli.Tools, inventory.Installation{Tool: "kind", Version: "0.25.0", Path: "/opt/homebrew/bin/kind", OnPath: 1,
+		Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew", Root: "/opt/homebrew/Cellar/kind/0.25.0"}})
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker", Docker: &inventory.DockerState{
+		Selected: "orbstack",
+		Contexts: []inventory.DockerContext{{Name: "orbstack", Endpoint: "unix:///orbstack.sock", Engine: "OrbStack", Local: true, Status: "available"}},
+		KindClusters: []inventory.KindCluster{
+			{Name: "dev", Nodes: 3, Running: 3, Version: "v1.31.2"},
+			{Name: "old", Nodes: 1},
+		},
+	}})
+	return a
+}
+
+// Local clusters come from the engine's containers; creating and deleting
+// one go through a plan.
+func TestKindClusters(t *testing.T) {
+	a := kindApp()
+	env := sysenv.Env{"PATH=/opt/homebrew/bin"}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	a.router.Push(kubePage)
+	tt := ui.NewTester(a.View, 1280, 1000)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "kind-clusters")
+	hasTexts(t, tt, "Local clusters", "dev", "in Docker (OrbStack)", "kind · v1.31.2 · 3 nodes · running", "kind · 1 node · stopped")
+	if err := tt.Click("Delete…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Delete kind cluster dev", "/opt/homebrew/bin/kind delete cluster --name dev", "Everything in the cluster is lost")
+	a.op = nil
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Create local cluster…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	// dev is taken: the dialog offers the next name.
+	hasTexts(t, tt, "Create local cluster", "kind 0.25.0 · brew", "context kind-dev-2", "kind 0.25.0 default node image", "Docker · OrbStack running",
+		"WHAT WILL HAPPEN", "kind create cluster --name dev-2 --wait 3m", "kubectl's current context stays staging")
+	a.kind.name = "dev"
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "A kind cluster named dev already exists.")
+	a.kind.name, a.kind.nodes = "payments", 1
+	tt.Frame()
+	tt.Advance(time.Second)
+	screenshot(t, tt, "kind-create")
+	if err := tt.Click("Next"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Create kind cluster payments", "/opt/homebrew/bin/kubectl config use-context -- staging")
+	if a.op == nil || a.op.started || a.kind.open || len(a.op.plan.Steps) != 2 || !slices.Contains(a.op.plan.Steps[0].Argv, "--config") {
+		t.Fatalf("unexpected operation: %+v", a.op)
+	}
+
+	// The engine is down: nothing is listed and nothing can be created.
+	a.op = nil
+	a.Snapshot.Tools[1].Docker.Contexts[0].Status = "unavailable"
+	a.openKindDialog()
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Docker engine is not running", "kind clusters are listed once it runs")
+	if err := tt.Click("Next"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op != nil {
+		t.Fatal("proposed a cluster without an engine")
+	}
+}
