@@ -48,7 +48,7 @@ func TestCliPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "cli")
-	hasTexts(t, tt, "CLI & clouds", "Tools · command line", "of 8 known", "CLOUDS", "INFRASTRUCTURE",
+	hasTexts(t, tt, "CLI & clouds", "Infrastructure · command line", "of 8 known", "CLOUDS", "INFRASTRUCTURE",
 		"brew · profile default · eu-central-1",
 		"brew · no project chosen", "503.0.0", "not found · Azure CLI", "not found · OpenTofu",
 		"Current contexts", "aws · default", "from ~/.aws/config", "gcloud · no project chosen",

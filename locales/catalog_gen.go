@@ -164,13 +164,13 @@ func (msgs Messages) SectionToolsJavaScript() string {
 	return Catalog.Format(msgs.locale, "sectionToolsJavaScript", nil)
 }
 
-// SectionToolsContainers says "Tools · containers"
+// SectionToolsContainers says "Infrastructure · containers"
 // in the language the app shows.
 //
 // Subtitle of the Docker page.
 func SectionToolsContainers() string { return In(i18n.Locale()).SectionToolsContainers() }
 
-// SectionToolsContainers says "Tools · containers"
+// SectionToolsContainers says "Infrastructure · containers"
 // in the language of msgs.
 //
 // Subtitle of the Docker page.
@@ -204,6 +204,52 @@ func SectionSystem() string { return In(i18n.Locale()).SectionSystem() }
 // Sidebar section of package managers and PATH.
 func (msgs Messages) SectionSystem() string {
 	return Catalog.Format(msgs.locale, "sectionSystem", nil)
+}
+
+// SectionMaintenance says "Maintenance"
+// in the language the app shows.
+//
+// Sidebar section of problems, updates, cleanup and installation.
+func SectionMaintenance() string { return In(i18n.Locale()).SectionMaintenance() }
+
+// SectionMaintenance says "Maintenance"
+// in the language of msgs.
+//
+// Sidebar section of problems, updates, cleanup and installation.
+func (msgs Messages) SectionMaintenance() string {
+	return Catalog.Format(msgs.locale, "sectionMaintenance", nil)
+}
+
+// SectionInfrastructure says "Infrastructure"
+// in the language the app shows.
+//
+// Sidebar section of Docker, Kubernetes, databases, ports and cloud CLIs,
+// and the subtitle of their pages.
+func SectionInfrastructure() string { return In(i18n.Locale()).SectionInfrastructure() }
+
+// SectionInfrastructure says "Infrastructure"
+// in the language of msgs.
+//
+// Sidebar section of Docker, Kubernetes, databases, ports and cloud CLIs,
+// and the subtitle of their pages.
+func (msgs Messages) SectionInfrastructure() string {
+	return Catalog.Format(msgs.locale, "sectionInfrastructure", nil)
+}
+
+// NotFoundSection says "Not found"
+// in the language the app shows.
+//
+// Sidebar item that shows the languages and tools not found on this
+// computer.
+func NotFoundSection() string { return In(i18n.Locale()).NotFoundSection() }
+
+// NotFoundSection says "Not found"
+// in the language of msgs.
+//
+// Sidebar item that shows the languages and tools not found on this
+// computer.
+func (msgs Messages) NotFoundSection() string {
+	return Catalog.Format(msgs.locale, "notFoundSection", nil)
 }
 
 // DatabasesTitle says "Databases"
@@ -276,20 +322,6 @@ func PathTitle() string { return In(i18n.Locale()).PathTitle() }
 // Sidebar item and header of the page of PATH and environment variables.
 func (msgs Messages) PathTitle() string {
 	return Catalog.Format(msgs.locale, "pathTitle", nil)
-}
-
-// MoreLanguages says "{count, plural, one {# more language} other {# more languages}}"
-// in the language the app shows.
-//
-// Sidebar item that shows the languages not found on this computer.
-func MoreLanguages(count int) string { return In(i18n.Locale()).MoreLanguages(count) }
-
-// MoreLanguages says "{count, plural, one {# more language} other {# more languages}}"
-// in the language of msgs.
-//
-// Sidebar item that shows the languages not found on this computer.
-func (msgs Messages) MoreLanguages(count int) string {
-	return Catalog.Format(msgs.locale, "moreLanguages", map[string]any{"count": count})
 }
 
 // ComingSoon says "Coming soon"
@@ -9148,13 +9180,13 @@ func (msgs Messages) CliTitle() string {
 	return Catalog.Format(msgs.locale, "cliTitle", nil)
 }
 
-// SectionToolsCli says "Tools · command line"
+// SectionToolsCli says "Infrastructure · command line"
 // in the language the app shows.
 //
 // Subtitle of the CLI page.
 func SectionToolsCli() string { return In(i18n.Locale()).SectionToolsCli() }
 
-// SectionToolsCli says "Tools · command line"
+// SectionToolsCli says "Infrastructure · command line"
 // in the language of msgs.
 //
 // Subtitle of the CLI page.
@@ -23142,13 +23174,13 @@ func (msgs Messages) KubeContextSelected(name string) string {
 	return Catalog.Format(msgs.locale, "kubeContextSelected", map[string]any{"name": name})
 }
 
-// KubeSubtitle says "Tools · kubeconfig contexts"
+// KubeSubtitle says "Infrastructure · kubeconfig contexts"
 // in the language the app shows.
 //
 // Kubernetes page subtitle.
 func KubeSubtitle() string { return In(i18n.Locale()).KubeSubtitle() }
 
-// KubeSubtitle says "Tools · kubeconfig contexts"
+// KubeSubtitle says "Infrastructure · kubeconfig contexts"
 // in the language of msgs.
 //
 // Kubernetes page subtitle.

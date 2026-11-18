@@ -21,7 +21,7 @@ type page struct {
 
 // byTitle orders x and y by their titles as the language shown sorts
 // words, Russian's before Latin ones in Russian, regardless of case: the
-// sidebar's pages, the tools, servers and skills in their lists.
+// sidebar's languages, the tools, servers and skills in their lists.
 func (a *App) byTitle(x, y string) int {
 	if a.collator == nil || a.collatorLocale != a.Locale {
 		a.collator, a.collatorLocale = collate.New(lang.Make(a.Locale), collate.IgnoreCase), a.Locale
@@ -83,18 +83,26 @@ var (
 		{"dotnet", page{"/tools/dotnet", "brand/dotnet", name(".NET"), locales.SectionLanguages}},
 	}
 
-	// sections are the sidebar's titled groups after the languages.
+	// maintenance is the sidebar's section of what to do on the computer,
+	// under Overview and Projects.
+	maintenance = []page{problemsNav, updatesNav, cleanupNav, installNav}
+
+	// sections are the sidebar's titled groups after the languages, each
+	// in a fixed order, the pages used most first.
 	sections = []struct {
 		title func() string
 		pages []page
 	}{
-		{locales.SectionTools, []page{
-			{"/tools/jspm", "brand/pnpm", name("npm · pnpm · Yarn"), locales.SectionToolsJavaScript},
+		{locales.SectionInfrastructure, []page{
 			{"/tools/docker", "brand/docker", name("Docker"), locales.SectionToolsContainers},
-			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionTools},
-			{gitPage, "brand/git", name("Git"), locales.SectionToolsVcs},
-			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
 			{kubePage, "brand/kubernetes", name("Kubernetes"), locales.KubeSubtitle},
+			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionInfrastructure},
+			{portsPage, "lucide/ethernet-port", locales.PortsTitle, locales.PortsSubtitle},
+			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
+		}},
+		{locales.SectionTools, []page{
+			{gitPage, "brand/git", name("Git"), locales.SectionToolsVcs},
+			{"/tools/jspm", "brand/pnpm", name("npm · pnpm · Yarn"), locales.SectionToolsJavaScript},
 			{editorsPage, "lucide/code-xml", locales.EditorsTitle, locales.SectionToolsEditors},
 			{mobilePage, "lucide/smartphone", locales.MobileTitle, locales.SectionToolsMobile},
 		}},
@@ -102,21 +110,20 @@ var (
 			{"/ai/agents", "lucide/bot", locales.AgentsTitle, locales.SectionAI},
 			{"/ai/skills", "lucide/puzzle", locales.SkillsTitle, locales.SectionAI},
 			{"/ai/mcp", "lucide/plug", name("MCP"), locales.SectionAI},
-			{modelsPage, "lucide/brain", locales.ModelsTitle, locales.ModelsSubtitle},
 			{instructionsPage, "lucide/file-text", locales.InstructionsTitle, locales.InstructionsSubtitle},
+			{modelsPage, "lucide/brain", locales.ModelsTitle, locales.ModelsSubtitle},
 			{usagePage, "lucide/chart-column", locales.UsageTitle, locales.UsageSubtitle},
 		}},
 		{locales.SectionSystem, []page{
-			{"/system/packages", "lucide/package", locales.PackageManagersTitle, locales.SectionSystem},
 			{pathPage, "lucide/terminal", locales.PathTitle, locales.SectionSystem},
-			{portsPage, "lucide/ethernet-port", locales.PortsTitle, locales.PortsSubtitle},
+			{"/system/packages", "lucide/package", locales.PackageManagersTitle, locales.SectionSystem},
 		}},
 	}
 )
 
 // pages lists every page, for the router.
 func pages() []page {
-	all := []page{overview, installNav, problemsNav, updatesNav, projectsPage, cleanupNav}
+	all := append([]page{overview, projectsPage}, maintenance...)
 	for _, l := range languages {
 		all = append(all, l.page)
 	}

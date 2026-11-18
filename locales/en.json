@@ -36,7 +36,7 @@
   "@sectionToolsJavaScript": {
     "description": "Subtitle of the npm, pnpm and Yarn page."
   },
-  "sectionToolsContainers": "Tools · containers",
+  "sectionToolsContainers": "Infrastructure · containers",
   "@sectionToolsContainers": {
     "description": "Subtitle of the Docker page."
   },
@@ -47,6 +47,18 @@
   "sectionSystem": "System",
   "@sectionSystem": {
     "description": "Sidebar section of package managers and PATH."
+  },
+  "sectionMaintenance": "Maintenance",
+  "@sectionMaintenance": {
+    "description": "Sidebar section of problems, updates, cleanup and installation."
+  },
+  "sectionInfrastructure": "Infrastructure",
+  "@sectionInfrastructure": {
+    "description": "Sidebar section of Docker, Kubernetes, databases, ports and cloud CLIs, and the subtitle of their pages."
+  },
+  "notFoundSection": "Not found",
+  "@notFoundSection": {
+    "description": "Sidebar item that shows the languages and tools not found on this computer."
   },
   "databasesTitle": "Databases",
   "@databasesTitle": {
@@ -67,16 +79,6 @@
   "pathTitle": "PATH & variables",
   "@pathTitle": {
     "description": "Sidebar item and header of the page of PATH and environment variables."
-  },
-  "moreLanguages": "{count, plural, one {# more language} other {# more languages}}",
-  "@moreLanguages": {
-    "description": "Sidebar item that shows the languages not found on this computer.",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "6"
-      }
-    }
   },
   "comingSoon": "Coming soon",
   "@comingSoon": {
@@ -3157,7 +3159,7 @@
   "@cliTitle": {
     "description": "Sidebar item and header of the CLI page."
   },
-  "sectionToolsCli": "Tools · command line",
+  "sectionToolsCli": "Infrastructure · command line",
   "@sectionToolsCli": {
     "description": "Subtitle of the CLI page."
   },
@@ -9207,7 +9209,7 @@
       }
     }
   },
-  "kubeSubtitle": "Tools · kubeconfig contexts",
+  "kubeSubtitle": "Infrastructure · kubeconfig contexts",
   "@kubeSubtitle": {
     "description": "Kubernetes page subtitle."
   },

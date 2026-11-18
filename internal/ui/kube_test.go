@@ -48,7 +48,7 @@ func TestKubePage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "kube")
-	hasTexts(t, tt, "Kubernetes", "Tools · kubeconfig contexts", "Contexts from 3 kubeconfig files, kubectl, Helm and kind",
+	hasTexts(t, tt, "Kubernetes", "Infrastructure · kubeconfig contexts", "Contexts from 3 kubeconfig files, kubectl, Helm and kind",
 		"~/.KUBE/CONFIG", "~/.KUBE/WORK/PROD.YAML", "kind-dev", "cluster kind-dev · namespace default",
 		"cluster eks-staging · namespace shop", "in kubectl", "shadowed", "kubectl uses the context of this name from a file above",
 		"kubectl in the terminal", "staging · shop", "current-context from ~/.kube/config", "KUBECONFIG: 3 files",

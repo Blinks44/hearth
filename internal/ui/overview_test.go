@@ -434,8 +434,8 @@ func TestCopyReport(t *testing.T) {
 	hasTexts(t, tt, "Report copied")
 }
 
-// The sidebar lists the languages and each section's pages by title, and
-// the overview its tools cards by name, after those with issues.
+// The sidebar lists the languages by title and the sections in their own
+// order, and the overview its tools cards by name, after those with issues.
 func TestAlphabeticalOrder(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = calmSnapshot()
@@ -456,8 +456,8 @@ func TestAlphabeticalOrder(t *testing.T) {
 	// The sidebar's, then the cards'.
 	for _, order := range [][]string{
 		{"Bun", "Go", "Node.js", "Python"},
-		{"CLI & clouds", "Databases", "Docker", "Editors", "Git", "Mobile development", "npm · pnpm · Yarn"},
-		{"Agents", "Local models", "MCP", "Skills"},
+		{"Overview", "Projects", "Maintenance", "Issues", "Updates", "Cleanup", "Install", "Languages & runtimes"},
+		{"Infrastructure", "Ports", "AI", "Agents", "Skills", "MCP", "Instructions", "Usage", "System", "PATH & variables", "Package managers", "Not found"},
 	} {
 		for i := 1; i < len(order); i++ {
 			if at(order[i-1]) > at(order[i]) {
@@ -476,8 +476,8 @@ func TestAlphabeticalOrder(t *testing.T) {
 	}
 }
 
-// In Russian the sidebar puts Russian titles before Latin ones, as the
-// language sorts them; MCP servers and skills go by name within a group.
+// In Russian the sidebar keeps its sections' order; MCP servers and
+// skills go by name within a group.
 func TestAlphabeticalOrderRussian(t *testing.T) {
 	i18n.SetLocaleFunc(func() string { return "ru" })
 	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
@@ -486,7 +486,7 @@ func TestAlphabeticalOrderRussian(t *testing.T) {
 	a.Snapshot = calmSnapshot()
 	tt := openOverview(t, a)
 	texts := tt.Texts()
-	for _, pair := range [][2]string{{"Агенты", "MCP"}, {"Локальные модели", "Skills"}, {"Базы данных", "Docker"}} {
+	for _, pair := range [][2]string{{"Обслуживание", "Языки и рантаймы"}, {"Агенты", "Skills"}, {"Skills", "MCP"}, {"Инструкции", "Расход"}} {
 		if i, j := slices.Index(texts, pair[0]), slices.Index(texts, pair[1]); i < 0 || j < 0 || i > j {
 			t.Errorf("%q should come before %q: %q", pair[0], pair[1], texts)
 		}

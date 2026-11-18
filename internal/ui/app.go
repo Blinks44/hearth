@@ -211,7 +211,7 @@ type App struct {
 	search         searchState
 	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
-	moreOpen       bool   // the languages not found show in the sidebar
+	notFoundOpen   bool   // the languages and tools not found show in the sidebar
 	nodeTab        int    // the tab of the Node.js page shown
 	jspmTab        int    // the tab of the package managers page shown
 	jspmFilter     string // the package managers table's filter
@@ -520,24 +520,39 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(1).Children(func() {
 				a.item(c, overview, nil)
-				a.item(c, installNav, nil)
-				a.item(c, problemsNav, a.problemsEnd(c))
-				a.item(c, updatesNav, a.updatesEnd(c))
 				a.item(c, projectsPage, func() {
 					if len(a.Projects) > 0 {
 						ui.Text(c, strconv.Itoa(len(a.Projects))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
+				sectionTitle(c, locales.SectionMaintenance())
+				a.item(c, problemsNav, a.problemsEnd(c))
+				a.item(c, updatesNav, a.updatesEnd(c))
 				a.item(c, cleanupNav, a.cleanupEnd(c))
-				a.languages(c)
+				a.item(c, installNav, nil)
+				missing := a.languages(c)
 				for _, s := range sections {
+					var shown []page
+					for _, p := range s.pages {
+						if a.missing(p) && !within(a.router.Path(), p.path) {
+							missing = append(missing, p)
+						} else {
+							shown = append(shown, p)
+						}
+					}
+					if len(shown) == 0 {
+						continue
+					}
 					sectionTitle(c, s.title())
-					// By title in the language shown.
-					pages := slices.SortedFunc(slices.Values(s.pages), func(x, y page) int { return a.byTitle(x.title(), y.title()) })
-					for _, p := range pages {
-						a.item(c, p, a.pageEnd(c, p))
+					for _, p := range shown {
+						end := a.pageEnd(c, p)
+						if a.missing(p) {
+							end = notInstalled(c)
+						}
+						a.item(c, p, end)
 					}
 				}
+				a.notFound(c, missing)
 			})
 		})
 		ui.Box(c).Height(1).Shrink(0).Margin(12, 0, 4, 0).Background(pal.Divider)
@@ -572,6 +587,12 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 			if issuePage(is) == p.path {
 				return func() { ui.Box(c).Size(6, 6).Radius(3).Background(c.Theme().Warning) }
 			}
+		}
+		if p.path == "/tools/databases" {
+			n = len(inventory.DatabaseServers(a.Snapshot))
+		} else if a.dockerAnswers() {
+			// The engine Docker goes to answers.
+			return func() { ui.Box(c).Size(6, 6).Radius(3).Background(c.Theme().Success) }
 		}
 	case pathPage:
 		return a.issueCount(c)
@@ -695,51 +716,118 @@ func checked(c *ui.Context, taken time.Time) string {
 	return locales.CheckedOn(taken)
 }
 
-// languages is the "Languages & runtimes" section: the languages found,
-// the page shown if it is another one, and the rest under "N more
-// languages".
-func (a *App) languages(c *ui.Context) {
-	sectionTitle(c, locales.SectionLanguages())
+// languages is the "Languages & runtimes" section: the languages found
+// and the page shown if it is another one. It returns the rest, which
+// notFound lists.
+func (a *App) languages(c *ui.Context) []page {
+	var shown []language
 	var rest []page
-	pal := Colors(c.Theme())
-	plus := func() {
-		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(pal.TextFaint).Tooltip(locales.NotInstalledHint())
-	}
 	for _, l := range slices.SortedFunc(slices.Values(languages), func(x, y language) int { return a.byTitle(x.title(), y.title()) }) {
-		switch v := a.version(l.id); {
-		case v != "":
-			a.item(c, l.page, func() {
-				ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-			})
-		case within(a.router.Path(), l.path):
-			a.item(c, l.page, plus)
-		default:
+		if a.version(l.id) != "" || within(a.router.Path(), l.path) {
+			shown = append(shown, l)
+		} else {
 			rest = append(rest, l.page)
 		}
 	}
+	if len(shown) == 0 {
+		return rest
+	}
+	sectionTitle(c, locales.SectionLanguages())
+	pal := Colors(c.Theme())
+	for _, l := range shown {
+		v := a.version(l.id)
+		if v == "" {
+			a.item(c, l.page, notInstalled(c))
+			continue
+		}
+		a.item(c, l.page, func() {
+			ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		})
+	}
+	return rest
+}
+
+// notInstalled is the end of an item whose tool the scan did not find.
+func notInstalled(c *ui.Context) func() {
+	return func() {
+		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(Colors(c.Theme()).TextFaint).Tooltip(locales.NotInstalledHint())
+	}
+}
+
+// missing reports that the last scan found nothing a tool page p shows,
+// which then waits under "Not found". Pages that always have something
+// to show, and every page before a scan, are never missing.
+func (a *App) missing(p page) bool {
+	if a.Snapshot == nil {
+		return false
+	}
+	switch p.path {
+	case "/tools/docker":
+		if a.version("docker") != "" {
+			return false
+		}
+		st, _ := a.Snapshot.Tool("docker")
+		return st.Docker == nil || !slices.ContainsFunc(st.Docker.Engines, func(e inventory.DockerEngine) bool { return e.Path != "" })
+	case kubePage:
+		_, ok := cliCopy(a.cliState(), "kubectl")
+		return !ok
+	case "/tools/databases":
+		return len(inventory.DatabaseServers(a.Snapshot)) == 0
+	case cliPage:
+		return a.cliCount() == 0
+	case gitPage:
+		return a.version("git") == ""
+	case "/tools/jspm":
+		return a.jsCount() == 0
+	case editorsPage:
+		return len(a.editorsState().Editors) == 0
+	case mobilePage:
+		return a.mobileCount() == 0
+	case modelsPage:
+		return len(a.modelApps()) == 0
+	}
+	return false
+}
+
+// dockerAnswers reports that the engine of Docker's selected context
+// answered the last scan.
+func (a *App) dockerAnswers() bool {
+	st, _ := a.Snapshot.Tool("docker")
+	return st.Docker != nil && slices.ContainsFunc(st.Docker.Contexts, func(ctx inventory.DockerContext) bool {
+		return ctx.Name == st.Docker.Selected && ctx.Status == "available"
+	})
+}
+
+// notFound is the "Not found" item at the end of the sections: it opens
+// the languages and tools the scan did not find, pages kept by the order
+// of their sections.
+func (a *App) notFound(c *ui.Context, rest []page) {
 	if len(rest) == 0 {
 		return
 	}
-	more := ui.ButtonBase(c.Key("more-languages")).Expanded(a.moreOpen).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
+	pal := Colors(c.Theme())
+	ui.Box(c).Height(8).Shrink(0)
+	more := ui.ButtonBase(c.Key("not-found")).Expanded(a.notFoundOpen).Height(30).Shrink(0).Gap(9).Padding(0, 8).Radius(7).AlignItems(ui.Center)
 	if more.Hovered() {
 		more.Background(pal.SidebarHover)
 	}
 	more.Children(func() {
 		ui.Icon(c, Icon("layers")).Size(16, 16).TextColor(pal.TextFaint)
-		ui.Text(c, locales.MoreLanguages(len(rest))).FontSize(13).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		ui.Text(c, locales.NotFoundSection()).FontSize(13).TextColor(pal.TextFaint).Grow(1).SingleLine()
+		ui.Text(c, strconv.Itoa(len(rest))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 		chevron := "chevron-right"
-		if a.moreOpen {
+		if a.notFoundOpen {
 			chevron = "chevron-down"
 		}
 		ui.Icon(c, Icon(chevron)).Size(14, 14).TextColor(pal.TextFaint)
 	})
 	if more.Clicked() {
-		a.moreOpen = !a.moreOpen
+		a.notFoundOpen = !a.notFoundOpen
 	}
-	if a.moreOpen {
-		ui.Column(c.Key("extra-languages")).Gap(1).Shrink(0).Transition(rowMotion).Children(func() {
+	if a.notFoundOpen {
+		ui.Column(c.Key("not-found-pages")).Gap(1).Shrink(0).Transition(rowMotion).Children(func() {
 			for _, p := range rest {
-				a.item(c, p, plus)
+				a.item(c, p, notInstalled(c))
 			}
 		})
 	}

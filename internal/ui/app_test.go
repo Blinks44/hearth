@@ -9,11 +9,10 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
-	"github.com/Blinks44/hearth/locales"
 )
 
 // Every sidebar item opens its page, whose header shows its title; the
-// languages not found wait under "N more languages".
+// languages and tools not found wait under "Not found".
 func TestSidebarOpensPages(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = found("node", "bun", "python", "php")
@@ -22,7 +21,7 @@ func TestSidebarOpensPages(t *testing.T) {
 	if tt.HasText("Rust") {
 		t.Error("a language not found shows before opening the rest")
 	}
-	if err := tt.Click("6 more languages"); err != nil {
+	if err := tt.Click("Not found"); err != nil {
 		t.Fatal(err)
 	}
 	for _, p := range pages() {
@@ -45,12 +44,12 @@ func TestSidebarOpensPages(t *testing.T) {
 func TestSidebarKeepsOpenLanguage(t *testing.T) {
 	a := NewApp()
 	tt := ui.NewTester(a.View, 1280, 820)
-	if !tt.HasText("10 more languages") {
+	if !tt.HasText("Not found") || !tt.HasText("10") || tt.HasText("Rust") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
 	a.router.Push("/tools/rust")
 	tt.Advance(time.Second)
-	if !tt.HasText("Rust") || !tt.HasText("9 more languages") {
+	if !tt.HasText("Rust") || !tt.HasText("9") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -82,14 +81,9 @@ func TestShellInRussian(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	a.Snapshot.Taken = tt.Now().Add(-5 * time.Minute)
 	tt.Frame()
-	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Ещё 6 языков", "Сканировать", "Проверено 5 мин назад"} {
+	for _, s := range []string{"Обзор", "Всё окружение разработчика на этом компьютере", "Языки и рантаймы", "Обслуживание", "Не найдено", "Сканировать", "Проверено 5 мин назад"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
-		}
-	}
-	for n, want := range map[int]string{1: "Ещё 1 язык", 2: "Ещё 2 языка", 5: "Ещё 5 языков"} {
-		if got := locales.MoreLanguages(n); got != want {
-			t.Errorf("MoreLanguages(%d) = %q, want %q", n, got, want)
 		}
 	}
 	if err := tt.Click("Проекты"); err != nil {
@@ -198,27 +192,46 @@ func TestShortcuts(t *testing.T) {
 	}
 }
 
-func TestSidebarLanguagesCollapse(t *testing.T) {
+func TestSidebarNotFound(t *testing.T) {
 	a := NewApp()
+	a.Snapshot = found("node", "git")
 	tt := ui.NewTester(a.View, 1280, 1400)
-	for range 3 {
-		if err := tt.Click("10 more languages"); err != nil {
-			t.Fatal(err)
-		}
-		tt.Advance(80 * time.Millisecond)
-		tt.Advance(time.Second)
-		if !a.moreOpen || !tt.HasText("Rust") {
-			t.Fatal("languages did not open")
-		}
-		screenshot(t, tt, "sidebar-languages-open")
-		if err := tt.Click("10 more languages"); err != nil {
-			t.Fatal(err)
-		}
-		tt.Advance(80 * time.Millisecond)
-		tt.Advance(time.Second)
-		if a.moreOpen || tt.HasText("Rust") {
-			t.Fatal("languages did not close")
+	tt.Frame()
+	for _, s := range []string{"Node.js", "Git", "Infrastructure", "AI", "PATH & variables"} {
+		if !tt.HasText(s) {
+			t.Errorf("no %q in the sidebar", s)
 		}
 	}
-	screenshot(t, tt, "sidebar-languages-closed")
+	// Infrastructure found nothing but ports: its others wait under Not found.
+	for _, s := range []string{"Rust", "Docker", "Kubernetes", "Editors"} {
+		if tt.HasText(s) {
+			t.Errorf("%q shows before Not found opens", s)
+		}
+	}
+	for range 3 {
+		if err := tt.Click("Not found"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(80 * time.Millisecond)
+		tt.Advance(time.Second)
+		if !a.notFoundOpen || !tt.HasText("Rust") || !tt.HasText("Docker") {
+			t.Fatal("not found did not open")
+		}
+		screenshot(t, tt, "sidebar-not-found-open")
+		if err := tt.Click("Not found"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(80 * time.Millisecond)
+		tt.Advance(time.Second)
+		if a.notFoundOpen || tt.HasText("Rust") {
+			t.Fatal("not found did not close")
+		}
+	}
+	// The page shown stays in its section while it is open.
+	a.router.Push(kubePage)
+	tt.Advance(time.Second)
+	if !tt.HasText("Kubernetes") || a.notFoundOpen {
+		t.Errorf("Kubernetes is not in its section while shown")
+	}
+	screenshot(t, tt, "sidebar-not-found-closed")
 }
