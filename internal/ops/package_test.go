@@ -8,6 +8,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestPackagePlanCommands(t *testing.T) {
@@ -113,6 +114,16 @@ func TestPackagePlanCommands(t *testing.T) {
 			}
 			if p.Title == "" || p.Why == "" || len(p.Changes) == 0 {
 				t.Errorf("plan says nothing: %+v", p)
+			}
+			// Only casks' installers run sudo themselves.
+			for _, s := range p.Steps {
+				if want := slices.Contains(s.Argv, "--cask"); s.Askpass != want {
+					t.Errorf("%v: askpass %v", s.Argv, s.Askpass)
+				}
+			}
+			askpass := slices.ContainsFunc(p.Steps, func(s Step) bool { return s.Askpass })
+			if noted := slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Text == locales.NoteCaskAdmin() }); noted != askpass {
+				t.Errorf("cask note %v, askpass steps %v", noted, askpass)
 			}
 			admin := slices.ContainsFunc(p.Steps, func(s Step) bool { return s.Admin })
 			if noted := slices.ContainsFunc(p.Notes, func(n Note) bool { return n == AdminNote() }); noted != admin {

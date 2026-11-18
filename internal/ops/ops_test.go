@@ -254,6 +254,35 @@ func TestExecuteFindsProgramInPlanPath(t *testing.T) {
 	}
 }
 
+// A step with Askpass points sudo inside it to Hearth's program, which
+// says the plan's title; others get no askpass.
+func TestExecuteAskpass(t *testing.T) {
+	old := AskpassProgram
+	AskpassProgram = "/Applications/Hearth.app/Contents/MacOS/Hearth"
+	t.Cleanup(func() { AskpassProgram = old })
+	r := &run.Fake{}
+	p := Plan{Title: "Update 5 packages", Steps: []Step{
+		{Argv: []string{"/opt/homebrew/bin/brew", "upgrade", "--formula", "jq"}},
+		{Argv: []string{"/opt/homebrew/bin/brew", "upgrade", "--cask", "forklift"}, Askpass: true},
+	}}
+	for _, s := range p.Steps {
+		r.Stdout("", s.Argv...)
+	}
+	Execute(context.Background(), r, p, io.Discard, func(State) {})
+	calls := r.Calls()
+	if len(calls) != 2 {
+		t.Fatalf("ran %+v", calls)
+	}
+	if slices.ContainsFunc(calls[0].Env, func(e string) bool { return strings.HasPrefix(e, "SUDO_ASKPASS=") }) {
+		t.Errorf("formula step got askpass: %q", calls[0].Env)
+	}
+	for _, want := range []string{"SUDO_ASKPASS=" + AskpassProgram, AskpassEnv + "=Update 5 packages"} {
+		if !slices.Contains(calls[1].Env, want) {
+			t.Errorf("cask step env %q lacks %q", calls[1].Env, want)
+		}
+	}
+}
+
 // A step that may leave part of its work puts it back when it fails or
 // is stopped itself; another step's Undo runs only once it got through.
 func TestExecuteUndoAlways(t *testing.T) {

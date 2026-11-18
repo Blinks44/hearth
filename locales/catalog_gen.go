@@ -12456,6 +12456,22 @@ func (msgs Messages) NoteAdminMac() string {
 	return Catalog.Format(msgs.locale, "noteAdminMac", nil)
 }
 
+// NoteCaskAdmin says "Homebrew may ask for the administrator's password in a macOS window when an app's installer needs it"
+// in the language the app shows.
+//
+// Note of a Homebrew plan with casks: their installers may run sudo, which
+// asks through Hearth's dialog.
+func NoteCaskAdmin() string { return In(i18n.Locale()).NoteCaskAdmin() }
+
+// NoteCaskAdmin says "Homebrew may ask for the administrator's password in a macOS window when an app's installer needs it"
+// in the language of msgs.
+//
+// Note of a Homebrew plan with casks: their installers may run sudo, which
+// asks through Hearth's dialog.
+func (msgs Messages) NoteCaskAdmin() string {
+	return Catalog.Format(msgs.locale, "noteCaskAdmin", nil)
+}
+
 // NoteAdminLinux says "The system asks for the administrator's password in its own window (polkit), for each run"
 // in the language the app shows.
 //

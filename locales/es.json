@@ -938,6 +938,7 @@
   "adminDenied": "no lo permitiste en la ventana de UAC",
   "adminNoAgent": "el sistema no tiene una ventana para pedir la contraseña de administrador: ejecuta el comando en una terminal con sudo",
   "noteAdminMac": "macOS pide la contraseña de administrador en su propia ventana, en cada ejecución",
+  "noteCaskAdmin": "Homebrew puede pedir la contraseña de administrador en una ventana de macOS si el instalador de una app la necesita",
   "noteAdminLinux": "El sistema pide la contraseña de administrador en su propia ventana (polkit), en cada ejecución",
   "noteWingetUAC": "Windows puede pedir permiso (UAC) cuando un paquete se instala para todos los usuarios",
   "noteAdminWindows": "Windows pide permiso (UAC) antes del paso que lo necesita",

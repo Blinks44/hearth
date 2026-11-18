@@ -58,6 +58,10 @@ type Step struct {
 	Remove string
 	// Env adds to the plan's environment for this step, as KEY=value.
 	Env []string
+	// Askpass lets sudo inside the command ask for the password through
+	// Hearth's dialog, as Homebrew's casks run it: Hearth has no terminal
+	// to ask in. See AskpassProgram.
+	Askpass bool
 	// Runs, when Argv is a wrapper, is the command it runs, which the
 	// plan shows in Argv's place.
 	Runs []string
@@ -364,6 +368,9 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		// The program is found in the terminal's PATH, as the user's own
 		// command would be: Hearth's own PATH, as an app's, may lack it.
 		env := slices.Concat(p.Env, step.Env)
+		if step.Askpass && AskpassProgram != "" {
+			env = append(env, "SUDO_ASKPASS="+AskpassProgram, AskpassEnv+"="+p.Title)
+		}
 		argv := fullPath(step.Argv, env)
 		if step.Admin {
 			argv = elevate(argv, p.Title)

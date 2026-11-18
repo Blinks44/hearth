@@ -155,10 +155,16 @@ func packageSteps(action PackageAction, m inventory.PackageManager, pkgs []inven
 				}
 			}
 			if len(these) > 0 {
-				steps = append(steps, Step{Argv: append([]string{m.Path, verb, "--" + kind}, these...)})
+				// A cask's installer or uninstaller may run sudo, which
+				// Homebrew points to SUDO_ASKPASS.
+				steps = append(steps, Step{Argv: append([]string{m.Path, verb, "--" + kind}, these...), Askpass: kind == "cask"})
 			}
 		}
-		return steps, nil
+		var notes []Note
+		if slices.ContainsFunc(steps, func(s Step) bool { return s.Askpass }) {
+			notes = []Note{{Title: locales.NoteAdmin(), Text: locales.NoteCaskAdmin(), Tag: "sudo"}}
+		}
+		return steps, notes
 	case "winget":
 		var steps []Step
 		for _, pkg := range pkgs {

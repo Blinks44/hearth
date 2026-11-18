@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/url"
@@ -40,6 +41,10 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "mcp" {
 		os.Exit(serveMCP(os.Args[2:], os.Stderr))
 	}
+	// sudo runs Hearth as its askpass program, for a plan's step.
+	if why := os.Getenv(ops.AskpassEnv); why != "" {
+		os.Exit(askpass(why))
+	}
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)
 	}
@@ -48,6 +53,7 @@ func main() {
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
 	a.HearthExecutable, _ = os.Executable()
+	ops.AskpassProgram = a.HearthExecutable
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}
 	list := &projectList{app: a, settings: store.DefaultSettings()}
 	if dir, err := mygo.App.Path(mygo.PathUserData); err != nil {
@@ -654,4 +660,16 @@ func openSet(win *mygo.Window, done func(path string, data []byte, err error)) {
 		data, err := os.ReadFile(paths[0])
 		win.Update(func() { done(paths[0], data, err) })
 	}()
+}
+
+// askpass prints the password the user gives for why, as sudo's askpass
+// program; it fails when the user would not give it.
+func askpass(why string) int {
+	password, err := ops.AskPassword(context.Background(), run.Exec{}, why)
+	if err != nil {
+		log.Print(err)
+		return 1
+	}
+	fmt.Println(password)
+	return 0
 }
