@@ -138,6 +138,8 @@
   "addProjects": "{count, plural, one {# Projekt hinzufügen} other {# Projekte hinzufügen}}",
   "problemMissing": "kein {tool}",
   "problemTerminal": "Terminal verwendet eine andere Version von {tool}",
+  "problemEngineDown": "{tool} antwortet nicht",
+  "problemEngineDownBanner": "Das Projekt braucht eine laufende Docker-Engine ({file}), aber die Engine des gewählten Kontexts antwortet nicht. Starten Sie sie unter „Umgebung vorbereiten“ oder auf der Docker-Seite.",
   "problemBanner": "Das Projekt braucht {tool} {want} ({file}). Installiert: {installed}. In diesem Ordner startet das Terminal {run}.",
   "nothingInstalled": "nichts",
   "aiInstructions": "Anweisungen · {agent}",

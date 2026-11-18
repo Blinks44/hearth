@@ -2000,6 +2000,38 @@ func (msgs Messages) ProblemTerminal(tool string) string {
 	return Catalog.Format(msgs.locale, "problemTerminal", map[string]any{"tool": tool})
 }
 
+// ProblemEngineDown says "{tool} not answering"
+// in the language the app shows.
+//
+// Project problem: the Docker CLI is there, but the engine of the selected
+// local context does not answer.
+func ProblemEngineDown(tool string) string { return In(i18n.Locale()).ProblemEngineDown(tool) }
+
+// ProblemEngineDown says "{tool} not answering"
+// in the language of msgs.
+//
+// Project problem: the Docker CLI is there, but the engine of the selected
+// local context does not answer.
+func (msgs Messages) ProblemEngineDown(tool string) string {
+	return Catalog.Format(msgs.locale, "problemEngineDown", map[string]any{"tool": tool})
+}
+
+// ProblemEngineDownBanner says "The project needs a running Docker engine ({file}), but the engine of the selected context does not answer. Start it …"
+// in the language the app shows.
+//
+// Project page banner: the Docker engine the project needs does not answer.
+func ProblemEngineDownBanner(file string) string {
+	return In(i18n.Locale()).ProblemEngineDownBanner(file)
+}
+
+// ProblemEngineDownBanner says "The project needs a running Docker engine ({file}), but the engine of the selected context does not answer. Start it …"
+// in the language of msgs.
+//
+// Project page banner: the Docker engine the project needs does not answer.
+func (msgs Messages) ProblemEngineDownBanner(file string) string {
+	return Catalog.Format(msgs.locale, "problemEngineDownBanner", map[string]any{"file": file})
+}
+
 // ProblemBanner says "The project needs {tool} {want} ({file}). Installed: {installed}. In this folder the terminal runs {run}."
 // in the language the app shows.
 //

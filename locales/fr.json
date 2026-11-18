@@ -138,6 +138,8 @@
   "addProjects": "{count, plural, one {Ajouter # projet} many {Ajouter # projets} other {Ajouter # projets}}",
   "problemMissing": "pas de {tool}",
   "problemTerminal": "le terminal utilise une autre version de {tool}",
+  "problemEngineDown": "{tool} ne répond pas",
+  "problemEngineDownBanner": "Le projet requiert un moteur Docker en marche ({file}), mais le moteur du contexte choisi ne répond pas. Démarrez-le dans « Préparer l’environnement » ou sur la page Docker.",
   "problemBanner": "Le projet requiert {tool} {want} ({file}). Installé : {installed}. Dans ce dossier, le terminal lance {run}.",
   "nothingInstalled": "rien",
   "aiInstructions": "instructions · {agent}",

@@ -783,6 +783,8 @@ func checkSource(ch projects.Check) string {
 func statusProblem(st projects.Status) string {
 	ch, ok := st.Unmet()
 	switch {
+	case !ok && st.EngineDown:
+		return locales.ProblemEngineDown(toolTitle(st.Tool))
 	case !ok:
 		return ""
 	case ch.Installed == nil:
@@ -807,6 +809,9 @@ func problemBanner(statuses []projects.Status) string {
 	for _, st := range statuses {
 		ch, ok := st.Unmet()
 		if !ok {
+			if st.EngineDown {
+				return locales.ProblemEngineDownBanner(st.Checks[0].File)
+			}
 			continue
 		}
 		vs := installedVersions(st)

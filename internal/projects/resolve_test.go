@@ -252,3 +252,29 @@ func TestPick(t *testing.T) {
 		}
 	}
 }
+
+// Docker's CLI meets the project, but its engine down is a problem of its
+// own: only for the selected local context, which the scan checks.
+func TestResolveDockerEngine(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ctx  inventory.DockerContext
+		down bool
+	}{
+		{"local engine answers", inventory.DockerContext{Name: "kiri", Local: true, Status: "available"}, false},
+		{"local engine down", inventory.DockerContext{Name: "kiri", Local: true, Status: "unavailable"}, true},
+		{"remote context not checked", inventory.DockerContext{Name: "kiri"}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{
+				Tool:          "docker",
+				Installations: []inventory.Installation{{Tool: "docker", Version: "29.9.2", OnPath: 1, Path: "/bin/docker"}},
+				Docker:        &inventory.DockerState{Selected: "kiri", Contexts: []inventory.DockerContext{{Name: "default", Local: true, Status: "unavailable"}, tc.ctx}},
+			}}}
+			got := Resolve(Project{Requirements: []Requirement{{Tool: "docker", File: "compose.yaml"}}}, s, nil)
+			if got[0].EngineDown != tc.down || !got[0].Checks[0].Met {
+				t.Errorf("engine down %v, met %v; want down %v, met", got[0].EngineDown, got[0].Checks[0].Met, tc.down)
+			}
+		})
+	}
+}

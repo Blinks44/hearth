@@ -343,3 +343,17 @@ func TestProjectPin(t *testing.T) {
 	hasTexts(t, tt, "Pin Node 22.12.0 in shop-web", tilde(filepath.Join(home+"/dev/shop-web", ".nvmrc"), home), "- 22", "+ 22.12.0", "Pin 22.12.0")
 	screenshot(t, tt, "project-pin")
 }
+
+// A project's Docker with its engine down is not ready, though the CLI
+// meets the requirement, and the banner says what to start.
+func TestProjectDockerEngineDown(t *testing.T) {
+	st := projects.Status{Tool: "docker", Checked: true, EngineDown: true,
+		Checks: []projects.Check{{Tool: "docker", File: "compose.yaml", Met: true}}}
+	if got := statusProblem(st); got != "Docker not answering" {
+		t.Errorf("problem %q", got)
+	}
+	want := "The project needs a running Docker engine (compose.yaml), but the engine of the selected context does not answer. Start it with “Prepare environment” or on the Docker page."
+	if got := problemBanner([]projects.Status{st}); got != want {
+		t.Errorf("banner %q", got)
+	}
+}

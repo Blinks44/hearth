@@ -26,6 +26,9 @@ type Status struct {
 	// Installations are the tool's copies the scan found.
 	Installations []inventory.Installation
 	Checks        []Check
+	// EngineDown reports, for Docker, that the engine of the selected
+	// local context does not answer: the CLI alone runs no containers.
+	EngineDown bool
 }
 
 // Check is one requirement against what is installed.
@@ -81,6 +84,10 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 		}
 		st.Installations = ts.Installations
 		st.Terminal, st.Downloads = terminal(ts, st.Checks, lines)
+		if d := ts.Docker; d != nil {
+			i := slices.IndexFunc(d.Contexts, func(c inventory.DockerContext) bool { return c.Name == d.Selected })
+			st.EngineDown = i >= 0 && d.Contexts[i].Local && d.Contexts[i].Status == "unavailable"
+		}
 		for j := range st.Checks {
 			c := &st.Checks[j]
 			match, err := matcher(st.Tool, c.Want, lines)

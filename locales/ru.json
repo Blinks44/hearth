@@ -138,6 +138,8 @@
   "addProjects": "{count, plural, one {Добавить # проект} few {Добавить # проекта} many {Добавить # проектов} other {Добавить # проекта}}",
   "problemMissing": "нет {tool}",
   "problemTerminal": "в терминале другая версия {tool}",
+  "problemEngineDown": "{tool} не отвечает",
+  "problemEngineDownBanner": "Проекту нужен работающий движок Docker (файл {file}), но движок выбранного контекста не отвечает. Запустите его в «Подготовить окружение» или на странице Docker.",
   "problemBanner": "Проекту нужно: {tool} {want} (файл {file}). Установлено: {installed}. В терминале в этой папке запустится {run}.",
   "nothingInstalled": "ничего",
   "aiInstructions": "инструкции · {agent}",

@@ -138,6 +138,8 @@
   "addProjects": "{count, plural, other {添加 # 个项目}}",
   "problemMissing": "缺少 {tool}",
   "problemTerminal": "终端使用的是其他版本的 {tool}",
+  "problemEngineDown": "{tool} 无响应",
+  "problemEngineDownBanner": "项目需要正在运行的 Docker 引擎（{file}），但所选上下文的引擎无响应。请在“准备环境”或 Docker 页面中启动它。",
   "problemBanner": "项目需要 {tool} {want}（{file}）。已安装：{installed}。在此文件夹中终端运行的是 {run}。",
   "nothingInstalled": "无",
   "aiInstructions": "指令 · {agent}",

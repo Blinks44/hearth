@@ -773,6 +773,26 @@
       }
     }
   },
+  "problemEngineDown": "{tool} not answering",
+  "@problemEngineDown": {
+    "description": "Project problem: the Docker CLI is there, but the engine of the selected local context does not answer.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Docker"
+      }
+    }
+  },
+  "problemEngineDownBanner": "The project needs a running Docker engine ({file}), but the engine of the selected context does not answer. Start it with “Prepare environment” or on the Docker page.",
+  "@problemEngineDownBanner": {
+    "description": "Project page banner: the Docker engine the project needs does not answer.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "compose.yaml"
+      }
+    }
+  },
   "problemBanner": "The project needs {tool} {want} ({file}). Installed: {installed}. In this folder the terminal runs {run}.",
   "@problemBanner": {
     "description": "Project page banner explaining its problem.",
