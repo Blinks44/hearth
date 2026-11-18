@@ -26553,3 +26553,1099 @@ func KubeClusterNotReady(count int) string { return In(i18n.Locale()).KubeCluste
 func (msgs Messages) KubeClusterNotReady(count int) string {
 	return Catalog.Format(msgs.locale, "kubeClusterNotReady", map[string]any{"count": count})
 }
+
+// KubePodsTrouble says "Problems"
+// in the language the app shows.
+//
+// Cluster view tab: resources that need attention.
+func KubePodsTrouble() string { return In(i18n.Locale()).KubePodsTrouble() }
+
+// KubePodsTrouble says "Problems"
+// in the language of msgs.
+//
+// Cluster view tab: resources that need attention.
+func (msgs Messages) KubePodsTrouble() string {
+	return Catalog.Format(msgs.locale, "kubePodsTrouble", nil)
+}
+
+// KubePodsRestarted says "Restarted"
+// in the language the app shows.
+//
+// Pod list tab: pods whose containers restarted.
+func KubePodsRestarted() string { return In(i18n.Locale()).KubePodsRestarted() }
+
+// KubePodsRestarted says "Restarted"
+// in the language of msgs.
+//
+// Pod list tab: pods whose containers restarted.
+func (msgs Messages) KubePodsRestarted() string {
+	return Catalog.Format(msgs.locale, "kubePodsRestarted", nil)
+}
+
+// KubePodsDone says "Completed"
+// in the language the app shows.
+//
+// Pod list tab: pods that completed or failed.
+func KubePodsDone() string { return In(i18n.Locale()).KubePodsDone() }
+
+// KubePodsDone says "Completed"
+// in the language of msgs.
+//
+// Pod list tab: pods that completed or failed.
+func (msgs Messages) KubePodsDone() string {
+	return Catalog.Format(msgs.locale, "kubePodsDone", nil)
+}
+
+// KubePodsSearch says "Name, app=web or node:worker-2"
+// in the language the app shows.
+//
+// Pod list search placeholder; app=web and node:worker-2 are syntax, keep
+// them.
+func KubePodsSearch() string { return In(i18n.Locale()).KubePodsSearch() }
+
+// KubePodsSearch says "Name, app=web or node:worker-2"
+// in the language of msgs.
+//
+// Pod list search placeholder; app=web and node:worker-2 are syntax, keep
+// them.
+func (msgs Messages) KubePodsSearch() string {
+	return Catalog.Format(msgs.locale, "kubePodsSearch", nil)
+}
+
+// KubeDeploymentsSearch says "Name or namespace"
+// in the language the app shows.
+//
+// Deployment list search placeholder.
+func KubeDeploymentsSearch() string { return In(i18n.Locale()).KubeDeploymentsSearch() }
+
+// KubeDeploymentsSearch says "Name or namespace"
+// in the language of msgs.
+//
+// Deployment list search placeholder.
+func (msgs Messages) KubeDeploymentsSearch() string {
+	return Catalog.Format(msgs.locale, "kubeDeploymentsSearch", nil)
+}
+
+// KubeDeploymentsRolling says "Rolling out"
+// in the language the app shows.
+//
+// Deployment list tab: Deployments rolling out.
+func KubeDeploymentsRolling() string { return In(i18n.Locale()).KubeDeploymentsRolling() }
+
+// KubeDeploymentsRolling says "Rolling out"
+// in the language of msgs.
+//
+// Deployment list tab: Deployments rolling out.
+func (msgs Messages) KubeDeploymentsRolling() string {
+	return Catalog.Format(msgs.locale, "kubeDeploymentsRolling", nil)
+}
+
+// KubeDeploymentsStopped says "Scaled to 0"
+// in the language the app shows.
+//
+// Deployment list tab: Deployments scaled to 0.
+func KubeDeploymentsStopped() string { return In(i18n.Locale()).KubeDeploymentsStopped() }
+
+// KubeDeploymentsStopped says "Scaled to 0"
+// in the language of msgs.
+//
+// Deployment list tab: Deployments scaled to 0.
+func (msgs Messages) KubeDeploymentsStopped() string {
+	return Catalog.Format(msgs.locale, "kubeDeploymentsStopped", nil)
+}
+
+// KubePodGone says "The chosen pod is not in the last read: it may have been deleted or replaced."
+// in the language the app shows.
+//
+// Cluster view: the chosen pod is not in the last read.
+func KubePodGone() string { return In(i18n.Locale()).KubePodGone() }
+
+// KubePodGone says "The chosen pod is not in the last read: it may have been deleted or replaced."
+// in the language of msgs.
+//
+// Cluster view: the chosen pod is not in the last read.
+func (msgs Messages) KubePodGone() string {
+	return Catalog.Format(msgs.locale, "kubePodGone", nil)
+}
+
+// KubeDeploymentGone says "The chosen Deployment is not in the last read: it may have been deleted."
+// in the language the app shows.
+//
+// Cluster view: the chosen Deployment is not in the last read.
+func KubeDeploymentGone() string { return In(i18n.Locale()).KubeDeploymentGone() }
+
+// KubeDeploymentGone says "The chosen Deployment is not in the last read: it may have been deleted."
+// in the language of msgs.
+//
+// Cluster view: the chosen Deployment is not in the last read.
+func (msgs Messages) KubeDeploymentGone() string {
+	return Catalog.Format(msgs.locale, "kubeDeploymentGone", nil)
+}
+
+// KubeGroupNotReady says "{notReady} of {total} not ready"
+// in the language the app shows.
+//
+// Pods of one owner: how many are not ready.
+func KubeGroupNotReady(notReady int, total int) string {
+	return In(i18n.Locale()).KubeGroupNotReady(notReady, total)
+}
+
+// KubeGroupNotReady says "{notReady} of {total} not ready"
+// in the language of msgs.
+//
+// Pods of one owner: how many are not ready.
+func (msgs Messages) KubeGroupNotReady(notReady int, total int) string {
+	return Catalog.Format(msgs.locale, "kubeGroupNotReady", map[string]any{"notReady": notReady, "total": total})
+}
+
+// KubeGroupReady says "{ready} of {total} ready"
+// in the language the app shows.
+//
+// Pods or replicas ready of those wanted.
+func KubeGroupReady(ready int, total int) string {
+	return In(i18n.Locale()).KubeGroupReady(ready, total)
+}
+
+// KubeGroupReady says "{ready} of {total} ready"
+// in the language of msgs.
+//
+// Pods or replicas ready of those wanted.
+func (msgs Messages) KubeGroupReady(ready int, total int) string {
+	return Catalog.Format(msgs.locale, "kubeGroupReady", map[string]any{"ready": ready, "total": total})
+}
+
+// KubeGroupDone says "completed"
+// in the language the app shows.
+//
+// Pods of a Job: all completed.
+func KubeGroupDone() string { return In(i18n.Locale()).KubeGroupDone() }
+
+// KubeGroupDone says "completed"
+// in the language of msgs.
+//
+// Pods of a Job: all completed.
+func (msgs Messages) KubeGroupDone() string {
+	return Catalog.Format(msgs.locale, "kubeGroupDone", nil)
+}
+
+// KubePodCount says "{count, plural, one {# pod} other {# pods}}"
+// in the language the app shows.
+//
+// A number of pods; pod is Kubernetes' term.
+func KubePodCount(count int) string { return In(i18n.Locale()).KubePodCount(count) }
+
+// KubePodCount says "{count, plural, one {# pod} other {# pods}}"
+// in the language of msgs.
+//
+// A number of pods; pod is Kubernetes' term.
+func (msgs Messages) KubePodCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubePodCount", map[string]any{"count": count})
+}
+
+// KubePodsFooter says "Owners: {owners} · pods: {pods}"
+// in the language the app shows.
+//
+// Under the pod list: owners and pods it shows.
+func KubePodsFooter(owners int, pods int) string {
+	return In(i18n.Locale()).KubePodsFooter(owners, pods)
+}
+
+// KubePodsFooter says "Owners: {owners} · pods: {pods}"
+// in the language of msgs.
+//
+// Under the pod list: owners and pods it shows.
+func (msgs Messages) KubePodsFooter(owners int, pods int) string {
+	return Catalog.Format(msgs.locale, "kubePodsFooter", map[string]any{"owners": owners, "pods": pods})
+}
+
+// KubeOpenAll says "Expand all"
+// in the language the app shows.
+//
+// Button: open every owner group of the pod list.
+func KubeOpenAll() string { return In(i18n.Locale()).KubeOpenAll() }
+
+// KubeOpenAll says "Expand all"
+// in the language of msgs.
+//
+// Button: open every owner group of the pod list.
+func (msgs Messages) KubeOpenAll() string {
+	return Catalog.Format(msgs.locale, "kubeOpenAll", nil)
+}
+
+// KubeCloseAll says "Collapse all"
+// in the language the app shows.
+//
+// Button: close every owner group of the pod list.
+func KubeCloseAll() string { return In(i18n.Locale()).KubeCloseAll() }
+
+// KubeCloseAll says "Collapse all"
+// in the language of msgs.
+//
+// Button: close every owner group of the pod list.
+func (msgs Messages) KubeCloseAll() string {
+	return Catalog.Format(msgs.locale, "kubeCloseAll", nil)
+}
+
+// KubeCloseDetails says "Close details"
+// in the language the app shows.
+//
+// Icon button closing a resource's details.
+func KubeCloseDetails() string { return In(i18n.Locale()).KubeCloseDetails() }
+
+// KubeCloseDetails says "Close details"
+// in the language of msgs.
+//
+// Icon button closing a resource's details.
+func (msgs Messages) KubeCloseDetails() string {
+	return Catalog.Format(msgs.locale, "kubeCloseDetails", nil)
+}
+
+// KubeOnNode says "node {node}"
+// in the language the app shows.
+//
+// A pod's details: the node it runs on.
+func KubeOnNode(node string) string { return In(i18n.Locale()).KubeOnNode(node) }
+
+// KubeOnNode says "node {node}"
+// in the language of msgs.
+//
+// A pod's details: the node it runs on.
+func (msgs Messages) KubeOnNode(node string) string {
+	return Catalog.Format(msgs.locale, "kubeOnNode", map[string]any{"node": node})
+}
+
+// KubeCreatedAgo says "created {age} ago"
+// in the language the app shows.
+//
+// A resource's details: how long ago it was created; age is short, as 2h.
+func KubeCreatedAgo(age string) string { return In(i18n.Locale()).KubeCreatedAgo(age) }
+
+// KubeCreatedAgo says "created {age} ago"
+// in the language of msgs.
+//
+// A resource's details: how long ago it was created; age is short, as 2h.
+func (msgs Messages) KubeCreatedAgo(age string) string {
+	return Catalog.Format(msgs.locale, "kubeCreatedAgo", map[string]any{"age": age})
+}
+
+// KubeOwner says "owner {kind} {name}"
+// in the language the app shows.
+//
+// A pod's details: its owner, as Deployment web.
+func KubeOwner(kind string, name string) string { return In(i18n.Locale()).KubeOwner(kind, name) }
+
+// KubeOwner says "owner {kind} {name}"
+// in the language of msgs.
+//
+// A pod's details: its owner, as Deployment web.
+func (msgs Messages) KubeOwner(kind string, name string) string {
+	return Catalog.Format(msgs.locale, "kubeOwner", map[string]any{"kind": kind, "name": name})
+}
+
+// KubeTabOverview says "Overview"
+// in the language the app shows.
+//
+// Resource details tab: overview.
+func KubeTabOverview() string { return In(i18n.Locale()).KubeTabOverview() }
+
+// KubeTabOverview says "Overview"
+// in the language of msgs.
+//
+// Resource details tab: overview.
+func (msgs Messages) KubeTabOverview() string {
+	return Catalog.Format(msgs.locale, "kubeTabOverview", nil)
+}
+
+// KubeTabEvents says "Events"
+// in the language the app shows.
+//
+// Resource details tab: Kubernetes events.
+func KubeTabEvents() string { return In(i18n.Locale()).KubeTabEvents() }
+
+// KubeTabEvents says "Events"
+// in the language of msgs.
+//
+// Resource details tab: Kubernetes events.
+func (msgs Messages) KubeTabEvents() string {
+	return Catalog.Format(msgs.locale, "kubeTabEvents", nil)
+}
+
+// KubeContainers says "Containers · {count}"
+// in the language the app shows.
+//
+// Pod details section: its containers.
+func KubeContainers(count int) string { return In(i18n.Locale()).KubeContainers(count) }
+
+// KubeContainers says "Containers · {count}"
+// in the language of msgs.
+//
+// Pod details section: its containers.
+func (msgs Messages) KubeContainers(count int) string {
+	return Catalog.Format(msgs.locale, "kubeContainers", map[string]any{"count": count})
+}
+
+// KubeFacts says "Details"
+// in the language the app shows.
+//
+// Pod details section: facts about it.
+func KubeFacts() string { return In(i18n.Locale()).KubeFacts() }
+
+// KubeFacts says "Details"
+// in the language of msgs.
+//
+// Pod details section: facts about it.
+func (msgs Messages) KubeFacts() string {
+	return Catalog.Format(msgs.locale, "kubeFacts", nil)
+}
+
+// KubePodIP says "Pod IP"
+// in the language the app shows.
+//
+// Pod details: its IP address.
+func KubePodIP() string { return In(i18n.Locale()).KubePodIP() }
+
+// KubePodIP says "Pod IP"
+// in the language of msgs.
+//
+// Pod details: its IP address.
+func (msgs Messages) KubePodIP() string {
+	return Catalog.Format(msgs.locale, "kubePodIP", nil)
+}
+
+// KubeNode says "Node"
+// in the language the app shows.
+//
+// Pod details: its node.
+func KubeNode() string { return In(i18n.Locale()).KubeNode() }
+
+// KubeNode says "Node"
+// in the language of msgs.
+//
+// Pod details: its node.
+func (msgs Messages) KubeNode() string {
+	return Catalog.Format(msgs.locale, "kubeNode", nil)
+}
+
+// KubeLabels says "Labels"
+// in the language the app shows.
+//
+// Pod details: its labels.
+func KubeLabels() string { return In(i18n.Locale()).KubeLabels() }
+
+// KubeLabels says "Labels"
+// in the language of msgs.
+//
+// Pod details: its labels.
+func (msgs Messages) KubeLabels() string {
+	return Catalog.Format(msgs.locale, "kubeLabels", nil)
+}
+
+// KubeVolumes says "Volumes"
+// in the language the app shows.
+//
+// Pod details: its volumes.
+func KubeVolumes() string { return In(i18n.Locale()).KubeVolumes() }
+
+// KubeVolumes says "Volumes"
+// in the language of msgs.
+//
+// Pod details: its volumes.
+func (msgs Messages) KubeVolumes() string {
+	return Catalog.Format(msgs.locale, "kubeVolumes", nil)
+}
+
+// KubeRecentEvents says "Recent events"
+// in the language the app shows.
+//
+// Pod details section: its latest events.
+func KubeRecentEvents() string { return In(i18n.Locale()).KubeRecentEvents() }
+
+// KubeRecentEvents says "Recent events"
+// in the language of msgs.
+//
+// Pod details section: its latest events.
+func (msgs Messages) KubeRecentEvents() string {
+	return Catalog.Format(msgs.locale, "kubeRecentEvents", nil)
+}
+
+// KubeAllEvents says "All events"
+// in the language the app shows.
+//
+// Link to a resource's events tab.
+func KubeAllEvents() string { return In(i18n.Locale()).KubeAllEvents() }
+
+// KubeAllEvents says "All events"
+// in the language of msgs.
+//
+// Link to a resource's events tab.
+func (msgs Messages) KubeAllEvents() string {
+	return Catalog.Format(msgs.locale, "kubeAllEvents", nil)
+}
+
+// KubeReadingEvents says "Reading events…"
+// in the language the app shows.
+//
+// Resource details: its events are being read.
+func KubeReadingEvents() string { return In(i18n.Locale()).KubeReadingEvents() }
+
+// KubeReadingEvents says "Reading events…"
+// in the language of msgs.
+//
+// Resource details: its events are being read.
+func (msgs Messages) KubeReadingEvents() string {
+	return Catalog.Format(msgs.locale, "kubeReadingEvents", nil)
+}
+
+// KubeNoEvents says "No events. Kubernetes keeps them for about an hour."
+// in the language the app shows.
+//
+// Resource details: it has no events.
+func KubeNoEvents() string { return In(i18n.Locale()).KubeNoEvents() }
+
+// KubeNoEvents says "No events. Kubernetes keeps them for about an hour."
+// in the language of msgs.
+//
+// Resource details: it has no events.
+func (msgs Messages) KubeNoEvents() string {
+	return Catalog.Format(msgs.locale, "kubeNoEvents", nil)
+}
+
+// KubeRestartCount says "{count, plural, one {# restart} other {# restarts}}"
+// in the language the app shows.
+//
+// A container's restarts.
+func KubeRestartCount(count int) string { return In(i18n.Locale()).KubeRestartCount(count) }
+
+// KubeRestartCount says "{count, plural, one {# restart} other {# restarts}}"
+// in the language of msgs.
+//
+// A container's restarts.
+func (msgs Messages) KubeRestartCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubeRestartCount", map[string]any{"count": count})
+}
+
+// KubeExitCode says "exit code {code}"
+// in the language the app shows.
+//
+// How a container's last run ended.
+func KubeExitCode(code int) string { return In(i18n.Locale()).KubeExitCode(code) }
+
+// KubeExitCode says "exit code {code}"
+// in the language of msgs.
+//
+// How a container's last run ended.
+func (msgs Messages) KubeExitCode(code int) string {
+	return Catalog.Format(msgs.locale, "kubeExitCode", map[string]any{"code": code})
+}
+
+// KubeWhyGuessNote says "This is inferred from the facts above, not a sure cause."
+// in the language the app shows.
+//
+// What is going on: the lines above are inferences.
+func KubeWhyGuessNote() string { return In(i18n.Locale()).KubeWhyGuessNote() }
+
+// KubeWhyGuessNote says "This is inferred from the facts above, not a sure cause."
+// in the language of msgs.
+//
+// What is going on: the lines above are inferences.
+func (msgs Messages) KubeWhyGuessNote() string {
+	return Catalog.Format(msgs.locale, "kubeWhyGuessNote", nil)
+}
+
+// KubeWhyUnknownNote says "Hearth does not know what this means. Kubernetes' own words:"
+// in the language the app shows.
+//
+// What is going on: the reason is unknown to Hearth; Kubernetes' words
+// follow.
+func KubeWhyUnknownNote() string { return In(i18n.Locale()).KubeWhyUnknownNote() }
+
+// KubeWhyUnknownNote says "Hearth does not know what this means. Kubernetes' own words:"
+// in the language of msgs.
+//
+// What is going on: the reason is unknown to Hearth; Kubernetes' words
+// follow.
+func (msgs Messages) KubeWhyUnknownNote() string {
+	return Catalog.Format(msgs.locale, "kubeWhyUnknownNote", nil)
+}
+
+// KubeWhyPodFailed says "The pod ended: {reason}"
+// in the language the app shows.
+//
+// What is going on: the pod ended, with Kubernetes' reason.
+func KubeWhyPodFailed(reason string) string { return In(i18n.Locale()).KubeWhyPodFailed(reason) }
+
+// KubeWhyPodFailed says "The pod ended: {reason}"
+// in the language of msgs.
+//
+// What is going on: the pod ended, with Kubernetes' reason.
+func (msgs Messages) KubeWhyPodFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyPodFailed", map[string]any{"reason": reason})
+}
+
+// KubeWhyCrash says "Container {container} keeps failing after it starts"
+// in the language the app shows.
+//
+// What is going on: a container in CrashLoopBackOff.
+func KubeWhyCrash(container string) string { return In(i18n.Locale()).KubeWhyCrash(container) }
+
+// KubeWhyCrash says "Container {container} keeps failing after it starts"
+// in the language of msgs.
+//
+// What is going on: a container in CrashLoopBackOff.
+func (msgs Messages) KubeWhyCrash(container string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyCrash", map[string]any{"container": container})
+}
+
+// KubeWhyLastRun says "Its last run ended with exit code {code} ({reason}) {ran} after it started"
+// in the language the app shows.
+//
+// What is going on: how the container's last run ended; ran is short, as
+// 3s.
+func KubeWhyLastRun(code int, reason string, ran string) string {
+	return In(i18n.Locale()).KubeWhyLastRun(code, reason, ran)
+}
+
+// KubeWhyLastRun says "Its last run ended with exit code {code} ({reason}) {ran} after it started"
+// in the language of msgs.
+//
+// What is going on: how the container's last run ended; ran is short, as
+// 3s.
+func (msgs Messages) KubeWhyLastRun(code int, reason string, ran string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyLastRun", map[string]any{"code": code, "reason": reason, "ran": ran})
+}
+
+// KubeWhyRestarts says "{count, plural, one {# restart in {age}} other {# restarts in {age}}}"
+// in the language the app shows.
+//
+// What is going on: restarts over the pod's age, short as 2h.
+func KubeWhyRestarts(count int, age string) string {
+	return In(i18n.Locale()).KubeWhyRestarts(count, age)
+}
+
+// KubeWhyRestarts says "{count, plural, one {# restart in {age}} other {# restarts in {age}}}"
+// in the language of msgs.
+//
+// What is going on: restarts over the pod's age, short as 2h.
+func (msgs Messages) KubeWhyRestarts(count int, age string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyRestarts", map[string]any{"count": count, "age": age})
+}
+
+// KubeWhyNextTry says "Kubernetes waits up to {wait} before the next try"
+// in the language the app shows.
+//
+// What is going on: kubelet's back-off before it starts the container
+// again.
+func KubeWhyNextTry(wait string) string { return In(i18n.Locale()).KubeWhyNextTry(wait) }
+
+// KubeWhyNextTry says "Kubernetes waits up to {wait} before the next try"
+// in the language of msgs.
+//
+// What is going on: kubelet's back-off before it starts the container
+// again.
+func (msgs Messages) KubeWhyNextTry(wait string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyNextTry", map[string]any{"wait": wait})
+}
+
+// KubeWhyOOM says "Kubernetes stopped it for going over its memory limit"
+// in the language the app shows.
+//
+// What is going on: the container was OOMKilled.
+func KubeWhyOOM() string { return In(i18n.Locale()).KubeWhyOOM() }
+
+// KubeWhyOOM says "Kubernetes stopped it for going over its memory limit"
+// in the language of msgs.
+//
+// What is going on: the container was OOMKilled.
+func (msgs Messages) KubeWhyOOM() string {
+	return Catalog.Format(msgs.locale, "kubeWhyOOM", nil)
+}
+
+// KubeWhyExit0 says "Exit code 0: the process ended on its own, while Kubernetes expects it to keep running"
+// in the language the app shows.
+//
+// What is going on, inferred: the container exited with code 0.
+func KubeWhyExit0() string { return In(i18n.Locale()).KubeWhyExit0() }
+
+// KubeWhyExit0 says "Exit code 0: the process ended on its own, while Kubernetes expects it to keep running"
+// in the language of msgs.
+//
+// What is going on, inferred: the container exited with code 0.
+func (msgs Messages) KubeWhyExit0() string {
+	return Catalog.Format(msgs.locale, "kubeWhyExit0", nil)
+}
+
+// KubeWhyExitCommand says "Exit code {code} usually means the container's command was not found or cannot run"
+// in the language the app shows.
+//
+// What is going on, inferred: exit code 126 or 127.
+func KubeWhyExitCommand(code int) string { return In(i18n.Locale()).KubeWhyExitCommand(code) }
+
+// KubeWhyExitCommand says "Exit code {code} usually means the container's command was not found or cannot run"
+// in the language of msgs.
+//
+// What is going on, inferred: exit code 126 or 127.
+func (msgs Messages) KubeWhyExitCommand(code int) string {
+	return Catalog.Format(msgs.locale, "kubeWhyExitCommand", map[string]any{"code": code})
+}
+
+// KubeWhyExit137 says "Exit code 137: the process was killed with SIGKILL, not for its memory limit"
+// in the language the app shows.
+//
+// What is going on, inferred: exit code 137 without OOMKilled.
+func KubeWhyExit137() string { return In(i18n.Locale()).KubeWhyExit137() }
+
+// KubeWhyExit137 says "Exit code 137: the process was killed with SIGKILL, not for its memory limit"
+// in the language of msgs.
+//
+// What is going on, inferred: exit code 137 without OOMKilled.
+func (msgs Messages) KubeWhyExit137() string {
+	return Catalog.Format(msgs.locale, "kubeWhyExit137", nil)
+}
+
+// KubeWhyPull says "Image {image} does not pull"
+// in the language the app shows.
+//
+// What is going on: the image does not pull.
+func KubeWhyPull(image string) string { return In(i18n.Locale()).KubeWhyPull(image) }
+
+// KubeWhyPull says "Image {image} does not pull"
+// in the language of msgs.
+//
+// What is going on: the image does not pull.
+func (msgs Messages) KubeWhyPull(image string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyPull", map[string]any{"image": image})
+}
+
+// KubeWhyPullUnreachable says "The node could not reach registry {registry}"
+// in the language the app shows.
+//
+// What is going on: the node could not reach the registry.
+func KubeWhyPullUnreachable(registry string) string {
+	return In(i18n.Locale()).KubeWhyPullUnreachable(registry)
+}
+
+// KubeWhyPullUnreachable says "The node could not reach registry {registry}"
+// in the language of msgs.
+//
+// What is going on: the node could not reach the registry.
+func (msgs Messages) KubeWhyPullUnreachable(registry string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyPullUnreachable", map[string]any{"registry": registry})
+}
+
+// KubeWhyPullDenied says "Registry {registry} refused: the image is private and needs an imagePullSecret, or the repository does not exist"
+// in the language the app shows.
+//
+// What is going on: the registry refused the pull.
+func KubeWhyPullDenied(registry string) string { return In(i18n.Locale()).KubeWhyPullDenied(registry) }
+
+// KubeWhyPullDenied says "Registry {registry} refused: the image is private and needs an imagePullSecret, or the repository does not exist"
+// in the language of msgs.
+//
+// What is going on: the registry refused the pull.
+func (msgs Messages) KubeWhyPullDenied(registry string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyPullDenied", map[string]any{"registry": registry})
+}
+
+// KubeWhyPullNotFound says "Registry {registry} has no such image or tag"
+// in the language the app shows.
+//
+// What is going on: the registry has no such image or tag.
+func KubeWhyPullNotFound(registry string) string {
+	return In(i18n.Locale()).KubeWhyPullNotFound(registry)
+}
+
+// KubeWhyPullNotFound says "Registry {registry} has no such image or tag"
+// in the language of msgs.
+//
+// What is going on: the registry has no such image or tag.
+func (msgs Messages) KubeWhyPullNotFound(registry string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyPullNotFound", map[string]any{"registry": registry})
+}
+
+// KubeWhyUnscheduled says "The pod is not placed on any node"
+// in the language the app shows.
+//
+// What is going on: the scheduler placed the pod on no node.
+func KubeWhyUnscheduled() string { return In(i18n.Locale()).KubeWhyUnscheduled() }
+
+// KubeWhyUnscheduled says "The pod is not placed on any node"
+// in the language of msgs.
+//
+// What is going on: the scheduler placed the pod on no node.
+func (msgs Messages) KubeWhyUnscheduled() string {
+	return Catalog.Format(msgs.locale, "kubeWhyUnscheduled", nil)
+}
+
+// KubeWhyNoResources says "The nodes lack the CPU or memory the pod requests"
+// in the language the app shows.
+//
+// What is going on: the scheduler says the nodes lack CPU or memory.
+func KubeWhyNoResources() string { return In(i18n.Locale()).KubeWhyNoResources() }
+
+// KubeWhyNoResources says "The nodes lack the CPU or memory the pod requests"
+// in the language of msgs.
+//
+// What is going on: the scheduler says the nodes lack CPU or memory.
+func (msgs Messages) KubeWhyNoResources() string {
+	return Catalog.Format(msgs.locale, "kubeWhyNoResources", nil)
+}
+
+// KubeWhyNoVolume says "The pod waits for a volume: its PersistentVolumeClaim is not bound"
+// in the language the app shows.
+//
+// What is going on: the scheduler says a PersistentVolumeClaim is not
+// bound.
+func KubeWhyNoVolume() string { return In(i18n.Locale()).KubeWhyNoVolume() }
+
+// KubeWhyNoVolume says "The pod waits for a volume: its PersistentVolumeClaim is not bound"
+// in the language of msgs.
+//
+// What is going on: the scheduler says a PersistentVolumeClaim is not
+// bound.
+func (msgs Messages) KubeWhyNoVolume() string {
+	return Catalog.Format(msgs.locale, "kubeWhyNoVolume", nil)
+}
+
+// KubeWhyNoNode says "No node matches the pod's nodeSelector or affinity"
+// in the language the app shows.
+//
+// What is going on: no node matches the pod's selector or affinity.
+func KubeWhyNoNode() string { return In(i18n.Locale()).KubeWhyNoNode() }
+
+// KubeWhyNoNode says "No node matches the pod's nodeSelector or affinity"
+// in the language of msgs.
+//
+// What is going on: no node matches the pod's selector or affinity.
+func (msgs Messages) KubeWhyNoNode() string {
+	return Catalog.Format(msgs.locale, "kubeWhyNoNode", nil)
+}
+
+// KubeWhyTainted says "The nodes have taints the pod does not tolerate"
+// in the language the app shows.
+//
+// What is going on: the nodes have taints the pod does not tolerate.
+func KubeWhyTainted() string { return In(i18n.Locale()).KubeWhyTainted() }
+
+// KubeWhyTainted says "The nodes have taints the pod does not tolerate"
+// in the language of msgs.
+//
+// What is going on: the nodes have taints the pod does not tolerate.
+func (msgs Messages) KubeWhyTainted() string {
+	return Catalog.Format(msgs.locale, "kubeWhyTainted", nil)
+}
+
+// KubeWhyOther says "Container {container}: {reason}"
+// in the language the app shows.
+//
+// What is going on: a container's reason Hearth does not explain.
+func KubeWhyOther(container string, reason string) string {
+	return In(i18n.Locale()).KubeWhyOther(container, reason)
+}
+
+// KubeWhyOther says "Container {container}: {reason}"
+// in the language of msgs.
+//
+// What is going on: a container's reason Hearth does not explain.
+func (msgs Messages) KubeWhyOther(container string, reason string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyOther", map[string]any{"container": container, "reason": reason})
+}
+
+// KubeWhyCreating says "The containers are still being created"
+// in the language the app shows.
+//
+// What is going on: the pod's containers are being created.
+func KubeWhyCreating() string { return In(i18n.Locale()).KubeWhyCreating() }
+
+// KubeWhyCreating says "The containers are still being created"
+// in the language of msgs.
+//
+// What is going on: the pod's containers are being created.
+func (msgs Messages) KubeWhyCreating() string {
+	return Catalog.Format(msgs.locale, "kubeWhyCreating", nil)
+}
+
+// KubeWhyNotReady says "Container {container} runs but is not ready"
+// in the language the app shows.
+//
+// What is going on: a container runs but is not ready.
+func KubeWhyNotReady(container string) string { return In(i18n.Locale()).KubeWhyNotReady(container) }
+
+// KubeWhyNotReady says "Container {container} runs but is not ready"
+// in the language of msgs.
+//
+// What is going on: a container runs but is not ready.
+func (msgs Messages) KubeWhyNotReady(container string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyNotReady", map[string]any{"container": container})
+}
+
+// KubeWhyProbe says "Its readiness check does not pass"
+// in the language the app shows.
+//
+// What is going on: the container's readiness check fails.
+func KubeWhyProbe() string { return In(i18n.Locale()).KubeWhyProbe() }
+
+// KubeWhyProbe says "Its readiness check does not pass"
+// in the language of msgs.
+//
+// What is going on: the container's readiness check fails.
+func (msgs Messages) KubeWhyProbe() string {
+	return Catalog.Format(msgs.locale, "kubeWhyProbe", nil)
+}
+
+// KubeWhyUnknown says "The pod needs attention: {phase}"
+// in the language the app shows.
+//
+// What is going on: a pod in trouble for no reason Hearth knows; phase is
+// Kubernetes' word.
+func KubeWhyUnknown(phase string) string { return In(i18n.Locale()).KubeWhyUnknown(phase) }
+
+// KubeWhyUnknown says "The pod needs attention: {phase}"
+// in the language of msgs.
+//
+// What is going on: a pod in trouble for no reason Hearth knows; phase is
+// Kubernetes' word.
+func (msgs Messages) KubeWhyUnknown(phase string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyUnknown", map[string]any{"phase": phase})
+}
+
+// KubeRollingOut says "rolling out · {updated} of {total}"
+// in the language the app shows.
+//
+// Deployment status: a rollout under way.
+func KubeRollingOut(updated int, total int) string {
+	return In(i18n.Locale()).KubeRollingOut(updated, total)
+}
+
+// KubeRollingOut says "rolling out · {updated} of {total}"
+// in the language of msgs.
+//
+// Deployment status: a rollout under way.
+func (msgs Messages) KubeRollingOut(updated int, total int) string {
+	return Catalog.Format(msgs.locale, "kubeRollingOut", map[string]any{"updated": updated, "total": total})
+}
+
+// KubePaused says "paused"
+// in the language the app shows.
+//
+// Deployment status: its rollout is paused.
+func KubePaused() string { return In(i18n.Locale()).KubePaused() }
+
+// KubePaused says "paused"
+// in the language of msgs.
+//
+// Deployment status: its rollout is paused.
+func (msgs Messages) KubePaused() string {
+	return Catalog.Format(msgs.locale, "kubePaused", nil)
+}
+
+// KubePausedNote says "Its rollout is paused: changes to its template do not reach the pods until it resumes."
+// in the language the app shows.
+//
+// Deployment details: its rollout is paused.
+func KubePausedNote() string { return In(i18n.Locale()).KubePausedNote() }
+
+// KubePausedNote says "Its rollout is paused: changes to its template do not reach the pods until it resumes."
+// in the language of msgs.
+//
+// Deployment details: its rollout is paused.
+func (msgs Messages) KubePausedNote() string {
+	return Catalog.Format(msgs.locale, "kubePausedNote", nil)
+}
+
+// KubeRevision says "revision {number}"
+// in the language the app shows.
+//
+// Deployment details: its current revision.
+func KubeRevision(number int) string { return In(i18n.Locale()).KubeRevision(number) }
+
+// KubeRevision says "revision {number}"
+// in the language of msgs.
+//
+// Deployment details: its current revision.
+func (msgs Messages) KubeRevision(number int) string {
+	return Catalog.Format(msgs.locale, "kubeRevision", map[string]any{"number": number})
+}
+
+// KubeStalled says "The rollout made no progress in time"
+// in the language the app shows.
+//
+// Deployment details: its rollout timed out; Kubernetes' message follows.
+func KubeStalled() string { return In(i18n.Locale()).KubeStalled() }
+
+// KubeStalled says "The rollout made no progress in time"
+// in the language of msgs.
+//
+// Deployment details: its rollout timed out; Kubernetes' message follows.
+func (msgs Messages) KubeStalled() string {
+	return Catalog.Format(msgs.locale, "kubeStalled", nil)
+}
+
+// KubePodsNotReady says "{count} of {total} pods not ready"
+// in the language the app shows.
+//
+// Deployment details: its pods not ready.
+func KubePodsNotReady(count int, total int) string {
+	return In(i18n.Locale()).KubePodsNotReady(count, total)
+}
+
+// KubePodsNotReady says "{count} of {total} pods not ready"
+// in the language of msgs.
+//
+// Deployment details: its pods not ready.
+func (msgs Messages) KubePodsNotReady(count int, total int) string {
+	return Catalog.Format(msgs.locale, "kubePodsNotReady", map[string]any{"count": count, "total": total})
+}
+
+// KubeReplicas says "Replicas"
+// in the language the app shows.
+//
+// Deployment details section: its replicas.
+func KubeReplicas() string { return In(i18n.Locale()).KubeReplicas() }
+
+// KubeReplicas says "Replicas"
+// in the language of msgs.
+//
+// Deployment details section: its replicas.
+func (msgs Messages) KubeReplicas() string {
+	return Catalog.Format(msgs.locale, "kubeReplicas", nil)
+}
+
+// KubeWanted says "Wanted"
+// in the language the app shows.
+//
+// Deployment details: replicas it wants.
+func KubeWanted() string { return In(i18n.Locale()).KubeWanted() }
+
+// KubeWanted says "Wanted"
+// in the language of msgs.
+//
+// Deployment details: replicas it wants.
+func (msgs Messages) KubeWanted() string {
+	return Catalog.Format(msgs.locale, "kubeWanted", nil)
+}
+
+// KubeReadyCount says "Ready"
+// in the language the app shows.
+//
+// Deployment details: replicas ready.
+func KubeReadyCount() string { return In(i18n.Locale()).KubeReadyCount() }
+
+// KubeReadyCount says "Ready"
+// in the language of msgs.
+//
+// Deployment details: replicas ready.
+func (msgs Messages) KubeReadyCount() string {
+	return Catalog.Format(msgs.locale, "kubeReadyCount", nil)
+}
+
+// KubeUpdatedCount says "Up to date"
+// in the language the app shows.
+//
+// Deployment details: replicas of the current revision.
+func KubeUpdatedCount() string { return In(i18n.Locale()).KubeUpdatedCount() }
+
+// KubeUpdatedCount says "Up to date"
+// in the language of msgs.
+//
+// Deployment details: replicas of the current revision.
+func (msgs Messages) KubeUpdatedCount() string {
+	return Catalog.Format(msgs.locale, "kubeUpdatedCount", nil)
+}
+
+// KubeAvailableCount says "Available"
+// in the language the app shows.
+//
+// Deployment details: replicas available.
+func KubeAvailableCount() string { return In(i18n.Locale()).KubeAvailableCount() }
+
+// KubeAvailableCount says "Available"
+// in the language of msgs.
+//
+// Deployment details: replicas available.
+func (msgs Messages) KubeAvailableCount() string {
+	return Catalog.Format(msgs.locale, "kubeAvailableCount", nil)
+}
+
+// KubeAllPods says "All pods"
+// in the language the app shows.
+//
+// Deployment details: all its pods, old ones of a rollout too.
+func KubeAllPods() string { return In(i18n.Locale()).KubeAllPods() }
+
+// KubeAllPods says "All pods"
+// in the language of msgs.
+//
+// Deployment details: all its pods, old ones of a rollout too.
+func (msgs Messages) KubeAllPods() string {
+	return Catalog.Format(msgs.locale, "kubeAllPods", nil)
+}
+
+// KubeStrategy says "Strategy"
+// in the language the app shows.
+//
+// Deployment details: its update strategy.
+func KubeStrategy() string { return In(i18n.Locale()).KubeStrategy() }
+
+// KubeStrategy says "Strategy"
+// in the language of msgs.
+//
+// Deployment details: its update strategy.
+func (msgs Messages) KubeStrategy() string {
+	return Catalog.Format(msgs.locale, "kubeStrategy", nil)
+}
+
+// KubeRevisions says "Revisions · {count}"
+// in the language the app shows.
+//
+// Deployment details section: its revisions.
+func KubeRevisions(count int) string { return In(i18n.Locale()).KubeRevisions(count) }
+
+// KubeRevisions says "Revisions · {count}"
+// in the language of msgs.
+//
+// Deployment details section: its revisions.
+func (msgs Messages) KubeRevisions(count int) string {
+	return Catalog.Format(msgs.locale, "kubeRevisions", map[string]any{"count": count})
+}
+
+// KubeCurrent says "current"
+// in the language the app shows.
+//
+// Deployment details: the current revision's tag.
+func KubeCurrent() string { return In(i18n.Locale()).KubeCurrent() }
+
+// KubeCurrent says "current"
+// in the language of msgs.
+//
+// Deployment details: the current revision's tag.
+func (msgs Messages) KubeCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeCurrent", nil)
+}
+
+// KubeNoRevisions says "No ReplicaSets in the answer."
+// in the language the app shows.
+//
+// Deployment details: no ReplicaSets were read.
+func KubeNoRevisions() string { return In(i18n.Locale()).KubeNoRevisions() }
+
+// KubeNoRevisions says "No ReplicaSets in the answer."
+// in the language of msgs.
+//
+// Deployment details: no ReplicaSets were read.
+func (msgs Messages) KubeNoRevisions() string {
+	return Catalog.Format(msgs.locale, "kubeNoRevisions", nil)
+}
+
+// KubeNoOwnedPods says "No pods."
+// in the language the app shows.
+//
+// Deployment details: it has no pods.
+func KubeNoOwnedPods() string { return In(i18n.Locale()).KubeNoOwnedPods() }
+
+// KubeNoOwnedPods says "No pods."
+// in the language of msgs.
+//
+// Deployment details: it has no pods.
+func (msgs Messages) KubeNoOwnedPods() string {
+	return Catalog.Format(msgs.locale, "kubeNoOwnedPods", nil)
+}

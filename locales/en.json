@@ -10567,5 +10567,493 @@
         "example": "1"
       }
     }
+  },
+  "kubePodsTrouble": "Problems",
+  "@kubePodsTrouble": {
+    "description": "Cluster view tab: resources that need attention."
+  },
+  "kubePodsRestarted": "Restarted",
+  "@kubePodsRestarted": {
+    "description": "Pod list tab: pods whose containers restarted."
+  },
+  "kubePodsDone": "Completed",
+  "@kubePodsDone": {
+    "description": "Pod list tab: pods that completed or failed."
+  },
+  "kubePodsSearch": "Name, app=web or node:worker-2",
+  "@kubePodsSearch": {
+    "description": "Pod list search placeholder; app=web and node:worker-2 are syntax, keep them."
+  },
+  "kubeDeploymentsSearch": "Name or namespace",
+  "@kubeDeploymentsSearch": {
+    "description": "Deployment list search placeholder."
+  },
+  "kubeDeploymentsRolling": "Rolling out",
+  "@kubeDeploymentsRolling": {
+    "description": "Deployment list tab: Deployments rolling out."
+  },
+  "kubeDeploymentsStopped": "Scaled to 0",
+  "@kubeDeploymentsStopped": {
+    "description": "Deployment list tab: Deployments scaled to 0."
+  },
+  "kubePodGone": "The chosen pod is not in the last read: it may have been deleted or replaced.",
+  "@kubePodGone": {
+    "description": "Cluster view: the chosen pod is not in the last read."
+  },
+  "kubeDeploymentGone": "The chosen Deployment is not in the last read: it may have been deleted.",
+  "@kubeDeploymentGone": {
+    "description": "Cluster view: the chosen Deployment is not in the last read."
+  },
+  "kubeGroupNotReady": "{notReady} of {total} not ready",
+  "@kubeGroupNotReady": {
+    "description": "Pods of one owner: how many are not ready.",
+    "placeholders": {
+      "notReady": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeGroupReady": "{ready} of {total} ready",
+  "@kubeGroupReady": {
+    "description": "Pods or replicas ready of those wanted.",
+    "placeholders": {
+      "ready": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeGroupDone": "completed",
+  "@kubeGroupDone": {
+    "description": "Pods of a Job: all completed."
+  },
+  "kubePodCount": "{count, plural, one {# pod} other {# pods}}",
+  "@kubePodCount": {
+    "description": "A number of pods; pod is Kubernetes' term.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubePodsFooter": "Owners: {owners} · pods: {pods}",
+  "@kubePodsFooter": {
+    "description": "Under the pod list: owners and pods it shows.",
+    "placeholders": {
+      "owners": {
+        "type": "int",
+        "example": "3"
+      },
+      "pods": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeOpenAll": "Expand all",
+  "@kubeOpenAll": {
+    "description": "Button: open every owner group of the pod list."
+  },
+  "kubeCloseAll": "Collapse all",
+  "@kubeCloseAll": {
+    "description": "Button: close every owner group of the pod list."
+  },
+  "kubeCloseDetails": "Close details",
+  "@kubeCloseDetails": {
+    "description": "Icon button closing a resource's details."
+  },
+  "kubeOnNode": "node {node}",
+  "@kubeOnNode": {
+    "description": "A pod's details: the node it runs on.",
+    "placeholders": {
+      "node": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCreatedAgo": "created {age} ago",
+  "@kubeCreatedAgo": {
+    "description": "A resource's details: how long ago it was created; age is short, as 2h.",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeOwner": "owner {kind} {name}",
+  "@kubeOwner": {
+    "description": "A pod's details: its owner, as Deployment web.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeTabOverview": "Overview",
+  "@kubeTabOverview": {
+    "description": "Resource details tab: overview."
+  },
+  "kubeTabEvents": "Events",
+  "@kubeTabEvents": {
+    "description": "Resource details tab: Kubernetes events."
+  },
+  "kubeContainers": "Containers · {count}",
+  "@kubeContainers": {
+    "description": "Pod details section: its containers.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeFacts": "Details",
+  "@kubeFacts": {
+    "description": "Pod details section: facts about it."
+  },
+  "kubePodIP": "Pod IP",
+  "@kubePodIP": {
+    "description": "Pod details: its IP address."
+  },
+  "kubeNode": "Node",
+  "@kubeNode": {
+    "description": "Pod details: its node."
+  },
+  "kubeLabels": "Labels",
+  "@kubeLabels": {
+    "description": "Pod details: its labels."
+  },
+  "kubeVolumes": "Volumes",
+  "@kubeVolumes": {
+    "description": "Pod details: its volumes."
+  },
+  "kubeRecentEvents": "Recent events",
+  "@kubeRecentEvents": {
+    "description": "Pod details section: its latest events."
+  },
+  "kubeAllEvents": "All events",
+  "@kubeAllEvents": {
+    "description": "Link to a resource's events tab."
+  },
+  "kubeReadingEvents": "Reading events…",
+  "@kubeReadingEvents": {
+    "description": "Resource details: its events are being read."
+  },
+  "kubeNoEvents": "No events. Kubernetes keeps them for about an hour.",
+  "@kubeNoEvents": {
+    "description": "Resource details: it has no events."
+  },
+  "kubeRestartCount": "{count, plural, one {# restart} other {# restarts}}",
+  "@kubeRestartCount": {
+    "description": "A container's restarts.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeExitCode": "exit code {code}",
+  "@kubeExitCode": {
+    "description": "How a container's last run ended.",
+    "placeholders": {
+      "code": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeWhyGuessNote": "This is inferred from the facts above, not a sure cause.",
+  "@kubeWhyGuessNote": {
+    "description": "What is going on: the lines above are inferences."
+  },
+  "kubeWhyUnknownNote": "Hearth does not know what this means. Kubernetes' own words:",
+  "@kubeWhyUnknownNote": {
+    "description": "What is going on: the reason is unknown to Hearth; Kubernetes' words follow."
+  },
+  "kubeWhyPodFailed": "The pod ended: {reason}",
+  "@kubeWhyPodFailed": {
+    "description": "What is going on: the pod ended, with Kubernetes' reason.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyCrash": "Container {container} keeps failing after it starts",
+  "@kubeWhyCrash": {
+    "description": "What is going on: a container in CrashLoopBackOff.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyLastRun": "Its last run ended with exit code {code} ({reason}) {ran} after it started",
+  "@kubeWhyLastRun": {
+    "description": "What is going on: how the container's last run ended; ran is short, as 3s.",
+    "placeholders": {
+      "code": {
+        "type": "int",
+        "example": "3"
+      },
+      "reason": {
+        "type": "String"
+      },
+      "ran": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyRestarts": "{count, plural, one {# restart in {age}} other {# restarts in {age}}}",
+  "@kubeWhyRestarts": {
+    "description": "What is going on: restarts over the pod's age, short as 2h.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyNextTry": "Kubernetes waits up to {wait} before the next try",
+  "@kubeWhyNextTry": {
+    "description": "What is going on: kubelet's back-off before it starts the container again.",
+    "placeholders": {
+      "wait": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyOOM": "Kubernetes stopped it for going over its memory limit",
+  "@kubeWhyOOM": {
+    "description": "What is going on: the container was OOMKilled."
+  },
+  "kubeWhyExit0": "Exit code 0: the process ended on its own, while Kubernetes expects it to keep running",
+  "@kubeWhyExit0": {
+    "description": "What is going on, inferred: the container exited with code 0."
+  },
+  "kubeWhyExitCommand": "Exit code {code} usually means the container's command was not found or cannot run",
+  "@kubeWhyExitCommand": {
+    "description": "What is going on, inferred: exit code 126 or 127.",
+    "placeholders": {
+      "code": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeWhyExit137": "Exit code 137: the process was killed with SIGKILL, not for its memory limit",
+  "@kubeWhyExit137": {
+    "description": "What is going on, inferred: exit code 137 without OOMKilled."
+  },
+  "kubeWhyPull": "Image {image} does not pull",
+  "@kubeWhyPull": {
+    "description": "What is going on: the image does not pull.",
+    "placeholders": {
+      "image": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyPullUnreachable": "The node could not reach registry {registry}",
+  "@kubeWhyPullUnreachable": {
+    "description": "What is going on: the node could not reach the registry.",
+    "placeholders": {
+      "registry": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyPullDenied": "Registry {registry} refused: the image is private and needs an imagePullSecret, or the repository does not exist",
+  "@kubeWhyPullDenied": {
+    "description": "What is going on: the registry refused the pull.",
+    "placeholders": {
+      "registry": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyPullNotFound": "Registry {registry} has no such image or tag",
+  "@kubeWhyPullNotFound": {
+    "description": "What is going on: the registry has no such image or tag.",
+    "placeholders": {
+      "registry": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyUnscheduled": "The pod is not placed on any node",
+  "@kubeWhyUnscheduled": {
+    "description": "What is going on: the scheduler placed the pod on no node."
+  },
+  "kubeWhyNoResources": "The nodes lack the CPU or memory the pod requests",
+  "@kubeWhyNoResources": {
+    "description": "What is going on: the scheduler says the nodes lack CPU or memory."
+  },
+  "kubeWhyNoVolume": "The pod waits for a volume: its PersistentVolumeClaim is not bound",
+  "@kubeWhyNoVolume": {
+    "description": "What is going on: the scheduler says a PersistentVolumeClaim is not bound."
+  },
+  "kubeWhyNoNode": "No node matches the pod's nodeSelector or affinity",
+  "@kubeWhyNoNode": {
+    "description": "What is going on: no node matches the pod's selector or affinity."
+  },
+  "kubeWhyTainted": "The nodes have taints the pod does not tolerate",
+  "@kubeWhyTainted": {
+    "description": "What is going on: the nodes have taints the pod does not tolerate."
+  },
+  "kubeWhyOther": "Container {container}: {reason}",
+  "@kubeWhyOther": {
+    "description": "What is going on: a container's reason Hearth does not explain.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyCreating": "The containers are still being created",
+  "@kubeWhyCreating": {
+    "description": "What is going on: the pod's containers are being created."
+  },
+  "kubeWhyNotReady": "Container {container} runs but is not ready",
+  "@kubeWhyNotReady": {
+    "description": "What is going on: a container runs but is not ready.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeWhyProbe": "Its readiness check does not pass",
+  "@kubeWhyProbe": {
+    "description": "What is going on: the container's readiness check fails."
+  },
+  "kubeWhyUnknown": "The pod needs attention: {phase}",
+  "@kubeWhyUnknown": {
+    "description": "What is going on: a pod in trouble for no reason Hearth knows; phase is Kubernetes' word.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeRollingOut": "rolling out · {updated} of {total}",
+  "@kubeRollingOut": {
+    "description": "Deployment status: a rollout under way.",
+    "placeholders": {
+      "updated": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubePaused": "paused",
+  "@kubePaused": {
+    "description": "Deployment status: its rollout is paused."
+  },
+  "kubePausedNote": "Its rollout is paused: changes to its template do not reach the pods until it resumes.",
+  "@kubePausedNote": {
+    "description": "Deployment details: its rollout is paused."
+  },
+  "kubeRevision": "revision {number}",
+  "@kubeRevision": {
+    "description": "Deployment details: its current revision.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeStalled": "The rollout made no progress in time",
+  "@kubeStalled": {
+    "description": "Deployment details: its rollout timed out; Kubernetes' message follows."
+  },
+  "kubePodsNotReady": "{count} of {total} pods not ready",
+  "@kubePodsNotReady": {
+    "description": "Deployment details: its pods not ready.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeReplicas": "Replicas",
+  "@kubeReplicas": {
+    "description": "Deployment details section: its replicas."
+  },
+  "kubeWanted": "Wanted",
+  "@kubeWanted": {
+    "description": "Deployment details: replicas it wants."
+  },
+  "kubeReadyCount": "Ready",
+  "@kubeReadyCount": {
+    "description": "Deployment details: replicas ready."
+  },
+  "kubeUpdatedCount": "Up to date",
+  "@kubeUpdatedCount": {
+    "description": "Deployment details: replicas of the current revision."
+  },
+  "kubeAvailableCount": "Available",
+  "@kubeAvailableCount": {
+    "description": "Deployment details: replicas available."
+  },
+  "kubeAllPods": "All pods",
+  "@kubeAllPods": {
+    "description": "Deployment details: all its pods, old ones of a rollout too."
+  },
+  "kubeStrategy": "Strategy",
+  "@kubeStrategy": {
+    "description": "Deployment details: its update strategy."
+  },
+  "kubeRevisions": "Revisions · {count}",
+  "@kubeRevisions": {
+    "description": "Deployment details section: its revisions.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeCurrent": "current",
+  "@kubeCurrent": {
+    "description": "Deployment details: the current revision's tag."
+  },
+  "kubeNoRevisions": "No ReplicaSets in the answer.",
+  "@kubeNoRevisions": {
+    "description": "Deployment details: no ReplicaSets were read."
+  },
+  "kubeNoOwnedPods": "No pods.",
+  "@kubeNoOwnedPods": {
+    "description": "Deployment details: it has no pods."
   }
 }

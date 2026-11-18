@@ -5,56 +5,80 @@
     {
       "kind": "Pod",
       "metadata": {"name": "checkout-api-7d9f8c5b-x2k4p", "namespace": "shop", "uid": "p1", "creationTimestamp": "2026-11-18T08:00:00Z",
+        "labels": {"app": "checkout-api", "pod-template-hash": "7d9f8c5b"},
         "ownerReferences": [{"kind": "ReplicaSet", "name": "checkout-api-7d9f8c5b", "controller": true}]},
-      "spec": {"nodeName": "kind-worker", "containers": [{"name": "api"}, {"name": "envoy"}]},
-      "status": {"phase": "Running", "containerStatuses": [
-        {"name": "api", "ready": false, "restartCount": 14, "state": {"waiting": {"reason": "CrashLoopBackOff"}}},
-        {"name": "envoy", "ready": true, "restartCount": 0, "state": {"running": {}}}
-      ]}
+      "spec": {"nodeName": "kind-worker", "serviceAccountName": "checkout",
+        "containers": [{"name": "api", "image": "ghcr.io/acme/checkout:2.8.1"}, {"name": "envoy", "image": "envoyproxy/envoy:v1.31.2"}],
+        "volumes": [{"name": "config", "configMap": {"name": "checkout"}}, {"name": "kube-api-access-575tw", "projected": {"sources": []}}]},
+      "status": {"phase": "Running", "podIP": "10.244.1.17", "qosClass": "Burstable",
+        "conditions": [{"type": "PodScheduled", "status": "True"}],
+        "containerStatuses": [
+          {"name": "envoy", "ready": true, "restartCount": 0, "state": {"running": {"startedAt": "2026-11-18T08:00:05Z"}}},
+          {"name": "api", "ready": false, "restartCount": 14,
+            "state": {"waiting": {"reason": "CrashLoopBackOff", "message": "back-off 5m0s restarting failed container=api pod=checkout-api-7d9f8c5b-x2k4p_shop(p1)"}},
+            "lastState": {"terminated": {"reason": "Error", "exitCode": 1, "startedAt": "2026-11-18T09:58:00Z", "finishedAt": "2026-11-18T09:58:03Z"}}}
+        ]}
     },
     {
       "kind": "Pod",
       "metadata": {"name": "checkout-api-7d9f8c5b-m8q2z", "namespace": "shop", "uid": "p2", "creationTimestamp": "2026-11-18T08:00:00Z",
         "ownerReferences": [{"kind": "ReplicaSet", "name": "checkout-api-7d9f8c5b", "controller": true}]},
-      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "api"}]},
+      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "api", "image": "ghcr.io/acme/checkout:2.8.1"}]},
       "status": {"phase": "Running", "containerStatuses": [{"name": "api", "ready": true, "restartCount": 0, "state": {"running": {}}}]}
     },
     {
       "kind": "Pod",
       "metadata": {"name": "postgres-0", "namespace": "shop", "uid": "p3", "creationTimestamp": "2026-11-18T09:57:00Z",
         "ownerReferences": [{"kind": "StatefulSet", "name": "postgres", "controller": true}]},
-      "spec": {"containers": [{"name": "postgres"}]},
-      "status": {"phase": "Pending", "conditions": [{"type": "PodScheduled", "status": "False", "reason": "Unschedulable"}]}
+      "spec": {"containers": [{"name": "postgres", "image": "postgres:17"}], "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "data-postgres-0"}}]},
+      "status": {"phase": "Pending", "conditions": [{"type": "PodScheduled", "status": "False", "reason": "Unschedulable",
+        "message": "0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling."}]}
     },
     {
       "kind": "Pod",
       "metadata": {"name": "web-frontend-5c8d7f9b4-k2j9x", "namespace": "shop", "uid": "p4", "creationTimestamp": "2026-11-18T09:54:00Z",
         "ownerReferences": [{"kind": "ReplicaSet", "name": "web-frontend-5c8d7f9b4", "controller": true}]},
-      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "web"}]},
-      "status": {"phase": "Pending", "containerStatuses": [{"name": "web", "ready": false, "restartCount": 0, "state": {"waiting": {"reason": "ImagePullBackOff"}}}]}
+      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "web", "image": "ghcr.io/acme/web:1.4.2"}]},
+      "status": {"phase": "Pending", "containerStatuses": [{"name": "web", "ready": false, "restartCount": 0,
+        "state": {"waiting": {"reason": "ImagePullBackOff", "message": "Back-off pulling image \"ghcr.io/acme/web:1.4.2\": ErrImagePull: ghcr.io/acme/web:1.4.2: not found: manifest unknown"}}}]}
     },
     {
       "kind": "Pod",
       "metadata": {"name": "db-migrate-29381-abcde", "namespace": "shop", "uid": "p5", "creationTimestamp": "2026-11-18T09:00:00Z",
         "ownerReferences": [{"kind": "Job", "name": "db-migrate-29381", "controller": true}]},
-      "spec": {"containers": [{"name": "migrate"}]},
-      "status": {"phase": "Succeeded", "containerStatuses": [{"name": "migrate", "ready": false, "restartCount": 0, "state": {"terminated": {"reason": "Completed"}}}]}
+      "spec": {"containers": [{"name": "migrate", "image": "ghcr.io/acme/migrate:3"}]},
+      "status": {"phase": "Succeeded", "containerStatuses": [{"name": "migrate", "ready": false, "restartCount": 0,
+        "state": {"terminated": {"reason": "Completed", "exitCode": 0, "startedAt": "2026-11-18T09:00:02Z", "finishedAt": "2026-11-18T09:00:40Z"}}}]}
     },
     {
       "kind": "ReplicaSet",
-      "metadata": {"name": "checkout-api-7d9f8c5b", "namespace": "shop", "uid": "r1",
-        "ownerReferences": [{"kind": "Deployment", "name": "checkout-api", "controller": true}]}
+      "metadata": {"name": "checkout-api-7d9f8c5b", "namespace": "shop", "uid": "r1", "creationTimestamp": "2026-11-18T08:00:00Z",
+        "annotations": {"deployment.kubernetes.io/revision": "7"},
+        "ownerReferences": [{"kind": "Deployment", "name": "checkout-api", "controller": true}]},
+      "spec": {"template": {"spec": {"containers": [{"image": "ghcr.io/acme/checkout:2.8.1"}, {"image": "envoyproxy/envoy:v1.31.2"}]}}},
+      "status": {"replicas": 3, "readyReplicas": 2}
+    },
+    {
+      "kind": "ReplicaSet",
+      "metadata": {"name": "checkout-api-6b4f7d9c8", "namespace": "shop", "uid": "r0", "creationTimestamp": "2026-11-17T10:00:00Z",
+        "annotations": {"deployment.kubernetes.io/revision": "6"},
+        "ownerReferences": [{"kind": "Deployment", "name": "checkout-api", "controller": true}]},
+      "spec": {"template": {"spec": {"containers": [{"image": "ghcr.io/acme/checkout:2.8.0"}, {"image": "envoyproxy/envoy:v1.31.2"}]}}},
+      "status": {"replicas": 0}
     },
     {
       "kind": "Deployment",
-      "metadata": {"name": "checkout-api", "namespace": "shop", "uid": "d1", "creationTimestamp": "2026-11-06T10:00:00Z"},
-      "spec": {"replicas": 3},
-      "status": {"readyReplicas": 2, "updatedReplicas": 3}
+      "metadata": {"name": "checkout-api", "namespace": "shop", "uid": "d1", "creationTimestamp": "2026-11-06T10:00:00Z",
+        "annotations": {"deployment.kubernetes.io/revision": "7"}},
+      "spec": {"replicas": 3, "strategy": {"type": "RollingUpdate"},
+        "template": {"spec": {"containers": [{"image": "ghcr.io/acme/checkout:2.8.1"}, {"image": "envoyproxy/envoy:v1.31.2"}]}}},
+      "status": {"replicas": 3, "readyReplicas": 2, "updatedReplicas": 3, "availableReplicas": 2,
+        "conditions": [{"type": "Progressing", "status": "False", "reason": "ProgressDeadlineExceeded", "message": "ReplicaSet \"checkout-api-7d9f8c5b\" has timed out progressing."}]}
     },
     {
       "kind": "Deployment",
       "metadata": {"name": "search-indexer", "namespace": "shop", "uid": "d2", "creationTimestamp": "2026-11-06T10:00:00Z"},
-      "spec": {"replicas": 0},
+      "spec": {"replicas": 0, "paused": true},
       "status": {}
     }
   ]

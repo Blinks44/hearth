@@ -58,6 +58,22 @@ type kubeClusterState struct {
 	nsNames   []string
 	nsErr     error
 	nsTyped   string
+
+	// podFilter and deploymentFilter are the lists' tabs; query filters
+	// both.
+	podFilter, deploymentFilter int
+	query                       string
+	// queryField is the search's own: the Kubernetes page's filter,
+	// bound to App.filterField, is built beside it while the page slides
+	// in.
+	queryField ui.Handle
+	// toggled are the owner groups shown otherwise than by default: open
+	// for those in trouble, closed for the rest.
+	toggled map[string]bool
+	// pod and deployment are the UIDs of those whose details show beside
+	// the list, tab the details' tab.
+	pod, deployment string
+	tab             int
 }
 
 // clusterNamespaces are the namespaces the page reads in the context:
@@ -87,7 +103,8 @@ func (a *App) kubeContext(name string) *inventory.KubeContext {
 // syncCluster keeps the watch of the cluster page's target running while
 // the page shows, and stops it once it does not: the router tells no page
 // that it left. It starts and stops only as the target changes, so a view
-// built again does nothing.
+// built again does nothing. The events of the object whose details show
+// are read with the rest; choosing another keeps what was read.
 func (a *App) syncCluster() {
 	s := &a.cluster
 	var t kube.Target
@@ -101,7 +118,8 @@ func (a *App) syncCluster() {
 	}
 	running := ""
 	if target != "" {
-		running = target + "#" + strconv.Itoa(s.refresh)
+		t.Events = a.detailRef()
+		running = target + "#" + strconv.Itoa(s.refresh) + "#" + t.Events.UID
 	}
 	if running == s.running {
 		return
@@ -128,6 +146,28 @@ func (a *App) syncCluster() {
 		}
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
 	})
+}
+
+// detailRef is the object whose details show, zero for none.
+func (a *App) detailRef() kube.Ref {
+	s := &a.cluster
+	if s.data == nil {
+		return kube.Ref{}
+	}
+	if s.kind == kindDeployments {
+		for _, d := range s.data.Deployments {
+			if d.UID == s.deployment {
+				return kube.Ref{Namespace: d.Namespace, UID: d.UID}
+			}
+		}
+		return kube.Ref{}
+	}
+	for _, p := range s.data.Pods {
+		if p.UID == s.pod {
+			return kube.Ref{Namespace: p.Namespace, UID: p.UID}
+		}
+	}
+	return kube.Ref{}
 }
 
 // StopCluster ends the cluster page's reads, as the window closes.
@@ -196,9 +236,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
 					}
 					if s.kind == kindDeployments {
-						a.deploymentTable(c, s.data)
+						a.deploymentsView(c, s.data)
 					} else {
-						a.podTable(c, s.data)
+						a.podsView(c, s.data)
 					}
 				}
 			})
@@ -546,80 +586,12 @@ func podTrouble(p kube.Pod) bool {
 	case "Failed", "Unknown", "Pending":
 		return true
 	}
-	return p.Reason != "" || p.Ready < p.Containers
+	return p.Reason != "" || p.Ready < len(p.Containers)
 }
 
 // deploymentTrouble reports a Deployment with fewer pods ready than it
 // wants.
 func deploymentTrouble(d kube.Deployment) bool { return d.Ready < d.Replicas }
-
-// podTable lists the pods, those in trouble first. The design's grouping
-// by owner and the pod's details come with S10-01b.
-func (a *App) podTable(c *ui.Context, cl *kube.Cluster) {
-	pods := slices.Clone(cl.Pods)
-	slices.SortStableFunc(pods, func(x, y kube.Pod) int {
-		if tx, ty := podTrouble(x), podTrouble(y); tx != ty {
-			if tx {
-				return -1
-			}
-			return 1
-		}
-		return strings.Compare(x.Namespace+"/"+x.Name, y.Namespace+"/"+y.Name)
-	})
-	if len(pods) == 0 {
-		toolNote(c, locales.KubeClusterNoPods())
-		return
-	}
-	pal := Colors(c.Theme())
-	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
-		for _, p := range pods {
-			status := p.Phase
-			if p.Reason != "" {
-				status = p.Reason
-			}
-			node := p.Node
-			if node == "" {
-				node = "–"
-			}
-			resourceRow(c, "pod-"+p.UID, p.Name, p.Namespace, status, podTrouble(p),
-				fmt.Sprintf("%d/%d", p.Ready, p.Containers), strconv.Itoa(p.Restarts), node, age(c, p.Created))
-		}
-	})
-}
-
-// deploymentTable lists the Deployments, those in trouble first.
-func (a *App) deploymentTable(c *ui.Context, cl *kube.Cluster) {
-	ds := slices.Clone(cl.Deployments)
-	slices.SortStableFunc(ds, func(x, y kube.Deployment) int {
-		if tx, ty := deploymentTrouble(x), deploymentTrouble(y); tx != ty {
-			if tx {
-				return -1
-			}
-			return 1
-		}
-		return strings.Compare(x.Namespace+"/"+x.Name, y.Namespace+"/"+y.Name)
-	})
-	if len(ds) == 0 {
-		toolNote(c, locales.KubeClusterNoDeployments())
-		return
-	}
-	pal := Colors(c.Theme())
-	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
-		for _, d := range ds {
-			status := locales.KubeClusterAvailable()
-			switch {
-			case d.Replicas == 0:
-				status = locales.KubeClusterScaledDown()
-			case deploymentTrouble(d):
-				status = locales.KubeClusterNotReady(d.Replicas - d.Ready)
-			}
-			resourceRow(c, "deployment-"+d.UID, d.Name, d.Namespace, status, deploymentTrouble(d),
-				fmt.Sprintf("%d/%d", d.Ready, d.Replicas), strconv.Itoa(d.Updated), "", age(c, d.Created))
-		}
-	})
-}
 
 // resourceWidths are the widths of the tables' columns after the name.
 var resourceWidths = []float32{170, 70, 90, 130, 70}
@@ -634,38 +606,5 @@ func resourceHead(c *ui.Context, name string, cols ...string) {
 	})
 }
 
-func resourceRow(c *ui.Context, key, name, namespace, status string, trouble bool, cols ...string) {
-	t := c.Theme()
-	pal := Colors(t)
-	ui.Row(c.Key(key)).Gap(10).Padding(8, 16).MinHeight(40).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			clipped(c, name).Font(FontMono).FontSize(12.5)
-			ui.Text(c, namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-		})
-		ui.Row(c).Width(resourceWidths[0]).Children(func() {
-			if trouble {
-				aiTag(c, status, pal.DangerSoft, pal.DangerText)
-			} else {
-				aiTag(c, status, pal.SuccessSoft, pal.SuccessText)
-			}
-		})
-		for i, col := range cols[:len(cols)-1] {
-			ui.Text(c, col).Font(FontMono).FontSize(12).Width(resourceWidths[i+1]).SingleLine()
-		}
-		ui.Text(c, cols[len(cols)-1]).FontSize(12).TextColor(t.TextMuted).Width(resourceWidths[4]).SingleLine()
-	})
-}
-
 // age says how old a resource is, as kubectl does: 40s, 5m, 2h, 12d.
-func age(c *ui.Context, t time.Time) string {
-	d := max(c.Now().Sub(t), 0)
-	switch {
-	case d < time.Minute:
-		return locales.KubeAgeSeconds(int(d / time.Second))
-	case d < time.Hour:
-		return locales.KubeAgeMinutes(int(d / time.Minute))
-	case d < 24*time.Hour:
-		return locales.KubeAgeHours(int(d / time.Hour))
-	}
-	return locales.KubeAgeDays(int(d / (24 * time.Hour)))
-}
+func age(c *ui.Context, t time.Time) string { return span(c.Now().Sub(t)) }

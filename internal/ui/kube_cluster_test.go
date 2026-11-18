@@ -42,13 +42,50 @@ func (w *clusterWatches) running() []kube.Target {
 
 func shopCluster() kube.Cluster {
 	now := time.Now()
+	ago := func(d time.Duration) time.Time { return now.Add(-d) }
+	checkout := kube.Owner{Kind: "Deployment", Name: "checkout-api"}
+	running := func(name, image string) kube.Container {
+		return kube.Container{Name: name, Image: image, Ready: true, State: "running"}
+	}
+	api := running("api", "ghcr.io/acme/checkout:2.8.1")
 	return kube.Cluster{Taken: now, Pods: []kube.Pod{
-		{Namespace: "default", Name: "checkout-api-7d9f8c5b-m8q2z", UID: "p2", Phase: "Running", Ready: 1, Containers: 1, Node: "kind-worker2",
-			Created: now.Add(-2 * time.Hour), Owner: kube.Owner{Kind: "Deployment", Name: "checkout-api"}},
-		{Namespace: "default", Name: "checkout-api-7d9f8c5b-x2k4p", UID: "p1", Phase: "Running", Reason: "CrashLoopBackOff", Ready: 1, Containers: 2,
-			Restarts: 14, Node: "kind-worker", Created: now.Add(-2 * time.Hour), Owner: kube.Owner{Kind: "Deployment", Name: "checkout-api"}},
+		{Namespace: "default", Name: "checkout-api-7d9f8c5b-m8q2z", UID: "p2", Phase: "Running", Ready: 1, Containers: []kube.Container{api},
+			Node: "kind-worker2", Created: ago(2 * time.Hour), Owner: checkout},
+		{Namespace: "default", Name: "checkout-api-7d9f8c5b-x2k4p", UID: "p1", Phase: "Running", Reason: "CrashLoopBackOff", Ready: 1,
+			Containers: []kube.Container{
+				{Name: "api", Image: "ghcr.io/acme/checkout:2.8.1", Restarts: 14, State: "waiting", Reason: "CrashLoopBackOff",
+					Message: "back-off 5m0s restarting failed container=api pod=checkout-api-7d9f8c5b-x2k4p_default(p1)",
+					Last:    &kube.Run{Reason: "Error", ExitCode: 1, Started: ago(4 * time.Minute), Finished: ago(4*time.Minute - 3*time.Second)}},
+				running("envoy", "envoyproxy/envoy:v1.31.2"),
+			},
+			Restarts: 14, Node: "kind-worker", IP: "10.244.1.17", QoS: "Burstable", Account: "checkout",
+			Labels: map[string]string{"app": "checkout-api", "pod-template-hash": "7d9f8c5b"}, Volumes: []string{"config", "tmp"},
+			Created: ago(2 * time.Hour), Owner: checkout},
+		{Namespace: "default", Name: "checkout-api-7d9f8c5b-p9w4d", UID: "p3", Phase: "Running", Ready: 1, Containers: []kube.Container{api},
+			Node: "kind-worker", Created: ago(2 * time.Hour), Owner: checkout},
+		{Namespace: "default", Name: "web-frontend-5c8d7f9b4-k2j9x", UID: "p4", Phase: "Pending", Reason: "ImagePullBackOff",
+			Containers: []kube.Container{{Name: "web", Image: "ghcr.io/acme/web:1.4.2", State: "waiting", Reason: "ImagePullBackOff",
+				Message: `Back-off pulling image "ghcr.io/acme/web:1.4.2": not found: manifest unknown`}},
+			Node: "kind-worker2", Created: ago(6 * time.Minute), Owner: kube.Owner{Kind: "Deployment", Name: "web-frontend"}},
+		{Namespace: "default", Name: "worker-6f7d8-aaaaa", UID: "p5", Phase: "Running", Ready: 1, Containers: []kube.Container{running("worker", "worker:1")},
+			Node: "kind-worker", Created: ago(3 * time.Hour), Owner: kube.Owner{Kind: "Deployment", Name: "worker"}},
+		{Namespace: "default", Name: "worker-6f7d8-bbbbb", UID: "p6", Phase: "Running", Ready: 1, Restarts: 2,
+			Containers: []kube.Container{{Name: "worker", Image: "worker:1", Ready: true, State: "running", Restarts: 2}},
+			Node:       "kind-worker2", Created: ago(3 * time.Hour), Owner: kube.Owner{Kind: "Deployment", Name: "worker"}},
+		{Namespace: "default", Name: "db-migrate-29381-abcde", UID: "p7", Phase: "Succeeded",
+			Containers: []kube.Container{{Name: "migrate", Image: "migrate:3", State: "terminated", Reason: "Completed"}},
+			Created:    ago(40 * time.Minute), Owner: kube.Owner{Kind: "Job", Name: "db-migrate-29381"}},
+		{Namespace: "default", Name: "debug", UID: "p8", Phase: "Running", Ready: 1, Containers: []kube.Container{running("debug", "busybox")},
+			Node: "kind-worker", Created: ago(10 * time.Minute)},
 	}, Deployments: []kube.Deployment{
-		{Namespace: "default", Name: "checkout-api", UID: "d1", Replicas: 3, Ready: 2, Updated: 3, Created: now.Add(-12 * 24 * time.Hour)},
+		{Namespace: "default", Name: "checkout-api", UID: "d1", Replicas: 3, Pods: 3, Ready: 2, Updated: 3, Available: 2, Strategy: "RollingUpdate",
+			Images: []string{"ghcr.io/acme/checkout:2.8.1"}, Revision: 7, Created: ago(12 * 24 * time.Hour), Revisions: []kube.Revision{
+				{Number: 7, Name: "checkout-api-7d9f8c5b", Images: []string{"ghcr.io/acme/checkout:2.8.1"}, Pods: 3, Ready: 2, Created: ago(2 * time.Hour)},
+				{Number: 6, Name: "checkout-api-6b4f7d9c8", Images: []string{"ghcr.io/acme/checkout:2.8.0"}, Created: ago(24 * time.Hour)},
+			}},
+		{Namespace: "default", Name: "web-frontend", UID: "d2", Replicas: 1, Pods: 1, Updated: 1, Created: ago(6 * time.Minute)},
+		{Namespace: "default", Name: "worker", UID: "d3", Replicas: 2, Pods: 2, Ready: 2, Updated: 2, Available: 2, Created: ago(3 * time.Hour)},
+		{Namespace: "default", Name: "search-indexer", UID: "d4", Paused: true, Created: ago(30 * 24 * time.Hour)},
 	}}
 }
 
@@ -91,7 +128,7 @@ func TestKubeCluster(t *testing.T) {
 	a.cluster.kind = kindDeployments
 	tt.Frame()
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "checkout-api", "1 not ready", "2/3", "12d")
+	hasTexts(t, tt, "checkout-api", "2 of 3 ready", "2/3", "12d")
 
 	// A later read fails: the data stays, saying it is old.
 	w.got[0](kube.Cluster{}, &kube.Error{Access: detect.KubeAccess{State: detect.KubeUnreachable, Detail: "dial tcp: connection refused"}})

@@ -1,14 +1,19 @@
 // Package kube reads a cluster through kubectl for the cluster view: its
-// namespaces, pods and workloads. It runs only while the view is open and
-// never from the scan; it reads and changes nothing else. kubectl brings
-// the kubeconfig's sign-in, as for the access check.
+// namespaces, pods and workloads, and the events of the one shown. It runs
+// only while the view is open and never from the scan; it reads and
+// changes nothing else. kubectl brings the kubeconfig's sign-in, as for
+// the access check.
 package kube
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,6 +33,13 @@ type Target struct {
 	Kubectl, Context string
 	// Namespaces are those to read; none reads them all.
 	Namespaces []string
+	// Events is the object whose events to read too; zero reads none.
+	Events Ref
+}
+
+// Ref names an object by its namespace and UID.
+type Ref struct {
+	Namespace, UID string
 }
 
 // Owner is the workload a pod belongs to: a Deployment through its
@@ -36,35 +48,100 @@ type Owner struct {
 	Kind, Name string
 }
 
-// Pod is a pod as the view lists it.
+// Pod is a pod as the view lists and shows it.
 type Pod struct {
 	Namespace, Name, UID string
 	// Phase is Kubernetes' Pending, Running, Succeeded, Failed or
 	// Unknown.
 	Phase string
 	// Reason is why a container waits or ended, as CrashLoopBackOff, or
-	// the pod's own, as Evicted; empty when nothing is wrong.
-	Reason            string
-	Ready, Containers int
-	Restarts          int
-	Node              string
-	Created           time.Time
+	// the pod's own, as Evicted; empty when nothing is wrong. Message is
+	// the pod's own message, as an eviction's.
+	Reason, Message string
+	// Unscheduled is the scheduler's message while no node takes the pod.
+	Unscheduled string
+	Ready       int
+	Restarts    int
+	Containers  []Container
+	Node        string
+	IP, QoS     string
+	Account     string
+	Labels      map[string]string
+	// Volumes are the volumes the pod declares, without the API token
+	// every pod gets.
+	Volumes []string
+	Created time.Time
 	// Owner is zero for a pod nothing owns.
 	Owner Owner
 }
 
-// Deployment is a Deployment as the view lists it.
+// Container is a pod's container and its status.
+type Container struct {
+	Name, Image string
+	Ready       bool
+	Restarts    int
+	// State is running, waiting or terminated; empty before the
+	// container has a status.
+	State string
+	// Reason and Message say why it waits or ended.
+	Reason, Message string
+	// Ended is how its current run ended, when State is terminated; Last
+	// how its previous one did. Either is nil when there is none.
+	Ended, Last *Run
+}
+
+// Run is how a container's run ended.
+type Run struct {
+	Reason, Message   string
+	ExitCode          int
+	Started, Finished time.Time
+}
+
+// Deployment is a Deployment as the view lists and shows it.
 type Deployment struct {
-	Namespace, Name, UID     string
-	Replicas, Ready, Updated int
-	Created                  time.Time
+	Namespace, Name, UID string
+	// Replicas is how many pods it wants; Pods how many it has, old ones
+	// of a rollout too.
+	Replicas, Pods            int
+	Ready, Updated, Available int
+	Paused                    bool
+	Strategy                  string
+	Images                    []string
+	// Revision is the current one; Revisions are those its ReplicaSets
+	// keep, newest first.
+	Revision  int
+	Revisions []Revision
+	// Stalled is Kubernetes' message when the rollout made no progress
+	// in time.
+	Stalled string
+	Created time.Time
+}
+
+// Revision is a Deployment's revision, as its ReplicaSet keeps it.
+type Revision struct {
+	Number      int
+	Name        string
+	Images      []string
+	Pods, Ready int
+	Created     time.Time
+}
+
+// Event is something Kubernetes reported about an object.
+type Event struct {
+	// Type is Normal or Warning.
+	Type, Reason, Message string
+	Count                 int
+	Last                  time.Time
 }
 
 // Cluster is what one read found.
 type Cluster struct {
 	Pods        []Pod
 	Deployments []Deployment
-	Taken       time.Time
+	// Events are those of the target's Events object, newest first.
+	Events   []Event
+	EventsOf Ref
+	Taken    time.Time
 }
 
 // Error is a read kubectl refused or that failed: Access says why, by the
@@ -117,7 +194,8 @@ func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 }
 
 // Read reads the target's pods and Deployments, in one kubectl get for
-// each namespace, or one for all of them.
+// each namespace, or one for all of them, and the events of its Events
+// object.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
 	scopes := make([][]string, 0, max(len(t.Namespaces), 1))
 	for _, ns := range t.Namespaces {
@@ -138,8 +216,59 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 			return Cluster{}, err
 		}
 	}
+	if t.Events.UID != "" {
+		events, err := readEvents(ctx, r, env, t)
+		if err != nil {
+			return Cluster{}, err
+		}
+		c.Events, c.EventsOf = events, t.Events
+	}
 	c.Taken = time.Now()
 	return c, nil
+}
+
+// readEvents reads the events of the target's Events object.
+func readEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]Event, error) {
+	var list struct {
+		Items []struct {
+			Type           string    `json:"type"`
+			Reason         string    `json:"reason"`
+			Message        string    `json:"message"`
+			Count          int       `json:"count"`
+			LastTimestamp  time.Time `json:"lastTimestamp"`
+			EventTime      time.Time `json:"eventTime"`
+			FirstTimestamp time.Time `json:"firstTimestamp"`
+			Series         *struct {
+				Count            int       `json:"count"`
+				LastObservedTime time.Time `json:"lastObservedTime"`
+			} `json:"series"`
+		} `json:"items"`
+	}
+	args := []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID}
+	if err := get(ctx, r, env, t, args, &list); err != nil {
+		return nil, err
+	}
+	events := make([]Event, 0, len(list.Items))
+	for _, it := range list.Items {
+		e := Event{Type: it.Type, Reason: it.Reason, Message: it.Message, Count: max(it.Count, 1)}
+		// Newer clusters report through eventTime and series, older ones
+		// through lastTimestamp and count.
+		for _, at := range []time.Time{it.LastTimestamp, it.EventTime, it.FirstTimestamp} {
+			if !at.IsZero() {
+				e.Last = at
+				break
+			}
+		}
+		if s := it.Series; s != nil {
+			e.Count = max(s.Count, e.Count)
+			if !s.LastObservedTime.IsZero() {
+				e.Last = s.LastObservedTime
+			}
+		}
+		events = append(events, e)
+	}
+	slices.SortStableFunc(events, func(x, y Event) int { return y.Last.Compare(x.Last) })
+	return events, nil
 }
 
 // Watch reads the target now and every Every after the last read ended,
@@ -159,14 +288,103 @@ func Watch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, got func
 	}
 }
 
+// backOff finds the wait of kubelet's "back-off 5m0s restarting failed
+// container" message.
+var backOff = regexp.MustCompile(`back-off (\S+) restarting`)
+
+// BackOff is how long kubelet waits before starting a crashed container
+// again, by its waiting message; zero when the message does not say.
+func BackOff(message string) time.Duration {
+	m := backOff.FindStringSubmatch(message)
+	if m == nil {
+		return 0
+	}
+	d, err := time.ParseDuration(m[1])
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
+// Pull is why an image could not be pulled, by the words of the
+// container's waiting message.
+type Pull int
+
+const (
+	PullUnknown Pull = iota
+	// PullUnreachable: the node could not reach the registry.
+	PullUnreachable
+	// PullDenied: the registry refused, as for a private image without
+	// credentials; Docker Hub says so of an image that does not exist too.
+	PullDenied
+	// PullNotFound: the registry has no such image or tag.
+	PullNotFound
+)
+
+// PullCause says why an image could not be pulled by kubelet's message,
+// PullUnknown when its words are none Hearth knows.
+func PullCause(message string) Pull {
+	m := strings.ToLower(message)
+	has := func(words ...string) bool {
+		return slices.ContainsFunc(words, func(w string) bool { return strings.Contains(m, w) })
+	}
+	switch {
+	case has("no such host", "i/o timeout", "connection refused", "network is unreachable", "tls handshake timeout"):
+		return PullUnreachable
+	case has("pull access denied", "unauthorized", "authentication required", "403 forbidden", "denied"):
+		return PullDenied
+	case has("manifest unknown", "not found"):
+		return PullNotFound
+	}
+	return PullUnknown
+}
+
+// Unschedulable is a reason the scheduler gives for placing a pod on no
+// node.
+type Unschedulable int
+
+const (
+	// NoResources: the nodes lack the CPU or memory the pod requests.
+	NoResources Unschedulable = iota
+	// NoVolume: a PersistentVolumeClaim of the pod is not bound.
+	NoVolume
+	// NoMatchingNode: no node matches the pod's selector or affinity.
+	NoMatchingNode
+	// Tainted: the nodes have taints the pod does not tolerate.
+	Tainted
+)
+
+// ScheduleCauses are the reasons the scheduler's message names, in the
+// order above; none when its words are none Hearth knows.
+func ScheduleCauses(message string) []Unschedulable {
+	m := strings.ToLower(message)
+	var causes []Unschedulable
+	for _, c := range []struct {
+		cause Unschedulable
+		words []string
+	}{
+		{NoResources, []string{"insufficient cpu", "insufficient memory"}},
+		{NoVolume, []string{"persistentvolumeclaim"}},
+		{NoMatchingNode, []string{"didn't match pod's node affinity/selector", "didn't match node selector"}},
+		{Tainted, []string{"untolerated taint"}},
+	} {
+		if slices.ContainsFunc(c.words, func(w string) bool { return strings.Contains(m, w) }) {
+			causes = append(causes, c.cause)
+		}
+	}
+	return causes
+}
+
 // meta is the metadata every object has.
 type meta struct {
 	Kind     string `json:"kind"`
 	Metadata struct {
-		Name              string    `json:"name"`
-		Namespace         string    `json:"namespace"`
-		UID               string    `json:"uid"`
-		CreationTimestamp time.Time `json:"creationTimestamp"`
+		Name              string            `json:"name"`
+		Namespace         string            `json:"namespace"`
+		UID               string            `json:"uid"`
+		CreationTimestamp time.Time         `json:"creationTimestamp"`
+		Labels            map[string]string `json:"labels"`
+		Annotations       map[string]string `json:"annotations"`
 		OwnerReferences   []struct {
 			Kind       string `json:"kind"`
 			Name       string `json:"name"`
@@ -185,34 +403,102 @@ func (m meta) controller() Owner {
 	return Owner{}
 }
 
+// revision is the Deployment revision a ReplicaSet or Deployment carries.
+func (m meta) revision() int {
+	n, _ := strconv.Atoi(m.Metadata.Annotations["deployment.kubernetes.io/revision"])
+	return n
+}
+
+// template is a pod template's containers, as Deployments and ReplicaSets
+// have.
+type template struct {
+	Spec struct {
+		Containers []struct {
+			Image string `json:"image"`
+		} `json:"containers"`
+	} `json:"spec"`
+}
+
+func (t template) images() []string {
+	var images []string
+	for _, c := range t.Spec.Containers {
+		images = append(images, c.Image)
+	}
+	return images
+}
+
+type state struct {
+	Running *struct {
+		StartedAt time.Time `json:"startedAt"`
+	} `json:"running"`
+	Waiting *struct {
+		Reason  string `json:"reason"`
+		Message string `json:"message"`
+	} `json:"waiting"`
+	Terminated *terminated `json:"terminated"`
+}
+
+type terminated struct {
+	Reason     string    `json:"reason"`
+	Message    string    `json:"message"`
+	ExitCode   int       `json:"exitCode"`
+	StartedAt  time.Time `json:"startedAt"`
+	FinishedAt time.Time `json:"finishedAt"`
+}
+
+func (t *terminated) run() *Run {
+	if t == nil {
+		return nil
+	}
+	return &Run{Reason: t.Reason, Message: t.Message, ExitCode: t.ExitCode, Started: t.StartedAt, Finished: t.FinishedAt}
+}
+
 type containerStatus struct {
-	Ready        bool `json:"ready"`
-	RestartCount int  `json:"restartCount"`
-	State        struct {
-		Waiting *struct {
-			Reason string `json:"reason"`
-		} `json:"waiting"`
-		Terminated *struct {
-			Reason string `json:"reason"`
-		} `json:"terminated"`
-	} `json:"state"`
+	Name         string `json:"name"`
+	Ready        bool   `json:"ready"`
+	RestartCount int    `json:"restartCount"`
+	State        state  `json:"state"`
+	LastState    state  `json:"lastState"`
 }
 
 type pod struct {
 	meta
 	Spec struct {
-		NodeName   string     `json:"nodeName"`
-		Containers []struct{} `json:"containers"`
+		NodeName           string `json:"nodeName"`
+		ServiceAccountName string `json:"serviceAccountName"`
+		Containers         []struct {
+			Name  string `json:"name"`
+			Image string `json:"image"`
+		} `json:"containers"`
+		Volumes []struct {
+			Name      string           `json:"name"`
+			Projected *json.RawMessage `json:"projected"`
+		} `json:"volumes"`
 	} `json:"spec"`
 	Status struct {
 		Phase             string            `json:"phase"`
 		Reason            string            `json:"reason"`
+		Message           string            `json:"message"`
+		PodIP             string            `json:"podIP"`
+		QOSClass          string            `json:"qosClass"`
 		ContainerStatuses []containerStatus `json:"containerStatuses"`
 		Conditions        []struct {
-			Type   string `json:"type"`
-			Status string `json:"status"`
-			Reason string `json:"reason"`
+			Type    string `json:"type"`
+			Status  string `json:"status"`
+			Reason  string `json:"reason"`
+			Message string `json:"message"`
 		} `json:"conditions"`
+	} `json:"status"`
+}
+
+type replicaSet struct {
+	meta
+	Spec struct {
+		Template template `json:"template"`
+	} `json:"spec"`
+	Status struct {
+		Replicas      int `json:"replicas"`
+		ReadyReplicas int `json:"readyReplicas"`
 	} `json:"status"`
 }
 
@@ -220,18 +506,33 @@ type deployment struct {
 	meta
 	Spec struct {
 		Replicas *int `json:"replicas"`
+		Paused   bool `json:"paused"`
+		Strategy struct {
+			Type string `json:"type"`
+		} `json:"strategy"`
+		Template template `json:"template"`
 	} `json:"spec"`
 	Status struct {
-		ReadyReplicas   int `json:"readyReplicas"`
-		UpdatedReplicas int `json:"updatedReplicas"`
+		Replicas          int `json:"replicas"`
+		ReadyReplicas     int `json:"readyReplicas"`
+		UpdatedReplicas   int `json:"updatedReplicas"`
+		AvailableReplicas int `json:"availableReplicas"`
+		Conditions        []struct {
+			Type    string `json:"type"`
+			Status  string `json:"status"`
+			Reason  string `json:"reason"`
+			Message string `json:"message"`
+		} `json:"conditions"`
 	} `json:"status"`
 }
 
 // add decodes a list's items into c, pods owned by a ReplicaSet going to
 // the ReplicaSet's own owner, as kubectl's users think of them.
 func (c *Cluster) add(items []json.RawMessage) error {
-	sets := map[string]Owner{} // ReplicaSet by namespace/name
+	sets := map[string]Owner{}           // ReplicaSet by namespace/name
+	revisions := map[string][]Revision{} // by namespace/Deployment
 	var pods []pod
+	first := len(c.Deployments)
 	for _, raw := range items {
 		var m meta
 		if err := json.Unmarshal(raw, &m); err != nil {
@@ -245,7 +546,19 @@ func (c *Cluster) add(items []json.RawMessage) error {
 			}
 			pods = append(pods, p)
 		case "ReplicaSet":
-			sets[m.Metadata.Namespace+"/"+m.Metadata.Name] = m.controller()
+			var rs replicaSet
+			if err := json.Unmarshal(raw, &rs); err != nil {
+				return fmt.Errorf("kubectl get replicaset %s: %w", m.Metadata.Name, err)
+			}
+			owner := m.controller()
+			sets[m.Metadata.Namespace+"/"+m.Metadata.Name] = owner
+			if owner.Kind == "Deployment" {
+				key := m.Metadata.Namespace + "/" + owner.Name
+				revisions[key] = append(revisions[key], Revision{
+					Number: m.revision(), Name: m.Metadata.Name, Images: rs.Spec.Template.images(),
+					Pods: rs.Status.Replicas, Ready: rs.Status.ReadyReplicas, Created: m.Metadata.CreationTimestamp,
+				})
+			}
 		case "Deployment":
 			var d deployment
 			if err := json.Unmarshal(raw, &d); err != nil {
@@ -255,12 +568,25 @@ func (c *Cluster) add(items []json.RawMessage) error {
 			if d.Spec.Replicas != nil {
 				replicas = *d.Spec.Replicas
 			}
-			c.Deployments = append(c.Deployments, Deployment{
+			out := Deployment{
 				Namespace: m.Metadata.Namespace, Name: m.Metadata.Name, UID: m.Metadata.UID,
-				Replicas: replicas, Ready: d.Status.ReadyReplicas, Updated: d.Status.UpdatedReplicas,
-				Created: m.Metadata.CreationTimestamp,
-			})
+				Replicas: replicas, Pods: d.Status.Replicas, Ready: d.Status.ReadyReplicas,
+				Updated: d.Status.UpdatedReplicas, Available: d.Status.AvailableReplicas,
+				Paused: d.Spec.Paused, Strategy: d.Spec.Strategy.Type, Images: d.Spec.Template.images(),
+				Revision: m.revision(), Created: m.Metadata.CreationTimestamp,
+			}
+			for _, cond := range d.Status.Conditions {
+				if cond.Type == "Progressing" && cond.Status == "False" {
+					out.Stalled = cond.Message
+				}
+			}
+			c.Deployments = append(c.Deployments, out)
 		}
+	}
+	for i := first; i < len(c.Deployments); i++ {
+		d := &c.Deployments[i]
+		d.Revisions = revisions[d.Namespace+"/"+d.Name]
+		slices.SortFunc(d.Revisions, func(x, y Revision) int { return cmp.Compare(y.Number, x.Number) })
 	}
 	for _, p := range pods {
 		owner := p.controller()
@@ -269,33 +595,67 @@ func (c *Cluster) add(items []json.RawMessage) error {
 				owner = up
 			}
 		}
-		out := Pod{
-			Namespace: p.Metadata.Namespace, Name: p.Metadata.Name, UID: p.Metadata.UID,
-			Phase: p.Status.Phase, Reason: p.Status.Reason, Containers: len(p.Spec.Containers),
-			Node: p.Spec.NodeName, Created: p.Metadata.CreationTimestamp, Owner: owner,
-		}
-		for _, s := range p.Status.ContainerStatuses {
-			if s.Ready {
-				out.Ready++
-			}
-			out.Restarts += s.RestartCount
-			if out.Reason != "" {
-				continue
-			}
-			if w := s.State.Waiting; w != nil && w.Reason != "" && w.Reason != "ContainerCreating" {
-				out.Reason = w.Reason
-			} else if t := s.State.Terminated; t != nil && t.Reason != "" && t.Reason != "Completed" {
-				out.Reason = t.Reason
-			}
-		}
-		if out.Reason == "" && out.Phase == "Pending" {
-			for _, cond := range p.Status.Conditions {
-				if cond.Type == "PodScheduled" && cond.Status == "False" && cond.Reason != "" {
-					out.Reason = cond.Reason
-				}
-			}
-		}
-		c.Pods = append(c.Pods, out)
+		c.Pods = append(c.Pods, p.pod(owner))
 	}
 	return nil
+}
+
+// pod is what the view shows of p.
+func (p pod) pod(owner Owner) Pod {
+	out := Pod{
+		Namespace: p.Metadata.Namespace, Name: p.Metadata.Name, UID: p.Metadata.UID,
+		Phase: p.Status.Phase, Reason: p.Status.Reason, Message: p.Status.Message,
+		Node: p.Spec.NodeName, IP: p.Status.PodIP, QoS: p.Status.QOSClass, Account: p.Spec.ServiceAccountName,
+		Labels: maps.Clone(p.Metadata.Labels), Created: p.Metadata.CreationTimestamp, Owner: owner,
+	}
+	for _, v := range p.Spec.Volumes {
+		// Every pod gets a projected kube-api-access volume: no news.
+		if v.Projected != nil && strings.HasPrefix(v.Name, "kube-api-access-") {
+			continue
+		}
+		out.Volumes = append(out.Volumes, v.Name)
+	}
+	statuses := map[string]containerStatus{}
+	for _, s := range p.Status.ContainerStatuses {
+		statuses[s.Name] = s
+	}
+	for _, spec := range p.Spec.Containers {
+		ct := Container{Name: spec.Name, Image: spec.Image}
+		if s, ok := statuses[spec.Name]; ok {
+			ct.Ready, ct.Restarts = s.Ready, s.RestartCount
+			ct.Last = s.LastState.Terminated.run()
+			switch st := s.State; {
+			case st.Waiting != nil:
+				ct.State, ct.Reason, ct.Message = "waiting", st.Waiting.Reason, st.Waiting.Message
+			case st.Terminated != nil:
+				ct.State, ct.Reason, ct.Message = "terminated", st.Terminated.Reason, st.Terminated.Message
+				ct.Ended = st.Terminated.run()
+			case st.Running != nil:
+				ct.State = "running"
+			}
+		}
+		out.Containers = append(out.Containers, ct)
+		if ct.Ready {
+			out.Ready++
+		}
+		out.Restarts += ct.Restarts
+		if out.Reason != "" {
+			continue
+		}
+		switch {
+		case ct.State == "waiting" && ct.Reason != "" && ct.Reason != "ContainerCreating":
+			out.Reason = ct.Reason
+		case ct.State == "terminated" && ct.Reason != "" && ct.Reason != "Completed":
+			out.Reason = ct.Reason
+		}
+	}
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == "PodScheduled" && cond.Status == "False" {
+			out.Unscheduled = cond.Message
+			if out.Reason == "" && out.Phase == "Pending" && cond.Reason != "" {
+				out.Reason = cond.Reason
+			}
+		}
+	}
+	return out
 }
