@@ -125,3 +125,36 @@ func TestDockerOperations(t *testing.T) {
 	}
 	screenshot(t, tt, "docker-install")
 }
+
+// Kiri is in no system manager: its row opens the maker's page, and an
+// installed Kiri whose context does not answer starts from the header.
+func TestDockerKiri(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = dockerSnapshot()
+	d := a.Snapshot.Tools[0].Docker
+	d.Engines = append(d.Engines, inventory.DockerEngine{Name: "Kiri"})
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}})
+	tt := openDocker(a)
+	screenshot(t, tt, "docker-kiri")
+	if tt.HasText("Install Kiri") {
+		t.Fatal("Kiri installs through a manager")
+	}
+	if err := tt.Click("Download from runkiri.com"); err != nil {
+		t.Fatal(err)
+	}
+	if got := tt.OpenedURLs(); !slices.Equal(got, []string{"https://runkiri.com/releases/"}) || a.op != nil {
+		t.Fatalf("opened %q, op %+v", got, a.op)
+	}
+
+	d.Engines[len(d.Engines)-1].Path = "/Applications/Kiri.app"
+	d.Selected = "kiri"
+	d.Contexts = append(d.Contexts, inventory.DockerContext{Name: "kiri", Endpoint: "unix://" + home + "/.kiri/run/docker.sock", Engine: "Kiri", Status: "unavailable", Local: true})
+	tt = openDocker(a)
+	if err := tt.Click("Start Kiri"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Start Kiri" {
+		t.Fatalf("plan %+v", a.op)
+	}
+}

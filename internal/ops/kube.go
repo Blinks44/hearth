@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -26,7 +27,7 @@ func KubeContextPlan(cli, from, to string, env sysenv.Env, r run.Runner) (Plan, 
 		Title: locales.KubeContextTitle(to), Why: locales.KubeContextWhy(),
 		Env:     append([]string{}, env...),
 		Steps:   []Step{{Argv: []string{cli, "config", "use-context", "--", to}, Timeout: time.Minute}},
-		Changes: []string{locales.KubeContextSelected(from + " → " + to)},
+		Changes: []string{locales.KubeContextSelected(cmp.Or(from, "—") + " → " + to)},
 	}
 	p.Verify = func(ctx context.Context) (string, error) {
 		res, err := r.Run(ctx, run.Cmd{Args: []string{cli, "config", "current-context"}, Env: env})
@@ -185,8 +186,9 @@ func kindConfig(workers int) string {
 
 // KindDeletePlan deletes a kind cluster: its node containers with all in
 // them, and its context from kubeconfig. current is kubectl's current
-// context, which kind leaves unset when it was the cluster's.
-func KindDeletePlan(kind, name, current string, env sysenv.Env, r run.Runner) (Plan, error) {
+// context, which kind leaves unset when it was the cluster's; projects
+// are the Hearth projects linked to its context.
+func KindDeletePlan(kind, name, current string, projects []string, env sysenv.Env, r run.Runner) (Plan, error) {
 	if kind == "" || name == "" || strings.ContainsAny(name, "\x00\r\n") {
 		return Plan{}, errors.New(locales.KindNameInvalid())
 	}
@@ -201,6 +203,9 @@ func KindDeletePlan(kind, name, current string, env sysenv.Env, r run.Runner) (P
 	if current == "kind-"+name {
 		p.Notes = append(p.Notes, Note{Title: locales.KindCurrentNote(current), Text: locales.KindCurrentNoteText()})
 		p.Changes = append(p.Changes, locales.KindNoCurrent())
+	}
+	if len(projects) > 0 {
+		p.Notes = append(p.Notes, Note{Title: locales.KindLinkedNote(strings.Join(projects, ", ")), Text: locales.KindLinkedNoteText()})
 	}
 	p.Verify = func(ctx context.Context) (string, error) {
 		names, err := kindClusters(ctx, r, kind, env)

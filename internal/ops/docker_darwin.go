@@ -6,7 +6,7 @@ import "time"
 // and Podman start their virtual machine.
 func engineStart(e Engine) []Step {
 	switch e.Name {
-	case "OrbStack", "Docker Desktop", "Rancher Desktop":
+	case "OrbStack", "Docker Desktop", "Rancher Desktop", "Kiri":
 		return []Step{{Argv: []string{"/usr/bin/open", "-a", e.Path}, Timeout: time.Minute}}
 	case "Colima":
 		return []Step{{Argv: []string{e.Path, "start"}}}

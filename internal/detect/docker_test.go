@@ -141,3 +141,23 @@ func TestDockerWithoutCLI(t *testing.T) {
 		t.Fatalf("cancel = %v", err)
 	}
 }
+
+// A context's engine comes from its name or endpoint; Kiri's context on
+// each system, and the rest as before.
+func TestDockerContextEngine(t *testing.T) {
+	tests := []struct{ name, endpoint, want string }{
+		{"kiri", "unix:///Users/ann/.kiri/run/docker.sock", "Kiri"},
+		{"kiri", "unix:///run/kiri/docker.sock", "Kiri"},
+		{"kiri", "npipe:////./pipe/kiri", "Kiri"},
+		{"engine", "unix:///run/kiri/docker.sock", "Kiri"},
+		{"orbstack", "unix:///Users/ann/.orbstack/run/docker.sock", "OrbStack"},
+		{"colima", "unix:///Users/ann/.colima/default/docker.sock", "Colima"},
+		{"desktop-linux", "unix:///Users/ann/.docker/run/docker.sock", "Docker Desktop"},
+		{"default", "unix:///var/run/docker.sock", ""},
+	}
+	for _, tt := range tests {
+		if got := dockerContext(tt.name, tt.endpoint).Engine; got != tt.want {
+			t.Errorf("%s %s: %q, want %q", tt.name, tt.endpoint, got, tt.want)
+		}
+	}
+}

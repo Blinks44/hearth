@@ -5548,6 +5548,22 @@ func (msgs Messages) DockerNotInstalled() string {
 	return Catalog.Format(msgs.locale, "dockerNotInstalled", nil)
 }
 
+// DockerEngineSite says "Download from {site}"
+// in the language the app shows.
+//
+// Docker engines card: button that opens the download page of an engine no
+// system package manager has (Kiri). {site} is the host, as runkiri.com.
+func DockerEngineSite(site string) string { return In(i18n.Locale()).DockerEngineSite(site) }
+
+// DockerEngineSite says "Download from {site}"
+// in the language of msgs.
+//
+// Docker engines card: button that opens the download page of an engine no
+// system package manager has (Kiri). {site} is the host, as runkiri.com.
+func (msgs Messages) DockerEngineSite(site string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineSite", map[string]any{"site": site})
+}
+
 // DockerOrbTerms says "Personal: free · commercial: paid"
 // in the language the app shows.
 func DockerOrbTerms() string { return In(i18n.Locale()).DockerOrbTerms() }
@@ -25198,6 +25214,36 @@ func KindCurrentNoteText() string { return In(i18n.Locale()).KindCurrentNoteText
 // kind delete plan note.
 func (msgs Messages) KindCurrentNoteText() string {
 	return Catalog.Format(msgs.locale, "kindCurrentNoteText", nil)
+}
+
+// KindLinkedNote says "Linked projects: {projects}"
+// in the language the app shows.
+//
+// kind delete plan note title: Hearth projects are linked to the cluster's
+// context.
+func KindLinkedNote(projects string) string { return In(i18n.Locale()).KindLinkedNote(projects) }
+
+// KindLinkedNote says "Linked projects: {projects}"
+// in the language of msgs.
+//
+// kind delete plan note title: Hearth projects are linked to the cluster's
+// context.
+func (msgs Messages) KindLinkedNote(projects string) string {
+	return Catalog.Format(msgs.locale, "kindLinkedNote", map[string]any{"projects": projects})
+}
+
+// KindLinkedNoteText says "The link stays in Hearth and shows \"context not found\": choose another context, unlink, or create the cluster again."
+// in the language the app shows.
+//
+// kind delete plan note under kindLinkedNote.
+func KindLinkedNoteText() string { return In(i18n.Locale()).KindLinkedNoteText() }
+
+// KindLinkedNoteText says "The link stays in Hearth and shows \"context not found\": choose another context, unlink, or create the cluster again."
+// in the language of msgs.
+//
+// kind delete plan note under kindLinkedNote.
+func (msgs Messages) KindLinkedNoteText() string {
+	return Catalog.Format(msgs.locale, "kindLinkedNoteText", nil)
 }
 
 // KubeProjectsTab says "Projects"

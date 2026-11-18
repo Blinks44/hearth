@@ -176,6 +176,8 @@ func dockerContext(name, endpoint string) inventory.DockerContext {
 	}
 	lower := strings.ToLower(name + " " + c.Endpoint)
 	switch {
+	case strings.Contains(lower, "kiri"):
+		c.Engine = "Kiri"
 	case strings.Contains(lower, "orbstack"):
 		c.Engine = "OrbStack"
 	case strings.Contains(lower, "colima"):

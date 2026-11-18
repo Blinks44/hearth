@@ -12,9 +12,13 @@ func TestDockerLocationsLinux(t *testing.T) {
 	bin := filepath.Join(home, "bin")
 	exe := fakeExe(t, filepath.Join(bin, "dockerd"))
 	podman := fakeExe(t, filepath.Join(bin, "podman"))
-	engines, _ := dockerLocations(sysenv.Env{"PATH=" + bin}, home)
-	if engines[0].Path != exe || engines[1].Path != podman {
+	kiri := fakeExe(t, filepath.Join(bin, "kiri"))
+	engines, paths := dockerLocations(sysenv.Env{"PATH=" + bin}, home)
+	if engines[0].Path != exe || engines[1].Path != podman || engines[4].Name != "Kiri" || engines[4].Path != kiri {
 		t.Fatalf("%+v", engines)
+	}
+	if paths[0] != "/usr/libexec/kiri/docker" {
+		t.Fatalf("no Kiri CLI: %v", paths)
 	}
 }
 

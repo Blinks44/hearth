@@ -19,8 +19,11 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 		{Name: "Podman", Path: dockerCommand(env, "podman")},
 		{Name: "Docker Desktop", Path: dockerApp("/opt/docker-desktop")},
 		{Name: "Rancher Desktop", Path: dockerCommand(env, "rancher-desktop")},
+		{Name: "Kiri", Path: dockerCommand(env, "kiri")},
 	}
-	var paths []string
+	// Kiri's package keeps its docker CLI out of PATH when another owns
+	// /usr/bin/docker.
+	paths := []string{"/usr/libexec/kiri/docker"}
 	if home != "" {
 		paths = append(paths, filepath.Join(home, ".docker", "bin", "docker"), filepath.Join(home, ".rd", "bin", "docker"))
 	}

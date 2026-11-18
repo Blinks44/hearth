@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/ops"
 
 	"github.com/egoist/mygo/ui"
@@ -223,6 +224,11 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 				ui.Text(c, locales.DockerNotInstalled()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 				if plan, ok := a.engineInstallPlan(engine.Name, cli); ok {
 					iconButton(c.Key("install:"+engine.Name), "download", plan.Title).OnClick(func() { a.Propose(plan) })
+				} else if m, ok := catalog.EngineMethod(engine.Name, "installer"); ok {
+					// No system manager has it: its maker's page, not an install.
+					site := strings.TrimSuffix(strings.TrimPrefix(m.Package, "https://"), "/")
+					site, _, _ = strings.Cut(site, "/")
+					iconButton(c.Key("site:"+engine.Name), "external-link", locales.DockerEngineSite(site)).OnClick(func() { c.OpenURL(m.Package) })
 				}
 			})
 		}

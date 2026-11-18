@@ -520,7 +520,7 @@ func (a *App) kindClustersCard(c *ui.Context, cli inventory.CliState, current *i
 				}
 				ui.Button(kc.Key("delete"), locales.KindDelete()).Shrink(0).OnClick(func() {
 					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-						return ops.KindDeletePlan(in.Path, k.Name, cur, env, run.Exec{})
+						return ops.KindDeletePlan(in.Path, k.Name, cur, a.kubeProjectsOf("kind-"+k.Name), env, run.Exec{})
 					}, a.proposeOrSay)
 				})
 			})

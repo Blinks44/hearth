@@ -16,6 +16,7 @@ func TestEngineStartLinux(t *testing.T) {
 		{Engine{"Docker Engine", "/usr/bin/dockerd"}, []string{"systemctl", "start", "docker"}, true},
 		{Engine{"Docker Desktop", "/opt/docker-desktop"}, []string{"systemctl", "--user", "start", "docker-desktop"}, false},
 		{Engine{"Podman", "/usr/bin/podman"}, []string{"systemctl", "--user", "start", "podman.socket"}, false},
+		{Engine{"Kiri", "/usr/bin/kiri"}, []string{"systemctl", "start", "kiri"}, true},
 		{Engine{"Rancher Desktop", "/usr/bin/rancher-desktop"}, nil, false},
 	}
 	for _, tt := range tests {

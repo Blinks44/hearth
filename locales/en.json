@@ -2076,6 +2076,15 @@
   "dockerEngineOptions": "Container engines",
   "dockerInstalled": "installed",
   "dockerNotInstalled": "not found",
+  "dockerEngineSite": "Download from {site}",
+  "@dockerEngineSite": {
+    "description": "Docker engines card: button that opens the download page of an engine no system package manager has (Kiri). {site} is the host, as runkiri.com.",
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
   "dockerOrbTerms": "Personal: free · commercial: paid",
   "dockerDesktopTerms": "Business use: check license",
   "dockerOpenSource": "Open source",
@@ -10014,6 +10023,19 @@
   "kindCurrentNoteText": "After the delete kubectl has no current context: its commands fail until you choose another one.",
   "@kindCurrentNoteText": {
     "description": "kind delete plan note."
+  },
+  "kindLinkedNote": "Linked projects: {projects}",
+  "@kindLinkedNote": {
+    "description": "kind delete plan note title: Hearth projects are linked to the cluster's context.",
+    "placeholders": {
+      "projects": {
+        "type": "String"
+      }
+    }
+  },
+  "kindLinkedNoteText": "The link stays in Hearth and shows \"context not found\": choose another context, unlink, or create the cluster again.",
+  "@kindLinkedNoteText": {
+    "description": "kind delete plan note under kindLinkedNote."
   },
   "kubeProjectsTab": "Projects",
   "@kubeProjectsTab": {

@@ -17,11 +17,11 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 		}
 		return dockerApp("/Applications/" + name + ".app")
 	}
-	desktop, orb, podman, rancher := app("Docker"), app("OrbStack"), app("Podman Desktop"), app("Rancher Desktop")
-	engines := []inventory.DockerEngine{{Name: "OrbStack", Path: orb}, {Name: "Colima", Path: dockerCommand(env, "colima")}, {Name: "Docker Desktop", Path: desktop}, {Name: "Podman", Path: dockerCommand(env, "podman")}, {Name: "Podman Desktop", Path: podman}, {Name: "Rancher Desktop", Path: rancher}}
+	desktop, orb, podman, rancher, kiri := app("Docker"), app("OrbStack"), app("Podman Desktop"), app("Rancher Desktop"), app("Kiri")
+	engines := []inventory.DockerEngine{{Name: "OrbStack", Path: orb}, {Name: "Colima", Path: dockerCommand(env, "colima")}, {Name: "Docker Desktop", Path: desktop}, {Name: "Podman", Path: dockerCommand(env, "podman")}, {Name: "Podman Desktop", Path: podman}, {Name: "Rancher Desktop", Path: rancher}, {Name: "Kiri", Path: kiri}}
 	var paths []string
 	if home != "" {
-		paths = append(paths, filepath.Join(home, ".docker", "bin", "docker"), filepath.Join(home, ".orbstack", "bin", "docker"), filepath.Join(home, ".rd", "bin", "docker"))
+		paths = append(paths, filepath.Join(home, ".docker", "bin", "docker"), filepath.Join(home, ".orbstack", "bin", "docker"), filepath.Join(home, ".rd", "bin", "docker"), filepath.Join(home, ".kiri", "bin", "docker"))
 	}
 	if desktop != "" {
 		paths = append(paths, filepath.Join(desktop, "Contents", "Resources", "bin", "docker"))

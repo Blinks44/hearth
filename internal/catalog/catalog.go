@@ -46,7 +46,8 @@ type Method struct {
 // Engines are the container engines Hearth installs, each through each
 // manager that has it: the Docker page's and, those the wizard offers,
 // the catalog's Docker. Linux distributions package Docker Engine with
-// its CLI, each under a name of its own.
+// its CLI, each under a name of its own. Kiri is in no system manager:
+// its "installer" is the maker's download page, which Hearth only links.
 var Engines = []Method{
 	{Engine: "Colima", Manager: "brew", Package: "colima", Kind: "formula"},
 	{Engine: "OrbStack", Manager: "brew", Package: "orbstack", Kind: "cask", Terms: "https://orbstack.dev/pricing"},
@@ -68,6 +69,7 @@ var Engines = []Method{
 	{Engine: "Podman", Manager: "zypper", Package: "podman"},
 	{Engine: "Podman", Manager: "pacman", Package: "podman"},
 	{Engine: "Podman", Manager: "apk", Package: "podman"},
+	{Engine: "Kiri", Manager: "installer", Package: "https://runkiri.com/releases/"},
 }
 
 const dockerDesktopTerms = "https://docs.docker.com/subscription-billing/desktop-license/"

@@ -11,7 +11,7 @@ const startScript = `Start-Process -FilePath $env:HEARTH_PROGRAM`
 // Podman command starts its virtual machine.
 func engineStart(e Engine) []Step {
 	switch e.Name {
-	case "Docker Desktop", "Rancher Desktop":
+	case "Docker Desktop", "Rancher Desktop", "Kiri":
 		return []Step{{
 			Argv:    []string{"powershell.exe", "-NoProfile", "-NonInteractive", "-Command", startScript},
 			Env:     []string{"HEARTH_PROGRAM=" + e.Path},

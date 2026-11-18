@@ -151,6 +151,18 @@ func TestDockerEngines(t *testing.T) {
 	}
 }
 
+// Kiri is in no system manager: Hearth only links its download page.
+func TestEngineKiri(t *testing.T) {
+	for _, manager := range []string{"brew", "winget", "apt", "dnf"} {
+		if _, ok := EngineMethod("Kiri", manager); ok {
+			t.Errorf("Kiri through %s", manager)
+		}
+	}
+	if m, ok := EngineMethod("Kiri", "installer"); !ok || m.Package != "https://runkiri.com/releases/" {
+		t.Errorf("Kiri's page: %+v", m)
+	}
+}
+
 // Each database has its kind, and what it clashes with clashes with it.
 func TestDatabases(t *testing.T) {
 	for _, e := range Tools {

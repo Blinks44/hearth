@@ -153,7 +153,7 @@ func TestKindCreatePlan(t *testing.T) {
 func TestKindDeletePlan(t *testing.T) {
 	f := &run.Fake{}
 	list := []string{"kind", "get", "clusters"}
-	p, err := KindDeletePlan("kind", "dev", "kind-dev", nil, f)
+	p, err := KindDeletePlan("kind", "dev", "kind-dev", nil, nil, f)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,12 @@ func TestKindDeletePlan(t *testing.T) {
 	if _, err := p.Verify(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	if p, _ := KindDeletePlan("kind", "dev", "staging", nil, f); len(p.Changes) != 2 || len(p.Notes) != 1 {
+	if p, _ := KindDeletePlan("kind", "dev", "staging", nil, nil, f); len(p.Changes) != 2 || len(p.Notes) != 1 {
 		t.Fatalf("changes: %q, notes: %+v", p.Changes, p.Notes)
+	}
+	// A linked project is named in a note; the plan changes nothing more.
+	p, _ = KindDeletePlan("kind", "dev", "staging", []string{"shop", "blog"}, nil, f)
+	if len(p.Notes) != 2 || !strings.Contains(p.Notes[1].Title, "shop, blog") || len(p.Changes) != 2 {
+		t.Fatalf("linked: changes %q, notes %+v", p.Changes, p.Notes)
 	}
 }
