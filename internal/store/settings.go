@@ -34,6 +34,16 @@ type Settings struct {
 // Project is a folder the user added to Hearth.
 type Project struct {
 	Path string `json:"path"`
+	// Kube is the Kubernetes context the user linked the project to; nil
+	// when none is.
+	Kube *KubeLink `json:"kube,omitempty"`
+}
+
+// KubeLink is the kubeconfig context and namespace a project works with.
+// Hearth only shows it: kubectl and kubeconfig stay as they are.
+type KubeLink struct {
+	Context   string `json:"context"`
+	Namespace string `json:"namespace"`
 }
 
 // DefaultSettings is what a new user starts with. A field that a file

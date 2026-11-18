@@ -61,6 +61,9 @@ type Project struct {
 	Hooks []inventory.AgentHook
 	// Databases are the local databases Compose and .env refer to.
 	Databases []DatabaseReference
+	// Kube are the Kubernetes files and folders it has, as "Chart.yaml"
+	// and "k8s/": Hearth shows them and never applies them.
+	Kube []string
 	// Changed is when the project last changed, as its files and git's
 	// index say; zero when none of them is there.
 	Changed time.Time
@@ -163,6 +166,7 @@ func Read(dir string) Project {
 	}
 	p.Instructions = ReadInstructions(dir)
 	readDatabases(&p)
+	readKube(&p)
 	readInheritedGlobalJSON(&p)
 	for _, name := range aiFiles {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
@@ -190,7 +194,9 @@ func Names() []string {
 	for _, r := range readers {
 		names = append(names, r.file)
 	}
-	return append(append(names, ".env"), aiFiles...)
+	names = append(append(names, ".env"), aiFiles...)
+	names = append(names, kubeFiles...)
+	return append(names, kubeDirs...)
 }
 
 // needs is a file that only tells the tool is needed.

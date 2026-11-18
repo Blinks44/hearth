@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -74,6 +76,7 @@ func (a *App) kubeView(c *ui.Context, p page) {
 		}})
 		a.kubeNamespaceDialog(c)
 		a.kindDialog(c)
+		a.kubeLinkView(c)
 		t := c.Theme()
 		pal := Colors(t)
 		cli := a.cliState()
@@ -119,6 +122,7 @@ func (a *App) kubeView(c *ui.Context, p page) {
 					segments(c, "kube-tabs", &a.kubeTab, []segment{
 						{locales.KubeContextsCard(), strconv.Itoa(kubeContextCount(cli))},
 						{locales.KubeToolsTab(), strconv.Itoa(cliFound(cli, kubeCommands))},
+						{locales.KubeProjectsTab(), strconv.Itoa(a.kubeProjectsCount())},
 						{locales.KubeFilesTab(), strconv.Itoa(len(cli.KubeFiles))},
 					})
 					ui.Box(c).Grow(1).Height(1)
@@ -133,6 +137,8 @@ func (a *App) kubeView(c *ui.Context, p page) {
 					case 1:
 						a.kubeTools(c, cli)
 					case 2:
+						a.kubeProjectTable(c)
+					case 3:
 						a.kubeFiles(c, cli)
 					default:
 						a.kubeContextTable(c, cli, current)
@@ -198,6 +204,9 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 	if k.Auth != "" {
 		// Shown before a check runs it.
 		parts = append(parts, locales.KubeAuthVia(tilde(k.Auth, a.Home)))
+	}
+	for _, name := range a.kubeProjectsOf(k.Name) {
+		parts = append(parts, locales.KubeProjectOf(name))
 	}
 	if k.Shadowed {
 		parts = []string{locales.KubeShadowedCaption()}
@@ -525,6 +534,19 @@ type kindCreateDialog struct {
 	name string
 	// nodes is the nodes segment: 0 one node, 1 one and two workers.
 	nodes int
+	// project is the label of the project to link the cluster to once it
+	// is created, the first of kindProjects' labels for none.
+	project string
+}
+
+// kindProjects are the labels the kind dialog offers to link a cluster
+// to, not linking first, and the projects' folders by label.
+func (a *App) kindProjects() (labels, dirs []string) {
+	labels, dirs = []string{locales.KindNoProject()}, []string{""}
+	for _, p := range a.Projects {
+		labels, dirs = append(labels, filepath.Base(p.Dir)), append(dirs, p.Dir)
+	}
+	return labels, dirs
 }
 
 // openKindDialog opens the dialog with the first free name of dev,
@@ -538,7 +560,13 @@ func (a *App) openKindDialog() {
 	for i := 2; slices.ContainsFunc(taken, func(k inventory.KindCluster) bool { return k.Name == name }); i++ {
 		name = "dev-" + strconv.Itoa(i)
 	}
-	a.kind = kindCreateDialog{open: true, name: name}
+	a.kind = kindCreateDialog{open: true, name: name, project: locales.KindNoProject()}
+}
+
+// openKindDialogFor opens the dialog to create again the cluster name,
+// which the project in dir links to.
+func (a *App) openKindDialogFor(name, dir string) {
+	a.kind = kindCreateDialog{open: true, name: name, project: filepath.Base(dir)}
 }
 
 // kindDialog asks for the new cluster's name and nodes, says what will
@@ -564,14 +592,25 @@ func (a *App) kindDialog(c *ui.Context) {
 		taken := docker != nil && slices.ContainsFunc(docker.KindClusters, func(k inventory.KindCluster) bool { return k.Name == name })
 		workers := 2 * d.nodes
 		ok := found && up && a.BuildPlan != nil && valid && !taken
+		labels, dirs := a.kindProjects()
+		project := ""
+		if i := slices.Index(labels, d.project); i >= 0 {
+			project = dirs[i]
+		}
 		next := func() {
 			if !ok {
 				return
 			}
 			d.open = false
+			done := a.proposeOrSay
+			if project != "" && a.LinkKube != nil {
+				done = a.proposeThen(func() {
+					a.LinkKube(project, &store.KubeLink{Context: "kind-" + name, Namespace: "default"})
+				})
+			}
 			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 				return ops.KindCreatePlan(kind.Path, kubectl.Path, name, workers, from, env, run.Exec{})
-			}, a.proposeOrSay)
+			}, done)
 		}
 		row := func(label string, body func()) {
 			ui.Row(c).Gap(12).MinHeight(32).AlignItems(ui.Center).Children(func() {
@@ -621,6 +660,12 @@ func (a *App) kindDialog(c *ui.Context) {
 						aiTag(c, locales.KindEngineDown(), pal.WarningSoft, pal.WarningText)
 					}
 				})
+				if len(labels) > 1 && a.LinkKube != nil {
+					row(locales.KindProject(), func() {
+						ui.Select(c.Key("kind-project"), &d.project, labels).Label(locales.KindProject()).Width(200)
+						ui.Text(c, locales.KindProjectHint()).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+					})
+				}
 			})
 			if found && valid {
 				argv := []string{"kind", "create", "cluster", "--name", name, "--wait", "3m"}
@@ -632,6 +677,9 @@ func (a *App) kindDialog(c *ui.Context) {
 					lines = append(lines, locales.KindContextKept(from))
 				} else {
 					lines = append(lines, locales.KindContextNow("kind-"+name))
+				}
+				if project != "" && a.LinkKube != nil {
+					lines = append(lines, locales.KindLinkLine(filepath.Base(project), "kind-"+name))
 				}
 				lines = append(lines, locales.KindImageNoteText())
 				ui.Column(c).Gap(6).Padding(12, 20, 14, 20).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {

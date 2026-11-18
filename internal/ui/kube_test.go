@@ -67,7 +67,7 @@ func TestKubePage(t *testing.T) {
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "kubectl", "brew · context staging", "helm", "3.16.3")
-	a.kubeTab = 2
+	a.kubeTab = 3
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "~/.kube/config", "2 contexts · sets current-context staging", "~/.kube/work/prod.yaml", "~/.kube/gone", "no such file")

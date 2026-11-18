@@ -271,6 +271,8 @@ func (a *App) project(c *ui.Context, dir string) {
 		}
 		p := a.Projects[i]
 		statuses := projects.Resolve(p, a.Snapshot, a.nodeLines())
+		a.kubeLinkView(c)
+		a.kindDialog(c)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.projectHero(c, p, statuses)
@@ -296,6 +298,7 @@ func (a *App) project(c *ui.Context, dir string) {
 				if len(statuses) > 0 {
 					a.requirementTable(c, statuses)
 				}
+				a.projectKubeCard(c, p)
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { filesCard(c, p) })

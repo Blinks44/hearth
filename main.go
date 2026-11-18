@@ -62,6 +62,7 @@ func main() {
 	}
 	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
 	a.StartHidden = list.settings.StartHidden
+	a.KubeLinks = list.kubeLinks()
 	// The native parts follow it too: the sidebar's material, the window
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
@@ -129,6 +130,7 @@ func main() {
 		list.win = win
 		a.ChooseFolder, a.AddProjects, a.RemoveProject = list.choose, list.add, list.remove
 		a.FindProjects = list.find
+		a.LinkKube = list.linkKube
 		a.LoadSkill = func(dir string, done func([]inventory.Entry, string, error)) {
 			go func() {
 				entries, text, err := ai.SkillFolder(dir)

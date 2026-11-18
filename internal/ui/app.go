@@ -20,6 +20,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
+	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -138,6 +139,11 @@ type App struct {
 	// takes one off the list, leaving the folder be.
 	AddProjects   func(dirs []string)
 	RemoveProject func(dir string)
+	// KubeLinks are the projects' Kubernetes contexts by folder, and
+	// LinkKube links one, or unlinks it when link is nil; nil hides
+	// linking.
+	KubeLinks map[string]store.KubeLink
+	LinkKube  func(dir string, link *store.KubeLink)
 	// LoadSkill reads a skill's folder, its files and SKILL.md, in the
 	// background, and gives them to done through Window.Update; nil shows
 	// neither.
@@ -234,6 +240,7 @@ type App struct {
 	kubeNS             kubeNamespaceDialog
 	kubeChecks         map[string]kubeCheck
 	kind               kindCreateDialog
+	kubeLink           kubeLinkDialog
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page

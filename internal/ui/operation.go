@@ -23,6 +23,7 @@ type operation struct {
 	open    bool   // the dialog shows; hidden while it runs, a toast does
 	stop    func() // stops it while it runs
 	told    bool   // the toast of its end showed
+	after   func() // runs once it succeeds; nil when nothing waits for it
 }
 
 // running reports that the operation was confirmed and is not over.
@@ -39,6 +40,17 @@ func (a *App) Propose(p ops.Plan) {
 	a.op = &operation{plan: p, open: true}
 }
 
+// proposeThen proposes the plan built, as proposeOrSay does, and runs
+// after once the plan succeeds.
+func (a *App) proposeThen(after func()) func(ops.Plan, error) {
+	return func(p ops.Plan, err error) {
+		a.proposeOrSay(p, err)
+		if err == nil && a.op != nil && !a.op.started {
+			a.op.after = after
+		}
+	}
+}
+
 // startOperation runs the operation shown, which the user confirmed, and
 // scans again once it is over: whatever it did, the system changed.
 func (a *App) startOperation() {
@@ -50,6 +62,9 @@ func (a *App) startOperation() {
 			return
 		}
 		op.state = s
+		if s.Phase == ops.Succeeded && op.after != nil {
+			op.after()
+		}
 		if s.Phase.Over() && a.OnScan != nil {
 			// Cached sizes describe the system before this operation. Do not
 			// offer them again while the automatic refresh is running.

@@ -109,10 +109,35 @@ func (l *projectList) add(dirs []string) {
 func (l *projectList) remove(dir string) {
 	l.settings.Projects = slices.DeleteFunc(l.settings.Projects, func(p store.Project) bool { return p.Path == dir })
 	l.app.Projects = slices.DeleteFunc(slices.Clone(l.app.Projects), func(p projects.Project) bool { return p.Dir == dir })
+	l.app.KubeLinks = l.kubeLinks()
 	if l.watch != nil {
 		l.watch.Projects(l.dirs())
 	}
 	l.save()
+}
+
+// linkKube links the project in dir to a Kubernetes context, or unlinks
+// it when link is nil.
+func (l *projectList) linkKube(dir string, link *store.KubeLink) {
+	i := slices.IndexFunc(l.settings.Projects, func(p store.Project) bool { return p.Path == dir })
+	if i < 0 {
+		return
+	}
+	l.settings.Projects = slices.Clone(l.settings.Projects)
+	l.settings.Projects[i].Kube = link
+	l.app.KubeLinks = l.kubeLinks()
+	l.save()
+}
+
+// kubeLinks are the projects' Kubernetes links by folder.
+func (l *projectList) kubeLinks() map[string]store.KubeLink {
+	links := map[string]store.KubeLink{}
+	for _, p := range l.settings.Projects {
+		if p.Kube != nil {
+			links[p.Path] = *p.Kube
+		}
+	}
+	return links
 }
 
 func (l *projectList) save() {

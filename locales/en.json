@@ -10014,5 +10014,245 @@
   "kindCurrentNoteText": "After the delete kubectl has no current context: its commands fail until you choose another one.",
   "@kindCurrentNoteText": {
     "description": "kind delete plan note."
+  },
+  "kubeProjectsTab": "Projects",
+  "@kubeProjectsTab": {
+    "description": "Kubernetes page tab: projects."
+  },
+  "kubeProjectOf": "project {name}",
+  "@kubeProjectOf": {
+    "description": "Context row caption: the project linked to it.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCardAside": "Hearth never applies manifests",
+  "@kubeCardAside": {
+    "description": "Project's Kubernetes card aside."
+  },
+  "kubeLinkChange": "Change link…",
+  "@kubeLinkChange": {
+    "description": "Button: change the project's Kubernetes link."
+  },
+  "kubeUnlink": "Unlink",
+  "@kubeUnlink": {
+    "description": "Button: remove the project's Kubernetes link."
+  },
+  "kubeLinkButton": "Link…",
+  "@kubeLinkButton": {
+    "description": "Button: link a project to a Kubernetes context."
+  },
+  "kubeNotLinked": "Not linked to a context",
+  "@kubeNotLinked": {
+    "description": "Project's Kubernetes card: no link yet."
+  },
+  "kubeNotLinkedCaption": "choose the context and namespace the project works with",
+  "@kubeNotLinkedCaption": {
+    "description": "Caption of the no link row."
+  },
+  "kubeLinkName": "{context} · namespace {namespace}",
+  "@kubeLinkName": {
+    "description": "The linked context and namespace.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      },
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLinkCaption": "the project's context · {file} · the link is kept in Hearth",
+  "@kubeLinkCaption": {
+    "description": "Caption of the linked context.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeContextGone": "the context is no longer in kubeconfig · the link stays until you change it",
+  "@kubeContextGone": {
+    "description": "Caption: the linked context is gone."
+  },
+  "kubeContextMissing": "context not found",
+  "@kubeContextMissing": {
+    "description": "Tag: the linked context is gone."
+  },
+  "kubeChooseOther": "Choose another…",
+  "@kubeChooseOther": {
+    "description": "Button: link another context."
+  },
+  "kindClusterTitle": "kind cluster {name}",
+  "@kindClusterTitle": {
+    "description": "Project's kind cluster row.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeKindGone": "kind cluster {name} is not in Docker",
+  "@kubeKindGone": {
+    "description": "The linked kind cluster is gone.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeKindGoneCaption": "it can be created again with a plan; the old cluster's data does not come back",
+  "@kubeKindGoneCaption": {
+    "description": "Caption: the kind cluster is gone."
+  },
+  "kubeKindCreate": "Create kind cluster…",
+  "@kubeKindCreate": {
+    "description": "Button: create the kind cluster again."
+  },
+  "kubeKindMissingTag": "no cluster",
+  "@kubeKindMissingTag": {
+    "description": "Tag: the linked kind cluster is gone."
+  },
+  "kubeOtherCurrent": "kubectl in the terminal uses {current}",
+  "@kubeOtherCurrent": {
+    "description": "kubectl uses another context than the project.",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNoCurrentTitle": "kubectl in the terminal has no current context",
+  "@kubeNoCurrentTitle": {
+    "description": "kubectl has no current context."
+  },
+  "kubeOtherCurrentCaption": "kubectl commands without --context do not go to the project's cluster",
+  "@kubeOtherCurrentCaption": {
+    "description": "Caption: kubectl uses another context."
+  },
+  "kubeOtherTag": "another context",
+  "@kubeOtherTag": {
+    "description": "Tag: kubectl uses another context."
+  },
+  "kubeUseFor": "Use {context} in kubectl…",
+  "@kubeUseFor": {
+    "description": "Button: choose the project's context in kubectl.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeManifests": "Manifests: {list}",
+  "@kubeManifests": {
+    "description": "The project's Kubernetes files.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeManifestsCaption": "found in the project folder · Hearth does not apply them",
+  "@kubeManifestsCaption": {
+    "description": "Caption of the manifests row."
+  },
+  "kubeLinkTitle": "Link {project} to Kubernetes",
+  "@kubeLinkTitle": {
+    "description": "Link dialog title.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLinkLead": "Hearth remembers which context and namespace the project works with and shows whether they are ready. kubectl and kubeconfig do not change.",
+  "@kubeLinkLead": {
+    "description": "Link dialog lead."
+  },
+  "kubeContextLabel": "Context",
+  "@kubeContextLabel": {
+    "description": "Link dialog field."
+  },
+  "kubeLinkContextHint": "cluster {cluster} · {file}",
+  "@kubeLinkContextHint": {
+    "description": "Link dialog: the context's cluster and file.",
+    "placeholders": {
+      "cluster": {
+        "type": "String"
+      },
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceMayMiss": "may not exist yet",
+  "@kubeNamespaceMayMiss": {
+    "description": "Link dialog namespace hint."
+  },
+  "kubeLinkSaved": "the link is kept in Hearth's settings; the project's files do not change",
+  "@kubeLinkSaved": {
+    "description": "Link dialog: what happens."
+  },
+  "kubeLinkKubectlKept": "kubectl's current context stays {current}; {context} can be chosen separately",
+  "@kubeLinkKubectlKept": {
+    "description": "Link dialog: kubectl's context stays.",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLinkManifests": "Hearth does not apply the project's manifests",
+  "@kubeLinkManifests": {
+    "description": "Link dialog: manifests are not applied."
+  },
+  "kubeLinkSave": "Link",
+  "@kubeLinkSave": {
+    "description": "Link dialog button."
+  },
+  "kubeLinkedGroup": "Linked to a context",
+  "@kubeLinkedGroup": {
+    "description": "Projects tab group: linked."
+  },
+  "kubeUnlinkedGroup": "Have manifests, not linked",
+  "@kubeUnlinkedGroup": {
+    "description": "Projects tab group: manifests, no link."
+  },
+  "kubeNotLinkedTag": "not linked",
+  "@kubeNotLinkedTag": {
+    "description": "Tag: project not linked."
+  },
+  "kubeNoProjects": "No added project has Kubernetes manifests or a link.",
+  "@kubeNoProjects": {
+    "description": "Projects tab is empty."
+  },
+  "kindProject": "Link to project",
+  "@kindProject": {
+    "description": "kind dialog field: link to a project."
+  },
+  "kindNoProject": "Don't link",
+  "@kindNoProject": {
+    "description": "kind dialog: do not link."
+  },
+  "kindProjectHint": "manifests are not applied",
+  "@kindProjectHint": {
+    "description": "kind dialog: manifests are not applied."
+  },
+  "kindLinkLine": "after creating, project {project} is linked to {context}",
+  "@kindLinkLine": {
+    "description": "kind dialog: the project is linked after creating.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "context": {
+        "type": "String"
+      }
+    }
   }
 }

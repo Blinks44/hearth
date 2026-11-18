@@ -25199,3 +25199,599 @@ func KindCurrentNoteText() string { return In(i18n.Locale()).KindCurrentNoteText
 func (msgs Messages) KindCurrentNoteText() string {
 	return Catalog.Format(msgs.locale, "kindCurrentNoteText", nil)
 }
+
+// KubeProjectsTab says "Projects"
+// in the language the app shows.
+//
+// Kubernetes page tab: projects.
+func KubeProjectsTab() string { return In(i18n.Locale()).KubeProjectsTab() }
+
+// KubeProjectsTab says "Projects"
+// in the language of msgs.
+//
+// Kubernetes page tab: projects.
+func (msgs Messages) KubeProjectsTab() string {
+	return Catalog.Format(msgs.locale, "kubeProjectsTab", nil)
+}
+
+// KubeProjectOf says "project {name}"
+// in the language the app shows.
+//
+// Context row caption: the project linked to it.
+func KubeProjectOf(name string) string { return In(i18n.Locale()).KubeProjectOf(name) }
+
+// KubeProjectOf says "project {name}"
+// in the language of msgs.
+//
+// Context row caption: the project linked to it.
+func (msgs Messages) KubeProjectOf(name string) string {
+	return Catalog.Format(msgs.locale, "kubeProjectOf", map[string]any{"name": name})
+}
+
+// KubeCardAside says "Hearth never applies manifests"
+// in the language the app shows.
+//
+// Project's Kubernetes card aside.
+func KubeCardAside() string { return In(i18n.Locale()).KubeCardAside() }
+
+// KubeCardAside says "Hearth never applies manifests"
+// in the language of msgs.
+//
+// Project's Kubernetes card aside.
+func (msgs Messages) KubeCardAside() string {
+	return Catalog.Format(msgs.locale, "kubeCardAside", nil)
+}
+
+// KubeLinkChange says "Change link…"
+// in the language the app shows.
+//
+// Button: change the project's Kubernetes link.
+func KubeLinkChange() string { return In(i18n.Locale()).KubeLinkChange() }
+
+// KubeLinkChange says "Change link…"
+// in the language of msgs.
+//
+// Button: change the project's Kubernetes link.
+func (msgs Messages) KubeLinkChange() string {
+	return Catalog.Format(msgs.locale, "kubeLinkChange", nil)
+}
+
+// KubeUnlink says "Unlink"
+// in the language the app shows.
+//
+// Button: remove the project's Kubernetes link.
+func KubeUnlink() string { return In(i18n.Locale()).KubeUnlink() }
+
+// KubeUnlink says "Unlink"
+// in the language of msgs.
+//
+// Button: remove the project's Kubernetes link.
+func (msgs Messages) KubeUnlink() string {
+	return Catalog.Format(msgs.locale, "kubeUnlink", nil)
+}
+
+// KubeLinkButton says "Link…"
+// in the language the app shows.
+//
+// Button: link a project to a Kubernetes context.
+func KubeLinkButton() string { return In(i18n.Locale()).KubeLinkButton() }
+
+// KubeLinkButton says "Link…"
+// in the language of msgs.
+//
+// Button: link a project to a Kubernetes context.
+func (msgs Messages) KubeLinkButton() string {
+	return Catalog.Format(msgs.locale, "kubeLinkButton", nil)
+}
+
+// KubeNotLinked says "Not linked to a context"
+// in the language the app shows.
+//
+// Project's Kubernetes card: no link yet.
+func KubeNotLinked() string { return In(i18n.Locale()).KubeNotLinked() }
+
+// KubeNotLinked says "Not linked to a context"
+// in the language of msgs.
+//
+// Project's Kubernetes card: no link yet.
+func (msgs Messages) KubeNotLinked() string {
+	return Catalog.Format(msgs.locale, "kubeNotLinked", nil)
+}
+
+// KubeNotLinkedCaption says "choose the context and namespace the project works with"
+// in the language the app shows.
+//
+// Caption of the no link row.
+func KubeNotLinkedCaption() string { return In(i18n.Locale()).KubeNotLinkedCaption() }
+
+// KubeNotLinkedCaption says "choose the context and namespace the project works with"
+// in the language of msgs.
+//
+// Caption of the no link row.
+func (msgs Messages) KubeNotLinkedCaption() string {
+	return Catalog.Format(msgs.locale, "kubeNotLinkedCaption", nil)
+}
+
+// KubeLinkName says "{context} · namespace {namespace}"
+// in the language the app shows.
+//
+// The linked context and namespace.
+func KubeLinkName(context string, namespace string) string {
+	return In(i18n.Locale()).KubeLinkName(context, namespace)
+}
+
+// KubeLinkName says "{context} · namespace {namespace}"
+// in the language of msgs.
+//
+// The linked context and namespace.
+func (msgs Messages) KubeLinkName(context string, namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeLinkName", map[string]any{"context": context, "namespace": namespace})
+}
+
+// KubeLinkCaption says "the project's context · {file} · the link is kept in Hearth"
+// in the language the app shows.
+//
+// Caption of the linked context.
+func KubeLinkCaption(file string) string { return In(i18n.Locale()).KubeLinkCaption(file) }
+
+// KubeLinkCaption says "the project's context · {file} · the link is kept in Hearth"
+// in the language of msgs.
+//
+// Caption of the linked context.
+func (msgs Messages) KubeLinkCaption(file string) string {
+	return Catalog.Format(msgs.locale, "kubeLinkCaption", map[string]any{"file": file})
+}
+
+// KubeContextGone says "the context is no longer in kubeconfig · the link stays until you change it"
+// in the language the app shows.
+//
+// Caption: the linked context is gone.
+func KubeContextGone() string { return In(i18n.Locale()).KubeContextGone() }
+
+// KubeContextGone says "the context is no longer in kubeconfig · the link stays until you change it"
+// in the language of msgs.
+//
+// Caption: the linked context is gone.
+func (msgs Messages) KubeContextGone() string {
+	return Catalog.Format(msgs.locale, "kubeContextGone", nil)
+}
+
+// KubeContextMissing says "context not found"
+// in the language the app shows.
+//
+// Tag: the linked context is gone.
+func KubeContextMissing() string { return In(i18n.Locale()).KubeContextMissing() }
+
+// KubeContextMissing says "context not found"
+// in the language of msgs.
+//
+// Tag: the linked context is gone.
+func (msgs Messages) KubeContextMissing() string {
+	return Catalog.Format(msgs.locale, "kubeContextMissing", nil)
+}
+
+// KubeChooseOther says "Choose another…"
+// in the language the app shows.
+//
+// Button: link another context.
+func KubeChooseOther() string { return In(i18n.Locale()).KubeChooseOther() }
+
+// KubeChooseOther says "Choose another…"
+// in the language of msgs.
+//
+// Button: link another context.
+func (msgs Messages) KubeChooseOther() string {
+	return Catalog.Format(msgs.locale, "kubeChooseOther", nil)
+}
+
+// KindClusterTitle says "kind cluster {name}"
+// in the language the app shows.
+//
+// Project's kind cluster row.
+func KindClusterTitle(name string) string { return In(i18n.Locale()).KindClusterTitle(name) }
+
+// KindClusterTitle says "kind cluster {name}"
+// in the language of msgs.
+//
+// Project's kind cluster row.
+func (msgs Messages) KindClusterTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kindClusterTitle", map[string]any{"name": name})
+}
+
+// KubeKindGone says "kind cluster {name} is not in Docker"
+// in the language the app shows.
+//
+// The linked kind cluster is gone.
+func KubeKindGone(name string) string { return In(i18n.Locale()).KubeKindGone(name) }
+
+// KubeKindGone says "kind cluster {name} is not in Docker"
+// in the language of msgs.
+//
+// The linked kind cluster is gone.
+func (msgs Messages) KubeKindGone(name string) string {
+	return Catalog.Format(msgs.locale, "kubeKindGone", map[string]any{"name": name})
+}
+
+// KubeKindGoneCaption says "it can be created again with a plan; the old cluster's data does not come back"
+// in the language the app shows.
+//
+// Caption: the kind cluster is gone.
+func KubeKindGoneCaption() string { return In(i18n.Locale()).KubeKindGoneCaption() }
+
+// KubeKindGoneCaption says "it can be created again with a plan; the old cluster's data does not come back"
+// in the language of msgs.
+//
+// Caption: the kind cluster is gone.
+func (msgs Messages) KubeKindGoneCaption() string {
+	return Catalog.Format(msgs.locale, "kubeKindGoneCaption", nil)
+}
+
+// KubeKindCreate says "Create kind cluster…"
+// in the language the app shows.
+//
+// Button: create the kind cluster again.
+func KubeKindCreate() string { return In(i18n.Locale()).KubeKindCreate() }
+
+// KubeKindCreate says "Create kind cluster…"
+// in the language of msgs.
+//
+// Button: create the kind cluster again.
+func (msgs Messages) KubeKindCreate() string {
+	return Catalog.Format(msgs.locale, "kubeKindCreate", nil)
+}
+
+// KubeKindMissingTag says "no cluster"
+// in the language the app shows.
+//
+// Tag: the linked kind cluster is gone.
+func KubeKindMissingTag() string { return In(i18n.Locale()).KubeKindMissingTag() }
+
+// KubeKindMissingTag says "no cluster"
+// in the language of msgs.
+//
+// Tag: the linked kind cluster is gone.
+func (msgs Messages) KubeKindMissingTag() string {
+	return Catalog.Format(msgs.locale, "kubeKindMissingTag", nil)
+}
+
+// KubeOtherCurrent says "kubectl in the terminal uses {current}"
+// in the language the app shows.
+//
+// kubectl uses another context than the project.
+func KubeOtherCurrent(current string) string { return In(i18n.Locale()).KubeOtherCurrent(current) }
+
+// KubeOtherCurrent says "kubectl in the terminal uses {current}"
+// in the language of msgs.
+//
+// kubectl uses another context than the project.
+func (msgs Messages) KubeOtherCurrent(current string) string {
+	return Catalog.Format(msgs.locale, "kubeOtherCurrent", map[string]any{"current": current})
+}
+
+// KubeNoCurrentTitle says "kubectl in the terminal has no current context"
+// in the language the app shows.
+//
+// kubectl has no current context.
+func KubeNoCurrentTitle() string { return In(i18n.Locale()).KubeNoCurrentTitle() }
+
+// KubeNoCurrentTitle says "kubectl in the terminal has no current context"
+// in the language of msgs.
+//
+// kubectl has no current context.
+func (msgs Messages) KubeNoCurrentTitle() string {
+	return Catalog.Format(msgs.locale, "kubeNoCurrentTitle", nil)
+}
+
+// KubeOtherCurrentCaption says "kubectl commands without --context do not go to the project's cluster"
+// in the language the app shows.
+//
+// Caption: kubectl uses another context.
+func KubeOtherCurrentCaption() string { return In(i18n.Locale()).KubeOtherCurrentCaption() }
+
+// KubeOtherCurrentCaption says "kubectl commands without --context do not go to the project's cluster"
+// in the language of msgs.
+//
+// Caption: kubectl uses another context.
+func (msgs Messages) KubeOtherCurrentCaption() string {
+	return Catalog.Format(msgs.locale, "kubeOtherCurrentCaption", nil)
+}
+
+// KubeOtherTag says "another context"
+// in the language the app shows.
+//
+// Tag: kubectl uses another context.
+func KubeOtherTag() string { return In(i18n.Locale()).KubeOtherTag() }
+
+// KubeOtherTag says "another context"
+// in the language of msgs.
+//
+// Tag: kubectl uses another context.
+func (msgs Messages) KubeOtherTag() string {
+	return Catalog.Format(msgs.locale, "kubeOtherTag", nil)
+}
+
+// KubeUseFor says "Use {context} in kubectl…"
+// in the language the app shows.
+//
+// Button: choose the project's context in kubectl.
+func KubeUseFor(context string) string { return In(i18n.Locale()).KubeUseFor(context) }
+
+// KubeUseFor says "Use {context} in kubectl…"
+// in the language of msgs.
+//
+// Button: choose the project's context in kubectl.
+func (msgs Messages) KubeUseFor(context string) string {
+	return Catalog.Format(msgs.locale, "kubeUseFor", map[string]any{"context": context})
+}
+
+// KubeManifests says "Manifests: {list}"
+// in the language the app shows.
+//
+// The project's Kubernetes files.
+func KubeManifests(list string) string { return In(i18n.Locale()).KubeManifests(list) }
+
+// KubeManifests says "Manifests: {list}"
+// in the language of msgs.
+//
+// The project's Kubernetes files.
+func (msgs Messages) KubeManifests(list string) string {
+	return Catalog.Format(msgs.locale, "kubeManifests", map[string]any{"list": list})
+}
+
+// KubeManifestsCaption says "found in the project folder · Hearth does not apply them"
+// in the language the app shows.
+//
+// Caption of the manifests row.
+func KubeManifestsCaption() string { return In(i18n.Locale()).KubeManifestsCaption() }
+
+// KubeManifestsCaption says "found in the project folder · Hearth does not apply them"
+// in the language of msgs.
+//
+// Caption of the manifests row.
+func (msgs Messages) KubeManifestsCaption() string {
+	return Catalog.Format(msgs.locale, "kubeManifestsCaption", nil)
+}
+
+// KubeLinkTitle says "Link {project} to Kubernetes"
+// in the language the app shows.
+//
+// Link dialog title.
+func KubeLinkTitle(project string) string { return In(i18n.Locale()).KubeLinkTitle(project) }
+
+// KubeLinkTitle says "Link {project} to Kubernetes"
+// in the language of msgs.
+//
+// Link dialog title.
+func (msgs Messages) KubeLinkTitle(project string) string {
+	return Catalog.Format(msgs.locale, "kubeLinkTitle", map[string]any{"project": project})
+}
+
+// KubeLinkLead says "Hearth remembers which context and namespace the project works with and shows whether they are ready. kubectl and kub…"
+// in the language the app shows.
+//
+// Link dialog lead.
+func KubeLinkLead() string { return In(i18n.Locale()).KubeLinkLead() }
+
+// KubeLinkLead says "Hearth remembers which context and namespace the project works with and shows whether they are ready. kubectl and kub…"
+// in the language of msgs.
+//
+// Link dialog lead.
+func (msgs Messages) KubeLinkLead() string {
+	return Catalog.Format(msgs.locale, "kubeLinkLead", nil)
+}
+
+// KubeContextLabel says "Context"
+// in the language the app shows.
+//
+// Link dialog field.
+func KubeContextLabel() string { return In(i18n.Locale()).KubeContextLabel() }
+
+// KubeContextLabel says "Context"
+// in the language of msgs.
+//
+// Link dialog field.
+func (msgs Messages) KubeContextLabel() string {
+	return Catalog.Format(msgs.locale, "kubeContextLabel", nil)
+}
+
+// KubeLinkContextHint says "cluster {cluster} · {file}"
+// in the language the app shows.
+//
+// Link dialog: the context's cluster and file.
+func KubeLinkContextHint(cluster string, file string) string {
+	return In(i18n.Locale()).KubeLinkContextHint(cluster, file)
+}
+
+// KubeLinkContextHint says "cluster {cluster} · {file}"
+// in the language of msgs.
+//
+// Link dialog: the context's cluster and file.
+func (msgs Messages) KubeLinkContextHint(cluster string, file string) string {
+	return Catalog.Format(msgs.locale, "kubeLinkContextHint", map[string]any{"cluster": cluster, "file": file})
+}
+
+// KubeNamespaceMayMiss says "may not exist yet"
+// in the language the app shows.
+//
+// Link dialog namespace hint.
+func KubeNamespaceMayMiss() string { return In(i18n.Locale()).KubeNamespaceMayMiss() }
+
+// KubeNamespaceMayMiss says "may not exist yet"
+// in the language of msgs.
+//
+// Link dialog namespace hint.
+func (msgs Messages) KubeNamespaceMayMiss() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceMayMiss", nil)
+}
+
+// KubeLinkSaved says "the link is kept in Hearth's settings; the project's files do not change"
+// in the language the app shows.
+//
+// Link dialog: what happens.
+func KubeLinkSaved() string { return In(i18n.Locale()).KubeLinkSaved() }
+
+// KubeLinkSaved says "the link is kept in Hearth's settings; the project's files do not change"
+// in the language of msgs.
+//
+// Link dialog: what happens.
+func (msgs Messages) KubeLinkSaved() string {
+	return Catalog.Format(msgs.locale, "kubeLinkSaved", nil)
+}
+
+// KubeLinkKubectlKept says "kubectl's current context stays {current}; {context} can be chosen separately"
+// in the language the app shows.
+//
+// Link dialog: kubectl's context stays.
+func KubeLinkKubectlKept(current string, context string) string {
+	return In(i18n.Locale()).KubeLinkKubectlKept(current, context)
+}
+
+// KubeLinkKubectlKept says "kubectl's current context stays {current}; {context} can be chosen separately"
+// in the language of msgs.
+//
+// Link dialog: kubectl's context stays.
+func (msgs Messages) KubeLinkKubectlKept(current string, context string) string {
+	return Catalog.Format(msgs.locale, "kubeLinkKubectlKept", map[string]any{"current": current, "context": context})
+}
+
+// KubeLinkManifests says "Hearth does not apply the project's manifests"
+// in the language the app shows.
+//
+// Link dialog: manifests are not applied.
+func KubeLinkManifests() string { return In(i18n.Locale()).KubeLinkManifests() }
+
+// KubeLinkManifests says "Hearth does not apply the project's manifests"
+// in the language of msgs.
+//
+// Link dialog: manifests are not applied.
+func (msgs Messages) KubeLinkManifests() string {
+	return Catalog.Format(msgs.locale, "kubeLinkManifests", nil)
+}
+
+// KubeLinkSave says "Link"
+// in the language the app shows.
+//
+// Link dialog button.
+func KubeLinkSave() string { return In(i18n.Locale()).KubeLinkSave() }
+
+// KubeLinkSave says "Link"
+// in the language of msgs.
+//
+// Link dialog button.
+func (msgs Messages) KubeLinkSave() string {
+	return Catalog.Format(msgs.locale, "kubeLinkSave", nil)
+}
+
+// KubeLinkedGroup says "Linked to a context"
+// in the language the app shows.
+//
+// Projects tab group: linked.
+func KubeLinkedGroup() string { return In(i18n.Locale()).KubeLinkedGroup() }
+
+// KubeLinkedGroup says "Linked to a context"
+// in the language of msgs.
+//
+// Projects tab group: linked.
+func (msgs Messages) KubeLinkedGroup() string {
+	return Catalog.Format(msgs.locale, "kubeLinkedGroup", nil)
+}
+
+// KubeUnlinkedGroup says "Have manifests, not linked"
+// in the language the app shows.
+//
+// Projects tab group: manifests, no link.
+func KubeUnlinkedGroup() string { return In(i18n.Locale()).KubeUnlinkedGroup() }
+
+// KubeUnlinkedGroup says "Have manifests, not linked"
+// in the language of msgs.
+//
+// Projects tab group: manifests, no link.
+func (msgs Messages) KubeUnlinkedGroup() string {
+	return Catalog.Format(msgs.locale, "kubeUnlinkedGroup", nil)
+}
+
+// KubeNotLinkedTag says "not linked"
+// in the language the app shows.
+//
+// Tag: project not linked.
+func KubeNotLinkedTag() string { return In(i18n.Locale()).KubeNotLinkedTag() }
+
+// KubeNotLinkedTag says "not linked"
+// in the language of msgs.
+//
+// Tag: project not linked.
+func (msgs Messages) KubeNotLinkedTag() string {
+	return Catalog.Format(msgs.locale, "kubeNotLinkedTag", nil)
+}
+
+// KubeNoProjects says "No added project has Kubernetes manifests or a link."
+// in the language the app shows.
+//
+// Projects tab is empty.
+func KubeNoProjects() string { return In(i18n.Locale()).KubeNoProjects() }
+
+// KubeNoProjects says "No added project has Kubernetes manifests or a link."
+// in the language of msgs.
+//
+// Projects tab is empty.
+func (msgs Messages) KubeNoProjects() string {
+	return Catalog.Format(msgs.locale, "kubeNoProjects", nil)
+}
+
+// KindProject says "Link to project"
+// in the language the app shows.
+//
+// kind dialog field: link to a project.
+func KindProject() string { return In(i18n.Locale()).KindProject() }
+
+// KindProject says "Link to project"
+// in the language of msgs.
+//
+// kind dialog field: link to a project.
+func (msgs Messages) KindProject() string {
+	return Catalog.Format(msgs.locale, "kindProject", nil)
+}
+
+// KindNoProject says "Don't link"
+// in the language the app shows.
+//
+// kind dialog: do not link.
+func KindNoProject() string { return In(i18n.Locale()).KindNoProject() }
+
+// KindNoProject says "Don't link"
+// in the language of msgs.
+//
+// kind dialog: do not link.
+func (msgs Messages) KindNoProject() string {
+	return Catalog.Format(msgs.locale, "kindNoProject", nil)
+}
+
+// KindProjectHint says "manifests are not applied"
+// in the language the app shows.
+//
+// kind dialog: manifests are not applied.
+func KindProjectHint() string { return In(i18n.Locale()).KindProjectHint() }
+
+// KindProjectHint says "manifests are not applied"
+// in the language of msgs.
+//
+// kind dialog: manifests are not applied.
+func (msgs Messages) KindProjectHint() string {
+	return Catalog.Format(msgs.locale, "kindProjectHint", nil)
+}
+
+// KindLinkLine says "after creating, project {project} is linked to {context}"
+// in the language the app shows.
+//
+// kind dialog: the project is linked after creating.
+func KindLinkLine(project string, context string) string {
+	return In(i18n.Locale()).KindLinkLine(project, context)
+}
+
+// KindLinkLine says "after creating, project {project} is linked to {context}"
+// in the language of msgs.
+//
+// kind dialog: the project is linked after creating.
+func (msgs Messages) KindLinkLine(project string, context string) string {
+	return Catalog.Format(msgs.locale, "kindLinkLine", map[string]any{"project": project, "context": context})
+}
