@@ -22,6 +22,7 @@ import (
 	"github.com/Blinks44/hearth/internal/disk"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -160,6 +161,21 @@ func main() {
 				defer cancel()
 				res := detect.CheckKubeAccess(ctx, run.Exec{}, kubectl, k, env)
 				win.Update(func() { done(res) })
+			}()
+		}
+		a.WatchCluster = func(t kube.Target, got func(kube.Cluster, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go kube.Watch(ctx, run.Exec{}, env, t, func(c kube.Cluster, err error) {
+				win.Update(func() { got(c, err) })
+			})
+			return cancel
+		}
+		a.ListNamespaces = func(t kube.Target, done func([]string, error)) {
+			env := scanner.Terminal()
+			go func() {
+				names, err := kube.Namespaces(context.Background(), run.Exec{}, env, t)
+				win.Update(func() { done(names, err) })
 			}()
 		}
 		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
@@ -404,6 +420,7 @@ func main() {
 		a.CachePath = lists.Dir
 		win.OnClosed(func() {
 			a.CancelPreparation()
+			a.StopCluster()
 			stopCatalog()
 			if cancelVersions != nil {
 				cancelVersions()

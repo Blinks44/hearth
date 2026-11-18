@@ -1,0 +1,671 @@
+package ui
+
+import (
+	"errors"
+	"fmt"
+	"net/url"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/egoist/mygo/ui"
+
+	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
+)
+
+// kubeClusterPage is a context's cluster: its pods and Deployments, read
+// while the page shows.
+const kubeClusterPage = kubePage + "/cluster"
+
+// kubeClusterPath is the cluster page of the context name.
+func kubeClusterPath(name string) string {
+	return kubeClusterPage + "?context=" + url.QueryEscape(name)
+}
+
+// The kinds of resources the cluster page lists, in its chips' order.
+const (
+	kindPods = iota
+	kindDeployments
+)
+
+// kubeClusterState is the cluster page's: what it reads and what it read.
+type kubeClusterState struct {
+	// namespaces are those chosen by context; a context without an entry
+	// reads its own namespace, an empty entry all of them.
+	namespaces map[string][]string
+	kind       int
+	// target is what the data was read from; running is what the watch
+	// reads, with refresh, and stop ends it.
+	target, running string
+	refresh         int
+	stop            func()
+	data            *kube.Cluster
+	err             error
+	// failedAt is when the last read failed, after data was read.
+	failedAt time.Time
+
+	contextOpen, namespaceOpen bool
+	// nsNames are the context's namespaces, listed as the namespace
+	// popover opened; nsErr says why they could not be.
+	nsLoading bool
+	nsNames   []string
+	nsErr     error
+	nsTyped   string
+}
+
+// clusterNamespaces are the namespaces the page reads in the context:
+// none means all of them.
+func (a *App) clusterNamespaces(name string) []string {
+	if ns, ok := a.cluster.namespaces[name]; ok {
+		return ns
+	}
+	if k := a.kubeContext(name); k != nil {
+		return []string{namespaceOf(*k)}
+	}
+	return []string{"default"}
+}
+
+// kubeContext is the context of that name kubectl uses, nil when no file
+// defines it.
+func (a *App) kubeContext(name string) *inventory.KubeContext {
+	cli := a.cliState()
+	for i, k := range cli.KubeContexts {
+		if k.Name == name && !k.Shadowed {
+			return &cli.KubeContexts[i]
+		}
+	}
+	return nil
+}
+
+// syncCluster keeps the watch of the cluster page's target running while
+// the page shows, and stops it once it does not: the router tells no page
+// that it left. It starts and stops only as the target changes, so a view
+// built again does nothing.
+func (a *App) syncCluster() {
+	s := &a.cluster
+	var t kube.Target
+	target := ""
+	if a.router.Path() == kubeClusterPage && a.WatchCluster != nil {
+		name := a.router.Query("context")
+		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
+			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
+			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
+		}
+	}
+	running := ""
+	if target != "" {
+		running = target + "#" + strconv.Itoa(s.refresh)
+	}
+	if running == s.running {
+		return
+	}
+	if s.stop != nil {
+		s.stop()
+		s.stop = nil
+	}
+	s.running = running
+	if target != s.target {
+		// Another cluster or namespace: what was read is not its.
+		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
+	}
+	if running == "" {
+		return
+	}
+	s.stop = a.WatchCluster(t, func(cl kube.Cluster, err error) {
+		if s.running != running {
+			return
+		}
+		if err != nil {
+			s.err, s.failedAt = err, time.Now()
+			return
+		}
+		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+	})
+}
+
+// StopCluster ends the cluster page's reads, as the window closes.
+func (a *App) StopCluster() {
+	if a.cluster.stop != nil {
+		a.cluster.stop()
+		a.cluster.stop, a.cluster.running = nil, ""
+	}
+}
+
+// openCluster shows the cluster of the context name.
+func (a *App) openCluster(name string) {
+	a.cluster.contextOpen = false
+	a.router.Push(kubeClusterPath(name))
+}
+
+// setNamespaces chooses the namespaces the page reads in the context.
+func (a *App) setNamespaces(name string, ns []string) {
+	if a.cluster.namespaces == nil {
+		a.cluster.namespaces = map[string][]string{}
+	}
+	a.cluster.namespaces[name] = ns
+}
+
+// listNamespaces asks the context's cluster for its namespaces, for the
+// namespace popover.
+func (a *App) listNamespaces(name string) {
+	s := &a.cluster
+	in, ok := cliCopy(a.cliState(), "kubectl")
+	if !ok || a.ListNamespaces == nil {
+		return
+	}
+	s.nsLoading, s.nsErr, s.nsNames = true, nil, nil
+	a.ListNamespaces(kube.Target{Kubectl: in.Path, Context: name}, func(names []string, err error) {
+		if a.router.Query("context") != name {
+			return
+		}
+		s.nsLoading, s.nsNames, s.nsErr = false, names, err
+	})
+}
+
+func (a *App) kubeClusterView(c *ui.Context, name string) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Fill().Children(func() {
+		a.clusterHeader(c, name)
+		ui.Scroll(c).Grow(1).Children(func() {
+			ui.Column(c).Gap(14).Padding(20, 28, 24, 28).Children(func() {
+				a.kindChips(c)
+				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
+				switch {
+				case a.Snapshot == nil:
+					toolNote(c, locales.CleanupWaiting())
+				case !hasKubectl:
+					toolNote(c, locales.KubeClusterNoKubectl())
+				case s.data == nil && s.err != nil:
+					a.clusterError(c, name, s.err)
+				case s.data == nil:
+					ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(12, 0).Children(func() {
+						ui.Spinner(c).Size(14, 14)
+						ui.Text(c, locales.KubeClusterReading(name)).FontSize(12.5).TextColor(t.TextMuted)
+					})
+				default:
+					if s.err != nil {
+						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
+					}
+					if s.kind == kindDeployments {
+						a.deploymentTable(c, s.data)
+					} else {
+						a.podTable(c, s.data)
+					}
+				}
+			})
+		})
+	})
+}
+
+// clusterHeader is the page's path: context, namespaces and kind, each a
+// select; and how fresh the data is, with a button reading it again.
+func (a *App) clusterHeader(c *ui.Context, name string) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	right := float32(20)
+	if bar := c.TitleBar(); bar.Right > 0 {
+		right = bar.Right + 12
+	}
+	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(6).Padding(0, right, 0, 24).
+		BorderWidth(0, 0, 1, 0).BorderColor(pal.Divider).DragWindow().Children(func() {
+		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name)
+		if anchor.Clicked() {
+			s.contextOpen = !s.contextOpen
+		}
+		ui.Popover(c, anchor, &s.contextOpen, func() { a.contextPopover(c, name) })
+		pathSlash(c)
+		ns := a.clusterNamespaces(name)
+		label := strings.Join(ns, ", ")
+		if len(ns) == 0 {
+			label = locales.KubeClusterAllNamespaces()
+		}
+		anchor = pathButton(c, "cluster-namespace", "lucide/folder-tree", label)
+		if anchor.Clicked() {
+			s.namespaceOpen = !s.namespaceOpen
+			if s.namespaceOpen {
+				a.listNamespaces(name)
+			}
+		}
+		ui.Popover(c, anchor, &s.namespaceOpen, func() { a.namespacePopover(c, name) })
+		pathSlash(c)
+		kinds := []string{"Pods", "Deployments"}
+		pathButton(c, "cluster-kind", "lucide/"+[]string{"box", "boxes"}[s.kind], kinds[s.kind]).PopoverMenuButton(func(m *ui.Menu) {
+			for i, k := range kinds {
+				if m.Item(k).Radio(s.kind == i).Chosen() {
+					s.kind = i
+				}
+			}
+		})
+		ui.Box(c).Grow(1).Height(1)
+		a.freshness(c)
+		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() { s.refresh++ })
+	})
+}
+
+// pathButton is a select of the header's path: an icon, the value and a
+// chevron.
+func pathButton(c *ui.Context, key, icon, value string) ui.Element {
+	t := c.Theme()
+	b := ui.ButtonBase(c.Key(key)).Height(30).Padding(0, 8).Radius(7).AlignItems(ui.Center).Gap(7).Label(value)
+	if b.Hovered() {
+		b.Background(Colors(t).Muted)
+	}
+	return b.Children(func() {
+		iconOrLogo(c, icon, 16, t.TextMuted)
+		ui.Text(c, value).FontSize(14).FontWeight(600).SingleLine().MaxWidth(260)
+		ui.Icon(c, Icon("chevron-down")).Size(12, 12).TextColor(Colors(t).TextFaint)
+	})
+}
+
+func pathSlash(c *ui.Context) {
+	ui.Text(c, "/").FontSize(14).TextColor(Colors(c.Theme()).TextFaint)
+}
+
+// freshness says when the data was read: as it keeps coming, how long ago
+// the last read was; after a failure, why.
+func (a *App) freshness(c *ui.Context) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	dot, text := pal.TextFaint, locales.KubeClusterConnecting()
+	switch {
+	case s.err != nil:
+		dot, text = t.Warning, a.accessWords(s.err)
+	case s.data != nil:
+		since := max(c.Now().Sub(s.data.Taken), 0)
+		c.After(time.Second - since%time.Second)
+		dot, text = t.Success, locales.KubeClusterFresh(int(since/time.Second))
+	}
+	ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+		ui.Box(c).Size(6, 6).Radius(3).Background(dot)
+		ui.Text(c, text).FontSize(11.5).TextColor(t.TextMuted).SingleLine().MaxWidth(260)
+	})
+}
+
+// accessWords is what a failed read says in the header: the access
+// check's words for what kubectl said.
+func (a *App) accessWords(err error) string {
+	kerr, ok := errors.AsType[*kube.Error](err)
+	if !ok {
+		return locales.KubeAccessUnknown()
+	}
+	switch kerr.Access.State {
+	case detect.KubeUnreachable:
+		return locales.KubeAccessUnreachable()
+	case detect.KubeNoAuthProgram:
+		return locales.KubeAccessNoProgram(kerr.Access.Detail)
+	case detect.KubeNeedsLogin:
+		return locales.KubeAccessLogin()
+	case detect.KubeAuthFailed:
+		return locales.KubeAccessAuthFailed()
+	case detect.KubeForbidden:
+		return locales.KubeClusterForbidden()
+	}
+	return locales.KubeAccessUnknown()
+}
+
+// clusterError is the page when nothing could be read: why, kubectl's
+// own line, and a button to read again.
+func (a *App) clusterError(c *ui.Context, name string, err error) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	title, text := locales.KubeClusterUnknownTitle(), locales.KubeClusterUnknownText()
+	detail := err.Error()
+	if kerr, ok := errors.AsType[*kube.Error](err); ok {
+		detail = kerr.Access.Detail
+		switch kerr.Access.State {
+		case detect.KubeUnreachable:
+			title, text = locales.KubeClusterUnreachableTitle(), locales.KubeClusterUnreachableText(name)
+		case detect.KubeNoAuthProgram:
+			title, text = locales.KubeClusterNoProgramTitle(kerr.Access.Detail), locales.KubeClusterNoProgramText(name, kerr.Access.Detail)
+			detail = ""
+		case detect.KubeNeedsLogin, detect.KubeAuthFailed:
+			title, text = locales.KubeClusterLoginTitle(), locales.KubeClusterLoginText(name)
+		case detect.KubeForbidden:
+			title, text = locales.KubeClusterForbiddenTitle(), locales.KubeClusterForbiddenText(strings.Join(a.clusterNamespaces(name), ", "))
+		}
+	}
+	ui.Column(c).MaxWidth(500).Gap(12).Padding(40, 0, 0, 0).AlignSelf(ui.Center).Children(func() {
+		ui.Box(c).Size(48, 48).Radius(12).Background(pal.WarningSoft).Center().Children(func() {
+			ui.Icon(c, Icon("log-in")).Size(22, 22).TextColor(pal.WarningText)
+		})
+		ui.Text(c, title).FontSize(19).FontWeight(600).Wrap()
+		ui.Text(c, text).FontSize(12.5).TextColor(t.TextMuted).Wrap()
+		if detail != "" {
+			ui.Text(c, detail).Font(FontMono).FontSize(11.5).Padding(9, 12).Radius(8).Background(pal.Subtle).
+				BorderWidth(1).BorderColor(pal.Line).Wrap().Selectable()
+		}
+		ui.Row(c).Gap(8).Children(func() {
+			ui.Button(c.Key("cluster-retry"), locales.KubeClusterRetry()).OnClick(func() { s.refresh++ })
+			ui.Button(c.Key("cluster-contexts"), locales.KubeClusterAllContexts()).OnClick(func() { a.router.Push(kubePage) })
+		})
+	})
+}
+
+// contextPopover chooses the context the page shows, by kubeconfig file,
+// with what the last access check found; it does not change kubectl's,
+// which its own plan does.
+func (a *App) contextPopover(c *ui.Context, name string) {
+	t := c.Theme()
+	pal := Colors(t)
+	cli := a.cliState()
+	current := kubeCurrent(cli)
+	ui.Column(c).Width(440).Gap(2).Padding(6).Children(func() {
+		for _, f := range cli.KubeFiles {
+			var ks []inventory.KubeContext
+			for _, k := range cli.KubeContexts {
+				if k.File == f.Path && !k.Shadowed {
+					ks = append(ks, k)
+				}
+			}
+			if len(ks) == 0 {
+				continue
+			}
+			ui.Text(c, tilde(f.Path, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Padding(8, 10, 4, 10)
+			for _, k := range ks {
+				row := ui.ButtonBase(c.Key("context-"+k.File+"\n"+k.Name)).Padding(7, 10).Radius(7).AlignItems(ui.Center).Gap(10).Label(k.Name)
+				if k.Name == name {
+					row.Background(pal.ActiveRow)
+				} else if row.Hovered() {
+					row.Background(pal.Muted)
+				}
+				row.OnClick(func() {
+					a.cluster.contextOpen = false
+					if k.Name != name {
+						a.router.Replace(kubeClusterPath(k.Name))
+					}
+				}).Children(func() {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+							clipped(c, k.Name).FontSize(13).FontWeight(500)
+							if current != nil && current.Name == k.Name {
+								aiTag(c, locales.KubeKubectlNow(), pal.InfoSoft, pal.InfoText)
+							}
+						})
+						clipped(c, locales.KubeCluster(k.Cluster)).FontSize(10.5).TextColor(pal.TextFaint)
+					})
+					if ch, ok := a.kubeChecks[k.Name]; ok {
+						a.kubeAccessTag(c, k, ch)
+					}
+				})
+			}
+		}
+		ui.Box(c).Height(1).Background(pal.Line).Margin(4, 0)
+		note := locales.KubeClusterPickNoteNone()
+		if current != nil {
+			note = locales.KubeClusterPickNote(current.Name)
+		}
+		ui.Row(c).Gap(8).Padding(4, 10).Children(func() {
+			ui.Icon(c, Icon("info")).Size(14, 14).TextColor(pal.Info)
+			ui.Text(c, note).FontSize(11.5).TextColor(t.TextMuted).Wrap().Grow(1)
+		})
+		ui.Row(c).Gap(8).Padding(4, 10, 6, 10).AlignItems(ui.Center).Children(func() {
+			in, found := cliCopy(cli, "kubectl")
+			if found && a.BuildPlan != nil && (current == nil || current.Name != name) && a.kubeContext(name) != nil {
+				from := ""
+				if current != nil {
+					from = current.Name
+				}
+				ui.Button(c.Key("context-use"), locales.KubeClusterUse(name)).OnClick(func() {
+					a.cluster.contextOpen = false
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.KubeContextPlan(in.Path, from, name, env, run.Exec{})
+					}, a.proposeOrSay)
+				})
+			}
+			ui.Box(c).Grow(1)
+			ui.Button(c.Key("context-all"), locales.KubeClusterAllContexts()+" ›").OnClick(func() {
+				a.cluster.contextOpen = false
+				a.router.Push(kubePage)
+			})
+		})
+	})
+}
+
+// namespacePopover chooses the namespaces the page reads: all of them,
+// or some of those the cluster lists, or one typed when it lets no one
+// list them.
+func (a *App) namespacePopover(c *ui.Context, name string) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	chosen := a.clusterNamespaces(name)
+	ui.Column(c).Width(300).Gap(4).Padding(10).Children(func() {
+		all := len(chosen) == 0
+		if ui.Checkbox(c.Key("ns-all"), &all, "").Label(locales.KubeClusterAllNamespaces()).Changed() {
+			if all {
+				a.setNamespaces(name, []string{})
+			} else if k := a.kubeContext(name); k != nil {
+				a.setNamespaces(name, []string{namespaceOf(*k)})
+			} else {
+				a.setNamespaces(name, []string{"default"})
+			}
+		}
+		ui.Box(c).Height(1).Background(pal.Line).Margin(4, 0)
+		names := slices.Clone(s.nsNames)
+		for _, ns := range chosen {
+			if !slices.Contains(names, ns) {
+				names = append(names, ns)
+			}
+		}
+		slices.Sort(names)
+		switch {
+		case s.nsLoading:
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Spinner(c).Size(12, 12)
+				ui.Text(c, locales.KubeClusterListingNamespaces()).FontSize(11.5).TextColor(t.TextMuted)
+			})
+		case s.nsErr != nil:
+			ui.Text(c, locales.KubeClusterNoNamespaces(a.accessWords(s.nsErr))).FontSize(11.5).TextColor(pal.WarningText).Wrap()
+		}
+		ui.Scroll(c).MaxHeight(280).Children(func() {
+			ui.Column(c).Gap(2).Children(func() {
+				for _, ns := range names {
+					on := slices.Contains(chosen, ns)
+					if ui.Checkbox(c.Key("ns-"+ns), &on, "").Label(ns).Changed() {
+						next := slices.DeleteFunc(slices.Clone(chosen), func(n string) bool { return n == ns })
+						if on {
+							next = append(next, ns)
+							slices.Sort(next)
+						}
+						if len(next) == 0 {
+							// None chosen is not all: keep the last one.
+							next = []string{ns}
+						}
+						a.setNamespaces(name, next)
+					}
+				}
+			})
+		})
+		if s.nsErr != nil {
+			ui.TextInput(c.Key("ns-typed"), &s.nsTyped).Placeholder(locales.KubeClusterTypeNamespace()).OnSubmit(func() {
+				if ns := strings.TrimSpace(s.nsTyped); ns != "" {
+					a.setNamespaces(name, []string{ns})
+					s.nsTyped, s.namespaceOpen = "", false
+				}
+			})
+		}
+	})
+}
+
+// kindChips are the kinds the page lists, each with how many of them
+// need attention.
+func (a *App) kindChips(c *ui.Context) {
+	s := &a.cluster
+	pods, deployments := 0, 0
+	if s.data != nil {
+		pods = len(slices.DeleteFunc(slices.Clone(s.data.Pods), func(p kube.Pod) bool { return !podTrouble(p) }))
+		deployments = len(slices.DeleteFunc(slices.Clone(s.data.Deployments), func(d kube.Deployment) bool { return !deploymentTrouble(d) }))
+	}
+	ui.Row(c).Gap(8).Children(func() {
+		kindChip(c, &s.kind, kindPods, "box", "Pods", pods)
+		kindChip(c, &s.kind, kindDeployments, "boxes", "Deployments", deployments)
+	})
+}
+
+func kindChip(c *ui.Context, kind *int, value int, icon, label string, trouble int) {
+	t := c.Theme()
+	pal := Colors(t)
+	chosen := *kind == value
+	b := ui.ButtonBase(c.Key("kind-"+label)).Height(28).Padding(0, 11).Radius(14).AlignItems(ui.Center).Gap(6).
+		BorderWidth(1).BorderColor(pal.ControlBorder).Label(label)
+	fg := t.Text
+	switch {
+	case chosen:
+		b.Background(t.Text).BorderColor(t.Text)
+		fg = t.Background
+	case b.Hovered():
+		b.Background(pal.Muted)
+	}
+	b.OnClick(func() { *kind = value }).Children(func() {
+		ui.Icon(c, Icon(icon)).Size(14, 14).TextColor(fg)
+		ui.Text(c, label).FontSize(12.5).FontWeight(500).TextColor(fg)
+		if trouble > 0 {
+			ui.Text(c, strconv.Itoa(trouble)).FontSize(11).TextColor(t.Danger)
+		}
+	})
+}
+
+// podTrouble reports a pod that needs attention: a reason, a phase gone
+// wrong or containers not ready while it runs.
+func podTrouble(p kube.Pod) bool {
+	switch p.Phase {
+	case "Succeeded":
+		return false
+	case "Failed", "Unknown", "Pending":
+		return true
+	}
+	return p.Reason != "" || p.Ready < p.Containers
+}
+
+// deploymentTrouble reports a Deployment with fewer pods ready than it
+// wants.
+func deploymentTrouble(d kube.Deployment) bool { return d.Ready < d.Replicas }
+
+// podTable lists the pods, those in trouble first. The design's grouping
+// by owner and the pod's details come with S10-01b.
+func (a *App) podTable(c *ui.Context, cl *kube.Cluster) {
+	pods := slices.Clone(cl.Pods)
+	slices.SortStableFunc(pods, func(x, y kube.Pod) int {
+		if tx, ty := podTrouble(x), podTrouble(y); tx != ty {
+			if tx {
+				return -1
+			}
+			return 1
+		}
+		return strings.Compare(x.Namespace+"/"+x.Name, y.Namespace+"/"+y.Name)
+	})
+	if len(pods) == 0 {
+		toolNote(c, locales.KubeClusterNoPods())
+		return
+	}
+	pal := Colors(c.Theme())
+	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
+		for _, p := range pods {
+			status := p.Phase
+			if p.Reason != "" {
+				status = p.Reason
+			}
+			node := p.Node
+			if node == "" {
+				node = "–"
+			}
+			resourceRow(c, "pod-"+p.UID, p.Name, p.Namespace, status, podTrouble(p),
+				fmt.Sprintf("%d/%d", p.Ready, p.Containers), strconv.Itoa(p.Restarts), node, age(c, p.Created))
+		}
+	})
+}
+
+// deploymentTable lists the Deployments, those in trouble first.
+func (a *App) deploymentTable(c *ui.Context, cl *kube.Cluster) {
+	ds := slices.Clone(cl.Deployments)
+	slices.SortStableFunc(ds, func(x, y kube.Deployment) int {
+		if tx, ty := deploymentTrouble(x), deploymentTrouble(y); tx != ty {
+			if tx {
+				return -1
+			}
+			return 1
+		}
+		return strings.Compare(x.Namespace+"/"+x.Name, y.Namespace+"/"+y.Name)
+	})
+	if len(ds) == 0 {
+		toolNote(c, locales.KubeClusterNoDeployments())
+		return
+	}
+	pal := Colors(c.Theme())
+	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
+		for _, d := range ds {
+			status := locales.KubeClusterAvailable()
+			switch {
+			case d.Replicas == 0:
+				status = locales.KubeClusterScaledDown()
+			case deploymentTrouble(d):
+				status = locales.KubeClusterNotReady(d.Replicas - d.Ready)
+			}
+			resourceRow(c, "deployment-"+d.UID, d.Name, d.Namespace, status, deploymentTrouble(d),
+				fmt.Sprintf("%d/%d", d.Ready, d.Replicas), strconv.Itoa(d.Updated), "", age(c, d.Created))
+		}
+	})
+}
+
+// resourceWidths are the widths of the tables' columns after the name.
+var resourceWidths = []float32{170, 70, 90, 130, 70}
+
+func resourceHead(c *ui.Context, name string, cols ...string) {
+	pal := Colors(c.Theme())
+	ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		ui.Text(c, strings.ToUpper(name)).FontSize(10.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+		for i, col := range cols {
+			ui.Text(c, strings.ToUpper(col)).FontSize(10.5).TextColor(pal.TextFaint).Width(resourceWidths[i]).SingleLine()
+		}
+	})
+}
+
+func resourceRow(c *ui.Context, key, name, namespace, status string, trouble bool, cols ...string) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c.Key(key)).Gap(10).Padding(8, 16).MinHeight(40).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			clipped(c, name).Font(FontMono).FontSize(12.5)
+			ui.Text(c, namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+		})
+		ui.Row(c).Width(resourceWidths[0]).Children(func() {
+			if trouble {
+				aiTag(c, status, pal.DangerSoft, pal.DangerText)
+			} else {
+				aiTag(c, status, pal.SuccessSoft, pal.SuccessText)
+			}
+		})
+		for i, col := range cols[:len(cols)-1] {
+			ui.Text(c, col).Font(FontMono).FontSize(12).Width(resourceWidths[i+1]).SingleLine()
+		}
+		ui.Text(c, cols[len(cols)-1]).FontSize(12).TextColor(t.TextMuted).Width(resourceWidths[4]).SingleLine()
+	})
+}
+
+// age says how old a resource is, as kubectl does: 40s, 5m, 2h, 12d.
+func age(c *ui.Context, t time.Time) string {
+	d := max(c.Now().Sub(t), 0)
+	switch {
+	case d < time.Minute:
+		return locales.KubeAgeSeconds(int(d / time.Second))
+	case d < time.Hour:
+		return locales.KubeAgeMinutes(int(d / time.Minute))
+	case d < 24*time.Hour:
+		return locales.KubeAgeHours(int(d / time.Hour))
+	}
+	return locales.KubeAgeDays(int(d / (24 * time.Hour)))
+}

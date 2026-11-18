@@ -82,7 +82,7 @@ func checkKube(ctx context.Context, r run.Runner, kubectl string, k inventory.Ku
 	}
 	_ = json.Unmarshal(out.Stdout, &version) // none without an answer
 	if out.ExitCode != 0 || version.Server.GitVersion == "" {
-		return kubeFailure(string(out.Stderr))
+		return KubeFailure(string(out.Stderr))
 	}
 	acc := KubeAccess{Version: version.Server.GitVersion}
 	namespace := k.Namespace
@@ -100,7 +100,7 @@ func checkKube(ctx context.Context, r run.Runner, kubectl string, k inventory.Ku
 	case strings.HasPrefix(answer, "no"):
 		acc.State, acc.Detail = KubeForbidden, "kubectl auth can-i list pods -n "+namespace+": "+answer
 	default:
-		f := kubeFailure(string(out.Stderr))
+		f := KubeFailure(string(out.Stderr))
 		acc.State, acc.Detail = f.State, f.Detail
 	}
 	return acc
@@ -123,10 +123,10 @@ var kubeRules = []struct {
 	{KubeUnreachable, []string{"connection refused", "no such host", "i/o timeout", "network is unreachable", "no route to host", "deadline exceeded", "client.timeout", "timeout awaiting", "was refused", "dial tcp"}},
 }
 
-// kubeFailure tells why kubectl failed from what it said, and no more:
+// KubeFailure tells why kubectl failed from what it said, and no more:
 // what it does not recognize stays unknown. Detail is the line that says
 // why; for a sign-in program that failed, its own words before kubectl's.
-func kubeFailure(stderr string) KubeAccess {
+func KubeFailure(stderr string) KubeAccess {
 	var lines []string
 	for l := range strings.SplitSeq(stderr, "\n") {
 		if l = strings.TrimSpace(l); l != "" {

@@ -10306,5 +10306,266 @@
         "type": "String"
       }
     }
+  },
+  "kubeClusterOpen": "Open",
+  "@kubeClusterOpen": {
+    "description": "Kubernetes context row: open the context's cluster view."
+  },
+  "kubeClusterNoKubectl": "kubectl is not installed: the cluster is read through it.",
+  "@kubeClusterNoKubectl": {
+    "description": "Cluster view: kubectl is not installed."
+  },
+  "kubeClusterReading": "Reading {context}…",
+  "@kubeClusterReading": {
+    "description": "Cluster view: the first read is under way.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterStale": "Showing the last data read: the latest read failed ({error}).",
+  "@kubeClusterStale": {
+    "description": "Cluster view: the last read failed; older data shows.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterAllNamespaces": "All namespaces",
+  "@kubeClusterAllNamespaces": {
+    "description": "Cluster view: every namespace is read."
+  },
+  "kubeClusterRefresh": "Read now",
+  "@kubeClusterRefresh": {
+    "description": "Cluster view: button reading the cluster now."
+  },
+  "kubeClusterConnecting": "connecting",
+  "@kubeClusterConnecting": {
+    "description": "Cluster view header: no read has ended yet."
+  },
+  "kubeClusterFresh": "updating · {seconds} s ago",
+  "@kubeClusterFresh": {
+    "description": "Cluster view header: the data keeps coming; seconds since the last read.",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeClusterForbidden": "no access",
+  "@kubeClusterForbidden": {
+    "description": "Cluster view header: kubectl may not list there."
+  },
+  "kubeClusterUnknownTitle": "Could not read the cluster",
+  "@kubeClusterUnknownTitle": {
+    "description": "Cluster view: a read failed for a reason Hearth does not know."
+  },
+  "kubeClusterUnknownText": "kubectl failed for a reason Hearth does not recognize. Its own words are below.",
+  "@kubeClusterUnknownText": {
+    "description": "Cluster view: under the unknown failure's title."
+  },
+  "kubeClusterUnreachableTitle": "The cluster does not answer",
+  "@kubeClusterUnreachableTitle": {
+    "description": "Cluster view: the API did not answer."
+  },
+  "kubeClusterUnreachableText": "Nothing answered at the API address of {context}. A local cluster may be stopped, or the network or VPN may be down.",
+  "@kubeClusterUnreachableText": {
+    "description": "Cluster view: under the unreachable title.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterNoProgramTitle": "{program} is not installed",
+  "@kubeClusterNoProgramTitle": {
+    "description": "Cluster view: the sign-in program is missing.",
+    "placeholders": {
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterNoProgramText": "kubectl runs {program} to sign in to {context}, and the terminal's PATH has none.",
+  "@kubeClusterNoProgramText": {
+    "description": "Cluster view: under the missing program's title.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      },
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterLoginTitle": "Sign-in needed",
+  "@kubeClusterLoginTitle": {
+    "description": "Cluster view: sign-in needed."
+  },
+  "kubeClusterLoginText": "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does not sign in itself.",
+  "@kubeClusterLoginText": {
+    "description": "Cluster view: under the sign-in title.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterForbiddenTitle": "No right to list pods here",
+  "@kubeClusterForbiddenTitle": {
+    "description": "Cluster view: no right to list."
+  },
+  "kubeClusterForbiddenText": "The cluster answered, but your account may not list pods, ReplicaSets or Deployments in {namespaces}. Choose another namespace or ask the cluster's admin.",
+  "@kubeClusterForbiddenText": {
+    "description": "Cluster view: under the forbidden title.",
+    "placeholders": {
+      "namespaces": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterRetry": "Check again",
+  "@kubeClusterRetry": {
+    "description": "Cluster view: read the cluster again."
+  },
+  "kubeClusterAllContexts": "All contexts",
+  "@kubeClusterAllContexts": {
+    "description": "Cluster view: back to the Kubernetes page with every context."
+  },
+  "kubeClusterPickNote": "Choosing here changes only what Hearth shows. kubectl in the terminal still uses {context}.",
+  "@kubeClusterPickNote": {
+    "description": "Context popover: choosing does not change kubectl.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterPickNoteNone": "Choosing here changes only what Hearth shows. kubectl in the terminal has no current context.",
+  "@kubeClusterPickNoteNone": {
+    "description": "Context popover: kubectl has no current context."
+  },
+  "kubeClusterUse": "Make {context} current in kubectl…",
+  "@kubeClusterUse": {
+    "description": "Context popover: plan to make the context kubectl's current one.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterListingNamespaces": "Listing namespaces…",
+  "@kubeClusterListingNamespaces": {
+    "description": "Namespace popover: listing the namespaces."
+  },
+  "kubeClusterNoNamespaces": "Could not list namespaces: {reason}. Type one instead.",
+  "@kubeClusterNoNamespaces": {
+    "description": "Namespace popover: the cluster did not list namespaces; why.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeClusterTypeNamespace": "Namespace name, Enter to read",
+  "@kubeClusterTypeNamespace": {
+    "description": "Namespace popover: field for a namespace's name."
+  },
+  "kubeClusterNoPods": "No pods in the chosen namespaces.",
+  "@kubeClusterNoPods": {
+    "description": "Cluster view: the namespaces have no pods."
+  },
+  "kubeClusterNoDeployments": "No Deployments in the chosen namespaces.",
+  "@kubeClusterNoDeployments": {
+    "description": "Cluster view: the namespaces have no Deployments."
+  },
+  "kubeClusterName": "Name",
+  "@kubeClusterName": {
+    "description": "Cluster table column: the resource's name."
+  },
+  "kubeClusterStatus": "Status",
+  "@kubeClusterStatus": {
+    "description": "Cluster table column: status."
+  },
+  "kubeClusterReady": "Ready",
+  "@kubeClusterReady": {
+    "description": "Cluster table column: ready containers or replicas."
+  },
+  "kubeClusterRestarts": "Restarts",
+  "@kubeClusterRestarts": {
+    "description": "Cluster table column: container restarts."
+  },
+  "kubeClusterNode": "Node",
+  "@kubeClusterNode": {
+    "description": "Cluster table column: the node a pod runs on."
+  },
+  "kubeClusterAge": "Age",
+  "@kubeClusterAge": {
+    "description": "Cluster table column: how old the resource is."
+  },
+  "kubeClusterUpdated": "Up to date",
+  "@kubeClusterUpdated": {
+    "description": "Cluster table column: replicas on the latest template."
+  },
+  "kubeClusterAvailable": "ready",
+  "@kubeClusterAvailable": {
+    "description": "Deployment status: every replica ready."
+  },
+  "kubeClusterScaledDown": "scaled to 0",
+  "@kubeClusterScaledDown": {
+    "description": "Deployment status: zero replicas wanted."
+  },
+  "kubeAgeSeconds": "{n}s",
+  "@kubeAgeSeconds": {
+    "description": "A resource's age in seconds, short as kubectl's.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "kubeAgeMinutes": "{n}m",
+  "@kubeAgeMinutes": {
+    "description": "A resource's age in minutes, short as kubectl's.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "kubeAgeHours": "{n}h",
+  "@kubeAgeHours": {
+    "description": "A resource's age in hours, short as kubectl's.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "kubeAgeDays": "{n}d",
+  "@kubeAgeDays": {
+    "description": "A resource's age in days, short as kubectl's.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "kubeClusterNotReady": "{count, plural, one {# not ready} other {# not ready}}",
+  "@kubeClusterNotReady": {
+    "description": "Deployment status: replicas not ready.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   }
 }

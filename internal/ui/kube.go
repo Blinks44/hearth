@@ -237,6 +237,9 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 		if found && a.CheckKube != nil {
 			ui.Button(c.Key("check"), locales.KubeCheck()).Disabled(check.running).OnClick(func() { a.checkKube(in.Path, k) })
 		}
+		if found && a.WatchCluster != nil {
+			ui.Button(c.Key("open"), locales.KubeClusterOpen()).OnClick(func() { a.openCluster(k.Name) })
+		}
 		if plans {
 			from := ""
 			if current != nil {

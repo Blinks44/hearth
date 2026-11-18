@@ -17,6 +17,7 @@ import (
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
@@ -162,6 +163,11 @@ type App struct {
 	// terminal's environment, in the background, giving done the answer
 	// through Window.Update; nil hides the check.
 	CheckKube func(kubectl string, k inventory.KubeContext, done func(detect.KubeAccess))
+	// WatchCluster reads the target's cluster now and again, giving each
+	// read to got on the UI thread, until stop is called. ListNamespaces
+	// asks the cluster for its namespaces once. Nil hides the cluster.
+	WatchCluster   func(t kube.Target, got func(kube.Cluster, error)) (stop func())
+	ListNamespaces func(t kube.Target, done func([]string, error))
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -239,6 +245,7 @@ type App struct {
 	kubeFilter         string // the Kubernetes page's filter
 	kubeNS             kubeNamespaceDialog
 	kubeChecks         map[string]kubeCheck
+	cluster            kubeClusterState
 	kind               kindCreateDialog
 	kubeLink           kubeLinkDialog
 	portsFilter        string // the Ports table's filter
@@ -300,6 +307,7 @@ func NewApp() *App {
 // View builds the window: the sidebar and the page shown beside it.
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
+	a.syncCluster()
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
@@ -329,6 +337,12 @@ func (a *App) View(c *ui.Context) {
 				id := r.Query("id")
 				r.Title(agentTitle(id))
 				a.agentDetail(c, id)
+				return
+			}
+			if r.Match(kubeClusterPage) {
+				name := r.Query("context")
+				r.Title(name)
+				a.kubeClusterView(c, name)
 				return
 			}
 			if r.Match(changesPage.path) {

@@ -25937,3 +25937,619 @@ func KindLinkLine(project string, context string) string {
 func (msgs Messages) KindLinkLine(project string, context string) string {
 	return Catalog.Format(msgs.locale, "kindLinkLine", map[string]any{"project": project, "context": context})
 }
+
+// KubeClusterOpen says "Open"
+// in the language the app shows.
+//
+// Kubernetes context row: open the context's cluster view.
+func KubeClusterOpen() string { return In(i18n.Locale()).KubeClusterOpen() }
+
+// KubeClusterOpen says "Open"
+// in the language of msgs.
+//
+// Kubernetes context row: open the context's cluster view.
+func (msgs Messages) KubeClusterOpen() string {
+	return Catalog.Format(msgs.locale, "kubeClusterOpen", nil)
+}
+
+// KubeClusterNoKubectl says "kubectl is not installed: the cluster is read through it."
+// in the language the app shows.
+//
+// Cluster view: kubectl is not installed.
+func KubeClusterNoKubectl() string { return In(i18n.Locale()).KubeClusterNoKubectl() }
+
+// KubeClusterNoKubectl says "kubectl is not installed: the cluster is read through it."
+// in the language of msgs.
+//
+// Cluster view: kubectl is not installed.
+func (msgs Messages) KubeClusterNoKubectl() string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoKubectl", nil)
+}
+
+// KubeClusterReading says "Reading {context}…"
+// in the language the app shows.
+//
+// Cluster view: the first read is under way.
+func KubeClusterReading(context string) string { return In(i18n.Locale()).KubeClusterReading(context) }
+
+// KubeClusterReading says "Reading {context}…"
+// in the language of msgs.
+//
+// Cluster view: the first read is under way.
+func (msgs Messages) KubeClusterReading(context string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterReading", map[string]any{"context": context})
+}
+
+// KubeClusterStale says "Showing the last data read: the latest read failed ({error})."
+// in the language the app shows.
+//
+// Cluster view: the last read failed; older data shows.
+func KubeClusterStale(error string) string { return In(i18n.Locale()).KubeClusterStale(error) }
+
+// KubeClusterStale says "Showing the last data read: the latest read failed ({error})."
+// in the language of msgs.
+//
+// Cluster view: the last read failed; older data shows.
+func (msgs Messages) KubeClusterStale(error string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterStale", map[string]any{"error": error})
+}
+
+// KubeClusterAllNamespaces says "All namespaces"
+// in the language the app shows.
+//
+// Cluster view: every namespace is read.
+func KubeClusterAllNamespaces() string { return In(i18n.Locale()).KubeClusterAllNamespaces() }
+
+// KubeClusterAllNamespaces says "All namespaces"
+// in the language of msgs.
+//
+// Cluster view: every namespace is read.
+func (msgs Messages) KubeClusterAllNamespaces() string {
+	return Catalog.Format(msgs.locale, "kubeClusterAllNamespaces", nil)
+}
+
+// KubeClusterRefresh says "Read now"
+// in the language the app shows.
+//
+// Cluster view: button reading the cluster now.
+func KubeClusterRefresh() string { return In(i18n.Locale()).KubeClusterRefresh() }
+
+// KubeClusterRefresh says "Read now"
+// in the language of msgs.
+//
+// Cluster view: button reading the cluster now.
+func (msgs Messages) KubeClusterRefresh() string {
+	return Catalog.Format(msgs.locale, "kubeClusterRefresh", nil)
+}
+
+// KubeClusterConnecting says "connecting"
+// in the language the app shows.
+//
+// Cluster view header: no read has ended yet.
+func KubeClusterConnecting() string { return In(i18n.Locale()).KubeClusterConnecting() }
+
+// KubeClusterConnecting says "connecting"
+// in the language of msgs.
+//
+// Cluster view header: no read has ended yet.
+func (msgs Messages) KubeClusterConnecting() string {
+	return Catalog.Format(msgs.locale, "kubeClusterConnecting", nil)
+}
+
+// KubeClusterFresh says "updating · {seconds} s ago"
+// in the language the app shows.
+//
+// Cluster view header: the data keeps coming; seconds since the last read.
+func KubeClusterFresh(seconds int) string { return In(i18n.Locale()).KubeClusterFresh(seconds) }
+
+// KubeClusterFresh says "updating · {seconds} s ago"
+// in the language of msgs.
+//
+// Cluster view header: the data keeps coming; seconds since the last read.
+func (msgs Messages) KubeClusterFresh(seconds int) string {
+	return Catalog.Format(msgs.locale, "kubeClusterFresh", map[string]any{"seconds": seconds})
+}
+
+// KubeClusterForbidden says "no access"
+// in the language the app shows.
+//
+// Cluster view header: kubectl may not list there.
+func KubeClusterForbidden() string { return In(i18n.Locale()).KubeClusterForbidden() }
+
+// KubeClusterForbidden says "no access"
+// in the language of msgs.
+//
+// Cluster view header: kubectl may not list there.
+func (msgs Messages) KubeClusterForbidden() string {
+	return Catalog.Format(msgs.locale, "kubeClusterForbidden", nil)
+}
+
+// KubeClusterUnknownTitle says "Could not read the cluster"
+// in the language the app shows.
+//
+// Cluster view: a read failed for a reason Hearth does not know.
+func KubeClusterUnknownTitle() string { return In(i18n.Locale()).KubeClusterUnknownTitle() }
+
+// KubeClusterUnknownTitle says "Could not read the cluster"
+// in the language of msgs.
+//
+// Cluster view: a read failed for a reason Hearth does not know.
+func (msgs Messages) KubeClusterUnknownTitle() string {
+	return Catalog.Format(msgs.locale, "kubeClusterUnknownTitle", nil)
+}
+
+// KubeClusterUnknownText says "kubectl failed for a reason Hearth does not recognize. Its own words are below."
+// in the language the app shows.
+//
+// Cluster view: under the unknown failure's title.
+func KubeClusterUnknownText() string { return In(i18n.Locale()).KubeClusterUnknownText() }
+
+// KubeClusterUnknownText says "kubectl failed for a reason Hearth does not recognize. Its own words are below."
+// in the language of msgs.
+//
+// Cluster view: under the unknown failure's title.
+func (msgs Messages) KubeClusterUnknownText() string {
+	return Catalog.Format(msgs.locale, "kubeClusterUnknownText", nil)
+}
+
+// KubeClusterUnreachableTitle says "The cluster does not answer"
+// in the language the app shows.
+//
+// Cluster view: the API did not answer.
+func KubeClusterUnreachableTitle() string { return In(i18n.Locale()).KubeClusterUnreachableTitle() }
+
+// KubeClusterUnreachableTitle says "The cluster does not answer"
+// in the language of msgs.
+//
+// Cluster view: the API did not answer.
+func (msgs Messages) KubeClusterUnreachableTitle() string {
+	return Catalog.Format(msgs.locale, "kubeClusterUnreachableTitle", nil)
+}
+
+// KubeClusterUnreachableText says "Nothing answered at the API address of {context}. A local cluster may be stopped, or the network or VPN may be down."
+// in the language the app shows.
+//
+// Cluster view: under the unreachable title.
+func KubeClusterUnreachableText(context string) string {
+	return In(i18n.Locale()).KubeClusterUnreachableText(context)
+}
+
+// KubeClusterUnreachableText says "Nothing answered at the API address of {context}. A local cluster may be stopped, or the network or VPN may be down."
+// in the language of msgs.
+//
+// Cluster view: under the unreachable title.
+func (msgs Messages) KubeClusterUnreachableText(context string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterUnreachableText", map[string]any{"context": context})
+}
+
+// KubeClusterNoProgramTitle says "{program} is not installed"
+// in the language the app shows.
+//
+// Cluster view: the sign-in program is missing.
+func KubeClusterNoProgramTitle(program string) string {
+	return In(i18n.Locale()).KubeClusterNoProgramTitle(program)
+}
+
+// KubeClusterNoProgramTitle says "{program} is not installed"
+// in the language of msgs.
+//
+// Cluster view: the sign-in program is missing.
+func (msgs Messages) KubeClusterNoProgramTitle(program string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoProgramTitle", map[string]any{"program": program})
+}
+
+// KubeClusterNoProgramText says "kubectl runs {program} to sign in to {context}, and the terminal's PATH has none."
+// in the language the app shows.
+//
+// Cluster view: under the missing program's title.
+func KubeClusterNoProgramText(context string, program string) string {
+	return In(i18n.Locale()).KubeClusterNoProgramText(context, program)
+}
+
+// KubeClusterNoProgramText says "kubectl runs {program} to sign in to {context}, and the terminal's PATH has none."
+// in the language of msgs.
+//
+// Cluster view: under the missing program's title.
+func (msgs Messages) KubeClusterNoProgramText(context string, program string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoProgramText", map[string]any{"context": context, "program": program})
+}
+
+// KubeClusterLoginTitle says "Sign-in needed"
+// in the language the app shows.
+//
+// Cluster view: sign-in needed.
+func KubeClusterLoginTitle() string { return In(i18n.Locale()).KubeClusterLoginTitle() }
+
+// KubeClusterLoginTitle says "Sign-in needed"
+// in the language of msgs.
+//
+// Cluster view: sign-in needed.
+func (msgs Messages) KubeClusterLoginTitle() string {
+	return Catalog.Format(msgs.locale, "kubeClusterLoginTitle", nil)
+}
+
+// KubeClusterLoginText says "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does n…"
+// in the language the app shows.
+//
+// Cluster view: under the sign-in title.
+func KubeClusterLoginText(context string) string {
+	return In(i18n.Locale()).KubeClusterLoginText(context)
+}
+
+// KubeClusterLoginText says "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does n…"
+// in the language of msgs.
+//
+// Cluster view: under the sign-in title.
+func (msgs Messages) KubeClusterLoginText(context string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterLoginText", map[string]any{"context": context})
+}
+
+// KubeClusterForbiddenTitle says "No right to list pods here"
+// in the language the app shows.
+//
+// Cluster view: no right to list.
+func KubeClusterForbiddenTitle() string { return In(i18n.Locale()).KubeClusterForbiddenTitle() }
+
+// KubeClusterForbiddenTitle says "No right to list pods here"
+// in the language of msgs.
+//
+// Cluster view: no right to list.
+func (msgs Messages) KubeClusterForbiddenTitle() string {
+	return Catalog.Format(msgs.locale, "kubeClusterForbiddenTitle", nil)
+}
+
+// KubeClusterForbiddenText says "The cluster answered, but your account may not list pods, ReplicaSets or Deployments in {namespaces}. Choose another …"
+// in the language the app shows.
+//
+// Cluster view: under the forbidden title.
+func KubeClusterForbiddenText(namespaces string) string {
+	return In(i18n.Locale()).KubeClusterForbiddenText(namespaces)
+}
+
+// KubeClusterForbiddenText says "The cluster answered, but your account may not list pods, ReplicaSets or Deployments in {namespaces}. Choose another …"
+// in the language of msgs.
+//
+// Cluster view: under the forbidden title.
+func (msgs Messages) KubeClusterForbiddenText(namespaces string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterForbiddenText", map[string]any{"namespaces": namespaces})
+}
+
+// KubeClusterRetry says "Check again"
+// in the language the app shows.
+//
+// Cluster view: read the cluster again.
+func KubeClusterRetry() string { return In(i18n.Locale()).KubeClusterRetry() }
+
+// KubeClusterRetry says "Check again"
+// in the language of msgs.
+//
+// Cluster view: read the cluster again.
+func (msgs Messages) KubeClusterRetry() string {
+	return Catalog.Format(msgs.locale, "kubeClusterRetry", nil)
+}
+
+// KubeClusterAllContexts says "All contexts"
+// in the language the app shows.
+//
+// Cluster view: back to the Kubernetes page with every context.
+func KubeClusterAllContexts() string { return In(i18n.Locale()).KubeClusterAllContexts() }
+
+// KubeClusterAllContexts says "All contexts"
+// in the language of msgs.
+//
+// Cluster view: back to the Kubernetes page with every context.
+func (msgs Messages) KubeClusterAllContexts() string {
+	return Catalog.Format(msgs.locale, "kubeClusterAllContexts", nil)
+}
+
+// KubeClusterPickNote says "Choosing here changes only what Hearth shows. kubectl in the terminal still uses {context}."
+// in the language the app shows.
+//
+// Context popover: choosing does not change kubectl.
+func KubeClusterPickNote(context string) string {
+	return In(i18n.Locale()).KubeClusterPickNote(context)
+}
+
+// KubeClusterPickNote says "Choosing here changes only what Hearth shows. kubectl in the terminal still uses {context}."
+// in the language of msgs.
+//
+// Context popover: choosing does not change kubectl.
+func (msgs Messages) KubeClusterPickNote(context string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterPickNote", map[string]any{"context": context})
+}
+
+// KubeClusterPickNoteNone says "Choosing here changes only what Hearth shows. kubectl in the terminal has no current context."
+// in the language the app shows.
+//
+// Context popover: kubectl has no current context.
+func KubeClusterPickNoteNone() string { return In(i18n.Locale()).KubeClusterPickNoteNone() }
+
+// KubeClusterPickNoteNone says "Choosing here changes only what Hearth shows. kubectl in the terminal has no current context."
+// in the language of msgs.
+//
+// Context popover: kubectl has no current context.
+func (msgs Messages) KubeClusterPickNoteNone() string {
+	return Catalog.Format(msgs.locale, "kubeClusterPickNoteNone", nil)
+}
+
+// KubeClusterUse says "Make {context} current in kubectl…"
+// in the language the app shows.
+//
+// Context popover: plan to make the context kubectl's current one.
+func KubeClusterUse(context string) string { return In(i18n.Locale()).KubeClusterUse(context) }
+
+// KubeClusterUse says "Make {context} current in kubectl…"
+// in the language of msgs.
+//
+// Context popover: plan to make the context kubectl's current one.
+func (msgs Messages) KubeClusterUse(context string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterUse", map[string]any{"context": context})
+}
+
+// KubeClusterListingNamespaces says "Listing namespaces…"
+// in the language the app shows.
+//
+// Namespace popover: listing the namespaces.
+func KubeClusterListingNamespaces() string { return In(i18n.Locale()).KubeClusterListingNamespaces() }
+
+// KubeClusterListingNamespaces says "Listing namespaces…"
+// in the language of msgs.
+//
+// Namespace popover: listing the namespaces.
+func (msgs Messages) KubeClusterListingNamespaces() string {
+	return Catalog.Format(msgs.locale, "kubeClusterListingNamespaces", nil)
+}
+
+// KubeClusterNoNamespaces says "Could not list namespaces: {reason}. Type one instead."
+// in the language the app shows.
+//
+// Namespace popover: the cluster did not list namespaces; why.
+func KubeClusterNoNamespaces(reason string) string {
+	return In(i18n.Locale()).KubeClusterNoNamespaces(reason)
+}
+
+// KubeClusterNoNamespaces says "Could not list namespaces: {reason}. Type one instead."
+// in the language of msgs.
+//
+// Namespace popover: the cluster did not list namespaces; why.
+func (msgs Messages) KubeClusterNoNamespaces(reason string) string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoNamespaces", map[string]any{"reason": reason})
+}
+
+// KubeClusterTypeNamespace says "Namespace name, Enter to read"
+// in the language the app shows.
+//
+// Namespace popover: field for a namespace's name.
+func KubeClusterTypeNamespace() string { return In(i18n.Locale()).KubeClusterTypeNamespace() }
+
+// KubeClusterTypeNamespace says "Namespace name, Enter to read"
+// in the language of msgs.
+//
+// Namespace popover: field for a namespace's name.
+func (msgs Messages) KubeClusterTypeNamespace() string {
+	return Catalog.Format(msgs.locale, "kubeClusterTypeNamespace", nil)
+}
+
+// KubeClusterNoPods says "No pods in the chosen namespaces."
+// in the language the app shows.
+//
+// Cluster view: the namespaces have no pods.
+func KubeClusterNoPods() string { return In(i18n.Locale()).KubeClusterNoPods() }
+
+// KubeClusterNoPods says "No pods in the chosen namespaces."
+// in the language of msgs.
+//
+// Cluster view: the namespaces have no pods.
+func (msgs Messages) KubeClusterNoPods() string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoPods", nil)
+}
+
+// KubeClusterNoDeployments says "No Deployments in the chosen namespaces."
+// in the language the app shows.
+//
+// Cluster view: the namespaces have no Deployments.
+func KubeClusterNoDeployments() string { return In(i18n.Locale()).KubeClusterNoDeployments() }
+
+// KubeClusterNoDeployments says "No Deployments in the chosen namespaces."
+// in the language of msgs.
+//
+// Cluster view: the namespaces have no Deployments.
+func (msgs Messages) KubeClusterNoDeployments() string {
+	return Catalog.Format(msgs.locale, "kubeClusterNoDeployments", nil)
+}
+
+// KubeClusterName says "Name"
+// in the language the app shows.
+//
+// Cluster table column: the resource's name.
+func KubeClusterName() string { return In(i18n.Locale()).KubeClusterName() }
+
+// KubeClusterName says "Name"
+// in the language of msgs.
+//
+// Cluster table column: the resource's name.
+func (msgs Messages) KubeClusterName() string {
+	return Catalog.Format(msgs.locale, "kubeClusterName", nil)
+}
+
+// KubeClusterStatus says "Status"
+// in the language the app shows.
+//
+// Cluster table column: status.
+func KubeClusterStatus() string { return In(i18n.Locale()).KubeClusterStatus() }
+
+// KubeClusterStatus says "Status"
+// in the language of msgs.
+//
+// Cluster table column: status.
+func (msgs Messages) KubeClusterStatus() string {
+	return Catalog.Format(msgs.locale, "kubeClusterStatus", nil)
+}
+
+// KubeClusterReady says "Ready"
+// in the language the app shows.
+//
+// Cluster table column: ready containers or replicas.
+func KubeClusterReady() string { return In(i18n.Locale()).KubeClusterReady() }
+
+// KubeClusterReady says "Ready"
+// in the language of msgs.
+//
+// Cluster table column: ready containers or replicas.
+func (msgs Messages) KubeClusterReady() string {
+	return Catalog.Format(msgs.locale, "kubeClusterReady", nil)
+}
+
+// KubeClusterRestarts says "Restarts"
+// in the language the app shows.
+//
+// Cluster table column: container restarts.
+func KubeClusterRestarts() string { return In(i18n.Locale()).KubeClusterRestarts() }
+
+// KubeClusterRestarts says "Restarts"
+// in the language of msgs.
+//
+// Cluster table column: container restarts.
+func (msgs Messages) KubeClusterRestarts() string {
+	return Catalog.Format(msgs.locale, "kubeClusterRestarts", nil)
+}
+
+// KubeClusterNode says "Node"
+// in the language the app shows.
+//
+// Cluster table column: the node a pod runs on.
+func KubeClusterNode() string { return In(i18n.Locale()).KubeClusterNode() }
+
+// KubeClusterNode says "Node"
+// in the language of msgs.
+//
+// Cluster table column: the node a pod runs on.
+func (msgs Messages) KubeClusterNode() string {
+	return Catalog.Format(msgs.locale, "kubeClusterNode", nil)
+}
+
+// KubeClusterAge says "Age"
+// in the language the app shows.
+//
+// Cluster table column: how old the resource is.
+func KubeClusterAge() string { return In(i18n.Locale()).KubeClusterAge() }
+
+// KubeClusterAge says "Age"
+// in the language of msgs.
+//
+// Cluster table column: how old the resource is.
+func (msgs Messages) KubeClusterAge() string {
+	return Catalog.Format(msgs.locale, "kubeClusterAge", nil)
+}
+
+// KubeClusterUpdated says "Up to date"
+// in the language the app shows.
+//
+// Cluster table column: replicas on the latest template.
+func KubeClusterUpdated() string { return In(i18n.Locale()).KubeClusterUpdated() }
+
+// KubeClusterUpdated says "Up to date"
+// in the language of msgs.
+//
+// Cluster table column: replicas on the latest template.
+func (msgs Messages) KubeClusterUpdated() string {
+	return Catalog.Format(msgs.locale, "kubeClusterUpdated", nil)
+}
+
+// KubeClusterAvailable says "ready"
+// in the language the app shows.
+//
+// Deployment status: every replica ready.
+func KubeClusterAvailable() string { return In(i18n.Locale()).KubeClusterAvailable() }
+
+// KubeClusterAvailable says "ready"
+// in the language of msgs.
+//
+// Deployment status: every replica ready.
+func (msgs Messages) KubeClusterAvailable() string {
+	return Catalog.Format(msgs.locale, "kubeClusterAvailable", nil)
+}
+
+// KubeClusterScaledDown says "scaled to 0"
+// in the language the app shows.
+//
+// Deployment status: zero replicas wanted.
+func KubeClusterScaledDown() string { return In(i18n.Locale()).KubeClusterScaledDown() }
+
+// KubeClusterScaledDown says "scaled to 0"
+// in the language of msgs.
+//
+// Deployment status: zero replicas wanted.
+func (msgs Messages) KubeClusterScaledDown() string {
+	return Catalog.Format(msgs.locale, "kubeClusterScaledDown", nil)
+}
+
+// KubeAgeSeconds says "{n}s"
+// in the language the app shows.
+//
+// A resource's age in seconds, short as kubectl's.
+func KubeAgeSeconds(n int) string { return In(i18n.Locale()).KubeAgeSeconds(n) }
+
+// KubeAgeSeconds says "{n}s"
+// in the language of msgs.
+//
+// A resource's age in seconds, short as kubectl's.
+func (msgs Messages) KubeAgeSeconds(n int) string {
+	return Catalog.Format(msgs.locale, "kubeAgeSeconds", map[string]any{"n": n})
+}
+
+// KubeAgeMinutes says "{n}m"
+// in the language the app shows.
+//
+// A resource's age in minutes, short as kubectl's.
+func KubeAgeMinutes(n int) string { return In(i18n.Locale()).KubeAgeMinutes(n) }
+
+// KubeAgeMinutes says "{n}m"
+// in the language of msgs.
+//
+// A resource's age in minutes, short as kubectl's.
+func (msgs Messages) KubeAgeMinutes(n int) string {
+	return Catalog.Format(msgs.locale, "kubeAgeMinutes", map[string]any{"n": n})
+}
+
+// KubeAgeHours says "{n}h"
+// in the language the app shows.
+//
+// A resource's age in hours, short as kubectl's.
+func KubeAgeHours(n int) string { return In(i18n.Locale()).KubeAgeHours(n) }
+
+// KubeAgeHours says "{n}h"
+// in the language of msgs.
+//
+// A resource's age in hours, short as kubectl's.
+func (msgs Messages) KubeAgeHours(n int) string {
+	return Catalog.Format(msgs.locale, "kubeAgeHours", map[string]any{"n": n})
+}
+
+// KubeAgeDays says "{n}d"
+// in the language the app shows.
+//
+// A resource's age in days, short as kubectl's.
+func KubeAgeDays(n int) string { return In(i18n.Locale()).KubeAgeDays(n) }
+
+// KubeAgeDays says "{n}d"
+// in the language of msgs.
+//
+// A resource's age in days, short as kubectl's.
+func (msgs Messages) KubeAgeDays(n int) string {
+	return Catalog.Format(msgs.locale, "kubeAgeDays", map[string]any{"n": n})
+}
+
+// KubeClusterNotReady says "{count, plural, one {# not ready} other {# not ready}}"
+// in the language the app shows.
+//
+// Deployment status: replicas not ready.
+func KubeClusterNotReady(count int) string { return In(i18n.Locale()).KubeClusterNotReady(count) }
+
+// KubeClusterNotReady says "{count, plural, one {# not ready} other {# not ready}}"
+// in the language of msgs.
+//
+// Deployment status: replicas not ready.
+func (msgs Messages) KubeClusterNotReady(count int) string {
+	return Catalog.Format(msgs.locale, "kubeClusterNotReady", map[string]any{"count": count})
+}

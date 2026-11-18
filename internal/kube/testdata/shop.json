@@ -1,0 +1,61 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "kind": "Pod",
+      "metadata": {"name": "checkout-api-7d9f8c5b-x2k4p", "namespace": "shop", "uid": "p1", "creationTimestamp": "2026-11-18T08:00:00Z",
+        "ownerReferences": [{"kind": "ReplicaSet", "name": "checkout-api-7d9f8c5b", "controller": true}]},
+      "spec": {"nodeName": "kind-worker", "containers": [{"name": "api"}, {"name": "envoy"}]},
+      "status": {"phase": "Running", "containerStatuses": [
+        {"name": "api", "ready": false, "restartCount": 14, "state": {"waiting": {"reason": "CrashLoopBackOff"}}},
+        {"name": "envoy", "ready": true, "restartCount": 0, "state": {"running": {}}}
+      ]}
+    },
+    {
+      "kind": "Pod",
+      "metadata": {"name": "checkout-api-7d9f8c5b-m8q2z", "namespace": "shop", "uid": "p2", "creationTimestamp": "2026-11-18T08:00:00Z",
+        "ownerReferences": [{"kind": "ReplicaSet", "name": "checkout-api-7d9f8c5b", "controller": true}]},
+      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "api"}]},
+      "status": {"phase": "Running", "containerStatuses": [{"name": "api", "ready": true, "restartCount": 0, "state": {"running": {}}}]}
+    },
+    {
+      "kind": "Pod",
+      "metadata": {"name": "postgres-0", "namespace": "shop", "uid": "p3", "creationTimestamp": "2026-11-18T09:57:00Z",
+        "ownerReferences": [{"kind": "StatefulSet", "name": "postgres", "controller": true}]},
+      "spec": {"containers": [{"name": "postgres"}]},
+      "status": {"phase": "Pending", "conditions": [{"type": "PodScheduled", "status": "False", "reason": "Unschedulable"}]}
+    },
+    {
+      "kind": "Pod",
+      "metadata": {"name": "web-frontend-5c8d7f9b4-k2j9x", "namespace": "shop", "uid": "p4", "creationTimestamp": "2026-11-18T09:54:00Z",
+        "ownerReferences": [{"kind": "ReplicaSet", "name": "web-frontend-5c8d7f9b4", "controller": true}]},
+      "spec": {"nodeName": "kind-worker2", "containers": [{"name": "web"}]},
+      "status": {"phase": "Pending", "containerStatuses": [{"name": "web", "ready": false, "restartCount": 0, "state": {"waiting": {"reason": "ImagePullBackOff"}}}]}
+    },
+    {
+      "kind": "Pod",
+      "metadata": {"name": "db-migrate-29381-abcde", "namespace": "shop", "uid": "p5", "creationTimestamp": "2026-11-18T09:00:00Z",
+        "ownerReferences": [{"kind": "Job", "name": "db-migrate-29381", "controller": true}]},
+      "spec": {"containers": [{"name": "migrate"}]},
+      "status": {"phase": "Succeeded", "containerStatuses": [{"name": "migrate", "ready": false, "restartCount": 0, "state": {"terminated": {"reason": "Completed"}}}]}
+    },
+    {
+      "kind": "ReplicaSet",
+      "metadata": {"name": "checkout-api-7d9f8c5b", "namespace": "shop", "uid": "r1",
+        "ownerReferences": [{"kind": "Deployment", "name": "checkout-api", "controller": true}]}
+    },
+    {
+      "kind": "Deployment",
+      "metadata": {"name": "checkout-api", "namespace": "shop", "uid": "d1", "creationTimestamp": "2026-11-06T10:00:00Z"},
+      "spec": {"replicas": 3},
+      "status": {"readyReplicas": 2, "updatedReplicas": 3}
+    },
+    {
+      "kind": "Deployment",
+      "metadata": {"name": "search-indexer", "namespace": "shop", "uid": "d2", "creationTimestamp": "2026-11-06T10:00:00Z"},
+      "spec": {"replicas": 0},
+      "status": {}
+    }
+  ]
+}
