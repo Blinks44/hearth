@@ -41,9 +41,10 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "mcp" {
 		os.Exit(serveMCP(os.Args[2:], os.Stderr))
 	}
-	// sudo runs Hearth as its askpass program, for a plan's step.
-	if why := os.Getenv(ops.AskpassEnv); why != "" {
-		os.Exit(askpass(why))
+	// sudo runs Hearth as its askpass program, for a plan's step, with
+	// its prompt as the one argument.
+	if self, _ := os.Executable(); len(os.Args) == 2 && self != "" && os.Getenv("SUDO_ASKPASS") == self {
+		os.Exit(askpass(locales.AskpassPrompt()))
 	}
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)

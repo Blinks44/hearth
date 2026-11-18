@@ -254,8 +254,8 @@ func TestExecuteFindsProgramInPlanPath(t *testing.T) {
 	}
 }
 
-// A step with Askpass points sudo inside it to Hearth's program, which
-// says the plan's title; others get no askpass.
+// A step with Askpass points sudo inside it to Hearth's program; others
+// get no askpass.
 func TestExecuteAskpass(t *testing.T) {
 	old := AskpassProgram
 	AskpassProgram = "/Applications/Hearth.app/Contents/MacOS/Hearth"
@@ -276,7 +276,7 @@ func TestExecuteAskpass(t *testing.T) {
 	if slices.ContainsFunc(calls[0].Env, func(e string) bool { return strings.HasPrefix(e, "SUDO_ASKPASS=") }) {
 		t.Errorf("formula step got askpass: %q", calls[0].Env)
 	}
-	for _, want := range []string{"SUDO_ASKPASS=" + AskpassProgram, AskpassEnv + "=Update 5 packages"} {
+	for _, want := range []string{"SUDO_ASKPASS=" + AskpassProgram} {
 		if !slices.Contains(calls[1].Env, want) {
 			t.Errorf("cask step env %q lacks %q", calls[1].Env, want)
 		}

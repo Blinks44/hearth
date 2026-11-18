@@ -12472,6 +12472,22 @@ func (msgs Messages) NoteCaskAdmin() string {
 	return Catalog.Format(msgs.locale, "noteCaskAdmin", nil)
 }
 
+// AskpassPrompt says "Homebrew needs the administrator's password to change an app"
+// in the language the app shows.
+//
+// Text of the password dialog Hearth shows when sudo inside a Homebrew cask
+// asks for the password.
+func AskpassPrompt() string { return In(i18n.Locale()).AskpassPrompt() }
+
+// AskpassPrompt says "Homebrew needs the administrator's password to change an app"
+// in the language of msgs.
+//
+// Text of the password dialog Hearth shows when sudo inside a Homebrew cask
+// asks for the password.
+func (msgs Messages) AskpassPrompt() string {
+	return Catalog.Format(msgs.locale, "askpassPrompt", nil)
+}
+
 // NoteAdminLinux says "The system asks for the administrator's password in its own window (polkit), for each run"
 // in the language the app shows.
 //

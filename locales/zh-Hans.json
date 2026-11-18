@@ -939,6 +939,7 @@
   "adminNoAgent": "系统没有可以询问管理员密码的窗口：请在终端中用 sudo 运行该命令",
   "noteAdminMac": "每次运行时，macOS 会在自己的窗口中询问管理员密码",
   "noteCaskAdmin": "如果应用的安装程序需要，Homebrew 可能会在 macOS 窗口中要求输入管理员密码",
+  "askpassPrompt": "Homebrew 需要管理员密码来更改应用",
   "noteAdminLinux": "每次运行时，系统会在自己的窗口（polkit）中询问管理员密码",
   "noteWingetUAC": "为所有用户安装软件包时，Windows 可能会请求权限（UAC）",
   "noteAdminWindows": "在需要权限的步骤之前，Windows 会请求权限（UAC）",

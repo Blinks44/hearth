@@ -369,7 +369,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		// command would be: Hearth's own PATH, as an app's, may lack it.
 		env := slices.Concat(p.Env, step.Env)
 		if step.Askpass && AskpassProgram != "" {
-			env = append(env, "SUDO_ASKPASS="+AskpassProgram, AskpassEnv+"="+p.Title)
+			env = append(env, "SUDO_ASKPASS="+AskpassProgram)
 		}
 		argv := fullPath(step.Argv, env)
 		if step.Admin {

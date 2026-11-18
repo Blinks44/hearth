@@ -939,6 +939,7 @@
   "adminNoAgent": "das System hat kein Fenster, um nach dem Administratorpasswort zu fragen: Führen Sie den Befehl in einem Terminal mit sudo aus",
   "noteAdminMac": "macOS fragt bei jedem Lauf in einem eigenen Fenster nach dem Administratorpasswort",
   "noteCaskAdmin": "Homebrew kann in einem macOS-Fenster nach dem Administratorpasswort fragen, wenn das Installationsprogramm einer App es braucht",
+  "askpassPrompt": "Homebrew braucht das Administratorpasswort, um eine App zu ändern",
   "noteAdminLinux": "Das System fragt bei jedem Lauf in einem eigenen Fenster (polkit) nach dem Administratorpasswort",
   "noteWingetUAC": "Windows fragt eventuell nach einer Berechtigung (UAC), wenn ein Paket für alle Benutzer installiert wird",
   "noteAdminWindows": "Windows fragt vor dem Schritt, der sie braucht, nach einer Berechtigung (UAC)",
