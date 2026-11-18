@@ -4,6 +4,7 @@ package detect
 
 import (
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -31,6 +32,9 @@ func TestJSMiseInstalls(t *testing.T) {
 				Tool: name, Version: "10.4.1", Path: path, RealPath: path,
 				Source: inventory.Source{Kind: vm, Manager: "mise", Root: dir, Version: "10.4.1"},
 			}})
+			if len(got.Managers) != 1 || got.Managers[0].Name != "mise" || !slices.Contains(got.Managers[0].Files, "mise.toml") {
+				t.Errorf("managers = %+v, want mise, which picks the version by mise.toml", got.Managers)
+			}
 			if calls := r.Calls(); len(calls) != 0 {
 				t.Errorf("ran %v; the version is in the path", calls)
 			}

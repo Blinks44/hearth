@@ -179,6 +179,10 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 	if usesCorepack && term.Get("COREPACK_ENABLE_PROJECT_SPEC") != "0" {
 		st.Managers = []inventory.Manager{{Name: "corepack", SwitchOnCD: true, Files: []string{"package.json"}}}
 	}
+	// mise's shim runs the version the folder's mise.toml asks for.
+	if slices.ContainsFunc(f.ins, func(in inventory.Installation) bool { return in.Source.Manager == "mise" }) {
+		st.Managers = append(st.Managers, miseManager(ctx, r, term, gui, sources.ManagerDirs(term)))
+	}
 	return st, ctx.Err()
 }
 
