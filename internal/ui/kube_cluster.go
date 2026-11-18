@@ -443,7 +443,7 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 	chosen := a.clusterNamespaces(name)
 	ui.Column(c).Width(300).Gap(4).Padding(10).Children(func() {
 		all := len(chosen) == 0
-		if ui.Checkbox(c.Key("ns-all"), &all, "").Label(locales.KubeClusterAllNamespaces()).Changed() {
+		if ui.Checkbox(c.Key("ns-all"), &all, locales.KubeClusterAllNamespaces()).Changed() {
 			if all {
 				a.setNamespaces(name, []string{})
 			} else if k := a.kubeContext(name); k != nil {
@@ -473,7 +473,7 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 			ui.Column(c).Gap(2).Children(func() {
 				for _, ns := range names {
 					on := slices.Contains(chosen, ns)
-					if ui.Checkbox(c.Key("ns-"+ns), &on, "").Label(ns).Changed() {
+					if ui.Checkbox(c.Key("ns-"+ns), &on, ns).Changed() {
 						next := slices.DeleteFunc(slices.Clone(chosen), func(n string) bool { return n == ns })
 						if on {
 							next = append(next, ns)
