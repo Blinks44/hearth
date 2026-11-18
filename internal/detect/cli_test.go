@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
@@ -36,15 +38,29 @@ contexts:
   context:
     cluster: local-cluster
 `)
-	env := sysenv.Env{"KUBECONFIG=" + first + string(os.PathListSeparator) + second}
-	contexts, current := kubeContexts(env, home)
-	if current == nil || current.Name != "staging" || current.File != first {
-		t.Fatalf("current: %+v", current)
+	broken, missing := filepath.Join(home, "broken"), filepath.Join(home, "missing")
+	writeFile(t, broken, "contexts: [\n")
+	sep := string(os.PathListSeparator)
+	env := sysenv.Env{"KUBECONFIG=" + first + sep + second + sep + sep + first + sep + broken + sep + missing}
+	kc := readKubeConfig(env, home)
+	if kc.current == nil || kc.current.Name != "staging" || kc.current.File != first {
+		t.Fatalf("current: %+v", kc.current)
 	}
-	if len(contexts) != 3 || contexts[0].Name != "local" || contexts[1].Cluster != "prod-first" || contexts[1].Namespace != "digital" {
-		t.Fatalf("contexts: %+v", contexts)
+	// By file in merge order; a later context of a taken name is shadowed.
+	want := []inventory.KubeContext{
+		{Name: "production", Cluster: "prod-first", Namespace: "digital", File: first},
+		{Name: "staging", Cluster: "stage", File: first},
+		{Name: "local", Cluster: "local-cluster", File: second},
+		{Name: "production", Cluster: "prod-second", File: second, Shadowed: true},
 	}
-	data, err := json.Marshal(contexts)
+	if !slices.Equal(kc.contexts, want) {
+		t.Fatalf("contexts:\n got %+v\nwant %+v", kc.contexts, want)
+	}
+	files := []inventory.KubeFile{{Path: first}, {Path: second}, {Path: broken, Invalid: true}, {Path: missing, Missing: true}}
+	if !slices.Equal(kc.files, files) {
+		t.Fatalf("files: %+v", kc.files)
+	}
+	data, err := json.Marshal(inventory.CliState{KubeContexts: kc.contexts, KubeFiles: kc.files})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,8 +69,7 @@ contexts:
 	}
 	// Re-read after a terminal changes selection; no cached context survives.
 	writeFile(t, first, "current-context: local\n")
-	_, current = kubeContexts(env, home)
-	if current == nil || current.Name != "local" {
+	if current := kubeContext(env, home); current == nil || current.Name != "local" {
 		t.Fatalf("stale current: %+v", current)
 	}
 	// A blank KUBECONFIG entry must not replace the default config.

@@ -62,7 +62,19 @@ func (a *App) searchIndex() []searchResult {
 					name = in.Tool
 				}
 				detail := strings.Trim(in.Source.Manager+" · "+tilde(in.Path, a.Home), " ·")
-				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: strings.TrimSpace(name + " " + in.Version), detail: detail, icon: "lucide/box", open: func() { a.router.Push(target) }})
+				to := target
+				if tool.Cli != nil && slices.Contains(kubeCommands, in.Tool) {
+					to = kubePage
+				}
+				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: strings.TrimSpace(name + " " + in.Version), detail: detail, icon: "lucide/box", open: func() { a.router.Push(to) }})
+			}
+		}
+		for _, k := range a.cliState().KubeContexts {
+			if !k.Shadowed {
+				add(searchResult{id: "kube:" + k.Name, group: locales.KubeContextsCard(), title: k.Name, detail: strings.Trim(k.Cluster+" · "+tilde(k.File, a.Home), " ·"), icon: "brand/kubernetes", open: func() {
+					a.kubeTab, a.kubeFilter = 0, k.Name
+					a.router.Push(kubePage)
+				}})
 			}
 		}
 	}

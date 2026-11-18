@@ -3192,10 +3192,6 @@
   "@cliHowMiseCaption": {
     "description": "CLI page side card caption."
   },
-  "cliGroupKubernetes": "Kubernetes",
-  "@cliGroupKubernetes": {
-    "description": "CLI page group and tab."
-  },
   "cliGroupClouds": "Clouds",
   "@cliGroupClouds": {
     "description": "CLI page group and tab."
@@ -9147,30 +9143,6 @@
   "@cleanupFreedNone": {
     "description": "Cleanup: cleanupFreedNone."
   },
-  "kubeContexts": "Kubernetes contexts",
-  "@kubeContexts": {
-    "description": "Kubernetes context selection: kubeContexts."
-  },
-  "kubeContextCurrent": "Current",
-  "@kubeContextCurrent": {
-    "description": "Kubernetes context selection: kubeContextCurrent."
-  },
-  "kubeContextSwitch": "Switch…",
-  "@kubeContextSwitch": {
-    "description": "Kubernetes context selection: kubeContextSwitch."
-  },
-  "kubeContextDetails": "Cluster: {cluster} · namespace: {namespace}",
-  "@kubeContextDetails": {
-    "description": "Kubernetes context selection: kubeContextDetails.",
-    "placeholders": {
-      "cluster": {
-        "type": "String"
-      },
-      "namespace": {
-        "type": "String"
-      }
-    }
-  },
   "kubeContextTitle": "Use Kubernetes context {name}",
   "@kubeContextTitle": {
     "description": "Kubernetes context selection: kubeContextTitle.",
@@ -9202,6 +9174,272 @@
     "description": "Kubernetes context selection: kubeContextSelected.",
     "placeholders": {
       "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSubtitle": "Tools · kubeconfig contexts",
+  "@kubeSubtitle": {
+    "description": "Kubernetes page subtitle."
+  },
+  "kubeLead": "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm",
+  "@kubeLead": {
+    "description": "Kubernetes page lead: how many kubeconfig files kubectl reads.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeContextsCard": "Contexts",
+  "@kubeContextsCard": {
+    "description": "Kubernetes page: the contexts card and tab."
+  },
+  "kubeFromFiles": "from {count, plural, one {# file} other {# files}}",
+  "@kubeFromFiles": {
+    "description": "Kubernetes contexts card caption.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeKubectlNow": "kubectl now",
+  "@kubeKubectlNow": {
+    "description": "Kubernetes page card: kubectl's current context."
+  },
+  "kubeNamespace": "namespace {namespace}",
+  "@kubeNamespace": {
+    "description": "Kubernetes: the namespace a context selects.",
+    "placeholders": {
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNoCurrent": "No context chosen",
+  "@kubeNoCurrent": {
+    "description": "Kubernetes: kubectl has no current context."
+  },
+  "kubeNoTools": "kubectl and Helm not found",
+  "@kubeNoTools": {
+    "description": "Kubernetes tools card: none found."
+  },
+  "kubeToolsTab": "Tools",
+  "@kubeToolsTab": {
+    "description": "Kubernetes page: the tools card and tab."
+  },
+  "kubeFilesTab": "Files",
+  "@kubeFilesTab": {
+    "description": "Kubernetes page: the kubeconfig files tab."
+  },
+  "kubeFilter": "Context or cluster",
+  "@kubeFilter": {
+    "description": "Kubernetes page filter placeholder."
+  },
+  "kubeHow": "How Hearth works with clusters",
+  "@kubeHow": {
+    "description": "Kubernetes page card title."
+  },
+  "kubeHowScan": "The scan does not contact clusters",
+  "@kubeHowScan": {
+    "description": "Kubernetes how card row."
+  },
+  "kubeHowScanCaption": "only the kubeconfig files are read",
+  "@kubeHowScanCaption": {
+    "description": "Kubernetes how card row caption."
+  },
+  "kubeHowPlan": "kubectl changes only through a plan",
+  "@kubeHowPlan": {
+    "description": "Kubernetes how card row."
+  },
+  "kubeHowPlanCaption": "context and namespace, with confirmation and a check",
+  "@kubeHowPlanCaption": {
+    "description": "Kubernetes how card row caption."
+  },
+  "kubeHowSecrets": "Credentials are not read",
+  "@kubeHowSecrets": {
+    "description": "Kubernetes how card row."
+  },
+  "kubeHowSecretsCaption": "only the names of contexts, clusters and namespaces",
+  "@kubeHowSecretsCaption": {
+    "description": "Kubernetes how card row caption."
+  },
+  "kubeNoContexts": "kubeconfig has no contexts",
+  "@kubeNoContexts": {
+    "description": "Kubernetes contexts table: none."
+  },
+  "kubeCluster": "cluster {cluster}",
+  "@kubeCluster": {
+    "description": "Kubernetes context row: its cluster.",
+    "placeholders": {
+      "cluster": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeShadowedCaption": "kubectl uses the context of this name from a file above",
+  "@kubeShadowedCaption": {
+    "description": "Kubernetes context row: an earlier file has a context of the same name."
+  },
+  "kubeInKubectl": "in kubectl",
+  "@kubeInKubectl": {
+    "description": "Kubernetes context chip: kubectl's current context."
+  },
+  "kubeShadowed": "shadowed",
+  "@kubeShadowed": {
+    "description": "Kubernetes context chip: shadowed by an earlier file."
+  },
+  "kubeUse": "Use in kubectl…",
+  "@kubeUse": {
+    "description": "Kubernetes context button: make it kubectl's current context."
+  },
+  "kubeNamespaceChange": "Change namespace…",
+  "@kubeNamespaceChange": {
+    "description": "Kubernetes context menu item."
+  },
+  "kubeFileMissing": "no such file",
+  "@kubeFileMissing": {
+    "description": "Kubernetes file row: the file is not there."
+  },
+  "kubeFileInvalid": "not a valid kubeconfig: kubectl will report an error",
+  "@kubeFileInvalid": {
+    "description": "Kubernetes file row: not a readable kubeconfig."
+  },
+  "kubeFileContexts": "{count, plural, one {# context} other {# contexts}}",
+  "@kubeFileContexts": {
+    "description": "Kubernetes file row: its contexts.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeFileCurrent": "sets current-context {name}",
+  "@kubeFileCurrent": {
+    "description": "Kubernetes file row: the file sets current-context.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeTerminal": "kubectl in the terminal",
+  "@kubeTerminal": {
+    "description": "Kubernetes page card title."
+  },
+  "kubeCurrentFrom": "current-context from {file}",
+  "@kubeCurrentFrom": {
+    "description": "Kubernetes terminal card: where current-context is read.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeconfigSet": "KUBECONFIG: {count, plural, one {# file} other {# files}}",
+  "@kubeconfigSet": {
+    "description": "Kubernetes terminal card: KUBECONFIG names files.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeconfigUnset": "KUBECONFIG not set",
+  "@kubeconfigUnset": {
+    "description": "Kubernetes terminal card: KUBECONFIG is not set."
+  },
+  "kubeconfigOnly": "only {files} is read",
+  "@kubeconfigOnly": {
+    "description": "Kubernetes terminal card: the default file is read.",
+    "placeholders": {
+      "files": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceDialogTitle": "Namespace of {name}",
+  "@kubeNamespaceDialogTitle": {
+    "description": "Kubernetes namespace dialog title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceDialogLead": "kubectl will use it for commands in this context. It is saved in {file}; Hearth does not contact the cluster.",
+  "@kubeNamespaceDialogLead": {
+    "description": "Kubernetes namespace dialog lead.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceLabel": "Namespace",
+  "@kubeNamespaceLabel": {
+    "description": "Kubernetes namespace dialog field label."
+  },
+  "kubeNamespaceInvalid": "Use lowercase letters, digits and hyphens, up to 63 characters, starting and ending with a letter or digit.",
+  "@kubeNamespaceInvalid": {
+    "description": "Kubernetes namespace: invalid name."
+  },
+  "kubeNamespaceTitle": "Set namespace {namespace} for {name}",
+  "@kubeNamespaceTitle": {
+    "description": "Kubernetes namespace plan title.",
+    "placeholders": {
+      "namespace": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceWhy": "kubectl's own config command changes the context's namespace in the kubeconfig file that defines it. Terminals using the same files will use it too. The cluster is not contacted and nothing in it changes; the namespace does not have to exist yet.",
+  "@kubeNamespaceWhy": {
+    "description": "Kubernetes namespace plan explanation."
+  },
+  "kubeNamespaceChanged": "Namespace of {name}: {change} in {file}",
+  "@kubeNamespaceChanged": {
+    "description": "Kubernetes namespace plan change line.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      },
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceMismatch": "The namespace of {name} is not {namespace}.",
+  "@kubeNamespaceMismatch": {
+    "description": "Kubernetes namespace plan check failed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceSet": "{name}: namespace {namespace}",
+  "@kubeNamespaceSet": {
+    "description": "Kubernetes namespace plan check passed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "namespace": {
         "type": "String"
       }
     }

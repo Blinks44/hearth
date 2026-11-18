@@ -224,6 +224,9 @@ type App struct {
 	modelPullOpen      bool   // the dialog to download an Ollama model is open
 	cliTab             int    // the CLI & clouds page's tab
 	cliFilter          string // the CLI & clouds table's filter
+	kubeTab            int    // the Kubernetes page's tab
+	kubeFilter         string // the Kubernetes page's filter
+	kubeNS             kubeNamespaceDialog
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page
@@ -347,6 +350,8 @@ func (a *App) View(c *ui.Context) {
 						a.gitPageView(c, p)
 					case cliPage:
 						a.cliView(c, p)
+					case kubePage:
+						a.kubeView(c, p)
 					case portsPage:
 						a.portsView(c, p)
 					case instructionsPage:
@@ -556,6 +561,13 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		}
 	case pathPage:
 		return a.issueCount(c)
+	case kubePage:
+		// kubectl's context, as the design has it.
+		if cur := kubeCurrent(a.cliState()); cur != nil {
+			return func() {
+				ui.Text(c, cur.Name).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine().MaxWidth(110)
+			}
+		}
 	case gitPage:
 		// The version the terminal runs, as the languages show theirs.
 		if v := a.version("git"); v != "" {

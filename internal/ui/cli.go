@@ -8,9 +8,6 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
-	"github.com/Blinks44/hearth/internal/ops"
-	"github.com/Blinks44/hearth/internal/run"
-	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -18,23 +15,24 @@ import (
 // own, one table.
 const cliPage = "/tools/cli"
 
-// cliGroups are the table's groups of known commands, in its order.
+// cliGroups are the table's groups of known commands, in its order;
+// Kubernetes' have their page.
 var cliGroups = []struct {
 	title    func() string
 	commands []string
 }{
-	{locales.CliGroupKubernetes, []string{"kubectl", "helm"}},
 	{locales.CliGroupClouds, []string{"aws", "gcloud", "az"}},
 	{locales.CliGroupInfra, []string{"terraform", "tofu"}},
 }
 
-// cliProducts name what a missing command comes with.
+// cliProducts name what a missing command comes with; mise's copies of
+// them are left to their pages.
 var cliProducts = map[string]string{"kubectl": "Kubernetes", "helm": "Helm", "aws": "AWS CLI", "gcloud": "Google Cloud CLI",
 	"az": "Azure CLI", "terraform": "Terraform", "tofu": "OpenTofu"}
 
 // cliTabs are the page's tabs after All: the groups by cliGroups' index,
-// clouds first, then mise's (-1).
-var cliTabs = []int{1, 0, 2, -1}
+// then mise's (-1).
+var cliTabs = []int{0, 1, -1}
 
 // cliState is what the CLI detector found; empty before a scan.
 func (a *App) cliState() inventory.CliState {
@@ -186,10 +184,10 @@ func (a *App) cliView(c *ui.Context, p page) {
 					}
 					a.cliTable(c, cli, tools)
 				}, func() {
-					a.kubeContexts(c, cli)
-					if len(cli.Contexts) > 0 {
+					contexts := slices.DeleteFunc(slices.Clone(cli.Contexts), func(cc inventory.CliContext) bool { return cc.Tool == "kubectl" })
+					if len(contexts) > 0 {
 						listCard(c, locales.CliContexts(), "", func() {
-							for _, cc := range cli.Contexts {
+							for _, cc := range contexts {
 								name := cc.Name
 								if cc.Tool == "gcloud" || cc.Tool == "az" || name == "" {
 									name = cliContextText(cc)
@@ -344,36 +342,4 @@ func (a *App) miseToolRow(c *ui.Context, mt inventory.MiseTool) {
 		parts = append(parts, locales.CliMoreVersions(n, strings.Join(others, ", ")))
 	}
 	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version, nil)
-}
-
-// kubeContexts lists every locally configured context, with explicit selection.
-func (a *App) kubeContexts(c *ui.Context, cli inventory.CliState) {
-	if len(cli.KubeContexts) == 0 {
-		return
-	}
-	current := ""
-	if cc := cliContext(cli, "kubectl"); cc != nil {
-		current = cc.Name
-	}
-	in, found := cliCopy(cli, "kubectl")
-	listCard(c, locales.KubeContexts(), "", func() {
-		for _, cc := range cli.KubeContexts {
-			namespace := cc.Namespace
-			if namespace == "" {
-				namespace = "default"
-			}
-			caption := locales.KubeContextDetails(cc.Cluster, namespace)
-			listRow(c, cc.Name, true, caption, func() {
-				if cc.Name == current {
-					aiTag(c, locales.KubeContextCurrent(), Colors(c.Theme()).SuccessSoft, Colors(c.Theme()).SuccessText)
-					return
-				}
-				ui.Button(c.Key("kube:"+cc.Name), locales.KubeContextSwitch()).Disabled(!found || a.BuildPlan == nil).OnClick(func() {
-					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-						return ops.KubeContextPlan(in.Path, current, cc.Name, env, run.Exec{})
-					}, a.proposeOrSay)
-				})
-			})
-		}
-	})
 }

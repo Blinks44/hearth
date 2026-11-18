@@ -94,6 +94,7 @@ var (
 			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionTools},
 			{gitPage, "brand/git", name("Git"), locales.SectionToolsVcs},
 			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
+			{kubePage, "brand/kubernetes", name("Kubernetes"), locales.KubeSubtitle},
 			{editorsPage, "lucide/code-xml", locales.EditorsTitle, locales.SectionToolsEditors},
 			{mobilePage, "lucide/smartphone", locales.MobileTitle, locales.SectionToolsMobile},
 		}},

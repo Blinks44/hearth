@@ -4,9 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Blinks44/hearth/internal/ops"
-	"github.com/Blinks44/hearth/internal/sysenv"
-
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -51,53 +48,27 @@ func TestCliPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "cli")
-	hasTexts(t, tt, "CLI & clouds", "Tools · command line", "of 10 known", "kubectl", "KUBERNETES", "CLOUDS", "INFRASTRUCTURE",
-		"brew · context kind-dev · available 1.32.0", "1.31.4", "brew · 3 chart repositories", "brew · profile default · eu-central-1",
+	hasTexts(t, tt, "CLI & clouds", "Tools · command line", "of 8 known", "CLOUDS", "INFRASTRUCTURE",
+		"brew · profile default · eu-central-1",
 		"brew · no project chosen", "503.0.0", "not found · Azure CLI", "not found · OpenTofu",
-		"Current contexts", "kubectl · kind-dev", "from ~/.kube/config", "gcloud · no project chosen",
+		"Current contexts", "aws · default", "from ~/.aws/config", "gcloud · no project chosen",
 		"FROM MISE · NO PAGE OF THEIR OWN", "deno", "mise · in PATH", "2.1.4", "elixir", "mise · not set up", "zig",
 		"mise · the default version · 1 more version: 0.12.0", "0.13.0", "mise's folders", "installs/ without running mise")
-	if tt.HasText("3.15.0") {
-		t.Error("helm from mise is listed twice")
+	// Kubernetes' tools and contexts have their own page.
+	if tt.HasText("3.15.0") || tt.HasText("kubectl") || tt.HasText("KUBERNETES") || tt.HasText("kubectl · kind-dev") {
+		t.Errorf("Kubernetes on CLI & clouds: %q", tt.Texts())
 	}
 	a.cliFilter = "zi"
 	tt.Frame()
 	tt.Advance(time.Second)
-	if tt.HasText("deno") || !tt.HasText("kubectl · kind-dev") || !tt.HasText("zig") || tt.HasText("1.31.4") {
+	if tt.HasText("deno") || !tt.HasText("aws · default") || !tt.HasText("zig") || tt.HasText("503.0.0") {
 		t.Errorf("filter: %q", tt.Texts())
 	}
 	a.cliFilter = ""
 	a.cliTab = 1 // clouds
 	tt.Frame()
 	tt.Advance(time.Second)
-	if !tt.HasText("aws") || tt.HasText("1.31.4") || tt.HasText("deno") {
+	if !tt.HasText("aws") || tt.HasText("1.9.8") || tt.HasText("deno") {
 		t.Errorf("clouds tab: %q", tt.Texts())
 	}
-}
-
-func TestKubeContextsSwitch(t *testing.T) {
-	a := NewApp()
-	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "cli", Cli: &inventory.CliState{
-		Tools:        []inventory.Installation{{Tool: "kubectl", Path: "/bin/kubectl", OnPath: 1}},
-		Contexts:     []inventory.CliContext{{Tool: "kubectl", Name: "staging"}},
-		KubeContexts: []inventory.KubeContext{{Name: "production", Cluster: "prod", Namespace: "digital"}, {Name: "staging", Cluster: "stage"}},
-	}}}}
-	env := sysenv.Env{"KUBECONFIG=/tmp/test-config"}
-	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
-		done(build(env, nil))
-	}
-	a.router.Push(cliPage)
-	tt := ui.NewTester(a.View, 1280, 1000)
-	tt.Advance(time.Second)
-	hasTexts(t, tt, "Kubernetes contexts", "production", "staging", "Current", "Cluster: prod · namespace: digital", "Cluster: stage · namespace: default")
-	screenshot(t, tt, "kube-contexts")
-	if err := tt.Click("Switch…"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Advance(time.Second)
-	hasTexts(t, tt, "Use Kubernetes context production", "/bin/kubectl config use-context -- production")
-	if a.op == nil || a.op.started || a.op.plan.Env[0] != env[0] {
-		t.Fatalf("unexpected operation: %+v", a.op)
-	}
-	screenshot(t, tt, "kube-context-plan")
 }

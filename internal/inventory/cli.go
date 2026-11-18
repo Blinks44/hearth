@@ -8,8 +8,13 @@ type CliState struct {
 	Tools []Installation `json:",omitempty"`
 	// HelmRepos is how many chart repositories helm has added.
 	HelmRepos int `json:",omitempty"`
-	// KubeContexts are the merged named contexts, without credentials or servers.
+	// KubeContexts are the named contexts of every kubeconfig file, in
+	// the files' order, without credentials or servers.
 	KubeContexts []KubeContext `json:",omitempty"`
+	// KubeFiles are the kubeconfig files kubectl reads, in merge order.
+	KubeFiles []KubeFile `json:",omitempty"`
+	// KubeconfigSet reports that KUBECONFIG names the files.
+	KubeconfigSet bool `json:",omitempty"`
 	// Contexts are the tools' current cluster, profile, project or
 	// subscription, read from their settings; keys are never read.
 	Contexts []CliContext `json:",omitempty"`
@@ -31,4 +36,16 @@ type CliContext struct {
 // File is the source of this context in the merged kubeconfig.
 type KubeContext struct {
 	Name, Cluster, Namespace, File string
+	// Shadowed reports that an earlier file has a context of this name,
+	// which kubectl uses instead.
+	Shadowed bool `json:",omitempty"`
+}
+
+// KubeFile is a kubeconfig file kubectl reads.
+type KubeFile struct {
+	Path string
+	// Missing: there is no file; Invalid: it is not a kubeconfig kubectl
+	// can read.
+	Missing bool `json:",omitempty"`
+	Invalid bool `json:",omitempty"`
 }

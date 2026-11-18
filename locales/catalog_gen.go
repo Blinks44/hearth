@@ -9270,20 +9270,6 @@ func (msgs Messages) CliHowMiseCaption() string {
 	return Catalog.Format(msgs.locale, "cliHowMiseCaption", nil)
 }
 
-// CliGroupKubernetes says "Kubernetes"
-// in the language the app shows.
-//
-// CLI page group and tab.
-func CliGroupKubernetes() string { return In(i18n.Locale()).CliGroupKubernetes() }
-
-// CliGroupKubernetes says "Kubernetes"
-// in the language of msgs.
-//
-// CLI page group and tab.
-func (msgs Messages) CliGroupKubernetes() string {
-	return Catalog.Format(msgs.locale, "cliGroupKubernetes", nil)
-}
-
 // CliGroupClouds says "Clouds"
 // in the language the app shows.
 //
@@ -23038,64 +23024,6 @@ func (msgs Messages) CleanupFreedNone() string {
 	return Catalog.Format(msgs.locale, "cleanupFreedNone", nil)
 }
 
-// KubeContexts says "Kubernetes contexts"
-// in the language the app shows.
-//
-// Kubernetes context selection: kubeContexts.
-func KubeContexts() string { return In(i18n.Locale()).KubeContexts() }
-
-// KubeContexts says "Kubernetes contexts"
-// in the language of msgs.
-//
-// Kubernetes context selection: kubeContexts.
-func (msgs Messages) KubeContexts() string {
-	return Catalog.Format(msgs.locale, "kubeContexts", nil)
-}
-
-// KubeContextCurrent says "Current"
-// in the language the app shows.
-//
-// Kubernetes context selection: kubeContextCurrent.
-func KubeContextCurrent() string { return In(i18n.Locale()).KubeContextCurrent() }
-
-// KubeContextCurrent says "Current"
-// in the language of msgs.
-//
-// Kubernetes context selection: kubeContextCurrent.
-func (msgs Messages) KubeContextCurrent() string {
-	return Catalog.Format(msgs.locale, "kubeContextCurrent", nil)
-}
-
-// KubeContextSwitch says "Switch…"
-// in the language the app shows.
-//
-// Kubernetes context selection: kubeContextSwitch.
-func KubeContextSwitch() string { return In(i18n.Locale()).KubeContextSwitch() }
-
-// KubeContextSwitch says "Switch…"
-// in the language of msgs.
-//
-// Kubernetes context selection: kubeContextSwitch.
-func (msgs Messages) KubeContextSwitch() string {
-	return Catalog.Format(msgs.locale, "kubeContextSwitch", nil)
-}
-
-// KubeContextDetails says "Cluster: {cluster} · namespace: {namespace}"
-// in the language the app shows.
-//
-// Kubernetes context selection: kubeContextDetails.
-func KubeContextDetails(cluster string, namespace string) string {
-	return In(i18n.Locale()).KubeContextDetails(cluster, namespace)
-}
-
-// KubeContextDetails says "Cluster: {cluster} · namespace: {namespace}"
-// in the language of msgs.
-//
-// Kubernetes context selection: kubeContextDetails.
-func (msgs Messages) KubeContextDetails(cluster string, namespace string) string {
-	return Catalog.Format(msgs.locale, "kubeContextDetails", map[string]any{"cluster": cluster, "namespace": namespace})
-}
-
 // KubeContextTitle says "Use Kubernetes context {name}"
 // in the language the app shows.
 //
@@ -23164,6 +23092,620 @@ func KubeContextSelected(name string) string { return In(i18n.Locale()).KubeCont
 // Kubernetes context selection: kubeContextSelected.
 func (msgs Messages) KubeContextSelected(name string) string {
 	return Catalog.Format(msgs.locale, "kubeContextSelected", map[string]any{"name": name})
+}
+
+// KubeSubtitle says "Tools · kubeconfig contexts"
+// in the language the app shows.
+//
+// Kubernetes page subtitle.
+func KubeSubtitle() string { return In(i18n.Locale()).KubeSubtitle() }
+
+// KubeSubtitle says "Tools · kubeconfig contexts"
+// in the language of msgs.
+//
+// Kubernetes page subtitle.
+func (msgs Messages) KubeSubtitle() string {
+	return Catalog.Format(msgs.locale, "kubeSubtitle", nil)
+}
+
+// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm"
+// in the language the app shows.
+//
+// Kubernetes page lead: how many kubeconfig files kubectl reads.
+func KubeLead(count int) string { return In(i18n.Locale()).KubeLead(count) }
+
+// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm"
+// in the language of msgs.
+//
+// Kubernetes page lead: how many kubeconfig files kubectl reads.
+func (msgs Messages) KubeLead(count int) string {
+	return Catalog.Format(msgs.locale, "kubeLead", map[string]any{"count": count})
+}
+
+// KubeContextsCard says "Contexts"
+// in the language the app shows.
+//
+// Kubernetes page: the contexts card and tab.
+func KubeContextsCard() string { return In(i18n.Locale()).KubeContextsCard() }
+
+// KubeContextsCard says "Contexts"
+// in the language of msgs.
+//
+// Kubernetes page: the contexts card and tab.
+func (msgs Messages) KubeContextsCard() string {
+	return Catalog.Format(msgs.locale, "kubeContextsCard", nil)
+}
+
+// KubeFromFiles says "from {count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+//
+// Kubernetes contexts card caption.
+func KubeFromFiles(count int) string { return In(i18n.Locale()).KubeFromFiles(count) }
+
+// KubeFromFiles says "from {count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+//
+// Kubernetes contexts card caption.
+func (msgs Messages) KubeFromFiles(count int) string {
+	return Catalog.Format(msgs.locale, "kubeFromFiles", map[string]any{"count": count})
+}
+
+// KubeKubectlNow says "kubectl now"
+// in the language the app shows.
+//
+// Kubernetes page card: kubectl's current context.
+func KubeKubectlNow() string { return In(i18n.Locale()).KubeKubectlNow() }
+
+// KubeKubectlNow says "kubectl now"
+// in the language of msgs.
+//
+// Kubernetes page card: kubectl's current context.
+func (msgs Messages) KubeKubectlNow() string {
+	return Catalog.Format(msgs.locale, "kubeKubectlNow", nil)
+}
+
+// KubeNamespace says "namespace {namespace}"
+// in the language the app shows.
+//
+// Kubernetes: the namespace a context selects.
+func KubeNamespace(namespace string) string { return In(i18n.Locale()).KubeNamespace(namespace) }
+
+// KubeNamespace says "namespace {namespace}"
+// in the language of msgs.
+//
+// Kubernetes: the namespace a context selects.
+func (msgs Messages) KubeNamespace(namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespace", map[string]any{"namespace": namespace})
+}
+
+// KubeNoCurrent says "No context chosen"
+// in the language the app shows.
+//
+// Kubernetes: kubectl has no current context.
+func KubeNoCurrent() string { return In(i18n.Locale()).KubeNoCurrent() }
+
+// KubeNoCurrent says "No context chosen"
+// in the language of msgs.
+//
+// Kubernetes: kubectl has no current context.
+func (msgs Messages) KubeNoCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeNoCurrent", nil)
+}
+
+// KubeNoTools says "kubectl and Helm not found"
+// in the language the app shows.
+//
+// Kubernetes tools card: none found.
+func KubeNoTools() string { return In(i18n.Locale()).KubeNoTools() }
+
+// KubeNoTools says "kubectl and Helm not found"
+// in the language of msgs.
+//
+// Kubernetes tools card: none found.
+func (msgs Messages) KubeNoTools() string {
+	return Catalog.Format(msgs.locale, "kubeNoTools", nil)
+}
+
+// KubeToolsTab says "Tools"
+// in the language the app shows.
+//
+// Kubernetes page: the tools card and tab.
+func KubeToolsTab() string { return In(i18n.Locale()).KubeToolsTab() }
+
+// KubeToolsTab says "Tools"
+// in the language of msgs.
+//
+// Kubernetes page: the tools card and tab.
+func (msgs Messages) KubeToolsTab() string {
+	return Catalog.Format(msgs.locale, "kubeToolsTab", nil)
+}
+
+// KubeFilesTab says "Files"
+// in the language the app shows.
+//
+// Kubernetes page: the kubeconfig files tab.
+func KubeFilesTab() string { return In(i18n.Locale()).KubeFilesTab() }
+
+// KubeFilesTab says "Files"
+// in the language of msgs.
+//
+// Kubernetes page: the kubeconfig files tab.
+func (msgs Messages) KubeFilesTab() string {
+	return Catalog.Format(msgs.locale, "kubeFilesTab", nil)
+}
+
+// KubeFilter says "Context or cluster"
+// in the language the app shows.
+//
+// Kubernetes page filter placeholder.
+func KubeFilter() string { return In(i18n.Locale()).KubeFilter() }
+
+// KubeFilter says "Context or cluster"
+// in the language of msgs.
+//
+// Kubernetes page filter placeholder.
+func (msgs Messages) KubeFilter() string {
+	return Catalog.Format(msgs.locale, "kubeFilter", nil)
+}
+
+// KubeHow says "How Hearth works with clusters"
+// in the language the app shows.
+//
+// Kubernetes page card title.
+func KubeHow() string { return In(i18n.Locale()).KubeHow() }
+
+// KubeHow says "How Hearth works with clusters"
+// in the language of msgs.
+//
+// Kubernetes page card title.
+func (msgs Messages) KubeHow() string {
+	return Catalog.Format(msgs.locale, "kubeHow", nil)
+}
+
+// KubeHowScan says "The scan does not contact clusters"
+// in the language the app shows.
+//
+// Kubernetes how card row.
+func KubeHowScan() string { return In(i18n.Locale()).KubeHowScan() }
+
+// KubeHowScan says "The scan does not contact clusters"
+// in the language of msgs.
+//
+// Kubernetes how card row.
+func (msgs Messages) KubeHowScan() string {
+	return Catalog.Format(msgs.locale, "kubeHowScan", nil)
+}
+
+// KubeHowScanCaption says "only the kubeconfig files are read"
+// in the language the app shows.
+//
+// Kubernetes how card row caption.
+func KubeHowScanCaption() string { return In(i18n.Locale()).KubeHowScanCaption() }
+
+// KubeHowScanCaption says "only the kubeconfig files are read"
+// in the language of msgs.
+//
+// Kubernetes how card row caption.
+func (msgs Messages) KubeHowScanCaption() string {
+	return Catalog.Format(msgs.locale, "kubeHowScanCaption", nil)
+}
+
+// KubeHowPlan says "kubectl changes only through a plan"
+// in the language the app shows.
+//
+// Kubernetes how card row.
+func KubeHowPlan() string { return In(i18n.Locale()).KubeHowPlan() }
+
+// KubeHowPlan says "kubectl changes only through a plan"
+// in the language of msgs.
+//
+// Kubernetes how card row.
+func (msgs Messages) KubeHowPlan() string {
+	return Catalog.Format(msgs.locale, "kubeHowPlan", nil)
+}
+
+// KubeHowPlanCaption says "context and namespace, with confirmation and a check"
+// in the language the app shows.
+//
+// Kubernetes how card row caption.
+func KubeHowPlanCaption() string { return In(i18n.Locale()).KubeHowPlanCaption() }
+
+// KubeHowPlanCaption says "context and namespace, with confirmation and a check"
+// in the language of msgs.
+//
+// Kubernetes how card row caption.
+func (msgs Messages) KubeHowPlanCaption() string {
+	return Catalog.Format(msgs.locale, "kubeHowPlanCaption", nil)
+}
+
+// KubeHowSecrets says "Credentials are not read"
+// in the language the app shows.
+//
+// Kubernetes how card row.
+func KubeHowSecrets() string { return In(i18n.Locale()).KubeHowSecrets() }
+
+// KubeHowSecrets says "Credentials are not read"
+// in the language of msgs.
+//
+// Kubernetes how card row.
+func (msgs Messages) KubeHowSecrets() string {
+	return Catalog.Format(msgs.locale, "kubeHowSecrets", nil)
+}
+
+// KubeHowSecretsCaption says "only the names of contexts, clusters and namespaces"
+// in the language the app shows.
+//
+// Kubernetes how card row caption.
+func KubeHowSecretsCaption() string { return In(i18n.Locale()).KubeHowSecretsCaption() }
+
+// KubeHowSecretsCaption says "only the names of contexts, clusters and namespaces"
+// in the language of msgs.
+//
+// Kubernetes how card row caption.
+func (msgs Messages) KubeHowSecretsCaption() string {
+	return Catalog.Format(msgs.locale, "kubeHowSecretsCaption", nil)
+}
+
+// KubeNoContexts says "kubeconfig has no contexts"
+// in the language the app shows.
+//
+// Kubernetes contexts table: none.
+func KubeNoContexts() string { return In(i18n.Locale()).KubeNoContexts() }
+
+// KubeNoContexts says "kubeconfig has no contexts"
+// in the language of msgs.
+//
+// Kubernetes contexts table: none.
+func (msgs Messages) KubeNoContexts() string {
+	return Catalog.Format(msgs.locale, "kubeNoContexts", nil)
+}
+
+// KubeCluster says "cluster {cluster}"
+// in the language the app shows.
+//
+// Kubernetes context row: its cluster.
+func KubeCluster(cluster string) string { return In(i18n.Locale()).KubeCluster(cluster) }
+
+// KubeCluster says "cluster {cluster}"
+// in the language of msgs.
+//
+// Kubernetes context row: its cluster.
+func (msgs Messages) KubeCluster(cluster string) string {
+	return Catalog.Format(msgs.locale, "kubeCluster", map[string]any{"cluster": cluster})
+}
+
+// KubeShadowedCaption says "kubectl uses the context of this name from a file above"
+// in the language the app shows.
+//
+// Kubernetes context row: an earlier file has a context of the same name.
+func KubeShadowedCaption() string { return In(i18n.Locale()).KubeShadowedCaption() }
+
+// KubeShadowedCaption says "kubectl uses the context of this name from a file above"
+// in the language of msgs.
+//
+// Kubernetes context row: an earlier file has a context of the same name.
+func (msgs Messages) KubeShadowedCaption() string {
+	return Catalog.Format(msgs.locale, "kubeShadowedCaption", nil)
+}
+
+// KubeInKubectl says "in kubectl"
+// in the language the app shows.
+//
+// Kubernetes context chip: kubectl's current context.
+func KubeInKubectl() string { return In(i18n.Locale()).KubeInKubectl() }
+
+// KubeInKubectl says "in kubectl"
+// in the language of msgs.
+//
+// Kubernetes context chip: kubectl's current context.
+func (msgs Messages) KubeInKubectl() string {
+	return Catalog.Format(msgs.locale, "kubeInKubectl", nil)
+}
+
+// KubeShadowed says "shadowed"
+// in the language the app shows.
+//
+// Kubernetes context chip: shadowed by an earlier file.
+func KubeShadowed() string { return In(i18n.Locale()).KubeShadowed() }
+
+// KubeShadowed says "shadowed"
+// in the language of msgs.
+//
+// Kubernetes context chip: shadowed by an earlier file.
+func (msgs Messages) KubeShadowed() string {
+	return Catalog.Format(msgs.locale, "kubeShadowed", nil)
+}
+
+// KubeUse says "Use in kubectl…"
+// in the language the app shows.
+//
+// Kubernetes context button: make it kubectl's current context.
+func KubeUse() string { return In(i18n.Locale()).KubeUse() }
+
+// KubeUse says "Use in kubectl…"
+// in the language of msgs.
+//
+// Kubernetes context button: make it kubectl's current context.
+func (msgs Messages) KubeUse() string {
+	return Catalog.Format(msgs.locale, "kubeUse", nil)
+}
+
+// KubeNamespaceChange says "Change namespace…"
+// in the language the app shows.
+//
+// Kubernetes context menu item.
+func KubeNamespaceChange() string { return In(i18n.Locale()).KubeNamespaceChange() }
+
+// KubeNamespaceChange says "Change namespace…"
+// in the language of msgs.
+//
+// Kubernetes context menu item.
+func (msgs Messages) KubeNamespaceChange() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceChange", nil)
+}
+
+// KubeFileMissing says "no such file"
+// in the language the app shows.
+//
+// Kubernetes file row: the file is not there.
+func KubeFileMissing() string { return In(i18n.Locale()).KubeFileMissing() }
+
+// KubeFileMissing says "no such file"
+// in the language of msgs.
+//
+// Kubernetes file row: the file is not there.
+func (msgs Messages) KubeFileMissing() string {
+	return Catalog.Format(msgs.locale, "kubeFileMissing", nil)
+}
+
+// KubeFileInvalid says "not a valid kubeconfig: kubectl will report an error"
+// in the language the app shows.
+//
+// Kubernetes file row: not a readable kubeconfig.
+func KubeFileInvalid() string { return In(i18n.Locale()).KubeFileInvalid() }
+
+// KubeFileInvalid says "not a valid kubeconfig: kubectl will report an error"
+// in the language of msgs.
+//
+// Kubernetes file row: not a readable kubeconfig.
+func (msgs Messages) KubeFileInvalid() string {
+	return Catalog.Format(msgs.locale, "kubeFileInvalid", nil)
+}
+
+// KubeFileContexts says "{count, plural, one {# context} other {# contexts}}"
+// in the language the app shows.
+//
+// Kubernetes file row: its contexts.
+func KubeFileContexts(count int) string { return In(i18n.Locale()).KubeFileContexts(count) }
+
+// KubeFileContexts says "{count, plural, one {# context} other {# contexts}}"
+// in the language of msgs.
+//
+// Kubernetes file row: its contexts.
+func (msgs Messages) KubeFileContexts(count int) string {
+	return Catalog.Format(msgs.locale, "kubeFileContexts", map[string]any{"count": count})
+}
+
+// KubeFileCurrent says "sets current-context {name}"
+// in the language the app shows.
+//
+// Kubernetes file row: the file sets current-context.
+func KubeFileCurrent(name string) string { return In(i18n.Locale()).KubeFileCurrent(name) }
+
+// KubeFileCurrent says "sets current-context {name}"
+// in the language of msgs.
+//
+// Kubernetes file row: the file sets current-context.
+func (msgs Messages) KubeFileCurrent(name string) string {
+	return Catalog.Format(msgs.locale, "kubeFileCurrent", map[string]any{"name": name})
+}
+
+// KubeTerminal says "kubectl in the terminal"
+// in the language the app shows.
+//
+// Kubernetes page card title.
+func KubeTerminal() string { return In(i18n.Locale()).KubeTerminal() }
+
+// KubeTerminal says "kubectl in the terminal"
+// in the language of msgs.
+//
+// Kubernetes page card title.
+func (msgs Messages) KubeTerminal() string {
+	return Catalog.Format(msgs.locale, "kubeTerminal", nil)
+}
+
+// KubeCurrentFrom says "current-context from {file}"
+// in the language the app shows.
+//
+// Kubernetes terminal card: where current-context is read.
+func KubeCurrentFrom(file string) string { return In(i18n.Locale()).KubeCurrentFrom(file) }
+
+// KubeCurrentFrom says "current-context from {file}"
+// in the language of msgs.
+//
+// Kubernetes terminal card: where current-context is read.
+func (msgs Messages) KubeCurrentFrom(file string) string {
+	return Catalog.Format(msgs.locale, "kubeCurrentFrom", map[string]any{"file": file})
+}
+
+// KubeconfigSet says "KUBECONFIG: {count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+//
+// Kubernetes terminal card: KUBECONFIG names files.
+func KubeconfigSet(count int) string { return In(i18n.Locale()).KubeconfigSet(count) }
+
+// KubeconfigSet says "KUBECONFIG: {count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+//
+// Kubernetes terminal card: KUBECONFIG names files.
+func (msgs Messages) KubeconfigSet(count int) string {
+	return Catalog.Format(msgs.locale, "kubeconfigSet", map[string]any{"count": count})
+}
+
+// KubeconfigUnset says "KUBECONFIG not set"
+// in the language the app shows.
+//
+// Kubernetes terminal card: KUBECONFIG is not set.
+func KubeconfigUnset() string { return In(i18n.Locale()).KubeconfigUnset() }
+
+// KubeconfigUnset says "KUBECONFIG not set"
+// in the language of msgs.
+//
+// Kubernetes terminal card: KUBECONFIG is not set.
+func (msgs Messages) KubeconfigUnset() string {
+	return Catalog.Format(msgs.locale, "kubeconfigUnset", nil)
+}
+
+// KubeconfigOnly says "only {files} is read"
+// in the language the app shows.
+//
+// Kubernetes terminal card: the default file is read.
+func KubeconfigOnly(files string) string { return In(i18n.Locale()).KubeconfigOnly(files) }
+
+// KubeconfigOnly says "only {files} is read"
+// in the language of msgs.
+//
+// Kubernetes terminal card: the default file is read.
+func (msgs Messages) KubeconfigOnly(files string) string {
+	return Catalog.Format(msgs.locale, "kubeconfigOnly", map[string]any{"files": files})
+}
+
+// KubeNamespaceDialogTitle says "Namespace of {name}"
+// in the language the app shows.
+//
+// Kubernetes namespace dialog title.
+func KubeNamespaceDialogTitle(name string) string {
+	return In(i18n.Locale()).KubeNamespaceDialogTitle(name)
+}
+
+// KubeNamespaceDialogTitle says "Namespace of {name}"
+// in the language of msgs.
+//
+// Kubernetes namespace dialog title.
+func (msgs Messages) KubeNamespaceDialogTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceDialogTitle", map[string]any{"name": name})
+}
+
+// KubeNamespaceDialogLead says "kubectl will use it for commands in this context. It is saved in {file}; Hearth does not contact the cluster."
+// in the language the app shows.
+//
+// Kubernetes namespace dialog lead.
+func KubeNamespaceDialogLead(file string) string {
+	return In(i18n.Locale()).KubeNamespaceDialogLead(file)
+}
+
+// KubeNamespaceDialogLead says "kubectl will use it for commands in this context. It is saved in {file}; Hearth does not contact the cluster."
+// in the language of msgs.
+//
+// Kubernetes namespace dialog lead.
+func (msgs Messages) KubeNamespaceDialogLead(file string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceDialogLead", map[string]any{"file": file})
+}
+
+// KubeNamespaceLabel says "Namespace"
+// in the language the app shows.
+//
+// Kubernetes namespace dialog field label.
+func KubeNamespaceLabel() string { return In(i18n.Locale()).KubeNamespaceLabel() }
+
+// KubeNamespaceLabel says "Namespace"
+// in the language of msgs.
+//
+// Kubernetes namespace dialog field label.
+func (msgs Messages) KubeNamespaceLabel() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceLabel", nil)
+}
+
+// KubeNamespaceInvalid says "Use lowercase letters, digits and hyphens, up to 63 characters, starting and ending with a letter or digit."
+// in the language the app shows.
+//
+// Kubernetes namespace: invalid name.
+func KubeNamespaceInvalid() string { return In(i18n.Locale()).KubeNamespaceInvalid() }
+
+// KubeNamespaceInvalid says "Use lowercase letters, digits and hyphens, up to 63 characters, starting and ending with a letter or digit."
+// in the language of msgs.
+//
+// Kubernetes namespace: invalid name.
+func (msgs Messages) KubeNamespaceInvalid() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceInvalid", nil)
+}
+
+// KubeNamespaceTitle says "Set namespace {namespace} for {name}"
+// in the language the app shows.
+//
+// Kubernetes namespace plan title.
+func KubeNamespaceTitle(namespace string, name string) string {
+	return In(i18n.Locale()).KubeNamespaceTitle(namespace, name)
+}
+
+// KubeNamespaceTitle says "Set namespace {namespace} for {name}"
+// in the language of msgs.
+//
+// Kubernetes namespace plan title.
+func (msgs Messages) KubeNamespaceTitle(namespace string, name string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceTitle", map[string]any{"namespace": namespace, "name": name})
+}
+
+// KubeNamespaceWhy says "kubectl's own config command changes the context's namespace in the kubeconfig file that defines it. Terminals using …"
+// in the language the app shows.
+//
+// Kubernetes namespace plan explanation.
+func KubeNamespaceWhy() string { return In(i18n.Locale()).KubeNamespaceWhy() }
+
+// KubeNamespaceWhy says "kubectl's own config command changes the context's namespace in the kubeconfig file that defines it. Terminals using …"
+// in the language of msgs.
+//
+// Kubernetes namespace plan explanation.
+func (msgs Messages) KubeNamespaceWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceWhy", nil)
+}
+
+// KubeNamespaceChanged says "Namespace of {name}: {change} in {file}"
+// in the language the app shows.
+//
+// Kubernetes namespace plan change line.
+func KubeNamespaceChanged(name string, change string, file string) string {
+	return In(i18n.Locale()).KubeNamespaceChanged(name, change, file)
+}
+
+// KubeNamespaceChanged says "Namespace of {name}: {change} in {file}"
+// in the language of msgs.
+//
+// Kubernetes namespace plan change line.
+func (msgs Messages) KubeNamespaceChanged(name string, change string, file string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceChanged", map[string]any{"name": name, "change": change, "file": file})
+}
+
+// KubeNamespaceMismatch says "The namespace of {name} is not {namespace}."
+// in the language the app shows.
+//
+// Kubernetes namespace plan check failed.
+func KubeNamespaceMismatch(name string, namespace string) string {
+	return In(i18n.Locale()).KubeNamespaceMismatch(name, namespace)
+}
+
+// KubeNamespaceMismatch says "The namespace of {name} is not {namespace}."
+// in the language of msgs.
+//
+// Kubernetes namespace plan check failed.
+func (msgs Messages) KubeNamespaceMismatch(name string, namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceMismatch", map[string]any{"name": name, "namespace": namespace})
+}
+
+// KubeNamespaceSet says "{name}: namespace {namespace}"
+// in the language the app shows.
+//
+// Kubernetes namespace plan check passed.
+func KubeNamespaceSet(name string, namespace string) string {
+	return In(i18n.Locale()).KubeNamespaceSet(name, namespace)
+}
+
+// KubeNamespaceSet says "{name}: namespace {namespace}"
+// in the language of msgs.
+//
+// Kubernetes namespace plan check passed.
+func (msgs Messages) KubeNamespaceSet(name string, namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceSet", map[string]any{"name": name, "namespace": namespace})
 }
 
 // StartTitle says "Getting started"

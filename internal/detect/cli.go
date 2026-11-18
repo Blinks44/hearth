@@ -65,7 +65,8 @@ func Cli(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 	home := sources.ManagerDirs(term).Home
 	if home != "" {
 		cli.HelmRepos = helmRepos(term, home)
-		cli.KubeContexts, _ = kubeContexts(term, home)
+		kc := readKubeConfig(term, home)
+		cli.KubeContexts, cli.KubeFiles, cli.KubeconfigSet = kc.contexts, kc.files, strings.Trim(term.Get("KUBECONFIG"), string(os.PathListSeparator)) != ""
 		for _, c := range []func(sysenv.Env, string) *inventory.CliContext{kubeContext, awsProfile, gcloudProject, azSubscription} {
 			if cc := c(term, home); cc != nil {
 				cli.Contexts = append(cli.Contexts, *cc)
@@ -90,20 +91,35 @@ func helmRepos(env sysenv.Env, home string) int {
 }
 
 // KubeConfigFiles returns kubectl's configured files in merge order. Empty
-// entries are ignored and an empty KUBECONFIG uses the default config.
+// and repeated entries are ignored, as kubectl does, and an empty
+// KUBECONFIG uses the default config.
 func KubeConfigFiles(env sysenv.Env, home string) []string {
-	files := slices.DeleteFunc(filepath.SplitList(env.Get("KUBECONFIG")), func(p string) bool { return p == "" })
+	var files []string
+	for _, p := range filepath.SplitList(env.Get("KUBECONFIG")) {
+		if p != "" && !slices.Contains(files, p) {
+			files = append(files, p)
+		}
+	}
 	if len(files) == 0 {
 		return []string{filepath.Join(home, ".kube", "config")}
 	}
 	return files
 }
 
-// kubeContexts follows kubectl's first-definition-wins merge rule. Typed
-// decoding retains only context metadata, never user credentials or exec hooks.
-func kubeContexts(env sysenv.Env, home string) ([]inventory.KubeContext, *inventory.CliContext) {
-	var contexts []inventory.KubeContext
-	var current *inventory.CliContext
+// kubeConfig is what Hearth reads of kubeconfig files: the files in merge
+// order, their contexts by file and name, and the current context.
+type kubeConfig struct {
+	files    []inventory.KubeFile
+	contexts []inventory.KubeContext
+	current  *inventory.CliContext
+}
+
+// readKubeConfig follows kubectl's first-definition-wins merge rule: a
+// context of a name an earlier file has is kept, marked Shadowed. Typed
+// decoding retains only context metadata, never user credentials or exec
+// hooks.
+func readKubeConfig(env sysenv.Env, home string) kubeConfig {
+	var kc kubeConfig
 	seen := map[string]bool{}
 	for _, file := range KubeConfigFiles(env, home) {
 		var config struct {
@@ -116,28 +132,37 @@ func kubeContexts(env sysenv.Env, home string) ([]inventory.KubeContext, *invent
 				} `yaml:"context"`
 			} `yaml:"contexts"`
 		}
+		kf := inventory.KubeFile{Path: file}
 		data, err := os.ReadFile(file)
-		if err != nil || yaml.Unmarshal(data, &config) != nil {
+		switch {
+		case err != nil:
+			kf.Missing = true
+		case yaml.Unmarshal(data, &config) != nil:
+			kf.Invalid = true
+		}
+		kc.files = append(kc.files, kf)
+		if kf.Missing || kf.Invalid {
 			continue
 		}
-		if current == nil && config.Current != "" {
-			current = &inventory.CliContext{Tool: "kubectl", Name: config.Current, File: file}
+		if kc.current == nil && config.Current != "" {
+			kc.current = &inventory.CliContext{Tool: "kubectl", Name: config.Current, File: file}
 		}
+		var contexts []inventory.KubeContext
 		for _, cc := range config.Contexts {
-			if cc.Name == "" || seen[cc.Name] {
+			if cc.Name == "" {
 				continue
 			}
+			contexts = append(contexts, inventory.KubeContext{Name: cc.Name, Cluster: cc.Context.Cluster, Namespace: cc.Context.Namespace, File: file, Shadowed: seen[cc.Name]})
 			seen[cc.Name] = true
-			contexts = append(contexts, inventory.KubeContext{Name: cc.Name, Cluster: cc.Context.Cluster, Namespace: cc.Context.Namespace, File: file})
 		}
+		slices.SortFunc(contexts, func(a, b inventory.KubeContext) int { return strings.Compare(a.Name, b.Name) })
+		kc.contexts = append(kc.contexts, contexts...)
 	}
-	slices.SortFunc(contexts, func(a, b inventory.KubeContext) int { return strings.Compare(a.Name, b.Name) })
-	return contexts, current
+	return kc
 }
 
 func kubeContext(env sysenv.Env, home string) *inventory.CliContext {
-	_, current := kubeContexts(env, home)
-	return current
+	return readKubeConfig(env, home).current
 }
 
 // awsProfile is the AWS CLI's profile, AWS_PROFILE or default, and its
