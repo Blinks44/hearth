@@ -41,6 +41,9 @@ func (a *App) installTool(id string) {
 	if kind, ok := catalog.DatabaseKinds[id]; ok {
 		verify = ops.DatabaseFound(title, kind, a.detect("databases"))
 	}
+	if slices.Contains(kubeCommands, id) {
+		verify = ops.CommandFound(title, id, a.detect("cli"))
+	}
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		p, parts, err := ops.SetupPlan(s, env)
 		if err != nil {

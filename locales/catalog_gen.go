@@ -23108,13 +23108,13 @@ func (msgs Messages) KubeSubtitle() string {
 	return Catalog.Format(msgs.locale, "kubeSubtitle", nil)
 }
 
-// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm"
+// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl, Helm and kind"
 // in the language the app shows.
 //
 // Kubernetes page lead: how many kubeconfig files kubectl reads.
 func KubeLead(count int) string { return In(i18n.Locale()).KubeLead(count) }
 
-// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm"
+// KubeLead says "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl, Helm and kind"
 // in the language of msgs.
 //
 // Kubernetes page lead: how many kubeconfig files kubectl reads.
@@ -23192,13 +23192,13 @@ func (msgs Messages) KubeNoCurrent() string {
 	return Catalog.Format(msgs.locale, "kubeNoCurrent", nil)
 }
 
-// KubeNoTools says "kubectl and Helm not found"
+// KubeNoTools says "kubectl, Helm and kind not found"
 // in the language the app shows.
 //
 // Kubernetes tools card: none found.
 func KubeNoTools() string { return In(i18n.Locale()).KubeNoTools() }
 
-// KubeNoTools says "kubectl and Helm not found"
+// KubeNoTools says "kubectl, Helm and kind not found"
 // in the language of msgs.
 //
 // Kubernetes tools card: none found.
@@ -23276,13 +23276,13 @@ func (msgs Messages) KubeHowScan() string {
 	return Catalog.Format(msgs.locale, "kubeHowScan", nil)
 }
 
-// KubeHowScanCaption says "only the kubeconfig files are read"
+// KubeHowScanCaption says "access is checked only by the button"
 // in the language the app shows.
 //
 // Kubernetes how card row caption.
 func KubeHowScanCaption() string { return In(i18n.Locale()).KubeHowScanCaption() }
 
-// KubeHowScanCaption says "only the kubeconfig files are read"
+// KubeHowScanCaption says "access is checked only by the button"
 // in the language of msgs.
 //
 // Kubernetes how card row caption.
@@ -23706,6 +23706,222 @@ func KubeNamespaceSet(name string, namespace string) string {
 // Kubernetes namespace plan check passed.
 func (msgs Messages) KubeNamespaceSet(name string, namespace string) string {
 	return Catalog.Format(msgs.locale, "kubeNamespaceSet", map[string]any{"name": name, "namespace": namespace})
+}
+
+// CatalogKubectl says "Works with Kubernetes clusters from the command line."
+// in the language the app shows.
+//
+// Catalog: what kubectl is for.
+func CatalogKubectl() string { return In(i18n.Locale()).CatalogKubectl() }
+
+// CatalogKubectl says "Works with Kubernetes clusters from the command line."
+// in the language of msgs.
+//
+// Catalog: what kubectl is for.
+func (msgs Messages) CatalogKubectl() string {
+	return Catalog.Format(msgs.locale, "catalogKubectl", nil)
+}
+
+// CatalogHelm says "Installs and updates applications in Kubernetes from charts."
+// in the language the app shows.
+//
+// Catalog: what Helm is for.
+func CatalogHelm() string { return In(i18n.Locale()).CatalogHelm() }
+
+// CatalogHelm says "Installs and updates applications in Kubernetes from charts."
+// in the language of msgs.
+//
+// Catalog: what Helm is for.
+func (msgs Messages) CatalogHelm() string {
+	return Catalog.Format(msgs.locale, "catalogHelm", nil)
+}
+
+// CatalogKind says "Runs a local Kubernetes cluster in Docker containers."
+// in the language the app shows.
+//
+// Catalog: what kind is for.
+func CatalogKind() string { return In(i18n.Locale()).CatalogKind() }
+
+// CatalogKind says "Runs a local Kubernetes cluster in Docker containers."
+// in the language of msgs.
+//
+// Catalog: what kind is for.
+func (msgs Messages) CatalogKind() string {
+	return Catalog.Format(msgs.locale, "catalogKind", nil)
+}
+
+// KubeAuthVia says "sign-in through {program}"
+// in the language the app shows.
+//
+// Kubernetes context row: the program kubectl runs to sign in.
+func KubeAuthVia(program string) string { return In(i18n.Locale()).KubeAuthVia(program) }
+
+// KubeAuthVia says "sign-in through {program}"
+// in the language of msgs.
+//
+// Kubernetes context row: the program kubectl runs to sign in.
+func (msgs Messages) KubeAuthVia(program string) string {
+	return Catalog.Format(msgs.locale, "kubeAuthVia", map[string]any{"program": program})
+}
+
+// KubeCheck says "Check"
+// in the language the app shows.
+//
+// Kubernetes context button: check access.
+func KubeCheck() string { return In(i18n.Locale()).KubeCheck() }
+
+// KubeCheck says "Check"
+// in the language of msgs.
+//
+// Kubernetes context button: check access.
+func (msgs Messages) KubeCheck() string {
+	return Catalog.Format(msgs.locale, "kubeCheck", nil)
+}
+
+// KubeChecking says "checking…"
+// in the language the app shows.
+//
+// Kubernetes access chip: the check runs.
+func KubeChecking() string { return In(i18n.Locale()).KubeChecking() }
+
+// KubeChecking says "checking…"
+// in the language of msgs.
+//
+// Kubernetes access chip: the check runs.
+func (msgs Messages) KubeChecking() string {
+	return Catalog.Format(msgs.locale, "kubeChecking", nil)
+}
+
+// KubeAccessOk says "access"
+// in the language the app shows.
+//
+// Kubernetes access chip: the API answered and pods can be listed.
+func KubeAccessOk() string { return In(i18n.Locale()).KubeAccessOk() }
+
+// KubeAccessOk says "access"
+// in the language of msgs.
+//
+// Kubernetes access chip: the API answered and pods can be listed.
+func (msgs Messages) KubeAccessOk() string {
+	return Catalog.Format(msgs.locale, "kubeAccessOk", nil)
+}
+
+// KubeAccessOkTip says "API {version} answered; checked in {took}"
+// in the language the app shows.
+//
+// Kubernetes access chip tooltip.
+func KubeAccessOkTip(version string, took string) string {
+	return In(i18n.Locale()).KubeAccessOkTip(version, took)
+}
+
+// KubeAccessOkTip says "API {version} answered; checked in {took}"
+// in the language of msgs.
+//
+// Kubernetes access chip tooltip.
+func (msgs Messages) KubeAccessOkTip(version string, took string) string {
+	return Catalog.Format(msgs.locale, "kubeAccessOkTip", map[string]any{"version": version, "took": took})
+}
+
+// KubeAccessUnreachable says "not answering"
+// in the language the app shows.
+//
+// Kubernetes access chip: the API does not answer.
+func KubeAccessUnreachable() string { return In(i18n.Locale()).KubeAccessUnreachable() }
+
+// KubeAccessUnreachable says "not answering"
+// in the language of msgs.
+//
+// Kubernetes access chip: the API does not answer.
+func (msgs Messages) KubeAccessUnreachable() string {
+	return Catalog.Format(msgs.locale, "kubeAccessUnreachable", nil)
+}
+
+// KubeAccessNoProgram says "no {program}"
+// in the language the app shows.
+//
+// Kubernetes access chip: the sign-in program is missing.
+func KubeAccessNoProgram(program string) string {
+	return In(i18n.Locale()).KubeAccessNoProgram(program)
+}
+
+// KubeAccessNoProgram says "no {program}"
+// in the language of msgs.
+//
+// Kubernetes access chip: the sign-in program is missing.
+func (msgs Messages) KubeAccessNoProgram(program string) string {
+	return Catalog.Format(msgs.locale, "kubeAccessNoProgram", map[string]any{"program": program})
+}
+
+// KubeAccessNoProgramDetail says "kubectl runs {program} to sign in, and the terminal's PATH has none"
+// in the language the app shows.
+//
+// Kubernetes access: the sign-in program is not on the terminal's PATH.
+func KubeAccessNoProgramDetail(program string) string {
+	return In(i18n.Locale()).KubeAccessNoProgramDetail(program)
+}
+
+// KubeAccessNoProgramDetail says "kubectl runs {program} to sign in, and the terminal's PATH has none"
+// in the language of msgs.
+//
+// Kubernetes access: the sign-in program is not on the terminal's PATH.
+func (msgs Messages) KubeAccessNoProgramDetail(program string) string {
+	return Catalog.Format(msgs.locale, "kubeAccessNoProgramDetail", map[string]any{"program": program})
+}
+
+// KubeAccessLogin says "sign-in needed"
+// in the language the app shows.
+//
+// Kubernetes access chip: credentials missing or expired.
+func KubeAccessLogin() string { return In(i18n.Locale()).KubeAccessLogin() }
+
+// KubeAccessLogin says "sign-in needed"
+// in the language of msgs.
+//
+// Kubernetes access chip: credentials missing or expired.
+func (msgs Messages) KubeAccessLogin() string {
+	return Catalog.Format(msgs.locale, "kubeAccessLogin", nil)
+}
+
+// KubeAccessAuthFailed says "no token"
+// in the language the app shows.
+//
+// Kubernetes access chip: the sign-in program gave no token.
+func KubeAccessAuthFailed() string { return In(i18n.Locale()).KubeAccessAuthFailed() }
+
+// KubeAccessAuthFailed says "no token"
+// in the language of msgs.
+//
+// Kubernetes access chip: the sign-in program gave no token.
+func (msgs Messages) KubeAccessAuthFailed() string {
+	return Catalog.Format(msgs.locale, "kubeAccessAuthFailed", nil)
+}
+
+// KubeAccessForbidden says "no access to pods"
+// in the language the app shows.
+//
+// Kubernetes access chip: no right to list pods.
+func KubeAccessForbidden() string { return In(i18n.Locale()).KubeAccessForbidden() }
+
+// KubeAccessForbidden says "no access to pods"
+// in the language of msgs.
+//
+// Kubernetes access chip: no right to list pods.
+func (msgs Messages) KubeAccessForbidden() string {
+	return Catalog.Format(msgs.locale, "kubeAccessForbidden", nil)
+}
+
+// KubeAccessUnknown says "check failed"
+// in the language the app shows.
+//
+// Kubernetes access chip: the reason is not known.
+func KubeAccessUnknown() string { return In(i18n.Locale()).KubeAccessUnknown() }
+
+// KubeAccessUnknown says "check failed"
+// in the language of msgs.
+//
+// Kubernetes access chip: the reason is not known.
+func (msgs Messages) KubeAccessUnknown() string {
+	return Catalog.Format(msgs.locale, "kubeAccessUnknown", nil)
 }
 
 // StartTitle says "Getting started"

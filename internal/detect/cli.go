@@ -23,6 +23,7 @@ import (
 var cliVersionArgs = map[string][]string{
 	"kubectl":   {"version", "--client"},
 	"helm":      {"version", "--short"},
+	"kind":      {"version"},
 	"terraform": {"version"},
 	"tofu":      {"version"},
 	"aws":       {"--version"},
@@ -30,7 +31,7 @@ var cliVersionArgs = map[string][]string{
 }
 
 // cliCommands are the command-line tools the CLI page lists, in its order.
-var cliCommands = []string{"kubectl", "helm", "aws", "gcloud", "az", "terraform", "tofu"}
+var cliCommands = []string{"kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu"}
 
 // Cli finds the command-line tools of Kubernetes, the clouds and
 // infrastructure, and the context each points to now, from their settings
@@ -114,13 +115,24 @@ type kubeConfig struct {
 	current  *inventory.CliContext
 }
 
+// kubeContextUser is a context and the user it names, while the files are
+// read.
+type kubeContextUser struct {
+	inventory.KubeContext
+	user string
+}
+
 // readKubeConfig follows kubectl's first-definition-wins merge rule: a
-// context of a name an earlier file has is kept, marked Shadowed. Typed
-// decoding retains only context metadata, never user credentials or exec
-// hooks.
+// context of a name an earlier file has is kept, marked Shadowed, and a
+// user's definition comes from the first file that has it. Typed decoding
+// retains only context metadata and the command of a user's exec hook,
+// never credentials, its arguments or its environment.
 func readKubeConfig(env sysenv.Env, home string) kubeConfig {
 	var kc kubeConfig
 	seen := map[string]bool{}
+	// users are the auth programs by user, the first definition's.
+	users := map[string]string{}
+	var contextUsers []string // by kc.contexts' index
 	for _, file := range KubeConfigFiles(env, home) {
 		var config struct {
 			Current  string `yaml:"current-context"`
@@ -129,8 +141,20 @@ func readKubeConfig(env sysenv.Env, home string) kubeConfig {
 				Context struct {
 					Cluster   string `yaml:"cluster"`
 					Namespace string `yaml:"namespace"`
+					User      string `yaml:"user"`
 				} `yaml:"context"`
 			} `yaml:"contexts"`
+			Users []struct {
+				Name string `yaml:"name"`
+				User struct {
+					Exec struct {
+						Command string `yaml:"command"`
+					} `yaml:"exec"`
+					AuthProvider struct {
+						Name string `yaml:"name"`
+					} `yaml:"auth-provider"`
+				} `yaml:"user"`
+			} `yaml:"users"`
 		}
 		kf := inventory.KubeFile{Path: file}
 		data, err := os.ReadFile(file)
@@ -147,16 +171,27 @@ func readKubeConfig(env sysenv.Env, home string) kubeConfig {
 		if kc.current == nil && config.Current != "" {
 			kc.current = &inventory.CliContext{Tool: "kubectl", Name: config.Current, File: file}
 		}
-		var contexts []inventory.KubeContext
+		for _, u := range config.Users {
+			if _, ok := users[u.Name]; !ok && u.Name != "" {
+				users[u.Name] = or(u.User.Exec.Command, u.User.AuthProvider.Name)
+			}
+		}
+		var contexts []kubeContextUser
 		for _, cc := range config.Contexts {
 			if cc.Name == "" {
 				continue
 			}
-			contexts = append(contexts, inventory.KubeContext{Name: cc.Name, Cluster: cc.Context.Cluster, Namespace: cc.Context.Namespace, File: file, Shadowed: seen[cc.Name]})
+			contexts = append(contexts, kubeContextUser{inventory.KubeContext{Name: cc.Name, Cluster: cc.Context.Cluster, Namespace: cc.Context.Namespace, File: file, Shadowed: seen[cc.Name]}, cc.Context.User})
 			seen[cc.Name] = true
 		}
-		slices.SortFunc(contexts, func(a, b inventory.KubeContext) int { return strings.Compare(a.Name, b.Name) })
-		kc.contexts = append(kc.contexts, contexts...)
+		slices.SortFunc(contexts, func(a, b kubeContextUser) int { return strings.Compare(a.Name, b.Name) })
+		for _, cu := range contexts {
+			kc.contexts = append(kc.contexts, cu.KubeContext)
+			contextUsers = append(contextUsers, cu.user)
+		}
+	}
+	for i, user := range contextUsers {
+		kc.contexts[i].Auth = users[user]
 	}
 	return kc
 }

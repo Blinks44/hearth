@@ -4,7 +4,7 @@ package inventory
 // Kubernetes', the clouds' and infrastructure's, and where they point now.
 type CliState struct {
 	// Tools are the copies found, each Tool the command it is run by:
-	// kubectl, helm, terraform, tofu, aws, gcloud, az.
+	// kubectl, helm, kind, terraform, tofu, aws, gcloud, az.
 	Tools []Installation `json:",omitempty"`
 	// HelmRepos is how many chart repositories helm has added.
 	HelmRepos int `json:",omitempty"`
@@ -39,6 +39,10 @@ type KubeContext struct {
 	// Shadowed reports that an earlier file has a context of this name,
 	// which kubectl uses instead.
 	Shadowed bool `json:",omitempty"`
+	// Auth is the program kubectl runs to sign in to the cluster, the
+	// command of the user's exec hook or its auth provider's name; ""
+	// for a user without one.
+	Auth string `json:",omitempty"`
 }
 
 // KubeFile is a kubeconfig file kubectl reads.

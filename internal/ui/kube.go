@@ -4,9 +4,11 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/run"
@@ -19,7 +21,7 @@ const kubePage = "/tools/kubernetes"
 
 // kubeCommands are the Kubernetes tools the page lists, which CLI & clouds
 // leaves to it.
-var kubeCommands = []string{"kubectl", "helm"}
+var kubeCommands = []string{"kubectl", "helm", "kind"}
 
 // kubeNamespaceDialog asks for the namespace of a context.
 type kubeNamespaceDialog struct {
@@ -178,40 +180,57 @@ func (a *App) kubeContextTable(c *ui.Context, cli inventory.CliState, current *i
 	})
 }
 
-// kubeContextRow is a context: its cluster and namespace, whether kubectl
-// uses it, and the plans to use it or change its namespace.
+// kubeContextRow is a context: its cluster, namespace and sign-in program,
+// whether kubectl uses it, what its last check found, and the check and
+// the plans to use it or change its namespace.
 func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.KubeContext, current *inventory.KubeContext) {
 	pal := Colors(c.Theme())
 	isCurrent := current != nil && !k.Shadowed && k.Name == current.Name
 	parts := []string{locales.KubeCluster(k.Cluster), locales.KubeNamespace(namespaceOf(k))}
+	if k.Auth != "" {
+		// Shown before a check runs it.
+		parts = append(parts, locales.KubeAuthVia(tilde(k.Auth, a.Home)))
+	}
 	if k.Shadowed {
 		parts = []string{locales.KubeShadowedCaption()}
 	}
 	in, found := cliCopy(cli, "kubectl")
 	plans := found && a.BuildPlan != nil && !k.Shadowed
-	ui.Row(c).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	// A shadowed context is never checked: its name is the other one's.
+	check, checked := a.kubeChecks[k.Name]
+	checked = checked && !k.Shadowed
+	ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, k.Name).FontSize(13)
 			clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
+			if detail := kubeAccessDetail(k, check); checked && detail != "" {
+				clipped(c, detail).Font(FontMono).FontSize(10.5).TextColor(c.Theme().TextMuted)
+			}
 		})
-		switch {
-		case isCurrent:
+		if isCurrent {
 			aiTag(c, locales.KubeInKubectl(), pal.SuccessSoft, pal.SuccessText)
-		case k.Shadowed:
+		}
+		if k.Shadowed {
 			aiTag(c, locales.KubeShadowed(), pal.Muted, c.Theme().TextMuted)
-		default:
+			return
+		}
+		if checked {
+			a.kubeAccessTag(c, k, check)
+		}
+		if found && a.CheckKube != nil {
+			ui.Button(c.Key("check"), locales.KubeCheck()).Disabled(check.running).OnClick(func() { a.checkKube(in.Path, k) })
+		}
+		if plans {
 			from := ""
 			if current != nil {
 				from = current.Name
 			}
-			ui.Button(c.Key("use"), locales.KubeUse()).Disabled(!plans).OnClick(func() {
-				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-					return ops.KubeContextPlan(in.Path, from, k.Name, env, run.Exec{})
-				}, a.proposeOrSay)
-			})
-		}
-		if plans {
 			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+				if !isCurrent && menu.Item(locales.KubeUse()).Chosen() {
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.KubeContextPlan(in.Path, from, k.Name, env, run.Exec{})
+					}, a.proposeOrSay)
+				}
 				if menu.Item(locales.KubeNamespaceChange()).Chosen() {
 					a.kubeNS = kubeNamespaceDialog{open: true, context: k.Name, from: k.Namespace, file: k.File, value: k.Namespace}
 				}
@@ -220,7 +239,63 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 	})
 }
 
-// kubeTools are kubectl's and Helm's rows, as CLI & clouds had them.
+// kubeCheck is the last check of a context's cluster this session.
+type kubeCheck struct {
+	running bool
+	res     detect.KubeAccess
+}
+
+// checkKube asks the context's cluster through kubectl, in the
+// background; a check started again replaces the last one's result.
+func (a *App) checkKube(kubectl string, k inventory.KubeContext) {
+	if a.kubeChecks == nil {
+		a.kubeChecks = map[string]kubeCheck{}
+	}
+	a.kubeChecks[k.Name] = kubeCheck{running: true}
+	a.CheckKube(kubectl, k, func(res detect.KubeAccess) {
+		a.kubeChecks[k.Name] = kubeCheck{res: res}
+	})
+}
+
+// kubeAccessDetail is the line that says why a check failed: kubectl's or
+// the sign-in program's own, or that the program is not on the PATH.
+func kubeAccessDetail(k inventory.KubeContext, ch kubeCheck) string {
+	switch {
+	case ch.running || ch.res.State == detect.KubeReachable:
+		return ""
+	case ch.res.State == detect.KubeNoAuthProgram && ch.res.Detail == k.Auth:
+		return locales.KubeAccessNoProgramDetail(k.Auth)
+	}
+	return ch.res.Detail
+}
+
+// kubeAccessTag says what a check found, as the design's chips do.
+func (a *App) kubeAccessTag(c *ui.Context, k inventory.KubeContext, ch kubeCheck) {
+	pal := Colors(c.Theme())
+	if ch.running {
+		aiTag(c, locales.KubeChecking(), pal.InfoSoft, pal.InfoText)
+		return
+	}
+	switch ch.res.State {
+	case detect.KubeReachable:
+		aiTag(c, locales.KubeAccessOk(), pal.SuccessSoft, pal.SuccessText).Tooltip(locales.KubeAccessOkTip(ch.res.Version, ch.res.Took.Round(time.Millisecond).String()))
+	case detect.KubeUnreachable:
+		aiTag(c, locales.KubeAccessUnreachable(), pal.DangerSoft, pal.DangerText)
+	case detect.KubeNoAuthProgram:
+		aiTag(c, locales.KubeAccessNoProgram(k.Auth), pal.WarningSoft, pal.WarningText)
+	case detect.KubeNeedsLogin:
+		aiTag(c, locales.KubeAccessLogin(), pal.WarningSoft, pal.WarningText)
+	case detect.KubeAuthFailed:
+		aiTag(c, locales.KubeAccessAuthFailed(), pal.WarningSoft, pal.WarningText)
+	case detect.KubeForbidden:
+		aiTag(c, locales.KubeAccessForbidden(), pal.DangerSoft, pal.DangerText)
+	default:
+		aiTag(c, locales.KubeAccessUnknown(), pal.Muted, c.Theme().TextMuted)
+	}
+}
+
+// kubeTools are kubectl's, Helm's and kind's rows, as CLI & clouds had
+// them; one not found installs from the catalog.
 func (a *App) kubeTools(c *ui.Context, cli inventory.CliState) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {

@@ -1,15 +1,18 @@
 package ui
 
 import (
+	"context"
 	"slices"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // kubeApp has two kubeconfig files from KUBECONFIG, the second with a
@@ -27,7 +30,7 @@ func kubeApp() *App {
 		Contexts: []inventory.CliContext{{Tool: "kubectl", Name: "staging", File: config}},
 		KubeContexts: []inventory.KubeContext{
 			{Name: "kind-dev", Cluster: "kind-dev", File: config},
-			{Name: "staging", Cluster: "eks-staging", Namespace: "shop", File: config},
+			{Name: "staging", Cluster: "eks-staging", Namespace: "shop", File: config, Auth: "aws"},
 			{Name: "production", Cluster: "gke-prod", Namespace: "prod", File: prod},
 			{Name: "staging", Cluster: "other", File: prod, Shadowed: true},
 		},
@@ -45,7 +48,7 @@ func TestKubePage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "kube")
-	hasTexts(t, tt, "Kubernetes", "Tools · kubeconfig contexts", "Contexts from 3 kubeconfig files, kubectl and Helm",
+	hasTexts(t, tt, "Kubernetes", "Tools · kubeconfig contexts", "Contexts from 3 kubeconfig files, kubectl, Helm and kind",
 		"~/.KUBE/CONFIG", "~/.KUBE/WORK/PROD.YAML", "kind-dev", "cluster kind-dev · namespace default",
 		"cluster eks-staging · namespace shop", "in kubectl", "shadowed", "kubectl uses the context of this name from a file above",
 		"kubectl in the terminal", "staging · shop", "current-context from ~/.kube/config", "KUBECONFIG: 3 files",
@@ -92,7 +95,14 @@ func TestKubePlans(t *testing.T) {
 	a.router.Push(kubePage)
 	tt := ui.NewTester(a.View, 1280, 1000)
 	tt.Advance(time.Second)
-	if err := tt.Click("Use in kubectl…"); err != nil {
+	// kind-dev's menu: kubectl is on staging.
+	if err := tt.Click(locales.MoreActions()); err != nil {
+		t.Fatal(err)
+	}
+	if menu := tt.Menu(); !slices.Equal(menu, []string{"Use in kubectl…", "Change namespace…"}) {
+		t.Fatalf("menu %q", menu)
+	}
+	if err := tt.ChooseMenuItem("Use in kubectl…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -149,5 +159,115 @@ func TestKubeSearch(t *testing.T) {
 	production.open()
 	if a.router.Path() != kubePage || a.kubeFilter != "production" || a.kubeTab != 0 {
 		t.Errorf("context opens %s, filter %q", a.router.Path(), a.kubeFilter)
+	}
+}
+
+// A check runs only on its button, says it runs, and then says what it
+// found: the chip, and why in kubectl's or the program's words.
+func TestKubeAccessCheck(t *testing.T) {
+	a := kubeApp()
+	var asked []inventory.KubeContext
+	var answer []func(detect.KubeAccess)
+	a.CheckKube = func(kubectl string, k inventory.KubeContext, done func(detect.KubeAccess)) {
+		if kubectl != "/opt/homebrew/bin/kubectl" {
+			t.Errorf("kubectl %q", kubectl)
+		}
+		asked = append(asked, k)
+		answer = append(answer, done)
+	}
+	a.router.Push(kubePage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	// The sign-in program shows before any check runs it.
+	hasTexts(t, tt, "cluster eks-staging · namespace shop · sign-in through aws")
+	if len(asked) != 0 || tt.HasText("checking…") {
+		t.Fatal("checked without the button")
+	}
+	if err := tt.Click("Check"); err != nil { // kind-dev's
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "checking…")
+	answer[0](detect.KubeAccess{State: detect.KubeReachable, Version: "v1.31.2", Took: 140 * time.Millisecond})
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "access")
+
+	for _, tc := range []struct {
+		res   detect.KubeAccess
+		texts []string
+	}{
+		{detect.KubeAccess{State: detect.KubeNoAuthProgram, Detail: "aws"}, []string{"no aws", "kubectl runs aws to sign in, and the terminal's PATH has none"}},
+		{detect.KubeAccess{State: detect.KubeNeedsLogin, Detail: "error: You must be logged in to the server (Unauthorized)"}, []string{"sign-in needed", "error: You must be logged in to the server (Unauthorized)"}},
+		{detect.KubeAccess{State: detect.KubeAuthFailed, Detail: "getting credentials: exec: executable aws failed with exit code 1"}, []string{"no token"}},
+		{detect.KubeAccess{State: detect.KubeForbidden, Detail: "kubectl auth can-i list pods -n shop: no"}, []string{"no access to pods", "kubectl auth can-i list pods -n shop: no"}},
+		{detect.KubeAccess{State: detect.KubeUnreachable, Detail: "dial tcp: connection refused"}, []string{"not answering"}},
+		{detect.KubeAccess{Detail: "x509: certificate signed by unknown authority"}, []string{"check failed", "x509: certificate signed by unknown authority"}},
+	} {
+		a.checkKube("/opt/homebrew/bin/kubectl", inventory.KubeContext{Name: "staging", Auth: "aws"})
+		answer[len(answer)-1](tc.res)
+		tt.Frame()
+		tt.Advance(time.Second)
+		hasTexts(t, tt, tc.texts...)
+	}
+	screenshot(t, tt, "kube-access")
+	// The shadowed staging shows nothing of the other's check.
+	n := 0
+	for _, s := range tt.Texts() {
+		if s == "x509: certificate signed by unknown authority" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Errorf("the check's detail shows %d times", n)
+	}
+	// A shadowed context is not checked: kubectl never uses it.
+	if n := len(tt.Texts()); n == 0 {
+		t.Fatal("no texts")
+	}
+	checks := 0
+	for _, s := range tt.Texts() {
+		if s == "Check" {
+			checks++
+		}
+	}
+	if checks != 3 {
+		t.Errorf("%d Check buttons, want 3", checks)
+	}
+}
+
+// A tool not found installs from the catalog through mise, checked by the
+// CLI detector.
+func TestKubeInstall(t *testing.T) {
+	a := kubeApp()
+	env := sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh", "PATH="}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	a.DetectTool = func(_ context.Context, tool string) (inventory.ToolState, error) {
+		if tool != "cli" {
+			t.Errorf("detects %q", tool)
+		}
+		return inventory.ToolState{Tool: "cli", Cli: &inventory.CliState{Tools: []inventory.Installation{{Tool: "kind", Version: "0.29.0", OnPath: 1}}}}, nil
+	}
+	a.router.Push(kubePage)
+	a.kubeTab = 1
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "kind", "not found · kind", locales.AgentInstall())
+	screenshot(t, tt, "kube-tools")
+	if err := tt.Click(locales.AgentInstall()); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Install kind" || a.op.plan.Verify == nil {
+		t.Fatalf("plan %+v, error %q", a.op, a.planErr)
+	}
+	last := a.op.plan.Steps[len(a.op.plan.Steps)-1]
+	if !slices.Contains(last.Argv, "kind@latest") {
+		t.Errorf("steps %+v", a.op.plan.Steps)
+	}
+	if found, err := a.op.plan.Verify(t.Context()); err != nil || found == "" {
+		t.Errorf("verify %q, %v", found, err)
 	}
 }

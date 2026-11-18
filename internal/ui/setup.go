@@ -93,6 +93,9 @@ func (a *App) setupHave(id string) bool {
 	case "mise":
 		m, ok := a.miseManager()
 		return ok && (m.Activated || m.Shims)
+	case "kubectl", "helm", "kind":
+		_, found := cliCopy(a.cliState(), id)
+		return found
 	case "uv":
 		st, _ := a.Snapshot.Tool("python")
 		return slices.ContainsFunc(st.Managers, func(m inventory.Manager) bool { return m.Name == "uv" && m.Version != "" })

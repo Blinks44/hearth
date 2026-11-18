@@ -28,7 +28,7 @@ var cliGroups = []struct {
 // cliProducts name what a missing command comes with; mise's copies of
 // them are left to their pages.
 var cliProducts = map[string]string{"kubectl": "Kubernetes", "helm": "Helm", "aws": "AWS CLI", "gcloud": "Google Cloud CLI",
-	"az": "Azure CLI", "terraform": "Terraform", "tofu": "OpenTofu"}
+	"az": "Azure CLI", "terraform": "Terraform", "tofu": "OpenTofu", "kind": "kind"}
 
 // cliTabs are the page's tabs after All: the groups by cliGroups' index,
 // then mise's (-1).
@@ -283,6 +283,7 @@ func (a *App) cliRow(c *ui.Context, cli inventory.CliState, cmd string) {
 	}
 	cliTableRow(c, cmd, strings.Join(parts, " · "), version, func() {
 		if !found {
+			a.installToolButton(c, cmd)
 			return
 		}
 		if m, pkg, ok := a.copyPackage(in); ok {

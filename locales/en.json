@@ -9182,7 +9182,7 @@
   "@kubeSubtitle": {
     "description": "Kubernetes page subtitle."
   },
-  "kubeLead": "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl and Helm",
+  "kubeLead": "Contexts from {count, plural, one {# kubeconfig file} other {# kubeconfig files}}, kubectl, Helm and kind",
   "@kubeLead": {
     "description": "Kubernetes page lead: how many kubeconfig files kubectl reads.",
     "placeholders": {
@@ -9223,7 +9223,7 @@
   "@kubeNoCurrent": {
     "description": "Kubernetes: kubectl has no current context."
   },
-  "kubeNoTools": "kubectl and Helm not found",
+  "kubeNoTools": "kubectl, Helm and kind not found",
   "@kubeNoTools": {
     "description": "Kubernetes tools card: none found."
   },
@@ -9247,7 +9247,7 @@
   "@kubeHowScan": {
     "description": "Kubernetes how card row."
   },
-  "kubeHowScanCaption": "only the kubeconfig files are read",
+  "kubeHowScanCaption": "access is checked only by the button",
   "@kubeHowScanCaption": {
     "description": "Kubernetes how card row caption."
   },
@@ -9443,6 +9443,89 @@
         "type": "String"
       }
     }
+  },
+  "catalogKubectl": "Works with Kubernetes clusters from the command line.",
+  "@catalogKubectl": {
+    "description": "Catalog: what kubectl is for."
+  },
+  "catalogHelm": "Installs and updates applications in Kubernetes from charts.",
+  "@catalogHelm": {
+    "description": "Catalog: what Helm is for."
+  },
+  "catalogKind": "Runs a local Kubernetes cluster in Docker containers.",
+  "@catalogKind": {
+    "description": "Catalog: what kind is for."
+  },
+  "kubeAuthVia": "sign-in through {program}",
+  "@kubeAuthVia": {
+    "description": "Kubernetes context row: the program kubectl runs to sign in.",
+    "placeholders": {
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCheck": "Check",
+  "@kubeCheck": {
+    "description": "Kubernetes context button: check access."
+  },
+  "kubeChecking": "checking…",
+  "@kubeChecking": {
+    "description": "Kubernetes access chip: the check runs."
+  },
+  "kubeAccessOk": "access",
+  "@kubeAccessOk": {
+    "description": "Kubernetes access chip: the API answered and pods can be listed."
+  },
+  "kubeAccessOkTip": "API {version} answered; checked in {took}",
+  "@kubeAccessOkTip": {
+    "description": "Kubernetes access chip tooltip.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "took": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeAccessUnreachable": "not answering",
+  "@kubeAccessUnreachable": {
+    "description": "Kubernetes access chip: the API does not answer."
+  },
+  "kubeAccessNoProgram": "no {program}",
+  "@kubeAccessNoProgram": {
+    "description": "Kubernetes access chip: the sign-in program is missing.",
+    "placeholders": {
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeAccessNoProgramDetail": "kubectl runs {program} to sign in, and the terminal's PATH has none",
+  "@kubeAccessNoProgramDetail": {
+    "description": "Kubernetes access: the sign-in program is not on the terminal's PATH.",
+    "placeholders": {
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeAccessLogin": "sign-in needed",
+  "@kubeAccessLogin": {
+    "description": "Kubernetes access chip: credentials missing or expired."
+  },
+  "kubeAccessAuthFailed": "no token",
+  "@kubeAccessAuthFailed": {
+    "description": "Kubernetes access chip: the sign-in program gave no token."
+  },
+  "kubeAccessForbidden": "no access to pods",
+  "@kubeAccessForbidden": {
+    "description": "Kubernetes access chip: no right to list pods."
+  },
+  "kubeAccessUnknown": "check failed",
+  "@kubeAccessUnknown": {
+    "description": "Kubernetes access chip: the reason is not known."
   },
   "startTitle": "Getting started",
   "@startTitle": {

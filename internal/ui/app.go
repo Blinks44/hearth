@@ -14,6 +14,7 @@ import (
 	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -151,6 +152,10 @@ type App struct {
 	// background, giving done the answer through Window.Update; nil hides
 	// the check.
 	CheckMCP func(s inventory.MCPServer, done func(ai.MCPCheck, error))
+	// CheckKube asks a context's cluster through kubectl, with the
+	// terminal's environment, in the background, giving done the answer
+	// through Window.Update; nil hides the check.
+	CheckKube func(kubectl string, k inventory.KubeContext, done func(detect.KubeAccess))
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -227,6 +232,7 @@ type App struct {
 	kubeTab            int    // the Kubernetes page's tab
 	kubeFilter         string // the Kubernetes page's filter
 	kubeNS             kubeNamespaceDialog
+	kubeChecks         map[string]kubeCheck
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page

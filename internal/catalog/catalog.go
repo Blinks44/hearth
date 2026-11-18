@@ -261,6 +261,12 @@ var Tools = []Entry{
 	{ID: "maven", Group: Tool, Methods: mise("maven"), Needs: []string{"java"}},
 	{ID: "gradle", Group: Tool, Methods: mise("gradle"), Needs: []string{"java"}},
 
+	// Kubernetes' tools; kind runs its clusters in the Docker engine,
+	// which it needs only to create one.
+	{ID: "kubectl", Group: Tool, Methods: mise("kubectl")},
+	{ID: "helm", Group: Tool, Methods: mise("helm")},
+	{ID: "kind", Group: Tool, Methods: mise("kind")},
+
 	// Database servers install through the system's manager, which
 	// sets their service up; Homebrew's starts with brew services. On
 	// Linux only Debian's and Ubuntu's packages create a server that runs
@@ -367,6 +373,9 @@ func About(id string) string {
 		"bundler":    locales.CatalogBundler,
 		"maven":      locales.CatalogMaven,
 		"gradle":     locales.CatalogGradle,
+		"kubectl":    locales.CatalogKubectl,
+		"helm":       locales.CatalogHelm,
+		"kind":       locales.CatalogKind,
 		"pnpm":       locales.CatalogPnpm,
 		"yarn":       locales.CatalogYarn,
 		"git":        locales.CatalogGit,

@@ -144,6 +144,15 @@ func main() {
 				win.Update(func() { done(res, err) })
 			}()
 		}
+		a.CheckKube = func(kubectl string, k inventory.KubeContext, done func(detect.KubeAccess)) {
+			env := scanner.Terminal()
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), detect.KubeAccessTimeout)
+				defer cancel()
+				res := detect.CheckKubeAccess(ctx, run.Exec{}, kubectl, k, env)
+				win.Update(func() { done(res) })
+			}()
+		}
 		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
 		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
 		// Operations run one at a time in the background, as the user's

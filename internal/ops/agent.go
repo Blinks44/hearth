@@ -100,6 +100,33 @@ func ToolFound(title string, detect Detect) func(context.Context) (string, error
 	}
 }
 
+// CommandFound is the check of a plan that installs a command the CLI
+// detector finds, as kubectl: detect finds it on the terminal's PATH.
+func CommandFound(title, command string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		var ins []inventory.Installation
+		if st.Cli != nil {
+			for _, in := range st.Cli.Tools {
+				if in.Tool == command {
+					ins = append(ins, in)
+				}
+			}
+		}
+		i := inventory.TerminalCopy(ins)
+		if i < 0 {
+			return "", errors.New(locales.AgentCheckMissing(title))
+		}
+		return locales.AgentCheckFound(title, ins[i].Version), nil
+	}
+}
+
 // DatabaseFound is the check of a plan that installs a server of kind,
 // as inventory.DatabaseKind names it: detect finds one the system or a
 // package manager keeps, not a container's.

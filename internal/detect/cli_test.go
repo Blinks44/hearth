@@ -28,6 +28,12 @@ users:
 - name: private
   user:
     token: DO-NOT-RETAIN
+- name: eks
+  user:
+    exec:
+      command: aws
+      args: [eks, get-token, --token, DO-NOT-RETAIN-ARG]
+      env: [{name: SECRET, value: DO-NOT-RETAIN-ENV}]
 `)
 	writeFile(t, second, `current-context: production
 contexts:
@@ -37,6 +43,12 @@ contexts:
 - name: local
   context:
     cluster: local-cluster
+    user: eks
+users:
+- name: eks
+  user:
+    exec:
+      command: gke-gcloud-auth-plugin
 `)
 	broken, missing := filepath.Join(home, "broken"), filepath.Join(home, "missing")
 	writeFile(t, broken, "contexts: [\n")
@@ -50,7 +62,8 @@ contexts:
 	want := []inventory.KubeContext{
 		{Name: "production", Cluster: "prod-first", Namespace: "digital", File: first},
 		{Name: "staging", Cluster: "stage", File: first},
-		{Name: "local", Cluster: "local-cluster", File: second},
+		// The user's first definition, in the other file.
+		{Name: "local", Cluster: "local-cluster", File: second, Auth: "aws"},
 		{Name: "production", Cluster: "prod-second", File: second, Shadowed: true},
 	}
 	if !slices.Equal(kc.contexts, want) {
@@ -64,7 +77,7 @@ contexts:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(data), "DO-NOT-RETAIN") {
+	if strings.Contains(string(data), "DO-NOT-RETAIN") || strings.Contains(string(data), "get-token") {
 		t.Fatal("credentials retained")
 	}
 	// Re-read after a terminal changes selection; no cached context survives.

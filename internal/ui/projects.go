@@ -892,7 +892,7 @@ var toolTitles = map[string]string{
 	"node": "Node", "npm": "npm", "pnpm": "pnpm", "yarn": "Yarn", "bun": "Bun", "deno": "Deno",
 	"python": "Python", "uv": "uv", "rust": "Rust", "go": "Go", "java": "Java", "ruby": "Ruby",
 	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker", "git": "Git", "cpp": "C/C++",
-	"pipx": "pipx", "bundler": "Bundler", "maven": "Maven", "gradle": "Gradle",
+	"pipx": "pipx", "bundler": "Bundler", "maven": "Maven", "gradle": "Gradle", "helm": "Helm",
 }
 
 func toolTitle(id string) string {
@@ -913,6 +913,8 @@ func toolIcon(id string) string {
 	switch id {
 	case "npm", "pnpm", "docker", "git":
 		return "brand/" + id
+	case "kubectl", "kind":
+		return "brand/kubernetes"
 	}
 	return "lucide/package"
 }
