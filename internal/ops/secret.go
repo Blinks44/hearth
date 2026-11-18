@@ -117,20 +117,30 @@ func MCPSecretPlan(s inventory.MCPServer, env sysenv.Env, terminal Terminal, nam
 	case mcpClaude:
 		// claude mcp changes ~/.claude.json: the server goes and comes back
 		// with the variables in place of the values, as it was otherwise.
-		raw, err := claudeServer(s)
+		original, err := claudeServer(s)
 		if err != nil {
 			return Plan{}, err
 		}
-		if raw, err = jsonRefs(raw, nil, s, header); err != nil {
+		raw, err := jsonRefs(original, nil, s, header)
+		if err != nil {
 			return Plan{}, err
 		}
-		var compact bytes.Buffer
-		if err := json.Compact(&compact, []byte(raw)); err != nil {
+		compact, err := compactJSON(raw)
+		if err != nil {
 			return Plan{}, err
 		}
+		// If the server does not come back, as add-json fails or the check
+		// does not pass, the one that was comes back as it was.
+		before, err := compactJSON(original)
+		if err != nil {
+			return Plan{}, err
+		}
+		masked := FileEdit{Hide: hide}.Masked
+		remove := []string{"claude", "mcp", "remove", "--scope", "user", s.Name}
+		restore := []string{"claude", "mcp", "add-json", "--scope", "user", s.Name, before}
 		edit = []Step{
-			{Argv: []string{"claude", "mcp", "remove", "--scope", "user", s.Name}},
-			{Argv: []string{"claude", "mcp", "add-json", "--scope", "user", s.Name, compact.String()}},
+			{Argv: remove, Undo: &Step{Argv: restore, Runs: append(slices.Clone(restore[:6]), masked(before)), Note: s.File}},
+			{Argv: []string{"claude", "mcp", "add-json", "--scope", "user", s.Name, compact}, Undo: &Step{Argv: remove}},
 		}
 	default:
 		text, _, err := readText(s.File)
@@ -339,6 +349,15 @@ func inner(text string, path []string) string {
 		raw = m[key]
 	}
 	return string(raw)
+}
+
+// compactJSON is text, JSON, on one line, as claude mcp add-json takes it.
+func compactJSON(text string) (string, error) {
+	var b bytes.Buffer
+	if err := json.Compact(&b, []byte(text)); err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
 // claudeServer is the JSON of the user's server s in ~/.claude.json.

@@ -61,6 +61,10 @@ type Step struct {
 	// Runs, when Argv is a wrapper, is the command it runs, which the
 	// plan shows in Argv's place.
 	Runs []string
+	// Undo, for a command, is the command that puts back what it did if
+	// the plan does not get through, as an Edit's copy does; its Note,
+	// if any, names what came back in State.Restored.
+	Undo *Step
 }
 
 // Shown is the command a step shows: what it runs.
@@ -219,7 +223,8 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			err := a.restore()
 			e.printf("restore %s%s\n", a.name, errText(err))
 			e.mu.Lock()
-			if err == nil {
+			// An undo command that names nothing is not a thing put back.
+			if err == nil && !strings.HasPrefix(a.name, "$ ") {
 				e.state.Restored = append(e.state.Restored, a.name)
 			}
 			e.mu.Unlock()
@@ -369,6 +374,15 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.state.Steps[i] = Done
 			e.mu.Unlock()
 			e.printf("exit 0\n")
+			if u := step.Undo; u != nil {
+				name := u.Note
+				if name == "" {
+					name = "$ " + Command(u.Shown())
+				}
+				changes = append(changes, applied{name, func() error {
+					return runUndo(ctx, r, *u, env, commandDir)
+				}})
+			}
 			e.emit()
 			continue
 		}
@@ -454,6 +468,21 @@ func fullPath(argv []string, env []string) []string {
 		return argv
 	}
 	return append([]string{found[0]}, argv[1:]...)
+}
+
+// runUndo runs u, a step's Undo, with the step's environment and folder,
+// even after the plan was stopped: what the step did must come back.
+func runUndo(ctx context.Context, r run.Runner, u Step, env []string, dir string) error {
+	timeout := u.Timeout
+	if timeout <= 0 {
+		timeout = DefaultTimeout
+	}
+	env = slices.Concat(env, u.Env)
+	res, err := r.Run(context.WithoutCancel(ctx), run.Cmd{Args: fullPath(u.Argv, env), Env: env, Dir: dir, Timeout: timeout})
+	if err == nil && res.ExitCode != 0 {
+		err = fmt.Errorf("%s: exit code %d", Command(u.Shown()), res.ExitCode)
+	}
+	return err
 }
 
 func errText(err error) string {

@@ -4,9 +4,13 @@ package ops
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -170,6 +174,103 @@ func TestMCPSecretPlanClaude(t *testing.T) {
 	if !strings.Contains(add, `"GITHUB_TOKEN":"${GITHUB_TOKEN}"`) || strings.Contains(add, token) || !strings.Contains(add, "server-github") {
 		t.Errorf("add: %s", add)
 	}
+}
+
+// claudeCLI is claude mcp over a ~/.claude.json: remove and add-json of a
+// user server, add-json failing with failAdd.
+type claudeCLI struct {
+	path    string
+	failAdd bool
+}
+
+func (c claudeCLI) Run(_ context.Context, cmd run.Cmd) (run.Result, error) {
+	a := cmd.Args
+	if len(a) < 6 || a[0] != "claude" || a[1] != "mcp" || a[3] != "--scope" || a[4] != "user" {
+		return run.Result{}, fmt.Errorf("unexpected %q", a)
+	}
+	data, err := os.ReadFile(c.path)
+	if err != nil {
+		return run.Result{}, err
+	}
+	text := string(data)
+	switch {
+	case a[2] == "remove":
+		text, err = JSONDelete(text, []string{"mcpServers", a[5]})
+	case a[2] == "add-json" && len(a) == 7 && (!c.failAdd || !strings.Contains(a[6], "${")):
+		text, err = JSONSet(text, []string{"mcpServers", a[5]}, json.RawMessage(a[6]))
+	default:
+		return run.Result{ExitCode: 1, Stderr: []byte("Invalid configuration")}, nil
+	}
+	if err != nil {
+		return run.Result{}, err
+	}
+	return run.Result{}, os.WriteFile(c.path, []byte(text), 0o644)
+}
+
+// A server that does not come back with the variable, as add-json fails
+// or the check does not pass, comes back as it was, the token with it,
+// and .zshrc loses the variable.
+func TestMCPSecretPlanClaudeRestores(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		failAdd  bool
+		terminal Terminal
+		phase    Phase
+	}{
+		{"add-json fails", true, nil, Failed},
+		{"check fails", false, func(context.Context) (sysenv.Env, error) { return nil, nil }, NotVerified},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			home, env := mcpHome(t)
+			env = append(env, "SHELL=/bin/zsh")
+			path := filepath.Join(home, ".claude.json")
+			before := inner(mustRead(t, path), []string{"mcpServers", "github"})
+			p, err := MCPSecretPlan(server(t, env, "claude", "github"), env, tt.terminal, title)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, s := range p.Steps {
+				if s.Undo != nil && strings.Contains(Command(s.Undo.Shown()), token) {
+					t.Errorf("undo shows the token: %s", Command(s.Undo.Shown()))
+				}
+			}
+			s := Execute(context.Background(), claudeCLI{path, tt.failAdd}, p, io.Discard, func(State) {})
+			if s.Phase != tt.phase {
+				t.Fatalf("phase %v, %s", s.Phase, s.Err)
+			}
+			after := mustRead(t, path)
+			if !jsonEqual(t, inner(after, []string{"mcpServers", "github"}), before) || !strings.Contains(after, `"numStartups": 3`) {
+				t.Errorf("~/.claude.json not back:\n%s", after)
+			}
+			if rc, _ := os.ReadFile(filepath.Join(home, ".zshrc")); strings.Contains(string(rc), "GITHUB_TOKEN") {
+				t.Errorf(".zshrc keeps the variable:\n%s", rc)
+			}
+			if !slices.Contains(s.Restored, path) {
+				t.Errorf("restored %q", s.Restored)
+			}
+		})
+	}
+}
+
+func mustRead(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+func jsonEqual(t *testing.T, a, b string) bool {
+	t.Helper()
+	var x, y any
+	if err := json.Unmarshal([]byte(a), &x); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(b), &y); err != nil {
+		t.Fatal(err)
+	}
+	return reflect.DeepEqual(x, y)
 }
 
 // The API key leaves Claude Code's settings for .bashrc; the settings that
