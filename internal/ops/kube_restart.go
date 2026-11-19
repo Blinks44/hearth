@@ -26,6 +26,15 @@ func restartTime(obj resourceJSON) any {
 	return annotations[restartAnnotation]
 }
 
+func deploymentPatch(ref KubeResource, version string, spec map[string]any) []string {
+	patch, _ := json.Marshal(map[string]any{
+		"metadata": map[string]string{"uid": ref.UID, "resourceVersion": version},
+		"spec":     spec,
+	})
+	return []string{"patch", "deployment.apps/" + ref.Name, "--namespace=" + ref.Namespace,
+		"--type=merge", "--patch=" + string(patch), "-o", "json"}
+}
+
 // PlanKubeRestart previews the same template annotation as rollout restart.
 // kubectl patch supports server dry-run and can enforce the reviewed version.
 func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref KubeResource) (Plan, error) {
@@ -49,14 +58,11 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		return Plan{}, errors.New(locales.KubeRestartPaused())
 	}
 	stamp := time.Now().UTC().Format(time.RFC3339Nano)
-	patch, _ := json.Marshal(map[string]any{
-		"metadata": map[string]string{"uid": ref.UID, "resourceVersion": obj.version()},
-		"spec": map[string]any{"template": map[string]any{
+	command := deploymentPatch(ref, obj.version(), map[string]any{
+		"template": map[string]any{
 			"metadata": map[string]any{"annotations": map[string]string{restartAnnotation: stamp}},
-		}},
+		},
 	})
-	command := []string{"patch", "deployment.apps/" + ref.Name, "--namespace=" + ref.Namespace,
-		"--type=merge", "--patch=" + string(patch), "-o", "json"}
 	data, err := k.run(ctx, nil, append(slices.Clone(command), "--dry-run=server")...)
 	if err != nil {
 		return Plan{}, err
@@ -69,7 +75,7 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		return Plan{}, errors.New(locales.KubeResourceNoChanges())
 	}
 	change := &KubeChange{
-		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: true, restart: command,
+		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: true, patch: command, restart: true,
 	}
 	p := Plan{
 		Title: locales.KubeRestartTitle(ref.Name), Why: locales.KubeRestartPreview(), Action: locales.KubeRestartAction(),

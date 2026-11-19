@@ -1,5 +1,12 @@
 {
   "@@locale": "ru",
+  "kubePauseAction": "Приостановить выкатку",
+  "kubePauseTitle": "Приостановить выкатку {name}?",
+  "kubePauseHint": "Изменения шаблона вступят в силу после возобновления.",
+  "kubePausePreview": "Kubernetes приостановит выкатку. Текущие pod продолжат работу, а изменения шаблона вступят в силу после возобновления.",
+  "kubeResumeAction": "Возобновить выкатку",
+  "kubeResumeTitle": "Возобновить выкатку {name}?",
+  "kubeResumePreview": "Kubernetes возобновит выкатку. Накопленные изменения шаблона могут заменить pod по стратегии Deployment.",
   "kubeRestartOpen": "Перезапустить…",
   "kubeRestartTitle": "Перезапустить {name}?",
   "kubeRestartAction": "Перезапустить",

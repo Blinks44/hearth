@@ -1,5 +1,12 @@
 {
   "@@locale": "de",
+  "kubePauseAction": "Rollout pausieren",
+  "kubePauseTitle": "Rollout für {name} pausieren?",
+  "kubePauseHint": "Änderungen an der Vorlage werden nach dem Fortsetzen wirksam.",
+  "kubePausePreview": "Kubernetes pausiert den Rollout. Die aktuellen Pods laufen weiter. Änderungen an der Pod-Vorlage werden nach dem Fortsetzen wirksam.",
+  "kubeResumeAction": "Rollout fortsetzen",
+  "kubeResumeTitle": "Rollout für {name} fortsetzen?",
+  "kubeResumePreview": "Kubernetes setzt den Rollout fort. Ausstehende Änderungen an der Vorlage können Pods gemäß der Deployment-Strategie ersetzen.",
   "kubeRestartOpen": "Neu starten…",
   "kubeRestartTitle": "{name} neu starten?",
   "kubeRestartAction": "Neu starten",

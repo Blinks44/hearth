@@ -1,5 +1,12 @@
 {
   "@@locale": "es",
+  "kubePauseAction": "Pausar el despliegue",
+  "kubePauseTitle": "¿Pausar el despliegue de {name}?",
+  "kubePauseHint": "Los cambios en la plantilla se aplicarán al reanudar el despliegue.",
+  "kubePausePreview": "Kubernetes pausa el despliegue y mantiene los pods actuales en ejecución. Los cambios en la plantilla se aplicarán al reanudarlo.",
+  "kubeResumeAction": "Reanudar el despliegue",
+  "kubeResumeTitle": "¿Reanudar el despliegue de {name}?",
+  "kubeResumePreview": "Kubernetes reanuda el despliegue. Los cambios pendientes en la plantilla pueden reemplazar los pods según la estrategia del Deployment.",
   "kubeRestartOpen": "Reiniciar…",
   "kubeRestartTitle": "¿Reiniciar {name}?",
   "kubeRestartAction": "Reiniciar",

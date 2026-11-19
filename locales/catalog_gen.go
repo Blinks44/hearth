@@ -36,6 +36,84 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubePauseAction says "Pause rollout"
+// in the language the app shows.
+func KubePauseAction() string { return In(i18n.Locale()).KubePauseAction() }
+
+// KubePauseAction says "Pause rollout"
+// in the language of msgs.
+func (msgs Messages) KubePauseAction() string {
+	return Catalog.Format(msgs.locale, "kubePauseAction", nil)
+}
+
+// KubePauseTitle says "Pause the rollout for {name}?"
+// in the language the app shows.
+//
+// kubePauseTitle
+func KubePauseTitle(name string) string { return In(i18n.Locale()).KubePauseTitle(name) }
+
+// KubePauseTitle says "Pause the rollout for {name}?"
+// in the language of msgs.
+//
+// kubePauseTitle
+func (msgs Messages) KubePauseTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubePauseTitle", map[string]any{"name": name})
+}
+
+// KubePauseHint says "Template changes wait until the rollout resumes."
+// in the language the app shows.
+func KubePauseHint() string { return In(i18n.Locale()).KubePauseHint() }
+
+// KubePauseHint says "Template changes wait until the rollout resumes."
+// in the language of msgs.
+func (msgs Messages) KubePauseHint() string {
+	return Catalog.Format(msgs.locale, "kubePauseHint", nil)
+}
+
+// KubePausePreview says "Kubernetes pauses the rollout and keeps the current pods running. Changes to the pod template will take effect after …"
+// in the language the app shows.
+func KubePausePreview() string { return In(i18n.Locale()).KubePausePreview() }
+
+// KubePausePreview says "Kubernetes pauses the rollout and keeps the current pods running. Changes to the pod template will take effect after …"
+// in the language of msgs.
+func (msgs Messages) KubePausePreview() string {
+	return Catalog.Format(msgs.locale, "kubePausePreview", nil)
+}
+
+// KubeResumeAction says "Resume rollout"
+// in the language the app shows.
+func KubeResumeAction() string { return In(i18n.Locale()).KubeResumeAction() }
+
+// KubeResumeAction says "Resume rollout"
+// in the language of msgs.
+func (msgs Messages) KubeResumeAction() string {
+	return Catalog.Format(msgs.locale, "kubeResumeAction", nil)
+}
+
+// KubeResumeTitle says "Resume the rollout for {name}?"
+// in the language the app shows.
+//
+// kubeResumeTitle
+func KubeResumeTitle(name string) string { return In(i18n.Locale()).KubeResumeTitle(name) }
+
+// KubeResumeTitle says "Resume the rollout for {name}?"
+// in the language of msgs.
+//
+// kubeResumeTitle
+func (msgs Messages) KubeResumeTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeResumeTitle", map[string]any{"name": name})
+}
+
+// KubeResumePreview says "Kubernetes resumes the rollout. Any pending template changes can replace pods according to the Deployment strategy."
+// in the language the app shows.
+func KubeResumePreview() string { return In(i18n.Locale()).KubeResumePreview() }
+
+// KubeResumePreview says "Kubernetes resumes the rollout. Any pending template changes can replace pods according to the Deployment strategy."
+// in the language of msgs.
+func (msgs Messages) KubeResumePreview() string {
+	return Catalog.Format(msgs.locale, "kubeResumePreview", nil)
+}
+
 // KubeRestartOpen says "Restart…"
 // in the language the app shows.
 func KubeRestartOpen() string { return In(i18n.Locale()).KubeRestartOpen() }

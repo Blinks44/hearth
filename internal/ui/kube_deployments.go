@@ -23,7 +23,7 @@ const (
 // rolling reports a Deployment whose pods are not all of its current
 // revision yet.
 func rolling(d kube.Deployment) bool {
-	return d.Replicas > 0 && (d.Updated < d.Replicas || d.Pods > d.Replicas)
+	return !d.Paused && d.Replicas > 0 && (d.Updated < d.Replicas || d.Pods > d.Replicas)
 }
 
 func deploymentShows(tab int, d kube.Deployment) bool {
@@ -46,12 +46,12 @@ func deploymentTag(c *ui.Context, d kube.Deployment) (label string, bg, fg ui.Co
 	switch {
 	case d.Replicas == 0:
 		return locales.KubeClusterScaledDown(), pal.Muted, t.TextMuted
+	case d.Paused:
+		return locales.KubePaused(), pal.WarningSoft, pal.WarningText
 	case rolling(d) && d.Stalled == "":
 		return locales.KubeRollingOut(d.Updated, d.Replicas), pal.WarningSoft, pal.WarningText
 	case deploymentTrouble(d):
 		return locales.KubeGroupReady(d.Ready, d.Replicas), pal.DangerSoft, pal.DangerText
-	case d.Paused:
-		return locales.KubePaused(), pal.WarningSoft, pal.WarningText
 	}
 	return locales.KubeGroupReady(d.Ready, d.Replicas), pal.SuccessSoft, pal.SuccessText
 }
@@ -240,9 +240,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			})
 		}
 		a.deploymentScale(c, ref, d)
-		if d.Paused {
-			ui.Text(c, locales.KubePausedNote()).FontSize(12).TextColor(pal.WarningText).Padding(0, 16, 6, 16).Wrap()
-		}
+		a.deploymentPause(c, ref, d.Paused)
 		detailSection(c, locales.KubeReplicas())
 		facts := [][2]string{
 			{locales.KubeWanted(), strconv.Itoa(d.Replicas)},

@@ -1,5 +1,28 @@
 {
   "@@locale": "en",
+  "kubePauseAction": "Pause rollout",
+  "kubePauseTitle": "Pause the rollout for {name}?",
+  "@kubePauseTitle": {
+    "description": "kubePauseTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubePauseHint": "Template changes wait until the rollout resumes.",
+  "kubePausePreview": "Kubernetes pauses the rollout and keeps the current pods running. Changes to the pod template will take effect after you resume.",
+  "kubeResumeAction": "Resume rollout",
+  "kubeResumeTitle": "Resume the rollout for {name}?",
+  "@kubeResumeTitle": {
+    "description": "kubeResumeTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeResumePreview": "Kubernetes resumes the rollout. Any pending template changes can replace pods according to the Deployment strategy.",
   "kubeRestartOpen": "Restart…",
   "kubeRestartTitle": "Restart {name}?",
   "@kubeRestartTitle": {

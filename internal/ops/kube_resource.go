@@ -231,7 +231,8 @@ type KubeChange struct {
 	want    resourceJSON
 	rollout bool
 	scale   *deploymentScale
-	restart []string
+	patch   []string
+	restart bool
 	Diff    []DiffLine
 }
 
@@ -252,8 +253,8 @@ func (m *KubeChange) command() []string {
 	if m.scale != nil {
 		return m.scale.command(m.draft)
 	}
-	if m.restart != nil {
-		return m.restart
+	if m.patch != nil {
+		return m.patch
 	}
 	if m.want == nil {
 		return []string{"delete", "--raw", m.draft.Ref.path(), "-f", "-"}
@@ -444,7 +445,7 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 	if m.want != nil && obj.version() != m.draft.Version && m.matchesChange(obj) {
 		if m.rollout {
 			verified, unverified := locales.KubeResourceRolloutVerified(), locales.KubeResourceRolloutUnverified()
-			if m.restart != nil {
+			if m.restart {
 				checking()
 				verified, unverified = locales.KubeRestartVerified(), locales.KubeRestartUnverified()
 			}
@@ -481,12 +482,12 @@ func (m *KubeChange) verifyRollout(ctx context.Context, k resourceClient) error 
 }
 
 func (m *KubeChange) matchesChange(obj resourceJSON) bool {
-	if !obj.matches(m.draft.Ref) {
+	if !obj.matches(m.draft.Ref) || (m.patch != nil && obj.metadata()["deletionTimestamp"] != nil) {
 		return false
 	}
-	if m.restart != nil {
+	if m.restart {
 		spec := deploymentSpec(obj)
-		return obj.metadata()["deletionTimestamp"] == nil && spec["paused"] != true &&
+		return spec["paused"] != true &&
 			reflect.DeepEqual(spec["template"], deploymentSpec(m.want)["template"])
 	}
 	return approvedChanges(m.base, m.want, cleanResource(obj))

@@ -1,5 +1,12 @@
 {
   "@@locale": "zh-Hans",
+  "kubePauseAction": "暂停发布",
+  "kubePauseTitle": "暂停 {name} 的发布？",
+  "kubePauseHint": "模板变更将在恢复发布后生效。",
+  "kubePausePreview": "Kubernetes 将暂停发布，现有 Pod 会继续运行。Pod 模板变更将在恢复发布后生效。",
+  "kubeResumeAction": "恢复发布",
+  "kubeResumeTitle": "恢复 {name} 的发布？",
+  "kubeResumePreview": "Kubernetes 将恢复发布。待应用的模板变更可能会按 Deployment 策略替换 Pod。",
   "kubeRestartOpen": "重启…",
   "kubeRestartTitle": "重启 {name}？",
   "kubeRestartAction": "重启",

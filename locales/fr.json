@@ -1,5 +1,12 @@
 {
   "@@locale": "fr",
+  "kubePauseAction": "Suspendre le déploiement",
+  "kubePauseTitle": "Suspendre le déploiement de {name} ?",
+  "kubePauseHint": "Les modifications du modèle prendront effet à la reprise du déploiement.",
+  "kubePausePreview": "Kubernetes suspend le déploiement. Les pods actuels restent en cours d’exécution. Les modifications du modèle de pod prendront effet à la reprise.",
+  "kubeResumeAction": "Reprendre le déploiement",
+  "kubeResumeTitle": "Reprendre le déploiement de {name} ?",
+  "kubeResumePreview": "Kubernetes reprend le déploiement. Les modifications en attente du modèle peuvent remplacer des pods selon la stratégie du Deployment.",
   "kubeRestartOpen": "Redémarrer…",
   "kubeRestartTitle": "Redémarrer {name} ?",
   "kubeRestartAction": "Redémarrer",
