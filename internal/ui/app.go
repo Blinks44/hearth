@@ -168,6 +168,11 @@ type App struct {
 	// asks the cluster for its namespaces once. Nil hides the cluster.
 	WatchCluster   func(t kube.Target, got func(kube.Cluster, error)) (stop func())
 	ListNamespaces func(t kube.Target, done func([]string, error))
+	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
+	ReadSecretValue func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
+	// SecretTimer schedules a callback on the UI thread and returns its cancellation.
+	SecretTimer     func(time.Duration, func()) (stop func())
+	secretClipboard *secretClipboard
 	// StreamLogs reads a container's log in the background, giving the
 	// lines as they come to got and how the read ended to done, on the UI
 	// thread, until stop is called. Nil hides the logs.
@@ -316,6 +321,7 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncSecrets(c)
 	a.syncLogs()
 	a.syncForwardForm()
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)

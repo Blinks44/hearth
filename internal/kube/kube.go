@@ -41,6 +41,8 @@ type Target struct {
 	Batch bool
 	// Services reads the service list instead of workloads.
 	Services bool
+	// Secrets reads Secret metadata and key names.
+	Secrets bool
 	// Events is the object whose events to read too; zero reads none.
 	Events Ref
 	// Tail is the container whose previous run's last line to read too;
@@ -165,6 +167,7 @@ type Cluster struct {
 	Batch        *Batch
 	Services     []Service
 	HelmReleases []HelmRelease
+	Secrets      []Secret
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -240,6 +243,10 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 	if t.Helm != "" {
 		releases, err := readHelm(ctx, r, env, t, scopes)
 		return Cluster{HelmReleases: releases, Taken: time.Now()}, err
+	}
+	if t.Secrets {
+		secrets, err := readSecrets(ctx, r, env, t, scopes)
+		return Cluster{Secrets: secrets, Taken: time.Now()}, err
 	}
 	if t.Services {
 		services, err := readServices(ctx, r, env, t, scopes)

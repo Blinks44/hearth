@@ -174,6 +174,29 @@ func main() {
 			})
 			return cancel
 		}
+		a.SecretTimer = func(delay time.Duration, done func()) func() {
+			timer := time.AfterFunc(delay, func() { win.Update(done) })
+			return func() { timer.Stop() }
+		}
+		a.ReadSecretValue = func(t kube.Target, secret kube.Secret, key string, done func([]byte, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				value, err := kube.ReadSecretValue(ctx, run.Exec{}, env, t, secret, key)
+				if ctx.Err() != nil {
+					clear(value)
+					return
+				}
+				win.Update(func() {
+					if ctx.Err() != nil {
+						clear(value)
+						return
+					}
+					done(value, err)
+				})
+			}()
+			return cancel
+		}
 		a.StreamLogs = func(l kube.Logs, got func([]kube.LogLine), done func(error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())
@@ -454,6 +477,7 @@ func main() {
 			fetchList(ctx, win, lists, versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
 		}
 		a.CachePath = lists.Dir
+		win.OnClose(func(*mygo.CloseEvent) { a.ClearSecretClipboard() })
 		win.OnClosed(func() {
 			a.CancelPreparation()
 			a.StopCluster()

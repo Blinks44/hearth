@@ -1,5 +1,71 @@
 {
   "@@locale": "en",
+  "kubeSecretOther": "Other",
+  "kubeSecretSearch": "Name or namespace",
+  "kubeSecretEmpty": "No Secrets in the selected namespaces.",
+  "kubeSecretNoMatches": "No Secrets match the filters.",
+  "kubeSecretTypeKeys": "Type · keys",
+  "kubeSecretKeys": "Keys",
+  "kubeSecretNoKeys": "This Secret has no keys.",
+  "kubeSecretNotice": "Values are hidden. Show one key for 30 seconds. Hearth keeps values out of logs, history and reports.",
+  "kubeSecretClipboard": "Copy keeps the value hidden. Hearth clears its copy after 60 seconds. Binary values are copied as Base64.",
+  "kubeSecretEmptyValue": "Empty value",
+  "kubeSecretReadFailed": "Could not read the value. {reason}",
+  "@kubeSecretReadFailed": {
+    "description": "kubeSecretReadFailed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretBytes": "{count} B",
+  "@kubeSecretBytes": {
+    "description": "kubeSecretBytes",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretReading": "Reading…",
+  "kubeSecretHidesIn": "Hides in {seconds} s",
+  "@kubeSecretHidesIn": {
+    "description": "kubeSecretHidesIn",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretShow": "Show {key}",
+  "@kubeSecretShow": {
+    "description": "kubeSecretShow",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretHide": "Hide {key}",
+  "@kubeSecretHide": {
+    "description": "kubeSecretHide",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretCopy": "Copy {key}",
+  "@kubeSecretCopy": {
+    "description": "kubeSecretCopy",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSecretCopied": "Copied",
   "kubeCronOn": "On",
   "kubeCronEnabled": "Schedule enabled for {name}",
   "@kubeCronEnabled": {

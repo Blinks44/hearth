@@ -39,6 +39,7 @@ const (
 	kindCronJobs
 	kindServices
 	kindHelm
+	kindSecrets
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -68,6 +69,7 @@ type kubeClusterState struct {
 	serviceSort                string
 	helmFilter                 int
 	helmSort                   string
+	secret                     secretView
 	forward                    *forwardForm
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
@@ -141,6 +143,7 @@ func (a *App) syncCluster() {
 			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
 			t.Overview = a.cluster.kind == kindOverview
 			t.Batch = t.Overview || isBatchKind(a.cluster.kind)
+			t.Secrets = s.kind == kindSecrets
 			t.Services = s.kind == kindServices
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
 			if s.kind == kindHelm {
@@ -156,7 +159,7 @@ func (a *App) syncCluster() {
 	running := ""
 	if target != "" {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -239,6 +242,8 @@ func (a *App) StopCluster() {
 		a.cluster.watch++
 	}
 	a.stopLogs()
+	a.cluster.secret.reset()
+	a.ClearSecretClipboard()
 }
 
 // openCluster shows the cluster of the context name.
@@ -283,7 +288,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			a.logsView(c)
 			return
 		}
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -300,7 +305,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				a.forwardList(c, name)
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 				helm, hasHelm := cliCopy(a.cliState(), "helm")
-				waiting := s.data == nil || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
+				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
@@ -332,6 +337,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.cronJobsView(c, s.data.Batch)
 					case kindServices:
 						a.servicesView(c, s.data.Services)
+					case kindSecrets:
+						a.secretsView(c, s.data.Secrets)
 					case kindHelm:
 						a.helmView(c, s.data.HelmReleases, helm.Version)
 					}
@@ -700,7 +707,7 @@ func (a *App) kindChips(c *ui.Context) {
 			k := options[kindOverview]
 			kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0)
 		}
-		for _, i := range []int{kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices} {
+		for _, i := range []int{kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices, kindSecrets} {
 			k := options[i]
 			_, trouble, _ := clusterKindCounts(s.data, i)
 			kindChip(c, &s.kind, i, k.icon, k.label, trouble)

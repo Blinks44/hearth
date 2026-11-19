@@ -36,6 +36,212 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeSecretOther says "Other"
+// in the language the app shows.
+func KubeSecretOther() string { return In(i18n.Locale()).KubeSecretOther() }
+
+// KubeSecretOther says "Other"
+// in the language of msgs.
+func (msgs Messages) KubeSecretOther() string {
+	return Catalog.Format(msgs.locale, "kubeSecretOther", nil)
+}
+
+// KubeSecretSearch says "Name or namespace"
+// in the language the app shows.
+func KubeSecretSearch() string { return In(i18n.Locale()).KubeSecretSearch() }
+
+// KubeSecretSearch says "Name or namespace"
+// in the language of msgs.
+func (msgs Messages) KubeSecretSearch() string {
+	return Catalog.Format(msgs.locale, "kubeSecretSearch", nil)
+}
+
+// KubeSecretEmpty says "No Secrets in the selected namespaces."
+// in the language the app shows.
+func KubeSecretEmpty() string { return In(i18n.Locale()).KubeSecretEmpty() }
+
+// KubeSecretEmpty says "No Secrets in the selected namespaces."
+// in the language of msgs.
+func (msgs Messages) KubeSecretEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeSecretEmpty", nil)
+}
+
+// KubeSecretNoMatches says "No Secrets match the filters."
+// in the language the app shows.
+func KubeSecretNoMatches() string { return In(i18n.Locale()).KubeSecretNoMatches() }
+
+// KubeSecretNoMatches says "No Secrets match the filters."
+// in the language of msgs.
+func (msgs Messages) KubeSecretNoMatches() string {
+	return Catalog.Format(msgs.locale, "kubeSecretNoMatches", nil)
+}
+
+// KubeSecretTypeKeys says "Type · keys"
+// in the language the app shows.
+func KubeSecretTypeKeys() string { return In(i18n.Locale()).KubeSecretTypeKeys() }
+
+// KubeSecretTypeKeys says "Type · keys"
+// in the language of msgs.
+func (msgs Messages) KubeSecretTypeKeys() string {
+	return Catalog.Format(msgs.locale, "kubeSecretTypeKeys", nil)
+}
+
+// KubeSecretKeys says "Keys"
+// in the language the app shows.
+func KubeSecretKeys() string { return In(i18n.Locale()).KubeSecretKeys() }
+
+// KubeSecretKeys says "Keys"
+// in the language of msgs.
+func (msgs Messages) KubeSecretKeys() string {
+	return Catalog.Format(msgs.locale, "kubeSecretKeys", nil)
+}
+
+// KubeSecretNoKeys says "This Secret has no keys."
+// in the language the app shows.
+func KubeSecretNoKeys() string { return In(i18n.Locale()).KubeSecretNoKeys() }
+
+// KubeSecretNoKeys says "This Secret has no keys."
+// in the language of msgs.
+func (msgs Messages) KubeSecretNoKeys() string {
+	return Catalog.Format(msgs.locale, "kubeSecretNoKeys", nil)
+}
+
+// KubeSecretNotice says "Values are hidden. Show one key for 30 seconds. Hearth keeps values out of logs, history and reports."
+// in the language the app shows.
+func KubeSecretNotice() string { return In(i18n.Locale()).KubeSecretNotice() }
+
+// KubeSecretNotice says "Values are hidden. Show one key for 30 seconds. Hearth keeps values out of logs, history and reports."
+// in the language of msgs.
+func (msgs Messages) KubeSecretNotice() string {
+	return Catalog.Format(msgs.locale, "kubeSecretNotice", nil)
+}
+
+// KubeSecretClipboard says "Copy keeps the value hidden. Hearth clears its copy after 60 seconds. Binary values are copied as Base64."
+// in the language the app shows.
+func KubeSecretClipboard() string { return In(i18n.Locale()).KubeSecretClipboard() }
+
+// KubeSecretClipboard says "Copy keeps the value hidden. Hearth clears its copy after 60 seconds. Binary values are copied as Base64."
+// in the language of msgs.
+func (msgs Messages) KubeSecretClipboard() string {
+	return Catalog.Format(msgs.locale, "kubeSecretClipboard", nil)
+}
+
+// KubeSecretEmptyValue says "Empty value"
+// in the language the app shows.
+func KubeSecretEmptyValue() string { return In(i18n.Locale()).KubeSecretEmptyValue() }
+
+// KubeSecretEmptyValue says "Empty value"
+// in the language of msgs.
+func (msgs Messages) KubeSecretEmptyValue() string {
+	return Catalog.Format(msgs.locale, "kubeSecretEmptyValue", nil)
+}
+
+// KubeSecretReadFailed says "Could not read the value. {reason}"
+// in the language the app shows.
+//
+// kubeSecretReadFailed
+func KubeSecretReadFailed(reason string) string {
+	return In(i18n.Locale()).KubeSecretReadFailed(reason)
+}
+
+// KubeSecretReadFailed says "Could not read the value. {reason}"
+// in the language of msgs.
+//
+// kubeSecretReadFailed
+func (msgs Messages) KubeSecretReadFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretReadFailed", map[string]any{"reason": reason})
+}
+
+// KubeSecretBytes says "{count} B"
+// in the language the app shows.
+//
+// kubeSecretBytes
+func KubeSecretBytes(count string) string { return In(i18n.Locale()).KubeSecretBytes(count) }
+
+// KubeSecretBytes says "{count} B"
+// in the language of msgs.
+//
+// kubeSecretBytes
+func (msgs Messages) KubeSecretBytes(count string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretBytes", map[string]any{"count": count})
+}
+
+// KubeSecretReading says "Reading…"
+// in the language the app shows.
+func KubeSecretReading() string { return In(i18n.Locale()).KubeSecretReading() }
+
+// KubeSecretReading says "Reading…"
+// in the language of msgs.
+func (msgs Messages) KubeSecretReading() string {
+	return Catalog.Format(msgs.locale, "kubeSecretReading", nil)
+}
+
+// KubeSecretHidesIn says "Hides in {seconds} s"
+// in the language the app shows.
+//
+// kubeSecretHidesIn
+func KubeSecretHidesIn(seconds string) string { return In(i18n.Locale()).KubeSecretHidesIn(seconds) }
+
+// KubeSecretHidesIn says "Hides in {seconds} s"
+// in the language of msgs.
+//
+// kubeSecretHidesIn
+func (msgs Messages) KubeSecretHidesIn(seconds string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretHidesIn", map[string]any{"seconds": seconds})
+}
+
+// KubeSecretShow says "Show {key}"
+// in the language the app shows.
+//
+// kubeSecretShow
+func KubeSecretShow(key string) string { return In(i18n.Locale()).KubeSecretShow(key) }
+
+// KubeSecretShow says "Show {key}"
+// in the language of msgs.
+//
+// kubeSecretShow
+func (msgs Messages) KubeSecretShow(key string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretShow", map[string]any{"key": key})
+}
+
+// KubeSecretHide says "Hide {key}"
+// in the language the app shows.
+//
+// kubeSecretHide
+func KubeSecretHide(key string) string { return In(i18n.Locale()).KubeSecretHide(key) }
+
+// KubeSecretHide says "Hide {key}"
+// in the language of msgs.
+//
+// kubeSecretHide
+func (msgs Messages) KubeSecretHide(key string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretHide", map[string]any{"key": key})
+}
+
+// KubeSecretCopy says "Copy {key}"
+// in the language the app shows.
+//
+// kubeSecretCopy
+func KubeSecretCopy(key string) string { return In(i18n.Locale()).KubeSecretCopy(key) }
+
+// KubeSecretCopy says "Copy {key}"
+// in the language of msgs.
+//
+// kubeSecretCopy
+func (msgs Messages) KubeSecretCopy(key string) string {
+	return Catalog.Format(msgs.locale, "kubeSecretCopy", map[string]any{"key": key})
+}
+
+// KubeSecretCopied says "Copied"
+// in the language the app shows.
+func KubeSecretCopied() string { return In(i18n.Locale()).KubeSecretCopied() }
+
+// KubeSecretCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) KubeSecretCopied() string {
+	return Catalog.Format(msgs.locale, "kubeSecretCopied", nil)
+}
+
 // KubeCronOn says "On"
 // in the language the app shows.
 func KubeCronOn() string { return In(i18n.Locale()).KubeCronOn() }
