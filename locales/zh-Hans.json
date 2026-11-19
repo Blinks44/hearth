@@ -1,4 +1,9 @@
 {
+  "catalogAntigravity": "Google 的终端编程智能体。",
+  "setupAntigravityInstaller": "下载并运行 Google 的 Antigravity CLI 安装程序",
+  "antigravityDownload": "下载…",
+  "antigravityMigration": "从 Gemini CLI 迁移",
+  "antigravityMcpSse": "Antigravity CLI 要求远程 MCP 服务器使用 Streamable HTTP。请使用服务器的 Streamable HTTP 端点。",
   "@@locale": "zh-Hans",
   "kubeNamespaces": "命名空间",
   "kubeNamespaceNew": "新建命名空间…",

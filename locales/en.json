@@ -1,4 +1,24 @@
 {
+  "catalogAntigravity": "Google's coding agent in the terminal.",
+  "@catalogAntigravity": {
+    "description": "New computer: Antigravity CLI description."
+  },
+  "setupAntigravityInstaller": "downloads and runs Google's Antigravity CLI installer",
+  "@setupAntigravityInstaller": {
+    "description": "What the official Antigravity CLI installation step does."
+  },
+  "antigravityDownload": "Download…",
+  "@antigravityDownload": {
+    "description": "Link to the official Antigravity CLI download."
+  },
+  "antigravityMigration": "Switching from Gemini CLI",
+  "@antigravityMigration": {
+    "description": "Link to the Google guide to migrating from Gemini CLI."
+  },
+  "antigravityMcpSse": "Antigravity CLI requires Streamable HTTP for remote MCP servers. Use the server’s Streamable HTTP endpoint.",
+  "@antigravityMcpSse": {
+    "description": "Why an SSE server cannot be connected to Antigravity CLI."
+  },
   "@@locale": "en",
   "kubeNamespaces": "Namespaces",
   "@kubeNamespaces": {

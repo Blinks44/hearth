@@ -1,4 +1,9 @@
 {
+  "catalogAntigravity": "Der Coding-Agent von Google für das Terminal.",
+  "setupAntigravityInstaller": "lädt das Antigravity-CLI-Installationsprogramm von Google herunter und führt es aus",
+  "antigravityDownload": "Herunterladen…",
+  "antigravityMigration": "Von Gemini CLI wechseln",
+  "antigravityMcpSse": "Antigravity CLI benötigt Streamable HTTP für entfernte MCP-Server. Verwende den Streamable-HTTP-Endpunkt des Servers.",
   "@@locale": "de",
   "kubeNamespaces": "Namespaces",
   "kubeNamespaceNew": "Neuer Namespace…",

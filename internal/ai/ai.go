@@ -61,6 +61,12 @@ var agents = []agent{
 	{"copilot", []string{"copilot"}, []string{"$COPILOT_HOME", "~/.copilot"}, []file{
 		{"settings.json", settings}, {"copilot-instructions.md", instructions}, {"mcp-config.json", mcp},
 	}, []string{"skills", sharedSkills}, []string{".github/skills", ".claude/skills", ".agents/skills"}},
+	{"antigravity", []string{"agy"}, []string{"~/.gemini/antigravity-cli"}, []file{
+		{"settings.json", settings}, {"~/.gemini/config/hooks.json", settings}, {"~/.gemini/config/mcp_config.json", mcp},
+		{"~/.gemini/AGENTS.md", instructions}, {"~/.gemini/GEMINI.md", instructions},
+		{"~/.gemini/config/AGENTS.md", instructions}, {"~/.gemini/config/GEMINI.md", instructions},
+	}, []string{"~/.gemini/config/skills", "skills", "~/.gemini/skills"},
+		[]string{".agents/skills", ".agent/skills", "_agents/skills", "_agent/skills"}},
 	{"gemini", []string{"gemini"}, []string{"~/.gemini"}, []file{
 		{"settings.json", settings}, {"GEMINI.md", instructions},
 	}, []string{"skills", sharedSkills}, []string{".gemini/skills", ".agents/skills"}},
@@ -107,15 +113,19 @@ func Detect(ctx context.Context, r run.Runner, term, gui sysenv.Env) []inventory
 
 func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string, a agent) inventory.Agent {
 	found := inventory.Agent{ID: a.id, Installations: copies(term, gui, a.commands)}
+	versionEnv := term
+	if a.id == "antigravity" {
+		versionEnv = append(append(sysenv.Env(nil), term...), "AGY_CLI_DISABLE_AUTO_UPDATE=true")
+	}
 	for i := range found.Installations {
 		in := &found.Installations[i]
 		in.Tool = a.id
 		// A shim leads to its manager, as mise: the shim itself runs the
 		// agent.
 		if in.Source.Shim {
-			in.Version = runVersion(ctx, r, term, in.Path)
+			in.Version = runVersion(ctx, r, versionEnv, in.Path)
 		} else if in.Version = pathVersion(in.RealPath); in.Version == "" {
-			in.Version = runVersion(ctx, r, term, in.RealPath)
+			in.Version = runVersion(ctx, r, versionEnv, in.RealPath)
 		}
 	}
 	if a.id == "cursor" {
@@ -148,7 +158,7 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 	}
 	// As with the secrets, a file that does not read shows nothing: the
 	// agent page lists the files.
-	found.Rules, found.Hooks, _ = access(a.id, found.Dir, accessFiles[a.id].user, "")
+	found.Rules, found.Hooks, _ = access(a.id, found.Dir, home, accessFiles[a.id].user, "")
 	return found
 }
 

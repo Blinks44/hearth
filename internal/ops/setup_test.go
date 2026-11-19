@@ -32,6 +32,21 @@ func TestSetupParts(t *testing.T) {
 			want: []string{"mise:installer", "node:mise", "gemini:npm"},
 		},
 		{
+			name: "Antigravity via Homebrew",
+			s:    Setup{GOOS: "darwin", Tools: []string{"antigravity"}, Have: map[string]bool{"homebrew": true}},
+			want: []string{"antigravity:brew"},
+		},
+		{
+			name: "Antigravity via WinGet",
+			s:    Setup{GOOS: "windows", Tools: []string{"antigravity"}, Managers: []inventory.PackageManager{{ID: "winget"}}},
+			want: []string{"antigravity:winget"},
+		},
+		{
+			name: "Antigravity without Node",
+			s:    Setup{GOOS: "linux", Tools: []string{"antigravity"}, Managers: apt},
+			want: []string{"antigravity:installer"},
+		},
+		{
 			name: "the engine chosen",
 			s:    Setup{GOOS: "darwin", Tools: []string{"docker"}, Have: map[string]bool{"homebrew": true}, Engine: "orbstack"},
 			want: []string{"docker:brew:orbstack"},

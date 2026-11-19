@@ -44,10 +44,14 @@ type mcpFile struct {
 // detection.md §7: the user's, as the agents table writes files, and a
 // project's, relative to it.
 var mcpFiles = map[string]struct{ user, project []mcpFile }{
-	"claude":   {[]mcpFile{{"~/.claude.json", claudeState}}, []mcpFile{{".mcp.json", mcpServersJSON}}},
-	"codex":    {[]mcpFile{{"config.toml", codexTOML}}, []mcpFile{{".codex/config.toml", codexTOML}}},
-	"copilot":  {[]mcpFile{{"mcp-config.json", mcpServersJSON}}, []mcpFile{{".mcp.json", mcpServersJSON}, {".github/mcp.json", mcpServersJSON}}},
-	"gemini":   {[]mcpFile{{"settings.json", mcpServersJSON}}, []mcpFile{{".gemini/settings.json", mcpServersJSON}}},
+	"claude":  {[]mcpFile{{"~/.claude.json", claudeState}}, []mcpFile{{".mcp.json", mcpServersJSON}}},
+	"codex":   {[]mcpFile{{"config.toml", codexTOML}}, []mcpFile{{".codex/config.toml", codexTOML}}},
+	"copilot": {[]mcpFile{{"mcp-config.json", mcpServersJSON}}, []mcpFile{{".mcp.json", mcpServersJSON}, {".github/mcp.json", mcpServersJSON}}},
+	"gemini":  {[]mcpFile{{"settings.json", mcpServersJSON}}, []mcpFile{{".gemini/settings.json", mcpServersJSON}}},
+	"antigravity": {[]mcpFile{{"~/.gemini/config/mcp_config.json", mcpServersJSON}}, []mcpFile{
+		{".agents/mcp_config.json", mcpServersJSON}, {".agent/mcp_config.json", mcpServersJSON},
+		{"_agents/mcp_config.json", mcpServersJSON}, {"_agent/mcp_config.json", mcpServersJSON},
+	}},
 	"cursor":   {[]mcpFile{{"mcp.json", mcpServersJSON}}, []mcpFile{{".cursor/mcp.json", mcpServersJSON}}},
 	"opencode": {[]mcpFile{{"opencode.json", openCodeJSON}}, []mcpFile{{"opencode.json", openCodeJSON}}},
 	"devin":    {[]mcpFile{{"mcp_config.json", mcpServersJSON}}, []mcpFile{{".devin/mcp_config.json", mcpServersJSON}}},
@@ -209,7 +213,7 @@ func jsonServer(data json.RawMessage) (inventory.MCPServer, error) {
 		Headers     map[string]json.RawMessage `json:"headers"`
 		URL         string                     `json:"url"`
 		HTTPURL     string                     `json:"httpUrl"`   // Gemini's streamable HTTP
-		ServerURL   string                     `json:"serverUrl"` // Devin's
+		ServerURL   string                     `json:"serverUrl"` // Antigravity CLI and Devin
 		Disabled    bool                       `json:"disabled"`
 		Enabled     *bool                      `json:"enabled"` // OpenCode's
 	}

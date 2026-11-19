@@ -27,6 +27,8 @@ var accessFiles = map[string]struct{ user, project []string }{
 	// Gemini CLI does not read a project's policies.
 	"gemini": {[]string{"settings.json", "policies"}, []string{".gemini/settings.json"}},
 	"cursor": {[]string{"cli-config.json", "hooks.json"}, []string{".cursor/cli.json", ".cursor/hooks.json"}},
+	"antigravity": {[]string{"settings.json", "~/.gemini/config/hooks.json"},
+		[]string{".agents/hooks.json", ".agent/hooks.json", "_agents/hooks.json", "_agent/hooks.json"}},
 }
 
 // AccessKnown reports that Hearth reads the permissions and hooks of the
@@ -41,7 +43,7 @@ func AccessKnown(id string) bool {
 // read.
 func ProjectAccess(dir string) (rules []inventory.AgentRule, hooks []inventory.AgentHook, errs []error) {
 	for _, a := range agents {
-		r, h, e := access(a.id, dir, accessFiles[a.id].project, dir)
+		r, h, e := access(a.id, dir, "", accessFiles[a.id].project, dir)
 		rules, hooks, errs = append(rules, r...), append(hooks, h...), append(errs, e...)
 	}
 	return rules, hooks, errs
@@ -49,12 +51,12 @@ func ProjectAccess(dir string) (rules []inventory.AgentRule, hooks []inventory.A
 
 // access reads the agent's rules and hooks of files in dir, set for
 // project.
-func access(agent, dir string, files []string, project string) (rules []inventory.AgentRule, hooks []inventory.AgentHook, errs []error) {
-	if dir == "" {
-		return nil, nil, nil
-	}
+func access(agent, dir, home string, files []string, project string) (rules []inventory.AgentRule, hooks []inventory.AgentHook, errs []error) {
 	for _, f := range files {
-		path := filepath.Join(dir, filepath.FromSlash(f))
+		path := resolve(f, dir, home)
+		if path == "" {
+			continue
+		}
 		paths := []string{path}
 		if info, err := os.Stat(path); err != nil {
 			continue
@@ -106,10 +108,59 @@ func readAccess(agent, path string) ([]inventory.AgentRule, []inventory.AgentHoo
 		return geminiPolicy(data)
 	case agent == "gemini":
 		return geminiAccess(data)
+	case agent == "antigravity" && name == "hooks.json":
+		hooks, err := antigravityHooks(data)
+		return nil, hooks, err
+	case agent == "antigravity":
+		rules, err := antigravityAccess(data)
+		return rules, nil, err
 	case agent == "cursor":
 		return cursorAccess(data)
 	}
 	return nil, nil, nil
+}
+
+func antigravityAccess(data []byte) ([]inventory.AgentRule, error) {
+	var cfg struct {
+		AgentMode      string `json:"agentMode"`
+		ToolPermission string `json:"toolPermission"`
+		Permissions    struct {
+			Allow []string `json:"allow"`
+			Ask   []string `json:"ask"`
+			Deny  []string `json:"deny"`
+		} `json:"permissions"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	var rules []inventory.AgentRule
+	if cfg.AgentMode != "" {
+		rules = append(rules, mode("agentMode", cfg.AgentMode, false))
+	}
+	if cfg.ToolPermission != "" {
+		rules = append(rules, mode("toolPermission", cfg.ToolPermission, cfg.ToolPermission == "always-proceed"))
+	}
+	p := cfg.Permissions
+	rules = append(rules, listRules(inventory.RuleAllow, p.Allow, "command(*)")...)
+	rules = append(rules, listRules(inventory.RuleAsk, p.Ask)...)
+	return append(rules, listRules(inventory.RuleDeny, p.Deny)...), nil
+}
+
+func antigravityHooks(data []byte) ([]inventory.AgentHook, error) {
+	var definitions map[string]map[string]json.RawMessage
+	if err := json.Unmarshal(data, &definitions); err != nil {
+		return nil, err
+	}
+	var hooks []inventory.AgentHook
+	for _, name := range slices.Sorted(maps.Keys(definitions)) {
+		events := definitions[name]
+		var enabled bool
+		if raw, ok := events["enabled"]; ok && json.Unmarshal(raw, &enabled) == nil && !enabled {
+			continue
+		}
+		hooks = append(hooks, jsonHooks(events)...)
+	}
+	return hooks, nil
 }
 
 // mode is the rule of a mode setting key set to value.

@@ -174,3 +174,43 @@ func TestMCPRemoveAndToggle(t *testing.T) {
 		t.Error("Claude Code's project server is removable")
 	}
 }
+
+func TestAntigravityMCP(t *testing.T) {
+	home, env := mcpHome(t)
+	if err := os.WriteFile(filepath.Join(home, ".claude.json"), []byte(`{"mcpServers":{
+		"remote":{"type":"http","url":"https://example.test/mcp","headers":{"Authorization":"Bearer `+token+`"}},
+		"events":{"type":"sse","url":"https://example.test/sse"}
+	}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := MCPConnectPlan(server(t, env, "claude", "events"), "antigravity", env, title); err == nil {
+		t.Fatal("Antigravity CLI does not support SSE")
+	}
+	p, err := MCPConnectPlan(server(t, env, "claude", "remote"), "antigravity", env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := p.Steps[0].Edit
+	if want := filepath.Join(home, ".gemini", "config", "mcp_config.json"); e.Path != want {
+		t.Errorf("edit path = %s, want %s", e.Path, want)
+	}
+	if !strings.Contains(e.After, `"serverUrl"`) || strings.Contains(e.Masked(e.After), token) {
+		t.Fatal("plan must use serverUrl and redact the token")
+	}
+	runEdits(t, p)
+	for _, on := range []bool{false, true} {
+		p, err := MCPEnablePlan(server(t, env, "antigravity", "remote"), on, env, title)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runEdits(t, p)
+		if s := server(t, env, "antigravity", "remote"); s.Disabled == on || s.Transport != "http" {
+			t.Errorf("after enabled=%t: %+v", on, s)
+		}
+	}
+	p, err = MCPRemovePlan(server(t, env, "antigravity", "remote"), env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runEdits(t, p)
+}

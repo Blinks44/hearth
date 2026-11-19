@@ -85,7 +85,7 @@ var VersionFiles = []string{".nvmrc", ".node-version", ".tool-versions", "mise.t
 var installDirs = []string{"node_modules", ".venv"}
 
 // aiFiles are the AI settings a project may have, in the order shown.
-var aiFiles = []string{"AGENTS.md", "CLAUDE.md", ".agents", ".claude", ".cursor", ".mcp.json"}
+var aiFiles = []string{"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".agents", ".agent", "_agents", "_agent", ".claude", ".cursor", ".mcp.json"}
 
 // readers read the project files Hearth knows, in the order shown. Each
 // gets the file's contents and returns its requirements.

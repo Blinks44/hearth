@@ -34,6 +34,12 @@ if command -v curl >/dev/null 2>&1; then curl -fsSL -o "$f" https://claude.ai/in
 else wget -qO "$f" https://claude.ai/install.sh; fi
 bash "$f"
 rm -f "$f"`
+	antigravityScript = `set -e
+f=$(mktemp)
+trap 'rm -f "$f"' EXIT
+if command -v curl >/dev/null 2>&1; then curl -fsSL -o "$f" https://antigravity.google/cli/install.sh
+else wget -qO "$f" https://antigravity.google/cli/install.sh; fi
+bash "$f"`
 )
 
 // installerSteps are the steps that install the tool id with its maker's
@@ -46,8 +52,12 @@ func installerSteps(id string, env sysenv.Env) ([]Step, bool) {
 	case "rust":
 		steps = []Step{{Argv: []string{"/bin/sh", "-c", rustupScript}, Note: locales.SetupRustup()}}
 		posix, fish = `. "$HOME/.cargo/env"`, `source "$HOME/.cargo/env.fish"`
-	case "claude":
-		steps = []Step{{Argv: []string{"/bin/sh", "-c", claudeScript}, Note: locales.SetupClaudeInstaller()}}
+	case "claude", "antigravity":
+		script, note := claudeScript, locales.SetupClaudeInstaller()
+		if id == "antigravity" {
+			script, note = antigravityScript, locales.SetupAntigravityInstaller()
+		}
+		steps = []Step{{Argv: []string{"/bin/sh", "-c", script}, Note: note}}
 		bin := filepath.Join(env.Get("HOME"), ".local", "bin")
 		if slices.ContainsFunc(filepath.SplitList(env.Get("PATH")), func(d string) bool { return sysenv.SamePath(d, bin) }) {
 			return steps, true

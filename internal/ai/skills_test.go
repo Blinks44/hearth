@@ -177,7 +177,7 @@ func TestProjectSkills(t *testing.T) {
 	got := ProjectSkills(dir)
 	want := []skill{{name: "plan", description: "Plan work", dir: ".agents/skills/plan", paths: []inventory.SkillPath{
 		{Path: ".claude/skills/plan", Link: true, Agents: []string{"claude", "copilot", "cursor", "opencode", "grok"}},
-		{Path: ".agents/skills/plan", Agents: []string{"codex", "copilot", "gemini", "cursor", "opencode", "devin", "grok", "kimi"}},
+		{Path: ".agents/skills/plan", Agents: []string{"codex", "copilot", "antigravity", "gemini", "cursor", "opencode", "devin", "grok", "kimi"}},
 	}}}
 	if s := summary(t, got, dir); !reflect.DeepEqual(s, want) {
 		t.Errorf("got  %+v\nwant %+v", s, want)

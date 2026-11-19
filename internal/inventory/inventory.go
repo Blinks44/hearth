@@ -407,7 +407,7 @@ type SkillPath struct {
 
 // Agent is an AI coding agent as a scan found it.
 type Agent struct {
-	// ID names the agent: "claude", "codex", "copilot", "gemini",
+	// ID names the agent: "claude", "codex", "copilot", "antigravity", "gemini",
 	// "cursor", "opencode", "devin", "grok", "kimi", "aider".
 	ID string
 	// Installations are the copies of its command, found as a tool's are.

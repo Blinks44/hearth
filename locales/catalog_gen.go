@@ -36,6 +36,76 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// CatalogAntigravity says "Google's coding agent in the terminal."
+// in the language the app shows.
+//
+// New computer: Antigravity CLI description.
+func CatalogAntigravity() string { return In(i18n.Locale()).CatalogAntigravity() }
+
+// CatalogAntigravity says "Google's coding agent in the terminal."
+// in the language of msgs.
+//
+// New computer: Antigravity CLI description.
+func (msgs Messages) CatalogAntigravity() string {
+	return Catalog.Format(msgs.locale, "catalogAntigravity", nil)
+}
+
+// SetupAntigravityInstaller says "downloads and runs Google's Antigravity CLI installer"
+// in the language the app shows.
+//
+// What the official Antigravity CLI installation step does.
+func SetupAntigravityInstaller() string { return In(i18n.Locale()).SetupAntigravityInstaller() }
+
+// SetupAntigravityInstaller says "downloads and runs Google's Antigravity CLI installer"
+// in the language of msgs.
+//
+// What the official Antigravity CLI installation step does.
+func (msgs Messages) SetupAntigravityInstaller() string {
+	return Catalog.Format(msgs.locale, "setupAntigravityInstaller", nil)
+}
+
+// AntigravityDownload says "Download…"
+// in the language the app shows.
+//
+// Link to the official Antigravity CLI download.
+func AntigravityDownload() string { return In(i18n.Locale()).AntigravityDownload() }
+
+// AntigravityDownload says "Download…"
+// in the language of msgs.
+//
+// Link to the official Antigravity CLI download.
+func (msgs Messages) AntigravityDownload() string {
+	return Catalog.Format(msgs.locale, "antigravityDownload", nil)
+}
+
+// AntigravityMigration says "Switching from Gemini CLI"
+// in the language the app shows.
+//
+// Link to the Google guide to migrating from Gemini CLI.
+func AntigravityMigration() string { return In(i18n.Locale()).AntigravityMigration() }
+
+// AntigravityMigration says "Switching from Gemini CLI"
+// in the language of msgs.
+//
+// Link to the Google guide to migrating from Gemini CLI.
+func (msgs Messages) AntigravityMigration() string {
+	return Catalog.Format(msgs.locale, "antigravityMigration", nil)
+}
+
+// AntigravityMcpSse says "Antigravity CLI requires Streamable HTTP for remote MCP servers. Use the server’s Streamable HTTP endpoint."
+// in the language the app shows.
+//
+// Why an SSE server cannot be connected to Antigravity CLI.
+func AntigravityMcpSse() string { return In(i18n.Locale()).AntigravityMcpSse() }
+
+// AntigravityMcpSse says "Antigravity CLI requires Streamable HTTP for remote MCP servers. Use the server’s Streamable HTTP endpoint."
+// in the language of msgs.
+//
+// Why an SSE server cannot be connected to Antigravity CLI.
+func (msgs Messages) AntigravityMcpSse() string {
+	return Catalog.Format(msgs.locale, "antigravityMcpSse", nil)
+}
+
 // KubeNamespaces says "Namespaces"
 // in the language the app shows.
 //

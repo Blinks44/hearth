@@ -176,11 +176,11 @@ func (a *App) projectRows(c *ui.Context) {
 						toolTag(c, st)
 					}
 				})
-				ui.Row(c).Width(90).Shrink(0).Gap(4).Children(func() {
-					for _, ag := range projectAgents(r.p) {
+				ui.Row(c).Width(90).Shrink(0).Gap(4).Wrap().Children(func() {
+					for _, id := range projectAgents(r.p) {
 						ui.Box(c).Size(20, 20).Radius(10).Center().BorderWidth(1).BorderColor(pal.Line).
-							Tooltip(ag.name).Children(func() {
-							iconOrLogo(c, "brand/"+ag.brand, 12, t.TextMuted)
+							Tooltip(agentTitle(id)).Children(func() {
+							agentLogo(c, id, 12)
 						})
 					}
 				})
@@ -429,8 +429,8 @@ func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects
 		}
 		stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
 		var names []string
-		for _, ag := range projectAgents(p) {
-			names = append(names, ag.name)
+		for _, id := range projectAgents(p) {
+			names = append(names, agentTitle(id))
 		}
 		value, aiCaption := "—", locales.NoAISettings()
 		if len(names) > 0 {
@@ -850,27 +850,30 @@ func withSpace(s string) string {
 	return " " + s
 }
 
-// agent is an AI agent a project has settings for.
-type agent struct{ name, brand string }
-
 // projectAgents are the agents whose files the project has: Claude Code
 // for CLAUDE.md, .claude and .mcp.json; Codex and others for AGENTS.md;
 // Cursor for .cursor.
-func projectAgents(p projects.Project) []agent {
-	var out []agent
-	add := func(a agent) {
-		if !slices.Contains(out, a) {
-			out = append(out, a)
+func projectAgents(p projects.Project) []string {
+	var out []string
+	add := func(id string) {
+		if !slices.Contains(out, id) {
+			out = append(out, id)
 		}
 	}
 	for _, f := range p.AI {
 		switch f {
 		case "CLAUDE.md", ".claude", ".mcp.json":
-			add(agent{"Claude Code", "claude"})
+			add("claude")
 		case "AGENTS.md", ".agents":
-			add(agent{"Codex", "openai"})
+			add("codex")
+			add("antigravity")
+		case "GEMINI.md":
+			add("antigravity")
+			add("gemini")
+		case ".agent", "_agents", "_agent":
+			add("antigravity")
 		case ".cursor":
-			add(agent{"Cursor", "cursor"})
+			add("cursor")
 		}
 	}
 	return out
@@ -886,9 +889,13 @@ func aiFileCaption(f string) string {
 	case ".mcp.json":
 		return locales.AiMcp()
 	case "AGENTS.md":
-		return locales.AiInstructions("Codex, Copilot, Gemini")
+		return locales.AiInstructions("Codex, Copilot, Gemini CLI, Antigravity CLI")
+	case "GEMINI.md":
+		return locales.AiInstructions("Gemini CLI, Antigravity CLI")
 	case ".agents":
 		return locales.AiSkills()
+	case ".agent", "_agents", "_agent":
+		return locales.AiSettings("Antigravity CLI")
 	case ".cursor":
 		return locales.AiSettings("Cursor")
 	}

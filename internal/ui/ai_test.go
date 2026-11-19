@@ -77,6 +77,30 @@ func openAI(t *testing.T, a *App, path string) *ui.Tester {
 	return tt
 }
 
+func TestAntigravityAgentPage(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.Snapshot.Agents = append(a.Snapshot.Agents, inventory.Agent{
+		ID: "antigravity", Dir: home + "/.gemini/antigravity-cli",
+		Installations: []inventory.Installation{
+			{Tool: "antigravity", Version: "1.5.12", Path: home + "/.local/bin/agy", OnPath: 1},
+		},
+		Files: []inventory.AgentFile{
+			{Path: home + "/.gemini/GEMINI.md", Kind: inventory.FileInstructions},
+			{Path: home + "/.gemini/config/mcp_config.json", Kind: inventory.FileMCP},
+		},
+		Rules: []inventory.AgentRule{{Kind: inventory.RuleAsk, Rule: "command(*)"}},
+		Hooks: []inventory.AgentHook{{Event: "PostToolUse", Command: "make lint"}},
+	})
+	tt := openAI(t, a, "/ai/agents")
+	hasTexts(t, tt, "Antigravity CLI", "Gemini CLI", "1.5.12")
+	if err := tt.Click("Antigravity CLI"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Switching from Gemini CLI", "GEMINI.md", "mcp_config.json", "command(*)", "make lint")
+}
+
 // The agents found make a table with where they are, their version, what
 // installed them, their skills, servers and instructions; the others are
 // listed apart, with settings left told; a row opens the agent's page.

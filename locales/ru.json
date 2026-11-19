@@ -1,4 +1,9 @@
 {
+  "catalogAntigravity": "Агент Google для программирования в терминале.",
+  "setupAntigravityInstaller": "скачивает и запускает официальный установщик Antigravity CLI от Google",
+  "antigravityDownload": "Скачать…",
+  "antigravityMigration": "Переход с Gemini CLI",
+  "antigravityMcpSse": "Для удалённых MCP-серверов Antigravity CLI требует Streamable HTTP. Используйте адрес сервера с этим транспортом.",
   "@@locale": "ru",
   "kubeNamespaces": "Пространства имён",
   "kubeNamespaceNew": "Новый namespace…",

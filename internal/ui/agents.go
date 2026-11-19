@@ -25,6 +25,7 @@ var agentInfos = []agentInfo{
 	{"claude", "Claude Code", "claude"},
 	{"codex", "Codex", "openai"},
 	{"copilot", "Copilot CLI", "githubcopilot"},
+	{"antigravity", "Antigravity CLI", ""},
 	{"gemini", "Gemini CLI", "googlegemini"},
 	{"cursor", "Cursor", "cursor"},
 	{"opencode", "OpenCode", ""},
@@ -471,6 +472,11 @@ func (a *App) agentsNotFound(c *ui.Context) {
 			}
 			listRow(c, agentTitle(ag.ID), false, caption, func() {
 				a.installToolButton(c, ag.ID)
+				if ag.ID == "antigravity" && !a.canInstallTool(ag.ID) {
+					ui.Button(c.Key("antigravity-download"), locales.AntigravityDownload()).OnClick(func() {
+						c.OpenURL("https://antigravity.google/download")
+					})
+				}
 			})
 		}
 	})
@@ -496,6 +502,13 @@ func (a *App) agentDetail(c *ui.Context, id string) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.agentHero(c, ag)
+				if ag.ID == "antigravity" {
+					ui.Row(c).Children(func() {
+						ui.Button(c.Key("antigravity-migration"), locales.AntigravityMigration()).OnClick(func() {
+							c.OpenURL("https://antigravity.google/docs/cli/gcli-migration")
+						})
+					})
+				}
 				if ag.ID == "codex" {
 					a.globalInstructionsCard(c, ag.Instructions)
 				}

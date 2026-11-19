@@ -6,11 +6,82 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
+
+func TestAntigravityInventory(t *testing.T) {
+	home, project := t.TempDir(), t.TempDir()
+	bin := filepath.Join(home, "bin")
+	agy := executable(t, filepath.Join(bin, "agy"))
+	gemini := executable(t, filepath.Join(bin, "gemini"))
+	tree(t, home, map[string]string{
+		".gemini/settings.json": `{"mcpServers":{"legacy":{"command":"gemini-server"}}}`,
+		".gemini/GEMINI.md":     "# Shared context\n",
+		".gemini/antigravity-cli/settings.json": `{
+			"toolPermission":"always-proceed",
+			"permissions":{"allow":["command(*)"],"ask":["command(git push)"],"deny":["command(sudo)"]},
+			"hooks":{"Stop":[{"command":"not-loaded"}]}
+		}`,
+		".gemini/config/hooks.json": `{
+			"lint":{"PostToolUse":[{"matcher":"run_command","hooks":[{"command":"make lint"}]}]},
+			"off":{"enabled":false,"Stop":[{"command":"not-loaded"}]}
+		}`,
+		".gemini/config/mcp_config.json":     `{"mcpServers":{"remote":{"serverUrl":"https://example.test/mcp","disabled":true}}}`,
+		".gemini/config/skills/agy/SKILL.md": "---\nname: agy\n---\n",
+		".gemini/skills/shared/SKILL.md":     "---\nname: shared\n---\n",
+	}, nil)
+	tree(t, project, map[string]string{
+		".agents/skills/workspace/SKILL.md": "---\nname: workspace\n---\n",
+		".agents/mcp_config.json":           `{"mcpServers":{"local":{"command":"server"}}}`,
+		".agents/hooks.json":                `{"init":{"SessionStart":[{"command":"./init.sh"}]}}`,
+	}, nil)
+	env := sysenv.Env{"HOME=" + home, "PATH=" + bin, "AGY_CLI_DISABLE_AUTO_UPDATE=false"}
+	fake := &run.Fake{}
+	fake.Stdout("1.5.12\n", agy, "--version")
+	fake.Stdout("0.68.0\n", gemini, "--version")
+	detected := byID(Detect(t.Context(), fake, env, nil))
+	a := detected["antigravity"]
+	if len(a.Installations) != 1 || a.Installations[0].Version != "1.5.12" || !detected["gemini"].Found() {
+		t.Fatalf("Antigravity: %+v, Gemini: %+v", a, detected["gemini"])
+	}
+	for _, call := range fake.Calls() {
+		if call.Args[0] == agy && sysenv.Env(call.Env).Get("AGY_CLI_DISABLE_AUTO_UPDATE") != "true" {
+			t.Error("Antigravity version probe must disable updates")
+		}
+	}
+	if len(a.Hooks) != 1 || a.Hooks[0].Command != "make lint" || a.Hooks[0].Matcher != "run_command" {
+		t.Errorf("hooks = %+v", a.Hooks)
+	}
+	if len(a.Rules) != 4 || !a.Rules[0].Risky || !a.Rules[1].Risky {
+		t.Errorf("permissions = %+v", a.Rules)
+	}
+	user, issues := MCP(env)
+	if len(issues) != 0 || len(user) != 2 || user[0].Agent != "antigravity" ||
+		user[0].Name != "remote" || user[0].Transport != "http" || !user[0].Disabled ||
+		user[1].Agent != "gemini" || user[1].Name != "legacy" {
+		t.Errorf("user MCP = %+v, errors = %v", user, issues)
+	}
+	workspace, problems := ProjectMCP(project)
+	if len(problems) != 0 || len(workspace) != 1 || workspace[0].Agent != "antigravity" || workspace[0].Command != "server" {
+		t.Errorf("project MCP = %+v, errors = %v", workspace, problems)
+	}
+	_, hooks, problems := ProjectAccess(project)
+	if len(problems) != 0 || len(hooks) != 1 || hooks[0].Agent != "antigravity" || hooks[0].Command != "./init.sh" {
+		t.Errorf("project hooks = %+v, errors = %v", hooks, problems)
+	}
+	for _, scope := range [][]inventory.Skill{Skills(env), ProjectSkills(project)} {
+		for _, s := range scope {
+			if len(s.Paths) != 1 || !slices.Contains(s.Paths[0].Agents, "antigravity") {
+				t.Errorf("skill unavailable to Antigravity: %+v", s)
+			}
+		}
+	}
+}
 
 func executable(t *testing.T, path string) string {
 	t.Helper()

@@ -152,7 +152,7 @@ decision = "deny"
 		t.Run(tt.agent, func(t *testing.T) {
 			dir := t.TempDir()
 			writeFiles(t, dir, tt.files)
-			rules, hooks, errs := access(tt.agent, dir, accessFiles[tt.agent].user, "")
+			rules, hooks, errs := access(tt.agent, dir, "", accessFiles[tt.agent].user, "")
 			if len(errs) > 0 {
 				t.Fatal(errs)
 			}

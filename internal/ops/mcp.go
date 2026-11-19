@@ -107,7 +107,7 @@ func jsonDef(def ai.MCPDef, agent string, format mcpFormat) json.RawMessage {
 		return object("type", def.Transport, "url", def.URL, "headers", def.Headers, "tools", []string{"*"})
 	case agent == "gemini" && def.Transport == "http":
 		return object("httpUrl", def.URL, "headers", def.Headers)
-	case agent == "devin":
+	case agent == "devin" || agent == "antigravity":
 		return object("serverUrl", def.URL, "headers", def.Headers)
 	}
 	return object("type", def.Transport, "url", def.URL, "headers", def.Headers)
@@ -211,6 +211,30 @@ func secrets(def ai.MCPDef, s inventory.MCPServer) []string {
 	return slices.DeleteFunc(out, func(v string) bool { return v == "" })
 }
 
+// hideMCPFile includes Antigravity's OAuth client secrets, which can also
+// appear in the unchanged context of a diff for a different server.
+func hideMCPFile(agent, before string, hide []string) []string {
+	if agent != "antigravity" {
+		return hide
+	}
+	var cfg struct {
+		Servers map[string]struct {
+			OAuth struct {
+				ClientSecret string `json:"clientSecret"`
+			} `json:"oauth"`
+		} `json:"mcpServers"`
+	}
+	if json.Unmarshal([]byte(before), &cfg) == nil {
+		for _, server := range cfg.Servers {
+			if value := server.OAuth.ClientSecret; value != "" {
+				raw, _ := json.Marshal(value)
+				hide = append(hide, string(raw[1:len(raw)-1]), value)
+			}
+		}
+	}
+	return hide
+}
+
 // readText is the file at path, "" with new true when it is not there.
 func readText(path string) (text string, isNew bool, err error) {
 	data, err := os.ReadFile(path)
@@ -276,6 +300,9 @@ func HearthMCPPlan(executable, id string, env sysenv.Env, names func(string) str
 }
 
 func mcpAddPlan(s inventory.MCPServer, def ai.MCPDef, id string, env sysenv.Env, names func(string) string) (Plan, error) {
+	if id == "antigravity" && def.Transport == "sse" {
+		return Plan{}, errors.New(locales.AntigravityMcpSse())
+	}
 	title := names(id)
 	path := ai.MCPFile(id, env, s.Project)
 	if path == "" {
@@ -333,7 +360,7 @@ func mcpAddPlan(s inventory.MCPServer, def ai.MCPDef, id string, env sysenv.Env,
 		if isNew {
 			before = ""
 		}
-		p.Steps = []Step{{Edit: &FileEdit{Path: path, Before: before, After: after, New: isNew, Hide: hide}}}
+		p.Steps = []Step{{Edit: &FileEdit{Path: path, Before: before, After: after, New: isNew, Hide: hideMCPFile(id, before, hide)}}}
 	}
 	p.Verify = func(context.Context) (string, error) {
 		if _, ok := findServer(readServers(env, s.Project), id, s.Name, s.Project); !ok {
@@ -386,7 +413,7 @@ func MCPRemovePlan(s inventory.MCPServer, env sysenv.Env, names func(string) str
 			return Plan{}, fmt.Errorf("%s: %w", s.File, err)
 		}
 		def, _ := readDef(s)
-		p.Steps = []Step{{Edit: &FileEdit{Path: s.File, Before: text, After: after, Hide: secrets(def, s)}}}
+		p.Steps = []Step{{Edit: &FileEdit{Path: s.File, Before: text, After: after, Hide: hideMCPFile(s.Agent, text, secrets(def, s))}}}
 	}
 	p.Verify = func(context.Context) (string, error) {
 		if _, ok := findServer(readServers(env, s.Project), s.Agent, s.Name, s.Project); ok {
@@ -398,11 +425,10 @@ func MCPRemovePlan(s inventory.MCPServer, env sysenv.Env, names func(string) str
 }
 
 // MCPToggles reports that s's agent turns a server off by a setting of
-// its own, which Hearth then sets: Codex's and Grok Build's enabled, and
-// OpenCode's.
+// its own, which Hearth then sets.
 func MCPToggles(s inventory.MCPServer) bool {
 	f := formatOf(s.Agent, s.File)
-	return f == mcpTOML || f == mcpOpenCode
+	return f == mcpTOML || f == mcpOpenCode || s.Agent == "antigravity"
 }
 
 // MCPEnablePlan returns the plan that turns s on, or off, in its file.
@@ -417,9 +443,12 @@ func MCPEnablePlan(s inventory.MCPServer, on bool, env sysenv.Env, names func(st
 		return Plan{}, err
 	}
 	var after string
-	if formatOf(s.Agent, s.File) == mcpTOML {
+	switch {
+	case formatOf(s.Agent, s.File) == mcpTOML:
 		after, err = setTOMLRaw(text, serverTable(s.Name), "enabled", strconv.FormatBool(on))
-	} else {
+	case s.Agent == "antigravity":
+		after, err = JSONSet(text, []string{"mcpServers", s.Name, "disabled"}, json.RawMessage(strconv.FormatBool(!on)))
+	default:
 		after, err = JSONSet(text, []string{"mcp", s.Name, "enabled"}, json.RawMessage(strconv.FormatBool(on)))
 	}
 	if err != nil {
@@ -430,7 +459,7 @@ func MCPEnablePlan(s inventory.MCPServer, on bool, env sysenv.Env, names func(st
 	p := Plan{
 		Title: locales.McpOffTitle(s.Name, title),
 		Why:   locales.McpToggleWhy(),
-		Steps: []Step{{Edit: &FileEdit{Path: s.File, Before: text, After: after, Hide: secrets(def, s)}}},
+		Steps: []Step{{Edit: &FileEdit{Path: s.File, Before: text, After: after, Hide: hideMCPFile(s.Agent, text, secrets(def, s))}}},
 	}
 	if on {
 		p.Title = locales.McpOnTitle(s.Name, title)
