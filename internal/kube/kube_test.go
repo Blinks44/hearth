@@ -47,7 +47,7 @@ func TestRead(t *testing.T) {
 				{Name: "api", Image: "ghcr.io/acme/checkout:2.8.1", Restarts: 14, State: "waiting", Reason: "CrashLoopBackOff",
 					Message: "back-off 5m0s restarting failed container=api pod=checkout-api-7d9f8c5b-x2k4p_shop(p1)",
 					Last:    &Run{Reason: "Error", ExitCode: 1, Started: at(9, 58, 0), Finished: at(9, 58, 3)}},
-				{Name: "envoy", Image: "envoyproxy/envoy:v1.31.2", Ready: true, State: "running"},
+				{Name: "envoy", Image: "envoyproxy/envoy:v1.31.2", Ready: true, State: "running", Started: at(8, 0, 5)},
 			}}},
 		{"checkout-api-7d9f8c5b-m8q2z", Pod{Namespace: "shop", Name: "checkout-api-7d9f8c5b-m8q2z", UID: "p2", Phase: "Running",
 			Ready: 1, Node: "kind-worker2", Created: created, Owner: Owner{"Deployment", "checkout-api"},

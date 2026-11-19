@@ -74,6 +74,11 @@ type kubeClusterState struct {
 	// the list, tab the details' tab.
 	pod, deployment string
 	tab             int
+	// logs is the log shown in place of the list, nil for none;
+	// logRunning is what its kubectl logs reads, and logStop ends it.
+	logs       *logView
+	logRunning string
+	logStop    func()
 }
 
 // clusterNamespaces are the namespaces the page reads in the context:
@@ -118,8 +123,8 @@ func (a *App) syncCluster() {
 	}
 	running := ""
 	if target != "" {
-		t.Events = a.detailRef()
-		running = target + "#" + strconv.Itoa(s.refresh) + "#" + t.Events.UID
+		t.Events, t.Tail = a.detailRef(), a.detailTail()
+		running = fmt.Sprintf("%s#%d#%s#%+v", target, s.refresh, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -132,6 +137,7 @@ func (a *App) syncCluster() {
 	if target != s.target {
 		// Another cluster or namespace: what was read is not its.
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
+		s.logs = nil
 	}
 	if running == "" {
 		return
@@ -170,12 +176,31 @@ func (a *App) detailRef() kube.Ref {
 	return kube.Ref{}
 }
 
+// detailTail is the container of the pod whose details show that keeps
+// failing, whose failed run's last line they tell; zero for none.
+func (a *App) detailTail() kube.Tail {
+	s := &a.cluster
+	if s.data == nil || s.kind != kindPods || s.logs != nil {
+		return kube.Tail{}
+	}
+	for _, p := range s.data.Pods {
+		if p.UID != s.pod {
+			continue
+		}
+		if story, ok := storyOf(p, nil, time.Now()); ok && story.crashed != "" {
+			return kube.Tail{Namespace: p.Namespace, Pod: p.Name, Container: story.crashed, Previous: !story.ended}
+		}
+	}
+	return kube.Tail{}
+}
+
 // StopCluster ends the cluster page's reads, as the window closes.
 func (a *App) StopCluster() {
 	if a.cluster.stop != nil {
 		a.cluster.stop()
 		a.cluster.stop, a.cluster.running = nil, ""
 	}
+	a.stopLogs()
 }
 
 // openCluster shows the cluster of the context name.
@@ -215,6 +240,10 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 	pal := Colors(t)
 	ui.Column(c).Fill().Children(func() {
 		a.clusterHeader(c, name)
+		if s.logs != nil {
+			a.logsView(c)
+			return
+		}
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(14).Padding(20, 28, 24, 28).Children(func() {
 				a.kindChips(c)
@@ -281,11 +310,23 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		kinds := []string{"Pods", "Deployments"}
 		pathButton(c, "cluster-kind", "lucide/"+[]string{"box", "boxes"}[s.kind], kinds[s.kind]).PopoverMenuButton(func(m *ui.Menu) {
 			for i, k := range kinds {
-				if m.Item(k).Radio(s.kind == i).Chosen() {
-					s.kind = i
+				if m.Item(k).Radio(s.kind == i && s.logs == nil).Chosen() {
+					s.kind, s.logs = i, nil
 				}
 			}
 		})
+		if s.logs != nil {
+			a.logsCrumb(c)
+			ui.Box(c).Grow(1).Height(1)
+			ui.Button(c.Key("logs-copy"), "").Label(locales.KubeLogsCopy()).Disabled(len(s.logs.lines) == 0).OnClick(func() {
+				c.WriteClipboard(s.logs.text())
+				c.Toast(locales.KubeLogsCopied(len(s.logs.lines)))
+			}).Children(func() {
+				ui.Icon(c, Icon("copy")).Size(14, 14)
+				ui.Text(c, locales.KubeLogsCopy()).SingleLine()
+			})
+			return
+		}
 		ui.Box(c).Grow(1).Height(1)
 		a.freshness(c)
 		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() { s.refresh++ })

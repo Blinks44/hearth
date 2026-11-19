@@ -11055,5 +11055,226 @@
   "kubeNoOwnedPods": "No pods.",
   "@kubeNoOwnedPods": {
     "description": "Deployment details: it has no pods."
+  },
+  "kubeLogsOpen": "Logs",
+  "@kubeLogsOpen": {
+    "description": "Pod details button: open the container's log."
+  },
+  "kubeLogsOpenPrevious": "Previous run's log",
+  "@kubeLogsOpenPrevious": {
+    "description": "What is going on: button opening the log of the container's previous run."
+  },
+  "kubeWhyLastLine": "Last log line: {line}",
+  "@kubeWhyLastLine": {
+    "description": "What is going on: the last line the container wrote in its previous run.",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLogsTag": "logs",
+  "@kubeLogsTag": {
+    "description": "Cluster header: tag after the pod's name while its log shows."
+  },
+  "kubeLogsBack": "Back to the pod",
+  "@kubeLogsBack": {
+    "description": "Log page: back to the pod's details."
+  },
+  "kubeLogsGone": "The pod or its container is gone from the cluster.",
+  "@kubeLogsGone": {
+    "description": "Log page: the pod or container is no longer in the cluster."
+  },
+  "kubeLogsCopy": "Copy",
+  "@kubeLogsCopy": {
+    "description": "Log page: copy the lines shown."
+  },
+  "kubeLogsCopied": "{count, plural, one {Copied # line} other {Copied # lines}}",
+  "@kubeLogsCopied": {
+    "description": "Toast: the log's lines were copied.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsContainer": "Container",
+  "@kubeLogsContainer": {
+    "description": "Log page: label of the container select."
+  },
+  "kubeLogsCurrent": "Current",
+  "@kubeLogsCurrent": {
+    "description": "Log page: the container's current run."
+  },
+  "kubeLogsPrevious": "Previous run · code {code}",
+  "@kubeLogsPrevious": {
+    "description": "Log page: the container's previous run and how it ended.",
+    "placeholders": {
+      "code": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsWholeRun": "Whole run",
+  "@kubeLogsWholeRun": {
+    "description": "Log page period: all the run's lines."
+  },
+  "kubeLogsLast": "Last {period}",
+  "@kubeLogsLast": {
+    "description": "Log page period: the last minutes or hours, short as 15m.",
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLogsFind": "Find in the log",
+  "@kubeLogsFind": {
+    "description": "Log page: placeholder of the search in the log."
+  },
+  "kubeLogsMatches": "{n} of {total}",
+  "@kubeLogsMatches": {
+    "description": "Log page: the current match of the search among all.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsNoMatches": "No matches",
+  "@kubeLogsNoMatches": {
+    "description": "Log page: the search found nothing."
+  },
+  "kubeLogsPreviousMatch": "Previous match",
+  "@kubeLogsPreviousMatch": {
+    "description": "Log page: go to the match before."
+  },
+  "kubeLogsNextMatch": "Next match",
+  "@kubeLogsNextMatch": {
+    "description": "Log page: go to the next match."
+  },
+  "kubeLogsTime": "Time",
+  "@kubeLogsTime": {
+    "description": "Log page toggle: show each line's time."
+  },
+  "kubeLogsWrap": "Wrap",
+  "@kubeLogsWrap": {
+    "description": "Log page toggle: wrap long lines."
+  },
+  "kubeLogsTagCurrent": "current run",
+  "@kubeLogsTagCurrent": {
+    "description": "Log page head: tag of the current run."
+  },
+  "kubeLogsTagPrevious": "previous run",
+  "@kubeLogsTagPrevious": {
+    "description": "Log page head: tag of the previous run."
+  },
+  "kubeLogsPreviousRun": "Container {container} ran {ran}: {from} – {to}, and ended with code {code}. It is on try {try} now.",
+  "@kubeLogsPreviousRun": {
+    "description": "Log page head: how the previous run went; ran is short as 3s, from and to are times of day, try counts the runs.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      },
+      "ran": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "code": {
+        "type": "int",
+        "example": "3"
+      },
+      "try": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsRunning": "Container {container} runs since {since}; new lines show as it writes them.",
+  "@kubeLogsRunning": {
+    "description": "Log page head: the container runs; since is a time of day.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      },
+      "since": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLogsEnded": "Container {container} ended with code {code}.",
+  "@kubeLogsEnded": {
+    "description": "Log page head: the container's run ended.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      },
+      "code": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsWaiting": "Container {container} does not run now ({reason}): the log is of its last run.",
+  "@kubeLogsWaiting": {
+    "description": "Log page head: the container does not run; reason is Kubernetes' word, as CrashLoopBackOff.",
+    "placeholders": {
+      "container": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeLogsLines": "{count, plural, one {# line} other {# lines}}",
+  "@kubeLogsLines": {
+    "description": "Log page head: how many lines are shown.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "kubeLogsDropped": "older lines are not kept",
+  "@kubeLogsDropped": {
+    "description": "Log page head: older lines are not kept."
+  },
+  "kubeLogsFailed": "kubectl did not give the log:",
+  "@kubeLogsFailed": {
+    "description": "Log page: kubectl did not give the log; its words follow."
+  },
+  "kubeLogsReading": "Reading the log…",
+  "@kubeLogsReading": {
+    "description": "Log page: the log is being read."
+  },
+  "kubeLogsEmpty": "The container wrote nothing in this run.",
+  "@kubeLogsEmpty": {
+    "description": "Log page: the run wrote nothing."
+  },
+  "kubeLogsPreviousEnd": "End of the previous run. The current run's log is under Current.",
+  "@kubeLogsPreviousEnd": {
+    "description": "Log page: below the previous run's last line."
+  },
+  "kubeLogsStreamEnded": "The container stopped: its log ended. Hearth reads the next run when it starts.",
+  "@kubeLogsStreamEnded": {
+    "description": "Log page: the followed run stopped writing because the container ended."
+  },
+  "kubeLogsOpenEnded": "Log of the failed run",
+  "@kubeLogsOpenEnded": {
+    "description": "What is going on: button opening the log of the container's run that just failed, between its tries."
   }
 }

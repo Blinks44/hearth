@@ -46,6 +46,13 @@ func TestStoryOf(t *testing.T) {
 			"Its last run ended with exit code 137 (OOMKilled) 3s after it started", "Kubernetes stopped it for going over its memory limit",
 			"14 restarts in 41m", "Kubernetes waits up to 5m before the next try",
 		}}},
+		// Between its tries the container shows the run that just ended.
+		{"crash, between tries", kube.Pod{Phase: "Running", Reason: "Error", Created: created, Containers: []kube.Container{{
+			Name: "api", Restarts: 27, State: "terminated", Reason: "Error",
+			Ended: &kube.Run{Reason: "Error", ExitCode: 1, Started: now.Add(-time.Minute), Finished: now.Add(-time.Minute + 3*time.Second)},
+		}}}, nil, podStory{title: "Container api keeps failing after it starts", known: true, facts: []string{
+			"Its last run ended with exit code 1 (Error) 3s after it started", "27 restarts in 41m",
+		}}},
 		{"image not found", pull(`Back-off pulling image "ghcr.io/acme/web:1.4.2": not found: manifest unknown`), nil, podStory{
 			title: "Image ghcr.io/acme/web:1.4.2 does not pull", known: true, facts: []string{"Registry ghcr.io has no such image or tag"},
 			detail: `Back-off pulling image "ghcr.io/acme/web:1.4.2": not found: manifest unknown`}},
@@ -107,6 +114,7 @@ func openShop(t *testing.T) (*App, *ui.Tester, *clusterWatches) {
 	w := &clusterWatches{}
 	a.WatchCluster = w.watch
 	a.ListNamespaces = func(kube.Target, func([]string, error)) {}
+	a.StreamLogs = (&logStreams{}).stream
 	a.router.Push(kubeClusterPath("kind-dev"))
 	tt := ui.NewTester(a.View, 1440, 900)
 	tt.Advance(time.Second)

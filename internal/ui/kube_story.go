@@ -21,6 +21,11 @@ type podStory struct {
 	known bool
 	// waiting tells a pod still waiting for something from one failing.
 	waiting bool
+	// crashed is the container that keeps failing, whose log tells more;
+	// empty for none. ended is true when the run that failed is its
+	// current one, which ended, rather than its previous one.
+	crashed string
+	ended   bool
 }
 
 // line is the story in one line, for the pod's row.
@@ -49,6 +54,16 @@ func storyOf(p kube.Pod, events []kube.Event, now time.Time) (s podStory, ok boo
 			return crashStory(p, ct, now), true
 		case "ImagePullBackOff", "ErrImagePull":
 			return pullStory(ct), true
+		}
+	}
+	for _, ct := range p.Containers {
+		// Between its tries, a container that keeps failing shows the
+		// run that just ended.
+		if ct.State == "terminated" && ct.Ended != nil && ct.Reason != "Completed" && ct.Restarts > 0 && p.Phase == "Running" {
+			ct.Last = ct.Ended
+			s := crashStory(p, ct, now)
+			s.ended = true
+			return s, true
 		}
 	}
 	if p.Unscheduled != "" {
@@ -102,7 +117,7 @@ func storyOf(p kube.Pod, events []kube.Event, now time.Time) (s podStory, ok boo
 // crashStory is the story of container ct of p starting and failing
 // again and again.
 func crashStory(p kube.Pod, ct kube.Container, now time.Time) podStory {
-	s := podStory{title: locales.KubeWhyCrash(ct.Name), known: true}
+	s := podStory{title: locales.KubeWhyCrash(ct.Name), known: true, crashed: ct.Name}
 	if last := ct.Last; last != nil {
 		ran := last.Finished.Sub(last.Started)
 		s.facts = append(s.facts, locales.KubeWhyLastRun(last.ExitCode, last.Reason, span(ran)))

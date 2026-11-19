@@ -117,8 +117,9 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 // Lines runs a command that keeps writing, as docker events does, and
 // gives line every line of its stdout as it comes, on this goroutine. It
 // returns when the command ends, with an error unless it exited with 0,
-// or when ctx does. c.Timeout does not apply; a line longer than
-// c.MaxOutput stops the command with an error.
+// or when ctx does. c.Output, when set, gets its stderr. c.Timeout does
+// not apply; a line longer than c.MaxOutput stops the command with an
+// error.
 func Lines(ctx context.Context, c Cmd, line func(string)) error {
 	if len(c.Args) == 0 {
 		return errors.New("run: empty argv")
@@ -134,6 +135,7 @@ func Lines(ctx context.Context, c Cmd, line func(string)) error {
 	cmd.Dir = c.Dir
 	cmd.WaitDelay = time.Second
 	detach(cmd)
+	cmd.Stderr = c.Output
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)

@@ -171,6 +171,19 @@ func main() {
 			})
 			return cancel
 		}
+		a.StreamLogs = func(l kube.Logs, got func([]kube.LogLine), done func(error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				err := kube.Stream(ctx, run.Lines, env, l, func(lines []kube.LogLine) {
+					win.Update(func() { got(lines) })
+				})
+				if ctx.Err() == nil {
+					win.Update(func() { done(err) })
+				}
+			}()
+			return cancel
+		}
 		a.ListNamespaces = func(t kube.Target, done func([]string, error)) {
 			env := scanner.Terminal()
 			go func() {

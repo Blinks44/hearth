@@ -218,7 +218,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			return
 		}
 		if d.Stalled != "" {
-			storyCard(c, podStory{title: locales.KubeStalled(), detail: d.Stalled, known: true})
+			storyCard(c, podStory{title: locales.KubeStalled(), detail: d.Stalled, known: true}, nil)
 		}
 		trouble := slices.DeleteFunc(slices.Clone(pods), func(p kube.Pod) bool { return !podTrouble(p) })
 		if len(trouble) > 0 {

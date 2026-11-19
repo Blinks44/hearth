@@ -27649,3 +27649,493 @@ func KubeNoOwnedPods() string { return In(i18n.Locale()).KubeNoOwnedPods() }
 func (msgs Messages) KubeNoOwnedPods() string {
 	return Catalog.Format(msgs.locale, "kubeNoOwnedPods", nil)
 }
+
+// KubeLogsOpen says "Logs"
+// in the language the app shows.
+//
+// Pod details button: open the container's log.
+func KubeLogsOpen() string { return In(i18n.Locale()).KubeLogsOpen() }
+
+// KubeLogsOpen says "Logs"
+// in the language of msgs.
+//
+// Pod details button: open the container's log.
+func (msgs Messages) KubeLogsOpen() string {
+	return Catalog.Format(msgs.locale, "kubeLogsOpen", nil)
+}
+
+// KubeLogsOpenPrevious says "Previous run's log"
+// in the language the app shows.
+//
+// What is going on: button opening the log of the container's previous run.
+func KubeLogsOpenPrevious() string { return In(i18n.Locale()).KubeLogsOpenPrevious() }
+
+// KubeLogsOpenPrevious says "Previous run's log"
+// in the language of msgs.
+//
+// What is going on: button opening the log of the container's previous run.
+func (msgs Messages) KubeLogsOpenPrevious() string {
+	return Catalog.Format(msgs.locale, "kubeLogsOpenPrevious", nil)
+}
+
+// KubeWhyLastLine says "Last log line: {line}"
+// in the language the app shows.
+//
+// What is going on: the last line the container wrote in its previous run.
+func KubeWhyLastLine(line string) string { return In(i18n.Locale()).KubeWhyLastLine(line) }
+
+// KubeWhyLastLine says "Last log line: {line}"
+// in the language of msgs.
+//
+// What is going on: the last line the container wrote in its previous run.
+func (msgs Messages) KubeWhyLastLine(line string) string {
+	return Catalog.Format(msgs.locale, "kubeWhyLastLine", map[string]any{"line": line})
+}
+
+// KubeLogsTag says "logs"
+// in the language the app shows.
+//
+// Cluster header: tag after the pod's name while its log shows.
+func KubeLogsTag() string { return In(i18n.Locale()).KubeLogsTag() }
+
+// KubeLogsTag says "logs"
+// in the language of msgs.
+//
+// Cluster header: tag after the pod's name while its log shows.
+func (msgs Messages) KubeLogsTag() string {
+	return Catalog.Format(msgs.locale, "kubeLogsTag", nil)
+}
+
+// KubeLogsBack says "Back to the pod"
+// in the language the app shows.
+//
+// Log page: back to the pod's details.
+func KubeLogsBack() string { return In(i18n.Locale()).KubeLogsBack() }
+
+// KubeLogsBack says "Back to the pod"
+// in the language of msgs.
+//
+// Log page: back to the pod's details.
+func (msgs Messages) KubeLogsBack() string {
+	return Catalog.Format(msgs.locale, "kubeLogsBack", nil)
+}
+
+// KubeLogsGone says "The pod or its container is gone from the cluster."
+// in the language the app shows.
+//
+// Log page: the pod or container is no longer in the cluster.
+func KubeLogsGone() string { return In(i18n.Locale()).KubeLogsGone() }
+
+// KubeLogsGone says "The pod or its container is gone from the cluster."
+// in the language of msgs.
+//
+// Log page: the pod or container is no longer in the cluster.
+func (msgs Messages) KubeLogsGone() string {
+	return Catalog.Format(msgs.locale, "kubeLogsGone", nil)
+}
+
+// KubeLogsCopy says "Copy"
+// in the language the app shows.
+//
+// Log page: copy the lines shown.
+func KubeLogsCopy() string { return In(i18n.Locale()).KubeLogsCopy() }
+
+// KubeLogsCopy says "Copy"
+// in the language of msgs.
+//
+// Log page: copy the lines shown.
+func (msgs Messages) KubeLogsCopy() string {
+	return Catalog.Format(msgs.locale, "kubeLogsCopy", nil)
+}
+
+// KubeLogsCopied says "{count, plural, one {Copied # line} other {Copied # lines}}"
+// in the language the app shows.
+//
+// Toast: the log's lines were copied.
+func KubeLogsCopied(count int) string { return In(i18n.Locale()).KubeLogsCopied(count) }
+
+// KubeLogsCopied says "{count, plural, one {Copied # line} other {Copied # lines}}"
+// in the language of msgs.
+//
+// Toast: the log's lines were copied.
+func (msgs Messages) KubeLogsCopied(count int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsCopied", map[string]any{"count": count})
+}
+
+// KubeLogsContainer says "Container"
+// in the language the app shows.
+//
+// Log page: label of the container select.
+func KubeLogsContainer() string { return In(i18n.Locale()).KubeLogsContainer() }
+
+// KubeLogsContainer says "Container"
+// in the language of msgs.
+//
+// Log page: label of the container select.
+func (msgs Messages) KubeLogsContainer() string {
+	return Catalog.Format(msgs.locale, "kubeLogsContainer", nil)
+}
+
+// KubeLogsCurrent says "Current"
+// in the language the app shows.
+//
+// Log page: the container's current run.
+func KubeLogsCurrent() string { return In(i18n.Locale()).KubeLogsCurrent() }
+
+// KubeLogsCurrent says "Current"
+// in the language of msgs.
+//
+// Log page: the container's current run.
+func (msgs Messages) KubeLogsCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeLogsCurrent", nil)
+}
+
+// KubeLogsPrevious says "Previous run · code {code}"
+// in the language the app shows.
+//
+// Log page: the container's previous run and how it ended.
+func KubeLogsPrevious(code int) string { return In(i18n.Locale()).KubeLogsPrevious(code) }
+
+// KubeLogsPrevious says "Previous run · code {code}"
+// in the language of msgs.
+//
+// Log page: the container's previous run and how it ended.
+func (msgs Messages) KubeLogsPrevious(code int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsPrevious", map[string]any{"code": code})
+}
+
+// KubeLogsWholeRun says "Whole run"
+// in the language the app shows.
+//
+// Log page period: all the run's lines.
+func KubeLogsWholeRun() string { return In(i18n.Locale()).KubeLogsWholeRun() }
+
+// KubeLogsWholeRun says "Whole run"
+// in the language of msgs.
+//
+// Log page period: all the run's lines.
+func (msgs Messages) KubeLogsWholeRun() string {
+	return Catalog.Format(msgs.locale, "kubeLogsWholeRun", nil)
+}
+
+// KubeLogsLast says "Last {period}"
+// in the language the app shows.
+//
+// Log page period: the last minutes or hours, short as 15m.
+func KubeLogsLast(period string) string { return In(i18n.Locale()).KubeLogsLast(period) }
+
+// KubeLogsLast says "Last {period}"
+// in the language of msgs.
+//
+// Log page period: the last minutes or hours, short as 15m.
+func (msgs Messages) KubeLogsLast(period string) string {
+	return Catalog.Format(msgs.locale, "kubeLogsLast", map[string]any{"period": period})
+}
+
+// KubeLogsFind says "Find in the log"
+// in the language the app shows.
+//
+// Log page: placeholder of the search in the log.
+func KubeLogsFind() string { return In(i18n.Locale()).KubeLogsFind() }
+
+// KubeLogsFind says "Find in the log"
+// in the language of msgs.
+//
+// Log page: placeholder of the search in the log.
+func (msgs Messages) KubeLogsFind() string {
+	return Catalog.Format(msgs.locale, "kubeLogsFind", nil)
+}
+
+// KubeLogsMatches says "{n} of {total}"
+// in the language the app shows.
+//
+// Log page: the current match of the search among all.
+func KubeLogsMatches(n int, total int) string { return In(i18n.Locale()).KubeLogsMatches(n, total) }
+
+// KubeLogsMatches says "{n} of {total}"
+// in the language of msgs.
+//
+// Log page: the current match of the search among all.
+func (msgs Messages) KubeLogsMatches(n int, total int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsMatches", map[string]any{"n": n, "total": total})
+}
+
+// KubeLogsNoMatches says "No matches"
+// in the language the app shows.
+//
+// Log page: the search found nothing.
+func KubeLogsNoMatches() string { return In(i18n.Locale()).KubeLogsNoMatches() }
+
+// KubeLogsNoMatches says "No matches"
+// in the language of msgs.
+//
+// Log page: the search found nothing.
+func (msgs Messages) KubeLogsNoMatches() string {
+	return Catalog.Format(msgs.locale, "kubeLogsNoMatches", nil)
+}
+
+// KubeLogsPreviousMatch says "Previous match"
+// in the language the app shows.
+//
+// Log page: go to the match before.
+func KubeLogsPreviousMatch() string { return In(i18n.Locale()).KubeLogsPreviousMatch() }
+
+// KubeLogsPreviousMatch says "Previous match"
+// in the language of msgs.
+//
+// Log page: go to the match before.
+func (msgs Messages) KubeLogsPreviousMatch() string {
+	return Catalog.Format(msgs.locale, "kubeLogsPreviousMatch", nil)
+}
+
+// KubeLogsNextMatch says "Next match"
+// in the language the app shows.
+//
+// Log page: go to the next match.
+func KubeLogsNextMatch() string { return In(i18n.Locale()).KubeLogsNextMatch() }
+
+// KubeLogsNextMatch says "Next match"
+// in the language of msgs.
+//
+// Log page: go to the next match.
+func (msgs Messages) KubeLogsNextMatch() string {
+	return Catalog.Format(msgs.locale, "kubeLogsNextMatch", nil)
+}
+
+// KubeLogsTime says "Time"
+// in the language the app shows.
+//
+// Log page toggle: show each line's time.
+func KubeLogsTime() string { return In(i18n.Locale()).KubeLogsTime() }
+
+// KubeLogsTime says "Time"
+// in the language of msgs.
+//
+// Log page toggle: show each line's time.
+func (msgs Messages) KubeLogsTime() string {
+	return Catalog.Format(msgs.locale, "kubeLogsTime", nil)
+}
+
+// KubeLogsWrap says "Wrap"
+// in the language the app shows.
+//
+// Log page toggle: wrap long lines.
+func KubeLogsWrap() string { return In(i18n.Locale()).KubeLogsWrap() }
+
+// KubeLogsWrap says "Wrap"
+// in the language of msgs.
+//
+// Log page toggle: wrap long lines.
+func (msgs Messages) KubeLogsWrap() string {
+	return Catalog.Format(msgs.locale, "kubeLogsWrap", nil)
+}
+
+// KubeLogsTagCurrent says "current run"
+// in the language the app shows.
+//
+// Log page head: tag of the current run.
+func KubeLogsTagCurrent() string { return In(i18n.Locale()).KubeLogsTagCurrent() }
+
+// KubeLogsTagCurrent says "current run"
+// in the language of msgs.
+//
+// Log page head: tag of the current run.
+func (msgs Messages) KubeLogsTagCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeLogsTagCurrent", nil)
+}
+
+// KubeLogsTagPrevious says "previous run"
+// in the language the app shows.
+//
+// Log page head: tag of the previous run.
+func KubeLogsTagPrevious() string { return In(i18n.Locale()).KubeLogsTagPrevious() }
+
+// KubeLogsTagPrevious says "previous run"
+// in the language of msgs.
+//
+// Log page head: tag of the previous run.
+func (msgs Messages) KubeLogsTagPrevious() string {
+	return Catalog.Format(msgs.locale, "kubeLogsTagPrevious", nil)
+}
+
+// KubeLogsPreviousRun says "Container {container} ran {ran}: {from} – {to}, and ended with code {code}. It is on try {try} now."
+// in the language the app shows.
+//
+// Log page head: how the previous run went; ran is short as 3s, from and to
+// are times of day, try counts the runs.
+func KubeLogsPreviousRun(container string, ran string, from string, to string, code int, try int) string {
+	return In(i18n.Locale()).KubeLogsPreviousRun(container, ran, from, to, code, try)
+}
+
+// KubeLogsPreviousRun says "Container {container} ran {ran}: {from} – {to}, and ended with code {code}. It is on try {try} now."
+// in the language of msgs.
+//
+// Log page head: how the previous run went; ran is short as 3s, from and to
+// are times of day, try counts the runs.
+func (msgs Messages) KubeLogsPreviousRun(container string, ran string, from string, to string, code int, try int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsPreviousRun", map[string]any{"container": container, "ran": ran, "from": from, "to": to, "code": code, "try": try})
+}
+
+// KubeLogsRunning says "Container {container} runs since {since}; new lines show as it writes them."
+// in the language the app shows.
+//
+// Log page head: the container runs; since is a time of day.
+func KubeLogsRunning(container string, since string) string {
+	return In(i18n.Locale()).KubeLogsRunning(container, since)
+}
+
+// KubeLogsRunning says "Container {container} runs since {since}; new lines show as it writes them."
+// in the language of msgs.
+//
+// Log page head: the container runs; since is a time of day.
+func (msgs Messages) KubeLogsRunning(container string, since string) string {
+	return Catalog.Format(msgs.locale, "kubeLogsRunning", map[string]any{"container": container, "since": since})
+}
+
+// KubeLogsEnded says "Container {container} ended with code {code}."
+// in the language the app shows.
+//
+// Log page head: the container's run ended.
+func KubeLogsEnded(container string, code int) string {
+	return In(i18n.Locale()).KubeLogsEnded(container, code)
+}
+
+// KubeLogsEnded says "Container {container} ended with code {code}."
+// in the language of msgs.
+//
+// Log page head: the container's run ended.
+func (msgs Messages) KubeLogsEnded(container string, code int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsEnded", map[string]any{"container": container, "code": code})
+}
+
+// KubeLogsWaiting says "Container {container} does not run now ({reason}): the log is of its last run."
+// in the language the app shows.
+//
+// Log page head: the container does not run; reason is Kubernetes' word, as
+// CrashLoopBackOff.
+func KubeLogsWaiting(container string, reason string) string {
+	return In(i18n.Locale()).KubeLogsWaiting(container, reason)
+}
+
+// KubeLogsWaiting says "Container {container} does not run now ({reason}): the log is of its last run."
+// in the language of msgs.
+//
+// Log page head: the container does not run; reason is Kubernetes' word, as
+// CrashLoopBackOff.
+func (msgs Messages) KubeLogsWaiting(container string, reason string) string {
+	return Catalog.Format(msgs.locale, "kubeLogsWaiting", map[string]any{"container": container, "reason": reason})
+}
+
+// KubeLogsLines says "{count, plural, one {# line} other {# lines}}"
+// in the language the app shows.
+//
+// Log page head: how many lines are shown.
+func KubeLogsLines(count int) string { return In(i18n.Locale()).KubeLogsLines(count) }
+
+// KubeLogsLines says "{count, plural, one {# line} other {# lines}}"
+// in the language of msgs.
+//
+// Log page head: how many lines are shown.
+func (msgs Messages) KubeLogsLines(count int) string {
+	return Catalog.Format(msgs.locale, "kubeLogsLines", map[string]any{"count": count})
+}
+
+// KubeLogsDropped says "older lines are not kept"
+// in the language the app shows.
+//
+// Log page head: older lines are not kept.
+func KubeLogsDropped() string { return In(i18n.Locale()).KubeLogsDropped() }
+
+// KubeLogsDropped says "older lines are not kept"
+// in the language of msgs.
+//
+// Log page head: older lines are not kept.
+func (msgs Messages) KubeLogsDropped() string {
+	return Catalog.Format(msgs.locale, "kubeLogsDropped", nil)
+}
+
+// KubeLogsFailed says "kubectl did not give the log:"
+// in the language the app shows.
+//
+// Log page: kubectl did not give the log; its words follow.
+func KubeLogsFailed() string { return In(i18n.Locale()).KubeLogsFailed() }
+
+// KubeLogsFailed says "kubectl did not give the log:"
+// in the language of msgs.
+//
+// Log page: kubectl did not give the log; its words follow.
+func (msgs Messages) KubeLogsFailed() string {
+	return Catalog.Format(msgs.locale, "kubeLogsFailed", nil)
+}
+
+// KubeLogsReading says "Reading the log…"
+// in the language the app shows.
+//
+// Log page: the log is being read.
+func KubeLogsReading() string { return In(i18n.Locale()).KubeLogsReading() }
+
+// KubeLogsReading says "Reading the log…"
+// in the language of msgs.
+//
+// Log page: the log is being read.
+func (msgs Messages) KubeLogsReading() string {
+	return Catalog.Format(msgs.locale, "kubeLogsReading", nil)
+}
+
+// KubeLogsEmpty says "The container wrote nothing in this run."
+// in the language the app shows.
+//
+// Log page: the run wrote nothing.
+func KubeLogsEmpty() string { return In(i18n.Locale()).KubeLogsEmpty() }
+
+// KubeLogsEmpty says "The container wrote nothing in this run."
+// in the language of msgs.
+//
+// Log page: the run wrote nothing.
+func (msgs Messages) KubeLogsEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeLogsEmpty", nil)
+}
+
+// KubeLogsPreviousEnd says "End of the previous run. The current run's log is under Current."
+// in the language the app shows.
+//
+// Log page: below the previous run's last line.
+func KubeLogsPreviousEnd() string { return In(i18n.Locale()).KubeLogsPreviousEnd() }
+
+// KubeLogsPreviousEnd says "End of the previous run. The current run's log is under Current."
+// in the language of msgs.
+//
+// Log page: below the previous run's last line.
+func (msgs Messages) KubeLogsPreviousEnd() string {
+	return Catalog.Format(msgs.locale, "kubeLogsPreviousEnd", nil)
+}
+
+// KubeLogsStreamEnded says "The container stopped: its log ended. Hearth reads the next run when it starts."
+// in the language the app shows.
+//
+// Log page: the followed run stopped writing because the container ended.
+func KubeLogsStreamEnded() string { return In(i18n.Locale()).KubeLogsStreamEnded() }
+
+// KubeLogsStreamEnded says "The container stopped: its log ended. Hearth reads the next run when it starts."
+// in the language of msgs.
+//
+// Log page: the followed run stopped writing because the container ended.
+func (msgs Messages) KubeLogsStreamEnded() string {
+	return Catalog.Format(msgs.locale, "kubeLogsStreamEnded", nil)
+}
+
+// KubeLogsOpenEnded says "Log of the failed run"
+// in the language the app shows.
+//
+// What is going on: button opening the log of the container's run that just
+// failed, between its tries.
+func KubeLogsOpenEnded() string { return In(i18n.Locale()).KubeLogsOpenEnded() }
+
+// KubeLogsOpenEnded says "Log of the failed run"
+// in the language of msgs.
+//
+// What is going on: button opening the log of the container's run that just
+// failed, between its tries.
+func (msgs Messages) KubeLogsOpenEnded() string {
+	return Catalog.Format(msgs.locale, "kubeLogsOpenEnded", nil)
+}

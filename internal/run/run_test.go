@@ -174,7 +174,14 @@ func TestLines(t *testing.T) {
 	if err := Lines(t.Context(), helper("exit3"), func(string) {}); err == nil {
 		t.Error("exit 3: no error")
 	}
-	c := helper("flood")
+	var stderr syncBuffer
+	c := helper("echo", "HEARTH_SAY=hello")
+	c.Output = &stderr
+	got = nil
+	if err := Lines(t.Context(), c, func(l string) { got = append(got, l) }); err != nil || strings.Join(got, ",") != "hello" || stderr.String() != "to stderr" {
+		t.Errorf("stdout %q, stderr %q, %v", got, stderr.String(), err)
+	}
+	c = helper("flood")
 	c.MaxOutput = 100
 	if err := Lines(t.Context(), c, func(string) {}); err == nil {
 		t.Error("long line: no error")

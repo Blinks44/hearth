@@ -421,6 +421,18 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				}
 			})
 		})
+		if a.StreamLogs != nil && len(p.Containers) > 0 {
+			ui.Row(c).Gap(8).Padding(0, 16, 12, 16).Children(func() {
+				container := p.Containers[0].Name
+				if story.crashed != "" {
+					container = story.crashed
+				}
+				ui.Button(c.Key("pod-logs"), "").Label(locales.KubeLogsOpen()).OnClick(func() { a.openLogs(p, container, false) }).Children(func() {
+					ui.Icon(c, Icon("scroll-text")).Size(14, 14)
+					ui.Text(c, locales.KubeLogsOpen()).SingleLine()
+				})
+			})
+		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
 			count := ""
 			if read {
@@ -433,7 +445,22 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			return
 		}
 		if trouble {
-			storyCard(c, story)
+			var actions func()
+			if story.crashed != "" {
+				tail := cl.LastLineOf
+				if tail.Pod == p.Name && tail.Container == story.crashed && tail.Previous == !story.ended && cl.LastLine != "" {
+					story.facts = append(story.facts, locales.KubeWhyLastLine(cl.LastLine))
+				}
+				label := locales.KubeLogsOpenPrevious()
+				if story.ended {
+					label = locales.KubeLogsOpenEnded()
+				}
+				actions = func() {
+					ui.Button(c.Key("story-logs"), label).Background(t.Text).TextColor(t.Background).BorderColor(t.Text).
+						OnClick(func() { a.openLogs(p, story.crashed, !story.ended) })
+				}
+			}
+			storyCard(c, story, actions)
 		}
 		detailSection(c, locales.KubeContainers(len(p.Containers)))
 		for _, ct := range p.Containers {
@@ -472,8 +499,9 @@ func detailFrame(c *ui.Context, rows func()) {
 }
 
 // storyCard says what is going on with a pod: Kubernetes' facts, what
-// Hearth infers from them apart, and Kubernetes' own words.
-func storyCard(c *ui.Context, s podStory) {
+// Hearth infers from them apart, and Kubernetes' own words; then the
+// actions, when there are any.
+func storyCard(c *ui.Context, s podStory, actions func()) {
 	t := c.Theme()
 	pal := Colors(t)
 	bg, fg, icon := pal.DangerSoft, pal.DangerText, "circle-alert"
@@ -500,6 +528,9 @@ func storyCard(c *ui.Context, s podStory) {
 		if s.detail != "" {
 			ui.Text(c, s.detail).Font(FontMono).FontSize(11).Padding(7, 10).Margin(2, 0, 0, 23).Radius(7).
 				Background(t.Background.Alpha(0.6)).Wrap().Selectable()
+		}
+		if actions != nil {
+			ui.Row(c).Gap(8).Padding(4, 0, 0, 23).Children(actions)
 		}
 	})
 }

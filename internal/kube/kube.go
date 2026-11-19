@@ -35,6 +35,16 @@ type Target struct {
 	Namespaces []string
 	// Events is the object whose events to read too; zero reads none.
 	Events Ref
+	// Tail is the container whose previous run's last line to read too;
+	// zero reads none.
+	Tail Tail
+}
+
+// Tail names a container of a pod and its run: the previous one, or the
+// current one that ended.
+type Tail struct {
+	Namespace, Pod, Container string
+	Previous                  bool
 }
 
 // Ref names an object by its namespace and UID.
@@ -85,6 +95,8 @@ type Container struct {
 	State string
 	// Reason and Message say why it waits or ended.
 	Reason, Message string
+	// Started is when its current run started, while State is running.
+	Started time.Time
 	// Ended is how its current run ended, when State is terminated; Last
 	// how its previous one did. Either is nil when there is none.
 	Ended, Last *Run
@@ -141,7 +153,11 @@ type Cluster struct {
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
-	Taken    time.Time
+	// LastLine is the last line of the run of the target's Tail
+	// container, empty when it has none.
+	LastLine   string
+	LastLineOf Tail
+	Taken      time.Time
 }
 
 // Error is a read kubectl refused or that failed: Access says why, by the
@@ -194,8 +210,8 @@ func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 }
 
 // Read reads the target's pods and Deployments, in one kubectl get for
-// each namespace, or one for all of them, and the events of its Events
-// object.
+// each namespace, or one for all of them, the events of its Events object
+// and the last line its Tail container wrote.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
 	scopes := make([][]string, 0, max(len(t.Namespaces), 1))
 	for _, ns := range t.Namespaces {
@@ -222,6 +238,9 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 			return Cluster{}, err
 		}
 		c.Events, c.EventsOf = events, t.Events
+	}
+	if t.Tail.Container != "" {
+		c.LastLine, c.LastLineOf = lastLine(ctx, r, env, t), t.Tail
 	}
 	c.Taken = time.Now()
 	return c, nil
@@ -631,7 +650,7 @@ func (p pod) pod(owner Owner) Pod {
 				ct.State, ct.Reason, ct.Message = "terminated", st.Terminated.Reason, st.Terminated.Message
 				ct.Ended = st.Terminated.run()
 			case st.Running != nil:
-				ct.State = "running"
+				ct.State, ct.Started = "running", st.Running.StartedAt
 			}
 		}
 		out.Containers = append(out.Containers, ct)

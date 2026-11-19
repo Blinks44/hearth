@@ -168,6 +168,10 @@ type App struct {
 	// asks the cluster for its namespaces once. Nil hides the cluster.
 	WatchCluster   func(t kube.Target, got func(kube.Cluster, error)) (stop func())
 	ListNamespaces func(t kube.Target, done func([]string, error))
+	// StreamLogs reads a container's log in the background, giving the
+	// lines as they come to got and how the read ended to done, on the UI
+	// thread, until stop is called. Nil hides the logs.
+	StreamLogs func(l kube.Logs, got func([]kube.LogLine), done func(error)) (stop func())
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -308,9 +312,14 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncLogs()
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
+	if a.cluster.logs != nil && a.router.Path() == kubeClusterPage {
+		// Wherever the focus is, as the button that opened the log is gone.
+		c.OnShortcut(0, ui.KeyEscape, a.closeLogs)
+	}
 	// A focused text field types the slash; elsewhere it goes to the
 	// page's filter.
 	c.OnShortcut(0, ui.KeySlash, func() { a.filterField.Focus(c) })
