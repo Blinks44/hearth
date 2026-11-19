@@ -47,6 +47,9 @@ const (
 	kindEndpoints
 	kindNetworkPolicies
 	kindConfigMaps
+	kindPVCs
+	kindPVs
+	kindStorageClasses
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -81,6 +84,8 @@ type kubeClusterState struct {
 	forward                    *forwardForm
 	shell                      *shellForm
 	other                      otherResourceView
+	storageLink                storageLink
+	claimFilter                int
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
@@ -173,6 +178,9 @@ func (a *App) syncCluster() {
 		s.bulk.kind = s.kind
 		s.shell = nil
 		s.other.reset()
+		if s.storageLink.kind != s.kind {
+			s.storageLink = storageLink{}
+		}
 	}
 	running := ""
 	if target != "" {
@@ -192,6 +200,7 @@ func (a *App) syncCluster() {
 		// Another cluster or namespace: what was read is not its.
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
+		s.storageLink = storageLink{}
 	}
 	if running == "" {
 		return
@@ -207,6 +216,11 @@ func (a *App) syncCluster() {
 		}
 		s.bulk.retain(cl)
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+		if cl.Resources != nil && cl.Resources.Kind == kube.PersistentVolumeClaims &&
+			(cl.Resources.Claims == nil || cl.Resources.Claims.ConsumersErr != nil) && s.claimFilter == 2 {
+			s.claimFilter = 0
+		}
+		s.followStorageLink(cl)
 		if s.other.uid != "" && s.otherResource() == nil {
 			s.other.reset()
 		}
@@ -378,6 +392,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.helmView(c, s.data.HelmReleases, helm.Version)
 					default:
 						a.otherResourcesView(c, s.data)
+					}
+					if s.storageLink.name != "" && s.storageLink.kind == s.kind {
+						toolNote(c, locales.KubeStorageTargetMissing(s.storageLink.name))
 					}
 				}
 			})

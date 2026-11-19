@@ -1,5 +1,45 @@
 {
   "@@locale": "en",
+  "kubeResourcesEmptyCluster": "No resources in this cluster.",
+  "kubeStorageTargetMissing": "{name} is not in the current list.",
+  "@kubeStorageTargetMissing": {
+    "description": "kubeStorageTargetMissing",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeStorageFilterEmpty": "No claims match this filter.",
+  "kubeStorageSearch": "Name, class or pod",
+  "kubeStorageClaims": "Volume claims",
+  "kubeStorageOpenClaim": "Open PVC",
+  "kubeStorageUnused": "Unused",
+  "kubeStorageDefault": "Default",
+  "kubeStoragePendingClass": "No class",
+  "kubeStorageClassMissing": "Waiting for a volume. StorageClass {name} does not exist in this cluster.",
+  "@kubeStorageClassMissing": {
+    "description": "kubeStorageClassMissing",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeStorageNoVolume": "Kubernetes found no available volume for this claim.",
+  "kubeStorageRequested": "Requested",
+  "kubeStorageCapacity": "Capacity",
+  "kubeStorageVolume": "Volume (PV)",
+  "kubeStorageAccessModes": "Access modes",
+  "kubeStorageVolumeMode": "Volume mode",
+  "kubeStorageReclaimPolicy": "Reclaim policy",
+  "kubeStorageProvisioner": "Provisioner",
+  "kubeStorageBindingMode": "Binding mode",
+  "kubeStorageExpansion": "Volume expansion",
+  "kubeStorageAllowed": "Allowed",
+  "kubeStorageConsumers": "Pods using this claim",
+  "kubeStorageNoConsumers": "No pods reference this claim.",
+  "kubeStorageClasses": "Cluster storage classes",
   "kubeResourcesEmpty": "No resources in the selected namespaces.",
   "kubeResourceTerminating": "Terminating",
   "kubeResourceNoAddress": "No address",

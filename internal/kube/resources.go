@@ -18,25 +18,32 @@ import (
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
-// ResourceKind is a namespaced kind available in the read-only resource view.
+// ResourceKind is a kind available in the read-only resource view.
 type ResourceKind string
 
 const (
-	StatefulSets    ResourceKind = "statefulsets.apps"
-	DaemonSets      ResourceKind = "daemonsets.apps"
-	ReplicaSets     ResourceKind = "replicasets.apps"
-	Ingresses       ResourceKind = "ingresses.networking.k8s.io"
-	Endpoints       ResourceKind = "endpoints"
-	NetworkPolicies ResourceKind = "networkpolicies.networking.k8s.io"
-	ConfigMaps      ResourceKind = "configmaps"
+	StatefulSets           ResourceKind = "statefulsets.apps"
+	DaemonSets             ResourceKind = "daemonsets.apps"
+	ReplicaSets            ResourceKind = "replicasets.apps"
+	Ingresses              ResourceKind = "ingresses.networking.k8s.io"
+	Endpoints              ResourceKind = "endpoints"
+	NetworkPolicies        ResourceKind = "networkpolicies.networking.k8s.io"
+	ConfigMaps             ResourceKind = "configmaps"
+	PersistentVolumeClaims ResourceKind = "persistentvolumeclaims"
+	PersistentVolumes      ResourceKind = "persistentvolumes"
+	StorageClasses         ResourceKind = "storageclasses.storage.k8s.io"
 )
 
 func (k ResourceKind) supported() bool {
 	switch k {
-	case StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps:
+	case StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses:
 		return true
 	}
 	return false
+}
+
+func (k ResourceKind) namespaced() bool {
+	return k != PersistentVolumes && k != StorageClasses
 }
 
 // ResourceList is a successful list read, with an independent event read result.
@@ -44,6 +51,7 @@ type ResourceList struct {
 	Kind      ResourceKind
 	Items     []Resource
 	EventsErr error
+	Claims    *ClaimDetails
 }
 
 func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
@@ -52,8 +60,15 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 		return Cluster{}, err
 	}
 	c := Cluster{Taken: time.Now(), Resources: &ResourceList{Kind: t.Resource, Items: items}}
+	if t.Resource == PersistentVolumeClaims && len(items) > 0 {
+		c.Resources.Claims = readClaimDetails(ctx, r, env, t)
+	}
 	if t.Events.UID != "" {
-		c.Events, c.Resources.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace,
+		scope := "--all-namespaces"
+		if t.Events.Namespace != "" {
+			scope = "--namespace=" + t.Events.Namespace
+		}
+		c.Events, c.Resources.EventsErr = readEvents(ctx, r, env, t, []string{"events", scope,
 			"--field-selector=involvedObject.uid=" + t.Events.UID})
 		c.EventsOf = t.Events
 	}
@@ -80,6 +95,7 @@ type Resource struct {
 	IngressRules, EgressRules   int
 	Keys                        []string
 	Immutable                   bool
+	Storage                     Storage
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -120,6 +136,7 @@ type ingressBackend struct {
 
 type resourceObject struct {
 	meta
+	storageClassFields
 	Spec struct {
 		Replicas                                           int
 		ServiceName, PodManagementPolicy, IngressClassName string
@@ -144,8 +161,11 @@ type resourceObject struct {
 		}
 		PolicyTypes     []string
 		Ingress, Egress []json.RawMessage
+		volumeSpec
 	}
 	Status struct {
+		Phase                                                                                       string
+		Capacity                                                                                    map[string]string
 		ReadyReplicas, UpdatedReplicas, DesiredNumberScheduled, NumberReady, UpdatedNumberScheduled int
 		LoadBalancer                                                                                struct {
 			Ingress []struct{ IP, Hostname string }
@@ -162,22 +182,19 @@ type resourceObject struct {
 	Immutable        bool
 }
 
-// ReadResources reads a single resource kind in the selected namespaces.
+// ReadResources reads a single resource kind within its API scope.
 func ReadResources(ctx context.Context, r run.Runner, env sysenv.Env, t Target, kind ResourceKind) ([]Resource, error) {
 	if !kind.supported() {
 		return nil, fmt.Errorf("unsupported Kubernetes resource kind %q", kind)
 	}
-	scopes := []string{"--all-namespaces"}
-	if len(t.Namespaces) > 0 {
-		scopes = make([]string, 0, len(t.Namespaces))
-		for _, ns := range t.Namespaces {
-			scopes = append(scopes, "--namespace="+ns)
-		}
+	scopes := [][]string{nil}
+	if kind.namespaced() {
+		scopes = namespaceScopes(t.Namespaces)
 	}
 	resources := []Resource{}
 	for _, scope := range scopes {
 		var list struct{ Items []resourceObject }
-		if err := get(ctx, r, env, t, []string{string(kind), scope}, &list); err != nil {
+		if err := get(ctx, r, env, t, append([]string{string(kind)}, scope...), &list); err != nil {
 			return nil, err
 		}
 		for _, obj := range list.Items {
@@ -225,6 +242,8 @@ func (o resourceObject) resource(kind ResourceKind) Resource {
 		}
 		slices.Sort(r.Keys)
 		r.Immutable = o.Immutable
+	case PersistentVolumeClaims, PersistentVolumes, StorageClasses:
+		r.Storage = o.storage()
 	}
 	return r
 }
@@ -267,11 +286,14 @@ func (o resourceObject) ingress(r *Resource) {
 // ReadResourceYAML reads the selected object, checking its UID in the same
 // response so a replacement with the same name cannot take its place.
 func ReadResourceYAML(ctx context.Context, r run.Runner, env sysenv.Env, t Target, resource Resource) (string, error) {
-	if !resource.Kind.supported() || resource.Name == "" || resource.Namespace == "" || resource.UID == "" {
+	if !resource.Kind.supported() || resource.Name == "" || resource.Kind.namespaced() != (resource.Namespace != "") || resource.UID == "" {
 		return "", fmt.Errorf("invalid Kubernetes resource target")
 	}
-	args := []string{t.Kubectl, "--context=" + t.Context, "get", string(resource.Kind), "--namespace=" + resource.Namespace,
-		"--output=yaml", "--request-timeout=15s", "--", resource.Name}
+	args := []string{t.Kubectl, "--context=" + t.Context, "get", string(resource.Kind)}
+	if resource.Kind.namespaced() {
+		args = append(args, "--namespace="+resource.Namespace)
+	}
+	args = append(args, "--output=yaml", "--request-timeout=15s", "--", resource.Name)
 	out, err := r.Run(ctx, run.Cmd{Args: args, Env: env, Timeout: timeout, MaxOutput: 2 << 20})
 	if err != nil {
 		return "", fmt.Errorf("read Kubernetes resource: %w", err)

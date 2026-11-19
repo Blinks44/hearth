@@ -29,6 +29,12 @@ func otherResourceKind(kind int) kube.ResourceKind {
 		return kube.NetworkPolicies
 	case kindConfigMaps:
 		return kube.ConfigMaps
+	case kindPVCs:
+		return kube.PersistentVolumeClaims
+	case kindPVs:
+		return kube.PersistentVolumes
+	case kindStorageClasses:
+		return kube.StorageClasses
 	}
 	return ""
 }
@@ -97,22 +103,39 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	s := &a.cluster
 	v := &s.other
 	pal := Colors(c.Theme())
-	ui.Row(c).Justify(ui.End).Children(func() {
+	claims := cl.Resources.Claims
+	visible := func(item kube.Resource) bool {
+		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims)
+	}
+	ui.Row(c).Gap(12).AlignItems(ui.Center).Wrap().Children(func() {
+		if cl.Resources.Kind == kube.PersistentVolumeClaims {
+			claimFilters(c, s, cl.Resources)
+		}
+		ui.Box(c).Grow(1)
+		placeholder := locales.KubeDeploymentsSearch()
+		if cl.Resources.Kind == kube.PersistentVolumeClaims {
+			placeholder = locales.KubeStorageSearch()
+		}
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(locales.KubeDeploymentsSearch()).Width(240).OnChange(func() {
-			if item := s.otherResource(); item != nil && !matchesOtherResource(*item, resourceQuery(s.query)) {
+			Placeholder(placeholder).Width(240).OnChange(func() {
+			if item := s.otherResource(); item != nil && !visible(*item) {
 				v.reset()
 			}
 		})
 	})
-	query := resourceQuery(s.query)
 	var shown []kube.Resource
 	for _, r := range cl.Resources.Items {
-		if matchesOtherResource(r, query) {
+		if visible(r) {
 			shown = append(shown, r)
 		}
 	}
 	slices.SortFunc(shown, func(a, b kube.Resource) int {
+		if a.Kind == kube.PersistentVolumeClaims && claimProblem(a) != claimProblem(b) {
+			if claimProblem(a) {
+				return -1
+			}
+			return 1
+		}
 		if order := strings.Compare(a.Name, b.Name); order != 0 {
 			return order
 		}
@@ -120,15 +143,20 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	})
 	if len(shown) == 0 {
 		message := locales.KubeResourcesEmpty()
-		if len(cl.Resources.Items) > 0 {
+		if cl.Resources.Kind == kube.PersistentVolumes || cl.Resources.Kind == kube.StorageClasses {
+			message = locales.KubeResourcesEmptyCluster()
+		}
+		if resourceQuery(s.query) != "" {
 			message = locales.SearchNoResults(s.query)
+		} else if len(cl.Resources.Items) > 0 {
+			message = locales.KubeStorageFilterEmpty()
 		}
 		toolNote(c, message)
 		return
 	}
 	selected := s.otherResource()
 	uid := ""
-	if selected != nil {
+	if selected != nil && visible(*selected) {
 		uid = selected.UID
 	}
 	tracks := []ui.Track{ui.Fr(1), ui.Fixed(92), ui.Fixed(66)}
@@ -141,7 +169,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		for _, r := range shown {
 			row := resourceGrid(ui.ButtonBase(c.Key("other-resource-"+r.UID)), tracks).
 				Label(r.Name).Padding(7, 16).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).
-				OnClick(func() { s.toggleWorkload(&v.uid, r.UID); v.clearYAML(); v.tab = 0 })
+				OnClick(func() { s.toggleWorkload(&v.uid, r.UID); v.clearYAML(); v.tab = 0; s.storageLink = storageLink{} })
 			if r.UID == uid {
 				row.Background(pal.ActiveRow)
 			} else if row.Hovered() {
@@ -151,11 +179,11 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			row.Children(func() {
 				ui.Column(c).Gap(2).MinWidth(0).Children(func() {
 					clipped(c, r.Name).Font(FontMono).FontSize(12).FontWeight(500)
-					if len(a.clusterNamespaces(a.router.Query("context"))) != 1 {
+					if r.Namespace != "" && len(a.clusterNamespaces(a.router.Query("context"))) != 1 {
 						clipped(c, r.Namespace).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 				})
-				label, bg, fg := otherResourceStatus(c, r)
+				label, bg, fg := otherResourceStatus(c, r, claims)
 				workloadStatus(c, label, bg, fg)
 				created := otherResourceAge(c, r)
 				clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
@@ -173,18 +201,23 @@ func otherResourceAge(c *ui.Context, r kube.Resource) string {
 	return age(c, r.Created)
 }
 
-func matchesOtherResource(r kube.Resource, query string) bool {
+func matchesOtherResource(r kube.Resource, query string, claims *kube.ClaimDetails) bool {
 	match := func(text string) bool { return strings.Contains(strings.ToLower(text), query) }
-	return match(r.Namespace+"/"+r.Name) || slices.ContainsFunc(r.Keys, match) ||
+	if claims != nil && slices.ContainsFunc(claims.Consumers[claimKey(r)], func(p kube.ClaimConsumer) bool { return match(p.Name) }) {
+		return true
+	}
+	return match(r.Namespace+"/"+r.Name) || match(r.Storage.Class) || match(r.Storage.Provisioner) || slices.ContainsFunc(r.Keys, match) ||
 		slices.ContainsFunc(r.Routes, func(route kube.IngressRoute) bool { return match(route.Host) || match(route.Service) })
 }
 
-func otherResourceStatus(c *ui.Context, item kube.Resource) (string, ui.Color, ui.Color) {
+func otherResourceStatus(c *ui.Context, item kube.Resource, claims *kube.ClaimDetails) (string, ui.Color, ui.Color) {
 	pal := Colors(c.Theme())
 	if item.Deleting {
 		return locales.KubeResourceTerminating(), pal.WarningSoft, pal.WarningText
 	}
 	switch item.Kind {
+	case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
+		return storageStatus(c, item, claims)
 	case kube.StatefulSets, kube.DaemonSets, kube.ReplicaSets, kube.Endpoints:
 		label := fmt.Sprintf("%d/%d", item.Ready, item.Desired)
 		switch {
@@ -209,7 +242,7 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 	s := &a.cluster
 	v := &s.other
 	t := c.Theme()
-	label, bg, fg := otherResourceStatus(c, item)
+	label, bg, fg := otherResourceStatus(c, item, cl.Resources.Claims)
 	kind := clusterKindOptions()[s.kind]
 	events, read := clusterEvents(cl, item.UID)
 	detailFrame(c, v.tab, false, func() {
@@ -220,7 +253,12 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				aiTag(c, label, bg, fg).MaxWidth(110).Tooltip(label)
 				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(v.reset)
 			})
-			meta := []string{kind.label, item.Namespace}
+			meta := []string{kind.label}
+			for _, value := range []string{item.Namespace, item.Storage.Requested, strings.Join(item.Storage.AccessModes, ", ")} {
+				if value != "" {
+					meta = append(meta, value)
+				}
+			}
 			if created := otherResourceAge(c, item); created != "" {
 				meta = append(meta, locales.KubeCreatedAgo(created))
 			}
@@ -243,7 +281,12 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 		case 2:
 			otherResourceYAML(c, v)
 		default:
-			resourceOverview(c, item)
+			switch item.Kind {
+			case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
+				a.storageOverview(c, item, cl.Resources.Claims, events)
+			default:
+				resourceOverview(c, item)
+			}
 		}
 	})
 }

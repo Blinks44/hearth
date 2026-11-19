@@ -528,6 +528,13 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			facts = append(facts, [2]string{locales.KubeVolumes(), strings.Join(p.Volumes, " · ")})
 		}
 		factRows(c, facts)
+		if len(p.Claims) > 0 {
+			detailSection(c, locales.KubeStorageClaims())
+			for _, claim := range p.Claims {
+				link := storageLink{kind: kindPVCs, namespace: p.Namespace, name: claim}
+				a.storageLinkRow(c.Key("pod-claim-"+claim), claim, "", locales.KubeStorageOpenClaim(), link)
+			}
+		}
 		ui.Row(c).Padding(14, 16, 0, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 			ui.Text(c, strings.ToUpper(locales.KubeRecentEvents())).FontSize(11).FontWeight(500).TextColor(pal.TextFaint).Grow(1)
 			if read && len(events) > 3 {

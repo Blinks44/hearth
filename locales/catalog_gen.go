@@ -36,6 +36,258 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeResourcesEmptyCluster says "No resources in this cluster."
+// in the language the app shows.
+func KubeResourcesEmptyCluster() string { return In(i18n.Locale()).KubeResourcesEmptyCluster() }
+
+// KubeResourcesEmptyCluster says "No resources in this cluster."
+// in the language of msgs.
+func (msgs Messages) KubeResourcesEmptyCluster() string {
+	return Catalog.Format(msgs.locale, "kubeResourcesEmptyCluster", nil)
+}
+
+// KubeStorageTargetMissing says "{name} is not in the current list."
+// in the language the app shows.
+//
+// kubeStorageTargetMissing
+func KubeStorageTargetMissing(name string) string {
+	return In(i18n.Locale()).KubeStorageTargetMissing(name)
+}
+
+// KubeStorageTargetMissing says "{name} is not in the current list."
+// in the language of msgs.
+//
+// kubeStorageTargetMissing
+func (msgs Messages) KubeStorageTargetMissing(name string) string {
+	return Catalog.Format(msgs.locale, "kubeStorageTargetMissing", map[string]any{"name": name})
+}
+
+// KubeStorageFilterEmpty says "No claims match this filter."
+// in the language the app shows.
+func KubeStorageFilterEmpty() string { return In(i18n.Locale()).KubeStorageFilterEmpty() }
+
+// KubeStorageFilterEmpty says "No claims match this filter."
+// in the language of msgs.
+func (msgs Messages) KubeStorageFilterEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeStorageFilterEmpty", nil)
+}
+
+// KubeStorageSearch says "Name, class or pod"
+// in the language the app shows.
+func KubeStorageSearch() string { return In(i18n.Locale()).KubeStorageSearch() }
+
+// KubeStorageSearch says "Name, class or pod"
+// in the language of msgs.
+func (msgs Messages) KubeStorageSearch() string {
+	return Catalog.Format(msgs.locale, "kubeStorageSearch", nil)
+}
+
+// KubeStorageClaims says "Volume claims"
+// in the language the app shows.
+func KubeStorageClaims() string { return In(i18n.Locale()).KubeStorageClaims() }
+
+// KubeStorageClaims says "Volume claims"
+// in the language of msgs.
+func (msgs Messages) KubeStorageClaims() string {
+	return Catalog.Format(msgs.locale, "kubeStorageClaims", nil)
+}
+
+// KubeStorageOpenClaim says "Open PVC"
+// in the language the app shows.
+func KubeStorageOpenClaim() string { return In(i18n.Locale()).KubeStorageOpenClaim() }
+
+// KubeStorageOpenClaim says "Open PVC"
+// in the language of msgs.
+func (msgs Messages) KubeStorageOpenClaim() string {
+	return Catalog.Format(msgs.locale, "kubeStorageOpenClaim", nil)
+}
+
+// KubeStorageUnused says "Unused"
+// in the language the app shows.
+func KubeStorageUnused() string { return In(i18n.Locale()).KubeStorageUnused() }
+
+// KubeStorageUnused says "Unused"
+// in the language of msgs.
+func (msgs Messages) KubeStorageUnused() string {
+	return Catalog.Format(msgs.locale, "kubeStorageUnused", nil)
+}
+
+// KubeStorageDefault says "Default"
+// in the language the app shows.
+func KubeStorageDefault() string { return In(i18n.Locale()).KubeStorageDefault() }
+
+// KubeStorageDefault says "Default"
+// in the language of msgs.
+func (msgs Messages) KubeStorageDefault() string {
+	return Catalog.Format(msgs.locale, "kubeStorageDefault", nil)
+}
+
+// KubeStoragePendingClass says "No class"
+// in the language the app shows.
+func KubeStoragePendingClass() string { return In(i18n.Locale()).KubeStoragePendingClass() }
+
+// KubeStoragePendingClass says "No class"
+// in the language of msgs.
+func (msgs Messages) KubeStoragePendingClass() string {
+	return Catalog.Format(msgs.locale, "kubeStoragePendingClass", nil)
+}
+
+// KubeStorageClassMissing says "Waiting for a volume. StorageClass {name} does not exist in this cluster."
+// in the language the app shows.
+//
+// kubeStorageClassMissing
+func KubeStorageClassMissing(name string) string {
+	return In(i18n.Locale()).KubeStorageClassMissing(name)
+}
+
+// KubeStorageClassMissing says "Waiting for a volume. StorageClass {name} does not exist in this cluster."
+// in the language of msgs.
+//
+// kubeStorageClassMissing
+func (msgs Messages) KubeStorageClassMissing(name string) string {
+	return Catalog.Format(msgs.locale, "kubeStorageClassMissing", map[string]any{"name": name})
+}
+
+// KubeStorageNoVolume says "Kubernetes found no available volume for this claim."
+// in the language the app shows.
+func KubeStorageNoVolume() string { return In(i18n.Locale()).KubeStorageNoVolume() }
+
+// KubeStorageNoVolume says "Kubernetes found no available volume for this claim."
+// in the language of msgs.
+func (msgs Messages) KubeStorageNoVolume() string {
+	return Catalog.Format(msgs.locale, "kubeStorageNoVolume", nil)
+}
+
+// KubeStorageRequested says "Requested"
+// in the language the app shows.
+func KubeStorageRequested() string { return In(i18n.Locale()).KubeStorageRequested() }
+
+// KubeStorageRequested says "Requested"
+// in the language of msgs.
+func (msgs Messages) KubeStorageRequested() string {
+	return Catalog.Format(msgs.locale, "kubeStorageRequested", nil)
+}
+
+// KubeStorageCapacity says "Capacity"
+// in the language the app shows.
+func KubeStorageCapacity() string { return In(i18n.Locale()).KubeStorageCapacity() }
+
+// KubeStorageCapacity says "Capacity"
+// in the language of msgs.
+func (msgs Messages) KubeStorageCapacity() string {
+	return Catalog.Format(msgs.locale, "kubeStorageCapacity", nil)
+}
+
+// KubeStorageVolume says "Volume (PV)"
+// in the language the app shows.
+func KubeStorageVolume() string { return In(i18n.Locale()).KubeStorageVolume() }
+
+// KubeStorageVolume says "Volume (PV)"
+// in the language of msgs.
+func (msgs Messages) KubeStorageVolume() string {
+	return Catalog.Format(msgs.locale, "kubeStorageVolume", nil)
+}
+
+// KubeStorageAccessModes says "Access modes"
+// in the language the app shows.
+func KubeStorageAccessModes() string { return In(i18n.Locale()).KubeStorageAccessModes() }
+
+// KubeStorageAccessModes says "Access modes"
+// in the language of msgs.
+func (msgs Messages) KubeStorageAccessModes() string {
+	return Catalog.Format(msgs.locale, "kubeStorageAccessModes", nil)
+}
+
+// KubeStorageVolumeMode says "Volume mode"
+// in the language the app shows.
+func KubeStorageVolumeMode() string { return In(i18n.Locale()).KubeStorageVolumeMode() }
+
+// KubeStorageVolumeMode says "Volume mode"
+// in the language of msgs.
+func (msgs Messages) KubeStorageVolumeMode() string {
+	return Catalog.Format(msgs.locale, "kubeStorageVolumeMode", nil)
+}
+
+// KubeStorageReclaimPolicy says "Reclaim policy"
+// in the language the app shows.
+func KubeStorageReclaimPolicy() string { return In(i18n.Locale()).KubeStorageReclaimPolicy() }
+
+// KubeStorageReclaimPolicy says "Reclaim policy"
+// in the language of msgs.
+func (msgs Messages) KubeStorageReclaimPolicy() string {
+	return Catalog.Format(msgs.locale, "kubeStorageReclaimPolicy", nil)
+}
+
+// KubeStorageProvisioner says "Provisioner"
+// in the language the app shows.
+func KubeStorageProvisioner() string { return In(i18n.Locale()).KubeStorageProvisioner() }
+
+// KubeStorageProvisioner says "Provisioner"
+// in the language of msgs.
+func (msgs Messages) KubeStorageProvisioner() string {
+	return Catalog.Format(msgs.locale, "kubeStorageProvisioner", nil)
+}
+
+// KubeStorageBindingMode says "Binding mode"
+// in the language the app shows.
+func KubeStorageBindingMode() string { return In(i18n.Locale()).KubeStorageBindingMode() }
+
+// KubeStorageBindingMode says "Binding mode"
+// in the language of msgs.
+func (msgs Messages) KubeStorageBindingMode() string {
+	return Catalog.Format(msgs.locale, "kubeStorageBindingMode", nil)
+}
+
+// KubeStorageExpansion says "Volume expansion"
+// in the language the app shows.
+func KubeStorageExpansion() string { return In(i18n.Locale()).KubeStorageExpansion() }
+
+// KubeStorageExpansion says "Volume expansion"
+// in the language of msgs.
+func (msgs Messages) KubeStorageExpansion() string {
+	return Catalog.Format(msgs.locale, "kubeStorageExpansion", nil)
+}
+
+// KubeStorageAllowed says "Allowed"
+// in the language the app shows.
+func KubeStorageAllowed() string { return In(i18n.Locale()).KubeStorageAllowed() }
+
+// KubeStorageAllowed says "Allowed"
+// in the language of msgs.
+func (msgs Messages) KubeStorageAllowed() string {
+	return Catalog.Format(msgs.locale, "kubeStorageAllowed", nil)
+}
+
+// KubeStorageConsumers says "Pods using this claim"
+// in the language the app shows.
+func KubeStorageConsumers() string { return In(i18n.Locale()).KubeStorageConsumers() }
+
+// KubeStorageConsumers says "Pods using this claim"
+// in the language of msgs.
+func (msgs Messages) KubeStorageConsumers() string {
+	return Catalog.Format(msgs.locale, "kubeStorageConsumers", nil)
+}
+
+// KubeStorageNoConsumers says "No pods reference this claim."
+// in the language the app shows.
+func KubeStorageNoConsumers() string { return In(i18n.Locale()).KubeStorageNoConsumers() }
+
+// KubeStorageNoConsumers says "No pods reference this claim."
+// in the language of msgs.
+func (msgs Messages) KubeStorageNoConsumers() string {
+	return Catalog.Format(msgs.locale, "kubeStorageNoConsumers", nil)
+}
+
+// KubeStorageClasses says "Cluster storage classes"
+// in the language the app shows.
+func KubeStorageClasses() string { return In(i18n.Locale()).KubeStorageClasses() }
+
+// KubeStorageClasses says "Cluster storage classes"
+// in the language of msgs.
+func (msgs Messages) KubeStorageClasses() string {
+	return Catalog.Format(msgs.locale, "kubeStorageClasses", nil)
+}
+
 // KubeResourcesEmpty says "No resources in the selected namespaces."
 // in the language the app shows.
 func KubeResourcesEmpty() string { return In(i18n.Locale()).KubeResourcesEmpty() }

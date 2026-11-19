@@ -54,7 +54,7 @@ func TestRead(t *testing.T) {
 			Containers: []Container{{Name: "api", Image: "ghcr.io/acme/checkout:2.8.1", Ready: true, State: "running"}}}},
 		{"postgres-0", Pod{Namespace: "shop", Name: "postgres-0", UID: "p3", Phase: "Pending", Reason: "Unschedulable",
 			Unscheduled: "0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
-			Volumes:     []string{"data"}, Created: at(9, 57, 0), Owner: Owner{"StatefulSet", "postgres"},
+			Volumes:     []string{"data"}, Claims: []string{"data-postgres-0"}, Created: at(9, 57, 0), Owner: Owner{"StatefulSet", "postgres"},
 			Containers: []Container{{Name: "postgres", Image: "postgres:17"}}}},
 		// Its ReplicaSet was not in the answer: the pod keeps it as owner.
 		{"web-frontend-5c8d7f9b4-k2j9x", Pod{Namespace: "shop", Name: "web-frontend-5c8d7f9b4-k2j9x", UID: "p4", Phase: "Pending", Reason: "ImagePullBackOff",

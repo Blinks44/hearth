@@ -14,7 +14,7 @@ type clusterKind struct {
 	label, icon, alias string
 }
 
-func clusterKindOptions() [kindConfigMaps + 1]clusterKind {
+func clusterKindOptions() [kindStorageClasses + 1]clusterKind {
 	return [...]clusterKind{
 		kindPods:            {"Pods", "box", "po"},
 		kindDeployments:     {"Deployments", "boxes", "deploy"},
@@ -31,6 +31,9 @@ func clusterKindOptions() [kindConfigMaps + 1]clusterKind {
 		kindEndpoints:       {"Endpoints", "network", "ep"},
 		kindNetworkPolicies: {"NetworkPolicies", "network", "netpol"},
 		kindConfigMaps:      {"ConfigMaps", "file-text", "cm"},
+		kindPVCs:            {"PersistentVolumeClaims", "database", "pvc"},
+		kindPVs:             {"PersistentVolumes", "database", "pv"},
+		kindStorageClasses:  {"StorageClasses", "layers", "sc"},
 	}
 }
 
@@ -113,7 +116,7 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
 	var exact, partial []int
 	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
-		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm} {
+		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindPVCs, kindPVs, kindStorageClasses, kindHelm} {
 		kind := options[i]
 		label := strings.ToLower(kind.label)
 		switch {
@@ -125,7 +128,10 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	}
 	results := append(exact, partial...)
 	selected := min(s.kindSelected, max(len(results)-1, 0))
-	choose := func(i int) { s.kind, s.logs, s.kindsOpen = i, nil, false }
+	choose := func(i int) {
+		s.kind, s.logs, s.kindsOpen = i, nil, false
+		s.storageLink = storageLink{}
+	}
 	move := func(by int) {
 		if n := len(results); n > 0 {
 			s.kindSelected = (selected + by + n) % n

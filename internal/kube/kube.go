@@ -93,6 +93,7 @@ type Pod struct {
 	// Volumes are the volumes the pod declares, without the API token
 	// every pod gets.
 	Volumes []string
+	Claims  []string
 	Created time.Time
 	// Owner is zero for a pod nothing owns.
 	Owner Owner
@@ -231,6 +232,17 @@ func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 	return names, nil
 }
 
+func namespaceScopes(namespaces []string) [][]string {
+	scopes := make([][]string, 0, max(len(namespaces), 1))
+	for _, ns := range namespaces {
+		scopes = append(scopes, []string{"--namespace=" + ns})
+	}
+	if len(scopes) == 0 {
+		scopes = append(scopes, []string{"--all-namespaces"})
+	}
+	return scopes
+}
+
 // Read reads the target's pods and Deployments, in one kubectl get for
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
@@ -238,13 +250,7 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 	if t.Resource != "" {
 		return readResourceCluster(ctx, r, env, t)
 	}
-	scopes := make([][]string, 0, max(len(t.Namespaces), 1))
-	for _, ns := range t.Namespaces {
-		scopes = append(scopes, []string{"--namespace=" + ns})
-	}
-	if len(scopes) == 0 {
-		scopes = append(scopes, []string{"--all-namespaces"})
-	}
+	scopes := namespaceScopes(t.Namespaces)
 	var c Cluster
 	if t.Helm != "" {
 		releases, err := readHelm(ctx, r, env, t, scopes)
@@ -557,8 +563,9 @@ type pod struct {
 		Containers         []podContainer `json:"containers"`
 		InitContainers     []podContainer `json:"initContainers"`
 		Volumes            []struct {
-			Name      string           `json:"name"`
-			Projected *json.RawMessage `json:"projected"`
+			Name                  string                     `json:"name"`
+			Projected             *json.RawMessage           `json:"projected"`
+			PersistentVolumeClaim struct{ ClaimName string } `json:"persistentVolumeClaim"`
 		} `json:"volumes"`
 	} `json:"spec"`
 	Status struct {
@@ -701,6 +708,7 @@ func (p pod) pod(owner Owner) Pod {
 		}
 		out.Volumes = append(out.Volumes, v.Name)
 	}
+	out.Claims = p.claims()
 	statuses := map[string]containerStatus{}
 	for _, s := range p.Status.ContainerStatuses {
 		statuses[s.Name] = s
