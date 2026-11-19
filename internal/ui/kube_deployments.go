@@ -189,6 +189,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 		})
 		if a.BuildPlan != nil {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
+				a.deploymentRestart(c, ref, d.Paused)
 				a.resourceActions(c, ref, 3)
 			})
 		}

@@ -231,6 +231,7 @@ type KubeChange struct {
 	want    resourceJSON
 	rollout bool
 	scale   *deploymentScale
+	restart []string
 	Diff    []DiffLine
 }
 
@@ -250,6 +251,9 @@ func (m *KubeChange) Resource() string { return m.draft.Ref.label() }
 func (m *KubeChange) command() []string {
 	if m.scale != nil {
 		return m.scale.command(m.draft)
+	}
+	if m.restart != nil {
+		return m.restart
 	}
 	if m.want == nil {
 		return []string{"delete", "--raw", m.draft.Ref.path(), "-f", "-"}
@@ -437,12 +441,17 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 			return "", errors.New(locales.KubeResourceDeleting())
 		}
 	}
-	if m.want != nil && obj.matches(ref) && obj.version() != m.draft.Version && approvedChanges(m.base, m.want, cleanResource(obj)) {
+	if m.want != nil && obj.version() != m.draft.Version && m.matchesChange(obj) {
 		if m.rollout {
-			if err := m.verifyRollout(ctx, k); err != nil {
-				return "", fmt.Errorf("%s: %w", locales.KubeResourceRolloutUnverified(), err)
+			verified, unverified := locales.KubeResourceRolloutVerified(), locales.KubeResourceRolloutUnverified()
+			if m.restart != nil {
+				checking()
+				verified, unverified = locales.KubeRestartVerified(), locales.KubeRestartUnverified()
 			}
-			return locales.KubeResourceRolloutVerified(), nil
+			if err := m.verifyRollout(ctx, k); err != nil {
+				return "", fmt.Errorf("%s: %w", unverified, err)
+			}
+			return verified, nil
 		}
 		return locales.KubeResourceApplied(), nil
 	}
@@ -465,8 +474,20 @@ func (m *KubeChange) verifyRollout(ctx context.Context, k resourceClient) error 
 	if err != nil {
 		return err
 	}
-	if !obj.matches(ref) || !approvedChanges(m.base, m.want, cleanResource(obj)) {
+	if !m.matchesChange(obj) {
 		return errors.New(locales.KubeResourceChanged())
 	}
 	return nil
+}
+
+func (m *KubeChange) matchesChange(obj resourceJSON) bool {
+	if !obj.matches(m.draft.Ref) {
+		return false
+	}
+	if m.restart != nil {
+		spec := deploymentSpec(obj)
+		return obj.metadata()["deletionTimestamp"] == nil && spec["paused"] != true &&
+			reflect.DeepEqual(spec["template"], deploymentSpec(m.want)["template"])
+	}
+	return approvedChanges(m.base, m.want, cleanResource(obj))
 }

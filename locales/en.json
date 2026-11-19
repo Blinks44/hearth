@@ -1,5 +1,23 @@
 {
   "@@locale": "en",
+  "kubeRestartOpen": "Restart…",
+  "kubeRestartTitle": "Restart {name}?",
+  "@kubeRestartTitle": {
+    "description": "kubeRestartTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeRestartAction": "Restart",
+  "kubeRestartPreview": "Kubernetes will replace the pods according to the Deployment strategy. Hearth will check whether the new rollout completes.",
+  "kubeRestartSingle": "With one replica, traffic may be interrupted while the replacement pod starts.",
+  "kubeRestartRecreate": "The Recreate strategy stops all current pods before starting new ones. Traffic will be interrupted.",
+  "kubeRestartZero": "The Deployment is scaled to zero. Its template will change and no pods will start.",
+  "kubeRestartPaused": "Resume the Deployment rollout before restarting.",
+  "kubeRestartVerified": "Kubernetes completed the restart rollout.",
+  "kubeRestartUnverified": "Kubernetes accepted the restart. Hearth could not confirm that the rollout completed",
   "kubeScaleInvalid": "Choose a different replica count.",
   "kubeScaleTitle": "Scale {name}?",
   "@kubeScaleTitle": {

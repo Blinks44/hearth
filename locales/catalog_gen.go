@@ -36,6 +36,110 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeRestartOpen says "Restart…"
+// in the language the app shows.
+func KubeRestartOpen() string { return In(i18n.Locale()).KubeRestartOpen() }
+
+// KubeRestartOpen says "Restart…"
+// in the language of msgs.
+func (msgs Messages) KubeRestartOpen() string {
+	return Catalog.Format(msgs.locale, "kubeRestartOpen", nil)
+}
+
+// KubeRestartTitle says "Restart {name}?"
+// in the language the app shows.
+//
+// kubeRestartTitle
+func KubeRestartTitle(name string) string { return In(i18n.Locale()).KubeRestartTitle(name) }
+
+// KubeRestartTitle says "Restart {name}?"
+// in the language of msgs.
+//
+// kubeRestartTitle
+func (msgs Messages) KubeRestartTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeRestartTitle", map[string]any{"name": name})
+}
+
+// KubeRestartAction says "Restart"
+// in the language the app shows.
+func KubeRestartAction() string { return In(i18n.Locale()).KubeRestartAction() }
+
+// KubeRestartAction says "Restart"
+// in the language of msgs.
+func (msgs Messages) KubeRestartAction() string {
+	return Catalog.Format(msgs.locale, "kubeRestartAction", nil)
+}
+
+// KubeRestartPreview says "Kubernetes will replace the pods according to the Deployment strategy. Hearth will check whether the new rollout comp…"
+// in the language the app shows.
+func KubeRestartPreview() string { return In(i18n.Locale()).KubeRestartPreview() }
+
+// KubeRestartPreview says "Kubernetes will replace the pods according to the Deployment strategy. Hearth will check whether the new rollout comp…"
+// in the language of msgs.
+func (msgs Messages) KubeRestartPreview() string {
+	return Catalog.Format(msgs.locale, "kubeRestartPreview", nil)
+}
+
+// KubeRestartSingle says "With one replica, traffic may be interrupted while the replacement pod starts."
+// in the language the app shows.
+func KubeRestartSingle() string { return In(i18n.Locale()).KubeRestartSingle() }
+
+// KubeRestartSingle says "With one replica, traffic may be interrupted while the replacement pod starts."
+// in the language of msgs.
+func (msgs Messages) KubeRestartSingle() string {
+	return Catalog.Format(msgs.locale, "kubeRestartSingle", nil)
+}
+
+// KubeRestartRecreate says "The Recreate strategy stops all current pods before starting new ones. Traffic will be interrupted."
+// in the language the app shows.
+func KubeRestartRecreate() string { return In(i18n.Locale()).KubeRestartRecreate() }
+
+// KubeRestartRecreate says "The Recreate strategy stops all current pods before starting new ones. Traffic will be interrupted."
+// in the language of msgs.
+func (msgs Messages) KubeRestartRecreate() string {
+	return Catalog.Format(msgs.locale, "kubeRestartRecreate", nil)
+}
+
+// KubeRestartZero says "The Deployment is scaled to zero. Its template will change and no pods will start."
+// in the language the app shows.
+func KubeRestartZero() string { return In(i18n.Locale()).KubeRestartZero() }
+
+// KubeRestartZero says "The Deployment is scaled to zero. Its template will change and no pods will start."
+// in the language of msgs.
+func (msgs Messages) KubeRestartZero() string {
+	return Catalog.Format(msgs.locale, "kubeRestartZero", nil)
+}
+
+// KubeRestartPaused says "Resume the Deployment rollout before restarting."
+// in the language the app shows.
+func KubeRestartPaused() string { return In(i18n.Locale()).KubeRestartPaused() }
+
+// KubeRestartPaused says "Resume the Deployment rollout before restarting."
+// in the language of msgs.
+func (msgs Messages) KubeRestartPaused() string {
+	return Catalog.Format(msgs.locale, "kubeRestartPaused", nil)
+}
+
+// KubeRestartVerified says "Kubernetes completed the restart rollout."
+// in the language the app shows.
+func KubeRestartVerified() string { return In(i18n.Locale()).KubeRestartVerified() }
+
+// KubeRestartVerified says "Kubernetes completed the restart rollout."
+// in the language of msgs.
+func (msgs Messages) KubeRestartVerified() string {
+	return Catalog.Format(msgs.locale, "kubeRestartVerified", nil)
+}
+
+// KubeRestartUnverified says "Kubernetes accepted the restart. Hearth could not confirm that the rollout completed"
+// in the language the app shows.
+func KubeRestartUnverified() string { return In(i18n.Locale()).KubeRestartUnverified() }
+
+// KubeRestartUnverified says "Kubernetes accepted the restart. Hearth could not confirm that the rollout completed"
+// in the language of msgs.
+func (msgs Messages) KubeRestartUnverified() string {
+	return Catalog.Format(msgs.locale, "kubeRestartUnverified", nil)
+}
+
 // KubeScaleInvalid says "Choose a different replica count."
 // in the language the app shows.
 func KubeScaleInvalid() string { return In(i18n.Locale()).KubeScaleInvalid() }
