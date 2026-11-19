@@ -43,3 +43,16 @@ func (e Env) without(key string) Env {
 	}
 	return out
 }
+
+// HelmContext keeps the terminal environment but takes cluster and login
+// settings from the explicitly selected kubeconfig context.
+func (e Env) HelmContext() Env {
+	out := make(Env, 0, len(e))
+	for _, kv := range e {
+		key, _, _ := strings.Cut(kv, "=")
+		if !strings.HasPrefix(strings.ToUpper(key), "HELM_KUBE") {
+			out = append(out, kv)
+		}
+	}
+	return out
+}

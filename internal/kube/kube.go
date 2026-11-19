@@ -1,5 +1,5 @@
-// Package kube reads a cluster through kubectl for the cluster view: its
-// namespaces, pods, workloads and events. It runs
+// Package kube reads a cluster through kubectl and Helm for the cluster view.
+// It runs
 // only while the view is open and never from the scan; it reads and
 // changes nothing else. kubectl brings the kubeconfig's sign-in, as for
 // the access check.
@@ -31,6 +31,8 @@ const timeout = 30 * time.Second
 // Target is what the view reads: kubectl, the context and its namespaces.
 type Target struct {
 	Kubectl, Context string
+	// Helm reads releases instead of workloads when its executable is set.
+	Helm, HelmVersion string
 	// Namespaces are those to read; none reads them all.
 	Namespaces []string
 	// Overview includes nodes, their requests and recent warnings.
@@ -157,11 +159,12 @@ type Event struct {
 
 // Cluster is what one read found.
 type Cluster struct {
-	Pods        []Pod
-	Deployments []Deployment
-	Overview    *Overview
-	Batch       *Batch
-	Services    []Service
+	Pods         []Pod
+	Deployments  []Deployment
+	Overview     *Overview
+	Batch        *Batch
+	Services     []Service
+	HelmReleases []HelmRelease
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -175,14 +178,15 @@ type Cluster struct {
 // Error is a read kubectl refused or that failed: Access says why, by the
 // access check's rules, and Detail of an unknown reason is kubectl's line.
 type Error struct {
-	Access detect.KubeAccess
+	Access  detect.KubeAccess
+	command string
 }
 
 func (e *Error) Error() string {
 	if e.Access.Detail != "" {
-		return "kubectl: " + e.Access.Detail
+		return cmp.Or(e.command, "kubectl") + ": " + e.Access.Detail
 	}
-	return "kubectl failed"
+	return cmp.Or(e.command, "kubectl") + " failed"
 }
 
 // get runs kubectl get with the target's context and decodes its JSON.
@@ -233,6 +237,10 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 		scopes = append(scopes, []string{"--all-namespaces"})
 	}
 	var c Cluster
+	if t.Helm != "" {
+		releases, err := readHelm(ctx, r, env, t, scopes)
+		return Cluster{HelmReleases: releases, Taken: time.Now()}, err
+	}
 	if t.Services {
 		services, err := readServices(ctx, r, env, t, scopes)
 		return Cluster{Services: services, Taken: time.Now()}, err

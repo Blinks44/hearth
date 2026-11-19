@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"slices"
 	"strconv"
@@ -37,6 +38,7 @@ const (
 	kindJobs
 	kindCronJobs
 	kindServices
+	kindHelm
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -64,6 +66,8 @@ type kubeClusterState struct {
 	jobFilter, cronJobFilter   int
 	serviceFilter              int
 	serviceSort                string
+	helmFilter                 int
+	helmSort                   string
 	forward                    *forwardForm
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
@@ -136,6 +140,14 @@ func (a *App) syncCluster() {
 			t.Batch = t.Overview || isBatchKind(a.cluster.kind)
 			t.Services = s.kind == kindServices
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
+			if s.kind == kindHelm {
+				if helm, found := cliCopy(a.cliState(), "helm"); found {
+					t.Helm, t.HelmVersion = helm.Path, helm.Version
+					target += fmt.Sprintf("%q", []string{t.Helm, t.HelmVersion})
+				} else {
+					target = ""
+				}
+			}
 		}
 	}
 	running := ""
@@ -267,7 +279,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			a.logsView(c)
 			return
 		}
-		split := s.kind == kindPods || s.kind == kindDeployments
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -283,12 +295,15 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				a.kindChips(c)
 				a.forwardList(c, name)
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
+				helm, hasHelm := cliCopy(a.cliState(), "helm")
 				waiting := s.data == nil || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
 				case !hasKubectl:
 					toolNote(c, locales.KubeClusterNoKubectl())
+				case s.kind == kindHelm && (!hasHelm || errors.Is(s.err, fs.ErrNotExist)):
+					toolNote(c, locales.KubeHelmMissing())
 				case waiting && s.err != nil:
 					a.clusterError(c, name, s.err)
 				case waiting:
@@ -313,6 +328,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.cronJobsView(c, s.data.Batch)
 					case kindServices:
 						a.servicesView(c, s.data.Services)
+					case kindHelm:
+						a.helmView(c, s.data.HelmReleases, helm.Version)
 					}
 				}
 			})
@@ -444,6 +461,8 @@ func (a *App) freshness(c *ui.Context) {
 	pal := Colors(t)
 	dot, text := pal.TextFaint, locales.KubeClusterConnecting()
 	switch {
+	case s.kind == kindHelm && a.Snapshot != nil && (cliFound(a.cliState(), []string{"helm"}) == 0 || errors.Is(s.err, fs.ErrNotExist)):
+		dot, text = t.Warning, locales.KubeHelmUnavailable()
 	case s.err != nil:
 		dot, text = t.Warning, a.accessWords(s.err)
 	case s.data != nil:
@@ -500,6 +519,9 @@ func (a *App) clusterError(c *ui.Context, name string, err error) {
 		case detect.KubeForbidden:
 			title, text = locales.KubeClusterForbiddenTitle(), locales.KubeClusterForbiddenText(strings.Join(a.clusterNamespaces(name), ", "))
 		}
+	}
+	if s.kind == kindHelm {
+		title, text = locales.KubeHelmReadFailed(), a.accessWords(err)
 	}
 	ui.Column(c).MaxWidth(500).Gap(12).Padding(40, 0, 0, 0).AlignSelf(ui.Center).Children(func() {
 		ui.Box(c).Size(48, 48).Radius(12).Background(pal.WarningSoft).Center().Children(func() {

@@ -14,7 +14,7 @@ type clusterKind struct {
 	label, icon, alias string
 }
 
-func clusterKindOptions() [6]clusterKind {
+func clusterKindOptions() [7]clusterKind {
 	return [...]clusterKind{
 		kindPods:        {"Pods", "box", "po"},
 		kindDeployments: {"Deployments", "boxes", "deploy"},
@@ -22,6 +22,7 @@ func clusterKindOptions() [6]clusterKind {
 		kindJobs:        {"Jobs", "package", "job"},
 		kindCronJobs:    {"CronJobs", "history", "cj"},
 		kindServices:    {"Services", "network", "svc"},
+		kindHelm:        {locales.KubeHelmReleases(), "layers", "helm"},
 	}
 }
 
@@ -38,14 +39,21 @@ func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bo
 				trouble++
 			}
 		}
-		return len(cl.Pods), trouble, !cl.Taken.IsZero() || cl.Pods != nil
+		return len(cl.Pods), trouble, cl.HelmReleases == nil && (!cl.Taken.IsZero() || cl.Pods != nil)
 	case kindDeployments:
 		for _, d := range cl.Deployments {
 			if deploymentTrouble(d) {
 				trouble++
 			}
 		}
-		return len(cl.Deployments), trouble, !cl.Taken.IsZero() || cl.Deployments != nil
+		return len(cl.Deployments), trouble, cl.HelmReleases == nil && (!cl.Taken.IsZero() || cl.Deployments != nil)
+	case kindHelm:
+		for _, r := range cl.HelmReleases {
+			if r.Status == "failed" || r.Pending() {
+				trouble++
+			}
+		}
+		return len(cl.HelmReleases), trouble, cl.HelmReleases != nil
 	case kindServices:
 		for _, service := range cl.Services {
 			if service.PodsKnown && service.Pods == 0 {
@@ -91,7 +99,7 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	options := clusterKindOptions()
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
 	var results []int
-	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices} {
+	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices, kindHelm} {
 		kind := options[i]
 		if strings.Contains(strings.ToLower(kind.label), query) || strings.Contains(kind.alias, query) {
 			results = append(results, i)

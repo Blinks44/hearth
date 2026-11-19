@@ -1,5 +1,71 @@
 {
   "@@locale": "en",
+  "kubeHelmReleases": "Helm releases",
+  "@kubeHelmReleases": {
+    "description": "kubeHelmReleases"
+  },
+  "kubeHelmMissing": "Hearth couldn’t find Helm. Install Helm and rescan to view releases.",
+  "@kubeHelmMissing": {
+    "description": "kubeHelmMissing"
+  },
+  "kubeHelmUnavailable": "Helm unavailable",
+  "@kubeHelmUnavailable": {
+    "description": "kubeHelmUnavailable"
+  },
+  "kubeHelmReadFailed": "Could not read Helm releases",
+  "@kubeHelmReadFailed": {
+    "description": "kubeHelmReadFailed"
+  },
+  "kubeHelmFailed": "Failed",
+  "@kubeHelmFailed": {
+    "description": "kubeHelmFailed"
+  },
+  "kubeHelmPending": "In progress",
+  "@kubeHelmPending": {
+    "description": "kubeHelmPending"
+  },
+  "kubeHelmSort": "Sort Helm releases",
+  "@kubeHelmSort": {
+    "description": "kubeHelmSort"
+  },
+  "kubeHelmSearch": "Release, namespace or chart",
+  "@kubeHelmSearch": {
+    "description": "kubeHelmSearch"
+  },
+  "kubeHelmNoMatches": "No releases match the filters.",
+  "@kubeHelmNoMatches": {
+    "description": "kubeHelmNoMatches"
+  },
+  "kubeHelmEmpty": "No Helm releases in the selected namespaces.",
+  "@kubeHelmEmpty": {
+    "description": "kubeHelmEmpty"
+  },
+  "kubeHelmRelease": "Release",
+  "@kubeHelmRelease": {
+    "description": "kubeHelmRelease"
+  },
+  "kubeHelmChart": "Chart",
+  "@kubeHelmChart": {
+    "description": "kubeHelmChart"
+  },
+  "kubeHelmAppVersion": "App version",
+  "@kubeHelmAppVersion": {
+    "description": "kubeHelmAppVersion"
+  },
+  "kubeHelmRevision": "Revision",
+  "@kubeHelmRevision": {
+    "description": "kubeHelmRevision"
+  },
+  "kubeHelmReadOnly": "Read-only · Releases read with {helm}.",
+  "@kubeHelmReadOnly": {
+    "description": "kubeHelmReadOnly",
+    "placeholders": {
+      "helm": {
+        "type": "String",
+        "example": "Helm 3.16.3"
+      }
+    }
+  },
   "overviewTitle": "Overview",
   "@overviewTitle": {
     "description": "Sidebar item and header of the overview page."

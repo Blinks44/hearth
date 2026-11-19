@@ -36,6 +36,216 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeHelmReleases says "Helm releases"
+// in the language the app shows.
+//
+// kubeHelmReleases
+func KubeHelmReleases() string { return In(i18n.Locale()).KubeHelmReleases() }
+
+// KubeHelmReleases says "Helm releases"
+// in the language of msgs.
+//
+// kubeHelmReleases
+func (msgs Messages) KubeHelmReleases() string {
+	return Catalog.Format(msgs.locale, "kubeHelmReleases", nil)
+}
+
+// KubeHelmMissing says "Hearth couldn’t find Helm. Install Helm and rescan to view releases."
+// in the language the app shows.
+//
+// kubeHelmMissing
+func KubeHelmMissing() string { return In(i18n.Locale()).KubeHelmMissing() }
+
+// KubeHelmMissing says "Hearth couldn’t find Helm. Install Helm and rescan to view releases."
+// in the language of msgs.
+//
+// kubeHelmMissing
+func (msgs Messages) KubeHelmMissing() string {
+	return Catalog.Format(msgs.locale, "kubeHelmMissing", nil)
+}
+
+// KubeHelmUnavailable says "Helm unavailable"
+// in the language the app shows.
+//
+// kubeHelmUnavailable
+func KubeHelmUnavailable() string { return In(i18n.Locale()).KubeHelmUnavailable() }
+
+// KubeHelmUnavailable says "Helm unavailable"
+// in the language of msgs.
+//
+// kubeHelmUnavailable
+func (msgs Messages) KubeHelmUnavailable() string {
+	return Catalog.Format(msgs.locale, "kubeHelmUnavailable", nil)
+}
+
+// KubeHelmReadFailed says "Could not read Helm releases"
+// in the language the app shows.
+//
+// kubeHelmReadFailed
+func KubeHelmReadFailed() string { return In(i18n.Locale()).KubeHelmReadFailed() }
+
+// KubeHelmReadFailed says "Could not read Helm releases"
+// in the language of msgs.
+//
+// kubeHelmReadFailed
+func (msgs Messages) KubeHelmReadFailed() string {
+	return Catalog.Format(msgs.locale, "kubeHelmReadFailed", nil)
+}
+
+// KubeHelmFailed says "Failed"
+// in the language the app shows.
+//
+// kubeHelmFailed
+func KubeHelmFailed() string { return In(i18n.Locale()).KubeHelmFailed() }
+
+// KubeHelmFailed says "Failed"
+// in the language of msgs.
+//
+// kubeHelmFailed
+func (msgs Messages) KubeHelmFailed() string {
+	return Catalog.Format(msgs.locale, "kubeHelmFailed", nil)
+}
+
+// KubeHelmPending says "In progress"
+// in the language the app shows.
+//
+// kubeHelmPending
+func KubeHelmPending() string { return In(i18n.Locale()).KubeHelmPending() }
+
+// KubeHelmPending says "In progress"
+// in the language of msgs.
+//
+// kubeHelmPending
+func (msgs Messages) KubeHelmPending() string {
+	return Catalog.Format(msgs.locale, "kubeHelmPending", nil)
+}
+
+// KubeHelmSort says "Sort Helm releases"
+// in the language the app shows.
+//
+// kubeHelmSort
+func KubeHelmSort() string { return In(i18n.Locale()).KubeHelmSort() }
+
+// KubeHelmSort says "Sort Helm releases"
+// in the language of msgs.
+//
+// kubeHelmSort
+func (msgs Messages) KubeHelmSort() string {
+	return Catalog.Format(msgs.locale, "kubeHelmSort", nil)
+}
+
+// KubeHelmSearch says "Release, namespace or chart"
+// in the language the app shows.
+//
+// kubeHelmSearch
+func KubeHelmSearch() string { return In(i18n.Locale()).KubeHelmSearch() }
+
+// KubeHelmSearch says "Release, namespace or chart"
+// in the language of msgs.
+//
+// kubeHelmSearch
+func (msgs Messages) KubeHelmSearch() string {
+	return Catalog.Format(msgs.locale, "kubeHelmSearch", nil)
+}
+
+// KubeHelmNoMatches says "No releases match the filters."
+// in the language the app shows.
+//
+// kubeHelmNoMatches
+func KubeHelmNoMatches() string { return In(i18n.Locale()).KubeHelmNoMatches() }
+
+// KubeHelmNoMatches says "No releases match the filters."
+// in the language of msgs.
+//
+// kubeHelmNoMatches
+func (msgs Messages) KubeHelmNoMatches() string {
+	return Catalog.Format(msgs.locale, "kubeHelmNoMatches", nil)
+}
+
+// KubeHelmEmpty says "No Helm releases in the selected namespaces."
+// in the language the app shows.
+//
+// kubeHelmEmpty
+func KubeHelmEmpty() string { return In(i18n.Locale()).KubeHelmEmpty() }
+
+// KubeHelmEmpty says "No Helm releases in the selected namespaces."
+// in the language of msgs.
+//
+// kubeHelmEmpty
+func (msgs Messages) KubeHelmEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeHelmEmpty", nil)
+}
+
+// KubeHelmRelease says "Release"
+// in the language the app shows.
+//
+// kubeHelmRelease
+func KubeHelmRelease() string { return In(i18n.Locale()).KubeHelmRelease() }
+
+// KubeHelmRelease says "Release"
+// in the language of msgs.
+//
+// kubeHelmRelease
+func (msgs Messages) KubeHelmRelease() string {
+	return Catalog.Format(msgs.locale, "kubeHelmRelease", nil)
+}
+
+// KubeHelmChart says "Chart"
+// in the language the app shows.
+//
+// kubeHelmChart
+func KubeHelmChart() string { return In(i18n.Locale()).KubeHelmChart() }
+
+// KubeHelmChart says "Chart"
+// in the language of msgs.
+//
+// kubeHelmChart
+func (msgs Messages) KubeHelmChart() string {
+	return Catalog.Format(msgs.locale, "kubeHelmChart", nil)
+}
+
+// KubeHelmAppVersion says "App version"
+// in the language the app shows.
+//
+// kubeHelmAppVersion
+func KubeHelmAppVersion() string { return In(i18n.Locale()).KubeHelmAppVersion() }
+
+// KubeHelmAppVersion says "App version"
+// in the language of msgs.
+//
+// kubeHelmAppVersion
+func (msgs Messages) KubeHelmAppVersion() string {
+	return Catalog.Format(msgs.locale, "kubeHelmAppVersion", nil)
+}
+
+// KubeHelmRevision says "Revision"
+// in the language the app shows.
+//
+// kubeHelmRevision
+func KubeHelmRevision() string { return In(i18n.Locale()).KubeHelmRevision() }
+
+// KubeHelmRevision says "Revision"
+// in the language of msgs.
+//
+// kubeHelmRevision
+func (msgs Messages) KubeHelmRevision() string {
+	return Catalog.Format(msgs.locale, "kubeHelmRevision", nil)
+}
+
+// KubeHelmReadOnly says "Read-only · Releases read with {helm}."
+// in the language the app shows.
+//
+// kubeHelmReadOnly
+func KubeHelmReadOnly(helm string) string { return In(i18n.Locale()).KubeHelmReadOnly(helm) }
+
+// KubeHelmReadOnly says "Read-only · Releases read with {helm}."
+// in the language of msgs.
+//
+// kubeHelmReadOnly
+func (msgs Messages) KubeHelmReadOnly(helm string) string {
+	return Catalog.Format(msgs.locale, "kubeHelmReadOnly", map[string]any{"helm": helm})
+}
+
 // OverviewTitle says "Overview"
 // in the language the app shows.
 //
