@@ -35,6 +35,7 @@ func clusterKindOptions() [kindCustom + 1]clusterKind {
 		kindPVs:             {"PersistentVolumes", "database", "pv"},
 		kindStorageClasses:  {"StorageClasses", "layers", "sc"},
 		kindNodes:           {"Nodes", "cpu", "no"},
+		kindNamespaces:      {locales.KubeNamespaces(), "folder-tree", "ns"},
 		kindPolicies:        {locales.KubePolicies(), "gauge", "hpa"},
 		kindCustom:          {locales.KubeCustomDefinitions(), "boxes", "crd"},
 	}
@@ -153,12 +154,12 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	}
 	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
 		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm,
-		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindPolicies, kindCustom} {
+		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindNamespaces, kindPolicies, kindCustom} {
 		group := ""
 		switch i {
 		case kindPVCs, kindPVs, kindStorageClasses:
 			group = locales.KubeCustomStorage()
-		case kindNodes, kindPolicies, kindCustom:
+		case kindNodes, kindNamespaces, kindPolicies, kindCustom:
 			group = locales.KubeCustomCluster()
 		}
 		if i == kindPolicies {

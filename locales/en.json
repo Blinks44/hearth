@@ -1,5 +1,100 @@
 {
   "@@locale": "en",
+  "kubeNamespaces": "Namespaces",
+  "@kubeNamespaces": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceNew": "New namespace…",
+  "@kubeNamespaceNew": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceCreate": "Create namespace",
+  "@kubeNamespaceCreate": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceCreateTitle": "Create namespace {name}?",
+  "@kubeNamespaceCreateTitle": {
+    "description": "Kubernetes namespace screen and operations",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNamespaceCreateWhy": "The server validated the new namespace. It will be created in the selected context.",
+  "@kubeNamespaceCreateWhy": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceCreated": "The new namespace is present in the cluster.",
+  "@kubeNamespaceCreated": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceDeleteWhy": "Kubernetes will delete all resources in this namespace. Persistent data may be deleted according to the volumes’ reclaim policies.",
+  "@kubeNamespaceDeleteWhy": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceContents": "Resources",
+  "@kubeNamespaceContents": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceEmpty": "This namespace is empty.",
+  "@kubeNamespaceEmpty": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceReadingContents": "Reading namespace resources…",
+  "@kubeNamespaceReadingContents": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceInventoryFailed": "Could not list all resources in this namespace.",
+  "@kubeNamespaceInventoryFailed": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceContentsChanged": "Resources changed after the preview. Review a new deletion plan.",
+  "@kubeNamespaceContentsChanged": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceRemoving": "Deleting",
+  "@kubeNamespaceRemoving": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceWithoutPods": "No pods",
+  "@kubeNamespaceWithoutPods": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespacePodCount": "Pods · {count}",
+  "@kubeNamespacePodCount": {
+    "description": "Kubernetes namespace screen and operations",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeNamespaceQuota": "Quota · {percent}%",
+  "@kubeNamespaceQuota": {
+    "description": "Kubernetes namespace screen and operations",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeNamespaceSearch": "Name or label",
+  "@kubeNamespaceSearch": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceFilterEmpty": "No namespaces match this filter.",
+  "@kubeNamespaceFilterEmpty": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceTerminatingHelp": "Kubernetes is deleting this namespace. Check the controller’s conditions and the finalizers on remaining objects.",
+  "@kubeNamespaceTerminatingHelp": {
+    "description": "Kubernetes namespace screen and operations"
+  },
+  "kubeNamespaceDeletionBlockers": "What is holding up deletion",
+  "@kubeNamespaceDeletionBlockers": {
+    "description": "Kubernetes namespace screen and operations"
+  },
   "kubePolicies": "Autoscaling and limits",
   "@kubePolicies": {
     "description": "Kubernetes autoscaling and limits view"

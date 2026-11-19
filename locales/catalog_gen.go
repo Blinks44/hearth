@@ -36,6 +36,288 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeNamespaces says "Namespaces"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaces() string { return In(i18n.Locale()).KubeNamespaces() }
+
+// KubeNamespaces says "Namespaces"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaces() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaces", nil)
+}
+
+// KubeNamespaceNew says "New namespace…"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceNew() string { return In(i18n.Locale()).KubeNamespaceNew() }
+
+// KubeNamespaceNew says "New namespace…"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceNew() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceNew", nil)
+}
+
+// KubeNamespaceCreate says "Create namespace"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceCreate() string { return In(i18n.Locale()).KubeNamespaceCreate() }
+
+// KubeNamespaceCreate says "Create namespace"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceCreate() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceCreate", nil)
+}
+
+// KubeNamespaceCreateTitle says "Create namespace {name}?"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceCreateTitle(name string) string {
+	return In(i18n.Locale()).KubeNamespaceCreateTitle(name)
+}
+
+// KubeNamespaceCreateTitle says "Create namespace {name}?"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceCreateTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceCreateTitle", map[string]any{"name": name})
+}
+
+// KubeNamespaceCreateWhy says "The server validated the new namespace. It will be created in the selected context."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceCreateWhy() string { return In(i18n.Locale()).KubeNamespaceCreateWhy() }
+
+// KubeNamespaceCreateWhy says "The server validated the new namespace. It will be created in the selected context."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceCreateWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceCreateWhy", nil)
+}
+
+// KubeNamespaceCreated says "The new namespace is present in the cluster."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceCreated() string { return In(i18n.Locale()).KubeNamespaceCreated() }
+
+// KubeNamespaceCreated says "The new namespace is present in the cluster."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceCreated() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceCreated", nil)
+}
+
+// KubeNamespaceDeleteWhy says "Kubernetes will delete all resources in this namespace. Persistent data may be deleted according to the volumes’ re…"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceDeleteWhy() string { return In(i18n.Locale()).KubeNamespaceDeleteWhy() }
+
+// KubeNamespaceDeleteWhy says "Kubernetes will delete all resources in this namespace. Persistent data may be deleted according to the volumes’ re…"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceDeleteWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceDeleteWhy", nil)
+}
+
+// KubeNamespaceContents says "Resources"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceContents() string { return In(i18n.Locale()).KubeNamespaceContents() }
+
+// KubeNamespaceContents says "Resources"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceContents() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceContents", nil)
+}
+
+// KubeNamespaceEmpty says "This namespace is empty."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceEmpty() string { return In(i18n.Locale()).KubeNamespaceEmpty() }
+
+// KubeNamespaceEmpty says "This namespace is empty."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceEmpty", nil)
+}
+
+// KubeNamespaceReadingContents says "Reading namespace resources…"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceReadingContents() string { return In(i18n.Locale()).KubeNamespaceReadingContents() }
+
+// KubeNamespaceReadingContents says "Reading namespace resources…"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceReadingContents() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceReadingContents", nil)
+}
+
+// KubeNamespaceInventoryFailed says "Could not list all resources in this namespace."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceInventoryFailed() string { return In(i18n.Locale()).KubeNamespaceInventoryFailed() }
+
+// KubeNamespaceInventoryFailed says "Could not list all resources in this namespace."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceInventoryFailed() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceInventoryFailed", nil)
+}
+
+// KubeNamespaceContentsChanged says "Resources changed after the preview. Review a new deletion plan."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceContentsChanged() string { return In(i18n.Locale()).KubeNamespaceContentsChanged() }
+
+// KubeNamespaceContentsChanged says "Resources changed after the preview. Review a new deletion plan."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceContentsChanged() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceContentsChanged", nil)
+}
+
+// KubeNamespaceRemoving says "Deleting"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceRemoving() string { return In(i18n.Locale()).KubeNamespaceRemoving() }
+
+// KubeNamespaceRemoving says "Deleting"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceRemoving() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceRemoving", nil)
+}
+
+// KubeNamespaceWithoutPods says "No pods"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceWithoutPods() string { return In(i18n.Locale()).KubeNamespaceWithoutPods() }
+
+// KubeNamespaceWithoutPods says "No pods"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceWithoutPods() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceWithoutPods", nil)
+}
+
+// KubeNamespacePodCount says "Pods · {count}"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespacePodCount(count int) string { return In(i18n.Locale()).KubeNamespacePodCount(count) }
+
+// KubeNamespacePodCount says "Pods · {count}"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespacePodCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubeNamespacePodCount", map[string]any{"count": count})
+}
+
+// KubeNamespaceQuota says "Quota · {percent}%"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceQuota(percent int) string { return In(i18n.Locale()).KubeNamespaceQuota(percent) }
+
+// KubeNamespaceQuota says "Quota · {percent}%"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceQuota(percent int) string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceQuota", map[string]any{"percent": percent})
+}
+
+// KubeNamespaceSearch says "Name or label"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceSearch() string { return In(i18n.Locale()).KubeNamespaceSearch() }
+
+// KubeNamespaceSearch says "Name or label"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceSearch() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceSearch", nil)
+}
+
+// KubeNamespaceFilterEmpty says "No namespaces match this filter."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceFilterEmpty() string { return In(i18n.Locale()).KubeNamespaceFilterEmpty() }
+
+// KubeNamespaceFilterEmpty says "No namespaces match this filter."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceFilterEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceFilterEmpty", nil)
+}
+
+// KubeNamespaceTerminatingHelp says "Kubernetes is deleting this namespace. Check the controller’s conditions and the finalizers on remaining objects."
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceTerminatingHelp() string { return In(i18n.Locale()).KubeNamespaceTerminatingHelp() }
+
+// KubeNamespaceTerminatingHelp says "Kubernetes is deleting this namespace. Check the controller’s conditions and the finalizers on remaining objects."
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceTerminatingHelp() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceTerminatingHelp", nil)
+}
+
+// KubeNamespaceDeletionBlockers says "What is holding up deletion"
+// in the language the app shows.
+//
+// Kubernetes namespace screen and operations
+func KubeNamespaceDeletionBlockers() string { return In(i18n.Locale()).KubeNamespaceDeletionBlockers() }
+
+// KubeNamespaceDeletionBlockers says "What is holding up deletion"
+// in the language of msgs.
+//
+// Kubernetes namespace screen and operations
+func (msgs Messages) KubeNamespaceDeletionBlockers() string {
+	return Catalog.Format(msgs.locale, "kubeNamespaceDeletionBlockers", nil)
+}
+
 // KubePolicies says "Autoscaling and limits"
 // in the language the app shows.
 //

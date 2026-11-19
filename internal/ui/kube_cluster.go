@@ -52,6 +52,7 @@ const (
 	kindStorageClasses
 	kindNodes
 	kindPolicies
+	kindNamespaces
 	kindCustom
 )
 
@@ -90,6 +91,8 @@ type kubeClusterState struct {
 	custom                     customResourceView
 	resourceLink               resourceLink
 	claimFilter, nodeFilter    int
+	namespaceFilter            int
+	namespaceCreate            *namespaceCreateForm
 	policyTab                  int
 	policySort                 bool
 	resources                  map[ops.KubeResource]*kubeResourceForm
@@ -193,6 +196,7 @@ func (a *App) syncCluster() {
 		s.bulk.kind = s.kind
 		s.shell = nil
 		s.other.reset()
+		s.namespaceCreate = nil
 		if s.resourceLink.kind != s.kind {
 			s.resourceLink = resourceLink{}
 		}
@@ -345,6 +349,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 	ui.Column(c).Fill().Children(func() {
 		a.clusterHeader(c, name)
 		a.resourceEditorDialog(c)
+		a.namespaceCreate(c)
 		if s.logs != nil {
 			a.logsView(c)
 			return

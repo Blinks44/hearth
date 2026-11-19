@@ -15,6 +15,8 @@ import (
 
 func otherResourceKind(kind int) kube.ResourceKind {
 	switch kind {
+	case kindNamespaces:
+		return kube.NamespaceKind
 	case kindNodes:
 		return kube.Nodes
 	case kindStatefulSets:
@@ -92,7 +94,7 @@ func (s *kubeClusterState) otherResource() *kube.Resource {
 func (a *App) syncResourceYAML() {
 	v := &a.cluster.other
 	yamlTab := 2
-	if item := a.cluster.otherResource(); a.cluster.kind == kindNodes || a.cluster.kind == kindCustom || item != nil && item.Autoscaler != nil {
+	if item := a.cluster.otherResource(); a.cluster.kind == kindNodes || a.cluster.kind == kindNamespaces || a.cluster.kind == kindCustom || item != nil && item.Autoscaler != nil {
 		yamlTab = 3
 	}
 	if v.tab != yamlTab {
@@ -126,7 +128,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	pal := Colors(c.Theme())
 	claims := cl.Resources.Claims
 	visible := func(item kube.Resource) bool {
-		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims) && nodeShows(s.nodeFilter, item.Node)
+		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims) && nodeShows(s.nodeFilter, item.Node) && namespaceShows(s.namespaceFilter, item)
 	}
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Wrap().Children(func() {
 		if s.kind == kindPolicies {
@@ -138,15 +140,29 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		if cl.Resources.Kind == kube.Nodes {
 			nodeFilters(c, s, cl.Resources.Items)
 		}
+		if s.kind == kindNamespaces {
+			a.namespaceFilters(c, cl.Resources.Items)
+		}
 		ui.Box(c).Grow(1)
 		if s.kind == kindPolicies {
 			policySort(c, &s.policySort)
 		}
+		if s.kind == kindNamespaces && a.BuildPlan != nil {
+			name := a.router.Query("context")
+			cli, ok := cliCopy(a.cliState(), "kubectl")
+			kubeActionButton(c.Key("new-namespace"), "plus", locales.KubeNamespaceNew(), podActionHeight).
+				Disabled(!ok || a.op.running()).OnClick(func() {
+				s.namespaceCreate = &namespaceCreateForm{context: name, kubectl: cli.Path, open: true}
+			})
+		}
 		width := float32(240)
-		if s.kind == kindPolicies && narrow(c) {
+		if (s.kind == kindPolicies || s.kind == kindNamespaces) && narrow(c) {
 			width = 180
 		}
 		placeholder := locales.KubeDeploymentsSearch()
+		if s.kind == kindNamespaces {
+			placeholder = locales.KubeNamespaceSearch()
+		}
 		if cl.Resources.Kind == kube.PersistentVolumeClaims {
 			placeholder = locales.KubeStorageSearch()
 		}
@@ -179,6 +195,11 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 				return priority
 			}
 		}
+		if a.NamespaceInfo != nil && b.NamespaceInfo != nil {
+			if priority := namespacePriority(b) - namespacePriority(a); priority != 0 {
+				return priority
+			}
+		}
 		if a.Node != nil && b.Node != nil {
 			if priority := nodePriority(b.Node) - nodePriority(a.Node); priority != 0 {
 				return priority
@@ -197,13 +218,15 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	})
 	if len(shown) == 0 {
 		message := locales.KubeResourcesEmpty()
-		if cl.Resources.Kind == kube.Nodes || cl.Resources.Kind == kube.PersistentVolumes || cl.Resources.Kind == kube.StorageClasses {
+		if s.kind == kindNamespaces || cl.Resources.Kind == kube.Nodes || cl.Resources.Kind == kube.PersistentVolumes || cl.Resources.Kind == kube.StorageClasses {
 			message = locales.KubeResourcesEmptyCluster()
 		}
 		if resourceQuery(s.query) != "" {
 			message = locales.SearchNoResults(s.query)
 		} else if len(cl.Resources.Items) > 0 {
-			if cl.Resources.Kind == kube.Nodes {
+			if s.kind == kindNamespaces {
+				message = locales.KubeNamespaceFilterEmpty()
+			} else if cl.Resources.Kind == kube.Nodes {
 				message = locales.KubeNodeFilterEmpty()
 			} else {
 				message = locales.KubeStorageFilterEmpty()
@@ -228,6 +251,10 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		if cl.Resources.Kind == kube.Autoscalers {
 			headers[1] = locales.KubeReplicas()
 		}
+	}
+	if s.kind == kindNamespaces {
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(140)}
+		headers = headers[:2]
 	}
 	if cl.Resources.Kind == kube.Nodes {
 		metricsNotice(c, cl.MetricsErr)
@@ -260,7 +287,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 				})
 				label, bg, fg := otherResourceStatus(c, r, claims)
 				workloadStatus(c, label, bg, fg)
-				if r.Node == nil && s.kind != kindPolicies {
+				if r.Node == nil && s.kind != kindPolicies && s.kind != kindNamespaces {
 					created := otherResourceAge(c, r)
 					clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
 				} else if r.Node != nil && uid == "" {
@@ -283,6 +310,13 @@ func otherResourceAge(c *ui.Context, r kube.Resource) string {
 
 func matchesOtherResource(r kube.Resource, query string, claims *kube.ClaimDetails) bool {
 	match := func(text string) bool { return strings.Contains(strings.ToLower(text), query) }
+	if r.NamespaceInfo != nil {
+		for key, value := range r.NamespaceInfo.Labels {
+			if match(key + "=" + value) {
+				return true
+			}
+		}
+	}
 	if r.Node != nil {
 		for key, value := range r.Node.Labels {
 			if match(key + "=" + value) {
@@ -304,6 +338,9 @@ func matchesOtherResource(r kube.Resource, query string, claims *kube.ClaimDetai
 
 func otherResourceStatus(c *ui.Context, item kube.Resource, claims *kube.ClaimDetails) (string, ui.Color, ui.Color) {
 	pal := Colors(c.Theme())
+	if item.NamespaceInfo != nil {
+		return namespaceStatus(c, item)
+	}
 	if item.Deleting {
 		return locales.KubeResourceTerminating(), pal.WarningSoft, pal.WarningText
 	}
@@ -340,6 +377,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 	t := c.Theme()
 	label, bg, fg := otherResourceStatus(c, item, cl.Resources.Claims)
 	kind := clusterKindOptions()[s.kind]
+	if item.NamespaceInfo != nil {
+		kind.label = locales.KubeNamespaceLabel()
+	}
 	if s.kind == kindPolicies {
 		kind.label = policyKindName(item.Kind)
 	}
@@ -350,7 +390,7 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				ui.Icon(c, Icon(kind.icon)).Size(16, 16).Shrink(0)
 				clipped(c, item.Name).FontSize(15).FontWeight(600).Grow(1).MinWidth(0)
 				width := float32(110)
-				if s.kind == kindPolicies {
+				if s.kind == kindPolicies || s.kind == kindNamespaces {
 					width = 144
 				}
 				aiTag(c, label, bg, fg).MaxWidth(width).Tooltip(label)
@@ -391,6 +431,14 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				}
 				tabs = append(tabs, segment{"Pods", pods})
 			}
+			if item.NamespaceInfo != nil {
+				a.namespaceHeaderActions(c, item, v)
+				members := ""
+				if read && cl.Resources.NamespaceMembersErr == nil {
+					members = strconv.Itoa(len(cl.Resources.NamespaceMembers))
+				}
+				tabs = append(tabs, segment{locales.KubeNamespaceContents(), members})
+			}
 			if item.Autoscaler != nil {
 				tabs = append(tabs, segment{locales.KubeAutoscalerMetrics(), strconv.Itoa(len(item.Autoscaler.Metrics))})
 			}
@@ -402,6 +450,13 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 		if item.Node != nil && tab > 0 {
 			if tab == 1 {
 				nodePodsView(c, cl.Resources, read)
+				return
+			}
+			tab--
+		}
+		if item.NamespaceInfo != nil && tab > 0 {
+			if tab == 1 {
+				namespaceMembersView(c, cl.Resources, read, false)
 				return
 			}
 			tab--
@@ -424,6 +479,8 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			otherResourceYAML(c, v)
 		default:
 			switch item.Kind {
+			case kube.NamespaceKind:
+				namespaceOverview(c, item, cl.Resources, read, &v.tab)
 			case kube.Autoscalers, kube.DisruptionBudgets, kube.ResourceQuotas, kube.LimitRanges:
 				a.policyOverview(c, item, cl.Policies)
 			case kube.Nodes:

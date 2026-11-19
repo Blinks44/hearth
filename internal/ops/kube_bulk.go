@@ -91,7 +91,7 @@ func (m *KubeChange) UID() string { return m.draft.Ref.UID }
 func (m *KubeChange) Context() string { return m.draft.Ref.Context }
 
 func (m *KubeChange) DeletesResource() bool {
-	return m.want == nil && m.scale == nil && m.jobName == ""
+	return !m.createNamespace && m.want == nil && m.scale == nil && m.jobName == ""
 }
 
 // executeKubeBulk runs targets independently and records each outcome.

@@ -238,14 +238,12 @@ func kubectlJSON(ctx context.Context, r run.Runner, env sysenv.Env, t Target, ar
 
 // Namespaces lists the context's namespaces, sorted.
 func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]string, error) {
-	var list struct {
-		Items []meta `json:"items"`
-	}
-	if err := get(ctx, r, env, t, []string{"namespaces"}, &list); err != nil {
+	objects, err := readNamespaceObjects(ctx, r, env, t)
+	if err != nil {
 		return nil, err
 	}
-	names := make([]string, 0, len(list.Items))
-	for _, it := range list.Items {
+	names := make([]string, 0, len(objects))
+	for _, it := range objects {
 		names = append(names, it.Metadata.Name)
 	}
 	slices.Sort(names)
@@ -507,6 +505,7 @@ type meta struct {
 		CreationTimestamp time.Time         `json:"creationTimestamp"`
 		DeletionTimestamp time.Time         `json:"deletionTimestamp"`
 		Labels            map[string]string `json:"labels"`
+		Finalizers        []string          `json:"finalizers"`
 		Annotations       map[string]string `json:"annotations"`
 		OwnerReferences   []struct {
 			Kind       string `json:"kind"`

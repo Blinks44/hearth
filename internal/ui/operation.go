@@ -302,7 +302,7 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 				ui.Text(c, n.Title).FontSize(13)
 				if n.Text != "" {
-					ui.Text(c, n.Text).FontSize(11.5).TextColor(pal.TextFaint)
+					ui.Text(c, n.Text).FontSize(11.5).TextColor(pal.TextFaint).Wrap()
 				}
 			})
 			switch {

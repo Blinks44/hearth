@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -31,7 +32,7 @@ type kubeResourceType struct {
 }
 
 var kubeResourceTypes = map[string]kubeResourceType{
-	"Node": {"", "v1", "nodes"}, "Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
+	"Node": {"", "v1", "nodes"}, "Namespace": {"", "v1", "namespaces"}, "Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
 	"Deployment": {"apps", "v1", "deployments"},
 	"ReplicaSet": {"apps", "v1", "replicasets"},
 	"Job":        {"batch", "v1", "jobs"}, "CronJob": {"batch", "v1", "cronjobs"},
@@ -49,8 +50,8 @@ func (ref KubeResource) path() string {
 	if typ.group != "" {
 		api = "/apis/" + typ.group + "/" + typ.version
 	}
-	if ref.Kind == "Node" {
-		if ref.Namespace != "" {
+	if ref.Kind == "Node" || ref.Kind == "Namespace" {
+		if ref.Namespace != "" || ref.Kind == "Namespace" && !KubeNamespaceValid(ref.Name) {
 			return ""
 		}
 		return api + "/" + typ.plural + "/" + ref.Name
@@ -106,7 +107,7 @@ func (obj resourceJSON) matches(ref KubeResource) bool {
 	}
 	m := obj.metadata()
 	namespaceMatches := m["namespace"] == ref.Namespace
-	if ref.Kind == "Node" {
+	if ref.Kind == "Node" || ref.Kind == "Namespace" {
 		namespaceMatches = m["namespace"] == nil || m["namespace"] == ""
 	}
 	return obj["apiVersion"] == apiVersion && obj["kind"] == ref.Kind &&
@@ -212,7 +213,7 @@ func kubeManifestFits(text string) bool {
 }
 
 func LoadKubeDraft(ctx context.Context, r run.Runner, env sysenv.Env, ref KubeResource, edit bool) (KubeDraft, error) {
-	if ref.path() == "" {
+	if ref.path() == "" || ref.Kind == "Namespace" && edit {
 		return KubeDraft{}, errors.New(locales.KubeResourceTarget())
 	}
 	k, hash, closeConfig, err := (resourceClient{cli: ref.Kubectl, context: ref.Context, env: env, runner: r}).pin(ctx, [32]byte{})
@@ -247,35 +248,43 @@ func (k resourceClient) convert(ctx context.Context, data []byte, output string)
 
 // KubeChange is one reviewed write, bound to its context and version.
 type KubeChange struct {
-	draft       KubeDraft
-	input       []byte
-	base        resourceJSON
-	want        resourceJSON
-	rollout     bool
-	scale       *deploymentScale
-	patch       []string
-	restart     bool
-	batchDelete bool
-	rollback    *KubeDraft
-	jobName     string
-	drain       *nodeDrain
-	Diff        []DiffLine
+	draft            KubeDraft
+	input            []byte
+	base             resourceJSON
+	want             resourceJSON
+	rollout          bool
+	scale            *deploymentScale
+	patch            []string
+	restart          bool
+	batchDelete      bool
+	rollback         *KubeDraft
+	jobName          string
+	createNamespace  bool
+	namespaceMembers []kube.NamespaceMember
+	drain            *nodeDrain
+	Diff             []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
-	if m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" {
+	if !m.createNamespace && m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" {
 		return m.draft.Ref.Name
 	}
 	return ""
 }
 
 func (m *KubeChange) Target() string {
+	if m.createNamespace {
+		return m.draft.Ref.Context
+	}
 	return m.draft.Ref.Context + " · " + locales.KubeResourceVersion(m.draft.Version)
 }
 
 func (m *KubeChange) Resource() string { return m.draft.Ref.label() }
 
 func (m *KubeChange) command() []string {
+	if m.createNamespace {
+		return []string{"create", "--raw", namespaceCollection, "-f", "-"}
+	}
 	if m.jobName != "" {
 		return []string{"create", "-f", "-", "--namespace=" + m.draft.Ref.Namespace, "-o", "json"}
 	}
@@ -361,7 +370,7 @@ func approvedChanges(before, want, actual map[string]any) bool {
 // PlanKubeChange uses a server dry run before offering the operation.
 func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDraft, yaml string, remove bool) (Plan, error) {
 	ref := d.Ref
-	if ref.path() == "" || d.config == ([32]byte{}) || d.Version == "" {
+	if ref.path() == "" || d.config == ([32]byte{}) || d.Version == "" || ref.Kind == "Namespace" && !remove {
 		return Plan{}, errors.New(locales.KubeResourceTarget())
 	}
 	k, _, closeConfig, err := (resourceClient{cli: ref.Kubectl, context: ref.Context, env: env, runner: r}).pin(ctx, d.config)
@@ -376,12 +385,24 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 	change := &KubeChange{draft: d}
 	p := Plan{Env: slices.Clone(env)}
 	if remove {
+		var members []kube.NamespaceMember
+		if ref.Kind == "Namespace" {
+			members, err = k.namespaceMembers(ctx, ref.Name)
+			if err != nil {
+				return Plan{}, err
+			}
+		}
 		change, err = k.planDelete(ctx, d)
 		if err != nil {
 			return Plan{}, err
 		}
 		p.Title, p.Why, p.Action = locales.KubeResourceDeleteTitle(ref.Name), locales.KubeResourceDeleteWhy(), locales.KubeResourceDeleteAction()
 		p.Notes = []Note{{Title: locales.KubeResourceCascade(), Text: locales.KubeResourceDeleteData()}}
+		if ref.Kind == "Namespace" {
+			change.namespaceMembers = members
+			p.Why = locales.KubeNamespaceDeleteWhy()
+			p.Notes = []Note{namespaceInventoryNote(members)}
+		}
 		if ref.Kind == "Pod" && resourceController(current) != nil {
 			p.Notes = append(p.Notes, Note{Title: locales.KubeResourceOwnedPod()})
 		}
@@ -474,8 +495,20 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 
 func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking func()) (string, error) {
 	ref := m.draft.Ref
+	if m.createNamespace {
+		return m.applyNamespaceCreate(ctx, k, checking)
+	}
 	if _, err := m.draft.current(ctx, k); err != nil {
 		return "", err
+	}
+	if ref.Kind == "Namespace" {
+		members, err := k.namespaceMembers(ctx, ref.Name)
+		if err != nil {
+			return "", err
+		}
+		if !slices.Equal(members, m.namespaceMembers) {
+			return "", errors.New(locales.KubeNamespaceContentsChanged())
+		}
 	}
 	if m.drain != nil {
 		return m.applyNodeDrain(ctx, k, checking)
@@ -511,7 +544,7 @@ func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking
 			return locales.KubeResourceDeleted(), nil
 		}
 		if obj.matches(ref) && obj.metadata()["deletionTimestamp"] != nil {
-			if m.batchDelete {
+			if m.batchDelete || ref.Kind == "Namespace" {
 				return locales.KubeResourceDeleting(), nil
 			}
 			return "", errors.New(locales.KubeResourceDeleting())
