@@ -1,5 +1,12 @@
 {
   "@@locale": "ru",
+  "kubeRollbackOpen": "Откатить…",
+  "kubeRollbackAction": "Откатить",
+  "kubeRollbackRevision": "Откатить до ревизии {revision}",
+  "kubeRollbackTitle": "Откатить {name} до ревизии {revision}?",
+  "kubeRollbackPreview": "Kubernetes восстановит выбранный шаблон pod и его аннотации. Pods могут быть заменены по стратегии Deployment.",
+  "kubeRollbackPaused": "Возобновите выкатку перед откатом.",
+  "kubeRollbackVerified": "Откат завершён. Kubernetes подтвердил выкатку.",
   "kubePauseAction": "Приостановить выкатку",
   "kubePauseTitle": "Приостановить выкатку {name}?",
   "kubePauseHint": "Изменения шаблона вступят в силу после возобновления.",

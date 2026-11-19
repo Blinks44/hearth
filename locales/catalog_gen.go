@@ -36,6 +36,88 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeRollbackOpen says "Roll back…"
+// in the language the app shows.
+func KubeRollbackOpen() string { return In(i18n.Locale()).KubeRollbackOpen() }
+
+// KubeRollbackOpen says "Roll back…"
+// in the language of msgs.
+func (msgs Messages) KubeRollbackOpen() string {
+	return Catalog.Format(msgs.locale, "kubeRollbackOpen", nil)
+}
+
+// KubeRollbackAction says "Roll back"
+// in the language the app shows.
+func KubeRollbackAction() string { return In(i18n.Locale()).KubeRollbackAction() }
+
+// KubeRollbackAction says "Roll back"
+// in the language of msgs.
+func (msgs Messages) KubeRollbackAction() string {
+	return Catalog.Format(msgs.locale, "kubeRollbackAction", nil)
+}
+
+// KubeRollbackRevision says "Roll back to revision {revision}"
+// in the language the app shows.
+//
+// kubeRollbackRevision
+func KubeRollbackRevision(revision int) string {
+	return In(i18n.Locale()).KubeRollbackRevision(revision)
+}
+
+// KubeRollbackRevision says "Roll back to revision {revision}"
+// in the language of msgs.
+//
+// kubeRollbackRevision
+func (msgs Messages) KubeRollbackRevision(revision int) string {
+	return Catalog.Format(msgs.locale, "kubeRollbackRevision", map[string]any{"revision": revision})
+}
+
+// KubeRollbackTitle says "Roll back {name} to revision {revision}?"
+// in the language the app shows.
+//
+// kubeRollbackTitle
+func KubeRollbackTitle(name string, revision int) string {
+	return In(i18n.Locale()).KubeRollbackTitle(name, revision)
+}
+
+// KubeRollbackTitle says "Roll back {name} to revision {revision}?"
+// in the language of msgs.
+//
+// kubeRollbackTitle
+func (msgs Messages) KubeRollbackTitle(name string, revision int) string {
+	return Catalog.Format(msgs.locale, "kubeRollbackTitle", map[string]any{"name": name, "revision": revision})
+}
+
+// KubeRollbackPreview says "Kubernetes restores the selected pod template and its annotations. Pods can be replaced according to the Deployment s…"
+// in the language the app shows.
+func KubeRollbackPreview() string { return In(i18n.Locale()).KubeRollbackPreview() }
+
+// KubeRollbackPreview says "Kubernetes restores the selected pod template and its annotations. Pods can be replaced according to the Deployment s…"
+// in the language of msgs.
+func (msgs Messages) KubeRollbackPreview() string {
+	return Catalog.Format(msgs.locale, "kubeRollbackPreview", nil)
+}
+
+// KubeRollbackPaused says "Resume the rollout before rolling back."
+// in the language the app shows.
+func KubeRollbackPaused() string { return In(i18n.Locale()).KubeRollbackPaused() }
+
+// KubeRollbackPaused says "Resume the rollout before rolling back."
+// in the language of msgs.
+func (msgs Messages) KubeRollbackPaused() string {
+	return Catalog.Format(msgs.locale, "kubeRollbackPaused", nil)
+}
+
+// KubeRollbackVerified says "Rollback complete. Kubernetes confirmed the rollout."
+// in the language the app shows.
+func KubeRollbackVerified() string { return In(i18n.Locale()).KubeRollbackVerified() }
+
+// KubeRollbackVerified says "Rollback complete. Kubernetes confirmed the rollout."
+// in the language of msgs.
+func (msgs Messages) KubeRollbackVerified() string {
+	return Catalog.Format(msgs.locale, "kubeRollbackVerified", nil)
+}
+
 // KubePauseAction says "Pause rollout"
 // in the language the app shows.
 func KubePauseAction() string { return In(i18n.Locale()).KubePauseAction() }

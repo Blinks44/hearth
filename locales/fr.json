@@ -1,5 +1,12 @@
 {
   "@@locale": "fr",
+  "kubeRollbackOpen": "Restaurer…",
+  "kubeRollbackAction": "Restaurer",
+  "kubeRollbackRevision": "Restaurer la révision {revision}",
+  "kubeRollbackTitle": "Restaurer {name} à la révision {revision} ?",
+  "kubeRollbackPreview": "Kubernetes restaure le modèle de pod sélectionné et ses annotations. Les pods peuvent être remplacés selon la stratégie du Deployment.",
+  "kubeRollbackPaused": "Reprenez le déploiement avant de restaurer une révision.",
+  "kubeRollbackVerified": "Restauration terminée. Kubernetes a confirmé le déploiement.",
   "kubePauseAction": "Suspendre le déploiement",
   "kubePauseTitle": "Suspendre le déploiement de {name} ?",
   "kubePauseHint": "Les modifications du modèle prendront effet à la reprise du déploiement.",

@@ -1,5 +1,31 @@
 {
   "@@locale": "en",
+  "kubeRollbackOpen": "Roll back…",
+  "kubeRollbackAction": "Roll back",
+  "kubeRollbackRevision": "Roll back to revision {revision}",
+  "@kubeRollbackRevision": {
+    "description": "kubeRollbackRevision",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeRollbackTitle": "Roll back {name} to revision {revision}?",
+  "@kubeRollbackTitle": {
+    "description": "kubeRollbackTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeRollbackPreview": "Kubernetes restores the selected pod template and its annotations. Pods can be replaced according to the Deployment strategy.",
+  "kubeRollbackPaused": "Resume the rollout before rolling back.",
+  "kubeRollbackVerified": "Rollback complete. Kubernetes confirmed the rollout.",
   "kubePauseAction": "Pause rollout",
   "kubePauseTitle": "Pause the rollout for {name}?",
   "@kubePauseTitle": {

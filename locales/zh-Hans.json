@@ -1,5 +1,12 @@
 {
   "@@locale": "zh-Hans",
+  "kubeRollbackOpen": "回滚…",
+  "kubeRollbackAction": "回滚",
+  "kubeRollbackRevision": "回滚到修订版本 {revision}",
+  "kubeRollbackTitle": "将 {name} 回滚到修订版本 {revision}？",
+  "kubeRollbackPreview": "Kubernetes 将恢复选中的 Pod 模板及其注解。Pod 可能会按照 Deployment 策略被替换。",
+  "kubeRollbackPaused": "请先恢复发布，再执行回滚。",
+  "kubeRollbackVerified": "回滚已完成，Kubernetes 已确认发布成功。",
   "kubePauseAction": "暂停发布",
   "kubePauseTitle": "暂停 {name} 的发布？",
   "kubePauseHint": "模板变更将在恢复发布后生效。",

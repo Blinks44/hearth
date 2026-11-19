@@ -241,6 +241,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 		}
 		a.deploymentScale(c, ref, d)
 		a.deploymentPause(c, ref, d.Paused)
+		a.deploymentRevisions(c, ref, d)
 		detailSection(c, locales.KubeReplicas())
 		facts := [][2]string{
 			{locales.KubeWanted(), strconv.Itoa(d.Replicas)},
@@ -253,22 +254,6 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 		}
 		facts = append(facts, [2]string{locales.KubeStrategy(), d.Strategy})
 		factRows(c, facts)
-		detailSection(c, locales.KubeRevisions(len(d.Revisions)))
-		for _, r := range d.Revisions {
-			ui.Row(c).Gap(10).Padding(6, 16).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, "#"+strconv.Itoa(r.Number)).Font(FontMono).FontSize(12).TextColor(pal.TextFaint).Width(34).Shrink(0)
-				clipped(c, strings.Join(r.Images, ", ")).Font(FontMono).FontSize(12).Grow(1).MinWidth(0)
-				ui.Text(c, age(c, r.Created)).FontSize(12).TextColor(t.TextMuted).Shrink(0).SingleLine()
-				if r.Number == d.Revision {
-					aiTag(c, locales.KubeCurrent(), pal.SuccessSoft, pal.SuccessText).Shrink(0)
-				} else {
-					ui.Text(c, locales.KubePodCount(r.Pods)).FontSize(12).TextColor(pal.TextFaint).Shrink(0).SingleLine()
-				}
-			})
-		}
-		if len(d.Revisions) == 0 {
-			ui.Text(c, locales.KubeNoRevisions()).FontSize(12).TextColor(t.TextMuted).Padding(4, 16)
-		}
 	})
 }
 

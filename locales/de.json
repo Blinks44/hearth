@@ -1,5 +1,12 @@
 {
   "@@locale": "de",
+  "kubeRollbackOpen": "Zurücksetzen…",
+  "kubeRollbackAction": "Zurücksetzen",
+  "kubeRollbackRevision": "Auf Revision {revision} zurücksetzen",
+  "kubeRollbackTitle": "{name} auf Revision {revision} zurücksetzen?",
+  "kubeRollbackPreview": "Kubernetes stellt die ausgewählte Pod-Vorlage und ihre Anmerkungen wieder her. Pods können gemäß der Deployment-Strategie ersetzt werden.",
+  "kubeRollbackPaused": "Setze den Rollout vor dem Zurücksetzen fort.",
+  "kubeRollbackVerified": "Zurücksetzen abgeschlossen. Kubernetes hat den Rollout bestätigt.",
   "kubePauseAction": "Rollout pausieren",
   "kubePauseTitle": "Rollout für {name} pausieren?",
   "kubePauseHint": "Änderungen an der Vorlage werden nach dem Fortsetzen wirksam.",

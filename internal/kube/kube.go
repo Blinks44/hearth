@@ -141,7 +141,7 @@ type Deployment struct {
 // Revision is a Deployment's revision, as its ReplicaSet keeps it.
 type Revision struct {
 	Number      int
-	Name        string
+	Name, UID   string
 	Images      []string
 	Pods, Ready int
 	Created     time.Time
@@ -628,7 +628,7 @@ func (c *Cluster) add(items []json.RawMessage) error {
 			if owner.Kind == "Deployment" {
 				key := m.Metadata.Namespace + "/" + owner.Name
 				revisions[key] = append(revisions[key], Revision{
-					Number: m.revision(), Name: m.Metadata.Name, Images: rs.Spec.Template.images(),
+					Number: m.revision(), Name: m.Metadata.Name, UID: m.Metadata.UID, Images: rs.Spec.Template.images(),
 					Pods: rs.Status.Replicas, Ready: rs.Status.ReadyReplicas, Created: m.Metadata.CreationTimestamp,
 				})
 			}

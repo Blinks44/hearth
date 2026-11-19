@@ -80,8 +80,8 @@ func shopCluster() kube.Cluster {
 	}, Deployments: []kube.Deployment{
 		{Namespace: "default", Name: "checkout-api", UID: "d1", Replicas: 3, Pods: 3, Ready: 2, Updated: 3, Available: 2, Strategy: "RollingUpdate",
 			Images: []string{"ghcr.io/acme/checkout:2.8.1"}, Revision: 7, Created: ago(12 * 24 * time.Hour), Revisions: []kube.Revision{
-				{Number: 7, Name: "checkout-api-7d9f8c5b", Images: []string{"ghcr.io/acme/checkout:2.8.1"}, Pods: 3, Ready: 2, Created: ago(2 * time.Hour)},
-				{Number: 6, Name: "checkout-api-6b4f7d9c8", Images: []string{"ghcr.io/acme/checkout:2.8.0"}, Created: ago(24 * time.Hour)},
+				{Number: 7, Name: "checkout-api-7d9f8c5b", UID: "r1", Images: []string{"ghcr.io/acme/checkout:2.8.1"}, Pods: 3, Ready: 2, Created: ago(2 * time.Hour)},
+				{Number: 6, Name: "checkout-api-6b4f7d9c8", UID: "r0", Images: []string{"ghcr.io/acme/checkout:2.8.0"}, Created: ago(24 * time.Hour)},
 			}},
 		{Namespace: "default", Name: "web-frontend", UID: "d2", Replicas: 1, Pods: 1, Updated: 1, Created: ago(6 * time.Minute)},
 		{Namespace: "default", Name: "worker", UID: "d3", Replicas: 2, Pods: 2, Ready: 2, Updated: 2, Available: 2, Created: ago(3 * time.Hour)},

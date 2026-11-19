@@ -87,8 +87,8 @@ func TestRead(t *testing.T) {
 			Strategy: "RollingUpdate", Images: []string{"ghcr.io/acme/checkout:2.8.1", "envoyproxy/envoy:v1.31.2"}, Revision: 7,
 			// Newest first, whatever the answer's order.
 			Revisions: []Revision{
-				{Number: 7, Name: "checkout-api-7d9f8c5b", Images: []string{"ghcr.io/acme/checkout:2.8.1", "envoyproxy/envoy:v1.31.2"}, Pods: 3, Ready: 2, Created: created},
-				{Number: 6, Name: "checkout-api-6b4f7d9c8", Images: []string{"ghcr.io/acme/checkout:2.8.0", "envoyproxy/envoy:v1.31.2"}, Created: time.Date(2026, 11, 17, 10, 0, 0, 0, time.UTC)},
+				{Number: 7, Name: "checkout-api-7d9f8c5b", UID: "r1", Images: []string{"ghcr.io/acme/checkout:2.8.1", "envoyproxy/envoy:v1.31.2"}, Pods: 3, Ready: 2, Created: created},
+				{Number: 6, Name: "checkout-api-6b4f7d9c8", UID: "r0", Images: []string{"ghcr.io/acme/checkout:2.8.0", "envoyproxy/envoy:v1.31.2"}, Created: time.Date(2026, 11, 17, 10, 0, 0, 0, time.UTC)},
 			},
 			Stalled: `ReplicaSet "checkout-api-7d9f8c5b" has timed out progressing.`, Created: nov6},
 		{Namespace: "shop", Name: "search-indexer", UID: "d2", Paused: true, Created: nov6},

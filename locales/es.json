@@ -1,5 +1,12 @@
 {
   "@@locale": "es",
+  "kubeRollbackOpen": "Revertir…",
+  "kubeRollbackAction": "Revertir",
+  "kubeRollbackRevision": "Revertir a la revisión {revision}",
+  "kubeRollbackTitle": "¿Revertir {name} a la revisión {revision}?",
+  "kubeRollbackPreview": "Kubernetes restaura la plantilla de pod seleccionada y sus anotaciones. Los pods pueden reemplazarse según la estrategia del Deployment.",
+  "kubeRollbackPaused": "Reanuda el despliegue antes de revertirlo.",
+  "kubeRollbackVerified": "Reversión completada. Kubernetes confirmó el despliegue.",
   "kubePauseAction": "Pausar el despliegue",
   "kubePauseTitle": "¿Pausar el despliegue de {name}?",
   "kubePauseHint": "Los cambios en la plantilla se aplicarán al reanudar el despliegue.",

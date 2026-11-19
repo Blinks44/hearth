@@ -33,6 +33,7 @@ type kubeResourceType struct {
 var kubeResourceTypes = map[string]kubeResourceType{
 	"Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
 	"Deployment": {"apps", "v1", "deployments"},
+	"ReplicaSet": {"apps", "v1", "replicasets"},
 	"Job":        {"batch", "v1", "jobs"}, "CronJob": {"batch", "v1", "cronjobs"},
 }
 
@@ -225,15 +226,16 @@ func (k resourceClient) convert(ctx context.Context, data []byte, output string)
 
 // KubeChange is one reviewed write, bound to its context and version.
 type KubeChange struct {
-	draft   KubeDraft
-	input   []byte
-	base    resourceJSON
-	want    resourceJSON
-	rollout bool
-	scale   *deploymentScale
-	patch   []string
-	restart bool
-	Diff    []DiffLine
+	draft    KubeDraft
+	input    []byte
+	base     resourceJSON
+	want     resourceJSON
+	rollout  bool
+	scale    *deploymentScale
+	patch    []string
+	restart  bool
+	rollback *KubeDraft
+	Diff     []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
@@ -416,6 +418,11 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 	if _, err := m.draft.current(ctx, k); err != nil {
 		return "", err
 	}
+	if m.rollback != nil {
+		if _, err := m.rollback.current(ctx, k); err != nil {
+			return "", err
+		}
+	}
 	_, writeErr := k.run(ctx, m.input, m.command()...)
 	if m.scale != nil {
 		checking()
@@ -445,9 +452,13 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 	if m.want != nil && obj.version() != m.draft.Version && m.matchesChange(obj) {
 		if m.rollout {
 			verified, unverified := locales.KubeResourceRolloutVerified(), locales.KubeResourceRolloutUnverified()
-			if m.restart {
+			switch {
+			case m.restart:
 				checking()
 				verified, unverified = locales.KubeRestartVerified(), locales.KubeRestartUnverified()
+			case m.rollback != nil:
+				checking()
+				verified, unverified = locales.KubeRollbackVerified(), locales.KubeResourceRolloutUnverified()
 			}
 			if err := m.verifyRollout(ctx, k); err != nil {
 				return "", fmt.Errorf("%s: %w", unverified, err)
@@ -489,6 +500,10 @@ func (m *KubeChange) matchesChange(obj resourceJSON) bool {
 		spec := deploymentSpec(obj)
 		return spec["paused"] != true &&
 			reflect.DeepEqual(spec["template"], deploymentSpec(m.want)["template"])
+	}
+	if m.rollback != nil &&
+		(deploymentSpec(obj)["paused"] == true || !reflect.DeepEqual(deploymentSpec(obj)["template"], deploymentSpec(m.want)["template"])) {
+		return false
 	}
 	return approvedChanges(m.base, m.want, cleanResource(obj))
 }
