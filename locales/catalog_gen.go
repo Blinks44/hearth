@@ -36,6 +36,188 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeCronOn says "On"
+// in the language the app shows.
+func KubeCronOn() string { return In(i18n.Locale()).KubeCronOn() }
+
+// KubeCronOn says "On"
+// in the language of msgs.
+func (msgs Messages) KubeCronOn() string {
+	return Catalog.Format(msgs.locale, "kubeCronOn", nil)
+}
+
+// KubeCronEnabled says "Schedule enabled for {name}"
+// in the language the app shows.
+//
+// kubeCronEnabled
+func KubeCronEnabled(name string) string { return In(i18n.Locale()).KubeCronEnabled(name) }
+
+// KubeCronEnabled says "Schedule enabled for {name}"
+// in the language of msgs.
+//
+// kubeCronEnabled
+func (msgs Messages) KubeCronEnabled(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronEnabled", map[string]any{"name": name})
+}
+
+// KubeCronPauseAction says "Pause schedule"
+// in the language the app shows.
+func KubeCronPauseAction() string { return In(i18n.Locale()).KubeCronPauseAction() }
+
+// KubeCronPauseAction says "Pause schedule"
+// in the language of msgs.
+func (msgs Messages) KubeCronPauseAction() string {
+	return Catalog.Format(msgs.locale, "kubeCronPauseAction", nil)
+}
+
+// KubeCronPauseTitle says "Pause the schedule for {name}?"
+// in the language the app shows.
+//
+// kubeCronPauseTitle
+func KubeCronPauseTitle(name string) string { return In(i18n.Locale()).KubeCronPauseTitle(name) }
+
+// KubeCronPauseTitle says "Pause the schedule for {name}?"
+// in the language of msgs.
+//
+// kubeCronPauseTitle
+func (msgs Messages) KubeCronPauseTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronPauseTitle", map[string]any{"name": name})
+}
+
+// KubeCronPausePreview says "Scheduled Jobs will stop being created. Jobs already started will continue."
+// in the language the app shows.
+func KubeCronPausePreview() string { return In(i18n.Locale()).KubeCronPausePreview() }
+
+// KubeCronPausePreview says "Scheduled Jobs will stop being created. Jobs already started will continue."
+// in the language of msgs.
+func (msgs Messages) KubeCronPausePreview() string {
+	return Catalog.Format(msgs.locale, "kubeCronPausePreview", nil)
+}
+
+// KubeCronResumeAction says "Resume schedule"
+// in the language the app shows.
+func KubeCronResumeAction() string { return In(i18n.Locale()).KubeCronResumeAction() }
+
+// KubeCronResumeAction says "Resume schedule"
+// in the language of msgs.
+func (msgs Messages) KubeCronResumeAction() string {
+	return Catalog.Format(msgs.locale, "kubeCronResumeAction", nil)
+}
+
+// KubeCronResumeTitle says "Resume the schedule for {name}?"
+// in the language the app shows.
+//
+// kubeCronResumeTitle
+func KubeCronResumeTitle(name string) string { return In(i18n.Locale()).KubeCronResumeTitle(name) }
+
+// KubeCronResumeTitle says "Resume the schedule for {name}?"
+// in the language of msgs.
+//
+// kubeCronResumeTitle
+func (msgs Messages) KubeCronResumeTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronResumeTitle", map[string]any{"name": name})
+}
+
+// KubeCronResumePreview says "Kubernetes will resume the schedule and may start a missed Job immediately."
+// in the language the app shows.
+func KubeCronResumePreview() string { return In(i18n.Locale()).KubeCronResumePreview() }
+
+// KubeCronResumePreview says "Kubernetes will resume the schedule and may start a missed Job immediately."
+// in the language of msgs.
+func (msgs Messages) KubeCronResumePreview() string {
+	return Catalog.Format(msgs.locale, "kubeCronResumePreview", nil)
+}
+
+// KubeCronRunAction says "Run now"
+// in the language the app shows.
+func KubeCronRunAction() string { return In(i18n.Locale()).KubeCronRunAction() }
+
+// KubeCronRunAction says "Run now"
+// in the language of msgs.
+func (msgs Messages) KubeCronRunAction() string {
+	return Catalog.Format(msgs.locale, "kubeCronRunAction", nil)
+}
+
+// KubeCronRunTitle says "Run {name} now?"
+// in the language the app shows.
+//
+// kubeCronRunTitle
+func KubeCronRunTitle(name string) string { return In(i18n.Locale()).KubeCronRunTitle(name) }
+
+// KubeCronRunTitle says "Run {name} now?"
+// in the language of msgs.
+//
+// kubeCronRunTitle
+func (msgs Messages) KubeCronRunTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronRunTitle", map[string]any{"name": name})
+}
+
+// KubeCronRunPreview says "Kubernetes will create Job {name} from the current template, even if the schedule is paused. The Job can run alongsid…"
+// in the language the app shows.
+//
+// kubeCronRunPreview
+func KubeCronRunPreview(name string) string { return In(i18n.Locale()).KubeCronRunPreview(name) }
+
+// KubeCronRunPreview says "Kubernetes will create Job {name} from the current template, even if the schedule is paused. The Job can run alongsid…"
+// in the language of msgs.
+//
+// kubeCronRunPreview
+func (msgs Messages) KubeCronRunPreview(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronRunPreview", map[string]any{"name": name})
+}
+
+// KubeCronRunSuspended says "The template is configured to create a suspended Job. Edit the template before running it."
+// in the language the app shows.
+func KubeCronRunSuspended() string { return In(i18n.Locale()).KubeCronRunSuspended() }
+
+// KubeCronRunSuspended says "The template is configured to create a suspended Job. Edit the template before running it."
+// in the language of msgs.
+func (msgs Messages) KubeCronRunSuspended() string {
+	return Catalog.Format(msgs.locale, "kubeCronRunSuspended", nil)
+}
+
+// KubeCronRunUnverified says "Hearth could not confirm that Job {name} was created. Check Jobs before starting another run"
+// in the language the app shows.
+//
+// kubeCronRunUnverified
+func KubeCronRunUnverified(name string) string { return In(i18n.Locale()).KubeCronRunUnverified(name) }
+
+// KubeCronRunUnverified says "Hearth could not confirm that Job {name} was created. Check Jobs before starting another run"
+// in the language of msgs.
+//
+// kubeCronRunUnverified
+func (msgs Messages) KubeCronRunUnverified(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronRunUnverified", map[string]any{"name": name})
+}
+
+// KubeCronRunPending says "Job {name} was created. Hearth could not confirm that it started"
+// in the language the app shows.
+//
+// kubeCronRunPending
+func KubeCronRunPending(name string) string { return In(i18n.Locale()).KubeCronRunPending(name) }
+
+// KubeCronRunPending says "Job {name} was created. Hearth could not confirm that it started"
+// in the language of msgs.
+//
+// kubeCronRunPending
+func (msgs Messages) KubeCronRunPending(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronRunPending", map[string]any{"name": name})
+}
+
+// KubeCronRunStarted says "Kubernetes confirmed the start of Job {name}. See Jobs for its progress."
+// in the language the app shows.
+//
+// kubeCronRunStarted
+func KubeCronRunStarted(name string) string { return In(i18n.Locale()).KubeCronRunStarted(name) }
+
+// KubeCronRunStarted says "Kubernetes confirmed the start of Job {name}. See Jobs for its progress."
+// in the language of msgs.
+//
+// kubeCronRunStarted
+func (msgs Messages) KubeCronRunStarted(name string) string {
+	return Catalog.Format(msgs.locale, "kubeCronRunStarted", map[string]any{"name": name})
+}
+
 // KubeRollbackOpen says "Roll back…"
 // in the language the app shows.
 func KubeRollbackOpen() string { return In(i18n.Locale()).KubeRollbackOpen() }

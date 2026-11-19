@@ -100,7 +100,7 @@ func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.Job) int {
 		return cmp.Compare(batchIssueOrder(a.State == kube.JobFailed), batchIssueOrder(b.State == kube.JobFailed))
 	})
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge(), ""}, func() {
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge()}, 28, "", func() {
 		for _, j := range shown {
 			batchRow(c.Key(j.UID), j.State == kube.JobFailed, func() {
 				batchName(c, j.Name, j.Namespace)
@@ -142,7 +142,12 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.CronJob) int {
 		return cmp.Compare(batchIssueOrder(lastCronFailed(a)), batchIssueOrder(lastCronFailed(b)))
 	})
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus(), ""}, func() {
+	var actionWidth float32 = 28
+	actionHeader := ""
+	if a.BuildPlan != nil {
+		actionWidth, actionHeader = cronActionsWidth, locales.KubeCronOn()
+	}
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus()}, actionWidth, actionHeader, func() {
 		for _, j := range shown {
 			failure := ""
 			if lastCronFailed(j) {
@@ -166,7 +171,7 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 					status = locales.KubeJobRunning()
 				}
 				batchText(c, status)
-				a.batchResourceMenu(c, a.resourceRef("CronJob", j.Namespace, j.Name, j.UID))
+				a.cronJobActions(c, j, actionWidth)
 			}, failure)
 		}
 	})
@@ -196,17 +201,20 @@ func jobFailure(j kube.Job) string {
 	return locales.KubeJobFailed()
 }
 
-func batchTable(c *ui.Context, headers []string, rows func()) {
+func batchTable(c *ui.Context, headers []string, actionWidth float32, actionHeader string, rows func()) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			for i, header := range headers {
-				if i == len(headers)-1 {
-					ui.Box(c).Width(28).Shrink(0)
-					continue
-				}
 				ui.Text(c, strings.ToUpper(header)).FontSize(10.5).TextColor(pal.TextFaint).Grow(batchColumnWeight(i)).Basis(0).MinWidth(0).SingleLine()
 			}
+			ui.Row(c).Width(actionWidth).Shrink(0).Children(func() {
+				if actionHeader != "" {
+					ui.Box(c).Width(32).Center().Children(func() {
+						ui.Text(c, strings.ToUpper(actionHeader)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					})
+				}
+			})
 		})
 		rows()
 	})

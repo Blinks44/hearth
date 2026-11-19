@@ -35,7 +35,7 @@ func PlanKubeRollback(ctx context.Context, r run.Runner, env sysenv.Env, ref Kub
 	if !obj.matches(ref) || obj.metadata()["deletionTimestamp"] != nil {
 		return Plan{}, errors.New(locales.KubeResourceChanged())
 	}
-	if deploymentSpec(obj)["paused"] == true {
+	if resourceSpec(obj)["paused"] == true {
 		return Plan{}, errors.New(locales.KubeRollbackPaused())
 	}
 	currentAnnotations, _ := obj.metadata()["annotations"].(map[string]any)
@@ -49,8 +49,8 @@ func PlanKubeRollback(ctx context.Context, r run.Runner, env sysenv.Env, ref Kub
 	if !previous.matches(rs) || previous.metadata()["deletionTimestamp"] != nil || !rollbackRevisionMatches(previous, ref, revision) {
 		return Plan{}, errors.New(locales.KubeResourceChanged())
 	}
-	template, _ := deploymentSpec(previous)["template"].(map[string]any)
-	currentTemplate := deploymentSpec(obj)["template"]
+	template, _ := resourceSpec(previous)["template"].(map[string]any)
+	currentTemplate := resourceSpec(obj)["template"]
 	if len(template) == 0 || currentTemplate == nil {
 		return Plan{}, errors.New(locales.KubeResourceUnverified())
 	}
@@ -66,8 +66,8 @@ func PlanKubeRollback(ctx context.Context, r run.Runner, env sysenv.Env, ref Kub
 
 	next := maps.Clone(obj)
 	next["metadata"] = maps.Clone(obj.metadata())
-	next["spec"] = maps.Clone(deploymentSpec(obj))
-	deploymentSpec(next)["template"] = template
+	next["spec"] = maps.Clone(resourceSpec(obj))
+	resourceSpec(next)["template"] = template
 	annotations := rollbackAnnotations(obj, previous)
 	if len(annotations) == 0 {
 		delete(next.metadata(), "annotations")
@@ -139,7 +139,7 @@ func rollbackAnnotations(obj, rs resourceJSON) map[string]any {
 func rollbackPreview(obj resourceJSON) string {
 	data, _ := json.MarshalIndent(map[string]any{
 		"annotations": obj.metadata()["annotations"],
-		"template":    deploymentSpec(obj)["template"],
+		"template":    resourceSpec(obj)["template"],
 	}, "", "  ")
 	return string(data)
 }

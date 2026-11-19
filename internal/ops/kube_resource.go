@@ -76,6 +76,11 @@ func (obj resourceJSON) metadata() map[string]any {
 	return m
 }
 
+func resourceSpec(obj resourceJSON) map[string]any {
+	spec, _ := obj["spec"].(map[string]any)
+	return spec
+}
+
 func (obj resourceJSON) version() string {
 	rv, _ := obj.metadata()["resourceVersion"].(string)
 	return rv
@@ -235,11 +240,12 @@ type KubeChange struct {
 	patch    []string
 	restart  bool
 	rollback *KubeDraft
+	jobName  string
 	Diff     []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
-	if m.want == nil && m.scale == nil {
+	if m.want == nil && m.scale == nil && m.jobName == "" {
 		return m.draft.Ref.Name
 	}
 	return ""
@@ -252,6 +258,9 @@ func (m *KubeChange) Target() string {
 func (m *KubeChange) Resource() string { return m.draft.Ref.label() }
 
 func (m *KubeChange) command() []string {
+	if m.jobName != "" {
+		return []string{"create", "-f", "-", "--namespace=" + m.draft.Ref.Namespace, "-o", "json"}
+	}
 	if m.scale != nil {
 		return m.scale.command(m.draft)
 	}
@@ -262,6 +271,15 @@ func (m *KubeChange) command() []string {
 		return []string{"delete", "--raw", m.draft.Ref.path(), "-f", "-"}
 	}
 	return []string{"replace", "--raw", m.draft.Ref.path() + "?fieldValidation=Strict", "-f", "-"}
+}
+
+func resourceSpecPatch(ref KubeResource, resource, version string, spec map[string]any) []string {
+	patch, _ := json.Marshal(map[string]any{
+		"metadata": map[string]string{"uid": ref.UID, "resourceVersion": version},
+		"spec":     spec,
+	})
+	return []string{"patch", resource + "/" + ref.Name, "--namespace=" + ref.Namespace,
+		"--type=merge", "--patch=" + string(patch), "-o", "json"}
 }
 
 func deleteOptions(ref KubeResource, version string, dry bool) []byte {
@@ -418,6 +436,9 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 	if _, err := m.draft.current(ctx, k); err != nil {
 		return "", err
 	}
+	if m.jobName != "" {
+		return m.startCronJob(ctx, k, checking)
+	}
 	if m.rollback != nil {
 		if _, err := m.rollback.current(ctx, k); err != nil {
 			return "", err
@@ -497,12 +518,12 @@ func (m *KubeChange) matchesChange(obj resourceJSON) bool {
 		return false
 	}
 	if m.restart {
-		spec := deploymentSpec(obj)
+		spec := resourceSpec(obj)
 		return spec["paused"] != true &&
-			reflect.DeepEqual(spec["template"], deploymentSpec(m.want)["template"])
+			reflect.DeepEqual(spec["template"], resourceSpec(m.want)["template"])
 	}
 	if m.rollback != nil &&
-		(deploymentSpec(obj)["paused"] == true || !reflect.DeepEqual(deploymentSpec(obj)["template"], deploymentSpec(m.want)["template"])) {
+		(resourceSpec(obj)["paused"] == true || !reflect.DeepEqual(resourceSpec(obj)["template"], resourceSpec(m.want)["template"])) {
 		return false
 	}
 	return approvedChanges(m.base, m.want, cleanResource(obj))

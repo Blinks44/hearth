@@ -1,5 +1,84 @@
 {
   "@@locale": "en",
+  "kubeCronOn": "On",
+  "kubeCronEnabled": "Schedule enabled for {name}",
+  "@kubeCronEnabled": {
+    "description": "kubeCronEnabled",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronPauseAction": "Pause schedule",
+  "kubeCronPauseTitle": "Pause the schedule for {name}?",
+  "@kubeCronPauseTitle": {
+    "description": "kubeCronPauseTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronPausePreview": "Scheduled Jobs will stop being created. Jobs already started will continue.",
+  "kubeCronResumeAction": "Resume schedule",
+  "kubeCronResumeTitle": "Resume the schedule for {name}?",
+  "@kubeCronResumeTitle": {
+    "description": "kubeCronResumeTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronResumePreview": "Kubernetes will resume the schedule and may start a missed Job immediately.",
+  "kubeCronRunAction": "Run now",
+  "kubeCronRunTitle": "Run {name} now?",
+  "@kubeCronRunTitle": {
+    "description": "kubeCronRunTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronRunPreview": "Kubernetes will create Job {name} from the current template, even if the schedule is paused. The Job can run alongside other Jobs.",
+  "@kubeCronRunPreview": {
+    "description": "kubeCronRunPreview",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronRunSuspended": "The template is configured to create a suspended Job. Edit the template before running it.",
+  "kubeCronRunUnverified": "Hearth could not confirm that Job {name} was created. Check Jobs before starting another run",
+  "@kubeCronRunUnverified": {
+    "description": "kubeCronRunUnverified",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronRunPending": "Job {name} was created. Hearth could not confirm that it started",
+  "@kubeCronRunPending": {
+    "description": "kubeCronRunPending",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronRunStarted": "Kubernetes confirmed the start of Job {name}. See Jobs for its progress.",
+  "@kubeCronRunStarted": {
+    "description": "kubeCronRunStarted",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "kubeRollbackOpen": "Roll back…",
   "kubeRollbackAction": "Roll back",
   "kubeRollbackRevision": "Roll back to revision {revision}",

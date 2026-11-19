@@ -2,7 +2,6 @@ package ops
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"slices"
 	"time"
@@ -14,25 +13,11 @@ import (
 
 const restartAnnotation = "kubectl.kubernetes.io/restartedAt"
 
-func deploymentSpec(obj resourceJSON) map[string]any {
-	spec, _ := obj["spec"].(map[string]any)
-	return spec
-}
-
 func restartTime(obj resourceJSON) any {
-	template, _ := deploymentSpec(obj)["template"].(map[string]any)
+	template, _ := resourceSpec(obj)["template"].(map[string]any)
 	meta, _ := template["metadata"].(map[string]any)
 	annotations, _ := meta["annotations"].(map[string]any)
 	return annotations[restartAnnotation]
-}
-
-func deploymentPatch(ref KubeResource, version string, spec map[string]any) []string {
-	patch, _ := json.Marshal(map[string]any{
-		"metadata": map[string]string{"uid": ref.UID, "resourceVersion": version},
-		"spec":     spec,
-	})
-	return []string{"patch", "deployment.apps/" + ref.Name, "--namespace=" + ref.Namespace,
-		"--type=merge", "--patch=" + string(patch), "-o", "json"}
 }
 
 // PlanKubeRestart previews the same template annotation as rollout restart.
@@ -53,12 +38,12 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 	if !obj.matches(ref) || obj.metadata()["deletionTimestamp"] != nil {
 		return Plan{}, errors.New(locales.KubeResourceChanged())
 	}
-	spec := deploymentSpec(obj)
+	spec := resourceSpec(obj)
 	if spec["paused"] == true {
 		return Plan{}, errors.New(locales.KubeRestartPaused())
 	}
 	stamp := time.Now().UTC().Format(time.RFC3339Nano)
-	command := deploymentPatch(ref, obj.version(), map[string]any{
+	command := resourceSpecPatch(ref, "deployment.apps", obj.version(), map[string]any{
 		"template": map[string]any{
 			"metadata": map[string]any{"annotations": map[string]string{restartAnnotation: stamp}},
 		},
@@ -68,7 +53,7 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		return Plan{}, err
 	}
 	preview, err := decodeResource(data)
-	if err != nil || !preview.matches(ref) || deploymentSpec(preview)["paused"] == true || restartTime(preview) != stamp {
+	if err != nil || !preview.matches(ref) || resourceSpec(preview)["paused"] == true || restartTime(preview) != stamp {
 		return Plan{}, errors.New(locales.KubeResourceUnverified())
 	}
 	if restartTime(obj) == stamp {
