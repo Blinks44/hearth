@@ -223,18 +223,19 @@ func (k resourceClient) convert(ctx context.Context, data []byte, output string)
 	return k.run(ctx, data, "create", "--dry-run=client", "--validate=false", "-f", "-", "-o", output)
 }
 
-// KubeChange is one reviewed update or deletion, bound to its context and version.
+// KubeChange is one reviewed write, bound to its context and version.
 type KubeChange struct {
 	draft   KubeDraft
 	input   []byte
 	base    resourceJSON
 	want    resourceJSON
 	rollout bool
+	scale   *deploymentScale
 	Diff    []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
-	if m.want == nil {
+	if m.want == nil && m.scale == nil {
 		return m.draft.Ref.Name
 	}
 	return ""
@@ -247,6 +248,9 @@ func (m *KubeChange) Target() string {
 func (m *KubeChange) Resource() string { return m.draft.Ref.label() }
 
 func (m *KubeChange) command() []string {
+	if m.scale != nil {
+		return m.scale.command(m.draft)
+	}
 	if m.want == nil {
 		return []string{"delete", "--raw", m.draft.Ref.path(), "-f", "-"}
 	}
@@ -397,7 +401,7 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 	return p, nil
 }
 
-func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env) (string, error) {
+func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, checking func()) (string, error) {
 	ref := m.draft.Ref
 	k, _, closeConfig, err := (resourceClient{cli: ref.Kubectl, context: ref.Context, env: env, runner: r}).pin(ctx, m.draft.config)
 	if err != nil {
@@ -408,11 +412,17 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env) (s
 		return "", err
 	}
 	_, writeErr := k.run(ctx, m.input, m.command()...)
+	if m.scale != nil {
+		checking()
+	}
 	// A canceled command may already have reached the API server. Re-read with
 	// its own deadline before reporting, even if the operation was stopped.
 	check, cancel := context.WithTimeout(context.WithoutCancel(ctx), 22*time.Second)
 	defer cancel()
 	obj, readErr := k.read(check, ref)
+	if m.scale != nil {
+		return m.verifyScale(ctx, k, obj, writeErr, readErr)
+	}
 	if m.want == nil && resourceNotFound(readErr) {
 		return locales.KubeResourceDeleted(), nil
 	}

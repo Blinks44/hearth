@@ -1,5 +1,99 @@
 {
   "@@locale": "en",
+  "kubeScaleInvalid": "Choose a different replica count.",
+  "kubeScaleTitle": "Scale {name}?",
+  "@kubeScaleTitle": {
+    "description": "kubeScaleTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeScalePreview": "Replicas: {from} → {to}. The server checked the change. Hearth will check the replica count and pod readiness afterward.",
+  "@kubeScalePreview": {
+    "description": "kubeScalePreview",
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScaleAdds": "Kubernetes will start additional pods.",
+  "kubeScaleRemoves": "Kubernetes will gracefully terminate excess pods.",
+  "kubeScaleStops": "Kubernetes will shut down all pods of this Deployment. It will stop serving traffic.",
+  "kubeScaleAutoscaler": "Autoscaling (HPA)",
+  "kubeScaleAutoscalerUnknown": "Hearth could not check whether an HPA manages this Deployment.",
+  "kubeScaleAutoscalerManages": "{names} manages this Deployment and can override the chosen replica count.",
+  "@kubeScaleAutoscalerManages": {
+    "description": "kubeScaleAutoscalerManages",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeScaleChanged": "Hearth requested {want} replicas. The Deployment now requests {actual}.",
+  "@kubeScaleChanged": {
+    "description": "kubeScaleChanged",
+    "placeholders": {
+      "want": {
+        "type": "int"
+      },
+      "actual": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScaleVerified": "Desired replicas: {want}. Ready pods: {want} of {want}.",
+  "@kubeScaleVerified": {
+    "description": "kubeScaleVerified",
+    "placeholders": {
+      "want": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScalePending": "Desired replicas: {want}. Ready pods: {ready} of {total}. The requested scale is still pending.",
+  "@kubeScalePending": {
+    "description": "kubeScalePending",
+    "placeholders": {
+      "want": {
+        "type": "int"
+      },
+      "ready": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScaleSection": "Scale",
+  "kubeScaleNow": "Now {count}",
+  "@kubeScaleNow": {
+    "description": "kubeScaleNow",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScaleBefore": "was {count}",
+  "@kubeScaleBefore": {
+    "description": "kubeScaleBefore",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeScaleLess": "Decrease replicas",
+  "kubeScaleMore": "Increase replicas",
+  "kubeScaleApply": "Apply…",
   "kubeResourceManifest": "Enter a single Kubernetes resource in YAML.",
   "kubeResourceTooLarge": "This resource is too large to review in Hearth.",
   "kubeResourceContext": "The selected kubeconfig context could not be read or has changed. Reopen the resource before continuing.",

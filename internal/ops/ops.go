@@ -261,7 +261,12 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.Kube != nil {
 			e.printf("$ %s\n", strings.Join(step.Shown(), " "))
 			e.emit()
-			found, err := step.Kube.apply(ctx, r, p.Env)
+			found, err := step.Kube.apply(ctx, r, p.Env, func() {
+				e.mu.Lock()
+				e.state.Phase = Verifying
+				e.mu.Unlock()
+				e.emit()
+			})
 			e.mu.Lock()
 			e.state.Steps[i] = Done
 			if err != nil {

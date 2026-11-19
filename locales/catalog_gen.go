@@ -36,6 +36,224 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeScaleInvalid says "Choose a different replica count."
+// in the language the app shows.
+func KubeScaleInvalid() string { return In(i18n.Locale()).KubeScaleInvalid() }
+
+// KubeScaleInvalid says "Choose a different replica count."
+// in the language of msgs.
+func (msgs Messages) KubeScaleInvalid() string {
+	return Catalog.Format(msgs.locale, "kubeScaleInvalid", nil)
+}
+
+// KubeScaleTitle says "Scale {name}?"
+// in the language the app shows.
+//
+// kubeScaleTitle
+func KubeScaleTitle(name string) string { return In(i18n.Locale()).KubeScaleTitle(name) }
+
+// KubeScaleTitle says "Scale {name}?"
+// in the language of msgs.
+//
+// kubeScaleTitle
+func (msgs Messages) KubeScaleTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeScaleTitle", map[string]any{"name": name})
+}
+
+// KubeScalePreview says "Replicas: {from} → {to}. The server checked the change. Hearth will check the replica count and pod readiness after…"
+// in the language the app shows.
+//
+// kubeScalePreview
+func KubeScalePreview(from int, to int) string { return In(i18n.Locale()).KubeScalePreview(from, to) }
+
+// KubeScalePreview says "Replicas: {from} → {to}. The server checked the change. Hearth will check the replica count and pod readiness after…"
+// in the language of msgs.
+//
+// kubeScalePreview
+func (msgs Messages) KubeScalePreview(from int, to int) string {
+	return Catalog.Format(msgs.locale, "kubeScalePreview", map[string]any{"from": from, "to": to})
+}
+
+// KubeScaleAdds says "Kubernetes will start additional pods."
+// in the language the app shows.
+func KubeScaleAdds() string { return In(i18n.Locale()).KubeScaleAdds() }
+
+// KubeScaleAdds says "Kubernetes will start additional pods."
+// in the language of msgs.
+func (msgs Messages) KubeScaleAdds() string {
+	return Catalog.Format(msgs.locale, "kubeScaleAdds", nil)
+}
+
+// KubeScaleRemoves says "Kubernetes will gracefully terminate excess pods."
+// in the language the app shows.
+func KubeScaleRemoves() string { return In(i18n.Locale()).KubeScaleRemoves() }
+
+// KubeScaleRemoves says "Kubernetes will gracefully terminate excess pods."
+// in the language of msgs.
+func (msgs Messages) KubeScaleRemoves() string {
+	return Catalog.Format(msgs.locale, "kubeScaleRemoves", nil)
+}
+
+// KubeScaleStops says "Kubernetes will shut down all pods of this Deployment. It will stop serving traffic."
+// in the language the app shows.
+func KubeScaleStops() string { return In(i18n.Locale()).KubeScaleStops() }
+
+// KubeScaleStops says "Kubernetes will shut down all pods of this Deployment. It will stop serving traffic."
+// in the language of msgs.
+func (msgs Messages) KubeScaleStops() string {
+	return Catalog.Format(msgs.locale, "kubeScaleStops", nil)
+}
+
+// KubeScaleAutoscaler says "Autoscaling (HPA)"
+// in the language the app shows.
+func KubeScaleAutoscaler() string { return In(i18n.Locale()).KubeScaleAutoscaler() }
+
+// KubeScaleAutoscaler says "Autoscaling (HPA)"
+// in the language of msgs.
+func (msgs Messages) KubeScaleAutoscaler() string {
+	return Catalog.Format(msgs.locale, "kubeScaleAutoscaler", nil)
+}
+
+// KubeScaleAutoscalerUnknown says "Hearth could not check whether an HPA manages this Deployment."
+// in the language the app shows.
+func KubeScaleAutoscalerUnknown() string { return In(i18n.Locale()).KubeScaleAutoscalerUnknown() }
+
+// KubeScaleAutoscalerUnknown says "Hearth could not check whether an HPA manages this Deployment."
+// in the language of msgs.
+func (msgs Messages) KubeScaleAutoscalerUnknown() string {
+	return Catalog.Format(msgs.locale, "kubeScaleAutoscalerUnknown", nil)
+}
+
+// KubeScaleAutoscalerManages says "{names} manages this Deployment and can override the chosen replica count."
+// in the language the app shows.
+//
+// kubeScaleAutoscalerManages
+func KubeScaleAutoscalerManages(names string) string {
+	return In(i18n.Locale()).KubeScaleAutoscalerManages(names)
+}
+
+// KubeScaleAutoscalerManages says "{names} manages this Deployment and can override the chosen replica count."
+// in the language of msgs.
+//
+// kubeScaleAutoscalerManages
+func (msgs Messages) KubeScaleAutoscalerManages(names string) string {
+	return Catalog.Format(msgs.locale, "kubeScaleAutoscalerManages", map[string]any{"names": names})
+}
+
+// KubeScaleChanged says "Hearth requested {want} replicas. The Deployment now requests {actual}."
+// in the language the app shows.
+//
+// kubeScaleChanged
+func KubeScaleChanged(want int, actual int) string {
+	return In(i18n.Locale()).KubeScaleChanged(want, actual)
+}
+
+// KubeScaleChanged says "Hearth requested {want} replicas. The Deployment now requests {actual}."
+// in the language of msgs.
+//
+// kubeScaleChanged
+func (msgs Messages) KubeScaleChanged(want int, actual int) string {
+	return Catalog.Format(msgs.locale, "kubeScaleChanged", map[string]any{"want": want, "actual": actual})
+}
+
+// KubeScaleVerified says "Desired replicas: {want}. Ready pods: {want} of {want}."
+// in the language the app shows.
+//
+// kubeScaleVerified
+func KubeScaleVerified(want int) string { return In(i18n.Locale()).KubeScaleVerified(want) }
+
+// KubeScaleVerified says "Desired replicas: {want}. Ready pods: {want} of {want}."
+// in the language of msgs.
+//
+// kubeScaleVerified
+func (msgs Messages) KubeScaleVerified(want int) string {
+	return Catalog.Format(msgs.locale, "kubeScaleVerified", map[string]any{"want": want})
+}
+
+// KubeScalePending says "Desired replicas: {want}. Ready pods: {ready} of {total}. The requested scale is still pending."
+// in the language the app shows.
+//
+// kubeScalePending
+func KubeScalePending(want int, ready int, total int) string {
+	return In(i18n.Locale()).KubeScalePending(want, ready, total)
+}
+
+// KubeScalePending says "Desired replicas: {want}. Ready pods: {ready} of {total}. The requested scale is still pending."
+// in the language of msgs.
+//
+// kubeScalePending
+func (msgs Messages) KubeScalePending(want int, ready int, total int) string {
+	return Catalog.Format(msgs.locale, "kubeScalePending", map[string]any{"want": want, "ready": ready, "total": total})
+}
+
+// KubeScaleSection says "Scale"
+// in the language the app shows.
+func KubeScaleSection() string { return In(i18n.Locale()).KubeScaleSection() }
+
+// KubeScaleSection says "Scale"
+// in the language of msgs.
+func (msgs Messages) KubeScaleSection() string {
+	return Catalog.Format(msgs.locale, "kubeScaleSection", nil)
+}
+
+// KubeScaleNow says "Now {count}"
+// in the language the app shows.
+//
+// kubeScaleNow
+func KubeScaleNow(count int) string { return In(i18n.Locale()).KubeScaleNow(count) }
+
+// KubeScaleNow says "Now {count}"
+// in the language of msgs.
+//
+// kubeScaleNow
+func (msgs Messages) KubeScaleNow(count int) string {
+	return Catalog.Format(msgs.locale, "kubeScaleNow", map[string]any{"count": count})
+}
+
+// KubeScaleBefore says "was {count}"
+// in the language the app shows.
+//
+// kubeScaleBefore
+func KubeScaleBefore(count int) string { return In(i18n.Locale()).KubeScaleBefore(count) }
+
+// KubeScaleBefore says "was {count}"
+// in the language of msgs.
+//
+// kubeScaleBefore
+func (msgs Messages) KubeScaleBefore(count int) string {
+	return Catalog.Format(msgs.locale, "kubeScaleBefore", map[string]any{"count": count})
+}
+
+// KubeScaleLess says "Decrease replicas"
+// in the language the app shows.
+func KubeScaleLess() string { return In(i18n.Locale()).KubeScaleLess() }
+
+// KubeScaleLess says "Decrease replicas"
+// in the language of msgs.
+func (msgs Messages) KubeScaleLess() string {
+	return Catalog.Format(msgs.locale, "kubeScaleLess", nil)
+}
+
+// KubeScaleMore says "Increase replicas"
+// in the language the app shows.
+func KubeScaleMore() string { return In(i18n.Locale()).KubeScaleMore() }
+
+// KubeScaleMore says "Increase replicas"
+// in the language of msgs.
+func (msgs Messages) KubeScaleMore() string {
+	return Catalog.Format(msgs.locale, "kubeScaleMore", nil)
+}
+
+// KubeScaleApply says "Apply…"
+// in the language the app shows.
+func KubeScaleApply() string { return In(i18n.Locale()).KubeScaleApply() }
+
+// KubeScaleApply says "Apply…"
+// in the language of msgs.
+func (msgs Messages) KubeScaleApply() string {
+	return Catalog.Format(msgs.locale, "kubeScaleApply", nil)
+}
+
 // KubeResourceManifest says "Enter a single Kubernetes resource in YAML."
 // in the language the app shows.
 func KubeResourceManifest() string { return In(i18n.Locale()).KubeResourceManifest() }

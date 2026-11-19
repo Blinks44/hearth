@@ -238,6 +238,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				}
 			})
 		}
+		a.deploymentScale(c, ref, d)
 		if d.Paused {
 			ui.Text(c, locales.KubePausedNote()).FontSize(12).TextColor(pal.WarningText).Padding(0, 16, 6, 16).Wrap()
 		}

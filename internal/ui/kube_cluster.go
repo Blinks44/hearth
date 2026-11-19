@@ -71,6 +71,7 @@ type kubeClusterState struct {
 	forward                    *forwardForm
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
+	scale                      *scaleForm
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
 	nsLoading bool
