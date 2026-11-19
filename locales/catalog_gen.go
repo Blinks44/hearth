@@ -36,6 +36,138 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeShellAction says "Shell"
+// in the language the app shows.
+func KubeShellAction() string { return In(i18n.Locale()).KubeShellAction() }
+
+// KubeShellAction says "Shell"
+// in the language of msgs.
+func (msgs Messages) KubeShellAction() string {
+	return Catalog.Format(msgs.locale, "kubeShellAction", nil)
+}
+
+// KubeShellTitle says "Shell in container"
+// in the language the app shows.
+func KubeShellTitle() string { return In(i18n.Locale()).KubeShellTitle() }
+
+// KubeShellTitle says "Shell in container"
+// in the language of msgs.
+func (msgs Messages) KubeShellTitle() string {
+	return Catalog.Format(msgs.locale, "kubeShellTitle", nil)
+}
+
+// KubeShellDescription says "The system terminal opens with this command and keeps the session open."
+// in the language the app shows.
+func KubeShellDescription() string { return In(i18n.Locale()).KubeShellDescription() }
+
+// KubeShellDescription says "The system terminal opens with this command and keeps the session open."
+// in the language of msgs.
+func (msgs Messages) KubeShellDescription() string {
+	return Catalog.Format(msgs.locale, "kubeShellDescription", nil)
+}
+
+// KubeShellContainer says "Container"
+// in the language the app shows.
+func KubeShellContainer() string { return In(i18n.Locale()).KubeShellContainer() }
+
+// KubeShellContainer says "Container"
+// in the language of msgs.
+func (msgs Messages) KubeShellContainer() string {
+	return Catalog.Format(msgs.locale, "kubeShellContainer", nil)
+}
+
+// KubeShellCommand says "Command"
+// in the language the app shows.
+func KubeShellCommand() string { return In(i18n.Locale()).KubeShellCommand() }
+
+// KubeShellCommand says "Command"
+// in the language of msgs.
+func (msgs Messages) KubeShellCommand() string {
+	return Catalog.Format(msgs.locale, "kubeShellCommand", nil)
+}
+
+// KubeShellNotes says "Before opening"
+// in the language the app shows.
+func KubeShellNotes() string { return In(i18n.Locale()).KubeShellNotes() }
+
+// KubeShellNotes says "Before opening"
+// in the language of msgs.
+func (msgs Messages) KubeShellNotes() string {
+	return Catalog.Format(msgs.locale, "kubeShellNotes", nil)
+}
+
+// KubeShellRestarting says "{name} is restarting ({count} restarts). A restart ends the shell session."
+// in the language the app shows.
+//
+// kubeShellRestarting
+func KubeShellRestarting(name string, count int) string {
+	return In(i18n.Locale()).KubeShellRestarting(name, count)
+}
+
+// KubeShellRestarting says "{name} is restarting ({count} restarts). A restart ends the shell session."
+// in the language of msgs.
+//
+// kubeShellRestarting
+func (msgs Messages) KubeShellRestarting(name string, count int) string {
+	return Catalog.Format(msgs.locale, "kubeShellRestarting", map[string]any{"name": name, "count": count})
+}
+
+// KubeShellMissingSh says "If the image has no sh, kubectl shows the error in the terminal."
+// in the language the app shows.
+func KubeShellMissingSh() string { return In(i18n.Locale()).KubeShellMissingSh() }
+
+// KubeShellMissingSh says "If the image has no sh, kubectl shows the error in the terminal."
+// in the language of msgs.
+func (msgs Messages) KubeShellMissingSh() string {
+	return Catalog.Format(msgs.locale, "kubeShellMissingSh", nil)
+}
+
+// KubeShellLaunchFailed says "Could not open the terminal. {reason}"
+// in the language the app shows.
+//
+// kubeShellLaunchFailed
+func KubeShellLaunchFailed(reason string) string {
+	return In(i18n.Locale()).KubeShellLaunchFailed(reason)
+}
+
+// KubeShellLaunchFailed says "Could not open the terminal. {reason}"
+// in the language of msgs.
+//
+// kubeShellLaunchFailed
+func (msgs Messages) KubeShellLaunchFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "kubeShellLaunchFailed", map[string]any{"reason": reason})
+}
+
+// KubeShellCopy says "Copy command"
+// in the language the app shows.
+func KubeShellCopy() string { return In(i18n.Locale()).KubeShellCopy() }
+
+// KubeShellCopy says "Copy command"
+// in the language of msgs.
+func (msgs Messages) KubeShellCopy() string {
+	return Catalog.Format(msgs.locale, "kubeShellCopy", nil)
+}
+
+// KubeShellLaunch says "Open in Terminal"
+// in the language the app shows.
+func KubeShellLaunch() string { return In(i18n.Locale()).KubeShellLaunch() }
+
+// KubeShellLaunch says "Open in Terminal"
+// in the language of msgs.
+func (msgs Messages) KubeShellLaunch() string {
+	return Catalog.Format(msgs.locale, "kubeShellLaunch", nil)
+}
+
+// KubeShellCloseHint says "Press Enter to close."
+// in the language the app shows.
+func KubeShellCloseHint() string { return In(i18n.Locale()).KubeShellCloseHint() }
+
+// KubeShellCloseHint says "Press Enter to close."
+// in the language of msgs.
+func (msgs Messages) KubeShellCloseHint() string {
+	return Catalog.Format(msgs.locale, "kubeShellCloseHint", nil)
+}
+
 // KubeBulkSelectAll says "Select all matching resources"
 // in the language the app shows.
 func KubeBulkSelectAll() string { return In(i18n.Locale()).KubeBulkSelectAll() }

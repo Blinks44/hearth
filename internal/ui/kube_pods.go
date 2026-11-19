@@ -451,7 +451,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				}
 			})
 		})
-		if a.StreamLogs != nil && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil {
+		if (a.StreamLogs != nil || a.OpenKubeShell != nil) && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
 				if a.StreamLogs != nil && len(p.Containers) > 0 {
 					container := p.Containers[0].Name
@@ -468,6 +468,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 					}
 					a.forwardButton(c, p.UID, "pod", p.Namespace, p.Name, ports)
 				}
+				a.shellButton(c, p, story.crashed)
 				a.resourceActions(c, ref, 2)
 			})
 		}

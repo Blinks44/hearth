@@ -71,6 +71,7 @@ type kubeClusterState struct {
 	helmSort                   string
 	secret                     secretView
 	forward                    *forwardForm
+	shell                      *shellForm
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
@@ -165,6 +166,7 @@ func (a *App) syncCluster() {
 	if target != s.target || s.kind != s.bulk.kind {
 		s.bulk.clear()
 		s.bulk.kind = s.kind
+		s.shell = nil
 	}
 	if running == s.running {
 		return
@@ -248,6 +250,7 @@ func (a *App) StopCluster() {
 		a.cluster.watch++
 	}
 	a.stopLogs()
+	a.cluster.shell = nil
 	a.cluster.secret.reset()
 	a.ClearSecretClipboard()
 }
@@ -361,6 +364,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 // toggleWorkload keeps the clicked row in view when the list changes width.
 func (s *kubeClusterState) toggleWorkload(selection *string, uid string) {
 	s.revealWorkload = uid
+	s.shell = nil
 	if *selection == uid {
 		*selection = ""
 		return

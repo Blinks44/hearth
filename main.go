@@ -210,6 +210,14 @@ func main() {
 			}()
 			return cancel
 		}
+		a.OpenKubeShell = func(s kube.Shell, done func(error)) {
+			env := scanner.Terminal()
+			closeHint := locales.KubeShellCloseHint()
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, s.Args(), env, env.Get("PATH"), env.Get("KUBECONFIG"), closeHint)
+				win.Update(func() { done(err) })
+			}()
+		}
 		a.CheckForwardPort = func(port int, done func(int, error)) {
 			go func() {
 				suggestion, err := ops.CheckForwardPort(port)

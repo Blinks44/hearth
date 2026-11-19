@@ -1,5 +1,36 @@
 {
   "@@locale": "en",
+  "kubeShellAction": "Shell",
+  "kubeShellTitle": "Shell in container",
+  "kubeShellDescription": "The system terminal opens with this command and keeps the session open.",
+  "kubeShellContainer": "Container",
+  "kubeShellCommand": "Command",
+  "kubeShellNotes": "Before opening",
+  "kubeShellRestarting": "{name} is restarting ({count} restarts). A restart ends the shell session.",
+  "@kubeShellRestarting": {
+    "description": "kubeShellRestarting",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeShellMissingSh": "If the image has no sh, kubectl shows the error in the terminal.",
+  "kubeShellLaunchFailed": "Could not open the terminal. {reason}",
+  "@kubeShellLaunchFailed": {
+    "description": "kubeShellLaunchFailed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeShellCopy": "Copy command",
+  "kubeShellLaunch": "Open in Terminal",
+  "kubeShellCloseHint": "Press Enter to close.",
   "kubeBulkSelectAll": "Select all matching resources",
   "kubeBulkSelect": "Select {name}",
   "@kubeBulkSelect": {

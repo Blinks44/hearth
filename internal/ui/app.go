@@ -177,6 +177,8 @@ type App struct {
 	// lines as they come to got and how the read ended to done, on the UI
 	// thread, until stop is called. Nil hides the logs.
 	StreamLogs func(l kube.Logs, got func([]kube.LogLine), done func(error)) (stop func())
+	// OpenKubeShell hands a container session to the system terminal.
+	OpenKubeShell func(kube.Shell, func(error))
 
 	CheckForwardPort func(port int, done func(int, error))
 	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
