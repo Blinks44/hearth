@@ -1,5 +1,31 @@
 {
   "@@locale": "en",
+  "kubeResourcesEmpty": "No resources in the selected namespaces.",
+  "kubeResourceTerminating": "Terminating",
+  "kubeResourceNoAddress": "No address",
+  "kubeResourceKeyCount": "{count, plural, one {# key} other {# keys}}",
+  "@kubeResourceKeyCount": {
+    "description": "kubeResourceKeyCount",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeResourceOwner": "Owner",
+  "kubeResourceSelector": "Selector",
+  "kubeResourceUpdated": "Updated",
+  "kubeResourceImages": "Images",
+  "kubeResourceService": "Service",
+  "kubeResourceStrategy": "Update strategy",
+  "kubeResourcePodOrder": "Pod order",
+  "kubeResourceClass": "Class",
+  "kubeResourceAddresses": "Addresses",
+  "kubeResourcePorts": "Ports",
+  "kubeResourceIngressRules": "Ingress rules",
+  "kubeResourceEgressRules": "Egress rules",
+  "kubeResourceImmutable": "Immutable",
+  "kubeResourceCopyYAML": "Copy YAML",
   "kubeShellAction": "Shell",
   "kubeShellTitle": "Shell in container",
   "kubeShellDescription": "The system terminal opens with this command and keeps the session open.",

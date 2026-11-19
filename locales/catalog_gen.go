@@ -36,6 +36,190 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeResourcesEmpty says "No resources in the selected namespaces."
+// in the language the app shows.
+func KubeResourcesEmpty() string { return In(i18n.Locale()).KubeResourcesEmpty() }
+
+// KubeResourcesEmpty says "No resources in the selected namespaces."
+// in the language of msgs.
+func (msgs Messages) KubeResourcesEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeResourcesEmpty", nil)
+}
+
+// KubeResourceTerminating says "Terminating"
+// in the language the app shows.
+func KubeResourceTerminating() string { return In(i18n.Locale()).KubeResourceTerminating() }
+
+// KubeResourceTerminating says "Terminating"
+// in the language of msgs.
+func (msgs Messages) KubeResourceTerminating() string {
+	return Catalog.Format(msgs.locale, "kubeResourceTerminating", nil)
+}
+
+// KubeResourceNoAddress says "No address"
+// in the language the app shows.
+func KubeResourceNoAddress() string { return In(i18n.Locale()).KubeResourceNoAddress() }
+
+// KubeResourceNoAddress says "No address"
+// in the language of msgs.
+func (msgs Messages) KubeResourceNoAddress() string {
+	return Catalog.Format(msgs.locale, "kubeResourceNoAddress", nil)
+}
+
+// KubeResourceKeyCount says "{count, plural, one {# key} other {# keys}}"
+// in the language the app shows.
+//
+// kubeResourceKeyCount
+func KubeResourceKeyCount(count int) string { return In(i18n.Locale()).KubeResourceKeyCount(count) }
+
+// KubeResourceKeyCount says "{count, plural, one {# key} other {# keys}}"
+// in the language of msgs.
+//
+// kubeResourceKeyCount
+func (msgs Messages) KubeResourceKeyCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubeResourceKeyCount", map[string]any{"count": count})
+}
+
+// KubeResourceOwner says "Owner"
+// in the language the app shows.
+func KubeResourceOwner() string { return In(i18n.Locale()).KubeResourceOwner() }
+
+// KubeResourceOwner says "Owner"
+// in the language of msgs.
+func (msgs Messages) KubeResourceOwner() string {
+	return Catalog.Format(msgs.locale, "kubeResourceOwner", nil)
+}
+
+// KubeResourceSelector says "Selector"
+// in the language the app shows.
+func KubeResourceSelector() string { return In(i18n.Locale()).KubeResourceSelector() }
+
+// KubeResourceSelector says "Selector"
+// in the language of msgs.
+func (msgs Messages) KubeResourceSelector() string {
+	return Catalog.Format(msgs.locale, "kubeResourceSelector", nil)
+}
+
+// KubeResourceUpdated says "Updated"
+// in the language the app shows.
+func KubeResourceUpdated() string { return In(i18n.Locale()).KubeResourceUpdated() }
+
+// KubeResourceUpdated says "Updated"
+// in the language of msgs.
+func (msgs Messages) KubeResourceUpdated() string {
+	return Catalog.Format(msgs.locale, "kubeResourceUpdated", nil)
+}
+
+// KubeResourceImages says "Images"
+// in the language the app shows.
+func KubeResourceImages() string { return In(i18n.Locale()).KubeResourceImages() }
+
+// KubeResourceImages says "Images"
+// in the language of msgs.
+func (msgs Messages) KubeResourceImages() string {
+	return Catalog.Format(msgs.locale, "kubeResourceImages", nil)
+}
+
+// KubeResourceService says "Service"
+// in the language the app shows.
+func KubeResourceService() string { return In(i18n.Locale()).KubeResourceService() }
+
+// KubeResourceService says "Service"
+// in the language of msgs.
+func (msgs Messages) KubeResourceService() string {
+	return Catalog.Format(msgs.locale, "kubeResourceService", nil)
+}
+
+// KubeResourceStrategy says "Update strategy"
+// in the language the app shows.
+func KubeResourceStrategy() string { return In(i18n.Locale()).KubeResourceStrategy() }
+
+// KubeResourceStrategy says "Update strategy"
+// in the language of msgs.
+func (msgs Messages) KubeResourceStrategy() string {
+	return Catalog.Format(msgs.locale, "kubeResourceStrategy", nil)
+}
+
+// KubeResourcePodOrder says "Pod order"
+// in the language the app shows.
+func KubeResourcePodOrder() string { return In(i18n.Locale()).KubeResourcePodOrder() }
+
+// KubeResourcePodOrder says "Pod order"
+// in the language of msgs.
+func (msgs Messages) KubeResourcePodOrder() string {
+	return Catalog.Format(msgs.locale, "kubeResourcePodOrder", nil)
+}
+
+// KubeResourceClass says "Class"
+// in the language the app shows.
+func KubeResourceClass() string { return In(i18n.Locale()).KubeResourceClass() }
+
+// KubeResourceClass says "Class"
+// in the language of msgs.
+func (msgs Messages) KubeResourceClass() string {
+	return Catalog.Format(msgs.locale, "kubeResourceClass", nil)
+}
+
+// KubeResourceAddresses says "Addresses"
+// in the language the app shows.
+func KubeResourceAddresses() string { return In(i18n.Locale()).KubeResourceAddresses() }
+
+// KubeResourceAddresses says "Addresses"
+// in the language of msgs.
+func (msgs Messages) KubeResourceAddresses() string {
+	return Catalog.Format(msgs.locale, "kubeResourceAddresses", nil)
+}
+
+// KubeResourcePorts says "Ports"
+// in the language the app shows.
+func KubeResourcePorts() string { return In(i18n.Locale()).KubeResourcePorts() }
+
+// KubeResourcePorts says "Ports"
+// in the language of msgs.
+func (msgs Messages) KubeResourcePorts() string {
+	return Catalog.Format(msgs.locale, "kubeResourcePorts", nil)
+}
+
+// KubeResourceIngressRules says "Ingress rules"
+// in the language the app shows.
+func KubeResourceIngressRules() string { return In(i18n.Locale()).KubeResourceIngressRules() }
+
+// KubeResourceIngressRules says "Ingress rules"
+// in the language of msgs.
+func (msgs Messages) KubeResourceIngressRules() string {
+	return Catalog.Format(msgs.locale, "kubeResourceIngressRules", nil)
+}
+
+// KubeResourceEgressRules says "Egress rules"
+// in the language the app shows.
+func KubeResourceEgressRules() string { return In(i18n.Locale()).KubeResourceEgressRules() }
+
+// KubeResourceEgressRules says "Egress rules"
+// in the language of msgs.
+func (msgs Messages) KubeResourceEgressRules() string {
+	return Catalog.Format(msgs.locale, "kubeResourceEgressRules", nil)
+}
+
+// KubeResourceImmutable says "Immutable"
+// in the language the app shows.
+func KubeResourceImmutable() string { return In(i18n.Locale()).KubeResourceImmutable() }
+
+// KubeResourceImmutable says "Immutable"
+// in the language of msgs.
+func (msgs Messages) KubeResourceImmutable() string {
+	return Catalog.Format(msgs.locale, "kubeResourceImmutable", nil)
+}
+
+// KubeResourceCopyYAML says "Copy YAML"
+// in the language the app shows.
+func KubeResourceCopyYAML() string { return In(i18n.Locale()).KubeResourceCopyYAML() }
+
+// KubeResourceCopyYAML says "Copy YAML"
+// in the language of msgs.
+func (msgs Messages) KubeResourceCopyYAML() string {
+	return Catalog.Format(msgs.locale, "kubeResourceCopyYAML", nil)
+}
+
 // KubeShellAction says "Shell"
 // in the language the app shows.
 func KubeShellAction() string { return In(i18n.Locale()).KubeShellAction() }

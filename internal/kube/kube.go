@@ -43,6 +43,8 @@ type Target struct {
 	Services bool
 	// Secrets reads Secret metadata and key names.
 	Secrets bool
+	// Resource reads one of the additional namespaced resource kinds.
+	Resource ResourceKind
 	// Events is the object whose events to read too; zero reads none.
 	Events Ref
 	// Tail is the container whose previous run's last line to read too;
@@ -168,6 +170,7 @@ type Cluster struct {
 	Services     []Service
 	HelmReleases []HelmRelease
 	Secrets      []Secret
+	Resources    *ResourceList
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -232,6 +235,9 @@ func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	if t.Resource != "" {
+		return readResourceCluster(ctx, r, env, t)
+	}
 	scopes := make([][]string, 0, max(len(t.Namespaces), 1))
 	for _, ns := range t.Namespaces {
 		scopes = append(scopes, []string{"--namespace=" + ns})

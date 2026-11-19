@@ -169,7 +169,8 @@ type App struct {
 	WatchCluster   func(t kube.Target, got func(kube.Cluster, error)) (stop func())
 	ListNamespaces func(t kube.Target, done func([]string, error))
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
-	ReadSecretValue func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
+	ReadSecretValue  func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
+	ReadResourceYAML func(kube.Target, kube.Resource, func(string, error)) (stop func())
 	// SecretTimer schedules a callback on the UI thread and returns its cancellation.
 	SecretTimer     func(time.Duration, func()) (stop func())
 	secretClipboard *secretClipboard
@@ -323,6 +324,7 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncResourceYAML()
 	a.syncSecrets(c)
 	a.syncLogs()
 	a.syncForwardForm()

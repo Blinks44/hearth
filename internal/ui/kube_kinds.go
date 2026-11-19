@@ -14,16 +14,23 @@ type clusterKind struct {
 	label, icon, alias string
 }
 
-func clusterKindOptions() [kindSecrets + 1]clusterKind {
+func clusterKindOptions() [kindConfigMaps + 1]clusterKind {
 	return [...]clusterKind{
-		kindPods:        {"Pods", "box", "po"},
-		kindDeployments: {"Deployments", "boxes", "deploy"},
-		kindOverview:    {locales.KubeOverview(), "layout-dashboard", "overview"},
-		kindJobs:        {"Jobs", "package", "job"},
-		kindCronJobs:    {"CronJobs", "history", "cj"},
-		kindServices:    {"Services", "network", "svc"},
-		kindSecrets:     {"Secrets", "key-round", "secret"},
-		kindHelm:        {locales.KubeHelmReleases(), "layers", "helm"},
+		kindPods:            {"Pods", "box", "po"},
+		kindDeployments:     {"Deployments", "boxes", "deploy"},
+		kindOverview:        {locales.KubeOverview(), "layout-dashboard", "overview"},
+		kindJobs:            {"Jobs", "package", "job"},
+		kindCronJobs:        {"CronJobs", "history", "cj"},
+		kindServices:        {"Services", "network", "svc"},
+		kindSecrets:         {"Secrets", "key-round", "secret"},
+		kindHelm:            {locales.KubeHelmReleases(), "layers", "helm"},
+		kindStatefulSets:    {"StatefulSets", "boxes", "sts"},
+		kindDaemonSets:      {"DaemonSets", "boxes", "ds"},
+		kindReplicaSets:     {"ReplicaSets", "boxes", "rs"},
+		kindIngresses:       {"Ingresses", "globe", "ing"},
+		kindEndpoints:       {"Endpoints", "network", "ep"},
+		kindNetworkPolicies: {"NetworkPolicies", "network", "netpol"},
+		kindConfigMaps:      {"ConfigMaps", "file-text", "cm"},
 	}
 }
 
@@ -32,6 +39,9 @@ func isBatchKind(kind int) bool { return kind == kindJobs || kind == kindCronJob
 func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bool) {
 	if cl == nil {
 		return 0, 0, false
+	}
+	if cl.Resources != nil {
+		return len(cl.Resources.Items), 0, cl.Resources.Kind == otherResourceKind(kind)
 	}
 	switch kind {
 	case kindPods:
@@ -101,23 +111,30 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	pal := Colors(t)
 	options := clusterKindOptions()
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
-	var results []int
-	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices, kindSecrets, kindHelm} {
+	var exact, partial []int
+	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
+		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm} {
 		kind := options[i]
-		if strings.Contains(strings.ToLower(kind.label), query) || strings.Contains(kind.alias, query) {
-			results = append(results, i)
+		label := strings.ToLower(kind.label)
+		switch {
+		case label == query || kind.alias == query:
+			exact = append(exact, i)
+		case strings.Contains(label, query) || strings.Contains(kind.alias, query):
+			partial = append(partial, i)
 		}
 	}
+	results := append(exact, partial...)
 	selected := min(s.kindSelected, max(len(results)-1, 0))
 	choose := func(i int) { s.kind, s.logs, s.kindsOpen = i, nil, false }
 	move := func(by int) {
 		if n := len(results); n > 0 {
 			s.kindSelected = (selected + by + n) % n
+			s.kindScroll = true
 		}
 	}
 	ui.Column(c).Width(365).Padding(6).Gap(2).Children(func() {
 		ui.SearchField(c.Key("kind-query"), &s.kindQuery).Placeholder(locales.KubeKindSearch()).Label(locales.KubeKindSearch()).AutoFocus().Margin(0, 0, 5, 0).
-			OnChange(func() { s.kindSelected = 0 }).OnSubmit(func() {
+			OnChange(func() { s.kindSelected, s.kindScroll = 0, true }).OnSubmit(func() {
 			if len(results) > 0 {
 				choose(results[selected])
 			}
@@ -127,34 +144,40 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 		if len(results) == 0 {
 			overviewMessage(c, locales.SearchNoResults(s.kindQuery))
 		}
-		for index, id := range results {
-			kind := options[id]
-			row := ui.ButtonBase(c.Key("pick-kind-"+kind.label)).Height(32).Radius(7).Padding(0, 10).Gap(9).AlignItems(ui.Center).
-				Label(kind.label).OnClick(func() { choose(id) })
-			if index == selected {
-				row.Background(pal.AccentSoft)
-			} else if row.Hovered() {
-				row.Background(pal.Muted)
+		ui.Scroll(c.Key("kind-results")).MaxHeight(435).Children(func() {
+			for index, id := range results {
+				kind := options[id]
+				row := ui.ButtonBase(c.Key("pick-kind-"+kind.label)).Height(32).Radius(7).Padding(0, 10).Gap(9).AlignItems(ui.Center).
+					Label(kind.label).OnClick(func() { choose(id) })
+				if index == selected {
+					row.Background(pal.AccentSoft)
+					if s.kindScroll {
+						row.ScrollIntoView()
+						s.kindScroll = false
+					}
+				} else if row.Hovered() {
+					row.Background(pal.Muted)
+				}
+				row.Children(func() {
+					fg := t.TextMuted
+					if id == s.kind {
+						fg = pal.AccentInk
+					}
+					ui.Icon(c, Icon(kind.icon)).Size(15, 15).TextColor(fg)
+					ui.Text(c, kind.label).FontSize(13).FontWeight(500)
+					if id != kindOverview {
+						ui.Text(c, kind.alias).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+					}
+					ui.Box(c).Grow(1)
+					count, trouble, known := clusterKindCounts(s.data, id)
+					if trouble > 0 {
+						aiTag(c, strconv.Itoa(trouble), pal.DangerSoft, pal.DangerText)
+					}
+					if known && ((!s.batchData && s.data.Services == nil) || id != kindPods && id != kindDeployments) {
+						ui.Text(c, strconv.Itoa(count)).FontSize(11).TextColor(pal.TextFaint)
+					}
+				})
 			}
-			row.Children(func() {
-				fg := t.TextMuted
-				if id == s.kind {
-					fg = pal.AccentInk
-				}
-				ui.Icon(c, Icon(kind.icon)).Size(15, 15).TextColor(fg)
-				ui.Text(c, kind.label).FontSize(13).FontWeight(500)
-				if id != kindOverview {
-					ui.Text(c, kind.alias).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
-				}
-				ui.Box(c).Grow(1)
-				count, trouble, known := clusterKindCounts(s.data, id)
-				if trouble > 0 {
-					aiTag(c, strconv.Itoa(trouble), pal.DangerSoft, pal.DangerText)
-				}
-				if known && ((!s.batchData && s.data.Services == nil) || id != kindPods && id != kindDeployments) {
-					ui.Text(c, strconv.Itoa(count)).FontSize(11).TextColor(pal.TextFaint)
-				}
-			})
-		}
+		})
 	})
 }

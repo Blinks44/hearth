@@ -218,6 +218,17 @@ func main() {
 				win.Update(func() { done(err) })
 			}()
 		}
+		a.ReadResourceYAML = func(t kube.Target, resource kube.Resource, done func(string, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				yaml, err := kube.ReadResourceYAML(ctx, run.Exec{}, env, t, resource)
+				if ctx.Err() == nil {
+					win.Update(func() { done(yaml, err) })
+				}
+			}()
+			return cancel
+		}
 		a.CheckForwardPort = func(port int, done func(int, error)) {
 			go func() {
 				suggestion, err := ops.CheckForwardPort(port)

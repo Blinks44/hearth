@@ -40,6 +40,13 @@ const (
 	kindServices
 	kindHelm
 	kindSecrets
+	kindStatefulSets
+	kindDaemonSets
+	kindReplicaSets
+	kindIngresses
+	kindEndpoints
+	kindNetworkPolicies
+	kindConfigMaps
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -64,6 +71,7 @@ type kubeClusterState struct {
 	kindsOpen                  bool
 	kindQuery                  string
 	kindSelected               int
+	kindScroll                 bool
 	jobFilter, cronJobFilter   int
 	serviceFilter              int
 	serviceSort                string
@@ -72,6 +80,7 @@ type kubeClusterState struct {
 	secret                     secretView
 	forward                    *forwardForm
 	shell                      *shellForm
+	other                      otherResourceView
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
@@ -147,6 +156,7 @@ func (a *App) syncCluster() {
 			t.Batch = t.Overview || isBatchKind(a.cluster.kind)
 			t.Secrets = s.kind == kindSecrets
 			t.Services = s.kind == kindServices
+			t.Resource = otherResourceKind(s.kind)
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
 			if s.kind == kindHelm {
 				if helm, found := cliCopy(a.cliState(), "helm"); found {
@@ -158,15 +168,16 @@ func (a *App) syncCluster() {
 			}
 		}
 	}
-	running := ""
-	if target != "" {
-		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Events.UID, t.Tail)
-	}
 	if target != s.target || s.kind != s.bulk.kind {
 		s.bulk.clear()
 		s.bulk.kind = s.kind
 		s.shell = nil
+		s.other.reset()
+	}
+	running := ""
+	if target != "" {
+		t.Events, t.Tail = a.detailRef(), a.detailTail()
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%s#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Resource, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -196,6 +207,9 @@ func (a *App) syncCluster() {
 		}
 		s.bulk.retain(cl)
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+		if s.other.uid != "" && s.otherResource() == nil {
+			s.other.reset()
+		}
 		s.batchData = t.Batch && !t.Overview
 	})
 }
@@ -205,6 +219,9 @@ func (a *App) detailRef() kube.Ref {
 	s := &a.cluster
 	if s.data == nil {
 		return kube.Ref{}
+	}
+	if item := s.otherResource(); item != nil {
+		return kube.Ref{Namespace: item.Namespace, UID: item.UID}
 	}
 	if s.kind == kindDeployments {
 		for _, d := range s.data.Deployments {
@@ -251,6 +268,7 @@ func (a *App) StopCluster() {
 	}
 	a.stopLogs()
 	a.cluster.shell = nil
+	a.cluster.other.reset()
 	a.cluster.secret.reset()
 	a.ClearSecretClipboard()
 }
@@ -297,7 +315,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			a.logsView(c)
 			return
 		}
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets
+		resourceKind := otherResourceKind(s.kind)
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != ""
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -319,6 +338,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 				helm, hasHelm := cliCopy(a.cliState(), "helm")
 				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
+				if s.data != nil && (resourceKind != "" || s.data.Resources != nil) {
+					waiting = s.data.Resources == nil || s.data.Resources.Kind != resourceKind
+				}
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
@@ -354,6 +376,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.secretsView(c, s.data.Secrets)
 					case kindHelm:
 						a.helmView(c, s.data.HelmReleases, helm.Version)
+					default:
+						a.otherResourcesView(c, s.data)
 					}
 				}
 			})
