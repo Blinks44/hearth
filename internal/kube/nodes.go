@@ -104,7 +104,7 @@ func readNodePods(ctx context.Context, r run.Runner, env sysenv.Env, t Target, n
 		if p.Spec.NodeName != n.Name {
 			continue
 		}
-		phase, requested := p.Status.Phase, p.requests()
+		phase, requested := p.Status.Phase, p.Spec.requests()
 		if phase != "Succeeded" && phase != "Failed" {
 			n.Requested = n.Requested.add(requested)
 		}

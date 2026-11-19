@@ -63,6 +63,13 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 		return Cluster{}, err
 	}
 	c := Cluster{Taken: time.Now(), Resources: &ResourceList{Kind: t.Resource, Items: items}}
+	if t.Resource == Nodes && t.Metrics && len(items) > 0 {
+		values, err := nodeMetrics(ctx, r, env, t)
+		c.MetricsErr = err
+		for _, item := range items {
+			item.Node.Usage = values[item.Name]
+		}
+	}
 	if t.Resource == PersistentVolumeClaims && len(items) > 0 {
 		c.Resources.Claims = readClaimDetails(ctx, r, env, t)
 	}

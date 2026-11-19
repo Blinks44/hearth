@@ -1,5 +1,69 @@
 {
   "@@locale": "en",
+  "kubeMetricsInitContainers": "Init containers",
+  "kubeMetricsUsage": "Usage",
+  "kubeMetricsRequest": "Request",
+  "kubeMetricsLimit": "Limit",
+  "kubeMetricsMemory": "Memory",
+  "kubeMetricsUnavailable": "No metrics-server (kubectl top: “Metrics API not available”). Resource requests are still available.",
+  "kubeMetricsForbidden": "No permission to read CPU and memory usage.",
+  "kubeMetricsFailed": "Could not read CPU and memory usage.",
+  "kubeMetricsNoSample": "No usage sample yet",
+  "kubeMetricsMillicores": "{value, number, ::precision-integer}m",
+  "kubeMetricsMiB": "{value, number, ::precision-integer} MiB",
+  "kubeMetricsNodeUse": "Usage {cpu} · {memory}",
+  "@kubeMetricsInitContainers": {"description": "Kubernetes Pod section for init containers."},
+  "@kubeMetricsUsage": {
+    "description": "Kubernetes resource metrics: Usage"
+  },
+  "@kubeMetricsRequest": {
+    "description": "Kubernetes resource metrics: Request"
+  },
+  "@kubeMetricsLimit": {
+    "description": "Kubernetes resource metrics: Limit"
+  },
+  "@kubeMetricsMemory": {
+    "description": "Kubernetes resource metrics: Memory"
+  },
+  "@kubeMetricsUnavailable": {
+    "description": "Kubernetes resource metrics: Unavailable"
+  },
+  "@kubeMetricsForbidden": {
+    "description": "Kubernetes resource metrics: Forbidden"
+  },
+  "@kubeMetricsFailed": {
+    "description": "Kubernetes resource metrics: Failed"
+  },
+  "@kubeMetricsNoSample": {
+    "description": "Kubernetes resource metrics: NoSample"
+  },
+  "@kubeMetricsMillicores": {
+    "description": "Kubernetes resource metrics: Millicores",
+    "placeholders": {
+      "value": {
+        "type": "double"
+      }
+    }
+  },
+  "@kubeMetricsMiB": {
+    "description": "Kubernetes resource metrics: MiB",
+    "placeholders": {
+      "value": {
+        "type": "double"
+      }
+    }
+  },
+  "@kubeMetricsNodeUse": {
+    "description": "Kubernetes resource metrics: NodeUse",
+    "placeholders": {
+      "cpu": {
+        "type": "String"
+      },
+      "memory": {
+        "type": "String"
+      }
+    }
+  },
   "kubeNodeSearch": "Name, label or taint",
   "kubeNodeFilterEmpty": "No nodes match this filter.",
   "kubeNodeReady": "Ready",

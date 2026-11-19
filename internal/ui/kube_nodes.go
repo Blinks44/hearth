@@ -97,6 +97,9 @@ func nodeOverview(c *ui.Context, n *kube.Node, list *kube.ResourceList, read boo
 			facts = append(facts, [2]string{locales.KubeOverviewMemory(), locales.KubeOverviewGiB(n.Requested.Memory/(1<<30), n.Allocatable.Memory/(1<<30))})
 		}
 	}
+	if n.Usage != nil {
+		facts = append(facts, [2]string{locales.KubeMetricsUsage(), metricsCPU(n.Usage.CPU) + " · " + metricsMemory(n.Usage.Memory)})
+	}
 	factRows(c, facts)
 	if list.NodePodsErr != nil {
 		ui.Column(c).Padding(4, 16).Children(func() { warningRow(c, list.NodePodsErr.Error()) })

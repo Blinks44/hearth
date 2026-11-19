@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "metadata": {"namespace": "shop", "name": "checkout"},
+      "timestamp": "2026-11-19T09:01:00Z",
+      "containers": [
+        {"name": "api", "usage": {"cpu": "180000000n", "memory": "96Mi"}},
+        {"name": "worker", "usage": {"cpu": "0", "memory": "0"}}
+      ]
+    },
+    {
+      "metadata": {"namespace": "tools", "name": "checkout"},
+      "timestamp": "2026-11-19T09:01:00Z",
+      "containers": [{"name": "api", "usage": {"cpu": "250u", "memory": "2Mi"}}]
+    },
+    {
+      "metadata": {"namespace": "shop", "name": "recreated"},
+      "timestamp": "2026-11-19T08:59:00Z",
+      "containers": [{"name": "api", "usage": {"cpu": "1", "memory": "1Gi"}}]
+    }
+  ]
+}

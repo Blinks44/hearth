@@ -27,6 +27,7 @@ type Node struct {
 	Name, Version, OS, Runtime string
 	Ready, Cordoned            bool
 	Allocatable, Requested     Resources
+	Usage                      *Resources
 	PodCapacity                int
 	Conditions                 []NodeCondition
 	Taints                     []Taint
@@ -127,21 +128,21 @@ func (q *quantity) UnmarshalJSON(data []byte) error {
 
 type resourceSpec struct {
 	Requests quantities `json:"requests"`
+	Limits   quantities `json:"limits"`
+}
+
+type podResourceSpec struct {
+	Resources      resourceSpec   `json:"resources"`
+	Overhead       quantities     `json:"overhead"`
+	Containers     []podContainer `json:"containers"`
+	InitContainers []podContainer `json:"initContainers"`
 }
 
 type podResources struct {
 	meta
 	Spec struct {
-		NodeName   string       `json:"nodeName"`
-		Resources  resourceSpec `json:"resources"`
-		Overhead   quantities   `json:"overhead"`
-		Containers []struct {
-			Resources resourceSpec `json:"resources"`
-		} `json:"containers"`
-		InitContainers []struct {
-			Resources     resourceSpec `json:"resources"`
-			RestartPolicy string       `json:"restartPolicy"`
-		} `json:"initContainers"`
+		podResourceSpec
+		NodeName string `json:"nodeName"`
 	} `json:"spec"`
 	Status struct {
 		Phase string `json:"phase"`
@@ -151,26 +152,65 @@ type podResources struct {
 // requests is the effective request declared in the pod spec: the greater
 // of the initialization peak and the steady state, with pod-level requests
 // taking precedence and pod overhead added afterwards.
-func (p podResources) requests() Resources {
+func (p podResourceSpec) requests() Resources {
 	var peak, steady Resources
-	for _, init := range p.Spec.InitContainers {
+	for _, init := range p.InitContainers {
 		concurrent := steady.add(init.Resources.Requests.resources())
 		peak = peak.max(concurrent)
 		if init.RestartPolicy == "Always" {
 			steady = concurrent
 		}
 	}
-	for _, c := range p.Spec.Containers {
+	for _, c := range p.Containers {
 		steady = steady.add(c.Resources.Requests.resources())
 	}
 	requested := steady.max(peak)
-	if q := p.Spec.Resources.Requests; q.CPU.set {
+	if q := p.Resources.Requests; q.CPU.set {
 		requested.CPU = q.CPU.value
 	}
-	if q := p.Spec.Resources.Requests; q.Memory.set {
+	if q := p.Resources.Requests; q.Memory.set {
 		requested.Memory = q.Memory.value
 	}
-	return requested.add(p.Spec.Overhead.resources())
+	return requested.add(p.Overhead.resources())
+}
+
+// limits returns each finite steady-state limit. A missing container limit
+// leaves that resource unbounded unless the pod declares a shared limit.
+func (p podResourceSpec) limits() Resources {
+	var total Resources
+	cpuBound, memoryBound := true, true
+	add := func(c podContainer) {
+		l := c.Resources.Limits.resources()
+		cpuBound = cpuBound && l.CPU > 0
+		memoryBound = memoryBound && l.Memory > 0
+		total = total.add(l)
+	}
+	for _, c := range p.Containers {
+		add(c)
+	}
+	for _, c := range p.InitContainers {
+		if c.RestartPolicy == "Always" {
+			add(c)
+		}
+	}
+	if q := p.Resources.Limits.CPU; q.set {
+		total.CPU, cpuBound = q.value, q.value > 0
+	}
+	if q := p.Resources.Limits.Memory; q.set {
+		total.Memory, memoryBound = q.value, q.value > 0
+	}
+	overhead := p.Overhead.resources()
+	if cpuBound && total.CPU > 0 {
+		total.CPU += overhead.CPU
+	} else {
+		total.CPU = 0
+	}
+	if memoryBound && total.Memory > 0 {
+		total.Memory += overhead.Memory
+	} else {
+		total.Memory = 0
+	}
+	return total
 }
 
 func addNodeRequests(nodes []Node, items []json.RawMessage) error {
@@ -191,7 +231,7 @@ func addNodeRequests(nodes []Node, items []json.RawMessage) error {
 			return fmt.Errorf("kubectl get pod %s: %w", m.Metadata.Name, err)
 		}
 		if i, ok := indices[p.Spec.NodeName]; ok && p.Status.Phase != "Succeeded" && p.Status.Phase != "Failed" {
-			nodes[i].Requested = nodes[i].Requested.add(p.requests())
+			nodes[i].Requested = nodes[i].Requested.add(p.Spec.requests())
 		}
 	}
 	return nil

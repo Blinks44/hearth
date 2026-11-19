@@ -36,6 +36,178 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeMetricsInitContainers says "Init containers"
+// in the language the app shows.
+//
+// Kubernetes Pod section for init containers.
+func KubeMetricsInitContainers() string { return In(i18n.Locale()).KubeMetricsInitContainers() }
+
+// KubeMetricsInitContainers says "Init containers"
+// in the language of msgs.
+//
+// Kubernetes Pod section for init containers.
+func (msgs Messages) KubeMetricsInitContainers() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsInitContainers", nil)
+}
+
+// KubeMetricsUsage says "Usage"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Usage
+func KubeMetricsUsage() string { return In(i18n.Locale()).KubeMetricsUsage() }
+
+// KubeMetricsUsage says "Usage"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Usage
+func (msgs Messages) KubeMetricsUsage() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsUsage", nil)
+}
+
+// KubeMetricsRequest says "Request"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Request
+func KubeMetricsRequest() string { return In(i18n.Locale()).KubeMetricsRequest() }
+
+// KubeMetricsRequest says "Request"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Request
+func (msgs Messages) KubeMetricsRequest() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsRequest", nil)
+}
+
+// KubeMetricsLimit says "Limit"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Limit
+func KubeMetricsLimit() string { return In(i18n.Locale()).KubeMetricsLimit() }
+
+// KubeMetricsLimit says "Limit"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Limit
+func (msgs Messages) KubeMetricsLimit() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsLimit", nil)
+}
+
+// KubeMetricsMemory says "Memory"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Memory
+func KubeMetricsMemory() string { return In(i18n.Locale()).KubeMetricsMemory() }
+
+// KubeMetricsMemory says "Memory"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Memory
+func (msgs Messages) KubeMetricsMemory() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsMemory", nil)
+}
+
+// KubeMetricsUnavailable says "No metrics-server (kubectl top: “Metrics API not available”). Resource requests are still available."
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Unavailable
+func KubeMetricsUnavailable() string { return In(i18n.Locale()).KubeMetricsUnavailable() }
+
+// KubeMetricsUnavailable says "No metrics-server (kubectl top: “Metrics API not available”). Resource requests are still available."
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Unavailable
+func (msgs Messages) KubeMetricsUnavailable() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsUnavailable", nil)
+}
+
+// KubeMetricsForbidden says "No permission to read CPU and memory usage."
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Forbidden
+func KubeMetricsForbidden() string { return In(i18n.Locale()).KubeMetricsForbidden() }
+
+// KubeMetricsForbidden says "No permission to read CPU and memory usage."
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Forbidden
+func (msgs Messages) KubeMetricsForbidden() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsForbidden", nil)
+}
+
+// KubeMetricsFailed says "Could not read CPU and memory usage."
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Failed
+func KubeMetricsFailed() string { return In(i18n.Locale()).KubeMetricsFailed() }
+
+// KubeMetricsFailed says "Could not read CPU and memory usage."
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Failed
+func (msgs Messages) KubeMetricsFailed() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsFailed", nil)
+}
+
+// KubeMetricsNoSample says "No usage sample yet"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: NoSample
+func KubeMetricsNoSample() string { return In(i18n.Locale()).KubeMetricsNoSample() }
+
+// KubeMetricsNoSample says "No usage sample yet"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: NoSample
+func (msgs Messages) KubeMetricsNoSample() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsNoSample", nil)
+}
+
+// KubeMetricsMillicores says "{value, number, ::precision-integer}m"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: Millicores
+func KubeMetricsMillicores(value float64) string {
+	return In(i18n.Locale()).KubeMetricsMillicores(value)
+}
+
+// KubeMetricsMillicores says "{value, number, ::precision-integer}m"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: Millicores
+func (msgs Messages) KubeMetricsMillicores(value float64) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsMillicores", map[string]any{"value": value})
+}
+
+// KubeMetricsMiB says "{value, number, ::precision-integer} MiB"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: MiB
+func KubeMetricsMiB(value float64) string { return In(i18n.Locale()).KubeMetricsMiB(value) }
+
+// KubeMetricsMiB says "{value, number, ::precision-integer} MiB"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: MiB
+func (msgs Messages) KubeMetricsMiB(value float64) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsMiB", map[string]any{"value": value})
+}
+
+// KubeMetricsNodeUse says "Usage {cpu} · {memory}"
+// in the language the app shows.
+//
+// Kubernetes resource metrics: NodeUse
+func KubeMetricsNodeUse(cpu string, memory string) string {
+	return In(i18n.Locale()).KubeMetricsNodeUse(cpu, memory)
+}
+
+// KubeMetricsNodeUse says "Usage {cpu} · {memory}"
+// in the language of msgs.
+//
+// Kubernetes resource metrics: NodeUse
+func (msgs Messages) KubeMetricsNodeUse(cpu string, memory string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsNodeUse", map[string]any{"cpu": cpu, "memory": memory})
+}
+
 // KubeNodeSearch says "Name, label or taint"
 // in the language the app shows.
 func KubeNodeSearch() string { return In(i18n.Locale()).KubeNodeSearch() }

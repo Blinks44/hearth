@@ -118,7 +118,7 @@ func TestKubeCluster(t *testing.T) {
 	w.got[0](shopCluster(), nil)
 	tt.Frame()
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p", "CrashLoopBackOff", "1/2", "14", "kind-worker", "2h", "Running")
+	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p", "CrashLoopBackOff", "1/2", "14", "CPU", "MEMORY", "Running")
 	screenshot(t, tt, "kube-cluster")
 	// The pod in trouble comes first.
 	texts := tt.Texts()
@@ -129,9 +129,12 @@ func TestKubeCluster(t *testing.T) {
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "checkout-api", "2 of 3 ready", "2/3", "12d")
+	if got := w.running(); len(got) != 1 || got[0].Metrics || len(w.targets) != 2 || !w.stopped[0] {
+		t.Fatalf("expected workload watch without metrics after leaving Pods: %+v", got)
+	}
 
 	// A later read fails: the data stays, saying it is old.
-	w.got[0](kube.Cluster{}, &kube.Error{Access: detect.KubeAccess{State: detect.KubeUnreachable, Detail: "dial tcp: connection refused"}})
+	w.got[1](kube.Cluster{}, &kube.Error{Access: detect.KubeAccess{State: detect.KubeUnreachable, Detail: "dial tcp: connection refused"}})
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "not answering", "2/3")
@@ -139,8 +142,8 @@ func TestKubeCluster(t *testing.T) {
 	// Building the view again starts nothing more.
 	tt.Frame()
 	tt.Advance(time.Second)
-	if len(w.targets) != 1 {
-		t.Fatalf("watches = %d, want 1", len(w.targets))
+	if len(w.targets) != 2 {
+		t.Fatalf("watches = %d, want 2", len(w.targets))
 	}
 
 	// Another context: the last watch stops, the new one reads its
@@ -165,7 +168,7 @@ func TestKubeCluster(t *testing.T) {
 	}
 
 	// Nothing read: why, kubectl's words and a button to read again.
-	w.got[1](kube.Cluster{}, &kube.Error{Access: detect.KubeAccess{State: detect.KubeNeedsLogin, Detail: "error: You must be logged in to the server (Unauthorized)"}})
+	w.got[2](kube.Cluster{}, &kube.Error{Access: detect.KubeAccess{State: detect.KubeNeedsLogin, Detail: "error: You must be logged in to the server (Unauthorized)"}})
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "Sign-in needed", "error: You must be logged in to the server (Unauthorized)", "sign-in needed")
@@ -174,7 +177,7 @@ func TestKubeCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if len(w.targets) != 3 || !w.stopped[1] || w.targets[2].Context != "production" {
+	if len(w.targets) != 4 || !w.stopped[2] || w.targets[3].Context != "production" {
 		t.Fatalf("read again: %+v %v", w.targets, w.stopped)
 	}
 

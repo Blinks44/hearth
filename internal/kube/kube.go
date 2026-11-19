@@ -37,6 +37,8 @@ type Target struct {
 	Namespaces []string
 	// Overview includes nodes, their requests and recent warnings.
 	Overview bool
+	// Metrics reads CPU and memory use alongside the selected view.
+	Metrics bool
 	// Batch includes Jobs and CronJobs.
 	Batch bool
 	// Services reads the service list instead of workloads.
@@ -81,29 +83,33 @@ type Pod struct {
 	// the pod's own message, as an eviction's.
 	Reason, Message string
 	// Unscheduled is the scheduler's message while no node takes the pod.
-	Unscheduled string
-	Ready       int
-	Restarts    int
-	Containers  []Container
-	TCPPorts    []int
-	Node        string
-	IP, QoS     string
-	Account     string
-	Labels      map[string]string
+	Unscheduled                string
+	Ready                      int
+	Restarts                   int
+	Containers, InitContainers []Container
+	TCPPorts                   []int
+	Node                       string
+	IP, QoS                    string
+	Account                    string
+	Labels                     map[string]string
 	// Volumes are the volumes the pod declares, without the API token
 	// every pod gets.
-	Volumes []string
-	Claims  []string
-	Created time.Time
+	Volumes          []string
+	Claims           []string
+	Created          time.Time
+	Requests, Limits Resources
+	Usage            *Resources
 	// Owner is zero for a pod nothing owns.
 	Owner Owner
 }
 
 // Container is a pod's container and its status.
 type Container struct {
-	Name, Image string
-	Ready       bool
-	Restarts    int
+	Name, Image      string
+	Ready            bool
+	Restarts         int
+	Requests, Limits Resources
+	Usage            *Resources
 	// State is running, waiting or terminated; empty before the
 	// container has a status.
 	State string
@@ -172,6 +178,7 @@ type Cluster struct {
 	HelmReleases []HelmRelease
 	Secrets      []Secret
 	Resources    *ResourceList
+	MetricsErr   error
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -198,8 +205,12 @@ func (e *Error) Error() string {
 
 // get runs kubectl get with the target's context and decodes its JSON.
 func get(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args []string, v any) error {
+	return kubectlJSON(ctx, r, env, t, slices.Concat(args, []string{"--output=json"}), v)
+}
+
+func kubectlJSON(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args []string, v any) error {
 	argv := append([]string{t.Kubectl, "--context=" + t.Context, "get"}, args...)
-	argv = append(argv, "--output=json", "--request-timeout=15s")
+	argv = append(argv, "--request-timeout=15s")
 	out, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Timeout: timeout, MaxOutput: 64 << 20})
 	if err != nil {
 		return &Error{Access: detect.KubeAccess{Detail: err.Error()}}
@@ -289,6 +300,16 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 	}
 	if t.Overview {
 		c.Overview = readOverview(ctx, r, env, t, scopes, allPods)
+		if t.Metrics && len(c.Overview.Nodes) > 0 {
+			values, err := nodeMetrics(ctx, r, env, t)
+			c.MetricsErr = err
+			for i := range c.Overview.Nodes {
+				n := &c.Overview.Nodes[i]
+				n.Usage = values[n.Name]
+			}
+		}
+	} else if t.Metrics && len(c.Pods) > 0 {
+		c.MetricsErr = addPodMetrics(ctx, r, env, t, c.Pods)
 	}
 	if t.Events.UID != "" {
 		events, err := readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
@@ -546,9 +567,11 @@ type containerStatus struct {
 }
 
 type podContainer struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
-	Ports []struct {
+	Name          string       `json:"name"`
+	Image         string       `json:"image"`
+	Resources     resourceSpec `json:"resources"`
+	RestartPolicy string       `json:"restartPolicy"`
+	Ports         []struct {
 		Name     string `json:"name"`
 		Number   int    `json:"containerPort"`
 		Protocol string `json:"protocol"`
@@ -558,24 +581,24 @@ type podContainer struct {
 type pod struct {
 	meta
 	Spec struct {
-		NodeName           string         `json:"nodeName"`
-		ServiceAccountName string         `json:"serviceAccountName"`
-		Containers         []podContainer `json:"containers"`
-		InitContainers     []podContainer `json:"initContainers"`
-		Volumes            []struct {
+		NodeName           string `json:"nodeName"`
+		ServiceAccountName string `json:"serviceAccountName"`
+		podResourceSpec
+		Volumes []struct {
 			Name                  string                     `json:"name"`
 			Projected             *json.RawMessage           `json:"projected"`
 			PersistentVolumeClaim struct{ ClaimName string } `json:"persistentVolumeClaim"`
 		} `json:"volumes"`
 	} `json:"spec"`
 	Status struct {
-		Phase             string            `json:"phase"`
-		Reason            string            `json:"reason"`
-		Message           string            `json:"message"`
-		PodIP             string            `json:"podIP"`
-		QOSClass          string            `json:"qosClass"`
-		ContainerStatuses []containerStatus `json:"containerStatuses"`
-		Conditions        []struct {
+		Phase                 string            `json:"phase"`
+		Reason                string            `json:"reason"`
+		Message               string            `json:"message"`
+		PodIP                 string            `json:"podIP"`
+		QOSClass              string            `json:"qosClass"`
+		ContainerStatuses     []containerStatus `json:"containerStatuses"`
+		InitContainerStatuses []containerStatus `json:"initContainerStatuses"`
+		Conditions            []struct {
 			Type    string `json:"type"`
 			Status  string `json:"status"`
 			Reason  string `json:"reason"`
@@ -700,6 +723,7 @@ func (p pod) pod(owner Owner) Pod {
 		Phase: p.Status.Phase, Reason: p.Status.Reason, Message: p.Status.Message,
 		Node: p.Spec.NodeName, IP: p.Status.PodIP, QoS: p.Status.QOSClass, Account: p.Spec.ServiceAccountName,
 		Labels: maps.Clone(p.Metadata.Labels), Created: p.Metadata.CreationTimestamp, Owner: owner,
+		Requests: p.Spec.requests(), Limits: p.Spec.limits(),
 	}
 	for _, v := range p.Spec.Volumes {
 		// Every pod gets a projected kube-api-access volume: no news.
@@ -709,31 +733,16 @@ func (p pod) pod(owner Owner) Pod {
 		out.Volumes = append(out.Volumes, v.Name)
 	}
 	out.Claims = p.claims()
-	statuses := map[string]containerStatus{}
-	for _, s := range p.Status.ContainerStatuses {
-		statuses[s.Name] = s
-	}
+	out.Containers = containerViews(p.Spec.Containers, p.Status.ContainerStatuses)
+	out.InitContainers = containerViews(p.Spec.InitContainers, p.Status.InitContainerStatuses)
 	for _, spec := range p.Spec.Containers {
-		ct := Container{Name: spec.Name, Image: spec.Image}
 		for _, port := range spec.Ports {
 			if (port.Protocol == "TCP" || port.Protocol == "") && !slices.Contains(out.TCPPorts, port.Number) {
 				out.TCPPorts = append(out.TCPPorts, port.Number)
 			}
 		}
-		if s, ok := statuses[spec.Name]; ok {
-			ct.Ready, ct.Restarts = s.Ready, s.RestartCount
-			ct.Last = s.LastState.Terminated.run()
-			switch st := s.State; {
-			case st.Waiting != nil:
-				ct.State, ct.Reason, ct.Message = "waiting", st.Waiting.Reason, st.Waiting.Message
-			case st.Terminated != nil:
-				ct.State, ct.Reason, ct.Message = "terminated", st.Terminated.Reason, st.Terminated.Message
-				ct.Ended = st.Terminated.run()
-			case st.Running != nil:
-				ct.State, ct.Started = "running", st.Running.StartedAt
-			}
-		}
-		out.Containers = append(out.Containers, ct)
+	}
+	for _, ct := range out.Containers {
 		if ct.Ready {
 			out.Ready++
 		}
@@ -757,4 +766,31 @@ func (p pod) pod(owner Owner) Pod {
 		}
 	}
 	return out
+}
+
+func containerViews(specs []podContainer, states []containerStatus) []Container {
+	statuses := make(map[string]containerStatus, len(states))
+	for _, status := range states {
+		statuses[status.Name] = status
+	}
+	var containers []Container
+	for _, spec := range specs {
+		ct := Container{Name: spec.Name, Image: spec.Image,
+			Requests: spec.Resources.Requests.resources(), Limits: spec.Resources.Limits.resources()}
+		if s, ok := statuses[spec.Name]; ok {
+			ct.Ready, ct.Restarts = s.Ready, s.RestartCount
+			ct.Last = s.LastState.Terminated.run()
+			switch st := s.State; {
+			case st.Waiting != nil:
+				ct.State, ct.Reason, ct.Message = "waiting", st.Waiting.Reason, st.Waiting.Message
+			case st.Terminated != nil:
+				ct.State, ct.Reason, ct.Message = "terminated", st.Terminated.Reason, st.Terminated.Message
+				ct.Ended = st.Terminated.run()
+			case st.Running != nil:
+				ct.State, ct.Started = "running", st.Running.StartedAt
+			}
+		}
+		containers = append(containers, ct)
+	}
+	return containers
 }

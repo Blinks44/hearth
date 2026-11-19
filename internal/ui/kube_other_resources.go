@@ -186,8 +186,13 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		tracks[1] = ui.Fixed(166)
 	}
 	if cl.Resources.Kind == kube.Nodes {
+		metricsNotice(c, cl.MetricsErr)
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116)}
 		headers = headers[:2]
+		if uid == "" {
+			tracks = append(tracks, ui.Fixed(110), ui.Fixed(110))
+			headers = append(headers, "CPU", locales.KubeMetricsMemory())
+		}
 	}
 	workloadPanes(c, func() {
 		resourceHead(c, tracks, headers...)
@@ -214,6 +219,9 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 				if r.Node == nil {
 					created := otherResourceAge(c, r)
 					clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
+				} else if uid == "" {
+					podMetricCell(c, r.Node.Usage, kube.Resources{}, false)
+					podMetricCell(c, r.Node.Usage, kube.Resources{}, true)
 				}
 			})
 		}

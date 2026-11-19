@@ -419,7 +419,7 @@ func TestKubeWorkloadColumns(t *testing.T) {
 					t.Errorf("%q starts at %g, status column starts at %g", value, got.X, status.X)
 				}
 			}
-			for _, pair := range [][2]string{{"READY", "1/2"}, {"RESTARTS", "14"}, {"NODE", "kind-worker"}, {"AGE", "2h"}} {
+			for _, pair := range [][2]string{{"READY", "1/2"}, {"RESTARTS", "14"}} {
 				if head, value := find(pair[0]), find(pair[1]); head.X != value.X {
 					t.Errorf("%s and %s start at %g and %g", pair[0], pair[1], head.X, value.X)
 				}

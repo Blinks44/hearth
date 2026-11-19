@@ -158,7 +158,8 @@ func (a *App) syncCluster() {
 		name := a.router.Query("context")
 		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
 			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
-			t.Overview = a.cluster.kind == kindOverview
+			t.Overview = s.kind == kindOverview
+			t.Metrics = s.kind == kindPods || t.Overview || s.kind == kindNodes
 			t.Batch = t.Overview || isBatchKind(a.cluster.kind)
 			t.Secrets = s.kind == kindSecrets
 			t.Services = s.kind == kindServices
@@ -186,7 +187,7 @@ func (a *App) syncCluster() {
 	running := ""
 	if target != "" {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%s#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Resource, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%s#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Resource, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return

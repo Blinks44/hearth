@@ -203,6 +203,7 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		toolNote(c, locales.KubeClusterNoPods())
 		return
 	}
+	metricsNotice(c, cl.MetricsErr)
 	groups := podGroups(shown)
 	var uid string
 	var detail func()
@@ -212,11 +213,19 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		detail = func() { a.podDetail(c, cl, resource) }
 	}
 	compact := chosen >= 0
-	tracks := append([]ui.Track{ui.Fixed(18)}, workloadTracks(c, compact)...)
+	columns := workloadTracks(c, compact)
+	if !compact {
+		columns[4], columns[5] = ui.Fixed(110), ui.Fixed(90)
+		if narrow(c) {
+			columns[1], columns[2], columns[3] = ui.Fixed(120), ui.Fixed(48), ui.Fixed(82)
+			columns[4], columns[5] = ui.Fixed(90), ui.Fixed(98)
+		}
+	}
+	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("pods-panes"), func() {
 		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
 		if !compact {
-			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
+			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterRestarts(), "CPU", locales.KubeMetricsMemory())
 		}
 		workloadHead(c, tracks, func() {
 			s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
@@ -347,12 +356,8 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui
 				if p.Restarts > 0 && trouble {
 					restarts.TextColor(t.Danger)
 				}
-				node := p.Node
-				if node == "" {
-					node = "–"
-				}
-				clipped(c, node).Font(FontMono).FontSize(12)
-				ui.Text(c, age(c, p.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
+				podMetricCell(c, p.Usage, p.Limits, false)
+				podMetricCell(c, p.Usage, p.Limits, true)
 			})
 			if trouble && !compact {
 				ui.Row(c).Gap(6).AlignItems(ui.Start).Children(func() {
@@ -510,9 +515,19 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			}
 			storyCard(c, story, actions)
 		}
+		detailSection(c, locales.KubeMetricsUsage())
+		workloadMetrics(c, p.Usage, p.Requests, p.Limits)
 		detailSection(c, locales.KubeContainers(len(p.Containers)))
 		for _, ct := range p.Containers {
 			containerRow(c, ct)
+			workloadMetrics(c, ct.Usage, ct.Requests, ct.Limits)
+		}
+		if len(p.InitContainers) > 0 {
+			detailSection(c, locales.KubeMetricsInitContainers())
+			for _, ct := range p.InitContainers {
+				containerRow(c, ct)
+				workloadMetrics(c, ct.Usage, ct.Requests, ct.Limits)
+			}
 		}
 		detailSection(c, locales.KubeFacts())
 		facts := [][2]string{{locales.KubePodIP(), p.IP}, {"QoS", p.QoS}, {"Service account", p.Account}, {locales.KubeNode(), p.Node}}

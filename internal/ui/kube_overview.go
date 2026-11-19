@@ -62,6 +62,7 @@ func (a *App) clusterOverview(c *ui.Context, cl *kube.Cluster) {
 			return locales.KubeOverviewGiB(req/(1<<30), total/(1<<30))
 		})
 	})
+	metricsNotice(c, cl.MetricsErr)
 	columns(c, 14, func() { a.overviewAttention(c, cl) }, func() {
 		a.overviewNodes(c, o)
 		a.overviewWarnings(c, o)
@@ -256,6 +257,9 @@ func overviewNodeRow(c *ui.Context, n kube.Node, requests bool) {
 			clipped(c, n.Name).Font(FontMono).FontSize(12).Grow(1).MinWidth(0)
 			overviewCaption(c, locales.KubeOverviewNodeRequests(labels[0], labels[1]), pal.TextFaint)
 		})
+		if n.Usage != nil {
+			overviewCaption(c, locales.KubeMetricsNodeUse(metricsCPU(n.Usage.CPU), metricsMemory(n.Usage.Memory)), pal.TextFaint)
+		}
 		if requests {
 			ui.Row(c).Gap(8).Children(func() {
 				for _, share := range shares {
