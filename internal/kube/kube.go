@@ -1,5 +1,5 @@
 // Package kube reads a cluster through kubectl for the cluster view: its
-// namespaces, pods and workloads, and the events of the one shown. It runs
+// namespaces, pods, workloads and events. It runs
 // only while the view is open and never from the scan; it reads and
 // changes nothing else. kubectl brings the kubeconfig's sign-in, as for
 // the access check.
@@ -33,6 +33,10 @@ type Target struct {
 	Kubectl, Context string
 	// Namespaces are those to read; none reads them all.
 	Namespaces []string
+	// Overview includes nodes, their requests and recent warnings.
+	Overview bool
+	// Batch includes Jobs and CronJobs.
+	Batch bool
 	// Services reads the service list instead of workloads.
 	Services bool
 	// Events is the object whose events to read too; zero reads none.
@@ -147,12 +151,16 @@ type Event struct {
 	Type, Reason, Message string
 	Count                 int
 	Last                  time.Time
+	Object                Owner
+	Namespace             string
 }
 
 // Cluster is what one read found.
 type Cluster struct {
 	Pods        []Pod
 	Deployments []Deployment
+	Overview    *Overview
+	Batch       *Batch
 	Services    []Service
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
@@ -214,8 +222,8 @@ func Namespaces(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 }
 
 // Read reads the target's pods and Deployments, in one kubectl get for
-// each namespace, or one for all of them, the events of its Events object
-// and the last line its Tail container wrote.
+// each namespace, or one for all of them, and the optional overview,
+// object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
 	scopes := make([][]string, 0, max(len(t.Namespaces), 1))
 	for _, ns := range t.Namespaces {
@@ -229,6 +237,15 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 		services, err := readServices(ctx, r, env, t, scopes)
 		return Cluster{Services: services, Taken: time.Now()}, err
 	}
+	if t.Batch {
+		c.Batch = readBatch(ctx, r, env, t, scopes)
+		if !t.Overview {
+			// Batch views can be used with rights only to Jobs and CronJobs.
+			c.Taken = time.Now()
+			return c, nil
+		}
+	}
+	var allPods []json.RawMessage
 	for _, scope := range scopes {
 		var list struct {
 			Items []json.RawMessage `json:"items"`
@@ -239,9 +256,15 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 		if err := c.add(list.Items); err != nil {
 			return Cluster{}, err
 		}
+		if t.Overview && len(t.Namespaces) == 0 {
+			allPods = list.Items
+		}
+	}
+	if t.Overview {
+		c.Overview = readOverview(ctx, r, env, t, scopes, allPods)
 	}
 	if t.Events.UID != "" {
-		events, err := readEvents(ctx, r, env, t)
+		events, err := readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
 		if err != nil {
 			return Cluster{}, err
 		}
@@ -254,8 +277,8 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 	return c, nil
 }
 
-// readEvents reads the events of the target's Events object.
-func readEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]Event, error) {
+// readEvents reads core/v1 events, newest first.
+func readEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args []string) ([]Event, error) {
 	var list struct {
 		Items []struct {
 			Type           string    `json:"type"`
@@ -265,19 +288,24 @@ func readEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]
 			LastTimestamp  time.Time `json:"lastTimestamp"`
 			EventTime      time.Time `json:"eventTime"`
 			FirstTimestamp time.Time `json:"firstTimestamp"`
-			Series         *struct {
+			Object         struct {
+				Kind      string `json:"kind"`
+				Name      string `json:"name"`
+				Namespace string `json:"namespace"`
+			} `json:"involvedObject"`
+			Series *struct {
 				Count            int       `json:"count"`
 				LastObservedTime time.Time `json:"lastObservedTime"`
 			} `json:"series"`
 		} `json:"items"`
 	}
-	args := []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID}
 	if err := get(ctx, r, env, t, args, &list); err != nil {
 		return nil, err
 	}
 	events := make([]Event, 0, len(list.Items))
 	for _, it := range list.Items {
-		e := Event{Type: it.Type, Reason: it.Reason, Message: it.Message, Count: max(it.Count, 1)}
+		e := Event{Type: it.Type, Reason: it.Reason, Message: it.Message, Count: max(it.Count, 1),
+			Object: Owner{Kind: it.Object.Kind, Name: it.Object.Name}, Namespace: it.Object.Namespace}
 		// Newer clusters report through eventTime and series, older ones
 		// through lastTimestamp and count.
 		for _, at := range []time.Time{it.LastTimestamp, it.EventTime, it.FirstTimestamp} {
@@ -416,6 +444,7 @@ type meta struct {
 		OwnerReferences   []struct {
 			Kind       string `json:"kind"`
 			Name       string `json:"name"`
+			UID        string `json:"uid"`
 			Controller bool   `json:"controller"`
 		} `json:"ownerReferences"`
 	} `json:"metadata"`

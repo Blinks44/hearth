@@ -1,0 +1,323 @@
+package ui
+
+import (
+	"cmp"
+	"fmt"
+	"slices"
+	"strconv"
+	"strings"
+
+	"github.com/egoist/mygo/ui"
+
+	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/locales"
+)
+
+// Batch filters use the conditions reported by the controller. A retry
+// does not make a Job failed until its Failed condition is true.
+const (
+	batchAll = iota
+	batchFailed
+	batchRunning
+	batchSuspended
+)
+
+func lastCronFailed(j kube.CronJob) bool { return len(j.Runs) > 0 && j.Runs[0].State == kube.JobFailed }
+
+func jobState(c *ui.Context, state kube.JobState) (text string, bg, fg ui.Color) {
+	t := c.Theme()
+	pal := Colors(t)
+	switch state {
+	case kube.JobFailed:
+		return locales.KubeJobFailed(), pal.DangerSoft, pal.DangerText
+	case kube.JobSucceeded:
+		return locales.KubeJobSucceeded(), pal.SuccessSoft, pal.SuccessText
+	case kube.JobRunning:
+		return locales.KubeJobRunning(), pal.InfoSoft, pal.InfoText
+	case kube.JobSuspended:
+		return locales.KubeJobSuspended(), pal.Muted, t.TextMuted
+	default:
+		return locales.KubeJobPending(), pal.WarningSoft, pal.WarningText
+	}
+}
+
+func batchMatches(query, name, namespace string) bool {
+	return strings.Contains(strings.ToLower(namespace+"/"+name), strings.ToLower(strings.TrimSpace(query)))
+}
+
+func batchKindFilter(selected int, failed, running, suspended bool) bool {
+	switch selected {
+	case batchFailed:
+		return failed
+	case batchRunning:
+		return running
+	case batchSuspended:
+		return suspended
+	default:
+		return true
+	}
+}
+
+func (a *App) batchFilters(c *ui.Context, filter *int, counts [4]int, placeholder string) {
+	s := &a.cluster
+	ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+		segments(c, "batch-filter", filter, []segment{
+			{locales.TabAll(), strconv.Itoa(counts[batchAll])},
+			{locales.KubeJobFilterFailed(), strconv.Itoa(counts[batchFailed])},
+			{locales.KubeJobRunning(), strconv.Itoa(counts[batchRunning])},
+			{locales.KubeJobSuspended(), strconv.Itoa(counts[batchSuspended])},
+		})
+		ui.Box(c).Grow(1)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(placeholder).Width(240).MinWidth(100)
+	})
+}
+
+func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
+	if batch.JobsErr != nil {
+		toolNote(c, locales.KubeBatchReadError("Jobs", a.accessWords(batch.JobsErr)))
+		return
+	}
+	s := &a.cluster
+	var counts [4]int
+	var shown []kube.Job
+	for _, j := range batch.Jobs {
+		failed, running, suspended := j.State == kube.JobFailed, j.State == kube.JobRunning, j.State == kube.JobSuspended
+		for i := range counts {
+			if batchKindFilter(i, failed, running, suspended) {
+				counts[i]++
+			}
+		}
+		if batchKindFilter(s.jobFilter, failed, running, suspended) && batchMatches(s.query, j.Name, j.Namespace) {
+			shown = append(shown, j)
+		}
+	}
+	a.batchFilters(c.Key("jobs"), &s.jobFilter, counts, locales.KubeJobSearch())
+	if len(shown) == 0 {
+		toolNote(c, locales.KubeBatchEmpty("Jobs"))
+		return
+	}
+	slices.SortStableFunc(shown, func(a, b kube.Job) int {
+		return cmp.Compare(batchIssueOrder(a.State == kube.JobFailed), batchIssueOrder(b.State == kube.JobFailed))
+	})
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge()}, func() {
+		for _, j := range shown {
+			batchRow(c.Key(j.UID), j.State == kube.JobFailed, func() {
+				batchName(c, j.Name, j.Namespace)
+				ui.Column(c).Grow(1).Basis(0).MinWidth(0).AlignItems(ui.Start).Children(func() {
+					text, bg, fg := jobState(c, j.State)
+					aiTag(c, text, bg, fg)
+				})
+				batchText(c, fmt.Sprintf("%d/%d", j.Completed, j.Want))
+				batchText(c, age(c, j.Created))
+			}, jobFailure(j))
+		}
+	})
+}
+
+func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
+	if batch.CronJobsErr != nil {
+		toolNote(c, locales.KubeBatchReadError("CronJobs", a.accessWords(batch.CronJobsErr)))
+		return
+	}
+	s := &a.cluster
+	var counts [4]int
+	var shown []kube.CronJob
+	for _, j := range batch.CronJobs {
+		for i := range counts {
+			if batchKindFilter(i, lastCronFailed(j), j.Active > 0, j.Suspended) {
+				counts[i]++
+			}
+		}
+		if batchKindFilter(s.cronJobFilter, lastCronFailed(j), j.Active > 0, j.Suspended) && batchMatches(s.query, j.Name, j.Namespace) {
+			shown = append(shown, j)
+		}
+	}
+	a.batchFilters(c.Key("cronjobs"), &s.cronJobFilter, counts, locales.KubeCronSearch())
+	if len(shown) == 0 {
+		toolNote(c, locales.KubeBatchEmpty("CronJobs"))
+		return
+	}
+	slices.SortStableFunc(shown, func(a, b kube.CronJob) int {
+		return cmp.Compare(batchIssueOrder(lastCronFailed(a)), batchIssueOrder(lastCronFailed(b)))
+	})
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus()}, func() {
+		for _, j := range shown {
+			failure := ""
+			if lastCronFailed(j) {
+				failure = j.Runs[0].Name + " · " + jobFailure(j.Runs[0])
+			}
+			batchRow(c.Key(j.UID), lastCronFailed(j), func() {
+				batchName(c, j.Name, j.Namespace)
+				ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(1).Children(func() {
+					clipped(c, j.Schedule).Font(FontMono).FontSize(12)
+					caption := cronCaption(j.Schedule)
+					if j.TimeZone != "" {
+						caption = strings.TrimPrefix(caption+" · "+j.TimeZone, " · ")
+					}
+					overviewCaption(c, caption, Colors(c.Theme()).TextFaint)
+				})
+				a.cronHistory(c, j.Runs, batch.JobsErr)
+				status := locales.KubeCronScheduled()
+				if j.Suspended {
+					status = locales.KubeJobSuspended()
+				} else if j.Active > 0 {
+					status = locales.KubeJobRunning()
+				}
+				batchText(c, status)
+			}, failure)
+		}
+	})
+}
+
+func batchIssueOrder(failed bool) int {
+	if failed {
+		return 0
+	}
+	return 1
+}
+
+func jobFailure(j kube.Job) string {
+	if j.State != kube.JobFailed {
+		return ""
+	}
+	if j.Message != "" {
+		return j.Message
+	}
+	if j.Reason != "" {
+		return j.Reason
+	}
+	return locales.KubeJobFailed()
+}
+
+func batchTable(c *ui.Context, headers []string, rows func()) {
+	pal := Colors(c.Theme())
+	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).Children(func() {
+			for i, header := range headers {
+				ui.Text(c, strings.ToUpper(header)).FontSize(10.5).TextColor(pal.TextFaint).Grow(batchColumnWeight(i)).Basis(0).MinWidth(0).SingleLine()
+			}
+		})
+		rows()
+	})
+}
+
+func batchColumnWeight(i int) float32 {
+	if i == 0 {
+		return 1.35
+	}
+	return 1
+}
+
+func batchRow(c *ui.Context, failed bool, cells func(), message string) {
+	pal := Colors(c.Theme())
+	row := ui.Column(c).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Gap(4).Padding(8, 16)
+	if failed {
+		row.Background(pal.DangerSoft.Alpha(0.4))
+	}
+	row.Children(func() {
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(cells)
+		if message != "" {
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, Icon("circle-alert")).Size(13, 13).TextColor(pal.DangerText).Shrink(0)
+				clipped(c, message).FontSize(11.5).TextColor(pal.DangerText).Grow(1).MinWidth(0)
+			})
+		}
+	})
+}
+
+func batchName(c *ui.Context, name, namespace string) {
+	ui.Column(c).Grow(batchColumnWeight(0)).Basis(0).MinWidth(0).Gap(1).Children(func() {
+		clipped(c, name).FontSize(13).FontWeight(500)
+		overviewCaption(c, namespace, Colors(c.Theme()).TextFaint)
+	})
+}
+
+func batchText(c *ui.Context, text string) {
+	clipped(c, text).FontSize(12).TextColor(c.Theme().TextMuted).Grow(1).Basis(0).MinWidth(0)
+}
+
+func (a *App) cronHistory(c *ui.Context, runs []kube.Job, err error) {
+	pal := Colors(c.Theme())
+	ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(3).Children(func() {
+		if err != nil {
+			overviewCaption(c, a.accessWords(err), pal.WarningText)
+			return
+		}
+		if len(runs) == 0 {
+			overviewCaption(c, locales.KubeCronNoRuns(), pal.TextFaint)
+			return
+		}
+		ui.Row(c).Gap(3).Children(func() {
+			for range 10 - len(runs) {
+				ui.Box(c).Size(6, 14).Radius(2).Background(pal.Line)
+			}
+			for _, j := range slices.Backward(runs) {
+				label, _, fg := jobState(c, j.State)
+				ui.Box(c.Key(j.UID)).Size(6, 14).Radius(2).Background(fg).Tooltip(j.Name + " · " + label + " · " + age(c, j.Created))
+			}
+		})
+		last := runs[0]
+		label, _, fg := jobState(c, last.State)
+		overviewCaption(c, label+" · "+age(c, last.Created), fg)
+	})
+}
+
+// cronCaption describes common schedules. The table always shows the exact
+// expression, including schedules with lists, ranges or day-of-month rules.
+func cronCaption(schedule string) string {
+	switch schedule {
+	case "@hourly":
+		return locales.KubeCronHourly()
+	case "@daily", "@midnight":
+		return locales.KubeCronDaily("00:00")
+	case "@weekly":
+		return locales.KubeCronWeekly("0", "00:00")
+	case "@monthly":
+		return locales.KubeCronMonthly()
+	case "@yearly", "@annually":
+		return locales.KubeCronYearly()
+	}
+	f := strings.Fields(schedule)
+	if len(f) != 5 || f[2] != "*" || f[3] != "*" {
+		return ""
+	}
+	minute, hour := cronNumber(f[0], 59), cronNumber(f[1], 23)
+	if f[4] == "*" {
+		if n, ok := strings.CutPrefix(f[0], "*/"); ok && f[1] == "*" {
+			if step := cronNumber(n, 59); step > 0 && 60%step == 0 {
+				return locales.KubeCronMinutes(step)
+			}
+		}
+		if minute == 0 && f[1] == "*" {
+			return locales.KubeCronHourly()
+		}
+		if n, ok := strings.CutPrefix(f[1], "*/"); ok && minute == 0 {
+			if step := cronNumber(n, 23); step > 0 {
+				return locales.KubeCronHours(step)
+			}
+		}
+	}
+	if minute < 0 || hour < 0 {
+		return ""
+	}
+	at := fmt.Sprintf("%02d:%02d", hour, minute)
+	if f[4] == "*" {
+		return locales.KubeCronDaily(at)
+	}
+	day := cronNumber(f[4], 6)
+	if day < 0 {
+		day = slices.Index([]string{"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"}, strings.ToUpper(f[4]))
+	}
+	if day >= 0 {
+		return locales.KubeCronWeekly(strconv.Itoa(day), at)
+	}
+	return ""
+}
+
+func cronNumber(s string, maxValue int) int {
+	n, err := strconv.Atoi(s)
+	if err != nil || n < 0 || n > maxValue {
+		return -1
+	}
+	return n
+}

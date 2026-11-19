@@ -10311,6 +10311,249 @@
       }
     }
   },
+  "kubeOverview": "Cluster overview",
+  "@kubeOverview": {
+    "description": "Name of the cluster overview view."
+  },
+  "kubeOverviewNodes": "Nodes",
+  "@kubeOverviewNodes": {
+    "description": "Cluster overview: nodes card and list."
+  },
+  "kubeOverviewNode": "Node · {name}",
+  "@kubeOverviewNode": {
+    "description": "Cluster overview: node name in a problem row.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeOverviewNodeNoReady": "The node is not ready.",
+  "@kubeOverviewNodeNoReady": {
+    "description": "Cluster overview: a node is not ready."
+  },
+  "kubeOverviewCPU": "CPU: requested",
+  "@kubeOverviewCPU": {
+    "description": "Cluster overview: requested CPU, as a share of allocatable CPU."
+  },
+  "kubeOverviewMemory": "Memory: requested",
+  "@kubeOverviewMemory": {
+    "description": "Cluster overview: requested memory, as a share of allocatable memory."
+  },
+  "kubeOverviewPodProblems": "{count} need attention",
+  "@kubeOverviewPodProblems": {
+    "description": "Cluster overview: how many pods need attention.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeOverviewNoCapacity": "No allocatable capacity",
+  "@kubeOverviewNoCapacity": {
+    "description": "Cluster overview: no allocatable capacity to base the percentage on."
+  },
+  "kubeOverviewCores": "{requested, number, ::.#} of {total, number, ::.#} cores",
+  "@kubeOverviewCores": {
+    "description": "Cluster overview: requested and allocatable CPU in cores.",
+    "placeholders": {
+      "requested": {
+        "type": "double"
+      },
+      "total": {
+        "type": "double"
+      }
+    }
+  },
+  "kubeOverviewGiB": "{requested, number, ::.#} of {total, number, ::.#} GiB",
+  "@kubeOverviewGiB": {
+    "description": "Cluster overview: requested and allocatable memory in GiB.",
+    "placeholders": {
+      "requested": {
+        "type": "double"
+      },
+      "total": {
+        "type": "double"
+      }
+    }
+  },
+  "kubeOverviewAttention": "Needs attention",
+  "@kubeOverviewAttention": {
+    "description": "Cluster overview: problems panel title."
+  },
+  "kubeOverviewNoProblems": "No problems found.",
+  "@kubeOverviewNoProblems": {
+    "description": "Cluster overview: no issues found in the resources displayed."
+  },
+  "kubeOverviewNoWorkloadProblems": "No workload problems found.",
+  "@kubeOverviewNoWorkloadProblems": {
+    "description": "Cluster overview: workloads have no issues, but nodes could not be read."
+  },
+  "kubeOverviewNoNodes": "No nodes found.",
+  "@kubeOverviewNoNodes": {
+    "description": "Cluster overview: empty node list."
+  },
+  "kubeOverviewNodeRequests": "CPU {cpu} · memory {memory}",
+  "@kubeOverviewNodeRequests": {
+    "description": "Cluster overview: CPU and memory request percentages for one node.",
+    "placeholders": {
+      "cpu": {
+        "type": "String"
+      },
+      "memory": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeOverviewWarnings": "Warnings",
+  "@kubeOverviewWarnings": {
+    "description": "Cluster overview: warnings panel title."
+  },
+  "kubeOverviewLastHour": "last hour · {count}",
+  "@kubeOverviewLastHour": {
+    "description": "Cluster overview: number of warning event records last seen within an hour.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeOverviewNoWarnings": "No warnings in the last hour.",
+  "@kubeOverviewNoWarnings": {
+    "description": "Cluster overview: no warning events in the last hour."
+  },
+  "kubeKindSearch": "Resource kind: pods, jobs…",
+  "@kubeKindSearch": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobFailed": "Failed",
+  "@kubeJobFailed": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobSucceeded": "Succeeded",
+  "@kubeJobSucceeded": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobRunning": "Running",
+  "@kubeJobRunning": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobSuspended": "Suspended",
+  "@kubeJobSuspended": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobPending": "Pending",
+  "@kubeJobPending": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobFilterFailed": "With errors",
+  "@kubeJobFilterFailed": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobCompleted": "Completions",
+  "@kubeJobCompleted": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeJobSearch": "Job name or namespace",
+  "@kubeJobSearch": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronSearch": "CronJob name or namespace",
+  "@kubeCronSearch": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeBatchReadError": "Could not read {kind}: {reason}.",
+  "@kubeBatchReadError": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeBatchEmpty": "No matching {kind}.",
+  "@kubeBatchEmpty": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronSchedule": "Schedule",
+  "@kubeCronSchedule": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronRuns": "Recent runs",
+  "@kubeCronRuns": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronNoRuns": "No Jobs in history",
+  "@kubeCronNoRuns": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronScheduled": "Scheduled",
+  "@kubeCronScheduled": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronMinutes": "Every {count} min",
+  "@kubeCronMinutes": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeCronHours": "Every {count} h from midnight",
+  "@kubeCronHours": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeCronHourly": "Every hour",
+  "@kubeCronHourly": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronDaily": "Daily at {at}",
+  "@kubeCronDaily": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronWeekly": "{day, select, 0 {Sundays} 1 {Mondays} 2 {Tuesdays} 3 {Wednesdays} 4 {Thursdays} 5 {Fridays} 6 {Saturdays} other {Weekly}} at {at}",
+  "@kubeCronWeekly": {
+    "description": "Kubernetes workload view or resource picker.",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronMonthly": "First day of each month at 00:00",
+  "@kubeCronMonthly": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeCronYearly": "January 1 at 00:00",
+  "@kubeCronYearly": {
+    "description": "Kubernetes workload view or resource picker."
+  },
+  "kubeKindsAll": "All resources",
+  "@kubeKindsAll": {
+    "description": "Kubernetes workload view or resource picker."
+  },
   "kubeClusterOpen": "Open",
   "@kubeClusterOpen": {
     "description": "Kubernetes context row: open the context's cluster view."

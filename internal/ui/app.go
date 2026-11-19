@@ -321,9 +321,17 @@ func (a *App) View(c *ui.Context) {
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
-	if a.cluster.logs != nil && a.router.Path() == kubeClusterPage {
-		// Wherever the focus is, as the button that opened the log is gone.
-		c.OnShortcut(0, ui.KeyEscape, a.closeLogs)
+	if a.router.Path() == kubeClusterPage {
+		c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleClusterKinds)
+	}
+	if a.router.Path() == kubeClusterPage {
+		switch {
+		case a.cluster.kindsOpen:
+			c.OnShortcut(0, ui.KeyEscape, func() { a.cluster.kindsOpen = false })
+		case a.cluster.logs != nil:
+			// Wherever the focus is, as the button that opened the log is gone.
+			c.OnShortcut(0, ui.KeyEscape, a.closeLogs)
+		}
 	}
 	// A focused text field types the slash; elsewhere it goes to the
 	// page's filter.

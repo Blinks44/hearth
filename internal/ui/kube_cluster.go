@@ -33,6 +33,9 @@ func kubeClusterPath(name string) string {
 const (
 	kindPods = iota
 	kindDeployments
+	kindOverview
+	kindJobs
+	kindCronJobs
 	kindServices
 )
 
@@ -46,13 +49,19 @@ type kubeClusterState struct {
 	// reads, with refresh, and stop ends it.
 	target, running string
 	refresh         int
+	watch           int
 	stop            func()
 	data            *kube.Cluster
+	batchData       bool
 	err             error
 	// failedAt is when the last read failed, after data was read.
 	failedAt time.Time
 
 	contextOpen, namespaceOpen bool
+	kindsOpen                  bool
+	kindQuery                  string
+	kindSelected               int
+	jobFilter, cronJobFilter   int
 	serviceFilter              int
 	serviceSort                string
 	forward                    *forwardForm
@@ -122,14 +131,17 @@ func (a *App) syncCluster() {
 	if a.router.Path() == kubeClusterPage && a.WatchCluster != nil {
 		name := a.router.Query("context")
 		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
-			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name), Services: s.kind == kindServices}
+			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
+			t.Overview = a.cluster.kind == kindOverview
+			t.Batch = t.Overview || isBatchKind(a.cluster.kind)
+			t.Services = s.kind == kindServices
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
 		}
 	}
 	running := ""
 	if target != "" {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%s#%+v", target, s.refresh, t.Services, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -139,6 +151,7 @@ func (a *App) syncCluster() {
 		s.stop = nil
 	}
 	s.running = running
+	s.watch++
 	if target != s.target {
 		// Another cluster or namespace: what was read is not its.
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
@@ -147,8 +160,9 @@ func (a *App) syncCluster() {
 	if running == "" {
 		return
 	}
+	watch := s.watch
 	s.stop = a.WatchCluster(t, func(cl kube.Cluster, err error) {
-		if s.running != running {
+		if s.watch != watch {
 			return
 		}
 		if err != nil {
@@ -156,6 +170,7 @@ func (a *App) syncCluster() {
 			return
 		}
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+		s.batchData = t.Batch && !t.Overview
 	})
 }
 
@@ -173,9 +188,11 @@ func (a *App) detailRef() kube.Ref {
 		}
 		return kube.Ref{}
 	}
-	for _, p := range s.data.Pods {
-		if p.UID == s.pod {
-			return kube.Ref{Namespace: p.Namespace, UID: p.UID}
+	if s.kind == kindPods {
+		for _, p := range s.data.Pods {
+			if p.UID == s.pod {
+				return kube.Ref{Namespace: p.Namespace, UID: p.UID}
+			}
 		}
 	}
 	return kube.Ref{}
@@ -204,13 +221,14 @@ func (a *App) StopCluster() {
 	if a.cluster.stop != nil {
 		a.cluster.stop()
 		a.cluster.stop, a.cluster.running = nil, ""
+		a.cluster.watch++
 	}
 	a.stopLogs()
 }
 
 // openCluster shows the cluster of the context name.
 func (a *App) openCluster(name string) {
-	a.cluster.contextOpen = false
+	a.cluster.contextOpen, a.cluster.kindsOpen = false, false
 	a.router.Push(kubeClusterPath(name))
 }
 
@@ -265,7 +283,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				a.kindChips(c)
 				a.forwardList(c, name)
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
-				waiting := s.data == nil || (s.kind == kindServices) != (s.data.Services != nil)
+				waiting := s.data == nil || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
@@ -283,10 +301,16 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
 					}
 					switch s.kind {
+					case kindOverview:
+						a.clusterOverview(c, s.data)
 					case kindDeployments:
 						a.deploymentsView(c, s.data)
 					case kindPods:
 						a.podsView(c, s.data)
+					case kindJobs:
+						a.jobsView(c, s.data.Batch)
+					case kindCronJobs:
+						a.cronJobsView(c, s.data.Batch)
 					case kindServices:
 						a.servicesView(c, s.data.Services)
 					}
@@ -371,14 +395,10 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		}
 		ui.Popover(c, anchor, &s.namespaceOpen, func() { a.namespacePopover(c, name) })
 		pathSlash(c)
-		kinds := []string{"Pods", "Deployments", "Services"}
-		pathButton(c, "cluster-kind", "lucide/"+[]string{"box", "boxes", "network"}[s.kind], kinds[s.kind]).PopoverMenuButton(func(m *ui.Menu) {
-			for i, k := range kinds {
-				if m.Item(k).Radio(s.kind == i && s.logs == nil).Chosen() {
-					s.kind, s.logs = i, nil
-				}
-			}
-		})
+		kind := clusterKindOptions()[s.kind]
+		anchor = pathButton(c, "cluster-kind", "lucide/"+kind.icon, kind.label)
+		anchor.OnClick(a.toggleClusterKinds)
+		ui.Popover(c, anchor, &s.kindsOpen, func() { a.clusterKindPicker(c) })
 		if s.logs != nil {
 			a.logsCrumb(c)
 			ui.Box(c).Grow(1).Height(1)
@@ -648,20 +668,31 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 // need attention.
 func (a *App) kindChips(c *ui.Context) {
 	s := &a.cluster
-	pods, deployments, services := 0, 0, 0
-	if s.data != nil {
-		pods = len(slices.DeleteFunc(slices.Clone(s.data.Pods), func(p kube.Pod) bool { return !podTrouble(p) }))
-		deployments = len(slices.DeleteFunc(slices.Clone(s.data.Deployments), func(d kube.Deployment) bool { return !deploymentTrouble(d) }))
-		for _, svc := range s.data.Services {
-			if serviceHasNoPods(svc) {
-				services++
-			}
+	options := clusterKindOptions()
+	ui.Row(c).Gap(6).Wrap().Children(func() {
+		if s.kind != kindOverview {
+			k := options[kindOverview]
+			kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0)
 		}
-	}
-	ui.Row(c).Gap(8).Children(func() {
-		kindChip(c, &s.kind, kindPods, "box", "Pods", pods)
-		kindChip(c, &s.kind, kindDeployments, "boxes", "Deployments", deployments)
-		kindChip(c, &s.kind, kindServices, "network", "Services", services)
+		for _, i := range []int{kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices} {
+			k := options[i]
+			_, trouble, _ := clusterKindCounts(s.data, i)
+			kindChip(c, &s.kind, i, k.icon, k.label, trouble)
+		}
+		t := c.Theme()
+		pal := Colors(t)
+		b := ui.ButtonBase(c.Key("all-kinds")).Height(28).Padding(0, 11).Radius(14).AlignItems(ui.Center).Gap(6).
+			BorderWidth(1).BorderColor(pal.ControlBorder).Label(locales.KubeKindsAll()).OnClick(a.toggleClusterKinds)
+		if b.Hovered() {
+			b.Background(pal.Muted)
+		}
+		b.Children(func() {
+			ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(t.TextMuted)
+			ui.Text(c, locales.KubeKindsAll()).FontSize(12.5).TextColor(t.TextMuted)
+			if !narrow(c) {
+				ui.Text(c, cmdKey("J")).FontSize(10).TextColor(pal.TextFaint)
+			}
+		})
 	})
 }
 

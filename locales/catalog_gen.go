@@ -25952,6 +25952,608 @@ func (msgs Messages) KindLinkLine(project string, context string) string {
 	return Catalog.Format(msgs.locale, "kindLinkLine", map[string]any{"project": project, "context": context})
 }
 
+// KubeOverview says "Cluster overview"
+// in the language the app shows.
+//
+// Name of the cluster overview view.
+func KubeOverview() string { return In(i18n.Locale()).KubeOverview() }
+
+// KubeOverview says "Cluster overview"
+// in the language of msgs.
+//
+// Name of the cluster overview view.
+func (msgs Messages) KubeOverview() string {
+	return Catalog.Format(msgs.locale, "kubeOverview", nil)
+}
+
+// KubeOverviewNodes says "Nodes"
+// in the language the app shows.
+//
+// Cluster overview: nodes card and list.
+func KubeOverviewNodes() string { return In(i18n.Locale()).KubeOverviewNodes() }
+
+// KubeOverviewNodes says "Nodes"
+// in the language of msgs.
+//
+// Cluster overview: nodes card and list.
+func (msgs Messages) KubeOverviewNodes() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNodes", nil)
+}
+
+// KubeOverviewNode says "Node · {name}"
+// in the language the app shows.
+//
+// Cluster overview: node name in a problem row.
+func KubeOverviewNode(name string) string { return In(i18n.Locale()).KubeOverviewNode(name) }
+
+// KubeOverviewNode says "Node · {name}"
+// in the language of msgs.
+//
+// Cluster overview: node name in a problem row.
+func (msgs Messages) KubeOverviewNode(name string) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNode", map[string]any{"name": name})
+}
+
+// KubeOverviewNodeNoReady says "The node is not ready."
+// in the language the app shows.
+//
+// Cluster overview: a node is not ready.
+func KubeOverviewNodeNoReady() string { return In(i18n.Locale()).KubeOverviewNodeNoReady() }
+
+// KubeOverviewNodeNoReady says "The node is not ready."
+// in the language of msgs.
+//
+// Cluster overview: a node is not ready.
+func (msgs Messages) KubeOverviewNodeNoReady() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNodeNoReady", nil)
+}
+
+// KubeOverviewCPU says "CPU: requested"
+// in the language the app shows.
+//
+// Cluster overview: requested CPU, as a share of allocatable CPU.
+func KubeOverviewCPU() string { return In(i18n.Locale()).KubeOverviewCPU() }
+
+// KubeOverviewCPU says "CPU: requested"
+// in the language of msgs.
+//
+// Cluster overview: requested CPU, as a share of allocatable CPU.
+func (msgs Messages) KubeOverviewCPU() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewCPU", nil)
+}
+
+// KubeOverviewMemory says "Memory: requested"
+// in the language the app shows.
+//
+// Cluster overview: requested memory, as a share of allocatable memory.
+func KubeOverviewMemory() string { return In(i18n.Locale()).KubeOverviewMemory() }
+
+// KubeOverviewMemory says "Memory: requested"
+// in the language of msgs.
+//
+// Cluster overview: requested memory, as a share of allocatable memory.
+func (msgs Messages) KubeOverviewMemory() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewMemory", nil)
+}
+
+// KubeOverviewPodProblems says "{count} need attention"
+// in the language the app shows.
+//
+// Cluster overview: how many pods need attention.
+func KubeOverviewPodProblems(count int) string {
+	return In(i18n.Locale()).KubeOverviewPodProblems(count)
+}
+
+// KubeOverviewPodProblems says "{count} need attention"
+// in the language of msgs.
+//
+// Cluster overview: how many pods need attention.
+func (msgs Messages) KubeOverviewPodProblems(count int) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewPodProblems", map[string]any{"count": count})
+}
+
+// KubeOverviewNoCapacity says "No allocatable capacity"
+// in the language the app shows.
+//
+// Cluster overview: no allocatable capacity to base the percentage on.
+func KubeOverviewNoCapacity() string { return In(i18n.Locale()).KubeOverviewNoCapacity() }
+
+// KubeOverviewNoCapacity says "No allocatable capacity"
+// in the language of msgs.
+//
+// Cluster overview: no allocatable capacity to base the percentage on.
+func (msgs Messages) KubeOverviewNoCapacity() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNoCapacity", nil)
+}
+
+// KubeOverviewCores says "{requested, number, ::.#} of {total, number, ::.#} cores"
+// in the language the app shows.
+//
+// Cluster overview: requested and allocatable CPU in cores.
+func KubeOverviewCores(requested float64, total float64) string {
+	return In(i18n.Locale()).KubeOverviewCores(requested, total)
+}
+
+// KubeOverviewCores says "{requested, number, ::.#} of {total, number, ::.#} cores"
+// in the language of msgs.
+//
+// Cluster overview: requested and allocatable CPU in cores.
+func (msgs Messages) KubeOverviewCores(requested float64, total float64) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewCores", map[string]any{"requested": requested, "total": total})
+}
+
+// KubeOverviewGiB says "{requested, number, ::.#} of {total, number, ::.#} GiB"
+// in the language the app shows.
+//
+// Cluster overview: requested and allocatable memory in GiB.
+func KubeOverviewGiB(requested float64, total float64) string {
+	return In(i18n.Locale()).KubeOverviewGiB(requested, total)
+}
+
+// KubeOverviewGiB says "{requested, number, ::.#} of {total, number, ::.#} GiB"
+// in the language of msgs.
+//
+// Cluster overview: requested and allocatable memory in GiB.
+func (msgs Messages) KubeOverviewGiB(requested float64, total float64) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewGiB", map[string]any{"requested": requested, "total": total})
+}
+
+// KubeOverviewAttention says "Needs attention"
+// in the language the app shows.
+//
+// Cluster overview: problems panel title.
+func KubeOverviewAttention() string { return In(i18n.Locale()).KubeOverviewAttention() }
+
+// KubeOverviewAttention says "Needs attention"
+// in the language of msgs.
+//
+// Cluster overview: problems panel title.
+func (msgs Messages) KubeOverviewAttention() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewAttention", nil)
+}
+
+// KubeOverviewNoProblems says "No problems found."
+// in the language the app shows.
+//
+// Cluster overview: no issues found in the resources displayed.
+func KubeOverviewNoProblems() string { return In(i18n.Locale()).KubeOverviewNoProblems() }
+
+// KubeOverviewNoProblems says "No problems found."
+// in the language of msgs.
+//
+// Cluster overview: no issues found in the resources displayed.
+func (msgs Messages) KubeOverviewNoProblems() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNoProblems", nil)
+}
+
+// KubeOverviewNoWorkloadProblems says "No workload problems found."
+// in the language the app shows.
+//
+// Cluster overview: workloads have no issues, but nodes could not be read.
+func KubeOverviewNoWorkloadProblems() string {
+	return In(i18n.Locale()).KubeOverviewNoWorkloadProblems()
+}
+
+// KubeOverviewNoWorkloadProblems says "No workload problems found."
+// in the language of msgs.
+//
+// Cluster overview: workloads have no issues, but nodes could not be read.
+func (msgs Messages) KubeOverviewNoWorkloadProblems() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNoWorkloadProblems", nil)
+}
+
+// KubeOverviewNoNodes says "No nodes found."
+// in the language the app shows.
+//
+// Cluster overview: empty node list.
+func KubeOverviewNoNodes() string { return In(i18n.Locale()).KubeOverviewNoNodes() }
+
+// KubeOverviewNoNodes says "No nodes found."
+// in the language of msgs.
+//
+// Cluster overview: empty node list.
+func (msgs Messages) KubeOverviewNoNodes() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNoNodes", nil)
+}
+
+// KubeOverviewNodeRequests says "CPU {cpu} · memory {memory}"
+// in the language the app shows.
+//
+// Cluster overview: CPU and memory request percentages for one node.
+func KubeOverviewNodeRequests(cpu string, memory string) string {
+	return In(i18n.Locale()).KubeOverviewNodeRequests(cpu, memory)
+}
+
+// KubeOverviewNodeRequests says "CPU {cpu} · memory {memory}"
+// in the language of msgs.
+//
+// Cluster overview: CPU and memory request percentages for one node.
+func (msgs Messages) KubeOverviewNodeRequests(cpu string, memory string) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNodeRequests", map[string]any{"cpu": cpu, "memory": memory})
+}
+
+// KubeOverviewWarnings says "Warnings"
+// in the language the app shows.
+//
+// Cluster overview: warnings panel title.
+func KubeOverviewWarnings() string { return In(i18n.Locale()).KubeOverviewWarnings() }
+
+// KubeOverviewWarnings says "Warnings"
+// in the language of msgs.
+//
+// Cluster overview: warnings panel title.
+func (msgs Messages) KubeOverviewWarnings() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewWarnings", nil)
+}
+
+// KubeOverviewLastHour says "last hour · {count}"
+// in the language the app shows.
+//
+// Cluster overview: number of warning event records last seen within an
+// hour.
+func KubeOverviewLastHour(count int) string { return In(i18n.Locale()).KubeOverviewLastHour(count) }
+
+// KubeOverviewLastHour says "last hour · {count}"
+// in the language of msgs.
+//
+// Cluster overview: number of warning event records last seen within an
+// hour.
+func (msgs Messages) KubeOverviewLastHour(count int) string {
+	return Catalog.Format(msgs.locale, "kubeOverviewLastHour", map[string]any{"count": count})
+}
+
+// KubeOverviewNoWarnings says "No warnings in the last hour."
+// in the language the app shows.
+//
+// Cluster overview: no warning events in the last hour.
+func KubeOverviewNoWarnings() string { return In(i18n.Locale()).KubeOverviewNoWarnings() }
+
+// KubeOverviewNoWarnings says "No warnings in the last hour."
+// in the language of msgs.
+//
+// Cluster overview: no warning events in the last hour.
+func (msgs Messages) KubeOverviewNoWarnings() string {
+	return Catalog.Format(msgs.locale, "kubeOverviewNoWarnings", nil)
+}
+
+// KubeKindSearch says "Resource kind: pods, jobs…"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeKindSearch() string { return In(i18n.Locale()).KubeKindSearch() }
+
+// KubeKindSearch says "Resource kind: pods, jobs…"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeKindSearch() string {
+	return Catalog.Format(msgs.locale, "kubeKindSearch", nil)
+}
+
+// KubeJobFailed says "Failed"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobFailed() string { return In(i18n.Locale()).KubeJobFailed() }
+
+// KubeJobFailed says "Failed"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobFailed() string {
+	return Catalog.Format(msgs.locale, "kubeJobFailed", nil)
+}
+
+// KubeJobSucceeded says "Succeeded"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobSucceeded() string { return In(i18n.Locale()).KubeJobSucceeded() }
+
+// KubeJobSucceeded says "Succeeded"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobSucceeded() string {
+	return Catalog.Format(msgs.locale, "kubeJobSucceeded", nil)
+}
+
+// KubeJobRunning says "Running"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobRunning() string { return In(i18n.Locale()).KubeJobRunning() }
+
+// KubeJobRunning says "Running"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobRunning() string {
+	return Catalog.Format(msgs.locale, "kubeJobRunning", nil)
+}
+
+// KubeJobSuspended says "Suspended"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobSuspended() string { return In(i18n.Locale()).KubeJobSuspended() }
+
+// KubeJobSuspended says "Suspended"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobSuspended() string {
+	return Catalog.Format(msgs.locale, "kubeJobSuspended", nil)
+}
+
+// KubeJobPending says "Pending"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobPending() string { return In(i18n.Locale()).KubeJobPending() }
+
+// KubeJobPending says "Pending"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobPending() string {
+	return Catalog.Format(msgs.locale, "kubeJobPending", nil)
+}
+
+// KubeJobFilterFailed says "With errors"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobFilterFailed() string { return In(i18n.Locale()).KubeJobFilterFailed() }
+
+// KubeJobFilterFailed says "With errors"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobFilterFailed() string {
+	return Catalog.Format(msgs.locale, "kubeJobFilterFailed", nil)
+}
+
+// KubeJobCompleted says "Completions"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobCompleted() string { return In(i18n.Locale()).KubeJobCompleted() }
+
+// KubeJobCompleted says "Completions"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobCompleted() string {
+	return Catalog.Format(msgs.locale, "kubeJobCompleted", nil)
+}
+
+// KubeJobSearch says "Job name or namespace"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeJobSearch() string { return In(i18n.Locale()).KubeJobSearch() }
+
+// KubeJobSearch says "Job name or namespace"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeJobSearch() string {
+	return Catalog.Format(msgs.locale, "kubeJobSearch", nil)
+}
+
+// KubeCronSearch says "CronJob name or namespace"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronSearch() string { return In(i18n.Locale()).KubeCronSearch() }
+
+// KubeCronSearch says "CronJob name or namespace"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronSearch() string {
+	return Catalog.Format(msgs.locale, "kubeCronSearch", nil)
+}
+
+// KubeBatchReadError says "Could not read {kind}: {reason}."
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeBatchReadError(kind string, reason string) string {
+	return In(i18n.Locale()).KubeBatchReadError(kind, reason)
+}
+
+// KubeBatchReadError says "Could not read {kind}: {reason}."
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeBatchReadError(kind string, reason string) string {
+	return Catalog.Format(msgs.locale, "kubeBatchReadError", map[string]any{"kind": kind, "reason": reason})
+}
+
+// KubeBatchEmpty says "No matching {kind}."
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeBatchEmpty(kind string) string { return In(i18n.Locale()).KubeBatchEmpty(kind) }
+
+// KubeBatchEmpty says "No matching {kind}."
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeBatchEmpty(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeBatchEmpty", map[string]any{"kind": kind})
+}
+
+// KubeCronSchedule says "Schedule"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronSchedule() string { return In(i18n.Locale()).KubeCronSchedule() }
+
+// KubeCronSchedule says "Schedule"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronSchedule() string {
+	return Catalog.Format(msgs.locale, "kubeCronSchedule", nil)
+}
+
+// KubeCronRuns says "Recent runs"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronRuns() string { return In(i18n.Locale()).KubeCronRuns() }
+
+// KubeCronRuns says "Recent runs"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronRuns() string {
+	return Catalog.Format(msgs.locale, "kubeCronRuns", nil)
+}
+
+// KubeCronNoRuns says "No Jobs in history"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronNoRuns() string { return In(i18n.Locale()).KubeCronNoRuns() }
+
+// KubeCronNoRuns says "No Jobs in history"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronNoRuns() string {
+	return Catalog.Format(msgs.locale, "kubeCronNoRuns", nil)
+}
+
+// KubeCronScheduled says "Scheduled"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronScheduled() string { return In(i18n.Locale()).KubeCronScheduled() }
+
+// KubeCronScheduled says "Scheduled"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronScheduled() string {
+	return Catalog.Format(msgs.locale, "kubeCronScheduled", nil)
+}
+
+// KubeCronMinutes says "Every {count} min"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronMinutes(count int) string { return In(i18n.Locale()).KubeCronMinutes(count) }
+
+// KubeCronMinutes says "Every {count} min"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronMinutes(count int) string {
+	return Catalog.Format(msgs.locale, "kubeCronMinutes", map[string]any{"count": count})
+}
+
+// KubeCronHours says "Every {count} h from midnight"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronHours(count int) string { return In(i18n.Locale()).KubeCronHours(count) }
+
+// KubeCronHours says "Every {count} h from midnight"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronHours(count int) string {
+	return Catalog.Format(msgs.locale, "kubeCronHours", map[string]any{"count": count})
+}
+
+// KubeCronHourly says "Every hour"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronHourly() string { return In(i18n.Locale()).KubeCronHourly() }
+
+// KubeCronHourly says "Every hour"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronHourly() string {
+	return Catalog.Format(msgs.locale, "kubeCronHourly", nil)
+}
+
+// KubeCronDaily says "Daily at {at}"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronDaily(at string) string { return In(i18n.Locale()).KubeCronDaily(at) }
+
+// KubeCronDaily says "Daily at {at}"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronDaily(at string) string {
+	return Catalog.Format(msgs.locale, "kubeCronDaily", map[string]any{"at": at})
+}
+
+// KubeCronWeekly says "{day, select, 0 {Sundays} 1 {Mondays} 2 {Tuesdays} 3 {Wednesdays} 4 {Thursdays} 5 {Fridays} 6 {Saturdays} other {Week…"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronWeekly(day string, at string) string { return In(i18n.Locale()).KubeCronWeekly(day, at) }
+
+// KubeCronWeekly says "{day, select, 0 {Sundays} 1 {Mondays} 2 {Tuesdays} 3 {Wednesdays} 4 {Thursdays} 5 {Fridays} 6 {Saturdays} other {Week…"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronWeekly(day string, at string) string {
+	return Catalog.Format(msgs.locale, "kubeCronWeekly", map[string]any{"day": day, "at": at})
+}
+
+// KubeCronMonthly says "First day of each month at 00:00"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronMonthly() string { return In(i18n.Locale()).KubeCronMonthly() }
+
+// KubeCronMonthly says "First day of each month at 00:00"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronMonthly() string {
+	return Catalog.Format(msgs.locale, "kubeCronMonthly", nil)
+}
+
+// KubeCronYearly says "January 1 at 00:00"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeCronYearly() string { return In(i18n.Locale()).KubeCronYearly() }
+
+// KubeCronYearly says "January 1 at 00:00"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeCronYearly() string {
+	return Catalog.Format(msgs.locale, "kubeCronYearly", nil)
+}
+
+// KubeKindsAll says "All resources"
+// in the language the app shows.
+//
+// Kubernetes workload view or resource picker.
+func KubeKindsAll() string { return In(i18n.Locale()).KubeKindsAll() }
+
+// KubeKindsAll says "All resources"
+// in the language of msgs.
+//
+// Kubernetes workload view or resource picker.
+func (msgs Messages) KubeKindsAll() string {
+	return Catalog.Format(msgs.locale, "kubeKindsAll", nil)
+}
+
 // KubeClusterOpen says "Open"
 // in the language the app shows.
 //
