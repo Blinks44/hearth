@@ -14,7 +14,7 @@ type clusterKind struct {
 	label, icon, alias string
 }
 
-func clusterKindOptions() [kindNodes + 1]clusterKind {
+func clusterKindOptions() [kindCustom + 1]clusterKind {
 	return [...]clusterKind{
 		kindPods:            {"Pods", "box", "po"},
 		kindDeployments:     {"Deployments", "boxes", "deploy"},
@@ -35,6 +35,7 @@ func clusterKindOptions() [kindNodes + 1]clusterKind {
 		kindPVs:             {"PersistentVolumes", "database", "pv"},
 		kindStorageClasses:  {"StorageClasses", "layers", "sc"},
 		kindNodes:           {"Nodes", "cpu", "no"},
+		kindCustom:          {locales.KubeCustomDefinitions(), "boxes", "crd"},
 	}
 }
 
@@ -45,7 +46,7 @@ func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bo
 		return 0, 0, false
 	}
 	if cl.Resources != nil {
-		return len(cl.Resources.Items), 0, cl.Resources.Kind == otherResourceKind(kind)
+		return len(cl.Resources.Items), 0, cl.Resources.Custom == nil && cl.Resources.Kind == otherResourceKind(kind)
 	}
 	switch kind {
 	case kindPods:
@@ -106,6 +107,7 @@ func (a *App) toggleClusterKinds() {
 	if s.kindsOpen {
 		s.kindQuery, s.kindSelected = "", 0
 		s.contextOpen, s.namespaceOpen = false, false
+		a.loadCustomDefinitions(a.router.Query("context"))
 	}
 }
 
@@ -115,24 +117,54 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	pal := Colors(t)
 	options := clusterKindOptions()
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
-	var exact, partial []int
-	for _, i := range []int{kindOverview, kindNodes, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
-		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindPVCs, kindPVs, kindStorageClasses, kindHelm} {
-		kind := options[i]
-		label := strings.ToLower(kind.label)
-		switch {
-		case label == query || kind.alias == query:
-			exact = append(exact, i)
-		case strings.Contains(label, query) || strings.Contains(kind.alias, query):
-			partial = append(partial, i)
+	type entry struct {
+		id    int
+		kind  clusterKind
+		group string
+		def   *kube.CustomDefinition
+	}
+	var exact, partial []entry
+	add := func(e entry, aliases ...string) {
+		terms := append(aliases, strings.ToLower(e.kind.label), e.kind.alias, strings.ToLower(e.group))
+		for _, term := range terms {
+			if term == query && query != "" {
+				exact = append(exact, e)
+				return
+			}
+		}
+		for _, term := range terms {
+			if strings.Contains(term, query) {
+				partial = append(partial, e)
+				return
+			}
+		}
+	}
+	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
+		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm,
+		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindCustom} {
+		group := ""
+		switch i {
+		case kindPVCs, kindPVs, kindStorageClasses:
+			group = locales.KubeCustomStorage()
+		case kindNodes, kindCustom:
+			group = locales.KubeCustomCluster()
+		}
+		add(entry{id: i, kind: options[i], group: group})
+	}
+	if catalog := s.custom.catalog; catalog != nil && catalog.result != nil {
+		for i := range catalog.result.Items {
+			d := &catalog.result.Items[i]
+			alias := d.Names.Singular
+			if len(d.Names.ShortNames) > 0 {
+				alias = d.Names.ShortNames[0]
+			}
+			kind := clusterKind{d.Names.Plural, "boxes", alias}
+			add(entry{id: kindCustom, kind: kind, group: d.Group, def: d}, append([]string{d.Name(), d.Names.Singular}, d.Names.ShortNames...)...)
 		}
 	}
 	results := append(exact, partial...)
 	selected := min(s.kindSelected, max(len(results)-1, 0))
-	choose := func(i int) {
-		s.kind, s.logs, s.kindsOpen = i, nil, false
-		s.storageLink = storageLink{}
-	}
+	choose := func(e entry) { a.selectClusterKind(e.id, e.def) }
 	move := func(by int) {
 		if n := len(results); n > 0 {
 			s.kindSelected = (selected + by + n) % n
@@ -152,10 +184,19 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 			overviewMessage(c, locales.SearchNoResults(s.kindQuery))
 		}
 		ui.Scroll(c.Key("kind-results")).MaxHeight(435).Children(func() {
-			for index, id := range results {
-				kind := options[id]
-				row := ui.ButtonBase(c.Key("pick-kind-"+kind.label)).Height(32).Radius(7).Padding(0, 10).Gap(9).AlignItems(ui.Center).
-					Label(kind.label).OnClick(func() { choose(id) })
+			group := ""
+			for index, entry := range results {
+				id, kind := entry.id, entry.kind
+				if entry.group != group && entry.group != "" {
+					ui.Text(c, strings.ToUpper(entry.group)).FontSize(10.5).TextColor(pal.TextFaint).Margin(8, 0, 4, 10)
+				}
+				group = entry.group
+				key := kind.label
+				if entry.def != nil {
+					key = entry.def.Name()
+				}
+				row := ui.ButtonBase(c.Key("pick-kind-"+key)).Height(32).Radius(7).Padding(0, 10).Gap(9).AlignItems(ui.Center).
+					Label(kind.label).OnClick(func() { choose(entry) })
 				if index == selected {
 					row.Background(pal.AccentSoft)
 					if s.kindScroll {
@@ -167,15 +208,25 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 				}
 				row.Children(func() {
 					fg := t.TextMuted
-					if id == s.kind {
+					if id == s.kind && (id != kindCustom || s.custom.name == "" && entry.def == nil || entry.def != nil && entry.def.Name() == s.custom.name) {
 						fg = pal.AccentInk
 					}
 					ui.Icon(c, Icon(kind.icon)).Size(15, 15).TextColor(fg)
-					ui.Text(c, kind.label).FontSize(13).FontWeight(500)
+					clipped(c, kind.label).FontSize(13).FontWeight(500).MinWidth(0)
 					if id != kindOverview {
 						ui.Text(c, kind.alias).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 					ui.Box(c).Grow(1)
+					if entry.def != nil {
+						if list := s.custom.list(s.data); id == s.kind && entry.def.Name() == s.custom.name {
+							if s.err != nil {
+								clipped(c, a.accessWords(s.err)).FontSize(11).TextColor(pal.TextFaint)
+							} else if list != nil {
+								ui.Text(c, strconv.Itoa(len(list.Items))).FontSize(11).TextColor(pal.TextFaint)
+							}
+						}
+						return
+					}
 					count, trouble, known := clusterKindCounts(s.data, id)
 					if trouble > 0 {
 						aiTag(c, strconv.Itoa(trouble), pal.DangerSoft, pal.DangerText)
@@ -186,5 +237,8 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 				})
 			}
 		})
+		if catalog := s.custom.catalog; catalog != nil && (catalog.result == nil || catalog.result.Err != nil) {
+			a.customCatalogNotice(c)
+		}
 	})
 }

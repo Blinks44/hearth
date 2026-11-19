@@ -1,5 +1,61 @@
 {
   "@@locale": "en",
+  "kubeCustomForbiddenTitle": "No right to read custom resources",
+  "@kubeCustomForbiddenTitle": {
+    "description": "Error when Kubernetes denies access to a custom resource"
+  },
+  "kubeCustomForbiddenText": "The cluster denied this request. Check the permissions of this Kubernetes context.",
+  "@kubeCustomForbiddenText": {
+    "description": "Error when Kubernetes denies access to a custom resource"
+  },
+  "kubeCustomDefinitions": "Custom Resources",
+  "@kubeCustomDefinitions": {
+    "description": "Custom Resource browser: Definitions"
+  },
+  "kubeCustomGroup": "API group",
+  "@kubeCustomGroup": {
+    "description": "Custom Resource browser: Group"
+  },
+  "kubeCustomVersions": "Served versions",
+  "@kubeCustomVersions": {
+    "description": "Custom Resource browser: Versions"
+  },
+  "kubeCustomScope": "Scope",
+  "@kubeCustomScope": {
+    "description": "Custom Resource browser: Scope"
+  },
+  "kubeCustomClusterScoped": "Cluster",
+  "@kubeCustomClusterScoped": {
+    "description": "Custom Resource browser: ClusterScoped"
+  },
+  "kubeCustomNamespaced": "Namespace",
+  "@kubeCustomNamespaced": {
+    "description": "Custom Resource browser: Namespaced"
+  },
+  "kubeCustomConditions": "Conditions",
+  "@kubeCustomConditions": {
+    "description": "Custom Resource browser: Conditions"
+  },
+  "kubeCustomNoConditions": "No conditions reported.",
+  "@kubeCustomNoConditions": {
+    "description": "Custom Resource browser: NoConditions"
+  },
+  "kubeCustomStorage": "Storage",
+  "@kubeCustomStorage": {
+    "description": "Custom Resource browser: Storage"
+  },
+  "kubeCustomCluster": "Cluster",
+  "@kubeCustomCluster": {
+    "description": "Custom Resource browser: Cluster"
+  },
+  "kubeCustomColumns": "Columns from the CRD",
+  "@kubeCustomColumns": {
+    "description": "Custom Resource browser: Columns"
+  },
+  "kubeCustomSearch": "Name or value",
+  "@kubeCustomSearch": {
+    "description": "Custom Resource browser: Search"
+  },
   "kubeMetricsInitContainers": "Init containers",
   "kubeMetricsUsage": "Usage",
   "kubeMetricsRequest": "Request",

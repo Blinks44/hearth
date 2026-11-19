@@ -47,6 +47,8 @@ type Target struct {
 	Secrets bool
 	// Resource reads one of the additional namespaced resource kinds.
 	Resource ResourceKind
+	// CustomKind is a CRD selected by its full name.
+	CustomKind string
 	// Events is the object whose events to read too; zero reads none.
 	Events Ref
 	// Tail is the container whose previous run's last line to read too;
@@ -258,6 +260,9 @@ func namespaceScopes(namespaces []string) [][]string {
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	if t.CustomKind != "" {
+		return readCustomCluster(ctx, r, env, t)
+	}
 	if t.Resource != "" {
 		return readResourceCluster(ctx, r, env, t)
 	}

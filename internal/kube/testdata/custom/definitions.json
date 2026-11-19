@@ -1,0 +1,26 @@
+{
+  "items": [{
+    "spec": {
+      "group": "hearth.example",
+      "scope": "Namespaced",
+      "names": {"plural": "certificates", "singular": "certificate", "kind": "Certificate", "shortNames": ["cert"]},
+      "versions": [
+        {"name":"v1beta1","served":true,"storage":false},
+        {"name":"v1","served":true,"storage":true,"additionalPrinterColumns":[
+          {"name":"Ready","type":"string","jsonPath":".status.conditions[?(@.type==\"Ready\")].status"},
+          {"name":"Revision","type":"integer","jsonPath":".spec.revisions[?(@.slot==1)].id"},
+          {"name":"Enabled","type":"boolean","jsonPath":".spec.enabled"},
+          {"name":"Missing","type":"string","jsonPath":".spec.missing"},
+          {"name":"Mismatch","type":"integer","jsonPath":".spec.enabled"}
+        ]}
+      ]
+    }
+  }, {
+    "spec": {
+      "group": "hearth.example",
+      "scope": "Cluster",
+      "names": {"plural": "issuers", "kind": "Issuer"},
+      "versions": [{"name":"v1","served":false,"storage":true},{"name":"v2","served":true,"storage":false}]
+    }
+  }]
+}

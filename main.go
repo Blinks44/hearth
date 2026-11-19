@@ -218,6 +218,17 @@ func main() {
 				win.Update(func() { done(err) })
 			}()
 		}
+		a.ListCustomDefinitions = func(t kube.Target, done func(*kube.CustomDefinitions)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				defs := kube.ListCustomDefinitions(ctx, run.Exec{}, env, t)
+				if ctx.Err() == nil {
+					win.Update(func() { done(defs) })
+				}
+			}()
+			return cancel
+		}
 		a.ReadResourceYAML = func(t kube.Target, resource kube.Resource, done func(string, error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())

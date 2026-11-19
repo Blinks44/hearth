@@ -51,6 +51,7 @@ const (
 	kindPVs
 	kindStorageClasses
 	kindNodes
+	kindCustom
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -85,6 +86,7 @@ type kubeClusterState struct {
 	forward                    *forwardForm
 	shell                      *shellForm
 	other                      otherResourceView
+	custom                     customResourceView
 	storageLink                storageLink
 	claimFilter, nodeFilter    int
 	resources                  map[ops.KubeResource]*kubeResourceForm
@@ -156,6 +158,9 @@ func (a *App) syncCluster() {
 	target := ""
 	if a.router.Path() == kubeClusterPage && a.WatchCluster != nil {
 		name := a.router.Query("context")
+		if s.custom.context != name {
+			s.custom.reset(name)
+		}
 		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
 			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
 			t.Overview = s.kind == kindOverview
@@ -164,6 +169,9 @@ func (a *App) syncCluster() {
 			t.Secrets = s.kind == kindSecrets
 			t.Services = s.kind == kindServices
 			t.Resource = otherResourceKind(s.kind)
+			if s.kind == kindCustom {
+				t.CustomKind = s.custom.name
+			}
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
 			if s.kind == kindHelm {
 				if helm, found := cliCopy(a.cliState(), "helm"); found {
@@ -185,9 +193,9 @@ func (a *App) syncCluster() {
 		}
 	}
 	running := ""
-	if target != "" {
+	if target != "" && (s.kind != kindCustom || t.CustomKind != "") {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%s#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Resource, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%s#%q#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Resource, t.CustomKind, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -214,6 +222,10 @@ func (a *App) syncCluster() {
 		}
 		if err != nil {
 			s.err, s.failedAt = err, time.Now()
+			if kerr, ok := errors.AsType[*kube.Error](err); t.CustomKind != "" && ok && kerr.Access.State == detect.KubeForbidden {
+				s.data = nil
+				s.other.reset()
+			}
 			return
 		}
 		s.bulk.retain(cl)
@@ -285,6 +297,7 @@ func (a *App) StopCluster() {
 	a.stopLogs()
 	a.cluster.shell = nil
 	a.cluster.other.reset()
+	a.cluster.custom.reset("")
 	a.cluster.secret.reset()
 	a.ClearSecretClipboard()
 }
@@ -332,7 +345,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			return
 		}
 		resourceKind := otherResourceKind(s.kind)
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != ""
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -354,7 +367,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 				helm, hasHelm := cliCopy(a.cliState(), "helm")
 				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
-				if s.data != nil && (resourceKind != "" || s.data.Resources != nil) {
+				if s.kind == kindCustom && s.custom.name != "" {
+					waiting = s.custom.list(s.data) == nil
+				} else if s.data != nil && (resourceKind != "" || s.data.Resources != nil) {
 					waiting = s.data.Resources == nil || s.data.Resources.Kind != resourceKind
 				}
 				switch {
@@ -364,6 +379,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					toolNote(c, locales.KubeClusterNoKubectl())
 				case s.kind == kindHelm && (!hasHelm || errors.Is(s.err, fs.ErrNotExist)):
 					toolNote(c, locales.KubeHelmMissing())
+				case s.kind == kindCustom && s.custom.name == "":
+					a.customDefinitionsView(c)
 				case waiting && s.err != nil:
 					a.clusterError(c, name, s.err)
 				case waiting:
@@ -390,6 +407,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.servicesView(c, s.data.Services)
 					case kindSecrets:
 						a.secretsView(c, s.data.Secrets)
+					case kindCustom:
+						a.customResourcesView(c, s.data)
 					case kindHelm:
 						a.helmView(c, s.data.HelmReleases, helm.Version)
 					default:
@@ -481,6 +500,9 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		ui.Popover(c, anchor, &s.namespaceOpen, func() { a.namespacePopover(c, name) })
 		pathSlash(c)
 		kind := clusterKindOptions()[s.kind]
+		if s.kind == kindCustom && s.custom.name != "" {
+			kind.label = s.custom.label
+		}
 		anchor = pathButton(c, "cluster-kind", "lucide/"+kind.icon, kind.label)
 		anchor.OnClick(a.toggleClusterKinds)
 		ui.Popover(c, anchor, &s.kindsOpen, func() { a.clusterKindPicker(c) })
@@ -498,7 +520,12 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		}
 		ui.Box(c).Grow(1).Height(1)
 		a.freshness(c)
-		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() { s.refresh++ })
+		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() {
+			s.refresh++
+			if s.kind == kindCustom {
+				a.loadCustomDefinitions(name)
+			}
+		})
 	})
 }
 
@@ -528,13 +555,23 @@ func (a *App) freshness(c *ui.Context) {
 	t := c.Theme()
 	pal := Colors(t)
 	dot, text := pal.TextFaint, locales.KubeClusterConnecting()
+	readErr := s.err
+	var taken time.Time
+	if s.kind == kindCustom && s.custom.name == "" {
+		readErr = nil
+		if catalog := s.custom.catalog; catalog != nil && catalog.result != nil {
+			taken, readErr = catalog.taken, catalog.result.Err
+		}
+	} else if s.data != nil {
+		taken = s.data.Taken
+	}
 	switch {
 	case s.kind == kindHelm && a.Snapshot != nil && (cliFound(a.cliState(), []string{"helm"}) == 0 || errors.Is(s.err, fs.ErrNotExist)):
 		dot, text = t.Warning, locales.KubeHelmUnavailable()
-	case s.err != nil:
-		dot, text = t.Warning, a.accessWords(s.err)
-	case s.data != nil:
-		since := max(c.Now().Sub(s.data.Taken), 0)
+	case readErr != nil:
+		dot, text = t.Warning, a.accessWords(readErr)
+	case !taken.IsZero() || s.data != nil && s.kind != kindCustom:
+		since := max(c.Now().Sub(taken), 0)
 		c.After(time.Second - since%time.Second)
 		dot, text = t.Success, locales.KubeClusterFresh(int(since/time.Second))
 	}
@@ -585,7 +622,11 @@ func (a *App) clusterError(c *ui.Context, name string, err error) {
 		case detect.KubeNeedsLogin, detect.KubeAuthFailed:
 			title, text = locales.KubeClusterLoginTitle(), locales.KubeClusterLoginText(name)
 		case detect.KubeForbidden:
-			title, text = locales.KubeClusterForbiddenTitle(), locales.KubeClusterForbiddenText(strings.Join(a.clusterNamespaces(name), ", "))
+			if s.kind == kindCustom {
+				title, text = locales.KubeCustomForbiddenTitle(), locales.KubeCustomForbiddenText()
+			} else {
+				title, text = locales.KubeClusterForbiddenTitle(), locales.KubeClusterForbiddenText(strings.Join(a.clusterNamespaces(name), ", "))
+			}
 		}
 	}
 	if s.kind == kindHelm {

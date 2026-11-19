@@ -36,6 +36,202 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeCustomForbiddenTitle says "No right to read custom resources"
+// in the language the app shows.
+//
+// Error when Kubernetes denies access to a custom resource
+func KubeCustomForbiddenTitle() string { return In(i18n.Locale()).KubeCustomForbiddenTitle() }
+
+// KubeCustomForbiddenTitle says "No right to read custom resources"
+// in the language of msgs.
+//
+// Error when Kubernetes denies access to a custom resource
+func (msgs Messages) KubeCustomForbiddenTitle() string {
+	return Catalog.Format(msgs.locale, "kubeCustomForbiddenTitle", nil)
+}
+
+// KubeCustomForbiddenText says "The cluster denied this request. Check the permissions of this Kubernetes context."
+// in the language the app shows.
+//
+// Error when Kubernetes denies access to a custom resource
+func KubeCustomForbiddenText() string { return In(i18n.Locale()).KubeCustomForbiddenText() }
+
+// KubeCustomForbiddenText says "The cluster denied this request. Check the permissions of this Kubernetes context."
+// in the language of msgs.
+//
+// Error when Kubernetes denies access to a custom resource
+func (msgs Messages) KubeCustomForbiddenText() string {
+	return Catalog.Format(msgs.locale, "kubeCustomForbiddenText", nil)
+}
+
+// KubeCustomDefinitions says "Custom Resources"
+// in the language the app shows.
+//
+// Custom Resource browser: Definitions
+func KubeCustomDefinitions() string { return In(i18n.Locale()).KubeCustomDefinitions() }
+
+// KubeCustomDefinitions says "Custom Resources"
+// in the language of msgs.
+//
+// Custom Resource browser: Definitions
+func (msgs Messages) KubeCustomDefinitions() string {
+	return Catalog.Format(msgs.locale, "kubeCustomDefinitions", nil)
+}
+
+// KubeCustomGroup says "API group"
+// in the language the app shows.
+//
+// Custom Resource browser: Group
+func KubeCustomGroup() string { return In(i18n.Locale()).KubeCustomGroup() }
+
+// KubeCustomGroup says "API group"
+// in the language of msgs.
+//
+// Custom Resource browser: Group
+func (msgs Messages) KubeCustomGroup() string {
+	return Catalog.Format(msgs.locale, "kubeCustomGroup", nil)
+}
+
+// KubeCustomVersions says "Served versions"
+// in the language the app shows.
+//
+// Custom Resource browser: Versions
+func KubeCustomVersions() string { return In(i18n.Locale()).KubeCustomVersions() }
+
+// KubeCustomVersions says "Served versions"
+// in the language of msgs.
+//
+// Custom Resource browser: Versions
+func (msgs Messages) KubeCustomVersions() string {
+	return Catalog.Format(msgs.locale, "kubeCustomVersions", nil)
+}
+
+// KubeCustomScope says "Scope"
+// in the language the app shows.
+//
+// Custom Resource browser: Scope
+func KubeCustomScope() string { return In(i18n.Locale()).KubeCustomScope() }
+
+// KubeCustomScope says "Scope"
+// in the language of msgs.
+//
+// Custom Resource browser: Scope
+func (msgs Messages) KubeCustomScope() string {
+	return Catalog.Format(msgs.locale, "kubeCustomScope", nil)
+}
+
+// KubeCustomClusterScoped says "Cluster"
+// in the language the app shows.
+//
+// Custom Resource browser: ClusterScoped
+func KubeCustomClusterScoped() string { return In(i18n.Locale()).KubeCustomClusterScoped() }
+
+// KubeCustomClusterScoped says "Cluster"
+// in the language of msgs.
+//
+// Custom Resource browser: ClusterScoped
+func (msgs Messages) KubeCustomClusterScoped() string {
+	return Catalog.Format(msgs.locale, "kubeCustomClusterScoped", nil)
+}
+
+// KubeCustomNamespaced says "Namespace"
+// in the language the app shows.
+//
+// Custom Resource browser: Namespaced
+func KubeCustomNamespaced() string { return In(i18n.Locale()).KubeCustomNamespaced() }
+
+// KubeCustomNamespaced says "Namespace"
+// in the language of msgs.
+//
+// Custom Resource browser: Namespaced
+func (msgs Messages) KubeCustomNamespaced() string {
+	return Catalog.Format(msgs.locale, "kubeCustomNamespaced", nil)
+}
+
+// KubeCustomConditions says "Conditions"
+// in the language the app shows.
+//
+// Custom Resource browser: Conditions
+func KubeCustomConditions() string { return In(i18n.Locale()).KubeCustomConditions() }
+
+// KubeCustomConditions says "Conditions"
+// in the language of msgs.
+//
+// Custom Resource browser: Conditions
+func (msgs Messages) KubeCustomConditions() string {
+	return Catalog.Format(msgs.locale, "kubeCustomConditions", nil)
+}
+
+// KubeCustomNoConditions says "No conditions reported."
+// in the language the app shows.
+//
+// Custom Resource browser: NoConditions
+func KubeCustomNoConditions() string { return In(i18n.Locale()).KubeCustomNoConditions() }
+
+// KubeCustomNoConditions says "No conditions reported."
+// in the language of msgs.
+//
+// Custom Resource browser: NoConditions
+func (msgs Messages) KubeCustomNoConditions() string {
+	return Catalog.Format(msgs.locale, "kubeCustomNoConditions", nil)
+}
+
+// KubeCustomStorage says "Storage"
+// in the language the app shows.
+//
+// Custom Resource browser: Storage
+func KubeCustomStorage() string { return In(i18n.Locale()).KubeCustomStorage() }
+
+// KubeCustomStorage says "Storage"
+// in the language of msgs.
+//
+// Custom Resource browser: Storage
+func (msgs Messages) KubeCustomStorage() string {
+	return Catalog.Format(msgs.locale, "kubeCustomStorage", nil)
+}
+
+// KubeCustomCluster says "Cluster"
+// in the language the app shows.
+//
+// Custom Resource browser: Cluster
+func KubeCustomCluster() string { return In(i18n.Locale()).KubeCustomCluster() }
+
+// KubeCustomCluster says "Cluster"
+// in the language of msgs.
+//
+// Custom Resource browser: Cluster
+func (msgs Messages) KubeCustomCluster() string {
+	return Catalog.Format(msgs.locale, "kubeCustomCluster", nil)
+}
+
+// KubeCustomColumns says "Columns from the CRD"
+// in the language the app shows.
+//
+// Custom Resource browser: Columns
+func KubeCustomColumns() string { return In(i18n.Locale()).KubeCustomColumns() }
+
+// KubeCustomColumns says "Columns from the CRD"
+// in the language of msgs.
+//
+// Custom Resource browser: Columns
+func (msgs Messages) KubeCustomColumns() string {
+	return Catalog.Format(msgs.locale, "kubeCustomColumns", nil)
+}
+
+// KubeCustomSearch says "Name or value"
+// in the language the app shows.
+//
+// Custom Resource browser: Search
+func KubeCustomSearch() string { return In(i18n.Locale()).KubeCustomSearch() }
+
+// KubeCustomSearch says "Name or value"
+// in the language of msgs.
+//
+// Custom Resource browser: Search
+func (msgs Messages) KubeCustomSearch() string {
+	return Catalog.Format(msgs.locale, "kubeCustomSearch", nil)
+}
+
 // KubeMetricsInitContainers says "Init containers"
 // in the language the app shows.
 //

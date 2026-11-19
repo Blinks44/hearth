@@ -166,8 +166,9 @@ type App struct {
 	// WatchCluster reads the target's cluster now and again, giving each
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
-	WatchCluster   func(t kube.Target, got func(kube.Cluster, error)) (stop func())
-	ListNamespaces func(t kube.Target, done func([]string, error))
+	WatchCluster          func(t kube.Target, got func(kube.Cluster, error)) (stop func())
+	ListNamespaces        func(t kube.Target, done func([]string, error))
+	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
 	ReadSecretValue  func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
 	ReadResourceYAML func(kube.Target, kube.Resource, func(string, error)) (stop func())
@@ -324,6 +325,7 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncCustomDefinitions()
 	a.syncResourceYAML()
 	a.syncSecrets(c)
 	a.syncLogs()

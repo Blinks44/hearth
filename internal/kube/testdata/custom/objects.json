@@ -1,0 +1,10 @@
+{
+  "items": [{
+    "metadata": {"name":"tls-shop","namespace":"shop","uid":"cert1"},
+    "spec": {"revisions":[{"slot":0,"id":10},{"slot":1,"id":9007199254740995}],"enabled":false},
+    "status": {"conditions":[{"type":"Ready","status":"False","reason":"Failed","message":"ACME challenge failed."}, {}]}
+  }, {
+    "metadata": {"name":"tls-other","namespace":"shop","uid":"cert2"},
+    "status": "controller-specific status"
+  }]
+}

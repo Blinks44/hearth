@@ -50,6 +50,7 @@ func (k ResourceKind) namespaced() bool {
 // ResourceList is a successful list read, with an independent event read result.
 type ResourceList struct {
 	Kind        ResourceKind
+	Custom      *CustomDefinition
 	Items       []Resource
 	EventsErr   error
 	Claims      *ClaimDetails
@@ -73,15 +74,20 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 	if t.Resource == PersistentVolumeClaims && len(items) > 0 {
 		c.Resources.Claims = readClaimDetails(ctx, r, env, t)
 	}
-	if t.Events.UID != "" {
-		if t.Resource == Nodes {
-			for i := range items {
-				if items[i].UID == t.Events.UID {
-					c.Resources.NodePods, c.Resources.NodePodsErr = readNodePods(ctx, r, env, t, items[i].Node)
-					break
-				}
+	if t.Events.UID != "" && t.Resource == Nodes {
+		for i := range items {
+			if items[i].UID == t.Events.UID {
+				c.Resources.NodePods, c.Resources.NodePodsErr = readNodePods(ctx, r, env, t, items[i].Node)
+				break
 			}
 		}
+	}
+	c.readResourceEvents(ctx, r, env, t)
+	return c, nil
+}
+
+func (c *Cluster) readResourceEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target) {
+	if t.Events.UID != "" {
 		scope := "--all-namespaces"
 		if t.Events.Namespace != "" {
 			scope = "--namespace=" + t.Events.Namespace
@@ -90,7 +96,6 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 			"--field-selector=involvedObject.uid=" + t.Events.UID})
 		c.EventsOf = t.Events
 	}
-	return c, nil
 }
 
 // Resource holds metadata and the facts shown for its kind. ConfigMap list
@@ -115,6 +120,7 @@ type Resource struct {
 	Immutable                   bool
 	Storage                     Storage
 	Node                        *Node
+	Custom                      *CustomObject
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -319,11 +325,17 @@ func (o resourceObject) ingress(r *Resource) {
 // ReadResourceYAML reads the selected object, checking its UID in the same
 // response so a replacement with the same name cannot take its place.
 func ReadResourceYAML(ctx context.Context, r run.Runner, env sysenv.Env, t Target, resource Resource) (string, error) {
-	if !resource.Kind.supported() || resource.Name == "" || resource.Kind.namespaced() != (resource.Namespace != "") || resource.UID == "" {
+	supported, namespaced := resource.Kind.supported(), resource.Kind.namespaced()
+	if custom := resource.Custom; custom != nil && custom.Definition != nil {
+		def := custom.Definition
+		supported = def.valid() && custom.Version == def.Version().Name && resource.Kind == def.resourceKind(custom.Version)
+		namespaced = def.Namespaced()
+	}
+	if !supported || resource.Name == "" || namespaced != (resource.Namespace != "") || resource.UID == "" {
 		return "", fmt.Errorf("invalid Kubernetes resource target")
 	}
 	args := []string{t.Kubectl, "--context=" + t.Context, "get", string(resource.Kind)}
-	if resource.Kind.namespaced() {
+	if namespaced {
 		args = append(args, "--namespace="+resource.Namespace)
 	}
 	args = append(args, "--output=yaml", "--request-timeout=15s", "--", resource.Name)

@@ -48,6 +48,7 @@ type otherResourceView struct {
 }
 
 type resourceYAML struct {
+	kind kube.ResourceKind
 	text string
 	err  error
 	stop func()
@@ -67,10 +68,18 @@ func (v *otherResourceView) reset() {
 }
 
 func (s *kubeClusterState) otherResource() *kube.Resource {
-	if s.other.uid == "" || s.data == nil || s.data.Resources == nil || s.data.Resources.Kind != otherResourceKind(s.kind) {
+	if s.other.uid == "" || s.data == nil || s.data.Resources == nil {
 		return nil
 	}
-	items := s.data.Resources.Items
+	list := s.data.Resources
+	if s.kind == kindCustom {
+		if s.custom.list(s.data) == nil {
+			return nil
+		}
+	} else if list.Kind != otherResourceKind(s.kind) {
+		return nil
+	}
+	items := list.Items
 	if i := slices.IndexFunc(items, func(r kube.Resource) bool { return r.UID == s.other.uid }); i >= 0 {
 		return &items[i]
 	}
@@ -80,7 +89,7 @@ func (s *kubeClusterState) otherResource() *kube.Resource {
 func (a *App) syncResourceYAML() {
 	v := &a.cluster.other
 	yamlTab := 2
-	if a.cluster.kind == kindNodes {
+	if a.cluster.kind == kindNodes || a.cluster.kind == kindCustom {
 		yamlTab = 3
 	}
 	if v.tab != yamlTab {
@@ -88,6 +97,9 @@ func (a *App) syncResourceYAML() {
 		return
 	}
 	item := a.cluster.otherResource()
+	if v.yaml != nil && (item == nil || v.yaml.kind != item.Kind) {
+		v.clearYAML()
+	}
 	if v.yaml != nil || item == nil || a.ReadResourceYAML == nil || a.router.Path() != kubeClusterPage {
 		return
 	}
@@ -95,7 +107,7 @@ func (a *App) syncResourceYAML() {
 	if !ok {
 		return
 	}
-	request := &resourceYAML{}
+	request := &resourceYAML{kind: item.Kind}
 	v.yaml = request
 	target := kube.Target{Kubectl: in.Path, Context: a.router.Query("context")}
 	request.stop = a.ReadResourceYAML(target, *item, func(text string, err error) {
