@@ -372,7 +372,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 	events, read := clusterEvents(cl, p.UID)
 	story, trouble := storyOf(p, events, c.Now())
 	label, bg, fg := podTag(c, p)
-	detailFrame(c, func() {
+	detailFrame(c, s.tab, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				if trouble {
@@ -417,10 +417,8 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 					if story.crashed != "" {
 						container = story.crashed
 					}
-					ui.Button(c.Key("pod-logs"), "").Label(locales.KubeLogsOpen()).OnClick(func() { a.openLogs(p, container, false) }).Children(func() {
-						ui.Icon(c, Icon("scroll-text")).Size(14, 14)
-						ui.Text(c, locales.KubeLogsOpen()).SingleLine()
-					})
+					kubeActionButton(c.Key("pod-logs"), "scroll-text", locales.KubeLogsOpen(), podActionHeight).
+						OnClick(func() { a.openLogs(p, container, false) })
 				}
 				if a.RunForward != nil && p.Phase == "Running" {
 					var ports []forwardPort
@@ -438,6 +436,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			}
 			segments(c, "pod-tab", &s.tab, []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}})
 		})
+	}, func() {
 		if s.tab == 1 {
 			eventList(c, events, read, 0)
 			return
@@ -490,10 +489,16 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 	})
 }
 
-// detailFrame is the bordered column of a resource's details.
-func detailFrame(c *ui.Context, rows func()) {
+// detailFrame keeps actions and tabs in reach while the tab's contents scroll.
+func detailFrame(c *ui.Context, tab int, header, body func()) {
 	t := c.Theme()
-	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(Colors(t).Divider).Padding(0, 0, 12, 0).Children(rows)
+	line := Colors(t).Divider
+	ui.Column(c).Shrink(0).Radius(12, 12, 0, 0).Clip().Background(t.Background).
+		BorderWidth(1, 1, 0, 1).BorderColor(line).Children(header)
+	ui.Scroll(c.Key("detail-tab-" + strconv.Itoa(tab))).Grow(1).MinHeight(0).Children(func() {
+		ui.Column(c).Radius(0, 0, 12, 12).Clip().Background(t.Background).
+			BorderWidth(0, 1, 1, 1).BorderColor(line).Padding(0, 0, 12, 0).Children(body)
+	})
 }
 
 // storyCard says what is going on with a pod: Kubernetes' facts, what
@@ -538,14 +543,19 @@ func storyCard(c *ui.Context, s podStory, actions func()) {
 func containerRow(c *ui.Context, ct kube.Container) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.Row(c).Gap(10).Padding(7, 16).AlignItems(ui.Center).Children(func() {
+	restartsWidth, stateWidth := float32(136), float32(164)
+	if narrow(c) {
+		restartsWidth, stateWidth = 88, 112
+	}
+	tracks := []ui.Track{ui.Fixed(7), ui.Fr(1), ui.Fixed(restartsWidth), ui.Fixed(stateWidth)}
+	resourceGrid(ui.Box(c), tracks).Padding(7, 16).Children(func() {
 		dot := t.Success
 		if !ct.Ready && ct.Reason != "Completed" {
 			dot = t.Danger
 		}
 		ui.Box(c).Size(7, 7).Radius(4).Shrink(0).Background(dot)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, ct.Name).FontSize(13).FontWeight(500).SingleLine()
+			clipped(c, ct.Name).FontSize(13).FontWeight(500)
 			clipped(c, ct.Image).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 		})
 		restarts := locales.KubeRestartCount(ct.Restarts)
@@ -556,7 +566,7 @@ func containerRow(c *ui.Context, ct kube.Container) {
 		if ct.Restarts > 0 && !ct.Ready {
 			color = pal.DangerText
 		}
-		ui.Text(c, restarts).FontSize(12).TextColor(color).SingleLine().Shrink(0)
+		clipped(c, restarts).FontSize(12).TextColor(color)
 		state := ct.Reason
 		if state == "" {
 			state = ct.State
@@ -564,11 +574,11 @@ func containerRow(c *ui.Context, ct kube.Container) {
 		switch {
 		case state == "":
 		case ct.Ready || state == "Completed":
-			aiTag(c, state, pal.SuccessSoft, pal.SuccessText).Shrink(0)
+			workloadStatus(c, state, pal.SuccessSoft, pal.SuccessText)
 		case ct.State == "running":
-			aiTag(c, state, pal.WarningSoft, pal.WarningText).Shrink(0)
+			workloadStatus(c, state, pal.WarningSoft, pal.WarningText)
 		default:
-			aiTag(c, state, pal.DangerSoft, pal.DangerText).Shrink(0)
+			workloadStatus(c, state, pal.DangerSoft, pal.DangerText)
 		}
 	})
 }
@@ -607,19 +617,28 @@ func eventList(c *ui.Context, events []kube.Event, read bool, limit int) {
 	if limit > 0 && len(events) > limit {
 		events = events[:limit]
 	}
-	for _, e := range events {
-		ui.Row(c).Gap(10).Padding(5, 16).AlignItems(ui.Start).Children(func() {
+	reasonWidth, timeWidth := float32(112), float32(88)
+	if narrow(c) {
+		reasonWidth, timeWidth = 88, 72
+	}
+	tracks := []ui.Track{ui.Fixed(reasonWidth), ui.Fr(1), ui.Fixed(timeWidth)}
+	for i, e := range events {
+		row := resourceGrid(ui.Box(c), tracks).Padding(6, 16).AlignItems(ui.Start)
+		if i < len(events)-1 {
+			row.BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
+		}
+		row.Children(func() {
 			if e.Type == "Warning" {
-				aiTag(c, e.Reason, pal.WarningSoft, pal.WarningText).Shrink(0)
+				workloadStatus(c, e.Reason, pal.WarningSoft, pal.WarningText)
 			} else {
-				aiTag(c, e.Reason, pal.Muted, t.TextMuted).Shrink(0)
+				workloadStatus(c, e.Reason, pal.Muted, t.TextMuted)
 			}
-			ui.Text(c, e.Message).FontSize(12.5).Grow(1).MinWidth(0).Wrap().Selectable()
+			ui.Text(c, e.Message).FontSize(12.5).MinWidth(0).Wrap().Selectable()
 			when := age(c, e.Last)
 			if e.Count > 1 {
 				when = "×" + strconv.Itoa(e.Count) + " · " + when
 			}
-			ui.Text(c, when).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+			clipped(c, when).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).TextAlign(ui.End)
 		})
 	}
 }

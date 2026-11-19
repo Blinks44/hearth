@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
 )
 
 // What is going on with a pod says only what Kubernetes reported, keeps
@@ -341,9 +342,11 @@ func TestKubeWorkloadPanes(t *testing.T) {
 				}
 			}
 			selected, anchor, next := "pod-050", "pod-060", "pod-058"
+			bodyAnchor := "CONTAINERS · 28"
 			if kind == "Deployments" {
 				click(kind)
 				selected, anchor, next = "deploy-050", "deploy-060", "deploy-058"
+				bodyAnchor = "Wanted"
 			}
 			find := func(text string) ui.Rect {
 				t.Helper()
@@ -367,15 +370,16 @@ func TestKubeWorkloadPanes(t *testing.T) {
 				t.Errorf("selected row moved out of the viewport: %+v", selectedRow)
 			}
 			screenshot(t, tt, "kube-"+kind+"-independent-panes")
-			left := find(anchor)
+			left, body := find(anchor), find(bodyAnchor)
 			tt.Scroll(790, 380, 0, 250)
-			if find(anchor).Y != left.Y || find("Close details").Y >= close.Y {
-				t.Fatalf("scrolling the details moved the list or left the details still")
+			moved := find(bodyAnchor)
+			if find(anchor).Y != left.Y || find("Close details") != close || (moved.Y >= body.Y && moved.H >= body.H) {
+				t.Fatalf("details scroll: left %v -> %v, close %v -> %v, body %v -> %v", left, find(anchor), close, find("Close details"), body, moved)
 			}
-			right := find("Close details")
+			body = find(bodyAnchor)
 			tt.Scroll(400, 380, 0, 160)
-			if find("Close details").Y != right.Y || find(anchor).Y >= left.Y {
-				t.Fatalf("scrolling the list moved the details or left the list still")
+			if find("Close details") != close || find(bodyAnchor) != body || find(anchor).Y >= left.Y {
+				t.Fatal("scrolling the list moved the details or left the list still")
 			}
 			click(next)
 			if got := find("Close details"); got.Y != close.Y {
@@ -428,6 +432,88 @@ func TestKubeWorkloadColumns(t *testing.T) {
 				t.Errorf("Deployment status starts at %g, want %g", got.X, status.X)
 			}
 			screenshot(t, tt, "kube-deployments-table-"+strconv.Itoa(width))
+		})
+	}
+}
+
+func TestKubePodEventsLayout(t *testing.T) {
+	for _, width := range []int{1000, 1280} {
+		t.Run(strconv.Itoa(width), func(t *testing.T) {
+			a := kubeApp()
+			var watches clusterWatches
+			a.WatchCluster = watches.watch
+			a.StreamLogs = (&logStreams{}).stream
+			a.CheckForwardPort = func(int, func(int, error)) {}
+			a.RunForward = func(ops.Forward, func(kube.ForwardPod), func(error)) func() { return func() {} }
+			a.openCluster("kind-dev")
+			tt := ui.NewTester(a.View, width, 680)
+			tt.Advance(time.Second)
+			now := time.Now()
+			pod := kube.Pod{UID: "test", Name: "event-pod", Namespace: "default", Phase: "Running", Created: now.Add(-time.Hour)}
+			for i := range 14 {
+				pod.Containers = append(pod.Containers, kube.Container{Name: fmt.Sprintf("app-%02d", i), Ready: true, State: "running"})
+			}
+			pod.Containers[0].Reason, pod.Containers[0].State = "CreateContainerConfigError", "waiting"
+			pod.Containers[0].Ready, pod.Containers[0].Restarts = false, 14
+			pod.Ready = len(pod.Containers) - 1
+			cl := kube.Cluster{Taken: now, Pods: []kube.Pod{pod}}
+			watches.got[0](cl, nil)
+			tt.Frame()
+			click := func(label string) {
+				t.Helper()
+				if err := tt.Click(label); err != nil {
+					t.Fatal(err)
+				}
+			}
+			find := func(label string) ui.Rect {
+				t.Helper()
+				r, ok := tt.Find(label)
+				if !ok {
+					t.Fatalf("missing %q", label)
+				}
+				return r
+			}
+			click(pod.Name)
+			logs, forward := find("Logs"), find("Forward port…")
+			if logs.Y != forward.Y || logs.H != forward.H {
+				t.Fatalf("action sizes differ: logs %+v, forward %+v", logs, forward)
+			}
+
+			const first = "Readiness probe failed: HTTP probe failed with statuscode: 502"
+			const second = "Container created"
+			const third = "Container image registry.test/example/postgresql:18.6-standard-trixie@sha256:28c7e72a490d6d1d8a9139fc02eedaaa was found locally"
+			if first, second := find("14 restarts"), find("0 restarts"); first.X != second.X {
+				t.Fatalf("container restart columns differ: %+v %+v", first, second)
+			}
+			if first, second := find("CreateContainerConfigError"), find("running"); first.X != second.X {
+				t.Fatalf("container state columns differ: %+v %+v", first, second)
+			}
+			cl.EventsOf = kube.Ref{Namespace: pod.Namespace, UID: pod.UID}
+			cl.Events = []kube.Event{
+				{Type: "Warning", Reason: "Unhealthy", Message: first, Count: 52, Last: now.Add(-time.Minute)},
+				{Type: "Normal", Reason: "Created", Message: second, Count: 1, Last: now.Add(-2 * time.Minute)},
+				{Type: "Normal", Reason: "Pulled", Message: third, Count: 143, Last: now.Add(-3 * time.Minute)},
+				{Type: "Warning", Reason: "FailedCreatePodSandBox", Message: "The network plugin could not set up the pod sandbox", Count: 3, Last: now.Add(-4 * time.Minute)},
+			}
+			watches.got[len(watches.got)-1](cl, nil)
+			tt.Frame()
+			summary := find(first)
+			link := find("All events")
+			x := link.X + link.W/2 - 60
+			tt.Scroll(x, 440, 0, link.Y-404)
+			click("All events")
+
+			if find("Logs") != logs || find("Forward port…") != forward {
+				t.Fatal("the header moved when switching to events")
+			}
+			f, s, l := find(first), find(second), find(third)
+			if f.Y >= 405 || f.X != summary.X || f.X != s.X || f.X != l.X || l.H <= s.H {
+				t.Fatalf("events did not open at the top of an aligned list: %+v %+v %+v", f, s, l)
+			}
+			if a, b := find("×52 · 1m"), find("2m"); a.X+a.W != b.X+b.W {
+				t.Fatalf("event ages do not share the right edge: %+v %+v", a, b)
+			}
+			screenshot(t, tt, "kube-pod-events-"+strconv.Itoa(width))
 		})
 	}
 }

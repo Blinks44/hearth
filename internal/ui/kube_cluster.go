@@ -333,7 +333,7 @@ func workloadPanes(c *ui.Context, header, list func(), uid string, detail func()
 			})
 		})
 		if uid != "" {
-			ui.Scroll(c.Key("workload-detail-" + uid)).Grow(1).MinWidth(0).Children(detail)
+			ui.Column(c.Key("workload-detail-" + uid)).Grow(1).MinWidth(0).MinHeight(0).Children(detail)
 		}
 	})
 }

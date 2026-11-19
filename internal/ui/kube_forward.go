@@ -95,15 +95,25 @@ func (a *App) dismissForward(f *portForward) {
 	a.forwards = slices.DeleteFunc(a.forwards, func(other *portForward) bool { return other == f })
 }
 
+const podActionHeight = 28
+
+func kubeActionButton(c *ui.Context, icon, label string, height float32) ui.Element {
+	return ui.Button(c, "").Height(height).Label(label).Children(func() {
+		ui.Icon(c, Icon(icon)).Size(14, 14)
+		ui.Text(c, label).FontSize(12).SingleLine()
+	})
+}
+
 func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, ports []forwardPort) {
 	if a.CheckForwardPort == nil || a.RunForward == nil {
 		return
 	}
-	b := ui.Button(c.Key("forward-"+uid), "").Height(24).Label(locales.KubeForwardOpen())
-	b.Children(func() {
-		ui.Icon(c, Icon("cable")).Size(14, 14)
-		ui.Text(c, locales.KubeForwardOpen()).FontSize(11.5).SingleLine()
-	}).OnClick(func() {
+	height := float32(24)
+	if kind == "pod" {
+		height = podActionHeight
+	}
+	b := kubeActionButton(c.Key("forward-"+uid), "cable", locales.KubeForwardOpen(), height)
+	b.OnClick(func() {
 		in, ok := cliCopy(a.cliState(), "kubectl")
 		if !ok {
 			return

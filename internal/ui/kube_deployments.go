@@ -169,7 +169,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 	}
 	slices.SortFunc(pods, troubleFirst)
 	label, bg, fg := deploymentTag(c, d)
-	detailFrame(c, func() {
+	detailFrame(c, s.tab, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, Icon("boxes")).Size(18, 18).Shrink(0).TextColor(t.TextMuted)
@@ -195,6 +195,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				{locales.KubeTabOverview(), ""}, {"Pods", strconv.Itoa(len(pods))}, {locales.KubeTabEvents(), count},
 			})
 		})
+	}, func() {
 		switch s.tab {
 		case 1:
 			for _, p := range pods {
