@@ -6,6 +6,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/store"
@@ -107,6 +108,24 @@ func TestProjectKubeCard(t *testing.T) {
 	tt.Advance(time.Second)
 	if tt.HasText("Hearth never applies manifests") {
 		t.Errorf("card without manifests or a link: %q", tt.Texts())
+	}
+}
+
+func TestProjectOpensServicesInLinkedNamespace(t *testing.T) {
+	a := kubeProjectApp()
+	var watched kube.Target
+	a.WatchCluster = func(target kube.Target, _ func(kube.Cluster, error)) func() {
+		watched = target
+		return func() {}
+	}
+	a.router.Push(projectPath(home + "/work/shop"))
+	tt := ui.NewTester(a.View, 1280, 1000)
+	tt.Advance(time.Second)
+	if err := tt.Click("Open"); err != nil {
+		t.Fatal(err)
+	}
+	if !watched.Services || watched.Context != "kind-dev" || len(watched.Namespaces) != 1 || watched.Namespaces[0] != "shop" {
+		t.Fatalf("watch = %+v", watched)
 	}
 }
 

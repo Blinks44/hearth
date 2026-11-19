@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -243,6 +244,13 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 					}
 					if hasKubectl && a.CheckKube != nil {
 						ui.Button(c.Key("kube-check"), locales.KubeCheck()).Shrink(0).Disabled(a.kubeChecks[k.Name].running).OnClick(func() { a.checkKube(kubectl.Path, k) })
+					}
+					if hasKubectl && a.WatchCluster != nil {
+						ui.Button(c.Key("kube-open"), locales.KubeClusterOpen()).Shrink(0).OnClick(func() {
+							a.setNamespaces(k.Name, []string{cmp.Or(link.Namespace, namespaceOf(k))})
+							a.cluster.kind = kindServices
+							a.openCluster(k.Name)
+						})
 					}
 				})
 			}

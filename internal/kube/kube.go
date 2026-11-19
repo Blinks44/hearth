@@ -33,6 +33,8 @@ type Target struct {
 	Kubectl, Context string
 	// Namespaces are those to read; none reads them all.
 	Namespaces []string
+	// Services reads the service list instead of workloads.
+	Services bool
 	// Events is the object whose events to read too; zero reads none.
 	Events Ref
 	// Tail is the container whose previous run's last line to read too;
@@ -73,6 +75,7 @@ type Pod struct {
 	Ready       int
 	Restarts    int
 	Containers  []Container
+	TCPPorts    []int
 	Node        string
 	IP, QoS     string
 	Account     string
@@ -150,6 +153,7 @@ type Event struct {
 type Cluster struct {
 	Pods        []Pod
 	Deployments []Deployment
+	Services    []Service
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -221,6 +225,10 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 		scopes = append(scopes, []string{"--all-namespaces"})
 	}
 	var c Cluster
+	if t.Services {
+		services, err := readServices(ctx, r, env, t, scopes)
+		return Cluster{Services: services, Taken: time.Now()}, err
+	}
 	for _, scope := range scopes {
 		var list struct {
 			Items []json.RawMessage `json:"items"`
@@ -402,6 +410,7 @@ type meta struct {
 		Namespace         string            `json:"namespace"`
 		UID               string            `json:"uid"`
 		CreationTimestamp time.Time         `json:"creationTimestamp"`
+		DeletionTimestamp time.Time         `json:"deletionTimestamp"`
 		Labels            map[string]string `json:"labels"`
 		Annotations       map[string]string `json:"annotations"`
 		OwnerReferences   []struct {
@@ -480,16 +489,24 @@ type containerStatus struct {
 	LastState    state  `json:"lastState"`
 }
 
+type podContainer struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
+	Ports []struct {
+		Name     string `json:"name"`
+		Number   int    `json:"containerPort"`
+		Protocol string `json:"protocol"`
+	} `json:"ports"`
+}
+
 type pod struct {
 	meta
 	Spec struct {
-		NodeName           string `json:"nodeName"`
-		ServiceAccountName string `json:"serviceAccountName"`
-		Containers         []struct {
-			Name  string `json:"name"`
-			Image string `json:"image"`
-		} `json:"containers"`
-		Volumes []struct {
+		NodeName           string         `json:"nodeName"`
+		ServiceAccountName string         `json:"serviceAccountName"`
+		Containers         []podContainer `json:"containers"`
+		InitContainers     []podContainer `json:"initContainers"`
+		Volumes            []struct {
 			Name      string           `json:"name"`
 			Projected *json.RawMessage `json:"projected"`
 		} `json:"volumes"`
@@ -640,6 +657,11 @@ func (p pod) pod(owner Owner) Pod {
 	}
 	for _, spec := range p.Spec.Containers {
 		ct := Container{Name: spec.Name, Image: spec.Image}
+		for _, port := range spec.Ports {
+			if (port.Protocol == "TCP" || port.Protocol == "") && !slices.Contains(out.TCPPorts, port.Number) {
+				out.TCPPorts = append(out.TCPPorts, port.Number)
+			}
+		}
 		if s, ok := statuses[spec.Name]; ok {
 			ct.Ready, ct.Restarts = s.Ready, s.RestartCount
 			ct.Last = s.LastState.Terminated.run()

@@ -173,6 +173,9 @@ type App struct {
 	// thread, until stop is called. Nil hides the logs.
 	StreamLogs func(l kube.Logs, got func([]kube.LogLine), done func(error)) (stop func())
 
+	CheckForwardPort func(port int, done func(int, error))
+	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
+
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
 	// gives it to done through Window.Update; nil offers no fixes.
@@ -252,6 +255,7 @@ type App struct {
 	cluster            kubeClusterState
 	kind               kindCreateDialog
 	kubeLink           kubeLinkDialog
+	forwards           []*portForward
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page
@@ -313,6 +317,7 @@ func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
 	a.syncLogs()
+	a.syncForwardForm()
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
@@ -497,10 +502,7 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(8).Padding(0, right, 0, 28).
 		BorderWidth(0, 0, 1, 0).BorderColor(Colors(t).Divider).DragWindow().Children(func() {
 		if x.back != nil {
-			ui.Button(c.Key("back"), "").Label(locales.BackToProjects()).Tooltip(locales.BackToProjects()).
-				Size(28, 26).Padding(0).Margin(0, 4, 0, 0).OnClick(x.back).Children(func() {
-				ui.Icon(c, Icon("chevron-left")).Size(14, 14).TextColor(t.TextMuted)
-			})
+			headerBackButton(c, locales.BackToProjects(), x.back)
 		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, title).FontSize(15).FontWeight(600).SingleLine()
@@ -512,6 +514,13 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 		if x.after != nil {
 			x.after()
 		}
+	})
+}
+
+func headerBackButton(c *ui.Context, label string, back func()) {
+	ui.Button(c.Key("back"), "").Label(label).Tooltip(label).
+		Size(28, 26).Shrink(0).Padding(0).Margin(0, 4, 0, 0).OnClick(back).Children(func() {
+		ui.Icon(c, Icon("chevron-left")).Size(14, 14).TextColor(c.Theme().TextMuted)
 	})
 }
 

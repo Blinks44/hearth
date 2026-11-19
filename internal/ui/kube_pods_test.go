@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -301,4 +303,131 @@ func TestKubeClusterSlidesIn(t *testing.T) {
 	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p")
 	a.router.Back()
 	tt.Advance(time.Second)
+}
+
+// Opening a workload deep in the list leaves its details at the top of
+// the right pane. Both panes can scroll without moving the other one.
+func TestKubeWorkloadPanes(t *testing.T) {
+	for _, kind := range []string{"Pods", "Deployments"} {
+		t.Run(kind, func(t *testing.T) {
+			a := kubeApp()
+			var watches clusterWatches
+			a.WatchCluster = watches.watch
+			a.router.Push(projectsPage.path)
+			a.openCluster("kind-dev")
+			tt := ui.NewTester(a.View, 1000, 680)
+			tt.Advance(time.Second)
+
+			cl := kube.Cluster{Taken: time.Now()}
+			for i := range 90 {
+				pod := kube.Pod{UID: fmt.Sprintf("p%d", i), Name: fmt.Sprintf("pod-%03d", i), Namespace: "shop", Phase: "Running", Created: cl.Taken.Add(-3 * time.Hour)}
+				deployment := kube.Deployment{UID: fmt.Sprintf("d%d", i), Name: fmt.Sprintf("deploy-%03d", i), Namespace: "shop", Created: cl.Taken.Add(-3 * time.Hour)}
+				if i == 50 {
+					for j := range 28 {
+						pod.Containers = append(pod.Containers, kube.Container{Name: fmt.Sprintf("container-%02d", j), Ready: true, State: "running"})
+						deployment.Revisions = append(deployment.Revisions, kube.Revision{Name: fmt.Sprintf("revision-%02d", j), Number: j + 1, Created: deployment.Created})
+					}
+					pod.Ready = len(pod.Containers)
+				}
+				cl.Pods = append(cl.Pods, pod)
+				cl.Deployments = append(cl.Deployments, deployment)
+			}
+			watches.got[0](cl, nil)
+			tt.Frame()
+			click := func(label string) {
+				t.Helper()
+				if err := tt.Click(label); err != nil {
+					t.Fatal(err)
+				}
+			}
+			selected, anchor, next := "pod-050", "pod-060", "pod-058"
+			if kind == "Deployments" {
+				click(kind)
+				selected, anchor, next = "deploy-050", "deploy-060", "deploy-058"
+			}
+			find := func(text string) ui.Rect {
+				t.Helper()
+				r, ok := tt.Find(text)
+				if !ok {
+					t.Fatalf("missing %q", text)
+				}
+				return r
+			}
+			header := find("STATUS")
+			tt.Scroll(400, 380, 0, find(selected).Y-420)
+			if got := find("STATUS"); got != header {
+				t.Fatalf("column header moved on scroll: %+v -> %+v", header, got)
+			}
+			click(selected)
+			close := find("Close details")
+			if close.Y < 125 || close.Y > 240 {
+				t.Fatalf("details header opened outside the top of the pane: %+v", close)
+			}
+			if selectedRow := find(selected); selectedRow.X >= 575 || selectedRow.Y < 190 || selectedRow.Y > 650 {
+				t.Errorf("selected row moved out of the viewport: %+v", selectedRow)
+			}
+			screenshot(t, tt, "kube-"+kind+"-independent-panes")
+			left := find(anchor)
+			tt.Scroll(790, 380, 0, 250)
+			if find(anchor).Y != left.Y || find("Close details").Y >= close.Y {
+				t.Fatalf("scrolling the details moved the list or left the details still")
+			}
+			right := find("Close details")
+			tt.Scroll(400, 380, 0, 160)
+			if find("Close details").Y != right.Y || find(anchor).Y >= left.Y {
+				t.Fatalf("scrolling the list moved the details or left the list still")
+			}
+			click(next)
+			if got := find("Close details"); got.Y != close.Y {
+				t.Fatalf("new details inherited the previous pane's scroll: %+v", got)
+			}
+			click("Back to Kubernetes")
+			tt.Advance(time.Second)
+			if a.router.Path() != kubePage || len(watches.running()) != 0 {
+				t.Fatalf("back opened %q with active cluster watches %+v", a.router.Path(), watches.running())
+			}
+		})
+	}
+}
+
+func TestKubeWorkloadColumns(t *testing.T) {
+	for _, width := range []int{1000, 1440} {
+		t.Run(strconv.Itoa(width), func(t *testing.T) {
+			a := kubeApp()
+			var watches clusterWatches
+			a.WatchCluster = watches.watch
+			a.openCluster("kind-dev")
+			tt := ui.NewTester(a.View, width, 680)
+			tt.Advance(time.Second)
+			watches.got[0](shopCluster(), nil)
+			tt.Frame()
+			find := func(label string) ui.Rect {
+				t.Helper()
+				r, ok := tt.Find(label)
+				if !ok {
+					t.Fatalf("missing %q", label)
+				}
+				return r
+			}
+			status := find("STATUS")
+			for _, value := range []string{"1 of 3 not ready", "CrashLoopBackOff", "Running"} {
+				if got := find(value); got.X != status.X {
+					t.Errorf("%q starts at %g, status column starts at %g", value, got.X, status.X)
+				}
+			}
+			for _, pair := range [][2]string{{"READY", "1/2"}, {"RESTARTS", "14"}, {"NODE", "kind-worker"}, {"AGE", "2h"}} {
+				if head, value := find(pair[0]), find(pair[1]); head.X != value.X {
+					t.Errorf("%s and %s start at %g and %g", pair[0], pair[1], head.X, value.X)
+				}
+			}
+			if err := tt.Click("Deployments"); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			if got := find("2 of 3 ready"); got.X != status.X {
+				t.Errorf("Deployment status starts at %g, want %g", got.X, status.X)
+			}
+			screenshot(t, tt, "kube-deployments-table-"+strconv.Itoa(width))
+		})
+	}
 }

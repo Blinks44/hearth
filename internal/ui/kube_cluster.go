@@ -33,6 +33,7 @@ func kubeClusterPath(name string) string {
 const (
 	kindPods = iota
 	kindDeployments
+	kindServices
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -52,6 +53,9 @@ type kubeClusterState struct {
 	failedAt time.Time
 
 	contextOpen, namespaceOpen bool
+	serviceFilter              int
+	serviceSort                string
+	forward                    *forwardForm
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
 	nsLoading bool
@@ -73,6 +77,7 @@ type kubeClusterState struct {
 	// pod and deployment are the UIDs of those whose details show beside
 	// the list, tab the details' tab.
 	pod, deployment string
+	revealWorkload  string
 	tab             int
 	// logs is the log shown in place of the list, nil for none;
 	// logRunning is what its kubectl logs reads, and logStop ends it.
@@ -117,14 +122,14 @@ func (a *App) syncCluster() {
 	if a.router.Path() == kubeClusterPage && a.WatchCluster != nil {
 		name := a.router.Query("context")
 		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
-			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
+			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name), Services: s.kind == kindServices}
 			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
 		}
 	}
 	running := ""
 	if target != "" {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%s#%+v", target, s.refresh, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%s#%+v", target, s.refresh, t.Services, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -137,7 +142,7 @@ func (a *App) syncCluster() {
 	if target != s.target {
 		// Another cluster or namespace: what was read is not its.
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
-		s.logs = nil
+		s.logs, s.forward, s.revealWorkload = nil, nil, ""
 	}
 	if running == "" {
 		return
@@ -244,18 +249,31 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			a.logsView(c)
 			return
 		}
-		ui.Scroll(c).Grow(1).Children(func() {
-			ui.Column(c).Gap(14).Padding(20, 28, 24, 28).Children(func() {
+		split := s.kind == kindPods || s.kind == kindDeployments
+		var viewport ui.Element
+		if split {
+			viewport = ui.Column(c.Key("cluster-workloads"))
+		} else {
+			viewport = ui.Scroll(c.Key("cluster-resources"))
+		}
+		viewport.Grow(1).MinHeight(0).Children(func() {
+			body := ui.Column(c).Gap(14).Padding(20, 28, 24, 28)
+			if split {
+				body.Grow(1).MinHeight(0)
+			}
+			body.Children(func() {
 				a.kindChips(c)
+				a.forwardList(c, name)
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
+				waiting := s.data == nil || (s.kind == kindServices) != (s.data.Services != nil)
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
 				case !hasKubectl:
 					toolNote(c, locales.KubeClusterNoKubectl())
-				case s.data == nil && s.err != nil:
+				case waiting && s.err != nil:
 					a.clusterError(c, name, s.err)
-				case s.data == nil:
+				case waiting:
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(12, 0).Children(func() {
 						ui.Spinner(c).Size(14, 14)
 						ui.Text(c, locales.KubeClusterReading(name)).FontSize(12.5).TextColor(t.TextMuted)
@@ -264,14 +282,59 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					if s.err != nil {
 						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
 					}
-					if s.kind == kindDeployments {
+					switch s.kind {
+					case kindDeployments:
 						a.deploymentsView(c, s.data)
-					} else {
+					case kindPods:
 						a.podsView(c, s.data)
+					case kindServices:
+						a.servicesView(c, s.data.Services)
 					}
 				}
 			})
 		})
+	})
+}
+
+// toggleWorkload keeps the clicked row in view when the list changes width.
+func (s *kubeClusterState) toggleWorkload(selection *string, uid string) {
+	s.revealWorkload = uid
+	if *selection == uid {
+		*selection = ""
+		return
+	}
+	*selection, s.tab = uid, 0
+}
+
+func (s *kubeClusterState) revealWorkloadRow(row ui.Element, uid string) {
+	if s.revealWorkload == uid {
+		row.ScrollIntoView()
+		s.revealWorkload = ""
+	}
+}
+
+// workloadPanes keeps the list's scroll position as the details open and
+// gives each selected resource its own details viewport.
+func workloadPanes(c *ui.Context, header, list func(), uid string, detail func()) {
+	ui.Row(c).Grow(1).MinHeight(0).Gap(16).AlignItems(ui.Stretch).Children(func() {
+		left := ui.Column(c).MinWidth(0).MinHeight(0)
+		if uid == "" {
+			left.Grow(1)
+		} else if narrow(c) {
+			left.Width(300).Shrink(0)
+		} else {
+			left.Width(390).Shrink(0)
+		}
+		left.Children(func() {
+			border := Colors(c.Theme()).Divider
+			ui.Column(c).Radius(12, 12, 0, 0).Clip().Shrink(0).BorderWidth(1, 1, 0, 1).BorderColor(border).Children(header)
+			ui.Scroll(c.Key("workload-list")).Grow(1).MinHeight(0).Children(func() {
+				ui.Column(c).Radius(0, 0, 12, 12).Clip().BorderWidth(0, 1, 1, 1).BorderColor(border).Children(list)
+			})
+		})
+		if uid != "" {
+			ui.Scroll(c.Key("workload-detail-" + uid)).Grow(1).MinWidth(0).Children(detail)
+		}
 	})
 }
 
@@ -287,6 +350,7 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 	}
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(6).Padding(0, right, 0, 24).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Divider).DragWindow().Children(func() {
+		headerBackButton(c, locales.BackToKubernetes(), func() { a.router.Push(kubePage) })
 		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen
@@ -307,8 +371,8 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		}
 		ui.Popover(c, anchor, &s.namespaceOpen, func() { a.namespacePopover(c, name) })
 		pathSlash(c)
-		kinds := []string{"Pods", "Deployments"}
-		pathButton(c, "cluster-kind", "lucide/"+[]string{"box", "boxes"}[s.kind], kinds[s.kind]).PopoverMenuButton(func(m *ui.Menu) {
+		kinds := []string{"Pods", "Deployments", "Services"}
+		pathButton(c, "cluster-kind", "lucide/"+[]string{"box", "boxes", "network"}[s.kind], kinds[s.kind]).PopoverMenuButton(func(m *ui.Menu) {
 			for i, k := range kinds {
 				if m.Item(k).Radio(s.kind == i && s.logs == nil).Chosen() {
 					s.kind, s.logs = i, nil
@@ -584,14 +648,20 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 // need attention.
 func (a *App) kindChips(c *ui.Context) {
 	s := &a.cluster
-	pods, deployments := 0, 0
+	pods, deployments, services := 0, 0, 0
 	if s.data != nil {
 		pods = len(slices.DeleteFunc(slices.Clone(s.data.Pods), func(p kube.Pod) bool { return !podTrouble(p) }))
 		deployments = len(slices.DeleteFunc(slices.Clone(s.data.Deployments), func(d kube.Deployment) bool { return !deploymentTrouble(d) }))
+		for _, svc := range s.data.Services {
+			if serviceHasNoPods(svc) {
+				services++
+			}
+		}
 	}
 	ui.Row(c).Gap(8).Children(func() {
 		kindChip(c, &s.kind, kindPods, "box", "Pods", pods)
 		kindChip(c, &s.kind, kindDeployments, "boxes", "Deployments", deployments)
+		kindChip(c, &s.kind, kindServices, "network", "Services", services)
 	})
 }
 
@@ -633,19 +703,6 @@ func podTrouble(p kube.Pod) bool {
 // deploymentTrouble reports a Deployment with fewer pods ready than it
 // wants.
 func deploymentTrouble(d kube.Deployment) bool { return d.Ready < d.Replicas }
-
-// resourceWidths are the widths of the tables' columns after the name.
-var resourceWidths = []float32{170, 70, 90, 130, 70}
-
-func resourceHead(c *ui.Context, name string, cols ...string) {
-	pal := Colors(c.Theme())
-	ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-		ui.Text(c, strings.ToUpper(name)).FontSize(10.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
-		for i, col := range cols {
-			ui.Text(c, strings.ToUpper(col)).FontSize(10.5).TextColor(pal.TextFaint).Width(resourceWidths[i]).SingleLine()
-		}
-	})
-}
 
 // age says how old a resource is, as kubectl does: 40s, 5m, 2h, 12d.
 func age(c *ui.Context, t time.Time) string { return span(c.Now().Sub(t)) }

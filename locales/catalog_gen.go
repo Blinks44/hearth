@@ -2150,6 +2150,20 @@ func (msgs Messages) AiSkills() string {
 	return Catalog.Format(msgs.locale, "aiSkills", nil)
 }
 
+// BackToKubernetes says "Back to Kubernetes"
+// in the language the app shows.
+//
+// Back button from a cluster to the Kubernetes page
+func BackToKubernetes() string { return In(i18n.Locale()).BackToKubernetes() }
+
+// BackToKubernetes says "Back to Kubernetes"
+// in the language of msgs.
+//
+// Back button from a cluster to the Kubernetes page
+func (msgs Messages) BackToKubernetes() string {
+	return Catalog.Format(msgs.locale, "backToKubernetes", nil)
+}
+
 // BackToProjects says "Back to projects"
 // in the language the app shows.
 //
@@ -28138,4 +28152,482 @@ func KubeLogsOpenEnded() string { return In(i18n.Locale()).KubeLogsOpenEnded() }
 // failed, between its tries.
 func (msgs Messages) KubeLogsOpenEnded() string {
 	return Catalog.Format(msgs.locale, "kubeLogsOpenEnded", nil)
+}
+
+// KubeForwardOpen says "Forward port…"
+// in the language the app shows.
+//
+// kubeForwardOpen
+func KubeForwardOpen() string { return In(i18n.Locale()).KubeForwardOpen() }
+
+// KubeForwardOpen says "Forward port…"
+// in the language of msgs.
+//
+// kubeForwardOpen
+func (msgs Messages) KubeForwardOpen() string {
+	return Catalog.Format(msgs.locale, "kubeForwardOpen", nil)
+}
+
+// KubeForwardTitle says "Forward {name} to this computer"
+// in the language the app shows.
+//
+// kubeForwardTitle
+func KubeForwardTitle(name string) string { return In(i18n.Locale()).KubeForwardTitle(name) }
+
+// KubeForwardTitle says "Forward {name} to this computer"
+// in the language of msgs.
+//
+// kubeForwardTitle
+func (msgs Messages) KubeForwardTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeForwardTitle", map[string]any{"name": name})
+}
+
+// KubeForwardPodPort says "Pod port"
+// in the language the app shows.
+//
+// kubeForwardPodPort
+func KubeForwardPodPort() string { return In(i18n.Locale()).KubeForwardPodPort() }
+
+// KubeForwardPodPort says "Pod port"
+// in the language of msgs.
+//
+// kubeForwardPodPort
+func (msgs Messages) KubeForwardPodPort() string {
+	return Catalog.Format(msgs.locale, "kubeForwardPodPort", nil)
+}
+
+// KubeForwardServicePort says "Service port"
+// in the language the app shows.
+//
+// kubeForwardServicePort
+func KubeForwardServicePort() string { return In(i18n.Locale()).KubeForwardServicePort() }
+
+// KubeForwardServicePort says "Service port"
+// in the language of msgs.
+//
+// kubeForwardServicePort
+func (msgs Messages) KubeForwardServicePort() string {
+	return Catalog.Format(msgs.locale, "kubeForwardServicePort", nil)
+}
+
+// KubeForwardLocalPort says "Local port"
+// in the language the app shows.
+//
+// kubeForwardLocalPort
+func KubeForwardLocalPort() string { return In(i18n.Locale()).KubeForwardLocalPort() }
+
+// KubeForwardLocalPort says "Local port"
+// in the language of msgs.
+//
+// kubeForwardLocalPort
+func (msgs Messages) KubeForwardLocalPort() string {
+	return Catalog.Format(msgs.locale, "kubeForwardLocalPort", nil)
+}
+
+// KubeForwardBusy says "Local port {port} is already in use."
+// in the language the app shows.
+//
+// kubeForwardBusy
+func KubeForwardBusy(port string) string { return In(i18n.Locale()).KubeForwardBusy(port) }
+
+// KubeForwardBusy says "Local port {port} is already in use."
+// in the language of msgs.
+//
+// kubeForwardBusy
+func (msgs Messages) KubeForwardBusy(port string) string {
+	return Catalog.Format(msgs.locale, "kubeForwardBusy", map[string]any{"port": port})
+}
+
+// KubeForwardSuggestion says "Use free port {port}."
+// in the language the app shows.
+//
+// kubeForwardSuggestion
+func KubeForwardSuggestion(port string) string { return In(i18n.Locale()).KubeForwardSuggestion(port) }
+
+// KubeForwardSuggestion says "Use free port {port}."
+// in the language of msgs.
+//
+// kubeForwardSuggestion
+func (msgs Messages) KubeForwardSuggestion(port string) string {
+	return Catalog.Format(msgs.locale, "kubeForwardSuggestion", map[string]any{"port": port})
+}
+
+// KubeForwardRange says "Enter a port from 1 to 65535."
+// in the language the app shows.
+//
+// kubeForwardRange
+func KubeForwardRange() string { return In(i18n.Locale()).KubeForwardRange() }
+
+// KubeForwardRange says "Enter a port from 1 to 65535."
+// in the language of msgs.
+//
+// kubeForwardRange
+func (msgs Messages) KubeForwardRange() string {
+	return Catalog.Format(msgs.locale, "kubeForwardRange", nil)
+}
+
+// KubeForwardChecking says "Checking the local port…"
+// in the language the app shows.
+//
+// kubeForwardChecking
+func KubeForwardChecking() string { return In(i18n.Locale()).KubeForwardChecking() }
+
+// KubeForwardChecking says "Checking the local port…"
+// in the language of msgs.
+//
+// kubeForwardChecking
+func (msgs Messages) KubeForwardChecking() string {
+	return Catalog.Format(msgs.locale, "kubeForwardChecking", nil)
+}
+
+// KubeForwardAddress says "Address"
+// in the language the app shows.
+//
+// kubeForwardAddress
+func KubeForwardAddress() string { return In(i18n.Locale()).KubeForwardAddress() }
+
+// KubeForwardAddress says "Address"
+// in the language of msgs.
+//
+// kubeForwardAddress
+func (msgs Messages) KubeForwardAddress() string {
+	return Catalog.Format(msgs.locale, "kubeForwardAddress", nil)
+}
+
+// KubeForwardDestination says "Destination"
+// in the language the app shows.
+//
+// kubeForwardDestination
+func KubeForwardDestination() string { return In(i18n.Locale()).KubeForwardDestination() }
+
+// KubeForwardDestination says "Destination"
+// in the language of msgs.
+//
+// kubeForwardDestination
+func (msgs Messages) KubeForwardDestination() string {
+	return Catalog.Format(msgs.locale, "kubeForwardDestination", nil)
+}
+
+// KubeForwardSelectedPod says "Hearth chooses a pod from the service selector"
+// in the language the app shows.
+//
+// kubeForwardSelectedPod
+func KubeForwardSelectedPod() string { return In(i18n.Locale()).KubeForwardSelectedPod() }
+
+// KubeForwardSelectedPod says "Hearth chooses a pod from the service selector"
+// in the language of msgs.
+//
+// kubeForwardSelectedPod
+func (msgs Messages) KubeForwardSelectedPod() string {
+	return Catalog.Format(msgs.locale, "kubeForwardSelectedPod", nil)
+}
+
+// KubeForwardLifetime says "The connection is local to this computer. You can stop it on the Ports page. It closes when you quit Hearth."
+// in the language the app shows.
+//
+// kubeForwardLifetime
+func KubeForwardLifetime() string { return In(i18n.Locale()).KubeForwardLifetime() }
+
+// KubeForwardLifetime says "The connection is local to this computer. You can stop it on the Ports page. It closes when you quit Hearth."
+// in the language of msgs.
+//
+// kubeForwardLifetime
+func (msgs Messages) KubeForwardLifetime() string {
+	return Catalog.Format(msgs.locale, "kubeForwardLifetime", nil)
+}
+
+// KubeForwardStart says "Forward"
+// in the language the app shows.
+//
+// kubeForwardStart
+func KubeForwardStart() string { return In(i18n.Locale()).KubeForwardStart() }
+
+// KubeForwardStart says "Forward"
+// in the language of msgs.
+//
+// kubeForwardStart
+func (msgs Messages) KubeForwardStart() string {
+	return Catalog.Format(msgs.locale, "kubeForwardStart", nil)
+}
+
+// KubeForwardList says "Port forwards"
+// in the language the app shows.
+//
+// kubeForwardList
+func KubeForwardList() string { return In(i18n.Locale()).KubeForwardList() }
+
+// KubeForwardList says "Port forwards"
+// in the language of msgs.
+//
+// kubeForwardList
+func (msgs Messages) KubeForwardList() string {
+	return Catalog.Format(msgs.locale, "kubeForwardList", nil)
+}
+
+// KubeForwardStarting says "Connecting"
+// in the language the app shows.
+//
+// kubeForwardStarting
+func KubeForwardStarting() string { return In(i18n.Locale()).KubeForwardStarting() }
+
+// KubeForwardStarting says "Connecting"
+// in the language of msgs.
+//
+// kubeForwardStarting
+func (msgs Messages) KubeForwardStarting() string {
+	return Catalog.Format(msgs.locale, "kubeForwardStarting", nil)
+}
+
+// KubeForwardActive says "Active"
+// in the language the app shows.
+//
+// kubeForwardActive
+func KubeForwardActive() string { return In(i18n.Locale()).KubeForwardActive() }
+
+// KubeForwardActive says "Active"
+// in the language of msgs.
+//
+// kubeForwardActive
+func (msgs Messages) KubeForwardActive() string {
+	return Catalog.Format(msgs.locale, "kubeForwardActive", nil)
+}
+
+// KubeForwardFailed says "Could not connect"
+// in the language the app shows.
+//
+// kubeForwardFailed
+func KubeForwardFailed() string { return In(i18n.Locale()).KubeForwardFailed() }
+
+// KubeForwardFailed says "Could not connect"
+// in the language of msgs.
+//
+// kubeForwardFailed
+func (msgs Messages) KubeForwardFailed() string {
+	return Catalog.Format(msgs.locale, "kubeForwardFailed", nil)
+}
+
+// KubeForwardDisconnected says "Disconnected"
+// in the language the app shows.
+//
+// kubeForwardDisconnected
+func KubeForwardDisconnected() string { return In(i18n.Locale()).KubeForwardDisconnected() }
+
+// KubeForwardDisconnected says "Disconnected"
+// in the language of msgs.
+//
+// kubeForwardDisconnected
+func (msgs Messages) KubeForwardDisconnected() string {
+	return Catalog.Format(msgs.locale, "kubeForwardDisconnected", nil)
+}
+
+// KubeForwardStopping says "Stopping"
+// in the language the app shows.
+//
+// kubeForwardStopping
+func KubeForwardStopping() string { return In(i18n.Locale()).KubeForwardStopping() }
+
+// KubeForwardStopping says "Stopping"
+// in the language of msgs.
+//
+// kubeForwardStopping
+func (msgs Messages) KubeForwardStopping() string {
+	return Catalog.Format(msgs.locale, "kubeForwardStopping", nil)
+}
+
+// KubeForwardStop says "Stop"
+// in the language the app shows.
+//
+// kubeForwardStop
+func KubeForwardStop() string { return In(i18n.Locale()).KubeForwardStop() }
+
+// KubeForwardStop says "Stop"
+// in the language of msgs.
+//
+// kubeForwardStop
+func (msgs Messages) KubeForwardStop() string {
+	return Catalog.Format(msgs.locale, "kubeForwardStop", nil)
+}
+
+// KubeForwardCopy says "Copy address"
+// in the language the app shows.
+//
+// kubeForwardCopy
+func KubeForwardCopy() string { return In(i18n.Locale()).KubeForwardCopy() }
+
+// KubeForwardCopy says "Copy address"
+// in the language of msgs.
+//
+// kubeForwardCopy
+func (msgs Messages) KubeForwardCopy() string {
+	return Catalog.Format(msgs.locale, "kubeForwardCopy", nil)
+}
+
+// KubeForwardDismiss says "Dismiss"
+// in the language the app shows.
+//
+// kubeForwardDismiss
+func KubeForwardDismiss() string { return In(i18n.Locale()).KubeForwardDismiss() }
+
+// KubeForwardDismiss says "Dismiss"
+// in the language of msgs.
+//
+// kubeForwardDismiss
+func (msgs Messages) KubeForwardDismiss() string {
+	return Catalog.Format(msgs.locale, "kubeForwardDismiss", nil)
+}
+
+// KubeForwardTimeout says "kubectl did not start forwarding in time."
+// in the language the app shows.
+//
+// kubeForwardTimeout
+func KubeForwardTimeout() string { return In(i18n.Locale()).KubeForwardTimeout() }
+
+// KubeForwardTimeout says "kubectl did not start forwarding in time."
+// in the language of msgs.
+//
+// kubeForwardTimeout
+func (msgs Messages) KubeForwardTimeout() string {
+	return Catalog.Format(msgs.locale, "kubeForwardTimeout", nil)
+}
+
+// KubeServicesNoPods says "No pods"
+// in the language the app shows.
+//
+// kubeServicesNoPods
+func KubeServicesNoPods() string { return In(i18n.Locale()).KubeServicesNoPods() }
+
+// KubeServicesNoPods says "No pods"
+// in the language of msgs.
+//
+// kubeServicesNoPods
+func (msgs Messages) KubeServicesNoPods() string {
+	return Catalog.Format(msgs.locale, "kubeServicesNoPods", nil)
+}
+
+// KubeServicesForwarded says "Forwarded"
+// in the language the app shows.
+//
+// kubeServicesForwarded
+func KubeServicesForwarded() string { return In(i18n.Locale()).KubeServicesForwarded() }
+
+// KubeServicesForwarded says "Forwarded"
+// in the language of msgs.
+//
+// kubeServicesForwarded
+func (msgs Messages) KubeServicesForwarded() string {
+	return Catalog.Format(msgs.locale, "kubeServicesForwarded", nil)
+}
+
+// KubeServicesExternal says "External"
+// in the language the app shows.
+//
+// kubeServicesExternal
+func KubeServicesExternal() string { return In(i18n.Locale()).KubeServicesExternal() }
+
+// KubeServicesExternal says "External"
+// in the language of msgs.
+//
+// kubeServicesExternal
+func (msgs Messages) KubeServicesExternal() string {
+	return Catalog.Format(msgs.locale, "kubeServicesExternal", nil)
+}
+
+// KubeServicesProblemsFirst says "Problems first"
+// in the language the app shows.
+//
+// kubeServicesProblemsFirst
+func KubeServicesProblemsFirst() string { return In(i18n.Locale()).KubeServicesProblemsFirst() }
+
+// KubeServicesProblemsFirst says "Problems first"
+// in the language of msgs.
+//
+// kubeServicesProblemsFirst
+func (msgs Messages) KubeServicesProblemsFirst() string {
+	return Catalog.Format(msgs.locale, "kubeServicesProblemsFirst", nil)
+}
+
+// KubeServicesSort says "Sort services"
+// in the language the app shows.
+//
+// kubeServicesSort
+func KubeServicesSort() string { return In(i18n.Locale()).KubeServicesSort() }
+
+// KubeServicesSort says "Sort services"
+// in the language of msgs.
+//
+// kubeServicesSort
+func (msgs Messages) KubeServicesSort() string {
+	return Catalog.Format(msgs.locale, "kubeServicesSort", nil)
+}
+
+// KubeServicesSearch says "Name or namespace"
+// in the language the app shows.
+//
+// kubeServicesSearch
+func KubeServicesSearch() string { return In(i18n.Locale()).KubeServicesSearch() }
+
+// KubeServicesSearch says "Name or namespace"
+// in the language of msgs.
+//
+// kubeServicesSearch
+func (msgs Messages) KubeServicesSearch() string {
+	return Catalog.Format(msgs.locale, "kubeServicesSearch", nil)
+}
+
+// KubeServicesType says "Type"
+// in the language the app shows.
+//
+// kubeServicesType
+func KubeServicesType() string { return In(i18n.Locale()).KubeServicesType() }
+
+// KubeServicesType says "Type"
+// in the language of msgs.
+//
+// kubeServicesType
+func (msgs Messages) KubeServicesType() string {
+	return Catalog.Format(msgs.locale, "kubeServicesType", nil)
+}
+
+// KubeServicesPods says "Matching pods"
+// in the language the app shows.
+//
+// kubeServicesPods
+func KubeServicesPods() string { return In(i18n.Locale()).KubeServicesPods() }
+
+// KubeServicesPods says "Matching pods"
+// in the language of msgs.
+//
+// kubeServicesPods
+func (msgs Messages) KubeServicesPods() string {
+	return Catalog.Format(msgs.locale, "kubeServicesPods", nil)
+}
+
+// KubeServicesReady says "{ready} of {total} ready"
+// in the language the app shows.
+//
+// kubeServicesReady
+func KubeServicesReady(ready string, total string) string {
+	return In(i18n.Locale()).KubeServicesReady(ready, total)
+}
+
+// KubeServicesReady says "{ready} of {total} ready"
+// in the language of msgs.
+//
+// kubeServicesReady
+func (msgs Messages) KubeServicesReady(ready string, total string) string {
+	return Catalog.Format(msgs.locale, "kubeServicesReady", map[string]any{"ready": ready, "total": total})
+}
+
+// KubeForwardPodEnded says "The target pod ended or was replaced."
+// in the language the app shows.
+//
+// Status detail after the port-forward target pod ends or is replaced
+func KubeForwardPodEnded() string { return In(i18n.Locale()).KubeForwardPodEnded() }
+
+// KubeForwardPodEnded says "The target pod ended or was replaced."
+// in the language of msgs.
+//
+// Status detail after the port-forward target pod ends or is replaced
+func (msgs Messages) KubeForwardPodEnded() string {
+	return Catalog.Format(msgs.locale, "kubeForwardPodEnded", nil)
 }

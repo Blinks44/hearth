@@ -100,44 +100,36 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 		toolNote(c, locales.KubeClusterNoDeployments())
 		return
 	}
-	pal := Colors(c.Theme())
-	ui.Row(c).Gap(16).AlignItems(ui.Start).Children(func() {
-		list := ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider)
-		if chosen >= 0 {
-			list.Width(390).Shrink(0)
-			if narrow(c) {
-				list.Width(300)
-			}
-		} else {
-			list.Grow(1).MinWidth(0)
+	var uid string
+	var detail func()
+	if chosen >= 0 {
+		resource := cl.Deployments[chosen]
+		uid = resource.UID
+		detail = func() { a.deploymentDetail(c, cl, resource) }
+	}
+	compact := chosen >= 0
+	tracks := workloadTracks(c, compact)
+	workloadPanes(c.Key("deployments-panes"), func() {
+		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
+		if !compact {
+			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
 		}
-		list.Children(func() {
-			if chosen < 0 {
-				resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
-			}
-			for _, d := range shown {
-				a.deploymentRow(c, d, chosen >= 0)
-			}
-		})
-		if chosen >= 0 {
-			ui.Column(c).Grow(1).MinWidth(0).Children(func() { a.deploymentDetail(c, cl, cl.Deployments[chosen]) })
+		resourceHead(c, tracks, headers...)
+	}, func() {
+		for _, d := range shown {
+			a.deploymentRow(c, d, compact, tracks)
 		}
-	})
+	}, uid, detail)
 }
 
-func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool) {
+func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, tracks []ui.Track) {
 	s := &a.cluster
 	t := c.Theme()
 	pal := Colors(t)
 	label, bg, fg := deploymentTag(c, d)
-	row := ui.ButtonBase(c.Key("deployment-"+d.UID)).Gap(10).Padding(8, 16).MinHeight(40).AlignItems(ui.Center).
-		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(d.Name).OnClick(func() {
-		if s.deployment == d.UID {
-			s.deployment = ""
-			return
-		}
-		s.deployment, s.tab = d.UID, 0
-	})
+	row := resourceGrid(ui.ButtonBase(c.Key("deployment-"+d.UID)), tracks).Padding(8, 16).MinHeight(40).
+		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(d.Name).OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
+	s.revealWorkloadRow(row, d.UID)
 	switch {
 	case s.deployment == d.UID:
 		row.Background(pal.ActiveRow)
@@ -145,21 +137,20 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool) {
 		row.Background(pal.Subtle)
 	}
 	row.Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+		ui.Column(c).MinWidth(0).Gap(1).Children(func() {
 			clipped(c, d.Name).FontSize(13)
 			if !compact {
 				ui.Text(c, d.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 			}
 		})
+		workloadStatus(c, label, bg, fg)
 		if compact {
-			aiTag(c, label, bg, fg).Shrink(0)
 			return
 		}
-		ui.Row(c).Width(resourceWidths[0]).Children(func() { aiTag(c, label, bg, fg) })
-		ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).Width(resourceWidths[1]).SingleLine()
-		ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).Width(resourceWidths[2]).SingleLine()
-		ui.Box(c).Width(resourceWidths[3])
-		ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).Width(resourceWidths[4]).SingleLine()
+		ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).SingleLine()
+		ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).SingleLine()
+		ui.Box(c)
+		ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
 	})
 }
 
@@ -185,7 +176,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				clipped(c, d.Name).FontSize(16).FontWeight(500).Shrink(1).MinWidth(0)
 				aiTag(c, label, bg, fg).Shrink(0)
 				ui.Box(c).Grow(1)
-				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.deployment = "" })
+				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
 			})
 			meta := []string{"Deployment", d.Namespace}
 			meta = append(meta, d.Images...)

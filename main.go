@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -74,6 +75,8 @@ func main() {
 	// The native parts follow it too: the sidebar's material, the window
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
+	forwardCtx, stopForwards := context.WithCancel(context.Background())
+	var forwards sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
@@ -182,6 +185,26 @@ func main() {
 					win.Update(func() { done(err) })
 				}
 			}()
+			return cancel
+		}
+		a.CheckForwardPort = func(port int, done func(int, error)) {
+			go func() {
+				suggestion, err := ops.CheckForwardPort(port)
+				win.Update(func() { done(suggestion, err) })
+			}()
+		}
+		a.RunForward = func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(forwardCtx)
+			forwards.Go(func() {
+				defer cancel()
+				err := ops.RunForward(ctx, run.Exec{}, run.Lines, env, f, func(pod kube.ForwardPod) {
+					win.Update(func() { ready(pod) })
+				})
+				if forwardCtx.Err() == nil {
+					win.Update(func() { done(err) })
+				}
+			})
 			return cancel
 		}
 		a.ListNamespaces = func(t kube.Target, done func([]string, error)) {
@@ -434,6 +457,7 @@ func main() {
 		win.OnClosed(func() {
 			a.CancelPreparation()
 			a.StopCluster()
+			stopForwards()
 			stopCatalog()
 			if cancelVersions != nil {
 				cancelVersions()
@@ -561,7 +585,10 @@ func main() {
 		scanner.Start(scanned)
 		fetchVersions()
 	})
-	if err := mygo.App.Run(); err != nil {
+	err := mygo.App.Run()
+	stopForwards()
+	forwards.Wait()
+	if err != nil {
 		log.Fatal(err)
 	}
 }

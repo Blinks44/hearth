@@ -190,94 +190,90 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		return
 	}
 	groups := podGroups(shown)
-	ui.Row(c).Gap(16).AlignItems(ui.Start).Children(func() {
-		list := ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(Colors(c.Theme()).Divider)
-		if chosen >= 0 {
-			list.Width(390).Shrink(0)
-			if narrow(c) {
-				list.Width(300)
-			}
-		} else {
-			list.Grow(1).MinWidth(0)
+	var uid string
+	var detail func()
+	if chosen >= 0 {
+		resource := cl.Pods[chosen]
+		uid = resource.UID
+		detail = func() { a.podDetail(c, cl, resource) }
+	}
+	compact := chosen >= 0
+	tracks := workloadTracks(c, compact)
+	workloadPanes(c.Key("pods-panes"), func() {
+		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
+		if !compact {
+			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
 		}
-		list.Children(func() {
-			if chosen < 0 {
-				resourceHead(c, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
-			}
-			for _, g := range groups {
-				a.podGroupRows(c, g, chosen >= 0)
-			}
-			a.podFooter(c, groups, len(shown))
-		})
-		if chosen >= 0 {
-			ui.Column(c).Grow(1).MinWidth(0).Children(func() { a.podDetail(c, cl, cl.Pods[chosen]) })
+		resourceHead(c, tracks, headers...)
+	}, func() {
+		for _, g := range groups {
+			a.podGroupRows(c, g, compact, tracks)
 		}
-	})
+		a.podFooter(c, groups, len(shown))
+	}, uid, detail)
 }
 
 // podGroupRows are a group's header, and its pods while it is open; a
 // lone pod nothing owns has no header.
-func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool) {
+func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool, tracks []ui.Track) {
 	if g.owner.Kind == "" {
-		a.podRow(c, g.pods[0], "", compact)
+		a.podRow(c, g.pods[0], false, compact, tracks)
 		return
 	}
 	t := c.Theme()
 	pal := Colors(t)
 	open := a.groupOpen(g)
-	head := ui.ButtonBase(c.Key("group-"+g.key())).Gap(8).Padding(9, 16, 9, 10).AlignItems(ui.Center).
+	head := resourceGrid(ui.ButtonBase(c.Key("group-"+g.key())), tracks).Padding(8, 16).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(g.owner.Name).OnClick(func() { a.toggleGroup(g) })
 	if head.Hovered() {
+		head.Background(pal.Muted)
+	} else if open {
 		head.Background(pal.Subtle)
 	}
 	head.Children(func() {
-		chevron := "chevron-right"
-		if open {
-			chevron = "chevron-down"
-		}
-		ui.Icon(c, Icon(chevron)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
-		aiTag(c, g.owner.Kind, pal.Muted, t.TextMuted).Shrink(0)
-		clipped(c, g.owner.Name).FontSize(13.5).FontWeight(500).Shrink(1).MinWidth(0)
-		ready := 0
-		for _, p := range g.pods {
-			if !podTrouble(p) {
-				ready++
+		ui.Row(c).Gap(8).AlignItems(ui.Center).MinWidth(0).Children(func() {
+			chevron := "chevron-right"
+			if open {
+				chevron = "chevron-down"
 			}
-		}
+			ui.Icon(c, Icon(chevron)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+				clipped(c, g.owner.Name).FontSize(13).FontWeight(600)
+				meta := g.owner.Kind
+				if !compact {
+					meta += " · " + g.namespace + " · " + locales.KubePodCount(len(g.pods))
+				}
+				clipped(c, meta).FontSize(10.5).TextColor(pal.TextFaint)
+			})
+		})
 		switch {
 		case g.trouble > 0:
-			aiTag(c, locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText).Shrink(0)
+			workloadStatus(c, locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText)
 		case g.owner.Kind == "Job" && !slices.ContainsFunc(g.pods, func(p kube.Pod) bool { return p.Phase != "Succeeded" }):
-			aiTag(c, locales.KubeGroupDone(), pal.Muted, t.TextMuted).Shrink(0)
+			workloadStatus(c, locales.KubeGroupDone(), pal.Muted, t.TextMuted)
 		default:
-			aiTag(c, locales.KubeGroupReady(ready, len(g.pods)), pal.SuccessSoft, pal.SuccessText).Shrink(0)
-		}
-		ui.Box(c).Grow(1)
-		if !compact {
-			ui.Text(c, g.namespace+" · "+locales.KubePodCount(len(g.pods))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			workloadStatus(c, locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText)
 		}
 	})
 	if !open {
 		return
 	}
 	for _, p := range g.pods {
-		a.podRow(c, p, g.owner.Name, compact)
+		a.podRow(c, p, true, compact, tracks)
 	}
 }
 
 // podRow is a pod in the list: in full, its columns and what is going on
 // with it; compact beside its details, its name and status.
-func (a *App) podRow(c *ui.Context, p kube.Pod, owner string, compact bool) {
+func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui.Track) {
 	s := &a.cluster
 	t := c.Theme()
 	pal := Colors(t)
 	label, bg, fg := podTag(c, p)
 	story, trouble := storyOf(p, nil, c.Now())
-	row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Gap(6).Padding(9, 16, 9, 34).AlignItems(ui.Stretch).
-		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(p.Name).OnClick(func() { a.choosePod(p.UID) })
-	if owner == "" {
-		row.Padding(9, 16)
-	}
+	row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Gap(5).Padding(8, 16).AlignItems(ui.Stretch).
+		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
+	s.revealWorkloadRow(row, p.UID)
 	switch {
 	case s.pod == p.UID:
 		row.Background(pal.ActiveRow)
@@ -289,23 +285,26 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owner string, compact bool) {
 		row.Background(pal.Subtle)
 	}
 	row.Children(func() {
-		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+		resourceGrid(ui.Box(c), tracks).Children(func() {
+			cell := ui.Column(c).MinWidth(0).Gap(1)
+			if owned {
+				cell.Padding(0, 0, 0, 22)
+			}
+			cell.Children(func() {
 				name := clipped(c, p.Name).Font(FontMono).FontSize(12.5)
 				if compact {
 					name.TruncateStart()
 				}
-				if owner == "" && !compact {
+				if !owned && !compact {
 					ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 				}
 			})
+			workloadStatus(c, label, bg, fg)
 			if compact {
-				aiTag(c, label, bg, fg).Shrink(0)
 				return
 			}
-			ui.Row(c).Width(resourceWidths[0]).Children(func() { aiTag(c, label, bg, fg) })
-			ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).Width(resourceWidths[1]).SingleLine()
-			restarts := ui.Text(c, strconv.Itoa(p.Restarts)).Font(FontMono).FontSize(12).Width(resourceWidths[2]).SingleLine()
+			ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).SingleLine()
+			restarts := ui.Text(c, strconv.Itoa(p.Restarts)).Font(FontMono).FontSize(12).SingleLine()
 			if p.Restarts > 0 && trouble {
 				restarts.TextColor(t.Danger)
 			}
@@ -313,8 +312,8 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owner string, compact bool) {
 			if node == "" {
 				node = "–"
 			}
-			clipped(c, node).Font(FontMono).FontSize(12).Width(resourceWidths[3])
-			ui.Text(c, age(c, p.Created)).FontSize(12).TextColor(t.TextMuted).Width(resourceWidths[4]).SingleLine()
+			clipped(c, node).Font(FontMono).FontSize(12)
+			ui.Text(c, age(c, p.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
 		})
 		if trouble && !compact {
 			ui.Row(c).Gap(6).AlignItems(ui.Start).Children(func() {
@@ -323,7 +322,7 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owner string, compact bool) {
 					icon, color = "triangle-alert", pal.WarningText
 				}
 				ui.Icon(c, Icon(icon)).Size(13, 13).Shrink(0).TextColor(color).Margin(1, 0, 0, 0)
-				ui.Text(c, story.line()).FontSize(12).TextColor(color).Grow(1).MinWidth(0).Wrap()
+				clipped(c, story.line()).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
 			})
 		}
 	})
@@ -355,16 +354,6 @@ func (a *App) podFooter(c *ui.Context, groups []podGroup, pods int) {
 	})
 }
 
-// choosePod shows the pod beside the list, or closes it when it shows.
-func (a *App) choosePod(uid string) {
-	s := &a.cluster
-	if s.pod == uid {
-		s.pod = ""
-		return
-	}
-	s.pod, s.tab = uid, 0
-}
-
 // clusterEvents are the events of the object whose details show, when
 // they were read for it.
 func clusterEvents(cl *kube.Cluster, uid string) ([]kube.Event, bool) {
@@ -392,7 +381,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				clipped(c, p.Name).Font(FontMono).FontSize(15).FontWeight(500).Shrink(1).MinWidth(0)
 				aiTag(c, label, bg, fg).Shrink(0)
 				ui.Box(c).Grow(1)
-				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.pod = "" })
+				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
 			})
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Wrap().Children(func() {
 				meta := []string{"Pod", p.Namespace}
@@ -421,16 +410,25 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				}
 			})
 		})
-		if a.StreamLogs != nil && len(p.Containers) > 0 {
+		if a.StreamLogs != nil && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" {
 			ui.Row(c).Gap(8).Padding(0, 16, 12, 16).Children(func() {
-				container := p.Containers[0].Name
-				if story.crashed != "" {
-					container = story.crashed
+				if a.StreamLogs != nil && len(p.Containers) > 0 {
+					container := p.Containers[0].Name
+					if story.crashed != "" {
+						container = story.crashed
+					}
+					ui.Button(c.Key("pod-logs"), "").Label(locales.KubeLogsOpen()).OnClick(func() { a.openLogs(p, container, false) }).Children(func() {
+						ui.Icon(c, Icon("scroll-text")).Size(14, 14)
+						ui.Text(c, locales.KubeLogsOpen()).SingleLine()
+					})
 				}
-				ui.Button(c.Key("pod-logs"), "").Label(locales.KubeLogsOpen()).OnClick(func() { a.openLogs(p, container, false) }).Children(func() {
-					ui.Icon(c, Icon("scroll-text")).Size(14, 14)
-					ui.Text(c, locales.KubeLogsOpen()).SingleLine()
-				})
+				if a.RunForward != nil && p.Phase == "Running" {
+					var ports []forwardPort
+					for _, port := range p.TCPPorts {
+						ports = append(ports, forwardPort{port, port, strconv.Itoa(port) + "/TCP"})
+					}
+					a.forwardButton(c, p.UID, "pod", p.Namespace, p.Name, ports)
+				}
 			})
 		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {

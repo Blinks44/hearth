@@ -853,6 +853,10 @@
   "@aiSkills": {
     "description": "Project AI folder .agents."
   },
+  "backToKubernetes": "Back to Kubernetes",
+  "@backToKubernetes": {
+    "description": "Back button from a cluster to the Kubernetes page"
+  },
   "backToProjects": "Back to projects",
   "@backToProjects": {
     "description": "Project page: the button before the title going back to the projects."
@@ -11276,5 +11280,169 @@
   "kubeLogsOpenEnded": "Log of the failed run",
   "@kubeLogsOpenEnded": {
     "description": "What is going on: button opening the log of the container's run that just failed, between its tries."
+  },
+  "kubeForwardOpen": "Forward port…",
+  "@kubeForwardOpen": {
+    "description": "kubeForwardOpen"
+  },
+  "kubeForwardTitle": "Forward {name} to this computer",
+  "@kubeForwardTitle": {
+    "description": "kubeForwardTitle",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "web"
+      }
+    }
+  },
+  "kubeForwardPodPort": "Pod port",
+  "@kubeForwardPodPort": {
+    "description": "kubeForwardPodPort"
+  },
+  "kubeForwardServicePort": "Service port",
+  "@kubeForwardServicePort": {
+    "description": "kubeForwardServicePort"
+  },
+  "kubeForwardLocalPort": "Local port",
+  "@kubeForwardLocalPort": {
+    "description": "kubeForwardLocalPort"
+  },
+  "kubeForwardBusy": "Local port {port} is already in use.",
+  "@kubeForwardBusy": {
+    "description": "kubeForwardBusy",
+    "placeholders": {
+      "port": {
+        "type": "String",
+        "example": "8080"
+      }
+    }
+  },
+  "kubeForwardSuggestion": "Use free port {port}.",
+  "@kubeForwardSuggestion": {
+    "description": "kubeForwardSuggestion",
+    "placeholders": {
+      "port": {
+        "type": "String",
+        "example": "8080"
+      }
+    }
+  },
+  "kubeForwardRange": "Enter a port from 1 to 65535.",
+  "@kubeForwardRange": {
+    "description": "kubeForwardRange"
+  },
+  "kubeForwardChecking": "Checking the local port…",
+  "@kubeForwardChecking": {
+    "description": "kubeForwardChecking"
+  },
+  "kubeForwardAddress": "Address",
+  "@kubeForwardAddress": {
+    "description": "kubeForwardAddress"
+  },
+  "kubeForwardDestination": "Destination",
+  "@kubeForwardDestination": {
+    "description": "kubeForwardDestination"
+  },
+  "kubeForwardSelectedPod": "Hearth chooses a pod from the service selector",
+  "@kubeForwardSelectedPod": {
+    "description": "kubeForwardSelectedPod"
+  },
+  "kubeForwardLifetime": "The connection is local to this computer. You can stop it on the Ports page. It closes when you quit Hearth.",
+  "@kubeForwardLifetime": {
+    "description": "kubeForwardLifetime"
+  },
+  "kubeForwardStart": "Forward",
+  "@kubeForwardStart": {
+    "description": "kubeForwardStart"
+  },
+  "kubeForwardList": "Port forwards",
+  "@kubeForwardList": {
+    "description": "kubeForwardList"
+  },
+  "kubeForwardStarting": "Connecting",
+  "@kubeForwardStarting": {
+    "description": "kubeForwardStarting"
+  },
+  "kubeForwardActive": "Active",
+  "@kubeForwardActive": {
+    "description": "kubeForwardActive"
+  },
+  "kubeForwardFailed": "Could not connect",
+  "@kubeForwardFailed": {
+    "description": "kubeForwardFailed"
+  },
+  "kubeForwardDisconnected": "Disconnected",
+  "@kubeForwardDisconnected": {
+    "description": "kubeForwardDisconnected"
+  },
+  "kubeForwardStopping": "Stopping",
+  "@kubeForwardStopping": {
+    "description": "kubeForwardStopping"
+  },
+  "kubeForwardStop": "Stop",
+  "@kubeForwardStop": {
+    "description": "kubeForwardStop"
+  },
+  "kubeForwardCopy": "Copy address",
+  "@kubeForwardCopy": {
+    "description": "kubeForwardCopy"
+  },
+  "kubeForwardDismiss": "Dismiss",
+  "@kubeForwardDismiss": {
+    "description": "kubeForwardDismiss"
+  },
+  "kubeForwardTimeout": "kubectl did not start forwarding in time.",
+  "@kubeForwardTimeout": {
+    "description": "kubeForwardTimeout"
+  },
+  "kubeServicesNoPods": "No pods",
+  "@kubeServicesNoPods": {
+    "description": "kubeServicesNoPods"
+  },
+  "kubeServicesForwarded": "Forwarded",
+  "@kubeServicesForwarded": {
+    "description": "kubeServicesForwarded"
+  },
+  "kubeServicesExternal": "External",
+  "@kubeServicesExternal": {
+    "description": "kubeServicesExternal"
+  },
+  "kubeServicesProblemsFirst": "Problems first",
+  "@kubeServicesProblemsFirst": {
+    "description": "kubeServicesProblemsFirst"
+  },
+  "kubeServicesSort": "Sort services",
+  "@kubeServicesSort": {
+    "description": "kubeServicesSort"
+  },
+  "kubeServicesSearch": "Name or namespace",
+  "@kubeServicesSearch": {
+    "description": "kubeServicesSearch"
+  },
+  "kubeServicesType": "Type",
+  "@kubeServicesType": {
+    "description": "kubeServicesType"
+  },
+  "kubeServicesPods": "Matching pods",
+  "@kubeServicesPods": {
+    "description": "kubeServicesPods"
+  },
+  "kubeServicesReady": "{ready} of {total} ready",
+  "@kubeServicesReady": {
+    "description": "kubeServicesReady",
+    "placeholders": {
+      "ready": {
+        "type": "String",
+        "example": "2"
+      },
+      "total": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "kubeForwardPodEnded": "The target pod ended or was replaced.",
+  "@kubeForwardPodEnded": {
+    "description": "Status detail after the port-forward target pod ends or is replaced"
   }
 }

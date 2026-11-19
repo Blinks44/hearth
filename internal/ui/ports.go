@@ -186,6 +186,7 @@ func (a *App) portsView(c *ui.Context, p page) {
 					stateCard(c, t.Success, locales.PortsInProjects(), strconv.Itoa(projects), locales.PortsInProjectsCaption())
 					stateCard(c, pal.Info, locales.PortsNetwork(), strconv.Itoa(network), locales.PortsNetworkCaption())
 				})
+				a.forwardList(c, "")
 				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("ports-filter"), &a.portsFilter).Bind(&a.filterField).Placeholder(locales.PortsFilter()).Width(200)
