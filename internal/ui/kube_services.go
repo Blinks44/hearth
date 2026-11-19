@@ -85,7 +85,7 @@ func (a *App) servicesView(c *ui.Context, list []kube.Service) {
 	})
 	t := c.Theme()
 	pal := Colors(t)
-	tracks := []ui.Track{ui.Fr(1.4), ui.Fr(0.7), ui.Fr(1), ui.Fr(1.1), ui.Fr(1), ui.Fixed(132)}
+	tracks := []ui.Track{ui.Fr(1.4), ui.Fr(0.7), ui.Fr(1), ui.Fr(1.1), ui.Fr(1), ui.Fixed(150)}
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		resourceHead(c, tracks, locales.KubeClusterName(), locales.KubeServicesType(), "Cluster IP", locales.PortsTitle(), locales.KubeServicesPods(), "")
 		for _, service := range shown {
@@ -123,10 +123,11 @@ func (a *App) servicesView(c *ui.Context, list []kube.Service) {
 					}
 				}
 				clipped(c, text).FontSize(12).TextColor(color)
-				ui.Row(c).Justify(ui.End).Children(func() {
+				ui.Row(c).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 					if service.HasSelector && len(ports) > 0 {
 						a.forwardButton(c, service.UID, "service", service.Namespace, service.Name, ports)
 					}
+					a.resourceMenu(c, a.resourceRef("Service", service.Namespace, service.Name, service.UID))
 				})
 			})
 		}

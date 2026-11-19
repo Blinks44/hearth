@@ -169,7 +169,8 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 	}
 	slices.SortFunc(pods, troubleFirst)
 	label, bg, fg := deploymentTag(c, d)
-	detailFrame(c, s.tab, func() {
+	ref := a.resourceRef("Deployment", d.Namespace, d.Name, d.UID)
+	detailFrame(c, s.tab, s.tab == 3, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, Icon("boxes")).Size(18, 18).Shrink(0).TextColor(t.TextMuted)
@@ -186,17 +187,27 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			meta = append(meta, locales.KubeCreatedAgo(age(c, d.Created)))
 			ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted).Wrap()
 		})
+		if a.BuildPlan != nil {
+			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
+				a.resourceActions(c, ref, 3)
+			})
+		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
 			count := ""
 			if read {
 				count = strconv.Itoa(len(events))
 			}
-			segments(c, "deployment-tab", &s.tab, []segment{
-				{locales.KubeTabOverview(), ""}, {"Pods", strconv.Itoa(len(pods))}, {locales.KubeTabEvents(), count},
-			})
+			tabs := []segment{{locales.KubeTabOverview(), ""}, {"Pods", strconv.Itoa(len(pods))}, {locales.KubeTabEvents(), count}}
+			if f := s.resources[ref]; f != nil && (f.editor != nil || s.tab == 3) {
+				tabs = append(tabs, segment{locales.KubeResourceYaml(), ""})
+			}
+			segments(c, "deployment-tab", &s.tab, tabs)
 		})
 	}, func() {
 		switch s.tab {
+		case 3:
+			a.resourceEditor(c, s.resources[ref])
+			return
 		case 1:
 			for _, p := range pods {
 				a.ownedPodRow(c, p)

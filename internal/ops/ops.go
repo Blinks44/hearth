@@ -31,6 +31,8 @@ const LogLines = 200
 // Step is one command of a plan, as argv: never a shell string.
 type Step struct {
 	Argv []string
+	// Kube executes and verifies one reviewed Kubernetes write.
+	Kube *KubeChange
 	// Note says what else the step does, shown after the command, as
 	// "wait for the engine to start".
 	Note string
@@ -256,6 +258,26 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		e.mu.Lock()
 		e.state.Current, e.state.Steps[i], e.state.Log = i, Busy, nil
 		e.mu.Unlock()
+		if step.Kube != nil {
+			e.printf("$ %s\n", strings.Join(step.Shown(), " "))
+			e.emit()
+			found, err := step.Kube.apply(ctx, r, p.Env)
+			e.mu.Lock()
+			e.state.Steps[i] = Done
+			if err != nil {
+				e.state.Steps[i], e.state.Phase, e.state.Err = StepFailed, NotVerified, err.Error()
+			} else {
+				e.state.Phase, e.state.Verified = Succeeded, found
+			}
+			e.mu.Unlock()
+			if err != nil {
+				e.printf("Kubernetes operation needs verification\n")
+			} else {
+				e.printf("verify: %s\n", found)
+			}
+			e.emit()
+			return e.snapshot()
+		}
 		if step.Skill != nil || step.Instructions != nil {
 			var name string
 			var restore func() error

@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -99,7 +100,7 @@ func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.Job) int {
 		return cmp.Compare(batchIssueOrder(a.State == kube.JobFailed), batchIssueOrder(b.State == kube.JobFailed))
 	})
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge()}, func() {
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge(), ""}, func() {
 		for _, j := range shown {
 			batchRow(c.Key(j.UID), j.State == kube.JobFailed, func() {
 				batchName(c, j.Name, j.Namespace)
@@ -109,6 +110,7 @@ func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
 				})
 				batchText(c, fmt.Sprintf("%d/%d", j.Completed, j.Want))
 				batchText(c, age(c, j.Created))
+				a.batchResourceMenu(c, a.resourceRef("Job", j.Namespace, j.Name, j.UID))
 			}, jobFailure(j))
 		}
 	})
@@ -140,7 +142,7 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.CronJob) int {
 		return cmp.Compare(batchIssueOrder(lastCronFailed(a)), batchIssueOrder(lastCronFailed(b)))
 	})
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus()}, func() {
+	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus(), ""}, func() {
 		for _, j := range shown {
 			failure := ""
 			if lastCronFailed(j) {
@@ -164,9 +166,14 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 					status = locales.KubeJobRunning()
 				}
 				batchText(c, status)
+				a.batchResourceMenu(c, a.resourceRef("CronJob", j.Namespace, j.Name, j.UID))
 			}, failure)
 		}
 	})
+}
+
+func (a *App) batchResourceMenu(c *ui.Context, ref ops.KubeResource) {
+	ui.Row(c).Width(28).Shrink(0).Justify(ui.End).Children(func() { a.resourceMenu(c, ref) })
 }
 
 func batchIssueOrder(failed bool) int {
@@ -194,6 +201,10 @@ func batchTable(c *ui.Context, headers []string, rows func()) {
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			for i, header := range headers {
+				if i == len(headers)-1 {
+					ui.Box(c).Width(28).Shrink(0)
+					continue
+				}
 				ui.Text(c, strings.ToUpper(header)).FontSize(10.5).TextColor(pal.TextFaint).Grow(batchColumnWeight(i)).Basis(0).MinWidth(0).SingleLine()
 			}
 		})

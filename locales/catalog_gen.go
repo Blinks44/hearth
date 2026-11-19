@@ -36,6 +36,402 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeResourceManifest says "Enter a single Kubernetes resource in YAML."
+// in the language the app shows.
+func KubeResourceManifest() string { return In(i18n.Locale()).KubeResourceManifest() }
+
+// KubeResourceManifest says "Enter a single Kubernetes resource in YAML."
+// in the language of msgs.
+func (msgs Messages) KubeResourceManifest() string {
+	return Catalog.Format(msgs.locale, "kubeResourceManifest", nil)
+}
+
+// KubeResourceTooLarge says "This resource is too large to review in Hearth."
+// in the language the app shows.
+func KubeResourceTooLarge() string { return In(i18n.Locale()).KubeResourceTooLarge() }
+
+// KubeResourceTooLarge says "This resource is too large to review in Hearth."
+// in the language of msgs.
+func (msgs Messages) KubeResourceTooLarge() string {
+	return Catalog.Format(msgs.locale, "kubeResourceTooLarge", nil)
+}
+
+// KubeResourceContext says "The selected kubeconfig context could not be read or has changed. Reopen the resource before continuing."
+// in the language the app shows.
+func KubeResourceContext() string { return In(i18n.Locale()).KubeResourceContext() }
+
+// KubeResourceContext says "The selected kubeconfig context could not be read or has changed. Reopen the resource before continuing."
+// in the language of msgs.
+func (msgs Messages) KubeResourceContext() string {
+	return Catalog.Format(msgs.locale, "kubeResourceContext", nil)
+}
+
+// KubeResourceTarget says "The selected resource is unavailable, was replaced, or is being deleted."
+// in the language the app shows.
+func KubeResourceTarget() string { return In(i18n.Locale()).KubeResourceTarget() }
+
+// KubeResourceTarget says "The selected resource is unavailable, was replaced, or is being deleted."
+// in the language of msgs.
+func (msgs Messages) KubeResourceTarget() string {
+	return Catalog.Format(msgs.locale, "kubeResourceTarget", nil)
+}
+
+// KubeResourceVersion says "Version {version}"
+// in the language the app shows.
+//
+// kubeResourceVersion
+func KubeResourceVersion(version string) string {
+	return In(i18n.Locale()).KubeResourceVersion(version)
+}
+
+// KubeResourceVersion says "Version {version}"
+// in the language of msgs.
+//
+// kubeResourceVersion
+func (msgs Messages) KubeResourceVersion(version string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceVersion", map[string]any{"version": version})
+}
+
+// KubeResourceChanged says "The resource changed after it was read. Load the latest version and review a new plan."
+// in the language the app shows.
+func KubeResourceChanged() string { return In(i18n.Locale()).KubeResourceChanged() }
+
+// KubeResourceChanged says "The resource changed after it was read. Load the latest version and review a new plan."
+// in the language of msgs.
+func (msgs Messages) KubeResourceChanged() string {
+	return Catalog.Format(msgs.locale, "kubeResourceChanged", nil)
+}
+
+// KubeResourceDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+//
+// kubeResourceDeleteTitle
+func KubeResourceDeleteTitle(name string) string {
+	return In(i18n.Locale()).KubeResourceDeleteTitle(name)
+}
+
+// KubeResourceDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+//
+// kubeResourceDeleteTitle
+func (msgs Messages) KubeResourceDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleteTitle", map[string]any{"name": name})
+}
+
+// KubeResourceDeleteWhy says "The server checked the deletion. Kubernetes will use its normal grace period and finalizers."
+// in the language the app shows.
+func KubeResourceDeleteWhy() string { return In(i18n.Locale()).KubeResourceDeleteWhy() }
+
+// KubeResourceDeleteWhy says "The server checked the deletion. Kubernetes will use its normal grace period and finalizers."
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleteWhy() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleteWhy", nil)
+}
+
+// KubeResourceDeleteAction says "Delete"
+// in the language the app shows.
+func KubeResourceDeleteAction() string { return In(i18n.Locale()).KubeResourceDeleteAction() }
+
+// KubeResourceDeleteAction says "Delete"
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleteAction() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleteAction", nil)
+}
+
+// KubeResourceCascade says "Background cascading deletion"
+// in the language the app shows.
+func KubeResourceCascade() string { return In(i18n.Locale()).KubeResourceCascade() }
+
+// KubeResourceCascade says "Background cascading deletion"
+// in the language of msgs.
+func (msgs Messages) KubeResourceCascade() string {
+	return Catalog.Format(msgs.locale, "kubeResourceCascade", nil)
+}
+
+// KubeResourceDeleteData says "Kubernetes also deletes resources owned by this object. Data in removed pods’ writable layers and emptyDir volumes …"
+// in the language the app shows.
+func KubeResourceDeleteData() string { return In(i18n.Locale()).KubeResourceDeleteData() }
+
+// KubeResourceDeleteData says "Kubernetes also deletes resources owned by this object. Data in removed pods’ writable layers and emptyDir volumes …"
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleteData() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleteData", nil)
+}
+
+// KubeResourceOwnedPod says "The pod’s controller can create a replacement"
+// in the language the app shows.
+func KubeResourceOwnedPod() string { return In(i18n.Locale()).KubeResourceOwnedPod() }
+
+// KubeResourceOwnedPod says "The pod’s controller can create a replacement"
+// in the language of msgs.
+func (msgs Messages) KubeResourceOwnedPod() string {
+	return Catalog.Format(msgs.locale, "kubeResourceOwnedPod", nil)
+}
+
+// KubeResourceIdentity says "Keep apiVersion, kind, name, namespace, UID and resourceVersion from the loaded resource."
+// in the language the app shows.
+func KubeResourceIdentity() string { return In(i18n.Locale()).KubeResourceIdentity() }
+
+// KubeResourceIdentity says "Keep apiVersion, kind, name, namespace, UID and resourceVersion from the loaded resource."
+// in the language of msgs.
+func (msgs Messages) KubeResourceIdentity() string {
+	return Catalog.Format(msgs.locale, "kubeResourceIdentity", nil)
+}
+
+// KubeResourceProtection says "Keep finalizers and ownerReferences from the loaded resource."
+// in the language the app shows.
+func KubeResourceProtection() string { return In(i18n.Locale()).KubeResourceProtection() }
+
+// KubeResourceProtection says "Keep finalizers and ownerReferences from the loaded resource."
+// in the language of msgs.
+func (msgs Messages) KubeResourceProtection() string {
+	return Catalog.Format(msgs.locale, "kubeResourceProtection", nil)
+}
+
+// KubeResourceNoChanges says "The server preview found no changes."
+// in the language the app shows.
+func KubeResourceNoChanges() string { return In(i18n.Locale()).KubeResourceNoChanges() }
+
+// KubeResourceNoChanges says "The server preview found no changes."
+// in the language of msgs.
+func (msgs Messages) KubeResourceNoChanges() string {
+	return Catalog.Format(msgs.locale, "kubeResourceNoChanges", nil)
+}
+
+// KubeResourceApplyTitle says "Apply changes to {name}?"
+// in the language the app shows.
+//
+// kubeResourceApplyTitle
+func KubeResourceApplyTitle(name string) string {
+	return In(i18n.Locale()).KubeResourceApplyTitle(name)
+}
+
+// KubeResourceApplyTitle says "Apply changes to {name}?"
+// in the language of msgs.
+//
+// kubeResourceApplyTitle
+func (msgs Messages) KubeResourceApplyTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceApplyTitle", map[string]any{"name": name})
+}
+
+// KubeResourceDryRun says "The server checked the change (dry run). Hearth will read the resource again after applying it."
+// in the language the app shows.
+func KubeResourceDryRun() string { return In(i18n.Locale()).KubeResourceDryRun() }
+
+// KubeResourceDryRun says "The server checked the change (dry run). Hearth will read the resource again after applying it."
+// in the language of msgs.
+func (msgs Messages) KubeResourceDryRun() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDryRun", nil)
+}
+
+// KubeResourceApply says "Apply"
+// in the language the app shows.
+func KubeResourceApply() string { return In(i18n.Locale()).KubeResourceApply() }
+
+// KubeResourceApply says "Apply"
+// in the language of msgs.
+func (msgs Messages) KubeResourceApply() string {
+	return Catalog.Format(msgs.locale, "kubeResourceApply", nil)
+}
+
+// KubeResourceRollout says "Deployment rollout"
+// in the language the app shows.
+func KubeResourceRollout() string { return In(i18n.Locale()).KubeResourceRollout() }
+
+// KubeResourceRollout says "Deployment rollout"
+// in the language of msgs.
+func (msgs Messages) KubeResourceRollout() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRollout", nil)
+}
+
+// KubeResourceRolloutDetails says "A change to the pod template triggers a rollout according to the Deployment’s strategy. Pods may restart and traffi…"
+// in the language the app shows.
+func KubeResourceRolloutDetails() string { return In(i18n.Locale()).KubeResourceRolloutDetails() }
+
+// KubeResourceRolloutDetails says "A change to the pod template triggers a rollout according to the Deployment’s strategy. Pods may restart and traffi…"
+// in the language of msgs.
+func (msgs Messages) KubeResourceRolloutDetails() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRolloutDetails", nil)
+}
+
+// KubeResourceRolloutPaused says "The Deployment is paused. Its updated pod template will take effect when the rollout resumes."
+// in the language the app shows.
+func KubeResourceRolloutPaused() string { return In(i18n.Locale()).KubeResourceRolloutPaused() }
+
+// KubeResourceRolloutPaused says "The Deployment is paused. Its updated pod template will take effect when the rollout resumes."
+// in the language of msgs.
+func (msgs Messages) KubeResourceRolloutPaused() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRolloutPaused", nil)
+}
+
+// KubeResourceRolloutUnverified says "The edit was confirmed. The Deployment rollout could not be verified"
+// in the language the app shows.
+func KubeResourceRolloutUnverified() string { return In(i18n.Locale()).KubeResourceRolloutUnverified() }
+
+// KubeResourceRolloutUnverified says "The edit was confirmed. The Deployment rollout could not be verified"
+// in the language of msgs.
+func (msgs Messages) KubeResourceRolloutUnverified() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRolloutUnverified", nil)
+}
+
+// KubeResourceRolloutVerified says "The edit matches the preview and the Deployment finished rolling out."
+// in the language the app shows.
+func KubeResourceRolloutVerified() string { return In(i18n.Locale()).KubeResourceRolloutVerified() }
+
+// KubeResourceRolloutVerified says "The edit matches the preview and the Deployment finished rolling out."
+// in the language of msgs.
+func (msgs Messages) KubeResourceRolloutVerified() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRolloutVerified", nil)
+}
+
+// KubeResourceDeleted says "Confirmed that the selected resource is gone."
+// in the language the app shows.
+func KubeResourceDeleted() string { return In(i18n.Locale()).KubeResourceDeleted() }
+
+// KubeResourceDeleted says "Confirmed that the selected resource is gone."
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleted() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleted", nil)
+}
+
+// KubeResourceDeleting says "The resource is being deleted. It may wait for graceful shutdown or finalizers."
+// in the language the app shows.
+func KubeResourceDeleting() string { return In(i18n.Locale()).KubeResourceDeleting() }
+
+// KubeResourceDeleting says "The resource is being deleted. It may wait for graceful shutdown or finalizers."
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleting() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleting", nil)
+}
+
+// KubeResourceApplied says "The updated resource matches the server preview."
+// in the language the app shows.
+func KubeResourceApplied() string { return In(i18n.Locale()).KubeResourceApplied() }
+
+// KubeResourceApplied says "The updated resource matches the server preview."
+// in the language of msgs.
+func (msgs Messages) KubeResourceApplied() string {
+	return Catalog.Format(msgs.locale, "kubeResourceApplied", nil)
+}
+
+// KubeResourceUnverified says "The result could not be confirmed. Read the latest resource before planning another change."
+// in the language the app shows.
+func KubeResourceUnverified() string { return In(i18n.Locale()).KubeResourceUnverified() }
+
+// KubeResourceUnverified says "The result could not be confirmed. Read the latest resource before planning another change."
+// in the language of msgs.
+func (msgs Messages) KubeResourceUnverified() string {
+	return Catalog.Format(msgs.locale, "kubeResourceUnverified", nil)
+}
+
+// KubeResourceDeleteAccepted says "The server accepted deletion. The resource is still present."
+// in the language the app shows.
+func KubeResourceDeleteAccepted() string { return In(i18n.Locale()).KubeResourceDeleteAccepted() }
+
+// KubeResourceDeleteAccepted says "The server accepted deletion. The resource is still present."
+// in the language of msgs.
+func (msgs Messages) KubeResourceDeleteAccepted() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDeleteAccepted", nil)
+}
+
+// KubeResourceEdit says "Edit YAML"
+// in the language the app shows.
+func KubeResourceEdit() string { return In(i18n.Locale()).KubeResourceEdit() }
+
+// KubeResourceEdit says "Edit YAML"
+// in the language of msgs.
+func (msgs Messages) KubeResourceEdit() string {
+	return Catalog.Format(msgs.locale, "kubeResourceEdit", nil)
+}
+
+// KubeResourceDelete says "Delete…"
+// in the language the app shows.
+func KubeResourceDelete() string { return In(i18n.Locale()).KubeResourceDelete() }
+
+// KubeResourceDelete says "Delete…"
+// in the language of msgs.
+func (msgs Messages) KubeResourceDelete() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDelete", nil)
+}
+
+// KubeResourceYaml says "YAML"
+// in the language the app shows.
+func KubeResourceYaml() string { return In(i18n.Locale()).KubeResourceYaml() }
+
+// KubeResourceYaml says "YAML"
+// in the language of msgs.
+func (msgs Messages) KubeResourceYaml() string {
+	return Catalog.Format(msgs.locale, "kubeResourceYaml", nil)
+}
+
+// KubeResourceReload says "Reload"
+// in the language the app shows.
+func KubeResourceReload() string { return In(i18n.Locale()).KubeResourceReload() }
+
+// KubeResourceReload says "Reload"
+// in the language of msgs.
+func (msgs Messages) KubeResourceReload() string {
+	return Catalog.Format(msgs.locale, "kubeResourceReload", nil)
+}
+
+// KubeResourceCopyDraft says "Copy previous draft"
+// in the language the app shows.
+func KubeResourceCopyDraft() string { return In(i18n.Locale()).KubeResourceCopyDraft() }
+
+// KubeResourceCopyDraft says "Copy previous draft"
+// in the language of msgs.
+func (msgs Messages) KubeResourceCopyDraft() string {
+	return Catalog.Format(msgs.locale, "kubeResourceCopyDraft", nil)
+}
+
+// KubeResourceCheck says "Check…"
+// in the language the app shows.
+func KubeResourceCheck() string { return In(i18n.Locale()).KubeResourceCheck() }
+
+// KubeResourceCheck says "Check…"
+// in the language of msgs.
+func (msgs Messages) KubeResourceCheck() string {
+	return Catalog.Format(msgs.locale, "kubeResourceCheck", nil)
+}
+
+// KubeResourceDraft says "Draft · unsaved changes"
+// in the language the app shows.
+func KubeResourceDraft() string { return In(i18n.Locale()).KubeResourceDraft() }
+
+// KubeResourceDraft says "Draft · unsaved changes"
+// in the language of msgs.
+func (msgs Messages) KubeResourceDraft() string {
+	return Catalog.Format(msgs.locale, "kubeResourceDraft", nil)
+}
+
+// KubeResourceReadAge says "Read {age} ago"
+// in the language the app shows.
+//
+// kubeResourceReadAge
+func KubeResourceReadAge(age string) string { return In(i18n.Locale()).KubeResourceReadAge(age) }
+
+// KubeResourceReadAge says "Read {age} ago"
+// in the language of msgs.
+//
+// kubeResourceReadAge
+func (msgs Messages) KubeResourceReadAge(age string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceReadAge", map[string]any{"age": age})
+}
+
+// KubeResourceConfirm says "Type {name} to confirm deletion."
+// in the language the app shows.
+//
+// kubeResourceConfirm
+func KubeResourceConfirm(name string) string { return In(i18n.Locale()).KubeResourceConfirm(name) }
+
+// KubeResourceConfirm says "Type {name} to confirm deletion."
+// in the language of msgs.
+//
+// kubeResourceConfirm
+func (msgs Messages) KubeResourceConfirm(name string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceConfirm", map[string]any{"name": name})
+}
+
 // KubeHelmReleases says "Helm releases"
 // in the language the app shows.
 //

@@ -372,7 +372,8 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 	events, read := clusterEvents(cl, p.UID)
 	story, trouble := storyOf(p, events, c.Now())
 	label, bg, fg := podTag(c, p)
-	detailFrame(c, s.tab, func() {
+	ref := a.resourceRef("Pod", p.Namespace, p.Name, p.UID)
+	detailFrame(c, s.tab, s.tab == 2, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				if trouble {
@@ -410,8 +411,8 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				}
 			})
 		})
-		if a.StreamLogs != nil && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" {
-			ui.Row(c).Gap(8).Padding(0, 16, 12, 16).Children(func() {
+		if a.StreamLogs != nil && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil {
+			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
 				if a.StreamLogs != nil && len(p.Containers) > 0 {
 					container := p.Containers[0].Name
 					if story.crashed != "" {
@@ -427,6 +428,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 					}
 					a.forwardButton(c, p.UID, "pod", p.Namespace, p.Name, ports)
 				}
+				a.resourceActions(c, ref, 2)
 			})
 		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
@@ -434,9 +436,17 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			if read {
 				count = strconv.Itoa(len(events))
 			}
-			segments(c, "pod-tab", &s.tab, []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}})
+			tabs := []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}}
+			if f := s.resources[ref]; f != nil && (f.editor != nil || s.tab == 2) {
+				tabs = append(tabs, segment{locales.KubeResourceYaml(), ""})
+			}
+			segments(c, "pod-tab", &s.tab, tabs)
 		})
 	}, func() {
+		if s.tab == 2 {
+			a.resourceEditor(c, s.resources[ref])
+			return
+		}
 		if s.tab == 1 {
 			eventList(c, events, read, 0)
 			return
@@ -490,11 +500,16 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 }
 
 // detailFrame keeps actions and tabs in reach while the tab's contents scroll.
-func detailFrame(c *ui.Context, tab int, header, body func()) {
+func detailFrame(c *ui.Context, tab int, editorTab bool, header, body func()) {
 	t := c.Theme()
 	line := Colors(t).Divider
 	ui.Column(c).Shrink(0).Radius(12, 12, 0, 0).Clip().Background(t.Background).
 		BorderWidth(1, 1, 0, 1).BorderColor(line).Children(header)
+	if editorTab {
+		ui.Column(c).Grow(1).MinHeight(0).Radius(0, 0, 12, 12).Clip().Background(t.Background).
+			BorderWidth(0, 1, 1, 1).BorderColor(line).Children(body)
+		return
+	}
 	ui.Scroll(c.Key("detail-tab-" + strconv.Itoa(tab))).Grow(1).MinHeight(0).Children(func() {
 		ui.Column(c).Radius(0, 0, 12, 12).Clip().Background(t.Background).
 			BorderWidth(0, 1, 1, 1).BorderColor(line).Padding(0, 0, 12, 0).Children(body)

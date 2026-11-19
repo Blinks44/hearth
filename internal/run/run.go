@@ -37,6 +37,8 @@ type Cmd struct {
 	// MaxOutput caps the bytes kept of stdout and of stderr each; zero is
 	// DefaultMaxOutput. The rest is read and dropped.
 	MaxOutput int
+	// Stdin supplies input without putting it in argv or the journal.
+	Stdin io.Reader
 	// Output, when set, also gets stdout and stderr as the command writes
 	// them, all of it, from two goroutines at once.
 	Output io.Writer
@@ -81,6 +83,7 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 	cmd := exec.CommandContext(ctx, c.Args[0], c.Args[1:]...)
 	cmd.Env = c.Env
 	cmd.Dir = c.Dir
+	cmd.Stdin = c.Stdin
 	// A child that left grandchildren holding the pipes open must not keep
 	// Run waiting past its end.
 	cmd.WaitDelay = time.Second

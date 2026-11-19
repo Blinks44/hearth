@@ -18,6 +18,7 @@ import (
 type operation struct {
 	project *ops.ProjectPreparation
 	plan    ops.Plan
+	confirm string
 	state   ops.State
 	started bool   // confirmed: state says how it goes
 	open    bool   // the dialog shows; hidden while it runs, a toast does
@@ -27,6 +28,13 @@ type operation struct {
 }
 
 // running reports that the operation was confirmed and is not over.
+func (op *operation) kubeChange() *ops.KubeChange {
+	if len(op.plan.Steps) == 1 {
+		return op.plan.Steps[0].Kube
+	}
+	return nil
+}
+
 func (op *operation) running() bool { return op != nil && op.started && !op.state.Phase.Over() }
 
 // Propose shows p in the operation dialog, for the user to read and
@@ -55,6 +63,9 @@ func (a *App) proposeThen(after func()) func(ops.Plan, error) {
 // scans again once it is over: whatever it did, the system changed.
 func (a *App) startOperation() {
 	op := a.op
+	if change := op.kubeChange(); change != nil && change.ConfirmName() != "" && op.confirm != change.ConfirmName() {
+		return
+	}
 	op.started, op.told = true, false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
@@ -137,10 +148,24 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 			})
 			ui.Scroll(c).MaxHeight(440).Children(func() {
 				if !op.started {
+					if change := op.kubeChange(); change != nil {
+						ui.Text(c, change.Target()).FontSize(12).Font(FontMono).Wrap().Padding(0, 20, 12, 20)
+						if len(change.Diff) > 0 {
+							operationDiff(c, change.Resource(), change.Diff)
+						} else {
+							ui.Text(c, change.Resource()).FontSize(13).Font(FontMono).Wrap().Padding(0, 20, 12, 20)
+						}
+					}
 					if op.project != nil {
 						a.projectPreparationItems(c, op.project, false)
 					}
 					a.operationPlan(c, op.plan)
+					if change := op.kubeChange(); change != nil && change.ConfirmName() != "" {
+						ui.Column(c).Padding(4, 20, 14, 20).Gap(6).Children(func() {
+							ui.Text(c, locales.KubeResourceConfirm(change.ConfirmName())).FontSize(12).Wrap()
+							ui.TextInput(c.Key("op-target-name"), &op.confirm).Label(locales.KubeResourceConfirm(change.ConfirmName()))
+						})
+					}
 					return
 				}
 				dialogSection(c, strings.ToUpper(locales.OpSteps()))
@@ -175,6 +200,8 @@ func operationCaption(op *operation) string {
 		return locales.OpSucceeded()
 	case s.Phase == ops.Failed:
 		return locales.OpFailed(n, failReason(s))
+	case s.Phase == ops.NotVerified && op.kubeChange() != nil:
+		return s.Err
 	case s.Phase == ops.NotVerified:
 		return locales.OpNotVerified(s.Err)
 	}
@@ -229,7 +256,7 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 	commands := false
 	for _, step := range p.Steps {
 		_, _, edit := stepEdit(step)
-		commands = commands || !edit
+		commands = commands || (!edit && step.Kube == nil)
 	}
 	if commands {
 		dialogSection(c, strings.ToUpper(locales.OpCommands()))
@@ -314,6 +341,11 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 			ui.Button(c.Key("open:"+e.Path), locales.OpOpenFile()).OnClick(func() { a.openFile(c, e.Path) })
 		}
 	})
+	operationDiff(c, path, diff)
+}
+
+func operationDiff(c *ui.Context, path string, diff []ops.DiffLine) {
+	pal := Colors(c.Theme())
 	// A line replaced counts once, as the user sees it.
 	removed, added := 0, 0
 	for _, d := range diff {
@@ -337,7 +369,7 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 			}
 			ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
 				ui.Text(c, strconv.Itoa(d.Line)).FontSize(11.5).TextColor(pal.TextFaint).Width(24).Shrink(0)
-				clipped(c, mark+" "+d.Text).FontSize(12).TextColor(fg).Grow(1).MinWidth(0)
+				clipped(c, mark+" "+d.Text).FontSize(12).TextColor(fg).Grow(1).MinWidth(0).Tooltip(d.Text)
 			})
 		}
 	})
@@ -596,7 +628,15 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		if action == "" {
 			action = locales.OpRun()
 		}
-		ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil).OnClick(a.startOperation)
+		confirm := ""
+		if change := op.kubeChange(); change != nil {
+			confirm = change.ConfirmName()
+		}
+		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || confirm != "" && op.confirm != confirm).
+			OnClick(a.startOperation)
+		if confirm != "" {
+			button.Background(c.Theme().Danger)
+		}
 	case !op.state.Phase.Over():
 		ui.Button(c.Key("op-hide"), locales.OpHide()).OnClick(hide)
 		ui.Button(c.Key("op-stop"), locales.OpStop()).TextColor(c.Theme().Danger).
@@ -606,6 +646,8 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
 		}
 		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).OnClick(hide)
+	case op.kubeChange() != nil:
+		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case op.state.Phase == ops.Stopped:
 		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 		ui.PrimaryButton(c.Key("op-again"), locales.OpRestart()).OnClick(a.startOperation)

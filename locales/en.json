@@ -1,5 +1,82 @@
 {
   "@@locale": "en",
+  "kubeResourceManifest": "Enter a single Kubernetes resource in YAML.",
+  "kubeResourceTooLarge": "This resource is too large to review in Hearth.",
+  "kubeResourceContext": "The selected kubeconfig context could not be read or has changed. Reopen the resource before continuing.",
+  "kubeResourceTarget": "The selected resource is unavailable, was replaced, or is being deleted.",
+  "kubeResourceVersion": "Version {version}",
+  "@kubeResourceVersion": {
+    "description": "kubeResourceVersion",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeResourceChanged": "The resource changed after it was read. Load the latest version and review a new plan.",
+  "kubeResourceDeleteTitle": "Delete {name}?",
+  "@kubeResourceDeleteTitle": {
+    "description": "kubeResourceDeleteTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeResourceDeleteWhy": "The server checked the deletion. Kubernetes will use its normal grace period and finalizers.",
+  "kubeResourceDeleteAction": "Delete",
+  "kubeResourceCascade": "Background cascading deletion",
+  "kubeResourceDeleteData": "Kubernetes also deletes resources owned by this object. Data in removed pods’ writable layers and emptyDir volumes is lost. A dependent claim may be deleted with its volume, depending on ownership and reclaim policy.",
+  "kubeResourceOwnedPod": "The pod’s controller can create a replacement",
+  "kubeResourceIdentity": "Keep apiVersion, kind, name, namespace, UID and resourceVersion from the loaded resource.",
+  "kubeResourceProtection": "Keep finalizers and ownerReferences from the loaded resource.",
+  "kubeResourceNoChanges": "The server preview found no changes.",
+  "kubeResourceApplyTitle": "Apply changes to {name}?",
+  "@kubeResourceApplyTitle": {
+    "description": "kubeResourceApplyTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeResourceDryRun": "The server checked the change (dry run). Hearth will read the resource again after applying it.",
+  "kubeResourceApply": "Apply",
+  "kubeResourceRollout": "Deployment rollout",
+  "kubeResourceRolloutDetails": "A change to the pod template triggers a rollout according to the Deployment’s strategy. Pods may restart and traffic may be interrupted.",
+  "kubeResourceRolloutPaused": "The Deployment is paused. Its updated pod template will take effect when the rollout resumes.",
+  "kubeResourceRolloutUnverified": "The edit was confirmed. The Deployment rollout could not be verified",
+  "kubeResourceRolloutVerified": "The edit matches the preview and the Deployment finished rolling out.",
+  "kubeResourceDeleted": "Confirmed that the selected resource is gone.",
+  "kubeResourceDeleting": "The resource is being deleted. It may wait for graceful shutdown or finalizers.",
+  "kubeResourceApplied": "The updated resource matches the server preview.",
+  "kubeResourceUnverified": "The result could not be confirmed. Read the latest resource before planning another change.",
+  "kubeResourceDeleteAccepted": "The server accepted deletion. The resource is still present.",
+  "kubeResourceEdit": "Edit YAML",
+  "kubeResourceDelete": "Delete…",
+  "kubeResourceYaml": "YAML",
+  "kubeResourceReload": "Reload",
+  "kubeResourceCopyDraft": "Copy previous draft",
+  "kubeResourceCheck": "Check…",
+  "kubeResourceDraft": "Draft · unsaved changes",
+  "kubeResourceReadAge": "Read {age} ago",
+  "@kubeResourceReadAge": {
+    "description": "kubeResourceReadAge",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeResourceConfirm": "Type {name} to confirm deletion.",
+  "@kubeResourceConfirm": {
+    "description": "kubeResourceConfirm",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "kubeHelmReleases": "Helm releases",
   "@kubeHelmReleases": {
     "description": "kubeHelmReleases"

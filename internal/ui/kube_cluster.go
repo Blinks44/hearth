@@ -69,6 +69,8 @@ type kubeClusterState struct {
 	helmFilter                 int
 	helmSort                   string
 	forward                    *forwardForm
+	resources                  map[ops.KubeResource]*kubeResourceForm
+	resourceDialog             *kubeResourceForm
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
 	nsLoading bool
@@ -275,6 +277,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 	pal := Colors(t)
 	ui.Column(c).Fill().Children(func() {
 		a.clusterHeader(c, name)
+		a.resourceEditorDialog(c)
 		if s.logs != nil {
 			a.logsView(c)
 			return
