@@ -36,6 +36,156 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeBulkSelectAll says "Select all matching resources"
+// in the language the app shows.
+func KubeBulkSelectAll() string { return In(i18n.Locale()).KubeBulkSelectAll() }
+
+// KubeBulkSelectAll says "Select all matching resources"
+// in the language of msgs.
+func (msgs Messages) KubeBulkSelectAll() string {
+	return Catalog.Format(msgs.locale, "kubeBulkSelectAll", nil)
+}
+
+// KubeBulkSelect says "Select {name}"
+// in the language the app shows.
+//
+// kubeBulkSelect
+func KubeBulkSelect(name string) string { return In(i18n.Locale()).KubeBulkSelect(name) }
+
+// KubeBulkSelect says "Select {name}"
+// in the language of msgs.
+//
+// kubeBulkSelect
+func (msgs Messages) KubeBulkSelect(name string) string {
+	return Catalog.Format(msgs.locale, "kubeBulkSelect", map[string]any{"name": name})
+}
+
+// KubeBulkSelected says "Selected {count} · {namespaces, plural, one {# namespace} other {# namespaces}}"
+// in the language the app shows.
+//
+// kubeBulkSelected
+func KubeBulkSelected(count int, namespaces int) string {
+	return In(i18n.Locale()).KubeBulkSelected(count, namespaces)
+}
+
+// KubeBulkSelected says "Selected {count} · {namespaces, plural, one {# namespace} other {# namespaces}}"
+// in the language of msgs.
+//
+// kubeBulkSelected
+func (msgs Messages) KubeBulkSelected(count int, namespaces int) string {
+	return Catalog.Format(msgs.locale, "kubeBulkSelected", map[string]any{"count": count, "namespaces": namespaces})
+}
+
+// KubeBulkDelete says "Delete"
+// in the language the app shows.
+func KubeBulkDelete() string { return In(i18n.Locale()).KubeBulkDelete() }
+
+// KubeBulkDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) KubeBulkDelete() string {
+	return Catalog.Format(msgs.locale, "kubeBulkDelete", nil)
+}
+
+// KubeBulkRestart says "Restart"
+// in the language the app shows.
+func KubeBulkRestart() string { return In(i18n.Locale()).KubeBulkRestart() }
+
+// KubeBulkRestart says "Restart"
+// in the language of msgs.
+func (msgs Messages) KubeBulkRestart() string {
+	return Catalog.Format(msgs.locale, "kubeBulkRestart", nil)
+}
+
+// KubeBulkRecreate says "Recreate"
+// in the language the app shows.
+func KubeBulkRecreate() string { return In(i18n.Locale()).KubeBulkRecreate() }
+
+// KubeBulkRecreate says "Recreate"
+// in the language of msgs.
+func (msgs Messages) KubeBulkRecreate() string {
+	return Catalog.Format(msgs.locale, "kubeBulkRecreate", nil)
+}
+
+// KubeBulkClear says "Clear selection"
+// in the language the app shows.
+func KubeBulkClear() string { return In(i18n.Locale()).KubeBulkClear() }
+
+// KubeBulkClear says "Clear selection"
+// in the language of msgs.
+func (msgs Messages) KubeBulkClear() string {
+	return Catalog.Format(msgs.locale, "kubeBulkClear", nil)
+}
+
+// KubeBulkTargets says "Targets"
+// in the language the app shows.
+func KubeBulkTargets() string { return In(i18n.Locale()).KubeBulkTargets() }
+
+// KubeBulkTargets says "Targets"
+// in the language of msgs.
+func (msgs Messages) KubeBulkTargets() string {
+	return Catalog.Format(msgs.locale, "kubeBulkTargets", nil)
+}
+
+// KubeBulkDeleteWhy says "Delete the listed resources. Hearth checks each target against Kubernetes and shows the result for each one."
+// in the language the app shows.
+func KubeBulkDeleteWhy() string { return In(i18n.Locale()).KubeBulkDeleteWhy() }
+
+// KubeBulkDeleteWhy says "Delete the listed resources. Hearth checks each target against Kubernetes and shows the result for each one."
+// in the language of msgs.
+func (msgs Messages) KubeBulkDeleteWhy() string {
+	return Catalog.Format(msgs.locale, "kubeBulkDeleteWhy", nil)
+}
+
+// KubeBulkRestartWhy says "Restart the listed Deployments one at a time. Replacing pods may interrupt traffic."
+// in the language the app shows.
+func KubeBulkRestartWhy() string { return In(i18n.Locale()).KubeBulkRestartWhy() }
+
+// KubeBulkRestartWhy says "Restart the listed Deployments one at a time. Replacing pods may interrupt traffic."
+// in the language of msgs.
+func (msgs Messages) KubeBulkRestartWhy() string {
+	return Catalog.Format(msgs.locale, "kubeBulkRestartWhy", nil)
+}
+
+// KubeBulkRecreateWhy says "Terminate the listed pods so their controllers can replace them. The result shows whether termination started or fini…"
+// in the language the app shows.
+func KubeBulkRecreateWhy() string { return In(i18n.Locale()).KubeBulkRecreateWhy() }
+
+// KubeBulkRecreateWhy says "Terminate the listed pods so their controllers can replace them. The result shows whether termination started or fini…"
+// in the language of msgs.
+func (msgs Messages) KubeBulkRecreateWhy() string {
+	return Catalog.Format(msgs.locale, "kubeBulkRecreateWhy", nil)
+}
+
+// KubeBulkOwnedPods says "Controllers can create replacements for managed pods."
+// in the language the app shows.
+func KubeBulkOwnedPods() string { return In(i18n.Locale()).KubeBulkOwnedPods() }
+
+// KubeBulkOwnedPods says "Controllers can create replacements for managed pods."
+// in the language of msgs.
+func (msgs Messages) KubeBulkOwnedPods() string {
+	return Catalog.Format(msgs.locale, "kubeBulkOwnedPods", nil)
+}
+
+// KubeBulkUnmanaged says "Only active pods managed by a workload can be recreated with this action."
+// in the language the app shows.
+func KubeBulkUnmanaged() string { return In(i18n.Locale()).KubeBulkUnmanaged() }
+
+// KubeBulkUnmanaged says "Only active pods managed by a workload can be recreated with this action."
+// in the language of msgs.
+func (msgs Messages) KubeBulkUnmanaged() string {
+	return Catalog.Format(msgs.locale, "kubeBulkUnmanaged", nil)
+}
+
+// KubeBulkPartial says "Review the result for each resource."
+// in the language the app shows.
+func KubeBulkPartial() string { return In(i18n.Locale()).KubeBulkPartial() }
+
+// KubeBulkPartial says "Review the result for each resource."
+// in the language of msgs.
+func (msgs Messages) KubeBulkPartial() string {
+	return Catalog.Format(msgs.locale, "kubeBulkPartial", nil)
+}
+
 // KubeSecretOther says "Other"
 // in the language the app shows.
 func KubeSecretOther() string { return In(i18n.Locale()).KubeSecretOther() }

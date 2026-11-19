@@ -99,6 +99,7 @@ type Note struct {
 
 // Plan is a change to the system the user confirms before it runs.
 type Plan struct {
+	KubeBulk bool
 	// Title names the change, as "Install Docker Desktop"; Why says how
 	// it goes and why.
 	Title, Why string
@@ -156,8 +157,9 @@ const (
 // State is how an execution goes, given whole to the caller at every
 // change.
 type State struct {
-	Phase Phase
-	Steps []StepStatus
+	Phase       Phase
+	Steps       []StepStatus
+	StepDetails []string
 	// Current is the step running or the last that ran.
 	Current int
 	// Log holds the last LogLines lines of the current step's output.
@@ -213,6 +215,9 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.emit()
 			return e.snapshot()
 		}
+	}
+	if p.KubeBulk && len(p.Steps) > 0 {
+		return e.executeKubeBulk(ctx, r, p)
 	}
 	commandDir := ""
 	if p.Isolated {
@@ -678,6 +683,7 @@ func (e *execution) snapshot() State {
 	defer e.mu.Unlock()
 	s := e.state
 	s.Steps = append([]StepStatus(nil), s.Steps...)
+	s.StepDetails = slices.Clone(s.StepDetails)
 	s.Log = append([]string(nil), s.Log...)
 	s.Restored = append([]string(nil), s.Restored...)
 	s.Undone = append([]string(nil), s.Undone...)

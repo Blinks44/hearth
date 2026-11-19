@@ -1,5 +1,38 @@
 {
   "@@locale": "en",
+  "kubeBulkSelectAll": "Select all matching resources",
+  "kubeBulkSelect": "Select {name}",
+  "@kubeBulkSelect": {
+    "description": "kubeBulkSelect",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeBulkSelected": "Selected {count} · {namespaces, plural, one {# namespace} other {# namespaces}}",
+  "@kubeBulkSelected": {
+    "description": "kubeBulkSelected",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "namespaces": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeBulkDelete": "Delete",
+  "kubeBulkRestart": "Restart",
+  "kubeBulkRecreate": "Recreate",
+  "kubeBulkClear": "Clear selection",
+  "kubeBulkTargets": "Targets",
+  "kubeBulkDeleteWhy": "Delete the listed resources. Hearth checks each target against Kubernetes and shows the result for each one.",
+  "kubeBulkRestartWhy": "Restart the listed Deployments one at a time. Replacing pods may interrupt traffic.",
+  "kubeBulkRecreateWhy": "Terminate the listed pods so their controllers can replace them. The result shows whether termination started or finished.",
+  "kubeBulkOwnedPods": "Controllers can create replacements for managed pods.",
+  "kubeBulkUnmanaged": "Only active pods managed by a workload can be recreated with this action.",
+  "kubeBulkPartial": "Review the result for each resource.",
   "kubeSecretOther": "Other",
   "kubeSecretSearch": "Name or namespace",
   "kubeSecretEmpty": "No Secrets in the selected namespaces.",

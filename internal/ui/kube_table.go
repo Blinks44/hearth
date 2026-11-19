@@ -24,13 +24,27 @@ func resourceGrid(row ui.Element, tracks []ui.Track) ui.Element {
 }
 
 func resourceHead(c *ui.Context, tracks []ui.Track, headers ...string) {
+	workloadHead(c, tracks, nil, headers...)
+}
+
+func workloadHead(c *ui.Context, tracks []ui.Track, check func(), headers ...string) {
 	pal := Colors(c.Theme())
 	resourceGrid(ui.Box(c), tracks).Padding(8, 16).Background(pal.Subtle).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		if check != nil {
+			check()
+		}
 		for _, header := range headers {
 			ui.Text(c, strings.ToUpper(header)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 		}
 	})
+}
+
+// The checkbox and row button are siblings so assistive technology can
+// reach both actions.
+func workloadSelectionRow(c *ui.Context, line ui.Color) ui.Element {
+	return ui.Row(c).Gap(10).Padding(0, 16).AlignItems(ui.Stretch).
+		BorderWidth(0, 0, 1, 0).BorderColor(line)
 }
 
 func workloadStatus(c *ui.Context, label string, bg, fg ui.Color) {

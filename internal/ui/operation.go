@@ -66,6 +66,9 @@ func (a *App) startOperation() {
 	if change := op.kubeChange(); change != nil && change.ConfirmName() != "" && op.confirm != change.ConfirmName() {
 		return
 	}
+	if op.plan.KubeBulk {
+		a.cluster.bulk.clear()
+	}
 	op.started, op.told = true, false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
@@ -73,6 +76,9 @@ func (a *App) startOperation() {
 			return
 		}
 		op.state = s
+		if op.plan.KubeBulk && s.Phase.Over() {
+			a.cluster.refresh++
+		}
 		if s.Phase == ops.Succeeded && op.after != nil {
 			op.after()
 		}
@@ -148,6 +154,11 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 			})
 			ui.Scroll(c).MaxHeight(440).Children(func() {
 				if !op.started {
+					if op.plan.KubeBulk {
+						ui.Text(c, op.plan.Steps[0].Kube.Context()).FontSize(12).Font(FontMono).Wrap().Padding(0, 20, 12, 20)
+						dialogSection(c, locales.KubeBulkTargets())
+						operationSteps(c, op.plan.Steps, ops.State{Steps: make([]ops.StepStatus, len(op.plan.Steps)), Current: -1}, a.Home)
+					}
 					if change := op.kubeChange(); change != nil {
 						ui.Text(c, change.Target()).FontSize(12).Font(FontMono).Wrap().Padding(0, 20, 12, 20)
 						if len(change.Diff) > 0 {
@@ -200,7 +211,7 @@ func operationCaption(op *operation) string {
 		return locales.OpSucceeded()
 	case s.Phase == ops.Failed:
 		return locales.OpFailed(n, failReason(s))
-	case s.Phase == ops.NotVerified && op.kubeChange() != nil:
+	case s.Phase == ops.NotVerified && (op.kubeChange() != nil || op.plan.KubeBulk):
 		return s.Err
 	case s.Phase == ops.NotVerified:
 		return locales.OpNotVerified(s.Err)
@@ -408,7 +419,18 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				if step.Note != "" {
 					command += "  ·  " + step.Note
 				}
-				clipped(c, command).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
+				if step.Kube != nil && (s.Current < 0 || len(s.StepDetails) != 0) {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+						ui.Text(c, step.Kube.Resource()).FontSize(12).TextColor(color).Wrap().Selectable()
+						text := step.Kube.UID()
+						if i < len(s.StepDetails) && s.StepDetails[i] != "" {
+							text = s.StepDetails[i]
+						}
+						ui.Text(c, text).FontSize(11).TextColor(pal.TextFaint).Wrap().Selectable()
+					})
+				} else {
+					clipped(c, command).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
+				}
 				if step.Admin && s.Current < 0 {
 					aiTag(c, locales.OpTagAdmin(), pal.WarningSoft, pal.WarningText)
 				}
@@ -450,6 +472,9 @@ func stepTag(c *ui.Context, st ops.StepStatus) (label string, bg, fg ui.Color) {
 // the last lines of the one that failed, what changed or what stays.
 func (a *App) operationResult(c *ui.Context, op *operation) {
 	s := op.state
+	if op.plan.KubeBulk {
+		return
+	}
 	pal := Colors(c.Theme())
 	if op.project != nil && s.Phase.Over() {
 		text := locales.PrepareCommandsDone()
@@ -634,7 +659,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		}
 		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || confirm != "" && op.confirm != confirm).
 			OnClick(a.startOperation)
-		if confirm != "" {
+		if confirm != "" || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
 			button.Background(c.Theme().Danger)
 		}
 	case !op.state.Phase.Over():
@@ -646,7 +671,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
 		}
 		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).OnClick(hide)
-	case op.kubeChange() != nil:
+	case op.kubeChange() != nil || op.plan.KubeBulk:
 		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case op.state.Phase == ops.Stopped:
 		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)

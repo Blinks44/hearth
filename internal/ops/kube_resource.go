@@ -231,17 +231,18 @@ func (k resourceClient) convert(ctx context.Context, data []byte, output string)
 
 // KubeChange is one reviewed write, bound to its context and version.
 type KubeChange struct {
-	draft    KubeDraft
-	input    []byte
-	base     resourceJSON
-	want     resourceJSON
-	rollout  bool
-	scale    *deploymentScale
-	patch    []string
-	restart  bool
-	rollback *KubeDraft
-	jobName  string
-	Diff     []DiffLine
+	draft       KubeDraft
+	input       []byte
+	base        resourceJSON
+	want        resourceJSON
+	rollout     bool
+	scale       *deploymentScale
+	patch       []string
+	restart     bool
+	batchDelete bool
+	rollback    *KubeDraft
+	jobName     string
+	Diff        []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
@@ -355,18 +356,13 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 	change := &KubeChange{draft: d}
 	p := Plan{Env: slices.Clone(env)}
 	if remove {
-		change.input = deleteOptions(ref, d.Version, false)
-		if _, err := k.run(ctx, deleteOptions(ref, d.Version, true), change.command()...); err != nil {
+		change, err = k.planDelete(ctx, d)
+		if err != nil {
 			return Plan{}, err
 		}
 		p.Title, p.Why, p.Action = locales.KubeResourceDeleteTitle(ref.Name), locales.KubeResourceDeleteWhy(), locales.KubeResourceDeleteAction()
 		p.Notes = []Note{{Title: locales.KubeResourceCascade(), Text: locales.KubeResourceDeleteData()}}
-		owners, _ := current.metadata()["ownerReferences"].([]any)
-		managed := slices.ContainsFunc(owners, func(owner any) bool {
-			m, _ := owner.(map[string]any)
-			return m["controller"] == true
-		})
-		if ref.Kind == "Pod" && managed {
+		if ref.Kind == "Pod" && resourceController(current) != nil {
 			p.Notes = append(p.Notes, Note{Title: locales.KubeResourceOwnedPod()})
 		}
 	} else {
@@ -426,6 +422,26 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 	return p, nil
 }
 
+func resourceController(obj resourceJSON) map[string]any {
+	owners, _ := obj.metadata()["ownerReferences"].([]any)
+	for _, owner := range owners {
+		m, _ := owner.(map[string]any)
+		if m["controller"] == true {
+			return m
+		}
+	}
+	return nil
+}
+
+func (k resourceClient) planDelete(ctx context.Context, d KubeDraft) (*KubeChange, error) {
+	ref := d.Ref
+	change := &KubeChange{draft: d, input: deleteOptions(ref, d.Version, false)}
+	if _, err := k.run(ctx, deleteOptions(ref, d.Version, true), change.command()...); err != nil {
+		return nil, err
+	}
+	return change, nil
+}
+
 func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, checking func()) (string, error) {
 	ref := m.draft.Ref
 	k, _, closeConfig, err := (resourceClient{cli: ref.Kubectl, context: ref.Context, env: env, runner: r}).pin(ctx, m.draft.config)
@@ -433,6 +449,11 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 		return "", err
 	}
 	defer closeConfig()
+	return m.applyPinned(ctx, k, checking)
+}
+
+func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking func()) (string, error) {
+	ref := m.draft.Ref
 	if _, err := m.draft.current(ctx, k); err != nil {
 		return "", err
 	}
@@ -467,6 +488,9 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 			return locales.KubeResourceDeleted(), nil
 		}
 		if obj.matches(ref) && obj.metadata()["deletionTimestamp"] != nil {
+			if m.batchDelete {
+				return locales.KubeResourceDeleting(), nil
+			}
 			return "", errors.New(locales.KubeResourceDeleting())
 		}
 	}

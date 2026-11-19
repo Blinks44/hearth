@@ -74,6 +74,7 @@ type kubeClusterState struct {
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
+	bulk                       kubeBulkSelection
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
 	nsLoading bool
@@ -161,6 +162,10 @@ func (a *App) syncCluster() {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
 		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Events.UID, t.Tail)
 	}
+	if target != s.target || s.kind != s.bulk.kind {
+		s.bulk.clear()
+		s.bulk.kind = s.kind
+	}
 	if running == s.running {
 		return
 	}
@@ -187,6 +192,7 @@ func (a *App) syncCluster() {
 			s.err, s.failedAt = err, time.Now()
 			return
 		}
+		s.bulk.retain(cl)
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
 		s.batchData = t.Batch && !t.Overview
 	})
@@ -296,7 +302,11 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			viewport = ui.Scroll(c.Key("cluster-resources"))
 		}
 		viewport.Grow(1).MinHeight(0).Children(func() {
-			body := ui.Column(c).Gap(14).Padding(20, 28, 24, 28)
+			bottom := float32(24)
+			if len(s.bulk.selected) > 0 {
+				bottom = 54
+			}
+			body := ui.Column(c).Gap(14).Padding(20, 28, bottom, 28)
 			if split {
 				body.Grow(1).MinHeight(0)
 			}

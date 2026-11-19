@@ -337,6 +337,8 @@ func (a *App) View(c *ui.Context) {
 		case a.cluster.logs != nil:
 			// Wherever the focus is, as the button that opened the log is gone.
 			c.OnShortcut(0, ui.KeyEscape, a.closeLogs)
+		case len(a.cluster.bulk.selected) > 0 && (a.op == nil || !a.op.open):
+			c.OnShortcut(0, ui.KeyEscape, a.cluster.bulk.clear)
 		}
 	}
 	// A focused text field types the slash; elsewhere it goes to the

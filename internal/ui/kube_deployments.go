@@ -62,8 +62,13 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 	s := &a.cluster
 	counts := make([]int, 4)
 	var shown []kube.Deployment
+	var ids []string
+	var selected []kubeBulkTarget
 	query := strings.ToLower(strings.TrimSpace(s.query))
 	for _, d := range cl.Deployments {
+		if s.bulk.selected[d.UID] {
+			selected = append(selected, kubeBulkTarget{a.resourceRef("Deployment", d.Namespace, d.Name, d.UID), !d.Paused})
+		}
 		for tab := range counts {
 			if deploymentShows(tab, d) {
 				counts[tab]++
@@ -71,6 +76,9 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 		}
 		if deploymentShows(s.deploymentFilter, d) && strings.Contains(strings.ToLower(d.Namespace+"/"+d.Name), query) {
 			shown = append(shown, d)
+			if d.UID != "" {
+				ids = append(ids, d.UID)
+			}
 		}
 	}
 	slices.SortStableFunc(shown, func(x, y kube.Deployment) int {
@@ -108,18 +116,21 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 		detail = func() { a.deploymentDetail(c, cl, resource) }
 	}
 	compact := chosen >= 0
-	tracks := workloadTracks(c, compact)
+	tracks := append([]ui.Track{ui.Fixed(18)}, workloadTracks(c, compact)...)
 	workloadPanes(c.Key("deployments-panes"), func() {
 		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
 		if !compact {
 			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
 		}
-		resourceHead(c, tracks, headers...)
+		workloadHead(c, tracks, func() {
+			s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
+		}, headers...)
 	}, func() {
 		for _, d := range shown {
 			a.deploymentRow(c, d, compact, tracks)
 		}
 	}, uid, detail)
+	a.kubeBulkBar(c, selected)
 }
 
 func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, tracks []ui.Track) {
@@ -127,30 +138,41 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 	t := c.Theme()
 	pal := Colors(t)
 	label, bg, fg := deploymentTag(c, d)
-	row := resourceGrid(ui.ButtonBase(c.Key("deployment-"+d.UID)), tracks).Padding(8, 16).MinHeight(40).
-		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(d.Name).OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
-	s.revealWorkloadRow(row, d.UID)
-	switch {
-	case s.deployment == d.UID:
-		row.Background(pal.ActiveRow)
-	case row.Hovered():
-		row.Background(pal.Subtle)
-	}
-	row.Children(func() {
-		ui.Column(c).MinWidth(0).Gap(1).Children(func() {
-			clipped(c, d.Name).FontSize(13)
-			if !compact {
-				ui.Text(c, d.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-			}
-		})
-		workloadStatus(c, label, bg, fg)
-		if compact {
-			return
+	line := workloadSelectionRow(c.Key("deployment-select-row-"+d.UID), pal.Line)
+	line.Children(func() {
+		var ids []string
+		if d.UID != "" {
+			ids = []string{d.UID}
 		}
-		ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).SingleLine()
-		ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).SingleLine()
-		ui.Box(c)
-		ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
+		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
+			s.bulk.checkbox(c, "deployment-select", locales.KubeBulkSelect(d.Name), ids)
+		})
+		row := resourceGrid(ui.ButtonBase(c.Key("deployment-"+d.UID)), tracks[1:]).
+			Padding(8, 0).MinHeight(40).Grow(1).MinWidth(0).Label(d.Name).
+			OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
+		s.revealWorkloadRow(row, d.UID)
+		switch {
+		case s.deployment == d.UID:
+			line.Background(pal.ActiveRow)
+		case row.Hovered():
+			line.Background(pal.Subtle)
+		}
+		row.Children(func() {
+			ui.Column(c).MinWidth(0).Gap(1).Children(func() {
+				clipped(c, d.Name).FontSize(13)
+				if !compact {
+					ui.Text(c, d.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+				}
+			})
+			workloadStatus(c, label, bg, fg)
+			if compact {
+				return
+			}
+			ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).SingleLine()
+			ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).SingleLine()
+			ui.Box(c)
+			ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
+		})
 	})
 }
 

@@ -31,40 +31,14 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		return Plan{}, err
 	}
 	defer closeConfig()
-	obj, err := k.read(ctx, ref)
+	change, obj, err := k.planRestart(ctx, ref, hash)
 	if err != nil {
 		return Plan{}, err
-	}
-	if !obj.matches(ref) || obj.metadata()["deletionTimestamp"] != nil {
-		return Plan{}, errors.New(locales.KubeResourceChanged())
 	}
 	spec := resourceSpec(obj)
-	if spec["paused"] == true {
-		return Plan{}, errors.New(locales.KubeRestartPaused())
-	}
-	stamp := time.Now().UTC().Format(time.RFC3339Nano)
-	command := resourceSpecPatch(ref, "deployment.apps", obj.version(), map[string]any{
-		"template": map[string]any{
-			"metadata": map[string]any{"annotations": map[string]string{restartAnnotation: stamp}},
-		},
-	})
-	data, err := k.run(ctx, nil, append(slices.Clone(command), "--dry-run=server")...)
-	if err != nil {
-		return Plan{}, err
-	}
-	preview, err := decodeResource(data)
-	if err != nil || !preview.matches(ref) || resourceSpec(preview)["paused"] == true || restartTime(preview) != stamp {
-		return Plan{}, errors.New(locales.KubeResourceUnverified())
-	}
-	if restartTime(obj) == stamp {
-		return Plan{}, errors.New(locales.KubeResourceNoChanges())
-	}
-	change := &KubeChange{
-		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: true, patch: command, restart: true,
-	}
 	p := Plan{
 		Title: locales.KubeRestartTitle(ref.Name), Why: locales.KubeRestartPreview(), Action: locales.KubeRestartAction(),
-		Env: slices.Clone(env), Steps: []Step{{Kube: change, Argv: append([]string{ref.Kubectl, "--context=" + ref.Context}, command...)}},
+		Env: slices.Clone(env), Steps: []Step{{Kube: change, Argv: append([]string{ref.Kubectl, "--context=" + ref.Context}, change.command()...)}},
 	}
 	strategy, _ := spec["strategy"].(map[string]any)
 	switch {
@@ -76,4 +50,39 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		p.Notes = []Note{{Title: locales.KubeReplicas(), Text: locales.KubeRestartSingle()}}
 	}
 	return p, nil
+}
+
+func (k resourceClient) planRestart(ctx context.Context, ref KubeResource, hash [32]byte) (*KubeChange, resourceJSON, error) {
+	obj, err := k.read(ctx, ref)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !obj.matches(ref) || obj.metadata()["deletionTimestamp"] != nil {
+		return nil, nil, errors.New(locales.KubeResourceChanged())
+	}
+	spec := resourceSpec(obj)
+	if spec["paused"] == true {
+		return nil, nil, errors.New(locales.KubeRestartPaused())
+	}
+	stamp := time.Now().UTC().Format(time.RFC3339Nano)
+	command := resourceSpecPatch(ref, "deployment.apps", obj.version(), map[string]any{
+		"template": map[string]any{
+			"metadata": map[string]any{"annotations": map[string]string{restartAnnotation: stamp}},
+		},
+	})
+	data, err := k.run(ctx, nil, append(slices.Clone(command), "--dry-run=server")...)
+	if err != nil {
+		return nil, nil, err
+	}
+	preview, err := decodeResource(data)
+	if err != nil || !preview.matches(ref) || resourceSpec(preview)["paused"] == true || restartTime(preview) != stamp {
+		return nil, nil, errors.New(locales.KubeResourceUnverified())
+	}
+	if restartTime(obj) == stamp {
+		return nil, nil, errors.New(locales.KubeResourceNoChanges())
+	}
+	change := &KubeChange{
+		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: true, patch: command, restart: true,
+	}
+	return change, obj, nil
 }

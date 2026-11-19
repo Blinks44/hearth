@@ -161,7 +161,18 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 	s := &a.cluster
 	counts := make([]int, 4)
 	var shown []kube.Pod
+	var ids []string
+	var selected []kubeBulkTarget
 	for _, p := range cl.Pods {
+		if s.bulk.selected[p.UID] {
+			restartable := p.Phase != "Succeeded" && p.Phase != "Failed"
+			switch p.Owner.Kind {
+			case "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "ReplicationController":
+			default:
+				restartable = false
+			}
+			selected = append(selected, kubeBulkTarget{a.resourceRef("Pod", p.Namespace, p.Name, p.UID), restartable})
+		}
 		for tab := range counts {
 			if podShows(tab, p) {
 				counts[tab]++
@@ -169,6 +180,9 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		}
 		if podShows(s.podFilter, p) && matches(s.query, p) {
 			shown = append(shown, p)
+			if p.UID != "" {
+				ids = append(ids, p.UID)
+			}
 		}
 	}
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
@@ -198,19 +212,22 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		detail = func() { a.podDetail(c, cl, resource) }
 	}
 	compact := chosen >= 0
-	tracks := workloadTracks(c, compact)
+	tracks := append([]ui.Track{ui.Fixed(18)}, workloadTracks(c, compact)...)
 	workloadPanes(c.Key("pods-panes"), func() {
 		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
 		if !compact {
 			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterRestarts(), locales.KubeClusterNode(), locales.KubeClusterAge())
 		}
-		resourceHead(c, tracks, headers...)
+		workloadHead(c, tracks, func() {
+			s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
+		}, headers...)
 	}, func() {
 		for _, g := range groups {
 			a.podGroupRows(c, g, compact, tracks)
 		}
 		a.podFooter(c, groups, len(shown))
 	}, uid, detail)
+	a.kubeBulkBar(c, selected)
 }
 
 // podGroupRows are a group's header, and its pods while it is open; a
@@ -223,37 +240,50 @@ func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool, tracks []ui.
 	t := c.Theme()
 	pal := Colors(t)
 	open := a.groupOpen(g)
-	head := resourceGrid(ui.ButtonBase(c.Key("group-"+g.key())), tracks).Padding(8, 16).
-		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(g.owner.Name).OnClick(func() { a.toggleGroup(g) })
-	if head.Hovered() {
-		head.Background(pal.Muted)
-	} else if open {
-		head.Background(pal.Subtle)
-	}
-	head.Children(func() {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).MinWidth(0).Children(func() {
-			chevron := "chevron-right"
-			if open {
-				chevron = "chevron-down"
+	key := "group-" + g.key()
+	line := workloadSelectionRow(c.Key(key+"-select-row"), pal.Line)
+	line.Children(func() {
+		var ids []string
+		for _, p := range g.pods {
+			if p.UID != "" {
+				ids = append(ids, p.UID)
 			}
-			ui.Icon(c, Icon(chevron)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
-			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-				clipped(c, g.owner.Name).FontSize(13).FontWeight(600)
-				meta := g.owner.Kind
-				if !compact {
-					meta += " · " + g.namespace + " · " + locales.KubePodCount(len(g.pods))
-				}
-				clipped(c, meta).FontSize(10.5).TextColor(pal.TextFaint)
-			})
-		})
-		switch {
-		case g.trouble > 0:
-			workloadStatus(c, locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText)
-		case g.owner.Kind == "Job" && !slices.ContainsFunc(g.pods, func(p kube.Pod) bool { return p.Phase != "Succeeded" }):
-			workloadStatus(c, locales.KubeGroupDone(), pal.Muted, t.TextMuted)
-		default:
-			workloadStatus(c, locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText)
 		}
+		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
+			a.cluster.bulk.checkbox(c, "group-select", locales.KubeBulkSelect(g.owner.Name), ids)
+		})
+		head := resourceGrid(ui.ButtonBase(c.Key(key)), tracks[1:]).Grow(1).MinWidth(0).Padding(8, 0).
+			Label(g.owner.Name).OnClick(func() { a.toggleGroup(g) })
+		if head.Hovered() {
+			line.Background(pal.Muted)
+		} else if open {
+			line.Background(pal.Subtle)
+		}
+		head.Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).MinWidth(0).Children(func() {
+				chevron := "chevron-right"
+				if open {
+					chevron = "chevron-down"
+				}
+				ui.Icon(c, Icon(chevron)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+					clipped(c, g.owner.Name).FontSize(13).FontWeight(600)
+					meta := g.owner.Kind
+					if !compact {
+						meta += " · " + g.namespace + " · " + locales.KubePodCount(len(g.pods))
+					}
+					clipped(c, meta).FontSize(10.5).TextColor(pal.TextFaint)
+				})
+			})
+			switch {
+			case g.trouble > 0:
+				workloadStatus(c, locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText)
+			case g.owner.Kind == "Job" && !slices.ContainsFunc(g.pods, func(p kube.Pod) bool { return p.Phase != "Succeeded" }):
+				workloadStatus(c, locales.KubeGroupDone(), pal.Muted, t.TextMuted)
+			default:
+				workloadStatus(c, locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText)
+			}
+		})
 	})
 	if !open {
 		return
@@ -271,60 +301,70 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui
 	pal := Colors(t)
 	label, bg, fg := podTag(c, p)
 	story, trouble := storyOf(p, nil, c.Now())
-	row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Gap(5).Padding(8, 16).AlignItems(ui.Stretch).
-		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
-	s.revealWorkloadRow(row, p.UID)
-	switch {
-	case s.pod == p.UID:
-		row.Background(pal.ActiveRow)
-	case trouble && story.waiting:
-		row.Background(pal.WarningSoft.Alpha(0.4))
-	case trouble:
-		row.Background(pal.DangerSoft.Alpha(0.4))
-	case row.Hovered():
-		row.Background(pal.Subtle)
-	}
-	row.Children(func() {
-		resourceGrid(ui.Box(c), tracks).Children(func() {
-			cell := ui.Column(c).MinWidth(0).Gap(1)
-			if owned {
-				cell.Padding(0, 0, 0, 22)
-			}
-			cell.Children(func() {
-				name := clipped(c, p.Name).Font(FontMono).FontSize(12.5)
-				if compact {
-					name.TruncateStart()
-				}
-				if !owned && !compact {
-					ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-				}
-			})
-			workloadStatus(c, label, bg, fg)
-			if compact {
-				return
-			}
-			ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).SingleLine()
-			restarts := ui.Text(c, strconv.Itoa(p.Restarts)).Font(FontMono).FontSize(12).SingleLine()
-			if p.Restarts > 0 && trouble {
-				restarts.TextColor(t.Danger)
-			}
-			node := p.Node
-			if node == "" {
-				node = "–"
-			}
-			clipped(c, node).Font(FontMono).FontSize(12)
-			ui.Text(c, age(c, p.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
-		})
-		if trouble && !compact {
-			ui.Row(c).Gap(6).AlignItems(ui.Start).Children(func() {
-				icon, color := "circle-alert", pal.DangerText
-				if story.waiting {
-					icon, color = "triangle-alert", pal.WarningText
-				}
-				ui.Icon(c, Icon(icon)).Size(13, 13).Shrink(0).TextColor(color).Margin(1, 0, 0, 0)
-				clipped(c, story.line()).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
-			})
+	line := workloadSelectionRow(c.Key("pod-select-row-"+p.UID), pal.Line)
+	line.Children(func() {
+		var ids []string
+		if p.UID != "" {
+			ids = []string{p.UID}
 		}
+		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Padding(8, 0, 0, 0).Children(func() {
+			s.bulk.checkbox(c, "pod-select", locales.KubeBulkSelect(p.Name), ids)
+		})
+		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Gap(5).Padding(8, 0).
+			AlignItems(ui.Stretch).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
+		s.revealWorkloadRow(row, p.UID)
+		switch {
+		case s.pod == p.UID:
+			line.Background(pal.ActiveRow)
+		case trouble && story.waiting:
+			line.Background(pal.WarningSoft.Alpha(0.4))
+		case trouble:
+			line.Background(pal.DangerSoft.Alpha(0.4))
+		case row.Hovered():
+			line.Background(pal.Subtle)
+		}
+		row.Children(func() {
+			resourceGrid(ui.Box(c), tracks[1:]).Children(func() {
+				cell := ui.Column(c).MinWidth(0).Gap(1)
+				if owned {
+					cell.Padding(0, 0, 0, 22)
+				}
+				cell.Children(func() {
+					name := clipped(c, p.Name).Font(FontMono).FontSize(12.5)
+					if compact {
+						name.TruncateStart()
+					}
+					if !owned && !compact {
+						ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					}
+				})
+				workloadStatus(c, label, bg, fg)
+				if compact {
+					return
+				}
+				ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).SingleLine()
+				restarts := ui.Text(c, strconv.Itoa(p.Restarts)).Font(FontMono).FontSize(12).SingleLine()
+				if p.Restarts > 0 && trouble {
+					restarts.TextColor(t.Danger)
+				}
+				node := p.Node
+				if node == "" {
+					node = "–"
+				}
+				clipped(c, node).Font(FontMono).FontSize(12)
+				ui.Text(c, age(c, p.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
+			})
+			if trouble && !compact {
+				ui.Row(c).Gap(6).AlignItems(ui.Start).Children(func() {
+					icon, color := "circle-alert", pal.DangerText
+					if story.waiting {
+						icon, color = "triangle-alert", pal.WarningText
+					}
+					ui.Icon(c, Icon(icon)).Size(13, 13).Shrink(0).TextColor(color).Margin(1, 0, 0, 0)
+					clipped(c, story.line()).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
+				})
+			}
+		})
 	})
 }
 
