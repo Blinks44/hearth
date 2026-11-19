@@ -14,7 +14,7 @@ type clusterKind struct {
 	label, icon, alias string
 }
 
-func clusterKindOptions() [kindStorageClasses + 1]clusterKind {
+func clusterKindOptions() [kindNodes + 1]clusterKind {
 	return [...]clusterKind{
 		kindPods:            {"Pods", "box", "po"},
 		kindDeployments:     {"Deployments", "boxes", "deploy"},
@@ -34,6 +34,7 @@ func clusterKindOptions() [kindStorageClasses + 1]clusterKind {
 		kindPVCs:            {"PersistentVolumeClaims", "database", "pvc"},
 		kindPVs:             {"PersistentVolumes", "database", "pv"},
 		kindStorageClasses:  {"StorageClasses", "layers", "sc"},
+		kindNodes:           {"Nodes", "cpu", "no"},
 	}
 }
 
@@ -115,7 +116,7 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	options := clusterKindOptions()
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
 	var exact, partial []int
-	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
+	for _, i := range []int{kindOverview, kindNodes, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
 		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindPVCs, kindPVs, kindStorageClasses, kindHelm} {
 		kind := options[i]
 		label := strings.ToLower(kind.label)

@@ -15,6 +15,8 @@ import (
 
 func otherResourceKind(kind int) kube.ResourceKind {
 	switch kind {
+	case kindNodes:
+		return kube.Nodes
 	case kindStatefulSets:
 		return kube.StatefulSets
 	case kindDaemonSets:
@@ -77,7 +79,11 @@ func (s *kubeClusterState) otherResource() *kube.Resource {
 
 func (a *App) syncResourceYAML() {
 	v := &a.cluster.other
-	if v.tab != 2 {
+	yamlTab := 2
+	if a.cluster.kind == kindNodes {
+		yamlTab = 3
+	}
+	if v.tab != yamlTab {
 		v.clearYAML()
 		return
 	}
@@ -105,16 +111,22 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	pal := Colors(c.Theme())
 	claims := cl.Resources.Claims
 	visible := func(item kube.Resource) bool {
-		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims)
+		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims) && nodeShows(s.nodeFilter, item.Node)
 	}
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Wrap().Children(func() {
 		if cl.Resources.Kind == kube.PersistentVolumeClaims {
 			claimFilters(c, s, cl.Resources)
 		}
+		if cl.Resources.Kind == kube.Nodes {
+			nodeFilters(c, s, cl.Resources.Items)
+		}
 		ui.Box(c).Grow(1)
 		placeholder := locales.KubeDeploymentsSearch()
 		if cl.Resources.Kind == kube.PersistentVolumeClaims {
 			placeholder = locales.KubeStorageSearch()
+		}
+		if cl.Resources.Kind == kube.Nodes {
+			placeholder = locales.KubeNodeSearch()
 		}
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
 			Placeholder(placeholder).Width(240).OnChange(func() {
@@ -130,6 +142,11 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		}
 	}
 	slices.SortFunc(shown, func(a, b kube.Resource) int {
+		if a.Node != nil && b.Node != nil {
+			if priority := nodePriority(b.Node) - nodePriority(a.Node); priority != 0 {
+				return priority
+			}
+		}
 		if a.Kind == kube.PersistentVolumeClaims && claimProblem(a) != claimProblem(b) {
 			if claimProblem(a) {
 				return -1
@@ -143,13 +160,17 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	})
 	if len(shown) == 0 {
 		message := locales.KubeResourcesEmpty()
-		if cl.Resources.Kind == kube.PersistentVolumes || cl.Resources.Kind == kube.StorageClasses {
+		if cl.Resources.Kind == kube.Nodes || cl.Resources.Kind == kube.PersistentVolumes || cl.Resources.Kind == kube.StorageClasses {
 			message = locales.KubeResourcesEmptyCluster()
 		}
 		if resourceQuery(s.query) != "" {
 			message = locales.SearchNoResults(s.query)
 		} else if len(cl.Resources.Items) > 0 {
-			message = locales.KubeStorageFilterEmpty()
+			if cl.Resources.Kind == kube.Nodes {
+				message = locales.KubeNodeFilterEmpty()
+			} else {
+				message = locales.KubeStorageFilterEmpty()
+			}
 		}
 		toolNote(c, message)
 		return
@@ -160,11 +181,16 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		uid = selected.UID
 	}
 	tracks := []ui.Track{ui.Fr(1), ui.Fixed(92), ui.Fixed(66)}
+	headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterAge()}
 	if uid == "" {
 		tracks[1] = ui.Fixed(166)
 	}
+	if cl.Resources.Kind == kube.Nodes {
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116)}
+		headers = headers[:2]
+	}
 	workloadPanes(c, func() {
-		resourceHead(c, tracks, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterAge())
+		resourceHead(c, tracks, headers...)
 	}, func() {
 		for _, r := range shown {
 			row := resourceGrid(ui.ButtonBase(c.Key("other-resource-"+r.UID)), tracks).
@@ -185,8 +211,10 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 				})
 				label, bg, fg := otherResourceStatus(c, r, claims)
 				workloadStatus(c, label, bg, fg)
-				created := otherResourceAge(c, r)
-				clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
+				if r.Node == nil {
+					created := otherResourceAge(c, r)
+					clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
+				}
 			})
 		}
 	}, uid, func() { a.otherResourceDetail(c, cl, *selected) })
@@ -203,6 +231,18 @@ func otherResourceAge(c *ui.Context, r kube.Resource) string {
 
 func matchesOtherResource(r kube.Resource, query string, claims *kube.ClaimDetails) bool {
 	match := func(text string) bool { return strings.Contains(strings.ToLower(text), query) }
+	if r.Node != nil {
+		for key, value := range r.Node.Labels {
+			if match(key + "=" + value) {
+				return true
+			}
+		}
+		for _, taint := range r.Node.Taints {
+			if match(taint.String()) {
+				return true
+			}
+		}
+	}
 	if claims != nil && slices.ContainsFunc(claims.Consumers[claimKey(r)], func(p kube.ClaimConsumer) bool { return match(p.Name) }) {
 		return true
 	}
@@ -216,6 +256,8 @@ func otherResourceStatus(c *ui.Context, item kube.Resource, claims *kube.ClaimDe
 		return locales.KubeResourceTerminating(), pal.WarningSoft, pal.WarningText
 	}
 	switch item.Kind {
+	case kube.Nodes:
+		return nodeStatus(c, item.Node)
 	case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
 		return storageStatus(c, item, claims)
 	case kube.StatefulSets, kube.DaemonSets, kube.ReplicaSets, kube.Endpoints:
@@ -254,6 +296,14 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(v.reset)
 			})
 			meta := []string{kind.label}
+			if n := item.Node; n != nil {
+				meta = append(meta, n.Roles...)
+				for _, value := range []string{n.Version, n.OS, n.Runtime} {
+					if value != "" {
+						meta = append(meta, value)
+					}
+				}
+			}
 			for _, value := range []string{item.Namespace, item.Storage.Requested, strings.Join(item.Storage.AccessModes, ", ")} {
 				if value != "" {
 					meta = append(meta, value)
@@ -268,10 +318,28 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			if read && cl.Resources.EventsErr == nil {
 				count = strconv.Itoa(len(events))
 			}
-			segments(c, "resource-tabs", &v.tab, []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}, {locales.KubeResourceYaml(), ""}})
+			tabs := []segment{{locales.KubeTabOverview(), ""}}
+			if item.Node != nil {
+				a.nodeActions(c, item)
+				pods := ""
+				if read && cl.Resources.NodePodsErr == nil {
+					pods = strconv.Itoa(len(cl.Resources.NodePods))
+				}
+				tabs = append(tabs, segment{"Pods", pods})
+			}
+			tabs = append(tabs, segment{locales.KubeTabEvents(), count}, segment{locales.KubeResourceYaml(), ""})
+			segments(c, "resource-tabs", &v.tab, tabs)
 		})
 	}, func() {
-		switch v.tab {
+		tab := v.tab
+		if item.Node != nil && tab > 0 {
+			if tab == 1 {
+				nodePodsView(c, cl.Resources, read)
+				return
+			}
+			tab--
+		}
+		switch tab {
 		case 1:
 			if read && cl.Resources.EventsErr != nil {
 				warningRow(c, cl.Resources.EventsErr.Error())
@@ -282,6 +350,8 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			otherResourceYAML(c, v)
 		default:
 			switch item.Kind {
+			case kube.Nodes:
+				nodeOverview(c, item.Node, cl.Resources, read)
 			case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
 				a.storageOverview(c, item, cl.Resources.Claims, events)
 			default:

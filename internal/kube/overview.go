@@ -1,7 +1,6 @@
 package kube
 
 import (
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -25,10 +24,14 @@ type Overview struct {
 
 // Node is a node's readiness and its allocatable and requested resources.
 type Node struct {
-	Name, Version string
-	Ready         bool
-	Allocatable   Resources
-	Requested     Resources
+	Name, Version, OS, Runtime string
+	Ready, Cordoned            bool
+	Allocatable, Requested     Resources
+	PodCapacity                int
+	Conditions                 []NodeCondition
+	Taints                     []Taint
+	Roles, Addresses           []string
+	Labels                     map[string]string
 }
 
 // Resources holds CPU in cores and memory in bytes.
@@ -75,36 +78,14 @@ func readOverview(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 }
 
 func readNodes(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]Node, error) {
-	var list struct {
-		Items []struct {
-			meta
-			Status struct {
-				Allocatable quantities `json:"allocatable"`
-				Conditions  []struct {
-					Type   string `json:"type"`
-					Status string `json:"status"`
-				} `json:"conditions"`
-				NodeInfo struct {
-					KubeletVersion string `json:"kubeletVersion"`
-				} `json:"nodeInfo"`
-			} `json:"status"`
-		} `json:"items"`
-	}
-	if err := get(ctx, r, env, t, []string{"nodes"}, &list); err != nil {
+	objects, err := readNodeObjects(ctx, r, env, t)
+	if err != nil {
 		return nil, err
 	}
-	nodes := make([]Node, 0, len(list.Items))
-	for _, it := range list.Items {
-		n := Node{Name: it.Metadata.Name, Version: it.Status.NodeInfo.KubeletVersion, Allocatable: it.Status.Allocatable.resources()}
-		for _, cond := range it.Status.Conditions {
-			if cond.Type == "Ready" {
-				n.Ready = cond.Status == "True"
-				break
-			}
-		}
-		nodes = append(nodes, n)
+	nodes := make([]Node, 0, len(objects))
+	for _, o := range objects {
+		nodes = append(nodes, o.node())
 	}
-	slices.SortFunc(nodes, func(x, y Node) int { return cmp.Compare(x.Name, y.Name) })
 	return nodes, nil
 }
 

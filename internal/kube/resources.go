@@ -22,6 +22,7 @@ import (
 type ResourceKind string
 
 const (
+	Nodes                  ResourceKind = "nodes"
 	StatefulSets           ResourceKind = "statefulsets.apps"
 	DaemonSets             ResourceKind = "daemonsets.apps"
 	ReplicaSets            ResourceKind = "replicasets.apps"
@@ -36,22 +37,24 @@ const (
 
 func (k ResourceKind) supported() bool {
 	switch k {
-	case StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses:
+	case Nodes, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses:
 		return true
 	}
 	return false
 }
 
 func (k ResourceKind) namespaced() bool {
-	return k != PersistentVolumes && k != StorageClasses
+	return k != Nodes && k != PersistentVolumes && k != StorageClasses
 }
 
 // ResourceList is a successful list read, with an independent event read result.
 type ResourceList struct {
-	Kind      ResourceKind
-	Items     []Resource
-	EventsErr error
-	Claims    *ClaimDetails
+	Kind        ResourceKind
+	Items       []Resource
+	EventsErr   error
+	Claims      *ClaimDetails
+	NodePods    []NodePod
+	NodePodsErr error
 }
 
 func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
@@ -64,6 +67,14 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 		c.Resources.Claims = readClaimDetails(ctx, r, env, t)
 	}
 	if t.Events.UID != "" {
+		if t.Resource == Nodes {
+			for i := range items {
+				if items[i].UID == t.Events.UID {
+					c.Resources.NodePods, c.Resources.NodePodsErr = readNodePods(ctx, r, env, t, items[i].Node)
+					break
+				}
+			}
+		}
 		scope := "--all-namespaces"
 		if t.Events.Namespace != "" {
 			scope = "--namespace=" + t.Events.Namespace
@@ -96,6 +107,7 @@ type Resource struct {
 	Keys                        []string
 	Immutable                   bool
 	Storage                     Storage
+	Node                        *Node
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -186,6 +198,20 @@ type resourceObject struct {
 func ReadResources(ctx context.Context, r run.Runner, env sysenv.Env, t Target, kind ResourceKind) ([]Resource, error) {
 	if !kind.supported() {
 		return nil, fmt.Errorf("unsupported Kubernetes resource kind %q", kind)
+	}
+	if kind == Nodes {
+		objects, err := readNodeObjects(ctx, r, env, t)
+		if err != nil {
+			return nil, err
+		}
+		items := make([]Resource, 0, len(objects))
+		for _, o := range objects {
+			m := o.Metadata
+			n := o.node()
+			items = append(items, Resource{Kind: Nodes, Name: m.Name, UID: m.UID,
+				Created: m.CreationTimestamp, Deleting: !m.DeletionTimestamp.IsZero(), Node: &n})
+		}
+		return items, nil
 	}
 	scopes := [][]string{nil}
 	if kind.namespaced() {

@@ -50,6 +50,7 @@ const (
 	kindPVCs
 	kindPVs
 	kindStorageClasses
+	kindNodes
 )
 
 // kubeClusterState is the cluster page's: what it reads and what it read.
@@ -85,7 +86,7 @@ type kubeClusterState struct {
 	shell                      *shellForm
 	other                      otherResourceView
 	storageLink                storageLink
-	claimFilter                int
+	claimFilter, nodeFilter    int
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm

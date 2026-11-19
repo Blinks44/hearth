@@ -31,7 +31,7 @@ type kubeResourceType struct {
 }
 
 var kubeResourceTypes = map[string]kubeResourceType{
-	"Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
+	"Node": {"", "v1", "nodes"}, "Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
 	"Deployment": {"apps", "v1", "deployments"},
 	"ReplicaSet": {"apps", "v1", "replicasets"},
 	"Job":        {"batch", "v1", "jobs"}, "CronJob": {"batch", "v1", "cronjobs"},
@@ -42,17 +42,29 @@ var kubeResourceName = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$|^
 func (ref KubeResource) path() string {
 	typ, ok := kubeResourceTypes[ref.Kind]
 	if !ok || ref.Kubectl == "" || ref.Context == "" || ref.UID == "" ||
-		!KubeNamespaceValid(ref.Namespace) || !kubeResourceName.MatchString(ref.Name) {
+		!kubeResourceName.MatchString(ref.Name) {
 		return ""
 	}
 	api := "/api/" + typ.version
 	if typ.group != "" {
 		api = "/apis/" + typ.group + "/" + typ.version
 	}
+	if ref.Kind == "Node" {
+		if ref.Namespace != "" {
+			return ""
+		}
+		return api + "/" + typ.plural + "/" + ref.Name
+	}
+	if !KubeNamespaceValid(ref.Namespace) {
+		return ""
+	}
 	return api + "/namespaces/" + ref.Namespace + "/" + typ.plural + "/" + ref.Name
 }
 
 func (ref KubeResource) label() string {
+	if ref.Namespace == "" {
+		return ref.Kind + " " + ref.Name
+	}
 	return ref.Kind + " " + ref.Namespace + "/" + ref.Name
 }
 
@@ -93,8 +105,12 @@ func (obj resourceJSON) matches(ref KubeResource) bool {
 		apiVersion = typ.group + "/" + apiVersion
 	}
 	m := obj.metadata()
+	namespaceMatches := m["namespace"] == ref.Namespace
+	if ref.Kind == "Node" {
+		namespaceMatches = m["namespace"] == nil || m["namespace"] == ""
+	}
 	return obj["apiVersion"] == apiVersion && obj["kind"] == ref.Kind &&
-		m["name"] == ref.Name && m["namespace"] == ref.Namespace && m["uid"] == ref.UID && obj.version() != ""
+		m["name"] == ref.Name && namespaceMatches && m["uid"] == ref.UID && obj.version() != ""
 }
 
 func (obj resourceJSON) manifest() []byte {
@@ -242,11 +258,12 @@ type KubeChange struct {
 	batchDelete bool
 	rollback    *KubeDraft
 	jobName     string
+	drain       *nodeDrain
 	Diff        []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
-	if m.want == nil && m.scale == nil && m.jobName == "" {
+	if m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" {
 		return m.draft.Ref.Name
 	}
 	return ""
@@ -279,8 +296,11 @@ func resourceSpecPatch(ref KubeResource, resource, version string, spec map[stri
 		"metadata": map[string]string{"uid": ref.UID, "resourceVersion": version},
 		"spec":     spec,
 	})
-	return []string{"patch", resource + "/" + ref.Name, "--namespace=" + ref.Namespace,
-		"--type=merge", "--patch=" + string(patch), "-o", "json"}
+	args := []string{"patch", resource + "/" + ref.Name}
+	if ref.Namespace != "" {
+		args = append(args, "--namespace="+ref.Namespace)
+	}
+	return append(args, "--type=merge", "--patch="+string(patch), "-o", "json")
 }
 
 func deleteOptions(ref KubeResource, version string, dry bool) []byte {
@@ -456,6 +476,9 @@ func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking
 	ref := m.draft.Ref
 	if _, err := m.draft.current(ctx, k); err != nil {
 		return "", err
+	}
+	if m.drain != nil {
+		return m.applyNodeDrain(ctx, k, checking)
 	}
 	if m.jobName != "" {
 		return m.startCronJob(ctx, k, checking)

@@ -1,5 +1,98 @@
 {
   "@@locale": "en",
+  "kubeNodeSearch": "Name, label or taint",
+  "kubeNodeFilterEmpty": "No nodes match this filter.",
+  "kubeNodeReady": "Ready",
+  "kubeNodeNotReady": "NotReady",
+  "kubeNodeCordoned": "Cordoned",
+  "kubeNodePressure": "Resource pressure",
+  "kubeNodeConditions": "Conditions and taints",
+  "kubeNodeKubelet": "Kubelet version",
+  "kubeNodeReadingPods": "Reading pods on this node…",
+  "kubeNodeNoPods": "No pods are assigned to this node.",
+  "kubeNodeCordon": "Cordon…",
+  "kubeNodeUncordon": "Uncordon…",
+  "kubeNodeDrain": "Drain…",
+  "kubeNodeCordonTitle": "Cordon {name}",
+  "@kubeNodeCordonTitle": {
+    "description": "kubeNodeCordonTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeUncordonTitle": "Uncordon {name}",
+  "@kubeNodeUncordonTitle": {
+    "description": "kubeNodeUncordonTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeCordonWhy": "The scheduler will stop placing new pods here. Pods already on this node will stay.",
+  "kubeNodeUncordonWhy": "The scheduler can place pods here again, subject to the node’s taints and other scheduling rules.",
+  "kubeNodeCordonAction": "Cordon",
+  "kubeNodeUncordonAction": "Uncordon",
+  "kubeNodeDrainTitle": "Drain {name}",
+  "@kubeNodeDrainTitle": {
+    "description": "kubeNodeDrainTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainWhy": "Cordon the node, then evict the listed pods through Kubernetes. Controllers may replace them on other nodes. PodDisruptionBudgets apply. Uncordon separately when the node is ready for workloads.",
+  "kubeNodeDrainAction": "Cordon and drain",
+  "kubeNodeDrainSkip": "Stays on the node ({kind}).",
+  "@kubeNodeDrainSkip": {
+    "description": "kubeNodeDrainSkip",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainEmptyDir": "{name} uses emptyDir. Drain is blocked because eviction would discard its local data.",
+  "@kubeNodeDrainEmptyDir": {
+    "description": "kubeNodeDrainEmptyDir",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainUnmanaged": "{name} has no controller to recreate it. Drain is blocked.",
+  "@kubeNodeDrainUnmanaged": {
+    "description": "kubeNodeDrainUnmanaged",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainEvict": "Evict. Controller: {owner}.",
+  "@kubeNodeDrainEvict": {
+    "description": "kubeNodeDrainEvict",
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainNotReady": "Pods may remain Terminating until the kubelet responds.",
+  "kubeNodeDrainIncomplete": "Drain incomplete. The node was cordoned. Last pending pod: {name}.",
+  "@kubeNodeDrainIncomplete": {
+    "description": "kubeNodeDrainIncomplete",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeNodeDrainVerified": "The node is cordoned. Only DaemonSet and static pods can remain.",
   "kubeResourcesEmptyCluster": "No resources in this cluster.",
   "kubeStorageTargetMissing": "{name} is not in the current list.",
   "@kubeStorageTargetMissing": {

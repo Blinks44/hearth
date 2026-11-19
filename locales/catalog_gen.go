@@ -36,6 +36,332 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeNodeSearch says "Name, label or taint"
+// in the language the app shows.
+func KubeNodeSearch() string { return In(i18n.Locale()).KubeNodeSearch() }
+
+// KubeNodeSearch says "Name, label or taint"
+// in the language of msgs.
+func (msgs Messages) KubeNodeSearch() string {
+	return Catalog.Format(msgs.locale, "kubeNodeSearch", nil)
+}
+
+// KubeNodeFilterEmpty says "No nodes match this filter."
+// in the language the app shows.
+func KubeNodeFilterEmpty() string { return In(i18n.Locale()).KubeNodeFilterEmpty() }
+
+// KubeNodeFilterEmpty says "No nodes match this filter."
+// in the language of msgs.
+func (msgs Messages) KubeNodeFilterEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeNodeFilterEmpty", nil)
+}
+
+// KubeNodeReady says "Ready"
+// in the language the app shows.
+func KubeNodeReady() string { return In(i18n.Locale()).KubeNodeReady() }
+
+// KubeNodeReady says "Ready"
+// in the language of msgs.
+func (msgs Messages) KubeNodeReady() string {
+	return Catalog.Format(msgs.locale, "kubeNodeReady", nil)
+}
+
+// KubeNodeNotReady says "NotReady"
+// in the language the app shows.
+func KubeNodeNotReady() string { return In(i18n.Locale()).KubeNodeNotReady() }
+
+// KubeNodeNotReady says "NotReady"
+// in the language of msgs.
+func (msgs Messages) KubeNodeNotReady() string {
+	return Catalog.Format(msgs.locale, "kubeNodeNotReady", nil)
+}
+
+// KubeNodeCordoned says "Cordoned"
+// in the language the app shows.
+func KubeNodeCordoned() string { return In(i18n.Locale()).KubeNodeCordoned() }
+
+// KubeNodeCordoned says "Cordoned"
+// in the language of msgs.
+func (msgs Messages) KubeNodeCordoned() string {
+	return Catalog.Format(msgs.locale, "kubeNodeCordoned", nil)
+}
+
+// KubeNodePressure says "Resource pressure"
+// in the language the app shows.
+func KubeNodePressure() string { return In(i18n.Locale()).KubeNodePressure() }
+
+// KubeNodePressure says "Resource pressure"
+// in the language of msgs.
+func (msgs Messages) KubeNodePressure() string {
+	return Catalog.Format(msgs.locale, "kubeNodePressure", nil)
+}
+
+// KubeNodeConditions says "Conditions and taints"
+// in the language the app shows.
+func KubeNodeConditions() string { return In(i18n.Locale()).KubeNodeConditions() }
+
+// KubeNodeConditions says "Conditions and taints"
+// in the language of msgs.
+func (msgs Messages) KubeNodeConditions() string {
+	return Catalog.Format(msgs.locale, "kubeNodeConditions", nil)
+}
+
+// KubeNodeKubelet says "Kubelet version"
+// in the language the app shows.
+func KubeNodeKubelet() string { return In(i18n.Locale()).KubeNodeKubelet() }
+
+// KubeNodeKubelet says "Kubelet version"
+// in the language of msgs.
+func (msgs Messages) KubeNodeKubelet() string {
+	return Catalog.Format(msgs.locale, "kubeNodeKubelet", nil)
+}
+
+// KubeNodeReadingPods says "Reading pods on this node…"
+// in the language the app shows.
+func KubeNodeReadingPods() string { return In(i18n.Locale()).KubeNodeReadingPods() }
+
+// KubeNodeReadingPods says "Reading pods on this node…"
+// in the language of msgs.
+func (msgs Messages) KubeNodeReadingPods() string {
+	return Catalog.Format(msgs.locale, "kubeNodeReadingPods", nil)
+}
+
+// KubeNodeNoPods says "No pods are assigned to this node."
+// in the language the app shows.
+func KubeNodeNoPods() string { return In(i18n.Locale()).KubeNodeNoPods() }
+
+// KubeNodeNoPods says "No pods are assigned to this node."
+// in the language of msgs.
+func (msgs Messages) KubeNodeNoPods() string {
+	return Catalog.Format(msgs.locale, "kubeNodeNoPods", nil)
+}
+
+// KubeNodeCordon says "Cordon…"
+// in the language the app shows.
+func KubeNodeCordon() string { return In(i18n.Locale()).KubeNodeCordon() }
+
+// KubeNodeCordon says "Cordon…"
+// in the language of msgs.
+func (msgs Messages) KubeNodeCordon() string {
+	return Catalog.Format(msgs.locale, "kubeNodeCordon", nil)
+}
+
+// KubeNodeUncordon says "Uncordon…"
+// in the language the app shows.
+func KubeNodeUncordon() string { return In(i18n.Locale()).KubeNodeUncordon() }
+
+// KubeNodeUncordon says "Uncordon…"
+// in the language of msgs.
+func (msgs Messages) KubeNodeUncordon() string {
+	return Catalog.Format(msgs.locale, "kubeNodeUncordon", nil)
+}
+
+// KubeNodeDrain says "Drain…"
+// in the language the app shows.
+func KubeNodeDrain() string { return In(i18n.Locale()).KubeNodeDrain() }
+
+// KubeNodeDrain says "Drain…"
+// in the language of msgs.
+func (msgs Messages) KubeNodeDrain() string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrain", nil)
+}
+
+// KubeNodeCordonTitle says "Cordon {name}"
+// in the language the app shows.
+//
+// kubeNodeCordonTitle
+func KubeNodeCordonTitle(name string) string { return In(i18n.Locale()).KubeNodeCordonTitle(name) }
+
+// KubeNodeCordonTitle says "Cordon {name}"
+// in the language of msgs.
+//
+// kubeNodeCordonTitle
+func (msgs Messages) KubeNodeCordonTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeCordonTitle", map[string]any{"name": name})
+}
+
+// KubeNodeUncordonTitle says "Uncordon {name}"
+// in the language the app shows.
+//
+// kubeNodeUncordonTitle
+func KubeNodeUncordonTitle(name string) string { return In(i18n.Locale()).KubeNodeUncordonTitle(name) }
+
+// KubeNodeUncordonTitle says "Uncordon {name}"
+// in the language of msgs.
+//
+// kubeNodeUncordonTitle
+func (msgs Messages) KubeNodeUncordonTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeUncordonTitle", map[string]any{"name": name})
+}
+
+// KubeNodeCordonWhy says "The scheduler will stop placing new pods here. Pods already on this node will stay."
+// in the language the app shows.
+func KubeNodeCordonWhy() string { return In(i18n.Locale()).KubeNodeCordonWhy() }
+
+// KubeNodeCordonWhy says "The scheduler will stop placing new pods here. Pods already on this node will stay."
+// in the language of msgs.
+func (msgs Messages) KubeNodeCordonWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNodeCordonWhy", nil)
+}
+
+// KubeNodeUncordonWhy says "The scheduler can place pods here again, subject to the node’s taints and other scheduling rules."
+// in the language the app shows.
+func KubeNodeUncordonWhy() string { return In(i18n.Locale()).KubeNodeUncordonWhy() }
+
+// KubeNodeUncordonWhy says "The scheduler can place pods here again, subject to the node’s taints and other scheduling rules."
+// in the language of msgs.
+func (msgs Messages) KubeNodeUncordonWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNodeUncordonWhy", nil)
+}
+
+// KubeNodeCordonAction says "Cordon"
+// in the language the app shows.
+func KubeNodeCordonAction() string { return In(i18n.Locale()).KubeNodeCordonAction() }
+
+// KubeNodeCordonAction says "Cordon"
+// in the language of msgs.
+func (msgs Messages) KubeNodeCordonAction() string {
+	return Catalog.Format(msgs.locale, "kubeNodeCordonAction", nil)
+}
+
+// KubeNodeUncordonAction says "Uncordon"
+// in the language the app shows.
+func KubeNodeUncordonAction() string { return In(i18n.Locale()).KubeNodeUncordonAction() }
+
+// KubeNodeUncordonAction says "Uncordon"
+// in the language of msgs.
+func (msgs Messages) KubeNodeUncordonAction() string {
+	return Catalog.Format(msgs.locale, "kubeNodeUncordonAction", nil)
+}
+
+// KubeNodeDrainTitle says "Drain {name}"
+// in the language the app shows.
+//
+// kubeNodeDrainTitle
+func KubeNodeDrainTitle(name string) string { return In(i18n.Locale()).KubeNodeDrainTitle(name) }
+
+// KubeNodeDrainTitle says "Drain {name}"
+// in the language of msgs.
+//
+// kubeNodeDrainTitle
+func (msgs Messages) KubeNodeDrainTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainTitle", map[string]any{"name": name})
+}
+
+// KubeNodeDrainWhy says "Cordon the node, then evict the listed pods through Kubernetes. Controllers may replace them on other nodes. PodDisru…"
+// in the language the app shows.
+func KubeNodeDrainWhy() string { return In(i18n.Locale()).KubeNodeDrainWhy() }
+
+// KubeNodeDrainWhy says "Cordon the node, then evict the listed pods through Kubernetes. Controllers may replace them on other nodes. PodDisru…"
+// in the language of msgs.
+func (msgs Messages) KubeNodeDrainWhy() string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainWhy", nil)
+}
+
+// KubeNodeDrainAction says "Cordon and drain"
+// in the language the app shows.
+func KubeNodeDrainAction() string { return In(i18n.Locale()).KubeNodeDrainAction() }
+
+// KubeNodeDrainAction says "Cordon and drain"
+// in the language of msgs.
+func (msgs Messages) KubeNodeDrainAction() string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainAction", nil)
+}
+
+// KubeNodeDrainSkip says "Stays on the node ({kind})."
+// in the language the app shows.
+//
+// kubeNodeDrainSkip
+func KubeNodeDrainSkip(kind string) string { return In(i18n.Locale()).KubeNodeDrainSkip(kind) }
+
+// KubeNodeDrainSkip says "Stays on the node ({kind})."
+// in the language of msgs.
+//
+// kubeNodeDrainSkip
+func (msgs Messages) KubeNodeDrainSkip(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainSkip", map[string]any{"kind": kind})
+}
+
+// KubeNodeDrainEmptyDir says "{name} uses emptyDir. Drain is blocked because eviction would discard its local data."
+// in the language the app shows.
+//
+// kubeNodeDrainEmptyDir
+func KubeNodeDrainEmptyDir(name string) string { return In(i18n.Locale()).KubeNodeDrainEmptyDir(name) }
+
+// KubeNodeDrainEmptyDir says "{name} uses emptyDir. Drain is blocked because eviction would discard its local data."
+// in the language of msgs.
+//
+// kubeNodeDrainEmptyDir
+func (msgs Messages) KubeNodeDrainEmptyDir(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainEmptyDir", map[string]any{"name": name})
+}
+
+// KubeNodeDrainUnmanaged says "{name} has no controller to recreate it. Drain is blocked."
+// in the language the app shows.
+//
+// kubeNodeDrainUnmanaged
+func KubeNodeDrainUnmanaged(name string) string {
+	return In(i18n.Locale()).KubeNodeDrainUnmanaged(name)
+}
+
+// KubeNodeDrainUnmanaged says "{name} has no controller to recreate it. Drain is blocked."
+// in the language of msgs.
+//
+// kubeNodeDrainUnmanaged
+func (msgs Messages) KubeNodeDrainUnmanaged(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainUnmanaged", map[string]any{"name": name})
+}
+
+// KubeNodeDrainEvict says "Evict. Controller: {owner}."
+// in the language the app shows.
+//
+// kubeNodeDrainEvict
+func KubeNodeDrainEvict(owner string) string { return In(i18n.Locale()).KubeNodeDrainEvict(owner) }
+
+// KubeNodeDrainEvict says "Evict. Controller: {owner}."
+// in the language of msgs.
+//
+// kubeNodeDrainEvict
+func (msgs Messages) KubeNodeDrainEvict(owner string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainEvict", map[string]any{"owner": owner})
+}
+
+// KubeNodeDrainNotReady says "Pods may remain Terminating until the kubelet responds."
+// in the language the app shows.
+func KubeNodeDrainNotReady() string { return In(i18n.Locale()).KubeNodeDrainNotReady() }
+
+// KubeNodeDrainNotReady says "Pods may remain Terminating until the kubelet responds."
+// in the language of msgs.
+func (msgs Messages) KubeNodeDrainNotReady() string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainNotReady", nil)
+}
+
+// KubeNodeDrainIncomplete says "Drain incomplete. The node was cordoned. Last pending pod: {name}."
+// in the language the app shows.
+//
+// kubeNodeDrainIncomplete
+func KubeNodeDrainIncomplete(name string) string {
+	return In(i18n.Locale()).KubeNodeDrainIncomplete(name)
+}
+
+// KubeNodeDrainIncomplete says "Drain incomplete. The node was cordoned. Last pending pod: {name}."
+// in the language of msgs.
+//
+// kubeNodeDrainIncomplete
+func (msgs Messages) KubeNodeDrainIncomplete(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainIncomplete", map[string]any{"name": name})
+}
+
+// KubeNodeDrainVerified says "The node is cordoned. Only DaemonSet and static pods can remain."
+// in the language the app shows.
+func KubeNodeDrainVerified() string { return In(i18n.Locale()).KubeNodeDrainVerified() }
+
+// KubeNodeDrainVerified says "The node is cordoned. Only DaemonSet and static pods can remain."
+// in the language of msgs.
+func (msgs Messages) KubeNodeDrainVerified() string {
+	return Catalog.Format(msgs.locale, "kubeNodeDrainVerified", nil)
+}
+
 // KubeResourcesEmptyCluster says "No resources in this cluster."
 // in the language the app shows.
 func KubeResourcesEmptyCluster() string { return In(i18n.Locale()).KubeResourcesEmptyCluster() }
