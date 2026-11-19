@@ -51,6 +51,7 @@ const (
 	kindPVs
 	kindStorageClasses
 	kindNodes
+	kindPolicies
 	kindCustom
 )
 
@@ -87,8 +88,10 @@ type kubeClusterState struct {
 	shell                      *shellForm
 	other                      otherResourceView
 	custom                     customResourceView
-	storageLink                storageLink
+	resourceLink               resourceLink
 	claimFilter, nodeFilter    int
+	policyTab                  int
+	policySort                 bool
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
@@ -169,6 +172,8 @@ func (a *App) syncCluster() {
 			t.Secrets = s.kind == kindSecrets
 			t.Services = s.kind == kindServices
 			t.Resource = otherResourceKind(s.kind)
+			t.Policies = s.kind == kindPolicies
+			t.DeploymentAutoscalers = s.kind == kindDeployments
 			if s.kind == kindCustom {
 				t.CustomKind = s.custom.name
 			}
@@ -188,14 +193,14 @@ func (a *App) syncCluster() {
 		s.bulk.kind = s.kind
 		s.shell = nil
 		s.other.reset()
-		if s.storageLink.kind != s.kind {
-			s.storageLink = storageLink{}
+		if s.resourceLink.kind != s.kind {
+			s.resourceLink = resourceLink{}
 		}
 	}
 	running := ""
 	if target != "" && (s.kind != kindCustom || t.CustomKind != "") {
 		t.Events, t.Tail = a.detailRef(), a.detailTail()
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%s#%q#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Resource, t.CustomKind, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%t#%t#%s#%q#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Policies, t.DeploymentAutoscalers, t.Resource, t.CustomKind, t.Events.UID, t.Tail)
 	}
 	if running == s.running {
 		return
@@ -210,7 +215,7 @@ func (a *App) syncCluster() {
 		// Another cluster or namespace: what was read is not its.
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
-		s.storageLink = storageLink{}
+		s.resourceLink = resourceLink{}
 	}
 	if running == "" {
 		return
@@ -234,7 +239,7 @@ func (a *App) syncCluster() {
 			(cl.Resources.Claims == nil || cl.Resources.Claims.ConsumersErr != nil) && s.claimFilter == 2 {
 			s.claimFilter = 0
 		}
-		s.followStorageLink(cl)
+		s.followResourceLink(cl)
 		if s.other.uid != "" && s.otherResource() == nil {
 			s.other.reset()
 		}
@@ -345,7 +350,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			return
 		}
 		resourceKind := otherResourceKind(s.kind)
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -369,6 +374,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
 				if s.kind == kindCustom && s.custom.name != "" {
 					waiting = s.custom.list(s.data) == nil
+				} else if s.data != nil && (s.kind == kindPolicies || s.data.Policies != nil) {
+					waiting = s.kind != kindPolicies || s.data.Policies == nil
 				} else if s.data != nil && (resourceKind != "" || s.data.Resources != nil) {
 					waiting = s.data.Resources == nil || s.data.Resources.Kind != resourceKind
 				}
@@ -407,6 +414,10 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.servicesView(c, s.data.Services)
 					case kindSecrets:
 						a.secretsView(c, s.data.Secrets)
+					case kindPolicies:
+						view := *s.data
+						view.Resources = s.activeResourceList(s.data)
+						a.otherResourcesView(c, &view)
 					case kindCustom:
 						a.customResourcesView(c, s.data)
 					case kindHelm:
@@ -414,8 +425,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					default:
 						a.otherResourcesView(c, s.data)
 					}
-					if s.storageLink.name != "" && s.storageLink.kind == s.kind {
-						toolNote(c, locales.KubeStorageTargetMissing(s.storageLink.name))
+					if s.resourceLink.name != "" && s.resourceLink.kind == s.kind {
+						toolNote(c, locales.KubeStorageTargetMissing(s.resourceLink.name))
 					}
 				}
 			})

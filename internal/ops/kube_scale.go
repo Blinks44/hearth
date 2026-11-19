@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -85,7 +86,7 @@ func scaleAutoscalers(ctx context.Context, k resourceClient, ref KubeResource) (
 		Items []struct {
 			Metadata struct{ Name string }
 			Spec     struct {
-				ScaleTargetRef struct{ APIVersion, Kind, Name string }
+				ScaleTargetRef kube.ScaleTarget
 			}
 		}
 	}
@@ -94,9 +95,7 @@ func scaleAutoscalers(ctx context.Context, k resourceClient, ref KubeResource) (
 	}
 	var names []string
 	for _, h := range list.Items {
-		t := h.Spec.ScaleTargetRef
-		group, _, _ := strings.Cut(t.APIVersion, "/")
-		if t.Kind == ref.Kind && t.Name == ref.Name && (group == "apps" || group == "extensions") {
+		if h.Spec.ScaleTargetRef.TargetsDeployment(ref.Name) {
 			names = append(names, h.Metadata.Name)
 		}
 	}

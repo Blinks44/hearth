@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "checkout-hpa", "namespace": "shop", "uid": "hpa"},
+      "spec": {
+        "scaleTargetRef": {"apiVersion": "apps/v1", "kind": "Deployment", "name": "checkout"},
+        "maxReplicas": 3,
+        "metrics": [
+          {"type": "Resource", "resource": {"name": "cpu", "target": {"type": "Utilization", "averageUtilization": 70}}},
+          {"type": "ContainerResource", "containerResource": {"name": "memory", "container": "web", "target": {"type": "AverageValue", "averageValue": "256Mi"}}},
+          {"type": "External", "external": {"metric": {"name": "queue_depth", "selector": {"matchLabels": {"queue": "shop"}}}, "target": {"type": "Value", "value": "10"}}},
+          {"type": "External", "external": {"metric": {"name": "queue_depth", "selector": {"matchLabels": {"queue": "jobs"}}}, "target": {"type": "AverageValue", "averageValue": "25"}}}
+        ]
+      },
+      "status": {
+        "currentReplicas": 0,
+        "desiredReplicas": 2,
+        "currentMetrics": [
+          {"type": "External", "external": {"metric": {"name": "queue_depth", "selector": {"matchLabels": {"queue": "jobs"}}}, "current": {"averageValue": "20"}}},
+          {"type": "External", "external": {"metric": {"name": "queue_depth", "selector": {"matchLabels": {"queue": "shop"}}}, "current": {"value": "7"}}},
+          {"type": "Resource", "resource": {"name": "cpu", "current": {"averageUtilization": 85}}}
+        ]
+      }
+    },
+    {
+      "metadata": {"name": "other", "namespace": "shop", "uid": "other"},
+      "spec": {"scaleTargetRef": {"apiVersion": "apps/v1", "kind": "StatefulSet", "name": "checkout"}, "maxReplicas": 2}
+    }
+  ]
+}

@@ -147,7 +147,7 @@ func readCustomCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Targ
 		}
 	}
 	cluster := Cluster{Taken: time.Now(), Resources: list}
-	cluster.readResourceEvents(ctx, r, env, t)
+	cluster.readListEvents(ctx, r, env, t, cluster.Resources)
 	return cluster, nil
 }
 

@@ -11,15 +11,21 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-type storageLink struct {
-	kind                 int
+type resourceLink struct {
+	kind, policyTab      int
 	namespace, name, uid string
 }
 
-func (a *App) openStorageLink(link storageLink) {
+func (a *App) openResourceLink(link resourceLink) {
 	s := &a.cluster
 	s.kind, s.query, s.podFilter, s.claimFilter = link.kind, "", 0, 0
-	s.storageLink = link
+	if link.kind == kindPolicies {
+		s.policyTab = link.policyTab
+	}
+	if link.kind == kindDeployments {
+		s.deployment, s.deploymentFilter, s.tab = "", 0, 0
+	}
+	s.resourceLink = link
 	s.other.reset()
 	if link.kind == kindPods {
 		s.pod, s.tab = "", 0
@@ -28,8 +34,8 @@ func (a *App) openStorageLink(link storageLink) {
 	s.refresh++
 }
 
-func (s *kubeClusterState) followStorageLink(cl kube.Cluster) {
-	link := s.storageLink
+func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
+	link := s.resourceLink
 	if link.name == "" || link.kind != s.kind {
 		return
 	}
@@ -37,16 +43,25 @@ func (s *kubeClusterState) followStorageLink(cl kube.Cluster) {
 		for _, pod := range cl.Pods {
 			if pod.UID == link.uid && pod.Namespace == link.namespace {
 				s.pod, s.tab, s.revealWorkload = pod.UID, 0, pod.UID
-				s.storageLink = storageLink{}
+				s.resourceLink = resourceLink{}
 				return
 			}
 		}
 	}
-	if cl.Resources != nil && cl.Resources.Kind == otherResourceKind(link.kind) {
-		for _, item := range cl.Resources.Items {
+	if link.kind == kindDeployments {
+		for _, deployment := range cl.Deployments {
+			if deployment.Namespace == link.namespace && deployment.Name == link.name {
+				s.deployment, s.tab, s.revealWorkload = deployment.UID, 0, deployment.UID
+				s.resourceLink = resourceLink{}
+				return
+			}
+		}
+	}
+	if list := s.activeResourceList(&cl); list != nil && (link.kind == kindPolicies || list.Kind == otherResourceKind(link.kind)) {
+		for _, item := range list.Items {
 			if item.Namespace == link.namespace && item.Name == link.name && (link.uid == "" || item.UID == link.uid) {
 				s.other.uid, s.other.tab, s.revealWorkload = item.UID, 0, item.UID
-				s.storageLink = storageLink{}
+				s.resourceLink = resourceLink{}
 				return
 			}
 		}
@@ -156,8 +171,8 @@ func (a *App) storageOverview(c *ui.Context, item kube.Resource, claims *kube.Cl
 	detailSection(c, locales.KubeStorageConsumers())
 	consumers := claims.Consumers[claimKey(item)]
 	for _, pod := range consumers {
-		a.storageLinkRow(c.Key("claim-pod-"+pod.UID), pod.Name, pod.Phase, locales.KubeClusterOpen(),
-			storageLink{kind: kindPods, uid: pod.UID, namespace: pod.Namespace, name: pod.Name})
+		a.resourceLinkRow(c.Key("claim-pod-"+pod.UID), pod.Name, pod.Phase, locales.KubeClusterOpen(),
+			resourceLink{kind: kindPods, uid: pod.UID, namespace: pod.Namespace, name: pod.Name})
 	}
 	switch {
 	case claims.ConsumersErr != nil:
@@ -167,8 +182,8 @@ func (a *App) storageOverview(c *ui.Context, item kube.Resource, claims *kube.Cl
 	}
 	if s.Volume != "" {
 		detailSection(c, locales.KubeStorageVolume())
-		a.storageLinkRow(c.Key("claim-volume"), s.Volume, "", locales.KubeClusterOpen(),
-			storageLink{kind: kindPVs, name: s.Volume})
+		a.resourceLinkRow(c.Key("claim-volume"), s.Volume, "", locales.KubeClusterOpen(),
+			resourceLink{kind: kindPVs, name: s.Volume})
 	}
 	detailSection(c, locales.KubeStorageClasses())
 	if claims.ClassesErr != nil {
@@ -179,8 +194,8 @@ func (a *App) storageOverview(c *ui.Context, item kube.Resource, claims *kube.Cl
 		if class.Storage.Default {
 			description += " · " + locales.KubeStorageDefault()
 		}
-		a.storageLinkRow(c.Key("claim-class-"+class.UID), class.Name, description, locales.KubeClusterOpen(),
-			storageLink{kind: kindStorageClasses, name: class.Name, uid: class.UID})
+		a.resourceLinkRow(c.Key("claim-class-"+class.UID), class.Name, description, locales.KubeClusterOpen(),
+			resourceLink{kind: kindStorageClasses, name: class.Name, uid: class.UID})
 	}
 	if claims.ClassesErr == nil && len(claims.Classes) == 0 {
 		storageReadNote(c, locales.KubeResourcesEmptyCluster())
@@ -191,15 +206,15 @@ func storageReadNote(c *ui.Context, text string) {
 	ui.Text(c, text).Padding(4, 16).FontSize(12).TextColor(c.Theme().TextMuted).Wrap()
 }
 
-func (a *App) storageLinkRow(c *ui.Context, name, description, button string, link storageLink) {
+func (a *App) resourceLinkRow(c *ui.Context, name, description, button string, link resourceLink) {
 	pal := Colors(c.Theme())
 	ui.Row(c).Padding(5, 16).Gap(8).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Gap(2).Grow(1).MinWidth(0).Children(func() {
 			clipped(c, name).Font(FontMono).FontSize(12)
 			if description != "" {
-				clipped(c, description).FontSize(11.5).TextColor(pal.TextFaint)
+				clipped(c, description).FontSize(11.5).TextColor(pal.TextFaint).Tooltip(description)
 			}
 		})
-		kubeActionButton(c, "arrow-right", button, podActionHeight).Tooltip(name).OnClick(func() { a.openStorageLink(link) })
+		kubeActionButton(c, "arrow-right", button, podActionHeight).Tooltip(name).OnClick(func() { a.openResourceLink(link) })
 	})
 }

@@ -37,7 +37,7 @@ const (
 
 func (k ResourceKind) supported() bool {
 	switch k {
-	case Nodes, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses:
+	case Nodes, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses, Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
 		return true
 	}
 	return false
@@ -52,6 +52,7 @@ type ResourceList struct {
 	Kind        ResourceKind
 	Custom      *CustomDefinition
 	Items       []Resource
+	Err         error
 	EventsErr   error
 	Claims      *ClaimDetails
 	NodePods    []NodePod
@@ -82,17 +83,17 @@ func readResourceCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Ta
 			}
 		}
 	}
-	c.readResourceEvents(ctx, r, env, t)
+	c.readListEvents(ctx, r, env, t, c.Resources)
 	return c, nil
 }
 
-func (c *Cluster) readResourceEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target) {
+func (c *Cluster) readListEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target, list *ResourceList) {
 	if t.Events.UID != "" {
 		scope := "--all-namespaces"
 		if t.Events.Namespace != "" {
 			scope = "--namespace=" + t.Events.Namespace
 		}
-		c.Events, c.Resources.EventsErr = readEvents(ctx, r, env, t, []string{"events", scope,
+		c.Events, list.EventsErr = readEvents(ctx, r, env, t, []string{"events", scope,
 			"--field-selector=involvedObject.uid=" + t.Events.UID})
 		c.EventsOf = t.Events
 	}
@@ -121,6 +122,10 @@ type Resource struct {
 	Storage                     Storage
 	Node                        *Node
 	Custom                      *CustomObject
+	Autoscaler                  *Autoscaler
+	Budget                      *DisruptionBudget
+	Quota                       *ResourceQuota
+	Limits                      []LimitRangeItem
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -225,6 +230,10 @@ func ReadResources(ctx context.Context, r run.Runner, env sysenv.Env, t Target, 
 				Created: m.CreationTimestamp, Deleting: !m.DeletionTimestamp.IsZero(), Node: &n})
 		}
 		return items, nil
+	}
+	switch kind {
+	case Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
+		return readPolicyResources(ctx, r, env, t, kind)
 	}
 	scopes := [][]string{nil}
 	if kind.namespaced() {

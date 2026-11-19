@@ -68,15 +68,18 @@ func (v *otherResourceView) reset() {
 }
 
 func (s *kubeClusterState) otherResource() *kube.Resource {
-	if s.other.uid == "" || s.data == nil || s.data.Resources == nil {
+	if s.other.uid == "" || s.data == nil {
 		return nil
 	}
-	list := s.data.Resources
+	list := s.activeResourceList(s.data)
+	if list == nil {
+		return nil
+	}
 	if s.kind == kindCustom {
 		if s.custom.list(s.data) == nil {
 			return nil
 		}
-	} else if list.Kind != otherResourceKind(s.kind) {
+	} else if s.kind != kindPolicies && list.Kind != otherResourceKind(s.kind) {
 		return nil
 	}
 	items := list.Items
@@ -89,7 +92,7 @@ func (s *kubeClusterState) otherResource() *kube.Resource {
 func (a *App) syncResourceYAML() {
 	v := &a.cluster.other
 	yamlTab := 2
-	if a.cluster.kind == kindNodes || a.cluster.kind == kindCustom {
+	if item := a.cluster.otherResource(); a.cluster.kind == kindNodes || a.cluster.kind == kindCustom || item != nil && item.Autoscaler != nil {
 		yamlTab = 3
 	}
 	if v.tab != yamlTab {
@@ -126,6 +129,9 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		return matchesOtherResource(item, resourceQuery(s.query), claims) && claimShows(s.claimFilter, item, claims) && nodeShows(s.nodeFilter, item.Node)
 	}
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Wrap().Children(func() {
+		if s.kind == kindPolicies {
+			policyTabs(c, &s.policyTab, cl.Policies)
+		}
 		if cl.Resources.Kind == kube.PersistentVolumeClaims {
 			claimFilters(c, s, cl.Resources)
 		}
@@ -133,6 +139,13 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			nodeFilters(c, s, cl.Resources.Items)
 		}
 		ui.Box(c).Grow(1)
+		if s.kind == kindPolicies {
+			policySort(c, &s.policySort)
+		}
+		width := float32(240)
+		if s.kind == kindPolicies && narrow(c) {
+			width = 180
+		}
 		placeholder := locales.KubeDeploymentsSearch()
 		if cl.Resources.Kind == kube.PersistentVolumeClaims {
 			placeholder = locales.KubeStorageSearch()
@@ -140,13 +153,20 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		if cl.Resources.Kind == kube.Nodes {
 			placeholder = locales.KubeNodeSearch()
 		}
+		if cl.Resources.Kind == kube.Autoscalers {
+			placeholder = locales.KubeAutoscalerSearch()
+		}
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(placeholder).Width(240).OnChange(func() {
+			Placeholder(placeholder).Label(placeholder).Width(width).OnChange(func() {
 			if item := s.otherResource(); item != nil && !visible(*item) {
 				v.reset()
 			}
 		})
 	})
+	if cl.Resources.Err != nil {
+		a.clusterError(c, a.router.Query("context"), cl.Resources.Err)
+		return
+	}
 	var shown []kube.Resource
 	for _, r := range cl.Resources.Items {
 		if visible(r) {
@@ -154,6 +174,11 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		}
 	}
 	slices.SortFunc(shown, func(a, b kube.Resource) int {
+		if s.kind == kindPolicies && !s.policySort {
+			if priority := policyPriority(b) - policyPriority(a); priority != 0 {
+				return priority
+			}
+		}
 		if a.Node != nil && b.Node != nil {
 			if priority := nodePriority(b.Node) - nodePriority(a.Node); priority != 0 {
 				return priority
@@ -197,6 +222,13 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	if uid == "" {
 		tracks[1] = ui.Fixed(166)
 	}
+	if s.kind == kindPolicies {
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(124)}
+		headers = headers[:2]
+		if cl.Resources.Kind == kube.Autoscalers {
+			headers[1] = locales.KubeReplicas()
+		}
+	}
 	if cl.Resources.Kind == kube.Nodes {
 		metricsNotice(c, cl.MetricsErr)
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116)}
@@ -212,7 +244,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		for _, r := range shown {
 			row := resourceGrid(ui.ButtonBase(c.Key("other-resource-"+r.UID)), tracks).
 				Label(r.Name).Padding(7, 16).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).
-				OnClick(func() { s.toggleWorkload(&v.uid, r.UID); v.clearYAML(); v.tab = 0; s.storageLink = storageLink{} })
+				OnClick(func() { s.toggleWorkload(&v.uid, r.UID); v.clearYAML(); v.tab = 0; s.resourceLink = resourceLink{} })
 			if r.UID == uid {
 				row.Background(pal.ActiveRow)
 			} else if row.Hovered() {
@@ -228,10 +260,10 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 				})
 				label, bg, fg := otherResourceStatus(c, r, claims)
 				workloadStatus(c, label, bg, fg)
-				if r.Node == nil {
+				if r.Node == nil && s.kind != kindPolicies {
 					created := otherResourceAge(c, r)
 					clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
-				} else if uid == "" {
+				} else if r.Node != nil && uid == "" {
 					podMetricCell(c, r.Node.Usage, kube.Resources{}, false)
 					podMetricCell(c, r.Node.Usage, kube.Resources{}, true)
 				}
@@ -266,7 +298,7 @@ func matchesOtherResource(r kube.Resource, query string, claims *kube.ClaimDetai
 	if claims != nil && slices.ContainsFunc(claims.Consumers[claimKey(r)], func(p kube.ClaimConsumer) bool { return match(p.Name) }) {
 		return true
 	}
-	return match(r.Namespace+"/"+r.Name) || match(r.Storage.Class) || match(r.Storage.Provisioner) || slices.ContainsFunc(r.Keys, match) ||
+	return match(r.Namespace+"/"+r.Name) || r.Autoscaler != nil && match(r.Autoscaler.Target.Kind+"/"+r.Autoscaler.Target.Name) || match(r.Storage.Class) || match(r.Storage.Provisioner) || slices.ContainsFunc(r.Keys, match) ||
 		slices.ContainsFunc(r.Routes, func(route kube.IngressRoute) bool { return match(route.Host) || match(route.Service) })
 }
 
@@ -276,6 +308,8 @@ func otherResourceStatus(c *ui.Context, item kube.Resource, claims *kube.ClaimDe
 		return locales.KubeResourceTerminating(), pal.WarningSoft, pal.WarningText
 	}
 	switch item.Kind {
+	case kube.Autoscalers, kube.DisruptionBudgets, kube.ResourceQuotas, kube.LimitRanges:
+		return policyStatus(c, item)
 	case kube.Nodes:
 		return nodeStatus(c, item.Node)
 	case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
@@ -306,13 +340,20 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 	t := c.Theme()
 	label, bg, fg := otherResourceStatus(c, item, cl.Resources.Claims)
 	kind := clusterKindOptions()[s.kind]
+	if s.kind == kindPolicies {
+		kind.label = policyKindName(item.Kind)
+	}
 	events, read := clusterEvents(cl, item.UID)
 	detailFrame(c, v.tab, false, func() {
 		ui.Column(c).Padding(16).Gap(8).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, Icon(kind.icon)).Size(16, 16).Shrink(0)
 				clipped(c, item.Name).FontSize(15).FontWeight(600).Grow(1).MinWidth(0)
-				aiTag(c, label, bg, fg).MaxWidth(110).Tooltip(label)
+				width := float32(110)
+				if s.kind == kindPolicies {
+					width = 144
+				}
+				aiTag(c, label, bg, fg).MaxWidth(width).Tooltip(label)
 				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(v.reset)
 			})
 			meta := []string{kind.label}
@@ -328,6 +369,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				if value != "" {
 					meta = append(meta, value)
 				}
+			}
+			if hpa := item.Autoscaler; hpa != nil {
+				meta = append(meta, hpa.Target.Kind+" "+hpa.Target.Name)
 			}
 			if created := otherResourceAge(c, item); created != "" {
 				meta = append(meta, locales.KubeCreatedAgo(created))
@@ -347,6 +391,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				}
 				tabs = append(tabs, segment{"Pods", pods})
 			}
+			if item.Autoscaler != nil {
+				tabs = append(tabs, segment{locales.KubeAutoscalerMetrics(), strconv.Itoa(len(item.Autoscaler.Metrics))})
+			}
 			tabs = append(tabs, segment{locales.KubeTabEvents(), count}, segment{locales.KubeResourceYaml(), ""})
 			segments(c, "resource-tabs", &v.tab, tabs)
 		})
@@ -355,6 +402,13 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 		if item.Node != nil && tab > 0 {
 			if tab == 1 {
 				nodePodsView(c, cl.Resources, read)
+				return
+			}
+			tab--
+		}
+		if item.Autoscaler != nil && tab > 0 {
+			if tab == 1 {
+				autoscalerMetricsView(c, item.Autoscaler.Metrics)
 				return
 			}
 			tab--
@@ -370,6 +424,8 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			otherResourceYAML(c, v)
 		default:
 			switch item.Kind {
+			case kube.Autoscalers, kube.DisruptionBudgets, kube.ResourceQuotas, kube.LimitRanges:
+				a.policyOverview(c, item, cl.Policies)
 			case kube.Nodes:
 				nodeOverview(c, item.Node, cl.Resources, read)
 			case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:

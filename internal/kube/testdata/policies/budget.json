@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "stale", "namespace": "shop", "uid": "stale", "generation": 3},
+      "spec": {"maxUnavailable": "25%"},
+      "status": {"observedGeneration": 2, "disruptionsAllowed": 2}
+    },
+    {
+      "metadata": {"name": "checkout", "namespace": "shop", "uid": "budget", "generation": 1},
+      "spec": {"minAvailable": 1},
+      "status": {"observedGeneration": 1, "disruptionsAllowed": 0, "currentHealthy": 1, "desiredHealthy": 1}
+    }
+  ]
+}

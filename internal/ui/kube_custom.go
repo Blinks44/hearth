@@ -87,7 +87,7 @@ func (a *App) selectClusterKind(id int, def *kube.CustomDefinition) {
 	}
 	s.custom.name, s.custom.label = name, label
 	s.kind, s.logs, s.kindsOpen = id, nil, false
-	s.storageLink = storageLink{}
+	s.resourceLink = resourceLink{}
 }
 
 func (a *App) customCatalogNotice(c *ui.Context) {

@@ -1,0 +1,9 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "compute", "namespace": "shop", "uid": "quota"},
+      "spec": {"hard": {"requests.cpu": "6"}},
+      "status": {"hard": {"requests.cpu": "4"}, "used": {"requests.cpu": "750m"}}
+    }
+  ]
+}

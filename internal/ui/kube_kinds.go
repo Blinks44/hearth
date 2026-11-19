@@ -35,6 +35,7 @@ func clusterKindOptions() [kindCustom + 1]clusterKind {
 		kindPVs:             {"PersistentVolumes", "database", "pv"},
 		kindStorageClasses:  {"StorageClasses", "layers", "sc"},
 		kindNodes:           {"Nodes", "cpu", "no"},
+		kindPolicies:        {locales.KubePolicies(), "gauge", "hpa"},
 		kindCustom:          {locales.KubeCustomDefinitions(), "boxes", "crd"},
 	}
 }
@@ -44,6 +45,17 @@ func isBatchKind(kind int) bool { return kind == kindJobs || kind == kindCronJob
 func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bool) {
 	if cl == nil {
 		return 0, 0, false
+	}
+	if cl.Policies != nil {
+		if kind == kindPolicies {
+			for _, list := range cl.Policies {
+				if list.Err != nil {
+					return 0, 0, false
+				}
+				count += len(list.Items)
+			}
+		}
+		return count, 0, kind == kindPolicies
 	}
 	if cl.Resources != nil {
 		return len(cl.Resources.Items), 0, cl.Resources.Custom == nil && cl.Resources.Kind == otherResourceKind(kind)
@@ -141,15 +153,19 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	}
 	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
 		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm,
-		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindCustom} {
+		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindPolicies, kindCustom} {
 		group := ""
 		switch i {
 		case kindPVCs, kindPVs, kindStorageClasses:
 			group = locales.KubeCustomStorage()
-		case kindNodes, kindCustom:
+		case kindNodes, kindPolicies, kindCustom:
 			group = locales.KubeCustomCluster()
 		}
-		add(entry{id: i, kind: options[i], group: group})
+		if i == kindPolicies {
+			add(entry{id: i, kind: options[i], group: group}, "horizontalpodautoscalers", "pdb", "poddisruptionbudgets", "resourcequota", "resourcequotas", "quota", "limitrange", "limitranges", "limits")
+		} else {
+			add(entry{id: i, kind: options[i], group: group})
+		}
 	}
 	if catalog := s.custom.catalog; catalog != nil && catalog.result != nil {
 		for i := range catalog.result.Items {
@@ -164,7 +180,21 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	}
 	results := append(exact, partial...)
 	selected := min(s.kindSelected, max(len(results)-1, 0))
-	choose := func(e entry) { a.selectClusterKind(e.id, e.def) }
+	choose := func(e entry) {
+		if e.id == kindPolicies {
+			switch query {
+			case "hpa", "horizontalpodautoscalers":
+				s.policyTab = 0
+			case "pdb", "poddisruptionbudgets":
+				s.policyTab = 1
+			case "quota", "resourcequota", "resourcequotas":
+				s.policyTab = 2
+			case "limitrange", "limitranges":
+				s.policyTab = 3
+			}
+		}
+		a.selectClusterKind(e.id, e.def)
+	}
 	move := func(by int) {
 		if n := len(results); n > 0 {
 			s.kindSelected = (selected + by + n) % n

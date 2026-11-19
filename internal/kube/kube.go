@@ -47,6 +47,10 @@ type Target struct {
 	Secrets bool
 	// Resource reads one of the additional namespaced resource kinds.
 	Resource ResourceKind
+	// Policies reads autoscalers and namespace policies instead of workloads.
+	Policies bool
+	// DeploymentAutoscalers reads HPAs for the selected Deployment.
+	DeploymentAutoscalers bool
 	// CustomKind is a CRD selected by its full name.
 	CustomKind string
 	// Events is the object whose events to read too; zero reads none.
@@ -147,8 +151,10 @@ type Deployment struct {
 	Revisions []Revision
 	// Stalled is Kubernetes' message when the rollout made no progress
 	// in time.
-	Stalled string
-	Created time.Time
+	Stalled        string
+	Created        time.Time
+	Autoscalers    []Resource
+	AutoscalersErr error
 }
 
 // Revision is a Deployment's revision, as its ReplicaSet keeps it.
@@ -180,6 +186,7 @@ type Cluster struct {
 	HelmReleases []HelmRelease
 	Secrets      []Secret
 	Resources    *ResourceList
+	Policies     []ResourceList
 	MetricsErr   error
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
@@ -260,6 +267,9 @@ func namespaceScopes(namespaces []string) [][]string {
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	if t.Policies {
+		return readPolicies(ctx, r, env, t), nil
+	}
 	if t.CustomKind != "" {
 		return readCustomCluster(ctx, r, env, t)
 	}
@@ -322,6 +332,9 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 			return Cluster{}, err
 		}
 		c.Events, c.EventsOf = events, t.Events
+	}
+	if t.DeploymentAutoscalers && t.Events.UID != "" {
+		c.readDeploymentAutoscalers(ctx, r, env, t)
 	}
 	if t.Tail.Container != "" {
 		c.LastLine, c.LastLineOf = lastLine(ctx, r, env, t), t.Tail
@@ -489,6 +502,7 @@ type meta struct {
 	Metadata struct {
 		Name              string            `json:"name"`
 		Namespace         string            `json:"namespace"`
+		Generation        int64             `json:"generation"`
 		UID               string            `json:"uid"`
 		CreationTimestamp time.Time         `json:"creationTimestamp"`
 		DeletionTimestamp time.Time         `json:"deletionTimestamp"`

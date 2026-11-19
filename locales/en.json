@@ -1,5 +1,131 @@
 {
   "@@locale": "en",
+  "kubePolicies": "Autoscaling and limits",
+  "@kubePolicies": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicySort": "Sort policies",
+  "@kubePolicySort": {
+    "description": "Accessible label for the policy list sort menu"
+  },
+  "kubePolicyQuotas": "Quotas",
+  "@kubePolicyQuotas": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerSearch": "Name or target",
+  "@kubeAutoscalerSearch": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerInactive": "Cannot scale",
+  "@kubeAutoscalerInactive": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerNoMetrics": "No metrics",
+  "@kubeAutoscalerNoMetrics": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerAtMax": "At maximum",
+  "@kubeAutoscalerAtMax": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerScaling": "Scaling · {current} → {desired}",
+  "@kubeAutoscalerScaling": {
+    "description": "Kubernetes autoscaling and limits view",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "desired": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeAutoscalerReplicas": "{current} of {minimum}–{maximum}",
+  "@kubeAutoscalerReplicas": {
+    "description": "Kubernetes autoscaling and limits view",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      },
+      "maximum": {
+        "type": "int"
+      }
+    }
+  },
+  "kubePolicyAllowed": "Allowed · {count}",
+  "@kubePolicyAllowed": {
+    "description": "Kubernetes autoscaling and limits view",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubePolicyCount": "Entries · {count}",
+  "@kubePolicyCount": {
+    "description": "Kubernetes autoscaling and limits view",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubePolicyPending": "Waiting for status",
+  "@kubePolicyPending": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicyHealthy": "Healthy / required",
+  "@kubePolicyHealthy": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicyExpected": "Expected pods",
+  "@kubePolicyExpected": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicyDisruptions": "Disruptions allowed",
+  "@kubePolicyDisruptions": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicyUsedOfLimit": "Used / limit",
+  "@kubePolicyUsedOfLimit": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerCurrent": "Current replicas",
+  "@kubeAutoscalerCurrent": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerRange": "Min / max replicas",
+  "@kubeAutoscalerRange": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerDownscale": "Scale-down window",
+  "@kubeAutoscalerDownscale": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerLastScale": "Last scale",
+  "@kubeAutoscalerLastScale": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubePolicyRelated": "Policies and target · {namespace}",
+  "@kubePolicyRelated": {
+    "description": "Kubernetes autoscaling and limits view",
+    "placeholders": {
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeAutoscalerMetrics": "Metrics",
+  "@kubeAutoscalerMetrics": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
+  "kubeAutoscalerCurrentOfTarget": "Current / target",
+  "@kubeAutoscalerCurrentOfTarget": {
+    "description": "Kubernetes autoscaling and limits view"
+  },
   "kubeCustomForbiddenTitle": "No right to read custom resources",
   "@kubeCustomForbiddenTitle": {
     "description": "Error when Kubernetes denies access to a custom resource"

@@ -36,6 +36,334 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubePolicies says "Autoscaling and limits"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicies() string { return In(i18n.Locale()).KubePolicies() }
+
+// KubePolicies says "Autoscaling and limits"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicies() string {
+	return Catalog.Format(msgs.locale, "kubePolicies", nil)
+}
+
+// KubePolicySort says "Sort policies"
+// in the language the app shows.
+//
+// Accessible label for the policy list sort menu
+func KubePolicySort() string { return In(i18n.Locale()).KubePolicySort() }
+
+// KubePolicySort says "Sort policies"
+// in the language of msgs.
+//
+// Accessible label for the policy list sort menu
+func (msgs Messages) KubePolicySort() string {
+	return Catalog.Format(msgs.locale, "kubePolicySort", nil)
+}
+
+// KubePolicyQuotas says "Quotas"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyQuotas() string { return In(i18n.Locale()).KubePolicyQuotas() }
+
+// KubePolicyQuotas says "Quotas"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyQuotas() string {
+	return Catalog.Format(msgs.locale, "kubePolicyQuotas", nil)
+}
+
+// KubeAutoscalerSearch says "Name or target"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerSearch() string { return In(i18n.Locale()).KubeAutoscalerSearch() }
+
+// KubeAutoscalerSearch says "Name or target"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerSearch() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerSearch", nil)
+}
+
+// KubeAutoscalerInactive says "Cannot scale"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerInactive() string { return In(i18n.Locale()).KubeAutoscalerInactive() }
+
+// KubeAutoscalerInactive says "Cannot scale"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerInactive() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerInactive", nil)
+}
+
+// KubeAutoscalerNoMetrics says "No metrics"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerNoMetrics() string { return In(i18n.Locale()).KubeAutoscalerNoMetrics() }
+
+// KubeAutoscalerNoMetrics says "No metrics"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerNoMetrics() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerNoMetrics", nil)
+}
+
+// KubeAutoscalerAtMax says "At maximum"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerAtMax() string { return In(i18n.Locale()).KubeAutoscalerAtMax() }
+
+// KubeAutoscalerAtMax says "At maximum"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerAtMax() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerAtMax", nil)
+}
+
+// KubeAutoscalerScaling says "Scaling · {current} → {desired}"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerScaling(current int, desired int) string {
+	return In(i18n.Locale()).KubeAutoscalerScaling(current, desired)
+}
+
+// KubeAutoscalerScaling says "Scaling · {current} → {desired}"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerScaling(current int, desired int) string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerScaling", map[string]any{"current": current, "desired": desired})
+}
+
+// KubeAutoscalerReplicas says "{current} of {minimum}–{maximum}"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerReplicas(current int, minimum int, maximum int) string {
+	return In(i18n.Locale()).KubeAutoscalerReplicas(current, minimum, maximum)
+}
+
+// KubeAutoscalerReplicas says "{current} of {minimum}–{maximum}"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerReplicas(current int, minimum int, maximum int) string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerReplicas", map[string]any{"current": current, "minimum": minimum, "maximum": maximum})
+}
+
+// KubePolicyAllowed says "Allowed · {count}"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyAllowed(count int) string { return In(i18n.Locale()).KubePolicyAllowed(count) }
+
+// KubePolicyAllowed says "Allowed · {count}"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyAllowed(count int) string {
+	return Catalog.Format(msgs.locale, "kubePolicyAllowed", map[string]any{"count": count})
+}
+
+// KubePolicyCount says "Entries · {count}"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyCount(count int) string { return In(i18n.Locale()).KubePolicyCount(count) }
+
+// KubePolicyCount says "Entries · {count}"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubePolicyCount", map[string]any{"count": count})
+}
+
+// KubePolicyPending says "Waiting for status"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyPending() string { return In(i18n.Locale()).KubePolicyPending() }
+
+// KubePolicyPending says "Waiting for status"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyPending() string {
+	return Catalog.Format(msgs.locale, "kubePolicyPending", nil)
+}
+
+// KubePolicyHealthy says "Healthy / required"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyHealthy() string { return In(i18n.Locale()).KubePolicyHealthy() }
+
+// KubePolicyHealthy says "Healthy / required"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyHealthy() string {
+	return Catalog.Format(msgs.locale, "kubePolicyHealthy", nil)
+}
+
+// KubePolicyExpected says "Expected pods"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyExpected() string { return In(i18n.Locale()).KubePolicyExpected() }
+
+// KubePolicyExpected says "Expected pods"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyExpected() string {
+	return Catalog.Format(msgs.locale, "kubePolicyExpected", nil)
+}
+
+// KubePolicyDisruptions says "Disruptions allowed"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyDisruptions() string { return In(i18n.Locale()).KubePolicyDisruptions() }
+
+// KubePolicyDisruptions says "Disruptions allowed"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyDisruptions() string {
+	return Catalog.Format(msgs.locale, "kubePolicyDisruptions", nil)
+}
+
+// KubePolicyUsedOfLimit says "Used / limit"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyUsedOfLimit() string { return In(i18n.Locale()).KubePolicyUsedOfLimit() }
+
+// KubePolicyUsedOfLimit says "Used / limit"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyUsedOfLimit() string {
+	return Catalog.Format(msgs.locale, "kubePolicyUsedOfLimit", nil)
+}
+
+// KubeAutoscalerCurrent says "Current replicas"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerCurrent() string { return In(i18n.Locale()).KubeAutoscalerCurrent() }
+
+// KubeAutoscalerCurrent says "Current replicas"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerCurrent() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerCurrent", nil)
+}
+
+// KubeAutoscalerRange says "Min / max replicas"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerRange() string { return In(i18n.Locale()).KubeAutoscalerRange() }
+
+// KubeAutoscalerRange says "Min / max replicas"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerRange() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerRange", nil)
+}
+
+// KubeAutoscalerDownscale says "Scale-down window"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerDownscale() string { return In(i18n.Locale()).KubeAutoscalerDownscale() }
+
+// KubeAutoscalerDownscale says "Scale-down window"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerDownscale() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerDownscale", nil)
+}
+
+// KubeAutoscalerLastScale says "Last scale"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerLastScale() string { return In(i18n.Locale()).KubeAutoscalerLastScale() }
+
+// KubeAutoscalerLastScale says "Last scale"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerLastScale() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerLastScale", nil)
+}
+
+// KubePolicyRelated says "Policies and target · {namespace}"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubePolicyRelated(namespace string) string {
+	return In(i18n.Locale()).KubePolicyRelated(namespace)
+}
+
+// KubePolicyRelated says "Policies and target · {namespace}"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubePolicyRelated(namespace string) string {
+	return Catalog.Format(msgs.locale, "kubePolicyRelated", map[string]any{"namespace": namespace})
+}
+
+// KubeAutoscalerMetrics says "Metrics"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerMetrics() string { return In(i18n.Locale()).KubeAutoscalerMetrics() }
+
+// KubeAutoscalerMetrics says "Metrics"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerMetrics() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerMetrics", nil)
+}
+
+// KubeAutoscalerCurrentOfTarget says "Current / target"
+// in the language the app shows.
+//
+// Kubernetes autoscaling and limits view
+func KubeAutoscalerCurrentOfTarget() string { return In(i18n.Locale()).KubeAutoscalerCurrentOfTarget() }
+
+// KubeAutoscalerCurrentOfTarget says "Current / target"
+// in the language of msgs.
+//
+// Kubernetes autoscaling and limits view
+func (msgs Messages) KubeAutoscalerCurrentOfTarget() string {
+	return Catalog.Format(msgs.locale, "kubeAutoscalerCurrentOfTarget", nil)
+}
+
 // KubeCustomForbiddenTitle says "No right to read custom resources"
 // in the language the app shows.
 //

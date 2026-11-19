@@ -261,6 +261,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				}
 			})
 		}
+		a.deploymentAutoscalers(c, d)
 		a.deploymentScale(c, ref, d)
 		a.deploymentPause(c, ref, d.Paused)
 		a.deploymentRevisions(c, ref, d)

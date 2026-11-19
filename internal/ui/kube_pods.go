@@ -546,8 +546,8 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 		if len(p.Claims) > 0 {
 			detailSection(c, locales.KubeStorageClaims())
 			for _, claim := range p.Claims {
-				link := storageLink{kind: kindPVCs, namespace: p.Namespace, name: claim}
-				a.storageLinkRow(c.Key("pod-claim-"+claim), claim, "", locales.KubeStorageOpenClaim(), link)
+				link := resourceLink{kind: kindPVCs, namespace: p.Namespace, name: claim}
+				a.resourceLinkRow(c.Key("pod-claim-"+claim), claim, "", locales.KubeStorageOpenClaim(), link)
 			}
 		}
 		ui.Row(c).Padding(14, 16, 0, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
