@@ -15,6 +15,9 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// Terminals is none on Windows: commands open in PowerShell's console.
+func Terminals() []string { return nil }
+
 // TerminalCommand formats argv for pasting into PowerShell.
 func TerminalCommand(argv []string) string {
 	quoted := make([]string, 0, len(argv)+1)
@@ -32,7 +35,7 @@ func powershellQuote(s string) string {
 // OpenTerminal opens a visible PowerShell console through the system's
 // default terminal host. PowerShell owns the interactive child and stays open
 // so the user can read errors from kubectl.
-func OpenTerminal(ctx context.Context, _ Runner, argv, env []string, _, _, _ string) error {
+func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _, _, _ string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("open terminal: %w", err)
 	}

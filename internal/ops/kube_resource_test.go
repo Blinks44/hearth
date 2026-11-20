@@ -186,7 +186,7 @@ func TestKubeResourceDelete(t *testing.T) {
 				t.Fatal(err)
 			}
 			p, err := PlanKubeChange(t.Context(), r, nil, d, "", true)
-			if err != nil || writes != 0 || p.Steps[0].Kube.ConfirmName() != ref.Name {
+			if err != nil || writes != 0 || p.Steps[0].Kube.ConfirmName() != "" {
 				t.Fatalf("delete preview: %+v writes=%d err=%v", p, writes, err)
 			}
 			result := Execute(t.Context(), r, p, io.Discard, func(State) {})

@@ -33,7 +33,7 @@ func TestKubeOverview(t *testing.T) {
 	}
 	w.got[1](cl, nil)
 	tt.Frame()
-	hasTexts(t, tt, "1 of 2 ready", "CPU: requested", "38%", "50%", "Needs attention", "BackOff", "×52", "Node · kind-worker")
+	hasTexts(t, tt, "1 of 2 ready", "CPU: requested", "38%", "50%", "Needs attention", "BackOff", "52 times", "Node · kind-worker")
 	screenshot(t, tt, "kube-overview")
 	if err := tt.Click("Open Pod · " + cl.Pods[1].Name); err != nil {
 		t.Fatal(err)

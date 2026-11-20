@@ -40,6 +40,16 @@ func (d *Relationships) add(link Relationship) {
 
 type objectName struct{ Name string }
 
+// keyRef names a key of a ConfigMap or Secret.
+type keyRef struct{ Name, Key string }
+
+func (k *keyRef) object() *objectName {
+	if k == nil {
+		return nil
+	}
+	return &objectName{k.Name}
+}
+
 type podVolume struct {
 	Name                  string
 	PersistentVolumeClaim struct{ ClaimName string }
@@ -86,7 +96,7 @@ func (p pod) references() []Relationship {
 	}
 	for _, container := range slices.Concat(p.Spec.Containers, p.Spec.InitContainers, p.Spec.EphemeralContainers) {
 		for _, env := range container.Env {
-			addNames(env.Name, env.ValueFrom.ConfigMapKeyRef, env.ValueFrom.SecretKeyRef)
+			addNames(env.Name, env.ValueFrom.ConfigMapKeyRef.object(), env.ValueFrom.SecretKeyRef.object())
 		}
 		for _, from := range container.EnvFrom {
 			addNames(container.Name, from.ConfigMapRef, from.SecretRef)

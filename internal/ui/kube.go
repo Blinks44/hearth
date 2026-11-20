@@ -126,6 +126,19 @@ func (a *App) kubeView(c *ui.Context, p page) {
 						{locales.KubeFilesTab(), strconv.Itoa(len(cli.KubeFiles))},
 					})
 					ui.Box(c).Grow(1).Height(1)
+					if in, ok := cliCopy(cli, "kubectl"); ok && a.kubeTab == 0 && a.CheckKube != nil && kubeContextCount(cli) > 1 {
+						busy := slices.ContainsFunc(cli.KubeContexts, func(k inventory.KubeContext) bool { return a.kubeChecks[k.Name].running })
+						ui.Button(c.Key("kube-check-all"), "").Height(podActionHeight).Label(locales.KubeCheckAll()).Disabled(busy).Children(func() {
+							spinIcon(c, "refresh-cw", 14, t.Text, busy)
+							ui.Text(c, locales.KubeCheckAll()).FontSize(12).SingleLine()
+						}).OnClick(func() {
+							for _, k := range cli.KubeContexts {
+								if !k.Shadowed {
+									a.checkKube(in.Path, k)
+								}
+							}
+						})
+					}
 					ui.SearchField(c.Key("kube-filter"), &a.kubeFilter).Bind(&a.filterField).Placeholder(locales.KubeFilter()).Width(220)
 				})
 				columns(c, 12, func() {
@@ -145,6 +158,8 @@ func (a *App) kubeView(c *ui.Context, p page) {
 					}
 				}, func() {
 					if a.Snapshot != nil {
+						a.kubeMissingCard(c, cli)
+						a.forwardList(c, "")
 						a.kindClustersCard(c, cli, current)
 					}
 					a.kubeTerminalCard(c, cli, current)
@@ -216,7 +231,37 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 	// A shadowed context is never checked: its name is the other one's.
 	check, checked := a.kubeChecks[k.Name]
 	checked = checked && !k.Shadowed
-	ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	from := ""
+	if current != nil {
+		from = current.Name
+	}
+	// The row's right-click and its ⋯ open the same menu.
+	menu := func(m *ui.Menu) {
+		if found && a.CheckKube != nil && m.Item(locales.KubeCheckAccess()).Disabled(check.running).Chosen() {
+			a.checkKube(in.Path, k)
+		}
+		if plans && m.Item(locales.KubeUse()).Checked(isCurrent).Disabled(isCurrent).Chosen() {
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.KubeContextPlan(in.Path, from, k.Name, env, run.Exec{})
+			}, a.proposeOrSay)
+		}
+		if plans && m.Item(locales.KubeNamespaceChange()).Chosen() {
+			a.kubeNS = kubeNamespaceDialog{open: true, context: k.Name, from: k.Namespace, file: k.File, value: k.Namespace}
+		}
+		m.Separator()
+		if m.Item(locales.KubeCopyContext()).Chosen() {
+			c.WriteClipboard(k.Name)
+			c.Toast(locales.KubeNameCopied(k.Name))
+		}
+		if a.Shell != nil && m.Item(locales.KubeOpenKubeconfig(filepath.Base(k.File))).Chosen() {
+			a.openFile(c, k.File)
+		}
+	}
+	row := ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
+	if !k.Shadowed {
+		row.ContextMenu(menu)
+	}
+	row.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, k.Name).FontSize(13)
 			clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
@@ -234,29 +279,52 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 		if checked {
 			a.kubeAccessTag(c, k, check)
 		}
-		if found && a.CheckKube != nil {
-			ui.Button(c.Key("check"), locales.KubeCheck()).Disabled(check.running).OnClick(func() { a.checkKube(in.Path, k) })
-		}
 		if found && a.WatchCluster != nil {
 			ui.Button(c.Key("open"), locales.KubeClusterOpen()).OnClick(func() { a.openCluster(k.Name) })
 		}
-		if plans {
-			from := ""
-			if current != nil {
-				from = current.Name
-			}
-			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-				if !isCurrent && menu.Item(locales.KubeUse()).Chosen() {
-					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-						return ops.KubeContextPlan(in.Path, from, k.Name, env, run.Exec{})
-					}, a.proposeOrSay)
-				}
-				if menu.Item(locales.KubeNamespaceChange()).Chosen() {
-					a.kubeNS = kubeNamespaceDialog{open: true, context: k.Name, from: k.Namespace, file: k.File, value: k.Namespace}
-				}
-			})
+		iconButton(c, "ellipsis", locales.MoreActions()).Menu(menu)
+	})
+}
+
+// kubeMissingCard offers the Kubernetes tools the computer lacks, as the
+// other tools' pages offer theirs: kubectl reads the clusters, Helm its
+// releases and kind makes local ones. A sign-in program a check did not
+// find is named, for its maker installs it.
+func (a *App) kubeMissingCard(c *ui.Context, cli inventory.CliState) {
+	var tools []string
+	for _, cmd := range kubeCommands {
+		if _, ok := cliCopy(cli, cmd); !ok {
+			tools = append(tools, cmd)
+		}
+	}
+	var programs []string
+	for _, k := range cli.KubeContexts {
+		if ch, ok := a.kubeChecks[k.Name]; ok && ch.res.State == detect.KubeNoAuthProgram && ch.res.Detail != "" && !slices.Contains(programs, ch.res.Detail) {
+			programs = append(programs, ch.res.Detail)
+		}
+	}
+	if len(tools) == 0 && len(programs) == 0 {
+		return
+	}
+	listCard(c, locales.KubeMissingTitle(), "", func() {
+		for _, cmd := range tools {
+			listRow(c, locales.ToolNotInstalled(setupTitle(cmd)), false, kubeToolNeed(cmd), func() { a.installToolButton(c, cmd) })
+		}
+		for _, program := range programs {
+			listRow(c, locales.KubeProgramMissing(filepath.Base(program)), false, locales.KubeProgramMissingCaption(), func() {})
 		}
 	})
+}
+
+// kubeToolNeed says what the tool is for on this page.
+func kubeToolNeed(cmd string) string {
+	switch cmd {
+	case "kubectl":
+		return locales.KubeNeedKubectl()
+	case "helm":
+		return locales.KubeNeedHelm()
+	}
+	return locales.KubeNeedKind()
 }
 
 // kubeCheck is the last check of a context's cluster this session.

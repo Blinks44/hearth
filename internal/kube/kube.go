@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/detect"
@@ -62,6 +63,9 @@ type Target struct {
 	Tail Tail
 	// LogOwner reads only the selected workload's pods for the log viewer.
 	LogOwner LogOwner
+	// metrics is the Metrics API version a watch found served; nil for a
+	// single read.
+	metrics *metricsVersion
 }
 
 // Tail names a container of a pod and its run: the previous one, or the
@@ -132,6 +136,24 @@ type Container struct {
 	// Ended is how its current run ended, when State is terminated; Last
 	// how its previous one did. Either is nil when there is none.
 	Ended, Last *Run
+	// Env and EnvFrom are the variables its spec sets.
+	Env     []EnvVar
+	EnvFrom []EnvSource
+}
+
+// EnvVar is a variable a container's spec sets: its value written out,
+// or where it comes from. A Secret's value is never read.
+type EnvVar struct {
+	Name, Value string
+	// From is ConfigMap, Secret, Field or Resource when the value comes
+	// from there, Ref the object, field or resource and Key the key.
+	From, Ref, Key string
+}
+
+// EnvSource is a ConfigMap or Secret whose every key a container gets as
+// a variable, with Prefix before its name.
+type EnvSource struct {
+	Kind, Name, Prefix string
 }
 
 // Run is how a container's run ended.
@@ -321,43 +343,69 @@ func readCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (C
 			return c, nil
 		}
 	}
+	// The lists, the pods' metrics, the object's events and the log's
+	// last line do not wait for one another: each is a call of kubectl,
+	// and its sign-in, of its own.
+	lists := make([][]json.RawMessage, len(scopes))
+	listErrs := make([]error, len(scopes))
+	var samples []metricSample
+	var wg sync.WaitGroup
+	for i, scope := range scopes {
+		wg.Go(func() {
+			var list struct {
+				Items []json.RawMessage `json:"items"`
+			}
+			listErrs[i] = get(ctx, r, env, t, append([]string{"pods,replicasets,deployments"}, scope...), &list)
+			lists[i] = list.Items
+		})
+	}
+	if t.Metrics && !t.Overview {
+		wg.Go(func() { samples, c.MetricsErr = podSamples(ctx, r, env, t) })
+	}
+	if t.Events.UID != "" {
+		wg.Go(func() {
+			c.Events, c.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
+			c.EventsOf = t.Events
+		})
+	}
+	if t.Tail.Container != "" {
+		wg.Go(func() { c.LastLine, c.LastLineOf = lastLine(ctx, r, env, t), t.Tail })
+	}
+	wg.Wait()
 	var allPods []json.RawMessage
-	for _, scope := range scopes {
-		var list struct {
-			Items []json.RawMessage `json:"items"`
+	for i := range scopes {
+		if listErrs[i] != nil {
+			return Cluster{}, listErrs[i]
 		}
-		if err := get(ctx, r, env, t, append([]string{"pods,replicasets,deployments"}, scope...), &list); err != nil {
-			return Cluster{}, err
-		}
-		if err := c.add(list.Items); err != nil {
+		if err := c.add(lists[i]); err != nil {
 			return Cluster{}, err
 		}
 		if t.Overview && len(t.Namespaces) == 0 {
-			allPods = list.Items
+			allPods = lists[i]
 		}
 	}
 	if t.Overview {
-		c.Overview = readOverview(ctx, r, env, t, scopes, allPods)
+		var values map[string]*Resources
+		var metricsErr error
+		wg.Go(func() { c.Overview = readOverview(ctx, r, env, t, scopes, allPods) })
+		if t.Metrics {
+			wg.Go(func() { values, metricsErr = nodeMetrics(ctx, r, env, t) })
+		}
+		wg.Wait()
 		if t.Metrics && len(c.Overview.Nodes) > 0 {
-			values, err := nodeMetrics(ctx, r, env, t)
-			c.MetricsErr = err
+			c.MetricsErr = metricsErr
 			for i := range c.Overview.Nodes {
 				n := &c.Overview.Nodes[i]
 				n.Usage = values[n.Name]
 			}
 		}
 	} else if t.Metrics && len(c.Pods) > 0 {
-		c.MetricsErr = addPodMetrics(ctx, r, env, t, c.Pods)
-	}
-	if t.Events.UID != "" {
-		c.Events, c.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
-		c.EventsOf = t.Events
+		applyPodMetrics(c.Pods, samples)
+	} else {
+		c.MetricsErr = nil
 	}
 	if t.DeploymentAutoscalers && t.Events.UID != "" {
 		c.readDeploymentAutoscalers(ctx, r, env, t)
-	}
-	if t.Tail.Container != "" {
-		c.LastLine, c.LastLineOf = lastLine(ctx, r, env, t), t.Tail
 	}
 	c.Taken = time.Now()
 	return c, nil
@@ -415,6 +463,7 @@ func readEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Target, arg
 // Watch reads the target now and every Every after the last read ended,
 // giving each result to got, until ctx ends.
 func Watch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, got func(Cluster, error)) {
+	t.metrics = &metricsVersion{}
 	for {
 		c, err := Read(ctx, r, env, t)
 		if ctx.Err() != nil {
@@ -623,10 +672,18 @@ type podContainer struct {
 	RestartPolicy string       `json:"restartPolicy"`
 	Env           []struct {
 		Name      string
-		ValueFrom struct{ ConfigMapKeyRef, SecretKeyRef *objectName }
+		Value     string
+		ValueFrom struct {
+			ConfigMapKeyRef, SecretKeyRef *keyRef
+			FieldRef                      *struct{ FieldPath string }
+			ResourceFieldRef              *struct{ Resource string }
+		}
 	}
-	EnvFrom []struct{ ConfigMapRef, SecretRef *objectName }
-	Ports   []struct {
+	EnvFrom []struct {
+		Prefix                  string
+		ConfigMapRef, SecretRef *objectName
+	}
+	Ports []struct {
 		Name     string `json:"name"`
 		Number   int    `json:"containerPort"`
 		Protocol string `json:"protocol"`
@@ -831,6 +888,28 @@ func containerViews(specs []podContainer, states []containerStatus) []Container 
 	for _, spec := range specs {
 		ct := Container{Name: spec.Name, Image: spec.Image,
 			Requests: spec.Resources.Requests.resources(), Limits: spec.Resources.Limits.resources()}
+		for _, e := range spec.Env {
+			v := EnvVar{Name: e.Name, Value: e.Value}
+			switch from := e.ValueFrom; {
+			case from.ConfigMapKeyRef != nil:
+				v.From, v.Ref, v.Key = "ConfigMap", from.ConfigMapKeyRef.Name, from.ConfigMapKeyRef.Key
+			case from.SecretKeyRef != nil:
+				v.From, v.Ref, v.Key = "Secret", from.SecretKeyRef.Name, from.SecretKeyRef.Key
+			case from.FieldRef != nil:
+				v.From, v.Ref = "Field", from.FieldRef.FieldPath
+			case from.ResourceFieldRef != nil:
+				v.From, v.Ref = "Resource", from.ResourceFieldRef.Resource
+			}
+			ct.Env = append(ct.Env, v)
+		}
+		for _, from := range spec.EnvFrom {
+			switch {
+			case from.ConfigMapRef != nil:
+				ct.EnvFrom = append(ct.EnvFrom, EnvSource{Kind: "ConfigMap", Name: from.ConfigMapRef.Name, Prefix: from.Prefix})
+			case from.SecretRef != nil:
+				ct.EnvFrom = append(ct.EnvFrom, EnvSource{Kind: "Secret", Name: from.SecretRef.Name, Prefix: from.Prefix})
+			}
+		}
 		if s, ok := statuses[spec.Name]; ok {
 			ct.Ready, ct.Restarts = s.Ready, s.RestartCount
 			ct.Last = s.LastState.Terminated.run()

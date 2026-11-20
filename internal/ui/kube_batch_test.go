@@ -29,9 +29,9 @@ func TestKubeBatch(t *testing.T) {
 	}
 	now := time.Now()
 	failed := kube.Job{Namespace: "default", Name: "cleanup-sessions-failed", UID: "j1", State: kube.JobFailed,
-		Message: "Job has reached the specified backoff limit", Want: 1, Created: now.Add(-4 * time.Minute)}
+		Message: "Job has reached the specified backoff limit", Want: 1, Created: now.Add(-4*time.Minute - 30*time.Second)}
 	succeeded := kube.Job{Namespace: "default", Name: "cleanup-sessions-success", UID: "j2", State: kube.JobSucceeded,
-		Completed: 1, Want: 1, Created: now.Add(-19 * time.Minute)}
+		Completed: 1, Want: 1, Created: now.Add(-19*time.Minute - 30*time.Second)}
 	batch := &kube.Batch{Jobs: []kube.Job{failed, succeeded}, CronJobs: []kube.CronJob{
 		{Name: "cleanup-sessions", Namespace: "default", UID: "c1", Schedule: "*/15 * * * *", TimeZone: "Etc/UTC", Runs: []kube.Job{failed, succeeded}},
 		{Name: "report-nightly", Namespace: "default", UID: "c2", Schedule: "0 3 * * *", Suspended: true},

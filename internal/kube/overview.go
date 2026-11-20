@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
@@ -50,27 +51,39 @@ func (r Resources) max(s Resources) Resources {
 
 func readOverview(ctx context.Context, r run.Runner, env sysenv.Env, t Target, scopes [][]string, allPods []json.RawMessage) *Overview {
 	o := &Overview{}
-	o.Nodes, o.NodesErr = readNodes(ctx, r, env, t)
-	if o.NodesErr == nil && len(o.Nodes) > 0 {
-		if len(t.Namespaces) > 0 {
+	// Nodes, the pods of every namespace and the warnings are read at once.
+	var wg sync.WaitGroup
+	var podsErr error
+	wg.Go(func() { o.Nodes, o.NodesErr = readNodes(ctx, r, env, t) })
+	if len(t.Namespaces) > 0 {
+		wg.Go(func() {
 			var pods struct {
 				Items []json.RawMessage `json:"items"`
 			}
-			o.RequestsErr = get(ctx, r, env, t, []string{"pods", "--all-namespaces"}, &pods)
+			podsErr = get(ctx, r, env, t, []string{"pods", "--all-namespaces"}, &pods)
 			allPods = pods.Items
-		}
+		})
+	}
+	warnings := make([][]Event, len(scopes))
+	warningErrs := make([]error, len(scopes))
+	for i, scope := range scopes {
+		wg.Go(func() {
+			warnings[i], warningErrs[i] = readEvents(ctx, r, env, t, append([]string{"events", "--field-selector=type=Warning"}, scope...))
+		})
+	}
+	wg.Wait()
+	if o.NodesErr == nil && len(o.Nodes) > 0 {
+		o.RequestsErr = podsErr
 		if o.RequestsErr == nil {
 			o.RequestsErr = addNodeRequests(o.Nodes, allPods)
 		}
 	}
-	for _, scope := range scopes {
-		args := append([]string{"events", "--field-selector=type=Warning"}, scope...)
-		events, err := readEvents(ctx, r, env, t, args)
-		if err != nil {
-			o.Warnings, o.WarningsErr = nil, err
+	for i := range scopes {
+		if warningErrs[i] != nil {
+			o.Warnings, o.WarningsErr = nil, warningErrs[i]
 			break
 		}
-		o.Warnings = append(o.Warnings, events...)
+		o.Warnings = append(o.Warnings, warnings[i]...)
 	}
 	cutoff := time.Now().Add(-time.Hour)
 	o.Warnings = slices.DeleteFunc(o.Warnings, func(e Event) bool { return e.Type != "Warning" || e.Last.Before(cutoff) })

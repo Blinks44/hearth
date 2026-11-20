@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -35,12 +36,7 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 			{locales.KubeHelmPending(), strconv.Itoa(counts[2])},
 		})
 		ui.Box(c).Grow(1)
-		sorts := []string{locales.KubeServicesProblemsFirst(), locales.KubeClusterName()}
-		if s.helmSort == "" {
-			s.helmSort = sorts[0]
-		}
-		ui.Select(c.Key("helm-sort"), &s.helmSort, sorts).Label(locales.KubeHelmSort()).Width(158)
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeHelmSearch()).Width(215).MinWidth(100)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeHelmSearch()).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 && s.helmDetail == nil {
 		empty := locales.KubeHelmNoMatches()
@@ -51,24 +47,31 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 		return
 	}
 	slices.SortStableFunc(shown, func(a, b kube.HelmRelease) int {
-		if s.helmSort != locales.KubeClusterName() {
-			if order := cmp.Compare(helmStatusOrder(a), helmStatusOrder(b)); order != 0 {
-				return order
-			}
+		if order := cmp.Compare(helmStatusOrder(a), helmStatusOrder(b)); order != 0 {
+			return order
 		}
 		return cmp.Or(cmp.Compare(a.Name, b.Name), cmp.Compare(a.Namespace, b.Namespace))
+	})
+	sort := s.sortOf(kindHelm)
+	sortRows(*sort, shown, map[string]func(x, y kube.HelmRelease) int{
+		"name":     func(x, y kube.HelmRelease) int { return cmp.Compare(x.Name, y.Name) },
+		"chart":    func(x, y kube.HelmRelease) int { return cmp.Compare(x.Chart, y.Chart) },
+		"app":      func(x, y kube.HelmRelease) int { return cmp.Compare(x.AppVersion, y.AppVersion) },
+		"revision": func(x, y kube.HelmRelease) int { return cmp.Compare(helmRevision(x), helmRevision(y)) },
+		"status":   func(x, y kube.HelmRelease) int { return cmp.Compare(helmStatusOrder(x), helmStatusOrder(y)) },
 	})
 	detail := s.helmDetail
 	selected := ""
 	tracks := []ui.Track{ui.Fr(1.1), ui.Fr(1.15), ui.Fr(0.65), ui.Fixed(62), ui.Fixed(135)}
-	headers := []string{locales.KubeHelmRelease(), locales.KubeHelmChart(), locales.KubeHelmAppVersion(), locales.KubeHelmRevision(), locales.KubeClusterStatus()}
+	headers := []sortColumn{{locales.KubeHelmRelease(), "name"}, {locales.KubeHelmChart(), "chart"}, {locales.KubeHelmAppVersion(), "app"},
+		{locales.KubeHelmRevision(), "revision"}, {locales.KubeClusterStatus(), "status"}}
 	if detail != nil {
 		selected = helmKey(detail.release)
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(132)}
-		headers = []string{locales.KubeHelmRelease(), locales.KubeClusterStatus()}
+		headers = []sortColumn{{locales.KubeHelmRelease(), "name"}, {locales.KubeClusterStatus(), "status"}}
 	}
 	workloadPanes(c, func() {
-		resourceHead(c, tracks, headers...)
+		sortHead(c, tracks, nil, sort, headers...)
 	}, func() {
 		for _, r := range shown {
 			a.helmRow(c, tracks, r, selected)
@@ -90,6 +93,11 @@ func helmStatusOrder(r kube.HelmRelease) int {
 	default:
 		return 2
 	}
+}
+
+func helmRevision(r kube.HelmRelease) int {
+	n, _ := strconv.Atoi(r.Revision)
+	return n
 }
 
 func helmKey(r kube.HelmRelease) string { return r.Namespace + "/" + r.Name }
@@ -115,6 +123,7 @@ func (a *App) helmRow(c *ui.Context, tracks []ui.Track, r kube.HelmRelease, sele
 		case r.Status == "failed":
 			row.Background(pal.DangerSoft.Alpha(0.35))
 		}
+		a.resourceContextMenu(c, row, ops.KubeResource{Name: r.Name}, nil)
 		a.cluster.revealWorkloadRow(row, key)
 		row.Children(func() {
 			batchName(c, r.Name, r.Namespace)

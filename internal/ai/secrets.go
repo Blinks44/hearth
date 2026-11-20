@@ -33,6 +33,10 @@ func AuthScheme(value string) (scheme, credential string) {
 	return "", value
 }
 
+// PlainSecret reports that value, of the variable name, is a secret
+// written out, as plainSecret does.
+func PlainSecret(name, value string) bool { return plainSecret(name, value) }
+
 // plainSecret reports that value, of the variable or header name, is a
 // secret written out: a token by its prefix, or under a secret's name a
 // word of 6 characters or more that is no path, URL or switch. A value

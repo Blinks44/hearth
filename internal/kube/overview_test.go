@@ -68,7 +68,8 @@ func TestReadOverviewForbidden(t *testing.T) {
 		t.Fatalf("cluster = %+v, error = %v", c, err)
 	}
 	e, ok := errors.AsType[*Error](c.Overview.NodesErr)
-	if !ok || e.Access.State != detect.KubeForbidden || len(f.Calls()) != 3 {
+	// The pods of every namespace are read beside the nodes, not after them.
+	if !ok || e.Access.State != detect.KubeForbidden || len(f.Calls()) != 4 {
 		t.Fatalf("node error = %v, calls = %+v", c.Overview.NodesErr, f.Calls())
 	}
 }

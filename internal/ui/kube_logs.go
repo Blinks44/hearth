@@ -63,6 +63,9 @@ func (a *App) openLogs(p kube.Pod, container string, previous bool) {
 func (a *App) closeLogs() {
 	if l := a.cluster.logs; l != nil && l.owner.UID == "" {
 		a.cluster.kind, a.cluster.pod = kindPods, l.pod
+		if p, _, ok := a.logPod(); ok {
+			a.openPod(p)
+		}
 	}
 	a.cluster.logs = nil
 }

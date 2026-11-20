@@ -30,6 +30,13 @@ type Settings struct {
 	StartHidden bool `json:"startHidden,omitempty"`
 	// Hidden are the issues worth knowing the user hid, by their keys.
 	Hidden []string `json:"hidden,omitempty"`
+	// KubePinned are the Kubernetes kinds pinned above the cluster's
+	// tables, by their short names; nil pins the default ones.
+	KubePinned []string `json:"kubePinned"`
+	// Terminal and Editor are the apps that open shells and files, by
+	// their names; "" uses the system's.
+	Terminal string `json:"terminal,omitempty"`
+	Editor   string `json:"editor,omitempty"`
 }
 
 // Project is a folder the user added to Hearth.

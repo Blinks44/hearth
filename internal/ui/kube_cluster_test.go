@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // clusterWatches records the cluster page's watches: what each reads,
@@ -55,7 +56,10 @@ func shopCluster() kube.Cluster {
 			Containers: []kube.Container{
 				{Name: "api", Image: "ghcr.io/acme/checkout:2.8.1", Restarts: 14, State: "waiting", Reason: "CrashLoopBackOff",
 					Message: "back-off 5m0s restarting failed container=api pod=checkout-api-7d9f8c5b-x2k4p_default(p1)",
-					Last:    &kube.Run{Reason: "Error", ExitCode: 1, Started: ago(4 * time.Minute), Finished: ago(4*time.Minute - 3*time.Second)}},
+					Last:    &kube.Run{Reason: "Error", ExitCode: 1, Started: ago(4 * time.Minute), Finished: ago(4*time.Minute - 3*time.Second)},
+					Env: []kube.EnvVar{{Name: "LOG_LEVEL", Value: "debug"}, {Name: "API_TOKEN", Value: "sk-live-4f9a8b7c6d5e"},
+						{Name: "DB_PASSWORD", From: "Secret", Ref: "checkout-db", Key: "password"}, {Name: "POD_IP", From: "Field", Ref: "status.podIP"}},
+					EnvFrom: []kube.EnvSource{{Kind: "ConfigMap", Name: "checkout", Prefix: "APP_"}}},
 				running("envoy", "envoyproxy/envoy:v1.31.2"),
 			},
 			Restarts: 14, Node: "kind-worker", IP: "10.244.1.17", QoS: "Burstable", Account: "checkout",
@@ -116,6 +120,7 @@ func TestKubeCluster(t *testing.T) {
 	hasTexts(t, tt, "kind-dev", "default", "connecting", "Reading kind-dev…")
 
 	w.got[0](shopCluster(), nil)
+	expandGroups(a, shopCluster())
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p", "CrashLoopBackOff", "1/2", "14", "CPU", "MEMORY", "Running")
@@ -333,5 +338,36 @@ func TestKubeClusterNamespaceListLifetime(t *testing.T) {
 	requests[2].done([]string{"late"}, nil)
 	if !requests[2].stopped || len(a.cluster.nsNames) != 0 {
 		t.Fatal("the old page's pending read survived navigation")
+	}
+}
+
+func TestKubectlLine(t *testing.T) {
+	detail := `E1119 22:49:23.703365   18248 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://master.k8s.example:6443/api?timeout=15s\": getting credentials: exec: executable kubectl failed with exit code 1"
+E1119 22:49:23.703365   18248 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://master.k8s.example:6443/api?timeout=15s\": getting credentials: exec: executable kubectl failed with exit code 1"
+error: You must be logged in to the server (the server has asked for the client to provide credentials)`
+	want := `couldn't get current server API group list: Get "https://master.k8s.example:6443/api?timeout=15s": getting credentials: exec: executable kubectl failed with exit code 1
+error: You must be logged in to the server (the server has asked for the client to provide credentials)`
+	if got := kubectlLine(detail); got != want {
+		t.Errorf("kubectlLine = %q, want %q", got, want)
+	}
+}
+
+// Going back to a kind shows what was read of it at once, while it is
+// read again.
+func TestKubeClusterCachesKinds(t *testing.T) {
+	a, tt, w := openShop(t)
+	if err := tt.Click("Jobs"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Pods"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("checkout-api") || tt.HasText(locales.KubeClusterReading("kind-dev")) {
+		t.Fatalf("pods not shown from the cache: %q", tt.Texts())
+	}
+	if running := w.running(); len(running) != 1 || running[0].Batch || !a.cluster.reading {
+		t.Fatalf("pods not read again: %+v, reading %t", running, a.cluster.reading)
 	}
 }

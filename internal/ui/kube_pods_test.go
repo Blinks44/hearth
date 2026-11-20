@@ -111,8 +111,29 @@ func TestRegistry(t *testing.T) {
 	}
 }
 
-// openShop is the cluster page of kind-dev showing shopCluster.
+// openShop is the cluster page of kind-dev showing shopCluster, its
+// groups of pods open.
 func openShop(t *testing.T) (*App, *ui.Tester, *clusterWatches) {
+	t.Helper()
+	a, tt, w := openShopClosed(t)
+	if err := tt.Click("Expand all"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	return a, tt, w
+}
+
+// expandGroups opens every group of the cluster's pods, as Expand all
+// does.
+func expandGroups(a *App, cl kube.Cluster) {
+	a.cluster.toggled = map[string]bool{}
+	for _, g := range podGroups(cl.Pods, tableSort{}) {
+		a.cluster.toggled[g.key()] = true
+	}
+}
+
+// openShopClosed is openShop with the groups as they first show: closed.
+func openShopClosed(t *testing.T) (*App, *ui.Tester, *clusterWatches) {
 	t.Helper()
 	a := kubeApp()
 	w := &clusterWatches{}
@@ -128,14 +149,22 @@ func openShop(t *testing.T) (*App, *ui.Tester, *clusterWatches) {
 	return a, tt, w
 }
 
-// Pods group by owner: groups in trouble first and open, healthy ones
-// closed; tabs and the search narrow the list.
+// Pods group by owner: groups in trouble first, every group closed with
+// its totals; tabs and the search narrow the list.
 func TestKubePods(t *testing.T) {
-	a, tt, _ := openShop(t)
+	a, tt, _ := openShopClosed(t)
 	hasTexts(t, tt, "checkout-api", "1 of 3 not ready", "web-frontend", "worker", "2 of 2 ready", "db-migrate-29381", "completed", "debug",
-		"Container api keeps failing after it starts. Its last run ended with exit code 1 (Error) 3s after it started",
-		"Image ghcr.io/acme/web:1.4.2 does not pull. Registry ghcr.io has no such image or tag",
-		"Owners: 4 · pods: 8")
+		"2/3", "14", "Owners: 4 · pods: 8")
+	if tt.HasText("checkout-api-7d9f8c5b-x2k4p") {
+		t.Error("a group in trouble shows open")
+	}
+	if err := tt.Click("Deployment checkout-api"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p",
+		"Container api keeps failing after it starts. Its last run ended with exit code 1 (Error) 3s after it started")
+	a.cluster.toggled = nil
 	for _, tab := range []string{"All", "Problems", "Restarted", "Completed"} {
 		if err := tt.Click(tab); err != nil {
 			t.Error(err)
@@ -153,11 +182,10 @@ func TestKubePods(t *testing.T) {
 	if slices.Index(texts, "checkout-api") > slices.Index(texts, "worker") {
 		t.Error("the group in trouble is not first")
 	}
-	// The healthy group is closed, the one in trouble open.
-	if tt.HasText("worker-6f7d8-aaaaa") || !tt.HasText("checkout-api-7d9f8c5b-m8q2z") {
+	if tt.HasText("worker-6f7d8-aaaaa") || tt.HasText("checkout-api-7d9f8c5b-m8q2z") {
 		t.Errorf("groups: %q", texts)
 	}
-	if err := tt.Click("worker"); err != nil {
+	if err := tt.Click("Deployment worker"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -224,7 +252,7 @@ func TestKubePodDetail(t *testing.T) {
 	// What was read stays while its events are read.
 	hasTexts(t, tt, "Container api keeps failing after it starts", "14 restarts in 2h", "Kubernetes waits up to 5m before the next try",
 		"CONTAINERS · 2", "ghcr.io/acme/checkout:2.8.1", "14 restarts · exit code 1", "envoy", "10.244.1.17", "Burstable",
-		"app=checkout-api +1", "config · tmp", "Reading events…", "owner Deployment checkout-api ›")
+		"app=checkout-api +1", "config · tmp", "Reading events…", "Owner", "Open Deployment checkout-api")
 
 	cl := shopCluster()
 	cl.Events, cl.EventsOf = []kube.Event{
@@ -234,10 +262,10 @@ func TestKubePodDetail(t *testing.T) {
 	w.got[len(w.got)-1](cl, nil)
 	tt.Frame()
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "BackOff", "Back-off restarting failed container api", "×52 · 1m")
+	hasTexts(t, tt, "BackOff", "Back-off restarting failed container api", "52 times · 1m")
 	screenshot(t, tt, "kube-pod-detail")
 
-	if err := tt.Click("owner Deployment checkout-api"); err != nil {
+	if err := tt.Click("Open Deployment checkout-api"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -343,6 +371,7 @@ func TestKubeClusterSlidesIn(t *testing.T) {
 	}
 	tt.Frame()
 	w.got[0](shopCluster(), nil)
+	expandGroups(a, shopCluster())
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p")
 	a.router.Back()
@@ -377,6 +406,7 @@ func TestKubeWorkloadPanes(t *testing.T) {
 				cl.Deployments = append(cl.Deployments, deployment)
 			}
 			watches.got[0](cl, nil)
+			expandGroups(a, cl)
 			tt.Frame()
 			click := func(label string) {
 				t.Helper()
@@ -447,6 +477,7 @@ func TestKubeWorkloadColumns(t *testing.T) {
 			tt := ui.NewTester(a.View, width, 680)
 			tt.Advance(time.Second)
 			watches.got[0](shopCluster(), nil)
+			expandGroups(a, shopCluster())
 			tt.Frame()
 			find := func(label string) ui.Rect {
 				t.Helper()
@@ -553,7 +584,7 @@ func TestKubePodEventsLayout(t *testing.T) {
 			if f.Y >= 405 || f.X != summary.X || f.X != s.X || f.X != l.X || l.H <= s.H {
 				t.Fatalf("events did not open at the top of an aligned list: %+v %+v %+v", f, s, l)
 			}
-			if a, b := find("×52 · 1m"), find("2m"); a.X+a.W != b.X+b.W {
+			if a, b := find("52 times · 1m"), find("2m"); a.X+a.W != b.X+b.W {
 				t.Fatalf("event ages do not share the right edge: %+v %+v", a, b)
 			}
 			screenshot(t, tt, "kube-pod-events-"+strconv.Itoa(width))

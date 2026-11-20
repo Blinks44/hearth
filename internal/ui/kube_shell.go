@@ -78,7 +78,11 @@ func (a *App) shellPopover(c *ui.Context, pod kube.Pod, form *shellForm) {
 	ui.Row(c).Gap(8).Justify(ui.End).Wrap().Children(func() {
 		ui.Button(c.Key("shell-copy"), locales.KubeShellCopy()).Height(podActionHeight).Disabled(!ok).
 			OnClick(func() { c.WriteClipboard(command) })
-		ui.PrimaryButton(c.Key("shell-launch"), locales.KubeShellLaunch()).Height(podActionHeight).Disabled(!ok || form.launching).
+		launch := locales.KubeShellLaunch()
+		if slices.Contains(a.Terminals, a.Terminal) {
+			launch = locales.KubeShellLaunchIn(a.Terminal)
+		}
+		ui.PrimaryButton(c.Key("shell-launch"), launch).Height(podActionHeight).Disabled(!ok || form.launching).
 			OnClick(func() {
 				form.launching, form.err = true, nil
 				a.OpenKubeShell(target, func(err error) {

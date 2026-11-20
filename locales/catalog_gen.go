@@ -918,20 +918,6 @@ func (msgs Messages) KubePolicies() string {
 	return Catalog.Format(msgs.locale, "kubePolicies", nil)
 }
 
-// KubePolicySort says "Sort policies"
-// in the language the app shows.
-//
-// Accessible label for the policy list sort menu
-func KubePolicySort() string { return In(i18n.Locale()).KubePolicySort() }
-
-// KubePolicySort says "Sort policies"
-// in the language of msgs.
-//
-// Accessible label for the policy list sort menu
-func (msgs Messages) KubePolicySort() string {
-	return Catalog.Format(msgs.locale, "kubePolicySort", nil)
-}
-
 // KubePolicyQuotas says "Quotas"
 // in the language the app shows.
 //
@@ -1554,32 +1540,32 @@ func (msgs Messages) KubeMetricsNoSample() string {
 	return Catalog.Format(msgs.locale, "kubeMetricsNoSample", nil)
 }
 
-// KubeMetricsMillicores says "{value, number, ::precision-integer}m"
+// KubeMetricsMillicores says "{value, number, ::group-off}m"
 // in the language the app shows.
 //
-// Kubernetes resource metrics: Millicores
+// CPU in millicores, Kubernetes' unit m, kept as is in every language.
 func KubeMetricsMillicores(value float64) string {
 	return In(i18n.Locale()).KubeMetricsMillicores(value)
 }
 
-// KubeMetricsMillicores says "{value, number, ::precision-integer}m"
+// KubeMetricsMillicores says "{value, number, ::group-off}m"
 // in the language of msgs.
 //
-// Kubernetes resource metrics: Millicores
+// CPU in millicores, Kubernetes' unit m, kept as is in every language.
 func (msgs Messages) KubeMetricsMillicores(value float64) string {
 	return Catalog.Format(msgs.locale, "kubeMetricsMillicores", map[string]any{"value": value})
 }
 
-// KubeMetricsMiB says "{value, number, ::precision-integer} MiB"
+// KubeMetricsMiB says "{value, number, ::group-off} MiB"
 // in the language the app shows.
 //
-// Kubernetes resource metrics: MiB
+// Memory below 1 GiB, in mebibytes.
 func KubeMetricsMiB(value float64) string { return In(i18n.Locale()).KubeMetricsMiB(value) }
 
-// KubeMetricsMiB says "{value, number, ::precision-integer} MiB"
+// KubeMetricsMiB says "{value, number, ::group-off} MiB"
 // in the language of msgs.
 //
-// Kubernetes resource metrics: MiB
+// Memory below 1 GiB, in mebibytes.
 func (msgs Messages) KubeMetricsMiB(value float64) string {
 	return Catalog.Format(msgs.locale, "kubeMetricsMiB", map[string]any{"value": value})
 }
@@ -2382,12 +2368,16 @@ func (msgs Messages) KubeShellTitle() string {
 	return Catalog.Format(msgs.locale, "kubeShellTitle", nil)
 }
 
-// KubeShellDescription says "The system terminal opens with this command and keeps the session open."
+// KubeShellDescription says "The command opens in your terminal, and the session continues in its window. Choose the terminal in Settings."
 // in the language the app shows.
+//
+// Shell popover: where the command opens.
 func KubeShellDescription() string { return In(i18n.Locale()).KubeShellDescription() }
 
-// KubeShellDescription says "The system terminal opens with this command and keeps the session open."
+// KubeShellDescription says "The command opens in your terminal, and the session continues in its window. Choose the terminal in Settings."
 // in the language of msgs.
+//
+// Shell popover: where the command opens.
 func (msgs Messages) KubeShellDescription() string {
 	return Catalog.Format(msgs.locale, "kubeShellDescription", nil)
 }
@@ -3924,13 +3914,13 @@ func (msgs Messages) KubeHelmReleases() string {
 	return Catalog.Format(msgs.locale, "kubeHelmReleases", nil)
 }
 
-// KubeHelmMissing says "Hearth couldn’t find Helm. Install Helm and rescan to view releases."
+// KubeHelmMissing says "Hearth couldn’t find Helm. Install it, and releases will show here."
 // in the language the app shows.
 //
 // kubeHelmMissing
 func KubeHelmMissing() string { return In(i18n.Locale()).KubeHelmMissing() }
 
-// KubeHelmMissing says "Hearth couldn’t find Helm. Install Helm and rescan to view releases."
+// KubeHelmMissing says "Hearth couldn’t find Helm. Install it, and releases will show here."
 // in the language of msgs.
 //
 // kubeHelmMissing
@@ -3992,20 +3982,6 @@ func KubeHelmPending() string { return In(i18n.Locale()).KubeHelmPending() }
 // kubeHelmPending
 func (msgs Messages) KubeHelmPending() string {
 	return Catalog.Format(msgs.locale, "kubeHelmPending", nil)
-}
-
-// KubeHelmSort says "Sort Helm releases"
-// in the language the app shows.
-//
-// kubeHelmSort
-func KubeHelmSort() string { return In(i18n.Locale()).KubeHelmSort() }
-
-// KubeHelmSort says "Sort Helm releases"
-// in the language of msgs.
-//
-// kubeHelmSort
-func (msgs Messages) KubeHelmSort() string {
-	return Catalog.Format(msgs.locale, "kubeHelmSort", nil)
 }
 
 // KubeHelmSearch says "Release, namespace or chart"
@@ -15842,13 +15818,13 @@ func (msgs Messages) OpOffline(host string) string {
 	return Catalog.Format(msgs.locale, "opOffline", map[string]any{"host": host})
 }
 
-// WingetCancelled says "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered"
+// WingetCancelled says "the installation was canceled, as when Windows' permission request (UAC) is declined or left unanswered"
 // in the language the app shows.
 //
 // Why a WinGet step failed, from its documented error code.
 func WingetCancelled() string { return In(i18n.Locale()).WingetCancelled() }
 
-// WingetCancelled says "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered"
+// WingetCancelled says "the installation was canceled, as when Windows' permission request (UAC) is declined or left unanswered"
 // in the language of msgs.
 //
 // Why a WinGet step failed, from its documented error code.
@@ -30964,13 +30940,13 @@ func (msgs Messages) KubeClusterConnecting() string {
 	return Catalog.Format(msgs.locale, "kubeClusterConnecting", nil)
 }
 
-// KubeClusterFresh says "updating · {seconds} s ago"
+// KubeClusterFresh says "updated {seconds} s ago"
 // in the language the app shows.
 //
 // Cluster view header: the data keeps coming; seconds since the last read.
 func KubeClusterFresh(seconds int) string { return In(i18n.Locale()).KubeClusterFresh(seconds) }
 
-// KubeClusterFresh says "updating · {seconds} s ago"
+// KubeClusterFresh says "updated {seconds} s ago"
 // in the language of msgs.
 //
 // Cluster view header: the data keeps coming; seconds since the last read.
@@ -31096,18 +31072,18 @@ func (msgs Messages) KubeClusterLoginTitle() string {
 	return Catalog.Format(msgs.locale, "kubeClusterLoginTitle", nil)
 }
 
-// KubeClusterLoginText says "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does n…"
+// KubeClusterLoginText says "The credentials of {context} are missing or have expired. Sign in the way its cluster requires, for example in a term…"
 // in the language the app shows.
 //
-// Cluster view: under the sign-in title.
+// Cluster view: the context's credentials are missing or expired.
 func KubeClusterLoginText(context string) string {
 	return In(i18n.Locale()).KubeClusterLoginText(context)
 }
 
-// KubeClusterLoginText says "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does n…"
+// KubeClusterLoginText says "The credentials of {context} are missing or have expired. Sign in the way its cluster requires, for example in a term…"
 // in the language of msgs.
 //
-// Cluster view: under the sign-in title.
+// Cluster view: the context's credentials are missing or expired.
 func (msgs Messages) KubeClusterLoginText(context string) string {
 	return Catalog.Format(msgs.locale, "kubeClusterLoginText", map[string]any{"context": context})
 }
@@ -31754,20 +31730,6 @@ func KubeCreatedAgo(age string) string { return In(i18n.Locale()).KubeCreatedAgo
 // A resource's details: how long ago it was created; age is short, as 2h.
 func (msgs Messages) KubeCreatedAgo(age string) string {
 	return Catalog.Format(msgs.locale, "kubeCreatedAgo", map[string]any{"age": age})
-}
-
-// KubeOwner says "owner {kind} {name}"
-// in the language the app shows.
-//
-// A pod's details: its owner, as Deployment web.
-func KubeOwner(kind string, name string) string { return In(i18n.Locale()).KubeOwner(kind, name) }
-
-// KubeOwner says "owner {kind} {name}"
-// in the language of msgs.
-//
-// A pod's details: its owner, as Deployment web.
-func (msgs Messages) KubeOwner(kind string, name string) string {
-	return Catalog.Format(msgs.locale, "kubeOwner", map[string]any{"kind": kind, "name": name})
 }
 
 // KubeTabOverview says "Overview"
@@ -33558,34 +33520,6 @@ func (msgs Messages) KubeServicesExternal() string {
 	return Catalog.Format(msgs.locale, "kubeServicesExternal", nil)
 }
 
-// KubeServicesProblemsFirst says "Problems first"
-// in the language the app shows.
-//
-// kubeServicesProblemsFirst
-func KubeServicesProblemsFirst() string { return In(i18n.Locale()).KubeServicesProblemsFirst() }
-
-// KubeServicesProblemsFirst says "Problems first"
-// in the language of msgs.
-//
-// kubeServicesProblemsFirst
-func (msgs Messages) KubeServicesProblemsFirst() string {
-	return Catalog.Format(msgs.locale, "kubeServicesProblemsFirst", nil)
-}
-
-// KubeServicesSort says "Sort services"
-// in the language the app shows.
-//
-// kubeServicesSort
-func KubeServicesSort() string { return In(i18n.Locale()).KubeServicesSort() }
-
-// KubeServicesSort says "Sort services"
-// in the language of msgs.
-//
-// kubeServicesSort
-func (msgs Messages) KubeServicesSort() string {
-	return Catalog.Format(msgs.locale, "kubeServicesSort", nil)
-}
-
 // KubeServicesSearch says "Name or namespace"
 // in the language the app shows.
 //
@@ -33656,4 +33590,818 @@ func KubeForwardPodEnded() string { return In(i18n.Locale()).KubeForwardPodEnded
 // Status detail after the port-forward target pod ends or is replaced
 func (msgs Messages) KubeForwardPodEnded() string {
 	return Catalog.Format(msgs.locale, "kubeForwardPodEnded", nil)
+}
+
+// KubeResourceGone says "{kind} {name} is no longer in the cluster: it was deleted or replaced. The list updates on its own."
+// in the language the app shows.
+//
+// A plan could not be built: the object was deleted or replaced meanwhile.
+func KubeResourceGone(kind string, name string) string {
+	return In(i18n.Locale()).KubeResourceGone(kind, name)
+}
+
+// KubeResourceGone says "{kind} {name} is no longer in the cluster: it was deleted or replaced. The list updates on its own."
+// in the language of msgs.
+//
+// A plan could not be built: the object was deleted or replaced meanwhile.
+func (msgs Messages) KubeResourceGone(kind string, name string) string {
+	return Catalog.Format(msgs.locale, "kubeResourceGone", map[string]any{"kind": kind, "name": name})
+}
+
+// KubeKindHintMove says "↑↓ choose"
+// in the language the app shows.
+//
+// Kind picker footer: arrow keys move the selection.
+func KubeKindHintMove() string { return In(i18n.Locale()).KubeKindHintMove() }
+
+// KubeKindHintMove says "↑↓ choose"
+// in the language of msgs.
+//
+// Kind picker footer: arrow keys move the selection.
+func (msgs Messages) KubeKindHintMove() string {
+	return Catalog.Format(msgs.locale, "kubeKindHintMove", nil)
+}
+
+// KubeKindHintOpen says "↵ open"
+// in the language the app shows.
+//
+// Kind picker footer: Return opens the kind.
+func KubeKindHintOpen() string { return In(i18n.Locale()).KubeKindHintOpen() }
+
+// KubeKindHintOpen says "↵ open"
+// in the language of msgs.
+//
+// Kind picker footer: Return opens the kind.
+func (msgs Messages) KubeKindHintOpen() string {
+	return Catalog.Format(msgs.locale, "kubeKindHintOpen", nil)
+}
+
+// KubeKindHintPin says "★ pin above the tables"
+// in the language the app shows.
+//
+// Kind picker footer: the star pins a kind above the tables.
+func KubeKindHintPin() string { return In(i18n.Locale()).KubeKindHintPin() }
+
+// KubeKindHintPin says "★ pin above the tables"
+// in the language of msgs.
+//
+// Kind picker footer: the star pins a kind above the tables.
+func (msgs Messages) KubeKindHintPin() string {
+	return Catalog.Format(msgs.locale, "kubeKindHintPin", nil)
+}
+
+// KubeKindPin says "Pin {kind} above the tables"
+// in the language the app shows.
+//
+// Kind picker: button pinning a resource kind as a chip above the tables.
+func KubeKindPin(kind string) string { return In(i18n.Locale()).KubeKindPin(kind) }
+
+// KubeKindPin says "Pin {kind} above the tables"
+// in the language of msgs.
+//
+// Kind picker: button pinning a resource kind as a chip above the tables.
+func (msgs Messages) KubeKindPin(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeKindPin", map[string]any{"kind": kind})
+}
+
+// KubeKindUnpin says "Unpin {kind}"
+// in the language the app shows.
+//
+// Kind picker: button removing a pinned kind's chip.
+func KubeKindUnpin(kind string) string { return In(i18n.Locale()).KubeKindUnpin(kind) }
+
+// KubeKindUnpin says "Unpin {kind}"
+// in the language of msgs.
+//
+// Kind picker: button removing a pinned kind's chip.
+func (msgs Messages) KubeKindUnpin(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeKindUnpin", map[string]any{"kind": kind})
+}
+
+// KubeMetricsCores says "{value, number, ::.##} CPU"
+// in the language the app shows.
+//
+// CPU of one core or more, in cores.
+func KubeMetricsCores(value float64) string { return In(i18n.Locale()).KubeMetricsCores(value) }
+
+// KubeMetricsCores says "{value, number, ::.##} CPU"
+// in the language of msgs.
+//
+// CPU of one core or more, in cores.
+func (msgs Messages) KubeMetricsCores(value float64) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsCores", map[string]any{"value": value})
+}
+
+// KubeMetricsGiB says "{value, number, ::.##} GiB"
+// in the language the app shows.
+//
+// Memory of 1 GiB or more, in gibibytes.
+func KubeMetricsGiB(value float64) string { return In(i18n.Locale()).KubeMetricsGiB(value) }
+
+// KubeMetricsGiB says "{value, number, ::.##} GiB"
+// in the language of msgs.
+//
+// Memory of 1 GiB or more, in gibibytes.
+func (msgs Messages) KubeMetricsGiB(value float64) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsGiB", map[string]any{"value": value})
+}
+
+// KubeEventRepeated says "{count, plural, one {# time} other {# times}} · {when}"
+// in the language the app shows.
+//
+// Event list: how many times Kubernetes reported the event, and how long
+// ago it last did.
+func KubeEventRepeated(count int, when string) string {
+	return In(i18n.Locale()).KubeEventRepeated(count, when)
+}
+
+// KubeEventRepeated says "{count, plural, one {# time} other {# times}} · {when}"
+// in the language of msgs.
+//
+// Event list: how many times Kubernetes reported the event, and how long
+// ago it last did.
+func (msgs Messages) KubeEventRepeated(count int, when string) string {
+	return Catalog.Format(msgs.locale, "kubeEventRepeated", map[string]any{"count": count, "when": when})
+}
+
+// KubeSortBy says "Sort by {column}"
+// in the language the app shows.
+//
+// Table header button: sorts the rows by this column; a second click
+// reverses, a third restores the default order.
+func KubeSortBy(column string) string { return In(i18n.Locale()).KubeSortBy(column) }
+
+// KubeSortBy says "Sort by {column}"
+// in the language of msgs.
+//
+// Table header button: sorts the rows by this column; a second click
+// reverses, a third restores the default order.
+func (msgs Messages) KubeSortBy(column string) string {
+	return Catalog.Format(msgs.locale, "kubeSortBy", map[string]any{"column": column})
+}
+
+// KubeOpenOwner says "Open Deployment {name}"
+// in the language the app shows.
+//
+// Pod row context menu: opens the Deployment the pod belongs to.
+func KubeOpenOwner(name string) string { return In(i18n.Locale()).KubeOpenOwner(name) }
+
+// KubeOpenOwner says "Open Deployment {name}"
+// in the language of msgs.
+//
+// Pod row context menu: opens the Deployment the pod belongs to.
+func (msgs Messages) KubeOpenOwner(name string) string {
+	return Catalog.Format(msgs.locale, "kubeOpenOwner", map[string]any{"name": name})
+}
+
+// KubeOwnerLogsAll says "Logs of all pods"
+// in the language the app shows.
+//
+// Owner row context menu: the log of all its pods in one stream.
+func KubeOwnerLogsAll() string { return In(i18n.Locale()).KubeOwnerLogsAll() }
+
+// KubeOwnerLogsAll says "Logs of all pods"
+// in the language of msgs.
+//
+// Owner row context menu: the log of all its pods in one stream.
+func (msgs Messages) KubeOwnerLogsAll() string {
+	return Catalog.Format(msgs.locale, "kubeOwnerLogsAll", nil)
+}
+
+// KubeOpenGroup says "Show pods"
+// in the language the app shows.
+//
+// Owner row context menu: shows the group's pods.
+func KubeOpenGroup() string { return In(i18n.Locale()).KubeOpenGroup() }
+
+// KubeOpenGroup says "Show pods"
+// in the language of msgs.
+//
+// Owner row context menu: shows the group's pods.
+func (msgs Messages) KubeOpenGroup() string {
+	return Catalog.Format(msgs.locale, "kubeOpenGroup", nil)
+}
+
+// KubeCloseGroup says "Hide pods"
+// in the language the app shows.
+//
+// Owner row context menu: hides the group's pods.
+func KubeCloseGroup() string { return In(i18n.Locale()).KubeCloseGroup() }
+
+// KubeCloseGroup says "Hide pods"
+// in the language of msgs.
+//
+// Owner row context menu: hides the group's pods.
+func (msgs Messages) KubeCloseGroup() string {
+	return Catalog.Format(msgs.locale, "kubeCloseGroup", nil)
+}
+
+// KubeCopyName says "Copy name"
+// in the language the app shows.
+//
+// Row context menu: copies the resource's name.
+func KubeCopyName() string { return In(i18n.Locale()).KubeCopyName() }
+
+// KubeCopyName says "Copy name"
+// in the language of msgs.
+//
+// Row context menu: copies the resource's name.
+func (msgs Messages) KubeCopyName() string {
+	return Catalog.Format(msgs.locale, "kubeCopyName", nil)
+}
+
+// KubeNameCopied says "Copied {name}"
+// in the language the app shows.
+//
+// Toast after copying a resource's name.
+func KubeNameCopied(name string) string { return In(i18n.Locale()).KubeNameCopied(name) }
+
+// KubeNameCopied says "Copied {name}"
+// in the language of msgs.
+//
+// Toast after copying a resource's name.
+func (msgs Messages) KubeNameCopied(name string) string {
+	return Catalog.Format(msgs.locale, "kubeNameCopied", map[string]any{"name": name})
+}
+
+// KubeEventCount says "{count, plural, one {# time} other {# times}}"
+// in the language the app shows.
+//
+// Event list: how many times Kubernetes reported the event, when it did not
+// say when.
+func KubeEventCount(count int) string { return In(i18n.Locale()).KubeEventCount(count) }
+
+// KubeEventCount says "{count, plural, one {# time} other {# times}}"
+// in the language of msgs.
+//
+// Event list: how many times Kubernetes reported the event, when it did not
+// say when.
+func (msgs Messages) KubeEventCount(count int) string {
+	return Catalog.Format(msgs.locale, "kubeEventCount", map[string]any{"count": count})
+}
+
+// KubeOwnerLabel says "Owner"
+// in the language the app shows.
+//
+// Pod details: label before the button naming the workload the pod belongs
+// to.
+func KubeOwnerLabel() string { return In(i18n.Locale()).KubeOwnerLabel() }
+
+// KubeOwnerLabel says "Owner"
+// in the language of msgs.
+//
+// Pod details: label before the button naming the workload the pod belongs
+// to.
+func (msgs Messages) KubeOwnerLabel() string {
+	return Catalog.Format(msgs.locale, "kubeOwnerLabel", nil)
+}
+
+// KubeOpenOwnerKind says "Open {kind} {name}"
+// in the language the app shows.
+//
+// Pod details: the owner button's accessible name and tooltip.
+func KubeOpenOwnerKind(kind string, name string) string {
+	return In(i18n.Locale()).KubeOpenOwnerKind(kind, name)
+}
+
+// KubeOpenOwnerKind says "Open {kind} {name}"
+// in the language of msgs.
+//
+// Pod details: the owner button's accessible name and tooltip.
+func (msgs Messages) KubeOpenOwnerKind(kind string, name string) string {
+	return Catalog.Format(msgs.locale, "kubeOpenOwnerKind", map[string]any{"kind": kind, "name": name})
+}
+
+// KubeMetricsOfLimit says "{share} of limit"
+// in the language the app shows.
+//
+// Pod usage: the share of the limit used, after the value.
+func KubeMetricsOfLimit(share string) string { return In(i18n.Locale()).KubeMetricsOfLimit(share) }
+
+// KubeMetricsOfLimit says "{share} of limit"
+// in the language of msgs.
+//
+// Pod usage: the share of the limit used, after the value.
+func (msgs Messages) KubeMetricsOfLimit(share string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsOfLimit", map[string]any{"share": share})
+}
+
+// KubeMetricsOfRequest says "{share} of request"
+// in the language the app shows.
+//
+// Pod usage: the share of the request used, when there is no limit.
+func KubeMetricsOfRequest(share string) string { return In(i18n.Locale()).KubeMetricsOfRequest(share) }
+
+// KubeMetricsOfRequest says "{share} of request"
+// in the language of msgs.
+//
+// Pod usage: the share of the request used, when there is no limit.
+func (msgs Messages) KubeMetricsOfRequest(share string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsOfRequest", map[string]any{"share": share})
+}
+
+// KubeMetricsRequestIs says "request {value}"
+// in the language the app shows.
+//
+// Pod usage: the request, under the bar.
+func KubeMetricsRequestIs(value string) string { return In(i18n.Locale()).KubeMetricsRequestIs(value) }
+
+// KubeMetricsRequestIs says "request {value}"
+// in the language of msgs.
+//
+// Pod usage: the request, under the bar.
+func (msgs Messages) KubeMetricsRequestIs(value string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsRequestIs", map[string]any{"value": value})
+}
+
+// KubeMetricsLimitIs says "limit {value}"
+// in the language the app shows.
+//
+// Pod usage: the limit, under the bar.
+func KubeMetricsLimitIs(value string) string { return In(i18n.Locale()).KubeMetricsLimitIs(value) }
+
+// KubeMetricsLimitIs says "limit {value}"
+// in the language of msgs.
+//
+// Pod usage: the limit, under the bar.
+func (msgs Messages) KubeMetricsLimitIs(value string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsLimitIs", map[string]any{"value": value})
+}
+
+// KubeMetricsNoRequest says "no request"
+// in the language the app shows.
+//
+// Pod usage: no request set.
+func KubeMetricsNoRequest() string { return In(i18n.Locale()).KubeMetricsNoRequest() }
+
+// KubeMetricsNoRequest says "no request"
+// in the language of msgs.
+//
+// Pod usage: no request set.
+func (msgs Messages) KubeMetricsNoRequest() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsNoRequest", nil)
+}
+
+// KubeMetricsNoLimit says "no limit"
+// in the language the app shows.
+//
+// Pod usage: no limit set.
+func KubeMetricsNoLimit() string { return In(i18n.Locale()).KubeMetricsNoLimit() }
+
+// KubeMetricsNoLimit says "no limit"
+// in the language of msgs.
+//
+// Pod usage: no limit set.
+func (msgs Messages) KubeMetricsNoLimit() string {
+	return Catalog.Format(msgs.locale, "kubeMetricsNoLimit", nil)
+}
+
+// KubeMetricsBounds says "request {request}, limit {limit}"
+// in the language the app shows.
+//
+// Container usage line: its request and limit.
+func KubeMetricsBounds(request string, limit string) string {
+	return In(i18n.Locale()).KubeMetricsBounds(request, limit)
+}
+
+// KubeMetricsBounds says "request {request}, limit {limit}"
+// in the language of msgs.
+//
+// Container usage line: its request and limit.
+func (msgs Messages) KubeMetricsBounds(request string, limit string) string {
+	return Catalog.Format(msgs.locale, "kubeMetricsBounds", map[string]any{"request": request, "limit": limit})
+}
+
+// KubeEnvTitle says "Environment variables"
+// in the language the app shows.
+//
+// Pod details section: the environment variables its containers get.
+func KubeEnvTitle() string { return In(i18n.Locale()).KubeEnvTitle() }
+
+// KubeEnvTitle says "Environment variables"
+// in the language of msgs.
+//
+// Pod details section: the environment variables its containers get.
+func (msgs Messages) KubeEnvTitle() string {
+	return Catalog.Format(msgs.locale, "kubeEnvTitle", nil)
+}
+
+// KubeEnvFromAll says "every key of {kind} {name}"
+// in the language the app shows.
+//
+// Environment row: every key of a ConfigMap or Secret becomes a variable.
+func KubeEnvFromAll(kind string, name string) string {
+	return In(i18n.Locale()).KubeEnvFromAll(kind, name)
+}
+
+// KubeEnvFromAll says "every key of {kind} {name}"
+// in the language of msgs.
+//
+// Environment row: every key of a ConfigMap or Secret becomes a variable.
+func (msgs Messages) KubeEnvFromAll(kind string, name string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvFromAll", map[string]any{"kind": kind, "name": name})
+}
+
+// KubeEnvFromKey says "from {kind} {name}, key {key}"
+// in the language the app shows.
+//
+// Environment row: the value comes from a key of a ConfigMap or Secret; a
+// Secret's value is not read.
+func KubeEnvFromKey(kind string, name string, key string) string {
+	return In(i18n.Locale()).KubeEnvFromKey(kind, name, key)
+}
+
+// KubeEnvFromKey says "from {kind} {name}, key {key}"
+// in the language of msgs.
+//
+// Environment row: the value comes from a key of a ConfigMap or Secret; a
+// Secret's value is not read.
+func (msgs Messages) KubeEnvFromKey(kind string, name string, key string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvFromKey", map[string]any{"kind": kind, "name": name, "key": key})
+}
+
+// KubeEnvFromField says "pod field {field}"
+// in the language the app shows.
+//
+// Environment row: the value is a field of the pod, as status.podIP.
+func KubeEnvFromField(field string) string { return In(i18n.Locale()).KubeEnvFromField(field) }
+
+// KubeEnvFromField says "pod field {field}"
+// in the language of msgs.
+//
+// Environment row: the value is a field of the pod, as status.podIP.
+func (msgs Messages) KubeEnvFromField(field string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvFromField", map[string]any{"field": field})
+}
+
+// KubeEnvFromResource says "container resource {resource}"
+// in the language the app shows.
+//
+// Environment row: the value is the container's request or limit, as
+// limits.memory.
+func KubeEnvFromResource(resource string) string {
+	return In(i18n.Locale()).KubeEnvFromResource(resource)
+}
+
+// KubeEnvFromResource says "container resource {resource}"
+// in the language of msgs.
+//
+// Environment row: the value is the container's request or limit, as
+// limits.memory.
+func (msgs Messages) KubeEnvFromResource(resource string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvFromResource", map[string]any{"resource": resource})
+}
+
+// KubeEnvShow says "Show {name}"
+// in the language the app shows.
+//
+// Environment row: shows a value that looks like a secret.
+func KubeEnvShow(name string) string { return In(i18n.Locale()).KubeEnvShow(name) }
+
+// KubeEnvShow says "Show {name}"
+// in the language of msgs.
+//
+// Environment row: shows a value that looks like a secret.
+func (msgs Messages) KubeEnvShow(name string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvShow", map[string]any{"name": name})
+}
+
+// KubeEnvHide says "Hide {name}"
+// in the language the app shows.
+//
+// Environment row: hides the value again.
+func KubeEnvHide(name string) string { return In(i18n.Locale()).KubeEnvHide(name) }
+
+// KubeEnvHide says "Hide {name}"
+// in the language of msgs.
+//
+// Environment row: hides the value again.
+func (msgs Messages) KubeEnvHide(name string) string {
+	return Catalog.Format(msgs.locale, "kubeEnvHide", map[string]any{"name": name})
+}
+
+// KubeImage says "Image"
+// in the language the app shows.
+//
+// Deployments table column: the container image and tag.
+func KubeImage() string { return In(i18n.Locale()).KubeImage() }
+
+// KubeImage says "Image"
+// in the language of msgs.
+//
+// Deployments table column: the container image and tag.
+func (msgs Messages) KubeImage() string {
+	return Catalog.Format(msgs.locale, "kubeImage", nil)
+}
+
+// KubeCheckAll says "Check all"
+// in the language the app shows.
+//
+// Kubernetes page toolbar: checks access to every context at once.
+func KubeCheckAll() string { return In(i18n.Locale()).KubeCheckAll() }
+
+// KubeCheckAll says "Check all"
+// in the language of msgs.
+//
+// Kubernetes page toolbar: checks access to every context at once.
+func (msgs Messages) KubeCheckAll() string {
+	return Catalog.Format(msgs.locale, "kubeCheckAll", nil)
+}
+
+// KubeCopyContext says "Copy context name"
+// in the language the app shows.
+//
+// Context menu: copies the context's name.
+func KubeCopyContext() string { return In(i18n.Locale()).KubeCopyContext() }
+
+// KubeCopyContext says "Copy context name"
+// in the language of msgs.
+//
+// Context menu: copies the context's name.
+func (msgs Messages) KubeCopyContext() string {
+	return Catalog.Format(msgs.locale, "kubeCopyContext", nil)
+}
+
+// KubeOpenKubeconfig says "Open {file}"
+// in the language the app shows.
+//
+// Context menu: opens the kubeconfig file that defines the context.
+func KubeOpenKubeconfig(file string) string { return In(i18n.Locale()).KubeOpenKubeconfig(file) }
+
+// KubeOpenKubeconfig says "Open {file}"
+// in the language of msgs.
+//
+// Context menu: opens the kubeconfig file that defines the context.
+func (msgs Messages) KubeOpenKubeconfig(file string) string {
+	return Catalog.Format(msgs.locale, "kubeOpenKubeconfig", map[string]any{"file": file})
+}
+
+// KubeMissingTitle says "Missing tools"
+// in the language the app shows.
+//
+// Kubernetes page card: tools the computer lacks, with install buttons.
+func KubeMissingTitle() string { return In(i18n.Locale()).KubeMissingTitle() }
+
+// KubeMissingTitle says "Missing tools"
+// in the language of msgs.
+//
+// Kubernetes page card: tools the computer lacks, with install buttons.
+func (msgs Messages) KubeMissingTitle() string {
+	return Catalog.Format(msgs.locale, "kubeMissingTitle", nil)
+}
+
+// KubeNeedKubectl says "Hearth reads clusters through it"
+// in the language the app shows.
+//
+// Missing tools card: what kubectl is for.
+func KubeNeedKubectl() string { return In(i18n.Locale()).KubeNeedKubectl() }
+
+// KubeNeedKubectl says "Hearth reads clusters through it"
+// in the language of msgs.
+//
+// Missing tools card: what kubectl is for.
+func (msgs Messages) KubeNeedKubectl() string {
+	return Catalog.Format(msgs.locale, "kubeNeedKubectl", nil)
+}
+
+// KubeNeedHelm says "needed for Helm releases"
+// in the language the app shows.
+//
+// Missing tools card: what Helm is for.
+func KubeNeedHelm() string { return In(i18n.Locale()).KubeNeedHelm() }
+
+// KubeNeedHelm says "needed for Helm releases"
+// in the language of msgs.
+//
+// Missing tools card: what Helm is for.
+func (msgs Messages) KubeNeedHelm() string {
+	return Catalog.Format(msgs.locale, "kubeNeedHelm", nil)
+}
+
+// KubeNeedKind says "creates local clusters in Docker"
+// in the language the app shows.
+//
+// Missing tools card: what kind is for.
+func KubeNeedKind() string { return In(i18n.Locale()).KubeNeedKind() }
+
+// KubeNeedKind says "creates local clusters in Docker"
+// in the language of msgs.
+//
+// Missing tools card: what kind is for.
+func (msgs Messages) KubeNeedKind() string {
+	return Catalog.Format(msgs.locale, "kubeNeedKind", nil)
+}
+
+// KubeProgramMissing says "{program} not found"
+// in the language the app shows.
+//
+// Missing tools card: a context's sign-in program is not on the PATH.
+func KubeProgramMissing(program string) string { return In(i18n.Locale()).KubeProgramMissing(program) }
+
+// KubeProgramMissing says "{program} not found"
+// in the language of msgs.
+//
+// Missing tools card: a context's sign-in program is not on the PATH.
+func (msgs Messages) KubeProgramMissing(program string) string {
+	return Catalog.Format(msgs.locale, "kubeProgramMissing", map[string]any{"program": program})
+}
+
+// KubeProgramMissingCaption says "the cluster's sign-in program: install it as its provider says"
+// in the language the app shows.
+//
+// Missing tools card: where a sign-in program comes from.
+func KubeProgramMissingCaption() string { return In(i18n.Locale()).KubeProgramMissingCaption() }
+
+// KubeProgramMissingCaption says "the cluster's sign-in program: install it as its provider says"
+// in the language of msgs.
+//
+// Missing tools card: where a sign-in program comes from.
+func (msgs Messages) KubeProgramMissingCaption() string {
+	return Catalog.Format(msgs.locale, "kubeProgramMissingCaption", nil)
+}
+
+// SettingsApps says "Apps"
+// in the language the app shows.
+//
+// Settings card: the apps Hearth opens shells and files in.
+func SettingsApps() string { return In(i18n.Locale()).SettingsApps() }
+
+// SettingsApps says "Apps"
+// in the language of msgs.
+//
+// Settings card: the apps Hearth opens shells and files in.
+func (msgs Messages) SettingsApps() string {
+	return Catalog.Format(msgs.locale, "settingsApps", nil)
+}
+
+// SettingsTerminal says "Terminal"
+// in the language the app shows.
+//
+// Settings row: the terminal app for container shells and other commands.
+func SettingsTerminal() string { return In(i18n.Locale()).SettingsTerminal() }
+
+// SettingsTerminal says "Terminal"
+// in the language of msgs.
+//
+// Settings row: the terminal app for container shells and other commands.
+func (msgs Messages) SettingsTerminal() string {
+	return Catalog.Format(msgs.locale, "settingsTerminal", nil)
+}
+
+// SettingsTerminalHint says "Opens container shells and other commands"
+// in the language the app shows.
+//
+// Settings row hint for the terminal choice.
+func SettingsTerminalHint() string { return In(i18n.Locale()).SettingsTerminalHint() }
+
+// SettingsTerminalHint says "Opens container shells and other commands"
+// in the language of msgs.
+//
+// Settings row hint for the terminal choice.
+func (msgs Messages) SettingsTerminalHint() string {
+	return Catalog.Format(msgs.locale, "settingsTerminalHint", nil)
+}
+
+// SettingsEditor says "Editor"
+// in the language the app shows.
+//
+// Settings row: the editor files open in.
+func SettingsEditor() string { return In(i18n.Locale()).SettingsEditor() }
+
+// SettingsEditor says "Editor"
+// in the language of msgs.
+//
+// Settings row: the editor files open in.
+func (msgs Messages) SettingsEditor() string {
+	return Catalog.Format(msgs.locale, "settingsEditor", nil)
+}
+
+// SettingsEditorHint says "Opens configs, kubeconfig and other files"
+// in the language the app shows.
+//
+// Settings row hint for the editor choice.
+func SettingsEditorHint() string { return In(i18n.Locale()).SettingsEditorHint() }
+
+// SettingsEditorHint says "Opens configs, kubeconfig and other files"
+// in the language of msgs.
+//
+// Settings row hint for the editor choice.
+func (msgs Messages) SettingsEditorHint() string {
+	return Catalog.Format(msgs.locale, "settingsEditorHint", nil)
+}
+
+// KubeShellLaunchIn says "Open in {app}"
+// in the language the app shows.
+//
+// Shell popover button: opens the command in the chosen terminal app,
+// named.
+func KubeShellLaunchIn(app string) string { return In(i18n.Locale()).KubeShellLaunchIn(app) }
+
+// KubeShellLaunchIn says "Open in {app}"
+// in the language of msgs.
+//
+// Shell popover button: opens the command in the chosen terminal app,
+// named.
+func (msgs Messages) KubeShellLaunchIn(app string) string {
+	return Catalog.Format(msgs.locale, "kubeShellLaunchIn", map[string]any{"app": app})
+}
+
+// KubeStepContext says "Context {context} found"
+// in the language the app shows.
+//
+// Cluster access failure: step checked, the context was found in a
+// kubeconfig file.
+func KubeStepContext(context string) string { return In(i18n.Locale()).KubeStepContext(context) }
+
+// KubeStepContext says "Context {context} found"
+// in the language of msgs.
+//
+// Cluster access failure: step checked, the context was found in a
+// kubeconfig file.
+func (msgs Messages) KubeStepContext(context string) string {
+	return Catalog.Format(msgs.locale, "kubeStepContext", map[string]any{"context": context})
+}
+
+// KubeStepProgramFound says "Sign-in program found"
+// in the language the app shows.
+//
+// Cluster access failure: the context's sign-in program is installed.
+func KubeStepProgramFound() string { return In(i18n.Locale()).KubeStepProgramFound() }
+
+// KubeStepProgramFound says "Sign-in program found"
+// in the language of msgs.
+//
+// Cluster access failure: the context's sign-in program is installed.
+func (msgs Messages) KubeStepProgramFound() string {
+	return Catalog.Format(msgs.locale, "kubeStepProgramFound", nil)
+}
+
+// KubeStepProgramMissing says "Sign-in program not found"
+// in the language the app shows.
+//
+// Cluster access failure: the context's sign-in program is not on the PATH.
+func KubeStepProgramMissing() string { return In(i18n.Locale()).KubeStepProgramMissing() }
+
+// KubeStepProgramMissing says "Sign-in program not found"
+// in the language of msgs.
+//
+// Cluster access failure: the context's sign-in program is not on the PATH.
+func (msgs Messages) KubeStepProgramMissing() string {
+	return Catalog.Format(msgs.locale, "kubeStepProgramMissing", nil)
+}
+
+// KubeStepAnswer says "kubectl's answer"
+// in the language the app shows.
+//
+// Cluster access failure: what kubectl answered.
+func KubeStepAnswer() string { return In(i18n.Locale()).KubeStepAnswer() }
+
+// KubeStepAnswer says "kubectl's answer"
+// in the language of msgs.
+//
+// Cluster access failure: what kubectl answered.
+func (msgs Messages) KubeStepAnswer() string {
+	return Catalog.Format(msgs.locale, "kubeStepAnswer", nil)
+}
+
+// KubeOpenTerminal says "Open terminal"
+// in the language the app shows.
+//
+// Cluster access failure: opens a terminal to sign in there.
+func KubeOpenTerminal() string { return In(i18n.Locale()).KubeOpenTerminal() }
+
+// KubeOpenTerminal says "Open terminal"
+// in the language of msgs.
+//
+// Cluster access failure: opens a terminal to sign in there.
+func (msgs Messages) KubeOpenTerminal() string {
+	return Catalog.Format(msgs.locale, "kubeOpenTerminal", nil)
+}
+
+// KubeRowMenuHint says "Right-click a row: logs, Shell, YAML, delete"
+// in the language the app shows.
+//
+// Pods table footer: a right-click on a row opens its actions.
+func KubeRowMenuHint() string { return In(i18n.Locale()).KubeRowMenuHint() }
+
+// KubeRowMenuHint says "Right-click a row: logs, Shell, YAML, delete"
+// in the language of msgs.
+//
+// Pods table footer: a right-click on a row opens its actions.
+func (msgs Messages) KubeRowMenuHint() string {
+	return Catalog.Format(msgs.locale, "kubeRowMenuHint", nil)
+}
+
+// KubeCheckAccess says "Check access"
+// in the language the app shows.
+//
+// Context menu: checks access to the context's cluster.
+func KubeCheckAccess() string { return In(i18n.Locale()).KubeCheckAccess() }
+
+// KubeCheckAccess says "Check access"
+// in the language of msgs.
+//
+// Context menu: checks access to the context's cluster.
+func (msgs Messages) KubeCheckAccess() string {
+	return Catalog.Format(msgs.locale, "kubeCheckAccess", nil)
 }

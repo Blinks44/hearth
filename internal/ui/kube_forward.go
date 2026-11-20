@@ -113,21 +113,7 @@ func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, po
 		height = podActionHeight
 	}
 	b := kubeActionButton(c.Key("forward-"+uid), "cable", locales.KubeForwardOpen(), height)
-	b.OnClick(func() {
-		in, ok := cliCopy(a.cliState(), "kubectl")
-		if !ok {
-			return
-		}
-		d := &forwardForm{
-			target: ops.Forward{Kubectl: in.Path, Context: a.router.Query("context"), Namespace: namespace, Kind: kind, Name: name, UID: uid},
-			open:   true,
-		}
-		if len(ports) > 0 {
-			d.portLabel, d.local = ports[0].label, strconv.Itoa(ports[0].preferredLocal)
-		}
-		a.cluster.forward = d
-		a.probeForwardPort(d)
-	})
+	b.OnClick(func() { a.openForward(uid, kind, namespace, name, ports) })
 	if d := a.cluster.forward; d != nil && d.target.UID == uid {
 		ui.PopoverBase(c.Key("forward-popup-"+uid), b, &d.open, func(panel ui.Element) {
 			t := c.Theme()
@@ -137,6 +123,24 @@ func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, po
 			a.forwardPopover(c, d, ports)
 		})
 	}
+}
+
+// openForward opens the forward popover of the pod or Service, by its
+// button.
+func (a *App) openForward(uid, kind, namespace, name string, ports []forwardPort) {
+	in, ok := cliCopy(a.cliState(), "kubectl")
+	if !ok {
+		return
+	}
+	d := &forwardForm{
+		target: ops.Forward{Kubectl: in.Path, Context: a.router.Query("context"), Namespace: namespace, Kind: kind, Name: name, UID: uid},
+		open:   true,
+	}
+	if len(ports) > 0 {
+		d.portLabel, d.local = ports[0].label, strconv.Itoa(ports[0].preferredLocal)
+	}
+	a.cluster.forward = d
+	a.probeForwardPort(d)
 }
 
 func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort) {
@@ -224,8 +228,11 @@ func forwardField(c *ui.Context, label string, field func()) {
 
 // forwardList shows sessions in the current context, or across contexts
 // on the Ports page.
+// forwardList is the port forwards of the context, those of every context
+// for "" (as the Ports and Kubernetes pages list them), each with the
+// cluster it leads to there.
 func (a *App) forwardList(c *ui.Context, context string) {
-	onPorts := a.router.Path() == portsPage
+	onPorts := context == ""
 	shown := slices.ContainsFunc(a.forwards, func(f *portForward) bool { return onPorts || f.target.Context == context })
 	if !shown {
 		return
@@ -236,7 +243,7 @@ func (a *App) forwardList(c *ui.Context, context string) {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, Icon("cable")).Size(16, 16).TextColor(t.TextMuted)
 			ui.Text(c, locales.KubeForwardList()).FontSize(13).FontWeight(600).Grow(1)
-			if !onPorts {
+			if a.router.Path() != portsPage {
 				ui.Button(c.Key("forward-to-ports"), locales.PortsTitle()+" ›").OnClick(func() { a.router.Push(portsPage) })
 			}
 		})

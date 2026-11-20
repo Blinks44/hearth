@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
@@ -111,28 +112,38 @@ type cronJob struct {
 
 func readBatch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, scopes [][]string) *Batch {
 	b := &Batch{}
-	for _, scope := range scopes {
-		if b.JobsErr == nil {
+	// Jobs and CronJobs are read at once, each on its own: the rights to
+	// one may lack the other.
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for _, scope := range scopes {
 			var list struct {
 				Items []batchJob `json:"items"`
 			}
-			b.JobsErr = get(ctx, r, env, t, append([]string{"jobs.batch"}, scope...), &list)
+			if b.JobsErr = get(ctx, r, env, t, append([]string{"jobs.batch"}, scope...), &list); b.JobsErr != nil {
+				return
+			}
 			for _, j := range list.Items {
 				b.Jobs = append(b.Jobs, j.value())
 			}
 		}
-		if b.CronJobsErr == nil {
+	})
+	wg.Go(func() {
+		for _, scope := range scopes {
 			var list struct {
 				Items []cronJob `json:"items"`
 			}
-			b.CronJobsErr = get(ctx, r, env, t, append([]string{"cronjobs.batch"}, scope...), &list)
+			if b.CronJobsErr = get(ctx, r, env, t, append([]string{"cronjobs.batch"}, scope...), &list); b.CronJobsErr != nil {
+				return
+			}
 			for _, j := range list.Items {
 				m := j.Metadata
 				b.CronJobs = append(b.CronJobs, CronJob{Namespace: m.Namespace, Name: m.Name, UID: m.UID, Schedule: j.Spec.Schedule,
 					TimeZone: j.Spec.TimeZone, Suspended: j.Spec.Suspend, Active: len(j.Status.Active)})
 			}
 		}
-	}
+	})
+	wg.Wait()
 	if b.JobsErr != nil {
 		b.Jobs = nil
 	}

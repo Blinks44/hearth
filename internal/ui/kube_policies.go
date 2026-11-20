@@ -48,17 +48,6 @@ func policyTabs(c *ui.Context, tab *int, lists []kube.ResourceList) {
 	segments(c, "policy-tabs", tab, tabs)
 }
 
-func policySort(c *ui.Context, byName *bool) {
-	options := []string{locales.KubeServicesProblemsFirst(), locales.KubeClusterName()}
-	selected := options[0]
-	if *byName {
-		selected = options[1]
-	}
-	ui.Select(c.Key("policy-sort"), &selected, options).Label(locales.KubePolicySort()).Width(184).OnChange(func() {
-		*byName = selected == options[1]
-	})
-}
-
 func autoscalerCondition(h *kube.Autoscaler, kind string) kube.CustomCondition {
 	for _, condition := range h.Conditions {
 		if condition.Type == kind {

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"slices"
@@ -10,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -146,9 +148,6 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			a.namespaceFilters(c, cl.Resources.Items)
 		}
 		ui.Box(c).Grow(1)
-		if s.kind == kindPolicies {
-			policySort(c, &s.policySort)
-		}
 		if s.kind == kindNamespaces && a.BuildPlan != nil {
 			name := a.router.Query("context")
 			cli, ok := cliCopy(a.cliState(), "kubectl")
@@ -192,7 +191,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		}
 	}
 	slices.SortFunc(shown, func(a, b kube.Resource) int {
-		if s.kind == kindPolicies && !s.policySort {
+		if s.kind == kindPolicies {
 			if priority := policyPriority(b) - policyPriority(a); priority != 0 {
 				return priority
 			}
@@ -237,13 +236,37 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		toolNote(c, message)
 		return
 	}
+	sort := s.sortOf(s.kind)
+	usage := func(r kube.Resource, memory bool) float64 {
+		if r.Node == nil || r.Node.Usage == nil {
+			return -1
+		}
+		if memory {
+			return r.Node.Usage.Memory
+		}
+		return r.Node.Usage.CPU
+	}
+	sortRows(*sort, shown, map[string]func(x, y kube.Resource) int{
+		"name": func(x, y kube.Resource) int {
+			return cmp.Or(cmp.Compare(x.Name, y.Name), cmp.Compare(x.Namespace, y.Namespace))
+		},
+		"status": func(x, y kube.Resource) int {
+			lx, _, _ := otherResourceStatus(c, x, claims)
+			ly, _, _ := otherResourceStatus(c, y, claims)
+			return cmp.Compare(lx, ly)
+		},
+		// The newest first, as the column reads ages.
+		"age":    func(x, y kube.Resource) int { return y.Created.Compare(x.Created) },
+		"cpu":    func(x, y kube.Resource) int { return cmp.Compare(usage(x, false), usage(y, false)) },
+		"memory": func(x, y kube.Resource) int { return cmp.Compare(usage(x, true), usage(y, true)) },
+	})
 	selected := s.otherResource()
 	uid := ""
 	if selected != nil && visible(*selected) {
 		uid = selected.UID
 	}
 	tracks := []ui.Track{ui.Fr(1), ui.Fixed(92), ui.Fixed(66)}
-	headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeClusterAge()}
+	headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}, {locales.KubeClusterAge(), "age"}}
 	if uid == "" {
 		tracks[1] = ui.Fixed(166)
 	}
@@ -251,7 +274,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(124)}
 		headers = headers[:2]
 		if cl.Resources.Kind == kube.Autoscalers {
-			headers[1] = locales.KubeReplicas()
+			headers[1].label = locales.KubeReplicas()
 		}
 	}
 	if s.kind == kindNamespaces {
@@ -260,7 +283,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 	}
 	if s.kind == kindServiceAccounts {
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(66)}
-		headers = []string{locales.KubeClusterName(), locales.KubeClusterAge()}
+		headers = []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterAge(), "age"}}
 	}
 	if cl.Resources.Kind == kube.Nodes {
 		metricsNotice(c, cl.MetricsErr)
@@ -268,16 +291,21 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		headers = headers[:2]
 		if uid == "" {
 			tracks = append(tracks, ui.Fixed(110), ui.Fixed(110))
-			headers = append(headers, "CPU", locales.KubeMetricsMemory())
+			headers = append(headers, sortColumn{"CPU", "cpu"}, sortColumn{locales.KubeMetricsMemory(), "memory"})
 		}
 	}
 	workloadPanes(c, func() {
-		resourceHead(c, tracks, headers...)
+		sortHead(c, tracks, nil, sort, headers...)
 	}, func() {
 		for _, r := range shown {
 			row := resourceGrid(ui.ButtonBase(c.Key("other-resource-"+r.UID)), tracks).
 				Label(r.Name).Padding(7, 16).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).
 				OnClick(func() { s.toggleWorkload(&v.uid, r.UID); v.clearYAML(); v.tab = 0; s.resourceLink = resourceLink{} })
+			ref := ops.KubeResource{Name: r.Name}
+			if kind := resourceRefKind(r.Kind); kind != "" {
+				ref = a.resourceRef(kind, r.Namespace, r.Name, r.UID)
+			}
+			a.resourceContextMenu(c, row, ref, nil)
 			if r.UID == uid {
 				row.Background(pal.ActiveRow)
 			} else if row.Hovered() {
@@ -305,6 +333,20 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			})
 		}
 	}, uid, func() { a.otherResourceDetail(c, cl, *selected) })
+}
+
+// resourceRefKind is the kind Hearth edits and deletes of the list's kind,
+// "" for one it only shows.
+func resourceRefKind(kind kube.ResourceKind) string {
+	switch kind {
+	case kube.Nodes:
+		return "Node"
+	case kube.NamespaceKind:
+		return "Namespace"
+	case kube.ReplicaSets:
+		return "ReplicaSet"
+	}
+	return ""
 }
 
 func resourceQuery(query string) string { return strings.ToLower(strings.TrimSpace(query)) }

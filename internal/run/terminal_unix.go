@@ -28,9 +28,10 @@ func terminalQuote(arg string) string {
 	return "'" + strings.ReplaceAll(arg, "'", `'\''`) + "'"
 }
 
-// OpenTerminal hands a one-shot script to the desktop terminal. The script
-// removes itself before starting the command and keeps stderr visible on failure.
-func OpenTerminal(ctx context.Context, r Runner, argv, env []string, path, kubeconfig, closeHint string) error {
+// OpenTerminal hands a one-shot script to the terminal app of that name,
+// the desktop's for "". The script removes itself before starting the
+// command and keeps stderr visible on failure.
+func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string, path, kubeconfig, closeHint string) error {
 	f, err := os.CreateTemp("", "hearth-*.command")
 	if err != nil {
 		return fmt.Errorf("create terminal script: %w", err)
@@ -45,7 +46,7 @@ func OpenTerminal(ctx context.Context, r Runner, argv, env []string, path, kubec
 	if err != nil {
 		return err
 	}
-	args := terminalLauncher(name)
+	args := terminalLauncher(app, name)
 	res, err := r.Run(ctx, Cmd{Args: args, Env: env})
 	if err != nil {
 		return fmt.Errorf("open terminal: %w", err)

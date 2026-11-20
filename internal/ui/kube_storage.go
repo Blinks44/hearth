@@ -2,7 +2,6 @@ package ui
 
 import (
 	"cmp"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -61,9 +60,7 @@ func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
 					if s.toggled == nil {
 						s.toggled = map[string]bool{}
 					}
-					s.toggled[group.key()] = !slices.ContainsFunc(cl.Pods, func(p kube.Pod) bool {
-						return p.Namespace == pod.Namespace && p.Owner == pod.Owner && podTrouble(p)
-					})
+					s.toggled[group.key()] = true
 				}
 				s.resourceLink = resourceLink{}
 				return

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -90,6 +91,17 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 		}
 		return strings.Compare(x.Namespace+"/"+x.Name, y.Namespace+"/"+y.Name)
 	})
+	sort := s.sortOf(kindDeployments)
+	sortRows(*sort, shown, map[string]func(x, y kube.Deployment) int{
+		"name":   func(x, y kube.Deployment) int { return cmp.Compare(x.Name, y.Name) },
+		"status": func(x, y kube.Deployment) int { return cmp.Compare(deploymentReadyShare(x), deploymentReadyShare(y)) },
+		"ready":  func(x, y kube.Deployment) int { return cmp.Compare(x.Ready, y.Ready) },
+		"updated": func(x, y kube.Deployment) int {
+			return cmp.Compare(x.Updated, y.Updated)
+		},
+		"image": func(x, y kube.Deployment) int { return cmp.Compare(imageTag(x.Images), imageTag(y.Images)) },
+		"age":   func(x, y kube.Deployment) int { return y.Created.Compare(x.Created) },
+	})
 	ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 		segments(c, "deployment-filter", &s.deploymentFilter, []segment{
 			{locales.TabAll(), strconv.Itoa(counts[deploymentsAll])},
@@ -118,13 +130,14 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 	compact := chosen >= 0
 	tracks := append([]ui.Track{ui.Fixed(18)}, workloadTracks(c, compact)...)
 	workloadPanes(c.Key("deployments-panes"), func() {
-		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
+		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
 		if !compact {
-			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterUpdated(), "", locales.KubeClusterAge())
+			headers = append(headers, sortColumn{locales.KubeClusterReady(), "ready"}, sortColumn{locales.KubeClusterUpdated(), "updated"},
+				sortColumn{locales.KubeImage(), "image"}, sortColumn{locales.KubeClusterAge(), "age"})
 		}
-		workloadHead(c, tracks, func() {
+		sortHead(c, tracks, func() {
 			s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
-		}, headers...)
+		}, sort, headers...)
 	}, func() {
 		for _, d := range shown {
 			a.deploymentRow(c, d, compact, tracks)
@@ -150,6 +163,12 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 		row := resourceGrid(ui.ButtonBase(c.Key("deployment-"+d.UID)), tracks[1:]).
 			Padding(8, 0).MinHeight(40).Grow(1).MinWidth(0).Label(d.Name).
 			OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
+		ref := a.resourceRef("Deployment", d.Namespace, d.Name, d.UID)
+		a.resourceContextMenu(c, row, ref, func(m *ui.Menu) {
+			if a.StreamLogs != nil && a.WatchCluster != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
+				a.openOwnerLogs(ref)
+			}
+		})
 		s.revealWorkloadRow(row, d.UID)
 		switch {
 		case s.deployment == d.UID:
@@ -170,7 +189,7 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 			}
 			ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).SingleLine()
 			ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).SingleLine()
-			ui.Box(c)
+			clipped(c, imageTag(d.Images)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).Tooltip(strings.Join(d.Images, "\n"))
 			ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
 		})
 	})
@@ -255,9 +274,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				ui.Text(c, locales.KubePodsNotReady(len(trouble), len(pods))).FontSize(13).FontWeight(500).TextColor(pal.DangerText)
 				for _, p := range trouble[:min(len(trouble), 3)] {
 					story, _ := storyOf(p, nil, c.Now())
-					link := ui.ButtonBase(c.Key("trouble-" + p.UID)).AlignSelf(ui.Start).Label(p.Name).OnClick(func() {
-						s.kind, s.pod, s.tab = kindPods, p.UID, 0
-					})
+					link := ui.ButtonBase(c.Key("trouble-" + p.UID)).AlignSelf(ui.Start).Label(p.Name).OnClick(func() { a.openPod(p) })
 					link.Children(func() {
 						ui.Text(c, p.Name+": "+story.line()).FontSize(12).TextColor(t.Text).Wrap()
 					})
@@ -286,12 +303,9 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 
 // ownedPodRow is a Deployment's pod in its details, opening the pod's.
 func (a *App) ownedPodRow(c *ui.Context, p kube.Pod) {
-	s := &a.cluster
 	pal := Colors(c.Theme())
 	label, bg, fg := podTag(c, p)
-	row := ui.ButtonBase(c.Key("owned-"+p.UID)).Gap(10).Padding(7, 16).AlignItems(ui.Center).Label(p.Name).OnClick(func() {
-		s.kind, s.pod, s.tab = kindPods, p.UID, 0
-	})
+	row := ui.ButtonBase(c.Key("owned-"+p.UID)).Gap(10).Padding(7, 16).AlignItems(ui.Center).Label(p.Name).OnClick(func() { a.openPod(p) })
 	if row.Hovered() {
 		row.Background(pal.Subtle)
 	}
@@ -300,4 +314,41 @@ func (a *App) ownedPodRow(c *ui.Context, p kube.Pod) {
 		ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).Shrink(0)
 		aiTag(c, label, bg, fg).Shrink(0)
 	})
+}
+
+// openPod shows the pod's details on the Pods tab, its group open and its
+// row in view.
+func (a *App) openPod(p kube.Pod) {
+	s := &a.cluster
+	s.kind, s.query, s.podFilter, s.resourceLink = kindPods, "", podsAll, resourceLink{}
+	s.pod, s.tab, s.revealWorkload = p.UID, 0, p.UID
+	if p.Owner.Kind != "" {
+		if s.toggled == nil {
+			s.toggled = map[string]bool{}
+		}
+		s.toggled[podGroup{namespace: p.Namespace, owner: p.Owner}.key()] = true
+	}
+}
+
+func deploymentReadyShare(d kube.Deployment) float64 {
+	if d.Replicas == 0 {
+		return 1
+	}
+	return float64(d.Ready) / float64(d.Replicas)
+}
+
+// imageTag is the Deployment's image as its column shows it: the last
+// part of the first image's path, with its tag, and how many more.
+func imageTag(images []string) string {
+	if len(images) == 0 {
+		return "—"
+	}
+	tag := images[0]
+	if i := strings.LastIndex(tag, "/"); i >= 0 {
+		tag = tag[i+1:]
+	}
+	if len(images) > 1 {
+		tag += " +" + strconv.Itoa(len(images)-1)
+	}
+	return tag
 }

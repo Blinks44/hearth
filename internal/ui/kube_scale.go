@@ -74,15 +74,24 @@ func (a *App) deploymentScale(c *ui.Context, ref ops.KubeResource, d kube.Deploy
 		ui.Row(c).Gap(9).Shrink(0).AlignItems(ui.Center).Children(func() {
 			ui.Row(c).Height(podActionHeight).Radius(6).Clip().BorderWidth(1).BorderColor(pal.ControlBorder).AlignItems(ui.Center).
 				Children(func() {
-					ui.ButtonBase(c.Key("replicas-less")).Size(28, podActionHeight).Center().
-						Label(locales.KubeScaleLess()).Tooltip(locales.KubeScaleLess()).Disabled(disabled || want <= 0).
-						OnClick(func() { set(want - 1) }).Children(func() { ui.Text(c, "−").FontSize(15) })
-					ui.Box(c).Width(1).Height(podActionHeight).Background(pal.Line)
-					ui.Text(c, strconv.Itoa(want)).Font(FontMono).FontSize(12).MinWidth(30).Padding(0, 6).Center().SingleLine()
-					ui.Box(c).Width(1).Height(podActionHeight).Background(pal.Line)
-					ui.ButtonBase(c.Key("replicas-more")).Size(28, podActionHeight).Center().
-						Label(locales.KubeScaleMore()).Tooltip(locales.KubeScaleMore()).Disabled(disabled || want >= ops.KubeMaxReplicas).
-						OnClick(func() { set(want + 1) }).Children(func() { ui.Text(c, "+").FontSize(15) })
+					step := func(key, icon, label string, off bool, to int) {
+						b := ui.ButtonBase(c.Key(key)).Size(28, podActionHeight).Center().Label(label).Tooltip(label).
+							Disabled(disabled || off).OnClick(func() { set(to) })
+						color := t.Text
+						switch {
+						case disabled || off:
+							color = pal.TextFaint
+						case b.Hovered():
+							b.Background(pal.Muted)
+						}
+						b.Children(func() { ui.Icon(c, Icon(icon)).Size(13, 13).TextColor(color) })
+					}
+					step("replicas-less", "minus", locales.KubeScaleLess(), want <= 0, want-1)
+					ui.Row(c).Height(podActionHeight).MinWidth(36).Padding(0, 8).AlignItems(ui.Center).Justify(ui.Center).
+						BorderWidth(0, 1, 0, 1).BorderColor(pal.ControlBorder).Children(func() {
+						ui.Text(c, strconv.Itoa(want)).Font(FontMono).FontSize(12.5).SingleLine()
+					})
+					step("replicas-more", "plus", locales.KubeScaleMore(), want >= ops.KubeMaxReplicas, want+1)
 				})
 			ui.Row(c).Width(previousWidth + 2).Shrink(0).Children(func() {
 				if want != d.Replicas {

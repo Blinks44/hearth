@@ -42,6 +42,7 @@ func TestRead(t *testing.T) {
 			Ready: 1, Restarts: 14, Node: "kind-worker", IP: "10.244.1.17", QoS: "Burstable", Account: "checkout",
 			References: []Relationship{
 				{Kind: "ConfigMap", Namespace: "shop", Name: "checkout", Detail: "config"},
+				{Kind: "Secret", Namespace: "shop", Name: "checkout-db", Detail: "DB_PASSWORD"},
 				{Kind: "ServiceAccount", Namespace: "shop", Name: "checkout"},
 			},
 			Labels: map[string]string{"app": "checkout-api", "pod-template-hash": "7d9f8c5b"}, Volumes: []string{"config"},
@@ -50,7 +51,11 @@ func TestRead(t *testing.T) {
 			Containers: []Container{
 				{Name: "api", Image: "ghcr.io/acme/checkout:2.8.1", Restarts: 14, State: "waiting", Reason: "CrashLoopBackOff",
 					Message: "back-off 5m0s restarting failed container=api pod=checkout-api-7d9f8c5b-x2k4p_shop(p1)",
-					Last:    &Run{Reason: "Error", ExitCode: 1, Started: at(9, 58, 0), Finished: at(9, 58, 3)}},
+					Last:    &Run{Reason: "Error", ExitCode: 1, Started: at(9, 58, 0), Finished: at(9, 58, 3)},
+					// A Secret's key is named, never read.
+					Env: []EnvVar{{Name: "LOG_LEVEL", Value: "debug"}, {Name: "DB_PASSWORD", From: "Secret", Ref: "checkout-db", Key: "password"},
+						{Name: "POD_IP", From: "Field", Ref: "status.podIP"}},
+					EnvFrom: []EnvSource{{Kind: "ConfigMap", Name: "checkout", Prefix: "APP_"}}},
 				{Name: "envoy", Image: "envoyproxy/envoy:v1.31.2", Ready: true, State: "running", Started: at(8, 0, 5)},
 			}}},
 		{"checkout-api-7d9f8c5b-m8q2z", Pod{Namespace: "shop", Name: "checkout-api-7d9f8c5b-m8q2z", UID: "p2", Phase: "Running",
@@ -214,7 +219,12 @@ func TestReadScopes(t *testing.T) {
 			for _, call := range f.Calls() {
 				got = append(got, call.Args)
 			}
-			if !slices.EqualFunc(got, tt.want, slices.Equal) {
+			// The namespaces are read at once, in no order.
+			key := func(x, y []string) int { return slices.Compare(x, y) }
+			slices.SortFunc(got, key)
+			want := slices.Clone(tt.want)
+			slices.SortFunc(want, key)
+			if !slices.EqualFunc(got, want, slices.Equal) {
 				t.Errorf("calls = %q, want %q", got, tt.want)
 			}
 		})

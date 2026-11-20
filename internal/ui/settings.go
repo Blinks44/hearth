@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 
 	"github.com/egoist/mygo/ui"
 
@@ -83,6 +84,7 @@ func (a *App) settingsPage(c *ui.Context) {
 							})
 						})
 					})
+					a.appsCard(c)
 					card(c, locales.SettingsNetwork(), "", nil, func() {
 						settingRow(c, locales.SettingsLists(), locales.SettingsListsHint(), func() {
 							toggle(c, "settings-lists", &a.VersionLists).Label(locales.SettingsAllowLists()).OnChange(a.savePreferences)
@@ -144,6 +146,54 @@ func (a *App) licensesDialog(c *ui.Context) {
 				ui.Button(c, locales.SettingsClose()).OnClick(func() { a.licensesOpen = false })
 			})
 		})
+	})
+}
+
+// appsCard chooses the apps Hearth opens things in: the terminal for a
+// container's shell, the editor for files. Each starts as the system's.
+func (a *App) appsCard(c *ui.Context) {
+	editors := a.editorChoices()
+	if len(a.Terminals) == 0 && len(editors) == 0 {
+		return
+	}
+	card(c, locales.SettingsApps(), "", nil, func() {
+		if len(a.Terminals) > 0 {
+			settingRow(c, locales.SettingsTerminal(), locales.SettingsTerminalHint(), func() {
+				names := append([]string{locales.SettingsSystem()}, a.Terminals...)
+				value := names[0]
+				if slices.Contains(a.Terminals, a.Terminal) {
+					value = a.Terminal
+				}
+				ui.Select(c.Key("settings-terminal"), &value, names).Label(locales.SettingsTerminal()).Width(145).OnChange(func() {
+					a.Terminal = value
+					if value == names[0] {
+						a.Terminal = ""
+					}
+					a.savePreferences()
+				})
+			})
+		}
+		if len(editors) > 0 {
+			settingRow(c, locales.SettingsEditor(), locales.SettingsEditorHint(), func() {
+				names := []string{locales.SettingsSystem()}
+				for _, e := range editors {
+					names = append(names, e.Name)
+				}
+				value := names[0]
+				for _, e := range editors {
+					if e.Name == a.Editor {
+						value = e.Name
+					}
+				}
+				ui.Select(c.Key("settings-editor"), &value, names).Label(locales.SettingsEditor()).Width(145).OnChange(func() {
+					a.Editor = ""
+					if value != names[0] {
+						a.Editor = value
+					}
+					a.savePreferences()
+				})
+			})
+		}
 	})
 }
 

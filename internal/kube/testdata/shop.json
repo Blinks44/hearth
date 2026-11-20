@@ -8,7 +8,7 @@
         "labels": {"app": "checkout-api", "pod-template-hash": "7d9f8c5b"},
         "ownerReferences": [{"kind": "ReplicaSet", "name": "checkout-api-7d9f8c5b", "controller": true}]},
       "spec": {"nodeName": "kind-worker", "serviceAccountName": "checkout",
-        "containers": [{"name": "api", "image": "ghcr.io/acme/checkout:2.8.1"}, {"name": "envoy", "image": "envoyproxy/envoy:v1.31.2"}],
+        "containers": [{"name": "api", "image": "ghcr.io/acme/checkout:2.8.1", "env": [{"name": "LOG_LEVEL", "value": "debug"}, {"name": "DB_PASSWORD", "valueFrom": {"secretKeyRef": {"name": "checkout-db", "key": "password"}}}, {"name": "POD_IP", "valueFrom": {"fieldRef": {"fieldPath": "status.podIP"}}}], "envFrom": [{"configMapRef": {"name": "checkout"}, "prefix": "APP_"}]}, {"name": "envoy", "image": "envoyproxy/envoy:v1.31.2"}],
         "volumes": [{"name": "config", "configMap": {"name": "checkout"}}, {"name": "kube-api-access-575tw", "projected": {"sources": []}}]},
       "status": {"phase": "Running", "podIP": "10.244.1.17", "qosClass": "Burstable",
         "conditions": [{"type": "PodScheduled", "status": "True"}],

@@ -251,7 +251,7 @@ func TestFailReason(t *testing.T) {
 		{"no output", ops.State{ExitCode: 2, Log: []string{"$ a", "earlier", "$ b"}}, "exit code 2"},
 		{"HRESULT", ops.State{ExitCode: 0x8a150006, Log: []string{"$ winget install"}}, "exit code 0x8a150006"},
 		{"WinGet cancelled", ops.State{ExitCode: 0x8a15010c, Log: []string{"$ winget install"}},
-			"the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered (0x8a15010c)"},
+			"the installation was canceled, as when Windows' permission request (UAC) is declined or left unanswered (0x8a15010c)"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
@@ -28,16 +29,49 @@ type metricSample struct {
 	Containers []metricContainer `json:"containers"`
 }
 
+// metricsVersion remembers, for a watch's reads, the version of the
+// Metrics API the cluster served: most serve only v1beta1, and asking for
+// v1 first would cost every read a call of kubectl and its sign-in.
+type metricsVersion struct {
+	mu      sync.Mutex
+	version string
+}
+
+func (m *metricsVersion) get() string {
+	if m == nil {
+		return ""
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.version
+}
+
+func (m *metricsVersion) set(v string) {
+	if m != nil {
+		m.mu.Lock()
+		m.version = v
+		m.mu.Unlock()
+	}
+}
+
 func readMetrics(ctx context.Context, r run.Runner, env sysenv.Env, t Target, path string) ([]metricSample, error) {
 	var list struct {
 		Items []metricSample `json:"items"`
 	}
+	versions := []string{"v1", "v1beta1"}
+	if served := t.metrics.get(); served != "" {
+		versions = []string{served, "v1", "v1beta1"}
+	}
 	// kubectl top reads these same endpoints. JSON preserves nanocores,
 	// per-container values and the sample timestamp.
-	for _, version := range []string{"v1", "v1beta1"} {
+	for i, version := range versions {
+		if i > 0 && version == versions[0] {
+			continue
+		}
 		path := "/apis/metrics.k8s.io/" + version + "/" + path
 		err := kubectlJSON(ctx, r, env, t, []string{"--raw", path}, &list)
 		if err == nil {
+			t.metrics.set(version)
 			return list.Items, nil
 		}
 		var rejected *Error
@@ -56,13 +90,10 @@ func (q quantities) usage() *Resources {
 	return &value
 }
 
-func addPodMetrics(ctx context.Context, r run.Runner, env sysenv.Env, t Target, pods []Pod) error {
-	type podKey struct{ namespace, name string }
-	byName := make(map[podKey]*Pod, len(pods))
-	for i := range pods {
-		p := &pods[i]
-		byName[podKey{p.Namespace, p.Name}] = p
-	}
+// podSamples reads the pods' metrics in the target's namespaces, all of
+// them for none.
+func podSamples(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]metricSample, error) {
+	var all []metricSample
 	var firstErr error
 	namespaces := t.Namespaces
 	if len(namespaces) == 0 {
@@ -75,7 +106,7 @@ func addPodMetrics(ctx context.Context, r run.Runner, env sysenv.Env, t Target, 
 		}
 		samples, err := readMetrics(ctx, r, env, t, path)
 		if errors.Is(err, ErrMetricsUnavailable) || ctx.Err() != nil {
-			return err
+			return nil, err
 		}
 		if err != nil {
 			if firstErr == nil {
@@ -83,14 +114,25 @@ func addPodMetrics(ctx context.Context, r run.Runner, env sysenv.Env, t Target, 
 			}
 			continue
 		}
-		for _, sample := range samples {
-			p := byName[podKey{sample.Metadata.Namespace, sample.Metadata.Name}]
-			if p != nil && !sample.Timestamp.Before(p.Created) {
-				p.applyMetrics(sample)
-			}
+		all = append(all, samples...)
+	}
+	return all, firstErr
+}
+
+// applyPodMetrics gives each pod its sample.
+func applyPodMetrics(pods []Pod, samples []metricSample) {
+	type podKey struct{ namespace, name string }
+	byName := make(map[podKey]*Pod, len(pods))
+	for i := range pods {
+		p := &pods[i]
+		byName[podKey{p.Namespace, p.Name}] = p
+	}
+	for _, sample := range samples {
+		p := byName[podKey{sample.Metadata.Namespace, sample.Metadata.Name}]
+		if p != nil && !sample.Timestamp.Before(p.Created) {
+			p.applyMetrics(sample)
 		}
 	}
-	return firstErr
 }
 
 func (p *Pod) applyMetrics(sample metricSample) {

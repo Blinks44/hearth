@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -73,9 +74,10 @@ type podGroup struct {
 
 func (g podGroup) key() string { return g.namespace + "/" + g.owner.Kind + "/" + g.owner.Name }
 
-// podGroups groups the pods by owner, groups in trouble first; a pod
-// nothing owns is a group of its own.
-func podGroups(pods []kube.Pod) []podGroup {
+// podGroups groups the pods by owner, groups in trouble first, then by
+// name; a pod nothing owns is a group of its own. A sorted column orders
+// the groups by their pods' totals, and the pods within them.
+func podGroups(pods []kube.Pod, sort tableSort) []podGroup {
 	var groups []podGroup
 	index := map[string]int{}
 	for _, p := range pods {
@@ -96,6 +98,7 @@ func podGroups(pods []kube.Pod) []podGroup {
 	}
 	for i := range groups {
 		slices.SortFunc(groups[i].pods, troubleFirst)
+		sortRows(sort, groups[i].pods, podColumns)
 	}
 	slices.SortStableFunc(groups, func(x, y podGroup) int {
 		if (x.trouble > 0) != (y.trouble > 0) {
@@ -104,9 +107,76 @@ func podGroups(pods []kube.Pod) []podGroup {
 			}
 			return 1
 		}
-		return cmp.Compare(x.key(), y.key())
+		return cmp.Compare(x.owner.Name+"/"+x.namespace, y.owner.Name+"/"+y.namespace)
+	})
+	sortRows(sort, groups, map[string]func(x, y podGroup) int{
+		"name":     func(x, y podGroup) int { return cmp.Compare(x.owner.Name, y.owner.Name) },
+		"status":   func(x, y podGroup) int { return cmp.Compare(y.trouble, x.trouble) },
+		"ready":    func(x, y podGroup) int { return cmp.Compare(x.readyShare(), y.readyShare()) },
+		"restarts": func(x, y podGroup) int { return cmp.Compare(x.total(podRestarts), y.total(podRestarts)) },
+		"cpu":      func(x, y podGroup) int { return cmp.Compare(x.total(podCPU), y.total(podCPU)) },
+		"memory":   func(x, y podGroup) int { return cmp.Compare(x.total(podMemory), y.total(podMemory)) },
 	})
 	return groups
+}
+
+// podColumns order pods by the columns of their table.
+var podColumns = map[string]func(x, y kube.Pod) int{
+	"name": func(x, y kube.Pod) int { return cmp.Compare(x.Name, y.Name) },
+	"status": func(x, y kube.Pod) int {
+		tx, ty := podTrouble(x), podTrouble(y)
+		if tx != ty {
+			if tx {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(x.Reason+x.Phase, y.Reason+y.Phase)
+	},
+	"ready":    func(x, y kube.Pod) int { return cmp.Compare(podReadyShare(x), podReadyShare(y)) },
+	"restarts": func(x, y kube.Pod) int { return cmp.Compare(podRestarts(x), podRestarts(y)) },
+	"cpu":      func(x, y kube.Pod) int { return cmp.Compare(podCPU(x), podCPU(y)) },
+	"memory":   func(x, y kube.Pod) int { return cmp.Compare(podMemory(x), podMemory(y)) },
+}
+
+func podRestarts(p kube.Pod) float64 { return float64(p.Restarts) }
+
+// podCPU and podMemory are a pod's use, -1 without a sample: those sort
+// below any that has one.
+func podCPU(p kube.Pod) float64 {
+	if p.Usage == nil {
+		return -1
+	}
+	return p.Usage.CPU
+}
+
+func podMemory(p kube.Pod) float64 {
+	if p.Usage == nil {
+		return -1
+	}
+	return p.Usage.Memory
+}
+
+func podReadyShare(p kube.Pod) float64 {
+	if len(p.Containers) == 0 {
+		return 1
+	}
+	return float64(p.Ready) / float64(len(p.Containers))
+}
+
+func (g podGroup) total(value func(kube.Pod) float64) float64 {
+	var sum float64
+	for _, p := range g.pods {
+		sum += max(value(p), 0)
+	}
+	return sum
+}
+
+func (g podGroup) readyShare() float64 {
+	if len(g.pods) == 0 {
+		return 1
+	}
+	return float64(len(g.pods)-g.trouble) / float64(len(g.pods))
 }
 
 func troubleFirst(x, y kube.Pod) int {
@@ -119,14 +189,18 @@ func troubleFirst(x, y kube.Pod) int {
 	return strings.Compare(x.Name, y.Name)
 }
 
-// groupOpen reports whether the group's pods show: a group in trouble
-// shows open, others closed, unless toggled; all show open while the
-// list is searched or shows restarted or completed pods, which healthy
-// groups would hide.
-func (a *App) groupOpen(g podGroup) bool {
+// groupsForced reports whether every group shows open: while the list
+// is searched or shows restarted or completed pods, which closed groups
+// would hide.
+func (a *App) groupsForced() bool {
 	s := &a.cluster
-	open := g.trouble > 0 || s.query != "" || s.podFilter == podsRestarted || s.podFilter == podsDone
-	return open != s.toggled[g.key()]
+	return s.query != "" || s.podFilter == podsRestarted || s.podFilter == podsDone
+}
+
+// groupOpen reports whether the group's pods show: groups show closed,
+// those in trouble with their count in red, until opened.
+func (a *App) groupOpen(g podGroup) bool {
+	return a.groupsForced() || a.cluster.toggled[g.key()]
 }
 
 func (a *App) toggleGroup(g podGroup) {
@@ -204,7 +278,8 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		return
 	}
 	metricsNotice(c, cl.MetricsErr)
-	groups := podGroups(shown)
+	sort := s.sortOf(kindPods)
+	groups := podGroups(shown, *sort)
 	var uid string
 	var detail func()
 	if chosen >= 0 {
@@ -223,16 +298,17 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 	}
 	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("pods-panes"), func() {
-		headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus()}
+		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
 		if !compact {
-			headers = append(headers, locales.KubeClusterReady(), locales.KubeClusterRestarts(), "CPU", locales.KubeMetricsMemory())
+			headers = append(headers, sortColumn{locales.KubeClusterReady(), "ready"}, sortColumn{locales.KubeClusterRestarts(), "restarts"},
+				sortColumn{"CPU", "cpu"}, sortColumn{locales.KubeMetricsMemory(), "memory"})
 		}
-		workloadHead(c, tracks, func() {
+		sortHead(c, tracks, func() {
 			s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
-		}, headers...)
+		}, sort, headers...)
 	}, func() {
 		for _, g := range groups {
-			a.podGroupRows(c, g, compact, tracks)
+			a.podGroupRows(c, cl, g, compact, tracks)
 		}
 		a.podFooter(c, groups, len(shown))
 	}, uid, detail)
@@ -240,10 +316,12 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 }
 
 // podGroupRows are a group's header, and its pods while it is open; a
-// lone pod nothing owns has no header.
-func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool, tracks []ui.Track) {
+// lone pod nothing owns has no header. The header sits on the table's
+// subtle tone and its pods hang under it from a guide line, so the two
+// do not read as one.
+func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact bool, tracks []ui.Track) {
 	if g.owner.Kind == "" {
-		a.podRow(c, g.pods[0], false, compact, tracks)
+		a.podRow(c, cl, g.pods[0], false, compact, tracks)
 		return
 	}
 	t := c.Theme()
@@ -261,27 +339,35 @@ func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool, tracks []ui.
 		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
 			a.cluster.bulk.checkbox(c, "group-select", locales.KubeBulkSelect(g.owner.Name), ids)
 		})
-		head := resourceGrid(ui.ButtonBase(c.Key(key)), tracks[1:]).Grow(1).MinWidth(0).Padding(8, 0).
-			Label(g.owner.Name).OnClick(func() { a.toggleGroup(g) })
-		if head.Hovered() {
-			line.Background(pal.Muted)
-		} else if open {
-			line.Background(pal.Subtle)
+		head := resourceGrid(ui.ButtonBase(c.Key(key)), tracks[1:]).Grow(1).MinWidth(0).Padding(9, 0).
+			Label(g.owner.Kind + " " + g.owner.Name).OnClick(func() { a.toggleGroup(g) })
+		a.ownerMenu(c, head, cl, g)
+		bg := t.Background.Alpha(0)
+		switch {
+		case head.Hovered():
+			bg = pal.Muted
+		case open:
+			bg = pal.Subtle
 		}
+		line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
 		head.Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).MinWidth(0).Children(func() {
-				chevron := "chevron-right"
+				turn := float32(0)
 				if open {
-					chevron = "chevron-down"
+					turn = 90
 				}
-				ui.Icon(c, Icon(chevron)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
-				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-					clipped(c, g.owner.Name).FontSize(13).FontWeight(600)
-					meta := g.owner.Kind
+				chevron := ui.Box(c).Size(14, 14).Shrink(0).Center()
+				chevron.Rotate(chevron.AnimateTo("turn", turn, ui.Animation{Duration: 160 * time.Millisecond})).Children(func() {
+					ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
+				})
+				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+					ui.Row(c).Gap(6).AlignItems(ui.Center).MinWidth(0).Children(func() {
+						aiTag(c, g.owner.Kind, t.Background, t.TextMuted).Shrink(0).BorderWidth(1).BorderColor(pal.Line)
+						clipped(c, g.owner.Name).FontSize(13).FontWeight(600).MinWidth(0)
+					})
 					if !compact {
-						meta += " · " + g.namespace + " · " + locales.KubePodCount(len(g.pods))
+						clipped(c, g.namespace+" · "+locales.KubePodCount(len(g.pods))).FontSize(11).TextColor(pal.TextFaint)
 					}
-					clipped(c, meta).FontSize(10.5).TextColor(pal.TextFaint)
 				})
 			})
 			switch {
@@ -292,23 +378,71 @@ func (a *App) podGroupRows(c *ui.Context, g podGroup, compact bool, tracks []ui.
 			default:
 				workloadStatus(c, locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText)
 			}
+			if compact {
+				return
+			}
+			// The group's totals, faint beside its pods' own values.
+			ready := 0
+			var usage *kube.Resources
+			var limits kube.Resources
+			sampled := true
+			for _, p := range g.pods {
+				if !podTrouble(p) {
+					ready++
+				}
+				limits.CPU += p.Limits.CPU
+				limits.Memory += p.Limits.Memory
+				if p.Usage == nil {
+					sampled = false
+					continue
+				}
+				if usage == nil {
+					usage = &kube.Resources{}
+				}
+				usage.CPU += p.Usage.CPU
+				usage.Memory += p.Usage.Memory
+			}
+			if !sampled {
+				usage = nil
+			}
+			// A share of the limits says something only when every pod has one.
+			for _, p := range g.pods {
+				if p.Limits.CPU == 0 {
+					limits.CPU = 0
+				}
+				if p.Limits.Memory == 0 {
+					limits.Memory = 0
+				}
+			}
+			ui.Text(c, fmt.Sprintf("%d/%d", ready, len(g.pods))).Font(FontMono).FontSize(12).TextColor(t.TextMuted).SingleLine().
+				Tooltip(locales.KubeGroupReady(ready, len(g.pods)))
+			restarts := ui.Text(c, strconv.Itoa(int(g.total(podRestarts)))).Font(FontMono).FontSize(12).TextColor(t.TextMuted).SingleLine()
+			if g.trouble > 0 && g.total(podRestarts) > 0 {
+				restarts.TextColor(t.Danger)
+			}
+			podMetricCell(c, usage, limits, false)
+			podMetricCell(c, usage, limits, true)
 		})
 	})
 	if !open {
 		return
 	}
-	for _, p := range g.pods {
-		a.podRow(c, p, true, compact, tracks)
-	}
+	// The pods unfold under their header as one block.
+	ui.Column(c.Key(key + "-pods")).Transition(rowMotion).Children(func() {
+		for _, p := range g.pods {
+			a.podRow(c, cl, p, true, compact, tracks)
+		}
+	})
 }
 
 // podRow is a pod in the list: in full, its columns and what is going on
-// with it; compact beside its details, its name and status.
-func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui.Track) {
+// with it; compact beside its details, its name and status. A pod of a
+// group hangs from the group's guide line.
+func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact bool, tracks []ui.Track) {
 	s := &a.cluster
 	t := c.Theme()
 	pal := Colors(t)
-	label, bg, fg := podTag(c, p)
+	label, tagBg, tagFg := podTag(c, p)
 	story, trouble := storyOf(p, nil, c.Now())
 	line := workloadSelectionRow(c.Key("pod-select-row-"+p.UID), pal.Line)
 	line.Children(func() {
@@ -319,26 +453,31 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui
 		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Padding(8, 0, 0, 0).Children(func() {
 			s.bulk.checkbox(c, "pod-select", locales.KubeBulkSelect(p.Name), ids)
 		})
+		if owned {
+			// The guide line from the group's chevron down its pods.
+			ui.Box(c).Width(2).Shrink(0).Margin(0, 4, 0, 6).Background(pal.ControlBorder)
+		}
 		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Gap(5).Padding(8, 0).
 			AlignItems(ui.Stretch).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
+		a.podMenu(c, row, cl, p, story.crashed)
 		s.revealWorkloadRow(row, p.UID)
+		var bg ui.Color
 		switch {
 		case s.pod == p.UID:
-			line.Background(pal.ActiveRow)
-		case trouble && story.waiting:
-			line.Background(pal.WarningSoft.Alpha(0.4))
-		case trouble:
-			line.Background(pal.DangerSoft.Alpha(0.4))
+			bg = pal.ActiveRow
 		case row.Hovered():
-			line.Background(pal.Subtle)
+			bg = pal.Subtle
+		case trouble && story.waiting:
+			bg = pal.WarningSoft.Alpha(0.35)
+		case trouble:
+			bg = pal.DangerSoft.Alpha(0.35)
+		default:
+			bg = t.Background.Alpha(0)
 		}
+		line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
 		row.Children(func() {
 			resourceGrid(ui.Box(c), tracks[1:]).Children(func() {
-				cell := ui.Column(c).MinWidth(0).Gap(1)
-				if owned {
-					cell.Padding(0, 0, 0, 22)
-				}
-				cell.Children(func() {
+				ui.Column(c).MinWidth(0).Gap(1).Children(func() {
 					name := clipped(c, p.Name).Font(FontMono).FontSize(12.5)
 					if compact {
 						name.TruncateStart()
@@ -347,7 +486,7 @@ func (a *App) podRow(c *ui.Context, p kube.Pod, owned, compact bool, tracks []ui
 						ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				workloadStatus(c, label, bg, fg)
+				workloadStatus(c, label, tagBg, tagFg)
 				if compact {
 					return
 				}
@@ -381,7 +520,10 @@ func (a *App) podFooter(c *ui.Context, groups []podGroup, pods int) {
 	allOpen := !slices.ContainsFunc(owned, func(g podGroup) bool { return !a.groupOpen(g) })
 	ui.Row(c).Gap(10).Padding(8, 16).AlignItems(ui.Center).Background(pal.Subtle).Children(func() {
 		ui.Text(c, locales.KubePodsFooter(len(owned), pods)).FontSize(12).TextColor(c.Theme().TextMuted).Grow(1).MinWidth(0).SingleLine()
-		if len(owned) == 0 {
+		if !narrow(c) && s.pod == "" {
+			ui.Text(c, locales.KubeRowMenuHint()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+		}
+		if len(owned) == 0 || a.groupsForced() {
 			return
 		}
 		label := locales.KubeOpenAll()
@@ -390,8 +532,8 @@ func (a *App) podFooter(c *ui.Context, groups []podGroup, pods int) {
 		}
 		ui.Button(c.Key("groups-toggle"), label).OnClick(func() {
 			s.toggled = map[string]bool{}
-			for _, g := range owned {
-				if a.groupOpen(g) == allOpen {
+			if !allOpen {
+				for _, g := range owned {
 					s.toggled[g.key()] = true
 				}
 			}
@@ -429,32 +571,16 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				ui.Box(c).Grow(1)
 				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
 			})
-			ui.Row(c).Gap(4).AlignItems(ui.Center).Wrap().Children(func() {
-				meta := []string{"Pod", p.Namespace}
-				if p.Node != "" {
-					meta = append(meta, locales.KubeOnNode(p.Node))
-				}
-				meta = append(meta, locales.KubeCreatedAgo(age(c, p.Created)))
-				ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted)
-				if p.Owner.Kind != "" {
-					ui.Text(c, "·").FontSize(12).TextColor(t.TextMuted)
-					owner := locales.KubeOwner(p.Owner.Kind, p.Owner.Name)
-					d := slices.IndexFunc(cl.Deployments, func(d kube.Deployment) bool {
-						return p.Owner.Kind == "Deployment" && d.Namespace == p.Namespace && d.Name == p.Owner.Name
-					})
-					if d < 0 {
-						ui.Text(c, owner).FontSize(12).TextColor(t.TextMuted)
-						return
-					}
-					uid := cl.Deployments[d].UID
-					link := ui.ButtonBase(c.Key("pod-owner")).Label(owner).OnClick(func() {
-						s.kind, s.deployment, s.tab = kindDeployments, uid, 0
-					})
-					link.Children(func() {
-						ui.Text(c, owner+" ›").FontSize(12).TextColor(pal.AccentInk)
-					})
-				}
-			})
+			meta := []string{"Pod", p.Namespace}
+			if p.Node != "" {
+				meta = append(meta, locales.KubeOnNode(p.Node))
+			}
+			meta = append(meta, locales.KubeCreatedAgo(age(c, p.Created)))
+			ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted).Wrap()
+			if p.Owner.Kind != "" {
+				ui.Box(c).Height(2)
+				a.ownerChip(c, p.Namespace, p.Owner)
+			}
 		})
 		if (a.StreamLogs != nil || a.OpenKubeShell != nil) && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
@@ -520,15 +646,16 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 		detailSection(c, locales.KubeContainers(len(p.Containers)))
 		for _, ct := range p.Containers {
 			containerRow(c, ct)
-			workloadMetrics(c, ct.Usage, ct.Requests, ct.Limits)
+			containerMetrics(c, ct)
 		}
 		if len(p.InitContainers) > 0 {
 			detailSection(c, locales.KubeMetricsInitContainers())
 			for _, ct := range p.InitContainers {
 				containerRow(c, ct)
-				workloadMetrics(c, ct.Usage, ct.Requests, ct.Limits)
+				containerMetrics(c, ct)
 			}
 		}
+		a.podEnv(c, p)
 		detailSection(c, locales.KubeFacts())
 		facts := [][2]string{{locales.KubePodIP(), p.IP}, {"QoS", p.QoS}, {"Service account", p.Account}, {locales.KubeNode(), p.Node}}
 		if len(p.Labels) > 0 {
@@ -697,9 +824,9 @@ func eventList(c *ui.Context, events []kube.Event, read bool, limit int) {
 	if limit > 0 && len(events) > limit {
 		events = events[:limit]
 	}
-	reasonWidth, timeWidth := float32(112), float32(88)
+	reasonWidth, timeWidth := float32(112), float32(104)
 	if narrow(c) {
-		reasonWidth, timeWidth = 88, 72
+		reasonWidth, timeWidth = 88, 92
 	}
 	tracks := []ui.Track{ui.Fixed(reasonWidth), ui.Fr(1), ui.Fixed(timeWidth)}
 	for i, e := range events {
@@ -716,9 +843,9 @@ func eventList(c *ui.Context, events []kube.Event, read bool, limit int) {
 			ui.Text(c, e.Message).FontSize(12.5).MinWidth(0).Wrap().Selectable()
 			when := age(c, e.Last)
 			if e.Count > 1 {
-				when = "×" + strconv.Itoa(e.Count) + " · " + when
+				when = locales.KubeEventRepeated(e.Count, when)
 			}
-			clipped(c, when).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).TextAlign(ui.End)
+			clipped(c, when).FontSize(11.5).TextColor(pal.TextFaint).TextAlign(ui.End).Tooltip(e.Last.Local().Format(time.DateTime))
 		})
 	}
 }

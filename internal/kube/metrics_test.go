@@ -30,9 +30,11 @@ func TestPodMetricsScopesAndSamples(t *testing.T) {
 		{Namespace: "shop", Name: "recreated", Created: created},
 		{Namespace: "shop", Name: "pending", Created: created},
 	}
-	if err := addPodMetrics(t.Context(), &fake, nil, tgt, pods); err != nil {
+	samples, err := podSamples(t.Context(), &fake, nil, tgt)
+	if err != nil {
 		t.Fatal(err)
 	}
+	applyPodMetrics(pods, samples)
 	if p := pods[0]; p.Usage == nil || p.Usage.CPU < .179 || p.Usage.CPU > .181 || p.Usage.Memory != 96<<20 ||
 		p.Containers[0].Usage == nil || p.Containers[1].Usage == nil || *p.Containers[1].Usage != (Resources{}) {
 		t.Fatalf("metrics missing or incorrect: %+v, containers %+v", p.Usage, p.Containers)

@@ -71,6 +71,7 @@ func main() {
 	}
 	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
 	a.StartHidden = list.settings.StartHidden
+	a.KubePinned, a.Terminal, a.Editor = list.settings.KubePinned, list.settings.Terminal, list.settings.Editor
 	a.KubeLinks = list.kubeLinks()
 	// The native parts follow it too: the sidebar's material, the window
 	// controls and the menus.
@@ -221,11 +222,32 @@ func main() {
 			}()
 			return cancel
 		}
+		a.Terminals, a.EditorApps = run.Terminals(), run.EditorApps()
+		a.OpenInEditor = func(app, command, path string, done func(error)) {
+			env := scanner.Terminal()
+			go func() {
+				err := run.OpenWith(context.Background(), run.Exec{}, app, command, path, env)
+				win.Update(func() { done(err) })
+			}()
+		}
+		a.OpenTerminal = func(done func(error)) {
+			env := scanner.Terminal()
+			shell := env.Get("SHELL")
+			if shell == "" {
+				shell = "/bin/sh"
+			}
+			terminal := a.Terminal
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, []string{shell, "-l"}, env, env.Get("PATH"), env.Get("KUBECONFIG"), "")
+				win.Update(func() { done(err) })
+			}()
+		}
 		a.OpenKubeShell = func(s kube.Shell, done func(error)) {
 			env := scanner.Terminal()
 			closeHint := locales.KubeShellCloseHint()
+			terminal := a.Terminal
 			go func() {
-				err := run.OpenTerminal(context.Background(), run.Exec{}, s.Args(), env, env.Get("PATH"), env.Get("KUBECONFIG"), closeHint)
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, s.Args(), env, env.Get("PATH"), env.Get("KUBECONFIG"), closeHint)
 				win.Update(func() { done(err) })
 			}()
 		}
@@ -571,6 +593,7 @@ func main() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
 			list.settings.Theme, list.settings.VersionLists, list.settings.Hidden = a.ThemeMode, a.VersionLists, a.Hidden
 			list.settings.StartHidden = a.StartHidden
+			list.settings.KubePinned, list.settings.Terminal, list.settings.Editor = a.KubePinned, a.Terminal, a.Editor
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 			list.save()
 			if onlineChanged {

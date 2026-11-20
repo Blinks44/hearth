@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestKubeResourceBrowser(t *testing.T) {
@@ -138,7 +139,7 @@ func TestKubeResourceBrowserRussianLabels(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	age, ok := tt.Find("ВОЗРАСТ")
+	age, ok := tt.Find(locales.KubeSortBy("Возраст"))
 	if !ok || age.W < 58 {
 		t.Fatalf("age column is too narrow: %+v", age)
 	}

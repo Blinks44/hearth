@@ -54,8 +54,27 @@ func stepMotion(back bool) ui.ElementTransition {
 	}
 }
 
+// detailEnter brings a resource's details in beside its list, from a
+// little to the right.
+var detailEnter = ui.ElementTransition{
+	Duration: 180 * time.Millisecond,
+	Enter:    &ui.Motion{X: 12},
+}
+
 // barMotion moves a progress bar's fill to its new share and color.
 var barMotion = ui.ElementTransition{Width: true, Colors: true, Animation: &ui.Smooth}
 
 // sidebarMotion follows the rows moved by the expanding language group.
 var sidebarMotion = ui.ElementTransition{Position: true, Colors: true, Shadows: true, Duration: 200 * time.Millisecond}
+
+// spinIcon is an icon that turns while spinning is true, as the refresh
+// icon of something being read or checked; still otherwise.
+func spinIcon(c *ui.Context, name string, size float32, color ui.Color, spinning bool) {
+	box := ui.Box(c).Size(size, size).Shrink(0).Center()
+	if spinning {
+		const turn = 900 * time.Millisecond
+		box.Rotate(float32(c.Now().UnixNano()%int64(turn)) / float32(turn) * 360)
+		c.Invalidate()
+	}
+	box.Children(func() { ui.Icon(c, Icon(name)).Size(size, size).TextColor(color) })
+}

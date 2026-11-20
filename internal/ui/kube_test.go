@@ -99,7 +99,7 @@ func TestKubePlans(t *testing.T) {
 	if err := tt.Click(locales.MoreActions()); err != nil {
 		t.Fatal(err)
 	}
-	if menu := tt.Menu(); !slices.Equal(menu, []string{"Use in kubectl…", "Change namespace…"}) {
+	if menu := tt.Menu(); !slices.Equal(menu, []string{"Use in kubectl…", "Change namespace…", "-", "Copy context name"}) {
 		t.Fatalf("menu %q", menu)
 	}
 	if err := tt.ChooseMenuItem("Use in kubectl…"); err != nil {
@@ -183,7 +183,11 @@ func TestKubeAccessCheck(t *testing.T) {
 	if len(asked) != 0 || tt.HasText("checking…") {
 		t.Fatal("checked without the button")
 	}
-	if err := tt.Click("Check"); err != nil { // kind-dev's
+	// kind-dev's menu checks it.
+	if err := tt.Click(locales.MoreActions()); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Check access"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -225,14 +229,13 @@ func TestKubeAccessCheck(t *testing.T) {
 	if n := len(tt.Texts()); n == 0 {
 		t.Fatal("no texts")
 	}
-	checks := 0
-	for _, s := range tt.Texts() {
-		if s == "Check" {
-			checks++
-		}
+	// Every context kubectl can use is checked at once, the shadowed one
+	// is not.
+	if err := tt.Click("Check all"); err != nil {
+		t.Fatal(err)
 	}
-	if checks != 3 {
-		t.Errorf("%d Check buttons, want 3", checks)
+	if len(asked) != 1+6+3 {
+		t.Errorf("checked %d times, want the 3 contexts kubectl uses", len(asked)-7)
 	}
 }
 

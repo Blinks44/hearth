@@ -152,7 +152,7 @@ func (a *App) customResourcesView(c *ui.Context, cl *kube.Cluster) {
 	columns := list.Custom.Version().Columns
 	pal := Colors(c.Theme())
 	tracks := []ui.Track{ui.Fr(2)}
-	headers := []string{locales.KubeClusterName()}
+	headers := []sortColumn{{locales.KubeClusterName(), "name"}}
 	var indices []int
 	for i := range columns {
 		indices = append(indices, i)
@@ -168,11 +168,11 @@ func (a *App) customResourcesView(c *ui.Context, cl *kube.Cluster) {
 	}
 	indices = indices[:min(len(indices), maxColumns)]
 	if len(columns) == 0 {
-		headers = append(headers, locales.KubeClusterAge())
+		headers = append(headers, sortColumn{locales.KubeClusterAge(), "age"})
 		tracks = append(tracks, ui.Fixed(66))
 	}
 	for _, i := range indices {
-		headers = append(headers, columns[i].Name)
+		headers = append(headers, sortColumn{columns[i].Name, "column-" + strconv.Itoa(i)})
 		tracks = append(tracks, ui.Fr(1))
 	}
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
@@ -199,6 +199,21 @@ func (a *App) customResourcesView(c *ui.Context, cl *kube.Cluster) {
 		}
 		return strings.Compare(a.Namespace, b.Namespace)
 	})
+	sort := s.sortOf(kindCustom)
+	by := map[string]func(x, y kube.Resource) int{
+		"name": func(x, y kube.Resource) int { return cmp.Compare(x.Name, y.Name) },
+		"age":  func(x, y kube.Resource) int { return y.Created.Compare(x.Created) },
+	}
+	for _, i := range indices {
+		cell := func(r kube.Resource) string {
+			if i < len(r.Custom.Cells) {
+				return r.Custom.Cells[i]
+			}
+			return ""
+		}
+		by["column-"+strconv.Itoa(i)] = func(x, y kube.Resource) int { return cmp.Compare(cell(x), cell(y)) }
+	}
+	sortRows(*sort, items, by)
 	if len(items) == 0 {
 		message := locales.KubeResourcesEmpty()
 		if !list.Custom.Namespaced() {
@@ -215,7 +230,7 @@ func (a *App) customResourcesView(c *ui.Context, cl *kube.Cluster) {
 	if selected == nil {
 		uid = ""
 	}
-	workloadPanes(c, func() { resourceHead(c, tracks, headers...) }, func() {
+	workloadPanes(c, func() { sortHead(c, tracks, nil, sort, headers...) }, func() {
 		for _, item := range items {
 			row := resourceGrid(ui.ButtonBase(c.Key("custom-"+item.UID)), tracks).Label(item.Name).
 				Padding(7, 16).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).OnClick(func() {

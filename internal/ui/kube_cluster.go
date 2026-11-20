@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/url"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -73,9 +74,18 @@ type kubeClusterState struct {
 	stop            func()
 	data            *kube.Cluster
 	batchData       bool
-	err             error
+	// cache is the last read of each kind's view of the target, by what
+	// it reads: going back to a kind shows it at once while it is read
+	// again.
+	cache    map[string]kube.Cluster
+	dataView string
+	err      error
 	// failedAt is when the last read failed, after data was read.
 	failedAt time.Time
+	// reading is true from a read the user is waiting for, the first of a
+	// watch, to its answer: the reads that follow every few seconds are
+	// quiet.
+	reading bool
 
 	contextOpen, namespaceOpen bool
 	kindsOpen                  bool
@@ -84,10 +94,8 @@ type kubeClusterState struct {
 	kindScroll                 bool
 	jobFilter, cronJobFilter   int
 	serviceFilter              int
-	serviceSort                string
 	service                    string
 	helmFilter                 int
-	helmSort                   string
 	helmDetail                 *helmDetails
 	secret                     secretView
 	forward                    *forwardForm
@@ -100,7 +108,6 @@ type kubeClusterState struct {
 	namespaceCreate            *namespaceCreateForm
 	access                     accessView
 	policyTab                  int
-	policySort                 bool
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
@@ -121,9 +128,14 @@ type kubeClusterState struct {
 	// bound to App.filterField, is built beside it while the page slides
 	// in.
 	queryField ui.Handle
-	// toggled are the owner groups shown otherwise than by default: open
-	// for those in trouble, closed for the rest.
+	// toggled are the owner groups shown otherwise than by default:
+	// open, as groups show closed.
 	toggled map[string]bool
+	// sorts are the tables' orders, by kind.
+	sorts map[int]*tableSort
+	// envShown are the pods' variables that look like secrets shown, by
+	// pod UID, container and name.
+	envShown map[string]bool
 	// pod and deployment are the UIDs of those whose details show beside
 	// the list, tab the details' tab.
 	pod, deployment string
@@ -223,7 +235,7 @@ func (a *App) syncCluster() {
 		if target == s.target {
 			t.Events, t.Tail = a.detailRef(), a.detailTail()
 		}
-		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%t#%t#%s#%q#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Policies, t.DeploymentAutoscalers, t.Resource, t.CustomKind, t.Events.UID, t.Tail)
+		running = fmt.Sprintf("%s#%d#%s#%s#%+v", target, s.refresh, viewKey(t), t.Events.UID, t.Tail)
 	}
 	ownerLog := s.logs
 	if running != "" && target == s.target && ownerLog != nil && ownerLog.owner.UID != "" {
@@ -245,15 +257,24 @@ func (a *App) syncCluster() {
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
 		s.resourceLink = resourceLink{}
+		s.cache = nil
+	}
+	view := target + viewKey(t)
+	if cached, ok := s.cache[view]; ok && running != "" && t.LogOwner.UID == "" && (s.data == nil || s.dataView != view) {
+		s.data, s.dataView, s.err, s.failedAt = &cached, view, nil, time.Time{}
+		s.batchData = t.Batch && !t.Overview
 	}
 	if running == "" {
+		s.reading = false
 		return
 	}
 	watch, refresh := s.watch, s.refresh
+	s.reading = true
 	s.stop = a.WatchCluster(t, func(cl kube.Cluster, err error) {
 		if s.watch != watch {
 			return
 		}
+		s.reading = false
 		if t.LogOwner.UID != "" {
 			ownerLog.podsErr, ownerLog.podsRead = err, true
 			if err == nil {
@@ -265,12 +286,17 @@ func (a *App) syncCluster() {
 			s.err, s.failedAt = err, time.Now()
 			if kerr, ok := errors.AsType[*kube.Error](err); t.CustomKind != "" && ok && kerr.Access.State == detect.KubeForbidden {
 				s.data = nil
+				delete(s.cache, view)
 				s.other.reset()
 			}
 			return
 		}
 		s.bulk.retain(cl)
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+		if s.cache == nil {
+			s.cache = map[string]kube.Cluster{}
+		}
+		s.cache[view], s.dataView = cl, view
 		if t.Helm != "" {
 			a.syncHelmRelease(cl.HelmReleases)
 		}
@@ -286,6 +312,13 @@ func (a *App) syncCluster() {
 		}
 		s.batchData = t.Batch && !t.Overview
 	})
+}
+
+// viewKey names what a target reads besides its cluster and namespaces:
+// the kind's view, whose reads the cache keeps apart.
+func viewKey(t kube.Target) string {
+	return fmt.Sprintf("#%t#%t#%t#%t#%t#%t#%t#%s#%q#%s", t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Policies,
+		t.DeploymentAutoscalers, t.Resource, t.CustomKind, t.Helm)
 }
 
 // detailRef is the object whose details show, zero for none.
@@ -343,11 +376,12 @@ func (a *App) detailTail() kube.Tail {
 // StopCluster ends the cluster page's reads, as the window closes.
 func (a *App) StopCluster() {
 	a.cluster.clearHelmDetails()
+	a.cluster.cache = nil
 	a.cluster.namespaceOpen = false
 	a.cluster.stopNamespaceList()
 	if a.cluster.stop != nil {
 		a.cluster.stop()
-		a.cluster.stop, a.cluster.running = nil, ""
+		a.cluster.stop, a.cluster.running, a.cluster.reading = nil, "", false
 		a.cluster.watch++
 	}
 	a.stopLogs()
@@ -456,17 +490,16 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					toolNote(c, locales.CleanupWaiting())
 				case !hasKubectl:
 					toolNote(c, locales.KubeClusterNoKubectl())
+					a.installPrimary(c, "kubectl")
 				case s.kind == kindHelm && (!hasHelm || errors.Is(s.err, fs.ErrNotExist)):
 					toolNote(c, locales.KubeHelmMissing())
+					a.installPrimary(c, "helm")
 				case s.kind == kindCustom && s.custom.name == "":
 					a.customDefinitionsView(c)
 				case waiting && s.err != nil:
 					a.clusterError(c, name, s.err)
 				case waiting:
-					ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(12, 0).Children(func() {
-						ui.Spinner(c).Size(14, 14)
-						ui.Text(c, locales.KubeClusterReading(name)).FontSize(12.5).TextColor(t.TextMuted)
-					})
+					tableSkeleton(c, locales.KubeClusterReading(name))
 				default:
 					if s.err != nil {
 						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
@@ -504,6 +537,48 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					}
 				}
 			})
+		})
+	})
+}
+
+// sortOf is the order of the kind's table.
+func (s *kubeClusterState) sortOf(kind int) *tableSort {
+	if s.sorts == nil {
+		s.sorts = map[int]*tableSort{}
+	}
+	if s.sorts[kind] == nil {
+		s.sorts[kind] = &tableSort{}
+	}
+	return s.sorts[kind]
+}
+
+// tableSkeleton stands for a table being read for the first time: its
+// header and rows of bars under a line saying what is read; it fades as
+// the table comes.
+func tableSkeleton(c *ui.Context, reading string) {
+	t := c.Theme()
+	pal := Colors(t)
+	bar := func(w float32) { ui.Box(c).Width(w).Height(8).Radius(4).Background(pal.Muted) }
+	ui.Column(c.Key("table-skeleton")).Transition(skeletonExit).Gap(10).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Spinner(c).Size(14, 14)
+			ui.Text(c, reading).FontSize(12.5).TextColor(t.TextMuted)
+		})
+		ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+			ui.Row(c).Gap(40).Padding(12, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				for _, w := range []float32{60, 50, 40, 50} {
+					bar(w)
+				}
+			})
+			for i, w := range []float32{220, 180, 260, 150, 200, 240} {
+				ui.Row(c).Gap(10).Padding(14, 16).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+					ui.Box(c).Size(14, 14).Radius(4).Background(pal.Muted)
+					ui.Box(c).Width(w).Height(10).Radius(5).Background(pal.Muted)
+					ui.Box(c).Grow(1)
+					ui.Box(c).Width(float32(60 + i%3*14)).Height(14).Radius(7).Background(pal.Muted)
+					ui.Box(c).Width(120).Height(1)
+				})
+			}
 		})
 	})
 }
@@ -546,7 +621,7 @@ func workloadPanes(c *ui.Context, header, list func(), uid string, detail func()
 			})
 		})
 		if uid != "" {
-			ui.Column(c.Key("workload-detail-" + uid)).Grow(1).MinWidth(0).MinHeight(0).Children(detail)
+			ui.Column(c.Key("workload-detail-" + uid)).Transition(detailEnter).Grow(1).MinWidth(0).MinHeight(0).Children(detail)
 		}
 	})
 }
@@ -614,12 +689,17 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 			})
 		}
 		a.freshness(c)
-		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() {
+		refresh := ui.ButtonBase(c.Key(locales.KubeClusterRefresh())).Size(24, 24).Radius(6).Center().
+			Label(locales.KubeClusterRefresh()).Tooltip(locales.KubeClusterRefresh()).OnClick(func() {
 			s.refresh++
 			if s.kind == kindCustom {
 				a.loadCustomDefinitions(name)
 			}
 		})
+		if refresh.Hovered() {
+			refresh.Background(pal.Muted)
+		}
+		refresh.Children(func() { spinIcon(c, "refresh-cw", 14, t.TextMuted, s.reading) })
 	})
 }
 
@@ -735,21 +815,94 @@ func (a *App) clusterError(c *ui.Context, name string, err error) {
 	if s.kind == kindHelm {
 		title, text = locales.KubeHelmReadFailed(), a.accessWords(err)
 	}
-	ui.Column(c).MaxWidth(500).Gap(12).Padding(40, 0, 0, 0).AlignSelf(ui.Center).Children(func() {
+	kerr, _ := errors.AsType[*kube.Error](err)
+	icon := "log-in"
+	if kerr != nil && (kerr.Access.State == detect.KubeUnreachable || kerr.Access.State == detect.KubeForbidden) {
+		icon = "triangle-alert"
+	}
+	k := a.kubeContext(name)
+	// The state is centered as the other empty states are: icon, title,
+	// words and buttons on one axis, the checks under them full width.
+	ui.Column(c).Width(520).MaxWidthPercent(100).Gap(12).Padding(56, 0, 0, 0).AlignSelf(ui.Center).AlignItems(ui.Center).Children(func() {
 		ui.Box(c).Size(48, 48).Radius(12).Background(pal.WarningSoft).Center().Children(func() {
-			ui.Icon(c, Icon("log-in")).Size(22, 22).TextColor(pal.WarningText)
+			ui.Icon(c, Icon(icon)).Size(22, 22).TextColor(pal.WarningText)
 		})
-		ui.Text(c, title).FontSize(19).FontWeight(600).Wrap()
-		ui.Text(c, text).FontSize(12.5).TextColor(t.TextMuted).Wrap()
-		if detail != "" {
-			ui.Text(c, detail).Font(FontMono).FontSize(11.5).Padding(9, 12).Radius(8).Background(pal.Subtle).
-				BorderWidth(1).BorderColor(pal.Line).Wrap().Selectable()
-		}
-		ui.Row(c).Gap(8).Children(func() {
-			ui.Button(c.Key("cluster-retry"), locales.KubeClusterRetry()).OnClick(func() { s.refresh++ })
-			ui.Button(c.Key("cluster-contexts"), locales.KubeClusterAllContexts()).OnClick(func() { a.router.Push(kubePage) })
+		ui.Text(c, title).FontSize(19).FontWeight(600).TextAlign(ui.Center).Wrap()
+		ui.Text(c, text).FontSize(12.5).TextColor(t.TextMuted).TextAlign(ui.Center).Wrap()
+		ui.Row(c).Gap(8).Margin(4, 0, 0, 0).Wrap().Justify(ui.Center).Children(func() {
+			ui.PrimaryButton(c.Key("cluster-retry"), "").Height(podActionHeight).Label(locales.KubeClusterRetry()).OnClick(func() { s.refresh++ }).Children(func() {
+				spinIcon(c, "refresh-cw", 14, c.Theme().AccentText, s.reading)
+				ui.Text(c, locales.KubeClusterRetry()).FontSize(12).SingleLine()
+			})
+			if a.OpenTerminal != nil {
+				kubeActionButton(c.Key("cluster-terminal"), "terminal", locales.KubeOpenTerminal(), podActionHeight).OnClick(func() {
+					a.OpenTerminal(func(err error) {
+						if err != nil {
+							a.planErr = locales.KubeShellLaunchFailed(err.Error())
+						}
+					})
+				})
+			}
+			kubeActionButton(c.Key("cluster-contexts"), "chevron-left", locales.KubeClusterAllContexts(), podActionHeight).OnClick(func() { a.router.Push(kubePage) })
+		})
+		// What Hearth checked, as the access check's steps.
+		ui.Column(c).AlignSelf(ui.Stretch).Radius(10).Clip().BorderWidth(1).BorderColor(pal.Divider).Margin(4, 0, 0, 0).Children(func() {
+			if k != nil {
+				checkStep(c, true, locales.KubeStepContext(name), tilde(k.File, a.Home))
+				if k.Auth != "" {
+					found := kerr == nil || kerr.Access.State != detect.KubeNoAuthProgram
+					label := locales.KubeStepProgramFound()
+					if !found {
+						label = locales.KubeStepProgramMissing()
+					}
+					checkStep(c, found, label, tilde(k.Auth, a.Home))
+				}
+			}
+			if line := kubectlLine(detail); line != "" {
+				checkStep(c, false, locales.KubeStepAnswer(), line)
+			}
 		})
 	})
+}
+
+// checkStep is a step of an access check: done or not, what it is, and
+// its detail in kubectl's words.
+func checkStep(c *ui.Context, ok bool, label, detail string) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c).Gap(10).Padding(9, 12).AlignItems(ui.Start).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		icon, color := "circle-check", t.Success
+		if !ok {
+			icon, color = "circle-alert", t.Warning
+		}
+		ui.Icon(c, Icon(icon)).Size(15, 15).Shrink(0).TextColor(color).Margin(1, 0, 0, 0)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			ui.Text(c, label).FontSize(12.5).FontWeight(500).Wrap()
+			if detail != "" {
+				ui.Text(c, detail).Font(FontMono).FontSize(11).TextColor(t.TextMuted).Wrap().Selectable()
+			}
+		})
+	})
+}
+
+// klogPrefix is the header client-go's log puts before its lines, as
+// "E1119 22:49:23.703365   18248 memcache.go:265] ".
+var klogPrefix = regexp.MustCompile(`^[IWEF]\d{4} [\d:.]+\s+\d+ [\w./-]+:\d+\] `)
+
+// kubectlLine is kubectl's answer without client-go's log headers,
+// escaped quotes and repeated lines, at most three of them.
+func kubectlLine(detail string) string {
+	var lines []string
+	for line := range strings.SplitSeq(strings.ReplaceAll(detail, `\"`, `"`), "\n") {
+		line = strings.TrimSpace(klogPrefix.ReplaceAllString(strings.TrimSpace(line), ""))
+		if quoted, ok := strings.CutPrefix(line, `"Unhandled Error" err="`); ok {
+			line = strings.TrimSuffix(quoted, `"`)
+		}
+		if line != "" && !slices.Contains(lines, line) {
+			lines = append(lines, line)
+		}
+	}
+	return strings.Join(lines[:min(len(lines), 3)], "\n")
 }
 
 // contextPopover chooses the context the page shows, by kubeconfig file,
@@ -910,18 +1063,24 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 	})
 }
 
-// kindChips are the kinds the page lists, each with how many of them
-// need attention.
+// kindChips are the cluster's overview, then the kinds pinned in ⌘J, each
+// with how many of them need attention; a kind chosen there that is not
+// pinned shows after them while it is chosen.
 func (a *App) kindChips(c *ui.Context) {
 	s := &a.cluster
 	options := clusterKindOptions()
 	ui.Row(c).Gap(6).Wrap().Children(func() {
-		if s.kind != kindOverview {
-			k := options[kindOverview]
-			kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0)
+		k := options[kindOverview]
+		kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0)
+		pinned := a.pinnedKinds()
+		if !slices.Contains(pinned, s.kind) && s.kind != kindOverview {
+			pinned = append(pinned, s.kind)
 		}
-		for _, i := range []int{kindPods, kindDeployments, kindJobs, kindCronJobs, kindServices, kindSecrets} {
+		for _, i := range pinned {
 			k := options[i]
+			if i == kindCustom && s.kind == kindCustom && s.custom.name != "" {
+				k.label = s.custom.label
+			}
 			_, trouble, _ := clusterKindCounts(s.data, i)
 			kindChip(c, &s.kind, i, k.icon, k.label, trouble)
 		}
@@ -940,6 +1099,46 @@ func (a *App) kindChips(c *ui.Context) {
 			}
 		})
 	})
+}
+
+// defaultPinned are the kinds pinned until the user pins others.
+var defaultPinned = []string{"po", "deploy", "job", "cj", "svc", "secret"}
+
+// pinnedKinds are the kinds pinned above the tables, in the order they
+// were pinned.
+func (a *App) pinnedKinds() []int {
+	aliases := a.KubePinned
+	if aliases == nil {
+		aliases = defaultPinned
+	}
+	options := clusterKindOptions()
+	var kinds []int
+	for _, alias := range aliases {
+		for i, k := range options {
+			if k.alias == alias && i != kindOverview && !slices.Contains(kinds, i) {
+				kinds = append(kinds, i)
+			}
+		}
+	}
+	return kinds
+}
+
+// togglePin pins the kind above the tables, or unpins it, and keeps the
+// choice.
+func (a *App) togglePin(kind int) {
+	alias := clusterKindOptions()[kind].alias
+	pinned := slices.Clone(a.KubePinned)
+	if pinned == nil {
+		pinned = slices.Clone(defaultPinned)
+	}
+	if i := slices.Index(pinned, alias); i >= 0 {
+		pinned = slices.Delete(pinned, i, i+1)
+	} else {
+		pinned = append(pinned, alias)
+	}
+	// An empty list is kept as such, not as the defaults.
+	a.KubePinned = append(make([]string, 0, len(pinned)), pinned...)
+	a.savePreferences()
 }
 
 func kindChip(c *ui.Context, kind *int, value int, icon, label string, trouble int) {

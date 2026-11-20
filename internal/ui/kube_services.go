@@ -53,7 +53,6 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 			}
 		}
 	}
-	sortOptions := []string{locales.KubeServicesProblemsFirst(), locales.KubeClusterName()}
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Wrap().Children(func() {
 		segments(c, "service-filter", &s.serviceFilter, []segment{
 			{locales.TabAll(), strconv.Itoa(counts[serviceAll])},
@@ -62,25 +61,14 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 			{locales.KubeServicesExternal(), strconv.Itoa(counts[serviceExternal])},
 		})
 		ui.Box(c).Grow(1)
-		sort := sortOptions[0]
-		if s.serviceSort == "name" {
-			sort = sortOptions[1]
-		}
-		ui.Select(c.Key("service-sort"), &sort, sortOptions).Label(locales.KubeServicesSort()).Width(158).OnChange(func() {
-			if sort == sortOptions[1] {
-				s.serviceSort = "name"
-			} else {
-				s.serviceSort = ""
-			}
-		})
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeServicesSearch()).Width(215).MinWidth(100)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeServicesSearch()).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 {
 		toolNote(c, locales.CleanupNone())
 		return
 	}
 	slices.SortStableFunc(shown, func(a, b kube.Service) int {
-		if s.serviceSort != "name" && serviceNeedsAttention(a) != serviceNeedsAttention(b) {
+		if serviceNeedsAttention(a) != serviceNeedsAttention(b) {
 			if serviceNeedsAttention(a) {
 				return -1
 			}
@@ -88,29 +76,40 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 		}
 		return cmp.Or(cmp.Compare(a.Name, b.Name), cmp.Compare(a.Namespace, b.Namespace))
 	})
+	sort := s.sortOf(kindServices)
+	sortRows(*sort, shown, map[string]func(x, y kube.Service) int{
+		"name":  func(x, y kube.Service) int { return cmp.Compare(x.Name, y.Name) },
+		"type":  func(x, y kube.Service) int { return cmp.Compare(x.Type, y.Type) },
+		"ip":    func(x, y kube.Service) int { return cmp.Compare(x.ClusterIP, y.ClusterIP) },
+		"ports": func(x, y kube.Service) int { return cmp.Compare(servicePortLabels(x), servicePortLabels(y)) },
+		"pods": func(x, y kube.Service) int {
+			return cmp.Or(cmp.Compare(serviceReadyShare(x), serviceReadyShare(y)), cmp.Compare(x.Pods, y.Pods))
+		},
+	})
 	t := c.Theme()
 	pal := Colors(t)
 	tracks := []ui.Track{ui.Fr(1.4), ui.Fr(0.7), ui.Fr(1), ui.Fr(1.1), ui.Fr(1), ui.Fixed(150)}
-	headers := []string{locales.KubeClusterName(), locales.KubeServicesType(), "Cluster IP", locales.PortsTitle(), locales.KubeServicesPods(), ""}
+	headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeServicesType(), "type"}, {"Cluster IP", "ip"},
+		{locales.PortsTitle(), "ports"}, {locales.KubeServicesPods(), "pods"}, {"", ""}}
 	compact := selected.UID != ""
 	if compact {
 		tracks = []ui.Track{ui.Fr(1.4), ui.Fr(1)}
-		headers = []string{locales.KubeClusterName(), locales.KubeServicesPods()}
+		headers = []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeServicesPods(), "pods"}}
 	}
 	workloadPanes(c.Key("service-panes"), func() {
-		resourceHead(c, tracks, headers...)
+		sortHead(c, tracks, nil, sort, headers...)
 	}, func() {
 		for _, service := range shown {
 			row := resourceGrid(ui.Box(c.Key(service.UID)), tracks).Padding(8, 16).
 				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
 			switch {
 			case service.UID == selected.UID:
-				row.Background(pal.AccentSoft)
+				row.Background(pal.ActiveRow)
 			case serviceNeedsAttention(service):
 				row.Background(pal.DangerSoft.Alpha(0.4))
 			}
 			row.Children(func() {
-				button := ui.ButtonBase(c.Key("select-service")).MinWidth(0).Label(service.Namespace + "/" + service.Name).
+				button := ui.ButtonBase(c.Key("select-service")).MinWidth(0).Justify(ui.Start).AlignItems(ui.Start).Label(service.Namespace + "/" + service.Name).
 					OnClick(func() { s.toggleWorkload(&s.service, service.UID) })
 				button.Children(func() {
 					ui.Column(c).MinWidth(0).Gap(1).Children(func() {
@@ -132,6 +131,7 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 					a.serviceActions(c, service)
 				}
 			})
+			a.resourceContextMenu(c, row, a.resourceRef("Service", service.Namespace, service.Name, service.UID), nil)
 			s.revealWorkloadRow(row, service.UID)
 		}
 	}, selected.UID, func() {
@@ -157,6 +157,18 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 			a.resourceRelationships(c, d.Links, d.Errors)
 		})
 	})
+}
+
+// serviceReadyShare is the share of the Service's pods ready, -1 when
+// unknown and 0 without pods: those sort first.
+func serviceReadyShare(service kube.Service) float64 {
+	if !service.PodsKnown {
+		return -1
+	}
+	if service.Pods == 0 {
+		return 0
+	}
+	return float64(service.Ready) / float64(service.Pods)
 }
 
 func serviceReadyLabel(service kube.Service) string {

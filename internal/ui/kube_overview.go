@@ -104,6 +104,9 @@ func (a *App) overviewRequest(c *ui.Context, label string, requested, total floa
 }
 
 func requestPercent(share float64) string {
+	if share > 0 && share < 0.005 {
+		return "<1%"
+	}
 	return strconv.FormatFloat(math.Round(share*100), 'f', 0, 64) + "%"
 }
 
@@ -143,7 +146,7 @@ func (a *App) overviewAttention(c *ui.Context, cl *kube.Cluster) {
 	for _, p := range cl.Pods {
 		if story, ok := storyOf(p, nil, c.Now()); ok {
 			problems = append(problems, overviewProblem{"pod-" + p.UID, "Pod · " + p.Name, p.Namespace + " · " + story.line(), story.waiting, func() {
-				s.kind, s.pod, s.tab, s.podFilter, s.query, s.toggled = kindPods, p.UID, 0, podsAll, "", nil
+				a.openPod(p)
 			}})
 		}
 	}
@@ -305,7 +308,11 @@ func (a *App) overviewWarnings(c *ui.Context, o *kube.Overview) {
 					object = e.Message
 				}
 				ui.Text(c, object).SingleLine().Tooltip(e.Message).Font(FontMono).FontSize(11.5).Grow(1).MinWidth(0)
-				ui.Text(c, "×"+strconv.Itoa(e.Count)).FontSize(11).TextColor(pal.TextFaint).Shrink(0)
+				count := locales.KubeEventCount(e.Count)
+				if !e.Last.IsZero() {
+					count = locales.KubeEventRepeated(e.Count, age(c, e.Last))
+				}
+				ui.Text(c, count).FontSize(11).TextColor(pal.TextFaint).Shrink(0)
 			})
 		}
 	})

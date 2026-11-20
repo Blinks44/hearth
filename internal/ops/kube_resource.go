@@ -144,6 +144,16 @@ type resourceCommandError struct{ command, detail string }
 
 func (e *resourceCommandError) Error() string { return "kubectl " + e.command + ": " + e.detail }
 
+// resourceGone is a read of an object the cluster no longer has: in
+// words, while resourceNotFound still finds kubectl's answer under it.
+type resourceGone struct {
+	ref KubeResource
+	err error
+}
+
+func (e *resourceGone) Error() string { return locales.KubeResourceGone(e.ref.Kind, e.ref.Name) }
+func (e *resourceGone) Unwrap() error { return e.err }
+
 func resourceNotFound(err error) bool {
 	call, ok := errors.AsType[*resourceCommandError](err)
 	return ok && call.command == "get" && strings.HasPrefix(call.detail, "Error from server (NotFound):")
@@ -182,6 +192,9 @@ func (k resourceClient) call(ctx context.Context, timeout time.Duration, request
 
 func (k resourceClient) read(ctx context.Context, ref KubeResource) (resourceJSON, error) {
 	data, err := k.run(ctx, nil, "get", "--raw", ref.path())
+	if resourceNotFound(err) {
+		return nil, &resourceGone{ref, err}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -293,11 +306,14 @@ type KubeChange struct {
 	Diff             []DiffLine
 }
 
+// ConfirmName is the name to type before the change runs: only deletions
+// that take many objects with them, a namespace's and a Helm release's,
+// ask for it. Deleting one object needs only the dialog's button.
 func (m *KubeChange) ConfirmName() string {
-	if m.helm != nil && m.helm.to.Revision != 0 {
-		return ""
-	}
-	if !m.createNamespace && m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" && m.Manifests == nil {
+	switch {
+	case m.helm != nil && m.helm.to.Revision == 0:
+		return m.draft.Ref.Name
+	case m.helm == nil && m.draft.Ref.Kind == "Namespace" && !m.createNamespace && m.want == nil:
 		return m.draft.Ref.Name
 	}
 	return ""

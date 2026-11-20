@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/sha256"
 	"encoding/base64"
 	"math"
@@ -15,6 +16,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -225,7 +227,7 @@ func (a *App) secretsView(c *ui.Context, list []kube.Secret) {
 		})
 		ui.Box(c).Grow(1)
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(locales.KubeSecretSearch()).Width(215).MinWidth(100)
+			Placeholder(locales.KubeSecretSearch()).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 {
 		message := locales.KubeSecretNoMatches()
@@ -235,6 +237,11 @@ func (a *App) secretsView(c *ui.Context, list []kube.Secret) {
 		toolNote(c, message)
 		return
 	}
+	sort := s.sortOf(kindSecrets)
+	sortRows(*sort, shown, map[string]func(x, y kube.Secret) int{
+		"name": func(x, y kube.Secret) int { return cmp.Compare(x.Name, y.Name) },
+		"type": func(x, y kube.Secret) int { return cmp.Compare(secretTypeLabel(x), secretTypeLabel(y)) },
+	})
 	t := c.Theme()
 	pal := Colors(t)
 	tracks := []ui.Track{ui.Fr(1.5), ui.Fr(1)}
@@ -244,17 +251,18 @@ func (a *App) secretsView(c *ui.Context, list []kube.Secret) {
 		rowHeight = 41
 	}
 	workloadPanes(c, func() {
-		resourceHead(c, tracks, locales.KubeClusterName(), locales.KubeSecretTypeKeys())
+		sortHead(c, tracks, nil, sort, sortColumn{locales.KubeClusterName(), "name"}, sortColumn{locales.KubeSecretTypeKeys(), "type"})
 	}, func() {
 		for _, item := range shown {
 			row := resourceGrid(ui.ButtonBase(c.Key(item.UID)), tracks).Padding(4, 16).Height(rowHeight).
 				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(item.Name)
 			switch {
 			case selected.UID == item.UID:
-				row.Background(pal.AccentSoft)
+				row.Background(pal.ActiveRow)
 			case row.Hovered():
-				row.Background(pal.Muted)
+				row.Background(pal.Subtle)
 			}
+			a.resourceContextMenu(c, row, ops.KubeResource{Name: item.Name}, nil)
 			row.OnClick(func() {
 				wasSelected := v.uid == item.UID
 				v.reset()

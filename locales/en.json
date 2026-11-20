@@ -281,10 +281,6 @@
   "@kubePolicies": {
     "description": "Kubernetes autoscaling and limits view"
   },
-  "kubePolicySort": "Sort policies",
-  "@kubePolicySort": {
-    "description": "Accessible label for the policy list sort menu"
-  },
   "kubePolicyQuotas": "Quotas",
   "@kubePolicyQuotas": {
     "description": "Kubernetes autoscaling and limits view"
@@ -468,10 +464,12 @@
   "kubeMetricsForbidden": "No permission to read CPU and memory usage.",
   "kubeMetricsFailed": "Could not read CPU and memory usage.",
   "kubeMetricsNoSample": "No usage sample yet",
-  "kubeMetricsMillicores": "{value, number, ::precision-integer}m",
-  "kubeMetricsMiB": "{value, number, ::precision-integer} MiB",
+  "kubeMetricsMillicores": "{value, number, ::group-off}m",
+  "kubeMetricsMiB": "{value, number, ::group-off} MiB",
   "kubeMetricsNodeUse": "Usage {cpu} · {memory}",
-  "@kubeMetricsInitContainers": {"description": "Kubernetes Pod section for init containers."},
+  "@kubeMetricsInitContainers": {
+    "description": "Kubernetes Pod section for init containers."
+  },
   "@kubeMetricsUsage": {
     "description": "Kubernetes resource metrics: Usage"
   },
@@ -497,7 +495,7 @@
     "description": "Kubernetes resource metrics: NoSample"
   },
   "@kubeMetricsMillicores": {
-    "description": "Kubernetes resource metrics: Millicores",
+    "description": "CPU in millicores, Kubernetes' unit m, kept as is in every language.",
     "placeholders": {
       "value": {
         "type": "double"
@@ -505,7 +503,7 @@
     }
   },
   "@kubeMetricsMiB": {
-    "description": "Kubernetes resource metrics: MiB",
+    "description": "Memory below 1 GiB, in mebibytes.",
     "placeholders": {
       "value": {
         "type": "double"
@@ -684,7 +682,7 @@
   "kubeResourceCopyYAML": "Copy YAML",
   "kubeShellAction": "Shell",
   "kubeShellTitle": "Shell in container",
-  "kubeShellDescription": "The system terminal opens with this command and keeps the session open.",
+  "kubeShellDescription": "The command opens in your terminal, and the session continues in its window. Choose the terminal in Settings.",
   "kubeShellContainer": "Container",
   "kubeShellCommand": "Command",
   "kubeShellNotes": "Before opening",
@@ -1133,7 +1131,7 @@
   "@kubeHelmReleases": {
     "description": "kubeHelmReleases"
   },
-  "kubeHelmMissing": "Hearth couldn’t find Helm. Install Helm and rescan to view releases.",
+  "kubeHelmMissing": "Hearth couldn’t find Helm. Install it, and releases will show here.",
   "@kubeHelmMissing": {
     "description": "kubeHelmMissing"
   },
@@ -1152,10 +1150,6 @@
   "kubeHelmPending": "In progress",
   "@kubeHelmPending": {
     "description": "kubeHelmPending"
-  },
-  "kubeHelmSort": "Sort Helm releases",
-  "@kubeHelmSort": {
-    "description": "kubeHelmSort"
   },
   "kubeHelmSearch": "Release, namespace or chart",
   "@kubeHelmSearch": {
@@ -5402,7 +5396,7 @@
       }
     }
   },
-  "wingetCancelled": "the installation was cancelled, as when Windows' permission request (UAC) is declined or left unanswered",
+  "wingetCancelled": "the installation was canceled, as when Windows' permission request (UAC) is declined or left unanswered",
   "@wingetCancelled": {
     "description": "Why a WinGet step failed, from its documented error code."
   },
@@ -11884,7 +11878,7 @@
   "@kubeClusterConnecting": {
     "description": "Cluster view header: no read has ended yet."
   },
-  "kubeClusterFresh": "updating · {seconds} s ago",
+  "kubeClusterFresh": "updated {seconds} s ago",
   "@kubeClusterFresh": {
     "description": "Cluster view header: the data keeps coming; seconds since the last read.",
     "placeholders": {
@@ -11944,9 +11938,9 @@
   "@kubeClusterLoginTitle": {
     "description": "Cluster view: sign-in needed."
   },
-  "kubeClusterLoginText": "The credentials of {context} are missing or expired. Sign in the way its cluster asks, then read again. Hearth does not sign in itself.",
+  "kubeClusterLoginText": "The credentials of {context} are missing or have expired. Sign in the way its cluster requires, for example in a terminal, then check again. Hearth doesn’t sign in for you.",
   "@kubeClusterLoginText": {
-    "description": "Cluster view: under the sign-in title.",
+    "description": "Cluster view: the context's credentials are missing or expired.",
     "placeholders": {
       "context": {
         "type": "String"
@@ -12225,18 +12219,6 @@
     "description": "A resource's details: how long ago it was created; age is short, as 2h.",
     "placeholders": {
       "age": {
-        "type": "String"
-      }
-    }
-  },
-  "kubeOwner": "owner {kind} {name}",
-  "@kubeOwner": {
-    "description": "A pod's details: its owner, as Deployment web.",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      },
-      "name": {
         "type": "String"
       }
     }
@@ -12986,14 +12968,6 @@
   "@kubeServicesExternal": {
     "description": "kubeServicesExternal"
   },
-  "kubeServicesProblemsFirst": "Problems first",
-  "@kubeServicesProblemsFirst": {
-    "description": "kubeServicesProblemsFirst"
-  },
-  "kubeServicesSort": "Sort services",
-  "@kubeServicesSort": {
-    "description": "kubeServicesSort"
-  },
   "kubeServicesSearch": "Name or namespace",
   "@kubeServicesSearch": {
     "description": "kubeServicesSearch"
@@ -13023,5 +12997,383 @@
   "kubeForwardPodEnded": "The target pod ended or was replaced.",
   "@kubeForwardPodEnded": {
     "description": "Status detail after the port-forward target pod ends or is replaced"
+  },
+  "kubeResourceGone": "{kind} {name} is no longer in the cluster: it was deleted or replaced. The list updates on its own.",
+  "@kubeResourceGone": {
+    "description": "A plan could not be built: the object was deleted or replaced meanwhile.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeKindHintMove": "↑↓ choose",
+  "@kubeKindHintMove": {
+    "description": "Kind picker footer: arrow keys move the selection."
+  },
+  "kubeKindHintOpen": "↵ open",
+  "@kubeKindHintOpen": {
+    "description": "Kind picker footer: Return opens the kind."
+  },
+  "kubeKindHintPin": "★ pin above the tables",
+  "@kubeKindHintPin": {
+    "description": "Kind picker footer: the star pins a kind above the tables."
+  },
+  "kubeKindPin": "Pin {kind} above the tables",
+  "@kubeKindPin": {
+    "description": "Kind picker: button pinning a resource kind as a chip above the tables.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeKindUnpin": "Unpin {kind}",
+  "@kubeKindUnpin": {
+    "description": "Kind picker: button removing a pinned kind's chip.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsCores": "{value, number, ::.##} CPU",
+  "@kubeMetricsCores": {
+    "description": "CPU of one core or more, in cores.",
+    "placeholders": {
+      "value": {
+        "type": "double"
+      }
+    }
+  },
+  "kubeMetricsGiB": "{value, number, ::.##} GiB",
+  "@kubeMetricsGiB": {
+    "description": "Memory of 1 GiB or more, in gibibytes.",
+    "placeholders": {
+      "value": {
+        "type": "double"
+      }
+    }
+  },
+  "kubeEventRepeated": "{count, plural, one {# time} other {# times}} · {when}",
+  "@kubeEventRepeated": {
+    "description": "Event list: how many times Kubernetes reported the event, and how long ago it last did.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeSortBy": "Sort by {column}",
+  "@kubeSortBy": {
+    "description": "Table header button: sorts the rows by this column; a second click reverses, a third restores the default order.",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeOpenOwner": "Open Deployment {name}",
+  "@kubeOpenOwner": {
+    "description": "Pod row context menu: opens the Deployment the pod belongs to.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeOwnerLogsAll": "Logs of all pods",
+  "@kubeOwnerLogsAll": {
+    "description": "Owner row context menu: the log of all its pods in one stream."
+  },
+  "kubeOpenGroup": "Show pods",
+  "@kubeOpenGroup": {
+    "description": "Owner row context menu: shows the group's pods."
+  },
+  "kubeCloseGroup": "Hide pods",
+  "@kubeCloseGroup": {
+    "description": "Owner row context menu: hides the group's pods."
+  },
+  "kubeCopyName": "Copy name",
+  "@kubeCopyName": {
+    "description": "Row context menu: copies the resource's name."
+  },
+  "kubeNameCopied": "Copied {name}",
+  "@kubeNameCopied": {
+    "description": "Toast after copying a resource's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEventCount": "{count, plural, one {# time} other {# times}}",
+  "@kubeEventCount": {
+    "description": "Event list: how many times Kubernetes reported the event, when it did not say when.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeOwnerLabel": "Owner",
+  "@kubeOwnerLabel": {
+    "description": "Pod details: label before the button naming the workload the pod belongs to."
+  },
+  "kubeOpenOwnerKind": "Open {kind} {name}",
+  "@kubeOpenOwnerKind": {
+    "description": "Pod details: the owner button's accessible name and tooltip.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsOfLimit": "{share} of limit",
+  "@kubeMetricsOfLimit": {
+    "description": "Pod usage: the share of the limit used, after the value.",
+    "placeholders": {
+      "share": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsOfRequest": "{share} of request",
+  "@kubeMetricsOfRequest": {
+    "description": "Pod usage: the share of the request used, when there is no limit.",
+    "placeholders": {
+      "share": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsRequestIs": "request {value}",
+  "@kubeMetricsRequestIs": {
+    "description": "Pod usage: the request, under the bar.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsLimitIs": "limit {value}",
+  "@kubeMetricsLimitIs": {
+    "description": "Pod usage: the limit, under the bar.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMetricsNoRequest": "no request",
+  "@kubeMetricsNoRequest": {
+    "description": "Pod usage: no request set."
+  },
+  "kubeMetricsNoLimit": "no limit",
+  "@kubeMetricsNoLimit": {
+    "description": "Pod usage: no limit set."
+  },
+  "kubeMetricsBounds": "request {request}, limit {limit}",
+  "@kubeMetricsBounds": {
+    "description": "Container usage line: its request and limit.",
+    "placeholders": {
+      "request": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvTitle": "Environment variables",
+  "@kubeEnvTitle": {
+    "description": "Pod details section: the environment variables its containers get."
+  },
+  "kubeEnvFromAll": "every key of {kind} {name}",
+  "@kubeEnvFromAll": {
+    "description": "Environment row: every key of a ConfigMap or Secret becomes a variable.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvFromKey": "from {kind} {name}, key {key}",
+  "@kubeEnvFromKey": {
+    "description": "Environment row: the value comes from a key of a ConfigMap or Secret; a Secret's value is not read.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvFromField": "pod field {field}",
+  "@kubeEnvFromField": {
+    "description": "Environment row: the value is a field of the pod, as status.podIP.",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvFromResource": "container resource {resource}",
+  "@kubeEnvFromResource": {
+    "description": "Environment row: the value is the container's request or limit, as limits.memory.",
+    "placeholders": {
+      "resource": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvShow": "Show {name}",
+  "@kubeEnvShow": {
+    "description": "Environment row: shows a value that looks like a secret.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeEnvHide": "Hide {name}",
+  "@kubeEnvHide": {
+    "description": "Environment row: hides the value again.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeImage": "Image",
+  "@kubeImage": {
+    "description": "Deployments table column: the container image and tag."
+  },
+  "kubeCheckAll": "Check all",
+  "@kubeCheckAll": {
+    "description": "Kubernetes page toolbar: checks access to every context at once."
+  },
+  "kubeCopyContext": "Copy context name",
+  "@kubeCopyContext": {
+    "description": "Context menu: copies the context's name."
+  },
+  "kubeOpenKubeconfig": "Open {file}",
+  "@kubeOpenKubeconfig": {
+    "description": "Context menu: opens the kubeconfig file that defines the context.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeMissingTitle": "Missing tools",
+  "@kubeMissingTitle": {
+    "description": "Kubernetes page card: tools the computer lacks, with install buttons."
+  },
+  "kubeNeedKubectl": "Hearth reads clusters through it",
+  "@kubeNeedKubectl": {
+    "description": "Missing tools card: what kubectl is for."
+  },
+  "kubeNeedHelm": "needed for Helm releases",
+  "@kubeNeedHelm": {
+    "description": "Missing tools card: what Helm is for."
+  },
+  "kubeNeedKind": "creates local clusters in Docker",
+  "@kubeNeedKind": {
+    "description": "Missing tools card: what kind is for."
+  },
+  "kubeProgramMissing": "{program} not found",
+  "@kubeProgramMissing": {
+    "description": "Missing tools card: a context's sign-in program is not on the PATH.",
+    "placeholders": {
+      "program": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeProgramMissingCaption": "the cluster's sign-in program: install it as its provider says",
+  "@kubeProgramMissingCaption": {
+    "description": "Missing tools card: where a sign-in program comes from."
+  },
+  "settingsApps": "Apps",
+  "@settingsApps": {
+    "description": "Settings card: the apps Hearth opens shells and files in."
+  },
+  "settingsTerminal": "Terminal",
+  "@settingsTerminal": {
+    "description": "Settings row: the terminal app for container shells and other commands."
+  },
+  "settingsTerminalHint": "Opens container shells and other commands",
+  "@settingsTerminalHint": {
+    "description": "Settings row hint for the terminal choice."
+  },
+  "settingsEditor": "Editor",
+  "@settingsEditor": {
+    "description": "Settings row: the editor files open in."
+  },
+  "settingsEditorHint": "Opens configs, kubeconfig and other files",
+  "@settingsEditorHint": {
+    "description": "Settings row hint for the editor choice."
+  },
+  "@kubeShellDescription": {
+    "description": "Shell popover: where the command opens."
+  },
+  "kubeShellLaunchIn": "Open in {app}",
+  "@kubeShellLaunchIn": {
+    "description": "Shell popover button: opens the command in the chosen terminal app, named.",
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeStepContext": "Context {context} found",
+  "@kubeStepContext": {
+    "description": "Cluster access failure: step checked, the context was found in a kubeconfig file.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeStepProgramFound": "Sign-in program found",
+  "@kubeStepProgramFound": {
+    "description": "Cluster access failure: the context's sign-in program is installed."
+  },
+  "kubeStepProgramMissing": "Sign-in program not found",
+  "@kubeStepProgramMissing": {
+    "description": "Cluster access failure: the context's sign-in program is not on the PATH."
+  },
+  "kubeStepAnswer": "kubectl's answer",
+  "@kubeStepAnswer": {
+    "description": "Cluster access failure: what kubectl answered."
+  },
+  "kubeOpenTerminal": "Open terminal",
+  "@kubeOpenTerminal": {
+    "description": "Cluster access failure: opens a terminal to sign in there."
+  },
+  "kubeRowMenuHint": "Right-click a row: logs, Shell, YAML, delete",
+  "@kubeRowMenuHint": {
+    "description": "Pods table footer: a right-click on a row opens its actions."
+  },
+  "kubeCheckAccess": "Check access",
+  "@kubeCheckAccess": {
+    "description": "Context menu: checks access to the context's cluster."
   }
 }

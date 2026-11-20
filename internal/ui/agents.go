@@ -13,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -622,10 +623,51 @@ func (a *App) agentFilesCard(c *ui.Context, ag inventory.Agent) {
 }
 
 // openFile opens path in its app, telling in a toast when it cannot.
+// openFile opens path in the editor chosen in Settings, or with the
+// system's app when none is chosen or it is gone.
 func (a *App) openFile(c *ui.Context, path string) {
+	if e, ok := a.chosenEditor(); ok && a.OpenInEditor != nil {
+		a.OpenInEditor(e.Path, e.Path, path, func(err error) {
+			if err != nil {
+				a.planErr = locales.OpenFailed(tilde(path, a.Home), err.Error())
+			}
+		})
+		return
+	}
 	if err := a.Shell.OpenPath(path); err != nil {
 		c.Toast(locales.OpenFailed(tilde(path, a.Home), err.Error()))
 	}
+}
+
+// editorChoices are the editors files can open in: the common ones
+// installed, then the IDEs the Editors page found with an app or a
+// command, by name.
+func (a *App) editorChoices() []run.App {
+	choices := slices.Clone(a.EditorApps)
+	if a.Snapshot == nil {
+		return choices
+	}
+	for _, e := range a.editorsState().Editors {
+		// An app bundle opens files on macOS; elsewhere the command does.
+		path := e.App
+		if !strings.HasSuffix(path, ".app") {
+			path = e.CommandPath
+		}
+		if path != "" && !slices.ContainsFunc(choices, func(c run.App) bool { return c.Name == e.Name }) {
+			choices = append(choices, run.App{Name: e.Name, Path: path})
+		}
+	}
+	return choices
+}
+
+// chosenEditor is the editor chosen in Settings, while it is installed.
+func (a *App) chosenEditor() (run.App, bool) {
+	for _, e := range a.editorChoices() {
+		if a.Editor != "" && e.Name == a.Editor {
+			return e, true
+		}
+	}
+	return run.App{}, false
 }
 
 // fileKind says what an agent's file holds.

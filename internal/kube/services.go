@@ -3,8 +3,8 @@ package kube
 import (
 	"context"
 	"encoding/json"
-	"slices"
 	"strconv"
+	"sync"
 
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -58,9 +58,6 @@ func readServices(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 	services := []Service{}
 	for _, scope := range scopes {
 		var list struct{ Items []service }
-		if err := get(ctx, r, env, t, append([]string{"services"}, scope...), &list); err != nil {
-			return nil, err
-		}
 		var pods struct {
 			Items []struct {
 				meta
@@ -69,12 +66,16 @@ func readServices(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 				}
 			}
 		}
-		var podsErr error
-		var podsKnown bool
-		if slices.ContainsFunc(list.Items, func(s service) bool { return s.hasSelector() }) {
-			podsErr = get(ctx, r, env, t, append([]string{"pods"}, scope...), &pods)
-			podsKnown = podsErr == nil
+		// The pods are read beside the Services, for those with a selector.
+		var err, podsErr error
+		var wg sync.WaitGroup
+		wg.Go(func() { err = get(ctx, r, env, t, append([]string{"services"}, scope...), &list) })
+		wg.Go(func() { podsErr = get(ctx, r, env, t, append([]string{"pods"}, scope...), &pods) })
+		wg.Wait()
+		if err != nil {
+			return nil, err
 		}
+		podsKnown := podsErr == nil
 		for _, it := range list.Items {
 			s := Service{
 				Namespace: it.Metadata.Namespace, Name: it.Metadata.Name, UID: it.Metadata.UID,

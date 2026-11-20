@@ -20,6 +20,7 @@ import (
 	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
 	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -58,7 +59,21 @@ type App struct {
 	Hidden []string
 	// StartHidden keeps the introductory actions dismissed across launches.
 	StartHidden bool
-	// OnSettings saves ThemeMode, VersionLists, Hidden and StartHidden after the user
+	// KubePinned are the Kubernetes kinds pinned above the cluster's
+	// tables, by their short names; nil pins the default ones.
+	KubePinned []string
+	// Terminal and Editor are the apps chosen to open shells and files;
+	// "" uses the system's. Terminals are those installed to choose from.
+	Terminal, Editor string
+	Terminals        []string
+	// EditorApps are the common editors installed, beside the IDEs the
+	// Editors page finds.
+	EditorApps []run.App
+	// OpenInEditor opens path in an editor's app or command, telling done
+	// how it went; nil opens files with the system's apps only.
+	OpenInEditor func(app, command, path string, done func(error))
+	// OnSettings saves ThemeMode, VersionLists, Hidden, StartHidden,
+	// KubePinned, Terminal and Editor after the user
 	// changed them; OnLocale shows and keeps another language.
 	OnSettings func()
 	OnLocale   func(string)
@@ -186,6 +201,9 @@ type App struct {
 	SaveLogs func(name, text string, done func(path string, err error))
 	// OpenKubeShell hands a container session to the system terminal.
 	OpenKubeShell func(kube.Shell, func(error))
+	// OpenTerminal opens the chosen terminal with the user's shell and
+	// kubectl's environment, as for signing in to a cluster.
+	OpenTerminal func(done func(error))
 
 	CheckForwardPort func(port int, done func(int, error))
 	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
@@ -358,7 +376,8 @@ func (a *App) View(c *ui.Context) {
 	// page's filter.
 	c.OnShortcut(0, ui.KeySlash, func() { a.filterField.Focus(c) })
 	if a.planErr != "" {
-		c.AddToast(ui.Toast{Title: a.planErr, Type: "error", Timeout: -1})
+		// Long enough to read, and closed sooner by its button.
+		c.AddToast(ui.Toast{Title: a.planErr, Type: "error", Timeout: 10 * time.Second, Action: locales.OpClose(), OnAction: func() {}})
 		a.planErr = ""
 	}
 	if a.notice != "" {
@@ -730,9 +749,7 @@ func (a *App) status(c *ui.Context) {
 		if again.Hovered() {
 			again.Background(pal.SidebarHover)
 		}
-		again.Children(func() {
-			ui.Icon(c, Icon("refresh-cw")).Size(12, 12).TextColor(pal.TextFaint)
-		})
+		again.Children(func() { spinIcon(c, "refresh-cw", 12, pal.TextFaint, a.Scanning) })
 	})
 }
 

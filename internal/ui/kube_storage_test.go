@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestKubeStorageNavigation(t *testing.T) {
@@ -18,9 +19,9 @@ func TestKubeStorageNavigation(t *testing.T) {
 				i18n.SetLocaleFunc(func() string { return "ru" })
 				t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
 			}
-			openClaim, diagnosis, status := "Open PVC", "Waiting for a volume. StorageClass fast-ssd does not exist in this cluster.", "STATUS"
+			openClaim, diagnosis := "Open PVC", "Waiting for a volume. StorageClass fast-ssd does not exist in this cluster."
 			if size[0] == 1000 {
-				openClaim, diagnosis, status = "Открыть PVC", "PVC ждёт том. StorageClass fast-ssd нет в кластере.", "СТАТУС"
+				openClaim, diagnosis = "Открыть PVC", "PVC ждёт том. StorageClass fast-ssd нет в кластере."
 			}
 			a := kubeApp()
 			var watches clusterWatches
@@ -63,7 +64,8 @@ func TestKubeStorageNavigation(t *testing.T) {
 				t.Fatalf("selected claim = %q", a.cluster.other.uid)
 			}
 			hasTexts(t, tt, diagnosis, pod.Name, "standard", "ReadWriteOnce")
-			if header, ok := tt.Find(status); !ok || header.W < 68 {
+			// The header's sort button spans its column.
+			if header, ok := tt.Find(locales.KubeSortBy(locales.KubeClusterStatus())); !ok || header.W < 68 {
 				t.Fatalf("status header at %d px: %+v", size[0], header)
 			}
 			screenshot(t, tt, fmt.Sprintf("storage-%d", size[0]))

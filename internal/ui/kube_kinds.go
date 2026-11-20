@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -285,11 +286,41 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 					if known && ((!s.batchData && s.data.Services == nil) || id != kindPods && id != kindDeployments) {
 						ui.Text(c, strconv.Itoa(count)).FontSize(11).TextColor(pal.TextFaint)
 					}
+					if id != kindOverview {
+						a.pinButton(c, id)
+					}
 				})
 			}
 		})
 		if catalog := s.custom.catalog; catalog != nil && (catalog.result == nil || catalog.result.Err != nil) {
 			a.customCatalogNotice(c)
 		}
+		ui.Row(c).Gap(14).Padding(8, 10, 4, 10).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+			for _, hint := range []string{locales.KubeKindHintMove(), locales.KubeKindHintOpen(), locales.KubeKindHintPin()} {
+				ui.Text(c, hint).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
 	})
+}
+
+// pinButton pins the kind above the cluster's tables, or unpins it.
+func (a *App) pinButton(c *ui.Context, kind int) {
+	t := c.Theme()
+	pal := Colors(t)
+	pinned := slices.Contains(a.pinnedKinds(), kind)
+	label := locales.KubeKindPin(clusterKindOptions()[kind].label)
+	icon, color := "star", pal.TextFaint
+	if pinned {
+		label = locales.KubeKindUnpin(clusterKindOptions()[kind].label)
+		icon, color = "star-filled", t.Accent
+	}
+	b := ui.ButtonBase(c.Key("pin-kind-"+strconv.Itoa(kind))).Size(22, 22).Radius(5).Center().Label(label).Tooltip(label).
+		OnClick(func() { a.togglePin(kind) })
+	if b.Hovered() {
+		b.Background(pal.Muted)
+		if !pinned {
+			color = t.TextMuted
+		}
+	}
+	b.Children(func() { ui.Icon(c, Icon(icon)).Size(14, 14).TextColor(color) })
 }

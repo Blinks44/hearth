@@ -15,12 +15,17 @@ import (
 
 func TestTerminalLauncher(t *testing.T) {
 	script := "/tmp/a b.command"
-	want := []string{"/usr/bin/open", "-a", "Terminal", script}
-	if runtime.GOOS == "linux" {
-		want = []string{"/usr/bin/gnome-terminal", "--", "/bin/sh", script}
-	}
-	if got := terminalLauncher(script); !slices.Equal(got, want) {
-		t.Fatalf("launcher = %q, want %q", got, want)
+	if runtime.GOOS == "darwin" {
+		for app, want := range map[string][]string{
+			"":        {"/usr/bin/open", "-a", "Terminal", script},
+			"Warp":    {"/usr/bin/open", "-a", "Warp", script},
+			"Ghostty": {"/usr/bin/open", "-na", "Ghostty", "--args", "-e", script},
+			"unknown": {"/usr/bin/open", "-a", "Terminal", script},
+		} {
+			if got := terminalLauncher(app, script); !slices.Equal(got, want) {
+				t.Errorf("launcher(%q) = %q, want %q", app, got, want)
+			}
+		}
 	}
 }
 

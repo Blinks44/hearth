@@ -37,6 +37,7 @@ func TestKubeMetricsLayout(t *testing.T) {
 			p.Containers[0].Usage = p.Usage
 			p.Containers[0].Requests, p.Containers[0].Limits = p.Requests, p.Limits
 			watches.got[len(watches.got)-1](cl, nil)
+			expandGroups(a, cl)
 			tt.Frame()
 			tt.Advance(time.Second)
 			cpu := metricsCPU(.46) + " · 92%"
@@ -58,7 +59,8 @@ func TestKubeMetricsLayout(t *testing.T) {
 				t.Fatal(err)
 			}
 			tt.Advance(time.Second)
-			hasTexts(t, tt, cpu, memory, metricsCPU(.1), metricsMemory(100<<20))
+			hasTexts(t, tt, metricsCPU(.46), locales.KubeMetricsOfLimit("92%"), metricsMemory(97<<20), locales.KubeMetricsOfLimit("97%"),
+				locales.KubeMetricsRequestIs(metricsCPU(.1))+" · "+locales.KubeMetricsLimitIs(metricsCPU(.5)))
 			screenshot(t, tt, fmt.Sprintf("pod-metrics-detail-%d", size[0]))
 
 			a.cluster.kind = kindOverview

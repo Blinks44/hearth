@@ -100,9 +100,19 @@ func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.Job) int {
 		return cmp.Compare(batchIssueOrder(a.State == kube.JobFailed), batchIssueOrder(b.State == kube.JobFailed))
 	})
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.KubeJobCompleted(), locales.KubeClusterAge()}, 28, "", func() {
+	sort := s.sortOf(kindJobs)
+	sortRows(*sort, shown, map[string]func(x, y kube.Job) int{
+		"name":      func(x, y kube.Job) int { return cmp.Compare(x.Name, y.Name) },
+		"status":    func(x, y kube.Job) int { return cmp.Compare(x.State, y.State) },
+		"completed": func(x, y kube.Job) int { return cmp.Compare(x.Completed, y.Completed) },
+		"age":       func(x, y kube.Job) int { return y.Created.Compare(x.Created) },
+	})
+	headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"},
+		{locales.KubeJobCompleted(), "completed"}, {locales.KubeClusterAge(), "age"}}
+	batchTable(c, sort, headers, 28, "", func() {
 		for _, j := range shown {
-			batchRow(c.Key(j.UID), j.State == kube.JobFailed, func() {
+			ref := a.resourceRef("Job", j.Namespace, j.Name, j.UID)
+			a.batchRow(c.Key(j.UID), ref, j.State == kube.JobFailed, func() {
 				batchName(c, j.Name, j.Namespace)
 				ui.Column(c).Grow(1).Basis(0).MinWidth(0).AlignItems(ui.Start).Children(func() {
 					text, bg, fg := jobState(c, j.State)
@@ -142,18 +152,30 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 	slices.SortStableFunc(shown, func(a, b kube.CronJob) int {
 		return cmp.Compare(batchIssueOrder(lastCronFailed(a)), batchIssueOrder(lastCronFailed(b)))
 	})
+	sort := s.sortOf(kindCronJobs)
+	sortRows(*sort, shown, map[string]func(x, y kube.CronJob) int{
+		"name":     func(x, y kube.CronJob) int { return cmp.Compare(x.Name, y.Name) },
+		"schedule": func(x, y kube.CronJob) int { return cmp.Compare(x.Schedule, y.Schedule) },
+		"runs": func(x, y kube.CronJob) int {
+			return cmp.Compare(batchIssueOrder(lastCronFailed(x)), batchIssueOrder(lastCronFailed(y)))
+		},
+		"status": func(x, y kube.CronJob) int { return cmp.Compare(cronStatus(x), cronStatus(y)) },
+	})
 	var actionWidth float32 = 28
 	actionHeader := ""
 	if a.BuildPlan != nil {
 		actionWidth, actionHeader = cronActionsWidth, locales.KubeCronOn()
 	}
-	batchTable(c, []string{locales.KubeClusterName(), locales.KubeCronSchedule(), locales.KubeCronRuns(), locales.KubeClusterStatus()}, actionWidth, actionHeader, func() {
+	headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeCronSchedule(), "schedule"},
+		{locales.KubeCronRuns(), "runs"}, {locales.KubeClusterStatus(), "status"}}
+	batchTable(c, sort, headers, actionWidth, actionHeader, func() {
 		for _, j := range shown {
 			failure := ""
 			if lastCronFailed(j) {
 				failure = j.Runs[0].Name + " · " + jobFailure(j.Runs[0])
 			}
-			batchRow(c.Key(j.UID), lastCronFailed(j), func() {
+			ref := a.resourceRef("CronJob", j.Namespace, j.Name, j.UID)
+			a.batchRow(c.Key(j.UID), ref, lastCronFailed(j), func() {
 				batchName(c, j.Name, j.Namespace)
 				ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(1).Children(func() {
 					clipped(c, j.Schedule).Font(FontMono).FontSize(12)
@@ -164,17 +186,22 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 					overviewCaption(c, caption, Colors(c.Theme()).TextFaint)
 				})
 				a.cronHistory(c, j.Runs, batch.JobsErr)
-				status := locales.KubeCronScheduled()
-				if j.Suspended {
-					status = locales.KubeJobSuspended()
-				} else if j.Active > 0 {
-					status = locales.KubeJobRunning()
-				}
-				batchText(c, status)
+				batchText(c, cronStatus(j))
 				a.cronJobActions(c, j, actionWidth)
 			}, failure)
 		}
 	})
+}
+
+// cronStatus is the CronJob's state in words.
+func cronStatus(j kube.CronJob) string {
+	switch {
+	case j.Suspended:
+		return locales.KubeJobSuspended()
+	case j.Active > 0:
+		return locales.KubeJobRunning()
+	}
+	return locales.KubeCronScheduled()
 }
 
 func (a *App) batchResourceMenu(c *ui.Context, ref ops.KubeResource) {
@@ -201,12 +228,29 @@ func jobFailure(j kube.Job) string {
 	return locales.KubeJobFailed()
 }
 
-func batchTable(c *ui.Context, headers []string, actionWidth float32, actionHeader string, rows func()) {
-	pal := Colors(c.Theme())
+func batchTable(c *ui.Context, sort *tableSort, headers []sortColumn, actionWidth float32, actionHeader string, rows func()) {
+	t := c.Theme()
+	pal := Colors(t)
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(10).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			for i, header := range headers {
-				ui.Text(c, strings.ToUpper(header)).FontSize(10.5).TextColor(pal.TextFaint).Grow(batchColumnWeight(i)).Basis(0).MinWidth(0).SingleLine()
+			for i, col := range headers {
+				on := sort.column == col.key
+				b := ui.ButtonBase(c.Key("sort-" + col.key)).Grow(batchColumnWeight(i)).Basis(0).MinWidth(0).Gap(3).AlignItems(ui.Center).
+					Justify(ui.Start).Label(locales.KubeSortBy(col.label)).OnClick(func() { *sort = sort.next(col.key) })
+				color := pal.TextFaint
+				if on || b.Hovered() {
+					color = t.TextMuted
+				}
+				b.Children(func() {
+					ui.Text(c, strings.ToUpper(col.label)).FontSize(10.5).TextColor(color).MinWidth(0).SingleLine()
+					if on {
+						icon := "chevron-up"
+						if sort.desc {
+							icon = "chevron-down"
+						}
+						ui.Icon(c, Icon(icon)).Size(11, 11).Shrink(0).TextColor(color)
+					}
+				})
 			}
 			ui.Row(c).Width(actionWidth).Shrink(0).Children(func() {
 				if actionHeader != "" {
@@ -227,12 +271,17 @@ func batchColumnWeight(i int) float32 {
 	return 1
 }
 
-func batchRow(c *ui.Context, failed bool, cells func(), message string) {
+func (a *App) batchRow(c *ui.Context, ref ops.KubeResource, failed bool, cells func(), message string) {
 	pal := Colors(c.Theme())
-	row := ui.Column(c).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Gap(4).Padding(8, 16)
+	row := ui.Column(c).Transition(rowMotion).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Gap(4).Padding(8, 16)
 	if failed {
-		row.Background(pal.DangerSoft.Alpha(0.4))
+		row.Background(pal.DangerSoft.Alpha(0.35))
 	}
+	a.resourceContextMenu(c, row, ref, func(m *ui.Menu) {
+		if ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
+			a.openOwnerLogs(ref)
+		}
+	})
 	row.Children(func() {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(cells)
 		if message != "" {
