@@ -54,6 +54,7 @@ const (
 	kindNodes
 	kindPolicies
 	kindNamespaces
+	kindServiceAccounts
 	kindCustom
 )
 
@@ -83,6 +84,7 @@ type kubeClusterState struct {
 	jobFilter, cronJobFilter   int
 	serviceFilter              int
 	serviceSort                string
+	service                    string
 	helmFilter                 int
 	helmSort                   string
 	helmDetail                 *helmDetails
@@ -197,6 +199,7 @@ func (a *App) syncCluster() {
 		s.bulk.clear()
 		s.bulk.kind = s.kind
 		s.shell = nil
+		s.service = ""
 		s.other.reset()
 		s.namespaceCreate = nil
 		if s.resourceLink.kind != s.kind {
@@ -265,6 +268,13 @@ func (a *App) detailRef() kube.Ref {
 	}
 	if item := s.otherResource(); item != nil {
 		return kube.Ref{Namespace: item.Namespace, UID: item.UID}
+	}
+	if s.kind == kindServices {
+		for _, service := range s.data.Services {
+			if service.UID == s.service {
+				return kube.Ref{Namespace: service.Namespace, UID: service.UID}
+			}
+		}
 	}
 	if s.kind == kindDeployments {
 		for _, d := range s.data.Deployments {
@@ -363,7 +373,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			return
 		}
 		resourceKind := otherResourceKind(s.kind)
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindServices || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -424,7 +434,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					case kindCronJobs:
 						a.cronJobsView(c, s.data.Batch)
 					case kindServices:
-						a.servicesView(c, s.data.Services)
+						a.servicesView(c, s.data)
 					case kindSecrets:
 						a.secretsView(c, s.data.Secrets)
 					case kindPolicies:
@@ -438,7 +448,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					default:
 						a.otherResourcesView(c, s.data)
 					}
-					if s.resourceLink.name != "" && s.resourceLink.kind == s.kind {
+					if s.resourceLink.missing && s.resourceLink.kind == s.kind {
 						toolNote(c, locales.KubeStorageTargetMissing(s.resourceLink.name))
 					}
 				}

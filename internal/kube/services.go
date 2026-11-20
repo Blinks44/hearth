@@ -19,6 +19,8 @@ type Service struct {
 	Ports                 []ServicePort
 	Pods, Ready           int
 	PodsKnown             bool
+	relatedPods           []Relationship
+	podsErr               error
 }
 
 // ServicePort is a Service's port and the number or name it maps to in a pod.
@@ -67,9 +69,11 @@ func readServices(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 				}
 			}
 		}
+		var podsErr error
 		var podsKnown bool
 		if slices.ContainsFunc(list.Items, func(s service) bool { return s.hasSelector() }) {
-			podsKnown = get(ctx, r, env, t, append([]string{"pods"}, scope...), &pods) == nil
+			podsErr = get(ctx, r, env, t, append([]string{"pods"}, scope...), &pods)
+			podsKnown = podsErr == nil
 		}
 		for _, it := range list.Items {
 			s := Service{
@@ -82,12 +86,19 @@ func readServices(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 			for _, port := range it.Spec.Ports {
 				s.Ports = append(s.Ports, ServicePort{Port: port.Port, Protocol: port.Protocol, Target: serviceTargetPort(port.TargetPort)})
 			}
+			selected := s.UID == t.Events.UID && s.Namespace == t.Events.Namespace && t.Events.UID != ""
+			if selected && s.HasSelector {
+				s.podsErr = podsErr
+			}
 			if s.PodsKnown {
 				for _, p := range pods.Items {
 					if p.Metadata.Namespace != s.Namespace || !selectorMatches(it.Spec.Selector, p.Metadata.Labels) {
 						continue
 					}
 					s.Pods++
+					if selected {
+						s.relatedPods = append(s.relatedPods, Relationship{Kind: "Pod", Namespace: s.Namespace, Name: p.Metadata.Name, UID: p.Metadata.UID})
+					}
 					for _, cond := range p.Status.Conditions {
 						if cond.Type == "Ready" && cond.Status == "True" {
 							s.Ready++

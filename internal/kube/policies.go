@@ -16,7 +16,7 @@ import (
 
 const (
 	Autoscalers       ResourceKind = "horizontalpodautoscalers.v2.autoscaling"
-	DisruptionBudgets ResourceKind = "poddisruptionbudgets.policy"
+	DisruptionBudgets ResourceKind = "poddisruptionbudgets.v1.policy"
 	ResourceQuotas    ResourceKind = "resourcequotas"
 	LimitRanges       ResourceKind = "limitranges"
 )
@@ -46,6 +46,7 @@ type AutoscalerMetric struct {
 }
 
 type DisruptionBudget struct {
+	Selector                                                         *labelSelector
 	MinAvailable, MaxUnavailable                                     json.RawMessage
 	CurrentHealthy, DesiredHealthy, ExpectedPods, DisruptionsAllowed int
 	CurrentStatus                                                    bool
@@ -65,6 +66,7 @@ type policyObject struct {
 	meta
 	Spec struct {
 		ScaleTargetRef ScaleTarget
+		Selector       *labelSelector
 		MinReplicas    *int
 		MaxReplicas    int
 		Metrics        []metricObject
@@ -179,7 +181,7 @@ func (o policyObject) resource(kind ResourceKind) Resource {
 			DownscaleWindow: o.Spec.Behavior.ScaleDown.StabilizationWindowSeconds,
 			Conditions:      o.Status.Conditions, Metrics: autoscalerMetrics(o.Spec.Metrics, o.Status.CurrentMetrics)}
 	case DisruptionBudgets:
-		r.Budget = &DisruptionBudget{MinAvailable: o.Spec.MinAvailable, MaxUnavailable: o.Spec.MaxUnavailable,
+		r.Budget = &DisruptionBudget{Selector: o.Spec.Selector, MinAvailable: o.Spec.MinAvailable, MaxUnavailable: o.Spec.MaxUnavailable,
 			CurrentHealthy: o.Status.CurrentHealthy, DesiredHealthy: o.Status.DesiredHealthy, ExpectedPods: o.Status.ExpectedPods,
 			Conditions: o.Status.Conditions}
 		if o.Status.DisruptionsAllowed != nil && o.Status.ObservedGeneration == m.Generation {

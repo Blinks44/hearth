@@ -40,6 +40,10 @@ func TestRead(t *testing.T) {
 	}{
 		{"checkout-api-7d9f8c5b-x2k4p", Pod{Namespace: "shop", Name: "checkout-api-7d9f8c5b-x2k4p", UID: "p1", Phase: "Running", Reason: "CrashLoopBackOff",
 			Ready: 1, Restarts: 14, Node: "kind-worker", IP: "10.244.1.17", QoS: "Burstable", Account: "checkout",
+			References: []Relationship{
+				{Kind: "ConfigMap", Namespace: "shop", Name: "checkout", Detail: "config"},
+				{Kind: "ServiceAccount", Namespace: "shop", Name: "checkout"},
+			},
 			Labels: map[string]string{"app": "checkout-api", "pod-template-hash": "7d9f8c5b"}, Volumes: []string{"config"},
 			Created: created, Owner: Owner{"Deployment", "checkout-api"},
 			// In the spec's order, whatever the statuses' order.
@@ -55,6 +59,7 @@ func TestRead(t *testing.T) {
 		{"postgres-0", Pod{Namespace: "shop", Name: "postgres-0", UID: "p3", Phase: "Pending", Reason: "Unschedulable",
 			Unscheduled: "0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
 			Volumes:     []string{"data"}, Claims: []string{"data-postgres-0"}, Created: at(9, 57, 0), Owner: Owner{"StatefulSet", "postgres"},
+			References: []Relationship{{Kind: "PersistentVolumeClaim", Namespace: "shop", Name: "data-postgres-0", Detail: "data"}},
 			Containers: []Container{{Name: "postgres", Image: "postgres:17"}}}},
 		// Its ReplicaSet was not in the answer: the pod keeps it as owner.
 		{"web-frontend-5c8d7f9b4-k2j9x", Pod{Namespace: "shop", Name: "web-frontend-5c8d7f9b4-k2j9x", UID: "p4", Phase: "Pending", Reason: "ImagePullBackOff",

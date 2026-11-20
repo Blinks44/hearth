@@ -308,19 +308,3 @@ func policyConditions(c *ui.Context, conditions []kube.CustomCondition) {
 		storageReadNote(c, strings.TrimSpace(condition.Reason+" "+condition.Message))
 	}
 }
-
-func (a *App) deploymentAutoscalers(c *ui.Context, deployment kube.Deployment) {
-	if len(deployment.Autoscalers) == 0 && deployment.AutoscalersErr == nil {
-		return
-	}
-	detailSection(c, locales.KubeScaleAutoscaler())
-	if deployment.AutoscalersErr != nil {
-		storageReadNote(c, locales.KubeScaleAutoscalerUnknown())
-		return
-	}
-	for _, hpa := range deployment.Autoscalers {
-		status, _, _ := policyStatus(c, hpa)
-		a.resourceLinkRow(c.Key("deployment-hpa-"+hpa.UID), hpa.Name, status, locales.KubeClusterOpen(),
-			resourceLink{kind: kindPolicies, namespace: hpa.Namespace, name: hpa.Name, uid: hpa.UID})
-	}
-}

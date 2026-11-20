@@ -1,4 +1,8 @@
 {
+  "kubeRelationships": "Relationships",
+  "@kubeRelationships": {
+    "description": "Heading for links to related Kubernetes resources."
+  },
   "kubeApplyTitle": "Apply manifests · {name}",
   "@kubeApplyTitle": {
     "description": "Apply manifests ·.",

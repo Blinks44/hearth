@@ -1,4 +1,5 @@
 {
+  "kubeRelationships": "Связи",
   "kubeApplyTitle": "Применить манифесты · {name}",
   "kubeApplyOpen": "Применить манифесты…",
   "kubeApplyChooseFile": "Выбрать файл…",

@@ -1,4 +1,5 @@
 {
+  "kubeRelationships": "Relaciones",
   "kubeApplyTitle": "Aplicar manifiestos · {name}",
   "kubeApplyOpen": "Aplicar manifiestos…",
   "kubeApplyChooseFile": "Elegir archivo…",

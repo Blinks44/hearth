@@ -1,4 +1,5 @@
 {
+  "kubeRelationships": "关联",
   "kubeApplyTitle": "应用清单 · {name}",
   "kubeApplyOpen": "应用清单…",
   "kubeApplyChooseFile": "选择文件…",

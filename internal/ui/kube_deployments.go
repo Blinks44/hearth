@@ -261,7 +261,6 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				}
 			})
 		}
-		a.deploymentAutoscalers(c, d)
 		a.deploymentScale(c, ref, d)
 		a.deploymentPause(c, ref, d.Paused)
 		a.deploymentRevisions(c, ref, d)
@@ -277,6 +276,8 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 		}
 		facts = append(facts, [2]string{locales.KubeStrategy(), d.Strategy})
 		factRows(c, facts)
+		relations := relationshipsFor(cl, d.Namespace, d.UID)
+		a.resourceRelationships(c, relations.Links, relations.Errors)
 	})
 }
 

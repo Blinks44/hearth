@@ -97,6 +97,8 @@ type Pod struct {
 	Node                       string
 	IP, QoS                    string
 	Account                    string
+	References                 []Relationship
+	controllerUID              string
 	Labels                     map[string]string
 	// Volumes are the volumes the pod declares, without the API token
 	// every pod gets.
@@ -155,6 +157,7 @@ type Deployment struct {
 	Created        time.Time
 	Autoscalers    []Resource
 	AutoscalersErr error
+	podLabels      map[string]string
 }
 
 // Revision is a Deployment's revision, as its ReplicaSet keeps it.
@@ -178,16 +181,17 @@ type Event struct {
 
 // Cluster is what one read found.
 type Cluster struct {
-	Pods         []Pod
-	Deployments  []Deployment
-	Overview     *Overview
-	Batch        *Batch
-	Services     []Service
-	HelmReleases []HelmRelease
-	Secrets      []Secret
-	Resources    *ResourceList
-	Policies     []ResourceList
-	MetricsErr   error
+	Pods          []Pod
+	Deployments   []Deployment
+	Overview      *Overview
+	Batch         *Batch
+	Services      []Service
+	HelmReleases  []HelmRelease
+	Secrets       []Secret
+	Resources     *ResourceList
+	Policies      []ResourceList
+	Relationships *Relationships
+	MetricsErr    error
 	// Events are those of the target's Events object, newest first.
 	Events   []Event
 	EventsOf Ref
@@ -265,6 +269,14 @@ func namespaceScopes(namespaces []string) [][]string {
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	c, err := readCluster(ctx, r, env, t)
+	if err == nil {
+		c.readRelationships(ctx, r, env, t)
+	}
+	return c, err
+}
+
+func readCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
 	if t.Policies {
 		return readPolicies(ctx, r, env, t), nil
 	}
@@ -526,6 +538,15 @@ func (m meta) controller() Owner {
 	return Owner{}
 }
 
+func (m meta) controllerUID() string {
+	for _, owner := range m.Metadata.OwnerReferences {
+		if owner.Controller {
+			return owner.UID
+		}
+	}
+	return ""
+}
+
 // revision is the Deployment revision a ReplicaSet or Deployment carries.
 func (m meta) revision() int {
 	n, _ := strconv.Atoi(m.Metadata.Annotations["deployment.kubernetes.io/revision"])
@@ -535,7 +556,8 @@ func (m meta) revision() int {
 // template is a pod template's containers, as Deployments and ReplicaSets
 // have.
 type template struct {
-	Spec struct {
+	Metadata struct{ Labels map[string]string }
+	Spec     struct {
 		Containers []struct {
 			Image string `json:"image"`
 		} `json:"containers"`
@@ -589,7 +611,12 @@ type podContainer struct {
 	Image         string       `json:"image"`
 	Resources     resourceSpec `json:"resources"`
 	RestartPolicy string       `json:"restartPolicy"`
-	Ports         []struct {
+	Env           []struct {
+		Name      string
+		ValueFrom struct{ ConfigMapKeyRef, SecretKeyRef *objectName }
+	}
+	EnvFrom []struct{ ConfigMapRef, SecretRef *objectName }
+	Ports   []struct {
 		Name     string `json:"name"`
 		Number   int    `json:"containerPort"`
 		Protocol string `json:"protocol"`
@@ -602,11 +629,9 @@ type pod struct {
 		NodeName           string `json:"nodeName"`
 		ServiceAccountName string `json:"serviceAccountName"`
 		podResourceSpec
-		Volumes []struct {
-			Name                  string                     `json:"name"`
-			Projected             *json.RawMessage           `json:"projected"`
-			PersistentVolumeClaim struct{ ClaimName string } `json:"persistentVolumeClaim"`
-		} `json:"volumes"`
+		Volumes             []podVolume `json:"volumes"`
+		EphemeralContainers []podContainer
+		ImagePullSecrets    []objectName
 	} `json:"spec"`
 	Status struct {
 		Phase                 string            `json:"phase"`
@@ -707,7 +732,7 @@ func (c *Cluster) add(items []json.RawMessage) error {
 				Replicas: replicas, Pods: d.Status.Replicas, Ready: d.Status.ReadyReplicas,
 				Updated: d.Status.UpdatedReplicas, Available: d.Status.AvailableReplicas,
 				Paused: d.Spec.Paused, Strategy: d.Spec.Strategy.Type, Images: d.Spec.Template.images(),
-				Revision: m.revision(), Created: m.Metadata.CreationTimestamp,
+				Revision: m.revision(), Created: m.Metadata.CreationTimestamp, podLabels: d.Spec.Template.Metadata.Labels,
 			}
 			for _, cond := range d.Status.Conditions {
 				if cond.Type == "Progressing" && cond.Status == "False" {
@@ -745,12 +770,13 @@ func (p pod) pod(owner Owner) Pod {
 	}
 	for _, v := range p.Spec.Volumes {
 		// Every pod gets a projected kube-api-access volume: no news.
-		if v.Projected != nil && strings.HasPrefix(v.Name, "kube-api-access-") {
+		if v.apiAccess() {
 			continue
 		}
 		out.Volumes = append(out.Volumes, v.Name)
 	}
 	out.Claims = p.claims()
+	out.References, out.controllerUID = p.references(), p.controllerUID()
 	out.Containers = containerViews(p.Spec.Containers, p.Status.ContainerStatuses)
 	out.InitContainers = containerViews(p.Spec.InitContainers, p.Status.InitContainerStatuses)
 	for _, spec := range p.Spec.Containers {

@@ -31,6 +31,7 @@ const (
 	Endpoints              ResourceKind = "endpoints"
 	NetworkPolicies        ResourceKind = "networkpolicies.networking.k8s.io"
 	ConfigMaps             ResourceKind = "configmaps"
+	ServiceAccounts        ResourceKind = "serviceaccounts"
 	PersistentVolumeClaims ResourceKind = "persistentvolumeclaims"
 	PersistentVolumes      ResourceKind = "persistentvolumes"
 	StorageClasses         ResourceKind = "storageclasses.storage.k8s.io"
@@ -38,7 +39,7 @@ const (
 
 func (k ResourceKind) supported() bool {
 	switch k {
-	case Nodes, NamespaceKind, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses, Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
+	case Nodes, NamespaceKind, ServiceAccounts, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses, Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
 		return true
 	}
 	return false
@@ -122,6 +123,7 @@ type Resource struct {
 	Service, Strategy, PodOrder string
 	Images                      []string
 	Selector                    map[string]string
+	podLabels                   map[string]string
 	IngressClass                string
 	Addresses, TLSSecrets       []string
 	Routes                      []IngressRoute
@@ -184,11 +186,9 @@ type resourceObject struct {
 		ServiceName, PodManagementPolicy, IngressClassName string
 		UpdateStrategy                                     struct{ Type string }
 		Selector, PodSelector                              struct{ MatchLabels map[string]string }
-		Template                                           struct {
-			Spec struct{ Containers []struct{ Image string } }
-		}
-		DefaultBackend *ingressBackend
-		Rules          []struct {
+		Template                                           template
+		DefaultBackend                                     *ingressBackend
+		Rules                                              []struct {
 			Host string
 			HTTP struct {
 				Paths []struct {
@@ -279,6 +279,7 @@ func (o resourceObject) resource(kind ResourceKind) Resource {
 		}
 		r.Service, r.Strategy, r.PodOrder = o.Spec.ServiceName, o.Spec.UpdateStrategy.Type, o.Spec.PodManagementPolicy
 		r.Selector = o.Spec.Selector.MatchLabels
+		r.podLabels = o.Spec.Template.Metadata.Labels
 		for _, c := range o.Spec.Template.Spec.Containers {
 			r.Images = append(r.Images, c.Image)
 		}

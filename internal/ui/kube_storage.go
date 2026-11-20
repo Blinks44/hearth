@@ -2,6 +2,7 @@ package ui
 
 import (
 	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,6 +15,8 @@ import (
 type resourceLink struct {
 	kind, policyTab      int
 	namespace, name, uid string
+	direction            string
+	missing              bool
 }
 
 func (a *App) openResourceLink(link resourceLink) {
@@ -24,6 +27,13 @@ func (a *App) openResourceLink(link resourceLink) {
 	}
 	if link.kind == kindDeployments {
 		s.deployment, s.deploymentFilter, s.tab = "", 0, 0
+	}
+	if link.kind == kindServices {
+		s.service, s.serviceFilter = "", 0
+	}
+	if link.kind == kindSecrets {
+		s.secret.reset()
+		s.secret.filter = 0
 	}
 	s.resourceLink = link
 	s.other.reset()
@@ -39,10 +49,22 @@ func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
 	if link.name == "" || link.kind != s.kind {
 		return
 	}
+	matches := func(namespace, name, uid string) bool {
+		return namespace == link.namespace && name == link.name && (link.uid == "" || uid == link.uid)
+	}
 	if link.kind == kindPods {
 		for _, pod := range cl.Pods {
-			if pod.UID == link.uid && pod.Namespace == link.namespace {
+			if matches(pod.Namespace, pod.Name, pod.UID) {
 				s.pod, s.tab, s.revealWorkload = pod.UID, 0, pod.UID
+				if pod.Owner.Kind != "" {
+					group := podGroup{namespace: pod.Namespace, owner: pod.Owner}
+					if s.toggled == nil {
+						s.toggled = map[string]bool{}
+					}
+					s.toggled[group.key()] = !slices.ContainsFunc(cl.Pods, func(p kube.Pod) bool {
+						return p.Namespace == pod.Namespace && p.Owner == pod.Owner && podTrouble(p)
+					})
+				}
 				s.resourceLink = resourceLink{}
 				return
 			}
@@ -50,22 +72,44 @@ func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
 	}
 	if link.kind == kindDeployments {
 		for _, deployment := range cl.Deployments {
-			if deployment.Namespace == link.namespace && deployment.Name == link.name {
+			if matches(deployment.Namespace, deployment.Name, deployment.UID) {
 				s.deployment, s.tab, s.revealWorkload = deployment.UID, 0, deployment.UID
 				s.resourceLink = resourceLink{}
 				return
 			}
 		}
 	}
+	if link.kind == kindServices {
+		for _, service := range cl.Services {
+			if matches(service.Namespace, service.Name, service.UID) {
+				s.service, s.revealWorkload = service.UID, service.UID
+				s.resourceLink = resourceLink{}
+				return
+			}
+		}
+	}
+	if link.kind == kindSecrets {
+		for _, secret := range cl.Secrets {
+			if matches(secret.Namespace, secret.Name, secret.UID) {
+				s.secret.uid, s.secret.scope, s.revealWorkload = secret.UID, s.target, secret.UID
+				s.resourceLink = resourceLink{}
+				return
+			}
+		}
+	}
 	if list := s.activeResourceList(&cl); list != nil && (link.kind == kindPolicies || list.Kind == otherResourceKind(link.kind)) {
+		if list.Err != nil {
+			return
+		}
 		for _, item := range list.Items {
-			if item.Namespace == link.namespace && item.Name == link.name && (link.uid == "" || item.UID == link.uid) {
+			if matches(item.Namespace, item.Name, item.UID) {
 				s.other.uid, s.other.tab, s.revealWorkload = item.UID, 0, item.UID
 				s.resourceLink = resourceLink{}
 				return
 			}
 		}
 	}
+	s.resourceLink.missing = true
 }
 
 func claimKey(item kube.Resource) kube.ClaimKey {
@@ -208,13 +252,27 @@ func storageReadNote(c *ui.Context, text string) {
 
 func (a *App) resourceLinkRow(c *ui.Context, name, description, button string, link resourceLink) {
 	pal := Colors(c.Theme())
-	ui.Row(c).Padding(5, 16).Gap(8).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-		ui.Column(c).Gap(2).Grow(1).MinWidth(0).Children(func() {
-			clipped(c, name).Font(FontMono).FontSize(12)
-			if description != "" {
-				clipped(c, description).FontSize(11.5).TextColor(pal.TextFaint).Tooltip(description)
-			}
-		})
+	padding := float32(16)
+	if link.direction != "" {
+		padding = 12
+	}
+	ui.Row(c).Padding(5, padding).Gap(8).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		if link.direction != "" {
+			ui.Text(c, link.direction).Width(16).Shrink(0).FontSize(12).TextColor(pal.TextFaint)
+			ui.Row(c).Gap(10).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
+				clipped(c, name).Font(FontMono).FontSize(12).Shrink(1).MinWidth(0)
+				if description != "" {
+					clipped(c, description).FontSize(11.5).TextColor(pal.TextFaint).Shrink(1).MinWidth(0)
+				}
+			})
+		} else {
+			ui.Column(c).Gap(2).Grow(1).MinWidth(0).Children(func() {
+				clipped(c, name).Font(FontMono).FontSize(12)
+				if description != "" {
+					clipped(c, description).FontSize(11.5).TextColor(pal.TextFaint)
+				}
+			})
+		}
 		kubeActionButton(c, "arrow-right", button, podActionHeight).Tooltip(name).OnClick(func() { a.openResourceLink(link) })
 	})
 }

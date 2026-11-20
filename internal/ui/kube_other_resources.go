@@ -31,6 +31,8 @@ func otherResourceKind(kind int) kube.ResourceKind {
 		return kube.Endpoints
 	case kindNetworkPolicies:
 		return kube.NetworkPolicies
+	case kindServiceAccounts:
+		return kube.ServiceAccounts
 	case kindConfigMaps:
 		return kube.ConfigMaps
 	case kindPVCs:
@@ -256,6 +258,10 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(140)}
 		headers = headers[:2]
 	}
+	if s.kind == kindServiceAccounts {
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(66)}
+		headers = []string{locales.KubeClusterName(), locales.KubeClusterAge()}
+	}
 	if cl.Resources.Kind == kube.Nodes {
 		metricsNotice(c, cl.MetricsErr)
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116)}
@@ -285,8 +291,10 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 						clipped(c, r.Namespace).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 				})
-				label, bg, fg := otherResourceStatus(c, r, claims)
-				workloadStatus(c, label, bg, fg)
+				if s.kind != kindServiceAccounts {
+					label, bg, fg := otherResourceStatus(c, r, claims)
+					workloadStatus(c, label, bg, fg)
+				}
 				if r.Node == nil && s.kind != kindPolicies && s.kind != kindNamespaces {
 					created := otherResourceAge(c, r)
 					clipped(c, created).FontSize(11.5).TextColor(pal.TextFaint)
@@ -365,6 +373,8 @@ func otherResourceStatus(c *ui.Context, item kube.Resource, claims *kube.ClaimDe
 			return locales.KubeResourceNoAddress(), pal.WarningSoft, pal.WarningText
 		}
 		return item.Addresses[0], pal.SuccessSoft, pal.SuccessText
+	case kube.ServiceAccounts:
+		return "", pal.Muted, c.Theme().TextMuted
 	case kube.NetworkPolicies:
 		return strings.Join(item.PolicyTypes, " · "), pal.Muted, c.Theme().TextMuted
 	}
@@ -393,7 +403,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				if s.kind == kindPolicies || s.kind == kindNamespaces {
 					width = 144
 				}
-				aiTag(c, label, bg, fg).MaxWidth(width).Tooltip(label)
+				if label != "" {
+					aiTag(c, label, bg, fg).MaxWidth(width).Tooltip(label)
+				}
 				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(v.reset)
 			})
 			meta := []string{kind.label}
@@ -489,6 +501,8 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 				a.storageOverview(c, item, cl.Resources.Claims, events)
 			default:
 				resourceOverview(c, item)
+				d := relationshipsFor(cl, item.Namespace, item.UID)
+				a.resourceRelationships(c, d.Links, d.Errors)
 			}
 		}
 	})
@@ -536,6 +550,8 @@ func resourceOverview(c *ui.Context, item kube.Resource) {
 		add(locales.KubeClusterStatus(), strings.Join(item.PolicyTypes, " · "))
 		add(locales.KubeResourceIngressRules(), strconv.Itoa(item.IngressRules))
 		add(locales.KubeResourceEgressRules(), strconv.Itoa(item.EgressRules))
+	case kube.ServiceAccounts:
+		add("UID", item.UID)
 	case kube.ConfigMaps:
 		add(locales.KubeSecretKeys(), strconv.Itoa(len(item.Keys)))
 		if item.Immutable {

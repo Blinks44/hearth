@@ -36,6 +36,20 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeRelationships says "Relationships"
+// in the language the app shows.
+//
+// Heading for links to related Kubernetes resources.
+func KubeRelationships() string { return In(i18n.Locale()).KubeRelationships() }
+
+// KubeRelationships says "Relationships"
+// in the language of msgs.
+//
+// Heading for links to related Kubernetes resources.
+func (msgs Messages) KubeRelationships() string {
+	return Catalog.Format(msgs.locale, "kubeRelationships", nil)
+}
+
 // KubeApplyTitle says "Apply manifests · {name}"
 // in the language the app shows.
 //

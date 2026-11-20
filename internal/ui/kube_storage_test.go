@@ -43,7 +43,8 @@ func TestKubeStorageNavigation(t *testing.T) {
 				tt.Frame()
 				tt.Advance(time.Second)
 			}
-			pod := kube.Pod{Namespace: "default", Name: "postgres-0", UID: "pod", Phase: "Pending", Claims: []string{"data-postgres-0"}, Created: now}
+			pod := kube.Pod{Namespace: "default", Name: "postgres-0", UID: "pod", Phase: "Pending", Created: now,
+				References: []kube.Relationship{{Kind: "PersistentVolumeClaim", Namespace: "default", Name: "data-postgres-0"}}}
 			show(kube.Cluster{Pods: []kube.Pod{pod}})
 			click(pod.Name)
 			click(openClaim)
