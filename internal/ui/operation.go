@@ -185,10 +185,10 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 						a.projectPreparationItems(c, op.project, false)
 					}
 					a.operationPlan(c, op.plan)
-					if change := op.kubeChange(); change != nil && change.ConfirmName() != "" {
+					if name := op.confirmName(); name != "" {
 						ui.Column(c).Padding(4, 20, 14, 20).Gap(6).Children(func() {
-							ui.Text(c, locales.KubeResourceConfirm(change.ConfirmName())).FontSize(12).Wrap()
-							ui.TextInput(c.Key("op-target-name"), &op.confirm).Label(locales.KubeResourceConfirm(change.ConfirmName()))
+							ui.Text(c, locales.KubeResourceConfirm(name)).FontSize(12).Wrap()
+							ui.TextInput(c.Key("op-target-name"), &op.confirm).Label(locales.KubeResourceConfirm(name))
 						})
 					}
 					return
@@ -672,7 +672,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 	}
 	hide := func() { op.open = false }
 	switch {
-	case !op.started && op.plan.DockerAction == ops.DockerImageRemove && len(op.plan.Steps) == 0:
+	case !op.started && op.blockedDockerRemoval():
 		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case !op.started:
 		ui.Button(c.Key("op-cancel"), locales.Cancel()).OnClick(hide)
@@ -680,13 +680,9 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		if action == "" {
 			action = locales.OpRun()
 		}
-		confirm := ""
-		if change := op.kubeChange(); change != nil {
-			confirm = change.ConfirmName()
-		}
 		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || !op.canConfirm()).
 			OnClick(a.startOperation)
-		if confirm != "" || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
+		if op.confirmName() != "" || op.plan.DockerAction == ops.DockerResourceRemove || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
 			button.Background(c.Theme().Danger)
 		}
 	case !op.state.Phase.Over():
@@ -698,7 +694,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
 		}
 		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).OnClick(hide)
-	case op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers():
+	case op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers() || op.plan.DockerAction == ops.DockerResourceRemove:
 		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case op.state.Phase == ops.Stopped:
 		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)
@@ -715,16 +711,23 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 	}
 }
 
+func (op *operation) blockedDockerRemoval() bool {
+	return len(op.plan.Steps) == 0 && (op.plan.DockerAction == ops.DockerImageRemove || op.plan.DockerAction == ops.DockerResourceRemove)
+}
+
+func (op *operation) confirmName() string {
+	if change := op.kubeChange(); change != nil {
+		return change.ConfirmName()
+	}
+	return op.plan.ConfirmName
+}
+
 func (op *operation) canConfirm() bool {
-	if op.plan.DockerAction == ops.DockerImageRemove && len(op.plan.Steps) == 0 {
+	if name := op.confirmName(); op.blockedDockerRemoval() || name != "" && op.confirm != name {
 		return false
 	}
 	change := op.kubeChange()
-	if change == nil {
-		return true
-	}
-	return (change.Manifests == nil || change.Manifests.Changes() > 0) &&
-		(change.ConfirmName() == "" || op.confirm == change.ConfirmName())
+	return change == nil || change.Manifests == nil || change.Manifests.Changes() > 0
 }
 
 // operationToast is the operation running hidden: its step and progress,

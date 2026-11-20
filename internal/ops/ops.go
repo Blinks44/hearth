@@ -116,6 +116,8 @@ type Plan struct {
 	// Action labels the button that runs it, as "Accept the terms and
 	// install"; empty is a plain "Run".
 	Action string
+	// ConfirmName is the exact resource name required before a destructive step.
+	ConfirmName string
 	// Changes says what will be different after, one line each, shown
 	// once the plan ran.
 	Changes []string

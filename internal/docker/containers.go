@@ -39,6 +39,8 @@ type Container struct {
 		Health        *struct{ Status string }
 	}
 	RestartCount int
+	Mounts       []struct{ Type, Name string }
+	Networks     map[string]struct{ NetworkID string }
 	Ports        string
 	CPU, Memory  string
 }
@@ -81,7 +83,7 @@ var containerID = regexp.MustCompile(`^[0-9a-f]{64}$`)
 // ContainerID accepts only full, immutable IDs so names cannot retarget a plan.
 func ContainerID(id string) bool { return containerID.MatchString(id) }
 
-const inspectContainer = `{"ID":{{json .Id}},"Name":{{json .Name}},"Image":{{json .Config.Image}},"ImageID":{{json (index . "Image")}},"Kind":{{json (index .Config.Labels "io.x-k8s.kind.cluster")}},"Compose":{"Name":{{json (index .Config.Labels "com.docker.compose.project")}},"Dir":{{json (index .Config.Labels "com.docker.compose.project.working_dir")}},"Files":{{json (index .Config.Labels "com.docker.compose.project.config_files")}}},"State":{"Status":{{json .State.Status}},"Error":{{json .State.Error}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json (index .State "OOMKilled")}},"StartedAt":{{json .State.StartedAt}},"Health":{{if $health := index .State "Health"}}{"Status":{{json (index $health "Status")}}}{{else}}null{{end}}},"RestartCount":{{json (index . "RestartCount")}}}`
+const inspectContainer = `{"ID":{{json .Id}},"Name":{{json .Name}},"Image":{{json .Config.Image}},"ImageID":{{json (index . "Image")}},"Kind":{{json (index .Config.Labels "io.x-k8s.kind.cluster")}},"Compose":{"Name":{{json (index .Config.Labels "com.docker.compose.project")}},"Dir":{{json (index .Config.Labels "com.docker.compose.project.working_dir")}},"Files":{{json (index .Config.Labels "com.docker.compose.project.config_files")}}},"State":{"Status":{{json .State.Status}},"Error":{{json .State.Error}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json (index .State "OOMKilled")}},"StartedAt":{{json .State.StartedAt}},"Health":{{if $health := index .State "Health"}}{"Status":{{json (index $health "Status")}}}{{else}}null{{end}}},"RestartCount":{{json (index . "RestartCount")}},"Mounts":{{json (index . "Mounts")}},"Networks":{{with index . "NetworkSettings"}}{{json (index . "Networks")}}{{else}}null{{end}}}`
 
 // InspectContainers reads only the fields needed by the list and plans.
 func InspectContainers(ctx context.Context, r run.Runner, env sysenv.Env, t Target, ids []string) ([]Container, error) {

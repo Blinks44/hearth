@@ -36,6 +36,248 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// DockerVolumesReading says "Reading volumes…"
+// in the language the app shows.
+func DockerVolumesReading() string { return In(i18n.Locale()).DockerVolumesReading() }
+
+// DockerVolumesReading says "Reading volumes…"
+// in the language of msgs.
+func (msgs Messages) DockerVolumesReading() string {
+	return Catalog.Format(msgs.locale, "dockerVolumesReading", nil)
+}
+
+// DockerVolumesEmpty says "No matching volumes."
+// in the language the app shows.
+func DockerVolumesEmpty() string { return In(i18n.Locale()).DockerVolumesEmpty() }
+
+// DockerVolumesEmpty says "No matching volumes."
+// in the language of msgs.
+func (msgs Messages) DockerVolumesEmpty() string {
+	return Catalog.Format(msgs.locale, "dockerVolumesEmpty", nil)
+}
+
+// DockerVolumeSearch says "Name or project"
+// in the language the app shows.
+func DockerVolumeSearch() string { return In(i18n.Locale()).DockerVolumeSearch() }
+
+// DockerVolumeSearch says "Name or project"
+// in the language of msgs.
+func (msgs Messages) DockerVolumeSearch() string {
+	return Catalog.Format(msgs.locale, "dockerVolumeSearch", nil)
+}
+
+// DockerVolumesLocal says "Local volumes"
+// in the language the app shows.
+func DockerVolumesLocal() string { return In(i18n.Locale()).DockerVolumesLocal() }
+
+// DockerVolumesLocal says "Local volumes"
+// in the language of msgs.
+func (msgs Messages) DockerVolumesLocal() string {
+	return Catalog.Format(msgs.locale, "dockerVolumesLocal", nil)
+}
+
+// DockerVolumesHint says "Container data · removed individually"
+// in the language the app shows.
+func DockerVolumesHint() string { return In(i18n.Locale()).DockerVolumesHint() }
+
+// DockerVolumesHint says "Container data · removed individually"
+// in the language of msgs.
+func (msgs Messages) DockerVolumesHint() string {
+	return Catalog.Format(msgs.locale, "dockerVolumesHint", nil)
+}
+
+// DockerVolumeSizeUnavailable says "Could not read volume sizes. {error}"
+// in the language the app shows.
+func DockerVolumeSizeUnavailable(error string) string {
+	return In(i18n.Locale()).DockerVolumeSizeUnavailable(error)
+}
+
+// DockerVolumeSizeUnavailable says "Could not read volume sizes. {error}"
+// in the language of msgs.
+func (msgs Messages) DockerVolumeSizeUnavailable(error string) string {
+	return Catalog.Format(msgs.locale, "dockerVolumeSizeUnavailable", map[string]any{"error": error})
+}
+
+// DockerNetworksReading says "Reading networks…"
+// in the language the app shows.
+func DockerNetworksReading() string { return In(i18n.Locale()).DockerNetworksReading() }
+
+// DockerNetworksReading says "Reading networks…"
+// in the language of msgs.
+func (msgs Messages) DockerNetworksReading() string {
+	return Catalog.Format(msgs.locale, "dockerNetworksReading", nil)
+}
+
+// DockerNetworksEmpty says "No matching networks."
+// in the language the app shows.
+func DockerNetworksEmpty() string { return In(i18n.Locale()).DockerNetworksEmpty() }
+
+// DockerNetworksEmpty says "No matching networks."
+// in the language of msgs.
+func (msgs Messages) DockerNetworksEmpty() string {
+	return Catalog.Format(msgs.locale, "dockerNetworksEmpty", nil)
+}
+
+// DockerNetworkSearch says "Name, project or subnet"
+// in the language the app shows.
+func DockerNetworkSearch() string { return In(i18n.Locale()).DockerNetworkSearch() }
+
+// DockerNetworkSearch says "Name, project or subnet"
+// in the language of msgs.
+func (msgs Messages) DockerNetworkSearch() string {
+	return Catalog.Format(msgs.locale, "dockerNetworkSearch", nil)
+}
+
+// DockerNetworksUnused says "No containers"
+// in the language the app shows.
+func DockerNetworksUnused() string { return In(i18n.Locale()).DockerNetworksUnused() }
+
+// DockerNetworksUnused says "No containers"
+// in the language of msgs.
+func (msgs Messages) DockerNetworksUnused() string {
+	return Catalog.Format(msgs.locale, "dockerNetworksUnused", nil)
+}
+
+// DockerNetworkDriver says "Driver"
+// in the language the app shows.
+func DockerNetworkDriver() string { return In(i18n.Locale()).DockerNetworkDriver() }
+
+// DockerNetworkDriver says "Driver"
+// in the language of msgs.
+func (msgs Messages) DockerNetworkDriver() string {
+	return Catalog.Format(msgs.locale, "dockerNetworkDriver", nil)
+}
+
+// DockerNetworksHint says "bridge, host and none are system networks"
+// in the language the app shows.
+func DockerNetworksHint() string { return In(i18n.Locale()).DockerNetworksHint() }
+
+// DockerNetworksHint says "bridge, host and none are system networks"
+// in the language of msgs.
+func (msgs Messages) DockerNetworksHint() string {
+	return Catalog.Format(msgs.locale, "dockerNetworksHint", nil)
+}
+
+// DockerNetworkSystem says "System"
+// in the language the app shows.
+func DockerNetworkSystem() string { return In(i18n.Locale()).DockerNetworkSystem() }
+
+// DockerNetworkSystem says "System"
+// in the language of msgs.
+func (msgs Messages) DockerNetworkSystem() string {
+	return Catalog.Format(msgs.locale, "dockerNetworkSystem", nil)
+}
+
+// DockerVolumeUnusedHint says "No container uses this volume. It may still contain data."
+// in the language the app shows.
+func DockerVolumeUnusedHint() string { return In(i18n.Locale()).DockerVolumeUnusedHint() }
+
+// DockerVolumeUnusedHint says "No container uses this volume. It may still contain data."
+// in the language of msgs.
+func (msgs Messages) DockerVolumeUnusedHint() string {
+	return Catalog.Format(msgs.locale, "dockerVolumeUnusedHint", nil)
+}
+
+// DockerNetworkUnusedHint says "No containers are connected to this network."
+// in the language the app shows.
+func DockerNetworkUnusedHint() string { return In(i18n.Locale()).DockerNetworkUnusedHint() }
+
+// DockerNetworkUnusedHint says "No containers are connected to this network."
+// in the language of msgs.
+func (msgs Messages) DockerNetworkUnusedHint() string {
+	return Catalog.Format(msgs.locale, "dockerNetworkUnusedHint", nil)
+}
+
+// DockerResourceChanged says "The Docker resource has changed. Refresh the list and review it again."
+// in the language the app shows.
+func DockerResourceChanged() string { return In(i18n.Locale()).DockerResourceChanged() }
+
+// DockerResourceChanged says "The Docker resource has changed. Refresh the list and review it again."
+// in the language of msgs.
+func (msgs Messages) DockerResourceChanged() string {
+	return Catalog.Format(msgs.locale, "dockerResourceChanged", nil)
+}
+
+// DockerNetworkProtected says "Docker protects this system network."
+// in the language the app shows.
+func DockerNetworkProtected() string { return In(i18n.Locale()).DockerNetworkProtected() }
+
+// DockerNetworkProtected says "Docker protects this system network."
+// in the language of msgs.
+func (msgs Messages) DockerNetworkProtected() string {
+	return Catalog.Format(msgs.locale, "dockerNetworkProtected", nil)
+}
+
+// DockerResourceInUse says "Used by containers: {names}. Stopped containers also keep their references."
+// in the language the app shows.
+func DockerResourceInUse(names string) string { return In(i18n.Locale()).DockerResourceInUse(names) }
+
+// DockerResourceInUse says "Used by containers: {names}. Stopped containers also keep their references."
+// in the language of msgs.
+func (msgs Messages) DockerResourceInUse(names string) string {
+	return Catalog.Format(msgs.locale, "dockerResourceInUse", map[string]any{"names": names})
+}
+
+// DockerNetworkRemoveTitle says "Remove network {name}?"
+// in the language the app shows.
+func DockerNetworkRemoveTitle(name string) string {
+	return In(i18n.Locale()).DockerNetworkRemoveTitle(name)
+}
+
+// DockerNetworkRemoveTitle says "Remove network {name}?"
+// in the language of msgs.
+func (msgs Messages) DockerNetworkRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "dockerNetworkRemoveTitle", map[string]any{"name": name})
+}
+
+// DockerNetworkRemoveWhy says "Docker will remove the selected network from {context} if it has no connected containers."
+// in the language the app shows.
+func DockerNetworkRemoveWhy(context string) string {
+	return In(i18n.Locale()).DockerNetworkRemoveWhy(context)
+}
+
+// DockerNetworkRemoveWhy says "Docker will remove the selected network from {context} if it has no connected containers."
+// in the language of msgs.
+func (msgs Messages) DockerNetworkRemoveWhy(context string) string {
+	return Catalog.Format(msgs.locale, "dockerNetworkRemoveWhy", map[string]any{"context": context})
+}
+
+// DockerVolumeRemoveTitle says "Remove volume {name}?"
+// in the language the app shows.
+func DockerVolumeRemoveTitle(name string) string {
+	return In(i18n.Locale()).DockerVolumeRemoveTitle(name)
+}
+
+// DockerVolumeRemoveTitle says "Remove volume {name}?"
+// in the language of msgs.
+func (msgs Messages) DockerVolumeRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "dockerVolumeRemoveTitle", map[string]any{"name": name})
+}
+
+// DockerVolumeRemoveWhy says "Docker will permanently delete the data in this volume on {context}. Docker refuses if a container uses it."
+// in the language the app shows.
+func DockerVolumeRemoveWhy(context string) string {
+	return In(i18n.Locale()).DockerVolumeRemoveWhy(context)
+}
+
+// DockerVolumeRemoveWhy says "Docker will permanently delete the data in this volume on {context}. Docker refuses if a container uses it."
+// in the language of msgs.
+func (msgs Messages) DockerVolumeRemoveWhy(context string) string {
+	return Catalog.Format(msgs.locale, "dockerVolumeRemoveWhy", map[string]any{"context": context})
+}
+
+// DockerResourceProject says "Compose project: {project}"
+// in the language the app shows.
+func DockerResourceProject(project string) string {
+	return In(i18n.Locale()).DockerResourceProject(project)
+}
+
+// DockerResourceProject says "Compose project: {project}"
+// in the language of msgs.
+func (msgs Messages) DockerResourceProject(project string) string {
+	return Catalog.Format(msgs.locale, "dockerResourceProject", map[string]any{"project": project})
+}
+
 // DockerImagesReading says "Reading images…"
 // in the language the app shows.
 func DockerImagesReading() string { return In(i18n.Locale()).DockerImagesReading() }

@@ -190,6 +190,7 @@ type App struct {
 	// engine view.
 	WatchDocker           func(t docker.Target, got func(docker.Engine, error)) (stop func())
 	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
+	WatchDockerResources  func(docker.Target, docker.ResourceKind, func([]docker.Resource, error, error)) (stop func())
 	WatchDockerImages     func(t docker.Target, got func([]docker.Image, error)) (stop func())
 	ReadDockerDetail      func(docker.Target, string, func(docker.ContainerDetail, error)) (stop func())
 	ReadDockerEnv         func(docker.Target, string, string, func([]byte, error)) (stop func())

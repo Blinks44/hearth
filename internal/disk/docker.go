@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -88,7 +88,7 @@ func parseUnusedImages(data []byte) (int64, error) {
 		if img.Containers != "0" {
 			continue
 		}
-		size, err := parseDockerSize(img.UniqueSize)
+		size, err := docker.ParseSize(img.UniqueSize)
 		if err != nil {
 			return 0, fmt.Errorf("docker system df --verbose: %w", err)
 		}
@@ -108,33 +108,14 @@ func parseDockerDF(data []byte) ([]inventory.DockerUsage, error) {
 		var errs [4]error
 		u.Count, errs[0] = strconv.Atoi(row.TotalCount)
 		u.Active, errs[1] = strconv.Atoi(row.Active)
-		u.Bytes, errs[2] = parseDockerSize(row.Size)
+		u.Bytes, errs[2] = docker.ParseSize(row.Size)
 		// Reclaimable comes with a share: "1.664GB (14%)".
 		reclaimable, _, _ := strings.Cut(row.Reclaimable, " ")
-		u.Reclaimable, errs[3] = parseDockerSize(reclaimable)
+		u.Reclaimable, errs[3] = docker.ParseSize(reclaimable)
 		if err := errors.Join(errs[:]...); err != nil {
 			return nil, fmt.Errorf("docker system df %s: %w", row.Type, err)
 		}
 		out = append(out, u)
 	}
 	return out, nil
-}
-
-// parseDockerSize reads a size as Docker writes it, in decimal units:
-// "0B", "769.4MB", "11.66GB".
-func parseDockerSize(s string) (int64, error) {
-	units := []struct {
-		suffix string
-		scale  float64
-	}{{"TB", 1e12}, {"GB", 1e9}, {"MB", 1e6}, {"kB", 1e3}, {"B", 1}}
-	for _, u := range units {
-		if num, ok := strings.CutSuffix(s, u.suffix); ok {
-			f, err := strconv.ParseFloat(num, 64)
-			if err != nil {
-				return 0, fmt.Errorf("size %q: %w", s, err)
-			}
-			return int64(math.Round(f * u.scale)), nil
-		}
-	}
-	return 0, fmt.Errorf("size %q: unknown unit", s)
 }

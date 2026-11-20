@@ -57,6 +57,10 @@ func TestDockerEngineOpenAndBack(t *testing.T) {
 	a.Snapshot = colimaSnapshot()
 	var w engineWatches
 	a.WatchDocker = w.watch
+	a.WatchDockerResources = func(_ docker.Target, _ docker.ResourceKind, got func([]docker.Resource, error, error)) func() {
+		got(nil, nil, nil)
+		return func() {}
+	}
 	tt := openDocker(a)
 	if !tt.HasText("Open colima") {
 		t.Fatalf("no header button: %q", tt.Texts())
@@ -95,7 +99,7 @@ func TestDockerEngineOpenAndBack(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if a.engine.view != dockerNetworks || !tt.HasText("This view arrives in a coming update of the Docker section.") {
+	if a.engine.view != dockerNetworks || !tt.HasText("No matching networks.") {
 		t.Fatalf("view %d: %q", a.engine.view, tt.Texts())
 	}
 	if len(w.running()) != 1 {

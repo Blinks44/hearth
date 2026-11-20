@@ -198,6 +198,14 @@ func main() {
 			return cancel
 		}
 
+		a.WatchDockerResources = func(t docker.Target, kind docker.ResourceKind, got func([]docker.Resource, error, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go docker.WatchResources(ctx, run.Exec{}, env, t, kind, func(items []docker.Resource, err, sizeErr error) {
+				win.Update(func() { got(items, err, sizeErr) })
+			})
+			return cancel
+		}
 		a.WatchDockerImages = func(t docker.Target, got func([]docker.Image, error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())

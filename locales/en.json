@@ -1,4 +1,76 @@
 {
+  "dockerVolumesReading": "Reading volumes…",
+  "dockerVolumesEmpty": "No matching volumes.",
+  "dockerVolumeSearch": "Name or project",
+  "dockerVolumesLocal": "Local volumes",
+  "dockerVolumesHint": "Container data · removed individually",
+  "dockerVolumeSizeUnavailable": "Could not read volume sizes. {error}",
+  "@dockerVolumeSizeUnavailable": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerNetworksReading": "Reading networks…",
+  "dockerNetworksEmpty": "No matching networks.",
+  "dockerNetworkSearch": "Name, project or subnet",
+  "dockerNetworksUnused": "No containers",
+  "dockerNetworkDriver": "Driver",
+  "dockerNetworksHint": "bridge, host and none are system networks",
+  "dockerNetworkSystem": "System",
+  "dockerVolumeUnusedHint": "No container uses this volume. It may still contain data.",
+  "dockerNetworkUnusedHint": "No containers are connected to this network.",
+  "dockerResourceChanged": "The Docker resource has changed. Refresh the list and review it again.",
+  "dockerNetworkProtected": "Docker protects this system network.",
+  "dockerResourceInUse": "Used by containers: {names}. Stopped containers also keep their references.",
+  "@dockerResourceInUse": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerNetworkRemoveTitle": "Remove network {name}?",
+  "@dockerNetworkRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerNetworkRemoveWhy": "Docker will remove the selected network from {context} if it has no connected containers.",
+  "@dockerNetworkRemoveWhy": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerVolumeRemoveTitle": "Remove volume {name}?",
+  "@dockerVolumeRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerVolumeRemoveWhy": "Docker will permanently delete the data in this volume on {context}. Docker refuses if a container uses it.",
+  "@dockerVolumeRemoveWhy": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerResourceProject": "Compose project: {project}",
+  "@dockerResourceProject": {
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
   "dockerImagesReading": "Reading images…",
   "dockerImagesEmpty": "No matching images.",
   "dockerImageDownload": "Pull image",
