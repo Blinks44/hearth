@@ -2,8 +2,10 @@ package detect
 
 import (
 	"path/filepath"
+	"slices"
 	"testing"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
@@ -19,6 +21,24 @@ func TestDockerLocationsLinux(t *testing.T) {
 	}
 	if paths[0] != "/usr/libexec/kiri/docker" {
 		t.Fatalf("no Kiri CLI: %v", paths)
+	}
+}
+
+func TestDockerLocationsLinuxKeepsInstalledColima(t *testing.T) {
+	home := root(t)
+	bin := filepath.Join(home, "bin")
+	fakeExe(t, filepath.Join(bin, "brew"))
+	env := sysenv.Env{"PATH=" + bin}
+	engines, _ := dockerLocations(env, home)
+	if engines[0].Name != "Docker Engine" || slices.ContainsFunc(engines, func(e inventory.DockerEngine) bool {
+		return e.Name == "Colima"
+	}) {
+		t.Fatalf("installation choices with Homebrew: %+v", engines)
+	}
+	colima := fakeExe(t, filepath.Join(bin, "colima"))
+	engines, _ = dockerLocations(env, home)
+	if engines[0].Name != "Docker Engine" || !slices.Contains(engines, inventory.DockerEngine{Name: "Colima", Path: colima}) {
+		t.Fatalf("installed engines: %+v", engines)
 	}
 }
 

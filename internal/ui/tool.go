@@ -438,16 +438,34 @@ func listCard(c *ui.Context, title, aside string, rows func()) {
 // listRow is a row of a list card: a name, mono for a version, with a
 // caption under it, and what end builds on the right.
 func listRow(c *ui.Context, name string, mono bool, caption string, end func()) {
+	drawListRow(c, name, mono, caption, false, end)
+}
+
+func listRowWrapped(c *ui.Context, name, caption string, end func()) {
+	drawListRow(c, name, false, caption, true, end)
+}
+
+func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap bool, end func()) {
 	pal := Colors(c.Theme())
 	ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			n := ui.Text(c, name).FontSize(13).SingleLine()
+			n := ui.Text(c, name).FontSize(13)
+			if wrap {
+				n.Wrap()
+			} else {
+				n.SingleLine()
+			}
 			if mono {
 				n.Font(FontMono)
 			}
 			if caption != "" {
-				ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				e := ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint)
+				if wrap {
+					e.Wrap()
+				} else {
+					e.SingleLine()
+				}
 			}
 		})
 		end()

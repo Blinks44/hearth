@@ -343,6 +343,9 @@ type App struct {
 	addOpen        bool
 	licensesOpen   bool // the licenses dialog from Settings
 
+	dockerTabsReady bool
+	colimaResize    colimaResizeForm
+
 	// The skills and MCP pages: the agent filtered by, "" for all; the
 	// scope, as scopeSegments; the search; and the key of the one shown.
 	skillAgent, mcpAgent   string
@@ -540,6 +543,7 @@ func (a *App) View(c *ui.Context) {
 	a.addDialog(c)
 	a.searchDialog(c)
 	a.preparationView(c)
+	a.colimaResizeDialog(c)
 	a.operationView(c)
 	a.globalInstructionsDialog(c)
 }

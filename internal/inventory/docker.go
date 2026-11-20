@@ -10,6 +10,7 @@ type DockerState struct {
 	Err       string
 	Engines   []DockerEngine
 	Plugins   []Package
+	Colima    *ColimaState `json:",omitempty"`
 	// Databases are the database containers of the selected engine, once
 	// it answered; DatabaseErr reports that they could not all be listed.
 	Databases   []Database

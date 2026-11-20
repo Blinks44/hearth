@@ -36,6 +36,560 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// ColimaBrewRequired says "Colima is installed through Homebrew."
+// in the language the app shows.
+func ColimaBrewRequired() string { return In(i18n.Locale()).ColimaBrewRequired() }
+
+// ColimaBrewRequired says "Colima is installed through Homebrew."
+// in the language of msgs.
+func (msgs Messages) ColimaBrewRequired() string {
+	return Catalog.Format(msgs.locale, "colimaBrewRequired", nil)
+}
+
+// ColimaConfigError says "Could not read the Docker CLI plugin settings in config.json."
+// in the language the app shows.
+func ColimaConfigError() string { return In(i18n.Locale()).ColimaConfigError() }
+
+// ColimaConfigError says "Could not read the Docker CLI plugin settings in config.json."
+// in the language of msgs.
+func (msgs Messages) ColimaConfigError() string {
+	return Catalog.Format(msgs.locale, "colimaConfigError", nil)
+}
+
+// ColimaInstall says "Install Colima…"
+// in the language the app shows.
+func ColimaInstall() string { return In(i18n.Locale()).ColimaInstall() }
+
+// ColimaInstall says "Install Colima…"
+// in the language of msgs.
+func (msgs Messages) ColimaInstall() string {
+	return Catalog.Format(msgs.locale, "colimaInstall", nil)
+}
+
+// ColimaInstallWhy says "Homebrew installs Colima and the Docker CLI plugins. Hearth registers the plugin folder and starts the default Colima…"
+// in the language the app shows.
+func ColimaInstallWhy() string { return In(i18n.Locale()).ColimaInstallWhy() }
+
+// ColimaInstallWhy says "Homebrew installs Colima and the Docker CLI plugins. Hearth registers the plugin folder and starts the default Colima…"
+// in the language of msgs.
+func (msgs Messages) ColimaInstallWhy() string {
+	return Catalog.Format(msgs.locale, "colimaInstallWhy", nil)
+}
+
+// ColimaMigrate says "How to switch…"
+// in the language the app shows.
+func ColimaMigrate() string { return In(i18n.Locale()).ColimaMigrate() }
+
+// ColimaMigrate says "How to switch…"
+// in the language of msgs.
+func (msgs Messages) ColimaMigrate() string {
+	return Catalog.Format(msgs.locale, "colimaMigrate", nil)
+}
+
+// ColimaSeparateData says "Colima has its own storage"
+// in the language the app shows.
+func ColimaSeparateData() string { return In(i18n.Locale()).ColimaSeparateData() }
+
+// ColimaSeparateData says "Colima has its own storage"
+// in the language of msgs.
+func (msgs Messages) ColimaSeparateData() string {
+	return Catalog.Format(msgs.locale, "colimaSeparateData", nil)
+}
+
+// ColimaSeparateDataHint says "Containers, images and volumes stay in the original engine."
+// in the language the app shows.
+func ColimaSeparateDataHint() string { return In(i18n.Locale()).ColimaSeparateDataHint() }
+
+// ColimaSeparateDataHint says "Containers, images and volumes stay in the original engine."
+// in the language of msgs.
+func (msgs Messages) ColimaSeparateDataHint() string {
+	return Catalog.Format(msgs.locale, "colimaSeparateDataHint", nil)
+}
+
+// ColimaSelectContext says "Colima selects its Docker context on first start. Environment overrides still take precedence."
+// in the language the app shows.
+func ColimaSelectContext() string { return In(i18n.Locale()).ColimaSelectContext() }
+
+// ColimaSelectContext says "Colima selects its Docker context on first start. Environment overrides still take precedence."
+// in the language of msgs.
+func (msgs Messages) ColimaSelectContext() string {
+	return Catalog.Format(msgs.locale, "colimaSelectContext", nil)
+}
+
+// ColimaChooseContext says "Open the Colima context in Hearth. Select it separately if you want to use it in the terminal."
+// in the language the app shows.
+func ColimaChooseContext() string { return In(i18n.Locale()).ColimaChooseContext() }
+
+// ColimaChooseContext says "Open the Colima context in Hearth. Select it separately if you want to use it in the terminal."
+// in the language of msgs.
+func (msgs Messages) ColimaChooseContext() string {
+	return Catalog.Format(msgs.locale, "colimaChooseContext", nil)
+}
+
+// ColimaUnavailable says "Could not verify the Colima profile."
+// in the language the app shows.
+func ColimaUnavailable() string { return In(i18n.Locale()).ColimaUnavailable() }
+
+// ColimaUnavailable says "Could not verify the Colima profile."
+// in the language of msgs.
+func (msgs Messages) ColimaUnavailable() string {
+	return Catalog.Format(msgs.locale, "colimaUnavailable", nil)
+}
+
+// ColimaNotStarted says "Colima has not been started"
+// in the language the app shows.
+func ColimaNotStarted() string { return In(i18n.Locale()).ColimaNotStarted() }
+
+// ColimaNotStarted says "Colima has not been started"
+// in the language of msgs.
+func (msgs Messages) ColimaNotStarted() string {
+	return Catalog.Format(msgs.locale, "colimaNotStarted", nil)
+}
+
+// ColimaRunning says "Colima is running"
+// in the language the app shows.
+func ColimaRunning() string { return In(i18n.Locale()).ColimaRunning() }
+
+// ColimaRunning says "Colima is running"
+// in the language of msgs.
+func (msgs Messages) ColimaRunning() string {
+	return Catalog.Format(msgs.locale, "colimaRunning", nil)
+}
+
+// ColimaStopped says "Colima is stopped"
+// in the language the app shows.
+func ColimaStopped() string { return In(i18n.Locale()).ColimaStopped() }
+
+// ColimaStopped says "Colima is stopped"
+// in the language of msgs.
+func (msgs Messages) ColimaStopped() string {
+	return Catalog.Format(msgs.locale, "colimaStopped", nil)
+}
+
+// ColimaStart says "Start Colima"
+// in the language the app shows.
+func ColimaStart() string { return In(i18n.Locale()).ColimaStart() }
+
+// ColimaStart says "Start Colima"
+// in the language of msgs.
+func (msgs Messages) ColimaStart() string {
+	return Catalog.Format(msgs.locale, "colimaStart", nil)
+}
+
+// ColimaStop says "Stop Colima"
+// in the language the app shows.
+func ColimaStop() string { return In(i18n.Locale()).ColimaStop() }
+
+// ColimaStop says "Stop Colima"
+// in the language of msgs.
+func (msgs Messages) ColimaStop() string {
+	return Catalog.Format(msgs.locale, "colimaStop", nil)
+}
+
+// ColimaStopWhy says "Docker containers in this profile stop with the VM. Images and volumes stay on disk."
+// in the language the app shows.
+func ColimaStopWhy() string { return In(i18n.Locale()).ColimaStopWhy() }
+
+// ColimaStopWhy says "Docker containers in this profile stop with the VM. Images and volumes stay on disk."
+// in the language of msgs.
+func (msgs Messages) ColimaStopWhy() string {
+	return Catalog.Format(msgs.locale, "colimaStopWhy", nil)
+}
+
+// ColimaEnable says "Enable autostart"
+// in the language the app shows.
+func ColimaEnable() string { return In(i18n.Locale()).ColimaEnable() }
+
+// ColimaEnable says "Enable autostart"
+// in the language of msgs.
+func (msgs Messages) ColimaEnable() string {
+	return Catalog.Format(msgs.locale, "colimaEnable", nil)
+}
+
+// ColimaEnableWhy says "Homebrew starts Colima now and registers the default profile to start at sign-in."
+// in the language the app shows.
+func ColimaEnableWhy() string { return In(i18n.Locale()).ColimaEnableWhy() }
+
+// ColimaEnableWhy says "Homebrew starts Colima now and registers the default profile to start at sign-in."
+// in the language of msgs.
+func (msgs Messages) ColimaEnableWhy() string {
+	return Catalog.Format(msgs.locale, "colimaEnableWhy", nil)
+}
+
+// ColimaDisable says "Disable autostart"
+// in the language the app shows.
+func ColimaDisable() string { return In(i18n.Locale()).ColimaDisable() }
+
+// ColimaDisable says "Disable autostart"
+// in the language of msgs.
+func (msgs Messages) ColimaDisable() string {
+	return Catalog.Format(msgs.locale, "colimaDisable", nil)
+}
+
+// ColimaDisableWhy says "Homebrew unregisters the service and stops the default profile if the service was running it."
+// in the language the app shows.
+func ColimaDisableWhy() string { return In(i18n.Locale()).ColimaDisableWhy() }
+
+// ColimaDisableWhy says "Homebrew unregisters the service and stops the default profile if the service was running it."
+// in the language of msgs.
+func (msgs Messages) ColimaDisableWhy() string {
+	return Catalog.Format(msgs.locale, "colimaDisableWhy", nil)
+}
+
+// ColimaAutostartOn says "Autostart enabled"
+// in the language the app shows.
+func ColimaAutostartOn() string { return In(i18n.Locale()).ColimaAutostartOn() }
+
+// ColimaAutostartOn says "Autostart enabled"
+// in the language of msgs.
+func (msgs Messages) ColimaAutostartOn() string {
+	return Catalog.Format(msgs.locale, "colimaAutostartOn", nil)
+}
+
+// ColimaAutostartOff says "Autostart disabled"
+// in the language the app shows.
+func ColimaAutostartOff() string { return In(i18n.Locale()).ColimaAutostartOff() }
+
+// ColimaAutostartOff says "Autostart disabled"
+// in the language of msgs.
+func (msgs Messages) ColimaAutostartOff() string {
+	return Catalog.Format(msgs.locale, "colimaAutostartOff", nil)
+}
+
+// ColimaAutostartUnknown says "Could not check autostart"
+// in the language the app shows.
+func ColimaAutostartUnknown() string { return In(i18n.Locale()).ColimaAutostartUnknown() }
+
+// ColimaAutostartUnknown says "Could not check autostart"
+// in the language of msgs.
+func (msgs Messages) ColimaAutostartUnknown() string {
+	return Catalog.Format(msgs.locale, "colimaAutostartUnknown", nil)
+}
+
+// ColimaAutostartOnHint says "Homebrew starts the default profile at sign-in."
+// in the language the app shows.
+func ColimaAutostartOnHint() string { return In(i18n.Locale()).ColimaAutostartOnHint() }
+
+// ColimaAutostartOnHint says "Homebrew starts the default profile at sign-in."
+// in the language of msgs.
+func (msgs Messages) ColimaAutostartOnHint() string {
+	return Catalog.Format(msgs.locale, "colimaAutostartOnHint", nil)
+}
+
+// ColimaRestoreAutostart says "Homebrew temporarily stops the service and re-enables autostart after the new limits are applied."
+// in the language the app shows.
+func ColimaRestoreAutostart() string { return In(i18n.Locale()).ColimaRestoreAutostart() }
+
+// ColimaRestoreAutostart says "Homebrew temporarily stops the service and re-enables autostart after the new limits are applied."
+// in the language of msgs.
+func (msgs Messages) ColimaRestoreAutostart() string {
+	return Catalog.Format(msgs.locale, "colimaRestoreAutostart", nil)
+}
+
+// ColimaResources says "Colima resources"
+// in the language the app shows.
+func ColimaResources() string { return In(i18n.Locale()).ColimaResources() }
+
+// ColimaResources says "Colima resources"
+// in the language of msgs.
+func (msgs Messages) ColimaResources() string {
+	return Catalog.Format(msgs.locale, "colimaResources", nil)
+}
+
+// ColimaResizeWhy says "Apply VM limits to profile {profile}. Running containers stop and restart according to their restart policies."
+// in the language the app shows.
+func ColimaResizeWhy(profile string) string { return In(i18n.Locale()).ColimaResizeWhy(profile) }
+
+// ColimaResizeWhy says "Apply VM limits to profile {profile}. Running containers stop and restart according to their restart policies."
+// in the language of msgs.
+func (msgs Messages) ColimaResizeWhy(profile string) string {
+	return Catalog.Format(msgs.locale, "colimaResizeWhy", map[string]any{"profile": profile})
+}
+
+// ColimaDiskGrowth says "Disk size can only increase"
+// in the language the app shows.
+func ColimaDiskGrowth() string { return In(i18n.Locale()).ColimaDiskGrowth() }
+
+// ColimaDiskGrowth says "Disk size can only increase"
+// in the language of msgs.
+func (msgs Messages) ColimaDiskGrowth() string {
+	return Catalog.Format(msgs.locale, "colimaDiskGrowth", nil)
+}
+
+// ColimaDiskGrowthHint says "Increasing capacity keeps the images and volumes. Shrinking the disk requires recreating it."
+// in the language the app shows.
+func ColimaDiskGrowthHint() string { return In(i18n.Locale()).ColimaDiskGrowthHint() }
+
+// ColimaDiskGrowthHint says "Increasing capacity keeps the images and volumes. Shrinking the disk requires recreating it."
+// in the language of msgs.
+func (msgs Messages) ColimaDiskGrowthHint() string {
+	return Catalog.Format(msgs.locale, "colimaDiskGrowthHint", nil)
+}
+
+// ColimaInvalidLimits says "Choose positive CPU and memory values and keep or increase the disk capacity."
+// in the language the app shows.
+func ColimaInvalidLimits() string { return In(i18n.Locale()).ColimaInvalidLimits() }
+
+// ColimaInvalidLimits says "Choose positive CPU and memory values and keep or increase the disk capacity."
+// in the language of msgs.
+func (msgs Messages) ColimaInvalidLimits() string {
+	return Catalog.Format(msgs.locale, "colimaInvalidLimits", nil)
+}
+
+// ColimaChanged says "The Colima profile has changed. Scan again and review the updated profile."
+// in the language the app shows.
+func ColimaChanged() string { return In(i18n.Locale()).ColimaChanged() }
+
+// ColimaChanged says "The Colima profile has changed. Scan again and review the updated profile."
+// in the language of msgs.
+func (msgs Messages) ColimaChanged() string {
+	return Catalog.Format(msgs.locale, "colimaChanged", nil)
+}
+
+// ColimaManaged says "Managed by Hearth"
+// in the language the app shows.
+func ColimaManaged() string { return In(i18n.Locale()).ColimaManaged() }
+
+// ColimaManaged says "Managed by Hearth"
+// in the language of msgs.
+func (msgs Messages) ColimaManaged() string {
+	return Catalog.Format(msgs.locale, "colimaManaged", nil)
+}
+
+// ColimaExternalApp says "Own app"
+// in the language the app shows.
+func ColimaExternalApp() string { return In(i18n.Locale()).ColimaExternalApp() }
+
+// ColimaExternalApp says "Own app"
+// in the language of msgs.
+func (msgs Messages) ColimaExternalApp() string {
+	return Catalog.Format(msgs.locale, "colimaExternalApp", nil)
+}
+
+// ColimaExternalService says "External service"
+// in the language the app shows.
+func ColimaExternalService() string { return In(i18n.Locale()).ColimaExternalService() }
+
+// ColimaExternalService says "External service"
+// in the language of msgs.
+func (msgs Messages) ColimaExternalService() string {
+	return Catalog.Format(msgs.locale, "colimaExternalService", nil)
+}
+
+// ColimaRecommended says "Recommended"
+// in the language the app shows.
+func ColimaRecommended() string { return In(i18n.Locale()).ColimaRecommended() }
+
+// ColimaRecommended says "Recommended"
+// in the language of msgs.
+func (msgs Messages) ColimaRecommended() string {
+	return Catalog.Format(msgs.locale, "colimaRecommended", nil)
+}
+
+// ColimaWizard says "With Colima, Hearth installs the engine, configures its resources and autostart, and shows its containers."
+// in the language the app shows.
+func ColimaWizard() string { return In(i18n.Locale()).ColimaWizard() }
+
+// ColimaWizard says "With Colima, Hearth installs the engine, configures its resources and autostart, and shows its containers."
+// in the language of msgs.
+func (msgs Messages) ColimaWizard() string {
+	return Catalog.Format(msgs.locale, "colimaWizard", nil)
+}
+
+// ColimaChoice says "Colima + Hearth"
+// in the language the app shows.
+func ColimaChoice() string { return In(i18n.Locale()).ColimaChoice() }
+
+// ColimaChoice says "Colima + Hearth"
+// in the language of msgs.
+func (msgs Messages) ColimaChoice() string {
+	return Catalog.Format(msgs.locale, "colimaChoice", nil)
+}
+
+// ColimaEverything says "Engine and containers in Hearth"
+// in the language the app shows.
+func ColimaEverything() string { return In(i18n.Locale()).ColimaEverything() }
+
+// ColimaEverything says "Engine and containers in Hearth"
+// in the language of msgs.
+func (msgs Messages) ColimaEverything() string {
+	return Catalog.Format(msgs.locale, "colimaEverything", nil)
+}
+
+// ColimaPackages says "Packages to install"
+// in the language the app shows.
+func ColimaPackages() string { return In(i18n.Locale()).ColimaPackages() }
+
+// ColimaPackages says "Packages to install"
+// in the language of msgs.
+func (msgs Messages) ColimaPackages() string {
+	return Catalog.Format(msgs.locale, "colimaPackages", nil)
+}
+
+// ColimaPackagesHint says "Colima, Docker CLI, Compose and Buildx through Homebrew."
+// in the language the app shows.
+func ColimaPackagesHint() string { return In(i18n.Locale()).ColimaPackagesHint() }
+
+// ColimaPackagesHint says "Colima, Docker CLI, Compose and Buildx through Homebrew."
+// in the language of msgs.
+func (msgs Messages) ColimaPackagesHint() string {
+	return Catalog.Format(msgs.locale, "colimaPackagesHint", nil)
+}
+
+// ColimaOtherEngine says "With another engine"
+// in the language the app shows.
+func ColimaOtherEngine() string { return In(i18n.Locale()).ColimaOtherEngine() }
+
+// ColimaOtherEngine says "With another engine"
+// in the language of msgs.
+func (msgs Messages) ColimaOtherEngine() string {
+	return Catalog.Format(msgs.locale, "colimaOtherEngine", nil)
+}
+
+// ColimaOtherEngineHint says "Hearth shows containers. Manage the engine and its resources in its own app."
+// in the language the app shows.
+func ColimaOtherEngineHint() string { return In(i18n.Locale()).ColimaOtherEngineHint() }
+
+// ColimaOtherEngineHint says "Hearth shows containers. Manage the engine and its resources in its own app."
+// in the language of msgs.
+func (msgs Messages) ColimaOtherEngineHint() string {
+	return Catalog.Format(msgs.locale, "colimaOtherEngineHint", nil)
+}
+
+// ColimaExternalResources says "Resources and updates"
+// in the language the app shows.
+func ColimaExternalResources() string { return In(i18n.Locale()).ColimaExternalResources() }
+
+// ColimaExternalResources says "Resources and updates"
+// in the language of msgs.
+func (msgs Messages) ColimaExternalResources() string {
+	return Catalog.Format(msgs.locale, "colimaExternalResources", nil)
+}
+
+// ColimaExternalResourcesHint says "In the {engine} app"
+// in the language the app shows.
+func ColimaExternalResourcesHint(engine string) string {
+	return In(i18n.Locale()).ColimaExternalResourcesHint(engine)
+}
+
+// ColimaExternalResourcesHint says "In the {engine} app"
+// in the language of msgs.
+func (msgs Messages) ColimaExternalResourcesHint(engine string) string {
+	return Catalog.Format(msgs.locale, "colimaExternalResourcesHint", map[string]any{"engine": engine})
+}
+
+// ColimaDockerResources says "Containers, images, volumes"
+// in the language the app shows.
+func ColimaDockerResources() string { return In(i18n.Locale()).ColimaDockerResources() }
+
+// ColimaDockerResources says "Containers, images, volumes"
+// in the language of msgs.
+func (msgs Messages) ColimaDockerResources() string {
+	return Catalog.Format(msgs.locale, "colimaDockerResources", nil)
+}
+
+// ColimaDockerResourcesHint says "View and manage them in Hearth."
+// in the language the app shows.
+func ColimaDockerResourcesHint() string { return In(i18n.Locale()).ColimaDockerResourcesHint() }
+
+// ColimaDockerResourcesHint says "View and manage them in Hearth."
+// in the language of msgs.
+func (msgs Messages) ColimaDockerResourcesHint() string {
+	return Catalog.Format(msgs.locale, "colimaDockerResourcesHint", nil)
+}
+
+// ColimaOnlyHearth says "Hearth without {engine}"
+// in the language the app shows.
+func ColimaOnlyHearth(engine string) string { return In(i18n.Locale()).ColimaOnlyHearth(engine) }
+
+// ColimaOnlyHearth says "Hearth without {engine}"
+// in the language of msgs.
+func (msgs Messages) ColimaOnlyHearth(engine string) string {
+	return Catalog.Format(msgs.locale, "colimaOnlyHearth", map[string]any{"engine": engine})
+}
+
+// ColimaProfile says "Profile {profile}"
+// in the language the app shows.
+func ColimaProfile(profile string) string { return In(i18n.Locale()).ColimaProfile(profile) }
+
+// ColimaProfile says "Profile {profile}"
+// in the language of msgs.
+func (msgs Messages) ColimaProfile(profile string) string {
+	return Catalog.Format(msgs.locale, "colimaProfile", map[string]any{"profile": profile})
+}
+
+// ColimaResourceSummary says "{cpu} CPU · {memory} GiB RAM · {disk} GiB disk"
+// in the language the app shows.
+func ColimaResourceSummary(cpu string, memory string, disk string) string {
+	return In(i18n.Locale()).ColimaResourceSummary(cpu, memory, disk)
+}
+
+// ColimaResourceSummary says "{cpu} CPU · {memory} GiB RAM · {disk} GiB disk"
+// in the language of msgs.
+func (msgs Messages) ColimaResourceSummary(cpu string, memory string, disk string) string {
+	return Catalog.Format(msgs.locale, "colimaResourceSummary", map[string]any{"cpu": cpu, "memory": memory, "disk": disk})
+}
+
+// ColimaEdit says "Edit…"
+// in the language the app shows.
+func ColimaEdit() string { return In(i18n.Locale()).ColimaEdit() }
+
+// ColimaEdit says "Edit…"
+// in the language of msgs.
+func (msgs Messages) ColimaEdit() string {
+	return Catalog.Format(msgs.locale, "colimaEdit", nil)
+}
+
+// ColimaMemoryGiB says "Memory, GiB"
+// in the language the app shows.
+func ColimaMemoryGiB() string { return In(i18n.Locale()).ColimaMemoryGiB() }
+
+// ColimaMemoryGiB says "Memory, GiB"
+// in the language of msgs.
+func (msgs Messages) ColimaMemoryGiB() string {
+	return Catalog.Format(msgs.locale, "colimaMemoryGiB", nil)
+}
+
+// ColimaDiskGiB says "Disk, GiB"
+// in the language the app shows.
+func ColimaDiskGiB() string { return In(i18n.Locale()).ColimaDiskGiB() }
+
+// ColimaDiskGiB says "Disk, GiB"
+// in the language of msgs.
+func (msgs Messages) ColimaDiskGiB() string {
+	return Catalog.Format(msgs.locale, "colimaDiskGiB", nil)
+}
+
+// ColimaIncrease says "Increase {name}"
+// in the language the app shows.
+func ColimaIncrease(name string) string { return In(i18n.Locale()).ColimaIncrease(name) }
+
+// ColimaIncrease says "Increase {name}"
+// in the language of msgs.
+func (msgs Messages) ColimaIncrease(name string) string {
+	return Catalog.Format(msgs.locale, "colimaIncrease", map[string]any{"name": name})
+}
+
+// ColimaDecrease says "Decrease {name}"
+// in the language the app shows.
+func ColimaDecrease(name string) string { return In(i18n.Locale()).ColimaDecrease(name) }
+
+// ColimaDecrease says "Decrease {name}"
+// in the language of msgs.
+func (msgs Messages) ColimaDecrease(name string) string {
+	return Catalog.Format(msgs.locale, "colimaDecrease", map[string]any{"name": name})
+}
+
+// ColimaRestart says "Restart Colima"
+// in the language the app shows.
+func ColimaRestart() string { return In(i18n.Locale()).ColimaRestart() }
+
+// ColimaRestart says "Restart Colima"
+// in the language of msgs.
+func (msgs Messages) ColimaRestart() string {
+	return Catalog.Format(msgs.locale, "colimaRestart", nil)
+}
+
 // DockerVolumesReading says "Reading volumes…"
 // in the language the app shows.
 func DockerVolumesReading() string { return In(i18n.Locale()).DockerVolumesReading() }

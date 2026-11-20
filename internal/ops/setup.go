@@ -11,6 +11,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -222,6 +223,12 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 					script := line + " && /usr/sbin/usermod -aG docker " + user
 					pp.Steps = []Step{{Argv: []string{"/bin/sh", "-c", script}, Runs: install.Shown(), Admin: true}}
 					pp.Notes = append(pp.Notes, Note{Title: locales.SetupDockerGroupTitle(), Text: locales.SetupDockerGroupText(user)})
+				}
+			case m.Engine == "Colima":
+				var err error
+				pp, err = ColimaInstallPlan(pm, false, env, run.Exec{})
+				if err != nil {
+					return Plan{}, nil, err
 				}
 			case part.Tool == "docker" && !slices.Contains(linuxManagers, m.Manager):
 				pp, ok = EngineInstallPlan(m.Engine, pm, false, nil)

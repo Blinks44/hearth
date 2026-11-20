@@ -38,7 +38,7 @@ func TestDockerPage(t *testing.T) {
 	a.Projects = []projects.Project{{Dir: home + "/dev/api", Requirements: []projects.Requirement{{Tool: "docker", File: "compose.yaml"}}}}
 	tt := openDocker(a)
 	screenshot(t, tt, "docker")
-	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "LOCAL", "How Hearth works with Docker", "OrbStack · ~/.orbstack/run/docker.sock · current in docker CLI", "/var/run/docker.sock", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
+	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "LOCAL", "How Hearth works with Docker", "OrbStack · ~/.orbstack/run/docker.sock · Own app · current in docker CLI", "/var/run/docker.sock", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
 		if !tt.HasText(text) {
 			t.Errorf("missing %q: %q", text, tt.Texts())
 		}

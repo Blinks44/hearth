@@ -21,6 +21,9 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 		{Name: "Rancher Desktop", Path: dockerCommand(env, "rancher-desktop")},
 		{Name: "Kiri", Path: dockerCommand(env, "kiri")},
 	}
+	if path := dockerCommand(env, "colima"); path != "" {
+		engines = append(engines, inventory.DockerEngine{Name: "Colima", Path: path})
+	}
 	// Kiri's package keeps its docker CLI out of PATH when another owns
 	// /usr/bin/docker.
 	paths := []string{"/usr/libexec/kiri/docker"}

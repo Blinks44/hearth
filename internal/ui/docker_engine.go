@@ -10,6 +10,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -227,6 +228,11 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 				switch s.view {
 				case dockerOverview:
 					dockerOverviewView(c, *s.data)
+					if st, _ := a.Snapshot.Tool("docker"); st.Docker != nil && st.Docker.Colima != nil {
+						if profile, ok := dockerColimaProfile(st.Docker, name); ok {
+							a.colimaCard(c, *st.Docker.Colima, profile)
+						}
+					}
 				case dockerContainers:
 					a.dockerContainersView(c)
 				case dockerImages:
@@ -262,6 +268,22 @@ func (a *App) dockerEngineHeader(c *ui.Context, name string) {
 			s.viewsOpen = false
 		}
 		ui.Popover(c, anchor, &s.contextOpen, func() { a.dockerContextPopover(c, name) })
+		if st, _ := a.Snapshot.Tool("docker"); st.Docker != nil && s.containers.logs == nil {
+			for _, ctx := range st.Docker.Contexts {
+				if ctx.Name != name {
+					continue
+				}
+				engine := dockerContextEngine(st.Docker, ctx)
+				if label := dockerManagementLabel(engine); label != "" {
+					bg, ink := pal.Muted, t.TextMuted
+					if engine == "Colima" {
+						bg, ink = pal.InfoSoft, pal.InfoText
+					}
+					aiTag(c, label, bg, ink).Shrink(0)
+				}
+				break
+			}
+		}
 		pathSlash(c)
 		v := dockerViews()[s.view]
 		anchor = pathButton(c, "engine-view", "lucide/"+v.icon, v.label, 0)
@@ -395,7 +417,10 @@ func (a *App) dockerEngineDown(c *ui.Context, name string, err error) {
 		ui.Text(c, locales.DockerEngineDownHint()).FontSize(12).TextColor(t.TextMuted).Wrap()
 		ui.Row(c).Gap(8).Padding(4, 0, 0, 0).Children(func() {
 			st, _ := a.Snapshot.Tool("docker")
-			if plan, ok := a.engineStartPlan(); ok && st.Docker != nil && st.Docker.Selected == name {
+			if profile, ok := dockerColimaProfile(st.Docker, name); ok && profile.Status == "stopped" {
+				ui.PrimaryButton(c.Key("engine-start-colima"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
+			} else if plan, ok := a.engineStartPlan(); ok && st.Docker != nil && st.Docker.Selected == name {
 				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
 			}
 			ui.Button(c.Key("engine-contexts"), locales.KubeClusterAllContexts()).OnClick(func() { a.router.Push(dockerPage) })

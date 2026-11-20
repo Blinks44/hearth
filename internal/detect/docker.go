@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sources"
@@ -27,6 +28,37 @@ func Docker(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 	return detectDocker(ctx, r, term, gui, engines, candidates)
 }
 
+// StandaloneDockerCLI finds a PATH copy that can outlive an engine app.
+// Resolve symlinks such as the docker link OrbStack puts in /usr/local/bin.
+func StandaloneDockerCLI(term sysenv.Env) string {
+	home := sources.ManagerDirs(term).Home
+	engines, _ := dockerLocations(term, home)
+	for _, path := range sysenv.LookPathAll("docker", term) {
+		real, err := filepath.EvalSymlinks(path)
+		if err != nil || dockerCLIEngine(real, engines).Name != "" ||
+			strings.Contains(strings.ToLower(filepath.ToSlash(real)), ".app/") {
+			continue
+		}
+		if home != "" && slices.ContainsFunc([]string{".orbstack", ".rd", ".kiri"}, func(dir string) bool {
+			root := filepath.Join(home, dir)
+			return within(path, root) || within(real, root)
+		}) {
+			continue
+		}
+		return path
+	}
+	return ""
+}
+
+func dockerCLIEngine(real string, engines []inventory.DockerEngine) inventory.DockerEngine {
+	for _, engine := range slices.Backward(engines) {
+		if engine.Path != "" && within(real, engine.Path) {
+			return engine
+		}
+	}
+	return inventory.DockerEngine{}
+}
+
 func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engines []inventory.DockerEngine, candidates []string) (inventory.ToolState, error) {
 	f := newFinder("docker", term)
 	f.lookPath("docker", term, gui)
@@ -37,16 +69,39 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 		}
 	}
 	d := &inventory.DockerState{Engines: engines}
+	for _, engine := range engines {
+		if engine.Name != "Colima" || engine.Path == "" {
+			continue
+		}
+		colima := &inventory.ColimaState{Path: engine.Path}
+		dir := term.Get("LIMA_HOME")
+		if dir == "" {
+			dir = filepath.Join(docker.ColimaConfigDir(term), "_lima")
+		}
+		// Colima creates its storage directories on the first CLI call.
+		// A scan of a fresh installation must leave them alone.
+		if _, err := os.Stat(dir); filepath.IsAbs(dir) && !errors.Is(err, os.ErrNotExist) {
+			profiles, err := docker.ReadColimaProfiles(ctx, r, term, engine.Path)
+			colima.Profiles, colima.Unreadable = profiles, err != nil
+			for i := range profiles {
+				if profiles[i].Status == "running" && profiles[i].Runtime == "docker" {
+					_ = docker.ReadColimaStatus(ctx, r, term, engine.Path, &profiles[i])
+				}
+			}
+		}
+		if colima.Brew = colimaBrew(term, engine.Path); colima.Brew != "" && docker.ColimaUsesServiceProfile(term) {
+			colima.Autostart = docker.ColimaAutostart(ctx, r, term, colima.Brew)
+		}
+		d.Colima = colima
+	}
 	st := inventory.ToolState{Tool: "docker", Installations: f.ins, Docker: d}
 	for i := range st.Installations {
 		in := &st.Installations[i]
 		if in.Source.Shim {
 			continue
 		}
-		for _, engine := range engines {
-			if engine.Path != "" && within(in.RealPath, engine.Path) {
-				in.Source = inventory.Source{Kind: inventory.KindInstaller, Manager: engine.Name, Root: engine.Path}
-			}
+		if engine := dockerCLIEngine(in.RealPath, engines); engine.Name != "" {
+			in.Source = inventory.Source{Kind: inventory.KindInstaller, Manager: engine.Name, Root: engine.Path}
 		}
 		v := versionOf(ctx, r, term, in.Path)
 		if fields := strings.Fields(v); len(fields) >= 3 && fields[0] == "Docker" && fields[1] == "version" {
@@ -196,9 +251,16 @@ func dockerPlugins(config string) []inventory.Package {
 	if config == "" {
 		return nil
 	}
+	dirs := []string{filepath.Join(config, "cli-plugins")}
+	var settings struct{ CLIPluginsExtraDirs []string }
+	if data, err := os.ReadFile(filepath.Join(config, "config.json")); err == nil && json.Unmarshal(data, &settings) == nil {
+		dirs = append(dirs, settings.CLIPluginsExtraDirs...)
+	}
 	var out []inventory.Package
 	for _, name := range []string{"compose", "buildx"} {
-		if exists(filepath.Join(config, "cli-plugins", "docker-"+name+dockerSuffix)) {
+		if slices.ContainsFunc(dirs, func(dir string) bool {
+			return filepath.IsAbs(dir) && exists(filepath.Join(dir, "docker-"+name+dockerSuffix))
+		}) {
 			out = append(out, inventory.Package{Name: name, Commands: []string{"docker " + name}})
 		}
 	}
@@ -217,6 +279,18 @@ func dockerApp(candidates ...string) string {
 		if exists(p) {
 			return p
 		}
+	}
+	return ""
+}
+
+func colimaBrew(env sysenv.Env, path string) string {
+	brew := dockerCommand(env, "brew")
+	if brew == "" {
+		return ""
+	}
+	real, err := filepath.EvalSymlinks(path)
+	if err == nil && within(real, filepath.Join(filepath.Dir(filepath.Dir(brew)), "Cellar", "colima")) {
+		return brew
 	}
 	return ""
 }

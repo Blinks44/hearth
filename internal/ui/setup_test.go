@@ -39,7 +39,7 @@ func TestSetupChoice(t *testing.T) {
 	screenshot(t, tt, "setup-choice")
 	hasTexts(t, tt, "Install", "Step 1 of 4 · choice", "Let's set up this computer",
 		"Languages and runtimes", "installed: 1 of 9", "Node.js LTS", "installed · 24.11.0", "/usr/local/bin/node", "Python", "via mise", "via rustup, as Rust recommends",
-		"Tools", "pnpm", "Docker engine", "Colima is open source", "Git", "via Xcode Command Line Tools",
+		"Tools", "pnpm", "Docker engine", "With Colima, Hearth installs the engine", "Git", "via Xcode Command Line Tools",
 		"Base · installs first", "Homebrew", "via the official installer", "required", "mise", "via Homebrew",
 		"AI agents", "Claude Code", "Codex",
 		// Homebrew, mise, Python, pnpm, Git, Colima: Node and Claude Code

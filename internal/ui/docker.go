@@ -17,9 +17,17 @@ import (
 func (a *App) docker(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			if plan, ok := a.engineStartPlan(); ok {
+			st, _ := a.Snapshot.Tool("docker")
+			if st.Docker != nil && inventory.TerminalCopy(st.Installations) < 0 && a.canInstallColima() {
+				ui.PrimaryButton(c.Key("colima-install"), locales.ColimaInstall()).OnClick(func() { a.installColima(false) })
+			} else if plan, ok := a.nativeDockerInstallPlan(st); ok {
+				ui.PrimaryButton(c.Key("docker-install"), plan.Title).OnClick(func() { a.Propose(plan) })
+			} else if profile, ok := dockerSelectedColima(st.Docker); ok && profile.Status == "stopped" {
+				ui.PrimaryButton(c.Key("colima-start"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
+			} else if plan, ok := a.engineStartPlan(); ok {
 				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
-			} else if st, _ := a.Snapshot.Tool("docker"); a.dockerAnswers() && a.dockerOpenable(st.Docker.Selected) {
+			} else if a.dockerAnswers() && a.dockerOpenable(st.Docker.Selected) {
 				name := st.Docker.Selected
 				ui.PrimaryButton(c.Key("engine-open"), locales.DockerOpenContext(name)).OnClick(func() { a.router.Push(dockerEnginePath(name)) })
 			}
@@ -31,6 +39,12 @@ func (a *App) docker(c *ui.Context, p page) {
 		}
 		d := st.Docker
 		active := inventory.TerminalCopy(st.Installations)
+		if !a.dockerTabsReady {
+			a.dockerTabsReady = true
+			if active < 0 {
+				a.dockerTab = 1
+			}
+		}
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				a.dockerHeader(c, st, active)
@@ -84,6 +98,7 @@ func (a *App) docker(c *ui.Context, p page) {
 						pathCard(c, "docker", st.Installations, active, a.Home)
 					}
 				}, func() {
+					a.dockerManagement(c, st)
 					listCard(c, locales.DockerHow(), "", func() {
 						listRow(c, locales.DockerHowScan(), false, locales.DockerHowScanCaption(), func() {})
 						listRow(c, locales.DockerHowView(), false, locales.DockerHowViewCaption(), func() {})
@@ -200,10 +215,13 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, k.Name).Font(FontMono).FontSize(13)
 			caption := dockerContextCaption(k, a.Home)
+			if label := dockerManagementLabel(dockerContextEngine(d, k)); k.Local && label != "" {
+				caption += " · " + label
+			}
 			if selected {
 				caption += " · " + locales.DockerInCli()
 			}
-			clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint)
+			clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(caption)
 			if !k.Local && k.Endpoint != "" {
 				clipped(c, locales.DockerRemoteNote()).FontSize(10.5).TextColor(pal.TextFaint)
 			}
@@ -245,13 +263,23 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 			case "Docker Engine":
 				caption = locales.DockerEngineTerms()
 			}
-			listRow(c, engine.Name, false, caption, func() {
+			if label := dockerManagementLabel(engine.Name); label != "" {
+				caption += " · " + label
+			}
+			listRow(c.Key("engine:"+engine.Name), engine.Name, false, caption, func() {
+				if engine.Name == recommendedDockerEngine {
+					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.ColimaRecommended())
+				}
+				if engine.Name == "Colima" && engine.Path == "" && a.canInstallColima() {
+					ui.Button(c.Key("install-colima"), locales.PkgInstallTitle("Colima")).OnClick(func() { a.installColima(false) })
+					return
+				}
 				if engine.Path != "" {
 					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.DockerInstalled())
 					return
 				}
 				ui.Text(c, locales.DockerNotInstalled()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-				if plan, ok := a.engineInstallPlan(engine.Name, cli); ok {
+				if plan, ok := a.engineInstallPlan(engine.Name, cli); ok && engine.Name != "Colima" {
 					iconButton(c.Key("install:"+engine.Name), "download", plan.Title).OnClick(func() { a.Propose(plan) })
 				} else if m, ok := catalog.EngineMethod(engine.Name, "installer"); ok {
 					// No system manager has it: its maker's page, not an install.
@@ -331,7 +359,7 @@ func (a *App) engineStartPlan() (ops.Plan, bool) {
 		name = installed[0].Name
 	}
 	for _, e := range installed {
-		if e.Name == name {
+		if e.Name == name && e.Name != "Colima" {
 			return ops.EngineStartPlan(ops.Engine{Name: e.Name, Path: e.Path}, d.Selected, a.detect("docker"))
 		}
 	}
@@ -365,6 +393,16 @@ func (a *App) engineInstallPlan(engine string, cli bool) (ops.Plan, bool) {
 		if p, ok := ops.EngineInstallPlan(engine, m, cli, a.reread(m)); ok {
 			return p, true
 		}
+	}
+	return ops.Plan{}, false
+}
+
+func (a *App) nativeDockerInstallPlan(st inventory.ToolState) (ops.Plan, bool) {
+	if recommendedDockerEngine == "Docker Engine" && st.Docker != nil && inventory.TerminalCopy(st.Installations) < 0 &&
+		slices.ContainsFunc(st.Docker.Engines, func(e inventory.DockerEngine) bool {
+			return e.Name == recommendedDockerEngine && e.Path == ""
+		}) {
+		return a.engineInstallPlan(recommendedDockerEngine, false)
 	}
 	return ops.Plan{}, false
 }

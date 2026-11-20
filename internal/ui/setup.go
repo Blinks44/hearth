@@ -760,6 +760,9 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 		}
 		caption = locales.SetupVia(managerTitle(m))
 		switch {
+		case m.Engine == "Colima":
+			about += " " + locales.ColimaWizard()
+			caption += " · " + locales.ColimaManaged()
 		case e.ID == "docker" && m.Terms != "":
 			caption = locales.SetupEngineTerms(m.Engine)
 		case e.ID == "docker":

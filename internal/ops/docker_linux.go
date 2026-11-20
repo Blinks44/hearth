@@ -7,6 +7,8 @@ import "time"
 // and Podman's socket the user's.
 func engineStart(e Engine) []Step {
 	switch e.Name {
+	case "Colima":
+		return []Step{{Argv: []string{e.Path, "start"}}}
 	case "Docker Engine":
 		return []Step{{Argv: []string{"systemctl", "start", "docker"}, Admin: true, Timeout: 2 * time.Minute}}
 	case "Kiri":
