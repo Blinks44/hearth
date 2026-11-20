@@ -73,6 +73,9 @@ func (a *App) startOperation() {
 	if op.plan.DockerContainers() {
 		a.engine.containers.bulk.clear()
 	}
+	if op.plan.DockerAction == ops.DockerImageRemove {
+		a.engine.images.bulk.clear()
+	}
 	op.started, op.told = true, false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
@@ -669,6 +672,8 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 	}
 	hide := func() { op.open = false }
 	switch {
+	case !op.started && op.plan.DockerAction == ops.DockerImageRemove && len(op.plan.Steps) == 0:
+		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case !op.started:
 		ui.Button(c.Key("op-cancel"), locales.Cancel()).OnClick(hide)
 		action := op.plan.Action
@@ -711,6 +716,9 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 }
 
 func (op *operation) canConfirm() bool {
+	if op.plan.DockerAction == ops.DockerImageRemove && len(op.plan.Steps) == 0 {
+		return false
+	}
 	change := op.kubeChange()
 	if change == nil {
 		return true

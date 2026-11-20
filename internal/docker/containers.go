@@ -29,9 +29,9 @@ type ComposeProject struct {
 }
 
 type Container struct {
-	ID, Name, Image, Kind string
-	Compose               ComposeProject
-	State                 struct {
+	ID, Name, Image, ImageID, Kind string
+	Compose                        ComposeProject
+	State                          struct {
 		Status, Error string
 		ExitCode      int
 		OOMKilled     bool
@@ -81,7 +81,7 @@ var containerID = regexp.MustCompile(`^[0-9a-f]{64}$`)
 // ContainerID accepts only full, immutable IDs so names cannot retarget a plan.
 func ContainerID(id string) bool { return containerID.MatchString(id) }
 
-const inspectContainer = `{"ID":{{json .Id}},"Name":{{json .Name}},"Image":{{json .Config.Image}},"Kind":{{json (index .Config.Labels "io.x-k8s.kind.cluster")}},"Compose":{"Name":{{json (index .Config.Labels "com.docker.compose.project")}},"Dir":{{json (index .Config.Labels "com.docker.compose.project.working_dir")}},"Files":{{json (index .Config.Labels "com.docker.compose.project.config_files")}}},"State":{"Status":{{json .State.Status}},"Error":{{json .State.Error}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json (index .State "OOMKilled")}},"StartedAt":{{json .State.StartedAt}},"Health":{{if $health := index .State "Health"}}{"Status":{{json (index $health "Status")}}}{{else}}null{{end}}},"RestartCount":{{json (index . "RestartCount")}}}`
+const inspectContainer = `{"ID":{{json .Id}},"Name":{{json .Name}},"Image":{{json .Config.Image}},"ImageID":{{json (index . "Image")}},"Kind":{{json (index .Config.Labels "io.x-k8s.kind.cluster")}},"Compose":{"Name":{{json (index .Config.Labels "com.docker.compose.project")}},"Dir":{{json (index .Config.Labels "com.docker.compose.project.working_dir")}},"Files":{{json (index .Config.Labels "com.docker.compose.project.config_files")}}},"State":{"Status":{{json .State.Status}},"Error":{{json .State.Error}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json (index .State "OOMKilled")}},"StartedAt":{{json .State.StartedAt}},"Health":{{if $health := index .State "Health"}}{"Status":{{json (index $health "Status")}}}{{else}}null{{end}}},"RestartCount":{{json (index . "RestartCount")}}}`
 
 // InspectContainers reads only the fields needed by the list and plans.
 func InspectContainers(ctx context.Context, r run.Runner, env sysenv.Env, t Target, ids []string) ([]Container, error) {
@@ -188,12 +188,31 @@ func readRows[T any](ctx context.Context, r run.Runner, cmd run.Cmd) ([]T, error
 // WatchContainers combines event-driven list refreshes with periodic samples
 // of CPU and memory. Only the visible Containers view keeps it running.
 func WatchContainers(ctx context.Context, r run.Runner, env sysenv.Env, t Target, got func([]Container, error, error)) {
+	watchChanges(ctx, env, t, []string{"type=container"}, func(ctx context.Context) {
+		items, err := ReadContainers(ctx, r, env, t)
+		var statsErr error
+		if err == nil && slices.ContainsFunc(items, Container.Active) {
+			statsErr = sampleContainers(ctx, r, env, t, items)
+		}
+		if ctx.Err() == nil {
+			got(items, err, statsErr)
+		}
+	})
+}
+
+func watchChanges(ctx context.Context, env sysenv.Env, t Target, filters []string, read func(context.Context)) {
+	if ctx.Err() != nil {
+		return
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	changed := make(chan struct{}, 1)
 	streamDone := make(chan struct{})
 	go func() {
 		defer close(streamDone)
-		cmd := t.Command(env, "events", "--filter", "type=container", "--format", "{{.Action}}")
+		cmd := t.Command(env, "events", "--format", "{{.Action}}")
+		for _, filter := range filters {
+			cmd.Args = append(cmd.Args, "--filter", filter)
+		}
 		for ctx.Err() == nil {
 			_ = run.Lines(ctx, cmd, func(string) {
 				select {
@@ -213,15 +232,7 @@ func WatchContainers(ctx context.Context, r run.Runner, env sysenv.Env, t Target
 		<-streamDone
 	}()
 	for ctx.Err() == nil {
-		items, err := ReadContainers(ctx, r, env, t)
-		var statsErr error
-		if err == nil && slices.ContainsFunc(items, Container.Active) {
-			statsErr = sampleContainers(ctx, r, env, t, items)
-		}
-		if ctx.Err() != nil {
-			return
-		}
-		got(items, err, statsErr)
+		read(ctx)
 		select {
 		case <-ctx.Done():
 			return

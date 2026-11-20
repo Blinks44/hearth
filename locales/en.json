@@ -1,4 +1,81 @@
 {
+  "dockerImagesReading": "Reading images…",
+  "dockerImagesEmpty": "No matching images.",
+  "dockerImageDownload": "Pull image",
+  "dockerImagePullTitle": "Pull image · {name}",
+  "@dockerImagePullTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImagePullWhy": "Docker will download the image to {context}. An existing tag can point to the downloaded image after the pull.",
+  "@dockerImagePullWhy": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImagesUsed": "In use",
+  "dockerImagesDangling": "Dangling",
+  "dockerImagesDanglingGroup": "Dangling images",
+  "dockerImagesTagged": "Local images",
+  "dockerImagesEmulation": "Emulation",
+  "dockerImageEmulationHint": "The image is built for {arch}. Running it on {engine} requires emulation and can be slower.",
+  "@dockerImageEmulationHint": {
+    "placeholders": {
+      "arch": {
+        "type": "String"
+      },
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageSearch": "Repository or tag",
+  "dockerImageUsers": "Used by",
+  "dockerImageSize": "Size",
+  "dockerImageStoppedUser": "Stopped container",
+  "dockerImageBuildCache": "Build Cache",
+  "dockerImageCopyID": "Copy image ID",
+  "dockerImageReview": "Review plan…",
+  "dockerImageReferenceInvalid": "Enter an image name, for example alpine:3.23 or registry.example.com/team/app:1.0.",
+  "dockerImageRemoveTitle": "Remove local images · {count}",
+  "@dockerImageRemoveTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerImageRemoveWhy": "Docker will delete the selected images from {context}. To use them again, pull or build them again.",
+  "@dockerImageRemoveWhy": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageRemoveBlocked": "Removal is blocked for this selection.",
+  "dockerImageInUse": "Used by containers: {names}",
+  "@dockerImageInUse": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageMultipleTags": "This image has multiple tags: {tags}. Docker requires force to remove it by ID.",
+  "@dockerImageMultipleTags": {
+    "placeholders": {
+      "tags": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageChanged": "The image or its tags changed. Refresh the list and review a new plan.",
   "dockerEnvTab": "Env",
   "dockerInspectTab": "Inspect",
   "dockerFinishedAgo": "stopped {age} ago",

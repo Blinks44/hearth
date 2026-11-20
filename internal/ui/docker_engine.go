@@ -62,6 +62,7 @@ type dockerEngineState struct {
 	// reading is true from a read the user waits for to its answer.
 	reading    bool
 	containers dockerContainersState
+	images     dockerImagesState
 }
 
 // engineTarget is the engine of the context name, or why Hearth cannot
@@ -128,6 +129,7 @@ func (a *App) syncDocker() {
 		running = fmt.Sprintf("%s#%d", target, s.refresh)
 	}
 	a.syncDockerContainers(t, running)
+	a.syncDockerImages(t, running)
 	if running == s.running {
 		return
 	}
@@ -166,6 +168,7 @@ func (a *App) StopDocker() {
 	s.containers.stopWatch()
 	s.containers.closeLogs()
 	s.containers.closeDetail()
+	s.images.stopWatch()
 	if s.stop != nil {
 		s.stop()
 		s.stop, s.running, s.reading = nil, "", false
@@ -223,6 +226,8 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 					dockerOverviewView(c, *s.data)
 				case dockerContainers:
 					a.dockerContainersView(c)
+				case dockerImages:
+					a.dockerImagesView(c)
 				default:
 					toolNote(c, locales.DockerViewSoon())
 				}

@@ -1,0 +1,2 @@
+{"ID":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","RepoTags":["ghcr.io/demo/legacy:latest","ghcr.io/demo/legacy:2.3"],"RepoDigests":[],"Architecture":"amd64","OS":"linux","Size":123456,"Created":"2026-11-19T10:00:00Z"}
+{"ID":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","RepoTags":null,"RepoDigests":[],"Architecture":"arm64","OS":"linux","Size":42,"Created":"2026-11-19T11:00:00Z"}

@@ -36,6 +36,262 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// DockerImagesReading says "Reading images…"
+// in the language the app shows.
+func DockerImagesReading() string { return In(i18n.Locale()).DockerImagesReading() }
+
+// DockerImagesReading says "Reading images…"
+// in the language of msgs.
+func (msgs Messages) DockerImagesReading() string {
+	return Catalog.Format(msgs.locale, "dockerImagesReading", nil)
+}
+
+// DockerImagesEmpty says "No matching images."
+// in the language the app shows.
+func DockerImagesEmpty() string { return In(i18n.Locale()).DockerImagesEmpty() }
+
+// DockerImagesEmpty says "No matching images."
+// in the language of msgs.
+func (msgs Messages) DockerImagesEmpty() string {
+	return Catalog.Format(msgs.locale, "dockerImagesEmpty", nil)
+}
+
+// DockerImageDownload says "Pull image"
+// in the language the app shows.
+func DockerImageDownload() string { return In(i18n.Locale()).DockerImageDownload() }
+
+// DockerImageDownload says "Pull image"
+// in the language of msgs.
+func (msgs Messages) DockerImageDownload() string {
+	return Catalog.Format(msgs.locale, "dockerImageDownload", nil)
+}
+
+// DockerImagePullTitle says "Pull image · {name}"
+// in the language the app shows.
+func DockerImagePullTitle(name string) string { return In(i18n.Locale()).DockerImagePullTitle(name) }
+
+// DockerImagePullTitle says "Pull image · {name}"
+// in the language of msgs.
+func (msgs Messages) DockerImagePullTitle(name string) string {
+	return Catalog.Format(msgs.locale, "dockerImagePullTitle", map[string]any{"name": name})
+}
+
+// DockerImagePullWhy says "Docker will download the image to {context}. An existing tag can point to the downloaded image after the pull."
+// in the language the app shows.
+func DockerImagePullWhy(context string) string { return In(i18n.Locale()).DockerImagePullWhy(context) }
+
+// DockerImagePullWhy says "Docker will download the image to {context}. An existing tag can point to the downloaded image after the pull."
+// in the language of msgs.
+func (msgs Messages) DockerImagePullWhy(context string) string {
+	return Catalog.Format(msgs.locale, "dockerImagePullWhy", map[string]any{"context": context})
+}
+
+// DockerImagesUsed says "In use"
+// in the language the app shows.
+func DockerImagesUsed() string { return In(i18n.Locale()).DockerImagesUsed() }
+
+// DockerImagesUsed says "In use"
+// in the language of msgs.
+func (msgs Messages) DockerImagesUsed() string {
+	return Catalog.Format(msgs.locale, "dockerImagesUsed", nil)
+}
+
+// DockerImagesDangling says "Dangling"
+// in the language the app shows.
+func DockerImagesDangling() string { return In(i18n.Locale()).DockerImagesDangling() }
+
+// DockerImagesDangling says "Dangling"
+// in the language of msgs.
+func (msgs Messages) DockerImagesDangling() string {
+	return Catalog.Format(msgs.locale, "dockerImagesDangling", nil)
+}
+
+// DockerImagesDanglingGroup says "Dangling images"
+// in the language the app shows.
+func DockerImagesDanglingGroup() string { return In(i18n.Locale()).DockerImagesDanglingGroup() }
+
+// DockerImagesDanglingGroup says "Dangling images"
+// in the language of msgs.
+func (msgs Messages) DockerImagesDanglingGroup() string {
+	return Catalog.Format(msgs.locale, "dockerImagesDanglingGroup", nil)
+}
+
+// DockerImagesTagged says "Local images"
+// in the language the app shows.
+func DockerImagesTagged() string { return In(i18n.Locale()).DockerImagesTagged() }
+
+// DockerImagesTagged says "Local images"
+// in the language of msgs.
+func (msgs Messages) DockerImagesTagged() string {
+	return Catalog.Format(msgs.locale, "dockerImagesTagged", nil)
+}
+
+// DockerImagesEmulation says "Emulation"
+// in the language the app shows.
+func DockerImagesEmulation() string { return In(i18n.Locale()).DockerImagesEmulation() }
+
+// DockerImagesEmulation says "Emulation"
+// in the language of msgs.
+func (msgs Messages) DockerImagesEmulation() string {
+	return Catalog.Format(msgs.locale, "dockerImagesEmulation", nil)
+}
+
+// DockerImageEmulationHint says "The image is built for {arch}. Running it on {engine} requires emulation and can be slower."
+// in the language the app shows.
+func DockerImageEmulationHint(arch string, engine string) string {
+	return In(i18n.Locale()).DockerImageEmulationHint(arch, engine)
+}
+
+// DockerImageEmulationHint says "The image is built for {arch}. Running it on {engine} requires emulation and can be slower."
+// in the language of msgs.
+func (msgs Messages) DockerImageEmulationHint(arch string, engine string) string {
+	return Catalog.Format(msgs.locale, "dockerImageEmulationHint", map[string]any{"arch": arch, "engine": engine})
+}
+
+// DockerImageSearch says "Repository or tag"
+// in the language the app shows.
+func DockerImageSearch() string { return In(i18n.Locale()).DockerImageSearch() }
+
+// DockerImageSearch says "Repository or tag"
+// in the language of msgs.
+func (msgs Messages) DockerImageSearch() string {
+	return Catalog.Format(msgs.locale, "dockerImageSearch", nil)
+}
+
+// DockerImageUsers says "Used by"
+// in the language the app shows.
+func DockerImageUsers() string { return In(i18n.Locale()).DockerImageUsers() }
+
+// DockerImageUsers says "Used by"
+// in the language of msgs.
+func (msgs Messages) DockerImageUsers() string {
+	return Catalog.Format(msgs.locale, "dockerImageUsers", nil)
+}
+
+// DockerImageSize says "Size"
+// in the language the app shows.
+func DockerImageSize() string { return In(i18n.Locale()).DockerImageSize() }
+
+// DockerImageSize says "Size"
+// in the language of msgs.
+func (msgs Messages) DockerImageSize() string {
+	return Catalog.Format(msgs.locale, "dockerImageSize", nil)
+}
+
+// DockerImageStoppedUser says "Stopped container"
+// in the language the app shows.
+func DockerImageStoppedUser() string { return In(i18n.Locale()).DockerImageStoppedUser() }
+
+// DockerImageStoppedUser says "Stopped container"
+// in the language of msgs.
+func (msgs Messages) DockerImageStoppedUser() string {
+	return Catalog.Format(msgs.locale, "dockerImageStoppedUser", nil)
+}
+
+// DockerImageBuildCache says "Build Cache"
+// in the language the app shows.
+func DockerImageBuildCache() string { return In(i18n.Locale()).DockerImageBuildCache() }
+
+// DockerImageBuildCache says "Build Cache"
+// in the language of msgs.
+func (msgs Messages) DockerImageBuildCache() string {
+	return Catalog.Format(msgs.locale, "dockerImageBuildCache", nil)
+}
+
+// DockerImageCopyID says "Copy image ID"
+// in the language the app shows.
+func DockerImageCopyID() string { return In(i18n.Locale()).DockerImageCopyID() }
+
+// DockerImageCopyID says "Copy image ID"
+// in the language of msgs.
+func (msgs Messages) DockerImageCopyID() string {
+	return Catalog.Format(msgs.locale, "dockerImageCopyID", nil)
+}
+
+// DockerImageReview says "Review plan…"
+// in the language the app shows.
+func DockerImageReview() string { return In(i18n.Locale()).DockerImageReview() }
+
+// DockerImageReview says "Review plan…"
+// in the language of msgs.
+func (msgs Messages) DockerImageReview() string {
+	return Catalog.Format(msgs.locale, "dockerImageReview", nil)
+}
+
+// DockerImageReferenceInvalid says "Enter an image name, for example alpine:3.23 or registry.example.com/team/app:1.0."
+// in the language the app shows.
+func DockerImageReferenceInvalid() string { return In(i18n.Locale()).DockerImageReferenceInvalid() }
+
+// DockerImageReferenceInvalid says "Enter an image name, for example alpine:3.23 or registry.example.com/team/app:1.0."
+// in the language of msgs.
+func (msgs Messages) DockerImageReferenceInvalid() string {
+	return Catalog.Format(msgs.locale, "dockerImageReferenceInvalid", nil)
+}
+
+// DockerImageRemoveTitle says "Remove local images · {count}"
+// in the language the app shows.
+func DockerImageRemoveTitle(count int) string { return In(i18n.Locale()).DockerImageRemoveTitle(count) }
+
+// DockerImageRemoveTitle says "Remove local images · {count}"
+// in the language of msgs.
+func (msgs Messages) DockerImageRemoveTitle(count int) string {
+	return Catalog.Format(msgs.locale, "dockerImageRemoveTitle", map[string]any{"count": count})
+}
+
+// DockerImageRemoveWhy says "Docker will delete the selected images from {context}. To use them again, pull or build them again."
+// in the language the app shows.
+func DockerImageRemoveWhy(context string) string {
+	return In(i18n.Locale()).DockerImageRemoveWhy(context)
+}
+
+// DockerImageRemoveWhy says "Docker will delete the selected images from {context}. To use them again, pull or build them again."
+// in the language of msgs.
+func (msgs Messages) DockerImageRemoveWhy(context string) string {
+	return Catalog.Format(msgs.locale, "dockerImageRemoveWhy", map[string]any{"context": context})
+}
+
+// DockerImageRemoveBlocked says "Removal is blocked for this selection."
+// in the language the app shows.
+func DockerImageRemoveBlocked() string { return In(i18n.Locale()).DockerImageRemoveBlocked() }
+
+// DockerImageRemoveBlocked says "Removal is blocked for this selection."
+// in the language of msgs.
+func (msgs Messages) DockerImageRemoveBlocked() string {
+	return Catalog.Format(msgs.locale, "dockerImageRemoveBlocked", nil)
+}
+
+// DockerImageInUse says "Used by containers: {names}"
+// in the language the app shows.
+func DockerImageInUse(names string) string { return In(i18n.Locale()).DockerImageInUse(names) }
+
+// DockerImageInUse says "Used by containers: {names}"
+// in the language of msgs.
+func (msgs Messages) DockerImageInUse(names string) string {
+	return Catalog.Format(msgs.locale, "dockerImageInUse", map[string]any{"names": names})
+}
+
+// DockerImageMultipleTags says "This image has multiple tags: {tags}. Docker requires force to remove it by ID."
+// in the language the app shows.
+func DockerImageMultipleTags(tags string) string {
+	return In(i18n.Locale()).DockerImageMultipleTags(tags)
+}
+
+// DockerImageMultipleTags says "This image has multiple tags: {tags}. Docker requires force to remove it by ID."
+// in the language of msgs.
+func (msgs Messages) DockerImageMultipleTags(tags string) string {
+	return Catalog.Format(msgs.locale, "dockerImageMultipleTags", map[string]any{"tags": tags})
+}
+
+// DockerImageChanged says "The image or its tags changed. Refresh the list and review a new plan."
+// in the language the app shows.
+func DockerImageChanged() string { return In(i18n.Locale()).DockerImageChanged() }
+
+// DockerImageChanged says "The image or its tags changed. Refresh the list and review a new plan."
+// in the language of msgs.
+func (msgs Messages) DockerImageChanged() string {
+	return Catalog.Format(msgs.locale, "dockerImageChanged", nil)
+}
+
 // DockerEnvTab says "Env"
 // in the language the app shows.
 func DockerEnvTab() string { return In(i18n.Locale()).DockerEnvTab() }
