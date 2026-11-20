@@ -167,8 +167,11 @@ func main() {
 				win.Update(func() { done(res) })
 			}()
 		}
+		// The cluster view's reads keep their sign-in and connection.
+		api := kube.NewAPI()
 		a.WatchCluster = func(t kube.Target, got func(kube.Cluster, error)) func() {
 			env := scanner.Terminal()
+			t.API = api
 			ctx, cancel := context.WithCancel(context.Background())
 			go kube.Watch(ctx, run.Exec{}, env, t, func(c kube.Cluster, err error) {
 				win.Update(func() { got(c, err) })
@@ -317,6 +320,7 @@ func main() {
 		}
 		a.ListNamespaces = func(t kube.Target, done func([]string, error)) func() {
 			env := scanner.Terminal()
+			t.API = api
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
 				names, err := kube.Namespaces(ctx, run.Exec{}, env, t)

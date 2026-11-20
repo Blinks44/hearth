@@ -9,6 +9,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"regexp"
@@ -63,6 +64,9 @@ type Target struct {
 	Tail Tail
 	// LogOwner reads only the selected workload's pods for the log viewer.
 	LogOwner LogOwner
+	// API reads the lists through client-go when set, and kubectl when
+	// nil or when the API leaves a read to it.
+	API *API
 	// metrics is the Metrics API version a watch found served; nil for a
 	// single read.
 	metrics *metricsVersion
@@ -250,6 +254,11 @@ func get(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args []str
 }
 
 func kubectlJSON(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args []string, v any) error {
+	if t.API != nil {
+		if err := t.API.get(ctx, env, t, args, v); !errors.Is(err, errUseKubectl) {
+			return err
+		}
+	}
 	argv := append([]string{t.Kubectl, "--context=" + t.Context, "get"}, args...)
 	argv = append(argv, "--request-timeout=15s")
 	out, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Timeout: timeout, MaxOutput: 64 << 20})
