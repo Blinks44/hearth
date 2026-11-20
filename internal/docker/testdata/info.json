@@ -1,0 +1,1 @@
+{"ID":"c0a1","Containers":8,"ContainersRunning":4,"ContainersPaused":0,"ContainersStopped":4,"Images":23,"Driver":"overlay2","ServerVersion":"27.5.1","OperatingSystem":"Ubuntu 24.04.1 LTS","OSType":"linux","Architecture":"aarch64","NCPU":4,"MemTotal":8326258688,"Name":"colima","ClientInfo":{"Version":"27.4.1"}}

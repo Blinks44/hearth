@@ -15,6 +15,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/kube"
@@ -182,7 +183,11 @@ type App struct {
 	// WatchCluster reads the target's cluster now and again, giving each
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
-	WatchCluster          func(t kube.Target, got func(kube.Cluster, error)) (stop func())
+	WatchCluster func(t kube.Target, got func(kube.Cluster, error)) (stop func())
+	// WatchDocker reads a local Docker engine now and again, giving each
+	// read to got on the UI thread, until stop is called; nil hides the
+	// engine view.
+	WatchDocker           func(t docker.Target, got func(docker.Engine, error)) (stop func())
 	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
@@ -285,6 +290,7 @@ type App struct {
 	kubeNS             kubeNamespaceDialog
 	kubeChecks         map[string]kubeCheck
 	cluster            kubeClusterState
+	engine             dockerEngineState // the Docker engine page's
 	kind               kindCreateDialog
 	kubeLink           kubeLinkDialog
 	kubeApply          *kubeApplyDialog
@@ -349,6 +355,7 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncDocker()
 	a.syncHelmContent()
 	a.syncCustomDefinitions()
 	a.syncResourceYAML()
@@ -360,6 +367,12 @@ func (a *App) View(c *ui.Context) {
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })
 	if a.router.Path() == kubeClusterPage {
 		c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleClusterKinds)
+	}
+	if a.router.Path() == dockerEnginePage {
+		c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleDockerViews)
+		if a.engine.viewsOpen {
+			c.OnShortcut(0, ui.KeyEscape, func() { a.engine.viewsOpen = false })
+		}
 	}
 	if a.router.Path() == kubeClusterPage {
 		switch {
@@ -405,6 +418,12 @@ func (a *App) View(c *ui.Context) {
 				name := r.Query("context")
 				r.Title(name)
 				a.kubeClusterView(c, name)
+				return
+			}
+			if r.Match(dockerEnginePage) {
+				name := r.Query("context")
+				r.Title(name)
+				a.dockerEngineView(c, name)
 				return
 			}
 			if r.Match(changesPage.path) {
@@ -964,7 +983,7 @@ func (a *App) item(c *ui.Context, p page, end func()) {
 		}
 	})
 	if e.Clicked() && !chosen {
-		a.router.Push(p.path)
+		a.router.Push(a.entryPath(p.path))
 	}
 }
 

@@ -38,9 +38,18 @@ func TestDockerPage(t *testing.T) {
 	a.Projects = []projects.Project{{Dir: home + "/dev/api", Requirements: []projects.Requirement{{Tool: "docker", File: "compose.yaml"}}}}
 	tt := openDocker(a)
 	screenshot(t, tt, "docker")
-	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "How the terminal finds docker", "Container engines", "docker compose", "~/.orbstack/run/docker.sock", "/var/run/docker.sock", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
+	for _, text := range []string{"27.4.1", "unavailable", "orbstack", "colima", "LOCAL", "How Hearth works with Docker", "OrbStack · ~/.orbstack/run/docker.sock · current in docker CLI", "/var/run/docker.sock", "The DOCKER_CONTEXT environment variable overrides the selected context."} {
 		if !tt.HasText(text) {
 			t.Errorf("missing %q: %q", text, tt.Texts())
+		}
+	}
+	for tab, text := range map[string]string{"Engines": "Container engines", "Plugins": "docker compose", "PATH": "How the terminal finds docker"} {
+		if err := tt.Click(tab); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		if !tt.HasText(text) {
+			t.Errorf("%s: missing %q: %q", tab, text, tt.Texts())
 		}
 	}
 	for _, text := range []string{"unix://", "not checked"} {
@@ -116,6 +125,10 @@ func TestDockerOperations(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
+	if err := tt.Click("Engines"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
 	if err := tt.Click("Install Docker Desktop"); err != nil {
 		t.Fatal(err)
 	}
@@ -135,6 +148,10 @@ func TestDockerKiri(t *testing.T) {
 	d.Engines = append(d.Engines, inventory.DockerEngine{Name: "Kiri"})
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}})
 	tt := openDocker(a)
+	if err := tt.Click("Engines"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-kiri")
 	if tt.HasText("Install Kiri") {
 		t.Fatal("Kiri installs through a manager")

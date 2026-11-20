@@ -21,6 +21,7 @@ import (
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/disk"
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/history"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/kube"
@@ -175,6 +176,14 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			go kube.Watch(ctx, run.Exec{}, env, t, func(c kube.Cluster, err error) {
 				win.Update(func() { got(c, err) })
+			})
+			return cancel
+		}
+		a.WatchDocker = func(t docker.Target, got func(docker.Engine, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go docker.Watch(ctx, run.Exec{}, env, t, func(e docker.Engine, err error) {
+				win.Update(func() { got(e, err) })
 			})
 			return cancel
 		}
@@ -581,6 +590,7 @@ func main() {
 		win.OnClosed(func() {
 			a.CancelPreparation()
 			a.StopCluster()
+			a.StopDocker()
 			stopForwards()
 			stopCatalog()
 			if cancelVersions != nil {

@@ -83,18 +83,19 @@ esac
 	// Standard manager locations can add probes with 15-second timeouts.
 	c.waitForWithin(t, "Node.js", 90*time.Second)
 
-	for _, step := range []struct{ key, text string }{
-		{"/projects", "Code folders Hearth checks"},
-		{"/tools/node", "v" + fakeVersion},
-		{"/tools/docker", "CLI, contexts and container engines"},
-		{"/tools/databases", "Database servers and containers"},
-		{"/system/packages", "Package manager status"},
-		{"/system/path", "Where terminals and apps look for commands"},
-		{"/settings", "Local app · no account or Hearth telemetry"},
-		{"/overview", "Needs attention"},
+	// Docker opens the selected engine when it answers, its page when not.
+	for _, step := range []struct{ key, text, or string }{
+		{"/projects", "Code folders Hearth checks", ""},
+		{"/tools/node", "v" + fakeVersion, ""},
+		{"/tools/docker", "CLI, contexts and container engines", "Back to Docker"},
+		{"/tools/databases", "Database servers and containers", ""},
+		{"/system/packages", "Package manager status", ""},
+		{"/system/path", "Where terminals and apps look for commands", ""},
+		{"/settings", "Local app · no account or Hearth telemetry", ""},
+		{"/overview", "Needs attention", ""},
 	} {
 		c.call(t, "act", map[string]any{"key": step.key, "action": "press"})
-		c.waitFor(t, step.text)
+		c.waitForAny(t, step.text, step.or)
 	}
 	c.call(t, "act", map[string]any{"key": "open-search", "action": "press"})
 	c.waitFor(t, "ACTIONS")
@@ -214,16 +215,33 @@ func (c *client) waitFor(t *testing.T, text string) {
 
 func (c *client) waitForWithin(t *testing.T, text string, timeout time.Duration) {
 	t.Helper()
+	c.waitForOne(t, []string{text}, timeout)
+}
+
+// waitForAny waits for text, or for or when it is not empty.
+func (c *client) waitForAny(t *testing.T, text, or string) {
+	t.Helper()
+	texts := []string{text}
+	if or != "" {
+		texts = append(texts, or)
+	}
+	c.waitForOne(t, texts, 30*time.Second)
+}
+
+func (c *client) waitForOne(t *testing.T, texts []string, timeout time.Duration) {
+	t.Helper()
 	deadline := time.Now().Add(timeout)
 	for {
 		// A window that keeps moving never settles; the tree is read anyway.
 		_, _ = c.try("idle", map[string]any{"timeout": 2000})
 		labels := c.labels(t)
-		if slices.ContainsFunc(labels, func(l string) bool { return strings.Contains(l, text) }) {
-			return
+		for _, text := range texts {
+			if slices.ContainsFunc(labels, func(l string) bool { return strings.Contains(l, text) }) {
+				return
+			}
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("no %q in %q", text, labels)
+			t.Fatalf("none of %q in %q", texts, labels)
 		}
 		time.Sleep(200 * time.Millisecond)
 	}

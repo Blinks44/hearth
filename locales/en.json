@@ -13375,5 +13375,178 @@
   "kubeCheckAccess": "Check access",
   "@kubeCheckAccess": {
     "description": "Context menu: checks access to the context's cluster."
+  },
+  "dockerViewOverview": "Overview",
+  "@dockerViewOverview": {
+    "description": "Docker engine view: the engine's overview."
+  },
+  "dockerViewContainers": "Containers",
+  "@dockerViewContainers": {
+    "description": "Docker engine view: the containers view."
+  },
+  "dockerViewImages": "Images",
+  "@dockerViewImages": {
+    "description": "Docker engine view: the images view."
+  },
+  "dockerViewVolumes": "Volumes",
+  "@dockerViewVolumes": {
+    "description": "Docker engine view: the volumes view."
+  },
+  "dockerViewNetworks": "Networks",
+  "@dockerViewNetworks": {
+    "description": "Docker engine view: the networks view."
+  },
+  "dockerViews": "Views",
+  "@dockerViews": {
+    "description": "Docker engine view: heading of the popover choosing what the view shows."
+  },
+  "backToDocker": "Back to Docker",
+  "@backToDocker": {
+    "description": "Back button from a Docker engine to the Docker page."
+  },
+  "dockerEngineReading": "Reading {context}…",
+  "@dockerEngineReading": {
+    "description": "Docker engine view: the first read is under way.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEngineDown": "{context} does not answer",
+  "@dockerEngineDown": {
+    "description": "Docker engine view: the engine could not be read; title above Docker's words.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEngineDownHint": "Containers, images and volumes show once the engine runs. Hearth reads it again every few seconds.",
+  "@dockerEngineDownHint": {
+    "description": "Docker engine view: under the title of an engine that does not answer."
+  },
+  "dockerEngineRemote": "{context} is a remote context: Hearth opens local engines only.",
+  "@dockerEngineRemote": {
+    "description": "Docker engine view: the context's engine is not on this computer.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEngineMissing": "No Docker context named {context}.",
+  "@dockerEngineMissing": {
+    "description": "Docker engine view: the context in the address no longer exists.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEngineNoCli": "Docker CLI is not on the terminal PATH: Hearth reads the engine through it.",
+  "@dockerEngineNoCli": {
+    "description": "Docker engine view: no CLI to read the engine with."
+  },
+  "dockerViewSoon": "This view arrives in a coming update of the Docker section.",
+  "@dockerViewSoon": {
+    "description": "Docker engine view: a view not built yet."
+  },
+  "dockerPickNote": "Choosing an engine here changes only what Hearth shows. The docker CLI keeps its context.",
+  "@dockerPickNote": {
+    "description": "Docker engine view: note in the context popover."
+  },
+  "dockerRunningOf": "{running} of {total} running",
+  "@dockerRunningOf": {
+    "description": "Docker engine overview: how many containers run.",
+    "placeholders": {
+      "running": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImagesCount": "Images",
+  "@dockerImagesCount": {
+    "description": "Docker engine overview: card with the number of images."
+  },
+  "dockerCpus": "Processors",
+  "@dockerCpus": {
+    "description": "Docker engine overview: card with the engine's CPUs."
+  },
+  "dockerMemory": "Memory",
+  "@dockerMemory": {
+    "description": "Docker engine overview: card with the engine's memory."
+  },
+  "dockerForEngine": "available to the engine",
+  "@dockerForEngine": {
+    "description": "Docker engine overview: caption under CPUs and memory."
+  },
+  "dockerStoppedPaused": "{stopped} stopped · {paused} paused",
+  "@dockerStoppedPaused": {
+    "description": "Docker engine overview: caption under the running containers.",
+    "placeholders": {
+      "stopped": {
+        "type": "String"
+      },
+      "paused": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOpenContext": "Open {context}",
+  "@dockerOpenContext": {
+    "description": "Docker page header: opens the selected context's engine.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerLocal": "Local",
+  "@dockerLocal": {
+    "description": "Docker contexts: group of contexts on this computer."
+  },
+  "dockerRemote": "Remote",
+  "@dockerRemote": {
+    "description": "Docker contexts: group of contexts on other machines."
+  },
+  "dockerInCli": "current in docker CLI",
+  "@dockerInCli": {
+    "description": "Docker context row: the context the CLI uses."
+  },
+  "dockerPluginsTab": "Plugins",
+  "@dockerPluginsTab": {
+    "description": "Docker page tab with the CLI plugins."
+  },
+  "dockerHow": "How Hearth works with Docker",
+  "@dockerHow": {
+    "description": "Docker page: card explaining what Hearth does."
+  },
+  "dockerHowScan": "The scan leaves containers alone",
+  "@dockerHowScan": {
+    "description": "Docker how card row."
+  },
+  "dockerHowScanCaption": "an engine is read only while its view is open",
+  "@dockerHowScanCaption": {
+    "description": "Docker how card row caption."
+  },
+  "dockerHowView": "Viewing does not change docker context",
+  "@dockerHowView": {
+    "description": "Docker how card row."
+  },
+  "dockerHowViewCaption": "the CLI's context changes by its own plan",
+  "@dockerHowViewCaption": {
+    "description": "Docker how card row caption."
+  },
+  "dockerHowPlan": "Changes only through a plan",
+  "@dockerHowPlan": {
+    "description": "Docker how card row."
+  },
+  "dockerHowPlanCaption": "with commands, consequences and confirmation",
+  "@dockerHowPlanCaption": {
+    "description": "Docker how card row caption."
   }
 }

@@ -19,6 +19,9 @@ func (a *App) docker(c *ui.Context, p page) {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			if plan, ok := a.engineStartPlan(); ok {
 				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
+			} else if st, _ := a.Snapshot.Tool("docker"); a.dockerAnswers() && a.dockerOpenable(st.Docker.Selected) {
+				name := st.Docker.Selected
+				ui.PrimaryButton(c.Key("engine-open"), locales.DockerOpenContext(name)).OnClick(func() { a.router.Push(dockerEnginePath(name)) })
 			}
 		}})
 		st, checked := a.Snapshot.Tool("docker")
@@ -51,19 +54,18 @@ func (a *App) docker(c *ui.Context, p page) {
 					warningRow(c, locales.DockerConfigError())
 				}
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					segments(c, "docker-tabs", &a.dockerTab, []segment{{locales.DockerContexts(), strconv.Itoa(len(d.Contexts))}, {locales.DockerEngines(), ""}, {locales.ProjectsTitle(), strconv.Itoa(len(a.dockerProjects()))}, {"PATH", ""}})
+					segments(c, "docker-tabs", &a.dockerTab, []segment{
+						{locales.DockerContexts(), strconv.Itoa(len(d.Contexts))},
+						{locales.DockerEngines(), strconv.Itoa(len(d.Engines))},
+						{locales.ProjectsTitle(), strconv.Itoa(len(a.dockerProjects()))},
+						{locales.DockerPluginsTab(), strconv.Itoa(len(d.Plugins))},
+						{"PATH", ""},
+					})
 					ui.Box(c).Grow(1)
 					if a.dockerTab == 0 {
 						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Width(200)
 					}
 				})
-				var side func()
-				if a.dockerTab == 0 {
-					side = func() {
-						a.dockerEngines(c, st)
-						globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
-					}
-				}
 				columns(c, 12, func() {
 					switch a.dockerTab {
 					case 0:
@@ -72,15 +74,22 @@ func (a *App) docker(c *ui.Context, p page) {
 						if d.Override != "" {
 							toolNote(c, locales.DockerOverrideNote(d.Override))
 						}
-						pathCard(c, "docker", st.Installations, active, a.Home)
 					case 1:
 						a.dockerEngines(c, st)
 					case 2:
 						a.dockerProjectList(c)
 					case 3:
+						globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
+					case 4:
 						pathCard(c, "docker", st.Installations, active, a.Home)
 					}
-				}, side)
+				}, func() {
+					listCard(c, locales.DockerHow(), "", func() {
+						listRow(c, locales.DockerHowScan(), false, locales.DockerHowScanCaption(), func() {})
+						listRow(c, locales.DockerHowView(), false, locales.DockerHowViewCaption(), func() {})
+						listRow(c, locales.DockerHowPlan(), false, locales.DockerHowPlanCaption(), func() {})
+					})
+				})
 			})
 		})
 	})
@@ -134,69 +143,89 @@ func endpointText(endpoint, home string) string {
 	return endpoint
 }
 
+// dockerContexts lists the contexts, local ones first, as the Kubernetes
+// page lists its own: what each points to, the status of the one checked,
+// and Open for an engine on this computer.
 func (a *App) dockerContexts(c *ui.Context, d *inventory.DockerState) {
 	pal := Colors(c.Theme())
+	shown := 0
 	ui.Column(c).Radius(12).Clip().Background(c.Theme().Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.DockerContext()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
-			ui.Text(c, locales.DockerEngine()).Width(84).FontSize(11.5).TextColor(pal.TextFaint)
-			ui.Text(c, locales.DockerEndpoint()).FontSize(11.5).TextColor(pal.TextFaint)
-		})
-		shown := 0
-		for _, context := range d.Contexts {
-			if !strings.Contains(strings.ToLower(context.Name+" "+context.Engine+" "+context.Endpoint), strings.ToLower(a.dockerFilter)) {
+		for _, local := range []bool{true, false} {
+			var rows []inventory.DockerContext
+			for _, k := range d.Contexts {
+				if k.Local == local && strings.Contains(strings.ToLower(k.Name+" "+k.Engine+" "+k.Endpoint), strings.ToLower(a.dockerFilter)) {
+					rows = append(rows, k)
+				}
+			}
+			if len(rows) == 0 {
 				continue
 			}
-			shown++
-			row := ui.Row(c.Key("context:"+context.Name)).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
-			if context.Name == d.Selected {
-				row.Background(pal.AccentSoft.Alpha(0.4))
+			title := locales.DockerRemote()
+			if local {
+				title = locales.DockerLocal()
 			}
-			row.Children(func() {
-				clipped(c, context.Name).Font(FontMono).FontSize(12.5).Width(nameWidth(c))
-				engine := context.Engine
-				if engine == "" {
-					engine = "—"
-				}
-				ui.Text(c, engine).FontSize(11).Width(84).SingleLine().TextColor(pal.MonoText)
-				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					clipped(c, endpointText(context.Endpoint, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
-					ui.Row(c).Gap(5).Children(func() {
-						if context.Name == d.Selected {
-							chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.DockerActive())
-						} else if context.Status == "" {
-							// Only the selected context is probed: saying the
-							// others were not checked tells nothing.
-							return
-						}
-						status, dot := dockerStatus(c, context.Status)
-						bg, ink := pal.Muted, pal.TextFaint
-						if context.Status == "available" {
-							bg, ink = pal.SuccessSoft, pal.SuccessText
-						}
-						if context.Status == "unavailable" {
-							bg, ink = pal.WarningSoft, pal.WarningText
-						}
-						chip(c, dot, bg, ink, status)
-					})
-					if !context.Local && context.Endpoint != "" {
-						ui.Text(c, locales.DockerRemoteNote()).FontSize(11).TextColor(pal.TextFaint)
-					}
-				})
-				if context.Local {
-					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(context.Endpoint); c.Toast(locales.PathCopied()) })
-				}
-				if plan, ok := a.contextPlan(context.Name); ok {
-					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-						if menu.Item(locales.DockerUseContext()).Chosen() {
-							a.Propose(plan)
-						}
-					})
-				}
-			})
+			cliGroupHead(c, title, len(rows))
+			for _, k := range rows {
+				a.dockerContextRow(c.Key("context:"+k.Name), d, k)
+			}
+			shown += len(rows)
 		}
 		if shown == 0 {
 			cardNote(c, locales.DockerNoMatches())
+		}
+	})
+}
+
+// dockerContextRow is a context: its engine and address, whether the CLI
+// uses it, what the scan found of its engine, and its actions; the row's
+// right-click and its ⋯ open the same menu.
+func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k inventory.DockerContext) {
+	pal := Colors(c.Theme())
+	selected := k.Name == d.Selected
+	plan, canUse := a.contextPlan(k.Name)
+	menu := func(m *ui.Menu) {
+		if canUse && m.Item(locales.DockerUseContext()).Chosen() {
+			a.Propose(plan)
+		}
+		if k.Local && m.Item(locales.CopyPath()).Chosen() {
+			c.WriteClipboard(k.Endpoint)
+			c.Toast(locales.PathCopied())
+		}
+	}
+	row := ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
+	if selected {
+		row.Background(pal.AccentSoft.Alpha(0.4))
+	}
+	row.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			clipped(c, k.Name).Font(FontMono).FontSize(13)
+			caption := dockerContextCaption(k, a.Home)
+			if selected {
+				caption += " · " + locales.DockerInCli()
+			}
+			clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint)
+			if !k.Local && k.Endpoint != "" {
+				clipped(c, locales.DockerRemoteNote()).FontSize(10.5).TextColor(pal.TextFaint)
+			}
+		})
+		// Only the selected context is probed: saying the others were not
+		// checked tells nothing.
+		if selected || k.Status != "" {
+			status, dot := dockerStatus(c, k.Status)
+			bg, ink := pal.Muted, pal.TextFaint
+			switch k.Status {
+			case "available":
+				bg, ink = pal.SuccessSoft, pal.SuccessText
+			case "unavailable":
+				bg, ink = pal.WarningSoft, pal.WarningText
+			}
+			chip(c, dot, bg, ink, status)
+		}
+		if a.dockerOpenable(k.Name) {
+			ui.Button(c.Key("open"), locales.KubeClusterOpen()).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
+		}
+		if canUse || k.Local {
+			iconButton(c, "ellipsis", locales.MoreActions()).Menu(menu)
 		}
 	})
 }

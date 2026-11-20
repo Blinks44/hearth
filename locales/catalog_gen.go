@@ -34405,3 +34405,475 @@ func KubeCheckAccess() string { return In(i18n.Locale()).KubeCheckAccess() }
 func (msgs Messages) KubeCheckAccess() string {
 	return Catalog.Format(msgs.locale, "kubeCheckAccess", nil)
 }
+
+// DockerViewOverview says "Overview"
+// in the language the app shows.
+//
+// Docker engine view: the engine's overview.
+func DockerViewOverview() string { return In(i18n.Locale()).DockerViewOverview() }
+
+// DockerViewOverview says "Overview"
+// in the language of msgs.
+//
+// Docker engine view: the engine's overview.
+func (msgs Messages) DockerViewOverview() string {
+	return Catalog.Format(msgs.locale, "dockerViewOverview", nil)
+}
+
+// DockerViewContainers says "Containers"
+// in the language the app shows.
+//
+// Docker engine view: the containers view.
+func DockerViewContainers() string { return In(i18n.Locale()).DockerViewContainers() }
+
+// DockerViewContainers says "Containers"
+// in the language of msgs.
+//
+// Docker engine view: the containers view.
+func (msgs Messages) DockerViewContainers() string {
+	return Catalog.Format(msgs.locale, "dockerViewContainers", nil)
+}
+
+// DockerViewImages says "Images"
+// in the language the app shows.
+//
+// Docker engine view: the images view.
+func DockerViewImages() string { return In(i18n.Locale()).DockerViewImages() }
+
+// DockerViewImages says "Images"
+// in the language of msgs.
+//
+// Docker engine view: the images view.
+func (msgs Messages) DockerViewImages() string {
+	return Catalog.Format(msgs.locale, "dockerViewImages", nil)
+}
+
+// DockerViewVolumes says "Volumes"
+// in the language the app shows.
+//
+// Docker engine view: the volumes view.
+func DockerViewVolumes() string { return In(i18n.Locale()).DockerViewVolumes() }
+
+// DockerViewVolumes says "Volumes"
+// in the language of msgs.
+//
+// Docker engine view: the volumes view.
+func (msgs Messages) DockerViewVolumes() string {
+	return Catalog.Format(msgs.locale, "dockerViewVolumes", nil)
+}
+
+// DockerViewNetworks says "Networks"
+// in the language the app shows.
+//
+// Docker engine view: the networks view.
+func DockerViewNetworks() string { return In(i18n.Locale()).DockerViewNetworks() }
+
+// DockerViewNetworks says "Networks"
+// in the language of msgs.
+//
+// Docker engine view: the networks view.
+func (msgs Messages) DockerViewNetworks() string {
+	return Catalog.Format(msgs.locale, "dockerViewNetworks", nil)
+}
+
+// DockerViews says "Views"
+// in the language the app shows.
+//
+// Docker engine view: heading of the popover choosing what the view shows.
+func DockerViews() string { return In(i18n.Locale()).DockerViews() }
+
+// DockerViews says "Views"
+// in the language of msgs.
+//
+// Docker engine view: heading of the popover choosing what the view shows.
+func (msgs Messages) DockerViews() string {
+	return Catalog.Format(msgs.locale, "dockerViews", nil)
+}
+
+// BackToDocker says "Back to Docker"
+// in the language the app shows.
+//
+// Back button from a Docker engine to the Docker page.
+func BackToDocker() string { return In(i18n.Locale()).BackToDocker() }
+
+// BackToDocker says "Back to Docker"
+// in the language of msgs.
+//
+// Back button from a Docker engine to the Docker page.
+func (msgs Messages) BackToDocker() string {
+	return Catalog.Format(msgs.locale, "backToDocker", nil)
+}
+
+// DockerEngineReading says "Reading {context}…"
+// in the language the app shows.
+//
+// Docker engine view: the first read is under way.
+func DockerEngineReading(context string) string {
+	return In(i18n.Locale()).DockerEngineReading(context)
+}
+
+// DockerEngineReading says "Reading {context}…"
+// in the language of msgs.
+//
+// Docker engine view: the first read is under way.
+func (msgs Messages) DockerEngineReading(context string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineReading", map[string]any{"context": context})
+}
+
+// DockerEngineDown says "{context} does not answer"
+// in the language the app shows.
+//
+// Docker engine view: the engine could not be read; title above Docker's
+// words.
+func DockerEngineDown(context string) string { return In(i18n.Locale()).DockerEngineDown(context) }
+
+// DockerEngineDown says "{context} does not answer"
+// in the language of msgs.
+//
+// Docker engine view: the engine could not be read; title above Docker's
+// words.
+func (msgs Messages) DockerEngineDown(context string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineDown", map[string]any{"context": context})
+}
+
+// DockerEngineDownHint says "Containers, images and volumes show once the engine runs. Hearth reads it again every few seconds."
+// in the language the app shows.
+//
+// Docker engine view: under the title of an engine that does not answer.
+func DockerEngineDownHint() string { return In(i18n.Locale()).DockerEngineDownHint() }
+
+// DockerEngineDownHint says "Containers, images and volumes show once the engine runs. Hearth reads it again every few seconds."
+// in the language of msgs.
+//
+// Docker engine view: under the title of an engine that does not answer.
+func (msgs Messages) DockerEngineDownHint() string {
+	return Catalog.Format(msgs.locale, "dockerEngineDownHint", nil)
+}
+
+// DockerEngineRemote says "{context} is a remote context: Hearth opens local engines only."
+// in the language the app shows.
+//
+// Docker engine view: the context's engine is not on this computer.
+func DockerEngineRemote(context string) string { return In(i18n.Locale()).DockerEngineRemote(context) }
+
+// DockerEngineRemote says "{context} is a remote context: Hearth opens local engines only."
+// in the language of msgs.
+//
+// Docker engine view: the context's engine is not on this computer.
+func (msgs Messages) DockerEngineRemote(context string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineRemote", map[string]any{"context": context})
+}
+
+// DockerEngineMissing says "No Docker context named {context}."
+// in the language the app shows.
+//
+// Docker engine view: the context in the address no longer exists.
+func DockerEngineMissing(context string) string {
+	return In(i18n.Locale()).DockerEngineMissing(context)
+}
+
+// DockerEngineMissing says "No Docker context named {context}."
+// in the language of msgs.
+//
+// Docker engine view: the context in the address no longer exists.
+func (msgs Messages) DockerEngineMissing(context string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineMissing", map[string]any{"context": context})
+}
+
+// DockerEngineNoCli says "Docker CLI is not on the terminal PATH: Hearth reads the engine through it."
+// in the language the app shows.
+//
+// Docker engine view: no CLI to read the engine with.
+func DockerEngineNoCli() string { return In(i18n.Locale()).DockerEngineNoCli() }
+
+// DockerEngineNoCli says "Docker CLI is not on the terminal PATH: Hearth reads the engine through it."
+// in the language of msgs.
+//
+// Docker engine view: no CLI to read the engine with.
+func (msgs Messages) DockerEngineNoCli() string {
+	return Catalog.Format(msgs.locale, "dockerEngineNoCli", nil)
+}
+
+// DockerViewSoon says "This view arrives in a coming update of the Docker section."
+// in the language the app shows.
+//
+// Docker engine view: a view not built yet.
+func DockerViewSoon() string { return In(i18n.Locale()).DockerViewSoon() }
+
+// DockerViewSoon says "This view arrives in a coming update of the Docker section."
+// in the language of msgs.
+//
+// Docker engine view: a view not built yet.
+func (msgs Messages) DockerViewSoon() string {
+	return Catalog.Format(msgs.locale, "dockerViewSoon", nil)
+}
+
+// DockerPickNote says "Choosing an engine here changes only what Hearth shows. The docker CLI keeps its context."
+// in the language the app shows.
+//
+// Docker engine view: note in the context popover.
+func DockerPickNote() string { return In(i18n.Locale()).DockerPickNote() }
+
+// DockerPickNote says "Choosing an engine here changes only what Hearth shows. The docker CLI keeps its context."
+// in the language of msgs.
+//
+// Docker engine view: note in the context popover.
+func (msgs Messages) DockerPickNote() string {
+	return Catalog.Format(msgs.locale, "dockerPickNote", nil)
+}
+
+// DockerRunningOf says "{running} of {total} running"
+// in the language the app shows.
+//
+// Docker engine overview: how many containers run.
+func DockerRunningOf(running string, total string) string {
+	return In(i18n.Locale()).DockerRunningOf(running, total)
+}
+
+// DockerRunningOf says "{running} of {total} running"
+// in the language of msgs.
+//
+// Docker engine overview: how many containers run.
+func (msgs Messages) DockerRunningOf(running string, total string) string {
+	return Catalog.Format(msgs.locale, "dockerRunningOf", map[string]any{"running": running, "total": total})
+}
+
+// DockerImagesCount says "Images"
+// in the language the app shows.
+//
+// Docker engine overview: card with the number of images.
+func DockerImagesCount() string { return In(i18n.Locale()).DockerImagesCount() }
+
+// DockerImagesCount says "Images"
+// in the language of msgs.
+//
+// Docker engine overview: card with the number of images.
+func (msgs Messages) DockerImagesCount() string {
+	return Catalog.Format(msgs.locale, "dockerImagesCount", nil)
+}
+
+// DockerCpus says "Processors"
+// in the language the app shows.
+//
+// Docker engine overview: card with the engine's CPUs.
+func DockerCpus() string { return In(i18n.Locale()).DockerCpus() }
+
+// DockerCpus says "Processors"
+// in the language of msgs.
+//
+// Docker engine overview: card with the engine's CPUs.
+func (msgs Messages) DockerCpus() string {
+	return Catalog.Format(msgs.locale, "dockerCpus", nil)
+}
+
+// DockerMemory says "Memory"
+// in the language the app shows.
+//
+// Docker engine overview: card with the engine's memory.
+func DockerMemory() string { return In(i18n.Locale()).DockerMemory() }
+
+// DockerMemory says "Memory"
+// in the language of msgs.
+//
+// Docker engine overview: card with the engine's memory.
+func (msgs Messages) DockerMemory() string {
+	return Catalog.Format(msgs.locale, "dockerMemory", nil)
+}
+
+// DockerForEngine says "available to the engine"
+// in the language the app shows.
+//
+// Docker engine overview: caption under CPUs and memory.
+func DockerForEngine() string { return In(i18n.Locale()).DockerForEngine() }
+
+// DockerForEngine says "available to the engine"
+// in the language of msgs.
+//
+// Docker engine overview: caption under CPUs and memory.
+func (msgs Messages) DockerForEngine() string {
+	return Catalog.Format(msgs.locale, "dockerForEngine", nil)
+}
+
+// DockerStoppedPaused says "{stopped} stopped · {paused} paused"
+// in the language the app shows.
+//
+// Docker engine overview: caption under the running containers.
+func DockerStoppedPaused(stopped string, paused string) string {
+	return In(i18n.Locale()).DockerStoppedPaused(stopped, paused)
+}
+
+// DockerStoppedPaused says "{stopped} stopped · {paused} paused"
+// in the language of msgs.
+//
+// Docker engine overview: caption under the running containers.
+func (msgs Messages) DockerStoppedPaused(stopped string, paused string) string {
+	return Catalog.Format(msgs.locale, "dockerStoppedPaused", map[string]any{"stopped": stopped, "paused": paused})
+}
+
+// DockerOpenContext says "Open {context}"
+// in the language the app shows.
+//
+// Docker page header: opens the selected context's engine.
+func DockerOpenContext(context string) string { return In(i18n.Locale()).DockerOpenContext(context) }
+
+// DockerOpenContext says "Open {context}"
+// in the language of msgs.
+//
+// Docker page header: opens the selected context's engine.
+func (msgs Messages) DockerOpenContext(context string) string {
+	return Catalog.Format(msgs.locale, "dockerOpenContext", map[string]any{"context": context})
+}
+
+// DockerLocal says "Local"
+// in the language the app shows.
+//
+// Docker contexts: group of contexts on this computer.
+func DockerLocal() string { return In(i18n.Locale()).DockerLocal() }
+
+// DockerLocal says "Local"
+// in the language of msgs.
+//
+// Docker contexts: group of contexts on this computer.
+func (msgs Messages) DockerLocal() string {
+	return Catalog.Format(msgs.locale, "dockerLocal", nil)
+}
+
+// DockerRemote says "Remote"
+// in the language the app shows.
+//
+// Docker contexts: group of contexts on other machines.
+func DockerRemote() string { return In(i18n.Locale()).DockerRemote() }
+
+// DockerRemote says "Remote"
+// in the language of msgs.
+//
+// Docker contexts: group of contexts on other machines.
+func (msgs Messages) DockerRemote() string {
+	return Catalog.Format(msgs.locale, "dockerRemote", nil)
+}
+
+// DockerInCli says "current in docker CLI"
+// in the language the app shows.
+//
+// Docker context row: the context the CLI uses.
+func DockerInCli() string { return In(i18n.Locale()).DockerInCli() }
+
+// DockerInCli says "current in docker CLI"
+// in the language of msgs.
+//
+// Docker context row: the context the CLI uses.
+func (msgs Messages) DockerInCli() string {
+	return Catalog.Format(msgs.locale, "dockerInCli", nil)
+}
+
+// DockerPluginsTab says "Plugins"
+// in the language the app shows.
+//
+// Docker page tab with the CLI plugins.
+func DockerPluginsTab() string { return In(i18n.Locale()).DockerPluginsTab() }
+
+// DockerPluginsTab says "Plugins"
+// in the language of msgs.
+//
+// Docker page tab with the CLI plugins.
+func (msgs Messages) DockerPluginsTab() string {
+	return Catalog.Format(msgs.locale, "dockerPluginsTab", nil)
+}
+
+// DockerHow says "How Hearth works with Docker"
+// in the language the app shows.
+//
+// Docker page: card explaining what Hearth does.
+func DockerHow() string { return In(i18n.Locale()).DockerHow() }
+
+// DockerHow says "How Hearth works with Docker"
+// in the language of msgs.
+//
+// Docker page: card explaining what Hearth does.
+func (msgs Messages) DockerHow() string {
+	return Catalog.Format(msgs.locale, "dockerHow", nil)
+}
+
+// DockerHowScan says "The scan leaves containers alone"
+// in the language the app shows.
+//
+// Docker how card row.
+func DockerHowScan() string { return In(i18n.Locale()).DockerHowScan() }
+
+// DockerHowScan says "The scan leaves containers alone"
+// in the language of msgs.
+//
+// Docker how card row.
+func (msgs Messages) DockerHowScan() string {
+	return Catalog.Format(msgs.locale, "dockerHowScan", nil)
+}
+
+// DockerHowScanCaption says "an engine is read only while its view is open"
+// in the language the app shows.
+//
+// Docker how card row caption.
+func DockerHowScanCaption() string { return In(i18n.Locale()).DockerHowScanCaption() }
+
+// DockerHowScanCaption says "an engine is read only while its view is open"
+// in the language of msgs.
+//
+// Docker how card row caption.
+func (msgs Messages) DockerHowScanCaption() string {
+	return Catalog.Format(msgs.locale, "dockerHowScanCaption", nil)
+}
+
+// DockerHowView says "Viewing does not change docker context"
+// in the language the app shows.
+//
+// Docker how card row.
+func DockerHowView() string { return In(i18n.Locale()).DockerHowView() }
+
+// DockerHowView says "Viewing does not change docker context"
+// in the language of msgs.
+//
+// Docker how card row.
+func (msgs Messages) DockerHowView() string {
+	return Catalog.Format(msgs.locale, "dockerHowView", nil)
+}
+
+// DockerHowViewCaption says "the CLI's context changes by its own plan"
+// in the language the app shows.
+//
+// Docker how card row caption.
+func DockerHowViewCaption() string { return In(i18n.Locale()).DockerHowViewCaption() }
+
+// DockerHowViewCaption says "the CLI's context changes by its own plan"
+// in the language of msgs.
+//
+// Docker how card row caption.
+func (msgs Messages) DockerHowViewCaption() string {
+	return Catalog.Format(msgs.locale, "dockerHowViewCaption", nil)
+}
+
+// DockerHowPlan says "Changes only through a plan"
+// in the language the app shows.
+//
+// Docker how card row.
+func DockerHowPlan() string { return In(i18n.Locale()).DockerHowPlan() }
+
+// DockerHowPlan says "Changes only through a plan"
+// in the language of msgs.
+//
+// Docker how card row.
+func (msgs Messages) DockerHowPlan() string {
+	return Catalog.Format(msgs.locale, "dockerHowPlan", nil)
+}
+
+// DockerHowPlanCaption says "with commands, consequences and confirmation"
+// in the language the app shows.
+//
+// Docker how card row caption.
+func DockerHowPlanCaption() string { return In(i18n.Locale()).DockerHowPlanCaption() }
+
+// DockerHowPlanCaption says "with commands, consequences and confirmation"
+// in the language of msgs.
+//
+// Docker how card row caption.
+func (msgs Messages) DockerHowPlanCaption() string {
+	return Catalog.Format(msgs.locale, "dockerHowPlanCaption", nil)
+}
