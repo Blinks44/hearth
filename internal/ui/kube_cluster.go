@@ -55,6 +55,7 @@ const (
 	kindPolicies
 	kindNamespaces
 	kindServiceAccounts
+	kindAccess
 	kindCustom
 )
 
@@ -97,6 +98,7 @@ type kubeClusterState struct {
 	claimFilter, nodeFilter    int
 	namespaceFilter            int
 	namespaceCreate            *namespaceCreateForm
+	access                     accessView
 	policyTab                  int
 	policySort                 bool
 	resources                  map[ops.KubeResource]*kubeResourceForm
@@ -180,11 +182,14 @@ func (a *App) syncCluster() {
 			t.Services = s.kind == kindServices
 			t.Resource = otherResourceKind(s.kind)
 			t.Policies = s.kind == kindPolicies
+			if s.kind == kindAccess {
+				t.AccessNamespace = a.accessNamespace(name)
+			}
 			t.DeploymentAutoscalers = s.kind == kindDeployments
 			if s.kind == kindCustom {
 				t.CustomKind = s.custom.name
 			}
-			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ",")})
+			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ","), t.AccessNamespace})
 			if s.kind == kindHelm {
 				if helm, found := cliCopy(a.cliState(), "helm"); found {
 					t.Helm, t.HelmVersion = helm.Path, helm.Version
@@ -201,6 +206,7 @@ func (a *App) syncCluster() {
 		s.shell = nil
 		s.service = ""
 		s.other.reset()
+		s.access.resetSelection()
 		s.namespaceCreate = nil
 		if s.resourceLink.kind != s.kind {
 			s.resourceLink = resourceLink{}
@@ -373,7 +379,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			return
 		}
 		resourceKind := otherResourceKind(s.kind)
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindServices || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies
+		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindServices || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies || s.kind == kindAccess
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -395,7 +401,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 				helm, hasHelm := cliCopy(a.cliState(), "helm")
 				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
-				if s.kind == kindCustom && s.custom.name != "" {
+				if s.data != nil && (s.kind == kindAccess || s.data.Access != nil) {
+					waiting = s.kind != kindAccess || s.data.Access == nil
+				} else if s.kind == kindCustom && s.custom.name != "" {
 					waiting = s.custom.list(s.data) == nil
 				} else if s.data != nil && (s.kind == kindPolicies || s.data.Policies != nil) {
 					waiting = s.kind != kindPolicies || s.data.Policies == nil
@@ -437,6 +445,8 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 						a.servicesView(c, s.data)
 					case kindSecrets:
 						a.secretsView(c, s.data.Secrets)
+					case kindAccess:
+						a.clusterAccessView(c, name, s.data.Access)
 					case kindPolicies:
 						view := *s.data
 						view.Resources = s.activeResourceList(s.data)
@@ -520,6 +530,9 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		ui.Popover(c, anchor, &s.contextOpen, func() { a.contextPopover(c, name) })
 		pathSlash(c)
 		ns := a.clusterNamespaces(name)
+		if s.kind == kindAccess {
+			ns = []string{a.accessNamespace(name)}
+		}
 		label := strings.Join(ns, ", ")
 		if len(ns) == 0 {
 			label = locales.KubeClusterAllNamespaces()
@@ -603,6 +616,9 @@ func (a *App) freshness(c *ui.Context) {
 		}
 	} else if s.data != nil {
 		taken = s.data.Taken
+		if s.kind == kindAccess && s.access.tab == accessRulesTab && s.data.Access != nil {
+			readErr = s.data.Access.RulesErr
+		}
 	}
 	switch {
 	case s.kind == kindHelm && a.Snapshot != nil && (cliFound(a.cliState(), []string{"helm"}) == 0 || errors.Is(s.err, fs.ErrNotExist)):
@@ -776,18 +792,23 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 	t := c.Theme()
 	pal := Colors(t)
 	chosen := a.clusterNamespaces(name)
+	if s.kind == kindAccess {
+		chosen = []string{a.accessNamespace(name)}
+	}
 	ui.Column(c).Width(300).Gap(4).Padding(10).Children(func() {
-		all := len(chosen) == 0
-		if ui.Checkbox(c.Key("ns-all"), &all, locales.KubeClusterAllNamespaces()).Changed() {
-			if all {
-				a.setNamespaces(name, []string{})
-			} else if k := a.kubeContext(name); k != nil {
-				a.setNamespaces(name, []string{namespaceOf(*k)})
-			} else {
-				a.setNamespaces(name, []string{"default"})
+		if s.kind != kindAccess {
+			all := len(chosen) == 0
+			if ui.Checkbox(c.Key("ns-all"), &all, locales.KubeClusterAllNamespaces()).Changed() {
+				if all {
+					a.setNamespaces(name, []string{})
+				} else if k := a.kubeContext(name); k != nil {
+					a.setNamespaces(name, []string{namespaceOf(*k)})
+				} else {
+					a.setNamespaces(name, []string{"default"})
+				}
 			}
+			ui.Box(c).Height(1).Background(pal.Line).Margin(4, 0)
 		}
-		ui.Box(c).Height(1).Background(pal.Line).Margin(4, 0)
 		names := slices.Clone(s.nsNames)
 		for _, ns := range chosen {
 			if !slices.Contains(names, ns) {
@@ -808,6 +829,13 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 			ui.Column(c).Gap(2).Children(func() {
 				for _, ns := range names {
 					on := slices.Contains(chosen, ns)
+					if s.kind == kindAccess {
+						ui.Button(c.Key("ns-"+ns), ns).Disabled(on).OnClick(func() {
+							a.setNamespaces(name, []string{ns})
+							s.namespaceOpen = false
+						})
+						continue
+					}
 					if ui.Checkbox(c.Key("ns-"+ns), &on, ns).Changed() {
 						next := slices.DeleteFunc(slices.Clone(chosen), func(n string) bool { return n == ns })
 						if on {

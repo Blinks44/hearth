@@ -39,14 +39,14 @@ const (
 
 func (k ResourceKind) supported() bool {
 	switch k {
-	case Nodes, NamespaceKind, ServiceAccounts, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses, Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
+	case Roles, ClusterRoles, RoleBindings, ClusterRoleBindings, Nodes, NamespaceKind, ServiceAccounts, StatefulSets, DaemonSets, ReplicaSets, Ingresses, Endpoints, NetworkPolicies, ConfigMaps, PersistentVolumeClaims, PersistentVolumes, StorageClasses, Autoscalers, DisruptionBudgets, ResourceQuotas, LimitRanges:
 		return true
 	}
 	return false
 }
 
 func (k ResourceKind) namespaced() bool {
-	return k != Nodes && k != NamespaceKind && k != PersistentVolumes && k != StorageClasses
+	return k != Nodes && k != NamespaceKind && k != PersistentVolumes && k != StorageClasses && k != ClusterRoles && k != ClusterRoleBindings
 }
 
 // ResourceList is a successful list read, with an independent event read result.
@@ -140,6 +140,7 @@ type Resource struct {
 	Budget                      *DisruptionBudget
 	Quota                       *ResourceQuota
 	Limits                      []LimitRangeItem
+	RBAC                        *RBACDetails
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -180,6 +181,7 @@ type ingressBackend struct {
 
 type resourceObject struct {
 	meta
+	RBACDetails
 	storageClassFields
 	Spec struct {
 		Replicas                                           int
@@ -272,6 +274,8 @@ func (o resourceObject) resource(kind ResourceKind) Resource {
 	r := Resource{Kind: kind, Namespace: m.Namespace, Name: m.Name, UID: m.UID, Created: m.CreationTimestamp,
 		Deleting: !m.DeletionTimestamp.IsZero(), Owner: o.controller()}
 	switch kind {
+	case Roles, ClusterRoles, RoleBindings, ClusterRoleBindings:
+		r.RBAC = &o.RBACDetails
 	case StatefulSets, DaemonSets, ReplicaSets:
 		r.Desired, r.Ready, r.Updated = o.Spec.Replicas, o.Status.ReadyReplicas, o.Status.UpdatedReplicas
 		if kind == DaemonSets {

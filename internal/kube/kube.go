@@ -49,6 +49,8 @@ type Target struct {
 	Resource ResourceKind
 	// Policies reads autoscalers and namespace policies instead of workloads.
 	Policies bool
+	// AccessNamespace reads RBAC resources and reviews permissions in one namespace.
+	AccessNamespace string
 	// DeploymentAutoscalers reads HPAs for the selected Deployment.
 	DeploymentAutoscalers bool
 	// CustomKind is a CRD selected by its full name.
@@ -190,6 +192,7 @@ type Cluster struct {
 	Secrets       []Secret
 	Resources     *ResourceList
 	Policies      []ResourceList
+	Access        *AccessReview
 	Relationships *Relationships
 	MetricsErr    error
 	// Events are those of the target's Events object, newest first.
@@ -277,6 +280,9 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster,
 }
 
 func readCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	if t.AccessNamespace != "" {
+		return readAccess(ctx, r, env, t), nil
+	}
 	if t.Policies {
 		return readPolicies(ctx, r, env, t), nil
 	}

@@ -1,4 +1,31 @@
 {
+  "kubeAccessResources": "Access",
+  "kubeAccessCanI": "What can I do?",
+  "kubeAccessSearch": "Resource or verb",
+  "kubeAccessResource": "Resource",
+  "kubeAccessVerbs": "Verbs",
+  "kubeAccessNoRules": "No rules reported",
+  "kubeAccessUser": "User",
+  "kubeAccessGroups": "Groups",
+  "kubeAccessSource": "Source",
+  "kubeAccessURL": "Non-resource URLs",
+  "kubeAccessNames": "Resource names",
+  "kubeAccessMatchingBindings": "Bindings for this identity",
+  "kubeAccessNoBindings": "No matching bindings found",
+  "kubeAccessSubjects": "Subjects",
+  "kubeAccessRule": "Rule {index}",
+  "kubeAccessAPIGroups": "API groups",
+  "kubeAccessAccounts": "ServiceAccounts",
+  "kubeAccessRoles": "Roles",
+  "kubeAccessBindings": "Bindings",
+  "@kubeAccessRule": {
+    "description": "Heading for a numbered Kubernetes role rule.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "kubeRelationships": "Relationships",
   "@kubeRelationships": {
     "description": "Heading for links to related Kubernetes resources."

@@ -37,6 +37,7 @@ func clusterKindOptions() [kindCustom + 1]clusterKind {
 		kindNodes:           {"Nodes", "cpu", "no"},
 		kindNamespaces:      {locales.KubeNamespaces(), "folder-tree", "ns"},
 		kindPolicies:        {locales.KubePolicies(), "gauge", "hpa"},
+		kindAccess:          {locales.KubeAccessResources(), "key-round", "rbac"},
 		kindServiceAccounts: {"ServiceAccounts", "user", "sa"},
 		kindCustom:          {locales.KubeCustomDefinitions(), "boxes", "crd"},
 	}
@@ -47,6 +48,9 @@ func isBatchKind(kind int) bool { return kind == kindJobs || kind == kindCronJob
 func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bool) {
 	if cl == nil {
 		return 0, 0, false
+	}
+	if cl.Access != nil {
+		return len(cl.Access.Rules), 0, kind == kindAccess && cl.Access.RulesErr == nil
 	}
 	if cl.Policies != nil {
 		if kind == kindPolicies {
@@ -155,17 +159,20 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	}
 	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
 		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm,
-		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindNamespaces, kindPolicies, kindServiceAccounts, kindCustom} {
+		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindNamespaces, kindPolicies, kindServiceAccounts, kindAccess, kindCustom} {
 		group := ""
 		switch i {
 		case kindPVCs, kindPVs, kindStorageClasses:
 			group = locales.KubeCustomStorage()
-		case kindNodes, kindNamespaces, kindPolicies, kindServiceAccounts, kindCustom:
+		case kindNodes, kindNamespaces, kindPolicies, kindServiceAccounts, kindAccess, kindCustom:
 			group = locales.KubeCustomCluster()
 		}
-		if i == kindPolicies {
+		switch i {
+		case kindPolicies:
 			add(entry{id: i, kind: options[i], group: group}, "horizontalpodautoscalers", "pdb", "poddisruptionbudgets", "resourcequota", "resourcequotas", "quota", "limitrange", "limitranges", "limits")
-		} else {
+		case kindAccess:
+			add(entry{id: i, kind: options[i], group: group}, "roles", "clusterroles", "rolebindings", "clusterrolebindings", "bindings", "can-i")
+		default:
 			add(entry{id: i, kind: options[i], group: group})
 		}
 	}
@@ -193,6 +200,16 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 				s.policyTab = 2
 			case "limitrange", "limitranges":
 				s.policyTab = 3
+			}
+		}
+		if e.id == kindAccess {
+			s.access.tab = accessRulesTab
+			s.access.resetSelection()
+			switch query {
+			case "roles", "clusterroles":
+				s.access.tab = accessRolesTab
+			case "rolebindings", "clusterrolebindings", "bindings":
+				s.access.tab = accessBindingsTab
 			}
 		}
 		a.selectClusterKind(e.id, e.def)

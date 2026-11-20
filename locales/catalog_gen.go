@@ -36,6 +36,200 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeAccessResources says "Access"
+// in the language the app shows.
+func KubeAccessResources() string { return In(i18n.Locale()).KubeAccessResources() }
+
+// KubeAccessResources says "Access"
+// in the language of msgs.
+func (msgs Messages) KubeAccessResources() string {
+	return Catalog.Format(msgs.locale, "kubeAccessResources", nil)
+}
+
+// KubeAccessCanI says "What can I do?"
+// in the language the app shows.
+func KubeAccessCanI() string { return In(i18n.Locale()).KubeAccessCanI() }
+
+// KubeAccessCanI says "What can I do?"
+// in the language of msgs.
+func (msgs Messages) KubeAccessCanI() string {
+	return Catalog.Format(msgs.locale, "kubeAccessCanI", nil)
+}
+
+// KubeAccessSearch says "Resource or verb"
+// in the language the app shows.
+func KubeAccessSearch() string { return In(i18n.Locale()).KubeAccessSearch() }
+
+// KubeAccessSearch says "Resource or verb"
+// in the language of msgs.
+func (msgs Messages) KubeAccessSearch() string {
+	return Catalog.Format(msgs.locale, "kubeAccessSearch", nil)
+}
+
+// KubeAccessResource says "Resource"
+// in the language the app shows.
+func KubeAccessResource() string { return In(i18n.Locale()).KubeAccessResource() }
+
+// KubeAccessResource says "Resource"
+// in the language of msgs.
+func (msgs Messages) KubeAccessResource() string {
+	return Catalog.Format(msgs.locale, "kubeAccessResource", nil)
+}
+
+// KubeAccessVerbs says "Verbs"
+// in the language the app shows.
+func KubeAccessVerbs() string { return In(i18n.Locale()).KubeAccessVerbs() }
+
+// KubeAccessVerbs says "Verbs"
+// in the language of msgs.
+func (msgs Messages) KubeAccessVerbs() string {
+	return Catalog.Format(msgs.locale, "kubeAccessVerbs", nil)
+}
+
+// KubeAccessNoRules says "No rules reported"
+// in the language the app shows.
+func KubeAccessNoRules() string { return In(i18n.Locale()).KubeAccessNoRules() }
+
+// KubeAccessNoRules says "No rules reported"
+// in the language of msgs.
+func (msgs Messages) KubeAccessNoRules() string {
+	return Catalog.Format(msgs.locale, "kubeAccessNoRules", nil)
+}
+
+// KubeAccessUser says "User"
+// in the language the app shows.
+func KubeAccessUser() string { return In(i18n.Locale()).KubeAccessUser() }
+
+// KubeAccessUser says "User"
+// in the language of msgs.
+func (msgs Messages) KubeAccessUser() string {
+	return Catalog.Format(msgs.locale, "kubeAccessUser", nil)
+}
+
+// KubeAccessGroups says "Groups"
+// in the language the app shows.
+func KubeAccessGroups() string { return In(i18n.Locale()).KubeAccessGroups() }
+
+// KubeAccessGroups says "Groups"
+// in the language of msgs.
+func (msgs Messages) KubeAccessGroups() string {
+	return Catalog.Format(msgs.locale, "kubeAccessGroups", nil)
+}
+
+// KubeAccessSource says "Source"
+// in the language the app shows.
+func KubeAccessSource() string { return In(i18n.Locale()).KubeAccessSource() }
+
+// KubeAccessSource says "Source"
+// in the language of msgs.
+func (msgs Messages) KubeAccessSource() string {
+	return Catalog.Format(msgs.locale, "kubeAccessSource", nil)
+}
+
+// KubeAccessURL says "Non-resource URLs"
+// in the language the app shows.
+func KubeAccessURL() string { return In(i18n.Locale()).KubeAccessURL() }
+
+// KubeAccessURL says "Non-resource URLs"
+// in the language of msgs.
+func (msgs Messages) KubeAccessURL() string {
+	return Catalog.Format(msgs.locale, "kubeAccessURL", nil)
+}
+
+// KubeAccessNames says "Resource names"
+// in the language the app shows.
+func KubeAccessNames() string { return In(i18n.Locale()).KubeAccessNames() }
+
+// KubeAccessNames says "Resource names"
+// in the language of msgs.
+func (msgs Messages) KubeAccessNames() string {
+	return Catalog.Format(msgs.locale, "kubeAccessNames", nil)
+}
+
+// KubeAccessMatchingBindings says "Bindings for this identity"
+// in the language the app shows.
+func KubeAccessMatchingBindings() string { return In(i18n.Locale()).KubeAccessMatchingBindings() }
+
+// KubeAccessMatchingBindings says "Bindings for this identity"
+// in the language of msgs.
+func (msgs Messages) KubeAccessMatchingBindings() string {
+	return Catalog.Format(msgs.locale, "kubeAccessMatchingBindings", nil)
+}
+
+// KubeAccessNoBindings says "No matching bindings found"
+// in the language the app shows.
+func KubeAccessNoBindings() string { return In(i18n.Locale()).KubeAccessNoBindings() }
+
+// KubeAccessNoBindings says "No matching bindings found"
+// in the language of msgs.
+func (msgs Messages) KubeAccessNoBindings() string {
+	return Catalog.Format(msgs.locale, "kubeAccessNoBindings", nil)
+}
+
+// KubeAccessSubjects says "Subjects"
+// in the language the app shows.
+func KubeAccessSubjects() string { return In(i18n.Locale()).KubeAccessSubjects() }
+
+// KubeAccessSubjects says "Subjects"
+// in the language of msgs.
+func (msgs Messages) KubeAccessSubjects() string {
+	return Catalog.Format(msgs.locale, "kubeAccessSubjects", nil)
+}
+
+// KubeAccessRule says "Rule {index}"
+// in the language the app shows.
+//
+// Heading for a numbered Kubernetes role rule.
+func KubeAccessRule(index int) string { return In(i18n.Locale()).KubeAccessRule(index) }
+
+// KubeAccessRule says "Rule {index}"
+// in the language of msgs.
+//
+// Heading for a numbered Kubernetes role rule.
+func (msgs Messages) KubeAccessRule(index int) string {
+	return Catalog.Format(msgs.locale, "kubeAccessRule", map[string]any{"index": index})
+}
+
+// KubeAccessAPIGroups says "API groups"
+// in the language the app shows.
+func KubeAccessAPIGroups() string { return In(i18n.Locale()).KubeAccessAPIGroups() }
+
+// KubeAccessAPIGroups says "API groups"
+// in the language of msgs.
+func (msgs Messages) KubeAccessAPIGroups() string {
+	return Catalog.Format(msgs.locale, "kubeAccessAPIGroups", nil)
+}
+
+// KubeAccessAccounts says "ServiceAccounts"
+// in the language the app shows.
+func KubeAccessAccounts() string { return In(i18n.Locale()).KubeAccessAccounts() }
+
+// KubeAccessAccounts says "ServiceAccounts"
+// in the language of msgs.
+func (msgs Messages) KubeAccessAccounts() string {
+	return Catalog.Format(msgs.locale, "kubeAccessAccounts", nil)
+}
+
+// KubeAccessRoles says "Roles"
+// in the language the app shows.
+func KubeAccessRoles() string { return In(i18n.Locale()).KubeAccessRoles() }
+
+// KubeAccessRoles says "Roles"
+// in the language of msgs.
+func (msgs Messages) KubeAccessRoles() string {
+	return Catalog.Format(msgs.locale, "kubeAccessRoles", nil)
+}
+
+// KubeAccessBindings says "Bindings"
+// in the language the app shows.
+func KubeAccessBindings() string { return In(i18n.Locale()).KubeAccessBindings() }
+
+// KubeAccessBindings says "Bindings"
+// in the language of msgs.
+func (msgs Messages) KubeAccessBindings() string {
+	return Catalog.Format(msgs.locale, "kubeAccessBindings", nil)
+}
+
 // KubeRelationships says "Relationships"
 // in the language the app shows.
 //
