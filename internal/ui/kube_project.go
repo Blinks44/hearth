@@ -194,7 +194,7 @@ func (a *App) kubeLinkView(c *ui.Context) {
 
 // projectKubeCard is the project's Kubernetes: the linked context and
 // its access, the kind cluster behind it, kubectl's own context, and the
-// manifests, which Hearth never applies. Shown when the project has
+// manifests. Shown when the project has
 // manifests or a link.
 func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 	link, linked := a.KubeLinks[p.Dir]
@@ -275,11 +275,21 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 				})
 			}
 		}
-		if len(p.Kube) > 0 {
-			listRow(c, locales.KubeManifests(strings.Join(p.Kube, " · ")), false, locales.KubeManifestsCaption(), func() {
-				if a.Shell != nil {
+		canApply := hasKubectl && r.ctx != nil && a.BuildPlan != nil && a.PickManifest != nil
+		if len(p.Kube) > 0 || canApply {
+			label, caption := locales.KubeApplySource(), ""
+			if len(p.Kube) > 0 {
+				label, caption = locales.KubeManifests(strings.Join(p.Kube, " · ")), locales.KubeManifestsCaption()
+			}
+			listRow(c, label, false, caption, func() {
+				if a.Shell != nil && len(p.Kube) > 0 {
 					first := filepath.Join(p.Dir, strings.TrimSuffix(p.Kube[0], "/"))
 					ui.Button(c.Key("kube-manifests"), locales.PrepareOpenFolder()).Shrink(0).OnClick(func() { a.Shell.ShowItemInFolder(first) })
+				}
+				if canApply {
+					ui.Button(c.Key("kube-apply"), locales.KubeApplyOpen()).Shrink(0).OnClick(func() {
+						a.openProjectApply(p, kubectl.Path, link.Context, cmp.Or(link.Namespace, namespaceOf(*r.ctx)))
+					})
 				}
 			})
 		}

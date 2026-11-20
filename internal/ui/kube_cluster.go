@@ -16,6 +16,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -350,6 +351,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 		a.clusterHeader(c, name)
 		a.resourceEditorDialog(c)
 		a.namespaceCreate(c)
+		a.kubeApplyView(c)
 		if s.logs != nil {
 			a.logsView(c)
 			return
@@ -535,6 +537,11 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 			return
 		}
 		ui.Box(c).Grow(1).Height(1)
+		if cli, ok := cliCopy(a.cliState(), "kubectl"); ok && len(ns) == 1 && a.PickManifest != nil && a.BuildPlan != nil {
+			iconButton(c.Key("cluster-apply"), "file-cog", locales.KubeApplyOpen()).OnClick(func() {
+				a.openProjectApply(projects.Project{}, cli.Path, name, ns[0])
+			})
+		}
 		a.freshness(c)
 		iconButton(c, "refresh-cw", locales.KubeClusterRefresh()).OnClick(func() {
 			s.refresh++

@@ -16,15 +16,16 @@ import (
 // operation is a plan the operation dialog shows, and how it goes once
 // the user confirmed it.
 type operation struct {
-	project *ops.ProjectPreparation
-	plan    ops.Plan
-	confirm string
-	state   ops.State
-	started bool   // confirmed: state says how it goes
-	open    bool   // the dialog shows; hidden while it runs, a toast does
-	stop    func() // stops it while it runs
-	told    bool   // the toast of its end showed
-	after   func() // runs once it succeeds; nil when nothing waits for it
+	project        *ops.ProjectPreparation
+	plan           ops.Plan
+	confirm        string
+	state          ops.State
+	started        bool   // confirmed: state says how it goes
+	open           bool   // the dialog shows; hidden while it runs, a toast does
+	stop           func() // stops it while it runs
+	told           bool   // the toast of its end showed
+	after          func() // runs once it succeeds; nil when nothing waits for it
+	chooseManifest func()
 }
 
 // running reports that the operation was confirmed and is not over.
@@ -63,7 +64,7 @@ func (a *App) proposeThen(after func()) func(ops.Plan, error) {
 // scans again once it is over: whatever it did, the system changed.
 func (a *App) startOperation() {
 	op := a.op
-	if change := op.kubeChange(); change != nil && change.ConfirmName() != "" && op.confirm != change.ConfirmName() {
+	if !op.canConfirm() {
 		return
 	}
 	if op.plan.KubeBulk {
@@ -154,6 +155,10 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 			})
 			ui.Scroll(c).MaxHeight(440).Children(func() {
 				if !op.started {
+					if change := op.kubeChange(); change != nil && change.Manifests != nil {
+						a.manifestPreview(c, op, change.Manifests)
+						return
+					}
 					if op.plan.KubeBulk {
 						ui.Text(c, op.plan.Steps[0].Kube.Context()).FontSize(12).Font(FontMono).Wrap().Padding(0, 20, 12, 20)
 						dialogSection(c, locales.KubeBulkTargets())
@@ -356,7 +361,6 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 }
 
 func operationDiff(c *ui.Context, path string, diff []ops.DiffLine) {
-	pal := Colors(c.Theme())
 	// A line replaced counts once, as the user sees it.
 	removed, added := 0, 0
 	for _, d := range diff {
@@ -367,6 +371,11 @@ func operationDiff(c *ui.Context, path string, diff []ops.DiffLine) {
 		}
 	}
 	dialogSection(c, strings.ToUpper(locales.OpWillChange(max(removed, added))))
+	operationDiffCard(c, path, diff)
+}
+
+func operationDiffCard(c *ui.Context, path string, diff []ops.DiffLine) {
+	pal := Colors(c.Theme())
 	ui.Column(c).Gap(2).Padding(6).Margin(0, 20, 14, 20).Radius(9).Background(pal.Subtle).
 		BorderWidth(1).BorderColor(pal.Line).Font(FontMono).Children(func() {
 		ui.Row(c).Gap(6).Padding(4, 10, 4, 10).Children(func() {
@@ -657,7 +666,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		if change := op.kubeChange(); change != nil {
 			confirm = change.ConfirmName()
 		}
-		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || confirm != "" && op.confirm != confirm).
+		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || !op.canConfirm()).
 			OnClick(a.startOperation)
 		if confirm != "" || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
 			button.Background(c.Theme().Danger)
@@ -686,6 +695,15 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		})
 		ui.PrimaryButton(c.Key("op-again"), locales.OpRetry()).OnClick(a.startOperation)
 	}
+}
+
+func (op *operation) canConfirm() bool {
+	change := op.kubeChange()
+	if change == nil {
+		return true
+	}
+	return (change.Manifests == nil || change.Manifests.Changes() > 0) &&
+		(change.ConfirmName() == "" || op.confirm == change.ConfirmName())
 }
 
 // operationToast is the operation running hidden: its step and progress,

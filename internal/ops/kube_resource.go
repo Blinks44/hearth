@@ -147,6 +147,17 @@ func (k resourceClient) run(ctx context.Context, input []byte, args ...string) (
 }
 
 func (k resourceClient) runFor(ctx context.Context, timeout time.Duration, requestTimeout string, input []byte, args ...string) ([]byte, error) {
+	res, err := k.call(ctx, timeout, requestTimeout, input, args...)
+	if err != nil {
+		return nil, err
+	}
+	if res.ExitCode != 0 {
+		return nil, &resourceCommandError{args[0], strings.TrimSpace(string(res.Stderr))}
+	}
+	return res.Stdout, nil
+}
+
+func (k resourceClient) call(ctx context.Context, timeout time.Duration, requestTimeout string, input []byte, args ...string) (run.Result, error) {
 	argv := []string{k.cli, "--context=" + k.context, "--request-timeout=" + requestTimeout}
 	if k.config != "" {
 		argv = append(argv, "--kubeconfig="+k.config)
@@ -154,15 +165,12 @@ func (k resourceClient) runFor(ctx context.Context, timeout time.Duration, reque
 	res, err := k.runner.Run(ctx, run.Cmd{Args: append(argv, args...), Env: k.env,
 		Stdin: bytes.NewReader(input), Timeout: timeout, MaxOutput: 4 << 20})
 	if err != nil {
-		return nil, fmt.Errorf("kubectl %s: %w", args[0], err)
+		return res, fmt.Errorf("kubectl %s: %w", args[0], err)
 	}
 	if res.Truncated {
-		return nil, errors.New(locales.KubeResourceTooLarge())
+		return res, errors.New(locales.KubeResourceTooLarge())
 	}
-	if res.ExitCode != 0 {
-		return nil, &resourceCommandError{args[0], strings.TrimSpace(string(res.Stderr))}
-	}
-	return res.Stdout, nil
+	return res, nil
 }
 
 func (k resourceClient) read(ctx context.Context, ref KubeResource) (resourceJSON, error) {
@@ -262,11 +270,12 @@ type KubeChange struct {
 	createNamespace  bool
 	namespaceMembers []kube.NamespaceMember
 	drain            *nodeDrain
+	Manifests        *KubeManifestPreview
 	Diff             []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
-	if !m.createNamespace && m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" {
+	if !m.createNamespace && m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" && m.Manifests == nil {
 		return m.draft.Ref.Name
 	}
 	return ""
@@ -282,6 +291,9 @@ func (m *KubeChange) Target() string {
 func (m *KubeChange) Resource() string { return m.draft.Ref.label() }
 
 func (m *KubeChange) command() []string {
+	if m.Manifests != nil {
+		return m.Manifests.command("apply")
+	}
 	if m.createNamespace {
 		return []string{"create", "--raw", namespaceCollection, "-f", "-"}
 	}
@@ -495,6 +507,9 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 
 func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking func()) (string, error) {
 	ref := m.draft.Ref
+	if m.Manifests != nil {
+		return m.Manifests.apply(ctx, k, checking)
+	}
 	if m.createNamespace {
 		return m.applyNamespaceCreate(ctx, k, checking)
 	}

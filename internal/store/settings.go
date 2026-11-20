@@ -41,7 +41,7 @@ type Project struct {
 }
 
 // KubeLink is the kubeconfig context and namespace a project works with.
-// Hearth only shows it: kubectl and kubeconfig stay as they are.
+// Saving a link does not change kubectl's settings or kubeconfig.
 type KubeLink struct {
 	Context   string `json:"context"`
 	Namespace string `json:"namespace"`

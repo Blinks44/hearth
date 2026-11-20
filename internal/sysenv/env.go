@@ -56,3 +56,6 @@ func (e Env) HelmContext() Env {
 	}
 	return out
 }
+
+// KubectlDiff selects kubectl's built-in diff invocation over a custom tool.
+func (e Env) KubectlDiff() Env { return e.without("KUBECTL_EXTERNAL_DIFF") }

@@ -36,6 +36,314 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// KubeApplyTitle says "Apply manifests · {name}"
+// in the language the app shows.
+//
+// Apply manifests ·.
+func KubeApplyTitle(name string) string { return In(i18n.Locale()).KubeApplyTitle(name) }
+
+// KubeApplyTitle says "Apply manifests · {name}"
+// in the language of msgs.
+//
+// Apply manifests ·.
+func (msgs Messages) KubeApplyTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeApplyTitle", map[string]any{"name": name})
+}
+
+// KubeApplyOpen says "Apply manifests…"
+// in the language the app shows.
+//
+// Apply manifests.
+func KubeApplyOpen() string { return In(i18n.Locale()).KubeApplyOpen() }
+
+// KubeApplyOpen says "Apply manifests…"
+// in the language of msgs.
+//
+// Apply manifests.
+func (msgs Messages) KubeApplyOpen() string {
+	return Catalog.Format(msgs.locale, "kubeApplyOpen", nil)
+}
+
+// KubeApplyChooseFile says "Choose file…"
+// in the language the app shows.
+//
+// Choose file.
+func KubeApplyChooseFile() string { return In(i18n.Locale()).KubeApplyChooseFile() }
+
+// KubeApplyChooseFile says "Choose file…"
+// in the language of msgs.
+//
+// Choose file.
+func (msgs Messages) KubeApplyChooseFile() string {
+	return Catalog.Format(msgs.locale, "kubeApplyChooseFile", nil)
+}
+
+// KubeApplyChooseFolder says "Choose folder…"
+// in the language the app shows.
+//
+// Choose folder.
+func KubeApplyChooseFolder() string { return In(i18n.Locale()).KubeApplyChooseFolder() }
+
+// KubeApplyChooseFolder says "Choose folder…"
+// in the language of msgs.
+//
+// Choose folder.
+func (msgs Messages) KubeApplyChooseFolder() string {
+	return Catalog.Format(msgs.locale, "kubeApplyChooseFolder", nil)
+}
+
+// KubeApplyOther says "Change source…"
+// in the language the app shows.
+//
+// Change source.
+func KubeApplyOther() string { return In(i18n.Locale()).KubeApplyOther() }
+
+// KubeApplyOther says "Change source…"
+// in the language of msgs.
+//
+// Change source.
+func (msgs Messages) KubeApplyOther() string {
+	return Catalog.Format(msgs.locale, "kubeApplyOther", nil)
+}
+
+// KubeApplySource says "Manifests"
+// in the language the app shows.
+//
+// Manifests.
+func KubeApplySource() string { return In(i18n.Locale()).KubeApplySource() }
+
+// KubeApplySource says "Manifests"
+// in the language of msgs.
+//
+// Manifests.
+func (msgs Messages) KubeApplySource() string {
+	return Catalog.Format(msgs.locale, "kubeApplySource", nil)
+}
+
+// KubeApplyChecking says "Checking manifests with the API server…"
+// in the language the app shows.
+//
+// Checking manifests with the API server.
+func KubeApplyChecking() string { return In(i18n.Locale()).KubeApplyChecking() }
+
+// KubeApplyChecking says "Checking manifests with the API server…"
+// in the language of msgs.
+//
+// Checking manifests with the API server.
+func (msgs Messages) KubeApplyChecking() string {
+	return Catalog.Format(msgs.locale, "kubeApplyChecking", nil)
+}
+
+// KubeApplySourceInvalid says "Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder for this namespace."
+// in the language the app shows.
+//
+// Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder
+// for this namespace.
+func KubeApplySourceInvalid() string { return In(i18n.Locale()).KubeApplySourceInvalid() }
+
+// KubeApplySourceInvalid says "Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder for this namespace."
+// in the language of msgs.
+//
+// Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder
+// for this namespace.
+func (msgs Messages) KubeApplySourceInvalid() string {
+	return Catalog.Format(msgs.locale, "kubeApplySourceInvalid", nil)
+}
+
+// KubeApplyReviewed says "{context} / {namespace} · Server dry run passed. Review the changes before applying."
+// in the language the app shows.
+//
+// {context} /.
+func KubeApplyReviewed(context string, namespace string) string {
+	return In(i18n.Locale()).KubeApplyReviewed(context, namespace)
+}
+
+// KubeApplyReviewed says "{context} / {namespace} · Server dry run passed. Review the changes before applying."
+// in the language of msgs.
+//
+// {context} /.
+func (msgs Messages) KubeApplyReviewed(context string, namespace string) string {
+	return Catalog.Format(msgs.locale, "kubeApplyReviewed", map[string]any{"context": context, "namespace": namespace})
+}
+
+// KubeApplyConfirm says "Apply changes ({count})"
+// in the language the app shows.
+//
+// Apply changes ({count}).
+func KubeApplyConfirm(count int) string { return In(i18n.Locale()).KubeApplyConfirm(count) }
+
+// KubeApplyConfirm says "Apply changes ({count})"
+// in the language of msgs.
+//
+// Apply changes ({count}).
+func (msgs Messages) KubeApplyConfirm(count int) string {
+	return Catalog.Format(msgs.locale, "kubeApplyConfirm", map[string]any{"count": count})
+}
+
+// KubeApplySummary says "Change {changed} · Create {created} · Unchanged {unchanged}"
+// in the language the app shows.
+//
+// Change.
+func KubeApplySummary(changed int, created int, unchanged int) string {
+	return In(i18n.Locale()).KubeApplySummary(changed, created, unchanged)
+}
+
+// KubeApplySummary says "Change {changed} · Create {created} · Unchanged {unchanged}"
+// in the language of msgs.
+//
+// Change.
+func (msgs Messages) KubeApplySummary(changed int, created int, unchanged int) string {
+	return Catalog.Format(msgs.locale, "kubeApplySummary", map[string]any{"changed": changed, "created": created, "unchanged": unchanged})
+}
+
+// KubeApplyCreates says "New resources"
+// in the language the app shows.
+//
+// New resources.
+func KubeApplyCreates() string { return In(i18n.Locale()).KubeApplyCreates() }
+
+// KubeApplyCreates says "New resources"
+// in the language of msgs.
+//
+// New resources.
+func (msgs Messages) KubeApplyCreates() string {
+	return Catalog.Format(msgs.locale, "kubeApplyCreates", nil)
+}
+
+// KubeApplyNoPrune says "Resources outside these manifests stay in the cluster."
+// in the language the app shows.
+//
+// Resources outside these manifests stay in the cluster.
+func KubeApplyNoPrune() string { return In(i18n.Locale()).KubeApplyNoPrune() }
+
+// KubeApplyNoPrune says "Resources outside these manifests stay in the cluster."
+// in the language of msgs.
+//
+// Resources outside these manifests stay in the cluster.
+func (msgs Messages) KubeApplyNoPrune() string {
+	return Catalog.Format(msgs.locale, "kubeApplyNoPrune", nil)
+}
+
+// KubeApplyVerification says "Hearth will read the resources back and wait up to 5 min for active rollouts."
+// in the language the app shows.
+//
+// Hearth will read the resources back and wait up to 5 min for active
+// rollouts.
+func KubeApplyVerification() string { return In(i18n.Locale()).KubeApplyVerification() }
+
+// KubeApplyVerification says "Hearth will read the resources back and wait up to 5 min for active rollouts."
+// in the language of msgs.
+//
+// Hearth will read the resources back and wait up to 5 min for active
+// rollouts.
+func (msgs Messages) KubeApplyVerification() string {
+	return Catalog.Format(msgs.locale, "kubeApplyVerification", nil)
+}
+
+// KubeApplySecretDiff says "Secret values are hidden."
+// in the language the app shows.
+//
+// Secret values are hidden.
+func KubeApplySecretDiff() string { return In(i18n.Locale()).KubeApplySecretDiff() }
+
+// KubeApplySecretDiff says "Secret values are hidden."
+// in the language of msgs.
+//
+// Secret values are hidden.
+func (msgs Messages) KubeApplySecretDiff() string {
+	return Catalog.Format(msgs.locale, "kubeApplySecretDiff", nil)
+}
+
+// KubeApplyStale says "The source or cluster resources changed. Review a fresh plan."
+// in the language the app shows.
+//
+// The source or cluster resources changed. Review a fresh plan.
+func KubeApplyStale() string { return In(i18n.Locale()).KubeApplyStale() }
+
+// KubeApplyStale says "The source or cluster resources changed. Review a fresh plan."
+// in the language of msgs.
+//
+// The source or cluster resources changed. Review a fresh plan.
+func (msgs Messages) KubeApplyStale() string {
+	return Catalog.Format(msgs.locale, "kubeApplyStale", nil)
+}
+
+// KubeApplyPartial says "Verified resources: {count}. Check the operation result before repeating. Unverified: {pending}"
+// in the language the app shows.
+//
+// Verified resources:.
+func KubeApplyPartial(count int, pending string) string {
+	return In(i18n.Locale()).KubeApplyPartial(count, pending)
+}
+
+// KubeApplyPartial says "Verified resources: {count}. Check the operation result before repeating. Unverified: {pending}"
+// in the language of msgs.
+//
+// Verified resources:.
+func (msgs Messages) KubeApplyPartial(count int, pending string) string {
+	return Catalog.Format(msgs.locale, "kubeApplyPartial", map[string]any{"count": count, "pending": pending})
+}
+
+// KubeApplyVerified says "Verified resources: {count}"
+// in the language the app shows.
+//
+// Verified resources:.
+func KubeApplyVerified(count int) string { return In(i18n.Locale()).KubeApplyVerified(count) }
+
+// KubeApplyVerified says "Verified resources: {count}"
+// in the language of msgs.
+//
+// Verified resources:.
+func (msgs Messages) KubeApplyVerified(count int) string {
+	return Catalog.Format(msgs.locale, "kubeApplyVerified", map[string]any{"count": count})
+}
+
+// KubeApplyConflict says "Conflict with fields managed by another client. Check field ownership before applying."
+// in the language the app shows.
+//
+// Conflict with fields managed by another client. Check field ownership
+// before applying.
+func KubeApplyConflict() string { return In(i18n.Locale()).KubeApplyConflict() }
+
+// KubeApplyConflict says "Conflict with fields managed by another client. Check field ownership before applying."
+// in the language of msgs.
+//
+// Conflict with fields managed by another client. Check field ownership
+// before applying.
+func (msgs Messages) KubeApplyConflict() string {
+	return Catalog.Format(msgs.locale, "kubeApplyConflict", nil)
+}
+
+// KubeApplyForbidden says "The cluster denied this request."
+// in the language the app shows.
+//
+// The cluster denied this request.
+func KubeApplyForbidden() string { return In(i18n.Locale()).KubeApplyForbidden() }
+
+// KubeApplyForbidden says "The cluster denied this request."
+// in the language of msgs.
+//
+// The cluster denied this request.
+func (msgs Messages) KubeApplyForbidden() string {
+	return Catalog.Format(msgs.locale, "kubeApplyForbidden", nil)
+}
+
+// KubeApplyCommandFailed says "kubectl {command} failed. Check the manifests, connection and permissions."
+// in the language the app shows.
+//
+// kubectl.
+func KubeApplyCommandFailed(command string) string {
+	return In(i18n.Locale()).KubeApplyCommandFailed(command)
+}
+
+// KubeApplyCommandFailed says "kubectl {command} failed. Check the manifests, connection and permissions."
+// in the language of msgs.
+//
+// kubectl.
+func (msgs Messages) KubeApplyCommandFailed(command string) string {
+	return Catalog.Format(msgs.locale, "kubeApplyCommandFailed", map[string]any{"command": command})
+}
+
 // CatalogAntigravity says "Google's coding agent in the terminal."
 // in the language the app shows.
 //
@@ -28952,13 +29260,13 @@ func (msgs Messages) KubeProjectOf(name string) string {
 	return Catalog.Format(msgs.locale, "kubeProjectOf", map[string]any{"name": name})
 }
 
-// KubeCardAside says "Hearth never applies manifests"
+// KubeCardAside says "Linked context and manifests"
 // in the language the app shows.
 //
 // Project's Kubernetes card aside.
 func KubeCardAside() string { return In(i18n.Locale()).KubeCardAside() }
 
-// KubeCardAside says "Hearth never applies manifests"
+// KubeCardAside says "Linked context and manifests"
 // in the language of msgs.
 //
 // Project's Kubernetes card aside.
@@ -29262,13 +29570,13 @@ func (msgs Messages) KubeManifests(list string) string {
 	return Catalog.Format(msgs.locale, "kubeManifests", map[string]any{"list": list})
 }
 
-// KubeManifestsCaption says "found in the project folder · Hearth does not apply them"
+// KubeManifestsCaption says "found in the project folder"
 // in the language the app shows.
 //
 // Caption of the manifests row.
 func KubeManifestsCaption() string { return In(i18n.Locale()).KubeManifestsCaption() }
 
-// KubeManifestsCaption says "found in the project folder · Hearth does not apply them"
+// KubeManifestsCaption says "found in the project folder"
 // in the language of msgs.
 //
 // Caption of the manifests row.
@@ -29378,13 +29686,13 @@ func (msgs Messages) KubeLinkKubectlKept(current string, context string) string 
 	return Catalog.Format(msgs.locale, "kubeLinkKubectlKept", map[string]any{"current": current, "context": context})
 }
 
-// KubeLinkManifests says "Hearth does not apply the project's manifests"
+// KubeLinkManifests says "Applying manifests requires a separate confirmation"
 // in the language the app shows.
 //
 // Link dialog: manifests are not applied.
 func KubeLinkManifests() string { return In(i18n.Locale()).KubeLinkManifests() }
 
-// KubeLinkManifests says "Hearth does not apply the project's manifests"
+// KubeLinkManifests says "Applying manifests requires a separate confirmation"
 // in the language of msgs.
 //
 // Link dialog: manifests are not applied.

@@ -1,4 +1,135 @@
 {
+  "kubeApplyTitle": "Apply manifests · {name}",
+  "@kubeApplyTitle": {
+    "description": "Apply manifests ·.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeApplyOpen": "Apply manifests…",
+  "@kubeApplyOpen": {
+    "description": "Apply manifests."
+  },
+  "kubeApplyChooseFile": "Choose file…",
+  "@kubeApplyChooseFile": {
+    "description": "Choose file."
+  },
+  "kubeApplyChooseFolder": "Choose folder…",
+  "@kubeApplyChooseFolder": {
+    "description": "Choose folder."
+  },
+  "kubeApplyOther": "Change source…",
+  "@kubeApplyOther": {
+    "description": "Change source."
+  },
+  "kubeApplySource": "Manifests",
+  "@kubeApplySource": {
+    "description": "Manifests."
+  },
+  "kubeApplyChecking": "Checking manifests with the API server…",
+  "@kubeApplyChecking": {
+    "description": "Checking manifests with the API server."
+  },
+  "kubeApplySourceInvalid": "Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder for this namespace.",
+  "@kubeApplySourceInvalid": {
+    "description": "Choose a YAML or JSON manifest, a manifest folder or a Kustomize folder for this namespace."
+  },
+  "kubeApplyReviewed": "{context} / {namespace} · Server dry run passed. Review the changes before applying.",
+  "@kubeApplyReviewed": {
+    "description": "{context} /.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      },
+      "namespace": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeApplyConfirm": "Apply changes ({count})",
+  "@kubeApplyConfirm": {
+    "description": "Apply changes ({count}).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeApplySummary": "Change {changed} · Create {created} · Unchanged {unchanged}",
+  "@kubeApplySummary": {
+    "description": "Change.",
+    "placeholders": {
+      "changed": {
+        "type": "int"
+      },
+      "created": {
+        "type": "int"
+      },
+      "unchanged": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeApplyCreates": "New resources",
+  "@kubeApplyCreates": {
+    "description": "New resources."
+  },
+  "kubeApplyNoPrune": "Resources outside these manifests stay in the cluster.",
+  "@kubeApplyNoPrune": {
+    "description": "Resources outside these manifests stay in the cluster."
+  },
+  "kubeApplyVerification": "Hearth will read the resources back and wait up to 5 min for active rollouts.",
+  "@kubeApplyVerification": {
+    "description": "Hearth will read the resources back and wait up to 5 min for active rollouts."
+  },
+  "kubeApplySecretDiff": "Secret values are hidden.",
+  "@kubeApplySecretDiff": {
+    "description": "Secret values are hidden."
+  },
+  "kubeApplyStale": "The source or cluster resources changed. Review a fresh plan.",
+  "@kubeApplyStale": {
+    "description": "The source or cluster resources changed. Review a fresh plan."
+  },
+  "kubeApplyPartial": "Verified resources: {count}. Check the operation result before repeating. Unverified: {pending}",
+  "@kubeApplyPartial": {
+    "description": "Verified resources:.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeApplyVerified": "Verified resources: {count}",
+  "@kubeApplyVerified": {
+    "description": "Verified resources:.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeApplyConflict": "Conflict with fields managed by another client. Check field ownership before applying.",
+  "@kubeApplyConflict": {
+    "description": "Conflict with fields managed by another client. Check field ownership before applying."
+  },
+  "kubeApplyForbidden": "The cluster denied this request.",
+  "@kubeApplyForbidden": {
+    "description": "The cluster denied this request."
+  },
+  "kubeApplyCommandFailed": "kubectl {command} failed. Check the manifests, connection and permissions.",
+  "@kubeApplyCommandFailed": {
+    "description": "kubectl.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
   "catalogAntigravity": "Google's coding agent in the terminal.",
   "@catalogAntigravity": {
     "description": "New computer: Antigravity CLI description."
@@ -11117,7 +11248,7 @@
       }
     }
   },
-  "kubeCardAside": "Hearth never applies manifests",
+  "kubeCardAside": "Linked context and manifests",
   "@kubeCardAside": {
     "description": "Project's Kubernetes card aside."
   },
@@ -11243,7 +11374,7 @@
       }
     }
   },
-  "kubeManifestsCaption": "found in the project folder · Hearth does not apply them",
+  "kubeManifestsCaption": "found in the project folder",
   "@kubeManifestsCaption": {
     "description": "Caption of the manifests row."
   },
@@ -11296,7 +11427,7 @@
       }
     }
   },
-  "kubeLinkManifests": "Hearth does not apply the project's manifests",
+  "kubeLinkManifests": "Applying manifests requires a separate confirmation",
   "@kubeLinkManifests": {
     "description": "Link dialog: manifests are not applied."
   },

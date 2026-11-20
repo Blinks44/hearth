@@ -143,8 +143,9 @@ type App struct {
 	// KubeLinks are the projects' Kubernetes contexts by folder, and
 	// LinkKube links one, or unlinks it when link is nil; nil hides
 	// linking.
-	KubeLinks map[string]store.KubeLink
-	LinkKube  func(dir string, link *store.KubeLink)
+	KubeLinks    map[string]store.KubeLink
+	LinkKube     func(dir string, link *store.KubeLink)
+	PickManifest func(dir string, folder bool, done func(string, error))
 	// LoadSkill reads a skill's folder, its files and SKILL.md, in the
 	// background, and gives them to done through Window.Update; nil shows
 	// neither.
@@ -264,6 +265,7 @@ type App struct {
 	cluster            kubeClusterState
 	kind               kindCreateDialog
 	kubeLink           kubeLinkDialog
+	kubeApply          *kubeApplyDialog
 	forwards           []*portForward
 	portsFilter        string // the Ports table's filter
 	instructionsQuery  string // the Instructions page's filter

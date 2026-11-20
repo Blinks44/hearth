@@ -272,6 +272,7 @@ func (a *App) project(c *ui.Context, dir string) {
 		p := a.Projects[i]
 		statuses := projects.Resolve(p, a.Snapshot, a.nodeLines())
 		a.kubeLinkView(c)
+		a.kubeApplyView(c)
 		a.kindDialog(c)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {

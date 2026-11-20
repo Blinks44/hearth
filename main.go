@@ -269,6 +269,7 @@ func main() {
 		}
 		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
 		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
+		a.PickManifest = func(dir string, folder bool, done func(string, error)) { pickManifest(win, dir, folder, done) }
 		// Operations run one at a time in the background, as the user's
 		// own commands would in the terminal, and append all their output
 		// to the operations log.
@@ -771,6 +772,22 @@ func openSet(win *mygo.Window, done func(path string, data []byte, err error)) {
 		}
 		data, err := os.ReadFile(paths[0])
 		win.Update(func() { done(paths[0], data, err) })
+	}()
+}
+
+func pickManifest(win *mygo.Window, dir string, folder bool, done func(string, error)) {
+	go func() {
+		opts := mygo.OpenDialogOptions{Parent: win, DefaultPath: dir, Directory: folder, Title: locales.KubeApplyChooseFolder()}
+		if !folder {
+			opts.Title = locales.KubeApplyChooseFile()
+			opts.Filters = []mygo.FileFilter{{Name: locales.KubeApplySource(), Extensions: []string{"yaml", "yml", "json"}}}
+		}
+		paths, err := mygo.Dialog.Open(opts)
+		var path string
+		if len(paths) > 0 {
+			path = paths[0]
+		}
+		win.Update(func() { done(path, err) })
 	}()
 }
 

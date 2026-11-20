@@ -10,7 +10,7 @@ import (
 
 // kubeFiles are the files in a project folder that tell it is deployed to
 // Kubernetes: a Helm chart, Kustomize, Skaffold, Tilt, helmfile.
-var kubeFiles = []string{"Chart.yaml", "kustomization.yaml", "kustomization.yml", "skaffold.yaml", "Tiltfile", "helmfile.yaml"}
+var kubeFiles = []string{"Chart.yaml", "kustomization.yaml", "kustomization.yml", "Kustomization", "skaffold.yaml", "Tiltfile", "helmfile.yaml"}
 
 // kubeDirs are the folders projects usually keep Kubernetes manifests in.
 // One counts only when a YAML file in it starts a Kubernetes object, so
@@ -24,8 +24,7 @@ const (
 	kubeReads = 50
 )
 
-// readKube finds the project's Kubernetes files and folders, which Hearth
-// shows and never applies.
+// readKube finds the project's Kubernetes files and folders.
 func readKube(p *Project) {
 	for _, name := range kubeFiles {
 		if info, err := os.Stat(filepath.Join(p.Dir, name)); err == nil && !info.IsDir() {
@@ -56,6 +55,11 @@ func hasManifest(dir string) bool {
 				return fs.SkipDir
 			}
 			return nil
+		}
+		switch d.Name() {
+		case "kustomization.yaml", "kustomization.yml", "Kustomization":
+			found = true
+			return fs.SkipAll
 		}
 		if ext := filepath.Ext(path); ext != ".yaml" && ext != ".yml" {
 			return nil

@@ -43,18 +43,18 @@ func kubeProjectApp() *App {
 
 // The project's card says where its link stands without asking the
 // cluster: the context, the kind cluster, kubectl's own context, the
-// manifests, which are not applied.
+// and manifest sources.
 func TestProjectKubeCard(t *testing.T) {
 	a := kubeProjectApp()
 	a.router.Push(projectPath(home + "/work/shop"))
 	tt := ui.NewTester(a.View, 1280, 1000)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "project-kube")
-	hasTexts(t, tt, "Kubernetes", "Hearth never applies manifests", "Change link…",
+	hasTexts(t, tt, "Kubernetes", "Linked context and manifests", "Change link…",
 		"kind-dev · namespace shop", "the project's context · ~/.kube/config · the link is kept in Hearth",
 		"kind cluster dev", "3 nodes · Kubernetes v1.31.2 · in Docker (OrbStack)", "running",
 		"kubectl in the terminal uses staging", "another context",
-		"Manifests: k8s/ · Chart.yaml", "found in the project folder · Hearth does not apply them")
+		"Manifests: k8s/ · Chart.yaml", "found in the project folder")
 	if err := tt.Click("Use kind-dev in kubectl…"); err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func TestProjectKubeCard(t *testing.T) {
 	a.router.Push(projectPath(home + "/work/notes"))
 	tt.Frame()
 	tt.Advance(time.Second)
-	if tt.HasText("Hearth never applies manifests") {
+	if tt.HasText("Linked context and manifests") {
 		t.Errorf("card without manifests or a link: %q", tt.Texts())
 	}
 }
@@ -143,7 +143,7 @@ func TestKubeLinkDialog(t *testing.T) {
 	tt.Advance(time.Second)
 	// kubectl's current context first, with its namespace.
 	hasTexts(t, tt, "Link pay to Kubernetes", "cluster eks-staging · ~/.kube/config", "may not exist yet",
-		"the link is kept in Hearth's settings; the project's files do not change", "Hearth does not apply the project's manifests")
+		"the link is kept in Hearth's settings; the project's files do not change", "Applying manifests requires a separate confirmation")
 	if a.kubeLink.context != "staging" || tt.HasText("Unlink") {
 		t.Fatalf("dialog: %+v", a.kubeLink)
 	}
