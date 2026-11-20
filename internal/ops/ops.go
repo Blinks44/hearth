@@ -31,6 +31,9 @@ const LogLines = 200
 // Step is one command of a plan, as argv: never a shell string.
 type Step struct {
 	Argv []string
+	// Dir sets the working directory of a command that operates on a project.
+	Dir             string
+	dockerContainer *dockerContainerChange
 	// Kube executes and verifies one reviewed Kubernetes write.
 	Kube *KubeChange
 	// Note says what else the step does, shown after the command, as
@@ -99,7 +102,8 @@ type Note struct {
 
 // Plan is a change to the system the user confirms before it runs.
 type Plan struct {
-	KubeBulk bool
+	KubeBulk     bool
+	DockerAction DockerAction
 	// Title names the change, as "Install Docker Desktop"; Why says how
 	// it goes and why.
 	Title, Why string
@@ -125,6 +129,10 @@ type Plan struct {
 	// own, as the new computer's tools: a step that fails puts back only
 	// what its part changed. None makes the plan one part.
 	Parts []int
+}
+
+func (p Plan) DockerContainers() bool {
+	return len(p.Steps) > 0 && p.Steps[0].dockerContainer != nil
 }
 
 // Phase is where an execution of a plan is.
@@ -215,6 +223,9 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			e.emit()
 			return e.snapshot()
 		}
+	}
+	if p.DockerContainers() {
+		return e.executeDockerContainers(ctx, r, p)
 	}
 	if p.KubeBulk && len(p.Steps) > 0 {
 		return e.executeKubeBulk(ctx, r, p)
@@ -423,7 +434,11 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.UndoAlways {
 			undoStep()
 		}
-		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: commandDir, Timeout: timeout, Output: e})
+		stepDir := commandDir
+		if step.Dir != "" {
+			stepDir = step.Dir
+		}
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: stepDir, Timeout: timeout, Output: e})
 		e.mu.Lock()
 		e.flushLine()
 		refused := ""

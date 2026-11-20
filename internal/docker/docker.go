@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -65,8 +64,7 @@ type info struct {
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Engine, error) {
 	// The address, not the context: DOCKER_CONTEXT in the terminal's
 	// environment would otherwise win over it.
-	res, err := r.Run(ctx, run.Cmd{Args: []string{t.Docker, "--host", t.Endpoint, "info", "--format", "{{json .}}"},
-		Timeout: 10 * time.Second, Env: append(slices.Clone(env), "DOCKER_CONTEXT=")})
+	res, err := r.Run(ctx, t.Command(env, "info", "--format", "{{json .}}"))
 	if err != nil {
 		return Engine{}, fmt.Errorf("docker info: %w", err)
 	}

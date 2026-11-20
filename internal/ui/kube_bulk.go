@@ -14,19 +14,19 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-type kubeBulkSelection struct {
+type resourceSelection struct {
 	kind     int
 	selected map[string]bool
 	busy     bool
 	revision int
 }
 
-func (s *kubeBulkSelection) clear() {
+func (s *resourceSelection) clear() {
 	s.selected, s.busy = nil, false
 	s.revision++
 }
 
-func (s *kubeBulkSelection) retain(cl kube.Cluster) {
+func (s *resourceSelection) retain(cl kube.Cluster) {
 	if len(s.selected) == 0 {
 		return
 	}
@@ -51,7 +51,7 @@ func (s *kubeBulkSelection) retain(cl kube.Cluster) {
 	}
 }
 
-func (s *kubeBulkSelection) checkbox(c *ui.Context, key, label string, ids []string) {
+func (s *resourceSelection) checkbox(c *ui.Context, key, label string, ids []string) {
 	state, count := ui.CheckOff, 0
 	for _, id := range ids {
 		if s.selected[id] {

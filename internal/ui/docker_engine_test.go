@@ -80,6 +80,11 @@ func TestDockerEngineOpenAndBack(t *testing.T) {
 	}
 	w.got[0](colimaEngine(), nil)
 	tt.Advance(time.Second)
+	if a.engine.view != dockerContainers {
+		t.Fatalf("first view = %d", a.engine.view)
+	}
+	a.engine.view = dockerOverview
+	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-engine")
 	for _, text := range []string{"Overview", "Containers", "Images", "Volumes", "Networks", "4 of 8 running", "23", "Docker 27.5.1", "8.6 GB"} {
 		if !tt.HasText(text) {

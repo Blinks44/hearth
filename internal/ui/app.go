@@ -188,6 +188,7 @@ type App struct {
 	// read to got on the UI thread, until stop is called; nil hides the
 	// engine view.
 	WatchDocker           func(t docker.Target, got func(docker.Engine, error)) (stop func())
+	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
 	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
@@ -348,7 +349,10 @@ type App struct {
 
 // NewApp returns the app showing the overview.
 func NewApp() *App {
-	return &App{router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en", usageTab: 1}
+	return &App{
+		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en", usageTab: 1,
+		engine: dockerEngineState{view: dockerContainers},
+	}
 }
 
 // View builds the window: the sidebar and the page shown beside it.

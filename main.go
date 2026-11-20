@@ -187,6 +187,15 @@ func main() {
 			})
 			return cancel
 		}
+		a.WatchDockerContainers = func(t docker.Target, got func([]docker.Container, error, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go docker.WatchContainers(ctx, run.Exec{}, env, t, func(items []docker.Container, err, statsErr error) {
+				win.Update(func() { got(items, err, statsErr) })
+			})
+			return cancel
+		}
+
 		a.SecretTimer = func(delay time.Duration, done func()) func() {
 			timer := time.AfterFunc(delay, func() { win.Update(done) })
 			return func() { timer.Stop() }

@@ -1,4 +1,125 @@
 {
+  "dockerContainerRunning": "Running",
+  "dockerContainerStopped": "Stopped",
+  "dockerContainersReading": "Reading containers…",
+  "dockerNoProject": "No project",
+  "dockerStatsUnavailable": "CPU and memory samples are unavailable.",
+  "dockerContainersRunning": "Running",
+  "dockerContainersStopped": "Stopped",
+  "dockerContainerSearch": "Name, image or port",
+  "dockerUptime": "Uptime",
+  "dockerContainersEmpty": "No matching containers",
+  "dockerContainersCount": "{shown} shown · {running} running",
+  "@dockerContainersCount": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "running": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerCollapseAll": "Collapse all",
+  "dockerExpandAll": "Expand all",
+  "dockerGroupProblems": "Problems: {count}",
+  "@dockerGroupProblems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerGroupRunning": "Running: {count}",
+  "@dockerGroupRunning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerOpenPorts": "Open in Ports",
+  "dockerContainerRestarting": "Restarting · {count}",
+  "@dockerContainerRestarting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerContainerPaused": "Paused",
+  "dockerContainerExit": "Exit code {code}",
+  "@dockerContainerExit": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerContainerCreated": "Created",
+  "dockerContainerIssue": "Problem",
+  "dockerPortConflict": "Docker could not bind port {port}: the address is already in use.",
+  "@dockerPortConflict": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerContainerOOM": "Docker reports that the process was killed because it ran out of memory.",
+  "dockerContainerExit137": "The process was killed by SIGKILL (exit 137).",
+  "dockerContainerExit127": "The startup command was not found (exit 127).",
+  "dockerContainerExit126": "The startup command could not be executed (exit 126).",
+  "dockerContainerExit1": "The process reported an error (exit 1).",
+  "dockerRestartLoop": "Docker is retrying startup. Restarts so far: {count}.",
+  "@dockerRestartLoop": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerContainerUnhealthy": "The container's health check is failing.",
+  "dockerSelected": "Selected: {count}",
+  "@dockerSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerContainerStart": "Start",
+  "dockerContainerStop": "Stop",
+  "dockerContainerRestart": "Restart",
+  "dockerContainerRemove": "Remove",
+  "dockerComposeUp": "Bring up environment",
+  "dockerComposeDown": "Stop environment",
+  "dockerComposeTitle": "Docker Compose environment",
+  "dockerContainerChanged": "The container list or state changed. Refresh and review the action again.",
+  "dockerContainerScope": "Hearth runs the action on the Docker engine shown in the plan.",
+  "dockerContainerPlan": "{action} · containers: {count} · {engine}",
+  "@dockerContainerPlan": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerContainerRemoveNote": "Running containers are stopped first. Their writable layers are removed.",
+  "dockerVolumesStay": "Volumes are kept",
+  "dockerContainerCheck": "Docker did not report the expected container state after the command.",
+  "dockerContainerPartial": "Some containers need attention. See the result for each container.",
+  "dockerComposeMissing": "The Compose files for this project are unavailable.",
+  "dockerComposeConfig": "Docker Compose could not read the project name. Check the Compose plugin and project configuration.",
+  "dockerComposeChanged": "A Compose project with this name uses a different directory or set of files on this engine.",
+  "dockerComposeDownWhy": "Compose stops and removes the project's containers and networks. Data in volumes stays.",
+  "dockerComposeDownRemoved": "The writable layers of the removed containers are deleted.",
   "kubeAccessResources": "Access",
   "kubeAccessCanI": "What can I do?",
   "kubeAccessSearch": "Resource or verb",

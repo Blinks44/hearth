@@ -36,6 +36,502 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// DockerContainerRunning says "Running"
+// in the language the app shows.
+func DockerContainerRunning() string { return In(i18n.Locale()).DockerContainerRunning() }
+
+// DockerContainerRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) DockerContainerRunning() string {
+	return Catalog.Format(msgs.locale, "dockerContainerRunning", nil)
+}
+
+// DockerContainerStopped says "Stopped"
+// in the language the app shows.
+func DockerContainerStopped() string { return In(i18n.Locale()).DockerContainerStopped() }
+
+// DockerContainerStopped says "Stopped"
+// in the language of msgs.
+func (msgs Messages) DockerContainerStopped() string {
+	return Catalog.Format(msgs.locale, "dockerContainerStopped", nil)
+}
+
+// DockerContainersReading says "Reading containers…"
+// in the language the app shows.
+func DockerContainersReading() string { return In(i18n.Locale()).DockerContainersReading() }
+
+// DockerContainersReading says "Reading containers…"
+// in the language of msgs.
+func (msgs Messages) DockerContainersReading() string {
+	return Catalog.Format(msgs.locale, "dockerContainersReading", nil)
+}
+
+// DockerNoProject says "No project"
+// in the language the app shows.
+func DockerNoProject() string { return In(i18n.Locale()).DockerNoProject() }
+
+// DockerNoProject says "No project"
+// in the language of msgs.
+func (msgs Messages) DockerNoProject() string {
+	return Catalog.Format(msgs.locale, "dockerNoProject", nil)
+}
+
+// DockerStatsUnavailable says "CPU and memory samples are unavailable."
+// in the language the app shows.
+func DockerStatsUnavailable() string { return In(i18n.Locale()).DockerStatsUnavailable() }
+
+// DockerStatsUnavailable says "CPU and memory samples are unavailable."
+// in the language of msgs.
+func (msgs Messages) DockerStatsUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerStatsUnavailable", nil)
+}
+
+// DockerContainersRunning says "Running"
+// in the language the app shows.
+func DockerContainersRunning() string { return In(i18n.Locale()).DockerContainersRunning() }
+
+// DockerContainersRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) DockerContainersRunning() string {
+	return Catalog.Format(msgs.locale, "dockerContainersRunning", nil)
+}
+
+// DockerContainersStopped says "Stopped"
+// in the language the app shows.
+func DockerContainersStopped() string { return In(i18n.Locale()).DockerContainersStopped() }
+
+// DockerContainersStopped says "Stopped"
+// in the language of msgs.
+func (msgs Messages) DockerContainersStopped() string {
+	return Catalog.Format(msgs.locale, "dockerContainersStopped", nil)
+}
+
+// DockerContainerSearch says "Name, image or port"
+// in the language the app shows.
+func DockerContainerSearch() string { return In(i18n.Locale()).DockerContainerSearch() }
+
+// DockerContainerSearch says "Name, image or port"
+// in the language of msgs.
+func (msgs Messages) DockerContainerSearch() string {
+	return Catalog.Format(msgs.locale, "dockerContainerSearch", nil)
+}
+
+// DockerUptime says "Uptime"
+// in the language the app shows.
+func DockerUptime() string { return In(i18n.Locale()).DockerUptime() }
+
+// DockerUptime says "Uptime"
+// in the language of msgs.
+func (msgs Messages) DockerUptime() string {
+	return Catalog.Format(msgs.locale, "dockerUptime", nil)
+}
+
+// DockerContainersEmpty says "No matching containers"
+// in the language the app shows.
+func DockerContainersEmpty() string { return In(i18n.Locale()).DockerContainersEmpty() }
+
+// DockerContainersEmpty says "No matching containers"
+// in the language of msgs.
+func (msgs Messages) DockerContainersEmpty() string {
+	return Catalog.Format(msgs.locale, "dockerContainersEmpty", nil)
+}
+
+// DockerContainersCount says "{shown} shown · {running} running"
+// in the language the app shows.
+func DockerContainersCount(shown int, running int) string {
+	return In(i18n.Locale()).DockerContainersCount(shown, running)
+}
+
+// DockerContainersCount says "{shown} shown · {running} running"
+// in the language of msgs.
+func (msgs Messages) DockerContainersCount(shown int, running int) string {
+	return Catalog.Format(msgs.locale, "dockerContainersCount", map[string]any{"shown": shown, "running": running})
+}
+
+// DockerCollapseAll says "Collapse all"
+// in the language the app shows.
+func DockerCollapseAll() string { return In(i18n.Locale()).DockerCollapseAll() }
+
+// DockerCollapseAll says "Collapse all"
+// in the language of msgs.
+func (msgs Messages) DockerCollapseAll() string {
+	return Catalog.Format(msgs.locale, "dockerCollapseAll", nil)
+}
+
+// DockerExpandAll says "Expand all"
+// in the language the app shows.
+func DockerExpandAll() string { return In(i18n.Locale()).DockerExpandAll() }
+
+// DockerExpandAll says "Expand all"
+// in the language of msgs.
+func (msgs Messages) DockerExpandAll() string {
+	return Catalog.Format(msgs.locale, "dockerExpandAll", nil)
+}
+
+// DockerGroupProblems says "Problems: {count}"
+// in the language the app shows.
+func DockerGroupProblems(count int) string { return In(i18n.Locale()).DockerGroupProblems(count) }
+
+// DockerGroupProblems says "Problems: {count}"
+// in the language of msgs.
+func (msgs Messages) DockerGroupProblems(count int) string {
+	return Catalog.Format(msgs.locale, "dockerGroupProblems", map[string]any{"count": count})
+}
+
+// DockerGroupRunning says "Running: {count}"
+// in the language the app shows.
+func DockerGroupRunning(count int) string { return In(i18n.Locale()).DockerGroupRunning(count) }
+
+// DockerGroupRunning says "Running: {count}"
+// in the language of msgs.
+func (msgs Messages) DockerGroupRunning(count int) string {
+	return Catalog.Format(msgs.locale, "dockerGroupRunning", map[string]any{"count": count})
+}
+
+// DockerOpenPorts says "Open in Ports"
+// in the language the app shows.
+func DockerOpenPorts() string { return In(i18n.Locale()).DockerOpenPorts() }
+
+// DockerOpenPorts says "Open in Ports"
+// in the language of msgs.
+func (msgs Messages) DockerOpenPorts() string {
+	return Catalog.Format(msgs.locale, "dockerOpenPorts", nil)
+}
+
+// DockerContainerRestarting says "Restarting · {count}"
+// in the language the app shows.
+func DockerContainerRestarting(count int) string {
+	return In(i18n.Locale()).DockerContainerRestarting(count)
+}
+
+// DockerContainerRestarting says "Restarting · {count}"
+// in the language of msgs.
+func (msgs Messages) DockerContainerRestarting(count int) string {
+	return Catalog.Format(msgs.locale, "dockerContainerRestarting", map[string]any{"count": count})
+}
+
+// DockerContainerPaused says "Paused"
+// in the language the app shows.
+func DockerContainerPaused() string { return In(i18n.Locale()).DockerContainerPaused() }
+
+// DockerContainerPaused says "Paused"
+// in the language of msgs.
+func (msgs Messages) DockerContainerPaused() string {
+	return Catalog.Format(msgs.locale, "dockerContainerPaused", nil)
+}
+
+// DockerContainerExit says "Exit code {code}"
+// in the language the app shows.
+func DockerContainerExit(code int) string { return In(i18n.Locale()).DockerContainerExit(code) }
+
+// DockerContainerExit says "Exit code {code}"
+// in the language of msgs.
+func (msgs Messages) DockerContainerExit(code int) string {
+	return Catalog.Format(msgs.locale, "dockerContainerExit", map[string]any{"code": code})
+}
+
+// DockerContainerCreated says "Created"
+// in the language the app shows.
+func DockerContainerCreated() string { return In(i18n.Locale()).DockerContainerCreated() }
+
+// DockerContainerCreated says "Created"
+// in the language of msgs.
+func (msgs Messages) DockerContainerCreated() string {
+	return Catalog.Format(msgs.locale, "dockerContainerCreated", nil)
+}
+
+// DockerContainerIssue says "Problem"
+// in the language the app shows.
+func DockerContainerIssue() string { return In(i18n.Locale()).DockerContainerIssue() }
+
+// DockerContainerIssue says "Problem"
+// in the language of msgs.
+func (msgs Messages) DockerContainerIssue() string {
+	return Catalog.Format(msgs.locale, "dockerContainerIssue", nil)
+}
+
+// DockerPortConflict says "Docker could not bind port {port}: the address is already in use."
+// in the language the app shows.
+func DockerPortConflict(port string) string { return In(i18n.Locale()).DockerPortConflict(port) }
+
+// DockerPortConflict says "Docker could not bind port {port}: the address is already in use."
+// in the language of msgs.
+func (msgs Messages) DockerPortConflict(port string) string {
+	return Catalog.Format(msgs.locale, "dockerPortConflict", map[string]any{"port": port})
+}
+
+// DockerContainerOOM says "Docker reports that the process was killed because it ran out of memory."
+// in the language the app shows.
+func DockerContainerOOM() string { return In(i18n.Locale()).DockerContainerOOM() }
+
+// DockerContainerOOM says "Docker reports that the process was killed because it ran out of memory."
+// in the language of msgs.
+func (msgs Messages) DockerContainerOOM() string {
+	return Catalog.Format(msgs.locale, "dockerContainerOOM", nil)
+}
+
+// DockerContainerExit137 says "The process was killed by SIGKILL (exit 137)."
+// in the language the app shows.
+func DockerContainerExit137() string { return In(i18n.Locale()).DockerContainerExit137() }
+
+// DockerContainerExit137 says "The process was killed by SIGKILL (exit 137)."
+// in the language of msgs.
+func (msgs Messages) DockerContainerExit137() string {
+	return Catalog.Format(msgs.locale, "dockerContainerExit137", nil)
+}
+
+// DockerContainerExit127 says "The startup command was not found (exit 127)."
+// in the language the app shows.
+func DockerContainerExit127() string { return In(i18n.Locale()).DockerContainerExit127() }
+
+// DockerContainerExit127 says "The startup command was not found (exit 127)."
+// in the language of msgs.
+func (msgs Messages) DockerContainerExit127() string {
+	return Catalog.Format(msgs.locale, "dockerContainerExit127", nil)
+}
+
+// DockerContainerExit126 says "The startup command could not be executed (exit 126)."
+// in the language the app shows.
+func DockerContainerExit126() string { return In(i18n.Locale()).DockerContainerExit126() }
+
+// DockerContainerExit126 says "The startup command could not be executed (exit 126)."
+// in the language of msgs.
+func (msgs Messages) DockerContainerExit126() string {
+	return Catalog.Format(msgs.locale, "dockerContainerExit126", nil)
+}
+
+// DockerContainerExit1 says "The process reported an error (exit 1)."
+// in the language the app shows.
+func DockerContainerExit1() string { return In(i18n.Locale()).DockerContainerExit1() }
+
+// DockerContainerExit1 says "The process reported an error (exit 1)."
+// in the language of msgs.
+func (msgs Messages) DockerContainerExit1() string {
+	return Catalog.Format(msgs.locale, "dockerContainerExit1", nil)
+}
+
+// DockerRestartLoop says "Docker is retrying startup. Restarts so far: {count}."
+// in the language the app shows.
+func DockerRestartLoop(count int) string { return In(i18n.Locale()).DockerRestartLoop(count) }
+
+// DockerRestartLoop says "Docker is retrying startup. Restarts so far: {count}."
+// in the language of msgs.
+func (msgs Messages) DockerRestartLoop(count int) string {
+	return Catalog.Format(msgs.locale, "dockerRestartLoop", map[string]any{"count": count})
+}
+
+// DockerContainerUnhealthy says "The container's health check is failing."
+// in the language the app shows.
+func DockerContainerUnhealthy() string { return In(i18n.Locale()).DockerContainerUnhealthy() }
+
+// DockerContainerUnhealthy says "The container's health check is failing."
+// in the language of msgs.
+func (msgs Messages) DockerContainerUnhealthy() string {
+	return Catalog.Format(msgs.locale, "dockerContainerUnhealthy", nil)
+}
+
+// DockerSelected says "Selected: {count}"
+// in the language the app shows.
+func DockerSelected(count int) string { return In(i18n.Locale()).DockerSelected(count) }
+
+// DockerSelected says "Selected: {count}"
+// in the language of msgs.
+func (msgs Messages) DockerSelected(count int) string {
+	return Catalog.Format(msgs.locale, "dockerSelected", map[string]any{"count": count})
+}
+
+// DockerContainerStart says "Start"
+// in the language the app shows.
+func DockerContainerStart() string { return In(i18n.Locale()).DockerContainerStart() }
+
+// DockerContainerStart says "Start"
+// in the language of msgs.
+func (msgs Messages) DockerContainerStart() string {
+	return Catalog.Format(msgs.locale, "dockerContainerStart", nil)
+}
+
+// DockerContainerStop says "Stop"
+// in the language the app shows.
+func DockerContainerStop() string { return In(i18n.Locale()).DockerContainerStop() }
+
+// DockerContainerStop says "Stop"
+// in the language of msgs.
+func (msgs Messages) DockerContainerStop() string {
+	return Catalog.Format(msgs.locale, "dockerContainerStop", nil)
+}
+
+// DockerContainerRestart says "Restart"
+// in the language the app shows.
+func DockerContainerRestart() string { return In(i18n.Locale()).DockerContainerRestart() }
+
+// DockerContainerRestart says "Restart"
+// in the language of msgs.
+func (msgs Messages) DockerContainerRestart() string {
+	return Catalog.Format(msgs.locale, "dockerContainerRestart", nil)
+}
+
+// DockerContainerRemove says "Remove"
+// in the language the app shows.
+func DockerContainerRemove() string { return In(i18n.Locale()).DockerContainerRemove() }
+
+// DockerContainerRemove says "Remove"
+// in the language of msgs.
+func (msgs Messages) DockerContainerRemove() string {
+	return Catalog.Format(msgs.locale, "dockerContainerRemove", nil)
+}
+
+// DockerComposeUp says "Bring up environment"
+// in the language the app shows.
+func DockerComposeUp() string { return In(i18n.Locale()).DockerComposeUp() }
+
+// DockerComposeUp says "Bring up environment"
+// in the language of msgs.
+func (msgs Messages) DockerComposeUp() string {
+	return Catalog.Format(msgs.locale, "dockerComposeUp", nil)
+}
+
+// DockerComposeDown says "Stop environment"
+// in the language the app shows.
+func DockerComposeDown() string { return In(i18n.Locale()).DockerComposeDown() }
+
+// DockerComposeDown says "Stop environment"
+// in the language of msgs.
+func (msgs Messages) DockerComposeDown() string {
+	return Catalog.Format(msgs.locale, "dockerComposeDown", nil)
+}
+
+// DockerComposeTitle says "Docker Compose environment"
+// in the language the app shows.
+func DockerComposeTitle() string { return In(i18n.Locale()).DockerComposeTitle() }
+
+// DockerComposeTitle says "Docker Compose environment"
+// in the language of msgs.
+func (msgs Messages) DockerComposeTitle() string {
+	return Catalog.Format(msgs.locale, "dockerComposeTitle", nil)
+}
+
+// DockerContainerChanged says "The container list or state changed. Refresh and review the action again."
+// in the language the app shows.
+func DockerContainerChanged() string { return In(i18n.Locale()).DockerContainerChanged() }
+
+// DockerContainerChanged says "The container list or state changed. Refresh and review the action again."
+// in the language of msgs.
+func (msgs Messages) DockerContainerChanged() string {
+	return Catalog.Format(msgs.locale, "dockerContainerChanged", nil)
+}
+
+// DockerContainerScope says "Hearth runs the action on the Docker engine shown in the plan."
+// in the language the app shows.
+func DockerContainerScope() string { return In(i18n.Locale()).DockerContainerScope() }
+
+// DockerContainerScope says "Hearth runs the action on the Docker engine shown in the plan."
+// in the language of msgs.
+func (msgs Messages) DockerContainerScope() string {
+	return Catalog.Format(msgs.locale, "dockerContainerScope", nil)
+}
+
+// DockerContainerPlan says "{action} · containers: {count} · {engine}"
+// in the language the app shows.
+func DockerContainerPlan(action string, count int, engine string) string {
+	return In(i18n.Locale()).DockerContainerPlan(action, count, engine)
+}
+
+// DockerContainerPlan says "{action} · containers: {count} · {engine}"
+// in the language of msgs.
+func (msgs Messages) DockerContainerPlan(action string, count int, engine string) string {
+	return Catalog.Format(msgs.locale, "dockerContainerPlan", map[string]any{"action": action, "count": count, "engine": engine})
+}
+
+// DockerContainerRemoveNote says "Running containers are stopped first. Their writable layers are removed."
+// in the language the app shows.
+func DockerContainerRemoveNote() string { return In(i18n.Locale()).DockerContainerRemoveNote() }
+
+// DockerContainerRemoveNote says "Running containers are stopped first. Their writable layers are removed."
+// in the language of msgs.
+func (msgs Messages) DockerContainerRemoveNote() string {
+	return Catalog.Format(msgs.locale, "dockerContainerRemoveNote", nil)
+}
+
+// DockerVolumesStay says "Volumes are kept"
+// in the language the app shows.
+func DockerVolumesStay() string { return In(i18n.Locale()).DockerVolumesStay() }
+
+// DockerVolumesStay says "Volumes are kept"
+// in the language of msgs.
+func (msgs Messages) DockerVolumesStay() string {
+	return Catalog.Format(msgs.locale, "dockerVolumesStay", nil)
+}
+
+// DockerContainerCheck says "Docker did not report the expected container state after the command."
+// in the language the app shows.
+func DockerContainerCheck() string { return In(i18n.Locale()).DockerContainerCheck() }
+
+// DockerContainerCheck says "Docker did not report the expected container state after the command."
+// in the language of msgs.
+func (msgs Messages) DockerContainerCheck() string {
+	return Catalog.Format(msgs.locale, "dockerContainerCheck", nil)
+}
+
+// DockerContainerPartial says "Some containers need attention. See the result for each container."
+// in the language the app shows.
+func DockerContainerPartial() string { return In(i18n.Locale()).DockerContainerPartial() }
+
+// DockerContainerPartial says "Some containers need attention. See the result for each container."
+// in the language of msgs.
+func (msgs Messages) DockerContainerPartial() string {
+	return Catalog.Format(msgs.locale, "dockerContainerPartial", nil)
+}
+
+// DockerComposeMissing says "The Compose files for this project are unavailable."
+// in the language the app shows.
+func DockerComposeMissing() string { return In(i18n.Locale()).DockerComposeMissing() }
+
+// DockerComposeMissing says "The Compose files for this project are unavailable."
+// in the language of msgs.
+func (msgs Messages) DockerComposeMissing() string {
+	return Catalog.Format(msgs.locale, "dockerComposeMissing", nil)
+}
+
+// DockerComposeConfig says "Docker Compose could not read the project name. Check the Compose plugin and project configuration."
+// in the language the app shows.
+func DockerComposeConfig() string { return In(i18n.Locale()).DockerComposeConfig() }
+
+// DockerComposeConfig says "Docker Compose could not read the project name. Check the Compose plugin and project configuration."
+// in the language of msgs.
+func (msgs Messages) DockerComposeConfig() string {
+	return Catalog.Format(msgs.locale, "dockerComposeConfig", nil)
+}
+
+// DockerComposeChanged says "A Compose project with this name uses a different directory or set of files on this engine."
+// in the language the app shows.
+func DockerComposeChanged() string { return In(i18n.Locale()).DockerComposeChanged() }
+
+// DockerComposeChanged says "A Compose project with this name uses a different directory or set of files on this engine."
+// in the language of msgs.
+func (msgs Messages) DockerComposeChanged() string {
+	return Catalog.Format(msgs.locale, "dockerComposeChanged", nil)
+}
+
+// DockerComposeDownWhy says "Compose stops and removes the project's containers and networks. Data in volumes stays."
+// in the language the app shows.
+func DockerComposeDownWhy() string { return In(i18n.Locale()).DockerComposeDownWhy() }
+
+// DockerComposeDownWhy says "Compose stops and removes the project's containers and networks. Data in volumes stays."
+// in the language of msgs.
+func (msgs Messages) DockerComposeDownWhy() string {
+	return Catalog.Format(msgs.locale, "dockerComposeDownWhy", nil)
+}
+
+// DockerComposeDownRemoved says "The writable layers of the removed containers are deleted."
+// in the language the app shows.
+func DockerComposeDownRemoved() string { return In(i18n.Locale()).DockerComposeDownRemoved() }
+
+// DockerComposeDownRemoved says "The writable layers of the removed containers are deleted."
+// in the language of msgs.
+func (msgs Messages) DockerComposeDownRemoved() string {
+	return Catalog.Format(msgs.locale, "dockerComposeDownRemoved", nil)
+}
+
 // KubeAccessResources says "Access"
 // in the language the app shows.
 func KubeAccessResources() string { return In(i18n.Locale()).KubeAccessResources() }

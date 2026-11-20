@@ -255,9 +255,10 @@ func TestKubePodDetail(t *testing.T) {
 		"app=checkout-api +1", "config · tmp", "Reading events…", "Owner", "Open Deployment checkout-api")
 
 	cl := shopCluster()
+	now := tt.Now()
 	cl.Events, cl.EventsOf = []kube.Event{
-		{Type: "Warning", Reason: "BackOff", Message: "Back-off restarting failed container api", Count: 52, Last: time.Now().Add(-time.Minute)},
-		{Type: "Normal", Reason: "Pulled", Message: "Container image already present on machine", Count: 15, Last: time.Now().Add(-4 * time.Minute)},
+		{Type: "Warning", Reason: "BackOff", Message: "Back-off restarting failed container api", Count: 52, Last: now.Add(-time.Minute)},
+		{Type: "Normal", Reason: "Pulled", Message: "Container image already present on machine", Count: 15, Last: now.Add(-4 * time.Minute)},
 	}, kube.Ref{Namespace: "default", UID: "p1"}
 	w.got[len(w.got)-1](cl, nil)
 	tt.Frame()

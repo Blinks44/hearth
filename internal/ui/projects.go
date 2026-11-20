@@ -299,6 +299,7 @@ func (a *App) project(c *ui.Context, dir string) {
 				if len(statuses) > 0 {
 					a.requirementTable(c, statuses)
 				}
+				a.projectDockerCard(c, p)
 				a.projectKubeCard(c, p)
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })

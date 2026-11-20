@@ -70,6 +70,9 @@ func (a *App) startOperation() {
 	if op.plan.KubeBulk {
 		a.cluster.bulk.clear()
 	}
+	if op.plan.DockerContainers() {
+		a.engine.containers.bulk.clear()
+	}
 	op.started, op.told = true, false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
@@ -82,6 +85,9 @@ func (a *App) startOperation() {
 		}
 		if s.Phase == ops.Succeeded && op.after != nil {
 			op.after()
+		}
+		if s.Phase.Over() && op.plan.DockerAction != "" {
+			a.engine.refresh++
 		}
 		if s.Phase.Over() && a.OnScan != nil {
 			// Cached sizes describe the system before this operation. Do not
@@ -216,7 +222,7 @@ func operationCaption(op *operation) string {
 		return locales.OpSucceeded()
 	case s.Phase == ops.Failed:
 		return locales.OpFailed(n, failReason(s))
-	case s.Phase == ops.NotVerified && (op.kubeChange() != nil || op.plan.KubeBulk):
+	case s.Phase == ops.NotVerified && (op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers()):
 		return s.Err
 	case s.Phase == ops.NotVerified:
 		return locales.OpNotVerified(s.Err)
@@ -437,6 +443,13 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 						}
 						ui.Text(c, text).FontSize(11).TextColor(pal.TextFaint).Wrap().Selectable()
 					})
+				} else if i < len(s.StepDetails) && s.StepDetails[i] != "" {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+						ui.Text(c, command).FontSize(12).Wrap().Selectable()
+						ui.Text(c, s.StepDetails[i]).FontSize(11).TextColor(pal.DangerText).Wrap().Selectable()
+					})
+				} else if step.Dir != "" {
+					ui.Text(c, command).FontSize(12).TextColor(color).Wrap().Selectable().Grow(1).MinWidth(0)
 				} else {
 					clipped(c, command).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
 				}
@@ -680,7 +693,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
 		}
 		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).OnClick(hide)
-	case op.kubeChange() != nil || op.plan.KubeBulk:
+	case op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers():
 		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
 	case op.state.Phase == ops.Stopped:
 		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)

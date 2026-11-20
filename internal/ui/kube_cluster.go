@@ -111,7 +111,7 @@ type kubeClusterState struct {
 	resources                  map[ops.KubeResource]*kubeResourceForm
 	resourceDialog             *kubeResourceForm
 	scale                      *scaleForm
-	bulk                       kubeBulkSelection
+	bulk                       resourceSelection
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
 	nsRequest *kubeNamespaceRequest

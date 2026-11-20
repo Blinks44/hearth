@@ -60,7 +60,8 @@ type dockerEngineState struct {
 	data            *docker.Engine
 	err             error
 	// reading is true from a read the user waits for to its answer.
-	reading bool
+	reading    bool
+	containers dockerContainersState
 }
 
 // engineTarget is the engine of the context name, or why Hearth cannot
@@ -126,6 +127,7 @@ func (a *App) syncDocker() {
 	if target != "" {
 		running = fmt.Sprintf("%s#%d", target, s.refresh)
 	}
+	a.syncDockerContainers(t, running)
 	if running == s.running {
 		return
 	}
@@ -161,6 +163,7 @@ func (a *App) syncDocker() {
 // StopDocker ends the engine page's reads, as the window closes.
 func (a *App) StopDocker() {
 	s := &a.engine
+	s.containers.stopWatch()
 	if s.stop != nil {
 		s.stop()
 		s.stop, s.running, s.reading = nil, "", false
@@ -181,34 +184,43 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Fill().Children(func() {
 		a.dockerEngineHeader(c, name)
-		ui.Scroll(c.Key("docker-engine")).Grow(1).MinHeight(0).Children(func() {
-			ui.Column(c).Gap(14).Padding(20, 28, 24, 28).Children(func() {
-				ui.Row(c).Gap(6).Wrap().Children(func() {
-					for i, v := range dockerViews() {
-						kindChip(c, &s.view, i, v.icon, v.label, 0)
+		ui.Column(c).Grow(1).MinHeight(0).Gap(14).Padding(20, 28, 24, 28).Children(func() {
+			ui.Row(c).Gap(6).Wrap().Shrink(0).Children(func() {
+				for i, v := range dockerViews() {
+					count := 0
+					if i == dockerContainers {
+						for _, item := range s.containers.items {
+							if item.Problem() {
+								count++
+							}
+						}
 					}
-				})
-				_, problem := a.engineTarget(name)
-				switch {
-				case a.Snapshot == nil:
-					toolNote(c, locales.CleanupWaiting())
-				case problem != "":
-					toolNote(c, problem)
-				case s.data == nil && s.err != nil:
-					a.dockerEngineDown(c, name, s.err)
-				case s.data == nil:
-					tableSkeleton(c, locales.DockerEngineReading(name))
-				default:
-					if s.err != nil {
-						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
-					}
-					if s.view == dockerOverview {
-						dockerOverviewView(c, *s.data)
-					} else {
-						toolNote(c, locales.DockerViewSoon())
-					}
+					kindChip(c, &s.view, i, v.icon, v.label, count)
 				}
 			})
+			_, problem := a.engineTarget(name)
+			switch {
+			case a.Snapshot == nil:
+				toolNote(c, locales.CleanupWaiting())
+			case problem != "":
+				toolNote(c, problem)
+			case s.data == nil && s.err != nil:
+				a.dockerEngineDown(c, name, s.err)
+			case s.data == nil:
+				tableSkeleton(c, locales.DockerEngineReading(name))
+			default:
+				if s.err != nil {
+					ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
+				}
+				switch s.view {
+				case dockerOverview:
+					dockerOverviewView(c, *s.data)
+				case dockerContainers:
+					a.dockerContainersView(c)
+				default:
+					toolNote(c, locales.DockerViewSoon())
+				}
+			}
 		})
 	})
 }
