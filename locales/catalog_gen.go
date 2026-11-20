@@ -3898,18 +3898,246 @@ func (msgs Messages) KubeHelmRevision() string {
 	return Catalog.Format(msgs.locale, "kubeHelmRevision", nil)
 }
 
-// KubeHelmReadOnly says "Read-only · Releases read with {helm}."
+// KubeHelmSource says "Releases read with {helm}."
 // in the language the app shows.
 //
-// kubeHelmReadOnly
-func KubeHelmReadOnly(helm string) string { return In(i18n.Locale()).KubeHelmReadOnly(helm) }
+// kubeHelmSource
+func KubeHelmSource(helm string) string { return In(i18n.Locale()).KubeHelmSource(helm) }
 
-// KubeHelmReadOnly says "Read-only · Releases read with {helm}."
+// KubeHelmSource says "Releases read with {helm}."
 // in the language of msgs.
 //
-// kubeHelmReadOnly
-func (msgs Messages) KubeHelmReadOnly(helm string) string {
-	return Catalog.Format(msgs.locale, "kubeHelmReadOnly", map[string]any{"helm": helm})
+// kubeHelmSource
+func (msgs Messages) KubeHelmSource(helm string) string {
+	return Catalog.Format(msgs.locale, "kubeHelmSource", map[string]any{"helm": helm})
+}
+
+// KubeHelmValues says "Values"
+// in the language the app shows.
+//
+// kubeHelmValues
+func KubeHelmValues() string { return In(i18n.Locale()).KubeHelmValues() }
+
+// KubeHelmValues says "Values"
+// in the language of msgs.
+//
+// kubeHelmValues
+func (msgs Messages) KubeHelmValues() string {
+	return Catalog.Format(msgs.locale, "kubeHelmValues", nil)
+}
+
+// KubeHelmHistory says "History"
+// in the language the app shows.
+//
+// kubeHelmHistory
+func KubeHelmHistory() string { return In(i18n.Locale()).KubeHelmHistory() }
+
+// KubeHelmHistory says "History"
+// in the language of msgs.
+//
+// kubeHelmHistory
+func (msgs Messages) KubeHelmHistory() string {
+	return Catalog.Format(msgs.locale, "kubeHelmHistory", nil)
+}
+
+// KubeHelmManifest says "Manifest"
+// in the language the app shows.
+//
+// kubeHelmManifest
+func KubeHelmManifest() string { return In(i18n.Locale()).KubeHelmManifest() }
+
+// KubeHelmManifest says "Manifest"
+// in the language of msgs.
+//
+// kubeHelmManifest
+func (msgs Messages) KubeHelmManifest() string {
+	return Catalog.Format(msgs.locale, "kubeHelmManifest", nil)
+}
+
+// KubeHelmUpdated says "Updated"
+// in the language the app shows.
+//
+// kubeHelmUpdated
+func KubeHelmUpdated() string { return In(i18n.Locale()).KubeHelmUpdated() }
+
+// KubeHelmUpdated says "Updated"
+// in the language of msgs.
+//
+// kubeHelmUpdated
+func (msgs Messages) KubeHelmUpdated() string {
+	return Catalog.Format(msgs.locale, "kubeHelmUpdated", nil)
+}
+
+// KubeHelmContentEmpty says "There is nothing to display for this revision."
+// in the language the app shows.
+//
+// kubeHelmContentEmpty
+func KubeHelmContentEmpty() string { return In(i18n.Locale()).KubeHelmContentEmpty() }
+
+// KubeHelmContentEmpty says "There is nothing to display for this revision."
+// in the language of msgs.
+//
+// kubeHelmContentEmpty
+func (msgs Messages) KubeHelmContentEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeHelmContentEmpty", nil)
+}
+
+// KubeHelmChanged says "The release changed. Refresh the list and review a new plan."
+// in the language the app shows.
+//
+// kubeHelmChanged
+func KubeHelmChanged() string { return In(i18n.Locale()).KubeHelmChanged() }
+
+// KubeHelmChanged says "The release changed. Refresh the list and review a new plan."
+// in the language of msgs.
+//
+// kubeHelmChanged
+func (msgs Messages) KubeHelmChanged() string {
+	return Catalog.Format(msgs.locale, "kubeHelmChanged", nil)
+}
+
+// KubeHelmDeleteOpen says "Uninstall release…"
+// in the language the app shows.
+//
+// kubeHelmDeleteOpen
+func KubeHelmDeleteOpen() string { return In(i18n.Locale()).KubeHelmDeleteOpen() }
+
+// KubeHelmDeleteOpen says "Uninstall release…"
+// in the language of msgs.
+//
+// kubeHelmDeleteOpen
+func (msgs Messages) KubeHelmDeleteOpen() string {
+	return Catalog.Format(msgs.locale, "kubeHelmDeleteOpen", nil)
+}
+
+// KubeHelmDeleteTitle says "Uninstall Helm release {name}"
+// in the language the app shows.
+//
+// kubeHelmDeleteTitle
+func KubeHelmDeleteTitle(name string) string { return In(i18n.Locale()).KubeHelmDeleteTitle(name) }
+
+// KubeHelmDeleteTitle says "Uninstall Helm release {name}"
+// in the language of msgs.
+//
+// kubeHelmDeleteTitle
+func (msgs Messages) KubeHelmDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeHelmDeleteTitle", map[string]any{"name": name})
+}
+
+// KubeHelmRollbackTo says "Roll back to {revision}…"
+// in the language the app shows.
+//
+// kubeHelmRollbackTo
+func KubeHelmRollbackTo(revision int) string { return In(i18n.Locale()).KubeHelmRollbackTo(revision) }
+
+// KubeHelmRollbackTo says "Roll back to {revision}…"
+// in the language of msgs.
+//
+// kubeHelmRollbackTo
+func (msgs Messages) KubeHelmRollbackTo(revision int) string {
+	return Catalog.Format(msgs.locale, "kubeHelmRollbackTo", map[string]any{"revision": revision})
+}
+
+// KubeHelmRollbackImpact says "Helm will create a revision using chart {chart}, values and manifests from revision {to} in place of revision {from}.…"
+// in the language the app shows.
+//
+// kubeHelmRollbackImpact
+func KubeHelmRollbackImpact(from int, to int, chart string) string {
+	return In(i18n.Locale()).KubeHelmRollbackImpact(from, to, chart)
+}
+
+// KubeHelmRollbackImpact says "Helm will create a revision using chart {chart}, values and manifests from revision {to} in place of revision {from}.…"
+// in the language of msgs.
+//
+// kubeHelmRollbackImpact
+func (msgs Messages) KubeHelmRollbackImpact(from int, to int, chart string) string {
+	return Catalog.Format(msgs.locale, "kubeHelmRollbackImpact", map[string]any{"from": from, "to": to, "chart": chart})
+}
+
+// KubeHelmDeleteImpact says "Helm will remove resources managed by the release and its revision history. Workloads may stop, data may be lost and …"
+// in the language the app shows.
+//
+// kubeHelmDeleteImpact
+func KubeHelmDeleteImpact() string { return In(i18n.Locale()).KubeHelmDeleteImpact() }
+
+// KubeHelmDeleteImpact says "Helm will remove resources managed by the release and its revision history. Workloads may stop, data may be lost and …"
+// in the language of msgs.
+//
+// kubeHelmDeleteImpact
+func (msgs Messages) KubeHelmDeleteImpact() string {
+	return Catalog.Format(msgs.locale, "kubeHelmDeleteImpact", nil)
+}
+
+// KubeHelmRemoved says "Helm confirmed the release history was removed."
+// in the language the app shows.
+//
+// kubeHelmRemoved
+func KubeHelmRemoved() string { return In(i18n.Locale()).KubeHelmRemoved() }
+
+// KubeHelmRemoved says "Helm confirmed the release history was removed."
+// in the language of msgs.
+//
+// kubeHelmRemoved
+func (msgs Messages) KubeHelmRemoved() string {
+	return Catalog.Format(msgs.locale, "kubeHelmRemoved", nil)
+}
+
+// KubeHelmRestored says "Helm deployed revision {revision}."
+// in the language the app shows.
+//
+// kubeHelmRestored
+func KubeHelmRestored(revision int) string { return In(i18n.Locale()).KubeHelmRestored(revision) }
+
+// KubeHelmRestored says "Helm deployed revision {revision}."
+// in the language of msgs.
+//
+// kubeHelmRestored
+func (msgs Messages) KubeHelmRestored(revision int) string {
+	return Catalog.Format(msgs.locale, "kubeHelmRestored", map[string]any{"revision": revision})
+}
+
+// KubeHelmCheckMissing says "Helm could not find the release. Check the cluster before repeating the operation."
+// in the language the app shows.
+//
+// kubeHelmCheckMissing
+func KubeHelmCheckMissing() string { return In(i18n.Locale()).KubeHelmCheckMissing() }
+
+// KubeHelmCheckMissing says "Helm could not find the release. Check the cluster before repeating the operation."
+// in the language of msgs.
+//
+// kubeHelmCheckMissing
+func (msgs Messages) KubeHelmCheckMissing() string {
+	return Catalog.Format(msgs.locale, "kubeHelmCheckMissing", nil)
+}
+
+// KubeHelmCheckRevision says "Helm reports revision {revision} ({status}). Check the cluster before repeating the operation."
+// in the language the app shows.
+//
+// kubeHelmCheckRevision
+func KubeHelmCheckRevision(revision int, status string) string {
+	return In(i18n.Locale()).KubeHelmCheckRevision(revision, status)
+}
+
+// KubeHelmCheckRevision says "Helm reports revision {revision} ({status}). Check the cluster before repeating the operation."
+// in the language of msgs.
+//
+// kubeHelmCheckRevision
+func (msgs Messages) KubeHelmCheckRevision(revision int, status string) string {
+	return Catalog.Format(msgs.locale, "kubeHelmCheckRevision", map[string]any{"revision": revision, "status": status})
+}
+
+// KubeHelmUnverified says "Could not verify the Helm release. Check the cluster before repeating the operation."
+// in the language the app shows.
+//
+// kubeHelmUnverified
+func KubeHelmUnverified() string { return In(i18n.Locale()).KubeHelmUnverified() }
+
+// KubeHelmUnverified says "Could not verify the Helm release. Check the cluster before repeating the operation."
+// in the language of msgs.
+//
+// kubeHelmUnverified
+func (msgs Messages) KubeHelmUnverified() string {
+	return Catalog.Format(msgs.locale, "kubeHelmUnverified", nil)
 }
 
 // OverviewTitle says "Overview"

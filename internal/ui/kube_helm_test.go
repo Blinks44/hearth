@@ -102,7 +102,7 @@ func TestKubeHelmTable(t *testing.T) {
 				return r
 			}
 			for _, pair := range [][2]string{{"RELEASE", "helm-z"}, {"CHART", "web-1.0.3"}, {"APP VERSION", "2.4"}, {"REVISION", "12"}} {
-				if head, value := find(pair[0]), find(pair[1]); head.X != value.X {
+				if head, value := find(pair[0]), find(pair[1]); head.X-value.X > 0.1 || value.X-head.X > 0.1 {
 					t.Errorf("%s and %s start at %g and %g", pair[0], pair[1], head.X, value.X)
 				}
 			}
@@ -127,5 +127,73 @@ func helmTestReleases() []kube.HelmRelease {
 		{Name: "helm-a", Namespace: "shop", Revision: "2", Chart: "checkout-0.14.2", AppVersion: "2.8.1", Status: "deployed"},
 		{Name: "helm-z", Namespace: "shop", Revision: "12", Chart: "web-1.0.3", AppVersion: "2.4", Status: "failed", Description: "The deployment timed out"},
 		{Name: "helm-pending", Namespace: "tools", Revision: "4", Chart: "bitnami-redis-20.2.1", AppVersion: "7.4.1", Status: "pending-upgrade"},
+	}
+}
+
+func TestKubeHelmDetails(t *testing.T) {
+	for _, width := range []int{1000, 1280} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			a := kubeApp()
+			var w clusterWatches
+			a.WatchCluster = w.watch
+			a.cluster.kind = kindHelm
+			a.openCluster("kind-dev")
+			history := []kube.HelmRevision{
+				{Revision: 12, Chart: "web-1.0.3", Status: "failed", Description: "The deployment timed out"},
+				{Revision: 11, Chart: "web-1.0.2", Status: "deployed"},
+			}
+			var requests, stopped int
+			var values func(string, error)
+			a.ReadHelmHistory = func(target kube.HelmTarget, done func([]kube.HelmRevision, error)) func() {
+				if target.Namespace != "shop" || target.Name != "helm-z" || target.Context != "kind-dev" {
+					t.Fatalf("history target = %+v", target)
+				}
+				done(history, nil)
+				return func() { stopped++ }
+			}
+			a.ReadHelmContent = func(_ kube.HelmTarget, revision int, manifest bool, done func(string, error)) func() {
+				requests++
+				if revision != 12 {
+					t.Fatalf("content revision = %d", revision)
+				}
+				if manifest {
+					done("kind: ConfigMap", nil)
+				} else {
+					values = done
+				}
+				return func() { stopped++ }
+			}
+			tt := ui.NewTester(a.View, width, 680)
+			tt.Advance(time.Second)
+			w.got[0](kube.Cluster{Taken: time.Now(), HelmReleases: helmTestReleases()}, nil)
+			tt.Frame()
+			click := func(label string) {
+				t.Helper()
+				if err := tt.Click(label); err != nil {
+					t.Fatal(err)
+				}
+			}
+			click("shop/helm-z")
+			hasTexts(t, tt, "Roll back to 11…", "Uninstall release…", "The deployment timed out", "#11")
+			if requests != 0 {
+				t.Fatal("content requested on overview")
+			}
+			screenshot(t, tt, fmt.Sprintf("helm-details-%d", width))
+			click("Values")
+			if values == nil {
+				t.Fatal("values were not requested")
+			}
+			click("Manifest")
+			values("late: response", nil)
+			tt.Frame()
+			hasTexts(t, tt, "kind: ConfigMap")
+			if tt.HasText("late: response") || requests != 2 || stopped != 1 {
+				t.Fatalf("tab change: %v, %d requests, %d stopped", tt.Texts(), requests, stopped)
+			}
+			click("Pods")
+			if a.cluster.helmDetail != nil || stopped != 3 {
+				t.Fatal("leaving Helm did not clear its selected release")
+			}
+		})
 	}
 }

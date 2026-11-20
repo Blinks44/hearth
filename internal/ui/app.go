@@ -172,6 +172,8 @@ type App struct {
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
 	ReadSecretValue  func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
+	ReadHelmHistory  func(kube.HelmTarget, func([]kube.HelmRevision, error)) (stop func())
+	ReadHelmContent  func(kube.HelmTarget, int, bool, func(string, error)) (stop func())
 	ReadResourceYAML func(kube.Target, kube.Resource, func(string, error)) (stop func())
 	// SecretTimer schedules a callback on the UI thread and returns its cancellation.
 	SecretTimer     func(time.Duration, func()) (stop func())
@@ -327,6 +329,7 @@ func NewApp() *App {
 func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
+	a.syncHelmContent()
 	a.syncCustomDefinitions()
 	a.syncResourceYAML()
 	a.syncSecrets(c)

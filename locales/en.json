@@ -1154,15 +1154,112 @@
   "@kubeHelmRevision": {
     "description": "kubeHelmRevision"
   },
-  "kubeHelmReadOnly": "Read-only · Releases read with {helm}.",
-  "@kubeHelmReadOnly": {
-    "description": "kubeHelmReadOnly",
+  "kubeHelmSource": "Releases read with {helm}.",
+  "@kubeHelmSource": {
+    "description": "kubeHelmSource",
     "placeholders": {
       "helm": {
-        "type": "String",
-        "example": "Helm 3.16.3"
+        "type": "String"
       }
     }
+  },
+  "kubeHelmValues": "Values",
+  "@kubeHelmValues": {
+    "description": "kubeHelmValues"
+  },
+  "kubeHelmHistory": "History",
+  "@kubeHelmHistory": {
+    "description": "kubeHelmHistory"
+  },
+  "kubeHelmManifest": "Manifest",
+  "@kubeHelmManifest": {
+    "description": "kubeHelmManifest"
+  },
+  "kubeHelmUpdated": "Updated",
+  "@kubeHelmUpdated": {
+    "description": "kubeHelmUpdated"
+  },
+  "kubeHelmContentEmpty": "There is nothing to display for this revision.",
+  "@kubeHelmContentEmpty": {
+    "description": "kubeHelmContentEmpty"
+  },
+  "kubeHelmChanged": "The release changed. Refresh the list and review a new plan.",
+  "@kubeHelmChanged": {
+    "description": "kubeHelmChanged"
+  },
+  "kubeHelmDeleteOpen": "Uninstall release…",
+  "@kubeHelmDeleteOpen": {
+    "description": "kubeHelmDeleteOpen"
+  },
+  "kubeHelmDeleteTitle": "Uninstall Helm release {name}",
+  "@kubeHelmDeleteTitle": {
+    "description": "kubeHelmDeleteTitle",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeHelmRollbackTo": "Roll back to {revision}…",
+  "@kubeHelmRollbackTo": {
+    "description": "kubeHelmRollbackTo",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeHelmRollbackImpact": "Helm will create a revision using chart {chart}, values and manifests from revision {to} in place of revision {from}. Workloads may restart and chart hooks may run.",
+  "@kubeHelmRollbackImpact": {
+    "description": "kubeHelmRollbackImpact",
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      },
+      "chart": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeHelmDeleteImpact": "Helm will remove resources managed by the release and its revision history. Workloads may stop, data may be lost and chart hooks may run. Some resources can be retained by the chart or Kubernetes policies.",
+  "@kubeHelmDeleteImpact": {
+    "description": "kubeHelmDeleteImpact"
+  },
+  "kubeHelmRemoved": "Helm confirmed the release history was removed.",
+  "@kubeHelmRemoved": {
+    "description": "kubeHelmRemoved"
+  },
+  "kubeHelmRestored": "Helm deployed revision {revision}.",
+  "@kubeHelmRestored": {
+    "description": "kubeHelmRestored",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeHelmCheckMissing": "Helm could not find the release. Check the cluster before repeating the operation.",
+  "@kubeHelmCheckMissing": {
+    "description": "kubeHelmCheckMissing"
+  },
+  "kubeHelmCheckRevision": "Helm reports revision {revision} ({status}). Check the cluster before repeating the operation.",
+  "@kubeHelmCheckRevision": {
+    "description": "kubeHelmCheckRevision",
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeHelmUnverified": "Could not verify the Helm release. Check the cluster before repeating the operation.",
+  "@kubeHelmUnverified": {
+    "description": "kubeHelmUnverified"
   },
   "overviewTitle": "Overview",
   "@overviewTitle": {

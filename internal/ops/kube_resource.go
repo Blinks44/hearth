@@ -270,11 +270,15 @@ type KubeChange struct {
 	createNamespace  bool
 	namespaceMembers []kube.NamespaceMember
 	drain            *nodeDrain
+	helm             *helmChange
 	Manifests        *KubeManifestPreview
 	Diff             []DiffLine
 }
 
 func (m *KubeChange) ConfirmName() string {
+	if m.helm != nil && m.helm.to.Revision != 0 {
+		return ""
+	}
 	if !m.createNamespace && m.drain == nil && m.want == nil && m.scale == nil && m.jobName == "" && m.Manifests == nil {
 		return m.draft.Ref.Name
 	}
@@ -506,6 +510,9 @@ func (m *KubeChange) apply(ctx context.Context, r run.Runner, env sysenv.Env, ch
 }
 
 func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking func()) (string, error) {
+	if m.helm != nil {
+		return m.helm.apply(ctx, k, checking)
+	}
 	ref := m.draft.Ref
 	if m.Manifests != nil {
 		return m.Manifests.apply(ctx, k, checking)

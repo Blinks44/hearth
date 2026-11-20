@@ -84,3 +84,22 @@ func TestProjectManifestPreview(t *testing.T) {
 		})
 	}
 }
+
+func TestClusterManifestSource(t *testing.T) {
+	a := kubeApp()
+	var watches clusterWatches
+	a.WatchCluster = watches.watch
+	a.PickManifest = func(string, bool, func(string, error)) {}
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	a.openCluster("kind-dev")
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+
+	if err := tt.Click(locales.KubeApplyOpen()); err != nil {
+		t.Fatal(err)
+	}
+	d := a.kubeApply
+	if d == nil || !d.open || d.source.Context != "kind-dev" || d.source.Namespace != "default" {
+		t.Fatalf("manifest dialog = %+v", d)
+	}
+}

@@ -229,6 +229,28 @@ func main() {
 			}()
 			return cancel
 		}
+		a.ReadHelmHistory = func(t kube.HelmTarget, done func([]kube.HelmRevision, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				history, err := kube.HelmHistory(ctx, run.Exec{}, env, t, "")
+				if ctx.Err() == nil {
+					win.Update(func() { done(history, err) })
+				}
+			}()
+			return cancel
+		}
+		a.ReadHelmContent = func(t kube.HelmTarget, revision int, manifest bool, done func(string, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				text, err := kube.HelmContent(ctx, run.Exec{}, env, t, "", revision, manifest)
+				if ctx.Err() == nil {
+					win.Update(func() { done(text, err) })
+				}
+			}()
+			return cancel
+		}
 		a.ReadResourceYAML = func(t kube.Target, resource kube.Resource, done func(string, error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())

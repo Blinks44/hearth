@@ -42,7 +42,7 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 		ui.Select(c.Key("helm-sort"), &s.helmSort, sorts).Label(locales.KubeHelmSort()).Width(158)
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeHelmSearch()).Width(215).MinWidth(100)
 	})
-	if len(shown) == 0 {
+	if len(shown) == 0 && s.helmDetail == nil {
 		empty := locales.KubeHelmNoMatches()
 		if len(releases) == 0 {
 			empty = locales.KubeHelmEmpty()
@@ -58,22 +58,27 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 		}
 		return cmp.Or(cmp.Compare(a.Name, b.Name), cmp.Compare(a.Namespace, b.Namespace))
 	})
-	t := c.Theme()
-	pal := Colors(t)
+	detail := s.helmDetail
+	selected := ""
 	tracks := []ui.Track{ui.Fr(1.1), ui.Fr(1.15), ui.Fr(0.65), ui.Fixed(62), ui.Fixed(135)}
-	ui.Column(c).MinHeight(0).Shrink(1).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		resourceHead(c, tracks, locales.KubeHelmRelease(), locales.KubeHelmChart(), locales.KubeHelmAppVersion(), locales.KubeHelmRevision(), locales.KubeClusterStatus())
-		ui.Scroll(c.Key("helm-list")).MinHeight(0).Shrink(1).Children(func() {
-			for _, r := range shown {
-				helmRow(c, tracks, r)
-			}
-		})
-	})
-	label := strings.TrimSpace("Helm " + version)
-	ui.Row(c).AlignItems(ui.Center).Gap(8).Padding(9, 12).Radius(8).Background(pal.InfoSoft).Shrink(0).Children(func() {
-		ui.Icon(c, Icon("info")).Size(14, 14).Shrink(0).TextColor(pal.Info)
-		ui.Text(c, locales.KubeHelmReadOnly(label)).FontSize(11.5).TextColor(pal.InfoText).Wrap()
-	})
+	headers := []string{locales.KubeHelmRelease(), locales.KubeHelmChart(), locales.KubeHelmAppVersion(), locales.KubeHelmRevision(), locales.KubeClusterStatus()}
+	if detail != nil {
+		selected = helmKey(detail.release)
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(132)}
+		headers = []string{locales.KubeHelmRelease(), locales.KubeClusterStatus()}
+	}
+	workloadPanes(c, func() {
+		resourceHead(c, tracks, headers...)
+	}, func() {
+		for _, r := range shown {
+			a.helmRow(c, tracks, r, selected)
+		}
+		if len(shown) == 0 {
+			toolNote(c, locales.KubeHelmNoMatches())
+		}
+		ui.Text(c, locales.KubeHelmSource(strings.TrimSpace("Helm "+version))).FontSize(11.5).
+			TextColor(c.Theme().TextMuted).Padding(8, 16)
+	}, selected, func() { a.helmDetailsView(c, detail) })
 }
 
 func helmStatusOrder(r kube.HelmRelease) int {
@@ -87,34 +92,59 @@ func helmStatusOrder(r kube.HelmRelease) int {
 	}
 }
 
-func helmRow(c *ui.Context, tracks []ui.Track, r kube.HelmRelease) {
+func helmKey(r kube.HelmRelease) string { return r.Namespace + "/" + r.Name }
+
+func (a *App) helmRow(c *ui.Context, tracks []ui.Track, r kube.HelmRelease, selected string) {
+	t := c.Theme()
+	pal := Colors(t)
+	key := helmKey(r)
+	ui.Column(c.Key(key)).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		row := resourceGrid(ui.ButtonBase(c.Key("select-helm")), tracks).Label(key).Padding(8, 16).
+			OnClick(func() {
+				a.cluster.revealWorkload = key
+				a.cluster.clearHelmDetails()
+				if key != selected {
+					a.selectHelm(r)
+				}
+			})
+		switch {
+		case key == selected:
+			row.Background(pal.ActiveRow)
+		case row.Hovered():
+			row.Background(pal.Subtle)
+		case r.Status == "failed":
+			row.Background(pal.DangerSoft.Alpha(0.35))
+		}
+		a.cluster.revealWorkloadRow(row, key)
+		row.Children(func() {
+			batchName(c, r.Name, r.Namespace)
+			if selected == "" {
+				for _, value := range []string{r.Chart, r.AppVersion, r.Revision} {
+					clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted).Tooltip(value)
+				}
+			}
+			ui.Column(c).MinWidth(0).AlignItems(ui.Start).Children(func() {
+				helmStatus(c, r.Status)
+			})
+		})
+		if selected == "" && r.Description != "" {
+			clipped(c, strings.Join(strings.Fields(r.Description), " ")).FontSize(12).TextColor(pal.DangerText).
+				Padding(0, 16, 8, 16).Tooltip(r.Description)
+		}
+	})
+}
+
+func helmStatus(c *ui.Context, status string) {
 	t := c.Theme()
 	pal := Colors(t)
 	dot, bg, fg := pal.TextFaint, pal.Muted, t.TextMuted
 	switch {
-	case r.Status == "failed":
+	case status == "failed":
 		dot, bg, fg = t.Danger, pal.DangerSoft, pal.DangerText
-	case r.Pending():
+	case strings.HasPrefix(status, "pending-"):
 		dot, bg, fg = t.Warning, pal.WarningSoft, pal.WarningText
-	case r.Status == "deployed":
+	case status == "deployed":
 		dot, bg, fg = t.Success, pal.SuccessSoft, pal.SuccessText
 	}
-	row := ui.Column(c.Key(r.Namespace+"/"+r.Name)).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
-	if r.Status == "failed" {
-		row.Background(bg.Alpha(0.35))
-	}
-	row.Children(func() {
-		resourceGrid(ui.Box(c), tracks).Padding(8, 16).Children(func() {
-			batchName(c, r.Name, r.Namespace)
-			for _, value := range []string{r.Chart, r.AppVersion, r.Revision} {
-				clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
-			}
-			ui.Column(c).MinWidth(0).AlignItems(ui.Start).Children(func() {
-				chip(c, dot, bg, fg, cmp.Or(r.Status, "—"))
-			})
-		})
-		if r.Description != "" {
-			clipped(c, strings.Join(strings.Fields(r.Description), " ")).FontSize(12).TextColor(fg).Padding(0, 16, 8, 16)
-		}
-	})
+	chip(c, dot, bg, fg, cmp.Or(status, "—"))
 }

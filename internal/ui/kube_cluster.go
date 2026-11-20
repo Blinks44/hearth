@@ -85,6 +85,7 @@ type kubeClusterState struct {
 	serviceSort                string
 	helmFilter                 int
 	helmSort                   string
+	helmDetail                 *helmDetails
 	secret                     secretView
 	forward                    *forwardForm
 	shell                      *shellForm
@@ -218,6 +219,7 @@ func (a *App) syncCluster() {
 	s.watch++
 	if target != s.target {
 		// Another cluster or namespace: what was read is not its.
+		s.clearHelmDetails()
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
 		s.resourceLink = resourceLink{}
@@ -240,6 +242,9 @@ func (a *App) syncCluster() {
 		}
 		s.bulk.retain(cl)
 		s.data, s.err, s.failedAt = &cl, nil, time.Time{}
+		if t.Helm != "" {
+			a.syncHelmRelease(cl.HelmReleases)
+		}
 		if cl.Resources != nil && cl.Resources.Kind == kube.PersistentVolumeClaims &&
 			(cl.Resources.Claims == nil || cl.Resources.Claims.ConsumersErr != nil) && s.claimFilter == 2 {
 			s.claimFilter = 0
@@ -299,6 +304,7 @@ func (a *App) detailTail() kube.Tail {
 
 // StopCluster ends the cluster page's reads, as the window closes.
 func (a *App) StopCluster() {
+	a.cluster.clearHelmDetails()
 	if a.cluster.stop != nil {
 		a.cluster.stop()
 		a.cluster.stop, a.cluster.running = nil, ""
@@ -538,7 +544,7 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		}
 		ui.Box(c).Grow(1).Height(1)
 		if cli, ok := cliCopy(a.cliState(), "kubectl"); ok && len(ns) == 1 && a.PickManifest != nil && a.BuildPlan != nil {
-			iconButton(c.Key("cluster-apply"), "file-cog", locales.KubeApplyOpen()).OnClick(func() {
+			iconButton(c.Key("cluster-apply"), "file-text", locales.KubeApplyOpen()).OnClick(func() {
 				a.openProjectApply(projects.Project{}, cli.Path, name, ns[0])
 			})
 		}

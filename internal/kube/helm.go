@@ -22,6 +22,7 @@ type HelmRelease struct {
 	AppVersion  string `json:"app_version"`
 	Revision    string `json:"revision"`
 	Status      string `json:"status"`
+	Updated     string `json:"updated"`
 	Description string `json:"-"`
 }
 
@@ -65,6 +66,7 @@ func readHelm(ctx context.Context, r run.Runner, env sysenv.Env, t Target, scope
 		var history []struct {
 			Revision    int    `json:"revision"`
 			Status      string `json:"status"`
+			Updated     string `json:"updated"`
 			Description string `json:"description"`
 		}
 		err := helmJSON(historyCtx, r, env, t, &history, "history", "--namespace="+release.Namespace,
