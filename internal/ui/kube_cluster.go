@@ -679,7 +679,12 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		if s.logs != nil {
 			a.logsCrumb(c)
 			ui.Box(c).Grow(1).Height(1)
-			a.logActions(c)
+			name := s.logs.owner.Name
+			if name == "" {
+				p, _, _ := a.logPod()
+				name = p.Name
+			}
+			a.logActions(c, s.logs, name)
 			return
 		}
 		ui.Box(c).Grow(1).Height(1)

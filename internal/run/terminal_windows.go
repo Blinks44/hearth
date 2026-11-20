@@ -35,7 +35,7 @@ func powershellQuote(s string) string {
 // OpenTerminal opens a visible PowerShell console through the system's
 // default terminal host. PowerShell owns the interactive child and stays open
 // so the user can read errors from kubectl.
-func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _, _, _ string) error {
+func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _, _, _ string, overrides ...string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("open terminal: %w", err)
 	}
@@ -53,7 +53,7 @@ func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _
 	info := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{}))}
 	var process windows.ProcessInformation
 	flags := uint32(windows.CREATE_NEW_CONSOLE | windows.CREATE_UNICODE_ENVIRONMENT)
-	if err := windows.CreateProcess(nil, line, nil, nil, false, flags, terminalEnvironment(env), nil, &info, &process); err != nil {
+	if err := windows.CreateProcess(nil, line, nil, nil, false, flags, terminalEnvironment(append(slices.Clone(env), overrides...)), nil, &info, &process); err != nil {
 		return fmt.Errorf("open PowerShell: %w", err)
 	}
 	_ = windows.CloseHandle(process.Thread)
@@ -65,7 +65,20 @@ func terminalEnvironment(env []string) *uint16 {
 	if env == nil {
 		return nil
 	}
-	ordered := slices.Clone(env)
+	var ordered []string
+	seen := make(map[string]bool)
+	for _, entry := range slices.Backward(env) {
+		name := strings.TrimPrefix(entry, "=")
+		key, _, _ := strings.Cut(name, "=")
+		key = strings.ToUpper(key)
+		if len(name) != len(entry) {
+			key = "=" + key
+		}
+		if !seen[key] {
+			ordered = append(ordered, entry)
+			seen[key] = true
+		}
+	}
 	slices.SortFunc(ordered, func(a, b string) int {
 		return strings.Compare(strings.ToUpper(a), strings.ToUpper(b))
 	})

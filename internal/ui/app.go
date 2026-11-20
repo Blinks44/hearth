@@ -14,6 +14,7 @@ import (
 	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/history"
@@ -189,6 +190,10 @@ type App struct {
 	// engine view.
 	WatchDocker           func(t docker.Target, got func(docker.Engine, error)) (stop func())
 	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
+	ReadDockerDetail      func(docker.Target, string, func(docker.ContainerDetail, error)) (stop func())
+	ReadDockerEnv         func(docker.Target, string, string, func([]byte, error)) (stop func())
+	StreamDockerLogs      func(docker.Logs, func([]containerlog.LogLine), func(error)) (stop func())
+	OpenDockerShell       func(docker.Target, string, func(error))
 	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
@@ -360,6 +365,8 @@ func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
 	a.syncDocker()
+	a.syncDockerDetail(c)
+	a.syncDockerLogs()
 	a.syncHelmContent()
 	a.syncCustomDefinitions()
 	a.syncResourceYAML()
@@ -374,8 +381,13 @@ func (a *App) View(c *ui.Context) {
 	}
 	if a.router.Path() == dockerEnginePage {
 		c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleDockerViews)
-		if a.engine.viewsOpen {
+		switch {
+		case a.engine.viewsOpen:
 			c.OnShortcut(0, ui.KeyEscape, func() { a.engine.viewsOpen = false })
+		case a.engine.containers.logs != nil:
+			c.OnShortcut(0, ui.KeyEscape, a.engine.containers.closeLogs)
+		case a.engine.containers.detail.id != "" && (a.op == nil || !a.op.open):
+			c.OnShortcut(0, ui.KeyEscape, a.engine.containers.closeDetail)
 		}
 	}
 	if a.router.Path() == kubeClusterPage {

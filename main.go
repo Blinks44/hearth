@@ -19,6 +19,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/catalog"
+	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/disk"
 	"github.com/Blinks44/hearth/internal/docker"
@@ -78,7 +79,8 @@ func main() {
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 	forwardCtx, stopForwards := context.WithCancel(context.Background())
-	var forwards sync.WaitGroup
+	dockerLogsCtx, stopDockerLogs := context.WithCancel(context.Background())
+	var forwards, dockerLogs sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
@@ -194,6 +196,73 @@ func main() {
 				win.Update(func() { got(items, err, statsErr) })
 			})
 			return cancel
+		}
+
+		a.ReadDockerDetail = func(t docker.Target, id string, done func(docker.ContainerDetail, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				d, err := docker.ReadContainerDetail(ctx, run.Exec{}, env, t, id)
+				win.Update(func() {
+					if ctx.Err() == nil {
+						done(d, err)
+					}
+				})
+			}()
+			return cancel
+		}
+		a.ReadDockerEnv = func(t docker.Target, id, key string, done func([]byte, error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				value, err := docker.ReadContainerEnv(ctx, run.Exec{}, env, t, id, key)
+				if ctx.Err() != nil {
+					clear(value)
+					return
+				}
+				win.Update(func() {
+					if ctx.Err() != nil {
+						clear(value)
+						return
+					}
+					done(value, err)
+				})
+			}()
+			return cancel
+		}
+		a.StreamDockerLogs = func(l docker.Logs, got func([]containerlog.LogLine), done func(error)) func() {
+			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(dockerLogsCtx)
+			dockerLogs.Go(func() {
+				err := l.Stream(ctx, run.CombinedLines, env, func(batch []containerlog.LogLine) {
+					if ctx.Err() == nil {
+						win.Update(func() {
+							if ctx.Err() == nil {
+								got(batch)
+							}
+						})
+					}
+				})
+				if ctx.Err() == nil {
+					win.Update(func() {
+						if ctx.Err() == nil {
+							done(err)
+						}
+					})
+				}
+			})
+			return cancel
+		}
+		a.OpenDockerShell = func(t docker.Target, id string, done func(error)) {
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			go func() {
+				ctx := context.Background()
+				cmd, err := docker.ShellCommand(ctx, run.Exec{}, env, t, id)
+				if err == nil {
+					err = run.OpenTerminal(ctx, run.Exec{}, terminal, cmd.Args, cmd.Env, env.Get("PATH"), env.Get("KUBECONFIG"), hint, "DOCKER_CONTEXT=")
+				}
+				win.Update(func() { done(err) })
+			}()
 		}
 
 		a.SecretTimer = func(delay time.Duration, done func()) func() {
@@ -731,7 +800,9 @@ func main() {
 	})
 	err := mygo.App.Run()
 	stopForwards()
+	stopDockerLogs()
 	forwards.Wait()
+	dockerLogs.Wait()
 	if err != nil {
 		log.Fatal(err)
 	}

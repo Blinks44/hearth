@@ -164,6 +164,8 @@ func (a *App) syncDocker() {
 func (a *App) StopDocker() {
 	s := &a.engine
 	s.containers.stopWatch()
+	s.containers.closeLogs()
+	s.containers.closeDetail()
 	if s.stop != nil {
 		s.stop()
 		s.stop, s.running, s.reading = nil, "", false
@@ -184,6 +186,10 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 	pal := Colors(c.Theme())
 	ui.Column(c).Fill().Children(func() {
 		a.dockerEngineHeader(c, name)
+		if l := s.containers.logs; l != nil {
+			a.dockerLogsView(c, l)
+			return
+		}
 		ui.Column(c).Grow(1).MinHeight(0).Gap(14).Padding(20, 28, 24, 28).Children(func() {
 			ui.Row(c).Gap(6).Wrap().Shrink(0).Children(func() {
 				for i, v := range dockerViews() {
@@ -237,7 +243,11 @@ func (a *App) dockerEngineHeader(c *ui.Context, name string) {
 	}
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(6).Padding(0, right, 0, 24).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Divider).DragWindow().Children(func() {
-		headerBackButton(c, locales.BackToDocker(), func() { a.router.Push(dockerPage) })
+		if s.containers.logs != nil {
+			headerBackButton(c, locales.DockerBackToContainers(), s.containers.closeLogs)
+		} else {
+			headerBackButton(c, locales.BackToDocker(), func() { a.router.Push(dockerPage) })
+		}
 		anchor := pathButton(c, "engine-context", "brand/docker", name, 0)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen
@@ -249,6 +259,14 @@ func (a *App) dockerEngineHeader(c *ui.Context, name string) {
 		anchor = pathButton(c, "engine-view", "lucide/"+v.icon, v.label, 0)
 		anchor.OnClick(a.toggleDockerViews)
 		ui.Popover(c, anchor, &s.viewsOpen, func() { a.dockerViewPicker(c) })
+		if l := s.containers.logs; l != nil {
+			pathSlash(c)
+			clipped(c, l.name).Font(FontMono).FontSize(12).MinWidth(0).Shrink(1).Tooltip(l.name)
+			aiTag(c, locales.KubeLogsTag(), pal.Muted, t.TextMuted).Shrink(0)
+			ui.Box(c).Grow(1)
+			a.logActions(c, &l.logView, l.name)
+			return
+		}
 		ui.Box(c).Grow(1).Height(1)
 		a.dockerFreshness(c)
 		refresh := ui.ButtonBase(c.Key(locales.KubeClusterRefresh())).Size(24, 24).Radius(6).Center().

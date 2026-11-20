@@ -31,6 +31,8 @@ type dockerContainersState struct {
 	open          map[string]bool
 	bulk          resourceSelection
 	planning      bool
+	detail        dockerDetailState
+	logs          *dockerLogState
 }
 
 func (s *dockerContainersState) stopWatch() {
@@ -52,6 +54,8 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 	}
 	s.stopWatch()
 	if key == "" || t != s.target {
+		s.closeLogs()
+		s.closeDetail()
 		s.items, s.err, s.statsErr, s.loaded = nil, nil, nil, false
 		s.bulk.clear()
 	}
@@ -244,39 +248,43 @@ func (a *App) dockerContainersView(c *ui.Context) {
 			}
 		}
 	}
+	item, compact := s.selectedContainer()
+	var detail func()
 	tracks := dockerContainerTracks(c)
+	headers := []string{locales.KubeClusterName(), locales.KubeClusterStatus(), locales.PortsTitle(), locales.DockerUptime(), "CPU", locales.KubeMetricsMemory(), ""}
+	if compact {
+		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(99), ui.Fixed(24)}
+		headers = []string{locales.KubeClusterName(), locales.KubeClusterStatus(), ""}
+		detail = func() { a.dockerDetails(c, item) }
+	}
 	pal := Colors(c.Theme())
-	ui.Column(c).MinHeight(0).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+	workloadPanes(c.Key("docker-container-panes"), func() {
 		workloadHead(c, tracks, func() {
 			s.bulk.checkbox(c, "docker-select-all", locales.KubeBulkSelectAll(), ids)
-		}, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.PortsTitle(), locales.DockerUptime(), "CPU", locales.KubeMetricsMemory(), "")
-		ui.Scroll(c.Key("docker-containers-list")).MinHeight(0).Children(func() {
-			ui.Column(c).Children(func() {
-				for _, g := range groups {
-					a.dockerGroupRows(c.Key(g.key), g, tracks)
-				}
-				if len(groups) == 0 {
-					ui.Text(c, locales.DockerContainersEmpty()).FontSize(13).TextColor(c.Theme().TextMuted).Padding(12, 16)
-				}
-			})
-		})
+		}, headers...)
+	}, func() {
+		for _, g := range groups {
+			a.dockerGroupRows(c.Key(g.key), g, tracks, compact)
+		}
+		if len(groups) == 0 {
+			ui.Text(c, locales.DockerContainersEmpty()).FontSize(13).TextColor(c.Theme().TextMuted).Padding(12, 16)
+		}
 		ui.Row(c).Gap(8).Padding(8, 14).AlignItems(ui.Center).Background(pal.Subtle).Shrink(0).Children(func() {
-			ui.Text(c, locales.DockerContainersCount(len(ids), running)).FontSize(11.5).TextColor(c.Theme().TextMuted)
-			ui.Box(c).Grow(1)
+			ui.Text(c, locales.DockerContainersCount(len(ids), running)).FontSize(11.5).TextColor(c.Theme().TextMuted).Wrap().Grow(1).MinWidth(0)
 			expand := slices.ContainsFunc(groups, func(g dockerGroup) bool { return len(g.items) > 0 && !s.groupOpen(g) })
 			label := locales.DockerCollapseAll()
 			if expand {
 				label = locales.DockerExpandAll()
 			}
 			if len(ids) > 0 {
-				ui.Button(c.Key("expand-all"), label).Height(24).OnClick(func() {
+				ui.Button(c.Key("expand-all"), label).Height(24).Shrink(0).OnClick(func() {
 					for _, g := range groups {
 						s.setGroup(g.key, expand)
 					}
 				})
 			}
 		})
-	})
+	}, item.ID, detail)
 	a.dockerBulkBar(c, s)
 }
 
@@ -295,7 +303,7 @@ func dockerContainerIDs(items []docker.Container) []string {
 	return ids
 }
 
-func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track) {
+func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track, compact bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	s := &a.engine.containers
@@ -329,7 +337,7 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track) {
 		})
 		ui.Row(c).AlignItems(ui.Center).Gap(6).Children(func() {
 			if g.dir != "" {
-				if !narrow(c) {
+				if !narrow(c) && !compact {
 					link := ui.ButtonBase(c.Key("project-link")).Height(24).MaxWidth(205).MinWidth(0).Padding(0, 6).
 						AlignItems(ui.Center).Radius(5).Label(locales.OpenProject()).Tooltip(g.dir).
 						OnClick(func() { a.router.Push(projectPath(g.dir)) })
@@ -353,17 +361,24 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track) {
 	})
 	if open {
 		for _, item := range g.items {
-			a.dockerContainerRow(c.Key(item.ID), item, tracks)
+			a.dockerContainerRow(c.Key(item.ID), item, tracks, compact)
 		}
 	}
 }
 
-func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []ui.Track) {
+func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []ui.Track, compact bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	s := &a.engine.containers
 	status, bg, fg := dockerContainerStatus(c, item)
 	menu := func(m *ui.Menu) {
+		if m.Item(locales.Details()).Chosen() {
+			s.selectContainer(item.ID)
+		}
+		if a.StreamDockerLogs != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
+			s.selectContainer(item.ID)
+			a.openDockerLogs(item.Name, []docker.LogTarget{{ID: item.ID}}, false)
+		}
 		if m.Item(locales.KubeCopyName()).Chosen() {
 			copyName(c, item.Name)
 		}
@@ -377,19 +392,29 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 		}
 	}
 	row := ui.Column(c).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
-	if item.Problem() {
+	if item.ID == s.detail.id {
+		row.Background(pal.AccentSoft)
+	} else if item.Problem() {
 		row.Background(bg.Alpha(0.24))
 	}
 	row.Children(func() {
 		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(39).Children(func() {
 			s.bulk.checkbox(c, "docker-select-container", locales.KubeBulkSelect(item.Name), []string{item.ID})
-			ui.Column(c).Padding(0, 0, 0, 23).MinWidth(0).Children(func() {
-				clipped(c, item.Name).FontSize(12.5).Font(FontMono)
-				if item.Image != "" {
-					clipped(c, item.Image).FontSize(10.5).TextColor(pal.TextFaint)
-				}
+			ui.ButtonBase(c.Key("docker-open-container")).Padding(0, 0, 0, 23).MinWidth(0).MinHeight(24).
+				AlignItems(ui.Center).Justify(ui.Start).Label(item.Name).Tooltip(item.Name).
+				OnClick(func() { s.selectContainer(item.ID) }).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+					clipped(c, item.Name).FontSize(12.5).Font(FontMono)
+					if !compact && item.Image != "" {
+						clipped(c, item.Image).FontSize(10.5).TextColor(pal.TextFaint)
+					}
+				})
 			})
 			workloadStatus(c, status, bg, fg)
+			if compact {
+				iconButton(c.Key("container-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
+				return
+			}
 			port := dockerPortLabel(item.Ports)
 			if item.ConflictPort() > 0 {
 				port = strconv.Itoa(item.ConflictPort())
@@ -404,7 +429,7 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 			}
 			iconButton(c.Key("container-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 		})
-		if why := dockerContainerProblem(item); why != "" {
+		if why := dockerContainerProblem(item); !compact && why != "" {
 			ui.Row(c).AlignItems(ui.Center).Gap(7).Padding(0, 16, 8, 67).Children(func() {
 				ui.Icon(c, Icon("triangle-alert")).Size(13, 13).Shrink(0).TextColor(fg)
 				ui.Text(c, why).FontSize(11.5).TextColor(fg).Wrap().Grow(1).MinWidth(0)
@@ -551,6 +576,15 @@ func (a *App) planDockerContainers(items []docker.Container, action ops.DockerAc
 }
 
 func (a *App) dockerGroupMenu(m *ui.Menu, g dockerGroup) {
+	if a.StreamDockerLogs != nil && g.compose.Name != "" && len(g.items) > 0 && m.Item(locales.DockerComposeLogs()).Chosen() {
+		var targets []docker.LogTarget
+		for _, item := range a.engine.containers.items {
+			if item.Kind == "" && item.Compose.Name == g.compose.Name && item.Compose.Dir == g.compose.Dir {
+				targets = append(targets, docker.LogTarget{ID: item.ID, Name: item.Name})
+			}
+		}
+		a.openDockerLogs(g.name, targets, true)
+	}
 	if g.dir != "" && m.Item(locales.OpenProject()).Chosen() {
 		a.router.Push(projectPath(g.dir))
 	}

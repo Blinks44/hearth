@@ -26,6 +26,7 @@ type logView struct {
 	scope          int
 	sources        map[string]*logSource
 	saving         bool
+	combined       bool
 	previous       bool
 	// since is the period's, in logPeriods.
 	since       int
@@ -148,7 +149,7 @@ func (a *App) setLogRun(key string) bool {
 
 func (l *logView) addLines(lines []kube.LogLine) {
 	l.lines = append(l.lines, lines...)
-	if l.owner.UID != "" {
+	if l.owner.UID != "" || l.combined {
 		slices.SortStableFunc(l.lines, func(a, b kube.LogLine) int { return a.At.Compare(b.At) })
 	}
 	if over := len(l.lines) - kube.MaxLogLines; over > 0 {
@@ -248,8 +249,7 @@ func (a *App) logsCrumb(c *ui.Context) {
 	aiTag(c, locales.KubeLogsTag(), pal.Muted, c.Theme().TextMuted).Shrink(0)
 }
 
-func (a *App) logActions(c *ui.Context) {
-	l := a.cluster.logs
+func (a *App) logActions(c *ui.Context, l *logView, name string) {
 	action := func(key, icon, label string) ui.Element {
 		if narrow(c) {
 			return iconButton(c.Key(key), icon, label).Shrink(0).Disabled(len(l.lines) == 0)
@@ -262,11 +262,6 @@ func (a *App) logActions(c *ui.Context) {
 	})
 	if a.SaveLogs != nil {
 		action("logs-save", "download", locales.KubeLogsSave()).Disabled(l.saving || len(l.lines) == 0).OnClick(func() {
-			name := l.owner.Name
-			if l.owner.UID == "" {
-				p, _, _ := a.logPod()
-				name = p.Name
-			}
 			l.saving = true
 			a.SaveLogs(name+".log", l.text(), func(path string, err error) {
 				l.saving = false
@@ -286,8 +281,6 @@ func (a *App) logActions(c *ui.Context) {
 func (a *App) logsView(c *ui.Context) {
 	s := &a.cluster
 	l := s.logs
-	t := c.Theme()
-	pal := Colors(t)
 	p, ct, ok := a.logPod()
 	owner := l.owner.UID != ""
 	if !ok && !owner {
@@ -332,70 +325,85 @@ func (a *App) logsView(c *ui.Context) {
 				l.previous = run == 1
 			}
 			if !l.previous {
-				period := locales.KubeLogsWholeRun()
-				if l.since > 0 {
-					period = locales.KubeLogsLast(span(logPeriods[l.since]))
-				}
-				logSelect(c, "logs-since", "", period).PopoverMenuButton(func(m *ui.Menu) {
-					for i, d := range logPeriods {
-						label := locales.KubeLogsWholeRun()
-						if d > 0 {
-							label = locales.KubeLogsLast(span(d))
-						}
-						if m.Item(label).Radio(l.since == i).Chosen() {
-							l.since = i
-						}
-					}
-				})
+				l.periodControl(c)
 			}
-			ui.Box(c).Grow(1)
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
-				ui.SearchField(c.Key("logs-query"), &l.query).Bind(&l.queryField).Placeholder(locales.KubeLogsFind()).Width(155).
-					OnChange(func() {
-						l.match = 0
-						if rows := l.matches(); len(rows) > 0 {
-							l.list.ScrollTo(rows[0], ui.Center)
-						}
-					}).OnSubmit(func() { l.step(1) })
-				if strings.TrimSpace(l.query) != "" {
-					count := locales.KubeLogsNoMatches()
-					if len(rows) > 0 {
-						count = locales.KubeLogsMatches(l.match+1, len(rows))
-					}
-					ui.Text(c, count).FontSize(11.5).TextColor(pal.TextFaint).Shrink(0).SingleLine()
-					iconButton(c, "chevron-up", locales.KubeLogsPreviousMatch()).OnClick(func() { l.step(-1) })
-					iconButton(c, "chevron-down", locales.KubeLogsNextMatch()).OnClick(func() { l.step(1) })
+			l.searchControls(c, rows)
+		})
+		a.logPanel(c, l, rows, locales.KubeLogsFailed(), func() { a.logHead(c, ct) })
+	})
+}
+
+func (l *logView) periodControl(c *ui.Context) {
+	period := locales.KubeLogsWholeRun()
+	if l.since > 0 {
+		period = locales.KubeLogsLast(span(logPeriods[l.since]))
+	}
+	logSelect(c, "logs-since", "", period).PopoverMenuButton(func(m *ui.Menu) {
+		for i, d := range logPeriods {
+			label := locales.KubeLogsWholeRun()
+			if d > 0 {
+				label = locales.KubeLogsLast(span(d))
+			}
+			if m.Item(label).Radio(l.since == i).Chosen() {
+				l.since = i
+			}
+		}
+	})
+}
+
+func (l *logView) searchControls(c *ui.Context, rows []int) {
+	pal := Colors(c.Theme())
+	ui.Box(c).Grow(1)
+	ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
+		ui.SearchField(c.Key("logs-query"), &l.query).Bind(&l.queryField).Placeholder(locales.KubeLogsFind()).Width(155).
+			OnChange(func() {
+				l.match = 0
+				if rows := l.matches(); len(rows) > 0 {
+					l.list.ScrollTo(rows[0], ui.Center)
 				}
-				logToggle(c, &l.times, "logs-times", "", locales.KubeLogsTime())
-				logToggle(c, &l.wrap, "logs-wrap", "wrap-text", locales.KubeLogsWrap())
+			}).OnSubmit(func() { l.step(1) })
+		if strings.TrimSpace(l.query) != "" {
+			count := locales.KubeLogsNoMatches()
+			if len(rows) > 0 {
+				count = locales.KubeLogsMatches(l.match+1, len(rows))
+			}
+			ui.Text(c, count).FontSize(11.5).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+			iconButton(c, "chevron-up", locales.KubeLogsPreviousMatch()).OnClick(func() { l.step(-1) })
+			iconButton(c, "chevron-down", locales.KubeLogsNextMatch()).OnClick(func() { l.step(1) })
+		}
+		logToggle(c, &l.times, "logs-times", "", locales.KubeLogsTime())
+		logToggle(c, &l.wrap, "logs-wrap", "wrap-text", locales.KubeLogsWrap())
+	})
+}
+
+func (a *App) logPanel(c *ui.Context, l *logView, rows []int, failure string, head func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Grow(1).MinHeight(0).Radius(10).Clip().BorderWidth(1).BorderColor(pal.Divider).Background(pal.Subtle.Alpha(0.5)).Children(func() {
+		head()
+		if err := l.podsErr; err != nil {
+			ui.Column(c).Padding(8, 16).Children(func() { warningRow(c, a.accessWords(err)) })
+		}
+		if l.err != nil {
+			ui.Column(c).Gap(6).Padding(8, 16).Children(func() {
+				ui.Text(c, failure).FontSize(13).FontWeight(500).TextColor(pal.DangerText)
+				ui.Text(c, l.err.Error()).Font(FontMono).FontSize(11.5).TextColor(pal.DangerText).Wrap().Selectable()
 			})
-		})
-		ui.Column(c).Grow(1).MinHeight(0).Radius(10).Clip().BorderWidth(1).BorderColor(pal.Divider).Background(pal.Subtle.Alpha(0.5)).Children(func() {
-			a.logHead(c, ct)
-			if err := l.podsErr; err != nil {
-				ui.Column(c).Padding(8, 16).Children(func() { warningRow(c, a.accessWords(err)) })
-			}
-			if l.err != nil {
-				ui.Column(c).Gap(6).Padding(8, 16).Children(func() {
-					ui.Text(c, locales.KubeLogsFailed()).FontSize(13).FontWeight(500).TextColor(pal.DangerText)
-					ui.Text(c, l.err.Error()).Font(FontMono).FontSize(11.5).TextColor(pal.DangerText).Wrap().Selectable()
-				})
-			}
-			switch {
-			case owner && l.podsRead && len(l.pods) == 0 && l.podsErr == nil && len(l.lines) == 0:
-				ui.Text(c, locales.KubeNoOwnedPods()).FontSize(12.5).TextColor(t.TextMuted).Padding(14, 16)
-			case len(l.lines) == 0 && (l.err != nil || l.podsErr != nil):
-			case len(l.lines) == 0 && !l.ended:
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(14, 16).Children(func() {
-					ui.Spinner(c).Size(14, 14)
-					ui.Text(c, locales.KubeLogsReading()).FontSize(12.5).TextColor(t.TextMuted)
-				})
-			case len(l.lines) == 0:
-				ui.Text(c, locales.KubeLogsEmpty()).FontSize(12.5).TextColor(t.TextMuted).Padding(14, 16)
-			default:
-				a.logLines(c, rows)
-			}
-		})
+		}
+		switch {
+		case l.owner.UID != "" && l.podsRead && len(l.pods) == 0 && l.podsErr == nil && len(l.lines) == 0:
+			ui.Text(c, locales.KubeNoOwnedPods()).FontSize(12.5).TextColor(t.TextMuted).Padding(14, 16)
+		case len(l.lines) == 0 && (l.err != nil || l.podsErr != nil):
+		case len(l.lines) == 0 && !l.ended:
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(14, 16).Children(func() {
+				ui.Spinner(c).Size(14, 14)
+				ui.Text(c, locales.KubeLogsReading()).FontSize(12.5).TextColor(t.TextMuted)
+			})
+		case len(l.lines) == 0:
+			ui.Text(c, locales.KubeLogsEmpty()).FontSize(12.5).TextColor(t.TextMuted).Padding(14, 16)
+		default:
+			l.logLines(c, rows)
+		}
 	})
 }
 
@@ -442,8 +450,7 @@ func (a *App) logHead(c *ui.Context, ct kube.Container) {
 // logLines are the lines, the end followed as they come unless a search
 // shows its matches; the rows holding one are marked, the current one
 // framed.
-func (a *App) logLines(c *ui.Context, rows []int) {
-	l := a.cluster.logs
+func (l *logView) logLines(c *ui.Context, rows []int) {
 	t := c.Theme()
 	pal := Colors(t)
 	current := -1

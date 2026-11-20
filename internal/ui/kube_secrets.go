@@ -112,6 +112,12 @@ func (a *App) syncSecrets(c *ui.Context) {
 			v.hide()
 			return
 		}
+		v.tick(c)
+	}
+}
+
+func (v *secretView) tick(c *ui.Context) {
+	if reveal := v.revealed; reveal != nil {
 		if reveal.until.IsZero() {
 			reveal.until = c.Now().Add(secretRevealTime)
 		}
@@ -166,36 +172,40 @@ func (a *App) loadSecret(services ui.Services, secret kube.Secret, key string, c
 			v.err = locales.KubeSecretReadFailed(a.accessWords(err))
 			return
 		}
-		binary := !utf8.Valid(value) || bytes.ContainsFunc(value, func(r rune) bool {
-			return unicode.IsControl(r) && r != '\n' && r != '\r' && r != '\t'
-		})
-		if binary {
-			encoded := make([]byte, base64.StdEncoding.EncodedLen(len(value)))
-			base64.StdEncoding.Encode(encoded, value)
-			clear(value)
-			value = encoded
-		}
-		if copyValue {
-			a.ClearSecretClipboard()
-			services.WriteClipboard(string(value))
-			clipboard := &secretClipboard{digest: sha256.Sum256(value), services: services}
-			a.secretClipboard = clipboard
-			clipboard.stop = a.SecretTimer(secretClipboardTime, func() {
-				if a.secretClipboard == clipboard {
-					a.ClearSecretClipboard()
-				}
-			})
-			a.notice = locales.KubeSecretCopied()
-			clear(value)
-			return
-		}
-		reveal := &secretReveal{key: key, value: value, binary: binary}
-		v.revealed = reveal
-		reveal.stop = a.SecretTimer(secretRevealTime, func() {
-			if v.revealed == reveal {
-				v.hide()
+		a.presentSecret(services, v, key, value, copyValue)
+	})
+}
+
+func (a *App) presentSecret(services ui.Services, v *secretView, key string, value []byte, copyValue bool) {
+	binary := !utf8.Valid(value) || bytes.ContainsFunc(value, func(r rune) bool {
+		return unicode.IsControl(r) && r != '\n' && r != '\r' && r != '\t'
+	})
+	if binary {
+		encoded := make([]byte, base64.StdEncoding.EncodedLen(len(value)))
+		base64.StdEncoding.Encode(encoded, value)
+		clear(value)
+		value = encoded
+	}
+	if copyValue {
+		a.ClearSecretClipboard()
+		services.WriteClipboard(string(value))
+		clipboard := &secretClipboard{digest: sha256.Sum256(value), services: services}
+		a.secretClipboard = clipboard
+		clipboard.stop = a.SecretTimer(secretClipboardTime, func() {
+			if a.secretClipboard == clipboard {
+				a.ClearSecretClipboard()
 			}
 		})
+		a.notice = locales.KubeSecretCopied()
+		clear(value)
+		return
+	}
+	reveal := &secretReveal{key: key, value: value, binary: binary}
+	v.revealed = reveal
+	reveal.stop = a.SecretTimer(secretRevealTime, func() {
+		if v.revealed == reveal {
+			v.hide()
+		}
 	})
 }
 

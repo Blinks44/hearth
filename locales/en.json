@@ -1,4 +1,32 @@
 {
+  "dockerEnvTab": "Env",
+  "dockerInspectTab": "Inspect",
+  "dockerFinishedAgo": "stopped {age} ago",
+  "dockerDetailReading": "Reading container details…",
+  "dockerInspectMasked": "Environment values are hidden. In Env, you can show one value for 30 seconds or copy it directly.",
+  "dockerPortsMounts": "Ports and mounts",
+  "dockerImage": "Image",
+  "dockerImageID": "Image ID",
+  "dockerImageDigest": "Image digest",
+  "dockerCommand": "Command",
+  "dockerPlatform": "Platform",
+  "dockerRestartPolicy": "Restart policy",
+  "dockerHealth": "Health",
+  "dockerHealthChecks": "Recent health checks",
+  "dockerLabels": "Labels",
+  "dockerUnpublishedPort": "Exposed inside the container",
+  "dockerMountReadOnly": "Read-only",
+  "dockerMountWrite": "Read and write",
+  "dockerComposeLogs": "Compose project logs",
+  "dockerBackToContainers": "Back to containers",
+  "dockerLogsFailed": "Docker could not read the log",
+  "@dockerFinishedAgo": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
   "dockerContainerRunning": "Running",
   "dockerContainerStopped": "Stopped",
   "dockerContainersReading": "Reading containers…",

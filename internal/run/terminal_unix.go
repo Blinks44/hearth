@@ -31,7 +31,7 @@ func terminalQuote(arg string) string {
 // OpenTerminal hands a one-shot script to the terminal app of that name,
 // the desktop's for "". The script removes itself before starting the
 // command and keeps stderr visible on failure.
-func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string, path, kubeconfig, closeHint string) error {
+func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string, path, kubeconfig, closeHint string, overrides ...string) error {
 	f, err := os.CreateTemp("", "hearth-*.command")
 	if err != nil {
 		return fmt.Errorf("create terminal script: %w", err)
@@ -42,6 +42,10 @@ func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string,
 			_ = os.Remove(name)
 		}
 	}()
+	if len(overrides) > 0 {
+		args := append([]string{"/usr/bin/env"}, overrides...)
+		argv = append(args, argv...)
+	}
 	err = writeTerminalScript(f, argv, path, kubeconfig, closeHint)
 	if err != nil {
 		return err

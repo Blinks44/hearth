@@ -124,6 +124,15 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 // not apply; a line longer than c.MaxOutput stops the command with an
 // error.
 func Lines(ctx context.Context, c Cmd, line func(string)) error {
+	return readLines(ctx, c, line, false)
+}
+
+// CombinedLines delivers stdout and stderr through the same pipe in write order.
+func CombinedLines(ctx context.Context, c Cmd, line func(string)) error {
+	return readLines(ctx, c, line, true)
+}
+
+func readLines(ctx context.Context, c Cmd, line func(string), combined bool) error {
 	if len(c.Args) == 0 {
 		return errors.New("run: empty argv")
 	}
@@ -142,6 +151,9 @@ func Lines(ctx context.Context, c Cmd, line func(string)) error {
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)
+	}
+	if combined {
+		cmd.Stderr = cmd.Stdout
 	}
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)
