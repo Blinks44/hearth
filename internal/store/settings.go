@@ -92,7 +92,7 @@ func SaveSettings(dir string, s Settings) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("save settings: %w", err)
 	}
-	if err := writeFile(dir, settingsFile, data); err != nil {
+	if err := WriteFile(dir, settingsFile, data); err != nil {
 		return fmt.Errorf("save settings: %w", err)
 	}
 	return nil

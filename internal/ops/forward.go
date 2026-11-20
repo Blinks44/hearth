@@ -72,26 +72,38 @@ func RunForward(ctx context.Context, r run.Runner, lines kube.LinesFunc, env sys
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithCancelCause(ctx)
+	watchCtx, cancel := context.WithCancelCause(ctx)
 	var watch sync.WaitGroup
 	watch.Go(func() {
 		tick := time.NewTicker(kube.Every)
 		defer tick.Stop()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-watchCtx.Done():
 				return
 			case <-tick.C:
-				if kube.ForwardPodEnded(ctx, r, env, t, f.Namespace, pod) {
+				if kube.ForwardPodEnded(watchCtx, r, env, t, f.Namespace, pod) {
 					cancel(ErrForwardPodEnded)
 					return
 				}
 			}
 		}
 	})
-	err = runForward(ctx, lines, env, f, pod, func() { ready(pod) })
+	started := false
+	err = runForward(watchCtx, lines, env, f, pod, func() {
+		started = true
+		ready(pod)
+	})
 	cancel(nil)
 	watch.Wait()
+	// kubectl can lose the connection before the pod watcher sees why.
+	if started && ctx.Err() == nil && !errors.Is(err, ErrForwardPodEnded) {
+		verifyCtx, stop := context.WithTimeout(ctx, 3*time.Second)
+		defer stop()
+		if kube.ForwardPodEnded(verifyCtx, r, env, t, f.Namespace, pod) {
+			return ErrForwardPodEnded
+		}
+	}
 	return err
 }
 

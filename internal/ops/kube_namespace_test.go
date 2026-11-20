@@ -19,9 +19,11 @@ func TestKubeNamespaceCreate(t *testing.T) {
 	for _, tc := range []struct {
 		name, actual string
 		want         Phase
+		interrupted  bool
 	}{
-		{"verified", namespaceObject, Succeeded},
-		{"replacement", strings.Replace(namespaceObject, `"uid":"uid"`, `"uid":"other"`, 1), NotVerified},
+		{name: "verified", actual: namespaceObject, want: Succeeded},
+		{name: "replacement", actual: strings.Replace(namespaceObject, `"uid":"uid"`, `"uid":"other"`, 1), want: NotVerified},
+		{name: "lost acknowledgement", actual: namespaceObject, want: NotVerified, interrupted: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -41,6 +43,9 @@ func TestKubeNamespaceCreate(t *testing.T) {
 						t.Fatalf("unexpected create: %v", cmd.Args)
 					}
 					calls[len(calls)-1] = cmd.Args[len(cmd.Args)-3]
+					if tc.interrupted && slices.Contains(cmd.Args, namespaceCollection) {
+						return run.Result{}, context.Canceled
+					}
 					return run.Result{Stdout: []byte(namespaceObject)}, nil
 				}
 				return run.Result{Stdout: []byte(tc.actual)}, nil

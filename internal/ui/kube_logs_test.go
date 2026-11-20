@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -76,6 +78,14 @@ func TestKubeLogs(t *testing.T) {
 	}
 	cl := shopCluster()
 	cl.LastLine, cl.LastLineOf = "Error: connect ECONNREFUSED 10.96.12.4:5432", tail
+	cl.LastLineOf.Namespace = "another-namespace"
+	w.got[len(w.got)-1](cl, nil)
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("Last log line: Error: connect ECONNREFUSED 10.96.12.4:5432") {
+		t.Fatal("the preview shows a log from another namespace")
+	}
+	cl.LastLineOf = tail
 	w.got[len(w.got)-1](cl, nil)
 	tt.Frame()
 	tt.Advance(time.Second)
@@ -180,5 +190,101 @@ func TestKubeLogs(t *testing.T) {
 	tt.Advance(time.Second)
 	if len(s.running()) != 0 {
 		t.Fatalf("logs read after leaving = %+v", s.running())
+	}
+}
+
+func TestKubeOwnerLogs(t *testing.T) {
+	a, tt, w := openShop(t)
+	var s logStreams
+	a.StreamLogs = s.stream
+	var name, contents string
+	a.SaveLogs = func(file, text string, done func(string, error)) {
+		name, contents = file, text
+		done("/tmp/worker.log", nil)
+	}
+	a.cluster.kind = kindDeployments
+	a.openOwnerLogs(a.resourceRef("Deployment", strings.Repeat("namespace-", 6)+"a", "worker", "deployment"))
+	tt.SetSize(1000, 680)
+	tt.Advance(time.Second)
+	if running := w.running(); len(running) != 1 || running[0].LogOwner.UID != "deployment" {
+		t.Fatalf("watches = %+v", running)
+	}
+	pod := func(uid string) kube.Pod {
+		return kube.Pod{UID: uid, Name: "worker-" + uid, Namespace: "shop",
+			Containers: []kube.Container{{Name: "api", State: "running"}}}
+	}
+	ownerPods := kube.Cluster{Pods: []kube.Pod{pod("a"), pod("b")}}
+	w.got[len(w.got)-1](ownerPods, nil)
+	tt.Frame()
+	tt.Advance(time.Second)
+	if streams := s.running(); len(streams) != 2 || streams[0].Since != 15*time.Minute {
+		t.Fatalf("streams = %+v", streams)
+	}
+	at := time.Date(2026, 11, 20, 12, 0, 0, 0, time.Local)
+	s.got[0]([]kube.LogLine{{At: at.Add(time.Second), Text: "later"}})
+	s.got[1]([]kube.LogLine{{At: at, Text: "first"}})
+	s.done[1](errors.New("access denied"))
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "[worker-b] first", "[worker-a] later", "worker-b: access denied")
+	for _, label := range []string{"Save to file…", "Last 15m", "Time", "Wrap"} {
+		control, ok := tt.Find(label)
+		if !ok || control.W <= 0 || control.X+control.W > 1000 {
+			t.Errorf("%s outside window: %+v", label, control)
+		}
+	}
+	if err := tt.Click("Save to file…"); err != nil {
+		t.Fatal(err)
+	}
+	if want := "12:00:00.000 [worker-b] first\n12:00:01.000 [worker-a] later\n"; name != "worker.log" || contents != want {
+		t.Fatalf("export %q = %q, want %q", name, contents, want)
+	}
+	screenshot(t, tt, "kube-owner-logs-narrow")
+
+	ownerPods.Pods = append(ownerPods.Pods[1:], pod("c"))
+	w.got[len(w.got)-1](ownerPods, nil)
+	tt.Frame()
+	tt.Advance(time.Second)
+	if len(s.logs) != 3 || !s.stopped[0] || s.stopped[1] || s.logs[2].Pod != "worker-c" {
+		t.Fatalf("after replacement: %+v, stopped %v", s.logs, s.stopped)
+	}
+	s.got[0]([]kube.LogLine{{At: at, Text: "late callback"}})
+	if strings.Contains(a.cluster.logs.text(), "late callback") {
+		t.Fatal("removed source wrote into the log")
+	}
+	if err := tt.Click("One pod"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if running := s.running(); len(running) != 1 || running[0].Pod != "worker-b" {
+		t.Fatalf("streams = %+v", running)
+	}
+	tt.Key(0, ui.KeyEscape)
+	tt.Advance(time.Second)
+	if a.cluster.logs != nil || len(s.running()) != 0 || a.cluster.kind != kindDeployments {
+		t.Fatalf("log stayed open or lost its list: %+v", s.running())
+	}
+}
+
+func TestKubeLogIgnoresOldRunAfterReturningToPeriod(t *testing.T) {
+	a, tt, _ := openShop(t)
+	var streams logStreams
+	a.StreamLogs = streams.stream
+	pod := a.cluster.data.Pods[1]
+	a.openLogs(pod, pod.Containers[0].Name, false)
+	for _, since := range []int{0, 1, 0} {
+		a.cluster.logs.since = since
+		tt.Frame()
+		tt.Advance(time.Second)
+	}
+	if len(streams.logs) != 3 || streams.logs[0] != streams.logs[2] {
+		t.Fatalf("expected two runs for the same period: %+v", streams.logs)
+	}
+	streams.got[0]([]kube.LogLine{{Text: "old run"}})
+	streams.done[0](errors.New("old error"))
+	streams.got[2]([]kube.LogLine{{Text: "new run"}})
+	log := a.cluster.logs
+	if log.err != nil || log.text() != "new run\n" {
+		t.Fatalf("text = %q, error = %v", log.text(), log.err)
 	}
 }

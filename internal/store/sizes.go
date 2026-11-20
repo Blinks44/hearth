@@ -31,7 +31,7 @@ func SaveSizes(dir string, s inventory.Sizes) error {
 	if err != nil {
 		return fmt.Errorf("encode sizes: %w", err)
 	}
-	if err := writeFile(dir, sizesFile, data); err != nil {
+	if err := WriteFile(dir, sizesFile, data); err != nil {
 		return fmt.Errorf("save sizes: %w", err)
 	}
 	return nil

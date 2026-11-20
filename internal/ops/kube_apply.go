@@ -53,7 +53,6 @@ type manifestSnapshot struct {
 	ids            []manifestID
 	source         map[manifestID]resourceJSON
 	live, admitted map[manifestID]resourceJSON
-	versions       map[manifestID]string
 }
 
 func PlanKubeManifests(ctx context.Context, r run.Runner, env sysenv.Env, cli, title string, source KubeManifestSource) (Plan, error) {
@@ -147,7 +146,22 @@ func (p *KubeManifestPreview) snapshot(ctx context.Context, k resourceClient) (m
 	if err != nil {
 		return s, false, err
 	}
-	data, err := k.run(ctx, s.input, append(p.command("apply"), "--dry-run=server", "-o", "json")...)
+	for _, id := range ids {
+		before := s.live[id]
+		if before == nil {
+			continue
+		}
+		uid, _ := before.metadata()["uid"].(string)
+		if uid == "" || before.version() == "" || before.metadata()["deletionTimestamp"] != nil {
+			return s, false, errors.New(locales.KubeApplyStale())
+		}
+		// The version prevents overwriting a concurrent change. The UID
+		// also prevents server-side apply from recreating a deleted target.
+		meta := objects[id].metadata()
+		meta["uid"], meta["resourceVersion"] = uid, before.version()
+	}
+	protected := manifestList(list)
+	data, err := k.run(ctx, protected, append(p.command("apply"), "--dry-run=server", "-o", "json")...)
 	if err != nil {
 		return s, false, manifestError("apply --dry-run=server", err)
 	}
@@ -156,7 +170,7 @@ func (p *KubeManifestPreview) snapshot(ctx context.Context, k resourceClient) (m
 		return s, false, errors.New(locales.KubeResourceManifest())
 	}
 	if len(sysenv.LookPathAll("diff", k.env)) > 0 {
-		diff, err := k.call(ctx, 45*time.Second, "30s", s.input, p.command("diff")...)
+		diff, err := k.call(ctx, 45*time.Second, "30s", protected, p.command("diff")...)
 		if err != nil {
 			return s, false, manifestError("diff", err)
 		}
@@ -164,15 +178,11 @@ func (p *KubeManifestPreview) snapshot(ctx context.Context, k resourceClient) (m
 			return s, false, manifestError("diff", &resourceCommandError{"diff", string(diff.Stderr)})
 		}
 	}
-	s.versions = make(map[manifestID]string, len(s.live))
 	for _, id := range ids {
 		after := s.admitted[id]
 		before := s.live[id]
-		if after == nil || before != nil && (before.metadata()["uid"] != after.metadata()["uid"] || before.metadata()["deletionTimestamp"] != nil) {
+		if after == nil || before != nil && before.metadata()["uid"] != after.metadata()["uid"] {
 			return s, false, errors.New(locales.KubeApplyStale())
-		}
-		if before != nil {
-			s.versions[id] = before.version()
 		}
 		normalizeManifest(before, before != nil)
 		normalizeManifest(after, before != nil)
@@ -314,11 +324,7 @@ func (p *KubeManifestPreview) apply(ctx context.Context, k resourceClient, check
 		if reflect.DeepEqual(s.live[id], s.admitted[id]) {
 			continue
 		}
-		obj := s.source[id]
-		if version := s.versions[id]; version != "" {
-			obj.metadata()["resourceVersion"] = version
-		}
-		writes = append(writes, obj)
+		writes = append(writes, s.source[id])
 	}
 	res, writeErr := k.call(ctx, 45*time.Second, "30s", manifestList(writes), append(p.command("apply"), "-o", "json")...)
 	written, _, parseErr := manifestObjects(res.Stdout)

@@ -32662,6 +32662,118 @@ func (msgs Messages) KubeLogsGone() string {
 	return Catalog.Format(msgs.locale, "kubeLogsGone", nil)
 }
 
+// KubeLogsOwnerEnded says "The selected log streams have ended."
+// in the language the app shows.
+//
+// End of the log view when the selected owner sources have finished.
+func KubeLogsOwnerEnded() string { return In(i18n.Locale()).KubeLogsOwnerEnded() }
+
+// KubeLogsOwnerEnded says "The selected log streams have ended."
+// in the language of msgs.
+//
+// End of the log view when the selected owner sources have finished.
+func (msgs Messages) KubeLogsOwnerEnded() string {
+	return Catalog.Format(msgs.locale, "kubeLogsOwnerEnded", nil)
+}
+
+// KubeLogsBackToOwner says "Back to the workload"
+// in the language the app shows.
+//
+// Log page: back to the workload that owns the pods.
+func KubeLogsBackToOwner() string { return In(i18n.Locale()).KubeLogsBackToOwner() }
+
+// KubeLogsBackToOwner says "Back to the workload"
+// in the language of msgs.
+//
+// Log page: back to the workload that owns the pods.
+func (msgs Messages) KubeLogsBackToOwner() string {
+	return Catalog.Format(msgs.locale, "kubeLogsBackToOwner", nil)
+}
+
+// KubeLogsOnePod says "One pod"
+// in the language the app shows.
+//
+// Log scope option for one pod.
+func KubeLogsOnePod() string { return In(i18n.Locale()).KubeLogsOnePod() }
+
+// KubeLogsOnePod says "One pod"
+// in the language of msgs.
+//
+// Log scope option for one pod.
+func (msgs Messages) KubeLogsOnePod() string {
+	return Catalog.Format(msgs.locale, "kubeLogsOnePod", nil)
+}
+
+// KubeLogsAllPods says "All pods"
+// in the language the app shows.
+//
+// Log scope option for all pods owned by the workload.
+func KubeLogsAllPods() string { return In(i18n.Locale()).KubeLogsAllPods() }
+
+// KubeLogsAllPods says "All pods"
+// in the language of msgs.
+//
+// Log scope option for all pods owned by the workload.
+func (msgs Messages) KubeLogsAllPods() string {
+	return Catalog.Format(msgs.locale, "kubeLogsAllPods", nil)
+}
+
+// KubeLogsSave says "Save to file…"
+// in the language the app shows.
+//
+// Action that opens a native save dialog for the shown logs.
+func KubeLogsSave() string { return In(i18n.Locale()).KubeLogsSave() }
+
+// KubeLogsSave says "Save to file…"
+// in the language of msgs.
+//
+// Action that opens a native save dialog for the shown logs.
+func (msgs Messages) KubeLogsSave() string {
+	return Catalog.Format(msgs.locale, "kubeLogsSave", nil)
+}
+
+// KubeLogsFileKind says "Log files"
+// in the language the app shows.
+//
+// File filter for the log export.
+func KubeLogsFileKind() string { return In(i18n.Locale()).KubeLogsFileKind() }
+
+// KubeLogsFileKind says "Log files"
+// in the language of msgs.
+//
+// File filter for the log export.
+func (msgs Messages) KubeLogsFileKind() string {
+	return Catalog.Format(msgs.locale, "kubeLogsFileKind", nil)
+}
+
+// KubeLogsSaveFailed says "Could not save the log: {error}"
+// in the language the app shows.
+//
+// Toast for a failed log export.
+func KubeLogsSaveFailed(error string) string { return In(i18n.Locale()).KubeLogsSaveFailed(error) }
+
+// KubeLogsSaveFailed says "Could not save the log: {error}"
+// in the language of msgs.
+//
+// Toast for a failed log export.
+func (msgs Messages) KubeLogsSaveFailed(error string) string {
+	return Catalog.Format(msgs.locale, "kubeLogsSaveFailed", map[string]any{"error": error})
+}
+
+// KubeLogsSaved says "Log saved to {path}"
+// in the language the app shows.
+//
+// Toast for a successful log export.
+func KubeLogsSaved(path string) string { return In(i18n.Locale()).KubeLogsSaved(path) }
+
+// KubeLogsSaved says "Log saved to {path}"
+// in the language of msgs.
+//
+// Toast for a successful log export.
+func (msgs Messages) KubeLogsSaved(path string) string {
+	return Catalog.Format(msgs.locale, "kubeLogsSaved", map[string]any{"path": path})
+}
+
 // KubeLogsCopy says "Copy"
 // in the language the app shows.
 //

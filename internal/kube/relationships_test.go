@@ -2,9 +2,11 @@ package kube
 
 import (
 	"encoding/json"
+	"errors"
 	"slices"
 	"testing"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/run"
 )
 
@@ -126,5 +128,19 @@ func TestReadDeploymentBudgets(t *testing.T) {
 	}
 	if d := cl.Relationships; len(d.Errors) != 0 || !slices.Equal(d.Links, want) {
 		t.Errorf("relationships = %+v, want %v", d, want)
+	}
+
+	eventArgs := []string{"kubectl", "--context=kind-dev", "get", "events", "--namespace=shop",
+		"--field-selector=involvedObject.uid=d", "--output=json", "--request-timeout=15s"}
+	runner.Set(run.Result{ExitCode: 1, Stderr: []byte("Error from server (Forbidden): cannot list events")}, nil, eventArgs...)
+	cl, err = Read(t.Context(), &runner, nil, target)
+	if err != nil || len(cl.Deployments) != 1 || cl.Relationships == nil {
+		t.Fatalf("forbidden events hid deployments or relationships: %+v, %v", cl, err)
+	}
+	if e, ok := errors.AsType[*Error](cl.EventsErr); !ok || e.Access.State != detect.KubeForbidden || cl.EventsOf != target.Events {
+		t.Errorf("events belong to %+v with error %v, want a forbidden read for %+v", cl.EventsOf, cl.EventsErr, target.Events)
+	}
+	if len(cl.Deployments[0].Autoscalers) != 1 || !slices.Equal(cl.Relationships.Links, want) {
+		t.Errorf("forbidden events hid HPA or PDB: %+v", cl.Relationships)
 	}
 }

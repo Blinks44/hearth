@@ -209,15 +209,18 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			meta = append(meta, locales.KubeCreatedAgo(age(c, d.Created)))
 			ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted).Wrap()
 		})
-		if a.BuildPlan != nil {
+		if a.BuildPlan != nil || a.StreamLogs != nil && a.WatchCluster != nil {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
-				a.deploymentRestart(c, ref, d.Paused)
+				a.ownerLogsButton(c, ref)
+				if a.BuildPlan != nil {
+					a.deploymentRestart(c, ref, d.Paused)
+				}
 				a.resourceActions(c, ref, 3)
 			})
 		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
 			count := ""
-			if read {
+			if read && cl.EventsErr == nil {
 				count = strconv.Itoa(len(events))
 			}
 			tabs := []segment{{locales.KubeTabOverview(), ""}, {"Pods", strconv.Itoa(len(pods))}, {locales.KubeTabEvents(), count}}
@@ -240,7 +243,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			}
 			return
 		case 2:
-			eventList(c, events, read, 0)
+			workloadEventList(c, events, read, cl.EventsErr, 0)
 			return
 		}
 		if d.Stalled != "" {

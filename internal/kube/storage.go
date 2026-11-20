@@ -87,11 +87,21 @@ func readClaimDetails(ctx context.Context, r run.Runner, env sysenv.Env, t Targe
 func (p pod) claims() []string {
 	var names []string
 	for _, v := range p.Spec.Volumes {
-		if name := v.PersistentVolumeClaim.ClaimName; name != "" && !slices.Contains(names, name) {
+		if name := v.claimName(p.Metadata.Name); name != "" && !slices.Contains(names, name) {
 			names = append(names, name)
 		}
 	}
 	return names
+}
+
+func (v podVolume) claimName(podName string) string {
+	if v.PersistentVolumeClaim.ClaimName != "" {
+		return v.PersistentVolumeClaim.ClaimName
+	}
+	if v.Ephemeral != nil && v.Ephemeral.VolumeClaimTemplate != nil {
+		return podName + "-" + v.Name
+	}
+	return ""
 }
 
 // MissingClass returns whether a pending claim names a class absent from a

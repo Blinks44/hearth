@@ -2,8 +2,10 @@ package kube
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -26,8 +28,46 @@ const flushEvery = 100 * time.Millisecond
 type Logs struct {
 	Kubectl, Context, Namespace, Pod, Container string
 	Previous                                    bool
+	// Terminated reads an ended current run without opening a follow stream.
+	Terminated bool
 	// Since reads the lines of the last Since alone; zero reads the run.
 	Since time.Duration
+}
+
+// LogOwner identifies the workload whose pods may supply logs.
+type LogOwner struct {
+	Kind, Namespace, Name, UID string
+}
+
+func readLogPods(ctx context.Context, r run.Runner, env sysenv.Env, t Target) ([]Pod, error) {
+	owner := t.LogOwner
+	scope := "--namespace=" + owner.Namespace
+	controllers := map[string]string{owner.UID: owner.Kind}
+	if owner.Kind == "Deployment" {
+		var sets struct{ Items []meta }
+		if err := get(ctx, r, env, t, []string{"replicasets.apps", scope}, &sets); err != nil {
+			return nil, err
+		}
+		clear(controllers)
+		for _, set := range sets.Items {
+			if set.controller().Kind == owner.Kind && set.controllerUID() == owner.UID {
+				controllers[set.Metadata.UID] = "ReplicaSet"
+			}
+		}
+	}
+	var list struct{ Items []pod }
+	if err := get(ctx, r, env, t, []string{"pods", scope}, &list); err != nil {
+		return nil, err
+	}
+	var pods []Pod
+	for _, p := range list.Items {
+		controller := p.controller()
+		if kind, ok := controllers[p.controllerUID()]; ok && kind == controller.Kind {
+			pods = append(pods, p.pod(Owner{Kind: owner.Kind, Name: owner.Name}))
+		}
+	}
+	slices.SortFunc(pods, func(a, b Pod) int { return cmp.Compare(a.Name, b.Name) })
+	return pods, nil
 }
 
 // argv is the kubectl logs reading l, every line with its time.
@@ -36,7 +76,7 @@ func (l Logs) argv() []string {
 		"--container=" + l.Container, "--timestamps", "--tail=" + strconv.Itoa(MaxLogLines)}
 	if l.Previous {
 		argv = append(argv, "--previous")
-	} else {
+	} else if !l.Terminated {
 		argv = append(argv, "--follow")
 	}
 	if l.Since > 0 {
@@ -61,6 +101,7 @@ type LogLine struct {
 	// At is when the container wrote it, by kubelet; zero when the line
 	// came without.
 	At    time.Time
+	Pod   string
 	Text  string
 	Level Level
 }
@@ -103,8 +144,15 @@ func Stream(ctx context.Context, lines LinesFunc, env sysenv.Env, l Logs, got fu
 		}
 	})
 	var stderr bytes.Buffer
+	var failure *Error
 	err := lines(ctx, run.Cmd{Args: l.argv(), Env: env, Output: &stderr, MaxOutput: 1 << 20}, func(s string) {
 		ln := ParseLine(s, last)
+		// The kubelet can send this diagnostic inside a successful log
+		// response. A container line has a timestamp with --timestamps.
+		if ln.At.IsZero() && strings.HasPrefix(s, "failed to create fsnotify watcher:") {
+			failure = &Error{Access: detect.KubeFailure(s)}
+			return
+		}
 		last = ln.Level
 		mu.Lock()
 		batch = append(batch, ln)
@@ -113,7 +161,13 @@ func Stream(ctx context.Context, lines LinesFunc, env sysenv.Env, l Logs, got fu
 	close(done)
 	wg.Wait()
 	send()
-	if err == nil || ctx.Err() != nil {
+	if ctx.Err() != nil {
+		return err
+	}
+	if failure != nil {
+		return failure
+	}
+	if err == nil {
 		return err
 	}
 	if msg := strings.TrimSpace(stderr.String()); msg != "" {

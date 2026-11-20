@@ -107,6 +107,7 @@ type kubeClusterState struct {
 	bulk                       kubeBulkSelection
 	// nsNames are the context's namespaces, listed as the namespace
 	// popover opened; nsErr says why they could not be.
+	nsRequest *kubeNamespaceRequest
 	nsLoading bool
 	nsNames   []string
 	nsErr     error
@@ -166,6 +167,11 @@ func (a *App) kubeContext(name string) *inventory.KubeContext {
 // are read with the rest; choosing another keeps what was read.
 func (a *App) syncCluster() {
 	s := &a.cluster
+	if request := s.nsRequest; request != nil && (!s.namespaceOpen ||
+		a.router.Path() != kubeClusterPage || a.router.Query("context") != request.context) {
+		s.namespaceOpen = false
+		s.stopNamespaceList()
+	}
 	var t kube.Target
 	target := ""
 	if a.router.Path() == kubeClusterPage && a.WatchCluster != nil {
@@ -214,8 +220,15 @@ func (a *App) syncCluster() {
 	}
 	running := ""
 	if target != "" && (s.kind != kindCustom || t.CustomKind != "") {
-		t.Events, t.Tail = a.detailRef(), a.detailTail()
+		if target == s.target {
+			t.Events, t.Tail = a.detailRef(), a.detailTail()
+		}
 		running = fmt.Sprintf("%s#%d#%t#%t#%t#%t#%t#%t#%t#%s#%q#%s#%+v", target, s.refresh, t.Overview, t.Batch, t.Services, t.Secrets, t.Metrics, t.Policies, t.DeploymentAutoscalers, t.Resource, t.CustomKind, t.Events.UID, t.Tail)
+	}
+	ownerLog := s.logs
+	if running != "" && target == s.target && ownerLog != nil && ownerLog.owner.UID != "" {
+		t.LogOwner = ownerLog.owner
+		running += fmt.Sprintf("#logs:%p", ownerLog)
 	}
 	if running == s.running {
 		return
@@ -236,9 +249,16 @@ func (a *App) syncCluster() {
 	if running == "" {
 		return
 	}
-	watch := s.watch
+	watch, refresh := s.watch, s.refresh
 	s.stop = a.WatchCluster(t, func(cl kube.Cluster, err error) {
 		if s.watch != watch {
+			return
+		}
+		if t.LogOwner.UID != "" {
+			ownerLog.podsErr, ownerLog.podsRead = err, true
+			if err == nil {
+				ownerLog.pods = cl.Pods
+			}
 			return
 		}
 		if err != nil {
@@ -258,7 +278,9 @@ func (a *App) syncCluster() {
 			(cl.Resources.Claims == nil || cl.Resources.Claims.ConsumersErr != nil) && s.claimFilter == 2 {
 			s.claimFilter = 0
 		}
-		s.followResourceLink(cl)
+		if s.refresh == refresh {
+			s.followResourceLink(cl)
+		}
 		if s.other.uid != "" && s.otherResource() == nil {
 			s.other.reset()
 		}
@@ -321,6 +343,8 @@ func (a *App) detailTail() kube.Tail {
 // StopCluster ends the cluster page's reads, as the window closes.
 func (a *App) StopCluster() {
 	a.cluster.clearHelmDetails()
+	a.cluster.namespaceOpen = false
+	a.cluster.stopNamespaceList()
 	if a.cluster.stop != nil {
 		a.cluster.stop()
 		a.cluster.stop, a.cluster.running = nil, ""
@@ -348,6 +372,21 @@ func (a *App) setNamespaces(name string, ns []string) {
 	a.cluster.namespaces[name] = ns
 }
 
+type kubeNamespaceRequest struct {
+	context string
+	stop    func()
+}
+
+func (s *kubeClusterState) stopNamespaceList() {
+	if request := s.nsRequest; request != nil {
+		s.nsRequest = nil
+		if request.stop != nil {
+			request.stop()
+		}
+	}
+	s.nsLoading, s.nsNames, s.nsErr = false, nil, nil
+}
+
 // listNamespaces asks the context's cluster for its namespaces, for the
 // namespace popover.
 func (a *App) listNamespaces(name string) {
@@ -356,9 +395,11 @@ func (a *App) listNamespaces(name string) {
 	if !ok || a.ListNamespaces == nil {
 		return
 	}
-	s.nsLoading, s.nsErr, s.nsNames = true, nil, nil
-	a.ListNamespaces(kube.Target{Kubectl: in.Path, Context: name}, func(names []string, err error) {
-		if a.router.Query("context") != name {
+	s.stopNamespaceList()
+	request := &kubeNamespaceRequest{context: name}
+	s.nsRequest, s.nsLoading = request, true
+	request.stop = a.ListNamespaces(kube.Target{Kubectl: in.Path, Context: name}, func(names []string, err error) {
+		if s.nsRequest != request || !s.namespaceOpen || a.router.Path() != kubeClusterPage || a.router.Query("context") != name {
 			return
 		}
 		s.nsLoading, s.nsNames, s.nsErr = false, names, err
@@ -520,10 +561,14 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 	if bar := c.TitleBar(); bar.Right > 0 {
 		right = bar.Right + 12
 	}
+	var contextWidth, namespaceWidth, kindWidth float32
+	if s.logs != nil && narrow(c) {
+		contextWidth, namespaceWidth, kindWidth = 76, 105, 92
+	}
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(6).Padding(0, right, 0, 24).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Divider).DragWindow().Children(func() {
 		headerBackButton(c, locales.BackToKubernetes(), func() { a.router.Push(kubePage) })
-		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name)
+		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name, contextWidth)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen
 		}
@@ -537,7 +582,10 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		if len(ns) == 0 {
 			label = locales.KubeClusterAllNamespaces()
 		}
-		anchor = pathButton(c, "cluster-namespace", "lucide/folder-tree", label)
+		if s.logs != nil && s.logs.owner.UID != "" {
+			label = s.logs.owner.Namespace
+		}
+		anchor = pathButton(c, "cluster-namespace", "lucide/folder-tree", label, namespaceWidth)
 		if anchor.Clicked() {
 			s.namespaceOpen = !s.namespaceOpen
 			if s.namespaceOpen {
@@ -550,19 +598,13 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		if s.kind == kindCustom && s.custom.name != "" {
 			kind.label = s.custom.label
 		}
-		anchor = pathButton(c, "cluster-kind", "lucide/"+kind.icon, kind.label)
+		anchor = pathButton(c, "cluster-kind", "lucide/"+kind.icon, kind.label, kindWidth)
 		anchor.OnClick(a.toggleClusterKinds)
 		ui.Popover(c, anchor, &s.kindsOpen, func() { a.clusterKindPicker(c) })
 		if s.logs != nil {
 			a.logsCrumb(c)
 			ui.Box(c).Grow(1).Height(1)
-			ui.Button(c.Key("logs-copy"), "").Label(locales.KubeLogsCopy()).Disabled(len(s.logs.lines) == 0).OnClick(func() {
-				c.WriteClipboard(s.logs.text())
-				c.Toast(locales.KubeLogsCopied(len(s.logs.lines)))
-			}).Children(func() {
-				ui.Icon(c, Icon("copy")).Size(14, 14)
-				ui.Text(c, locales.KubeLogsCopy()).SingleLine()
-			})
+			a.logActions(c)
 			return
 		}
 		ui.Box(c).Grow(1).Height(1)
@@ -583,15 +625,21 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 
 // pathButton is a select of the header's path: an icon, the value and a
 // chevron.
-func pathButton(c *ui.Context, key, icon, value string) ui.Element {
+func pathButton(c *ui.Context, key, icon, value string, width float32) ui.Element {
 	t := c.Theme()
 	b := ui.ButtonBase(c.Key(key)).Height(30).Padding(0, 8).Radius(7).AlignItems(ui.Center).Gap(7).Label(value)
+	if width > 0 {
+		b.MinWidth(0).Shrink(1)
+	}
 	if b.Hovered() {
 		b.Background(Colors(t).Muted)
 	}
 	return b.Children(func() {
 		iconOrLogo(c, icon, 16, t.TextMuted)
-		ui.Text(c, value).FontSize(14).FontWeight(600).SingleLine().MaxWidth(260)
+		label := ui.Text(c, value).FontSize(14).FontWeight(600).SingleLine().MaxWidth(260)
+		if width > 0 {
+			label.MaxWidth(width).MinWidth(0).Shrink(1).Tooltip(value)
+		}
 		ui.Icon(c, Icon("chevron-down")).Size(12, 12).TextColor(Colors(t).TextFaint)
 	})
 }

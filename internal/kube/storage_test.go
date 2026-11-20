@@ -24,7 +24,7 @@ func TestStorageClaims(t *testing.T) {
 		} else {
 			fake.Set(run.Result{ExitCode: 1, Stderr: []byte("Forbidden")}, nil, classes...)
 		}
-		fake.Stdout(`{"items":[{"metadata":{"name":"web","namespace":"shop","uid":"pod"},"spec":{"volumes":[{"persistentVolumeClaim":{"claimName":"data"}},{"persistentVolumeClaim":{"claimName":"data"}}]},"status":{"phase":"Pending"}}]}`,
+		fake.Stdout(`{"items":[{"metadata":{"name":"web","namespace":"shop","uid":"pod"},"spec":{"volumes":[{"persistentVolumeClaim":{"claimName":"data"}},{"persistentVolumeClaim":{"claimName":"data"}},{"name":"cache","ephemeral":{"volumeClaimTemplate":{}}}]},"status":{"phase":"Pending"}}]}`,
 			getArgs("pods", "--namespace=shop")...)
 		fake.Set(run.Result{ExitCode: 1, Stderr: []byte("Forbidden")}, nil, getArgs("pods", "--namespace=tools")...)
 		fake.Stdout(`{"items":[{"reason":"FailedBinding","message":"no persistent volumes available for this claim and no storage class is set"}]}`,
@@ -43,6 +43,9 @@ func TestStorageClaims(t *testing.T) {
 		if users := details.Consumers[ClaimKey{"shop", "data"}]; len(users) != 1 || users[0].UID != "pod" ||
 			len(details.Consumers[ClaimKey{"tools", "data"}]) != 0 || details.ConsumersErr == nil {
 			t.Fatalf("consumer read = %+v", details)
+		}
+		if users := details.Consumers[ClaimKey{"shop", "web-cache"}]; len(users) != 1 || users[0].UID != "pod" {
+			t.Fatalf("generic ephemeral claim consumers = %+v", users)
 		}
 		if NoVolumeEvent(got.Events) == "" || NoVolumeEvent([]Event{{Reason: "ProvisioningFailed", Message: "no persistent volumes available for this claim"}}) != "" {
 			t.Fatalf("unexpected binding diagnosis for %+v", got.Events)

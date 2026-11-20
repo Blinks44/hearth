@@ -168,7 +168,7 @@ type App struct {
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
 	WatchCluster          func(t kube.Target, got func(kube.Cluster, error)) (stop func())
-	ListNamespaces        func(t kube.Target, done func([]string, error))
+	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
 	ReadSecretValue  func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
@@ -182,6 +182,8 @@ type App struct {
 	// lines as they come to got and how the read ended to done, on the UI
 	// thread, until stop is called. Nil hides the logs.
 	StreamLogs func(l kube.Logs, got func([]kube.LogLine), done func(error)) (stop func())
+	// SaveLogs exports the shown lines to a file chosen by the user.
+	SaveLogs func(name, text string, done func(path string, err error))
 	// OpenKubeShell hands a container session to the system terminal.
 	OpenKubeShell func(kube.Shell, func(error))
 

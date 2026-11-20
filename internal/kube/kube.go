@@ -60,6 +60,8 @@ type Target struct {
 	// Tail is the container whose previous run's last line to read too;
 	// zero reads none.
 	Tail Tail
+	// LogOwner reads only the selected workload's pods for the log viewer.
+	LogOwner LogOwner
 }
 
 // Tail names a container of a pod and its run: the previous one, or the
@@ -196,8 +198,9 @@ type Cluster struct {
 	Relationships *Relationships
 	MetricsErr    error
 	// Events are those of the target's Events object, newest first.
-	Events   []Event
-	EventsOf Ref
+	Events    []Event
+	EventsOf  Ref
+	EventsErr error
 	// LastLine is the last line of the run of the target's Tail
 	// container, empty when it has none.
 	LastLine   string
@@ -272,6 +275,10 @@ func namespaceScopes(namespaces []string) [][]string {
 // each namespace, or one for all of them, and the optional overview,
 // object events and container log tail.
 func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
+	if t.LogOwner.UID != "" {
+		pods, err := readLogPods(ctx, r, env, t)
+		return Cluster{Pods: pods, Taken: time.Now()}, err
+	}
 	c, err := readCluster(ctx, r, env, t)
 	if err == nil {
 		c.readRelationships(ctx, r, env, t)
@@ -343,11 +350,8 @@ func readCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (C
 		c.MetricsErr = addPodMetrics(ctx, r, env, t, c.Pods)
 	}
 	if t.Events.UID != "" {
-		events, err := readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
-		if err != nil {
-			return Cluster{}, err
-		}
-		c.Events, c.EventsOf = events, t.Events
+		c.Events, c.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
+		c.EventsOf = t.Events
 	}
 	if t.DeploymentAutoscalers && t.Events.UID != "" {
 		c.readDeploymentAutoscalers(ctx, r, env, t)

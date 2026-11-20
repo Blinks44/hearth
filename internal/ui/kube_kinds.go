@@ -66,6 +66,8 @@ func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bo
 	if cl.Resources != nil {
 		return len(cl.Resources.Items), 0, cl.Resources.Custom == nil && cl.Resources.Kind == otherResourceKind(kind)
 	}
+	workloadsRead := !cl.Taken.IsZero() && cl.HelmReleases == nil && cl.Secrets == nil && cl.Services == nil &&
+		(cl.Batch == nil || cl.Overview != nil)
 	switch kind {
 	case kindPods:
 		for _, p := range cl.Pods {
@@ -73,14 +75,14 @@ func clusterKindCounts(cl *kube.Cluster, kind int) (count, trouble int, known bo
 				trouble++
 			}
 		}
-		return len(cl.Pods), trouble, cl.HelmReleases == nil && cl.Secrets == nil && (!cl.Taken.IsZero() || cl.Pods != nil)
+		return len(cl.Pods), trouble, workloadsRead || cl.Pods != nil
 	case kindDeployments:
 		for _, d := range cl.Deployments {
 			if deploymentTrouble(d) {
 				trouble++
 			}
 		}
-		return len(cl.Deployments), trouble, cl.HelmReleases == nil && cl.Secrets == nil && (!cl.Taken.IsZero() || cl.Deployments != nil)
+		return len(cl.Deployments), trouble, workloadsRead || cl.Deployments != nil
 	case kindSecrets:
 		return len(cl.Secrets), 0, cl.Secrets != nil
 	case kindHelm:

@@ -103,18 +103,20 @@ func cronRunMatches(job resourceJSON, source KubeResource, name string) bool {
 func (m *KubeChange) startCronJob(ctx context.Context, k resourceClient, checking func()) (string, error) {
 	source := m.draft.Ref
 	name := m.jobName
+	ref := source
+	ref.Kind, ref.Name, ref.UID = "Job", name, ""
 	data, err := k.run(ctx, m.input, m.command()...)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", locales.KubeCronRunUnverified(name), err)
+		return "", fmt.Errorf("%s: %w", locales.KubeCronRunUnverified(name), k.checkUnacknowledgedCreate(ctx, ref, err, checking))
 	}
 	created, err := decodeResource(data)
 	uid, _ := created.metadata()["uid"].(string)
 	if err != nil || uid == "" || !cronRunMatches(created, source, name) {
-		return "", errors.New(locales.KubeCronRunUnverified(name))
+		cause := errors.New(locales.KubeCronRunUnverified(name))
+		return "", k.checkUnacknowledgedCreate(ctx, ref, cause, checking)
 	}
 	checking()
-	ref := source
-	ref.Kind, ref.Name, ref.UID = "Job", name, uid
+	ref.UID = uid
 
 	check, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()

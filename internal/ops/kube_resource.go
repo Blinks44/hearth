@@ -41,8 +41,15 @@ var kubeResourceTypes = map[string]kubeResourceType{
 var kubeResourceName = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$|^[a-z0-9]$`)
 
 func (ref KubeResource) path() string {
+	if ref.UID == "" {
+		return ""
+	}
+	return ref.namedPath()
+}
+
+func (ref KubeResource) namedPath() string {
 	typ, ok := kubeResourceTypes[ref.Kind]
-	if !ok || ref.Kubectl == "" || ref.Context == "" || ref.UID == "" ||
+	if !ok || ref.Kubectl == "" || ref.Context == "" ||
 		!kubeResourceName.MatchString(ref.Name) {
 		return ""
 	}
@@ -179,6 +186,17 @@ func (k resourceClient) read(ctx context.Context, ref KubeResource) (resourceJSO
 		return nil, err
 	}
 	return decodeResource(data)
+}
+
+// checkUnacknowledgedCreate refreshes the reported state after a write
+// whose acknowledgement is missing. Without its UID, the read cannot
+// establish that this operation created the object.
+func (k resourceClient) checkUnacknowledgedCreate(ctx context.Context, ref KubeResource, cause error, checking func()) error {
+	checking()
+	check, cancel := context.WithTimeout(context.WithoutCancel(ctx), 22*time.Second)
+	defer cancel()
+	_, err := k.run(check, nil, "get", "--raw", ref.namedPath())
+	return errors.Join(cause, err)
 }
 
 // Pin resolves the selected context once and uses the same private kubeconfig

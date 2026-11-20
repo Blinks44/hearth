@@ -77,7 +77,7 @@ func TestPlanKubeCronRun(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var generated, previewInput string
-			writes := 0
+			writes, reads := 0, 0
 			confirmed := false
 			job := func(uid, status string) run.Result {
 				return run.Result{Stdout: fmt.Appendf(nil, `{"apiVersion":"batch/v1","kind":"Job","metadata":{"name":%q,"namespace":"work","uid":%q,"resourceVersion":"2","ownerReferences":[{"apiVersion":"batch/v1","kind":"CronJob","name":"demo","uid":"cron","controller":true}]},"spec":{}%s}`, generated, uid, status)}
@@ -116,6 +116,7 @@ func TestPlanKubeCronRun(t *testing.T) {
 					}
 					return job("job", ""), nil
 				case slices.Contains(cmd.Args, "/apis/batch/v1/namespaces/work/jobs/"+generated):
+					reads++
 					uid := "job"
 					if tc.replaced {
 						uid = "another-job"
@@ -137,8 +138,8 @@ func TestPlanKubeCronRun(t *testing.T) {
 					t.Fatalf("stale template = %+v, writes = %d", got, writes)
 				}
 			case tc.replaced || tc.interrupted:
-				if writes != 1 || got.Phase != NotVerified || !strings.Contains(got.Err, generated) {
-					t.Fatalf("unverified Job = %+v, writes = %d", got, writes)
+				if writes != 1 || reads != 1 || got.Phase != NotVerified || !strings.Contains(got.Err, generated) {
+					t.Fatalf("unverified Job = %+v, writes = %d, reads = %d", got, writes, reads)
 				}
 			default:
 				if writes != 1 || got.Phase != Succeeded {

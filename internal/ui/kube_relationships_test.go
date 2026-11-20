@@ -39,6 +39,16 @@ func TestResourceRelationshipRow(t *testing.T) {
 	}
 }
 
+func TestMissingResourceLinkDoesNotOverrideSelection(t *testing.T) {
+	s := kubeClusterState{kind: kindPods, resourceLink: resourceLink{kind: kindPods, namespace: "shop", name: "pending"}}
+	s.followResourceLink(kube.Cluster{})
+	s.pod = "manually-selected"
+	s.followResourceLink(kube.Cluster{Pods: []kube.Pod{{Namespace: "shop", Name: "pending", UID: "appeared"}}})
+	if s.pod != "manually-selected" || !s.resourceLink.missing {
+		t.Fatalf("pod = %q, link = %+v", s.pod, s.resourceLink)
+	}
+}
+
 func TestFollowResourceLink(t *testing.T) {
 	for _, tc := range []struct {
 		name string

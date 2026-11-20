@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 )
 
-// writeFile replaces dir/name with data whole: a crash midway leaves the
+// WriteFile replaces dir/name with data whole: a crash midway leaves the
 // old file.
-func writeFile(dir, name string, data []byte) error {
+func WriteFile(dir, name string, data []byte) error {
 	f, err := os.CreateTemp(dir, name+".*")
 	if err != nil {
 		return err

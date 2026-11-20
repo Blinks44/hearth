@@ -202,10 +202,21 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
 				err := kube.Stream(ctx, run.Lines, env, l, func(lines []kube.LogLine) {
-					win.Update(func() { got(lines) })
+					if ctx.Err() != nil {
+						return
+					}
+					win.Update(func() {
+						if ctx.Err() == nil {
+							got(lines)
+						}
+					})
 				})
 				if ctx.Err() == nil {
-					win.Update(func() { done(err) })
+					win.Update(func() {
+						if ctx.Err() == nil {
+							done(err)
+						}
+					})
 				}
 			}()
 			return cancel
@@ -282,14 +293,24 @@ func main() {
 			})
 			return cancel
 		}
-		a.ListNamespaces = func(t kube.Target, done func([]string, error)) {
+		a.ListNamespaces = func(t kube.Target, done func([]string, error)) func() {
 			env := scanner.Terminal()
+			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
-				names, err := kube.Namespaces(context.Background(), run.Exec{}, env, t)
-				win.Update(func() { done(names, err) })
+				names, err := kube.Namespaces(ctx, run.Exec{}, env, t)
+				if ctx.Err() != nil {
+					return
+				}
+				win.Update(func() {
+					if ctx.Err() == nil {
+						done(names, err)
+					}
+				})
 			}()
+			return cancel
 		}
 		a.SaveSet = func(data []byte, done func(string, error)) { saveSet(win, data, done) }
+		a.SaveLogs = func(name, text string, done func(string, error)) { saveLogs(win, name, text, done) }
 		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
 		a.PickManifest = func(dir string, folder bool, done func(string, error)) { pickManifest(win, dir, folder, done) }
 		// Operations run one at a time in the background, as the user's
@@ -776,6 +797,23 @@ func saveSet(win *mygo.Window, data []byte, done func(path string, err error)) {
 		})
 		if err == nil && path != "" {
 			err = os.WriteFile(path, data, 0o644)
+		}
+		win.Update(func() { done(path, err) })
+	}()
+}
+
+func saveLogs(win *mygo.Window, name, text string, done func(string, error)) {
+	go func() {
+		dir, _ := mygo.App.Path(mygo.PathDocuments)
+		path, err := mygo.Dialog.Save(mygo.SaveDialogOptions{
+			Parent: win, Title: locales.KubeLogsSave(), DefaultPath: filepath.Join(dir, name),
+			Filters:           []mygo.FileFilter{{Name: locales.KubeLogsFileKind(), Extensions: []string{"log"}}},
+			CreateDirectories: true,
+		})
+		if err == nil && path != "" {
+			if writeErr := store.WriteFile(filepath.Dir(path), filepath.Base(path), []byte(text)); writeErr != nil {
+				err = fmt.Errorf("write log: %w", writeErr)
+			}
 		}
 		win.Update(func() { done(path, err) })
 	}()

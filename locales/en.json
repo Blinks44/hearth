@@ -12624,6 +12624,50 @@
   "@kubeLogsGone": {
     "description": "Log page: the pod or container is no longer in the cluster."
   },
+  "kubeLogsOwnerEnded": "The selected log streams have ended.",
+  "@kubeLogsOwnerEnded": {
+    "description": "End of the log view when the selected owner sources have finished."
+  },
+  "kubeLogsBackToOwner": "Back to the workload",
+  "@kubeLogsBackToOwner": {
+    "description": "Log page: back to the workload that owns the pods."
+  },
+  "kubeLogsOnePod": "One pod",
+  "@kubeLogsOnePod": {
+    "description": "Log scope option for one pod."
+  },
+  "kubeLogsAllPods": "All pods",
+  "@kubeLogsAllPods": {
+    "description": "Log scope option for all pods owned by the workload."
+  },
+  "kubeLogsSave": "Save to file…",
+  "@kubeLogsSave": {
+    "description": "Action that opens a native save dialog for the shown logs."
+  },
+  "kubeLogsFileKind": "Log files",
+  "@kubeLogsFileKind": {
+    "description": "File filter for the log export."
+  },
+  "kubeLogsSaveFailed": "Could not save the log: {error}",
+  "@kubeLogsSaveFailed": {
+    "description": "Toast for a failed log export.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "permission denied"
+      }
+    }
+  },
+  "kubeLogsSaved": "Log saved to {path}",
+  "@kubeLogsSaved": {
+    "description": "Toast for a successful log export.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/Documents/worker.log"
+      }
+    }
+  },
   "kubeLogsCopy": "Copy",
   "@kubeLogsCopy": {
     "description": "Log page: copy the lines shown."

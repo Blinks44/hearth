@@ -78,10 +78,7 @@ func (p pod) references() []Relationship {
 				addNames(volume.Name, src.ConfigMap, src.Secret)
 			}
 		}
-		add("PersistentVolumeClaim", volume.PersistentVolumeClaim.ClaimName, volume.Name)
-		if volume.Ephemeral != nil && volume.Ephemeral.VolumeClaimTemplate != nil {
-			add("PersistentVolumeClaim", m.Name+"-"+volume.Name, volume.Name)
-		}
+		add("PersistentVolumeClaim", volume.claimName(m.Name), volume.Name)
 		addNames(volume.Name, volume.ConfigMap, nil)
 		if volume.Secret != nil {
 			add("Secret", volume.Secret.SecretName, volume.Name)

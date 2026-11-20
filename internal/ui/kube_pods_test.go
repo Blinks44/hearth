@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -116,7 +117,7 @@ func openShop(t *testing.T) (*App, *ui.Tester, *clusterWatches) {
 	a := kubeApp()
 	w := &clusterWatches{}
 	a.WatchCluster = w.watch
-	a.ListNamespaces = func(kube.Target, func([]string, error)) {}
+	a.ListNamespaces = func(kube.Target, func([]string, error)) func() { return func() {} }
 	a.StreamLogs = (&logStreams{}).stream
 	a.router.Push(kubeClusterPath("kind-dev"))
 	tt := ui.NewTester(a.View, 1440, 900)
@@ -284,6 +285,48 @@ func TestKubeDeployments(t *testing.T) {
 	}
 }
 
+func TestWorkloadEventFailureStaysInDetails(t *testing.T) {
+	for _, tc := range []struct {
+		name, label string
+		kind        int
+	}{
+		{"Pod", "checkout-api-7d9f8c5b-x2k4p", kindPods},
+		{"Deployment", "checkout-api", kindDeployments},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, tt, watches := openShop(t)
+			a.cluster.kind = tc.kind
+			tt.Frame()
+			tt.Advance(time.Second)
+			watches.got[len(watches.got)-1](shopCluster(), nil)
+			tt.Frame()
+			tt.Advance(time.Second)
+			if err := tt.Click(tc.label); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			running := watches.running()
+			if len(running) != 1 || running[0].Events.UID == "" {
+				t.Fatalf("missing request for %s events: %+v", tc.name, running)
+			}
+			data := shopCluster()
+			data.EventsOf = running[0].Events
+			data.EventsErr = errors.New("Forbidden to list workload events")
+			watches.got[len(watches.got)-1](data, nil)
+			tt.Frame()
+			tt.Advance(time.Second)
+			if err := tt.Click("Events"); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			hasTexts(t, tt, tc.label, "Forbidden to list workload events")
+			if tt.HasText("No events. Kubernetes keeps them for about an hour.") || tt.HasText("Reading events…") {
+				t.Fatalf("event denial was shown as an empty or pending list: %v", tt.Texts())
+			}
+		})
+	}
+}
+
 // The cluster's data may come while its page still slides in beside the
 // Kubernetes page, both built at once: their searches are not one
 // control.
@@ -291,7 +334,7 @@ func TestKubeClusterSlidesIn(t *testing.T) {
 	a := kubeApp()
 	w := &clusterWatches{}
 	a.WatchCluster = w.watch
-	a.ListNamespaces = func(kube.Target, func([]string, error)) {}
+	a.ListNamespaces = func(kube.Target, func([]string, error)) func() { return func() {} }
 	a.router.Push(kubePage)
 	tt := ui.NewTester(a.View, 1440, 900)
 	tt.Advance(time.Second)

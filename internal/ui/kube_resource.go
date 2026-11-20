@@ -159,15 +159,21 @@ func (a *App) resourceActions(c *ui.Context, ref ops.KubeResource, tab int) {
 }
 
 func (a *App) resourceMenu(c *ui.Context, ref ops.KubeResource) {
-	if a.BuildPlan == nil || ref.UID == "" {
+	logs := ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil
+	if ref.UID == "" || a.BuildPlan == nil && !logs {
 		return
 	}
 	iconButton(c.Key("resource-actions"), "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
-		if m.Item(locales.KubeResourceEdit()).Chosen() {
-			a.openResourceEditor(ref, -1)
+		if logs && m.Item(locales.KubeLogsOpen()).Chosen() {
+			a.openOwnerLogs(ref)
 		}
-		if m.Item(locales.KubeResourceDelete()).Chosen() {
-			a.planResourceChange(a.resourceForm(ref), true)
+		if a.BuildPlan != nil {
+			if m.Item(locales.KubeResourceEdit()).Chosen() {
+				a.openResourceEditor(ref, -1)
+			}
+			if m.Item(locales.KubeResourceDelete()).Chosen() {
+				a.planResourceChange(a.resourceForm(ref), true)
+			}
 		}
 	})
 }

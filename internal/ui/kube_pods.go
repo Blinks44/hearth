@@ -479,7 +479,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 		}
 		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
 			count := ""
-			if read {
+			if read && cl.EventsErr == nil {
 				count = strconv.Itoa(len(events))
 			}
 			tabs := []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}}
@@ -494,14 +494,14 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			return
 		}
 		if s.tab == 1 {
-			eventList(c, events, read, 0)
+			workloadEventList(c, events, read, cl.EventsErr, 0)
 			return
 		}
 		if trouble {
 			var actions func()
 			if story.crashed != "" {
-				tail := cl.LastLineOf
-				if tail.Pod == p.Name && tail.Container == story.crashed && tail.Previous == !story.ended && cl.LastLine != "" {
+				tail := kube.Tail{Namespace: p.Namespace, Pod: p.Name, Container: story.crashed, Previous: !story.ended}
+				if cl.LastLineOf == tail && cl.LastLine != "" {
 					story.facts = append(story.facts, locales.KubeWhyLastLine(cl.LastLine))
 				}
 				label := locales.KubeLogsOpenPrevious()
@@ -552,7 +552,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 			}
 		})
 		ui.Box(c).Height(6)
-		eventList(c, events, read, 3)
+		workloadEventList(c, events, read, cl.EventsErr, 3)
 	})
 }
 
@@ -668,6 +668,14 @@ func factRows(c *ui.Context, facts [][2]string) {
 			clipped(c, f[1]).Font(FontMono).FontSize(12).Grow(1).MinWidth(0).Selectable()
 		})
 	}
+}
+
+func workloadEventList(c *ui.Context, events []kube.Event, read bool, err error, limit int) {
+	if read && err != nil {
+		ui.Column(c).Padding(4, 16).Children(func() { warningRow(c, err.Error()) })
+		return
+	}
+	eventList(c, events, read, limit)
 }
 
 // eventList lists an object's events, newest first, at most limit of

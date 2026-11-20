@@ -101,3 +101,36 @@ func TestRunForwardEndsWithPod(t *testing.T) {
 		}
 	})
 }
+
+func TestRunForwardChecksPodWhenKubectlExits(t *testing.T) {
+	t.Parallel()
+	disconnect := errors.New("kubectl lost connection")
+	running := run.Result{Stdout: []byte(`{"metadata":{"name":"web","uid":"web-1"},"status":{"phase":"Running"}}`)}
+	for _, tc := range []struct {
+		name string
+		pod  run.Result
+		want error
+	}{
+		{"deleted", run.Result{ExitCode: 1, Stderr: []byte(`Error from server (NotFound): pods "web" not found`)}, ErrForwardPodEnded},
+		{"replaced", run.Result{Stdout: []byte(`{"metadata":{"name":"web","uid":"web-2"},"status":{"phase":"Running"}}`)}, ErrForwardPodEnded},
+		{"still running", running, disconnect},
+		{"no access", run.Result{ExitCode: 1, Stderr: []byte(`Error from server (Forbidden): pods "web" is forbidden`)}, disconnect},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			f := Forward{Kubectl: "kubectl", Context: "kind-dev", Namespace: "shop", Kind: "pod", Name: "web", UID: "web-1", Local: 18080, Remote: 8080}
+			var runner run.Fake
+			get := []string{"kubectl", "--context=kind-dev", "get", "pod/web", "--namespace=shop", "--output=json", "--request-timeout=15s"}
+			runner.Set(running, nil, get...)
+			err := RunForward(t.Context(), &runner, func(_ context.Context, _ run.Cmd, line func(string)) error {
+				line("Forwarding from 127.0.0.1:18080 -> 8080")
+				return disconnect
+			}, nil, f, func(_ kube.ForwardPod) {
+				runner.Set(tc.pod, nil, get...)
+			})
+			if !errors.Is(err, tc.want) {
+				t.Fatalf("RunForward = %v, want %v", err, tc.want)
+			}
+		})
+	}
+}

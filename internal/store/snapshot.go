@@ -35,7 +35,7 @@ func SaveSnapshot(dir string, s inventory.Snapshot) error {
 	if err != nil {
 		return fmt.Errorf("encode snapshot: %w", err)
 	}
-	if err := writeFile(dir, snapshotFile, data); err != nil {
+	if err := WriteFile(dir, snapshotFile, data); err != nil {
 		return fmt.Errorf("save snapshot: %w", err)
 	}
 	return nil

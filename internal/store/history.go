@@ -31,7 +31,7 @@ func SaveHistory(dir string, entries []history.Entry) error {
 	if err != nil {
 		return fmt.Errorf("encode history: %w", err)
 	}
-	if err := writeFile(dir, historyFile, data); err != nil {
+	if err := WriteFile(dir, historyFile, data); err != nil {
 		return fmt.Errorf("save history: %w", err)
 	}
 	return nil

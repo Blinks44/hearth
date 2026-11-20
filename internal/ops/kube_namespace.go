@@ -37,18 +37,19 @@ func PlanKubeNamespaceCreate(ctx context.Context, r run.Runner, env sysenv.Env, 
 }
 
 func (m *KubeChange) applyNamespaceCreate(ctx context.Context, k resourceClient, checking func()) (string, error) {
+	ref := m.draft.Ref
 	data, err := k.run(ctx, m.input, m.command()...)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", locales.KubeResourceUnverified(), err)
+		return "", fmt.Errorf("%s: %w", locales.KubeResourceUnverified(), k.checkUnacknowledgedCreate(ctx, ref, err, checking))
 	}
 	created, err := decodeResource(data)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s: %w", locales.KubeResourceUnverified(), k.checkUnacknowledgedCreate(ctx, ref, err, checking))
 	}
-	ref := m.draft.Ref
 	ref.UID, _ = created.metadata()["uid"].(string)
 	if ref.UID == "" || !created.matches(ref) {
-		return "", errors.New(locales.KubeResourceIdentity())
+		cause := errors.New(locales.KubeResourceIdentity())
+		return "", k.checkUnacknowledgedCreate(ctx, ref, cause, checking)
 	}
 	checking()
 	check, cancel := context.WithTimeout(context.WithoutCancel(ctx), 22*time.Second)

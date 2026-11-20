@@ -454,6 +454,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			if item.Autoscaler != nil {
 				tabs = append(tabs, segment{locales.KubeAutoscalerMetrics(), strconv.Itoa(len(item.Autoscaler.Metrics))})
 			}
+			if item.Kind == kube.StatefulSets {
+				a.ownerLogsButton(c, a.resourceRef("StatefulSet", item.Namespace, item.Name, item.UID))
+			}
 			tabs = append(tabs, segment{locales.KubeTabEvents(), count}, segment{locales.KubeResourceYaml(), ""})
 			segments(c, "resource-tabs", &v.tab, tabs)
 		})

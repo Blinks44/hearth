@@ -46,7 +46,7 @@ func (a *App) openResourceLink(link resourceLink) {
 
 func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
 	link := s.resourceLink
-	if link.name == "" || link.kind != s.kind {
+	if link.name == "" || link.kind != s.kind || link.missing {
 		return
 	}
 	matches := func(namespace, name, uid string) bool {

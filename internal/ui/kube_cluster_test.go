@@ -96,7 +96,7 @@ func TestKubeCluster(t *testing.T) {
 	a := kubeApp()
 	var w clusterWatches
 	a.WatchCluster = w.watch
-	a.ListNamespaces = func(kube.Target, func([]string, error)) {}
+	a.ListNamespaces = func(kube.Target, func([]string, error)) func() { return func() {} }
 	plans := 0
 	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) { plans++ }
 	a.router.Push(kubePage)
@@ -202,6 +202,35 @@ func TestKubeCluster(t *testing.T) {
 	}
 }
 
+func TestKubeClusterTargetSwitchDropsPodReads(t *testing.T) {
+	for _, tc := range []struct {
+		name, context, namespace string
+		switchTarget             func(*App)
+	}{
+		{"context", "production", "prod", func(a *App) { a.router.Replace(kubeClusterPath("production")) }},
+		{"namespace", "kind-dev", "shop", func(a *App) { a.setNamespaces("kind-dev", []string{"shop"}) }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, tt, watches := openShop(t)
+			if err := tt.Click("checkout-api-7d9f8c5b-x2k4p"); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			if got := watches.running(); len(got) != 1 || got[0].Events.UID != "p1" || got[0].Tail.Container != "api" {
+				t.Fatalf("watches before switching = %+v", got)
+			}
+			tc.switchTarget(a)
+			tt.Frame()
+			tt.Advance(time.Second)
+			got := watches.running()
+			if len(got) != 1 || got[0].Context != tc.context || !slices.Equal(got[0].Namespaces, []string{tc.namespace}) ||
+				got[0].Events != (kube.Ref{}) || got[0].Tail != (kube.Tail{}) {
+				t.Fatalf("watches after switching = %+v", got)
+			}
+		})
+	}
+}
+
 // Namespaces chosen in the popover are read; all of them reads the whole
 // cluster.
 func TestKubeClusterNamespaces(t *testing.T) {
@@ -210,7 +239,10 @@ func TestKubeClusterNamespaces(t *testing.T) {
 	a.WatchCluster = w.watch
 	var listed []kube.Target
 	var answer func([]string, error)
-	a.ListNamespaces = func(t kube.Target, done func([]string, error)) { listed, answer = append(listed, t), done }
+	a.ListNamespaces = func(t kube.Target, done func([]string, error)) func() {
+		listed, answer = append(listed, t), done
+		return func() {}
+	}
 	a.router.Push(kubeClusterPath("kind-dev"))
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
@@ -242,10 +274,64 @@ func TestKubeClusterNamespaces(t *testing.T) {
 	// A cluster that lets no one list namespaces takes one typed.
 	a.cluster.namespaceOpen = false
 	tt.Frame()
+	a.cluster.namespaceOpen = true
 	a.listNamespaces("kind-dev")
 	answer(nil, &kube.Error{Access: detect.KubeAccess{State: detect.KubeForbidden}})
-	a.cluster.namespaceOpen = true
 	tt.Frame()
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "Could not list namespaces: no access. Type one instead.")
+}
+
+func TestKubeClusterNamespaceListLifetime(t *testing.T) {
+	a, tt, _ := openShop(t)
+	type request struct {
+		context string
+		done    func([]string, error)
+		stopped bool
+	}
+	var requests []*request
+	a.ListNamespaces = func(t kube.Target, done func([]string, error)) func() {
+		r := &request{context: t.Context, done: done}
+		requests = append(requests, r)
+		return func() { r.stopped = true }
+	}
+	open := func(label string) {
+		t.Helper()
+		if err := tt.Click(label); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+	}
+	open("default")
+	a.cluster.namespaceOpen = false
+	tt.Frame()
+	open("default")
+	if len(requests) != 2 || !requests[0].stopped {
+		t.Fatalf("requests after reopening = %+v", requests)
+	}
+	requests[0].done([]string{"old"}, nil)
+	requests[1].done([]string{"new"}, nil)
+	requests[0].done([]string{"obsolete"}, nil)
+	tt.Frame()
+	hasTexts(t, tt, "new")
+	if tt.HasText("old") || tt.HasText("obsolete") {
+		t.Fatal("a previous opening supplied namespaces")
+	}
+	a.router.Replace(kubeClusterPath("production"))
+	tt.Frame()
+	tt.Advance(time.Second)
+	if a.cluster.namespaceOpen || !requests[1].stopped {
+		t.Fatal("changing context left the old namespace picker open")
+	}
+	open("prod")
+	if len(requests) != 3 || requests[2].context != "production" {
+		t.Fatalf("no namespace request for the new context: %+v", requests)
+	}
+	a.router.Push(kubePage)
+	tt.Frame()
+	tt.Advance(time.Second)
+	requests[2].done([]string{"late"}, nil)
+	if !requests[2].stopped || len(a.cluster.nsNames) != 0 {
+		t.Fatal("the old page's pending read survived navigation")
+	}
 }
