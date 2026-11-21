@@ -32,6 +32,10 @@ func (a *App) canInstallTool(id string) bool {
 // installTool offers the plan that installs the catalog's tool id, with
 // what it needs first.
 func (a *App) installTool(id string) {
+	a.installToolPlan(id, a.proposeOrSay)
+}
+
+func (a *App) installToolPlan(id string, done func(ops.Plan, error)) {
 	s := a.installSetup(id)
 	title := setupTitle(id)
 	verify := ops.ToolFound(title, a.detect(id))
@@ -57,7 +61,7 @@ func (a *App) installTool(id string) {
 		}
 		p.Title, p.Why, p.Action, p.Verify = locales.PkgInstallTitle(title), installWhy(parts), locales.Install(), verify
 		return p, nil
-	}, a.proposeOrSay)
+	}, done)
 }
 
 // installWhy says how a tool installs, the last of parts: through what,

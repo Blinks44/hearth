@@ -199,9 +199,13 @@ func Read(dir string) Project {
 			p.AI = append(p.AI, name)
 		}
 	}
-	for _, name := range installDirs {
-		if info, err := os.Stat(filepath.Join(dir, name)); err == nil && info.IsDir() {
-			p.Installs = append(p.Installs, name)
+	for _, spec := range installSpecs {
+		info, err := os.Stat(filepath.Join(dir, spec.name))
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		if slices.Contains(installDirs, spec.name) || hasInstallManifest(dir, spec.manifests) {
+			p.Installs = append(p.Installs, spec.name)
 		}
 	}
 	p.Readme = findReadme(dir)

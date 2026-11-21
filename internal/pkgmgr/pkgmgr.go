@@ -108,6 +108,7 @@ func detectManager(ctx context.Context, r run.Runner, term sysenv.Env, s spec, p
 		if err == nil {
 			m.ReasonsKnown = reasons(&m, aptStates, pacmanDB)
 			recordedSizes(&m, dpkgStatus, pacmanDB)
+			orphans(ctx, r, env, &m)
 		}
 		if err != nil {
 			m.Warnings = append(m.Warnings, err.Error())

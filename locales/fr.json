@@ -2998,5 +2998,13 @@
   "foundAllAdded": "Tous les projets trouvés dans {folders} sont déjà ajoutés.",
   "projectDatabasesTitle": "Bases de données du projet",
   "projectDatabasePortBusy": "Port {port} occupé",
-  "openDatabases": "Bases de données"
+  "openDatabases": "Bases de données",
+  "problemsHideHidden": "Masquer les éléments masqués",
+  "problemsRestoreAll": "Tout rétablir",
+  "problemsRestore": "Rétablir",
+  "problemsGroupHidden": "Masqués",
+  "updatesCheckNow": "Vérifier les mises à jour",
+  "cleanupRecount": "Recalculer les tailles",
+  "cleanupDockerErr": "Impossible de lire l'espace disque de Docker : {reason}",
+  "setLoadedPreview": "{count, plural, one {Chargé depuis le jeu : # outil sélectionné. Vérifiez la sélection puis passez au plan.} many {Chargé depuis le jeu : # outils sélectionnés. Vérifiez la sélection puis passez au plan.} other {Chargé depuis le jeu : # outils sélectionnés. Vérifiez la sélection puis passez au plan.}}"
 }

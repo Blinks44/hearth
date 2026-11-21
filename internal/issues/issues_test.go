@@ -406,3 +406,77 @@ func TestInstructionDiffers(t *testing.T) {
 		t.Fatalf("issues: %+v", got)
 	}
 }
+
+func TestUnsupportedLanguages(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	lists := Lists{
+		Python: &versions.Python{Lines: []versions.Cycle{
+			{Cycle: "3.13", Latest: "3.13.9", End: time.Date(2029, 10, 31, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "3.8", Latest: "3.8.20", EOL: true},
+		}},
+		PHP: &versions.PHP{Lines: []versions.Cycle{
+			{Cycle: "8.4", Latest: "8.4.14", End: time.Date(2028, 12, 31, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "8.0", Latest: "8.0.30", End: time.Date(2023, 11, 26, 0, 0, 0, 0, time.UTC)},
+		}},
+		Ruby: &versions.Ruby{Lines: []versions.Cycle{
+			{Cycle: "3.4", Latest: "3.4.5", End: time.Date(2028, 3, 31, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "2.6", Latest: "2.6.10", End: time.Date(2022, 3, 31, 0, 0, 0, 0, time.UTC)},
+		}},
+		Java: &versions.Java{Lines: []versions.Cycle{
+			{Cycle: "21", Latest: "21.0.9", End: time.Date(2029, 9, 30, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "8", Latest: "8.0.432", End: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)},
+		}},
+		Rust: &versions.Rust{Lines: []versions.Cycle{
+			{Cycle: "1.90", Latest: "1.90.0", End: time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "1.75", Latest: "1.75.0", EOL: true},
+		}},
+		Dotnet: &versions.Dotnet{Lines: []versions.DotnetLine{
+			{Version: "8.0.404", Support: "lts", Phase: "active", End: "2026-11-10"},
+			{Version: "6.0.428", Support: "lts", Phase: "eol", End: "2024-11-12"},
+		}},
+	}
+	vm := func(tool, version, path string) inventory.Installation {
+		return inventory.Installation{
+			Tool: tool, Version: version, Path: path, OnPath: 1, InGUI: 1,
+			Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"},
+		}
+	}
+	for _, tc := range []struct {
+		name string
+		tool string
+		in   inventory.Installation
+		want bool
+	}{
+		{"python eol", "python", vm("python", "3.8.20", "/mise/py/3.8/bin/python"), true},
+		{"python supported", "python", vm("python", "3.13.5", "/mise/py/3.13/bin/python"), false},
+		{"php eol", "php", vm("php", "8.0.30", "/mise/php/8.0/bin/php"), true},
+		{"ruby eol mise", "ruby", vm("ruby", "2.6.10", "/mise/ruby/2.6/bin/ruby"), true},
+		{"ruby system macOS skipped", "ruby", inventory.Installation{
+			Tool: "ruby", Version: "2.6.10", Path: "/usr/bin/ruby", OnPath: 1, InGUI: 1,
+			Source: inventory.Source{Kind: inventory.KindSystem},
+		}, false},
+		{"java 1.8 eol", "java", vm("java", "1.8.0_392", "/mise/java/8/bin/java"), true},
+		{"java 21 supported", "java", vm("java", "21.0.9", "/mise/java/21/bin/java"), false},
+		{"rust stable eol", "rust", vm("rust", "1.75.0", "/rustup/1.75/bin/rustc"), true},
+		{"rust nightly skipped", "rust", inventory.Installation{
+			Tool: "rust", Version: "1.75.0-nightly", Path: "/rustup/nightly/bin/rustc", OnPath: 1, InGUI: 1,
+			Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "rustup"},
+			Rust:   &inventory.RustToolchain{Name: "nightly-aarch64-apple-darwin"},
+		}, false},
+		{"dotnet eol", "dotnet", vm("dotnet", "6.0.400", "/dotnet/6/dotnet"), true},
+		{"dotnet active", "dotnet", vm("dotnet", "8.0.100", "/dotnet/8/dotnet"), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			snap := &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: tc.tool, Installations: []inventory.Installation{tc.in}}}}
+			var found bool
+			for _, is := range FindWithLists(snap, nil, lists, now) {
+				if is.Kind == Unsupported {
+					found = true
+				}
+			}
+			if found != tc.want {
+				t.Errorf("Unsupported found=%v, want %v", found, tc.want)
+			}
+		})
+	}
+}

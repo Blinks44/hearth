@@ -346,3 +346,59 @@ func TestUpdatesStatusStates(t *testing.T) {
 		}
 	})
 }
+
+func TestUpdatesCheckNowAndJSAgents(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{{
+			Tool: "pnpm",
+			Installations: []inventory.Installation{{
+				Tool: "pnpm", Version: "9.12.0", Path: "/corepack/pnpm", OnPath: 1, Default: true,
+				Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "corepack"},
+			}},
+		}},
+		Agents: []inventory.Agent{{
+			ID: "claude",
+			Installations: []inventory.Installation{{
+				Tool: "claude", Version: "2.1.0",
+				Path:     "/Users/me/.npm-global/bin/claude",
+				RealPath: "/Users/me/.npm-global/lib/node_modules/@anthropic-ai/claude-code/cli.js",
+				OnPath:   1,
+				Source:   inventory.Source{Kind: inventory.KindPackageManager, Manager: "npm"},
+			}},
+		}},
+	}
+	a.JSVersions = &versions.JSManagers{Pnpm: versions.Latest{Version: "9.15.0"}}
+	a.AgentVersions = &versions.Agents{Latest: map[string]versions.Latest{"claude": {Version: "2.2.0"}}}
+	checked := 0
+	a.CheckUpdates = func() { checked++ }
+	a.router.Push(updatesPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	hasTexts(t, tt, "Check updates now", "pnpm", "9.12.0 → 9.15.0", "Claude Code", "2.1.0 → 2.2.0", "Update selected · 2")
+	screenshot(t, tt, "s13-04-updates-1280")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "s13-04-updates-1000")
+	if err := tt.Click("Check updates now"); err != nil {
+		t.Fatal(err)
+	}
+	if checked != 1 {
+		t.Fatalf("CheckUpdates called %d times, want 1", checked)
+	}
+	if err := tt.Click("Update selected · 2"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !a.op.open {
+		t.Fatalf("expected proposed update plan: %+v", a.op)
+	}
+	// Corepack update is a single step (no duplicate default step) + npm update for Claude Code.
+	if len(a.op.plan.Steps) != 2 ||
+		!slices.Equal(a.op.plan.Steps[0].Argv, []string{"corepack", "install", "-g", "pnpm@9.15.0"}) ||
+		!slices.Equal(a.op.plan.Steps[1].Argv, []string{"npm", "install", "--global", "--prefix", "/Users/me/.npm-global", "@anthropic-ai/claude-code@latest"}) {
+		t.Fatalf("steps = %+v", a.op.plan.Steps)
+	}
+}

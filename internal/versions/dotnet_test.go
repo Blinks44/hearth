@@ -1,6 +1,9 @@
 package versions
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestParseDotnet(t *testing.T) {
 	for _, tt := range []struct {
@@ -20,5 +23,24 @@ func TestParseDotnet(t *testing.T) {
 				t.Fatalf("%+v", got)
 			}
 		})
+	}
+}
+
+func TestDotnetLineAndEnded(t *testing.T) {
+	d := &Dotnet{Lines: []DotnetLine{
+		{Version: "9.0.200", Support: "sts", Phase: "active", End: "2026-11-10"},
+		{Version: "8.0.404", Support: "lts", Phase: "active", End: "2026-11-10"},
+		{Version: "6.0.428", Support: "lts", Phase: "eol", End: "2024-11-12"},
+	}}
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	if l, ok := d.Line("8.0.100"); !ok || l.Version != "8.0.404" || l.Ended(now) {
+		t.Errorf("8.0.100: %+v ok=%v", l, ok)
+	}
+	if l, ok := d.Line("6.0.100"); !ok || !l.Ended(now) {
+		t.Errorf("6.0.100 should be eol: %+v ok=%v", l, ok)
+	}
+	later := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+	if l, _ := d.Line("9.0.100"); !l.Ended(later) {
+		t.Errorf("9.0 should be ended after eol-date: %+v", l)
 	}
 }

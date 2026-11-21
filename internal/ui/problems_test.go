@@ -132,9 +132,66 @@ func TestProblemsHide(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
+	hasTexts(t, tt, "HIDDEN", "Apps outside the terminal do not see Node", "Hide hidden", "Restore all")
+	if err := tt.Click("Restore"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
 	if saved != 2 || len(a.Hidden) != 0 || !tt.HasText("Apps outside the terminal do not see Node") {
 		t.Errorf("saved %d, hidden %q: %q", saved, a.Hidden, tt.Texts())
 	}
+}
+
+func TestProblemsHideWarningAndSelectiveRestore(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = nodeSnapshot()
+	a.Projects = []projects.Project{testProjects()[1]}
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true, Sources: []inventory.PathSource{{File: filepath.Join(home, ".zshrc"), Line: 1}}}}
+	saved := 0
+	a.OnSettings = func() { saved++ }
+	tt := openProblems(t, a)
+	// Hide both the first Warning ("Node: 2 copies on PATH") and the next Warning ("Node differs outside the terminal").
+	hasTexts(t, tt, "Node: 2 copies on PATH", "legacy-admin needs Node 18", "PATH lists folders that do not exist")
+	if err := tt.Click("Hide"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(a.Hidden) != 1 || tt.HasText("Node: 2 copies on PATH") {
+		t.Fatalf("warning not hidden: hidden=%q texts=%q", a.Hidden, tt.Texts())
+	}
+	if err := tt.Click("Hide"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if saved != 2 || len(a.Hidden) != 2 {
+		t.Fatalf("expected 2 hidden issues, got saved=%d hidden=%q", saved, a.Hidden)
+	}
+	// Expand hidden list and restore only the first hidden item.
+	if err := tt.Click("Show hidden"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "2 hidden items", "HIDDEN", "Restore all")
+	screenshot(t, tt, "s13-04-problems-hidden-1280")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "s13-04-problems-hidden-1000")
+	if err := tt.Click("Restore"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(a.Hidden) != 1 {
+		t.Fatalf("expected 1 remaining hidden item after selective restore, got %q", a.Hidden)
+	}
+	// Restore all brings the remaining hidden item back.
+	if err := tt.Click("Restore all"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(a.Hidden) != 0 {
+		t.Fatalf("expected 0 hidden items after Restore all, got %q", a.Hidden)
+	}
+	hasTexts(t, tt, "Node: 2 copies on PATH", "legacy-admin needs Node 18", "PATH lists folders that do not exist")
 }
 
 func TestHiddenInfoExcludedFromOverviewAndSidebar(t *testing.T) {

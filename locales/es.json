@@ -2998,5 +2998,13 @@
   "foundAllAdded": "Todos los proyectos encontrados en {folders} ya están añadidos.",
   "projectDatabasesTitle": "Bases de datos del proyecto",
   "projectDatabasePortBusy": "Puerto {port} ocupado",
-  "openDatabases": "Bases de datos"
+  "openDatabases": "Bases de datos",
+  "problemsHideHidden": "Ocultar elementos ocultos",
+  "problemsRestoreAll": "Restaurar todo",
+  "problemsRestore": "Restaurar",
+  "problemsGroupHidden": "Ocultos",
+  "updatesCheckNow": "Buscar actualizaciones ahora",
+  "cleanupRecount": "Recalcular tamaños",
+  "cleanupDockerErr": "No se pudo leer el uso de disco de Docker: {reason}",
+  "setLoadedPreview": "{count, plural, one {Cargado desde el conjunto: # herramienta seleccionada. Revisa la selección y continúa al plan.} many {Cargado desde el conjunto: # herramientas seleccionadas. Revisa la selección y continúa al plan.} other {Cargado desde el conjunto: # herramientas seleccionadas. Revisa la selección y continúa al plan.}}"
 }

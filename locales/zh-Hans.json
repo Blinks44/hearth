@@ -2998,5 +2998,13 @@
   "foundAllAdded": "在 {folders} 中找到的项目均已添加。",
   "projectDatabasesTitle": "项目数据库",
   "projectDatabasePortBusy": "端口 {port} 被占用",
-  "openDatabases": "数据库"
+  "openDatabases": "数据库",
+  "problemsHideHidden": "收起已隐藏项",
+  "problemsRestoreAll": "全部恢复",
+  "problemsRestore": "恢复",
+  "problemsGroupHidden": "已隐藏",
+  "updatesCheckNow": "立即检查更新",
+  "cleanupRecount": "重新计算大小",
+  "cleanupDockerErr": "无法读取 Docker 磁盘占用：{reason}",
+  "setLoadedPreview": "{count, plural, other {已从配置集加载：已选择 # 个工具。请检查选择后继续查看计划。}}"
 }

@@ -15386,5 +15386,49 @@
   "openDatabases": "Databases",
   "@openDatabases": {
     "description": "Button opening the Databases section from a project detail card"
+  },
+  "problemsHideHidden": "Hide hidden",
+  "@problemsHideHidden": {
+    "description": "Issues page button collapsing the list of hidden issues."
+  },
+  "problemsRestoreAll": "Restore all",
+  "@problemsRestoreAll": {
+    "description": "Issues page button restoring every hidden issue."
+  },
+  "problemsRestore": "Restore",
+  "@problemsRestore": {
+    "description": "Issues page button restoring a single hidden issue."
+  },
+  "problemsGroupHidden": "Hidden",
+  "@problemsGroupHidden": {
+    "description": "Issues page group header for hidden issues."
+  },
+  "updatesCheckNow": "Check updates now",
+  "@updatesCheckNow": {
+    "description": "Updates page header button forcing an immediate update check."
+  },
+  "cleanupRecount": "Recalculate sizes",
+  "@cleanupRecount": {
+    "description": "Cleanup page header button recounting disk usage."
+  },
+  "cleanupDockerErr": "Could not read Docker disk usage: {reason}",
+  "@cleanupDockerErr": {
+    "description": "Cleanup page warning when Docker disk usage failed to read.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "daemon is not running"
+      }
+    }
+  },
+  "setLoadedPreview": "{count, plural, one {Loaded from set: # tool selected. Review the selection and continue to the plan.} other {Loaded from set: # tools selected. Review the selection and continue to the plan.}}",
+  "@setLoadedPreview": {
+    "description": "Install page step 1 banner after loading a hearth-set.json file.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   }
 }

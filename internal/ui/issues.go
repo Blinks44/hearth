@@ -258,6 +258,20 @@ func (a *App) issueFixPlan(is issues.Issue, found []issues.Issue, done func(ops.
 				return func() { a.nvmMovePlan(l, done) }
 			}
 		}
+	case issues.InstructionDiffers:
+		if a.BuildPlan == nil {
+			return nil
+		}
+		for _, p := range a.Projects {
+			if p.Dir == is.Project && p.Instructions.State() == "different" && !p.Instructions.Agents.Link && !p.Instructions.Claude.Link {
+				dir := p.Dir
+				return func() {
+					a.BuildPlan(func(_ sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.InstructionPlan(dir)
+					}, done)
+				}
+			}
+		}
 	case issues.ProjectMissing:
 		for _, p := range a.Projects {
 			if p.Dir != is.Project {
@@ -269,6 +283,10 @@ func (a *App) issueFixPlan(is issues.Issue, found []issues.Issue, done func(ops.
 				}
 				if plan, ok := a.projectInstall(st); ok {
 					return func() { done(plan, nil) }
+				}
+				if ch, ok := st.Unmet(); ok && ch.Installed == nil && ch.Want == "" && a.canInstallTool(st.Tool) {
+					tool := st.Tool
+					return func() { a.installToolPlan(tool, done) }
 				}
 			}
 		}

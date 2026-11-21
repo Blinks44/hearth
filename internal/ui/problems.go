@@ -95,13 +95,10 @@ func (a *App) problemsView(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("problems-filter"), &a.problemsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
-				if hidden > 0 && !a.firstScan() {
+				if len(hidden) > 0 && !a.firstScan() {
 					// Under the table, or the note that stands for it.
 					defer func() {
-						ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-							ui.Text(c, locales.ProblemsHidden(hidden)).FontSize(12).TextColor(t.TextMuted)
-							ui.Button(c.Key("problems-unhide"), locales.ProblemsShowHidden()).OnClick(func() { a.setHidden(nil) })
-						})
+						a.hiddenProblemsSection(c, hidden)
 					}()
 				}
 				switch {
@@ -156,6 +153,83 @@ func (a *App) setHidden(keys []string) {
 	}
 }
 
+func (a *App) hideIssue(key string) {
+	if slices.Contains(a.Hidden, key) {
+		return
+	}
+	a.setHidden(append(slices.Clone(a.Hidden), key))
+}
+
+func (a *App) unhideIssue(key string) {
+	next := slices.DeleteFunc(slices.Clone(a.Hidden), func(k string) bool { return k == key })
+	if len(next) == 0 {
+		next = nil
+		a.problemsShowHidden = false
+	}
+	a.setHidden(next)
+}
+
+func (a *App) hiddenProblemsSection(c *ui.Context, hidden []attentionItem) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c).Gap(10).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.ProblemsHidden(len(hidden))).FontSize(12).TextColor(t.TextMuted)
+			toggleLabel := locales.ProblemsShowHidden()
+			if a.problemsShowHidden {
+				toggleLabel = locales.ProblemsHideHidden()
+			}
+			ui.Button(c.Key("problems-toggle-hidden"), toggleLabel).Height(controlHeight).OnClick(func() {
+				a.problemsShowHidden = !a.problemsShowHidden
+			})
+			ui.Button(c.Key("problems-unhide"), locales.ProblemsRestoreAll()).Height(controlHeight).OnClick(func() {
+				a.problemsShowHidden = false
+				a.setHidden(nil)
+			})
+		})
+		if !a.problemsShowHidden {
+			return
+		}
+		ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+			ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, strings.ToUpper(locales.ProblemsGroupHidden())).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
+				ui.Text(c, strconv.Itoa(len(hidden))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+			})
+			for _, it := range hidden {
+				a.hiddenProblemRow(c, it)
+			}
+		})
+	})
+}
+
+func (a *App) hiddenProblemRow(c *ui.Context, it attentionItem) {
+	t := c.Theme()
+	pal := Colors(t)
+	icon := "triangle-alert"
+	if it.severity == issues.Info {
+		icon = "info"
+	}
+	ui.Row(c.Key("hidden-problem:"+it.key)).Gap(10).Padding(13, 14).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		ui.Box(c).Size(28, 28).Shrink(0).Radius(8).Center().Background(pal.Muted).Children(func() {
+			ui.Icon(c, Icon(icon)).Size(16, 16).TextColor(t.TextMuted)
+		})
+		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			ui.Text(c, it.title).FontSize(13.5).FontWeight(500).TextColor(t.TextMuted)
+			ui.Text(c, it.explain).FontSize(11.5).TextColor(pal.TextFaint)
+		})
+		ui.Row(c).Gap(6).Shrink(0).Children(func() {
+			ui.Button(c.Key("restore"), "").Height(22).Padding(0, 10).
+				Label(locales.ProblemsRestore()).OnClick(func() { a.unhideIssue(it.key) }).Children(func() {
+				ui.Text(c, locales.ProblemsRestore()).FontSize(12).SingleLine()
+			})
+			ui.Button(c.Key("open"), "").Height(22).Padding(0, 10).
+				Label(locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
+				ui.Text(c, locales.IssueOpen()).FontSize(12).SingleLine()
+			})
+		})
+	})
+}
+
 // problemRow is an issue in the table: its level, what it is and the whole
 // of why it matters, and on the right its fix and the page it lives on.
 func (a *App) problemRow(c *ui.Context, it attentionItem) {
@@ -180,12 +254,10 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 					ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
 				})
 			}
-			if it.severity == issues.Info {
-				ui.Button(c.Key("hide"), "").Height(22).Padding(0, 10).Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
-					OnClick(func() { a.setHidden(append(slices.Clone(a.Hidden), it.key)) }).Children(func() {
-					ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
-				})
-			}
+			ui.Button(c.Key("hide"), "").Height(22).Padding(0, 10).Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
+				OnClick(func() { a.hideIssue(it.key) }).Children(func() {
+				ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
+			})
 			ui.Button(c.Key("open"), "").Height(22).Padding(0, 10).
 				Label(locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
 				ui.Text(c, locales.IssueOpen()).FontSize(12).SingleLine()

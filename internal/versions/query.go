@@ -34,7 +34,7 @@ func (c *Cache) Query(ctx context.Context, name string, fetch func(context.Conte
 		}
 		return kept, m.Fetched, nil
 	}
-	if readErr == nil && now().Sub(m.Fetched) < age {
+	if !forced(ctx) && readErr == nil && now().Sub(m.Fetched) < age {
 		return kept, m.Fetched, nil
 	}
 	data, err := fetch(ctx)

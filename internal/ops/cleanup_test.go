@@ -332,3 +332,40 @@ func TestCleanupPruneKeepsUsedPackages(t *testing.T) {
 		t.Fatal("missing prune explanation")
 	}
 }
+
+func TestCleanupPlanOrphans(t *testing.T) {
+	s := &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "packages",
+		PackageManagers: []inventory.PackageManager{
+			{ID: "apt", Name: "APT", Path: "/usr/bin/apt", Packages: []inventory.SystemPackage{
+				{Name: "libfoo1", Dependency: true, Orphan: true, Size: 4_000_000},
+				{Name: "apt", Orphan: true, Size: 1_000_000},
+			}},
+			{ID: "pacman", Name: "Pacman", Path: "/usr/bin/pacman", Packages: []inventory.SystemPackage{
+				{Name: "pcre-old", Dependency: true, Orphan: true, Size: 2_000_000},
+			}},
+		},
+	}}}
+	aptCand := cleanup.Candidate{Kind: cleanup.UnneededPackage, ID: "libfoo1", Manager: "apt", Usage: inventory.Usage{Bytes: 4_000_000}, Known: true}
+	aptSelf := cleanup.Candidate{Kind: cleanup.UnneededPackage, ID: "apt", Manager: "apt", Usage: inventory.Usage{Bytes: 1_000_000}, Known: true}
+	pacCand := cleanup.Candidate{Kind: cleanup.UnneededPackage, ID: "pcre-old", Manager: "pacman", Usage: inventory.Usage{Bytes: 2_000_000}, Known: true}
+
+	if !Cleans(aptCand, s) || !Cleans(pacCand, s) {
+		t.Fatalf("expected Cleans true for apt/pacman orphans")
+	}
+	if Cleans(aptSelf, s) {
+		t.Fatal("must refuse to remove package manager itself")
+	}
+	p, err := CleanupPlan([]cleanup.Candidate{aptCand, pacCand}, nil, s, nil, DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Steps) != 2 ||
+		!slices.Equal(p.Steps[0].Argv, []string{"/usr/bin/dpkg", "--remove", "libfoo1"}) || !p.Steps[0].Admin ||
+		!slices.Equal(p.Steps[1].Argv, []string{"/usr/bin/pacman", "-R", "--noconfirm", "pcre-old"}) || !p.Steps[1].Admin {
+		t.Fatalf("steps = %+v", p.Steps)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.NoteAdmin() }) {
+		t.Errorf("missing admin note: %+v", p.Notes)
+	}
+}

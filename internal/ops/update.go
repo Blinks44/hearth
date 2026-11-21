@@ -108,7 +108,7 @@ func VersionUpdatePlan(u VersionUpdate, detect Detect) (p Plan, ok bool) {
 		return Plan{}, false
 	}
 	parts := []Plan{install}
-	if u.Default {
+	if u.Default && from.Manager != "corepack" {
 		def, ok := VersionPlan(VersionDefault, to, nil)
 		if !ok {
 			return Plan{}, false

@@ -37,9 +37,11 @@ type setupState struct {
 	choice map[string]bool
 	engine string // the Docker engine's package chosen; "" for the first
 	// filter is the choice's segment: all, not installed, installed;
-	// more are the groups whose every tool shows.
-	filter int
-	more   map[catalog.Group]bool
+	// query narrows the tools shown; more are the groups whose every tool shows.
+	filter    int
+	query     string
+	setNotice string
+	more      map[catalog.Group]bool
 	// wizard keeps the page the wizard once it opened as one, as the
 	// Overview's offer to set the computer up does.
 	wizard bool
@@ -320,12 +322,18 @@ func (a *App) setupView(c *ui.Context) {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).ChildExit(ui.Motion{X: -stepShift(s.back)}).Children(func() {
 				if catalogView {
 					have, total := a.setupCounts()
-					ui.Row(c).Children(func() {
+					toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
+					if narrow(c) {
+						toolbar.Wrap()
+					}
+					toolbar.Children(func() {
 						segments(c, "install-filter", &s.filter, []segment{
 							{locales.InstallFilterAll(), strconv.Itoa(total)},
 							{locales.InstallFilterMissing(), strconv.Itoa(total - have)},
 							{locales.InstallFilterHave(), strconv.Itoa(have)},
 						})
+						ui.Box(c).Grow(1).Height(1)
+						ui.SearchField(c.Key("install-filter-search"), &s.query).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 					})
 					a.setupChoiceView(c)
 					return
@@ -340,11 +348,19 @@ func (a *App) setupView(c *ui.Context) {
 						ui.Text(c, lead).FontSize(12).TextColor(t.TextMuted)
 					})
 				})
-				ui.Row(c).Children(func() {
+				stepper := ui.Row(c).Gap(10).AlignItems(ui.Center)
+				if narrow(c) {
+					stepper.Wrap()
+				}
+				stepper.Children(func() {
 					segments(c, "setup-steps", &s.tab, []segment{
 						{"1 " + locales.SetupSegChoice(), ""}, {"2 " + locales.SetupSegPlan(), ""},
 						{"3 " + locales.SetupSegInstall(), ""}, {"4 " + locales.SetupSegCheck(), ""},
 					})
+					if s.step == 0 {
+						ui.Box(c).Grow(1).Height(1)
+						ui.SearchField(c.Key("install-filter-search"), &s.query).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
+					}
 				})
 				if s.step >= 2 {
 					a.operationProgress(c.Key("setup-progress"), s.op)
@@ -454,6 +470,7 @@ func (a *App) setupButtons(c *ui.Context) {
 					for _, id := range chosen {
 						s.choice[id] = false
 					}
+					s.setNotice = ""
 				})
 				label = locales.SetupNextCount(len(chosen))
 			}
@@ -545,8 +562,8 @@ func (a *App) saveSet() {
 	})
 }
 
-// openSet reads a set from a file the user chooses and shows the plan
-// that installs it.
+// openSet reads a set from a file the user chooses and previews its
+// selection on step 1.
 func (a *App) openSet() {
 	a.OpenSet(func(path string, data []byte, err error) {
 		if path == "" {
@@ -569,26 +586,28 @@ func (a *App) openSet() {
 }
 
 // applySet switches on the tools of a set, and every other off, and
-// makes their plan; those that do not install here are left out, and
-// said so but for another system's base, as Homebrew on Windows.
+// stays on step 1 so the user can review and adjust the selection before
+// continuing to the plan; tools that do not install here are left out,
+// and said so but for another system's base, as Homebrew on Windows.
 func (a *App) applySet(tools []string) {
 	s := &a.setup
 	s.choice = map[string]bool{}
 	for _, e := range a.setupEntries() {
 		s.choice[e.ID] = slices.Contains(tools, e.ID)
 	}
+	s.step, s.diff, s.filter, s.query = 0, "", 0, ""
 	parts := a.setupInput().Parts()
 	planned := func(id string) bool {
 		return slices.ContainsFunc(parts, func(p ops.SetupPart) bool { return p.Tool == id })
 	}
 	var left []string
-	missing := false
+	selected := 0
 	for _, id := range tools {
 		e, _ := catalog.Find(id)
 		switch {
 		case a.setupHave(id):
 		case planned(id):
-			missing = true
+			selected++
 		case e.Group == catalog.Base:
 		default:
 			left = append(left, setupTitle(id))
@@ -597,13 +616,14 @@ func (a *App) applySet(tools []string) {
 	if len(left) > 0 {
 		a.notice = locales.SetNotHere(strings.Join(left, ", "))
 	}
-	if !missing {
+	if selected == 0 {
+		s.setNotice = ""
 		if len(left) == 0 {
 			a.notice = locales.SetAllHere()
 		}
 		return
 	}
-	a.setupNext()
+	s.setNotice = locales.SetLoadedPreview(selected)
 }
 
 // setupChoiceView is step 1: the languages and tools to switch on beside
@@ -612,6 +632,10 @@ func (a *App) applySet(tools []string) {
 func (a *App) setupChoiceView(c *ui.Context) {
 	in := a.setupInput()
 	wizard := a.setupWizard()
+	query := strings.ToLower(strings.TrimSpace(a.setup.query))
+	if a.setup.setNotice != "" {
+		toolNote(c, a.setup.setNotice)
+	}
 	shown := 0
 	card := func(title string, g catalog.Group) {
 		all := a.setupOffers(in, g)
@@ -622,9 +646,13 @@ func (a *App) setupChoiceView(c *ui.Context) {
 			if h {
 				have++
 			}
-			if wizard || a.setup.filter == 0 || (a.setup.filter == 2) == h {
-				rows = append(rows, e)
+			if !wizard && a.setup.filter != 0 && (a.setup.filter == 2) != h {
+				continue
 			}
+			if query != "" && !setupMatches(e, query) {
+				continue
+			}
+			rows = append(rows, e)
 		}
 		if len(rows) == 0 {
 			return
@@ -638,10 +666,10 @@ func (a *App) setupChoiceView(c *ui.Context) {
 		listCard(c, title, aside, func() {
 			var more []string
 			for _, e := range rows {
-				// The first of a group, what is there and what is chosen
-				// show; the rest wait behind "N more".
+				// The first of a group, what is there, what is chosen,
+				// and any search match show; the rest wait behind "N more".
 				_, system := a.setupSystemCopy(e.ID)
-				if a.setup.more[g] || g == catalog.Base || slices.IndexFunc(all, func(x catalog.Entry) bool { return x.ID == e.ID }) < setupFeatured || a.setupHave(e.ID) || system || a.setupChosen(e.ID) {
+				if query != "" || a.setup.more[g] || g == catalog.Base || slices.IndexFunc(all, func(x catalog.Entry) bool { return x.ID == e.ID }) < setupFeatured || a.setupHave(e.ID) || system || a.setupChosen(e.ID) {
 					a.setupRow(c, in, e)
 				} else {
 					more = append(more, setupTitle(e.ID))
@@ -680,15 +708,27 @@ func (a *App) setupChoiceView(c *ui.Context) {
 	columns(c, 12, func() {
 		card(locales.SetupLanguages(), catalog.Language)
 		card(locales.SetupTools(), catalog.Tool)
-		note()
+		if shown > 0 || query == "" {
+			note()
+		}
 	}, func() {
 		card(locales.SetupBase(), catalog.Base)
 		card(locales.SetupAgents(), catalog.Agent)
 		card(locales.SetupDatabases(), catalog.Database)
 		if shown == 0 {
-			cardNote(c, locales.InstallNothingHere())
+			if query != "" {
+				cardNote(c, locales.NothingMatches())
+			} else {
+				cardNote(c, locales.InstallNothingHere())
+			}
 		}
 	})
+}
+
+func setupMatches(e catalog.Entry, q string) bool {
+	return strings.Contains(strings.ToLower(setupTitle(e.ID)), q) ||
+		strings.Contains(strings.ToLower(e.ID), q) ||
+		strings.Contains(strings.ToLower(catalog.About(e.ID)), q)
 }
 
 // setupConflict is the tool there or chosen that e does not install

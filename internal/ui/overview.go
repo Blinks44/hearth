@@ -388,10 +388,23 @@ func (a *App) report(found []issues.Issue) string {
 	return report.Write(a.Snapshot, a.Projects, found, report.Info{Version: a.AppVersion, OS: a.OS, Home: a.Home})
 }
 
+// issueLists are the loaded release lists used to judge version support.
+func (a *App) issueLists() issues.Lists {
+	return issues.Lists{
+		Node:   a.NodeVersions,
+		Python: a.PythonVersions,
+		PHP:    a.PHPVersions,
+		Ruby:   a.RubyVersions,
+		Java:   a.JavaVersions,
+		Rust:   a.RustVersions,
+		Dotnet: a.DotnetVersions,
+	}
+}
+
 // issues are what needs attention in the last scan, warnings first; nil
 // before the first scan.
 func (a *App) issues(c *ui.Context) []issues.Issue {
-	found := issues.Find(a.Snapshot, a.Projects, a.NodeVersions, c.Now())
+	found := issues.FindWithLists(a.Snapshot, a.Projects, a.issueLists(), c.Now())
 	slices.SortStableFunc(found, func(x, y issues.Issue) int { return cmp.Compare(y.Severity, x.Severity) })
 	return found
 }
@@ -1021,15 +1034,17 @@ func issueKey(is issues.Issue) string {
 // several: each is the same advice about another skill or server.
 var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
 
-// visibleIssues returns the attention items with Info items hidden by
-// the user removed, along with how many were hidden.
-func (a *App) visibleIssues(found []issues.Issue) (items []attentionItem, hidden int) {
-	items = a.attentionItems(found)
-	total := len(items)
-	items = slices.DeleteFunc(items, func(it attentionItem) bool {
-		return it.severity == issues.Info && slices.Contains(a.Hidden, it.key)
-	})
-	return items, total - len(items)
+// visibleIssues splits the attention items into visible and hidden ones,
+// matching keys the user chose to hide (both warnings and info items).
+func (a *App) visibleIssues(found []issues.Issue) (visible, hidden []attentionItem) {
+	for _, it := range a.attentionItems(found) {
+		if slices.Contains(a.Hidden, it.key) {
+			hidden = append(hidden, it)
+		} else {
+			visible = append(visible, it)
+		}
+	}
+	return visible, hidden
 }
 
 // needAttention are the items that need attention: warnings, and what is

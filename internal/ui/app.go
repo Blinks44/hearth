@@ -143,11 +143,21 @@ type App struct {
 	MiseOutdated    *versions.Mise
 	MiseOutdatedErr string
 	MiseChecking    bool
+	// AgentVersions holds the latest npm releases for installed npm-packaged
+	// AI agents; nil until fetched.
+	AgentVersions    *versions.Agents
+	AgentVersionsErr string
+	AgentChecking    bool
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
 	// Window.Update; nil disables scanning.
 	OnScan func()
+	// CheckUpdates revalidates version lists, agent releases, mise outdated,
+	// and package-manager updates right now (bypassing cache MaxAge).
+	CheckUpdates func()
+	// RecountSizes recounts disk usage for Cleanup right now.
+	RecountSizes func()
 	// Projects are the folders the user added, as last read.
 	Projects []projects.Project
 	// ChooseFolder asks for a folder to add, and shows it with Offer
@@ -335,6 +345,7 @@ type App struct {
 	changesFilter      string // the What changed table's filter
 	problemsTab        int    // the Issues page's tab: all, then an area each
 	problemsFilter     string // the Issues table's filter
+	problemsShowHidden bool   // whether the hidden issues list is expanded on the Issues page
 	cleanupTab         int    // the Cleanup page's tab: all, then a group each
 	cleanupFilter      string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup

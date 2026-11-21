@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -19,6 +20,41 @@ type DotnetLine struct {
 	Support string
 	Phase   string
 	End     string
+}
+
+// Ended reports that the line's support has ended at now.
+func (l DotnetLine) Ended(now time.Time) bool {
+	if strings.EqualFold(l.Phase, "eol") {
+		return true
+	}
+	end := date(l.End)
+	return !end.IsZero() && !now.Before(end)
+}
+
+// Line returns the release line of version (matching major.minor) and whether
+// it is known.
+func (d *Dotnet) Line(version string) (DotnetLine, bool) {
+	if d == nil {
+		return DotnetLine{}, false
+	}
+	want := dotnetLineKey(version)
+	if want == "" {
+		return DotnetLine{}, false
+	}
+	for _, l := range d.Lines {
+		if dotnetLineKey(l.Version) == want {
+			return l, true
+		}
+	}
+	return DotnetLine{}, false
+}
+
+func dotnetLineKey(v string) string {
+	parts := strings.SplitN(v, ".", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[0] + "." + parts[1]
 }
 
 // FetchDotnet uses the shared cache for Microsoft's published release index.

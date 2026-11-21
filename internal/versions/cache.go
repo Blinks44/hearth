@@ -45,6 +45,20 @@ type meta struct {
 
 var defaultClient = &http.Client{Timeout: 30 * time.Second}
 
+type forceKey struct{}
+
+// WithForce returns a context that tells Cache.Get and Cache.Query to bypass
+// the MaxAge freshness window and revalidate now while still honoring offline
+// mode and ETag/fallback behavior.
+func WithForce(ctx context.Context) context.Context {
+	return context.WithValue(ctx, forceKey{}, true)
+}
+
+func forced(ctx context.Context) bool {
+	v, _ := ctx.Value(forceKey{}).(bool)
+	return v
+}
+
 // Get returns the file at url, kept in Dir as name, and when it was last
 // got from the server. Without a kept copy, a failed request is an error;
 // with one, the copy comes back and the error is dropped, as an offline
@@ -71,7 +85,7 @@ func (c *Cache) Get(ctx context.Context, name, url string) ([]byte, time.Time, e
 		}
 		return kept, m.Fetched, nil
 	}
-	if keptErr == nil && now().Sub(m.Fetched) < maxAge {
+	if !forced(ctx) && keptErr == nil && now().Sub(m.Fetched) < maxAge {
 		return kept, m.Fetched, nil
 	}
 

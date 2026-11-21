@@ -134,7 +134,7 @@ func (a *App) searchIndex() []searchResult {
 		}})
 	}
 	if a.Snapshot != nil {
-		found := issues.Find(a.Snapshot, a.Projects, a.NodeVersions, time.Now())
+		found := issues.FindWithLists(a.Snapshot, a.Projects, a.issueLists(), time.Now())
 		visible, _ := a.visibleIssues(found)
 		for _, it := range visible {
 			icon := "lucide/triangle-alert"

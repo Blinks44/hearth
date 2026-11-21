@@ -32,3 +32,27 @@ func TestNewestLTS(t *testing.T) {
 		t.Errorf("NewestLTS of nothing = %q", got)
 	}
 }
+
+func TestCycleEnded(t *testing.T) {
+	data := `[{"cycle":"3.14","releaseDate":"2025-10-07","eol":"2030-10-31","latest":"3.14.0","lts":false},
+		{"cycle":"3.9","releaseDate":"2020-10-05","eol":"2025-10-31","latest":"3.9.24","lts":false},
+		{"cycle":"3.8","releaseDate":"2019-10-14","eol":true,"latest":"3.8.20","lts":false}]`
+	lines, err := parseCycles("Python", []byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	c := &Cycles{Lines: lines}
+	if l, ok := c.Line("3.14.0"); !ok || l.Ended(now) {
+		t.Errorf("3.14 should be supported: %+v ok=%v", l, ok)
+	}
+	if l, ok := c.Line("3.9.24"); !ok || !l.Ended(now) {
+		t.Errorf("3.9 should be ended by date: %+v ok=%v", l, ok)
+	}
+	if l, ok := c.Line("3.8.20"); !ok || !l.EOL || !l.Ended(now) {
+		t.Errorf("3.8 should be ended by bool eol: %+v ok=%v", l, ok)
+	}
+	if got := c.Newest(now); got != "3.14.0" {
+		t.Errorf("Newest = %q, want 3.14.0", got)
+	}
+}

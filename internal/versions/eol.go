@@ -14,8 +14,15 @@ type Cycle struct {
 	// Release is when the line came out; End is when its security fixes
 	// end.
 	Release, End time.Time
+	// EOL reports that endoflife.date marks the line unsupported without a date.
+	EOL bool
 	// LTS reports a line with long-term support, as Java's 25.
 	LTS bool
+}
+
+// Ended reports that the line's security fixes have ended at now.
+func (c Cycle) Ended(now time.Time) bool {
+	return c.EOL || (!c.End.IsZero() && !now.Before(c.End))
 }
 
 // Cycles is what is known of a tool's release lines.
@@ -44,7 +51,7 @@ func fetchCycles(ctx context.Context, c *Cache, tool, file, url string) (Cycles,
 func parseCycles(tool string, data []byte) ([]Cycle, error) {
 	var cycles []struct {
 		Cycle, Latest, ReleaseDate string
-		EOL                        any // a date, or false
+		EOL                        any // a date, or a bool
 		LTS                        any // a bool, or the date support became long-term
 	}
 	if err := json.Unmarshal(data, &cycles); err != nil {
@@ -53,11 +60,12 @@ func parseCycles(tool string, data []byte) ([]Cycle, error) {
 	lines := make([]Cycle, 0, len(cycles))
 	for _, c := range cycles {
 		eol, _ := c.EOL.(string)
+		eolBool, _ := c.EOL.(bool)
 		lts, _ := c.LTS.(bool)
 		if since, ok := c.LTS.(string); ok {
 			lts = since != ""
 		}
-		lines = append(lines, Cycle{Cycle: c.Cycle, Latest: c.Latest, Release: date(c.ReleaseDate), End: date(eol), LTS: lts})
+		lines = append(lines, Cycle{Cycle: c.Cycle, Latest: c.Latest, Release: date(c.ReleaseDate), End: date(eol), EOL: eolBool, LTS: lts})
 	}
 	return lines, nil
 }
@@ -89,7 +97,7 @@ func (p *Cycles) newest(now time.Time, lts bool) string {
 		return ""
 	}
 	for _, l := range p.Lines {
-		if l.Latest != "" && (!lts || l.LTS) && (l.End.IsZero() || now.Before(l.End)) && (l.Release.IsZero() || !now.Before(l.Release)) {
+		if l.Latest != "" && (!lts || l.LTS) && !l.Ended(now) && (l.Release.IsZero() || !now.Before(l.Release)) {
 			return l.Latest
 		}
 	}

@@ -70,7 +70,7 @@ func Cleans(c cleanup.Candidate, s *inventory.Snapshot) bool {
 		st, _ := s.Tool("models")
 		return c.Manager == "LM Studio" || c.Manager == "Ollama" && st.Models != nil && st.Models.Ollama != nil && st.Models.Ollama.Path != ""
 	case cleanup.ExtraCopy, cleanup.UnneededPackage:
-		if _, _, ok := brewPackage(c, s); ok {
+		if _, _, ok := cleanupPackage(c, s); ok {
 			return true
 		}
 		_, ok := copyTargets(c, s)
@@ -117,13 +117,35 @@ func copyTargets(c cleanup.Candidate, s *inventory.Snapshot) (ts []VersionTarget
 	return ts, len(ts) > 0
 }
 
-// brewPackage is Homebrew and its package c is: a copy in its keg, or a
-// package nothing needs. brew uninstall removes every installed version
-// of a formula, so one with another version is not offered.
-func brewPackage(c cleanup.Candidate, s *inventory.Snapshot) (inventory.PackageManager, inventory.SystemPackage, bool) {
+// cleanupPackage is the system package manager and its package c is:
+// a Homebrew copy or unneeded formula, or an orphaned APT/Pacman package.
+// brew uninstall removes every installed version of a formula, so one
+// with another version is not offered.
+func cleanupPackage(c cleanup.Candidate, s *inventory.Snapshot) (inventory.PackageManager, inventory.SystemPackage, bool) {
+	if s == nil {
+		return inventory.PackageManager{}, inventory.SystemPackage{}, false
+	}
 	switch {
 	case c.Kind == cleanup.ExtraCopy && len(c.Paths) == 1 && len(c.Copies) > 0 && c.Copies[0].Source.Manager == "brew":
-	case c.Kind == cleanup.UnneededPackage && c.Manager == "brew":
+	case c.Kind == cleanup.UnneededPackage && c.Manager == "brew" && len(c.Paths) > 0:
+	case c.Kind == cleanup.UnneededPackage && (c.Manager == "apt" || c.Manager == "pacman"):
+		for _, st := range s.Tools {
+			for _, m := range st.PackageManagers {
+				if m.ID != c.Manager {
+					continue
+				}
+				i := slices.IndexFunc(m.Packages, func(p inventory.SystemPackage) bool { return p.Name == c.ID })
+				if i < 0 {
+					continue
+				}
+				pkg := m.Packages[i]
+				if !packageName.MatchString(packageRef(m.ID, pkg)) || slices.Contains(managerPackages[m.ID], strings.ToLower(pkg.Name)) {
+					return inventory.PackageManager{}, inventory.SystemPackage{}, false
+				}
+				return m, pkg, true
+			}
+		}
+		return inventory.PackageManager{}, inventory.SystemPackage{}, false
 	default:
 		return inventory.PackageManager{}, inventory.SystemPackage{}, false
 	}
@@ -158,16 +180,19 @@ var dockerPrune = map[cleanup.Kind][]string{
 // finds it, or as its folder; Docker's through its prune commands; a
 // copy through its version manager, or as its folder when the terminal
 // does not find the manager; Homebrew's packages through one brew
-// uninstall, first; Ollama's models through ollama rm; projects'
-// installs, extensions' old versions and LM Studio's models as their
-// folders. Candidates it does not remove are left out. Its check counts
-// again what they take and says what was freed; docker, nil without an
+// uninstall, first; APT and Pacman orphans through dpkg --remove and
+// pacman -R; Ollama's models through ollama rm; projects' installs,
+// extensions' old versions and LM Studio's models as their folders.
+// Candidates it does not remove are left out. Its check counts again
+// what they take and says what was freed; docker, nil without an
 // engine, asks Docker.
 func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, env sysenv.Env, target DockerTarget, docker CountDocker) (Plan, error) {
 	p := Plan{Title: locales.CleanupPlanTitle(), Why: locales.CleanupPlanWhy()}
 	var done []cleanup.Candidate
 	var brew inventory.PackageManager
-	var pkgs []inventory.SystemPackage
+	var brewPkgs []inventory.SystemPackage
+	var otherManagers []inventory.PackageManager
+	otherPkgs := map[string][]inventory.SystemPackage{}
 	removes, pub, versions, admin, installs, models, history, pnpm := false, false, false, false, false, false, false, false
 	for _, c := range cands {
 		if !Cleans(c, s) {
@@ -207,8 +232,16 @@ func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, e
 			}
 			models = true
 		default:
-			if m, pkg, ok := brewPackage(c, s); ok {
-				brew, pkgs = m, append(pkgs, pkg)
+			if m, pkg, ok := cleanupPackage(c, s); ok {
+				if m.ID == "brew" {
+					brew, brewPkgs = m, append(brewPkgs, pkg)
+				} else {
+					key := m.ID + "\x00" + m.Path
+					if _, seen := otherPkgs[key]; !seen {
+						otherManagers = append(otherManagers, m)
+					}
+					otherPkgs[key] = append(otherPkgs[key], pkg)
+				}
 				break
 			}
 			ts, _ := copyTargets(c, s)
@@ -234,15 +267,25 @@ func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, e
 		}
 		done = append(done, c)
 	}
-	if len(pkgs) > 0 {
+	if len(brewPkgs) > 0 {
 		// First: brew reads its API data from its cache, which a later
 		// step may remove, and would download it again.
-		steps, _ := packageSteps(PackageUninstall, brew, pkgs)
+		steps, _ := packageSteps(PackageUninstall, brew, brewPkgs)
 		for i := range steps {
 			steps[i].Timeout = cleanupTimeout
 		}
 		p.Steps = append(steps, p.Steps...)
 		p.Notes = append(p.Notes, Note{Title: locales.CleanupBrewNote(), Text: locales.CleanupBrewNoteText()})
+	}
+	for _, m := range otherManagers {
+		key := m.ID + "\x00" + m.Path
+		steps, notes := packageSteps(PackageUninstall, m, otherPkgs[key])
+		for i := range steps {
+			steps[i].Timeout = cleanupTimeout
+			admin = admin || steps[i].Admin
+		}
+		p.Steps = append(p.Steps, steps...)
+		p.Notes = append(p.Notes, notes...)
 	}
 	if len(p.Steps) == 0 {
 		return Plan{}, errors.New(locales.CleanupNothing())

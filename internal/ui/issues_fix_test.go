@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
@@ -103,6 +105,80 @@ func TestIssueFixes(t *testing.T) {
 					}
 				}
 				a.Snapshot.Skills = kept
+			},
+		},
+		{
+			name: "project instructions differ", kind: issues.InstructionDiffers,
+			setup: func(a *App) {
+				dir := t.TempDir()
+				if err := os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte("Use Go\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte("Use Python\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				a.Snapshot = &inventory.Snapshot{}
+				a.Projects = []projects.Project{{
+					Dir: dir,
+					Instructions: projects.Instructions{
+						Agents: projects.InstructionFile{Exists: true, Text: "Use Go"},
+						Claude: projects.InstructionFile{Exists: true, Text: "Use Python"},
+					},
+				}}
+				a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+					p, err := build(sysenv.Env{}, nil)
+					done(p, err)
+				}
+			},
+			plan: func(p ops.Plan) bool { return len(p.Steps) > 0 && p.Title != "" },
+			fixed: func(a *App) {
+				a.Projects[0].Instructions.Claude.Text = "@AGENTS.md"
+			},
+		},
+		{
+			name: "project needs a missing Python version", kind: issues.ProjectMissing,
+			setup: func(a *App) {
+				a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{
+					Tool:     "python",
+					Managers: []inventory.Manager{{Name: "mise", Version: "2026.1.0", Activated: true}},
+					Installations: []inventory.Installation{{
+						Tool: "python", Version: "3.13.2", Path: home + "/.local/share/mise/installs/python/3.13.2/bin/python",
+						OnPath: 1, InGUI: 1, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"},
+					}},
+				}}}
+				a.Projects = []projects.Project{{
+					Dir:          home + "/dev/ml",
+					Requirements: []projects.Requirement{{Tool: "python", Want: "3.12.7", File: ".python-version"}},
+				}}
+			},
+			plan: func(p ops.Plan) bool {
+				return len(p.Steps) > 0 && slices.Equal(p.Steps[0].Argv, []string{"mise", "install", "python@3.12.7"})
+			},
+			fixed: func(a *App) {
+				st := &a.Snapshot.Tools[0]
+				st.Installations = append(st.Installations, inventory.Installation{
+					Tool: "python", Version: "3.12.7", Path: home + "/.local/share/mise/installs/python/3.12.7/bin/python",
+					Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"},
+				})
+			},
+		},
+		{
+			name: "project needs a missing unversioned tool", kind: issues.ProjectMissing,
+			setup: func(a *App) {
+				a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "docker"}}}
+				a.Projects = []projects.Project{{
+					Dir:          home + "/dev/api",
+					Requirements: []projects.Requirement{{Tool: "docker", File: "Dockerfile"}},
+				}}
+				a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+					done(ops.Plan{Title: "Install Docker"}, nil)
+				}
+			},
+			plan: func(p ops.Plan) bool { return p.Title == "Install Docker" },
+			fixed: func(a *App) {
+				a.Snapshot.Tools[0].Installations = []inventory.Installation{{
+					Tool: "docker", Version: "28.0.0", Path: "/opt/homebrew/bin/docker", OnPath: 1, InGUI: 1,
+				}}
 			},
 		},
 	}

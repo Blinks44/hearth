@@ -99,3 +99,79 @@ func TestNodeModules(t *testing.T) {
 		t.Error("no error after ctx ended")
 	}
 }
+
+func TestInstallsEcosystems(t *testing.T) {
+	home := t.TempDir()
+	mkFile := func(rel string) {
+		t.Helper()
+		p := filepath.Join(home, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	mkDir := func(rel string) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Join(home, filepath.FromSlash(rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Valid project dependency/build folders next to their manifests.
+	mkFile("dev/py/pyproject.toml")
+	mkDir("dev/py/.venv")
+	mkFile("dev/rust/Cargo.toml")
+	mkDir("dev/rust/target")
+	mkFile("dev/java/pom.xml")
+	mkDir("dev/java/target")
+	mkFile("dev/php/composer.json")
+	mkDir("dev/php/vendor")
+	mkFile("dev/goapp/go.mod")
+	mkDir("dev/goapp/vendor")
+
+	// Loose folders without matching manifests must be ignored.
+	mkDir("dev/loose/.venv")
+	mkDir("dev/loose/target")
+	mkDir("dev/loose/vendor")
+	// Inside testdata or hidden dirs must be ignored.
+	mkFile("dev/rust/testdata/sample/Cargo.toml")
+	mkDir("dev/rust/testdata/sample/target")
+	mkFile(".cache/py/pyproject.toml")
+	mkDir(".cache/py/.venv")
+
+	got, err := Installs(context.Background(), home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pairs []string
+	for _, in := range got {
+		rel, _ := filepath.Rel(home, in.Project)
+		pairs = append(pairs, filepath.ToSlash(rel)+"/"+in.Name)
+		if in.Changed.IsZero() {
+			t.Errorf("%s/%s has zero Changed", rel, in.Name)
+		}
+	}
+	slices.Sort(pairs)
+	want := []string{
+		"dev/goapp/vendor",
+		"dev/java/target",
+		"dev/php/vendor",
+		"dev/py/.venv",
+		"dev/rust/target",
+	}
+	if !slices.Equal(pairs, want) {
+		t.Errorf("Installs = %q, want %q", pairs, want)
+	}
+
+	// Read records manifest-guarded target and vendor in Project.Installs.
+	rustProj := Read(filepath.Join(home, "dev", "rust"))
+	if !slices.Equal(rustProj.Installs, []string{"target"}) {
+		t.Errorf("rust Installs = %q, want [target]", rustProj.Installs)
+	}
+	looseProj := Read(filepath.Join(home, "dev", "loose"))
+	if !slices.Equal(looseProj.Installs, []string{".venv"}) {
+		t.Errorf("loose Installs = %q, want [.venv]", looseProj.Installs)
+	}
+}

@@ -3038,5 +3038,13 @@
   "foundAllAdded": "Все найденные проекты в {folders} уже добавлены.",
   "projectDatabasesTitle": "Базы данных проекта",
   "projectDatabasePortBusy": "Порт {port} занят",
-  "openDatabases": "Базы данных"
+  "openDatabases": "Базы данных",
+  "problemsHideHidden": "Свернуть скрытые",
+  "problemsRestoreAll": "Вернуть все",
+  "problemsRestore": "Вернуть",
+  "problemsGroupHidden": "Скрытые",
+  "updatesCheckNow": "Проверить обновления сейчас",
+  "cleanupRecount": "Пересчитать размеры",
+  "cleanupDockerErr": "Не удалось посчитать место Docker: {reason}",
+  "setLoadedPreview": "{count, plural, one {Загружено из набора: выбран # инструмент. Проверьте выбор и перейдите к плану.} few {Загружено из набора: выбрано # инструмента. Проверьте выбор и перейдите к плану.} many {Загружено из набора: выбрано # инструментов. Проверьте выбор и перейдите к плану.} other {Загружено из набора: выбрано # инструмента. Проверьте выбор и перейдите к плану.}}"
 }

@@ -47,8 +47,12 @@ func TestCache(t *testing.T) {
 	if body, fetched := get(); body != "list" || !fetched.Equal(first) || requests != 1 {
 		t.Errorf("within a day: %q at %v, %d requests", body, fetched, requests)
 	}
-	now = now.Add(2 * time.Hour)
-	if body, fetched := get(); body != "list" || !fetched.Equal(now) || requests != 2 || gotETag != `"v1"` {
+	// WithForce bypasses MaxAge and revalidates with the ETag immediately.
+	if body, fetched, err := c.Get(WithForce(context.Background()), "list.json", srv.URL); err != nil || string(body) != "list" || !fetched.Equal(now) || requests != 2 || gotETag != `"v1"` {
+		t.Errorf("forced: %q at %v, err=%v, %d requests, ETag %q", body, fetched, err, requests, gotETag)
+	}
+	now = now.Add(25 * time.Hour)
+	if body, fetched := get(); body != "list" || !fetched.Equal(now) || requests != 3 || gotETag != `"v1"` {
 		t.Errorf("a day on: %q at %v, %d requests, ETag %q", body, fetched, requests, gotETag)
 	}
 

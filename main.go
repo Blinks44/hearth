@@ -565,7 +565,7 @@ func main() {
 		if err != nil {
 			log.Print(err)
 		}
-		var fetchPackages func()
+		var fetchPackages func(force bool)
 		// Disk space is counted after each scan, apart from it: a walk of
 		// big caches takes long. Each result replaces the previous count.
 		var cancelSizes context.CancelFunc
@@ -630,7 +630,7 @@ func main() {
 				}
 				a.Snapshot, a.Scanning = &s, false
 				if fetchPackages != nil {
-					fetchPackages()
+					fetchPackages(false)
 				}
 				countSizes(&s)
 				list.watch.StartupFiles(append(detect.StartupFiles(scanner.Terminal(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
@@ -658,12 +658,16 @@ func main() {
 		}
 		var cancelVersions context.CancelFunc
 		var cancelPackages context.CancelFunc
-		fetchPackages = func() {
+		fetchPackages = func(force bool) {
 			if cancelPackages != nil {
 				cancelPackages()
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelPackages = cancel
+			if force {
+				ctx = versions.WithForce(ctx)
+			}
+			lists.SetOffline(!a.VersionLists)
 			// The last check's results stay until the new one's come: the
 			// packages and what they hold do not drop out meanwhile.
 			if a.PackageUpdates == nil {
@@ -671,6 +675,10 @@ func main() {
 			}
 			a.PackageChecks = map[string]bool{}
 			fetchMise(ctx, win, lists, a, scanner.Terminal())
+			fetchAgents(ctx, win, lists, a)
+			if a.Snapshot == nil {
+				return
+			}
 			st, ok := a.Snapshot.Tool("packages")
 			if !ok {
 				return
@@ -700,12 +708,15 @@ func main() {
 				}()
 			}
 		}
-		fetchVersions := func() {
+		fetchVersions := func(force bool) {
 			if cancelVersions != nil {
 				cancelVersions()
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelVersions = cancel
+			if force {
+				ctx = versions.WithForce(ctx)
+			}
 			lists.SetOffline(!a.VersionLists)
 			a.VersionChecks = map[string]bool{}
 			fetchList(ctx, win, lists, a.VersionChecks, "node", versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
@@ -718,6 +729,18 @@ func main() {
 			fetchList(ctx, win, lists, a.VersionChecks, "dotnet", versions.FetchDotnet, &a.DotnetVersions, &a.DotnetVersionsErr)
 			fetchList(ctx, win, lists, a.VersionChecks, "ruby", versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
 			fetchList(ctx, win, lists, a.VersionChecks, "java", versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
+		}
+		a.CheckUpdates = func() {
+			if !a.VersionLists || a.Snapshot == nil {
+				return
+			}
+			fetchVersions(true)
+			fetchPackages(true)
+		}
+		a.RecountSizes = func() {
+			if a.Snapshot != nil && !a.Counting {
+				countSizes(a.Snapshot)
+			}
 		}
 		a.CachePath = lists.Dir
 		win.OnClose(func(*mygo.CloseEvent) { a.ClearSecretClipboard() })
@@ -745,8 +768,8 @@ func main() {
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 			list.save()
 			if onlineChanged {
-				fetchVersions()
-				fetchPackages()
+				fetchVersions(false)
+				fetchPackages(false)
 			}
 		}
 		a.ClearCache = func() {
@@ -759,6 +782,7 @@ func main() {
 			}
 			a.PackageUpdates = nil
 			a.PackageChecks = nil
+			a.AgentChecking = false
 			a.SettingsNotice = ""
 			if cancelVersions != nil {
 				cancelVersions()
@@ -781,6 +805,7 @@ func main() {
 					a.DotnetVersions = nil
 					a.RubyVersions = nil
 					a.JavaVersions = nil
+					a.AgentVersions = nil
 					a.NodeVersionsErr = ""
 					a.JSVersionsErr = ""
 					a.BunLatestErr = ""
@@ -791,10 +816,11 @@ func main() {
 					a.DotnetVersionsErr = ""
 					a.RubyVersionsErr = ""
 					a.JavaVersionsErr = ""
+					a.AgentVersionsErr = ""
 					a.SettingsError = ""
 					a.SettingsNotice = locales.SettingsCleared()
-					fetchVersions()
-					fetchPackages()
+					fetchVersions(false)
+					fetchPackages(false)
 				})
 			}()
 		}
@@ -806,8 +832,9 @@ func main() {
 				cancelPackages()
 			}
 			a.PackageChecks = nil
+			a.AgentChecking = false
 			scanner.Start(scanned)
-			fetchVersions()
+			fetchVersions(false)
 			list.read()
 		}
 		// The last snapshot shows at once, until the scan replaces it.
@@ -852,7 +879,7 @@ func main() {
 		}
 		a.Scanning = true
 		scanner.Start(scanned)
-		fetchVersions()
+		fetchVersions(false)
 	})
 	err := mygo.App.Run()
 	stopForwards()
@@ -918,6 +945,64 @@ func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *
 			default:
 				a.MiseOutdated = &m
 				a.MiseOutdatedErr = ""
+			}
+		})
+	}()
+}
+
+// fetchAgents asks the npm registry in the background for the latest
+// release of installed npm-packaged AI agents and puts the answer in
+// a.AgentVersions on the UI thread; a failed ask keeps the previous one.
+func fetchAgents(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *hearthui.App) {
+	all := catalog.AgentNpmPackages()
+	pkgs := map[string]string{}
+	if a.Snapshot != nil {
+		for _, ag := range a.Snapshot.Agents {
+			if len(ag.Installations) == 0 {
+				continue
+			}
+			if pkg, ok := all[ag.ID]; ok {
+				pkgs[ag.ID] = pkg
+			}
+		}
+	}
+	if len(pkgs) == 0 {
+		a.AgentVersions = nil
+		a.AgentVersionsErr = ""
+		a.AgentChecking = false
+		return
+	}
+	a.AgentChecking = true
+	a.AgentVersionsErr = ""
+	go func() {
+		agents, err := versions.FetchAgents(ctx, lists, pkgs)
+		if err != nil && !errors.Is(err, versions.ErrOffline) && ctx.Err() == nil {
+			log.Print(err)
+		}
+		win.Update(func() {
+			if ctx.Err() != nil {
+				return
+			}
+			a.AgentChecking = false
+			switch {
+			case errors.Is(err, versions.ErrOffline):
+				a.AgentVersionsErr = locales.VersionsOffline()
+				if len(agents.Latest) > 0 {
+					a.AgentVersions = &agents
+				}
+			case err != nil:
+				a.AgentVersionsErr = err.Error()
+				if uerr, ok := errors.AsType[*url.Error](err); ok {
+					if u, perr := url.Parse(uerr.URL); perr == nil {
+						a.AgentVersionsErr = locales.VersionsUnreachable(u.Host)
+					}
+				}
+				if len(agents.Latest) > 0 {
+					a.AgentVersions = &agents
+				}
+			default:
+				a.AgentVersions = &agents
+				a.AgentVersionsErr = ""
 			}
 		})
 	}()

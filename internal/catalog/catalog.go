@@ -386,6 +386,24 @@ func Find(id string) (Entry, bool) {
 	return Tools[i], true
 }
 
+// AgentNpmPackages returns the npm package name for each catalog AI agent
+// distributed through npm, keyed by agent ID.
+func AgentNpmPackages() map[string]string {
+	out := map[string]string{}
+	for _, e := range Tools {
+		if e.Group != Agent {
+			continue
+		}
+		for _, m := range e.Methods {
+			if m.Manager == "npm" && m.Package != "" {
+				out[e.ID] = m.Package
+				break
+			}
+		}
+	}
+	return out
+}
+
 // About says what the tool id is for, to someone new to it; "" for a
 // tool not in the catalog.
 func About(id string) string {

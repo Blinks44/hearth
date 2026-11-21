@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/ui"
+
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -262,6 +264,16 @@ func TestInstallSet(t *testing.T) {
 		t.Fatalf("%v: %q", err, tb.Texts())
 	}
 	tb.Advance(time.Second)
+	// Opening a set previews the chosen tools on Step 1 before building the plan.
+	if b.setup.step != 0 {
+		t.Fatalf("step %d, want 0 preview: %q", b.setup.step, tb.Texts())
+	}
+	hasTexts(t, tb, "Loaded from set: 5 tools selected. Review the selection and continue to the plan.", "Cursor")
+	screenshot(t, tb, "s13-04-install-set-preview-1280")
+	if err := tb.Click("Next: plan"); err != nil {
+		t.Fatalf("%v: %q", err, tb.Texts())
+	}
+	tb.Advance(time.Second)
 	if b.setup.step != 1 {
 		t.Fatalf("step %d: %q", b.setup.step, tb.Texts())
 	}
@@ -295,6 +307,10 @@ func TestInstallSetElsewhere(t *testing.T) {
 	if a.notice != "Left out, as they do not install here: Redis" {
 		t.Errorf("notice %q", a.notice)
 	}
+	if a.setup.step != 0 || !a.setupChosen("git") || a.setupChosen("redis") {
+		t.Errorf("step=%d git=%v redis=%v", a.setup.step, a.setupChosen("git"), a.setupChosen("redis"))
+	}
+	a.setupNext()
 	if n := len(a.setup.parts); n == 0 || a.setup.parts[n-1].Tool != "git" {
 		t.Errorf("parts %+v", a.setup.parts)
 	}
@@ -303,4 +319,24 @@ func TestInstallSetElsewhere(t *testing.T) {
 	if a.planErr != "notes.json is not a set saved by Hearth." {
 		t.Errorf("error %q", a.planErr)
 	}
+}
+
+func TestInstallSearch(t *testing.T) {
+	a := installPageApp(t)
+	tt := newTester(a)
+	screenshot(t, tt, "s13-04-install-1280")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "s13-04-install-1000")
+	// Terraform is normally collapsed behind "N more", but search reveals it immediately.
+	a.setup.query = "terraform"
+	tt.Frame()
+	hasTexts(t, tt, "Terraform")
+	screenshot(t, tt, "s13-04-install-search-1280")
+	if tt.HasText("Python") {
+		t.Errorf("unrelated tool stayed visible during search: %q", tt.Texts())
+	}
+	a.setup.query = "no-such-tool-xyz"
+	tt.Frame()
+	hasTexts(t, tt, "Nothing matches")
 }

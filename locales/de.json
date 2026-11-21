@@ -2998,5 +2998,13 @@
   "foundAllAdded": "Alle gefundenen Projekte in {folders} sind bereits hinzugefügt.",
   "projectDatabasesTitle": "Projektdatenbanken",
   "projectDatabasePortBusy": "Port {port} belegt",
-  "openDatabases": "Datenbanken"
+  "openDatabases": "Datenbanken",
+  "problemsHideHidden": "Ausgeblendete verbergen",
+  "problemsRestoreAll": "Alle wiederherstellen",
+  "problemsRestore": "Wiederherstellen",
+  "problemsGroupHidden": "Ausgeblendet",
+  "updatesCheckNow": "Jetzt nach Updates suchen",
+  "cleanupRecount": "Größen neu berechnen",
+  "cleanupDockerErr": "Docker-Speicherbelegung konnte nicht gelesen werden: {reason}",
+  "setLoadedPreview": "{count, plural, one {Aus Set geladen: # Tool ausgewählt. Auswahl prüfen und zum Plan weitergehen.} other {Aus Set geladen: # Tools ausgewählt. Auswahl prüfen und zum Plan weitergehen.}}"
 }

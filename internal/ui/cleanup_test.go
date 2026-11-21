@@ -204,3 +204,34 @@ func TestCleanupCountingBanner(t *testing.T) {
 		t.Errorf("unexpected full-width waiting banner while candidates are already shown")
 	}
 }
+
+func TestCleanupRecountDockerErrAndReveal(t *testing.T) {
+	a := cleanupApp()
+	a.Sizes.DockerErr = "daemon not running"
+	recounted := 0
+	a.RecountSizes = func() { recounted++ }
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	sh := &fakeShell{}
+	a.Shell = sh
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	hasTexts(t, tt, "Recalculate sizes", "Could not read Docker disk usage: daemon not running")
+	screenshot(t, tt, "s13-04-cleanup-1280")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "s13-04-cleanup-1000")
+	if err := tt.Click("Recalculate sizes"); err != nil {
+		t.Fatal(err)
+	}
+	if recounted != 1 {
+		t.Fatalf("RecountSizes called %d times, want 1", recounted)
+	}
+	if err := tt.Click(showInFolder()); err != nil {
+		t.Fatalf("reveal button click failed: %v", err)
+	}
+	if len(sh.revealed) != 1 || sh.revealed[0] == "" {
+		t.Fatalf("expected ShowItemInFolder to be called with candidate path, got %q", sh.revealed)
+	}
+}

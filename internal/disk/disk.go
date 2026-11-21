@@ -125,7 +125,7 @@ func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Sn
 	}
 	home := sources.ManagerDirs(env).Home
 	if home != "" {
-		s.Installs, err = projects.NodeModules(ctx, home)
+		s.Installs, err = projects.Installs(ctx, home)
 		if err != nil {
 			return s, err
 		}

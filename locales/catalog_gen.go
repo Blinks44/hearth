@@ -40143,3 +40143,115 @@ func OpenDatabases() string { return In(i18n.Locale()).OpenDatabases() }
 func (msgs Messages) OpenDatabases() string {
 	return Catalog.Format(msgs.locale, "openDatabases", nil)
 }
+
+// ProblemsHideHidden says "Hide hidden"
+// in the language the app shows.
+//
+// Issues page button collapsing the list of hidden issues.
+func ProblemsHideHidden() string { return In(i18n.Locale()).ProblemsHideHidden() }
+
+// ProblemsHideHidden says "Hide hidden"
+// in the language of msgs.
+//
+// Issues page button collapsing the list of hidden issues.
+func (msgs Messages) ProblemsHideHidden() string {
+	return Catalog.Format(msgs.locale, "problemsHideHidden", nil)
+}
+
+// ProblemsRestoreAll says "Restore all"
+// in the language the app shows.
+//
+// Issues page button restoring every hidden issue.
+func ProblemsRestoreAll() string { return In(i18n.Locale()).ProblemsRestoreAll() }
+
+// ProblemsRestoreAll says "Restore all"
+// in the language of msgs.
+//
+// Issues page button restoring every hidden issue.
+func (msgs Messages) ProblemsRestoreAll() string {
+	return Catalog.Format(msgs.locale, "problemsRestoreAll", nil)
+}
+
+// ProblemsRestore says "Restore"
+// in the language the app shows.
+//
+// Issues page button restoring a single hidden issue.
+func ProblemsRestore() string { return In(i18n.Locale()).ProblemsRestore() }
+
+// ProblemsRestore says "Restore"
+// in the language of msgs.
+//
+// Issues page button restoring a single hidden issue.
+func (msgs Messages) ProblemsRestore() string {
+	return Catalog.Format(msgs.locale, "problemsRestore", nil)
+}
+
+// ProblemsGroupHidden says "Hidden"
+// in the language the app shows.
+//
+// Issues page group header for hidden issues.
+func ProblemsGroupHidden() string { return In(i18n.Locale()).ProblemsGroupHidden() }
+
+// ProblemsGroupHidden says "Hidden"
+// in the language of msgs.
+//
+// Issues page group header for hidden issues.
+func (msgs Messages) ProblemsGroupHidden() string {
+	return Catalog.Format(msgs.locale, "problemsGroupHidden", nil)
+}
+
+// UpdatesCheckNow says "Check updates now"
+// in the language the app shows.
+//
+// Updates page header button forcing an immediate update check.
+func UpdatesCheckNow() string { return In(i18n.Locale()).UpdatesCheckNow() }
+
+// UpdatesCheckNow says "Check updates now"
+// in the language of msgs.
+//
+// Updates page header button forcing an immediate update check.
+func (msgs Messages) UpdatesCheckNow() string {
+	return Catalog.Format(msgs.locale, "updatesCheckNow", nil)
+}
+
+// CleanupRecount says "Recalculate sizes"
+// in the language the app shows.
+//
+// Cleanup page header button recounting disk usage.
+func CleanupRecount() string { return In(i18n.Locale()).CleanupRecount() }
+
+// CleanupRecount says "Recalculate sizes"
+// in the language of msgs.
+//
+// Cleanup page header button recounting disk usage.
+func (msgs Messages) CleanupRecount() string {
+	return Catalog.Format(msgs.locale, "cleanupRecount", nil)
+}
+
+// CleanupDockerErr says "Could not read Docker disk usage: {reason}"
+// in the language the app shows.
+//
+// Cleanup page warning when Docker disk usage failed to read.
+func CleanupDockerErr(reason string) string { return In(i18n.Locale()).CleanupDockerErr(reason) }
+
+// CleanupDockerErr says "Could not read Docker disk usage: {reason}"
+// in the language of msgs.
+//
+// Cleanup page warning when Docker disk usage failed to read.
+func (msgs Messages) CleanupDockerErr(reason string) string {
+	return Catalog.Format(msgs.locale, "cleanupDockerErr", map[string]any{"reason": reason})
+}
+
+// SetLoadedPreview says "{count, plural, one {Loaded from set: # tool selected. Review the selection and continue to the plan.} other {Loaded …"
+// in the language the app shows.
+//
+// Install page step 1 banner after loading a hearth-set.json file.
+func SetLoadedPreview(count int) string { return In(i18n.Locale()).SetLoadedPreview(count) }
+
+// SetLoadedPreview says "{count, plural, one {Loaded from set: # tool selected. Review the selection and continue to the plan.} other {Loaded …"
+// in the language of msgs.
+//
+// Install page step 1 banner after loading a hearth-set.json file.
+func (msgs Messages) SetLoadedPreview(count int) string {
+	return Catalog.Format(msgs.locale, "setLoadedPreview", map[string]any{"count": count})
+}

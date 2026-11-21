@@ -382,18 +382,31 @@ func copies(s *inventory.Snapshot, ps []projects.Project, lines map[int]versions
 	}
 	for _, ts := range s.Tools {
 		for _, m := range ts.PackageManagers {
-			// Only a manager listing every package's dependencies knows
-			// that nothing needs one.
-			if m.ID != "brew" || !m.ReasonsKnown {
-				continue
-			}
-			for _, p := range m.Packages {
-				if !p.Dependency || p.Path == "" || kept[p.Path] || offered[p.Path] {
+			switch m.ID {
+			case "brew":
+				// Only a manager listing every package's dependencies knows
+				// that nothing needs one.
+				if !m.ReasonsKnown {
 					continue
 				}
-				u, ok := usage(append([]string{p.Path}, p.Artifacts...)...)
-				out = append(out, Candidate{Kind: UnneededPackage, ID: p.Name, Manager: m.ID, Paths: append([]string{p.Path}, p.Artifacts...),
-					Usage: u, Known: ok, Reasons: []Reason{NothingNeeds}})
+				for _, p := range m.Packages {
+					if !p.Dependency || p.Path == "" || kept[p.Path] || offered[p.Path] {
+						continue
+					}
+					u, ok := usage(append([]string{p.Path}, p.Artifacts...)...)
+					out = append(out, Candidate{Kind: UnneededPackage, ID: p.Name, Manager: m.ID, Paths: append([]string{p.Path}, p.Artifacts...),
+						Usage: u, Known: ok, Reasons: []Reason{NothingNeeds}})
+				}
+			case "apt", "pacman":
+				seen := map[string]bool{}
+				for _, p := range m.Packages {
+					if !p.Orphan || seen[p.Name] {
+						continue
+					}
+					seen[p.Name] = true
+					out = append(out, Candidate{Kind: UnneededPackage, ID: p.Name, Manager: m.ID,
+						Usage: inventory.Usage{Bytes: p.Size}, Known: p.Size > 0, Reasons: []Reason{NothingNeeds}})
+				}
 			}
 		}
 	}

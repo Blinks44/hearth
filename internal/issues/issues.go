@@ -123,6 +123,14 @@ type Issue struct {
 	Rule *inventory.AgentRule
 }
 
+// Lists are the release lists used to judge version support; a nil entry
+// means that tool's support dates are unknown.
+type Lists struct {
+	Node                          *versions.Node
+	Python, PHP, Ruby, Java, Rust *versions.Cycles
+	Dotnet                        *versions.Dotnet
+}
+
 // Find returns the issues of the scan s and the projects ps, the PATH's
 // and the tools' first, then the user's skills' and MCP servers', then the
 // projects'. node is what nodejs.org says
@@ -130,12 +138,18 @@ type Issue struct {
 // out of support, and lts/* meets nothing. now is the time support is
 // judged at.
 func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now time.Time) []Issue {
+	return FindWithLists(s, ps, Lists{Node: node}, now)
+}
+
+// FindWithLists is Find with release lists for Node, Python, PHP, Ruby,
+// Java, Rust, and .NET so out-of-support copies of any of them are reported.
+func FindWithLists(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) []Issue {
 	if s == nil {
 		return nil
 	}
 	var lines map[int]versions.Line
-	if node != nil {
-		lines = node.Lines
+	if l.Node != nil {
+		lines = l.Node.Lines
 	}
 	out := pathIssues(s)
 	out = append(out, DatabaseConflicts(s, ps)...)
@@ -163,9 +177,7 @@ func Find(s *inventory.Snapshot, ps []projects.Project, node *versions.Node, now
 		}
 		out = append(out, duplicate(ts)...)
 		out = append(out, guiDiffers(ts)...)
-		if ts.Tool == "node" {
-			out = append(out, unsupported(ts, lines, now)...)
-		}
+		out = append(out, unsupported(ts, l, now)...)
 	}
 	out = append(out, extraVersions(s, ps, lines, now)...)
 	out = append(out, skillIssues(s.Skills)...)
@@ -367,13 +379,13 @@ func guiDiffers(ts inventory.ToolState) []Issue {
 }
 
 // unsupported is an issue when copies are of release lines whose support
-// ended; a warning when the terminal runs one of them.
-func unsupported(ts inventory.ToolState, lines map[int]versions.Line, now time.Time) []Issue {
+// ended; a warning when the terminal runs one of them. Copies required by
+// the OS (such as macOS's /usr/bin/ruby) are skipped.
+func unsupported(ts inventory.ToolState, l Lists, now time.Time) []Issue {
 	term := inventory.TerminalCopy(ts.Installations)
 	is := Issue{Kind: Unsupported, Severity: Info, Tool: ts.Tool}
 	for i, in := range ts.Installations {
-		l, ok := lines[versions.Major(in.Version)]
-		if in.Source.Shim || !ok || !l.Ended(now) {
+		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || !versionEnded(ts.Tool, in, l, now) {
 			continue
 		}
 		is.Copies = append(is.Copies, in)
@@ -385,6 +397,49 @@ func unsupported(ts inventory.ToolState, lines map[int]versions.Line, now time.T
 		return nil
 	}
 	return []Issue{is}
+}
+
+func versionEnded(tool string, in inventory.Installation, l Lists, now time.Time) bool {
+	if in.Version == "" {
+		return false
+	}
+	switch tool {
+	case "node":
+		if l.Node == nil {
+			return false
+		}
+		line, ok := l.Node.Lines[versions.Major(in.Version)]
+		return ok && line.Ended(now)
+	case "dotnet":
+		dl, ok := l.Dotnet.Line(in.Version)
+		return ok && dl.Ended(now)
+	case "python", "php", "ruby", "java", "rust":
+		var cycles *versions.Cycles
+		switch tool {
+		case "python":
+			cycles = l.Python
+		case "php":
+			cycles = l.PHP
+		case "ruby":
+			cycles = l.Ruby
+		case "java":
+			cycles = l.Java
+		case "rust":
+			if strings.Contains(in.Version, "-") || in.Rust != nil && (strings.HasPrefix(in.Rust.Name, "nightly") || strings.HasPrefix(in.Rust.Name, "beta")) {
+				return false
+			}
+			cycles = l.Rust
+		}
+		if cycles == nil {
+			return false
+		}
+		c, ok := cycles.Line(in.Version)
+		if !ok && tool == "java" && strings.HasPrefix(in.Version, "1.") {
+			c, ok = cycles.Line(strings.TrimPrefix(in.Version, "1."))
+		}
+		return ok && c.Ended(now)
+	}
+	return false
 }
 
 // skillIssues are the copies by one name among one scope's skills. One

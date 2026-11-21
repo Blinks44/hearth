@@ -47,8 +47,8 @@ type updateGroup struct {
 // they last came.
 func (a *App) updateLists() updates.Lists {
 	return updates.Lists{
-		Node: a.NodeVersions, Go: a.GoVersions, Python: a.PythonVersions, PHP: a.PHPVersions, Ruby: a.RubyVersions,
-		Java: a.JavaVersions, Rust: a.RustVersions, Dotnet: a.DotnetVersions, Bun: a.BunLatest, Mise: a.MiseOutdated,
+		Node: a.NodeVersions, JS: a.JSVersions, Go: a.GoVersions, Python: a.PythonVersions, PHP: a.PHPVersions, Ruby: a.RubyVersions,
+		Java: a.JavaVersions, Rust: a.RustVersions, Dotnet: a.DotnetVersions, Bun: a.BunLatest, Agents: a.AgentVersions, Mise: a.MiseOutdated,
 	}
 }
 
@@ -77,14 +77,18 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 	lines := updateGroup{title: locales.UpdatesGroupLines(), versions: true}
 	managers := a.managersChecked()
 	for _, u := range updates.Find(a.Snapshot, a.Projects, a.updateLists(), c.Now()) {
-		r := updateRow{key: "version\x00" + u.Tool + "\x00" + u.Copy.Path + "\x00" + u.Version, version: &u, to: u.Version}
+		prefix, title := "version", toolName(u.Tool)
+		if u.Agent {
+			prefix, title = "agent", agentTitle(u.Tool)
+		}
+		r := updateRow{key: prefix + "\x00" + u.Tool + "\x00" + u.Copy.Path + "\x00" + u.Version, version: &u, to: u.Version}
 		_, r.choosable = a.updatePlan(u)
 		if u.Kind == updates.Patch {
 			// Its package's row updates it, to the version its manager has.
 			if updates.Held(u.Copy, managers) {
 				continue
 			}
-			r.title, r.from, r.offered = toolName(u.Tool), u.Copy.Version, r.choosable
+			r.title, r.from, r.offered = title, u.Copy.Version, r.choosable
 			r.caption = sourceName(u.Copy.Source) + " · " + locales.UpdatesPatchCaption()
 			switch {
 			case r.choosable:
@@ -99,7 +103,7 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 			patches.rows = append(patches.rows, r)
 			continue
 		}
-		r.title = toolName(u.Tool)
+		r.title = title
 		if u.LTS != "" {
 			r.title += " LTS"
 		}
@@ -196,7 +200,10 @@ func (a *App) updatesView(c *ui.Context, p page) {
 			}
 		}
 		nv, np := updateCounts(groups)
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.updateButton(c, chosen) }})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.checkUpdatesButton(c)
+			a.updateButton(c, chosen)
+		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
@@ -343,22 +350,67 @@ func (a *App) updateGroupCheckbox(c *ui.Context, title string, rows []updateRow)
 	}
 }
 
-// updatesChecked is when the package managers' updates were checked, the
-// oldest of them; zero when none was.
+// updatesChecked is when updates were last checked, the oldest of the
+// package managers' checks, or of the loaded version lists when no package
+// manager has a recorded check time; zero when none was.
 func (a *App) updatesChecked() time.Time {
 	var oldest time.Time
-	for _, m := range a.managersChecked() {
-		if !m.UpdatesFetched.IsZero() && (oldest.IsZero() || m.UpdatesFetched.Before(oldest)) {
-			oldest = m.UpdatesFetched
+	add := func(t time.Time) {
+		if !t.IsZero() && (oldest.IsZero() || t.Before(oldest)) {
+			oldest = t
 		}
+	}
+	for _, m := range a.managersChecked() {
+		add(m.UpdatesFetched)
+	}
+	if !oldest.IsZero() {
+		return oldest
+	}
+	if a.NodeVersions != nil {
+		add(a.NodeVersions.Fetched)
+	}
+	if a.JSVersions != nil {
+		add(a.JSVersions.Npm.Fetched)
+		add(a.JSVersions.Pnpm.Fetched)
+		add(a.JSVersions.Yarn.Fetched)
+	}
+	if a.BunLatest != nil {
+		add(a.BunLatest.Fetched)
+	}
+	if a.GoVersions != nil {
+		add(a.GoVersions.Fetched)
+	}
+	if a.PythonVersions != nil {
+		add(a.PythonVersions.Fetched)
+	}
+	if a.PHPVersions != nil {
+		add(a.PHPVersions.Fetched)
+	}
+	if a.RustVersions != nil {
+		add(a.RustVersions.Fetched)
+	}
+	if a.DotnetVersions != nil {
+		add(a.DotnetVersions.Fetched)
+	}
+	if a.RubyVersions != nil {
+		add(a.RubyVersions.Fetched)
+	}
+	if a.JavaVersions != nil {
+		add(a.JavaVersions.Fetched)
+	}
+	if a.AgentVersions != nil {
+		add(a.AgentVersions.Fetched)
+	}
+	if a.MiseOutdated != nil {
+		add(a.MiseOutdated.Fetched)
 	}
 	return oldest
 }
 
-// updatesChecking reports whether any package manager, version list, or
-// mise outdated check is currently running.
+// updatesChecking reports whether any package manager, version list, agent,
+// or mise outdated check is currently running.
 func (a *App) updatesChecking() bool {
-	if a.MiseChecking {
+	if a.MiseChecking || a.AgentChecking {
 		return true
 	}
 	for _, busy := range a.PackageChecks {
@@ -374,7 +426,7 @@ func (a *App) updatesChecking() bool {
 	return false
 }
 
-// updateErrors lists update-check failures for installed tools, mise,
+// updateErrors lists update-check failures for installed tools, agents, mise,
 // and package managers. Offline notices are omitted when VersionLists
 // is turned off, because the page already shows a dedicated offline note.
 func (a *App) updateErrors() []string {
@@ -405,6 +457,22 @@ func (a *App) updateErrors() []string {
 	for _, v := range versionErrs {
 		if st, ok := a.Snapshot.Tool(v.tool); ok && len(listed(st.Installations)) > 0 {
 			add(v.title, v.err)
+		}
+	}
+	if a.JSVersionsErr != "" {
+		for _, tool := range []string{"npm", "pnpm", "yarn"} {
+			if st, ok := a.Snapshot.Tool(tool); ok && len(listed(st.Installations)) > 0 {
+				add("npm / pnpm / Yarn", a.JSVersionsErr)
+				break
+			}
+		}
+	}
+	if a.AgentVersionsErr != "" {
+		for _, ag := range a.Snapshot.Agents {
+			if len(listed(ag.Installations)) > 0 {
+				add(locales.AgentsTitle(), a.AgentVersionsErr)
+				break
+			}
 		}
 	}
 	if a.MiseOutdatedErr != "" {
@@ -452,6 +520,19 @@ func (a *App) updateRowView(c *ui.Context, r updateRow) {
 	})
 }
 
+// checkUpdatesButton revalidates version lists, agent releases, and
+// package-manager updates right now, bypassing the daily cache.
+func (a *App) checkUpdatesButton(c *ui.Context) {
+	ui.Button(c.Key("updates-check"), locales.UpdatesCheckNow()).
+		Height(controlHeight).
+		Disabled(a.CheckUpdates == nil || a.updatesChecking() || !a.VersionLists || a.Snapshot == nil).
+		OnClick(func() {
+			if a.CheckUpdates != nil {
+				a.CheckUpdates()
+			}
+		})
+}
+
 // updateButton is the header's button that updates the chosen rows, each
 // through the manager that keeps it, in one plan: the versions first, then
 // the packages by manager; nothing when none is chosen.
@@ -459,7 +540,7 @@ func (a *App) updateButton(c *ui.Context, chosen []updateRow) {
 	if len(chosen) == 0 {
 		return
 	}
-	ui.PrimaryButton(c.Key("updates-run"), locales.UpdatesRunChosen(len(chosen))).OnClick(func() {
+	ui.PrimaryButton(c.Key("updates-run"), locales.UpdatesRunChosen(len(chosen))).Height(controlHeight).OnClick(func() {
 		var plans []ops.Plan
 		var managers []inventory.PackageManager
 		byManager := map[string][]inventory.SystemPackage{}
@@ -529,6 +610,9 @@ func (a *App) updatesEnd(c *ui.Context) func() {
 // versions install through, or mise when there is none (newMise says it
 // is set up first); false when Hearth cannot.
 func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
+	if u.Agent {
+		return ops.AgentNpmUpdatePlan(u.Tool, agentTitle(u.Tool), u.Copy, a.findAgent(u.Tool))
+	}
 	if u.Mise != "" {
 		detect := a.detectMiseTool(u.Tool)
 		if u.Kind == updates.NewLine {
@@ -538,6 +622,9 @@ func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
 		return ops.VersionUpdatePlan(ops.VersionUpdate{From: from, To: ops.VersionTarget{Version: u.Version}, Mise: u.Mise}, detect)
 	}
 	if u.Kind == updates.NewLine {
+		if u.Tool == "npm" {
+			return ops.Plan{}, false
+		}
 		st, _ := a.toolState(u.Tool)
 		manager := a.installManager(st)
 		version, label := u.Version, versionLabel(u.Tool, u.Version)
@@ -586,7 +673,7 @@ func (a *App) updatePlan(u updates.Update) (ops.Plan, bool) {
 // newMise reports that u's plan needs mise set up first: a new line of a
 // tool no version manager keeps yet.
 func (a *App) newMise(u updates.Update) bool {
-	if u.Kind != updates.NewLine || u.Mise != "" {
+	if u.Agent || u.Kind != updates.NewLine || u.Mise != "" || u.Tool == "npm" || u.Tool == "yarn" {
 		return false
 	}
 	st, _ := a.toolState(u.Tool)

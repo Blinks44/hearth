@@ -22,7 +22,7 @@ func (a *App) RequestFix(q proposals.Request) error {
 	if a.Scanning {
 		return errors.New("hearth is scanning; wait and call get_issues again")
 	}
-	found := issues.Find(a.Snapshot, a.Projects, a.NodeVersions, time.Now())
+	found := issues.FindWithLists(a.Snapshot, a.Projects, a.issueLists(), time.Now())
 	for _, is := range found {
 		if issues.ID(is) != q.IssueID {
 			continue

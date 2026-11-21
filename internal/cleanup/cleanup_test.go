@@ -233,3 +233,28 @@ func TestHistory(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 }
+
+func TestOrphanPackages(t *testing.T) {
+	s := &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "packages",
+		PackageManagers: []inventory.PackageManager{
+			{ID: "apt", Name: "APT", Path: "/usr/bin/apt", Packages: []inventory.SystemPackage{
+				{Name: "git", Size: 10_000_000},
+				{Name: "libfoo1", Dependency: true, Orphan: true, Size: 4_000_000},
+			}},
+			{ID: "pacman", Name: "Pacman", Path: "/usr/bin/pacman", Packages: []inventory.SystemPackage{
+				{Name: "pcre-old", Dependency: true, Orphan: true, Size: 2_000_000},
+			}},
+		},
+	}}}
+	var got []Candidate
+	for _, c := range Find(s, nil, nil, nil, now) {
+		if c.Kind == UnneededPackage {
+			got = append(got, c)
+		}
+	}
+	if len(got) != 2 || got[0].ID != "libfoo1" || got[0].Manager != "apt" || got[0].Frees() != 4_000_000 || got[0].Selected || !got[0].Known ||
+		got[1].ID != "pcre-old" || got[1].Manager != "pacman" || got[1].Frees() != 2_000_000 || got[1].Selected {
+		t.Fatalf("orphans = %+v", got)
+	}
+}

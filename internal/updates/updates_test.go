@@ -345,6 +345,7 @@ func TestHeld(t *testing.T) {
 		want bool
 	}{
 		{"brew's", copyOf("node", "22.12.0", inventory.KindPackageManager, "brew"), true},
+		{"npm's", copyOf("claude", "2.1.0", inventory.KindPackageManager, "npm"), false},
 		{"WinGet's Go", installer("go", "1.25.4"), true},
 		{"WinGet's .NET", installer("dotnet", "10.0.100"), true},
 		{"another version", installer("go", "1.24.0"), false},
@@ -355,6 +356,46 @@ func TestHeld(t *testing.T) {
 		if got := Held(tc.in, winget); got != tc.want {
 			t.Errorf("%s: Held() = %v, want %v", tc.name, got, tc.want)
 		}
+	}
+}
+
+func TestFindJSAndAgents(t *testing.T) {
+	npmTerm := inventory.Installation{Tool: "npm", Version: "10.8.2", Path: "/node22/bin/npm", OnPath: 1, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
+	npmInactive := inventory.Installation{Tool: "npm", Version: "9.0.0", Path: "/node18/bin/npm", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}}
+	pnpm := inventory.Installation{Tool: "pnpm", Version: "9.12.0", Path: "/corepack/pnpm", OnPath: 1, Default: true, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "corepack"}}
+	claudeNpm := inventory.Installation{Tool: "claude", Version: "2.1.0", Path: "/prefix/bin/claude", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "npm"}}
+	codexCurrent := inventory.Installation{Tool: "codex", Version: "0.42.0", Path: "/prefix/bin/codex", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "npm"}}
+
+	s := &inventory.Snapshot{
+		Tools: []inventory.ToolState{
+			{Tool: "npm", Installations: []inventory.Installation{npmTerm, npmInactive}},
+			{Tool: "pnpm", Installations: []inventory.Installation{pnpm}},
+		},
+		Agents: []inventory.Agent{
+			{ID: "claude", Installations: []inventory.Installation{claudeNpm}},
+			{ID: "codex", Installations: []inventory.Installation{codexCurrent}},
+		},
+	}
+	l := Lists{
+		JS: &versions.JSManagers{
+			Npm:  versions.Latest{Version: "10.9.2"},
+			Pnpm: versions.Latest{Version: "10.2.0"},
+		},
+		Agents: &versions.Agents{
+			Latest: map[string]versions.Latest{
+				"claude": {Version: "2.2.0"},
+				"codex":  {Version: "0.42.0"},
+			},
+		},
+	}
+	got := Find(s, nil, l, now)
+	want := []Update{
+		{Tool: "npm", Kind: Patch, Copy: npmTerm, Version: "10.9.2"},
+		{Tool: "pnpm", Kind: NewLine, Version: "10.2.0"},
+		{Tool: "claude", Agent: true, Kind: Patch, Copy: claudeNpm, Version: "2.2.0"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("Find() =\n%+v\nwant\n%+v", got, want)
 	}
 }
 

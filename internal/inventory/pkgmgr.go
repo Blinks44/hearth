@@ -11,6 +11,9 @@ type SystemPackage struct {
 	// Dependency is a package another pulled in, not one asked for; known
 	// only where the manager's ReasonsKnown says so.
 	Dependency bool `json:",omitempty"`
+	// Orphan is a package pulled in as a dependency that no installed
+	// package needs any more, as the manager reports locally (APT, Pacman).
+	Orphan bool `json:",omitempty"`
 	// Artifacts are the other paths the package put, as a cask's app in
 	// /Applications.
 	Artifacts []string `json:",omitempty"`

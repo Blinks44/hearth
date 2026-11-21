@@ -43,16 +43,21 @@ type Update struct {
 	// Mise is mise's name of a tool of its own, as "npm:prettier"; "" for
 	// a tool with a page.
 	Mise string
+	// Agent reports that Tool is an AI agent ID (as "claude", "codex")
+	// rather than a language or tool ID.
+	Agent bool
 }
 
 // Lists are the version lists the updates come from; a nil one means its
 // tool is not known, and gets no updates.
 type Lists struct {
 	Node                          *versions.Node
+	JS                            *versions.JSManagers
 	Go                            *versions.Go
 	Python, PHP, Ruby, Java, Rust *versions.Cycles
 	Dotnet                        *versions.Dotnet
 	Bun                           *versions.Latest
+	Agents                        *versions.Agents
 	// Mise is for the tools of mise's without a page of their own.
 	Mise *versions.Mise
 }
@@ -96,11 +101,20 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 			}
 			return t.line(in.Version)
 		}
+		ins := ts.Installations
+		if ts.Tool == "npm" {
+			// npm ships bundled with every Node copy; only check the active one.
+			if active := inventory.TerminalCopy(ins); active >= 0 {
+				ins = []inventory.Installation{ins[active]}
+			} else {
+				ins = nil
+			}
+		}
 		installed := map[string]bool{} // by manager@version: another manager's copy does not update this one
 		lines := map[string]bool{}
 		var newest *semver.Version
 		var own []inventory.Installation
-		for _, in := range ts.Installations {
+		for _, in := range ins {
 			installed[in.Source.Manager+"@"+in.Version] = true
 			v := parse(in.Version)
 			if v == nil || v.Prerelease() != "" || in.Stub || in.Source.Shim ||
@@ -128,6 +142,31 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 		}
 		if t.newest != "" && newest != nil && !lines[t.line(t.newest)] && newer(t.newest, newest.Original()) {
 			out = append(out, Update{Kind: NewLine, Tool: ts.Tool, Version: t.newest, LTS: l.lts(t.newest)})
+		}
+	}
+	out = append(out, l.agents(s.Agents)...)
+	return out
+}
+
+func (l Lists) agents(agents []inventory.Agent) []Update {
+	if l.Agents == nil {
+		return nil
+	}
+	var out []Update
+	for _, ag := range agents {
+		latest, ok := l.Agents.Latest[ag.ID]
+		if !ok || latest.Version == "" {
+			continue
+		}
+		for _, in := range ag.Installations {
+			v := parse(in.Version)
+			if v == nil || v.Prerelease() != "" || in.Stub || in.Source.Shim ||
+				in.Source.Kind == inventory.KindSystem || in.Source.Kind == inventory.KindUnknown {
+				continue
+			}
+			if newer(latest.Version, in.Version) {
+				out = append(out, Update{Kind: Patch, Tool: ag.ID, Copy: in, Version: latest.Version, Agent: true})
+			}
 		}
 	}
 	return out
@@ -198,7 +237,9 @@ func (l Lists) mise(tools []inventory.MiseTool) []Update {
 // WinGet's GoLang.Go of C:\Program Files\Go. Its update is the package's.
 func Held(in inventory.Installation, ms []inventory.PackageManager) bool {
 	if in.Source.Kind == inventory.KindPackageManager {
-		return true
+		// npm is not a system package manager in ms; npm-installed tools
+		// and AI agents update through npm, not Homebrew/WinGet/APT.
+		return in.Source.Manager != "npm"
 	}
 	if in.Source.Kind != inventory.KindInstaller || in.Source.Manager != "" {
 		return false
@@ -259,6 +300,19 @@ func (l Lists) tool(tool string, now time.Time) (releases, bool) {
 			r.newest = rec.Version
 		}
 		return r, true
+	case "npm", "pnpm", "yarn":
+		if l.JS == nil {
+			return releases{}, false
+		}
+		latest := map[string]versions.Latest{"npm": l.JS.Npm, "pnpm": l.JS.Pnpm, "yarn": l.JS.Yarn}[tool].Version
+		if latest == "" {
+			return releases{}, false
+		}
+		return releases{
+			line:   major,
+			latest: map[string]string{major(latest): latest},
+			newest: latest,
+		}, true
 	case "go":
 		if l.Go == nil {
 			return releases{}, false

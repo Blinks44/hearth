@@ -100,7 +100,10 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				selected = append(selected, cand)
 			}
 		}
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.cleanupButton(c, selected) }})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.recountSizesButton(c)
+			a.cleanupButton(c, selected)
+		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
@@ -156,6 +159,9 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
+					if a.Sizes != nil && a.Sizes.DockerErr != "" {
+						warningRow(c, locales.CleanupDockerErr(a.Sizes.DockerErr))
+					}
 					switch {
 					case a.Snapshot == nil || a.Sizes == nil || a.Counting && len(cands) == 0:
 						toolNote(c, locales.CleanupWaiting())
@@ -184,6 +190,9 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 								a.groupCheckbox(c, cleanupGroupTitle(g), rows)
 								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								ui.Text(c, cleanupAmount(rows)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+								if a.Shell != nil {
+									ui.Box(c).Size(24, 24).Shrink(0)
+								}
 							})
 							for _, cand := range rows {
 								shown++
@@ -227,6 +236,18 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 	})
 }
 
+// recountSizesButton triggers a fresh disk-usage count right now.
+func (a *App) recountSizesButton(c *ui.Context) {
+	ui.Button(c.Key("cleanup-recount"), locales.CleanupRecount()).
+		Height(controlHeight).
+		Disabled(a.RecountSizes == nil || a.Counting || a.Snapshot == nil).
+		OnClick(func() {
+			if a.RecountSizes != nil {
+				a.RecountSizes()
+			}
+		})
+}
+
 // cleanupButton is the header's button that proposes removing the
 // selected candidates the plan removes; nothing when there are none.
 func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
@@ -243,7 +264,7 @@ func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
 	if len(cands) == 0 {
 		return
 	}
-	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(cleanupAmount(cands))).OnClick(func() {
+	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(cleanupAmount(cands))).Height(controlHeight).OnClick(func() {
 		target, snap, count := a.dockerTarget(), a.Snapshot, a.CountDocker
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 			var docker ops.CountDocker
@@ -320,6 +341,14 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 			size = formatUsage(inventory.Usage{Bytes: cand.Frees(), Partial: cand.Usage.Partial})
 		}
 		ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+		if a.Shell != nil {
+			if len(cand.Paths) > 0 {
+				path := cand.Paths[0]
+				iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(path) })
+			} else {
+				ui.Box(c).Size(24, 24).Shrink(0)
+			}
+		}
 	})
 }
 
