@@ -35,6 +35,15 @@ func TestXcodes(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	imagesPlist := `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>images</key><array><dict>
+<key>uuid</key><string>7A1B2C3D-0000-1111-2222-333344445555</string>
+<key>runtimeInfo</key><dict>
+<key>build</key><string>22C150</string>
+<key>identifier</key><string>com.apple.CoreSimulator.SimRuntime.iOS-18-2</string>
+<key>version</key><string>18.2</string>
+</dict></dict></array></dict></plist>`
+	writeFile(t, filepath.Join(sims, "Images", "images.plist"), imagesPlist)
 	oldApps, oldSims, oldLink := applications, simulators, xcodeSelectLink
 	applications, simulators, xcodeSelectLink = apps, sims, link
 	t.Cleanup(func() { applications, simulators, xcodeSelectLink = oldApps, oldSims, oldLink })
@@ -46,7 +55,10 @@ func TestXcodes(t *testing.T) {
 	if got := xcodes(); !reflect.DeepEqual(got, want) {
 		t.Errorf("xcodes = %+v, want %+v", got, want)
 	}
-	wantRT := []inventory.SimRuntime{{Platform: "iOS", Version: "18.2", Path: mounted}, {Platform: "watchOS", Version: "10.5", Path: bundled}}
+	wantRT := []inventory.SimRuntime{
+		{Platform: "iOS", Version: "18.2", Path: mounted, ID: "7A1B2C3D-0000-1111-2222-333344445555"},
+		{Platform: "watchOS", Version: "10.5", Path: bundled},
+	}
 	if got := simRuntimes(); !reflect.DeepEqual(got, wantRT) {
 		t.Errorf("runtimes = %+v, want %+v", got, wantRT)
 	}

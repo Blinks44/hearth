@@ -245,6 +245,16 @@ var Tools = []Entry{
 		"Colima", "brew", "OrbStack", "brew", "Docker Desktop", "winget",
 		"Docker Engine", "apt", "Docker Engine", "dnf", "Docker Engine", "zypper", "Docker Engine", "pacman", "Docker Engine", "apk",
 	)},
+	{ID: "gh", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "gh", Kind: "formula"},
+		{Manager: "winget", Package: "GitHub.cli"},
+		{Manager: "apt", Package: "gh"},
+		{Manager: "dnf", Package: "gh"},
+		{Manager: "pacman", Package: "github-cli"},
+		{Manager: "zypper", Package: "gh"},
+		{Manager: "apk", Package: "github-cli"},
+		{Manager: "mise", Package: "gh"},
+	}},
 
 	// Each language's own tools, after the language. mise has no
 	// Composer: the system's manager installs it, as it does PHP.
@@ -436,6 +446,7 @@ func About(id string) string {
 		"pnpm":        locales.CatalogPnpm,
 		"yarn":        locales.CatalogYarn,
 		"git":         locales.CatalogGit,
+		"gh":          locales.CatalogGh,
 		"docker":      locales.CatalogDocker,
 		"claude":      locales.CatalogClaude,
 		"codex":       locales.CatalogCodex,

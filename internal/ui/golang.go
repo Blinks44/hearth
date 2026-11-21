@@ -42,6 +42,7 @@ func (a *App) goPage(c *ui.Context, p page) {
 					}, func() {
 						a.goAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
+						a.goEnvironment(c, st)
 						if active >= 0 {
 							globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
 						}
@@ -159,4 +160,22 @@ func (a *App) goRecommended() string {
 		return ""
 	}
 	return a.GoVersions.Releases[0]
+}
+
+// goEnvironment shows GOPATH and GOMODCACHE as go env reports them.
+func (a *App) goEnvironment(c *ui.Context, st inventory.ToolState) {
+	listCard(c, locales.GoEnvironment(), "go env", func() {
+		for _, name := range []string{"GOPATH", "GOMODCACHE"} {
+			path := st.Vars[name]
+			caption := locales.MobileUnset()
+			if path != "" {
+				caption = tilde(path, a.Home)
+			}
+			listRow(c, name, true, caption, func() {
+				if path != "" {
+					a.pathActions(c, "go-"+name, path)
+				}
+			})
+		}
+	})
 }

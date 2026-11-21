@@ -86,6 +86,11 @@ func TestVersionPlanCommands(t *testing.T) {
 		{"go", "asdf", VersionInstall, "1.23.4", "", true, []string{"asdf", "install", "golang", "1.23.4"}},
 		{"go", "asdf", VersionDefault, "1.23.4", "", true, nil},
 
+		{"rust", "rustup", VersionInstall, "stable", "", false, []string{"rustup", "toolchain", "install", "stable"}},
+		{"rust", "rustup", VersionUninstall, "nightly-aarch64-apple-darwin", "", false, []string{"rustup", "toolchain", "uninstall", "nightly-aarch64-apple-darwin"}},
+		{"rust", "rustup", VersionDefault, "stable-aarch64-apple-darwin", "", false, []string{"rustup", "default", "stable-aarch64-apple-darwin"}},
+		{"go", "rustup", VersionInstall, "1.23.4", "", false, nil},
+
 		{"php", "mise", VersionInstall, "8.4.2", "", false, nil},
 		{"php", "mise", VersionUninstall, "8.3.15", "/m/installs/php/8.3.15", false, []string{"mise", "uninstall", "php@8.3.15"}},
 		{"php", "mise", VersionDefault, "8.3.15", "/m/installs/php/8.3.15", false, []string{"mise", "use", "-g", "php@8.3.15"}},

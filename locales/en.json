@@ -15430,5 +15430,226 @@
         "example": "3"
       }
     }
+  },
+  "catalogGh": "GitHub's command-line interface for pull requests, issues and repositories.",
+  "rustUpdateChannel": "Update {channel}",
+  "@rustUpdateChannel": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "rustToolchainPlaceholder": "Toolchain, e.g. 1.85.0",
+  "rustTargetAdd": "Add target",
+  "rustTargetPlaceholder": "Target triple, e.g. wasm32-unknown-unknown",
+  "rustTargetRemove": "Remove target {target}",
+  "@rustTargetRemove": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetAddTitle": "Add target {target}",
+  "@rustTargetAddTitle": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetRemoveTitle": "Remove target {target}",
+  "@rustTargetRemoveTitle": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetAddWhy": "Through rustup, for toolchain {toolchain}.",
+  "@rustTargetAddWhy": {
+    "placeholders": {
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetRemoveWhy": "Through rustup, from toolchain {toolchain}. Can be added back any time.",
+  "@rustTargetRemoveWhy": {
+    "placeholders": {
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetCheckAdded": "{target} is installed in {toolchain}",
+  "@rustTargetCheckAdded": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetCheckNotAdded": "{target} was not found in {toolchain}",
+  "@rustTargetCheckNotAdded": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetCheckRemoved": "{target} was removed from {toolchain}",
+  "@rustTargetCheckRemoved": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustTargetCheckNotRemoved": "{target} is still in {toolchain}",
+  "@rustTargetCheckNotRemoved": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "goEnvironment": "Environment",
+  "rubyNoBundler": "Bundler was not found on the terminal's PATH.",
+  "gitCopyPublicKey": "Copy public key",
+  "gitPublicKeyCopied": "Public key copied",
+  "gitNoGitHub": "GitHub CLI (gh) is not installed.",
+  "editorsAddToPath": "Add to PATH…",
+  "editorsAddPathTitle": "Add {command} to PATH",
+  "@editorsAddPathTitle": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "editorsAddPathWhy": "Adds {dir} to Hearth's block in the shell startup file so {command} works in new terminals.",
+  "@editorsAddPathWhy": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      },
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "editorsAddPathWhyRegistry": "Adds {dir} to the user's Path in the registry so {command} works in new terminals.",
+  "@editorsAddPathWhyRegistry": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      },
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "editorsAddPathChange": "+ {dir} in PATH",
+  "@editorsAddPathChange": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "editorsAddPathCheckOk": "{command} is now on the terminal's PATH ({path})",
+  "@editorsAddPathCheckOk": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "editorsAddPathCheckFail": "{command} was still not found on the terminal's PATH",
+  "@editorsAddPathCheckFail": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileUnusedImage": "Unused emulator image",
+  "mobileRemoveSimTitle": "Remove {platform} simulator {version}",
+  "@mobileRemoveSimTitle": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileRemoveSimWhy": "Removes this older simulator runtime. It can be downloaded again in Xcode.",
+  "mobileRemoveSimCheckOk": "{platform} simulator {version} was removed",
+  "@mobileRemoveSimCheckOk": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileRemoveSimCheckFail": "{platform} simulator {version} is still present",
+  "@mobileRemoveSimCheckFail": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileRemoveSimNoId": "Could not find the simulator runtime ID via xcrun simctl.",
+  "mobileRemoveImageTitle": "Remove emulator image API {api}",
+  "@mobileRemoveImageTitle": {
+    "placeholders": {
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "mobileRemoveImageWhy": "No AVD uses this system image. It can be downloaded again in Android Studio or sdkmanager.",
+  "mobileRemoveImageInUse": "This system image is still used by an AVD.",
+  "mobileRemoveImageCheckOk": "Emulator image API {api} was removed",
+  "@mobileRemoveImageCheckOk": {
+    "placeholders": {
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "mobileRemoveImageCheckFail": "Emulator image API {api} is still present",
+  "@mobileRemoveImageCheckFail": {
+    "placeholders": {
+      "api": {
+        "type": "int"
+      }
+    }
   }
 }

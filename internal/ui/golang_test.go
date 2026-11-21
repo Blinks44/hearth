@@ -118,3 +118,21 @@ func TestMiseConnectionCard(t *testing.T) {
 		})
 	}
 }
+
+func TestGoEnvironmentAndMultipleManagers(t *testing.T) {
+	a := NewApp()
+	a.Shell = &fakeShell{}
+	a.Snapshot = goSnapshot()
+	a.Snapshot.Tools[0].Vars["GOPATH"] = home + "/go"
+	a.Snapshot.Tools[0].Vars["GOMODCACHE"] = home + "/go/pkg/mod"
+	a.Snapshot.Tools[0].Managers = append(a.Snapshot.Tools[0].Managers, inventory.Manager{
+		Name: "asdf", Version: "0.16.0", Shims: true, SwitchOnCD: true, Files: []string{".tool-versions"},
+	})
+	tt := openGo(t, a)
+	screenshot(t, tt, "go-env-managers")
+	hasTexts(t, tt, "Environment", "GOPATH", "~/go", "GOMODCACHE", "~/go/pkg/mod",
+		"Version manager · mise", "Version manager · asdf", "0.16.0")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "go-env-managers-narrow")
+}

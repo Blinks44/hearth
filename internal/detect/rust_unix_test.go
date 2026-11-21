@@ -51,7 +51,7 @@ func TestRustRustupAndBrew(t *testing.T) {
 	for _, in := range got.Installations {
 		byRoot[filepath.Dir(filepath.Dir(in.RealPath))] = in
 	}
-	if in := byRoot[stable]; in.Version != "1.84.0" || !in.Default || in.Rust == nil || in.Rust.Name != "stable-aarch64-apple-darwin" || len(in.Rust.Targets) != 2 || len(in.Packages) != 1 || in.Packages[0].Commands[0] != "rg" {
+	if in := byRoot[stable]; in.Version != "1.84.0" || !in.Default || in.Source.Version != "stable-aarch64-apple-darwin" || in.Rust == nil || in.Rust.Name != "stable-aarch64-apple-darwin" || len(in.Rust.Targets) != 2 || len(in.Packages) != 1 || in.Packages[0].Commands[0] != "rg" {
 		t.Errorf("stable %+v %+v", in, in.Rust)
 	}
 	// A pinned toolchain that cannot run still has the version its name says.

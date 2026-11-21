@@ -187,3 +187,21 @@ func VarCommandFound(title, command string, detect Detect) func(context.Context)
 		return "", errors.New(locales.AgentCheckMissing(title))
 	}
 }
+
+// GitHubFound is the check of a plan that installs GitHub CLI (gh), which
+// the git detector finds in Git.GitHub.
+func GitHubFound(title string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		if st.Git != nil && st.Git.GitHub != nil {
+			return locales.AgentCheckFound(title, st.Git.GitHub.Version), nil
+		}
+		return "", errors.New(locales.AgentCheckMissing(title))
+	}
+}

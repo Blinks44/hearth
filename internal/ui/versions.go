@@ -134,6 +134,10 @@ func hasVersion(ins []inventory.Installation, manager, version string) bool {
 // none.
 func (a *App) versionMenu(m *ui.Menu, in inventory.Installation) bool {
 	manager, version, label := in.Source.Manager, cmp.Or(in.Source.Version, in.Version), versionLabel(in.Tool, in.Version)
+	if in.Tool == "rust" && in.Rust != nil && in.Rust.Name != "" {
+		version = cmp.Or(in.Source.Version, in.Rust.Name)
+		label = copyVersion(in)
+	}
 	makeDefault, canDefault := a.versionPlan(ops.VersionDefault, in.Tool, manager, version, label, in.Source.Root)
 	remove, canRemove := a.versionPlan(ops.VersionUninstall, in.Tool, manager, version, label, in.Source.Root)
 	if version == "" || in.Source.Shim || !canDefault && !canRemove {

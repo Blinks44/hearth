@@ -51,6 +51,9 @@ func (a *App) installToolPlan(id string, done func(ops.Plan, error)) {
 	if id == "uv" {
 		verify = ops.ManagerFound(title, "uv", a.detect("python"))
 	}
+	if id == "gh" {
+		verify = ops.GitHubFound(title, a.detect("git"))
+	}
 	if lang, command, ok := languageCommand(id); ok {
 		verify = ops.VarCommandFound(title, command, a.detect(lang))
 	}

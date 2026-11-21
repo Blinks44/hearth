@@ -101,6 +101,9 @@ func (a *App) setupHave(id string) bool {
 	case "uv":
 		st, _ := a.Snapshot.Tool("python")
 		return slices.ContainsFunc(st.Managers, func(m inventory.Manager) bool { return m.Name == "uv" && m.Version != "" })
+	case "gh":
+		st, _ := a.Snapshot.Tool("git")
+		return st.Git != nil && st.Git.GitHub != nil
 	}
 	// Commands a language's scan finds beside it.
 	if lang, command, ok := languageCommand(id); ok {
@@ -259,6 +262,8 @@ func setupTitle(id string) string {
 		return "Terraform"
 	case "tofu":
 		return "OpenTofu"
+	case "gh":
+		return "GitHub CLI"
 	}
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		return agentTitle(id)

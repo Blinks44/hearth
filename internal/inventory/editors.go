@@ -16,10 +16,13 @@ type Editor struct {
 	Toolbox bool `json:",omitempty"`
 	// Command is the editor's command, as "code" or "idea"; CommandPath
 	// where the terminal finds it, empty when not on its PATH;
-	// CommandReal the file it leads to, as the app's own bin/code.
-	Command     string
-	CommandPath string `json:",omitempty"`
-	CommandReal string `json:",omitempty"`
+	// CommandReal the file it leads to, as the app's own bin/code;
+	// CommandSource the CLI file found inside the app or Toolbox scripts
+	// that can be put on PATH.
+	Command       string
+	CommandPath   string `json:",omitempty"`
+	CommandReal   string `json:",omitempty"`
+	CommandSource string `json:",omitempty"`
 	// Extensions is the folder of the extensions or plugins; Installed
 	// are their IDs, as "golang.go", in VS Code and Cursor, or the
 	// plugins' folder names in a JetBrains IDE.

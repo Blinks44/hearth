@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -87,7 +88,18 @@ func (a *App) gitHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 // gitCards are the global settings, the credentials and the SSH keys.
 func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 	pal := Colors(c.Theme())
-	listCard(c, locales.GitGlobal(), tilde(g.ConfigFile, a.Home), func() {
+	configAside := func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			if label := tilde(g.ConfigFile, a.Home); label != "" {
+				ui.Text(c, label).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
+			if g.ConfigFile != "" && a.Shell != nil {
+				iconButton(c.Key("open-gitconfig"), "external-link", locales.OpenFile(filepath.Base(g.ConfigFile))).
+					OnClick(func() { a.openFile(c, g.ConfigFile) })
+			}
+		})
+	}
+	listCardHeader(c, locales.GitGlobal(), configAside, func() {
 		for _, s := range g.Config {
 			listRow(c, gitSettingName(s.Name), true, s.Value, func() {})
 		}
@@ -115,9 +127,21 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 				caption = locales.GitHubSignedIn(strings.Join(hosts, ", "))
 			}
 			listRow(c, "GitHub CLI "+gh.Version, false, caption, func() {})
+		} else if a.canInstallTool("gh") {
+			listRow(c, "GitHub CLI", false, locales.GitNoGitHub(), func() { a.installToolButton(c, "gh") })
 		}
 	})
-	listCard(c, locales.GitSSHKeys(), locales.GitSSHAside(), func() {
+	sshAside := func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.GitSSHAside()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			if a.Home != "" && a.Shell != nil {
+				sshConfig := filepath.Join(a.Home, ".ssh", "config")
+				iconButton(c.Key("open-ssh-config"), "external-link", locales.OpenFile("~/.ssh/config")).
+					OnClick(func() { a.openFile(c, sshConfig) })
+			}
+		})
+	}
+	listCardHeader(c, locales.GitSSHKeys(), sshAside, func() {
 		for _, k := range g.Keys {
 			var caption []string
 			if len(k.Hosts) > 0 {
@@ -133,8 +157,17 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 			if k.Bits > 0 {
 				kind += " " + strconv.Itoa(k.Bits)
 			}
+			pub := k.PublicKey
 			listRow(c, k.Name, true, strings.Join(caption, " · "), func() {
-				ui.Text(c, kind).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, kind).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					if pub != "" {
+						iconButton(c.Key("copy-pub:"+k.Name), "copy", locales.GitCopyPublicKey()).OnClick(func() {
+							c.WriteClipboard(pub)
+							c.Toast(locales.GitPublicKeyCopied())
+						})
+					}
+				})
 			})
 		}
 		if len(g.Keys) == 0 {

@@ -3,6 +3,7 @@ package detect
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -175,6 +176,18 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 			in.Default = version == want
 		}
 	}
+	var userPkgs []inventory.Package
+	switch name {
+	case "pnpm":
+		userPkgs = pnpmGlobalPackages(term)
+	case "yarn":
+		userPkgs = yarnGlobalPackages(term)
+	}
+	if len(userPkgs) > 0 {
+		for i := range f.ins {
+			f.ins[i].Packages = userPkgs
+		}
+	}
 	st := inventory.ToolState{Tool: name, Installations: f.ins}
 	if usesCorepack && term.Get("COREPACK_ENABLE_PROJECT_SPEC") != "0" {
 		st.Managers = []inventory.Manager{{Name: "corepack", SwitchOnCD: true, Files: []string{"package.json"}}}
@@ -184,6 +197,67 @@ func jsManager(ctx context.Context, r run.Runner, name string, term, gui sysenv.
 		st.Managers = append(st.Managers, miseManager(ctx, r, term, gui, sources.ManagerDirs(term)))
 	}
 	return st, ctx.Err()
+}
+
+// manifestPackages reads the top-level packages listed in dir/package.json's
+// dependencies and resolves each against dir/node_modules so transitive
+// packages hoisted by Yarn v1 are excluded.
+func manifestPackages(dir string) []inventory.Package {
+	data, err := os.ReadFile(filepath.Join(dir, "package.json"))
+	if err != nil {
+		return nil
+	}
+	var m struct {
+		Dependencies map[string]string `json:"dependencies"`
+	}
+	if json.Unmarshal(data, &m) != nil || len(m.Dependencies) == 0 {
+		return nil
+	}
+	var pkgs []inventory.Package
+	for name := range m.Dependencies {
+		pkgDir := filepath.Join(dir, "node_modules", filepath.FromSlash(name))
+		if p, ok := readPackage(pkgDir); ok {
+			pkgs = append(pkgs, p)
+		}
+	}
+	slices.SortFunc(pkgs, func(a, b inventory.Package) int { return strings.Compare(a.Name, b.Name) })
+	return pkgs
+}
+
+// pnpmGlobalPackages reads packages installed with pnpm add -g from
+// PNPM_HOME/global/*/package.json without running pnpm.
+func pnpmGlobalPackages(env sysenv.Env) []inventory.Package {
+	home := pnpmHome(env)
+	if home == "" {
+		return nil
+	}
+	manifests, _ := filepath.Glob(filepath.Join(home, "global", "*", "package.json"))
+	slices.Sort(manifests)
+	byName := map[string]inventory.Package{}
+	for _, m := range manifests {
+		for _, p := range manifestPackages(filepath.Dir(m)) {
+			byName[p.Name] = p
+		}
+	}
+	if len(byName) == 0 {
+		return nil
+	}
+	pkgs := make([]inventory.Package, 0, len(byName))
+	for _, p := range byName {
+		pkgs = append(pkgs, p)
+	}
+	slices.SortFunc(pkgs, func(a, b inventory.Package) int { return strings.Compare(a.Name, b.Name) })
+	return pkgs
+}
+
+// yarnGlobalPackages reads packages installed with yarn global add from
+// Yarn's global folder without running yarn.
+func yarnGlobalPackages(env sysenv.Env) []inventory.Package {
+	dir := yarnGlobalDir(env)
+	if dir == "" {
+		return nil
+	}
+	return manifestPackages(dir)
 }
 
 // corepackHome is Corepack's cache folder, chosen as Corepack does.

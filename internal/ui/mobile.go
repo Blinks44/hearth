@@ -2,6 +2,7 @@ package ui
 
 import (
 	"cmp"
+	"context"
 	"slices"
 	"strconv"
 	"strings"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -310,14 +313,16 @@ func (a *App) mobileView(c *ui.Context, p page) {
 // mobileTable is the groups of the chosen tab, their rows filtered.
 func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 	pal := Colors(c.Theme())
-	filter := strings.ToLower(a.mobileFilter)
+	filter := strings.ToLower(strings.TrimSpace(a.mobileFilter))
 	shown := 0
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		for i, g := range groups {
 			if a.mobileTab > 0 && a.mobileTab-1 != i {
 				continue
 			}
-			rows := slices.DeleteFunc(slices.Clone(g.rows), func(r mobileRow) bool { return !strings.Contains(strings.ToLower(r.name), filter) })
+			rows := slices.DeleteFunc(slices.Clone(g.rows), func(r mobileRow) bool {
+				return filter != "" && !strings.Contains(strings.ToLower(r.name+" "+r.about+" "+r.path), filter)
+			})
 			if len(rows) == 0 {
 				continue
 			}
@@ -328,6 +333,9 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 			ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 				ui.Text(c, strings.ToUpper(g.title)).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 				ui.Text(c, formatBytes(size)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+				if a.Shell != nil {
+					ui.Box(c).Width(50).Shrink(0)
+				}
 			})
 			for _, r := range rows {
 				size := "—" // nothing on disk to count
@@ -343,6 +351,7 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 						clipped(c, r.about).FontSize(10.5).TextColor(pal.TextFaint)
 					})
 					ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+					a.pathActions(c, g.title+":"+r.name, r.path)
 				})
 			}
 			shown += len(rows)
@@ -409,7 +418,7 @@ func (a *App) mobileEnv(c *ui.Context, m inventory.MobileState) {
 }
 
 // mobileRemovable is what Cleanup offers of mobile development, the older
-// simulators, and the way to Cleanup.
+// simulators, unused Android system images, and the way to Cleanup.
 func (a *App) mobileRemovable(c *ui.Context, m inventory.MobileState, caches []cleanup.Candidate) {
 	t := c.Theme()
 	listCard(c, locales.MobileRemovable(), "", func() {
@@ -419,12 +428,37 @@ func (a *App) mobileRemovable(c *ui.Context, m inventory.MobileState, caches []c
 			if rt.Version == newest[rt.Platform] {
 				continue
 			}
+			runtime := rt
 			caption := rt.Platform + " " + rt.Version
 			if size, ok := a.pathSize(rt.Path); ok {
 				caption = formatBytes(size) + " · " + caption
 			}
-			listRow(c, locales.MobileOldSimulator(), false, caption, func() {})
+			listRow(c, locales.MobileOldSimulator(), false, caption, func() {
+				if a.BuildPlan != nil {
+					ui.Button(c.Key("remove-sim:"+runtime.Path), locales.RemoveEllipsis()).Shrink(0).
+						OnClick(func() { a.removeSimRuntime(runtime) })
+				}
+			})
 			shown++
+		}
+		if sdk := m.Android; sdk != nil {
+			for _, img := range sdk.Images {
+				if len(img.AVDs) > 0 {
+					continue
+				}
+				part := img
+				caption := img.Name
+				if size, ok := a.pathSize(img.Path); ok {
+					caption = formatBytes(size) + " · " + caption
+				}
+				listRow(c, locales.MobileUnusedImage(), false, caption, func() {
+					if a.BuildPlan != nil {
+						ui.Button(c.Key("remove-img:"+part.Path), locales.RemoveEllipsis()).Shrink(0).
+							OnClick(func() { a.removeAndroidImage(sdk.Root, part) })
+					}
+				})
+				shown++
+			}
 		}
 		for _, cand := range caches {
 			listRow(c, cacheName(cand.ID), false, formatBytes(cand.Frees())+" · "+locales.MobileRestorable(), func() {})
@@ -432,6 +466,9 @@ func (a *App) mobileRemovable(c *ui.Context, m inventory.MobileState, caches []c
 		}
 		if shown == 0 {
 			cardNote(c, locales.MobileNothing())
+			return
+		}
+		if len(caches) == 0 {
 			return
 		}
 		b := ui.ButtonBase(c.Key("mobile-cleanup")).Column().AlignItems(ui.Start).Gap(1).Padding(9, 12, 9, 14).BorderWidth(1, 0, 0, 0).BorderColor(Colors(t).Line).
@@ -447,4 +484,27 @@ func (a *App) mobileRemovable(c *ui.Context, m inventory.MobileState, caches []c
 			ui.Text(c, locales.MobileOpenCleanupCaption()).FontSize(11.5).TextColor(Colors(t).TextFaint).SingleLine()
 		})
 	})
+}
+
+// removeSimRuntime proposes removing an older simulator runtime via simctl.
+func (a *App) removeSimRuntime(rt inventory.SimRuntime) {
+	if a.BuildPlan == nil {
+		return
+	}
+	detect := a.detect("mobile")
+	runner := a.Runner
+	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		return ops.RemoveSimRuntimePlan(context.Background(), runner, rt, env, detect)
+	}, a.proposeOrSay)
+}
+
+// removeAndroidImage proposes removing an unused Android system image.
+func (a *App) removeAndroidImage(sdkRoot string, img inventory.AndroidPart) {
+	if a.BuildPlan == nil {
+		return
+	}
+	detect := a.detect("mobile")
+	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		return ops.RemoveAndroidImagePlan(sdkRoot, img, env, detect)
+	}, a.proposeOrSay)
 }

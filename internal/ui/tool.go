@@ -324,27 +324,14 @@ func (a *App) versionTable(c *ui.Context, ins []inventory.Installation, rows []i
 	})
 }
 
-// managerCard shows the version manager that keeps the tool and how it
-// is set up, or that there is none and Hearth will use mise; and the rows
-// extra adds for the copy in use, if any.
+// managerCard shows every version manager found for the tool and how each
+// is set up, with the active copy's manager first, or says there is none
+// and Hearth will use mise; extra adds rows for the copy in use on the
+// first card.
 func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, active int, extra func(*ui.Context, inventory.Installation)) {
 	ins := st.Installations
-	var m *inventory.Manager
-	for i := range st.Managers {
-		if m == nil || active >= 0 && st.Managers[i].Name == ins[active].Source.Manager {
-			m = &st.Managers[i]
-		}
-	}
-	title := locales.VersionManager()
-	if m != nil {
-		title += " · " + m.Name
-	}
-	aside := ""
-	if m != nil {
-		aside = m.Version
-	}
-	listCard(c, title, aside, func() {
-		if m == nil {
+	if len(st.Managers) == 0 {
+		listCard(c, locales.VersionManager(), "", func() {
 			if names := sourceNames(ins, rows, active); len(names) > 0 {
 				note := locales.NoVersionManager(toolTitle(st.Tool), strings.Join(names, ", "))
 				// PHP and the like do not install through mise.
@@ -355,7 +342,28 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 			} else {
 				cardNote(c, locales.NoVersionManagerNone(toolTitle(st.Tool)))
 			}
-		} else {
+			if active >= 0 && extra != nil {
+				extra(c, ins[active])
+			}
+		})
+		return
+	}
+	ordered := make([]inventory.Manager, 0, len(st.Managers))
+	if active >= 0 {
+		for _, m := range st.Managers {
+			if m.Name == ins[active].Source.Manager {
+				ordered = append(ordered, m)
+			}
+		}
+	}
+	for _, m := range st.Managers {
+		if active >= 0 && m.Name == ins[active].Source.Manager {
+			continue
+		}
+		ordered = append(ordered, m)
+	}
+	for idx, m := range ordered {
+		listCard(c, locales.VersionManager()+" · "+m.Name, m.Version, func() {
 			def := "—"
 			for _, in := range ins {
 				if in.Default && in.Source.Manager == m.Name {
@@ -372,21 +380,21 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 					ui.Text(c, def).Font(FontMono).FontSize(12).TextColor(Colors(c.Theme()).MonoText).SingleLine()
 				})
 			}
-			if title, caption := hookup(*m); title != "" {
+			if title, caption := hookup(m); title != "" {
 				listRow(c, title, false, caption, func() { stateText(c, true) })
 			}
 			// Hooked in for the apps alone, mise still does not switch
 			// versions in the terminal.
 			if m.Name == "mise" && !m.Activated && !m.Shims && a.BuildPlan != nil {
 				listRow(c, locales.MiseHook(), false, locales.MiseNotHooked(), func() {
-					ui.Button(c.Key("mise-setup"), locales.MiseSetUp()).OnClick(a.setUpMise)
+					ui.Button(c.Key("mise-setup:"+st.Tool), locales.MiseSetUp()).OnClick(a.setUpMise)
 				})
 			}
 			if m.ConfigPath != "" {
 				listRow(c, locales.ManagerGlobalConfig(), false, tilde(m.ConfigPath, a.Home), func() {})
 			}
-			for _, st := range managerSettings(*m) {
-				listRow(c, st.title, false, st.caption, func() { stateText(c, st.on) })
+			for _, setting := range managerSettings(m) {
+				listRow(c, setting.title, false, setting.caption, func() { stateText(c, setting.on) })
 			}
 			// A manager that does not switch at all, as uv, says so by
 			// its settings.
@@ -400,11 +408,11 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 				}
 				listRow(c, locales.SwitchOnCd(), false, caption, func() { stateText(c, m.SwitchOnCD) })
 			}
-		}
-		if active >= 0 && extra != nil {
-			extra(c, ins[active])
-		}
-	})
+			if idx == 0 && active >= 0 && extra != nil {
+				extra(c, ins[active])
+			}
+		})
+	}
 }
 
 // setUpMise offers the plan that installs mise and hooks it in, once it
@@ -447,13 +455,24 @@ func hookup(m inventory.Manager) (title, caption string) {
 // listCard is a card of rows under a title, with a note on the right of
 // the title when aside is not empty.
 func listCard(c *ui.Context, title, aside string, rows func()) {
+	var headerAside func()
+	if aside != "" {
+		headerAside = func() {
+			ui.Text(c, aside).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+		}
+	}
+	listCardHeader(c, title, headerAside, rows)
+}
+
+// listCardHeader is a list card whose header right side is built by aside.
+func listCardHeader(c *ui.Context, title string, aside func(), rows func()) {
 	t := c.Theme()
 	pal := Colors(t)
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, title).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
-			if aside != "" {
-				ui.Text(c, aside).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			if aside != nil {
+				aside()
 			}
 		})
 		rows()
@@ -690,6 +709,28 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 					c.Toast(locales.OpenFailed(tilde(npmrc, a.Home), err.Error()))
 				}
 			}
+		})
+	})
+}
+
+// pathActions are a path's copy and reveal icon buttons, or an empty
+// spacer of the same width when path is empty so table columns stay aligned.
+// When Shell is nil, nothing is drawn.
+func (a *App) pathActions(c *ui.Context, key, path string) {
+	if a.Shell == nil {
+		return
+	}
+	if path == "" {
+		ui.Box(c).Size(50, 24).Shrink(0)
+		return
+	}
+	ui.Row(c.Key("path-actions:" + key)).Gap(2).Shrink(0).Children(func() {
+		iconButton(c, "copy", locales.CopyPath()).OnClick(func() {
+			c.WriteClipboard(path)
+			c.Toast(locales.PathCopied())
+		})
+		iconButton(c, "folder-open", showInFolder()).OnClick(func() {
+			a.Shell.ShowItemInFolder(path)
 		})
 	})
 }

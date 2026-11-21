@@ -30,6 +30,8 @@ type SimRuntime struct {
 	Platform, Version string
 	// Path is its .simruntime bundle.
 	Path string
+	// ID is CoreSimulator's runtime UUID from images.plist, when known.
+	ID string `json:",omitempty"`
 }
 
 // AndroidSDK is an Android SDK folder and what is installed in it.

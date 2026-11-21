@@ -120,7 +120,8 @@ func (a *App) jsTable(c *ui.Context) {
 				cardNote(c, id+" · "+locales.NotChecked())
 				continue
 			}
-			for _, in := range st.Installations {
+			active := inventory.TerminalCopy(st.Installations)
+			for i, in := range st.Installations {
 				if in.Source.Shim && in.Source.Manager != "corepack" {
 					continue
 				}
@@ -132,7 +133,12 @@ func (a *App) jsTable(c *ui.Context) {
 					continue
 				}
 				count++
-				ui.Row(c).Gap(12).Padding(12, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
+				isActive := i == active || (active < 0 && in.OnPath == 1 && in.Source.Shim && in.Source.Manager == "corepack")
+				row := ui.Row(c).Gap(12).Padding(12, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center)
+				if isActive {
+					row.Background(pal.ActiveRow)
+				}
+				row.Children(func() {
 					ui.Column(c).Width(132).Shrink(0).Gap(3).Children(func() {
 						ui.Text(c, text).Font(FontMono).FontSize(12).SingleLine()
 						if in.Source.Shim {
@@ -143,8 +149,17 @@ func (a *App) jsTable(c *ui.Context) {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 						clipped(c, tilde(in.Path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted)
 						ui.Row(c).Gap(5).Wrap().Children(func() {
-							if in.OnPath > 0 {
+							if in.Default {
+								chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.ChipDefault())
+							}
+							switch {
+							case isActive || (in.Source.Shim && in.OnPath == 1):
 								chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.ChipInPath())
+							case in.OnPath > 0 && !in.Source.Shim && !inventory.NeededBySystem(in):
+								chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.ChipDuplicate())
+							}
+							if inventory.NeededBySystem(in) {
+								chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.ChipSystem())
 							}
 							for _, name := range usedBy[id+"\x00"+in.Path] {
 								chip(c, c.Theme().Accent, pal.AccentSoft, pal.AccentInk, name)
@@ -220,6 +235,24 @@ func (a *App) jsGlobals(c *ui.Context) {
 		pkgs, empty = userPackages(st.Installations[i].Packages, version), locales.NoGlobalPackages()
 	}
 	globalsCard(c, locales.GlobalPackages(), empty, pkgs, "npm -g")
+
+	for _, mgr := range []struct{ id, aside string }{{"pnpm", "pnpm -g"}, {"yarn", "yarn global"}} {
+		mst, _ := a.Snapshot.Tool(mgr.id)
+		var mpkgs []inventory.Package
+		if i := inventory.TerminalCopy(mst.Installations); i >= 0 {
+			mpkgs = mst.Installations[i].Packages
+		} else {
+			for _, in := range mst.Installations {
+				if len(in.Packages) > 0 {
+					mpkgs = in.Packages
+					break
+				}
+			}
+		}
+		if len(mst.Installations) > 0 || len(mpkgs) > 0 {
+			globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), mpkgs, mgr.aside)
+		}
+	}
 }
 
 func (a *App) jsProjects(c *ui.Context) {

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"runtime"
 	"testing"
 	"time"
 
@@ -8,6 +9,8 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // Xcode, the simulators, the Android SDK and Flutter with the space each
@@ -93,5 +96,86 @@ func TestMobileInstallLinks(t *testing.T) {
 		"Flutter", "iOS and Android from one code", "Open ↗")
 	if got := tt.HasText("App Store · iOS SDK and simulators"); got != xcodeHere {
 		t.Errorf("Xcode link shown %v, want %v", got, xcodeHere)
+	}
+}
+
+func TestMobileSearchAndRemove(t *testing.T) {
+	sdk := t.TempDir()
+	usedImg := sdk + "/system-images/android-34/google_apis/arm64-v8a"
+	unusedImg := sdk + "/system-images/android-33/google_apis/arm64-v8a"
+	sims := "/Library/Developer/CoreSimulator/Volumes"
+
+	sh := &fakeShell{}
+	a := NewApp()
+	a.Home = home
+	a.Shell = sh
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + home}, nil))
+	}
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "mobile", Mobile: &inventory.MobileState{
+		Runtimes: []inventory.SimRuntime{
+			{ID: "SIM-175", Platform: "iOS", Version: "17.5", Path: sims + "/iOS_21F79/iOS 17.5.simruntime"},
+			{ID: "SIM-182", Platform: "iOS", Version: "18.2", Path: sims + "/iOS_22C150/iOS 18.2.simruntime"},
+		},
+		Android: &inventory.AndroidSDK{
+			Root:      sdk,
+			Platforms: []inventory.AndroidPart{{Name: "android-35", API: 35, Path: sdk + "/platforms/android-35"}},
+			Images: []inventory.AndroidPart{
+				{Name: "android-34/google_apis/arm64-v8a", API: 34, Path: usedImg, AVDs: []string{"Pixel_8"}},
+				{Name: "android-33/google_apis/arm64-v8a", API: 33, Path: unusedImg},
+			},
+		},
+	}}}}
+	a.router.Push(mobilePage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "mobile-actions")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "mobile-actions-narrow")
+
+	// Search matches AVD name in the row's subtitle.
+	a.mobileFilter = "Pixel_8"
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("Emulator image API 34") || tt.HasText("Emulator image API 33") {
+		t.Fatalf("AVD filter failed: %q", tt.Texts())
+	}
+
+	// Copy path action works on filtered row.
+	if err := tt.Click("Copy path"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got := tt.Clipboard(); got != usedImg {
+		t.Errorf("clipboard = %q, want %q", got, usedImg)
+	}
+
+	// Unused Android image shows under Can be removed and proposes removal.
+	hasTexts(t, tt, "Unused emulator image", "android-33/google_apis/arm64-v8a")
+	if runtime.GOOS == "darwin" {
+		// On macOS, clicking Remove… on the older simulator proposes simctl delete.
+		if err := tt.Click("Remove…"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		if !tt.HasText("xcrun simctl runtime delete SIM-175") {
+			t.Fatalf("expected simctl delete plan: %q", tt.Texts())
+		}
+		if err := tt.Click("Cancel"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+	}
+
+	// Remove unused Android image directly when no older simulator is listed.
+	a.Snapshot.Tools[0].Mobile.Runtimes = a.Snapshot.Tools[0].Mobile.Runtimes[1:]
+	tt.Frame()
+	if err := tt.Click("Remove…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("Remove emulator image API 33") {
+		t.Fatalf("expected Android image removal plan: %q", tt.Texts())
 	}
 }

@@ -42,4 +42,6 @@ type SSHKey struct {
 	Hosts []string `json:",omitempty"`
 	// InAgent reports that ssh-agent holds it.
 	InAgent bool `json:",omitempty"`
+	// PublicKey is the trimmed contents of the .pub file.
+	PublicKey string `json:",omitempty"`
 }

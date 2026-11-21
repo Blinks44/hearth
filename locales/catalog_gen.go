@@ -40255,3 +40255,403 @@ func SetLoadedPreview(count int) string { return In(i18n.Locale()).SetLoadedPrev
 func (msgs Messages) SetLoadedPreview(count int) string {
 	return Catalog.Format(msgs.locale, "setLoadedPreview", map[string]any{"count": count})
 }
+
+// CatalogGh says "GitHub's command-line interface for pull requests, issues and repositories."
+// in the language the app shows.
+func CatalogGh() string { return In(i18n.Locale()).CatalogGh() }
+
+// CatalogGh says "GitHub's command-line interface for pull requests, issues and repositories."
+// in the language of msgs.
+func (msgs Messages) CatalogGh() string {
+	return Catalog.Format(msgs.locale, "catalogGh", nil)
+}
+
+// RustUpdateChannel says "Update {channel}"
+// in the language the app shows.
+func RustUpdateChannel(channel string) string { return In(i18n.Locale()).RustUpdateChannel(channel) }
+
+// RustUpdateChannel says "Update {channel}"
+// in the language of msgs.
+func (msgs Messages) RustUpdateChannel(channel string) string {
+	return Catalog.Format(msgs.locale, "rustUpdateChannel", map[string]any{"channel": channel})
+}
+
+// RustToolchainPlaceholder says "Toolchain, e.g. 1.85.0"
+// in the language the app shows.
+func RustToolchainPlaceholder() string { return In(i18n.Locale()).RustToolchainPlaceholder() }
+
+// RustToolchainPlaceholder says "Toolchain, e.g. 1.85.0"
+// in the language of msgs.
+func (msgs Messages) RustToolchainPlaceholder() string {
+	return Catalog.Format(msgs.locale, "rustToolchainPlaceholder", nil)
+}
+
+// RustTargetAdd says "Add target"
+// in the language the app shows.
+func RustTargetAdd() string { return In(i18n.Locale()).RustTargetAdd() }
+
+// RustTargetAdd says "Add target"
+// in the language of msgs.
+func (msgs Messages) RustTargetAdd() string {
+	return Catalog.Format(msgs.locale, "rustTargetAdd", nil)
+}
+
+// RustTargetPlaceholder says "Target triple, e.g. wasm32-unknown-unknown"
+// in the language the app shows.
+func RustTargetPlaceholder() string { return In(i18n.Locale()).RustTargetPlaceholder() }
+
+// RustTargetPlaceholder says "Target triple, e.g. wasm32-unknown-unknown"
+// in the language of msgs.
+func (msgs Messages) RustTargetPlaceholder() string {
+	return Catalog.Format(msgs.locale, "rustTargetPlaceholder", nil)
+}
+
+// RustTargetRemove says "Remove target {target}"
+// in the language the app shows.
+func RustTargetRemove(target string) string { return In(i18n.Locale()).RustTargetRemove(target) }
+
+// RustTargetRemove says "Remove target {target}"
+// in the language of msgs.
+func (msgs Messages) RustTargetRemove(target string) string {
+	return Catalog.Format(msgs.locale, "rustTargetRemove", map[string]any{"target": target})
+}
+
+// RustTargetAddTitle says "Add target {target}"
+// in the language the app shows.
+func RustTargetAddTitle(target string) string { return In(i18n.Locale()).RustTargetAddTitle(target) }
+
+// RustTargetAddTitle says "Add target {target}"
+// in the language of msgs.
+func (msgs Messages) RustTargetAddTitle(target string) string {
+	return Catalog.Format(msgs.locale, "rustTargetAddTitle", map[string]any{"target": target})
+}
+
+// RustTargetRemoveTitle says "Remove target {target}"
+// in the language the app shows.
+func RustTargetRemoveTitle(target string) string {
+	return In(i18n.Locale()).RustTargetRemoveTitle(target)
+}
+
+// RustTargetRemoveTitle says "Remove target {target}"
+// in the language of msgs.
+func (msgs Messages) RustTargetRemoveTitle(target string) string {
+	return Catalog.Format(msgs.locale, "rustTargetRemoveTitle", map[string]any{"target": target})
+}
+
+// RustTargetAddWhy says "Through rustup, for toolchain {toolchain}."
+// in the language the app shows.
+func RustTargetAddWhy(toolchain string) string { return In(i18n.Locale()).RustTargetAddWhy(toolchain) }
+
+// RustTargetAddWhy says "Through rustup, for toolchain {toolchain}."
+// in the language of msgs.
+func (msgs Messages) RustTargetAddWhy(toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetAddWhy", map[string]any{"toolchain": toolchain})
+}
+
+// RustTargetRemoveWhy says "Through rustup, from toolchain {toolchain}. Can be added back any time."
+// in the language the app shows.
+func RustTargetRemoveWhy(toolchain string) string {
+	return In(i18n.Locale()).RustTargetRemoveWhy(toolchain)
+}
+
+// RustTargetRemoveWhy says "Through rustup, from toolchain {toolchain}. Can be added back any time."
+// in the language of msgs.
+func (msgs Messages) RustTargetRemoveWhy(toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetRemoveWhy", map[string]any{"toolchain": toolchain})
+}
+
+// RustTargetCheckAdded says "{target} is installed in {toolchain}"
+// in the language the app shows.
+func RustTargetCheckAdded(target string, toolchain string) string {
+	return In(i18n.Locale()).RustTargetCheckAdded(target, toolchain)
+}
+
+// RustTargetCheckAdded says "{target} is installed in {toolchain}"
+// in the language of msgs.
+func (msgs Messages) RustTargetCheckAdded(target string, toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetCheckAdded", map[string]any{"target": target, "toolchain": toolchain})
+}
+
+// RustTargetCheckNotAdded says "{target} was not found in {toolchain}"
+// in the language the app shows.
+func RustTargetCheckNotAdded(target string, toolchain string) string {
+	return In(i18n.Locale()).RustTargetCheckNotAdded(target, toolchain)
+}
+
+// RustTargetCheckNotAdded says "{target} was not found in {toolchain}"
+// in the language of msgs.
+func (msgs Messages) RustTargetCheckNotAdded(target string, toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetCheckNotAdded", map[string]any{"target": target, "toolchain": toolchain})
+}
+
+// RustTargetCheckRemoved says "{target} was removed from {toolchain}"
+// in the language the app shows.
+func RustTargetCheckRemoved(target string, toolchain string) string {
+	return In(i18n.Locale()).RustTargetCheckRemoved(target, toolchain)
+}
+
+// RustTargetCheckRemoved says "{target} was removed from {toolchain}"
+// in the language of msgs.
+func (msgs Messages) RustTargetCheckRemoved(target string, toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetCheckRemoved", map[string]any{"target": target, "toolchain": toolchain})
+}
+
+// RustTargetCheckNotRemoved says "{target} is still in {toolchain}"
+// in the language the app shows.
+func RustTargetCheckNotRemoved(target string, toolchain string) string {
+	return In(i18n.Locale()).RustTargetCheckNotRemoved(target, toolchain)
+}
+
+// RustTargetCheckNotRemoved says "{target} is still in {toolchain}"
+// in the language of msgs.
+func (msgs Messages) RustTargetCheckNotRemoved(target string, toolchain string) string {
+	return Catalog.Format(msgs.locale, "rustTargetCheckNotRemoved", map[string]any{"target": target, "toolchain": toolchain})
+}
+
+// GoEnvironment says "Environment"
+// in the language the app shows.
+func GoEnvironment() string { return In(i18n.Locale()).GoEnvironment() }
+
+// GoEnvironment says "Environment"
+// in the language of msgs.
+func (msgs Messages) GoEnvironment() string {
+	return Catalog.Format(msgs.locale, "goEnvironment", nil)
+}
+
+// RubyNoBundler says "Bundler was not found on the terminal's PATH."
+// in the language the app shows.
+func RubyNoBundler() string { return In(i18n.Locale()).RubyNoBundler() }
+
+// RubyNoBundler says "Bundler was not found on the terminal's PATH."
+// in the language of msgs.
+func (msgs Messages) RubyNoBundler() string {
+	return Catalog.Format(msgs.locale, "rubyNoBundler", nil)
+}
+
+// GitCopyPublicKey says "Copy public key"
+// in the language the app shows.
+func GitCopyPublicKey() string { return In(i18n.Locale()).GitCopyPublicKey() }
+
+// GitCopyPublicKey says "Copy public key"
+// in the language of msgs.
+func (msgs Messages) GitCopyPublicKey() string {
+	return Catalog.Format(msgs.locale, "gitCopyPublicKey", nil)
+}
+
+// GitPublicKeyCopied says "Public key copied"
+// in the language the app shows.
+func GitPublicKeyCopied() string { return In(i18n.Locale()).GitPublicKeyCopied() }
+
+// GitPublicKeyCopied says "Public key copied"
+// in the language of msgs.
+func (msgs Messages) GitPublicKeyCopied() string {
+	return Catalog.Format(msgs.locale, "gitPublicKeyCopied", nil)
+}
+
+// GitNoGitHub says "GitHub CLI (gh) is not installed."
+// in the language the app shows.
+func GitNoGitHub() string { return In(i18n.Locale()).GitNoGitHub() }
+
+// GitNoGitHub says "GitHub CLI (gh) is not installed."
+// in the language of msgs.
+func (msgs Messages) GitNoGitHub() string {
+	return Catalog.Format(msgs.locale, "gitNoGitHub", nil)
+}
+
+// EditorsAddToPath says "Add to PATH…"
+// in the language the app shows.
+func EditorsAddToPath() string { return In(i18n.Locale()).EditorsAddToPath() }
+
+// EditorsAddToPath says "Add to PATH…"
+// in the language of msgs.
+func (msgs Messages) EditorsAddToPath() string {
+	return Catalog.Format(msgs.locale, "editorsAddToPath", nil)
+}
+
+// EditorsAddPathTitle says "Add {command} to PATH"
+// in the language the app shows.
+func EditorsAddPathTitle(command string) string {
+	return In(i18n.Locale()).EditorsAddPathTitle(command)
+}
+
+// EditorsAddPathTitle says "Add {command} to PATH"
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathTitle(command string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathTitle", map[string]any{"command": command})
+}
+
+// EditorsAddPathWhy says "Adds {dir} to Hearth's block in the shell startup file so {command} works in new terminals."
+// in the language the app shows.
+func EditorsAddPathWhy(dir string, command string) string {
+	return In(i18n.Locale()).EditorsAddPathWhy(dir, command)
+}
+
+// EditorsAddPathWhy says "Adds {dir} to Hearth's block in the shell startup file so {command} works in new terminals."
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathWhy(dir string, command string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathWhy", map[string]any{"dir": dir, "command": command})
+}
+
+// EditorsAddPathWhyRegistry says "Adds {dir} to the user's Path in the registry so {command} works in new terminals."
+// in the language the app shows.
+func EditorsAddPathWhyRegistry(dir string, command string) string {
+	return In(i18n.Locale()).EditorsAddPathWhyRegistry(dir, command)
+}
+
+// EditorsAddPathWhyRegistry says "Adds {dir} to the user's Path in the registry so {command} works in new terminals."
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathWhyRegistry(dir string, command string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathWhyRegistry", map[string]any{"dir": dir, "command": command})
+}
+
+// EditorsAddPathChange says "+ {dir} in PATH"
+// in the language the app shows.
+func EditorsAddPathChange(dir string) string { return In(i18n.Locale()).EditorsAddPathChange(dir) }
+
+// EditorsAddPathChange says "+ {dir} in PATH"
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathChange(dir string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathChange", map[string]any{"dir": dir})
+}
+
+// EditorsAddPathCheckOk says "{command} is now on the terminal's PATH ({path})"
+// in the language the app shows.
+func EditorsAddPathCheckOk(command string, path string) string {
+	return In(i18n.Locale()).EditorsAddPathCheckOk(command, path)
+}
+
+// EditorsAddPathCheckOk says "{command} is now on the terminal's PATH ({path})"
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathCheckOk(command string, path string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathCheckOk", map[string]any{"command": command, "path": path})
+}
+
+// EditorsAddPathCheckFail says "{command} was still not found on the terminal's PATH"
+// in the language the app shows.
+func EditorsAddPathCheckFail(command string) string {
+	return In(i18n.Locale()).EditorsAddPathCheckFail(command)
+}
+
+// EditorsAddPathCheckFail says "{command} was still not found on the terminal's PATH"
+// in the language of msgs.
+func (msgs Messages) EditorsAddPathCheckFail(command string) string {
+	return Catalog.Format(msgs.locale, "editorsAddPathCheckFail", map[string]any{"command": command})
+}
+
+// MobileUnusedImage says "Unused emulator image"
+// in the language the app shows.
+func MobileUnusedImage() string { return In(i18n.Locale()).MobileUnusedImage() }
+
+// MobileUnusedImage says "Unused emulator image"
+// in the language of msgs.
+func (msgs Messages) MobileUnusedImage() string {
+	return Catalog.Format(msgs.locale, "mobileUnusedImage", nil)
+}
+
+// MobileRemoveSimTitle says "Remove {platform} simulator {version}"
+// in the language the app shows.
+func MobileRemoveSimTitle(platform string, version string) string {
+	return In(i18n.Locale()).MobileRemoveSimTitle(platform, version)
+}
+
+// MobileRemoveSimTitle says "Remove {platform} simulator {version}"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveSimTitle(platform string, version string) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveSimTitle", map[string]any{"platform": platform, "version": version})
+}
+
+// MobileRemoveSimWhy says "Removes this older simulator runtime. It can be downloaded again in Xcode."
+// in the language the app shows.
+func MobileRemoveSimWhy() string { return In(i18n.Locale()).MobileRemoveSimWhy() }
+
+// MobileRemoveSimWhy says "Removes this older simulator runtime. It can be downloaded again in Xcode."
+// in the language of msgs.
+func (msgs Messages) MobileRemoveSimWhy() string {
+	return Catalog.Format(msgs.locale, "mobileRemoveSimWhy", nil)
+}
+
+// MobileRemoveSimCheckOk says "{platform} simulator {version} was removed"
+// in the language the app shows.
+func MobileRemoveSimCheckOk(platform string, version string) string {
+	return In(i18n.Locale()).MobileRemoveSimCheckOk(platform, version)
+}
+
+// MobileRemoveSimCheckOk says "{platform} simulator {version} was removed"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveSimCheckOk(platform string, version string) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveSimCheckOk", map[string]any{"platform": platform, "version": version})
+}
+
+// MobileRemoveSimCheckFail says "{platform} simulator {version} is still present"
+// in the language the app shows.
+func MobileRemoveSimCheckFail(platform string, version string) string {
+	return In(i18n.Locale()).MobileRemoveSimCheckFail(platform, version)
+}
+
+// MobileRemoveSimCheckFail says "{platform} simulator {version} is still present"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveSimCheckFail(platform string, version string) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveSimCheckFail", map[string]any{"platform": platform, "version": version})
+}
+
+// MobileRemoveSimNoId says "Could not find the simulator runtime ID via xcrun simctl."
+// in the language the app shows.
+func MobileRemoveSimNoId() string { return In(i18n.Locale()).MobileRemoveSimNoId() }
+
+// MobileRemoveSimNoId says "Could not find the simulator runtime ID via xcrun simctl."
+// in the language of msgs.
+func (msgs Messages) MobileRemoveSimNoId() string {
+	return Catalog.Format(msgs.locale, "mobileRemoveSimNoId", nil)
+}
+
+// MobileRemoveImageTitle says "Remove emulator image API {api}"
+// in the language the app shows.
+func MobileRemoveImageTitle(api int) string { return In(i18n.Locale()).MobileRemoveImageTitle(api) }
+
+// MobileRemoveImageTitle says "Remove emulator image API {api}"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveImageTitle(api int) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveImageTitle", map[string]any{"api": api})
+}
+
+// MobileRemoveImageWhy says "No AVD uses this system image. It can be downloaded again in Android Studio or sdkmanager."
+// in the language the app shows.
+func MobileRemoveImageWhy() string { return In(i18n.Locale()).MobileRemoveImageWhy() }
+
+// MobileRemoveImageWhy says "No AVD uses this system image. It can be downloaded again in Android Studio or sdkmanager."
+// in the language of msgs.
+func (msgs Messages) MobileRemoveImageWhy() string {
+	return Catalog.Format(msgs.locale, "mobileRemoveImageWhy", nil)
+}
+
+// MobileRemoveImageInUse says "This system image is still used by an AVD."
+// in the language the app shows.
+func MobileRemoveImageInUse() string { return In(i18n.Locale()).MobileRemoveImageInUse() }
+
+// MobileRemoveImageInUse says "This system image is still used by an AVD."
+// in the language of msgs.
+func (msgs Messages) MobileRemoveImageInUse() string {
+	return Catalog.Format(msgs.locale, "mobileRemoveImageInUse", nil)
+}
+
+// MobileRemoveImageCheckOk says "Emulator image API {api} was removed"
+// in the language the app shows.
+func MobileRemoveImageCheckOk(api int) string { return In(i18n.Locale()).MobileRemoveImageCheckOk(api) }
+
+// MobileRemoveImageCheckOk says "Emulator image API {api} was removed"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveImageCheckOk(api int) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveImageCheckOk", map[string]any{"api": api})
+}
+
+// MobileRemoveImageCheckFail says "Emulator image API {api} is still present"
+// in the language the app shows.
+func MobileRemoveImageCheckFail(api int) string {
+	return In(i18n.Locale()).MobileRemoveImageCheckFail(api)
+}
+
+// MobileRemoveImageCheckFail says "Emulator image API {api} is still present"
+// in the language of msgs.
+func (msgs Messages) MobileRemoveImageCheckFail(api int) string {
+	return Catalog.Format(msgs.locale, "mobileRemoveImageCheckFail", map[string]any{"api": api})
+}

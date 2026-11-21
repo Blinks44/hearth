@@ -179,13 +179,14 @@ func TestCleanupCopies(t *testing.T) {
 		}, Usage: gb},
 		{Kind: cleanup.ExtraCopy, ID: "python", Paths: []string{"/opt/homebrew/Cellar/python@3.12/3.12.8"}, Copies: []inventory.Installation{keg("python", "/opt/homebrew/Cellar/python@3.12/3.12.8")}, Usage: gb},
 		{Kind: cleanup.UnneededPackage, ID: "libyaml", Manager: "brew", Paths: []string{"/opt/homebrew/Cellar/libyaml/0.2.5"}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "rust", Paths: []string{"/h/.rustup/toolchains/nightly"}, Copies: []inventory.Installation{vm("rust", "rustup", "/h/.rustup/toolchains/nightly", "nightly")}, Usage: gb},
 		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/opt/homebrew/Cellar/node/23.3.0"}, Copies: []inventory.Installation{keg("node", "/opt/homebrew/Cellar/node/23.3.0")}, Usage: gb},
 		{Kind: cleanup.ExtraCopy, ID: "node", Paths: []string{"/h/.volta/tools/image/node/22.11.0"}, Copies: []inventory.Installation{vm("node", "volta", "/h/.volta/tools/image/node/22.11.0", "22.11.0")}, Usage: gb},
-		{Kind: cleanup.ExtraCopy, ID: "rust", Paths: []string{"/h/.rustup/toolchains/nightly"}, Copies: []inventory.Installation{vm("rust", "rustup", "/h/.rustup/toolchains/nightly", "nightly")}, Usage: gb},
+		{Kind: cleanup.ExtraCopy, ID: "ruby", Paths: []string{"/h/.rubies/ruby-3.2.0"}, Copies: []inventory.Installation{vm("ruby", "chruby", "/h/.rubies/ruby-3.2.0", "3.2.0")}, Usage: gb},
 	}
-	titles := []string{"Node 20.1.0 · fnm", "Python 3.11.9 · pyenv", "Node 16.0.0 · n", "nvm", "Python · brew", "libyaml · brew", "Node 23.3.0 · brew", "Node · Volta", "Rust · rustup"}
+	titles := []string{"Node 20.1.0 · fnm", "Python 3.11.9 · pyenv", "Node 16.0.0 · n", "nvm", "Python · brew", "libyaml · brew", "Rust · rustup", "Node 23.3.0 · brew", "Node · Volta", "Ruby · chruby"}
 	for i, c := range cands {
-		if want := i < 6; Cleans(c, s) != want {
+		if want := i < 7; Cleans(c, s) != want {
 			t.Errorf("%s: Cleans %v, want %v", titles[i], !want, want)
 		}
 	}
@@ -196,7 +197,7 @@ func TestCleanupCopies(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(home, ".nvm", "nvm.sh"), nil, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	env := append(pathWith(t, "fnm", "n"), "HOME="+home)
+	env := append(pathWith(t, "fnm", "n", "rustup"), "HOME="+home)
 	p, err := CleanupPlan(cands, titles, s, env, DockerTarget{}, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -219,6 +220,7 @@ func TestCleanupCopies(t *testing.T) {
 		"admin n rm 16.0.0",
 		"nvm uninstall 18.20.4",
 		"nvm uninstall 20.18.0",
+		"rustup toolchain uninstall nightly",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("steps\n%q\nwant\n%q", got, want)

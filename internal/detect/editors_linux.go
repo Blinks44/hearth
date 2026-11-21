@@ -24,6 +24,14 @@ func codeApps(_ sysenv.Env, _, id string) []string {
 // codeResources are the folders of the app's package.json.
 func codeResources(app string) []string { return []string{filepath.Join(app, "resources", "app")} }
 
+// codeCommandSource is the editor's CLI launcher inside its install folder.
+func codeCommandSource(app, command string) string {
+	if p := filepath.Join(app, "bin", command); exists(p) {
+		return p
+	}
+	return ""
+}
+
 // jetbrainsInfos are the product-info.json of the JetBrains IDEs: where
 // Toolbox puts them, now and before its version 2, unpacked in /opt, and
 // their snaps.

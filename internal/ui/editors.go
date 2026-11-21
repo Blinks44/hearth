@@ -10,6 +10,8 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -25,6 +27,7 @@ type editorRow struct {
 	onPath      bool
 	path        string
 	paths       []string
+	addPath     *inventory.Editor
 }
 
 // editorsState is what the editors detector found; empty before a scan.
@@ -37,6 +40,9 @@ func (a *App) editorsState() inventory.EditorsState {
 
 // editorSize is the space the last count found at the row's paths.
 func (a *App) editorSize(r editorRow) (int64, bool) {
+	if r.command {
+		return 0, false
+	}
 	paths := r.paths
 	if r.path != "" {
 		paths = append(paths, r.path)
@@ -68,7 +74,11 @@ func editorTitle(e inventory.Editor) string {
 // editorRows are an editor's rows.
 func (a *App) editorRows(e inventory.Editor, all []inventory.Editor) []editorRow {
 	var rows []editorRow
-	cmd := editorRow{name: locales.EditorsCommand(e.Command), command: true, onPath: e.CommandPath != ""}
+	cmd := editorRow{name: locales.EditorsCommand(e.Command), command: true, onPath: e.CommandPath != "", path: e.CommandPath}
+	if e.CommandPath == "" && e.CommandSource != "" {
+		ed := e
+		cmd.addPath = &ed
+	}
 	switch {
 	case e.CommandPath != "" && strings.Contains(e.CommandPath, "Toolbox"):
 		cmd.about = locales.EditorsToolboxScript()
@@ -226,6 +236,9 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 				ui.Text(c, strings.ToUpper(editorTitle(e))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 				if size > 0 {
 					ui.Text(c, formatBytes(size)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+					if a.Shell != nil {
+						ui.Box(c).Width(50).Shrink(0)
+					}
 				}
 			})
 			for _, r := range rows {
@@ -243,7 +256,13 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 						clipped(c, r.name).FontSize(13)
 						clipped(c, r.about).FontSize(10.5).TextColor(pal.TextFaint)
 					})
-					ui.Text(c, right).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+					if r.addPath != nil && a.BuildPlan != nil {
+						ed := *r.addPath
+						ui.Button(c.Key("add-path:"+e.ID), locales.EditorsAddToPath()).Shrink(0).OnClick(func() { a.addEditorToPath(ed) })
+					} else {
+						ui.Text(c, right).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+						a.pathActions(c, e.ID+":"+r.name, r.path)
+					}
 				})
 			}
 			shown += len(rows)
@@ -258,6 +277,7 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 // extensions' old versions, and the way to Cleanup.
 func (a *App) editorsHints(c *ui.Context, eds []inventory.Editor) {
 	t := c.Theme()
+	pal := Colors(t)
 	var old int64
 	cleanable := false
 	for _, cand := range a.candidates(c) {
@@ -272,7 +292,18 @@ func (a *App) editorsHints(c *ui.Context, eds []inventory.Editor) {
 		shown := 0
 		for _, e := range eds {
 			if e.App != "" && e.CommandPath == "" {
-				listRow(c, locales.EditorsNoCommand(e.Name), false, locales.EditorsNoCommandCaption(e.Command), func() {})
+				ed := e
+				if ed.CommandSource != "" && a.BuildPlan != nil {
+					ui.Column(c.Key("hint:"+ed.ID)).Gap(8).Padding(10, 12, 10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Start).Children(func() {
+						ui.Column(c).Gap(2).Children(func() {
+							ui.Text(c, locales.EditorsNoCommand(ed.Name)).FontSize(12.5)
+							ui.Text(c, locales.EditorsNoCommandCaption(ed.Command)).FontSize(11).TextColor(pal.TextFaint)
+						})
+						ui.Button(c.Key("hint-add-path:"+ed.ID), locales.EditorsAddToPath()).OnClick(func() { a.addEditorToPath(ed) })
+					})
+				} else {
+					listRow(c, locales.EditorsNoCommand(e.Name), false, locales.EditorsNoCommandCaption(e.Command), func() {})
+				}
 				shown++
 			}
 		}
@@ -299,4 +330,14 @@ func (a *App) editorsHints(c *ui.Context, eds []inventory.Editor) {
 			ui.Text(c, locales.MobileOpenCleanupCaption()).FontSize(11.5).TextColor(Colors(t).TextFaint).SingleLine()
 		})
 	})
+}
+
+// addEditorToPath proposes the plan that adds e's CLI command to PATH.
+func (a *App) addEditorToPath(e inventory.Editor) {
+	if a.BuildPlan == nil {
+		return
+	}
+	a.BuildPlan(func(env sysenv.Env, term ops.Terminal) (ops.Plan, error) {
+		return ops.EditorPathPlan(e, env, term)
+	}, a.proposeOrSay)
 }

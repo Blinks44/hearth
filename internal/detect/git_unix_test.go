@@ -67,8 +67,8 @@ func TestGit(t *testing.T) {
 		Helpers: []string{"manager"},
 		GitHub:  &inventory.GitHubCLI{Path: gh, Version: "2.63.2", Hosts: []inventory.GitHubHost{{Host: "github.com", User: "ann"}}},
 		Keys: []inventory.SSHKey{
-			{Name: "id_ed25519", Type: "ED25519", Hosts: []string{"github.com", "gitlab.com"}, InAgent: true},
-			{Name: "id_rsa", Type: "RSA", Bits: 2048},
+			{Name: "id_ed25519", Type: "ED25519", Hosts: []string{"github.com", "gitlab.com"}, InAgent: true, PublicKey: "ssh-ed25519 " + base64.StdEncoding.EncodeToString(ed) + " ann@laptop"},
+			{Name: "id_rsa", Type: "RSA", Bits: 2048, PublicKey: "ssh-rsa " + base64.StdEncoding.EncodeToString(rsa)},
 		},
 	}
 	if !reflect.DeepEqual(st.Git, want) {

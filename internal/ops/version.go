@@ -129,6 +129,7 @@ var managerTools = map[string][]string{
 	"pyenv": {"python"}, "uv": {"python"},
 	"rbenv": {"ruby"}, "rvm": {"ruby"},
 	"sdkman":   {"java"},
+	"rustup":   {"rust"},
 	"corepack": {"pnpm", "yarn"},
 	// Homebrew's other copies are packages, which the package operation
 	// changes.
@@ -144,6 +145,7 @@ var knownDefaults = map[string][]string{
 	"ruby":   {"rbenv", "rvm", "asdf", "mise"},
 	"java":   {"sdkman", "mise"},
 	"go":     {"mise"},
+	"rust":   {"rustup"},
 	"php":    {"mise"},
 	"dotnet": {"mise"},
 	"pnpm":   {"corepack"},
@@ -217,6 +219,8 @@ func versionCommand(action VersionAction, t VersionTarget) []string {
 	case "sdkman":
 		argvs = shellFunction(sdkScript, "sdk", nil, []string{"uninstall", "java", v}, []string{"default", "java", v})
 		argvs[VersionInstall] = []string{"bash", "-c", sdkTemurinScript, "sdk", "install", "java", v}
+	case "rustup":
+		argvs = [3][]string{{"rustup", "toolchain", "install", v}, {"rustup", "toolchain", "uninstall", v}, {"rustup", "default", v}}
 	case "corepack":
 		// corepack install -g makes the version the default; Corepack has
 		// no command that removes one from its cache.
@@ -250,8 +254,11 @@ func javaSpec(manager, line string) string {
 
 // matches reports that in is version, as the manager names it: its own
 // name for it, or one it starts, as mise's temurin-21.0.5+11.0.LTS of
-// temurin-21.0.5+11.
+// temurin-21.0.5+11, or rustup's stable-aarch64-apple-darwin of stable.
 func matches(in inventory.Installation, version string) bool {
+	if in.Rust != nil && (in.Rust.Name == version || strings.HasPrefix(in.Rust.Name, version+"-")) {
+		return true
+	}
 	name := cmp.Or(in.Source.Version, in.Version)
 	return name == version || in.Version == version || strings.HasPrefix(name, version+".")
 }

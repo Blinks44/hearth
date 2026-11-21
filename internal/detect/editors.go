@@ -40,6 +40,9 @@ func Editors(ctx context.Context, _ run.Runner, term, _ sysenv.Env) (inventory.T
 			}
 		}
 		e.CommandPath, e.CommandReal = firstOnPath(spec.command, term)
+		if e.App != "" {
+			e.CommandSource = codeCommandSource(e.App, spec.command)
+		}
 		if home != "" {
 			e.Extensions = filepath.Join(home, spec.dir, "extensions")
 		}
@@ -135,6 +138,16 @@ func jetbrainsIDEs(env sysenv.Env, home string) []inventory.Editor {
 				e.Command, e.CommandPath, e.CommandReal = command+"-ce", path, real
 			}
 		}
+		if scripts != "" {
+			if script := filepath.Join(scripts, e.Command+toolboxScriptExt); exists(script) {
+				e.CommandSource = script
+			}
+		}
+		if e.CommandSource == "" && p.Launch[0].LauncherPath != "" {
+			if launcher := filepath.Clean(filepath.Join(filepath.Dir(info), filepath.FromSlash(p.Launch[0].LauncherPath))); exists(launcher) && editorCommandMatches(launcher, e.Command) {
+				e.CommandSource = launcher
+			}
+		}
 		if p.DataDirectoryName != "" {
 			plugins, caches := jetbrainsDirs(env, home, p.DataDirectoryName)
 			if entries, err := os.ReadDir(plugins); err == nil {
@@ -152,6 +165,20 @@ func jetbrainsIDEs(env sysenv.Env, home string) []inventory.Editor {
 		out = append(out, e)
 	}
 	return out
+}
+
+// editorCommandMatches reports that path's base name can be invoked as command
+// once its directory is on PATH.
+func editorCommandMatches(path, command string) bool {
+	base := filepath.Base(path)
+	if base == command {
+		return true
+	}
+	ext := strings.ToLower(filepath.Ext(base))
+	if ext == ".cmd" || ext == ".bat" || ext == ".exe" {
+		return strings.EqualFold(strings.TrimSuffix(base, filepath.Ext(base)), command)
+	}
+	return false
 }
 
 // jetbrainsCommand is the command of the IDE at app with the launcher

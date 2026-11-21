@@ -113,3 +113,34 @@ func TestJSManagersBeforeScan(t *testing.T) {
 		t.Fatalf("texts: %q", tt.Texts())
 	}
 }
+
+func TestJSManagersChipsAndGlobals(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "npm", Installations: []inventory.Installation{
+			{Tool: "npm", Version: "10.9.0", OnPath: 1, Default: true, Path: home + "/.local/share/fnm/bin/npm", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "fnm"}},
+			{Tool: "npm", Version: "10.2.0", OnPath: 2, Path: "/opt/homebrew/bin/npm", Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
+		}},
+		{Tool: "pnpm", Installations: []inventory.Installation{
+			{Tool: "pnpm", Version: "9.15.0", OnPath: 1, Default: true, Path: home + "/.local/share/pnpm/pnpm", Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise"},
+				Packages: []inventory.Package{{Name: "turbo", Version: "2.3.0"}}},
+		}},
+		{Tool: "yarn", Installations: []inventory.Installation{
+			{Tool: "yarn", Version: "1.22.22", OnPath: 1, Path: "/opt/homebrew/bin/yarn", Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"},
+				Packages: []inventory.Package{{Name: "serve", Version: "14.2.4"}}},
+		}},
+	}}
+	a.router.Push("/tools/jspm")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "jspm-chips-globals")
+	hasTexts(t, tt, "default", "in PATH", "duplicate in PATH", "pnpm -g", "turbo", "2.3.0", "yarn global", "serve", "14.2.4")
+
+	// Global packages tab shows all three managers' globals too.
+	a.jspmTab = 1
+	tt.Frame()
+	tt.Advance(time.Second)
+	screenshot(t, tt, "jspm-globals-tab")
+	hasTexts(t, tt, "npm -g", "pnpm -g", "turbo", "yarn global", "serve")
+}

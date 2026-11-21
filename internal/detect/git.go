@@ -161,7 +161,8 @@ func sshKeys(ctx context.Context, r run.Runner, env sysenv.Env, home string) []i
 	}
 	var out []inventory.SSHKey
 	for _, pub := range pubs {
-		fields := strings.Fields(readFile(pub))
+		raw := strings.TrimSpace(readFile(pub))
+		fields := strings.Fields(raw)
 		if len(fields) < 2 {
 			continue
 		}
@@ -170,7 +171,7 @@ func sshKeys(ctx context.Context, r run.Runner, env sysenv.Env, home string) []i
 			continue
 		}
 		name := strings.TrimSuffix(filepath.Base(pub), ".pub")
-		k := inventory.SSHKey{Name: name, Hosts: hosts[filepath.Join(dir, name)]}
+		k := inventory.SSHKey{Name: name, Hosts: hosts[filepath.Join(dir, name)], PublicKey: raw}
 		k.Type, k.Bits = sshKeyType(fields[0], blob)
 		sum := sha256.Sum256(blob)
 		k.InAgent = agent["SHA256:"+base64.RawStdEncoding.EncodeToString(sum[:])]

@@ -40,6 +40,7 @@ func (a *App) ruby(c *ui.Context, p page) {
 					}, func() {
 						a.rubyAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
+						a.rubyBundler(c, st, ins, active)
 						if active >= 0 {
 							globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
 						}
@@ -119,5 +120,32 @@ func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 				a.installButton(c, st, l.Latest, l.Latest)
 			})
 		}
+	})
+}
+
+// rubyBundler shows whether Bundler is on PATH and offers to install it
+// when absent.
+func (a *App) rubyBundler(c *ui.Context, st inventory.ToolState, ins []inventory.Installation, active int) {
+	ver := ""
+	if active >= 0 {
+		for _, pkg := range ins[active].Packages {
+			if pkg.Name == "bundler" {
+				ver = pkg.Version
+				break
+			}
+		}
+	}
+	listCard(c, "Bundler", ver, func() {
+		if path := st.Vars["bundle"]; path != "" {
+			listRow(c, "bundle", true, tilde(path, a.Home), func() {
+				a.pathActions(c, "ruby-bundle", path)
+			})
+			return
+		}
+		if a.canInstallTool("bundler") {
+			listRow(c, "Bundler", false, locales.NotInPath(), func() { a.installToolButton(c, "bundler") })
+			return
+		}
+		cardNote(c, locales.RubyNoBundler())
 	})
 }

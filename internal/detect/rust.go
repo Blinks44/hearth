@@ -55,7 +55,7 @@ func Rust(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		root := filepath.Dir(filepath.Dir(in.RealPath))
 		if slices.Contains(toolchains, root) {
 			name := filepath.Base(root)
-			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: Rustup, Root: root}
+			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: Rustup, Root: root, Version: name}
 			in.Rust = &inventory.RustToolchain{Name: name, Targets: rustTargets(root)}
 			in.Default = def != "" && (name == def || strings.HasPrefix(name, def+"-"))
 		}
@@ -65,11 +65,11 @@ func Rust(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 				in.Rust.Date = v[2]
 			}
 		}
-		if in.Version == "" {
-			in.Version = pathVersion(in.Source.Version)
-		}
 		if in.Version == "" && in.Rust != nil {
 			in.Version = rustNameVersion.FindString(in.Rust.Name)
+		}
+		if in.Version == "" && in.Rust == nil {
+			in.Version = pathVersion(in.Source.Version)
 		}
 		in.Packages = tools
 	}

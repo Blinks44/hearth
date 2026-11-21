@@ -7,6 +7,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 )
 
@@ -50,6 +52,32 @@ func TestJavaPage(t *testing.T) {
 	tt.Advance(time.Second)
 	if tt.HasText("mvn") || !tt.HasText("JAVA_HOME") {
 		t.Fatalf("PATH texts %q", tt.Texts())
+	}
+}
+
+func TestJavaIndependentBuilders(t *testing.T) {
+	orig := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = orig })
+
+	a := NewApp()
+	a.Shell = &fakeShell{}
+	a.Snapshot = javaSnapshot()
+	a.Snapshot.Tools[0].Managers[0].Activated = true
+	a.Snapshot.Tools[0].Managers[0].Version = "2025.1.6"
+	delete(a.Snapshot.Tools[0].Vars, "mvn")
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + home, "SHELL=/bin/zsh"}, nil))
+	}
+	tt := openJava(a)
+	screenshot(t, tt, "java-builders")
+	hasTexts(t, tt, "gradle", "/opt/homebrew/bin/gradle", "Maven", "Install…")
+	if err := tt.Click("Install…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("mise use --global maven") {
+		t.Fatalf("expected maven install plan: %q", tt.Texts())
 	}
 }
 

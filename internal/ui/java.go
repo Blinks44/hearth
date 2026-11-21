@@ -38,20 +38,20 @@ func (a *App) javaPage(c *ui.Context, p page) {
 						a.javaAvailable(c, st)
 						a.managerCard(c, st, rows, active, nil)
 						listCard(c, locales.JavaBuilders(), "", func() {
-							found := false
-							for _, cmd := range []string{"gradle", "mvn"} {
-								if path := st.Vars[cmd]; path != "" {
-									listRow(c, cmd, false, tilde(path, a.Home), func() {})
-									found = true
+							shown := 0
+							for _, b := range []struct{ id, cmd string }{{"gradle", "gradle"}, {"maven", "mvn"}} {
+								if path := st.Vars[b.cmd]; path != "" {
+									listRow(c, b.cmd, false, tilde(path, a.Home), func() {
+										a.pathActions(c, "java-"+b.cmd, path)
+									})
+									shown++
+								} else if a.canInstallTool(b.id) {
+									listRow(c, setupTitle(b.id), false, "", func() { a.installToolButton(c, b.id) })
+									shown++
 								}
 							}
-							if !found {
+							if shown == 0 {
 								cardNote(c, locales.JavaNoBuilders())
-								for _, id := range []string{"gradle", "maven"} {
-									if a.canInstallTool(id) {
-										listRow(c, setupTitle(id), false, "", func() { a.installToolButton(c, id) })
-									}
-								}
 							}
 						})
 					})

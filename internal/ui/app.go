@@ -150,6 +150,9 @@ type App struct {
 	AgentChecking    bool
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
+	// Runner runs read-only commands needed while building a plan (such as
+	// xcrun simctl runtime list); nil skips them.
+	Runner run.Runner
 	// OnScan starts a scan, whose snapshot comes back through
 	// Window.Update; nil disables scanning.
 	OnScan func()
@@ -355,24 +358,26 @@ type App struct {
 	updatesFilter string // the Updates table's filter
 	// updateChoice is what the user checked or unchecked on the Updates
 	// page, by updateRow.key; the others are as Hearth offers them.
-	updateChoice   map[string]bool
-	databaseTab    int     // the tab of the databases page shown
-	databaseFilter string  // the databases table's filter
-	dockerTab      int     // the tab of the Docker page shown
-	dockerFilter   string  // the Docker contexts table's filter
-	bunTab         int     // the tab of the Bun page shown
-	goTab          int     // the tab of the Go page shown
-	phpTab         int     // the tab of the PHP page shown
-	pythonTab      int     // the tab of the Python page shown
-	dotnetTab      int     // the tab of the .NET page shown
-	rubyTab        int     // the tab of the Ruby page shown
-	javaTab        int     // the tab of the Java page shown
-	rustTab        int     // the tab of the Rust page shown
-	projectsTab    int     // all projects, or the ones needing attention
-	projectFilter  string  // the projects page's filter
-	adding         *adding // the folder the add dialog shows; nil when closed
-	addOpen        bool
-	licensesOpen   bool // the licenses dialog from Settings
+	updateChoice       map[string]bool
+	databaseTab        int     // the tab of the databases page shown
+	databaseFilter     string  // the databases table's filter
+	dockerTab          int     // the tab of the Docker page shown
+	dockerFilter       string  // the Docker contexts table's filter
+	bunTab             int     // the tab of the Bun page shown
+	goTab              int     // the tab of the Go page shown
+	phpTab             int     // the tab of the PHP page shown
+	pythonTab          int     // the tab of the Python page shown
+	dotnetTab          int     // the tab of the .NET page shown
+	rubyTab            int     // the tab of the Ruby page shown
+	javaTab            int     // the tab of the Java page shown
+	rustTab            int     // the tab of the Rust page shown
+	rustToolchainInput string  // custom toolchain name or version to install via rustup
+	rustTargetInput    string  // custom target triple to add via rustup target add
+	projectsTab        int     // all projects, or the ones needing attention
+	projectFilter      string  // the projects page's filter
+	adding             *adding // the folder the add dialog shows; nil when closed
+	addOpen            bool
+	licensesOpen       bool // the licenses dialog from Settings
 
 	dockerTabsReady bool
 	colimaResize    colimaResizeForm

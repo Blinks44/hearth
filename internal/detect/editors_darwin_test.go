@@ -14,6 +14,7 @@ func TestEditorsDarwin(t *testing.T) {
 	applications = filepath.Join(dir, "Applications")
 	t.Cleanup(func() { applications = saved })
 	home := filepath.Join(dir, "home")
+	codeBin := fakeExe(t, filepath.Join(applications, "Visual Studio Code.app", "Contents", "Resources", "app", "bin", "code"))
 	writeFile(t, filepath.Join(applications, "Visual Studio Code.app", "Contents", "Resources", "app", "package.json"), `{"name":"Code","version":"1.96.2"}`)
 	bin := filepath.Join(dir, "bin")
 	fakeExe(t, filepath.Join(bin, "code"))
@@ -23,7 +24,7 @@ func TestEditorsDarwin(t *testing.T) {
 	writeFile(t, filepath.Join(applications, "Android Studio.app", "Contents", "Resources", "product-info.json"),
 		`{"name":"Android Studio","productCode":"AI","launch":[{"launcherPath":"../MacOS/studio"}]}`)
 	support := filepath.Join(home, "Library", "Application Support", "JetBrains")
-	fakeExe(t, filepath.Join(support, "Toolbox", "scripts", "idea"))
+	ideaScript := fakeExe(t, filepath.Join(support, "Toolbox", "scripts", "idea"))
 	for _, plugin := range []string{"go", "rust", ".DS_Store"} {
 		writeFile(t, filepath.Join(support, "IntelliJIdea2024.3", "plugins", plugin, "x"), "")
 	}
@@ -38,10 +39,10 @@ func TestEditorsDarwin(t *testing.T) {
 		t.Fatalf("%+v", eds)
 	}
 	code, idea := eds[0], eds[1]
-	if code.Version != "1.96.2" || code.CommandPath != filepath.Join(bin, "code") || code.Extensions != "" {
+	if code.Version != "1.96.2" || code.CommandPath != filepath.Join(bin, "code") || code.CommandSource != codeBin || code.Extensions != "" {
 		t.Fatalf("%+v", code)
 	}
-	if idea.Name != "IntelliJ IDEA" || idea.Command != "idea" || !idea.Toolbox || idea.CommandPath != "" || len(idea.Installed) != 2 ||
+	if idea.Name != "IntelliJ IDEA" || idea.Command != "idea" || !idea.Toolbox || idea.CommandPath != "" || idea.CommandSource != ideaScript || len(idea.Installed) != 2 ||
 		idea.Caches != filepath.Join(home, "Library", "Caches", "JetBrains", "IntelliJIdea2024.3") || idea.App != filepath.Join(home, "Applications", "IntelliJ IDEA Ultimate.app") {
 		t.Fatalf("%+v", idea)
 	}

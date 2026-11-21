@@ -21,6 +21,14 @@ func codeResources(app string) []string {
 	return []string{filepath.Join(app, "Contents", "Resources", "app")}
 }
 
+// codeCommandSource is the editor's CLI launcher inside its app bundle.
+func codeCommandSource(app, command string) string {
+	if p := filepath.Join(app, "Contents", "Resources", "app", "bin", command); exists(p) {
+		return p
+	}
+	return ""
+}
+
 // jetbrainsInfos are the product-info.json of the JetBrains IDEs: in
 // /Applications, in ~/Applications, where Toolbox 2 puts them, and in
 // older Toolbox's apps folder.

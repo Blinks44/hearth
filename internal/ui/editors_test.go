@@ -2,7 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -10,6 +12,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // VS Code with its command, Cursor without one and extensions shared
@@ -101,5 +105,54 @@ func TestEditorsPageRussian(t *testing.T) {
 	hasTexts(t, tt, "Редакторы", "Команда cursor", "не в PATH · ставится из самого Cursor", "3 расширения", "Cursor без команды в PATH")
 	if tt.HasText("0 КБ") {
 		t.Error("a size before the count")
+	}
+}
+
+func TestEditorsPathActionsAndAddToPath(t *testing.T) {
+	tmpHome := t.TempDir()
+	cmdDir := filepath.Join(tmpHome, "Cursor.app", "Contents", "Resources", "app", "bin")
+	if err := os.MkdirAll(cmdDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmdFile := filepath.Join(cmdDir, "cursor")
+	if err := os.WriteFile(cmdFile, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	extDir := filepath.Join(tmpHome, ".cursor", "extensions")
+
+	sh := &fakeShell{}
+	a := NewApp()
+	a.Home = tmpHome
+	a.Shell = sh
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		env := sysenv.Env{"HOME=" + tmpHome, "SHELL=/bin/zsh", "PATH=/usr/bin:/bin"}
+		done(build(env, nil))
+	}
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{
+		{ID: "cursor", Name: "Cursor", Version: "0.44.11", App: filepath.Join(tmpHome, "Cursor.app"), Command: "cursor", CommandSource: cmdFile, Extensions: extDir, Installed: []string{"a"}},
+	}}}}}
+	a.router.Push(editorsPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "editors-actions")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "editors-actions-narrow")
+
+	if err := tt.Click("Copy path"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got := tt.Clipboard(); got != extDir {
+		t.Errorf("clipboard = %q, want %q", got, extDir)
+	}
+
+	if err := tt.Click("Add to PATH…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Add cursor to PATH")
+	if runtime.GOOS != "windows" && !tt.HasText(cmdDir) {
+		t.Errorf("expected %q in EditorPathPlan dialog: %q", cmdDir, tt.Texts())
 	}
 }

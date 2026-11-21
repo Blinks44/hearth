@@ -28,6 +28,16 @@ func codeResources(app string) []string {
 	return append([]string{filepath.Join(app, "resources", "app")}, versioned...)
 }
 
+// codeCommandSource is the editor's CLI launcher inside its install folder.
+func codeCommandSource(app, command string) string {
+	for _, ext := range []string{".cmd", ".exe"} {
+		if p := filepath.Join(app, "bin", command+ext); exists(p) {
+			return p
+		}
+	}
+	return ""
+}
+
 // jetbrainsInfos are the product-info.json of the JetBrains IDEs: where
 // Toolbox 2 puts them, older Toolbox's apps folder, and their
 // installers' Program Files\JetBrains.

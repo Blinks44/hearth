@@ -39,6 +39,7 @@ func xcodes() []inventory.XcodeApp {
 func simRuntimes() []inventory.SimRuntime {
 	mounted, _ := filepath.Glob(filepath.Join(simulators, "Volumes", "*", "Library", "Developer", "CoreSimulator", "Profiles", "Runtimes", "*.simruntime"))
 	bundled, _ := filepath.Glob(filepath.Join(simulators, "Profiles", "Runtimes", "*.simruntime"))
+	ids := simRuntimeIDs()
 	var out []inventory.SimRuntime
 	for _, p := range append(mounted, bundled...) {
 		name := strings.TrimSuffix(filepath.Base(p), ".simruntime")
@@ -46,7 +47,119 @@ func simRuntimes() []inventory.SimRuntime {
 		if !ok {
 			continue
 		}
-		out = append(out, inventory.SimRuntime{Platform: platform, Version: version, Path: p})
+		rt := inventory.SimRuntime{Platform: platform, Version: version, Path: p}
+		if build := simVolumeBuild(p); build != "" {
+			rt.ID = ids[build]
+		}
+		if rt.ID == "" {
+			rt.ID = ids[platform+"\x00"+version]
+		}
+		out = append(out, rt)
+	}
+	return out
+}
+
+// simVolumeBuild extracts the build tag from a mounted runtime volume path
+// such as ".../Volumes/iOS_22C150/...".
+func simVolumeBuild(path string) string {
+	rel, err := filepath.Rel(filepath.Join(simulators, "Volumes"), path)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return ""
+	}
+	vol, _, _ := strings.Cut(filepath.ToSlash(rel), "/")
+	_, build, ok := strings.CutLast(vol, "_")
+	if !ok {
+		return ""
+	}
+	return build
+}
+
+// simRuntimeIDs reads CoreSimulator's XML images.plist when present and
+// maps build tags (and platform+version) to runtime image UUIDs.
+func simRuntimeIDs() map[string]string {
+	out := map[string]string{}
+	data, err := os.ReadFile(filepath.Join(simulators, "Images", "images.plist"))
+	if err != nil {
+		return out
+	}
+	var root struct {
+		Dict struct {
+			Items []struct {
+				XMLName xml.Name
+				Value   string `xml:",chardata"`
+				Dicts   []struct {
+					Items []struct {
+						XMLName xml.Name
+						Value   string `xml:",chardata"`
+						Inner   []struct {
+							XMLName xml.Name
+							Value   string `xml:",chardata"`
+						} `xml:",any"`
+					} `xml:",any"`
+				} `xml:"dict"`
+			} `xml:",any"`
+		} `xml:"dict"`
+	}
+	if xml.Unmarshal(data, &root) != nil {
+		return out
+	}
+	key := ""
+	for _, top := range root.Dict.Items {
+		switch top.XMLName.Local {
+		case "key":
+			key = top.Value
+		case "array":
+			if key != "images" {
+				continue
+			}
+			for _, img := range top.Dicts {
+				var uuid, build, version, runtimeID string
+				k := ""
+				for _, it := range img.Items {
+					switch it.XMLName.Local {
+					case "key":
+						k = it.Value
+					case "string":
+						if k == "uuid" {
+							uuid = strings.TrimSpace(it.Value)
+						}
+					case "dict":
+						if k != "runtimeInfo" {
+							continue
+						}
+						rk := ""
+						for _, sub := range it.Inner {
+							switch sub.XMLName.Local {
+							case "key":
+								rk = sub.Value
+							case "string":
+								switch rk {
+								case "build":
+									build = strings.TrimSpace(sub.Value)
+								case "version":
+									version = strings.TrimSpace(sub.Value)
+								case "identifier":
+									runtimeID = strings.TrimSpace(sub.Value)
+								}
+							}
+						}
+					}
+				}
+				if uuid == "" {
+					continue
+				}
+				if build != "" {
+					out[build] = uuid
+				}
+				if version != "" {
+					for _, plat := range []string{"iOS", "watchOS", "tvOS", "xrOS", "visionOS"} {
+						if strings.Contains(runtimeID, "."+plat+"-") {
+							out[plat+"\x00"+version] = uuid
+						}
+					}
+				}
+			}
+		}
 	}
 	return out
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -50,6 +52,35 @@ func TestRubyPage(t *testing.T) {
 	tt.Advance(time.Second)
 	if tt.HasText("rubocop") || !tt.HasText("How the terminal finds ruby") {
 		t.Fatalf("PATH %q", tt.Texts())
+	}
+}
+
+func TestRubyBundler(t *testing.T) {
+	// Installed Bundler shows its path and gem version.
+	a := NewApp()
+	a.Shell = &fakeShell{}
+	a.Snapshot = rubySnapshot()
+	a.Snapshot.Tools[0].Vars = map[string]string{"bundle": home + "/.rbenv/shims/bundle"}
+	tt := openRuby(a)
+	screenshot(t, tt, "ruby-bundler")
+	hasTexts(t, tt, "Bundler", "2.6.2", "bundle", "~/.rbenv/shims/bundle")
+
+	// Missing Bundler offers Install… through mise's gem:bundler package.
+	a2 := NewApp()
+	a2.Snapshot = rubySnapshot()
+	a2.Snapshot.Tools[0].Managers = append(a2.Snapshot.Tools[0].Managers, inventory.Manager{Name: "mise", Version: "2025.1.6", Activated: true})
+	a2.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + home, "SHELL=/bin/zsh"}, nil))
+	}
+	tt2 := openRuby(a2)
+	screenshot(t, tt2, "ruby-bundler-missing")
+	hasTexts(t, tt2, "Bundler", locales.NotInPath(), "Install…")
+	if err := tt2.Click("Install…"); err != nil {
+		t.Fatal(err)
+	}
+	tt2.Advance(time.Second)
+	if !tt2.HasText("mise use --global gem:bundler") {
+		t.Fatalf("expected bundler install plan: %q", tt2.Texts())
 	}
 }
 

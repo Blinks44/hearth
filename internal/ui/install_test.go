@@ -160,7 +160,7 @@ func TestInstallPage(t *testing.T) {
 	screenshot(t, tt, "install-page")
 	hasTexts(t, tt, "Install", "Everything Hearth can install", "All", "Not installed", "Installed",
 		"installed · 24.11.0", "mise · ~/.local/share/mise/installs/node/24.11.0/bin/node", "installed · 4.6.3", "installed · 2026.11.1", "installed · 2.1.322", "installed · 3.29.9", "/Applications/Cursor.app",
-		"5 more", "Bun, PHP, Java, Ruby, .NET", "14 more", "Composer, uv, pipx, Bundler, Maven, Gradle, kubectl, Helm, kind, AWS CLI, Google Cloud CLI, Azure CLI, Terraform, OpenTofu", "installed: 1 of 9",
+		"5 more", "Bun, PHP, Java, Ruby, .NET", "15 more", "GitHub CLI, Composer, uv, pipx, Bundler, Maven, Gradle, kubectl, Helm, kind, AWS CLI, Google Cloud CLI, Azure CLI, Terraform, OpenTofu", "installed: 1 of 9",
 		"Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before anything changes.")
 	for _, text := range []string{"Let's set up this computer", "required", "The package manager of PHP"} {
 		if tt.HasText(text) {

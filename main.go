@@ -57,6 +57,7 @@ func main() {
 	a.Machine, a.OS = machine()
 	a.Home, _ = os.UserHomeDir() // without it, paths show in full
 	a.Shell = mygo.Shell
+	a.Runner = run.Exec{}
 	a.HearthExecutable, _ = os.Executable()
 	ops.AskpassProgram = a.HearthExecutable
 	scanner := &scan.Scanner{Runner: run.Exec{}, Detectors: scan.Detectors}

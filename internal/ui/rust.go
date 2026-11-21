@@ -9,8 +9,21 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
+
+// commonRustTargets are popular cross-compilation targets offered in the
+// quick-add menu beside the custom target input.
+var commonRustTargets = []string{
+	"wasm32-unknown-unknown",
+	"wasm32-wasip1",
+	"x86_64-unknown-linux-gnu",
+	"aarch64-unknown-linux-gnu",
+	"x86_64-pc-windows-msvc",
+	"aarch64-apple-darwin",
+	"x86_64-apple-darwin",
+}
 
 // rust is the Rust page: the tool's header with where it stands, the
 // toolchains and other copies installed, how the terminal finds rustc,
@@ -18,7 +31,7 @@ import (
 // the commands cargo install put in CARGO_HOME/bin.
 func (a *App) rust(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.rustInstallHeader(c) }})
 		st, ok := a.toolState("rust")
 		if !ok {
 			a.toolEmpty(c, "rust", "Rust")
@@ -44,17 +57,17 @@ func (a *App) rust(c *ui.Context, p page) {
 						}
 						pathCard(c, "rustc", ins, active, a.Home)
 					}, func() {
-						a.rustAvailable(c, ins, rows, active)
+						a.rustAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 && ins[active].Rust != nil {
-							rustTargets(c, *ins[active].Rust)
+							a.rustTargets(c, st, *ins[active].Rust)
 						}
 						if active >= 0 {
 							globalsCard(c, locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
 						}
 					})
 				case 1:
-					a.rustAvailable(c, ins, rows, active)
+					a.rustAvailable(c, st, rows, active)
 				case 2:
 					a.toolProjectsTab(c, "rust", st, projs)
 				case 3:
@@ -63,6 +76,52 @@ func (a *App) rust(c *ui.Context, p page) {
 			})
 		})
 	})
+}
+
+// rustInstallHeader shows the header button that installs or updates the
+// stable toolchain through rustup when rustup is available.
+func (a *App) rustInstallHeader(c *ui.Context) {
+	st, ok := a.toolState("rust")
+	if !ok || a.installManager(st) != "rustup" {
+		return
+	}
+	stableIdx := -1
+	for i, in := range st.Installations {
+		if rustChannel(in) == "stable" {
+			stableIdx = i
+			break
+		}
+	}
+	upToDate := false
+	if stableIdx >= 0 {
+		upToDate = true
+		if a.RustVersions != nil {
+			if train, err := a.RustVersions.Train(); err == nil && st.Installations[stableIdx].Version != train.Stable {
+				upToDate = false
+			}
+		}
+	}
+	installVersionButton(c, "rust", upToDate, func() { a.installRustToolchain("stable") })
+}
+
+// installRustToolchain proposes installing or updating a rustup toolchain.
+func (a *App) installRustToolchain(toolchain string) {
+	toolchain = strings.TrimSpace(toolchain)
+	if toolchain == "" {
+		return
+	}
+	if p, ok := a.versionPlan(ops.VersionInstall, "rust", "rustup", toolchain, toolchain, ""); ok {
+		a.Propose(p)
+	}
+}
+
+// proposeRustTarget proposes adding or removing a rustup target on toolchain.
+func (a *App) proposeRustTarget(add bool, toolchain, target string) {
+	target = strings.TrimSpace(target)
+	if target == "" {
+		return
+	}
+	a.proposeOrSay(ops.RustTargetPlan(add, toolchain, target, a.detect("rust")))
 }
 
 // rustHeader is Rust's logo, name and how its versions are managed, and
@@ -132,75 +191,186 @@ func rustBuild(in inventory.Installation) (string, bool) {
 }
 
 // rustAvailable lists what each channel ships now, with how it stands to
-// the toolchains installed.
-func (a *App) rustAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+// the toolchains installed, plus rustup install/update actions when rustup
+// is present.
+func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, active int) {
+	ins := st.Installations
 	pal := Colors(c.Theme())
+	canRustup := a.installManager(st) == "rustup"
 	asOf := ""
 	if a.RustVersions != nil {
 		asOf = locales.VersionsAsOf(a.RustVersions.Fetched)
 	}
-	listCard(c, locales.AvailableTitle(), asOf, func() {
+	aside := asOf
+	if canRustup {
+		aside = locales.Through("rustup")
+	}
+	listCard(c, locales.AvailableTitle(), aside, func() {
 		if a.RustVersions == nil {
 			text := locales.VersionsLoading()
 			if a.RustVersionsErr != "" {
 				text = locales.VersionsFailed(a.RustVersionsErr)
 			}
 			cardNote(c, text)
-			return
-		}
-		train, err := a.RustVersions.Train()
-		if err != nil {
+		} else if train, err := a.RustVersions.Train(); err != nil {
 			cardNote(c, locales.VersionsFailed(err.Error()))
-			return
-		}
-		installed := func(channel string) int {
-			for _, i := range rows {
-				if rustChannel(ins[i]) == channel {
-					return i
+		} else {
+			installed := func(channel string) int {
+				for _, i := range rows {
+					if rustChannel(ins[i]) == channel {
+						return i
+					}
+				}
+				return -1
+			}
+			stableIdx := installed("stable")
+			caption, update := "", false
+			if stableIdx >= 0 {
+				caption = locales.NoteInstalled()
+				if ins[stableIdx].Version != train.Stable {
+					caption, update = locales.NoteUpdateFor(ins[stableIdx].Version), stableIdx == active
 				}
 			}
-			return -1
-		}
-		caption, update := "", false
-		if i := installed("stable"); i >= 0 {
-			caption = locales.NoteInstalled()
-			if ins[i].Version != train.Stable {
-				caption, update = locales.NoteUpdateFor(ins[i].Version), i == active
+			listRow(c, "stable "+train.Stable, true, caption, func() {
+				if update {
+					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
+						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
+				}
+				if canRustup {
+					if stableIdx < 0 {
+						iconButton(c.Key("install:stable"), "download", locales.InstallNamed("stable")).
+							OnClick(func() { a.installRustToolchain("stable") })
+					} else if ins[stableIdx].Version != train.Stable {
+						iconButton(c.Key("update:stable"), "download", locales.RustUpdateChannel("stable")).
+							OnClick(func() { a.installRustToolchain("stable") })
+					}
+				}
+			})
+
+			betaIdx := installed("beta")
+			caption = locales.RustBetaNext()
+			if days := train.NextStable.Sub(c.Now()).Hours() / 24; days > 0 {
+				caption = locales.RustBetaWeeks(int(math.Ceil(days / 7)))
 			}
-		}
-		listRow(c, "stable "+train.Stable, true, caption, func() {
-			if update {
-				ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
-					Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
+			listRow(c, "beta "+train.Beta, true, caption, func() {
+				if canRustup {
+					if betaIdx < 0 {
+						iconButton(c.Key("install:beta"), "download", locales.InstallNamed("beta")).
+							OnClick(func() { a.installRustToolchain("beta") })
+					} else if ins[betaIdx].Version != train.Beta {
+						iconButton(c.Key("update:beta"), "download", locales.RustUpdateChannel("beta")).
+							OnClick(func() { a.installRustToolchain("beta") })
+					}
+				}
+			})
+
+			nightlyIdx := installed("nightly")
+			caption = locales.RustNightlyNote()
+			if nightlyIdx >= 0 && ins[nightlyIdx].Rust.Date != "" {
+				caption = locales.RustNightlyInstalled(ins[nightlyIdx].Rust.Date)
 			}
-		})
-		caption = locales.RustBetaNext()
-		if days := train.NextStable.Sub(c.Now()).Hours() / 24; days > 0 {
-			caption = locales.RustBetaWeeks(int(math.Ceil(days / 7)))
+			listRow(c, "nightly "+train.Nightly, true, caption, func() {
+				if canRustup {
+					label := locales.InstallNamed("nightly")
+					if nightlyIdx >= 0 {
+						label = locales.RustUpdateChannel("nightly")
+					}
+					iconButton(c.Key("install:nightly"), "download", label).
+						OnClick(func() { a.installRustToolchain("nightly") })
+				}
+			})
 		}
-		listRow(c, "beta "+train.Beta, true, caption, func() {})
-		caption = locales.RustNightlyNote()
-		if i := installed("nightly"); i >= 0 && ins[i].Rust.Date != "" {
-			caption = locales.RustNightlyInstalled(ins[i].Rust.Date)
+		if canRustup {
+			install := func() {
+				v := strings.TrimSpace(a.rustToolchainInput)
+				if v == "" {
+					return
+				}
+				a.rustToolchainInput = ""
+				a.installRustToolchain(v)
+			}
+			ui.Row(c).Gap(8).Padding(8, 12, 10, 14).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.TextInput(c.Key("rust-toolchain-input"), &a.rustToolchainInput).
+					Placeholder(locales.RustToolchainPlaceholder()).Height(28).Grow(1).MinWidth(0).
+					OnChange(c.Invalidate).OnSubmit(install)
+				v := strings.TrimSpace(a.rustToolchainInput)
+				label := locales.InstallVersion()
+				if v != "" {
+					label = locales.InstallNamed(v)
+				}
+				ui.Button(c.Key("rust-toolchain-install"), locales.Install()).Label(label).
+					Disabled(v == "").Shrink(0).OnClick(install)
+			})
 		}
-		listRow(c, "nightly "+train.Nightly, true, caption, func() {})
 	})
 }
 
 // rustTargets lists the targets the toolchain tc can build for, its host
-// marked.
-func rustTargets(c *ui.Context, tc inventory.RustToolchain) {
+// marked, with add/remove actions when rustup is present.
+func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.RustToolchain) {
+	pal := Colors(c.Theme())
+	canRustup := a.installManager(st) == "rustup"
 	ch, _, _ := strings.Cut(tc.Name, "-")
-	listCard(c, locales.RustTargets(ch), "rustup target", func() {
+	var available []string
+	for _, target := range commonRustTargets {
+		if !slices.Contains(tc.Targets, target) {
+			available = append(available, target)
+		}
+	}
+	aside := func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "rustup target").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			if canRustup && len(available) > 0 {
+				iconButton(c.Key("rust-target-menu"), "plus", locales.RustTargetAdd()).Menu(func(m *ui.Menu) {
+					for _, target := range available {
+						if m.Item(target).Chosen() {
+							a.proposeRustTarget(true, tc.Name, target)
+						}
+					}
+				})
+			}
+		})
+	}
+	listCardHeader(c, locales.RustTargets(ch), aside, func() {
 		for _, target := range tc.Targets {
+			host := strings.HasSuffix(tc.Name, "-"+target)
 			caption := ""
-			if strings.HasSuffix(tc.Name, "-"+target) {
+			if host {
 				caption = locales.RustHostTarget()
 			}
-			listRow(c, target, false, caption, func() {})
+			listRow(c, target, false, caption, func() {
+				if canRustup && !host {
+					iconButton(c.Key("remove-target:"+target), "trash-2", locales.RustTargetRemove(target)).
+						OnClick(func() { a.proposeRustTarget(false, tc.Name, target) })
+				}
+			})
 		}
 		if len(tc.Targets) == 0 {
 			cardNote(c, locales.RustNoTargets())
+		}
+		if canRustup {
+			add := func() {
+				v := strings.TrimSpace(a.rustTargetInput)
+				if v == "" {
+					return
+				}
+				a.rustTargetInput = ""
+				a.proposeRustTarget(true, tc.Name, v)
+			}
+			ui.Row(c).Gap(8).Padding(8, 12, 10, 14).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.TextInput(c.Key("rust-target-input"), &a.rustTargetInput).
+					Placeholder(locales.RustTargetPlaceholder()).Height(28).Grow(1).MinWidth(0).
+					OnChange(c.Invalidate).OnSubmit(add)
+				v := strings.TrimSpace(a.rustTargetInput)
+				label := locales.RustTargetAdd()
+				if v != "" {
+					label = locales.RustTargetAddTitle(v)
+				}
+				ui.Button(c.Key("rust-target-add"), locales.RustTargetAdd()).Label(label).
+					Disabled(v == "").Shrink(0).OnClick(add)
+			})
 		}
 	})
 }
