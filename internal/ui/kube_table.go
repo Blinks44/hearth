@@ -14,11 +14,11 @@ import (
 func workloadTracks(c *ui.Context, compact bool) []ui.Track {
 	switch {
 	case compact:
-		return []ui.Track{ui.Fr(1), ui.Fixed(128)}
+		return []ui.Track{ui.Fr(1), ui.Fixed(134)}
 	case narrow(c):
-		return []ui.Track{ui.Fr(1), ui.Fixed(148), ui.Fixed(52), ui.Fixed(88), ui.Fixed(100), ui.Fixed(50)}
+		return []ui.Track{ui.Fr(1), ui.Fixed(152), ui.Fixed(52), ui.Fixed(86), ui.Fixed(98), ui.Fixed(50)}
 	default:
-		return []ui.Track{ui.Fr(1), ui.Fixed(170), ui.Fixed(70), ui.Fixed(90), ui.Fixed(130), ui.Fixed(70)}
+		return []ui.Track{ui.Fr(1), ui.Fixed(176), ui.Fixed(68), ui.Fixed(88), ui.Fixed(126), ui.Fixed(70)}
 	}
 }
 

@@ -112,16 +112,31 @@ func (a *App) jobsView(c *ui.Context, batch *kube.Batch) {
 	batchTable(c, sort, headers, 28, "", func() {
 		for _, j := range shown {
 			ref := a.resourceRef("Job", j.Namespace, j.Name, j.UID)
+			var issue *rowIssue
+			if failure := jobFailure(j); failure != "" {
+				title := locales.KubeJobFailed()
+				if j.Reason != "" && j.Message != "" {
+					title = j.Reason
+				}
+				issue = &rowIssue{
+					key:      "kube-job:" + j.UID,
+					label:    locales.Details() + " · " + j.Name,
+					severity: issueDanger,
+					title:    title,
+					body:     failure,
+				}
+			}
 			a.batchRow(c.Key(j.UID), ref, j.State == kube.JobFailed, func() {
 				batchName(c, j.Name, j.Namespace)
-				ui.Column(c).Grow(1).Basis(0).MinWidth(0).AlignItems(ui.Start).Children(func() {
+				ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(6).AlignItems(ui.Center).Children(func() {
 					text, bg, fg := jobState(c, j.State)
-					aiTag(c, text, bg, fg)
+					aiTag(c, text, bg, fg).Shrink(1).MinWidth(0).MaxWidthPercent(100).Tooltip(text)
+					a.rowIssueBadge(c, issue)
 				})
 				batchText(c, fmt.Sprintf("%d/%d", j.Completed, j.Want))
 				batchText(c, age(c, j.Created))
 				a.batchResourceMenu(c, a.resourceRef("Job", j.Namespace, j.Name, j.UID))
-			}, jobFailure(j))
+			})
 		}
 	})
 }
@@ -170,9 +185,15 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 		{locales.KubeCronRuns(), "runs"}, {locales.KubeClusterStatus(), "status"}}
 	batchTable(c, sort, headers, actionWidth, actionHeader, func() {
 		for _, j := range shown {
-			failure := ""
+			var issue *rowIssue
 			if lastCronFailed(j) {
-				failure = j.Runs[0].Name + " · " + jobFailure(j.Runs[0])
+				issue = &rowIssue{
+					key:      "kube-cron:" + j.UID,
+					label:    locales.Details() + " · " + j.Name,
+					severity: issueDanger,
+					title:    j.Runs[0].Name,
+					body:     jobFailure(j.Runs[0]),
+				}
 			}
 			ref := a.resourceRef("CronJob", j.Namespace, j.Name, j.UID)
 			a.batchRow(c.Key(j.UID), ref, lastCronFailed(j), func() {
@@ -186,9 +207,12 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 					overviewCaption(c, caption, Colors(c.Theme()).TextFaint)
 				})
 				a.cronHistory(c, j.Runs, batch.JobsErr)
-				batchText(c, cronStatus(j))
+				ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(6).AlignItems(ui.Center).Children(func() {
+					clipped(c, cronStatus(j)).FontSize(12).TextColor(c.Theme().TextMuted).MinWidth(0)
+					a.rowIssueBadge(c, issue)
+				})
 				a.cronJobActions(c, j, actionWidth)
-			}, failure)
+			})
 		}
 	})
 }
@@ -271,9 +295,10 @@ func batchColumnWeight(i int) float32 {
 	return 1
 }
 
-func (a *App) batchRow(c *ui.Context, ref ops.KubeResource, failed bool, cells func(), message string) {
+func (a *App) batchRow(c *ui.Context, ref ops.KubeResource, failed bool, cells func()) {
 	pal := Colors(c.Theme())
-	row := ui.Column(c).Transition(rowMotion).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Gap(4).Padding(8, 16)
+	row := ui.Row(c).Transition(rowMotion).MinHeight(44).Gap(10).Padding(6, 16).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
 	if failed {
 		row.Background(pal.DangerSoft.Alpha(0.35))
 	}
@@ -282,15 +307,7 @@ func (a *App) batchRow(c *ui.Context, ref ops.KubeResource, failed bool, cells f
 			a.openOwnerLogs(ref)
 		}
 	})
-	row.Children(func() {
-		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(cells)
-		if message != "" {
-			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, Icon("circle-alert")).Size(13, 13).TextColor(pal.DangerText).Shrink(0)
-				clipped(c, message).FontSize(11.5).TextColor(pal.DangerText).Grow(1).MinWidth(0)
-			})
-		}
-	})
+	row.Children(cells)
 }
 
 func batchName(c *ui.Context, name, namespace string) {

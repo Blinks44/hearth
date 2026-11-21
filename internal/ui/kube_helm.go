@@ -62,12 +62,12 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 	})
 	detail := s.helmDetail
 	selected := ""
-	tracks := []ui.Track{ui.Fr(1.1), ui.Fr(1.15), ui.Fr(0.65), ui.Fixed(62), ui.Fixed(135)}
+	tracks := []ui.Track{ui.Fr(1.1), ui.Fr(1.15), ui.Fr(0.65), ui.Fixed(62), ui.Fixed(156)}
 	headers := []sortColumn{{locales.KubeHelmRelease(), "name"}, {locales.KubeHelmChart(), "chart"}, {locales.KubeHelmAppVersion(), "app"},
 		{locales.KubeHelmRevision(), "revision"}, {locales.KubeClusterStatus(), "status"}}
 	if detail != nil {
 		selected = helmKey(detail.release)
-		tracks = []ui.Track{ui.Fr(1), ui.Fixed(132)}
+		tracks = []ui.Track{ui.Fr(1), ui.Fixed(148)}
 		headers = []sortColumn{{locales.KubeHelmRelease(), "name"}, {locales.KubeClusterStatus(), "status"}}
 	}
 	workloadPanes(c, func() {
@@ -106,8 +106,22 @@ func (a *App) helmRow(c *ui.Context, tracks []ui.Track, r kube.HelmRelease, sele
 	t := c.Theme()
 	pal := Colors(t)
 	key := helmKey(r)
+	var issue *rowIssue
+	if desc := strings.TrimSpace(r.Description); desc != "" {
+		sev := issueDanger
+		if r.Pending() {
+			sev = issueWarning
+		}
+		issue = &rowIssue{
+			key:      "kube-helm:" + key,
+			label:    locales.Details() + " · " + r.Name,
+			severity: sev,
+			title:    r.Status,
+			body:     desc,
+		}
+	}
 	ui.Column(c.Key(key)).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-		row := resourceGrid(ui.ButtonBase(c.Key("select-helm")), tracks).Label(key).Padding(8, 16).
+		row := resourceGrid(ui.ButtonBase(c.Key("select-helm")), tracks).Label(key).MinHeight(44).Padding(6, 16).
 			OnClick(func() {
 				a.cluster.revealWorkload = key
 				a.cluster.clearHelmDetails()
@@ -132,14 +146,11 @@ func (a *App) helmRow(c *ui.Context, tracks []ui.Track, r kube.HelmRelease, sele
 					clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted).Tooltip(value)
 				}
 			}
-			ui.Column(c).MinWidth(0).AlignItems(ui.Start).Children(func() {
+			ui.Row(c).MinWidth(0).Gap(6).AlignItems(ui.Center).Children(func() {
 				helmStatus(c, r.Status)
+				a.rowIssueBadge(c, issue)
 			})
 		})
-		if selected == "" && r.Description != "" {
-			clipped(c, strings.Join(strings.Fields(r.Description), " ")).FontSize(12).TextColor(pal.DangerText).
-				Padding(0, 16, 8, 16).Tooltip(r.Description)
-		}
 	})
 }
 

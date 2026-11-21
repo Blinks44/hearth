@@ -44,7 +44,15 @@ func TestKubeBatch(t *testing.T) {
 	if err := tt.Click("Jobs"); err != nil {
 		t.Fatal(err)
 	}
-	hasTexts(t, tt, "cleanup-sessions-failed", "cleanup-sessions-success", "Job has reached the specified backoff limit", "1/1")
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "cleanup-sessions-failed", "cleanup-sessions-success", "Details · cleanup-sessions-failed", "1/1")
+	if err := tt.Click("Details · cleanup-sessions-failed"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasTexts(t, tt, "Job has reached the specified backoff limit")
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
 	screenshot(t, tt, "kube-jobs")
 	if len(w.targets) != 2 {
 		t.Fatal("switching between batch views restarted the same read")

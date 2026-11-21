@@ -462,21 +462,21 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 	pal := Colors(t)
 	label, tagBg, tagFg := podTag(c, p)
 	story, trouble := storyOf(p, nil, c.Now())
-	line := workloadSelectionRow(c.Key("pod-select-row-"+p.UID), pal.Line)
+	line := workloadSelectionRow(c.Key("pod-select-row-"+p.UID), pal.Line).MinHeight(44)
 	line.Children(func() {
 		var ids []string
 		if p.UID != "" {
 			ids = []string{p.UID}
 		}
-		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Padding(8, 0, 0, 0).Children(func() {
+		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
 			s.bulk.checkbox(c, "pod-select", locales.KubeBulkSelect(p.Name), ids)
 		})
 		if owned {
 			// The guide line from the group's chevron down its pods.
 			ui.Box(c).Width(2).Shrink(0).Margin(0, 4, 0, 6).Background(pal.ControlBorder)
 		}
-		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Gap(5).Padding(8, 0).
-			AlignItems(ui.Stretch).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
+		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Padding(6, 0).
+			AlignItems(ui.Stretch).Justify(ui.Center).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
 		var logs func()
 		if container := podLogContainer(p, story.crashed); a.StreamLogs != nil && container != "" {
 			logs = func() { a.openLogs(p, container, false) }
@@ -498,6 +498,21 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 			bg = t.Background.Alpha(0)
 		}
 		line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
+		var issue *rowIssue
+		if trouble {
+			sev := issueDanger
+			if story.waiting {
+				sev = issueWarning
+			}
+			title, body := podIssueText(label, story)
+			issue = &rowIssue{
+				key:      "kube-pod:" + p.UID,
+				label:    locales.Details() + " · " + p.Name,
+				severity: sev,
+				title:    title,
+				body:     body,
+			}
+		}
 		row.Children(func() {
 			resourceGrid(ui.Box(c), tracks[1:]).Children(func() {
 				ui.Column(c).MinWidth(0).Gap(1).Children(func() {
@@ -509,7 +524,7 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 						ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				workloadStatus(c, label, tagBg, tagFg)
+				a.workloadStatusIssue(c, label, tagBg, tagFg, issue)
 				if compact {
 					return
 				}
@@ -521,26 +536,29 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 				podMetricCell(c, p.Usage, p.Limits, false)
 				podMetricCell(c, p.Usage, p.Limits, true)
 			})
-			if trouble && !compact {
-				ui.Row(c).Gap(6).AlignItems(ui.Start).Children(func() {
-					icon, color := "circle-alert", pal.DangerText
-					if story.waiting {
-						icon, color = "triangle-alert", pal.WarningText
-					}
-					ui.Icon(c, Icon(icon)).Size(13, 13).Shrink(0).TextColor(color).Margin(1, 0, 0, 0)
-					clipped(c, story.line()).FontSize(12).TextColor(color).Grow(1).MinWidth(0)
-				})
-			}
 		})
 		podRowActions(c.Key("pod-actions-"+p.UID), p.Name, locales.KubeLogsOpen(), logs, menu)
 	})
+}
+
+func podIssueText(status string, story podStory) (title, body string) {
+	lines := make([]string, 0, len(story.facts)+len(story.guesses)+1)
+	lines = append(lines, story.facts...)
+	lines = append(lines, story.guesses...)
+	if len(lines) == 0 && story.detail != "" {
+		lines = append(lines, story.detail)
+	}
+	if len(lines) > 0 {
+		return story.title, strings.Join(lines, "\n")
+	}
+	return status, story.title
 }
 
 // podFooter counts what the list shows and opens or closes every group.
 const podRowActionsWidth = 52
 
 func podRowActions(c *ui.Context, name, logLabel string, log func(), menu func(*ui.Menu)) {
-	ui.Row(c).Width(podRowActionsWidth).Shrink(0).AlignSelf(ui.Start).Gap(4).Margin(4, 0, 0, 0).Children(func() {
+	ui.Row(c).Width(podRowActionsWidth).Shrink(0).AlignSelf(ui.Center).Gap(4).Children(func() {
 		if log != nil {
 			iconButton(c, "scroll-text", logLabel+" · "+name).OnClick(log)
 		} else {

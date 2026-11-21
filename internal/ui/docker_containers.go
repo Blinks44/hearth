@@ -291,7 +291,7 @@ func (a *App) dockerContainersView(c *ui.Context) {
 		{"", ""},
 	}
 	if compact {
-		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(96), ui.Fixed(54)}
+		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(112), ui.Fixed(54)}
 		columns = []sortColumn{
 			{locales.KubeClusterName(), "name"},
 			{locales.KubeClusterStatus(), "status"},
@@ -336,9 +336,9 @@ func (a *App) dockerContainersView(c *ui.Context) {
 
 func dockerContainerTracks(c *ui.Context) []ui.Track {
 	if narrow(c) {
-		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(104), ui.Fixed(76), ui.Fixed(68), ui.Fixed(44), ui.Fixed(58), ui.Fixed(80)}
+		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(118), ui.Fixed(72), ui.Fixed(64), ui.Fixed(44), ui.Fixed(56), ui.Fixed(80)}
 	}
-	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(140), ui.Fixed(110), ui.Fixed(86), ui.Fixed(58), ui.Fixed(68), ui.Fixed(108)}
+	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(104), ui.Fixed(82), ui.Fixed(56), ui.Fixed(68), ui.Fixed(108)}
 }
 
 func sortDockerContainers(s tableSort, items []docker.Container) {
@@ -630,6 +630,27 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 	case item.State.Status == "running":
 		dot = t.Success
 	}
+	var issue *rowIssue
+	if why := dockerContainerProblem(item); why != "" {
+		sev := issueDanger
+		if item.State.Status == "restarting" {
+			sev = issueWarning
+		}
+		issue = &rowIssue{
+			key:      "docker-container:" + item.ID,
+			label:    locales.Details() + " · " + item.Name,
+			severity: sev,
+			title:    status,
+			body:     why,
+		}
+		if port := item.ConflictPort(); port > 0 {
+			issue.actionLabel = locales.DockerOpenPorts()
+			issue.onAction = func() {
+				a.portsFilter = strconv.Itoa(port)
+				a.router.Push(portsPage)
+			}
+		}
+	}
 	row.Children(func() {
 		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(44).Children(func() {
 			s.bulk.checkbox(c, "docker-select-container", locales.KubeBulkSelect(item.Name), []string{item.ID})
@@ -644,7 +665,7 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 					}
 				})
 			})
-			workloadStatus(c, status, bg, fg)
+			a.workloadStatusIssue(c, status, bg, fg, issue)
 			if compact {
 				ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 					a.dockerContainerQuickPower(c, item)
@@ -680,18 +701,6 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 				iconButton(c.Key("container-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 			})
 		})
-		if why := dockerContainerProblem(item); !compact && why != "" {
-			ui.Row(c).AlignItems(ui.Center).Gap(7).Padding(0, 16, 8, 92).Children(func() {
-				ui.Icon(c, Icon("triangle-alert")).Size(13, 13).Shrink(0).TextColor(fg)
-				ui.Text(c, why).FontSize(11.5).TextColor(fg).Wrap().Grow(1).MinWidth(0)
-				if port := item.ConflictPort(); port > 0 {
-					ui.Button(c.Key("docker-open-port"), locales.DockerOpenPorts()).Height(24).Shrink(0).OnClick(func() {
-						a.portsFilter = strconv.Itoa(port)
-						a.router.Push(portsPage)
-					})
-				}
-			})
-		}
 	})
 }
 

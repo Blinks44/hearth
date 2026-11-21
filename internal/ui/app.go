@@ -302,6 +302,8 @@ type App struct {
 	kubeChecks         map[string]kubeCheck
 	cluster            kubeClusterState
 	engine             dockerEngineState // the Docker engine page's
+	issuePopover       string            // key of the open row issue popover; "" when none
+	issuePopoverOn     bool
 	kind               kindCreateDialog
 	kubeLink           kubeLinkDialog
 	kubeApply          *kubeApplyDialog

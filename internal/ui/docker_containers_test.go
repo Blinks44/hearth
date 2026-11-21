@@ -54,10 +54,19 @@ func TestDockerContainersView(t *testing.T) {
 			t.Fatalf("CPU column at %v: header %+v, cell %+v", size, head, cell)
 		}
 		screenshot(t, tt, "docker-containers-"+strconv.Itoa(size[0]))
-		if !tt.HasText("The startup command was not found (exit 127).") || !tt.HasText("shop-web-1") || !tt.HasText("8080 → 80") {
+		if !tt.HasText(locales.Details()+" · shop-api-1") || !tt.HasText("shop-web-1") || !tt.HasText("8080 → 80") {
 			t.Fatalf("container rows: %q", tt.Texts())
 		}
 	}
+	if err := tt.Click(locales.Details() + " · shop-api-1"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("The startup command was not found (exit 127).") {
+		t.Fatalf("container issue popover: %q", tt.Texts())
+	}
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
 	a.engine.containers.query = "8080"
 	tt.Advance(time.Second)
 	if tt.HasText("shop-api-1") || !tt.HasText("shop-web-1") {

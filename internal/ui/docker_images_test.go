@@ -52,7 +52,7 @@ func TestDockerImagesView(t *testing.T) {
 		if !headOK || !userOK || head.X != user.X {
 			t.Fatalf("Used by column at %v: header %+v, cell %+v", size, head, user)
 		}
-		if !tt.HasText("amd64 · Emulation") || !tt.HasText("Dangling images") || tt.HasText(dangling.ID) {
+		if !tt.HasText(locales.DockerImageStoppedUser()) || !tt.HasText(locales.Details()+" · "+legacy.Name()) || !tt.HasText("Dangling images") || tt.HasText(dangling.ID) {
 			t.Fatalf("image list at %v: %q", size, tt.Texts())
 		}
 		screenshot(t, tt, fmt.Sprintf("docker-images-%d", size[0]))

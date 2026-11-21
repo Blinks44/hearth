@@ -37,7 +37,14 @@ func TestKubeHelm(t *testing.T) {
 
 	w.got[1](kube.Cluster{Taken: time.Now(), HelmReleases: helmTestReleases()}, nil)
 	tt.Frame()
-	hasTexts(t, tt, "helm-z", "shop", "web-1.0.3", "2.4", "12", "The deployment timed out", "pending-upgrade", "deployed")
+	hasTexts(t, tt, "helm-z", "shop", "web-1.0.3", "2.4", "12", "Details · helm-z", "pending-upgrade", "deployed")
+	if err := tt.Click("Details · helm-z"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasTexts(t, tt, "The deployment timed out")
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
 	screenshot(t, tt, "kube-helm")
 	if err := tt.Click("In progress"); err != nil {
 		t.Fatal(err)

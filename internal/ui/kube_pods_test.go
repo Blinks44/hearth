@@ -162,8 +162,15 @@ func TestKubePods(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p",
-		"Container api keeps failing after it starts. Its last run ended with exit code 1 (Error) 3s after it started")
+	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p", "Details · checkout-api-7d9f8c5b-x2k4p")
+	if err := tt.Click("Details · checkout-api-7d9f8c5b-x2k4p"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasTexts(t, tt, "Container api keeps failing after it starts",
+		"Its last run ended with exit code 1 (Error) 3s after it started")
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
 	a.cluster.toggled = nil
 	for _, tab := range []string{"All", "Problems", "Restarted", "Completed"} {
 		if err := tt.Click(tab); err != nil {

@@ -222,9 +222,9 @@ func (a *App) dockerImagesView(c *ui.Context) {
 
 func dockerImageTracks(c *ui.Context) []ui.Track {
 	if narrow(c) {
-		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(110), ui.Fixed(116), ui.Fixed(64), ui.Fixed(54), ui.Fixed(54)}
+		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(128), ui.Fixed(104), ui.Fixed(62), ui.Fixed(52), ui.Fixed(54)}
 	}
-	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(200), ui.Fixed(70), ui.Fixed(86), ui.Fixed(54)}
+	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(172), ui.Fixed(186), ui.Fixed(70), ui.Fixed(80), ui.Fixed(54)}
 }
 
 func sortDockerImages(s tableSort, items []docker.Image, arch string) {
@@ -358,12 +358,20 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 	}
 	status, bg, fg := locales.KubeStorageUnused(), pal.Muted, t.TextMuted
 	switch {
-	case item.Emulated(arch):
-		status, bg, fg = item.Architecture+" · "+locales.DockerImagesEmulation(), pal.WarningSoft, pal.WarningText
 	case slices.ContainsFunc(item.Users, func(user docker.ImageUser) bool { return user.Active }):
 		status, bg, fg = locales.DockerImagesUsed(), pal.SuccessSoft, pal.SuccessText
 	case len(users) > 0:
 		status = locales.DockerImageStoppedUser()
+	}
+	var issue *rowIssue
+	if item.Emulated(arch) {
+		issue = &rowIssue{
+			key:      "docker-image:" + item.ID,
+			label:    locales.Details() + " · " + item.Name(),
+			severity: issueWarning,
+			title:    item.Architecture + " · " + locales.DockerImagesEmulation(),
+			body:     locales.DockerImageEmulationHint(item.Architecture, arch),
+		}
 	}
 	menu := func(m *ui.Menu) {
 		if m.Item(locales.KubeCopyName()).Chosen() {
@@ -380,7 +388,7 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 	rowBg := t.Background.Alpha(0)
 	switch {
 	case item.Emulated(arch):
-		rowBg = bg.Alpha(0.10)
+		rowBg = pal.WarningSoft.Alpha(0.22)
 	case row.Hovered():
 		rowBg = pal.Subtle
 	}
@@ -396,7 +404,7 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 						Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(platform + " · " + item.ID)
 				})
 			})
-			workloadStatus(c, status, bg, fg)
+			a.workloadStatusIssue(c, status, bg, fg, issue)
 			if names == "" {
 				names = "—"
 			}
@@ -411,12 +419,6 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 				iconButton(c.Key("image-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 			})
 		})
-		if item.Emulated(arch) {
-			ui.Row(c).AlignItems(ui.Center).Gap(7).Padding(0, 16, 8, 90).Children(func() {
-				ui.Icon(c, Icon("triangle-alert")).Size(13, 13).Shrink(0).TextColor(fg)
-				ui.Text(c, locales.DockerImageEmulationHint(item.Architecture, arch)).FontSize(11.5).TextColor(fg).Wrap().Grow(1).MinWidth(0)
-			})
-		}
 	})
 }
 
