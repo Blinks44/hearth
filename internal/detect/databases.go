@@ -197,10 +197,10 @@ func kindNode(d *inventory.DockerState, cluster, role, image string, running boo
 }
 
 // dockerDatabases asks only for selected non-secret container fields: it
-// finds the database containers and kind's node containers.
+// finds the database containers, port-publishing containers, and kind's node containers.
 func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, endpoint string, d *inventory.DockerState) {
 	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"Service":{{json (.Label "com.docker.compose.service")}},"Kind":{{json (.Label "io.x-k8s.kind.cluster")}},"Role":{{json (.Label "io.x-k8s.kind.role")}}}`
-	res, err := r.Run(ctx, run.Cmd{Args: []string{exe, "--host", endpoint, "ps", "--all", "--format", format}, Timeout: 3 * time.Second, Env: append(slices.Clone(env), "DOCKER_CONTEXT=")})
+	res, err := r.Run(ctx, run.Cmd{Args: []string{exe, "--host", endpoint, "ps", "--all", "--no-trunc", "--format", format}, Timeout: 3 * time.Second, Env: append(slices.Clone(env), "DOCKER_CONTEXT=")})
 	if err != nil || res.ExitCode != 0 || res.Truncated {
 		d.DatabaseErr = true
 		return
@@ -210,6 +210,16 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 		if json.Unmarshal([]byte(line), &row) != nil {
 			d.DatabaseErr = true
 			continue
+		}
+		ports := publishedTCPPorts(row.Ports)
+		if row.State == "running" && len(ports) > 0 {
+			d.PortContainers = append(d.PortContainers, inventory.DockerPortContainer{
+				ID:     row.ID,
+				Name:   row.Name,
+				Image:  row.Image,
+				Status: row.State,
+				Ports:  ports,
+			})
 		}
 		if row.Kind != "" {
 			kindNode(d, row.Kind, row.Role, row.Image, row.State == "running")
@@ -226,22 +236,105 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 		case "created", "exited":
 			status = "stopped"
 		}
-		db := inventory.Database{Kind: kind, Name: row.Name, Version: row.Image, Source: "docker", Status: status, Project: row.Project, Service: row.Service}
-		for _, m := range databasePublished.FindAllStringSubmatch(row.Ports, -1) {
-			if !slices.Contains(db.Ports, m[1]) {
-				db.Ports = append(db.Ports, m[1])
-			}
+		db := inventory.Database{
+			Kind:        kind,
+			Name:        row.Name,
+			Version:     row.Image,
+			Source:      "docker",
+			Status:      status,
+			Project:     row.Project,
+			Service:     row.Service,
+			ContainerID: row.ID,
+			Ports:       ports,
 		}
 		if len(db.Ports) == 0 && databaseContainerID.MatchString(row.ID) {
-			ports, ok := databaseContainerPorts(ctx, r, env, exe, endpoint, row.ID)
+			inspected, ok := databaseContainerPorts(ctx, r, env, exe, endpoint, row.ID)
 			if !ok {
 				d.DatabaseErr = true
 			} else {
-				db.Ports = ports
+				db.Ports = inspected
 			}
 		}
 		d.Databases = append(d.Databases, db)
 	}
+}
+
+// PortsSnapshot is the result of a targeted Ports refresh without a full scan.
+type PortsSnapshot struct {
+	Listeners  []inventory.DatabaseListener
+	Warnings   []string
+	Containers []inventory.DockerPortContainer
+	HasDocker  bool
+}
+
+// RefreshPorts reads active TCP listeners and, when a local Docker engine is
+// active in snap, running containers publishing host TCP ports.
+func RefreshPorts(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot) PortsSnapshot {
+	d := &inventory.DatabaseState{}
+	databaseListeners(ctx, r, env, d)
+	out := PortsSnapshot{
+		Listeners: d.Listeners,
+		Warnings:  d.Warnings,
+	}
+	if snap == nil {
+		return out
+	}
+	st, ok := snap.Tool("docker")
+	if !ok || st.Docker == nil {
+		return out
+	}
+	active := inventory.TerminalCopy(st.Installations)
+	if active < 0 || st.Installations[active].Source.Shim {
+		return out
+	}
+	var endpoint string
+	for _, c := range st.Docker.Contexts {
+		if c.Name == st.Docker.Selected && c.Local {
+			endpoint = c.Endpoint
+			break
+		}
+	}
+	if endpoint == "" {
+		return out
+	}
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}}}`
+	res, err := r.Run(ctx, run.Cmd{
+		Args:    []string{st.Installations[active].Path, "--host", endpoint, "ps", "--no-trunc", "--format", format},
+		Timeout: 3 * time.Second,
+		Env:     append(slices.Clone(env), "DOCKER_CONTEXT="),
+	})
+	if err != nil || res.ExitCode != 0 || res.Truncated {
+		return out
+	}
+	out.HasDocker = true
+	for line := range strings.Lines(string(res.Stdout)) {
+		var row struct{ ID, Name, Image, State, Ports string }
+		if json.Unmarshal([]byte(line), &row) != nil {
+			continue
+		}
+		ports := publishedTCPPorts(row.Ports)
+		if len(ports) == 0 {
+			continue
+		}
+		out.Containers = append(out.Containers, inventory.DockerPortContainer{
+			ID:     row.ID,
+			Name:   row.Name,
+			Image:  row.Image,
+			Status: row.State,
+			Ports:  ports,
+		})
+	}
+	return out
+}
+
+func publishedTCPPorts(raw string) []string {
+	var ports []string
+	for _, m := range databasePublished.FindAllStringSubmatch(raw, -1) {
+		if !slices.Contains(ports, m[1]) {
+			ports = append(ports, m[1])
+		}
+	}
+	return ports
 }
 
 var databasePublished = regexp.MustCompile(`:([0-9]+)->[0-9]+/tcp`)

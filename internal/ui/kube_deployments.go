@@ -173,7 +173,7 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 			OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
 		ref := a.resourceRef("Deployment", d.Namespace, d.Name, d.UID)
 		var logs func()
-		if a.StreamLogs != nil && a.WatchCluster != nil {
+		if ref.Kubectl != "" && a.StreamLogs != nil && a.WatchCluster != nil {
 			logs = func() { a.openOwnerLogs(ref) }
 		}
 		menu := func(m *ui.Menu) {
@@ -246,7 +246,7 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 			meta = append(meta, locales.KubeCreatedAgo(age(c, d.Created)))
 			ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted).Wrap()
 		})
-		if a.BuildPlan != nil || a.StreamLogs != nil && a.WatchCluster != nil {
+		if ref.Kubectl != "" && (a.BuildPlan != nil || a.StreamLogs != nil && a.WatchCluster != nil) {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
 				a.ownerLogsButton(c, ref)
 				if a.BuildPlan != nil {

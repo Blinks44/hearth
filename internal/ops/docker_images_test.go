@@ -83,3 +83,47 @@ func TestDockerPullPlan(t *testing.T) {
 		}
 	}
 }
+
+func TestDockerImageUntagPlan(t *testing.T) {
+	target := docker.Target{Docker: "/usr/bin/docker", Context: "local", Endpoint: "unix:///run/docker.sock"}
+	id := "sha256:" + strings.Repeat("a", 64)
+	item := docker.Image{ID: id, RepoTags: []string{"app:1.0", "app:latest"}}
+	single := docker.Image{ID: id, RepoTags: []string{"app:1.0"}}
+
+	if _, err := PlanDockerImageUntag(t.Context(), &run.Fake{}, target, nil, single, "app:1.0"); err == nil {
+		t.Fatal("accepted untagging single-tag image")
+	}
+	if _, err := PlanDockerImageUntag(t.Context(), &run.Fake{}, target, nil, item, "app:other"); err == nil {
+		t.Fatal("accepted untagging unknown tag")
+	}
+
+	tags := []string{"app:1.0", "app:latest"}
+	r := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+		switch {
+		case len(cmd.Args) >= 5 && cmd.Args[3] == "image" && cmd.Args[4] == "inspect":
+			quoted := make([]string, len(tags))
+			for i, tg := range tags {
+				quoted[i] = `"` + tg + `"`
+			}
+			return run.Result{Stdout: []byte(`{"Id":"` + id + `","RepoTags":[` + strings.Join(quoted, ",") + `]}` + "\n")}, nil
+		case len(cmd.Args) >= 5 && cmd.Args[3] == "image" && cmd.Args[4] == "rm":
+			tags = []string{"app:latest"}
+			return run.Result{}, nil
+		}
+		return run.Result{}, nil
+	})
+	p, err := PlanDockerImageUntag(t.Context(), r, target, []string{"DOCKER_CONTEXT=other"}, item, "app:1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := target.Command(nil, "image", "rm", "--no-prune", "--", "app:1.0").Args
+	if p.DockerAction != DockerImageUntag || len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, want) {
+		t.Fatalf("plan %+v", p)
+	}
+	if res := Execute(t.Context(), r, p, io.Discard, func(State) {}); res.Phase != Succeeded {
+		t.Fatalf("execute untag result = %+v", res)
+	}
+	if !slices.Equal(tags, []string{"app:latest"}) {
+		t.Fatalf("tags after untag = %v", tags)
+	}
+}

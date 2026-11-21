@@ -105,7 +105,7 @@ func kubeActionButton(c *ui.Context, icon, label string, height float32) ui.Elem
 }
 
 func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, ports []forwardPort) {
-	if a.CheckForwardPort == nil || a.RunForward == nil {
+	if _, ok := cliCopy(a.cliState(), "kubectl"); !ok || a.CheckForwardPort == nil || a.RunForward == nil {
 		return
 	}
 	height := float32(24)

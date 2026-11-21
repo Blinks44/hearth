@@ -23,7 +23,7 @@ type logSource struct {
 }
 
 func (a *App) ownerLogsButton(c *ui.Context, ref ops.KubeResource) {
-	if a.StreamLogs != nil && a.WatchCluster != nil {
+	if a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != "" {
 		kubeActionButton(c.Key("owner-logs"), "scroll-text", locales.KubeLogsOpen(), podActionHeight).
 			OnClick(func() { a.openOwnerLogs(ref) })
 	}

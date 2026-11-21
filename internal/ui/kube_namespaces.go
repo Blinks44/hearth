@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"maps"
 	"slices"
@@ -87,7 +88,7 @@ func (a *App) namespaceHeaderActions(c *ui.Context, item kube.Resource, v *other
 	ui.Row(c).Gap(6).Wrap().Children(func() {
 		kubeActionButton(c.Key("namespace-events"), "scroll-text", locales.KubeTabEvents(), podActionHeight).
 			OnClick(func() { v.tab = 2 })
-		command := run.TerminalCommand([]string{ref.Kubectl, "--context=" + ref.Context, "get", "namespace", item.Name})
+		command := run.TerminalCommand([]string{cmp.Or(ref.Kubectl, "kubectl"), "--context=" + ref.Context, "get", "namespace", item.Name})
 		kubeActionButton(c.Key("namespace-copy-command"), "copy", locales.KubeShellCopy(), podActionHeight).
 			OnClick(func() { c.WriteClipboard(command) })
 		ui.Box(c).Grow(1)

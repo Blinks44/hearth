@@ -18,6 +18,7 @@ import (
 const (
 	DockerImagePull   DockerAction = "image-pull"
 	DockerImageRemove DockerAction = "image-remove"
+	DockerImageUntag  DockerAction = "image-untag"
 )
 
 // Accept registry, repository, tag and digest syntax. Docker validates
@@ -37,6 +38,50 @@ func PlanDockerPull(target docker.Target, env sysenv.Env, ref string) (Plan, err
 		Title: locales.DockerImagePullTitle(ref), Why: locales.DockerImagePullWhy(target.Context),
 		Action: locales.DockerImageDownload(), DockerAction: DockerImagePull, Env: cmd.Env,
 		Steps: []Step{{Argv: cmd.Args, Timeout: 2 * time.Hour}},
+	}, nil
+}
+
+func PlanDockerImageUntag(ctx context.Context, r run.Runner, target docker.Target, env sysenv.Env, item docker.Image, tag string) (Plan, error) {
+	if target.Docker == "" || target.Endpoint == "" || !docker.ImageID(item.ID) || !ValidDockerImageRef(tag) || len(item.RepoTags) <= 1 || !slices.Contains(item.RepoTags, tag) {
+		return Plan{}, errors.New(locales.DockerImageChanged())
+	}
+	priorTags := slices.Clone(item.RepoTags)
+	priorDigests := slices.Clone(item.RepoDigests)
+	check := func(ctx context.Context) error {
+		fresh, err := docker.InspectImages(ctx, r, env, target, []string{item.ID})
+		if err != nil {
+			return err
+		}
+		if len(fresh) != 1 || fresh[0].ID != item.ID ||
+			!slices.Equal(fresh[0].RepoTags, priorTags) ||
+			!slices.Equal(fresh[0].RepoDigests, priorDigests) ||
+			len(fresh[0].RepoTags) <= 1 || !slices.Contains(fresh[0].RepoTags, tag) {
+			return errors.New(locales.DockerImageChanged())
+		}
+		return nil
+	}
+	if err := check(ctx); err != nil {
+		return Plan{}, err
+	}
+	cmd := target.Command(env, "image", "rm", "--no-prune", "--", tag)
+	return Plan{
+		Title:        locales.DockerImageUntagTitle(tag),
+		Why:          locales.DockerImageUntagWhy(tag, target.Context),
+		Action:       locales.DockerImageUntagAction(),
+		DockerAction: DockerImageUntag,
+		Env:          cmd.Env,
+		Before:       check,
+		Steps:        []Step{{Argv: cmd.Args, Note: tag, Timeout: time.Minute}},
+		Verify: func(ctx context.Context) (string, error) {
+			fresh, err := docker.InspectImages(ctx, r, env, target, []string{item.ID})
+			if err != nil {
+				return "", err
+			}
+			if len(fresh) == 1 && slices.Contains(fresh[0].RepoTags, tag) {
+				return "", errors.New(locales.DockerImageUntagCheck())
+			}
+			return "", nil
+		},
 	}, nil
 }
 

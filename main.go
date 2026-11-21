@@ -324,12 +324,21 @@ func main() {
 			}()
 		}
 
+		a.OpenDBClient = func(argv []string, done func(error)) {
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, argv, env, env.Get("PATH"), "", hint)
+				win.Update(func() { done(err) })
+			}()
+		}
+
 		a.SecretTimer = func(delay time.Duration, done func()) func() {
 			timer := time.AfterFunc(delay, func() { win.Update(done) })
 			return func() { timer.Stop() }
 		}
 		a.ReadSecretValue = func(t kube.Target, secret kube.Secret, key string, done func([]byte, error)) func() {
 			env := scanner.Terminal()
+			t.API = api
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
 				value, err := kube.ReadSecretValue(ctx, run.Exec{}, env, t, secret, key)
@@ -402,6 +411,7 @@ func main() {
 		}
 		a.ListCustomDefinitions = func(t kube.Target, done func(*kube.CustomDefinitions)) func() {
 			env := scanner.Terminal()
+			t.API = api
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
 				defs := kube.ListCustomDefinitions(ctx, run.Exec{}, env, t)
@@ -435,6 +445,7 @@ func main() {
 		}
 		a.ReadResourceYAML = func(t kube.Target, resource kube.Resource, done func(string, error)) func() {
 			env := scanner.Terminal()
+			t.API = api
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
 				yaml, err := kube.ReadResourceYAML(ctx, run.Exec{}, env, t, resource)
@@ -742,6 +753,16 @@ func main() {
 			if a.Snapshot != nil && !a.Counting {
 				countSizes(a.Snapshot)
 			}
+		}
+		a.RefreshPorts = func(done func(detect.PortsSnapshot)) {
+			env := scanner.Terminal()
+			snap := a.Snapshot
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				res := detect.RefreshPorts(ctx, run.Exec{}, env, snap)
+				win.Update(func() { done(res) })
+			}()
 		}
 		a.CachePath = lists.Dir
 		win.OnClose(func(*mygo.CloseEvent) { a.ClearSecretClipboard() })

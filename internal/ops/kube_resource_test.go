@@ -204,3 +204,153 @@ func TestKubeResourceRejectsSecret(t *testing.T) {
 		t.Fatal("a Secret reached the resource reader")
 	}
 }
+
+func TestKubeResourceExtendedKinds(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		kind        string
+		apiVersion  string
+		wantPath    string
+		rolloutArg  string
+		baseBody    string
+		editedBody  string
+		writtenBody string
+	}{
+		{
+			kind: "StatefulSet", apiVersion: "apps/v1",
+			wantPath:    "/apis/apps/v1/namespaces/work/statefulsets/demo",
+			rolloutArg:  "statefulset/demo",
+			baseBody:    `{"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"template":{"spec":{"containers":[{"name":"app","image":"v1"}]}}}}`,
+			editedBody:  `{"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"template":{"spec":{"containers":[{"name":"app","image":"v2"}]}}}}`,
+			writtenBody: `{"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"5"},"spec":{"template":{"spec":{"containers":[{"name":"app","image":"v2"}]}}}}`,
+		},
+		{
+			kind: "DaemonSet", apiVersion: "apps/v1",
+			wantPath:    "/apis/apps/v1/namespaces/work/daemonsets/demo",
+			rolloutArg:  "daemonset/demo",
+			baseBody:    `{"apiVersion":"apps/v1","kind":"DaemonSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"template":{"spec":{"containers":[{"name":"agent","image":"v1"}]}}}}`,
+			editedBody:  `{"apiVersion":"apps/v1","kind":"DaemonSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"template":{"spec":{"containers":[{"name":"agent","image":"v2"}]}}}}`,
+			writtenBody: `{"apiVersion":"apps/v1","kind":"DaemonSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"5"},"spec":{"template":{"spec":{"containers":[{"name":"agent","image":"v2"}]}}}}`,
+		},
+		{
+			kind: "ConfigMap", apiVersion: "v1",
+			wantPath:    "/api/v1/namespaces/work/configmaps/demo",
+			baseBody:    `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"data":{"ENV":"dev"}}`,
+			editedBody:  `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"data":{"ENV":"prod"}}`,
+			writtenBody: `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"5"},"data":{"ENV":"prod"}}`,
+		},
+		{
+			kind: "Ingress", apiVersion: "networking.k8s.io/v1",
+			wantPath:    "/apis/networking.k8s.io/v1/namespaces/work/ingresses/demo",
+			baseBody:    `{"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"ingressClassName":"nginx"}}`,
+			editedBody:  `{"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"ingressClassName":"traefik"}}`,
+			writtenBody: `{"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"5"},"spec":{"ingressClassName":"traefik"}}`,
+		},
+		{
+			kind: "PersistentVolumeClaim", apiVersion: "v1",
+			wantPath:    "/api/v1/namespaces/work/persistentvolumeclaims/demo",
+			baseBody:    `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"resources":{"requests":{"storage":"1Gi"}}}}`,
+			editedBody:  `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"4"},"spec":{"resources":{"requests":{"storage":"2Gi"}}}}`,
+			writtenBody: `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":"5"},"spec":{"resources":{"requests":{"storage":"2Gi"}}}}`,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.kind, func(t *testing.T) {
+			t.Parallel()
+			ref := KubeResource{Kubectl: "kubectl", Context: "staging", Kind: tc.kind, Namespace: "work", Name: "demo", UID: "uid"}
+			if got := ref.path(); got != tc.wantPath {
+				t.Fatalf("path = %q, want %q", got, tc.wantPath)
+			}
+
+			// Edit + verify (including rollout status when applicable).
+			phase, writes, rollouts := "load", 0, 0
+			r := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+				ok := func(s string) (run.Result, error) { return run.Result{Stdout: []byte(s)}, nil }
+				switch {
+				case slices.Contains(cmd.Args, "config"):
+					return ok(`{"server":"same"}`)
+				case slices.Contains(cmd.Args, "get"):
+					if writes == 0 {
+						return ok(tc.baseBody)
+					}
+					return ok(tc.writtenBody)
+				case slices.Contains(cmd.Args, "create"):
+					if slices.Contains(cmd.Args, "yaml") {
+						b, _ := io.ReadAll(cmd.Stdin)
+						return ok(string(b))
+					}
+					return ok(tc.editedBody)
+				case slices.Contains(cmd.Args, "replace"):
+					if phase == "plan" {
+						return ok(tc.editedBody)
+					}
+					writes++
+					return ok(tc.writtenBody)
+				case slices.Contains(cmd.Args, "rollout"):
+					if tc.rolloutArg == "" || !slices.Contains(cmd.Args, tc.rolloutArg) {
+						t.Fatalf("unexpected rollout command: %v", cmd.Args)
+					}
+					rollouts++
+					return ok("")
+				}
+				t.Fatalf("unexpected command: %v", cmd.Args)
+				return run.Result{}, nil
+			})
+			d, err := LoadKubeDraft(t.Context(), r, nil, ref, true)
+			if err != nil {
+				t.Fatalf("LoadKubeDraft: %v", err)
+			}
+			phase = "plan"
+			plan, err := PlanKubeChange(t.Context(), r, nil, d, "draft", false)
+			if err != nil || len(plan.Steps[0].Kube.Diff) == 0 {
+				t.Fatalf("PlanKubeChange edit: plan=%+v err=%v", plan, err)
+			}
+			phase = "execute"
+			res := Execute(t.Context(), r, plan, io.Discard, func(State) {})
+			wantRollouts := 0
+			if tc.rolloutArg != "" {
+				wantRollouts = 1
+			}
+			if res.Phase != Succeeded || writes != 1 || rollouts != wantRollouts {
+				t.Fatalf("edit result=%+v writes=%d rollouts=%d", res, writes, rollouts)
+			}
+
+			// Delete + verify absence.
+			delWrites := 0
+			dr := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+				switch {
+				case slices.Contains(cmd.Args, "config"):
+					return run.Result{Stdout: []byte("pinned")}, nil
+				case slices.Contains(cmd.Args, "get"):
+					if delWrites == 0 {
+						return run.Result{Stdout: []byte(tc.baseBody)}, nil
+					}
+					return run.Result{ExitCode: 1, Stderr: []byte("Error from server (NotFound): gone")}, nil
+				case slices.Contains(cmd.Args, "delete"):
+					var opts struct{ DryRun []string }
+					if err := json.NewDecoder(cmd.Stdin).Decode(&opts); err != nil {
+						t.Fatal(err)
+					}
+					if slices.Equal(opts.DryRun, []string{"All"}) {
+						return run.Result{}, nil
+					}
+					delWrites++
+					return run.Result{}, nil
+				}
+				return run.Result{}, errors.New("unexpected command")
+			})
+			dd, err := LoadKubeDraft(t.Context(), dr, nil, ref, false)
+			if err != nil {
+				t.Fatalf("LoadKubeDraft delete: %v", err)
+			}
+			dp, err := PlanKubeChange(t.Context(), dr, nil, dd, "", true)
+			if err != nil || !dp.Steps[0].Kube.DeletesResource() {
+				t.Fatalf("PlanKubeChange delete: plan=%+v err=%v", dp, err)
+			}
+			dres := Execute(t.Context(), dr, dp, io.Discard, func(State) {})
+			if dres.Phase != Succeeded || delWrites != 1 {
+				t.Fatalf("delete result=%+v writes=%d", dres, delWrites)
+			}
+		})
+	}
+}

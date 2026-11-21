@@ -17,7 +17,7 @@ type shellForm struct {
 }
 
 func (a *App) shellButton(c *ui.Context, pod kube.Pod, preferred string) {
-	if a.OpenKubeShell == nil || len(pod.Containers) == 0 {
+	if _, ok := cliCopy(a.cliState(), "kubectl"); !ok || a.OpenKubeShell == nil || len(pod.Containers) == 0 {
 		return
 	}
 	button := kubeActionButton(c.Key("pod-shell"), "terminal", locales.KubeShellAction(), podActionHeight)

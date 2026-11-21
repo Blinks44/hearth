@@ -14,7 +14,7 @@ import (
 func (a *App) deploymentPause(c *ui.Context, ref ops.KubeResource, paused bool) {
 	t := c.Theme()
 	pal := Colors(t)
-	if a.BuildPlan == nil || ref.UID == "" {
+	if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" {
 		if paused {
 			ui.Text(c, locales.KubePausedNote()).FontSize(12).TextColor(pal.WarningText).Padding(0, 16, 6, 16).Wrap()
 		}

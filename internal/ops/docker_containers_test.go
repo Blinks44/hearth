@@ -79,5 +79,60 @@ func TestDockerComposeRemovesEnvironmentButKeepsVolumes(t *testing.T) {
 	if result := Execute(t.Context(), &r, p, io.Discard, func(State) {}); result.Phase == Succeeded || len(r.Calls()) != 6 {
 		t.Fatalf("changed config was executed: %+v, commands %+v", result, r.Calls())
 	}
+}
 
+func TestDockerContainerPauseUnpause(t *testing.T) {
+	target := docker.Target{Docker: "/usr/bin/docker", Context: "default", Endpoint: "unix:///var/run/docker.sock"}
+	running := docker.Container{ID: strings.Repeat("a", 64), Name: "web"}
+	running.State.Status = "running"
+	paused := docker.Container{ID: strings.Repeat("b", 64), Name: "worker"}
+	paused.State.Status = "paused"
+	stopped := docker.Container{ID: strings.Repeat("c", 64), Name: "done"}
+	stopped.State.Status = "exited"
+
+	if !DockerPause.Applies(running) || DockerPause.Applies(paused) || DockerPause.Applies(stopped) {
+		t.Fatal("unexpected DockerPause.Applies")
+	}
+	if !DockerUnpause.Applies(paused) || DockerUnpause.Applies(running) || DockerUnpause.Applies(stopped) {
+		t.Fatal("unexpected DockerUnpause.Applies")
+	}
+	if _, err := PlanDockerContainers(target, nil, []docker.Container{stopped}, DockerPause); err == nil {
+		t.Fatal("accepted pausing a stopped container")
+	}
+
+	pPause, err := PlanDockerContainers(target, nil, []docker.Container{running}, DockerPause)
+	if err != nil {
+		t.Fatal(err)
+	}
+	status := "running"
+	r := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+		verb := cmd.Args[4]
+		switch verb {
+		case "inspect":
+			return run.Result{Stdout: fmt.Appendf(nil, "{\"ID\":%q,\"Name\":\"/web\",\"State\":{\"Status\":%q}}\n", running.ID, status)}, nil
+		case "pause":
+			status = "paused"
+		case "unpause":
+			status = "running"
+		}
+		return run.Result{}, nil
+	})
+	if res := Execute(t.Context(), r, pPause, io.Discard, func(State) {}); res.Phase != Succeeded {
+		t.Fatalf("pause result = %+v", res)
+	}
+	if status != "paused" {
+		t.Fatalf("status after pause = %q", status)
+	}
+
+	running.State.Status = "paused"
+	pUnpause, err := PlanDockerContainers(target, nil, []docker.Container{running}, DockerUnpause)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res := Execute(t.Context(), r, pUnpause, io.Discard, func(State) {}); res.Phase != Succeeded {
+		t.Fatalf("unpause result = %+v", res)
+	}
+	if status != "running" {
+		t.Fatalf("status after unpause = %q", status)
+	}
 }

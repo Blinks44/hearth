@@ -9,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
@@ -21,6 +22,8 @@ const portsPage = "/system/ports"
 // on one address or several.
 type portRow struct {
 	inventory.DatabaseListener
+	// Addresses are the unique bind addresses observed for this port and PID.
+	Addresses []string
 	// Network reports that it listens beyond this computer: on all
 	// addresses or one of the network's.
 	Network bool
@@ -52,6 +55,9 @@ func (a *App) portRows() []portRow {
 			rows = append(rows, portRow{DatabaseListener: l, Project: a.portProject(l.Dirs)})
 			i = len(rows) - 1
 		}
+		if l.Address != "" && !slices.Contains(rows[i].Addresses, l.Address) {
+			rows[i].Addresses = append(rows[i].Addresses, l.Address)
+		}
 		if !loopback(l.Address) {
 			rows[i].Network = true
 		}
@@ -62,6 +68,19 @@ func (a *App) portRows() []portRow {
 		return cmp.Compare(px, py)
 	})
 	return rows
+}
+
+func portBindAddress(addrs []string) string {
+	switch len(addrs) {
+	case 0:
+		return "—"
+	case 1:
+		return addrs[0]
+	case 2:
+		return addrs[0] + ", " + addrs[1]
+	default:
+		return addrs[0] + " +" + strconv.Itoa(len(addrs)-1)
+	}
 }
 
 // loopback reports an address only this computer reaches.
@@ -110,21 +129,34 @@ func (a *App) portService(r portRow) (inventory.Database, bool) {
 	return found[0], true
 }
 
-// portContainer is the running container publishing port; false for none.
-func (a *App) portContainer(port string) (inventory.Database, bool) {
-	for _, db := range inventory.DatabaseServers(a.Snapshot) {
-		if db.Source == "docker" && db.Status == "running" && slices.Contains(db.Ports, port) {
-			return db, true
+// portContainer is the running Docker container publishing port; false for none.
+func (a *App) portContainer(port string) (inventory.DockerPortContainer, bool) {
+	if st, ok := a.Snapshot.Tool("docker"); ok && st.Docker != nil {
+		for _, ct := range st.Docker.PortContainers {
+			if (ct.Status == "" || ct.Status == "running") && slices.Contains(ct.Ports, port) {
+				return ct, true
+			}
+		}
+		for _, db := range st.Docker.Databases {
+			if db.Status == "running" && slices.Contains(db.Ports, port) {
+				return inventory.DockerPortContainer{
+					ID:     db.ContainerID,
+					Name:   db.Name,
+					Image:  db.Version,
+					Status: db.Status,
+					Ports:  db.Ports,
+				}, true
+			}
 		}
 	}
-	return inventory.Database{}, false
+	return inventory.DockerPortContainer{}, false
 }
 
 // portAbout says who listens at r, and the plan that stops it, if Hearth
 // can.
 func (a *App) portAbout(r portRow) (about string, plan ops.Plan, ok bool) {
-	if db, found := a.portContainer(r.Port); found {
-		return locales.PortsContainer(db.Name), ops.Plan{}, false
+	if ct, found := a.portContainer(r.Port); found {
+		return locales.PortsContainer(ct.Name), ops.Plan{}, false
 	}
 	if slices.Contains(dockerProcesses, r.Process) {
 		return locales.PortsDocker(), ops.Plan{}, false
@@ -156,9 +188,77 @@ func (a *App) portAbout(r portRow) (about string, plan ops.Plan, ok bool) {
 	return strings.Join(parts, " · "), plan, ok
 }
 
+func (a *App) refreshPortsNow() {
+	if a.RefreshPorts == nil || a.portsRefreshing || a.Snapshot == nil {
+		return
+	}
+	a.portsRefreshing = true
+	a.portsRefreshSeq++
+	seq := a.portsRefreshSeq
+	a.RefreshPorts(func(res detect.PortsSnapshot) {
+		if a.portsRefreshSeq != seq {
+			return
+		}
+		a.portsRefreshing = false
+		a.applyPortsRefresh(res)
+	})
+}
+
+func (a *App) applyPortsRefresh(res detect.PortsSnapshot) {
+	if a.Snapshot == nil {
+		return
+	}
+	next := *a.Snapshot
+	next.Tools = slices.Clone(a.Snapshot.Tools)
+	updatedDB := false
+	for i := range next.Tools {
+		switch next.Tools[i].Tool {
+		case "databases":
+			var db inventory.DatabaseState
+			if next.Tools[i].Databases != nil {
+				db = *next.Tools[i].Databases
+			}
+			db.Listeners = slices.Clone(res.Listeners)
+			db.Warnings = slices.Clone(res.Warnings)
+			next.Tools[i].Databases = &db
+			updatedDB = true
+		case "docker":
+			if res.HasDocker && next.Tools[i].Docker != nil {
+				d := *next.Tools[i].Docker
+				d.PortContainers = slices.Clone(res.Containers)
+				next.Tools[i].Docker = &d
+			}
+		}
+	}
+	if !updatedDB {
+		next.Tools = append(next.Tools, inventory.ToolState{
+			Tool: "databases",
+			Databases: &inventory.DatabaseState{
+				Listeners: slices.Clone(res.Listeners),
+				Warnings:  slices.Clone(res.Warnings),
+			},
+		})
+	}
+	a.Snapshot = &next
+}
+
+func (a *App) portsRefreshButton(c *ui.Context) {
+	t := c.Theme()
+	label := locales.PortsRefresh()
+	if a.portsRefreshing {
+		label = locales.PortsRefreshing()
+	}
+	ui.Button(c.Key("ports-refresh"), "").Height(controlHeight).Label(label).
+		Disabled(a.RefreshPorts == nil || a.portsRefreshing || a.Snapshot == nil).
+		OnClick(a.refreshPortsNow).Children(func() {
+		spinIcon(c, "refresh-cw", 14, t.Text, a.portsRefreshing)
+		ui.Text(c, label).FontSize(12.5).SingleLine()
+	})
+}
+
 func (a *App) portsView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.portsRefreshButton(c) }})
 		t := c.Theme()
 		pal := Colors(t)
 		rows := a.portRows()
@@ -213,15 +313,22 @@ func (a *App) portsView(c *ui.Context, p page) {
 }
 
 // portsTable lists the rows the filter keeps: the port, who listens and
-// where, whether the network reaches it, and the actions.
+// where, the bind address, whether the network reaches it, and the actions.
 func (a *App) portsTable(c *ui.Context, rows []portRow) {
 	pal := Colors(c.Theme())
 	filter := strings.ToLower(strings.TrimSpace(a.portsFilter))
+	addrWidth := float32(108)
+	if narrow(c) {
+		addrWidth = 88
+	}
 	shown := 0
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		for _, r := range rows {
 			about, plan, stoppable := a.portAbout(r)
-			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about), filter) {
+			ct, hasContainer := a.portContainer(r.Port)
+			canDocker := hasContainer && a.canOpenDockerContainer()
+			addrsFull := strings.Join(r.Addresses, ", ")
+			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about+" "+addrsFull+" "+ct.Image), filter) {
 				continue
 			}
 			shown++
@@ -231,12 +338,23 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 					clipped(c, cmp.Or(r.Process, "—")).FontSize(13)
 					clipped(c, about).FontSize(10.5).TextColor(pal.TextFaint)
 				})
-				if r.Network {
-					chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip())
-				} else {
-					chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
+				addrEl := clipped(c, portBindAddress(r.Addresses)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Width(addrWidth).Shrink(0)
+				if addrsFull != "" {
+					addrEl.Tooltip(addrsFull)
 				}
-				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+				ui.Row(c).Width(86).Shrink(0).AlignItems(ui.Center).Children(func() {
+					if r.Network {
+						chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip())
+					} else {
+						chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
+					}
+				})
+				ui.Row(c).Width(76).Gap(2).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if canDocker {
+						iconButton(c.Key("port-docker"), "container", locales.OpenInDocker()).OnClick(func() {
+							a.openDockerContainer(ct.ID, ct.Name)
+						})
+					}
 					if r.Project != "" {
 						iconButton(c.Key("port-project"), "folder-open", locales.OpenProject()).OnClick(func() {
 							a.router.Push(projectPath(r.Project))
@@ -247,11 +365,13 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 							a.Propose(plan)
 						})
 					}
-					if !stoppable && r.Project == "" {
-						ui.Box(c).Size(24, 24).Shrink(0)
+					if !stoppable && r.Project == "" && !canDocker {
 						return
 					}
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+						if canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
+							a.openDockerContainer(ct.ID, ct.Name)
+						}
 						if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
 							a.router.Push(projectPath(r.Project))
 						}

@@ -371,3 +371,60 @@ func TestKubeClusterCachesKinds(t *testing.T) {
 		t.Fatalf("pods not read again: %+v, reading %t", running, a.cluster.reading)
 	}
 }
+
+func TestKubeClusterWithoutKubectl(t *testing.T) {
+	a := kubeApp()
+	a.Snapshot.Tools[0].Cli.Tools = nil
+	var w clusterWatches
+	a.WatchCluster = w.watch
+	a.ListNamespaces = func(kube.Target, func([]string, error)) func() { return func() {} }
+	a.StreamLogs = func(kube.Logs, func([]kube.LogLine), func(error)) func() { return func() {} }
+	a.OpenKubeShell = func(kube.Shell, func(error)) {}
+	a.CheckForwardPort = func(int, func(int, error)) {}
+	a.RunForward = func(ops.Forward, func(kube.ForwardPod), func(error)) func() { return func() {} }
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
+	a.PickManifest = func(string, bool, func(string, error)) {}
+	a.router.Push(kubePage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if err := tt.Click("Open"); err != nil {
+		t.Fatalf("Open button should be available without kubectl: %v", err)
+	}
+	tt.Advance(time.Second)
+	if got := w.running(); len(got) != 1 || got[0].Kubectl != "" || got[0].Context != "kind-dev" {
+		t.Fatalf("watches = %+v, want watch with empty Kubectl for kind-dev", got)
+	}
+	hasTexts(t, tt, locales.KubeReadOnlyNoKubectl())
+	if _, ok := tt.Find(locales.KubeApplyOpen()); ok {
+		t.Fatal("Apply YAML should be hidden without kubectl")
+	}
+
+	w.got[0](shopCluster(), nil)
+	expandGroups(a, shopCluster())
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "checkout-api-7d9f8c5b-x2k4p", locales.KubeReadOnlyNoKubectl())
+	screenshot(t, tt, "kube-cluster-no-kubectl-1280")
+
+	// Open Pod details: Logs, Shell, Port-forward, Edit YAML, Delete must be hidden.
+	if err := tt.Click("checkout-api-7d9f8c5b-x2k4p"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	for _, hidden := range []string{locales.KubeLogsOpen(), locales.KubeShellAction(), locales.KubeForwardOpen(), locales.KubeResourceEdit(), locales.KubeResourceDelete()} {
+		if tt.HasText(hidden) {
+			t.Errorf("pod detail showed kubectl-only action %q without kubectl", hidden)
+		}
+	}
+
+	// Open Deployment details: Scale, Restart, Edit YAML, Delete must be hidden.
+	a.cluster.kind, a.cluster.deployment = kindDeployments, "d1"
+	tt.Frame()
+	tt.Advance(time.Second)
+	for _, hidden := range []string{locales.KubeRestartOpen(), locales.KubeScaleApply(), locales.KubeResourceEdit(), locales.KubeResourceDelete()} {
+		if tt.HasText(hidden) {
+			t.Errorf("deployment detail showed kubectl-only action %q without kubectl", hidden)
+		}
+	}
+}

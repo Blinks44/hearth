@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"time"
 
@@ -47,6 +48,9 @@ func (a *App) resourceFormCurrent(f *kubeResourceForm) bool {
 }
 
 func (a *App) openResourceEditor(ref ops.KubeResource, tab int) {
+	if ref.Kubectl == "" {
+		return
+	}
 	f := a.resourceForm(ref)
 	if tab < 0 {
 		f.open = true
@@ -60,15 +64,19 @@ func (a *App) openResourceEditor(ref ops.KubeResource, tab int) {
 }
 
 func (a *App) loadResourceEditor(f *kubeResourceForm) {
+	if f.ref.Kubectl == "" {
+		return
+	}
 	f.busy, f.err = true, nil
 	if f.editor != nil {
 		f.editor.ReadOnly = true
 	}
 	ref := f.ref
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	var draft ops.KubeDraft
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		var err error
-		draft, err = ops.LoadKubeDraft(context.Background(), run.Exec{}, env, ref, true)
+		draft, err = ops.LoadKubeDraft(context.Background(), runner, env, ref, true)
 		return ops.Plan{}, err
 	}, func(_ ops.Plan, err error) {
 		f.busy, f.err = false, err
@@ -90,7 +98,7 @@ func (a *App) loadResourceEditor(f *kubeResourceForm) {
 }
 
 func (a *App) planResourceChange(f *kubeResourceForm, remove bool) {
-	if f.busy {
+	if f.busy || f.ref.Kubectl == "" {
 		return
 	}
 	if a.op.running() {
@@ -104,16 +112,17 @@ func (a *App) planResourceChange(f *kubeResourceForm, remove bool) {
 		yaml = f.editor.Buffer.String()
 		f.editor.ReadOnly = true
 	}
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		ctx := context.Background()
 		if remove {
 			var err error
-			draft, err = ops.LoadKubeDraft(ctx, run.Exec{}, env, ref, false)
+			draft, err = ops.LoadKubeDraft(ctx, runner, env, ref, false)
 			if err != nil {
 				return ops.Plan{}, err
 			}
 		}
-		return ops.PlanKubeChange(ctx, run.Exec{}, env, draft, yaml, remove)
+		return ops.PlanKubeChange(ctx, runner, env, draft, yaml, remove)
 	}, func(p ops.Plan, err error) {
 		f.busy = false
 		if !remove {
@@ -147,7 +156,7 @@ func (a *App) planResourceChange(f *kubeResourceForm, remove bool) {
 }
 
 func (a *App) resourceActions(c *ui.Context, ref ops.KubeResource, tab int) {
-	if a.BuildPlan == nil || ref.UID == "" {
+	if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" {
 		return
 	}
 	busy := a.cluster.resources[ref] != nil && a.cluster.resources[ref].busy
@@ -159,15 +168,16 @@ func (a *App) resourceActions(c *ui.Context, ref ops.KubeResource, tab int) {
 }
 
 func (a *App) resourceMenu(c *ui.Context, ref ops.KubeResource) {
-	logs := ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil
-	if ref.UID == "" || a.BuildPlan == nil && !logs {
+	logs := ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != ""
+	manage := a.BuildPlan != nil && ref.Kubectl != ""
+	if ref.UID == "" || !manage && !logs {
 		return
 	}
 	iconButton(c.Key("resource-actions"), "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
 		if logs && m.Item(locales.KubeLogsOpen()).Chosen() {
 			a.openOwnerLogs(ref)
 		}
-		if a.BuildPlan != nil {
+		if manage {
 			if m.Item(locales.KubeResourceEdit()).Chosen() {
 				a.openResourceEditor(ref, -1)
 			}

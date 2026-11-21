@@ -78,6 +78,9 @@ func (a *API) get(ctx context.Context, env sysenv.Env, t Target, args []string, 
 	}
 	c, err := a.conn(env, t.Context)
 	if err != nil {
+		if t.Kubectl == "" {
+			return &Error{Access: detect.KubeFailure(err.Error()), command: "kubernetes"}
+		}
 		return errUseKubectl
 	}
 	// A sign-in program does not stop with the request's context: the
@@ -101,7 +104,7 @@ func (a *API) get(ctx context.Context, env sysenv.Env, t Target, args []string, 
 		return &Error{Access: detect.KubeFailure(ctx.Err().Error())}
 	}
 	if res.err != nil {
-		if errors.Is(res.err, errUseKubectl) || strings.Contains(res.err.Error(), "getting credentials") {
+		if errors.Is(res.err, errUseKubectl) || (t.Kubectl != "" && strings.Contains(res.err.Error(), "getting credentials")) {
 			return errUseKubectl
 		}
 		if failed, ok := errors.AsType[*Error](res.err); ok {

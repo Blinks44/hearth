@@ -40655,3 +40655,225 @@ func MobileRemoveImageCheckFail(api int) string {
 func (msgs Messages) MobileRemoveImageCheckFail(api int) string {
 	return Catalog.Format(msgs.locale, "mobileRemoveImageCheckFail", map[string]any{"api": api})
 }
+
+// PortsRefresh says "Refresh"
+// in the language the app shows.
+func PortsRefresh() string { return In(i18n.Locale()).PortsRefresh() }
+
+// PortsRefresh says "Refresh"
+// in the language of msgs.
+func (msgs Messages) PortsRefresh() string {
+	return Catalog.Format(msgs.locale, "portsRefresh", nil)
+}
+
+// PortsRefreshing says "Refreshing…"
+// in the language the app shows.
+func PortsRefreshing() string { return In(i18n.Locale()).PortsRefreshing() }
+
+// PortsRefreshing says "Refreshing…"
+// in the language of msgs.
+func (msgs Messages) PortsRefreshing() string {
+	return Catalog.Format(msgs.locale, "portsRefreshing", nil)
+}
+
+// OpenInDocker says "Open in Docker"
+// in the language the app shows.
+func OpenInDocker() string { return In(i18n.Locale()).OpenInDocker() }
+
+// OpenInDocker says "Open in Docker"
+// in the language of msgs.
+func (msgs Messages) OpenInDocker() string {
+	return Catalog.Format(msgs.locale, "openInDocker", nil)
+}
+
+// DatabaseOpenClient says "Open in {client}"
+// in the language the app shows.
+func DatabaseOpenClient(client string) string { return In(i18n.Locale()).DatabaseOpenClient(client) }
+
+// DatabaseOpenClient says "Open in {client}"
+// in the language of msgs.
+func (msgs Messages) DatabaseOpenClient(client string) string {
+	return Catalog.Format(msgs.locale, "databaseOpenClient", map[string]any{"client": client})
+}
+
+// DatabaseStopContainer says "Stop container…"
+// in the language the app shows.
+func DatabaseStopContainer() string { return In(i18n.Locale()).DatabaseStopContainer() }
+
+// DatabaseStopContainer says "Stop container…"
+// in the language of msgs.
+func (msgs Messages) DatabaseStopContainer() string {
+	return Catalog.Format(msgs.locale, "databaseStopContainer", nil)
+}
+
+// DatabaseStartContainer says "Start container…"
+// in the language the app shows.
+func DatabaseStartContainer() string { return In(i18n.Locale()).DatabaseStartContainer() }
+
+// DatabaseStartContainer says "Start container…"
+// in the language of msgs.
+func (msgs Messages) DatabaseStartContainer() string {
+	return Catalog.Format(msgs.locale, "databaseStartContainer", nil)
+}
+
+// DockerContainerPause says "Pause"
+// in the language the app shows.
+func DockerContainerPause() string { return In(i18n.Locale()).DockerContainerPause() }
+
+// DockerContainerPause says "Pause"
+// in the language of msgs.
+func (msgs Messages) DockerContainerPause() string {
+	return Catalog.Format(msgs.locale, "dockerContainerPause", nil)
+}
+
+// DockerContainerUnpause says "Resume"
+// in the language the app shows.
+func DockerContainerUnpause() string { return In(i18n.Locale()).DockerContainerUnpause() }
+
+// DockerContainerUnpause says "Resume"
+// in the language of msgs.
+func (msgs Messages) DockerContainerUnpause() string {
+	return Catalog.Format(msgs.locale, "dockerContainerUnpause", nil)
+}
+
+// DockerImageUntag says "Untag {tag}…"
+// in the language the app shows.
+func DockerImageUntag(tag string) string { return In(i18n.Locale()).DockerImageUntag(tag) }
+
+// DockerImageUntag says "Untag {tag}…"
+// in the language of msgs.
+func (msgs Messages) DockerImageUntag(tag string) string {
+	return Catalog.Format(msgs.locale, "dockerImageUntag", map[string]any{"tag": tag})
+}
+
+// DockerImageUntagTitle says "Remove tag · {tag}"
+// in the language the app shows.
+func DockerImageUntagTitle(tag string) string { return In(i18n.Locale()).DockerImageUntagTitle(tag) }
+
+// DockerImageUntagTitle says "Remove tag · {tag}"
+// in the language of msgs.
+func (msgs Messages) DockerImageUntagTitle(tag string) string {
+	return Catalog.Format(msgs.locale, "dockerImageUntagTitle", map[string]any{"tag": tag})
+}
+
+// DockerImageUntagWhy says "Docker will remove the tag {tag} from {context}. The image layers stay because other tags still point to it."
+// in the language the app shows.
+func DockerImageUntagWhy(tag string, context string) string {
+	return In(i18n.Locale()).DockerImageUntagWhy(tag, context)
+}
+
+// DockerImageUntagWhy says "Docker will remove the tag {tag} from {context}. The image layers stay because other tags still point to it."
+// in the language of msgs.
+func (msgs Messages) DockerImageUntagWhy(tag string, context string) string {
+	return Catalog.Format(msgs.locale, "dockerImageUntagWhy", map[string]any{"tag": tag, "context": context})
+}
+
+// DockerImageUntagAction says "Remove tag"
+// in the language the app shows.
+func DockerImageUntagAction() string { return In(i18n.Locale()).DockerImageUntagAction() }
+
+// DockerImageUntagAction says "Remove tag"
+// in the language of msgs.
+func (msgs Messages) DockerImageUntagAction() string {
+	return Catalog.Format(msgs.locale, "dockerImageUntagAction", nil)
+}
+
+// DockerImageUntagCheck says "Docker still reports the removed tag on this image."
+// in the language the app shows.
+func DockerImageUntagCheck() string { return In(i18n.Locale()).DockerImageUntagCheck() }
+
+// DockerImageUntagCheck says "Docker still reports the removed tag on this image."
+// in the language of msgs.
+func (msgs Messages) DockerImageUntagCheck() string {
+	return Catalog.Format(msgs.locale, "dockerImageUntagCheck", nil)
+}
+
+// DockerImageTagsCount says "{count} tags"
+// in the language the app shows.
+func DockerImageTagsCount(count int) string { return In(i18n.Locale()).DockerImageTagsCount(count) }
+
+// DockerImageTagsCount says "{count} tags"
+// in the language of msgs.
+func (msgs Messages) DockerImageTagsCount(count int) string {
+	return Catalog.Format(msgs.locale, "dockerImageTagsCount", map[string]any{"count": count})
+}
+
+// KubeReadOnlyNoKubectl says "kubectl was not found. Hearth reads this cluster directly via the Kubernetes API. Install kubectl to edit resources, …"
+// in the language the app shows.
+func KubeReadOnlyNoKubectl() string { return In(i18n.Locale()).KubeReadOnlyNoKubectl() }
+
+// KubeReadOnlyNoKubectl says "kubectl was not found. Hearth reads this cluster directly via the Kubernetes API. Install kubectl to edit resources, …"
+// in the language of msgs.
+func (msgs Messages) KubeReadOnlyNoKubectl() string {
+	return Catalog.Format(msgs.locale, "kubeReadOnlyNoKubectl", nil)
+}
+
+// KubeNoKubectlCommand says "Install kubectl to run this action."
+// in the language the app shows.
+func KubeNoKubectlCommand() string { return In(i18n.Locale()).KubeNoKubectlCommand() }
+
+// KubeNoKubectlCommand says "Install kubectl to run this action."
+// in the language of msgs.
+func (msgs Messages) KubeNoKubectlCommand() string {
+	return Catalog.Format(msgs.locale, "kubeNoKubectlCommand", nil)
+}
+
+// KubeRestartWorkloadPreview says "Kubernetes will replace the pods of this {kind}. Hearth will check whether the new rollout completes."
+// in the language the app shows.
+func KubeRestartWorkloadPreview(kind string) string {
+	return In(i18n.Locale()).KubeRestartWorkloadPreview(kind)
+}
+
+// KubeRestartWorkloadPreview says "Kubernetes will replace the pods of this {kind}. Hearth will check whether the new rollout completes."
+// in the language of msgs.
+func (msgs Messages) KubeRestartWorkloadPreview(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeRestartWorkloadPreview", map[string]any{"kind": kind})
+}
+
+// KubeRestartWorkloadZero says "The {kind} has no scheduled pods. Its template will change and no pods will start."
+// in the language the app shows.
+func KubeRestartWorkloadZero(kind string) string {
+	return In(i18n.Locale()).KubeRestartWorkloadZero(kind)
+}
+
+// KubeRestartWorkloadZero says "The {kind} has no scheduled pods. Its template will change and no pods will start."
+// in the language of msgs.
+func (msgs Messages) KubeRestartWorkloadZero(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeRestartWorkloadZero", map[string]any{"kind": kind})
+}
+
+// KubeScaleWorkloadStops says "Kubernetes will shut down all pods of this {kind}. It will stop serving traffic."
+// in the language the app shows.
+func KubeScaleWorkloadStops(kind string) string {
+	return In(i18n.Locale()).KubeScaleWorkloadStops(kind)
+}
+
+// KubeScaleWorkloadStops says "Kubernetes will shut down all pods of this {kind}. It will stop serving traffic."
+// in the language of msgs.
+func (msgs Messages) KubeScaleWorkloadStops(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeScaleWorkloadStops", map[string]any{"kind": kind})
+}
+
+// KubeScaleWorkloadAutoscalerUnknown says "Hearth could not check whether an HPA manages this {kind}."
+// in the language the app shows.
+func KubeScaleWorkloadAutoscalerUnknown(kind string) string {
+	return In(i18n.Locale()).KubeScaleWorkloadAutoscalerUnknown(kind)
+}
+
+// KubeScaleWorkloadAutoscalerUnknown says "Hearth could not check whether an HPA manages this {kind}."
+// in the language of msgs.
+func (msgs Messages) KubeScaleWorkloadAutoscalerUnknown(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeScaleWorkloadAutoscalerUnknown", map[string]any{"kind": kind})
+}
+
+// KubeScaleWorkloadAutoscalerManages says "{names} manages this {kind} and can override the chosen replica count."
+// in the language the app shows.
+func KubeScaleWorkloadAutoscalerManages(names string, kind string) string {
+	return In(i18n.Locale()).KubeScaleWorkloadAutoscalerManages(names, kind)
+}
+
+// KubeScaleWorkloadAutoscalerManages says "{names} manages this {kind} and can override the chosen replica count."
+// in the language of msgs.
+func (msgs Messages) KubeScaleWorkloadAutoscalerManages(names string, kind string) string {
+	return Catalog.Format(msgs.locale, "kubeScaleWorkloadAutoscalerManages", map[string]any{"names": names, "kind": kind})
+}

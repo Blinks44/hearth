@@ -110,9 +110,12 @@ func readAccess(ctx context.Context, r run.Runner, env sysenv.Env, t Target) Clu
 }
 
 func accessCommand(ctx context.Context, r run.Runner, env sysenv.Env, t Target, args ...string) (run.Result, error) {
+	command := "kubectl auth " + args[0]
+	if t.Kubectl == "" {
+		return run.Result{}, &Error{Access: detect.KubeAccess{Detail: "kubectl is required for auth checks"}, command: command}
+	}
 	argv := []string{t.Kubectl, "--context=" + t.Context, "--namespace=" + t.AccessNamespace, "auth", "--request-timeout=15s"}
 	out, err := r.Run(ctx, run.Cmd{Args: append(argv, args...), Env: env, Timeout: timeout, MaxOutput: 4 << 20})
-	command := "kubectl auth " + args[0]
 	if err != nil {
 		return out, fmt.Errorf("%s: %w", command, err)
 	}

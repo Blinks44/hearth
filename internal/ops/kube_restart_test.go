@@ -124,3 +124,97 @@ func TestPlanKubeRestart(t *testing.T) {
 		})
 	}
 }
+
+func TestPlanKubeRestartWorkloads(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name          string
+		kind          string
+		patchTarget   string
+		rolloutTarget string
+		zero          bool
+	}{
+		{name: "statefulset", kind: "StatefulSet", patchTarget: "statefulset.apps/demo", rolloutTarget: "statefulset/demo"},
+		{name: "statefulset zero", kind: "StatefulSet", patchTarget: "statefulset.apps/demo", rolloutTarget: "statefulset/demo", zero: true},
+		{name: "daemonset", kind: "DaemonSet", patchTarget: "daemonset.apps/demo", rolloutTarget: "daemonset/demo"},
+		{name: "daemonset zero", kind: "DaemonSet", patchTarget: "daemonset.apps/demo", rolloutTarget: "daemonset/demo", zero: true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ref := KubeResource{Kubectl: "kubectl", Context: "staging", Kind: tc.kind, Namespace: "work", Name: "demo", UID: "uid"}
+			object := func(version, stamp string) string {
+				if tc.kind == "DaemonSet" {
+					desired := 2
+					if tc.zero {
+						desired = 0
+					}
+					return fmt.Sprintf(`{"apiVersion":"apps/v1","kind":"DaemonSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":%q},
+						"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":%q}},"spec":{"containers":[{"name":"agent","image":"v1"}]}}},
+						"status":{"desiredNumberScheduled":%d}}`, version, stamp, desired)
+				}
+				replicas := 2
+				if tc.zero {
+					replicas = 0
+				}
+				return fmt.Sprintf(`{"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"name":"demo","namespace":"work","uid":"uid","resourceVersion":%q},
+					"spec":{"replicas":%d,"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":%q}},"spec":{"containers":[{"name":"db","image":"v1"}]}}}}`, version, replicas, stamp)
+			}
+			var stamp string
+			executing := false
+			previews, writes, checks := 0, 0, 0
+			r := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+				ok := func(s string) (run.Result, error) { return run.Result{Stdout: []byte(s)}, nil }
+				switch {
+				case slices.Contains(cmd.Args, "config"):
+					return ok("workspace")
+				case slices.Contains(cmd.Args, "--raw"):
+					if writes > 0 {
+						return ok(object("18", stamp))
+					}
+					return ok(object("17", "old"))
+				case slices.Contains(cmd.Args, "patch"):
+					if !slices.Contains(cmd.Args, tc.patchTarget) {
+						t.Fatalf("wrong patch target: %v", cmd.Args)
+					}
+					flag := slices.IndexFunc(cmd.Args, func(arg string) bool { return strings.HasPrefix(arg, "--patch=") })
+					var body resourceJSON
+					_ = json.Unmarshal([]byte(strings.TrimPrefix(cmd.Args[flag], "--patch=")), &body)
+					if slices.Contains(cmd.Args, "--dry-run=server") && !executing {
+						previews++
+						stamp, _ = restartTime(body).(string)
+						return ok(object("17", stamp))
+					}
+					writes++
+					return ok("")
+				case slices.Contains(cmd.Args, "status"):
+					if !slices.Contains(cmd.Args, tc.rolloutTarget) {
+						t.Fatalf("wrong rollout target: %v", cmd.Args)
+					}
+					checks++
+					return ok("")
+				}
+				t.Fatalf("unexpected command: %v", cmd.Args)
+				return run.Result{}, nil
+			})
+			plan, err := PlanKubeRestart(t.Context(), r, nil, ref)
+			if err != nil {
+				t.Fatalf("PlanKubeRestart: %v", err)
+			}
+			if previews != 1 || writes != 0 {
+				t.Fatalf("previews=%d writes=%d", previews, writes)
+			}
+			if tc.zero {
+				want := locales.KubeRestartWorkloadZero(tc.kind)
+				if !slices.ContainsFunc(plan.Notes, func(n Note) bool { return n.Text == want }) {
+					t.Fatalf("missing zero note %q in %+v", want, plan.Notes)
+				}
+			}
+			executing = true
+			got := Execute(t.Context(), r, plan, io.Discard, func(State) {})
+			if got.Phase != Succeeded || writes != 1 || checks != 1 {
+				t.Fatalf("result=%+v writes=%d checks=%d", got, writes, checks)
+			}
+		})
+	}
+}

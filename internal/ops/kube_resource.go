@@ -32,10 +32,19 @@ type kubeResourceType struct {
 }
 
 var kubeResourceTypes = map[string]kubeResourceType{
-	"Node": {"", "v1", "nodes"}, "Namespace": {"", "v1", "namespaces"}, "Pod": {"", "v1", "pods"}, "Service": {"", "v1", "services"},
-	"Deployment": {"apps", "v1", "deployments"},
-	"ReplicaSet": {"apps", "v1", "replicasets"},
-	"Job":        {"batch", "v1", "jobs"}, "CronJob": {"batch", "v1", "cronjobs"},
+	"Node":                  {"", "v1", "nodes"},
+	"Namespace":             {"", "v1", "namespaces"},
+	"Pod":                   {"", "v1", "pods"},
+	"Service":               {"", "v1", "services"},
+	"ConfigMap":             {"", "v1", "configmaps"},
+	"PersistentVolumeClaim": {"", "v1", "persistentvolumeclaims"},
+	"Deployment":            {"apps", "v1", "deployments"},
+	"StatefulSet":           {"apps", "v1", "statefulsets"},
+	"DaemonSet":             {"apps", "v1", "daemonsets"},
+	"ReplicaSet":            {"apps", "v1", "replicasets"},
+	"Job":                   {"batch", "v1", "jobs"},
+	"CronJob":               {"batch", "v1", "cronjobs"},
+	"Ingress":               {"networking.k8s.io", "v1", "ingresses"},
 }
 
 var kubeResourceName = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$|^[a-z0-9]$`)
@@ -483,11 +492,11 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 		}
 		change.Diff = Diff(d.YAML, string(after))
 		p.Title, p.Why, p.Action = locales.KubeResourceApplyTitle(ref.Name), locales.KubeResourceDryRun(), locales.KubeResourceApply()
-		if ref.Kind == "Deployment" {
+		if rolloutResource(ref.Kind) != "" {
 			before, _ := change.base["spec"].(map[string]any)
 			after, _ := change.want["spec"].(map[string]any)
 			if !reflect.DeepEqual(before["template"], after["template"]) {
-				change.rollout = after["paused"] != true
+				change.rollout = ref.Kind != "Deployment" || after["paused"] != true
 				note := locales.KubeResourceRolloutPaused()
 				if change.rollout {
 					note = locales.KubeResourceRolloutDetails()
@@ -620,10 +629,22 @@ func (m *KubeChange) applyPinned(ctx context.Context, k resourceClient, checking
 	return "", errors.New(locales.KubeResourceUnverified())
 }
 
+func rolloutResource(kind string) string {
+	switch kind {
+	case "Deployment":
+		return "deployment"
+	case "StatefulSet":
+		return "statefulset"
+	case "DaemonSet":
+		return "daemonset"
+	}
+	return ""
+}
+
 func (m *KubeChange) verifyRollout(ctx context.Context, k resourceClient) error {
 	ref := m.draft.Ref
 	if _, err := k.runFor(ctx, 5*time.Minute+5*time.Second, "0", nil,
-		"rollout", "status", "deployment/"+ref.Name, "--namespace="+ref.Namespace, "--timeout=5m"); err != nil {
+		"rollout", "status", rolloutResource(ref.Kind)+"/"+ref.Name, "--namespace="+ref.Namespace, "--timeout=5m"); err != nil {
 		return err
 	}
 	obj, err := k.read(ctx, ref)

@@ -15651,5 +15651,102 @@
         "type": "int"
       }
     }
+  },
+  "portsRefresh": "Refresh",
+  "portsRefreshing": "Refreshing…",
+  "openInDocker": "Open in Docker",
+  "databaseOpenClient": "Open in {client}",
+  "@databaseOpenClient": {
+    "placeholders": {
+      "client": {
+        "type": "String"
+      }
+    }
+  },
+  "databaseStopContainer": "Stop container…",
+  "databaseStartContainer": "Start container…",
+  "dockerContainerPause": "Pause",
+  "dockerContainerUnpause": "Resume",
+  "dockerImageUntag": "Untag {tag}…",
+  "@dockerImageUntag": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageUntagTitle": "Remove tag · {tag}",
+  "@dockerImageUntagTitle": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageUntagWhy": "Docker will remove the tag {tag} from {context}. The image layers stay because other tags still point to it.",
+  "@dockerImageUntagWhy": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      },
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerImageUntagAction": "Remove tag",
+  "dockerImageUntagCheck": "Docker still reports the removed tag on this image.",
+  "dockerImageTagsCount": "{count} tags",
+  "@dockerImageTagsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeReadOnlyNoKubectl": "kubectl was not found. Hearth reads this cluster directly via the Kubernetes API. Install kubectl to edit resources, scale, restart, stream logs, or open shells.",
+  "kubeNoKubectlCommand": "Install kubectl to run this action.",
+  "kubeRestartWorkloadPreview": "Kubernetes will replace the pods of this {kind}. Hearth will check whether the new rollout completes.",
+  "@kubeRestartWorkloadPreview": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeRestartWorkloadZero": "The {kind} has no scheduled pods. Its template will change and no pods will start.",
+  "@kubeRestartWorkloadZero": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeScaleWorkloadStops": "Kubernetes will shut down all pods of this {kind}. It will stop serving traffic.",
+  "@kubeScaleWorkloadStops": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeScaleWorkloadAutoscalerUnknown": "Hearth could not check whether an HPA manages this {kind}.",
+  "@kubeScaleWorkloadAutoscalerUnknown": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeScaleWorkloadAutoscalerManages": "{names} manages this {kind} and can override the chosen replica count.",
+  "@kubeScaleWorkloadAutoscalerManages": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
   }
 }

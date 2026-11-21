@@ -26,9 +26,22 @@ type ScaleTarget struct {
 	APIVersion, Kind, Name string
 }
 
-func (t ScaleTarget) TargetsDeployment(name string) bool {
+func (t ScaleTarget) Targets(kind, name string) bool {
 	group, _, _ := strings.Cut(t.APIVersion, "/")
-	return t.Kind == "Deployment" && t.Name == name && (group == "apps" || group == "extensions")
+	if t.Kind != kind || t.Name != name {
+		return false
+	}
+	switch kind {
+	case "Deployment":
+		return group == "apps" || group == "extensions"
+	case "StatefulSet":
+		return group == "apps"
+	}
+	return false
+}
+
+func (t ScaleTarget) TargetsDeployment(name string) bool {
+	return t.Targets("Deployment", name)
 }
 
 type Autoscaler struct {

@@ -21,12 +21,21 @@ type DockerState struct {
 	// it answered; DatabaseErr reports that they could not all be listed.
 	Databases   []Database
 	DatabaseErr bool
+	// PortContainers are the running containers of the selected engine that
+	// publish at least one host TCP port, read from the same list as Databases.
+	PortContainers []DockerPortContainer `json:",omitempty"`
 	// KindClusters are the kind clusters whose nodes are the selected
 	// engine's containers, read from the same list as Databases.
 	KindClusters []KindCluster `json:",omitempty"`
 	// Running and Containers are the selected engine's counts from docker info.
 	Running    int `json:",omitempty"`
 	Containers int `json:",omitempty"`
+}
+
+// DockerPortContainer is a running Docker container that publishes host TCP ports.
+type DockerPortContainer struct {
+	ID, Name, Image, Status string
+	Ports                   []string
 }
 
 // KindCluster is a local kind cluster, as its node containers show it.

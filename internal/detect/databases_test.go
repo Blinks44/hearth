@@ -52,15 +52,41 @@ func TestDockerDatabases(t *testing.T) {
 	if strings.Contains(format, ".Labels") || strings.Contains(format, ".Env") {
 		t.Fatal("unrestricted fields")
 	}
-	r.Stdout(`{"Name":"db","Image":"postgres:16","State":"running","Ports":"127.0.0.1:5433->5432/tcp, [::1]:5433->5432/tcp","Service":"db","Project":"/dev/app"}
+	fullID := strings.Repeat("a", 64)
+	webID := strings.Repeat("b", 64)
+	r.Stdout(`{"ID":"`+fullID+`","Name":"db","Image":"postgres:16","State":"running","Ports":"127.0.0.1:5433->5432/tcp, [::1]:5433->5432/tcp","Service":"db","Project":"/dev/app"}
+{"ID":"`+webID+`","Name":"web","Image":"nginx:1.27","State":"running","Ports":"0.0.0.0:8080->80/tcp"}
 {"Name":"metrics","Image":"postgres-exporter:latest","State":"running"}
 {"Name":"cache","Image":"redis:7","State":"exited"}
 {"Name":"docs","Image":"mongo:8","State":"running","Ports":"0.0.0.0:27017->27017/tcp"}
 {"Name":"sql","Image":"mcr.microsoft.com/mssql/server:2022-latest","State":"running","Ports":"127.0.0.1:1433->1433/tcp"}`, call.Args...)
 	d = &inventory.DockerState{}
 	dockerDatabases(t.Context(), r, nil, "docker", "unix:///local", d)
-	if d.DatabaseErr || len(d.Databases) != 4 || d.Databases[2].Kind != "MongoDB" || d.Databases[3].Kind != "SQL Server" || d.Databases[3].Ports[0] != "1433" || len(d.Databases[0].Ports) != 1 || d.Databases[0].Ports[0] != "5433" || d.Databases[1].Status != "stopped" {
+	if d.DatabaseErr || len(d.Databases) != 4 || d.Databases[0].ContainerID != fullID || d.Databases[2].Kind != "MongoDB" || d.Databases[3].Kind != "SQL Server" || d.Databases[3].Ports[0] != "1433" || len(d.Databases[0].Ports) != 1 || d.Databases[0].Ports[0] != "5433" || d.Databases[1].Status != "stopped" {
 		t.Fatalf("%+v", d)
+	}
+	if len(d.PortContainers) != 4 || d.PortContainers[1].Name != "web" || d.PortContainers[1].ID != webID || !slices.Equal(d.PortContainers[1].Ports, []string{"8080"}) {
+		t.Fatalf("PortContainers %+v", d.PortContainers)
+	}
+}
+
+func TestRefreshPortsDocker(t *testing.T) {
+	r := &run.Fake{}
+	webID := strings.Repeat("c", 64)
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}}}`
+	r.Stdout(`{"ID":"`+webID+`","Name":"api","Image":"my/api:latest","State":"running","Ports":"127.0.0.1:8081->8080/tcp"}`,
+		"/usr/local/bin/docker", "--host", "unix:///local", "ps", "--no-trunc", "--format", format)
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool:          "docker",
+		Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
+		Docker: &inventory.DockerState{
+			Selected: "default",
+			Contexts: []inventory.DockerContext{{Name: "default", Endpoint: "unix:///local", Local: true}},
+		},
+	}}}
+	got := RefreshPorts(t.Context(), r, sysenv.Env{"DOCKER_CONTEXT=remote"}, snap)
+	if !got.HasDocker || len(got.Containers) != 1 || got.Containers[0].ID != webID || got.Containers[0].Name != "api" || !slices.Equal(got.Containers[0].Ports, []string{"8081"}) {
+		t.Fatalf("RefreshPorts %+v", got)
 	}
 }
 

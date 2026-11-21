@@ -17,7 +17,7 @@ const cronActionsWidth = 32 + 24 + 28 + 2*4
 func (a *App) cronJobActions(c *ui.Context, job kube.CronJob, width float32) {
 	ref := a.resourceRef("CronJob", job.Namespace, job.Name, job.UID)
 	ui.Row(c).Width(width).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-		if a.BuildPlan == nil || ref.UID == "" {
+		if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" {
 			return
 		}
 		f := a.cluster.resources[ref]

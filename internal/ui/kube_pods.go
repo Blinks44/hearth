@@ -348,7 +348,7 @@ func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact 
 			Label(g.owner.Kind + " " + g.owner.Name).OnClick(func() { a.toggleGroup(g) })
 		ref := a.podGroupRef(cl, g)
 		var logs func()
-		if ref.UID != "" && a.StreamLogs != nil && a.WatchCluster != nil {
+		if ref.UID != "" && ref.Kubectl != "" && a.StreamLogs != nil && a.WatchCluster != nil {
 			logs = func() { a.openOwnerLogs(ref) }
 		}
 		menu := a.ownerMenu(c, g, ref, logs)
@@ -478,8 +478,10 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Padding(6, 0).
 			AlignItems(ui.Stretch).Justify(ui.Center).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
 		var logs func()
-		if container := podLogContainer(p, story.crashed); a.StreamLogs != nil && container != "" {
-			logs = func() { a.openLogs(p, container, false) }
+		if _, hasKubectl := cliCopy(a.cliState(), "kubectl"); hasKubectl {
+			if container := podLogContainer(p, story.crashed); a.StreamLogs != nil && container != "" {
+				logs = func() { a.openLogs(p, container, false) }
+			}
 		}
 		menu := a.podMenu(c, cl, p, logs, story.crashed)
 		row.ContextMenu(menu)
@@ -637,7 +639,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				a.ownerChip(c, p.Namespace, p.Owner)
 			}
 		})
-		if (a.StreamLogs != nil || a.OpenKubeShell != nil) && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil {
+		if ref.Kubectl != "" && ((a.StreamLogs != nil || a.OpenKubeShell != nil) && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil) {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
 				if a.StreamLogs != nil && len(p.Containers) > 0 {
 					container := p.Containers[0].Name
@@ -685,13 +687,15 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				if cl.LastLineOf == tail && cl.LastLine != "" {
 					story.facts = append(story.facts, locales.KubeWhyLastLine(cl.LastLine))
 				}
-				label := locales.KubeLogsOpenPrevious()
-				if story.ended {
-					label = locales.KubeLogsOpenEnded()
-				}
-				actions = func() {
-					ui.Button(c.Key("story-logs"), label).Background(t.Text).TextColor(t.Background).BorderColor(t.Text).
-						OnClick(func() { a.openLogs(p, story.crashed, !story.ended) })
+				if a.StreamLogs != nil && ref.Kubectl != "" {
+					label := locales.KubeLogsOpenPrevious()
+					if story.ended {
+						label = locales.KubeLogsOpenEnded()
+					}
+					actions = func() {
+						ui.Button(c.Key("story-logs"), label).Background(t.Text).TextColor(t.Background).BorderColor(t.Text).
+							OnClick(func() { a.openLogs(p, story.crashed, !story.ended) })
+					}
 				}
 			}
 			storyCard(c, story, actions)

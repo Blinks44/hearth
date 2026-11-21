@@ -9,6 +9,8 @@ import (
 
 	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/docker"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -102,5 +104,62 @@ func TestDockerDetailsAndLogs(t *testing.T) {
 	tt.Advance(time.Second)
 	if logsStopped != 2 || a.engine.containers.detail.id != "" {
 		t.Fatalf("route change: stops=%d, detail=%+v", logsStopped, a.engine.containers.detail)
+	}
+}
+
+func TestDockerPauseAndUnpauseUI(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = colimaSnapshot()
+	a.WatchDocker = (&engineWatches{}).watch
+	running := docker.Container{ID: strings.Repeat("a", 64), Name: "api-1"}
+	running.State.Status = "running"
+	paused := docker.Container{ID: strings.Repeat("b", 64), Name: "worker-1"}
+	paused.State.Status = "paused"
+	a.WatchDockerContainers = func(_ docker.Target, got func([]docker.Container, error, error)) func() {
+		got([]docker.Container{running, paused}, nil, nil)
+		return func() {}
+	}
+	a.ReadDockerDetail = func(_ docker.Target, _ string, got func(docker.ContainerDetail, error)) func() {
+		got(docker.ContainerDetail{Image: "app:1"}, nil)
+		return func() {}
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), got func(ops.Plan, error)) {
+		got(build(nil, nil))
+	}
+	a.router.Push(dockerEnginePath("colima"))
+	tt := ui.NewTester(a.View, 1280, 820)
+	a.engine.data = new(colimaEngine())
+	tt.Advance(time.Second)
+
+	// Open running container details and click Pause.
+	if err := tt.Click("api-1"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	screenshot(t, tt, "docker-pause-1280")
+	if err := tt.Click(locales.DockerContainerPause()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.DockerAction != ops.DockerPause {
+		t.Fatalf("expected DockerPause plan, got %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	// Open paused container details and click Resume.
+	if err := tt.Click("worker-1"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	screenshot(t, tt, "docker-unpause-1280")
+	if err := tt.Click(locales.DockerContainerUnpause()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.DockerAction != ops.DockerUnpause {
+		t.Fatalf("expected DockerUnpause plan, got %+v", a.op)
 	}
 }

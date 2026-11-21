@@ -6,6 +6,7 @@ import "strings"
 // bindings are observed listeners/published ports, never assumed defaults.
 type Database struct {
 	Kind, Name, Version, Path, Source, Status, Service, Project string
+	ContainerID                                                 string `json:",omitempty"`
 	Ports                                                       []string
 	// Autostart is whether the service starts with the system or at
 	// login: "on", "off", or "" when not known.

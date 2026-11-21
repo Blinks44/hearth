@@ -279,7 +279,7 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 		if checked {
 			a.kubeAccessTag(c, k, check)
 		}
-		if found && a.WatchCluster != nil {
+		if a.WatchCluster != nil {
 			ui.Button(c.Key("open"), locales.KubeClusterOpen()).OnClick(func() { a.openCluster(k.Name) })
 		}
 		iconButton(c, "ellipsis", locales.MoreActions()).Menu(menu)

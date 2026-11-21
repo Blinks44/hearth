@@ -159,8 +159,8 @@ type clusterEntry struct {
 func (a *App) kubeEntryPath() string {
 	entry := a.cluster.entry
 	current := a.kubeContext(entry.context.Name)
-	kubectl, found := cliCopy(a.cliState(), "kubectl")
-	if a.WatchCluster == nil || !found || !entry.verified || current == nil || *current != entry.context || kubectl.Path != entry.kubectl {
+	kubectl, _ := cliCopy(a.cliState(), "kubectl")
+	if a.WatchCluster == nil || !entry.verified || current == nil || *current != entry.context || kubectl.Path != entry.kubectl {
 		return kubePage
 	}
 	return kubeClusterPath(entry.context.Name)
@@ -209,7 +209,8 @@ func (a *App) syncCluster() {
 		if s.custom.context != name {
 			s.custom.reset(name)
 		}
-		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
+		if name != "" {
+			in, _ := cliCopy(a.cliState(), "kubectl")
 			if ctx := a.kubeContext(name); ctx == nil {
 				s.entry = clusterEntry{}
 			} else if s.entry.context != *ctx || s.entry.kubectl != in.Path {
@@ -474,8 +475,8 @@ func (s *kubeClusterState) stopNamespaceList() {
 // namespace popover.
 func (a *App) listNamespaces(name string) {
 	s := &a.cluster
-	in, ok := cliCopy(a.cliState(), "kubectl")
-	if !ok || a.ListNamespaces == nil {
+	in, _ := cliCopy(a.cliState(), "kubectl")
+	if a.ListNamespaces == nil {
 		return
 	}
 	s.stopNamespaceList()
@@ -524,6 +525,13 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				a.forwardList(c, name)
 				_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 				helm, hasHelm := cliCopy(a.cliState(), "helm")
+				if a.Snapshot != nil && !hasKubectl {
+					ui.Row(c.Key("kube-no-kubectl-notice")).Gap(10).Padding(8, 12).Radius(9).Background(pal.InfoSoft).AlignItems(ui.Center).Shrink(0).Children(func() {
+						ui.Icon(c, Icon("info")).Size(15, 15).Shrink(0).TextColor(pal.InfoText)
+						ui.Text(c, locales.KubeReadOnlyNoKubectl()).FontSize(12).TextColor(pal.InfoText).Wrap().Grow(1).MinWidth(0)
+						a.installToolButton(c, "kubectl")
+					})
+				}
 				waiting := s.data == nil || (s.kind == kindSecrets) != (s.data.Secrets != nil) || (s.kind == kindServices) != (s.data.Services != nil) || s.kind == kindOverview && s.data.Overview == nil || !isBatchKind(s.kind) && s.batchData || isBatchKind(s.kind) && s.data.Batch == nil
 				if s.data != nil && (s.kind == kindAccess || s.data.Access != nil) {
 					waiting = s.kind != kindAccess || s.data.Access == nil
@@ -537,9 +545,6 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 				switch {
 				case a.Snapshot == nil:
 					toolNote(c, locales.CleanupWaiting())
-				case !hasKubectl:
-					toolNote(c, locales.KubeClusterNoKubectl())
-					a.installPrimary(c, "kubectl")
 				case s.kind == kindHelm && (!hasHelm || errors.Is(s.err, fs.ErrNotExist)):
 					toolNote(c, locales.KubeHelmMissing())
 					a.installPrimary(c, "helm")

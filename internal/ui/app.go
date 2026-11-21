@@ -161,6 +161,11 @@ type App struct {
 	CheckUpdates func()
 	// RecountSizes recounts disk usage for Cleanup right now.
 	RecountSizes func()
+	// RefreshPorts re-reads active TCP listeners and port-publishing Docker
+	// containers without running a full system scan.
+	RefreshPorts func(done func(detect.PortsSnapshot))
+	// OpenDBClient opens the user's terminal running a database CLI command.
+	OpenDBClient func(argv []string, done func(error))
 	// Projects are the folders the user added, as last read.
 	Projects []projects.Project
 	// ChooseFolder asks for a folder to add, and shows it with Offer
@@ -337,6 +342,8 @@ type App struct {
 	kubeApply          *kubeApplyDialog
 	forwards           []*portForward
 	portsFilter        string // the Ports table's filter
+	portsRefreshing    bool
+	portsRefreshSeq    int
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page
 	usageTab           int    // the Usage page's period, by usagePeriods
@@ -361,6 +368,7 @@ type App struct {
 	updateChoice       map[string]bool
 	databaseTab        int     // the tab of the databases page shown
 	databaseFilter     string  // the databases table's filter
+	databaseErr        string  // last terminal launch error on the Databases page
 	dockerTab          int     // the tab of the Docker page shown
 	dockerFilter       string  // the Docker contexts table's filter
 	bunTab             int     // the tab of the Bun page shown

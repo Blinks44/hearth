@@ -259,6 +259,9 @@ func kubectlJSON(ctx context.Context, r run.Runner, env sysenv.Env, t Target, ar
 			return err
 		}
 	}
+	if t.Kubectl == "" {
+		return &Error{Access: detect.KubeAccess{Detail: "kubectl is required to read this cluster"}}
+	}
 	argv := append([]string{t.Kubectl, "--context=" + t.Context, "get"}, args...)
 	argv = append(argv, "--request-timeout=15s")
 	out, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Timeout: timeout, MaxOutput: 64 << 20})

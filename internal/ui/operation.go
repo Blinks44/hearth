@@ -95,7 +95,7 @@ func (a *App) startOperation() {
 	if op.plan.DockerContainers() {
 		a.engine.containers.bulk.clear()
 	}
-	if op.plan.DockerAction == ops.DockerImageRemove {
+	if op.plan.DockerAction == ops.DockerImageRemove || op.plan.DockerAction == ops.DockerImageUntag {
 		a.engine.images.bulk.clear()
 	}
 	if op.plan.DockerAction == ops.DockerResourceRemove {

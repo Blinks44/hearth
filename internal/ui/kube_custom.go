@@ -55,10 +55,7 @@ func (a *App) loadCustomDefinitions(name string) {
 	if name == "" || a.ListCustomDefinitions == nil {
 		return
 	}
-	in, ok := cliCopy(a.cliState(), "kubectl")
-	if !ok {
-		return
-	}
+	in, _ := cliCopy(a.cliState(), "kubectl")
 	v := &a.cluster.custom
 	request := &customCatalog{}
 	if v.catalog != nil {

@@ -233,3 +233,98 @@ func TestParseGet(t *testing.T) {
 		}
 	}
 }
+
+func TestAPIReadsWithoutKubectl(t *testing.T) {
+	discovery := map[string]string{
+		"/api": `{"kind":"APIGroupDiscoveryList","items":[{"metadata":{"name":""},"versions":[{"version":"v1","resources":[
+			{"resource":"pods","scope":"Namespaced","responseKind":{"kind":"Pod"}},
+			{"resource":"configmaps","scope":"Namespaced","responseKind":{"kind":"ConfigMap"}},
+			{"resource":"secrets","scope":"Namespaced","responseKind":{"kind":"Secret"}}]}]}]}`,
+		"/apis": `{"kind":"APIGroupDiscoveryList","items":[{"metadata":{"name":"apps"},"versions":[{"version":"v1","resources":[
+			{"resource":"replicasets","scope":"Namespaced","responseKind":{"kind":"ReplicaSet"}},
+			{"resource":"deployments","scope":"Namespaced","responseKind":{"kind":"Deployment"}}]}]}]}`,
+	}
+	lists := shopLists(t)
+	lists["/api/v1/namespaces/shop/configmaps/app-cfg"] = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"app-cfg","namespace":"shop","uid":"cm-1"},"data":{"ENV":"prod"}}`
+	lists["/api/v1/namespaces/shop/secrets"] = `{"items":[{"metadata":{"name":"db-pass","namespace":"shop","uid":"sec-1"},"type":"Opaque","data":{"password":"c2VjcmV0"}}]}`
+	lists["/api/v1/namespaces/shop/secrets/db-pass"] = `{"apiVersion":"v1","kind":"Secret","metadata":{"name":"db-pass","namespace":"shop","uid":"sec-1"},"type":"Opaque","data":{"password":"c2VjcmV0"}}`
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer secret" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if body, ok := discovery[r.URL.Path]; ok {
+			_, _ = fmt.Fprint(w, body)
+			return
+		}
+		if body, ok := lists[r.URL.RequestURI()]; ok {
+			_, _ = fmt.Fprint(w, body)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = fmt.Fprintf(w, `{"kind":"Status","reason":"NotFound","message":"%s not found"}`, r.URL.Path)
+	}))
+	t.Cleanup(srv.Close)
+
+	env := kubeconfig(t, srv, "{token: secret}")
+	tg := Target{Context: "kind-dev", Namespaces: []string{"shop"}, API: NewAPI()}
+	var none run.Fake
+
+	cl, err := Read(context.Background(), &none, env, tg)
+	if err != nil {
+		t.Fatalf("Read without kubectl: %v", err)
+	}
+	if len(cl.Pods) == 0 || len(cl.Deployments) == 0 {
+		t.Fatalf("Read returned empty cluster: %+v", cl)
+	}
+
+	raw, err := ReadResourceYAML(context.Background(), &none, env, tg, Resource{Kind: ConfigMaps, Namespace: "shop", Name: "app-cfg", UID: "cm-1"})
+	if err != nil {
+		t.Fatalf("ReadResourceYAML without kubectl: %v", err)
+	}
+	if !strings.Contains(raw, "kind: ConfigMap") || !strings.Contains(raw, "ENV: prod") {
+		t.Fatalf("unexpected YAML:\n%s", raw)
+	}
+
+	tgSecrets := tg
+	tgSecrets.Secrets = true
+	secCl, err := Read(context.Background(), &none, env, tgSecrets)
+	if err != nil {
+		t.Fatalf("Read secrets without kubectl: %v", err)
+	}
+	if len(secCl.Secrets) != 1 || secCl.Secrets[0].Name != "db-pass" || len(secCl.Secrets[0].Keys) != 1 || secCl.Secrets[0].Keys[0].Bytes != 6 {
+		t.Fatalf("unexpected secrets: %+v", secCl.Secrets)
+	}
+
+	val, err := ReadSecretValue(context.Background(), &none, env, tg, Secret{Namespace: "shop", Name: "db-pass", UID: "sec-1"}, "password")
+	if err != nil {
+		t.Fatalf("ReadSecretValue without kubectl: %v", err)
+	}
+	if string(val) != "secret" {
+		t.Fatalf("secret value = %q, want %q", string(val), "secret")
+	}
+	if calls := none.Calls(); len(calls) != 0 {
+		t.Fatalf("kubectl runner was called without kubectl: %v", calls)
+	}
+
+	// Failed sign-in without kubectl returns *Error directly instead of calling kubectl.
+	badEnv := kubeconfig(t, srv, `{exec: {apiVersion: client.authentication.k8s.io/v1, command: hearth-no-such-sign-in, interactiveMode: Never}}`)
+	_, err = Read(context.Background(), &none, badEnv, tg)
+	if _, ok := errors.AsType[*Error](err); !ok {
+		t.Fatalf("err = %v, want *Error", err)
+	}
+	if len(none.Calls()) != 0 {
+		t.Fatalf("kubectl runner called on error: %v", none.Calls())
+	}
+}
+
+func TestScaleTargetMatchesStatefulSet(t *testing.T) {
+	st := ScaleTarget{APIVersion: "apps/v1", Kind: "StatefulSet", Name: "db"}
+	if !st.Targets("StatefulSet", "db") {
+		t.Fatal("expected StatefulSet target to match")
+	}
+	if st.Targets("Deployment", "db") || st.Targets("StatefulSet", "other") {
+		t.Fatal("unexpected target match")
+	}
+}

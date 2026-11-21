@@ -11,6 +11,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/kube"
+	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -145,4 +147,135 @@ func TestKubeResourceBrowserRussianLabels(t *testing.T) {
 	}
 	hasTexts(t, tt, "Стратегия", "RollingUpdate", "OrderedReady")
 	screenshot(t, tt, "statefulset-1000-ru")
+}
+
+func TestKubeOtherResourceActions(t *testing.T) {
+	a := kubeApp()
+	var watches clusterWatches
+	a.WatchCluster = watches.watch
+	a.StreamLogs = func(kube.Logs, func([]kube.LogLine), func(error)) func() { return func() {} }
+	plans := 0
+	a.BuildPlan = func(_ func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		plans++
+		done(ops.Plan{Title: "Plan", Action: "Apply"}, nil)
+	}
+	a.openCluster("kind-dev")
+	a.cluster.kind = kindStatefulSets
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	show := func(kind kube.ResourceKind, item kube.Resource) {
+		t.Helper()
+		watches.got[len(watches.got)-1](kube.Cluster{
+			Taken:     time.Now(),
+			Resources: &kube.ResourceList{Kind: kind, Items: []kube.Resource{item}},
+		}, nil)
+		tt.Frame()
+		tt.Advance(time.Second)
+	}
+
+	// StatefulSet: scale, restart, logs, edit YAML, delete.
+	sts := kube.Resource{
+		Kind: kube.StatefulSets, Namespace: "default", Name: "checkout-store", UID: "sts1", Created: time.Now(),
+		Desired: 2, Ready: 2, Service: "checkout-db", Strategy: "RollingUpdate", PodOrder: "OrderedReady",
+	}
+	show(kube.StatefulSets, sts)
+	if err := tt.Click("checkout-store"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.KubeLogsOpen(), locales.KubeRestartOpen(), locales.KubeResourceEdit(), locales.KubeResourceDelete(), locales.KubeScaleApply())
+	screenshot(t, tt, "statefulset-actions-1280")
+
+	if err := tt.Click(locales.KubeScaleMore()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click(locales.KubeScaleApply()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if plans != 1 {
+		t.Fatalf("StatefulSet scale plans = %d, want 1", plans)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	if err := tt.Click(locales.KubeRestartOpen()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if plans != 2 {
+		t.Fatalf("StatefulSet restart plans = %d, want 2", plans)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	tt.SetSize(1000, 680)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "statefulset-actions-1000")
+	tt.SetSize(1280, 820)
+	tt.Advance(time.Second)
+
+	// DaemonSet: logs, restart, edit YAML, delete.
+	a.cluster.kind = kindDaemonSets
+	tt.Frame()
+	tt.Advance(time.Second)
+	show(kube.DaemonSets, kube.Resource{
+		Kind: kube.DaemonSets, Namespace: "default", Name: "node-agent", UID: "ds1", Created: time.Now(), Desired: 3, Ready: 3,
+	})
+	if err := tt.Click("node-agent"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.KubeLogsOpen(), locales.KubeRestartOpen(), locales.KubeResourceEdit(), locales.KubeResourceDelete())
+	if err := tt.Click(locales.KubeRestartOpen()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if plans != 3 {
+		t.Fatalf("DaemonSet restart plans = %d, want 3", plans)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	// ConfigMap, Ingress, PVC: edit YAML and delete.
+	for _, tc := range []struct {
+		nav  int
+		kind kube.ResourceKind
+		item kube.Resource
+	}{
+		{kindConfigMaps, kube.ConfigMaps, kube.Resource{Kind: kube.ConfigMaps, Namespace: "default", Name: "app-cfg", UID: "cm1", Created: time.Now()}},
+		{kindIngresses, kube.Ingresses, kube.Resource{Kind: kube.Ingresses, Namespace: "default", Name: "shop-ing", UID: "ing1", Created: time.Now()}},
+		{kindPVCs, kube.PersistentVolumeClaims, kube.Resource{Kind: kube.PersistentVolumeClaims, Namespace: "default", Name: "pg-data", UID: "pvc1", Created: time.Now()}},
+	} {
+		a.cluster.kind = tc.nav
+		tt.Frame()
+		tt.Advance(time.Second)
+		show(tc.kind, tc.item)
+		if err := tt.Click(tc.item.Name); err != nil {
+			t.Fatalf("%s click: %v", tc.kind, err)
+		}
+		tt.Advance(time.Second)
+		hasTexts(t, tt, locales.KubeResourceEdit(), locales.KubeResourceDelete())
+		before := plans
+		if err := tt.Click(locales.KubeResourceDelete()); err != nil {
+			t.Fatalf("%s delete click: %v", tc.kind, err)
+		}
+		tt.Advance(time.Second)
+		if plans != before+1 {
+			t.Fatalf("%s delete did not build plan: plans=%d", tc.kind, plans)
+		}
+		if err := tt.Click(locales.Cancel()); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+	}
 }

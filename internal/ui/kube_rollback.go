@@ -37,7 +37,7 @@ func (a *App) deploymentRevisions(c *ui.Context, ref ops.KubeResource, d kube.De
 					switch {
 					case revision.Number > 0 && revision.Number == d.Revision:
 						aiTag(c, locales.KubeCurrent(), pal.SuccessSoft, pal.SuccessText)
-					case a.BuildPlan != nil && ref.UID != "" && revision.UID != "" && revision.Number > 0:
+					case a.BuildPlan != nil && ref.UID != "" && ref.Kubectl != "" && revision.UID != "" && revision.Number > 0:
 						a.deploymentRollbackButton(c, ref, revision, d.Paused)
 					default:
 						ui.Text(c, locales.KubePodCount(revision.Pods)).FontSize(12).TextColor(pal.TextFaint).SingleLine()

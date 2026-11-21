@@ -196,19 +196,27 @@ func (a *App) dockerDetailActions(c *ui.Context, item docker.Container) {
 		kubeActionButton(c.Key("docker-detail-logs"), "scroll-text", locales.KubeLogsOpen(), 28).
 			Disabled(a.StreamDockerLogs == nil).OnClick(func() { a.openDockerLogs(item.Name, []docker.LogTarget{{ID: item.ID}}, false) })
 		action, icon := ops.DockerStart, "play"
-		if item.Active() {
+		switch {
+		case item.State.Status == "paused":
+			action, icon = ops.DockerUnpause, "play"
+		case item.Active():
 			action, icon = ops.DockerStop, "square"
 		}
 		if action.Applies(item) {
 			kubeActionButton(c.Key("docker-detail-action"), icon, action.Label(), 28).
 				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, action) })
 		}
+		if ops.DockerPause.Applies(item) {
+			kubeActionButton(c.Key("docker-detail-pause"), "pause", ops.DockerPause.Label(), 28).
+				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerPause) })
+		}
 		kubeActionButton(c.Key("docker-detail-shell"), "terminal", locales.KubeShellAction(), 28).
 			Disabled(a.OpenDockerShell == nil || item.State.Status != "running" || s.detail.shellRequest != nil || s.err != nil).
 			OnClick(func() { a.openDockerShell(item) })
 		ui.Box(c).Grow(1)
 		kubeActionButton(c.Key("docker-detail-remove"), "trash-2", ops.DockerRemove.Label()+"…", 28).
-			TextColor(Colors(c.Theme()).DangerText).Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerRemove) })
+			TextColor(Colors(c.Theme()).DangerText).Disabled(!a.canActOnDockerContainers() || !ops.DockerRemove.Applies(item)).
+			OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerRemove) })
 	})
 }
 

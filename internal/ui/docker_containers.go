@@ -62,6 +62,9 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 		s.pending = nil
 	}
 	if key == s.watching {
+		if s.loaded && s.pending != nil && !s.pending.logs {
+			s.applyPendingContainer()
+		}
 		return
 	}
 	s.stopWatch()
@@ -91,13 +94,7 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 		s.err, s.statsErr = err, statsErr
 		if err == nil {
 			s.items, s.loaded = items, true
-			if req := s.pending; req != nil {
-				s.pending = nil
-				if i := slices.IndexFunc(items, func(c docker.Container) bool { return c.ID == req.item.ID }); i >= 0 {
-					s.filter, s.query = dockerAll, strings.ToLower(items[i].Name)
-					s.selectContainer(req.item.ID)
-				}
-			}
+			s.applyPendingContainer()
 			for id := range s.bulk.selected {
 				if !slices.ContainsFunc(items, func(c docker.Container) bool { return c.ID == id }) {
 					delete(s.bulk.selected, id)
@@ -105,6 +102,24 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 			}
 		}
 	})
+}
+
+func (s *dockerContainersState) applyPendingContainer() {
+	req := s.pending
+	if req == nil {
+		return
+	}
+	s.pending = nil
+	i := slices.IndexFunc(s.items, func(c docker.Container) bool {
+		return req.item.ID != "" && (c.ID == req.item.ID || strings.HasPrefix(c.ID, req.item.ID))
+	})
+	if i < 0 && req.item.Name != "" {
+		i = slices.IndexFunc(s.items, func(c docker.Container) bool { return c.Name == req.item.Name })
+	}
+	if i >= 0 {
+		s.filter, s.query = dockerAll, strings.ToLower(s.items[i].Name)
+		s.selectContainer(s.items[i].ID)
+	}
 }
 
 const (
@@ -706,7 +721,10 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 
 func (a *App) dockerContainerQuickPower(c *ui.Context, item docker.Container) {
 	action, icon := ops.DockerStart, "play"
-	if item.Active() {
+	switch {
+	case item.State.Status == "paused":
+		action, icon = ops.DockerUnpause, "play"
+	case item.Active():
 		action, icon = ops.DockerStop, "square"
 	}
 	if !action.Applies(item) || !a.canActOnDockerContainers() {
@@ -800,7 +818,9 @@ func dockerContainerProblem(item docker.Container) string {
 	return strings.Join(reasons, " · ")
 }
 
-var dockerContainerActions = []ops.DockerAction{ops.DockerStart, ops.DockerStop, ops.DockerRestart, ops.DockerRemove}
+var dockerContainerActions = []ops.DockerAction{ops.DockerStart, ops.DockerStop, ops.DockerPause, ops.DockerUnpause, ops.DockerRestart, ops.DockerRemove}
+
+var dockerComposeActions = []ops.DockerAction{ops.DockerStart, ops.DockerStop, ops.DockerRestart, ops.DockerRemove}
 
 func (a *App) canPlanDocker() bool { return a.BuildPlan != nil && !a.op.running() }
 
@@ -820,14 +840,29 @@ func (a *App) dockerBulkBar(c *ui.Context, s *dockerContainersState) {
 		return
 	}
 	floatingBulkBar(c, "docker-bulk-bar", locales.DockerSelected(len(selected)), s.bulk.clear, func(fg, dangerFg, dangerBg ui.Color) {
-		icons := []string{"play", "square", "refresh-cw", "trash-2"}
-		for i, action := range dockerContainerActions {
+		type bulkSpec struct {
+			action ops.DockerAction
+			icon   string
+		}
+		specs := []bulkSpec{
+			{ops.DockerStart, "play"},
+			{ops.DockerStop, "square"},
+		}
+		if slices.ContainsFunc(selected, ops.DockerPause.Applies) {
+			specs = append(specs, bulkSpec{ops.DockerPause, "pause"})
+		}
+		if slices.ContainsFunc(selected, ops.DockerUnpause.Applies) {
+			specs = append(specs, bulkSpec{ops.DockerUnpause, "play"})
+		}
+		specs = append(specs, bulkSpec{ops.DockerRestart, "refresh-cw"}, bulkSpec{ops.DockerRemove, "trash-2"})
+		for _, spec := range specs {
+			action := spec.action
 			disabled := !a.canActOnDockerContainers() || slices.ContainsFunc(selected, func(item docker.Container) bool { return !action.Applies(item) })
 			afg, abg := fg, ui.Transparent
 			if action == ops.DockerRemove {
 				afg, abg = dangerFg, dangerBg
 			}
-			bulkAction(c.Key(string(action)), icons[i], action.Label()+"…", afg, abg, disabled, func() {
+			bulkAction(c.Key(string(action)), spec.icon, action.Label()+"…", afg, abg, disabled, func() {
 				a.planDockerContainers(selected, action)
 			})
 		}
@@ -857,7 +892,7 @@ func (a *App) dockerGroupMenu(m *ui.Menu, g dockerGroup) {
 	if !a.canActOnDockerContainers() || g.compose.Files == "" {
 		return
 	}
-	actions := dockerContainerActions
+	actions := dockerComposeActions
 	if g.dir != "" {
 		actions = append(slices.Clone(actions), ops.DockerUp)
 		if g.compose.Name != "" {

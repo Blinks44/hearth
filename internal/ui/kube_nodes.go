@@ -149,7 +149,7 @@ func nodePodsView(c *ui.Context, list *kube.ResourceList, read bool) {
 
 func (a *App) nodeActions(c *ui.Context, item kube.Resource) {
 	ref := a.resourceRef("Node", "", item.Name, item.UID)
-	if a.BuildPlan == nil || ref.UID == "" || item.Deleting {
+	if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" || item.Deleting {
 		return
 	}
 	f := a.cluster.resources[ref]

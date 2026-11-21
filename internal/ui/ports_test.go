@@ -2,11 +2,14 @@ package ui
 
 import (
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/locales"
@@ -33,6 +36,9 @@ func TestPorts(t *testing.T) {
 	if len(rows) != 4 || rows[0].Port != "631" || rows[1].Port != "3000" || rows[1].Project != shop || !rows[1].Network || rows[2].Network {
 		t.Fatalf("rows %+v", rows)
 	}
+	if !slices.Equal(rows[1].Addresses, []string{"*", "[::]"}) {
+		t.Fatalf("addresses %+v", rows[1].Addresses)
+	}
 	for _, r := range []portRow{rows[0], rows[3]} {
 		if _, _, ok := a.portAbout(r); ok {
 			t.Errorf("offers to stop %+v", r)
@@ -46,7 +52,18 @@ func TestPorts(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "ports")
-	hasTexts(t, tt, "Ports", "3000", "node", "service postgresql@17", "another user's or the system's process", "network", "localhost")
+	hasTexts(t, tt, "Ports", "3000", "node", "127.0.0.1", "*, [::]", "0.0.0.0", "service postgresql@17", "another user's or the system's process", "network", "localhost")
+	a1, ok1 := tt.Find("0.0.0.0")
+	a2, ok2 := tt.Find("127.0.0.1")
+	a3, ok3 := tt.Find("*")
+	if !ok1 || !ok2 || !ok3 || a1.X != a2.X || a2.X != a3.X {
+		t.Fatalf("bind address column misaligned: 0.0.0.0=%+v 127.0.0.1=%+v *=%+v", a1, a2, a3)
+	}
+	tt.SetSize(1000, 680)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "ports-1000")
+	tt.SetSize(1280, 820)
+	tt.Advance(time.Second)
 	if err := tt.Click(locales.MoreActions()); err != nil {
 		t.Fatal(err)
 	}
@@ -77,5 +94,70 @@ func TestPortsFilterByProcess(t *testing.T) {
 	hasTexts(t, tt, "3000", "myworker")
 	if tt.HasText("5432") || tt.HasText("postgres") {
 		t.Errorf("filter by process name did not narrow rows: %q", tt.Texts())
+	}
+}
+
+func TestPortsRefreshAndDockerJump(t *testing.T) {
+	webID := strings.Repeat("b", 64)
+	a := NewApp()
+	a.Home = home
+	scans := 0
+	a.OnScan = func() { scans++ }
+	refreshes := 0
+	a.RefreshPorts = func(done func(detect.PortsSnapshot)) {
+		refreshes++
+		done(detect.PortsSnapshot{
+			Listeners: []inventory.DatabaseListener{
+				{Address: "0.0.0.0", Port: "8080", Process: "com.docker.backend", PID: "700", Own: true},
+			},
+			Containers: []inventory.DockerPortContainer{
+				{ID: webID, Name: "frontend-nginx", Image: "nginx:1.27", Status: "running", Ports: []string{"8080"}},
+			},
+			HasDocker: true,
+		})
+	}
+	a.WatchDocker = func(docker.Target, bool, func(docker.Engine, error)) func() { return func() {} }
+	a.WatchDockerContainers = func(_ docker.Target, got func([]docker.Container, error, error)) func() {
+		ct := docker.Container{ID: webID, Name: "frontend-nginx", Image: "nginx:1.27"}
+		ct.State.Status = "running"
+		got([]docker.Container{ct}, nil, nil)
+		return func() {}
+	}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "databases", Databases: &inventory.DatabaseState{
+			Listeners: []inventory.DatabaseListener{
+				{Address: "127.0.0.1", Port: "9000", Process: "old-proc", PID: "100", Own: true},
+			},
+		}},
+		{Tool: "docker",
+			Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
+			Docker: &inventory.DockerState{
+				Selected: "default",
+				Contexts: []inventory.DockerContext{{Name: "default", Endpoint: "unix:///var/run/docker.sock", Local: true, Status: "available"}},
+			}},
+	}}
+	a.router.Push(portsPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "9000", "old-proc")
+
+	if err := tt.Click(locales.PortsRefresh()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if refreshes != 1 || scans != 0 {
+		t.Fatalf("refreshes=%d scans=%d, want 1 and 0", refreshes, scans)
+	}
+	hasTexts(t, tt, "8080", "0.0.0.0", "Docker container frontend-nginx")
+	if tt.HasText("old-proc") {
+		t.Fatal("old listener still shown after targeted refresh")
+	}
+
+	if err := tt.Click(locales.OpenInDocker()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != dockerEnginePage || a.engine.view != dockerContainers || a.engine.containers.detail.id != webID {
+		t.Fatalf("after Open in Docker: path=%q view=%d selected=%q", a.router.Path(), a.engine.view, a.engine.containers.detail.id)
 	}
 }

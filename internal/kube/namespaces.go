@@ -50,7 +50,7 @@ func readNamespaceResources(ctx context.Context, r run.Runner, env sysenv.Env, t
 	for _, pod := range pods.Items {
 		podCounts[pod.Metadata.Namespace]++
 	}
-	quotas, _ := readPolicyResources(ctx, r, env, Target{Kubectl: t.Kubectl, Context: t.Context}, ResourceQuotas)
+	quotas, _ := readPolicyResources(ctx, r, env, Target{Kubectl: t.Kubectl, Context: t.Context, API: t.API}, ResourceQuotas)
 	usage := map[string]float64{}
 	for _, resource := range quotas {
 		for key, hard := range resource.Quota.Hard {
@@ -89,6 +89,9 @@ var discoverableResource = regexp.MustCompile(`^[a-z][a-z0-9.-]*$`)
 // ReadNamespaceInventory lists each deletable namespaced kind. Any
 // discovery or list error means the inventory cannot authorize deletion.
 func ReadNamespaceInventory(ctx context.Context, r run.Runner, env sysenv.Env, t Target, config, namespace string) ([]NamespaceMember, error) {
+	if t.Kubectl == "" {
+		return nil, &Error{Access: detect.KubeAccess{Detail: "kubectl is required to inspect namespace members"}}
+	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	prefix := []string{t.Kubectl, "--context=" + t.Context, "--request-timeout=15s"}

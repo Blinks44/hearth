@@ -104,6 +104,9 @@ func ParseLine(s string, prev Level) LogLine {
 // kubectl ends (a previous run's log is read, a followed one ended with
 // its container) or ctx does; kubectl's refusal is an *Error.
 func Stream(ctx context.Context, lines LinesFunc, env sysenv.Env, l Logs, got func([]LogLine)) error {
+	if l.Kubectl == "" {
+		return &Error{Access: detect.KubeAccess{Detail: "kubectl is required to stream logs"}}
+	}
 	var stderr bytes.Buffer
 	var failure *Error
 	var last Level
@@ -138,6 +141,9 @@ func Stream(ctx context.Context, lines LinesFunc, env sysenv.Env, l Logs, got fu
 // lastLine is the last line of the run of the target's Tail container,
 // without its time; empty when kubectl has none to give.
 func lastLine(ctx context.Context, r run.Runner, env sysenv.Env, t Target) string {
+	if t.Kubectl == "" {
+		return ""
+	}
 	argv := []string{t.Kubectl, "--context=" + t.Context, "logs", "--namespace=" + t.Tail.Namespace, t.Tail.Pod,
 		"--container=" + t.Tail.Container}
 	if t.Tail.Previous {

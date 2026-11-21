@@ -87,7 +87,7 @@ type kubeBulkTarget struct {
 }
 
 func (a *App) kubeBulkBar(c *ui.Context, targets []kubeBulkTarget) {
-	if len(targets) == 0 || a.BuildPlan == nil {
+	if len(targets) == 0 || a.BuildPlan == nil || targets[0].ref.Kubectl == "" {
 		return
 	}
 	ns := make(map[string]bool)

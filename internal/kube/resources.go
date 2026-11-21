@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"net/netip"
@@ -362,6 +363,33 @@ func ReadResourceYAML(ctx context.Context, r run.Runner, env sysenv.Env, t Targe
 	}
 	if !supported || resource.Name == "" || namespaced != (resource.Namespace != "") || resource.UID == "" {
 		return "", fmt.Errorf("invalid Kubernetes resource target")
+	}
+	if t.API != nil && t.Kubectl == "" {
+		apiArgs := []string{string(resource.Kind) + "/" + resource.Name}
+		if namespaced {
+			apiArgs = append(apiArgs, "--namespace="+resource.Namespace)
+		}
+		var obj map[string]any
+		err := t.API.get(ctx, env, t, apiArgs, &obj)
+		if err != nil {
+			if errors.Is(err, errUseKubectl) {
+				return "", &Error{Access: detect.KubeAccess{Detail: "kubectl is required to read this resource"}}
+			}
+			return "", err
+		}
+		metadata, _ := obj["metadata"].(map[string]any)
+		uid, _ := metadata["uid"].(string)
+		if uid != resource.UID {
+			return "", fmt.Errorf("resource %q was replaced", resource.Name)
+		}
+		out, err := yaml.Marshal(obj)
+		if err != nil {
+			return "", fmt.Errorf("encode Kubernetes YAML: %w", err)
+		}
+		return string(out), nil
+	}
+	if t.Kubectl == "" {
+		return "", &Error{Access: detect.KubeAccess{Detail: "kubectl is required to read this resource"}}
 	}
 	args := []string{t.Kubectl, "--context=" + t.Context, "get", string(resource.Kind)}
 	if namespaced {

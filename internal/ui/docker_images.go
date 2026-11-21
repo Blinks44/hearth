@@ -380,8 +380,19 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 		if m.Item(locales.DockerImageCopyID()).Chosen() {
 			copyName(c, item.ID)
 		}
-		if a.canActOnDockerImages() && m.Item(locales.DockerContainerRemove()+"…").Chosen() {
-			a.planDockerImageRemoval([]docker.Image{item})
+		if a.canActOnDockerImages() && len(item.RepoTags) > 1 {
+			m.Separator()
+			for _, tag := range item.RepoTags {
+				if m.Item(locales.DockerImageUntag(tag)).Chosen() {
+					a.planDockerImageUntag(item, tag)
+				}
+			}
+		}
+		if a.canActOnDockerImages() {
+			m.Separator()
+			if m.Item(locales.DockerContainerRemove() + "…").Chosen() {
+				a.planDockerImageRemoval([]docker.Image{item})
+			}
 		}
 	}
 	row := ui.Column(c).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
@@ -400,8 +411,11 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 				dockerTechTile(c, item.Name(), 26, nil)
 				ui.Column(c).Gap(1).Grow(1).MinWidth(0).Children(func() {
 					clipped(c, item.Name()).Font(FontMono).FontSize(12.5).Tooltip(strings.TrimSpace(item.Name() + "\n" + tags))
-					clipped(c, strings.TrimSpace(platform+"  "+id[:min(12, len(id))])).
-						Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(platform + " · " + item.ID)
+					sub := strings.TrimSpace(platform + "  " + id[:min(12, len(id))])
+					if len(item.RepoTags) > 1 {
+						sub = strings.TrimSpace(sub + " · " + locales.DockerImageTagsCount(len(item.RepoTags)))
+					}
+					clipped(c, sub).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(platform + " · " + item.ID)
 				})
 			})
 			a.workloadStatusIssue(c, status, bg, fg, issue)
@@ -472,8 +486,17 @@ func (a *App) dockerImageBulkBar(c *ui.Context) {
 
 func (a *App) planDockerImageRemoval(items []docker.Image) {
 	target := a.engine.images.target
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	a.buildDockerImagePlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.PlanDockerImageRemoval(context.Background(), run.Exec{}, target, env, items)
+		return ops.PlanDockerImageRemoval(context.Background(), runner, target, env, items)
+	})
+}
+
+func (a *App) planDockerImageUntag(item docker.Image, tag string) {
+	target := a.engine.images.target
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
+	a.buildDockerImagePlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		return ops.PlanDockerImageUntag(context.Background(), runner, target, env, item, tag)
 	})
 }
 

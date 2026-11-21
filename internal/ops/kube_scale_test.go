@@ -127,3 +127,71 @@ func TestPlanKubeScale(t *testing.T) {
 		})
 	}
 }
+
+func TestPlanKubeScaleStatefulSet(t *testing.T) {
+	t.Parallel()
+	ref := KubeResource{Kubectl: "kubectl", Context: "staging", Kind: "StatefulSet", Namespace: "work", Name: "db", UID: "sts-uid"}
+	stsObject := func(version string, desired, actual, ready, gen, obs int) string {
+		return fmt.Sprintf(`{"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"name":"db","namespace":"work",
+			"uid":"sts-uid","resourceVersion":%q,"generation":%d},"spec":{"replicas":%d},
+			"status":{"replicas":%d,"readyReplicas":%d,"observedGeneration":%d}}`,
+			version, gen, desired, actual, ready, obs)
+	}
+	const wantScale = "scale statefulset.apps/db --namespace=work --current-replicas=2 --replicas=0 --resource-version=9"
+	executing := false
+	writes, previews := 0, 0
+	r := resourceRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+		ok := func(s string) (run.Result, error) { return run.Result{Stdout: []byte(s)}, nil }
+		switch {
+		case slices.Contains(cmd.Args, "config"):
+			return ok("workspace")
+		case slices.Contains(cmd.Args, "--raw"):
+			if !slices.Contains(cmd.Args, ref.path()) {
+				t.Fatalf("wrong path: %v", cmd.Args)
+			}
+			if writes > 0 {
+				return ok(stsObject("10", 0, 0, 0, 2, 2))
+			}
+			return ok(stsObject("9", 2, 2, 2, 1, 1))
+		case slices.Contains(cmd.Args, "horizontalpodautoscalers.autoscaling"):
+			return ok(`{"items":[
+				{"metadata":{"name":"db-hpa"},"spec":{"scaleTargetRef":{"apiVersion":"apps/v1","kind":"StatefulSet","name":"db"}}}
+			]}`)
+		case slices.Contains(cmd.Args, "scale"):
+			argv := cmd.Args[slices.Index(cmd.Args, "scale"):]
+			want := wantScale
+			if !executing {
+				want += " --dry-run=server"
+				previews++
+			} else {
+				writes++
+			}
+			if strings.Join(argv, " ") != want {
+				t.Fatalf("scale argv = %v, want %s", argv, want)
+			}
+			return ok("")
+		}
+		t.Fatalf("unexpected command: %v", cmd.Args)
+		return run.Result{}, nil
+	})
+	p, err := PlanKubeScale(t.Context(), r, nil, ref, 2, 0)
+	if err != nil {
+		t.Fatalf("PlanKubeScale StatefulSet: %v", err)
+	}
+	if previews != 1 || writes != 0 {
+		t.Fatalf("previews=%d writes=%d", previews, writes)
+	}
+	wantStops := locales.KubeScaleWorkloadStops("StatefulSet")
+	wantHPA := locales.KubeScaleWorkloadAutoscalerManages("db-hpa", "StatefulSet")
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Text == wantStops }) {
+		t.Fatalf("missing stop note %q in %+v", wantStops, p.Notes)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Text == wantHPA }) {
+		t.Fatalf("missing HPA note %q in %+v", wantHPA, p.Notes)
+	}
+	executing = true
+	got := Execute(t.Context(), r, p, io.Discard, func(State) {})
+	if got.Phase != Succeeded || writes != 1 {
+		t.Fatalf("StatefulSet scale result = %+v, writes = %d", got, writes)
+	}
+}

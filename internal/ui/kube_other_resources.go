@@ -112,10 +112,7 @@ func (a *App) syncResourceYAML() {
 	if v.yaml != nil || item == nil || a.ReadResourceYAML == nil || a.router.Path() != kubeClusterPage {
 		return
 	}
-	in, ok := cliCopy(a.cliState(), "kubectl")
-	if !ok {
-		return
-	}
+	in, _ := cliCopy(a.cliState(), "kubectl")
 	request := &resourceYAML{kind: item.Kind}
 	v.yaml = request
 	target := kube.Target{Kubectl: in.Path, Context: a.router.Query("context")}
@@ -305,7 +302,18 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			if kind := resourceRefKind(r.Kind); kind != "" {
 				ref = a.resourceRef(kind, r.Namespace, r.Name, r.UID)
 			}
-			a.resourceContextMenu(c, row, ref, nil)
+			var extra func(*ui.Menu)
+			if r.Kind == kube.StatefulSets || r.Kind == kube.DaemonSets {
+				extra = func(m *ui.Menu) {
+					if a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != "" && m.Item(locales.KubeLogsOpen()).Chosen() {
+						a.openOwnerLogs(ref)
+					}
+					if a.BuildPlan != nil && ref.Kubectl != "" && m.Item(locales.KubeRestartOpen()).Chosen() {
+						a.planRestart(a.resourceForm(ref))
+					}
+				}
+			}
+			a.resourceContextMenu(c, row, ref, extra)
 			if r.UID == uid {
 				row.Background(pal.ActiveRow)
 			} else if row.Hovered() {
@@ -343,8 +351,18 @@ func resourceRefKind(kind kube.ResourceKind) string {
 		return "Node"
 	case kube.NamespaceKind:
 		return "Namespace"
+	case kube.StatefulSets:
+		return "StatefulSet"
+	case kube.DaemonSets:
+		return "DaemonSet"
 	case kube.ReplicaSets:
 		return "ReplicaSet"
+	case kube.ConfigMaps:
+		return "ConfigMap"
+	case kube.Ingresses:
+		return "Ingress"
+	case kube.PersistentVolumeClaims:
+		return "PersistentVolumeClaim"
 	}
 	return ""
 }
@@ -496,8 +514,25 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			if item.Autoscaler != nil {
 				tabs = append(tabs, segment{locales.KubeAutoscalerMetrics(), strconv.Itoa(len(item.Autoscaler.Metrics))})
 			}
-			if item.Kind == kube.StatefulSets {
-				a.ownerLogsButton(c, a.resourceRef("StatefulSet", item.Namespace, item.Name, item.UID))
+			var ref ops.KubeResource
+			if refKind := resourceRefKind(item.Kind); refKind != "" {
+				ref = a.resourceRef(refKind, item.Namespace, item.Name, item.UID)
+			}
+			hasLogs := (item.Kind == kube.StatefulSets || item.Kind == kube.DaemonSets) && a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != ""
+			hasRestart := (item.Kind == kube.StatefulSets || item.Kind == kube.DaemonSets) && a.BuildPlan != nil && ref.Kubectl != "" && !item.Deleting
+			hasManage := ref.UID != "" && ref.Kubectl != "" && a.BuildPlan != nil && item.Node == nil && item.NamespaceInfo == nil && !item.Deleting
+			if hasLogs || hasRestart || hasManage {
+				ui.Row(c).Gap(8).Wrap().Children(func() {
+					if hasLogs {
+						a.ownerLogsButton(c, ref)
+					}
+					if hasRestart {
+						a.deploymentRestart(c, ref, false)
+					}
+					if hasManage {
+						a.resourceActions(c, ref, -1)
+					}
+				})
 			}
 			tabs = append(tabs, segment{locales.KubeTabEvents(), count}, segment{locales.KubeResourceYaml(), ""})
 			segments(c, "resource-tabs", &v.tab, tabs)
@@ -545,6 +580,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			case kube.PersistentVolumeClaims, kube.PersistentVolumes, kube.StorageClasses:
 				a.storageOverview(c, item, cl.Resources.Claims, events)
 			default:
+				if item.Kind == kube.StatefulSets && !item.Deleting {
+					a.workloadScale(c, a.resourceRef("StatefulSet", item.Namespace, item.Name, item.UID), item.Desired)
+				}
 				resourceOverview(c, item)
 				d := relationshipsFor(cl, item.Namespace, item.UID)
 				a.resourceRelationships(c, d.Links, d.Errors)

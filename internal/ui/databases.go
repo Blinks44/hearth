@@ -10,9 +10,11 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/catalog"
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -59,13 +61,38 @@ func (a *App) databases(c *ui.Context, p page) {
 						action = func() {
 							ui.Button(c.Key("stop:"+is.Project+is.Dirs[0]), locales.ServiceStop()).Shrink(0).OnClick(func() { a.Propose(plan) })
 						}
+					} else if ct, ok := a.conflictContainer(is, servers); ok {
+						target, hasTarget := a.selectedDockerTarget()
+						canStop := hasTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running()
+						canOpen := a.canOpenDockerContainer()
+						if canStop || canOpen {
+							action = func() {
+								ui.Row(c).Gap(6).Shrink(0).AlignItems(ui.Center).Children(func() {
+									if canStop {
+										ui.Button(c.Key("stop-container:"+is.Project+is.Dirs[0]), locales.DatabaseStopContainer()).Shrink(0).OnClick(func() {
+											item := docker.Container{ID: ct.ID, Name: ct.Name}
+											item.State.Status = "running"
+											a.planDockerDatabase(target, item, ops.DockerStop)
+										})
+									}
+									if canOpen {
+										ui.Button(c.Key("open-docker:"+is.Project+is.Dirs[0]), locales.OpenInDocker()).Shrink(0).OnClick(func() {
+											a.openDockerContainer(ct.ID, ct.Name)
+										})
+									}
+								})
+							}
+						}
 					}
 					warningWith(c, title+". "+explain, action)
+				}
+				if a.databaseErr != "" {
+					warningRow(c, a.databaseErr)
 				}
 				if len(d.Warnings) > 0 {
 					warningRow(c, locales.DatabaseProbeFailed(strings.Join(d.Warnings, ", ")))
 				}
-				if docker, ok := a.Snapshot.Tool("docker"); ok && docker.Docker != nil && docker.Docker.DatabaseErr {
+				if dockerSt, ok := a.Snapshot.Tool("docker"); ok && dockerSt.Docker != nil && dockerSt.Docker.DatabaseErr {
 					warningRow(c, locales.DatabaseContainersFailed())
 				}
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
@@ -77,7 +104,7 @@ func (a *App) databases(c *ui.Context, p page) {
 					if a.databaseTab == 2 {
 						a.databaseProjects(c)
 					} else {
-						a.databaseTable(c, servers, d.Clients)
+						a.databaseTable(c, servers, d.Clients, d.Listeners)
 					}
 					toolNote(c, locales.DatabaseReadOnly())
 					listCard(c, locales.DatabaseListeners(), locales.DatabaseObserved(), func() {
@@ -96,7 +123,13 @@ func (a *App) databases(c *ui.Context, p page) {
 				}, func() {
 					listCard(c, locales.DatabaseClients(), "", func() {
 						for _, client := range d.Clients {
-							listRow(c, client.Tool+" "+client.Version, false, tilde(client.Path, a.Home), func() {})
+							listRow(c, client.Tool+" "+client.Version, false, tilde(client.Path, a.Home), func() {
+								if a.OpenDBClient != nil && client.Path != "" {
+									iconButton(c.Key("client-open:"+client.Path), "terminal", locales.DatabaseOpenClient(client.Tool)).OnClick(func() {
+										a.launchDBClient([]string{client.Path})
+									})
+								}
+							})
 						}
 						if len(d.Clients) == 0 {
 							cardNote(c, locales.DatabaseNoClients())
@@ -138,12 +171,62 @@ func databaseStatus(c *ui.Context, status string) (string, ui.Color) {
 	}
 }
 
-func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients []inventory.Installation) {
+func (a *App) launchDBClient(argv []string) {
+	if a.OpenDBClient == nil || len(argv) == 0 {
+		return
+	}
+	a.databaseErr = ""
+	a.OpenDBClient(argv, func(err error) {
+		if err != nil {
+			a.databaseErr = err.Error()
+		}
+	})
+}
+
+func (a *App) dockerDatabaseAction(db inventory.Database) (ops.DockerAction, docker.Target, docker.Container, bool) {
+	if db.Source != "docker" || !docker.ContainerID(db.ContainerID) || a.BuildPlan == nil || a.op.running() {
+		return "", docker.Target{}, docker.Container{}, false
+	}
+	target, ok := a.selectedDockerTarget()
+	if !ok {
+		return "", docker.Target{}, docker.Container{}, false
+	}
+	ct := docker.Container{ID: db.ContainerID, Name: db.Name}
+	switch db.Status {
+	case "running":
+		ct.State.Status = "running"
+		return ops.DockerStop, target, ct, true
+	case "stopped":
+		ct.State.Status = "exited"
+		return ops.DockerStart, target, ct, true
+	default:
+		return "", docker.Target{}, docker.Container{}, false
+	}
+}
+
+func (a *App) planDockerDatabase(target docker.Target, ct docker.Container, action ops.DockerAction) {
+	if a.BuildPlan == nil || a.op.running() {
+		return
+	}
+	a.databaseErr = ""
+	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		return ops.PlanDockerContainers(target, env, []docker.Container{ct}, action)
+	}, func(p ops.Plan, err error) {
+		if err != nil {
+			a.databaseErr = err.Error()
+			return
+		}
+		a.Propose(p)
+	})
+}
+
+func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients []inventory.Installation, listeners []inventory.DatabaseListener) {
 	pal := Colors(c.Theme())
+	user := filepath.Base(a.Home)
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			ui.Text(c, locales.DatabaseServer()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
-			ui.Text(c, locales.ColumnSource()).Width(68).FontSize(11.5).TextColor(pal.TextFaint)
+			ui.Text(c, locales.ColumnSource()).Width(56).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.DatabaseAddress()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
 		shown := 0
@@ -155,6 +238,13 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 				continue
 			}
 			shown++
+			port := databasePort(db, listeners)
+			url, password := databaseURL(db, user, port)
+			client, hasClient := databaseClientFor(db, clients)
+			var clientCmd []string
+			if hasClient && a.OpenDBClient != nil {
+				clientCmd = databaseClientCommand(db, client, port, user)
+			}
 			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Column(c).Width(nameWidth(c)).Gap(3).Children(func() {
 					title, subtitle := db.Name+" "+db.Version, db.Service
@@ -164,18 +254,23 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					clipped(c, title).Font(FontMono).FontSize(12)
 					clipped(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint)
 				})
-				ui.Text(c, databaseSource(db.Source)).Width(68).FontSize(10.5).TextColor(pal.MonoText)
+				ui.Text(c, databaseSource(db.Source)).Width(56).FontSize(10.5).TextColor(pal.MonoText)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-					url, password := databaseURL(db, filepath.Base(a.Home))
 					address := cmp.Or(url, tilde(db.Path, a.Home))
-					if db.Source == "docker" {
+					if db.Source == "docker" && address == "" {
 						address = strings.Join(db.Ports, ", ")
 					}
 					if address == "" {
 						address = "—"
 					}
-					clipped(c, address).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
-					if password && db.Source != "docker" {
+					addrEl := clipped(c, address).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
+					switch {
+					case db.Source == "docker" && len(db.Ports) > 1 && url == "":
+						addrEl.Tooltip(strings.Join(db.Ports, ", "))
+					case address != "—":
+						addrEl.Tooltip(address)
+					}
+					if password && url != "" {
 						ui.Text(c, locales.DatabasePassword()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 					text, dot := databaseStatus(c, db.Status)
@@ -184,46 +279,84 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						bg, ink = pal.SuccessSoft, pal.SuccessText
 					}
 					ui.Row(c).Children(func() { chip(c, dot, bg, ink, text) })
-					for _, client := range clients {
-						if db.Path == "" || filepath.Dir(client.RealPath) != filepath.Dir(db.Path) && filepath.Dir(client.Path) != filepath.Dir(db.Path) || databaseClientKind(client.Tool) != db.Kind {
+					for _, cl := range clients {
+						if db.Path == "" || filepath.Dir(cl.RealPath) != filepath.Dir(db.Path) && filepath.Dir(cl.Path) != filepath.Dir(db.Path) || databaseClientKind(cl.Tool) != db.Kind {
 							continue
 						}
-						ui.Text(c, locales.DatabaseClient(client.Tool+" "+client.Version)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+						ui.Text(c, locales.DatabaseClient(cl.Tool+" "+cl.Version)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
 				plan, canService := a.servicePlan(db)
-				if canService {
-					icon, label := "play", locales.ServiceStart()
-					if db.Status == "running" {
-						icon, label = "square", locales.ServiceStop()
+				dockerAction, dockerTarget, dockerCt, canDockerPower := a.dockerDatabaseAction(db)
+				canDockerOpen := db.Source == "docker" && a.canOpenDockerContainer() && (db.ContainerID != "" || db.Name != "")
+				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if canService {
+						icon, label := "play", locales.ServiceStart()
+						if db.Status == "running" {
+							icon, label = "square", locales.ServiceStop()
+						}
+						iconButton(c.Key("service-power"), icon, label).OnClick(func() { a.Propose(plan) })
+					} else if canDockerPower {
+						icon, label := "play", locales.DatabaseStartContainer()
+						if dockerAction == ops.DockerStop {
+							icon, label = "square", locales.DatabaseStopContainer()
+						}
+						iconButton(c.Key("docker-power"), icon, label).OnClick(func() {
+							a.planDockerDatabase(dockerTarget, dockerCt, dockerAction)
+						})
 					}
-					iconButton(c.Key("service-power"), icon, label).OnClick(func() { a.Propose(plan) })
-				}
-				if url, _ := databaseURL(db, filepath.Base(a.Home)); url != "" && db.Source != "docker" {
-					iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
-				} else if db.Path != "" {
-					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(db.Path); c.Toast(locales.PathCopied()) })
-				}
-				if db.Path != "" && a.Shell != nil {
-					iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
-				}
-				if canService || db.Path != "" && db.Source != "docker" {
-					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-						if canService {
-							label := locales.ServiceStart()
-							if db.Status == "running" {
-								label = locales.ServiceStop()
+					if len(clientCmd) > 0 {
+						iconButton(c.Key("db-client"), "terminal", locales.DatabaseOpenClient(client.Tool)).OnClick(func() {
+							a.launchDBClient(clientCmd)
+						})
+					}
+					if canDockerOpen {
+						iconButton(c.Key("db-docker"), "container", locales.OpenInDocker()).OnClick(func() {
+							a.openDockerContainer(db.ContainerID, db.Name)
+						})
+					}
+					if url != "" {
+						iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
+					} else if db.Path != "" {
+						iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(db.Path); c.Toast(locales.PathCopied()) })
+					}
+					if db.Path != "" && a.Shell != nil {
+						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
+					}
+					hasMenu := canService || canDockerPower || canDockerOpen || len(clientCmd) > 0 || (db.Path != "" && db.Source != "docker")
+					if hasMenu {
+						iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+							if canService {
+								label := locales.ServiceStart()
+								if db.Status == "running" {
+									label = locales.ServiceStop()
+								}
+								if menu.Item(label).Chosen() {
+									a.Propose(plan)
+								}
 							}
-							if menu.Item(label).Chosen() {
-								a.Propose(plan)
+							if canDockerPower {
+								label := locales.DatabaseStartContainer()
+								if dockerAction == ops.DockerStop {
+									label = locales.DatabaseStopContainer()
+								}
+								if menu.Item(label).Chosen() {
+									a.planDockerDatabase(dockerTarget, dockerCt, dockerAction)
+								}
 							}
-						}
-						if db.Path != "" && menu.Item(locales.CopyPath()).Chosen() {
-							c.WriteClipboard(db.Path)
-							c.Toast(locales.PathCopied())
-						}
-					})
-				}
+							if len(clientCmd) > 0 && menu.Item(locales.DatabaseOpenClient(client.Tool)).Chosen() {
+								a.launchDBClient(clientCmd)
+							}
+							if canDockerOpen && menu.Item(locales.OpenInDocker()).Chosen() {
+								a.openDockerContainer(db.ContainerID, db.Name)
+							}
+							if db.Path != "" && menu.Item(locales.CopyPath()).Chosen() {
+								c.WriteClipboard(db.Path)
+								c.Toast(locales.PathCopied())
+							}
+						})
+					}
+				})
 			})
 		}
 		if shown == 0 {
@@ -300,6 +433,116 @@ func databaseClientKind(command string) string {
 	return ""
 }
 
+func databaseDefaultPort(kind string) string {
+	switch kind {
+	case "PostgreSQL":
+		return "5432"
+	case "MySQL", "MariaDB":
+		return "3306"
+	case "Redis":
+		return "6379"
+	case "MongoDB":
+		return "27017"
+	case "SQL Server":
+		return "1433"
+	}
+	return ""
+}
+
+// databasePort resolves the real observed TCP port for db when available,
+// falling back to the kind's default port for local servers. Docker containers
+// without a published host port return "".
+func databasePort(db inventory.Database, listeners []inventory.DatabaseListener) string {
+	if len(db.Ports) > 0 {
+		return db.Ports[0]
+	}
+	if db.Source == "docker" {
+		return ""
+	}
+	if db.Path != "" {
+		clean := filepath.Clean(db.Path)
+		for _, l := range listeners {
+			if l.Path != "" && l.Port != "" && filepath.Clean(l.Path) == clean {
+				return l.Port
+			}
+		}
+	}
+	var ports []string
+	for _, l := range listeners {
+		if l.Port == "" || l.Process == "" {
+			continue
+		}
+		procKind := serverProcesses[strings.TrimSuffix(l.Process, ".exe")]
+		same := procKind == db.Kind ||
+			(db.Kind == "MySQL" && procKind == "MariaDB") ||
+			(db.Kind == "MariaDB" && procKind == "MySQL")
+		if same && !slices.Contains(ports, l.Port) {
+			ports = append(ports, l.Port)
+		}
+	}
+	if len(ports) == 1 {
+		return ports[0]
+	}
+	return databaseDefaultPort(db.Kind)
+}
+
+func databaseClientFor(db inventory.Database, clients []inventory.Installation) (inventory.Installation, bool) {
+	if db.Path != "" {
+		dir := filepath.Dir(db.Path)
+		for _, cl := range clients {
+			if cl.Path == "" || databaseClientKind(cl.Tool) != db.Kind {
+				continue
+			}
+			if filepath.Dir(cl.RealPath) == dir || filepath.Dir(cl.Path) == dir {
+				return cl, true
+			}
+		}
+	}
+	for _, cl := range clients {
+		if cl.Path != "" && databaseClientKind(cl.Tool) == db.Kind {
+			return cl, true
+		}
+	}
+	if db.Kind == "MariaDB" || db.Kind == "MySQL" {
+		for _, cl := range clients {
+			if cl.Path != "" && (cl.Tool == "mysql" || cl.Tool == "mariadb") {
+				return cl, true
+			}
+		}
+	}
+	return inventory.Installation{}, false
+}
+
+func databaseClientCommand(db inventory.Database, client inventory.Installation, port, user string) []string {
+	if client.Path == "" || port == "" {
+		return nil
+	}
+	url, password := databaseURL(db, user, port)
+	switch client.Tool {
+	case "psql":
+		if url == "" {
+			return nil
+		}
+		return []string{client.Path, url}
+	case "mysql", "mariadb":
+		args := []string{client.Path, "-h", "127.0.0.1", "-P", port, "-u", "root"}
+		if password {
+			args = append(args, "-p")
+		}
+		return args
+	case "redis-cli":
+		return []string{client.Path, "-h", "127.0.0.1", "-p", port}
+	case "mongosh":
+		if url == "" {
+			return nil
+		}
+		return []string{client.Path, url}
+	case "sqlcmd":
+		return []string{client.Path, "-S", "localhost," + port, "-U", "sa"}
+	}
+	return nil
+}
+
 // servicePlan is the plan that starts db's service when it is stopped
 // and stops it when it runs; ok is false for a status not known, or a
 // server without a service Hearth changes.
@@ -342,6 +585,27 @@ func (a *App) conflictPlan(is issues.Issue, servers []inventory.Database) (ops.P
 		return ops.Plan{}, false
 	}
 	return ops.ServicePlan(ops.ServiceStop, holder[0], a.detect("databases"))
+}
+
+// conflictContainer finds a running Docker container publishing the conflicting
+// port, checking database containers and all port-publishing containers.
+func (a *App) conflictContainer(is issues.Issue, servers []inventory.Database) (inventory.DockerPortContainer, bool) {
+	if len(is.Dirs) == 0 {
+		return inventory.DockerPortContainer{}, false
+	}
+	port := is.Dirs[0]
+	for _, db := range servers {
+		if db.Source == "docker" && db.Status == "running" && slices.Contains(db.Ports, port) {
+			return inventory.DockerPortContainer{
+				ID:     db.ContainerID,
+				Name:   db.Name,
+				Image:  db.Version,
+				Status: db.Status,
+				Ports:  db.Ports,
+			}, true
+		}
+	}
+	return a.portContainer(port)
 }
 
 // databaseServer is the first server of kind the system or a package
@@ -408,27 +672,34 @@ func (a *App) autostartSwitch(c *ui.Context, db inventory.Database) {
 	}
 }
 
-// databaseURL is the string a client connects to db with, at its kind's
-// port, as the server sets its users up: Homebrew's PostgreSQL lets the
-// user in as themselves, its MySQL root, without a password; password
-// reports a server that asks one. "" for a kind Hearth has none for.
-func databaseURL(db inventory.Database, user string) (url string, password bool) {
+// databaseURL is the string a client connects to db with, at port (or its
+// kind's default for local servers), as the server sets its users up:
+// Homebrew's PostgreSQL lets the user in as themselves, its MySQL root,
+// without a password; password reports a server that asks one. "" for a kind
+// Hearth has none for, or a Docker container without a published port.
+func databaseURL(db inventory.Database, user, port string) (url string, password bool) {
+	if port == "" {
+		if db.Source == "docker" {
+			return "", false
+		}
+		port = databaseDefaultPort(db.Kind)
+	}
 	switch db.Kind {
 	case "PostgreSQL":
 		if db.Source == "brew" && user != "" {
-			return "postgresql://" + user + "@localhost:5432/postgres", false
+			return "postgresql://" + user + "@localhost:" + port + "/postgres", false
 		}
-		return "postgresql://postgres@localhost:5432/postgres", true
+		return "postgresql://postgres@localhost:" + port + "/postgres", true
 	case "MySQL":
-		return "mysql://root@localhost:3306", db.Source != "brew"
+		return "mysql://root@localhost:" + port, db.Source != "brew"
 	case "MariaDB":
-		return "mysql://root@localhost:3306", true
+		return "mysql://root@localhost:" + port, true
 	case "Redis":
-		return "redis://localhost:6379", false
+		return "redis://localhost:" + port, false
 	case "MongoDB":
-		return "mongodb://localhost:27017", false
+		return "mongodb://localhost:" + port, false
 	case "SQL Server":
-		return "sqlserver://sa@localhost:1433", true
+		return "sqlserver://sa@localhost:" + port, true
 	}
 	return "", false
 }

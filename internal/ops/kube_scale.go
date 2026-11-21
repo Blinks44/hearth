@@ -21,15 +21,25 @@ const KubeMaxReplicas = math.MaxInt32 // replicas is an int32 in the Kubernetes 
 
 type deploymentScale struct{ from, to int }
 
+func scaleResource(kind string) string {
+	switch kind {
+	case "Deployment":
+		return "deployment.apps"
+	case "StatefulSet":
+		return "statefulset.apps"
+	}
+	return ""
+}
+
 func (s deploymentScale) command(d KubeDraft) []string {
-	return []string{"scale", "deployment.apps/" + d.Ref.Name, "--namespace=" + d.Ref.Namespace,
+	return []string{"scale", scaleResource(d.Ref.Kind) + "/" + d.Ref.Name, "--namespace=" + d.Ref.Namespace,
 		"--current-replicas=" + strconv.Itoa(s.from), "--replicas=" + strconv.Itoa(s.to), "--resource-version=" + d.Version}
 }
 
-// PlanKubeScale checks the Deployment currently on the server, then previews
+// PlanKubeScale checks the Deployment or StatefulSet currently on the server, then previews
 // the scale subresource update with the same preconditions as the real write.
 func PlanKubeScale(ctx context.Context, r run.Runner, env sysenv.Env, ref KubeResource, from, to int) (Plan, error) {
-	if ref.Kind != "Deployment" || ref.path() == "" {
+	if scaleResource(ref.Kind) == "" || ref.path() == "" {
 		return Plan{}, errors.New(locales.KubeResourceTarget())
 	}
 	if from < 0 || from > KubeMaxReplicas || to < 0 || to > KubeMaxReplicas || to == from {
@@ -62,7 +72,11 @@ func PlanKubeScale(ctx context.Context, r run.Runner, env sysenv.Env, ref KubeRe
 	effect := locales.KubeScaleAdds()
 	switch {
 	case to == 0:
-		effect = locales.KubeScaleStops()
+		if ref.Kind == "Deployment" {
+			effect = locales.KubeScaleStops()
+		} else {
+			effect = locales.KubeScaleWorkloadStops(ref.Kind)
+		}
 	case to < from:
 		effect = locales.KubeScaleRemoves()
 	}
@@ -70,9 +84,17 @@ func PlanKubeScale(ctx context.Context, r run.Runner, env sysenv.Env, ref KubeRe
 	names, err := scaleAutoscalers(ctx, k, ref)
 	switch {
 	case err != nil:
-		p.Notes = append(p.Notes, Note{Title: locales.KubeScaleAutoscaler(), Text: locales.KubeScaleAutoscalerUnknown()})
+		note := locales.KubeScaleAutoscalerUnknown()
+		if ref.Kind != "Deployment" {
+			note = locales.KubeScaleWorkloadAutoscalerUnknown(ref.Kind)
+		}
+		p.Notes = append(p.Notes, Note{Title: locales.KubeScaleAutoscaler(), Text: note})
 	case len(names) > 0:
-		p.Notes = append(p.Notes, Note{Title: locales.KubeScaleAutoscaler(), Text: locales.KubeScaleAutoscalerManages(strings.Join(names, ", "))})
+		note := locales.KubeScaleAutoscalerManages(strings.Join(names, ", "))
+		if ref.Kind != "Deployment" {
+			note = locales.KubeScaleWorkloadAutoscalerManages(strings.Join(names, ", "), ref.Kind)
+		}
+		p.Notes = append(p.Notes, Note{Title: locales.KubeScaleAutoscaler(), Text: note})
 	}
 	return p, nil
 }
@@ -95,7 +117,7 @@ func scaleAutoscalers(ctx context.Context, k resourceClient, ref KubeResource) (
 	}
 	var names []string
 	for _, h := range list.Items {
-		if h.Spec.ScaleTargetRef.TargetsDeployment(ref.Name) {
+		if h.Spec.ScaleTargetRef.Targets(ref.Kind, ref.Name) {
 			names = append(names, h.Metadata.Name)
 		}
 	}

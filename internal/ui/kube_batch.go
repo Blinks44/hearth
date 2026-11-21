@@ -178,7 +178,7 @@ func (a *App) cronJobsView(c *ui.Context, batch *kube.Batch) {
 	})
 	var actionWidth float32 = 28
 	actionHeader := ""
-	if a.BuildPlan != nil {
+	if _, hasKubectl := cliCopy(a.cliState(), "kubectl"); hasKubectl && a.BuildPlan != nil {
 		actionWidth, actionHeader = cronActionsWidth, locales.KubeCronOn()
 	}
 	headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeCronSchedule(), "schedule"},
@@ -303,7 +303,7 @@ func (a *App) batchRow(c *ui.Context, ref ops.KubeResource, failed bool, cells f
 		row.Background(pal.DangerSoft.Alpha(0.35))
 	}
 	a.resourceContextMenu(c, row, ref, func(m *ui.Menu) {
-		if ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
+		if ref.Kind == "Job" && a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != "" && m.Item(locales.KubeLogsOpen()).Chosen() {
 			a.openOwnerLogs(ref)
 		}
 	})

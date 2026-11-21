@@ -25,16 +25,17 @@ func podLogContainer(p kube.Pod, crashed string) string {
 // podMenu is shared by right-click and the visible menu button.
 func (a *App) podMenu(c *ui.Context, cl *kube.Cluster, p kube.Pod, log func(), crashed string) func(*ui.Menu) {
 	s := &a.cluster
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	return func(m *ui.Menu) {
-		if log != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
+		if hasKubectl && log != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
 			log()
 		}
-		if a.OpenKubeShell != nil && len(p.Containers) > 0 && m.Item(locales.KubeShellAction()+"…").Chosen() {
+		if hasKubectl && a.OpenKubeShell != nil && len(p.Containers) > 0 && m.Item(locales.KubeShellAction()+"…").Chosen() {
 			container := podLogContainer(p, crashed)
 			s.pod, s.tab, s.revealWorkload = p.UID, 0, p.UID
 			s.shell = &shellForm{uid: p.UID, container: container, open: true}
 		}
-		if a.RunForward != nil && a.CheckForwardPort != nil && p.Phase == "Running" && m.Item(locales.KubeForwardOpen()).Chosen() {
+		if hasKubectl && a.RunForward != nil && a.CheckForwardPort != nil && p.Phase == "Running" && m.Item(locales.KubeForwardOpen()).Chosen() {
 			s.pod, s.tab, s.revealWorkload = p.UID, 0, p.UID
 			var ports []forwardPort
 			for _, port := range p.TCPPorts {
@@ -69,7 +70,7 @@ func (a *App) ownerMenu(c *ui.Context, g podGroup, ref ops.KubeResource, log fun
 			if m.Item(locales.KubeOpenOwner(g.owner.Name)).Chosen() {
 				s.kind, s.deployment, s.tab = kindDeployments, ref.UID, 0
 			}
-			if log != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
+			if ref.Kubectl != "" && log != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
 				log()
 			}
 		}
@@ -105,7 +106,7 @@ func (a *App) resourceContextMenu(c *ui.Context, row ui.Element, ref ops.KubeRes
 // resourceMenuItems are Edit YAML and Delete, the actions every resource
 // with a UID has, after a separator.
 func (a *App) resourceMenuItems(m *ui.Menu, ref ops.KubeResource) {
-	if a.BuildPlan == nil || ref.UID == "" {
+	if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" {
 		return
 	}
 	m.Separator()

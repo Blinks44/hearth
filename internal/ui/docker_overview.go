@@ -116,6 +116,31 @@ func (a *App) requestDockerContainer(context, id, name string, overview, logs bo
 	}
 }
 
+func (a *App) selectedDockerTarget() (docker.Target, bool) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil || st.Docker.Selected == "" {
+		return docker.Target{}, false
+	}
+	target, problem := a.engineTarget(st.Docker.Selected)
+	return target, problem == ""
+}
+
+func (a *App) canOpenDockerContainer() bool {
+	if a.WatchDocker == nil || a.WatchDockerContainers == nil {
+		return false
+	}
+	_, ok := a.selectedDockerTarget()
+	return ok
+}
+
+func (a *App) openDockerContainer(id, name string) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil || st.Docker.Selected == "" {
+		return
+	}
+	a.requestDockerContainer(st.Docker.Selected, id, name, false, false)
+}
+
 func (a *App) dockerOverviewDisk(c *ui.Context, d *inventory.DockerState, target docker.Target, disk docker.OverviewDisk, total string, bytes int64) {
 	pal := Colors(c.Theme())
 	overviewPanel(c, locales.DockerOverviewDisk(), total, func() {

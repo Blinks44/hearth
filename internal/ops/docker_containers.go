@@ -23,6 +23,8 @@ type DockerAction string
 const (
 	DockerStart   DockerAction = "start"
 	DockerStop    DockerAction = "stop"
+	DockerPause   DockerAction = "pause"
+	DockerUnpause DockerAction = "unpause"
 	DockerRestart DockerAction = "restart"
 	DockerRemove  DockerAction = "rm"
 	DockerUp      DockerAction = "up"
@@ -35,6 +37,10 @@ func (action DockerAction) Label() string {
 		return locales.DockerContainerStart()
 	case DockerStop:
 		return locales.DockerContainerStop()
+	case DockerPause:
+		return locales.DockerContainerPause()
+	case DockerUnpause:
+		return locales.DockerContainerUnpause()
 	case DockerRestart:
 		return locales.DockerContainerRestart()
 	case DockerRemove:
@@ -54,6 +60,10 @@ func (action DockerAction) Applies(c docker.Container) bool {
 		return c.State.Status == "created" || c.State.Status == "exited"
 	case DockerStop, DockerRestart:
 		return c.Active() && c.State.Status != "paused"
+	case DockerPause:
+		return c.State.Status == "running"
+	case DockerUnpause:
+		return c.State.Status == "paused"
 	case DockerRemove:
 		return c.State.Status != "removing" && c.State.Status != "paused"
 	default:
@@ -128,6 +138,14 @@ func (m *dockerContainerChange) apply(ctx context.Context, r run.Runner, env sys
 		switch m.action {
 		case DockerStop:
 			if !next[0].Active() {
+				return nil
+			}
+		case DockerPause:
+			if next[0].State.Status == "paused" {
+				return nil
+			}
+		case DockerUnpause:
+			if next[0].State.Status == "running" {
 				return nil
 			}
 		case DockerStart, DockerRestart:

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -108,4 +110,53 @@ func TestDockerImageBlockedPlan(t *testing.T) {
 	if a.op.canConfirm() || !tt.HasText("Used by containers: stopped-worker") {
 		t.Fatalf("blocked plan: %q", tt.Texts())
 	}
+}
+
+func TestDockerImageUntagUI(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = colimaSnapshot()
+	a.WatchDocker = (&engineWatches{}).watch
+	id := "sha256:" + strings.Repeat("a", 64)
+	multi := docker.Image{
+		ID: id, Architecture: "arm64", OS: "linux", Size: 1200000,
+		RepoTags: []string{"my/app:1.0", "my/app:latest"},
+	}
+	a.WatchDockerImages = func(_ docker.Target, got func([]docker.Image, error)) func() {
+		got([]docker.Image{multi}, nil)
+		return func() {}
+	}
+	a.Runner = imageTestRunner(func(_ context.Context, cmd run.Cmd) (run.Result, error) {
+		if len(cmd.Args) >= 5 && cmd.Args[3] == "image" && cmd.Args[4] == "inspect" {
+			return run.Result{Stdout: []byte(`{"ID":"` + id + `","RepoTags":["my/app:1.0","my/app:latest"]}` + "\n")}, nil
+		}
+		return run.Result{ExitCode: 1}, nil
+	})
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), got func(ops.Plan, error)) {
+		got(build(nil, nil))
+	}
+	a.engine.view = dockerImages
+	a.router.Push(dockerEnginePath("colima"))
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	a.engine.data = new(colimaEngine())
+	tt.Advance(time.Second)
+
+	hasTexts(t, tt, locales.DockerImageTagsCount(2))
+	screenshot(t, tt, "docker-image-untag-1280")
+	if err := tt.Click(locales.MoreActions()); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem(locales.DockerImageUntag("my/app:1.0")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.DockerAction != ops.DockerImageUntag || len(a.op.plan.Steps) != 1 {
+		t.Fatalf("expected DockerImageUntag plan, got %+v", a.op)
+	}
+}
+
+type imageTestRunner func(context.Context, run.Cmd) (run.Result, error)
+
+func (f imageTestRunner) Run(ctx context.Context, cmd run.Cmd) (run.Result, error) {
+	return f(ctx, cmd)
 }

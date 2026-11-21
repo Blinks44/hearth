@@ -2,16 +2,19 @@ package ui
 
 import (
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestDatabasesPage(t *testing.T) {
@@ -149,19 +152,123 @@ func TestDatabaseInstallAndAutostart(t *testing.T) {
 func TestDatabaseURL(t *testing.T) {
 	for _, tt := range []struct {
 		db       inventory.Database
+		port     string
 		url      string
 		password bool
 	}{
-		{inventory.Database{Kind: "PostgreSQL", Source: "brew"}, "postgresql://ann@localhost:5432/postgres", false},
-		{inventory.Database{Kind: "PostgreSQL", Source: "system"}, "postgresql://postgres@localhost:5432/postgres", true},
-		{inventory.Database{Kind: "MySQL", Source: "brew"}, "mysql://root@localhost:3306", false},
-		{inventory.Database{Kind: "MySQL", Source: "system"}, "mysql://root@localhost:3306", true},
-		{inventory.Database{Kind: "Redis", Source: "system"}, "redis://localhost:6379", false},
-		{inventory.Database{Kind: "Cassandra"}, "", false},
+		{inventory.Database{Kind: "PostgreSQL", Source: "brew"}, "", "postgresql://ann@localhost:5432/postgres", false},
+		{inventory.Database{Kind: "PostgreSQL", Source: "brew"}, "5433", "postgresql://ann@localhost:5433/postgres", false},
+		{inventory.Database{Kind: "PostgreSQL", Source: "system"}, "", "postgresql://postgres@localhost:5432/postgres", true},
+		{inventory.Database{Kind: "PostgreSQL", Source: "docker"}, "5434", "postgresql://postgres@localhost:5434/postgres", true},
+		{inventory.Database{Kind: "PostgreSQL", Source: "docker"}, "", "", false},
+		{inventory.Database{Kind: "MySQL", Source: "brew"}, "", "mysql://root@localhost:3306", false},
+		{inventory.Database{Kind: "MySQL", Source: "system"}, "3307", "mysql://root@localhost:3307", true},
+		{inventory.Database{Kind: "Redis", Source: "system"}, "", "redis://localhost:6379", false},
+		{inventory.Database{Kind: "Cassandra"}, "", "", false},
 	} {
-		if url, password := databaseURL(tt.db, "ann"); url != tt.url || password != tt.password {
-			t.Errorf("%+v: %q %v, want %q %v", tt.db, url, password, tt.url, tt.password)
+		if url, password := databaseURL(tt.db, "ann", tt.port); url != tt.url || password != tt.password {
+			t.Errorf("%+v (%q): %q %v, want %q %v", tt.db, tt.port, url, password, tt.url, tt.password)
 		}
+	}
+}
+
+func TestDatabaseObservedPortDockerAndClient(t *testing.T) {
+	pgID := strings.Repeat("d", 64)
+	a := NewApp()
+	a.Home = home
+	var launched []string
+	a.OpenDBClient = func(argv []string, done func(error)) {
+		launched = argv
+		done(nil)
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + t.TempDir()}, nil))
+	}
+	a.WatchDocker = func(docker.Target, bool, func(docker.Engine, error)) func() { return func() {} }
+	a.WatchDockerContainers = func(_ docker.Target, got func([]docker.Container, error, error)) func() {
+		ct := docker.Container{ID: pgID, Name: "shop-pg", Image: "postgres:16"}
+		ct.State.Status = "running"
+		got([]docker.Container{ct}, nil, nil)
+		return func() {}
+	}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "databases", Databases: &inventory.DatabaseState{
+			Servers: []inventory.Database{
+				{Kind: "MySQL", Name: "MySQL", Version: "8.4.3", Path: "/opt/homebrew/bin/mysqld", Source: "brew", Status: "running", Service: "mysql@8.4"},
+			},
+			Clients: []inventory.Installation{
+				{Tool: "mysql", Version: "8.4.3", Path: "/opt/homebrew/bin/mysql", RealPath: "/opt/homebrew/bin/mysql"},
+				{Tool: "psql", Version: "17.2", Path: "/opt/homebrew/bin/psql", RealPath: "/opt/homebrew/bin/psql"},
+				{Tool: "sqlite3", Version: "3.43.2", Path: "/usr/bin/sqlite3", RealPath: "/usr/bin/sqlite3"},
+			},
+			Listeners: []inventory.DatabaseListener{
+				{Address: "127.0.0.1", Port: "3307", Process: "mysqld", PID: "901", Path: "/opt/homebrew/bin/mysqld"},
+				{Address: "127.0.0.1", Port: "5433", Process: "com.docker.backend", PID: "902"},
+			},
+		}},
+		{Tool: "docker",
+			Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
+			Docker: &inventory.DockerState{
+				Selected: "default",
+				Contexts: []inventory.DockerContext{{Name: "default", Endpoint: "unix:///var/run/docker.sock", Local: true, Status: "available"}},
+				Databases: []inventory.Database{
+					{Kind: "PostgreSQL", Name: "shop-pg", Version: "postgres:16", Source: "docker", Status: "running", ContainerID: pgID, Ports: []string{"5433"}},
+				},
+			}},
+	}}
+	a.Projects = []projects.Project{{Dir: home + "/dev/shop", Databases: []projects.DatabaseReference{{Kind: "PostgreSQL", Service: "db", File: "compose.yaml", Ports: []string{"5433"}}}}}
+
+	a.router.Push("/tools/databases")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "mysql://root@localhost:3307", "postgresql://postgres@localhost:5433/postgres")
+	screenshot(t, tt, "databases-s13-06-1280")
+	tt.SetSize(1000, 680)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "databases-s13-06-1000")
+	tt.SetSize(1280, 820)
+	tt.Advance(time.Second)
+
+	// Launch mysql CLI against observed port 3307 using TCP 127.0.0.1.
+	if err := tt.Click(locales.DatabaseOpenClient("mysql")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	wantMySQL := []string{"/opt/homebrew/bin/mysql", "-h", "127.0.0.1", "-P", "3307", "-u", "root"}
+	if !slices.Equal(launched, wantMySQL) {
+		t.Fatalf("mysql launch %q, want %q", launched, wantMySQL)
+	}
+
+	// Launch psql CLI against the Docker PostgreSQL container on port 5433.
+	if err := tt.Click(locales.DatabaseOpenClient("psql")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	wantPSQL := []string{"/opt/homebrew/bin/psql", "postgresql://postgres@localhost:5433/postgres"}
+	if !slices.Equal(launched, wantPSQL) {
+		t.Fatalf("psql launch %q, want %q", launched, wantPSQL)
+	}
+
+	// Conflict banner offers stopping the Docker container holding port 5433.
+	if err := tt.Click(locales.DatabaseStopContainer()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.DockerAction != ops.DockerStop {
+		t.Fatalf("expected DockerStop plan, got %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	// Open in Docker jumps straight to the database container.
+	if err := tt.Click(locales.OpenInDocker()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != dockerEnginePage || a.engine.view != dockerContainers || a.engine.containers.detail.id != pgID {
+		t.Fatalf("after Open in Docker: path=%q view=%d selected=%q", a.router.Path(), a.engine.view, a.engine.containers.detail.id)
 	}
 }
 
