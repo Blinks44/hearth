@@ -26,10 +26,11 @@ func (a *App) python(c *ui.Context, p page) {
 		ins := st.Installations
 		rows := listed(ins)
 		active := inventory.TerminalCopy(ins)
+		projs := a.toolProjects("python")
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				pythonHeader(c, ins, rows, active)
-				toolTabs(c, "python-tabs", &a.pythonTab, len(rows))
+				a.pythonHeader(c, ins, rows, active, projs)
+				toolTabs(c, "python-tabs", &a.pythonTab, len(rows), len(projs))
 				switch a.pythonTab {
 				case 0:
 					columns(c, 12, func() {
@@ -47,10 +48,10 @@ func (a *App) python(c *ui.Context, p page) {
 					})
 				case 1:
 					a.pythonAvailable(c, st, rows, active)
+				case 2:
+					a.toolProjectsTab(c, "python", st, projs)
 				case 3:
 					pathCard(c, pythonCommand, ins, active, a.Home)
-				default:
-					comingSoon(c)
 				}
 			})
 		})
@@ -60,7 +61,7 @@ func (a *App) python(c *ui.Context, p page) {
 // pythonHeader is Python's logo, name and how its versions are managed,
 // and the cards of where it stands: installed, in the terminal, in a
 // project.
-func pythonHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) pythonHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int, projs []toolProject) {
 	t := c.Theme()
 	pal := Colors(t)
 	toolHead(c, "python", "Python", func() {}, managedBy(ins, rows, active), func() {
@@ -72,7 +73,7 @@ func pythonHeader(c *ui.Context, ins []inventory.Installation, rows []int, activ
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}
-		stateCard(c, pal.TextFaint, locales.Project(), "—", locales.NoProjects())
+		a.toolProjectCard(c, "python", projs)
 	})
 }
 

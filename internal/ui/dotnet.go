@@ -22,6 +22,7 @@ func (a *App) dotnet(c *ui.Context, p page) {
 		}
 		ins, active, sdks, runtimes := dotnetRows(st)
 		rows := listed(ins)
+		projs := a.toolProjects("dotnet")
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
@@ -32,24 +33,9 @@ func (a *App) dotnet(c *ui.Context, p page) {
 						v = st.Installations[i].Version
 					}
 					stateCard(c, c.Theme().Success, locales.InTerminal(), v, "dotnet · SDK")
-					pv, pn := "—", locales.NoProjects()
-					for _, p := range a.Projects {
-						for _, s := range projects.Resolve(p, a.Snapshot, nil) {
-							if s.Tool == "dotnet" {
-								pn = filepath.Base(p.Dir)
-								if s.Terminal != nil {
-									pv = s.Terminal.Version
-								}
-								break
-							}
-						}
-						if pn != locales.NoProjects() {
-							break
-						}
-					}
-					stateCard(c, pal.TextFaint, locales.Project(), pv, pn)
+					a.toolProjectCard(c, "dotnet", projs)
 				})
-				toolTabs(c, "dotnet-tabs", &a.dotnetTab, len(rows))
+				toolTabs(c, "dotnet-tabs", &a.dotnetTab, len(rows), len(projs))
 				switch a.dotnetTab {
 				case 0:
 					columns(c, 12, func() {

@@ -87,9 +87,7 @@ func (l *projectList) find() {
 	go func() {
 		folders, found := projects.Suggest(home)
 		l.win.Update(func() {
-			if len(found) > 0 {
-				l.app.OfferFound(folders, found, time.Now())
-			}
+			l.app.OfferFound(folders, found, time.Now())
 		})
 	}()
 }

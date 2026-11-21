@@ -2,11 +2,13 @@ package projects
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
@@ -261,4 +263,113 @@ func hasDotnetProject(dir string) bool {
 	return slices.ContainsFunc(entries, func(e os.DirEntry) bool {
 		return !e.IsDir() && slices.Contains([]string{".sln", ".slnx", ".csproj", ".fsproj", ".vbproj"}, strings.ToLower(filepath.Ext(e.Name())))
 	})
+}
+
+// PickDotnetSDK chooses the best matching SDK version from available releases
+// for policy using the same roll-forward rules as the .NET host.
+func PickDotnetSDK(releases []string, policy SDKPolicy) (string, bool) {
+	ins := make([]inventory.Installation, 0, len(releases))
+	for _, v := range releases {
+		ins = append(ins, inventory.Installation{Tool: "dotnet", Version: v})
+	}
+	best, err := selectSDK(ins, policy)
+	if err != nil || best == nil {
+		return "", false
+	}
+	return best.Version, true
+}
+
+// readCsproj reads top-level *.csproj files for TargetFramework(s). When no
+// TFM is declared and global.json already pins dotnet, no redundant empty
+// requirement is appended.
+func readCsproj(p *Project) {
+	entries, err := os.ReadDir(p.Dir)
+	if err != nil {
+		return
+	}
+	var csprojs []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.EqualFold(filepath.Ext(e.Name()), ".csproj") {
+			csprojs = append(csprojs, e.Name())
+		}
+	}
+	if len(csprojs) == 0 {
+		return
+	}
+	slices.Sort(csprojs)
+	for _, name := range csprojs {
+		if !slices.Contains(p.Files, name) {
+			p.Files = append(p.Files, name)
+		}
+		data, err := os.ReadFile(filepath.Join(p.Dir, name))
+		if err != nil {
+			p.Errs = append(p.Errs, fmt.Errorf("read %s: %w", name, err))
+			continue
+		}
+		want, key, err := parseCsprojTFM(data)
+		if err != nil {
+			p.Errs = append(p.Errs, fmt.Errorf("read %s: %w", name, err))
+			continue
+		}
+		if want != "" {
+			p.Requirements = append(p.Requirements, Requirement{Tool: "dotnet", Want: want, File: name, Key: key})
+		}
+	}
+	if !slices.ContainsFunc(p.Requirements, func(r Requirement) bool { return r.Tool == "dotnet" }) {
+		p.Requirements = append(p.Requirements, Requirement{Tool: "dotnet", File: csprojs[0]})
+	}
+}
+
+func parseCsprojTFM(data []byte) (want, key string, err error) {
+	var doc struct {
+		PropertyGroups []struct {
+			TargetFramework  string `xml:"TargetFramework"`
+			TargetFrameworks string `xml:"TargetFrameworks"`
+		} `xml:"PropertyGroup"`
+	}
+	if err := xml.Unmarshal(data, &doc); err != nil {
+		return "", "", err
+	}
+	bestMaj, bestMin := -1, -1
+	for _, pg := range doc.PropertyGroups {
+		for _, field := range []struct{ key, raw string }{
+			{"TargetFramework", pg.TargetFramework},
+			{"TargetFrameworks", pg.TargetFrameworks},
+		} {
+			for part := range strings.SplitSeq(field.raw, ";") {
+				maj, min, ok := parseNetTFM(part)
+				if !ok {
+					continue
+				}
+				if maj > bestMaj || (maj == bestMaj && min > bestMin) {
+					bestMaj, bestMin, key = maj, min, field.key
+				}
+			}
+		}
+	}
+	if bestMaj < 0 {
+		return "", "", nil
+	}
+	return fmt.Sprintf(">=%d.%d", bestMaj, bestMin), key, nil
+}
+
+// parseNetTFM parses modern .NET TFMs such as "net8.0" or "net9.0-windows10.0".
+// Legacy .NET Framework ("net48") and netstandard ("netstandard2.0") return false.
+func parseNetTFM(tfm string) (maj, min int, ok bool) {
+	tfm = strings.ToLower(strings.TrimSpace(tfm))
+	if !strings.HasPrefix(tfm, "net") || strings.HasPrefix(tfm, "netstandard") || strings.HasPrefix(tfm, "netcoreapp") {
+		return 0, 0, false
+	}
+	rest := strings.TrimPrefix(tfm, "net")
+	rest, _, _ = strings.Cut(rest, "-")
+	majStr, minStr, found := strings.Cut(rest, ".")
+	if !found {
+		return 0, 0, false
+	}
+	maj, err1 := strconv.Atoi(majStr)
+	min, err2 := strconv.Atoi(minStr)
+	if err1 != nil || err2 != nil || maj < 5 || min < 0 {
+		return 0, 0, false
+	}
+	return maj, min, true
 }

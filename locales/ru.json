@@ -3029,5 +3029,14 @@
   "livePortsInProjects": "{count} в проектах",
   "liveAiToday": "AI сегодня",
   "liveAiMonth": "{amount} за 30 дн",
-  "liveMcpAgents": "{count, plural, one {# агент} few {# агента} many {# агентов} other {# агентов}}"
+  "liveMcpAgents": "{count, plural, one {# агент} few {# агента} many {# агентов} other {# агентов}}",
+  "toolProjectsTitle": "Проекты на {tool}",
+  "toolNoProjects": "Среди добавленных проектов нет проектов на {tool}.",
+  "toolDefaultRow": "Другие папки → по умолчанию в терминале",
+  "foundNoFolders": "В домашней папке нет типовых папок с кодом. Используйте «Добавить папку».",
+  "foundNothingNew": "Проекты в {folders} не найдены.",
+  "foundAllAdded": "Все найденные проекты в {folders} уже добавлены.",
+  "projectDatabasesTitle": "Базы данных проекта",
+  "projectDatabasePortBusy": "Порт {port} занят",
+  "openDatabases": "Базы данных"
 }

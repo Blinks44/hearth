@@ -9,6 +9,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/versions"
 )
 
 // The pages share one layout check: Russian text, wide and narrow windows.
@@ -63,6 +65,51 @@ func TestLayoutScreenshots(t *testing.T) {
 			a.Snapshot = aiSnapshot()
 			a.ChooseFolder = func() {}
 			a.router.Push(instructionsPage)
+			return a
+		}},
+		{"projects-list", func() *App {
+			a := NewApp()
+			a.Snapshot = many
+			a.Projects = testProjects()
+			a.ChooseFolder, a.FindProjects = func() {}, func() {}
+			a.router.Push("/projects")
+			return a
+		}},
+		{"project-detail-db", func() *App {
+			a := NewApp()
+			snap := *many
+			snap.Tools = append(append([]inventory.ToolState(nil), many.Tools...), inventory.ToolState{
+				Tool: "databases",
+				Databases: &inventory.DatabaseState{
+					Servers: []inventory.Database{
+						{Kind: "PostgreSQL", Name: "postgresql@16", Status: "running", Ports: []string{"5432"}},
+						{Kind: "Redis", Name: "redis", Status: "stopped", Ports: []string{"6379"}},
+					},
+					Listeners: []inventory.DatabaseListener{
+						{Port: "5432", Process: "postgres", Path: "/opt/homebrew/bin/postgres"},
+					},
+				},
+			})
+			a.Snapshot = &snap
+			a.NodeVersions = nodeVersions(time.Now())
+			a.NodeVersions.Releases = append(a.NodeVersions.Releases, versions.Release{Version: "18.20.5"})
+			projs := testProjects()
+			projs[1].Databases = []projects.DatabaseReference{
+				{Kind: "PostgreSQL", Service: "postgres", File: "compose.yaml", Ports: []string{"5432"}},
+				{Kind: "Redis", Service: "cache", File: ".env", Ports: []string{"6379"}},
+			}
+			a.Projects = projs
+			a.router.Push(projectPath(projs[1].Dir))
+			return a
+		}},
+		{"node-projects-tab", func() *App {
+			a := NewApp()
+			a.Snapshot = many
+			a.NodeVersions = nodeVersions(time.Now())
+			a.NodeVersions.Releases = append(a.NodeVersions.Releases, versions.Release{Version: "18.20.5"})
+			a.Projects = testProjects()
+			a.router.Push("/tools/node")
+			a.nodeTab = 2
 			return a
 		}},
 	} {

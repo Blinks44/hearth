@@ -193,6 +193,13 @@ func (a *App) projectReleases() map[string][]string {
 		out["pnpm"] = []string{a.JSVersions.Pnpm.Version}
 		out["yarn"] = []string{a.JSVersions.Yarn.Version}
 	}
+	if a.DotnetVersions != nil {
+		for _, l := range a.DotnetVersions.Lines {
+			if l.Version != "" {
+				out["dotnet"] = append(out["dotnet"], l.Version)
+			}
+		}
+	}
 	return out
 }
 

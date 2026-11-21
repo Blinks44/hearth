@@ -5,11 +5,13 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 )
@@ -390,5 +392,291 @@ func TestProjectReadErrorInAttentionAndColumnAlignment(t *testing.T) {
 	tt.Frame()
 	if tt.HasText("shop-web") || !tt.HasText("broken-json") {
 		t.Errorf("Need attention tab did not include read-error project: %q", tt.Texts())
+	}
+}
+
+// Find projects is available both on the empty screen and in the populated
+// header, and OfferFound surfaces toast feedback when there is nothing new.
+func TestProjectFindButtonAndOfferFoundFeedback(t *testing.T) {
+	t.Run("buttons trigger FindProjects", func(t *testing.T) {
+		a := NewApp()
+		a.Home = home
+		finds := 0
+		a.FindProjects = func() { finds++ }
+		a.ChooseFolder = func() {}
+		a.router.Push("/projects")
+		tt := ui.NewTester(a.View, 1280, 820)
+		tt.Advance(time.Second)
+		if err := tt.Click("Find projects"); err != nil {
+			t.Fatalf("empty Find projects: %v; texts %q", err, tt.Texts())
+		}
+		if finds != 1 {
+			t.Fatalf("empty finds = %d, want 1", finds)
+		}
+
+		a.Snapshot = nodeSnapshot()
+		a.Projects = testProjects()
+		tt.Frame()
+		if err := tt.Click("Find projects"); err != nil {
+			t.Fatalf("header Find projects: %v; texts %q", err, tt.Texts())
+		}
+		if finds != 2 {
+			t.Fatalf("header finds = %d, want 2", finds)
+		}
+	})
+
+	now := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
+	dev := filepath.Join(home, "dev")
+
+	t.Run("no usual folders", func(t *testing.T) {
+		a := NewApp()
+		a.Home = home
+		a.OfferFound(nil, nil, now)
+		if a.adding != nil || !strings.Contains(a.notice, "usual code folders") {
+			t.Errorf("adding=%v notice=%q", a.adding, a.notice)
+		}
+	})
+
+	t.Run("folders scanned with no projects", func(t *testing.T) {
+		a := NewApp()
+		a.Home = home
+		a.OfferFound([]string{dev}, nil, now)
+		if a.adding != nil || !strings.Contains(a.notice, "~/dev") {
+			t.Errorf("adding=%v notice=%q", a.adding, a.notice)
+		}
+	})
+
+	t.Run("all found projects already added", func(t *testing.T) {
+		a := NewApp()
+		a.Home = home
+		existing := filepath.Join(dev, "shop-web")
+		a.Projects = []projects.Project{{Dir: existing}}
+		a.OfferFound([]string{dev}, []projects.Suggestion{
+			{Project: projects.Project{Dir: existing}, Changed: now.Add(-time.Hour)},
+		}, now)
+		if a.adding != nil || !strings.Contains(a.notice, "already added") {
+			t.Errorf("adding=%v notice=%q", a.adding, a.notice)
+		}
+	})
+
+	t.Run("skips already added projects and offers remaining", func(t *testing.T) {
+		a := NewApp()
+		a.Home = home
+		existing := filepath.Join(dev, "shop-web")
+		fresh := filepath.Join(dev, "new-api")
+		a.Projects = []projects.Project{{Dir: existing}}
+		a.OfferFound([]string{dev}, []projects.Suggestion{
+			{Project: projects.Project{Dir: existing}, Changed: now.Add(-time.Hour)},
+			{Project: projects.Project{Dir: fresh}, Changed: now.Add(-time.Hour)},
+		}, now)
+		if a.adding == nil || len(a.adding.nested) != 1 || a.adding.nested[0].Dir != fresh {
+			t.Fatalf("adding=%+v", a.adding)
+		}
+	})
+}
+
+// Filtering /projects matches required tools, titles, versions, config files,
+// databases, and AI agents in addition to the folder path.
+func TestProjectFilterByToolsAndDatabases(t *testing.T) {
+	a := NewApp()
+	tt := openProjects(t, a, "/projects")
+	a.Projects[0].Databases = []projects.DatabaseReference{
+		{Kind: "PostgreSQL", Service: "postgres", File: "compose.yaml", Ports: []string{"5432"}},
+	}
+	tt.Frame()
+
+	for _, tc := range []struct {
+		query string
+		want  string
+		hide  string
+	}{
+		{query: "python", want: "ml-notebooks", hide: "shop-web"},
+		{query: "Yarn", want: "legacy-admin", hide: "shop-web"},
+		{query: "3.12", want: "ml-notebooks", hide: "legacy-admin"},
+		{query: "pnpm-lock.yaml", want: "shop-web", hide: "legacy-admin"},
+		{query: "postgresql", want: "shop-web", hide: "ml-notebooks"},
+		{query: "5432", want: "shop-web", hide: "legacy-admin"},
+		{query: "Claude", want: "shop-web", hide: "ml-notebooks"},
+	} {
+		a.projectFilter = tc.query
+		tt.Frame()
+		if !tt.HasText(tc.want) || tt.HasText(tc.hide) {
+			t.Errorf("filter %q: want %q, hide %q; texts %q", tc.query, tc.want, tc.hide, tt.Texts())
+		}
+	}
+}
+
+// Project detail shows a Project databases card when Compose/.env references
+// databases, reflects running/stopped/port-conflict states, and links to Databases.
+func TestProjectDatabasesCard(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = nodeSnapshot()
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{
+		Tool: "databases",
+		Databases: &inventory.DatabaseState{
+			Servers: []inventory.Database{
+				{Kind: "PostgreSQL", Name: "postgresql@16", Status: "running", Ports: []string{"5432"}},
+				{Kind: "Redis", Name: "redis", Status: "stopped", Ports: []string{"6379"}},
+			},
+			Listeners: []inventory.DatabaseListener{
+				{Port: "5432", Process: "postgres", Path: "/opt/homebrew/bin/postgres"},
+			},
+		},
+	})
+	dir := home + "/dev/shop-web"
+	p := testProjects()[0]
+	a.Projects = []projects.Project{p}
+	a.router.Push(projectPath(dir))
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if tt.HasText("Project databases") {
+		t.Fatalf("Project databases card should be hidden when project has no databases")
+	}
+
+	// Add Postgres (busy port 5432 conflict via Compose) and Redis (stopped).
+	a.Projects[0].Databases = []projects.DatabaseReference{
+		{Kind: "PostgreSQL", Service: "db", File: "compose.yaml", Ports: []string{"5432"}},
+		{Kind: "Redis", Service: "cache", File: ".env", Ports: []string{"6379"}},
+	}
+	tt.Frame()
+	hasTexts(t, tt, "Project databases", "PostgreSQL · db", "compose.yaml · :5432", "Port 5432 busy",
+		"Redis · cache", ".env · :6379", "stopped", "Databases")
+
+	// When the port is not busy (e.g. .env reference with running server), show running.
+	a.Projects[0].Databases = []projects.DatabaseReference{
+		{Kind: "PostgreSQL", File: ".env", Ports: []string{"5432"}},
+	}
+	tt.Frame()
+	hasTexts(t, tt, "Project databases", "PostgreSQL", ".env · :5432", "running")
+
+	if err := tt.Click("Databases"); err != nil {
+		t.Fatalf("click Databases button: %v", err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != "/tools/databases" {
+		t.Errorf("Databases button navigated to %q, want /tools/databases", a.router.Path())
+	}
+}
+
+// Quick install in a project's requirement table works across all Hearth-supported
+// languages, not just Node.
+func TestProjectInstallAllLanguages(t *testing.T) {
+	now := time.Now()
+	cases := []struct {
+		name     string
+		setup    func(a *App)
+		req      projects.Requirement
+		wantCmd  string
+		wantText string
+	}{
+		{
+			name: "python via uv",
+			setup: func(a *App) {
+				a.Snapshot = pythonSnapshot()
+				a.PythonVersions = pythonLines(now)
+			},
+			req:      projects.Requirement{Tool: "python", Want: "3.14", File: ".python-version"},
+			wantCmd:  "uv python install 3.14.0",
+			wantText: "Install Python 3.14.0",
+		},
+		{
+			name: "go via mise",
+			setup: func(a *App) {
+				a.Snapshot = goSnapshot()
+				a.GoVersions = &versions.Go{Releases: []string{"1.24.1", "1.23.5"}}
+			},
+			req:      projects.Requirement{Tool: "go", Want: "1.24", File: "go.mod"},
+			wantCmd:  "mise install go@1.24.1",
+			wantText: "Install Go 1.24.1",
+		},
+		{
+			name: "java via mise",
+			setup: func(a *App) {
+				a.Snapshot = javaSnapshot()
+				a.JavaVersions = &versions.Java{Lines: []versions.Cycle{{Cycle: "23", Latest: "23.0.2+7"}, {Cycle: "21", Latest: "21.0.6+7"}}}
+			},
+			req:      projects.Requirement{Tool: "java", Want: "23", File: "pom.xml"},
+			wantCmd:  "mise install java@temurin-23",
+			wantText: "Install Java Temurin 23.0.2+7",
+		},
+		{
+			name: "ruby via rbenv",
+			setup: func(a *App) {
+				a.Snapshot = rubySnapshot()
+				a.RubyVersions = &versions.Ruby{Lines: []versions.Cycle{{Cycle: "3.4", Latest: "3.4.2"}}}
+			},
+			req:      projects.Requirement{Tool: "ruby", Want: "3.4", File: ".ruby-version"},
+			wantCmd:  "rbenv install 3.4.2",
+			wantText: "Install Ruby 3.4.2",
+		},
+		{
+			name: "bun via mise",
+			setup: func(a *App) {
+				a.Snapshot = bunSnapshot()
+				a.Snapshot.Tools[0].Managers = []inventory.Manager{{Name: "mise", SwitchOnCD: true}}
+				a.BunLatest = &versions.Latest{Version: "1.3.0"}
+			},
+			req:      projects.Requirement{Tool: "bun", Want: "1.3", File: ".bun-version"},
+			wantCmd:  "mise install bun@1.3.0",
+			wantText: "Install Bun 1.3.0",
+		},
+		{
+			name: "dotnet sdk via mise",
+			setup: func(a *App) {
+				a.Snapshot = dotnetSnapshot()
+				a.Snapshot.Tools[0].Managers = []inventory.Manager{{Name: "mise", SwitchOnCD: true}}
+				a.DotnetVersions = &versions.Dotnet{Lines: []versions.DotnetLine{{Version: "10.0.101", Support: "lts", Phase: "active"}}}
+			},
+			req: projects.Requirement{
+				Tool: "dotnet", Want: "10.0.100", File: "global.json",
+				SDK: &projects.SDKPolicy{Version: "10.0.100", RollForward: "latestFeature"},
+			},
+			wantCmd:  "mise install dotnet@10.0.101",
+			wantText: "Install .NET SDK 10.0.101",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := NewApp()
+			a.Home = home
+			tc.setup(a)
+			dir := home + "/work/polyglot"
+			a.Projects = []projects.Project{{
+				Dir: dir, Files: []string{tc.req.File}, Requirements: []projects.Requirement{tc.req},
+			}}
+			a.router.Push(projectPath(dir))
+			tt := ui.NewTester(a.View, 1280, 820)
+			tt.Advance(time.Second)
+			if err := tt.Click(tc.wantText); err != nil {
+				t.Fatalf("click %q: %v; texts %q", tc.wantText, err, tt.Texts())
+			}
+			tt.Advance(time.Second)
+			if !tt.HasText(tc.wantCmd) {
+				t.Errorf("plan missing %q; texts %q", tc.wantCmd, tt.Texts())
+			}
+		})
+	}
+}
+
+// At the minimum window width (1000x680), the Tools column on /projects must
+// retain enough width for tool badges instead of collapsing to an ellipsis.
+func TestProjectListNarrowToolsVisible(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = nodeSnapshot()
+	a.Projects = testProjects()
+	a.ChooseFolder, a.FindProjects = func() {}, func() {}
+	a.router.Push("/projects")
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+
+	tag, ok := tt.Find("node 22")
+	if !ok {
+		t.Fatalf("missing node 22 tag in %q", tt.Texts())
+	}
+	if tag.W < 40 {
+		t.Errorf("node 22 tag collapsed at 1000px width: W=%v", tag.W)
 	}
 }

@@ -37,6 +37,12 @@ type Requirement struct {
 	File, Key string
 }
 
+// Inherited reports that the requirement came from a parent folder
+// (such as a monorepo root) rather than the project directory itself.
+func (r Requirement) Inherited() bool {
+	return strings.HasPrefix(filepath.ToSlash(r.File), "../")
+}
+
 // Project is what Read found in a project folder.
 type Project struct {
 	Dir          string
@@ -90,12 +96,14 @@ var installDirs = []string{"node_modules", ".venv"}
 // aiFiles are the AI settings a project may have, in the order shown.
 var aiFiles = []string{"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".agents", ".agent", "_agents", "_agent", ".claude", ".cursor", ".mcp.json"}
 
-// readers read the project files Hearth knows, in the order shown. Each
-// gets the file's contents and returns its requirements.
-var readers = []struct {
+type fileReader struct {
 	file string
 	read func(data []byte) ([]Requirement, error)
-}{
+}
+
+// readers read the project files Hearth knows, in the order shown. Each
+// gets the file's contents and returns its requirements.
+var readers = []fileReader{
 	{".nvmrc", firstLine("node")},
 	{".node-version", firstLine("node")},
 	{"package.json", readPackageJSON},
@@ -104,6 +112,8 @@ var readers = []struct {
 	{"yarn.lock", needs("yarn")},
 	{"bun.lock", needs("bun")},
 	{"bun.lockb", needs("bun")},
+	{"deno.json", readDenoJSON},
+	{"deno.jsonc", readDenoJSON},
 	{".tool-versions", readToolVersions},
 	{"mise.toml", readMiseTOML},
 	{".mise.toml", readMiseTOML},
@@ -111,13 +121,20 @@ var readers = []struct {
 	{"Gemfile", readGemfile},
 	{".java-version", firstLine("java")},
 	{".sdkmanrc", readSDKMAN},
+	{"pom.xml", readPomXML},
+	{"build.gradle", readGradle},
+	{"build.gradle.kts", readGradle},
 	{".python-version", firstLine("python")},
 	{"pyproject.toml", readPyproject},
+	{"Pipfile", readPipfile},
+	{"poetry.lock", readPoetryLock},
 	{"uv.lock", needs("uv")},
 	{"rust-toolchain.toml", readRustToolchain},
 	{"rust-toolchain", firstLine("rust")},
 	{"Cargo.toml", readCargoTOML},
+	{".php-version", readPHPVersion},
 	{"composer.json", readComposerJSON},
+	{".go-version", readGoVersion},
 	{"go.mod", readGoMod},
 	{"global.json", readGlobalJSON},
 	{".bun-version", firstLine("bun")},
@@ -175,6 +192,8 @@ func Read(dir string) Project {
 	readKube(&p)
 	readTerraform(&p)
 	readInheritedGlobalJSON(&p)
+	readCsproj(&p)
+	readInheritedVersionFiles(&p)
 	for _, name := range aiFiles {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
 			p.AI = append(p.AI, name)
@@ -390,11 +409,58 @@ func readPyproject(data []byte) ([]Requirement, error) {
 		Project struct {
 			RequiresPython string `toml:"requires-python"`
 		} `toml:"project"`
+		Tool struct {
+			Poetry struct {
+				Dependencies map[string]any `toml:"dependencies"`
+			} `toml:"poetry"`
+		} `toml:"tool"`
 	}
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
-	return []Requirement{{Tool: "python", Want: cfg.Project.RequiresPython, Key: "project.requires-python"}}, nil
+	if v := strings.TrimSpace(cfg.Project.RequiresPython); v != "" {
+		return []Requirement{{Tool: "python", Want: v, Key: "project.requires-python"}}, nil
+	}
+	if py, ok := cfg.Tool.Poetry.Dependencies["python"].(string); ok {
+		if v := strings.TrimSpace(py); v != "" {
+			return []Requirement{{Tool: "python", Want: v, Key: "tool.poetry.dependencies.python"}}, nil
+		}
+	}
+	return []Requirement{{Tool: "python", Key: "project.requires-python"}}, nil
+}
+
+func readPipfile(data []byte) ([]Requirement, error) {
+	var cfg struct {
+		Requires struct {
+			PythonFullVersion string `toml:"python_full_version"`
+			PythonVersion     string `toml:"python_version"`
+		} `toml:"requires"`
+	}
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	if v := strings.TrimSpace(cfg.Requires.PythonFullVersion); v != "" {
+		return []Requirement{{Tool: "python", Want: v, Key: "requires.python_full_version"}}, nil
+	}
+	if v := strings.TrimSpace(cfg.Requires.PythonVersion); v != "" {
+		return []Requirement{{Tool: "python", Want: v, Key: "requires.python_version"}}, nil
+	}
+	return []Requirement{{Tool: "python"}}, nil
+}
+
+func readPoetryLock(data []byte) ([]Requirement, error) {
+	var cfg struct {
+		Metadata struct {
+			PythonVersions string `toml:"python-versions"`
+		} `toml:"metadata"`
+	}
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	if v := strings.TrimSpace(cfg.Metadata.PythonVersions); v != "" {
+		return []Requirement{{Tool: "python", Want: v, Key: "metadata.python-versions"}}, nil
+	}
+	return []Requirement{{Tool: "python"}}, nil
 }
 
 func readRustToolchain(data []byte) ([]Requirement, error) {
@@ -442,6 +508,66 @@ func readGoMod(data []byte) ([]Requirement, error) {
 		reqs = []Requirement{{Tool: "go"}}
 	}
 	return reqs, sc.Err()
+}
+
+func readGoVersion(data []byte) ([]Requirement, error) {
+	reqs, err := firstLine("go")(data)
+	for i := range reqs {
+		reqs[i].Want = strings.TrimPrefix(reqs[i].Want, "go")
+	}
+	return reqs, err
+}
+
+func readPHPVersion(data []byte) ([]Requirement, error) {
+	reqs, err := firstLine("php")(data)
+	for i := range reqs {
+		reqs[i].Want = strings.TrimPrefix(reqs[i].Want, "php-")
+	}
+	return reqs, err
+}
+
+func readDenoJSON(data []byte) ([]Requirement, error) {
+	clean := stripTrailingCommas(stripJSONComments(data))
+	var v any
+	if err := json.Unmarshal(clean, &v); err != nil {
+		return nil, err
+	}
+	return []Requirement{{Tool: "deno"}}, nil
+}
+
+// stripTrailingCommas removes JSONC trailing commas before closing '}' or ']',
+// outside string literals.
+func stripTrailingCommas(data []byte) []byte {
+	out := slices.Clone(data)
+	quoted, escaped := false, false
+	for i := range len(out) {
+		b := out[i]
+		if quoted {
+			if escaped {
+				escaped = false
+			} else if b == '\\' {
+				escaped = true
+			} else if b == '"' {
+				quoted = false
+			}
+			continue
+		}
+		if b == '"' {
+			quoted = true
+			continue
+		}
+		if b != ',' {
+			continue
+		}
+		j := i + 1
+		for j < len(out) && (out[j] == ' ' || out[j] == '\t' || out[j] == '\r' || out[j] == '\n') {
+			j++
+		}
+		if j < len(out) && (out[j] == '}' || out[j] == ']') {
+			out[i] = ' '
+		}
+	}
+	return out
 }
 
 func readComposerJSON(data []byte) ([]Requirement, error) {

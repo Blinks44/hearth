@@ -2989,5 +2989,14 @@
   "livePortsInProjects": "{count} 个在项目中",
   "liveAiToday": "今日 AI",
   "liveAiMonth": "30 天 {amount}",
-  "liveMcpAgents": "{count} 个代理"
+  "liveMcpAgents": "{count} 个代理",
+  "toolProjectsTitle": "使用 {tool} 的项目",
+  "toolNoProjects": "已添加的项目中尚未使用 {tool}。",
+  "toolDefaultRow": "其他文件夹 → 终端默认版本",
+  "foundNoFolders": "主目录中未找到常见代码文件夹，请使用“添加文件夹”选择。",
+  "foundNothingNew": "在 {folders} 中未找到项目。",
+  "foundAllAdded": "在 {folders} 中找到的项目均已添加。",
+  "projectDatabasesTitle": "项目数据库",
+  "projectDatabasePortBusy": "端口 {port} 被占用",
+  "openDatabases": "数据库"
 }

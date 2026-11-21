@@ -88,11 +88,6 @@ func headRow(c *ui.Context, lead, cards func()) {
 	})
 }
 
-// comingSoon stands for a tab still to be built.
-func comingSoon(c *ui.Context) {
-	ui.Text(c, locales.ComingSoon()).TextColor(c.Theme().TextMuted).Padding(24, 0)
-}
-
 // toolNote is a line of explanation under a table, after an info icon.
 func toolNote(c *ui.Context, text string) {
 	t := c.Theme()
@@ -236,7 +231,7 @@ func detailColumn(c *ui.Context) ui.Element {
 
 // toolTabs switches a tool page, *tab, between the installed versions,
 // the ones available, the projects and PATH.
-func toolTabs(c *ui.Context, key string, tab *int, installed int) {
+func toolTabs(c *ui.Context, key string, tab *int, installed, projectsCount int) {
 	t := c.Theme()
 	pal := Colors(t)
 	labels := []string{locales.Installed(), locales.Available(), locales.ProjectsTitle(), "PATH"}
@@ -254,6 +249,8 @@ func toolTabs(c *ui.Context, key string, tab *int, installed int) {
 					ui.Text(c, label).FontSize(12.5).TextColor(color).SingleLine()
 					if i == 0 {
 						ui.Text(c, strconv.Itoa(installed)).FontSize(11.5).TextColor(pal.TextFaint)
+					} else if i == 2 && projectsCount > 0 {
+						ui.Text(c, strconv.Itoa(projectsCount)).FontSize(11.5).TextColor(pal.TextFaint)
 					}
 				})
 			}

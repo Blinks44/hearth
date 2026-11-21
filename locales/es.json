@@ -2989,5 +2989,14 @@
   "livePortsInProjects": "{count} en proyectos",
   "liveAiToday": "IA hoy",
   "liveAiMonth": "{amount} en 30 d",
-  "liveMcpAgents": "{count, plural, one {# agente} many {# agentes} other {# agentes}}"
+  "liveMcpAgents": "{count, plural, one {# agente} many {# agentes} other {# agentes}}",
+  "toolProjectsTitle": "Proyectos con {tool}",
+  "toolNoProjects": "Ningún proyecto añadido usa {tool} todavía.",
+  "toolDefaultRow": "Otras carpetas → predeterminado en terminal",
+  "foundNoFolders": "No se encontraron carpetas de código habituales en tu carpeta personal. Usa «Añadir carpeta».",
+  "foundNothingNew": "No se encontraron proyectos en {folders}.",
+  "foundAllAdded": "Todos los proyectos encontrados en {folders} ya están añadidos.",
+  "projectDatabasesTitle": "Bases de datos del proyecto",
+  "projectDatabasePortBusy": "Puerto {port} ocupado",
+  "openDatabases": "Bases de datos"
 }

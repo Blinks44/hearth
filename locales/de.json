@@ -2989,5 +2989,14 @@
   "livePortsInProjects": "{count} in Projekten",
   "liveAiToday": "KI heute",
   "liveAiMonth": "{amount} in 30 T.",
-  "liveMcpAgents": "{count, plural, one {# Agent} other {# Agenten}}"
+  "liveMcpAgents": "{count, plural, one {# Agent} other {# Agenten}}",
+  "toolProjectsTitle": "Projekte mit {tool}",
+  "toolNoProjects": "Noch keine hinzugefügten Projekte verwenden {tool}.",
+  "toolDefaultRow": "Andere Ordner → Terminal-Standard",
+  "foundNoFolders": "Keine üblichen Code-Ordner im Benutzerverzeichnis gefunden. Nutzen Sie „Ordner hinzufügen“.",
+  "foundNothingNew": "Keine Projekte in {folders} gefunden.",
+  "foundAllAdded": "Alle gefundenen Projekte in {folders} sind bereits hinzugefügt.",
+  "projectDatabasesTitle": "Projektdatenbanken",
+  "projectDatabasePortBusy": "Port {port} belegt",
+  "openDatabases": "Datenbanken"
 }

@@ -54,12 +54,12 @@ func Find(dir string) (root Project, nested []Project) {
 	return root, nested
 }
 
-// Versions are the requirements of p that name a version, as .nvmrc's,
-// not the ones that only tell a tool is needed.
+// Versions are the requirements of p that name a version of p's own, as
+// .nvmrc's, not inherited ones or files that only tell a tool is needed.
 func (p Project) Versions() []Requirement {
 	var out []Requirement
 	for _, r := range p.Requirements {
-		if r.Want != "" {
+		if r.Want != "" && !r.Inherited() {
 			out = append(out, r)
 		}
 	}

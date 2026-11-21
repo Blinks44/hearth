@@ -23,10 +23,11 @@ func (a *App) javaPage(c *ui.Context, p page) {
 		}
 		ins := st.Installations
 		rows, active := listed(ins), inventory.TerminalCopy(ins)
+		projs := a.toolProjects("java")
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				a.javaHeader(c, ins, rows, active)
-				toolTabs(c, "java-tabs", &a.javaTab, len(rows))
+				a.javaHeader(c, ins, rows, active, projs)
+				toolTabs(c, "java-tabs", &a.javaTab, len(rows), len(projs))
 				switch a.javaTab {
 				case 0:
 					columns(c, 12, func() {
@@ -56,10 +57,10 @@ func (a *App) javaPage(c *ui.Context, p page) {
 					})
 				case 1:
 					a.javaAvailable(c, st)
+				case 2:
+					a.toolProjectsTab(c, "java", st, projs)
 				case 3:
 					a.javaPath(c, st, active)
-				default:
-					comingSoon(c)
 				}
 			})
 		})
@@ -82,7 +83,7 @@ func (a *App) javaHome() string {
 
 // javaHeader is Java's logo, name and how its versions are managed, and
 // the cards of where it stands: installed, in the terminal, in a project.
-func (a *App) javaHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) javaHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int, projs []toolProject) {
 	pal := Colors(c.Theme())
 	toolHead(c, "java", "Java", func() {}, managedBy(ins, rows, active), func() {
 		stateCard(c, pal.TextFaint, locales.Installed(), locales.JavaCount(len(rows)), strings.Join(sourceNames(ins, rows, -1), " · "))
@@ -91,7 +92,7 @@ func (a *App) javaHeader(c *ui.Context, ins []inventory.Installation, rows []int
 			v, via = copyVersion(ins[active]), "java → "+sourceName(ins[active].Source)
 		}
 		stateCard(c, c.Theme().Success, locales.InTerminal(), v, via)
-		stateCard(c, pal.TextFaint, locales.Project(), "—", locales.NoProjects())
+		a.toolProjectCard(c, "java", projs)
 	})
 }
 

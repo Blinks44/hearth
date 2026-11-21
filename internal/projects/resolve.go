@@ -2,6 +2,7 @@ package projects
 
 import (
 	"fmt"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -171,7 +172,7 @@ func terminal(ts inventory.ToolState, checks []Check, lines map[int]versions.Lin
 
 // reads reports that the version manager m picks the version by req.
 func reads(m inventory.Manager, req Requirement) bool {
-	file := req.File
+	file := filepath.Base(req.File)
 	switch file {
 	case ".mise.toml":
 		file = "mise.toml"

@@ -26,10 +26,11 @@ func (a *App) bun(c *ui.Context, p page) {
 		ins := st.Installations
 		rows := listed(ins)
 		active := inventory.TerminalCopy(ins)
+		projs := a.toolProjects("bun")
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				a.bunHeader(c, ins, rows, active)
-				toolTabs(c, "bun-tabs", &a.bunTab, len(rows))
+				a.bunHeader(c, ins, rows, active, projs)
+				toolTabs(c, "bun-tabs", &a.bunTab, len(rows), len(projs))
 				switch a.bunTab {
 				case 0:
 					columns(c, 12, func() {
@@ -47,10 +48,10 @@ func (a *App) bun(c *ui.Context, p page) {
 					})
 				case 1:
 					a.bunAvailable(c, st, rows, active)
+				case 2:
+					a.toolProjectsTab(c, "bun", st, projs)
 				case 3:
 					pathCard(c, "bun", ins, active, a.Home)
-				default:
-					comingSoon(c)
 				}
 			})
 		})
@@ -59,7 +60,7 @@ func (a *App) bun(c *ui.Context, p page) {
 
 // bunHeader is Bun's logo, name and how it was installed, and the cards
 // of where it stands: installed, in the terminal, in a project.
-func (a *App) bunHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) bunHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int, projs []toolProject) {
 	t := c.Theme()
 	pal := Colors(t)
 	subtitle := managedBy(ins, rows, active)
@@ -82,7 +83,7 @@ func (a *App) bunHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}
-		stateCard(c, pal.TextFaint, locales.Project(), "—", locales.NoProjects())
+		a.toolProjectCard(c, "bun", projs)
 	})
 }
 

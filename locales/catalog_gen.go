@@ -40011,3 +40011,135 @@ func LiveMcpAgents(count int) string { return In(i18n.Locale()).LiveMcpAgents(co
 func (msgs Messages) LiveMcpAgents(count int) string {
 	return Catalog.Format(msgs.locale, "liveMcpAgents", map[string]any{"count": count})
 }
+
+// ToolProjectsTitle says "Projects using {tool}"
+// in the language the app shows.
+//
+// Card title on a language page Projects tab
+func ToolProjectsTitle(tool string) string { return In(i18n.Locale()).ToolProjectsTitle(tool) }
+
+// ToolProjectsTitle says "Projects using {tool}"
+// in the language of msgs.
+//
+// Card title on a language page Projects tab
+func (msgs Messages) ToolProjectsTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "toolProjectsTitle", map[string]any{"tool": tool})
+}
+
+// ToolNoProjects says "No added projects use {tool} yet."
+// in the language the app shows.
+//
+// Empty state on a language page Projects tab
+func ToolNoProjects(tool string) string { return In(i18n.Locale()).ToolNoProjects(tool) }
+
+// ToolNoProjects says "No added projects use {tool} yet."
+// in the language of msgs.
+//
+// Empty state on a language page Projects tab
+func (msgs Messages) ToolNoProjects(tool string) string {
+	return Catalog.Format(msgs.locale, "toolNoProjects", map[string]any{"tool": tool})
+}
+
+// ToolDefaultRow says "Other folders → terminal default"
+// in the language the app shows.
+//
+// Footer row on a language page Projects tab showing the default terminal
+// version
+func ToolDefaultRow() string { return In(i18n.Locale()).ToolDefaultRow() }
+
+// ToolDefaultRow says "Other folders → terminal default"
+// in the language of msgs.
+//
+// Footer row on a language page Projects tab showing the default terminal
+// version
+func (msgs Messages) ToolDefaultRow() string {
+	return Catalog.Format(msgs.locale, "toolDefaultRow", nil)
+}
+
+// FoundNoFolders says "No usual code folders found in your home directory. Use Add folder to pick one."
+// in the language the app shows.
+//
+// Toast when Find projects finds no standard code folders
+func FoundNoFolders() string { return In(i18n.Locale()).FoundNoFolders() }
+
+// FoundNoFolders says "No usual code folders found in your home directory. Use Add folder to pick one."
+// in the language of msgs.
+//
+// Toast when Find projects finds no standard code folders
+func (msgs Messages) FoundNoFolders() string {
+	return Catalog.Format(msgs.locale, "foundNoFolders", nil)
+}
+
+// FoundNothingNew says "No projects found in {folders}."
+// in the language the app shows.
+//
+// Toast when Find projects scans folders and finds no projects
+func FoundNothingNew(folders string) string { return In(i18n.Locale()).FoundNothingNew(folders) }
+
+// FoundNothingNew says "No projects found in {folders}."
+// in the language of msgs.
+//
+// Toast when Find projects scans folders and finds no projects
+func (msgs Messages) FoundNothingNew(folders string) string {
+	return Catalog.Format(msgs.locale, "foundNothingNew", map[string]any{"folders": folders})
+}
+
+// FoundAllAdded says "All projects found in {folders} are already added."
+// in the language the app shows.
+//
+// Toast when every discovered project is already in Hearth
+func FoundAllAdded(folders string) string { return In(i18n.Locale()).FoundAllAdded(folders) }
+
+// FoundAllAdded says "All projects found in {folders} are already added."
+// in the language of msgs.
+//
+// Toast when every discovered project is already in Hearth
+func (msgs Messages) FoundAllAdded(folders string) string {
+	return Catalog.Format(msgs.locale, "foundAllAdded", map[string]any{"folders": folders})
+}
+
+// ProjectDatabasesTitle says "Project databases"
+// in the language the app shows.
+//
+// Databases card title on a project detail page
+func ProjectDatabasesTitle() string { return In(i18n.Locale()).ProjectDatabasesTitle() }
+
+// ProjectDatabasesTitle says "Project databases"
+// in the language of msgs.
+//
+// Databases card title on a project detail page
+func (msgs Messages) ProjectDatabasesTitle() string {
+	return Catalog.Format(msgs.locale, "projectDatabasesTitle", nil)
+}
+
+// ProjectDatabasePortBusy says "Port {port} busy"
+// in the language the app shows.
+//
+// Chip label when another local service already uses a project database
+// port
+func ProjectDatabasePortBusy(port string) string {
+	return In(i18n.Locale()).ProjectDatabasePortBusy(port)
+}
+
+// ProjectDatabasePortBusy says "Port {port} busy"
+// in the language of msgs.
+//
+// Chip label when another local service already uses a project database
+// port
+func (msgs Messages) ProjectDatabasePortBusy(port string) string {
+	return Catalog.Format(msgs.locale, "projectDatabasePortBusy", map[string]any{"port": port})
+}
+
+// OpenDatabases says "Databases"
+// in the language the app shows.
+//
+// Button opening the Databases section from a project detail card
+func OpenDatabases() string { return In(i18n.Locale()).OpenDatabases() }
+
+// OpenDatabases says "Databases"
+// in the language of msgs.
+//
+// Button opening the Databases section from a project detail card
+func (msgs Messages) OpenDatabases() string {
+	return Catalog.Format(msgs.locale, "openDatabases", nil)
+}

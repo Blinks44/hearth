@@ -32,11 +32,12 @@ func (a *App) node(c *ui.Context, p page) {
 		}
 		rows := listed(st.Installations)
 		active := inventory.TerminalCopy(st.Installations)
+		projs := a.toolProjects("node")
 		channel := func(in inventory.Installation) (string, bool) { return channel(a.NodeVersions, in.Version, c.Now()) }
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				nodeHeader(c, a.NodeVersions, st.Installations, rows, active)
-				toolTabs(c, "node-tabs", &a.nodeTab, len(rows))
+				a.nodeHeader(c, st.Installations, rows, active, projs)
+				toolTabs(c, "node-tabs", &a.nodeTab, len(rows), len(projs))
 				switch a.nodeTab {
 				case 0:
 					columns(c, 12, func() {
@@ -51,10 +52,10 @@ func (a *App) node(c *ui.Context, p page) {
 					})
 				case 1:
 					a.availableCard(c, st, rows)
+				case 2:
+					a.toolProjectsTab(c, "node", st, projs)
 				case 3:
 					pathCard(c, "node", st.Installations, active, a.Home)
-				default:
-					comingSoon(c)
 				}
 			})
 		})
@@ -64,11 +65,11 @@ func (a *App) node(c *ui.Context, p page) {
 // nodeHeader is the logo, the name and how the versions are managed, and
 // on the right the cards of where Node stands: installed, in the
 // terminal, in a project.
-func nodeHeader(c *ui.Context, nv *versions.Node, ins []inventory.Installation, rows []int, active int) {
+func (a *App) nodeHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int, projs []toolProject) {
 	t := c.Theme()
 	pal := Colors(t)
 	badge := func() {
-		if active >= 0 && isLTS(nv, ins[active].Version, c.Now()) {
+		if active >= 0 && isLTS(a.NodeVersions, ins[active].Version, c.Now()) {
 			ui.Text(c, "LTS").FontSize(10.5).FontWeight(600).TextColor(pal.SuccessText).
 				Padding(2, 6).Radius(5).Background(pal.SuccessSoft)
 		}
@@ -82,7 +83,7 @@ func nodeHeader(c *ui.Context, nv *versions.Node, ins []inventory.Installation, 
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}
-		stateCard(c, pal.TextFaint, locales.Project(), "—", locales.NoProjects())
+		a.toolProjectCard(c, "node", projs)
 	})
 }
 

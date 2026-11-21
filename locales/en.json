@@ -15325,5 +15325,66 @@
         "type": "int"
       }
     }
+  },
+  "toolProjectsTitle": "Projects using {tool}",
+  "@toolProjectsTitle": {
+    "description": "Card title on a language page Projects tab",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "toolNoProjects": "No added projects use {tool} yet.",
+  "@toolNoProjects": {
+    "description": "Empty state on a language page Projects tab",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "toolDefaultRow": "Other folders → terminal default",
+  "@toolDefaultRow": {
+    "description": "Footer row on a language page Projects tab showing the default terminal version"
+  },
+  "foundNoFolders": "No usual code folders found in your home directory. Use Add folder to pick one.",
+  "@foundNoFolders": {
+    "description": "Toast when Find projects finds no standard code folders"
+  },
+  "foundNothingNew": "No projects found in {folders}.",
+  "@foundNothingNew": {
+    "description": "Toast when Find projects scans folders and finds no projects",
+    "placeholders": {
+      "folders": {
+        "type": "String"
+      }
+    }
+  },
+  "foundAllAdded": "All projects found in {folders} are already added.",
+  "@foundAllAdded": {
+    "description": "Toast when every discovered project is already in Hearth",
+    "placeholders": {
+      "folders": {
+        "type": "String"
+      }
+    }
+  },
+  "projectDatabasesTitle": "Project databases",
+  "@projectDatabasesTitle": {
+    "description": "Databases card title on a project detail page"
+  },
+  "projectDatabasePortBusy": "Port {port} busy",
+  "@projectDatabasePortBusy": {
+    "description": "Chip label when another local service already uses a project database port",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "openDatabases": "Databases",
+  "@openDatabases": {
+    "description": "Button opening the Databases section from a project detail card"
   }
 }

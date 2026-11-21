@@ -30,10 +30,11 @@ func (a *App) rust(c *ui.Context, p page) {
 		rows := listed(ins)
 		slices.SortStableFunc(rows, func(i, j int) int { return cmp.Compare(rustOrder(ins[i]), rustOrder(ins[j])) })
 		active := inventory.TerminalCopy(ins)
+		projs := a.toolProjects("rust")
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				rustHeader(c, ins, rows, active)
-				toolTabs(c, "rust-tabs", &a.rustTab, len(rows))
+				a.rustHeader(c, ins, rows, active, projs)
+				toolTabs(c, "rust-tabs", &a.rustTab, len(rows), len(projs))
 				switch a.rustTab {
 				case 0:
 					columns(c, 12, func() {
@@ -54,10 +55,10 @@ func (a *App) rust(c *ui.Context, p page) {
 					})
 				case 1:
 					a.rustAvailable(c, ins, rows, active)
+				case 2:
+					a.toolProjectsTab(c, "rust", st, projs)
 				case 3:
 					pathCard(c, "rustc", ins, active, a.Home)
-				default:
-					comingSoon(c)
 				}
 			})
 		})
@@ -66,7 +67,7 @@ func (a *App) rust(c *ui.Context, p page) {
 
 // rustHeader is Rust's logo, name and how its versions are managed, and
 // the cards of where it stands: installed, in the terminal, in a project.
-func rustHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
+func (a *App) rustHeader(c *ui.Context, ins []inventory.Installation, rows []int, active int, projs []toolProject) {
 	t := c.Theme()
 	pal := Colors(t)
 	toolHead(c, "rust", "Rust", func() {}, managedBy(ins, rows, active), func() {
@@ -84,7 +85,7 @@ func rustHeader(c *ui.Context, ins []inventory.Installation, rows []int, active 
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}
-		stateCard(c, pal.TextFaint, locales.Project(), "—", locales.NoProjects())
+		a.toolProjectCard(c, "rust", projs)
 	})
 }
 

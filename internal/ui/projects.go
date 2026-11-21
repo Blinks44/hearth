@@ -11,6 +11,8 @@ import (
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/mod/semver"
 
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
@@ -47,13 +49,34 @@ func (a *App) Offer(root projects.Project, nested []projects.Project) {
 }
 
 // OfferFound shows the dialog adding the projects found in the usual code
-// folders on the first start; the ones changed lately are chosen.
+// folders; the ones changed lately are chosen. Projects already added are
+// skipped, and an empty result shows a toast explaining why.
 func (a *App) OfferFound(folders []string, found []projects.Suggestion, now time.Time) {
+	if len(folders) == 0 {
+		a.notice = locales.FoundNoFolders()
+		return
+	}
+	dirs := make([]string, len(folders))
+	for i, d := range folders {
+		dirs[i] = tilde(d, a.Home)
+	}
+	where := strings.Join(dirs, ", ")
+	if len(found) == 0 {
+		a.notice = locales.FoundNothingNew(where)
+		return
+	}
 	add := &adding{folders: folders}
 	for _, s := range found {
+		if slices.ContainsFunc(a.Projects, func(p projects.Project) bool { return p.Dir == s.Project.Dir }) {
+			continue
+		}
 		add.nested = append(add.nested, s.Project)
 		add.changed = append(add.changed, s.Changed)
 		add.on = append(add.on, now.Sub(s.Changed) < projects.StaleAfter)
+	}
+	if len(add.nested) == 0 {
+		a.notice = locales.FoundAllAdded(where)
+		return
 	}
 	a.adding, a.addOpen = add, true
 }
@@ -69,7 +92,12 @@ const projectPage = "/projects/project"
 // filter.
 func (a *App) projectList(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.addButton(c) }})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				a.findProjectsButton(c)
+				a.addButton(c)
+			})
+		}})
 		if len(a.Projects) == 0 {
 			a.projectsEmpty(c)
 		} else {
@@ -87,9 +115,20 @@ func (a *App) addButton(c *ui.Context) {
 	if a.ChooseFolder == nil {
 		return
 	}
-	ui.PrimaryButton(c, "").OnClick(a.ChooseFolder).Children(func() {
+	ui.PrimaryButton(c, "").Height(controlHeight).OnClick(a.ChooseFolder).Children(func() {
 		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(ui.Hex("#FFFFFF"))
 		ui.Text(c, locales.AddFolder()).TextColor(ui.Hex("#FFFFFF")).SingleLine()
+	})
+}
+
+// findProjectsButton scans the usual code folders for projects, when the app can.
+func (a *App) findProjectsButton(c *ui.Context) {
+	if a.FindProjects == nil {
+		return
+	}
+	ui.Button(c.Key("find-projects"), "").Height(controlHeight).OnClick(a.FindProjects).Children(func() {
+		ui.Icon(c, Icon("search")).Size(14, 14).TextColor(c.Theme().TextMuted)
+		ui.Text(c, locales.FindProjects()).SingleLine()
 	})
 }
 
@@ -99,7 +138,10 @@ func (a *App) projectsEmpty(c *ui.Context) {
 	ui.Column(c).Grow(1).Center().Gap(10).Padding(0, 28).Children(func() {
 		ui.Icon(c, Icon("folder-git-2")).Size(28, 28).TextColor(pal.TextFaint)
 		ui.Text(c, locales.NoProjectsYet()).TextColor(c.Theme().TextMuted).TextAlign(ui.Center)
-		a.addButton(c)
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			a.addButton(c)
+			a.findProjectsButton(c)
+		})
 	})
 }
 
@@ -125,8 +167,7 @@ func (a *App) projectRows(c *ui.Context) {
 		if a.projectsTab == 1 && !needsAttention {
 			continue
 		}
-		if q := strings.ToLower(strings.TrimSpace(a.projectFilter)); q != "" &&
-			!strings.Contains(strings.ToLower(p.Dir), q) {
+		if q := strings.ToLower(strings.TrimSpace(a.projectFilter)); q != "" && !projectMatches(p, st, q) {
 			continue
 		}
 		rows = append(rows, r)
@@ -139,16 +180,20 @@ func (a *App) projectRows(c *ui.Context) {
 		ui.Box(c).Grow(1)
 		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Bind(&a.filterField).Placeholder(locales.FilterProjects()).Height(controlHeight).Width(200)
 	})
+	projW, aiW, stateW, actionsW := float32(260), float32(90), float32(160), float32(98)
+	if narrow(c) {
+		projW, aiW, stateW = 170, 68, 128
+	}
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			head := func(title string) ui.Element {
 				return ui.Text(c, title).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 			}
-			head(locales.ColumnProject()).Width(260).Shrink(0)
+			head(locales.ColumnProject()).Width(projW).Shrink(0)
 			head(locales.ColumnProjectTools()).Grow(1).MinWidth(0)
-			head("AI").Width(90).Shrink(0)
-			head(locales.ColumnState()).Width(160).Shrink(0)
-			ui.Box(c).Width(98).Shrink(0) // over the quick actions and chevron
+			head("AI").Width(aiW).Shrink(0)
+			head(locales.ColumnState()).Width(stateW).Shrink(0)
+			ui.Box(c).Width(actionsW).Shrink(0) // over the quick actions and chevron
 		})
 		if len(rows) == 0 {
 			cardNote(c, locales.NoProjectsMatch())
@@ -164,7 +209,7 @@ func (a *App) projectRows(c *ui.Context) {
 				e.Background(pal.Subtle)
 			}
 			e.Children(func() {
-				ui.Row(c).Width(260).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
+				ui.Row(c).Width(projW).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
 					folderTile(c, 28)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 						ui.Text(c, filepath.Base(r.p.Dir)).FontSize(13.5).SingleLine()
@@ -176,7 +221,7 @@ func (a *App) projectRows(c *ui.Context) {
 						toolTag(c, st)
 					}
 				})
-				ui.Row(c).Width(90).Shrink(0).Gap(4).Wrap().Children(func() {
+				ui.Row(c).Width(aiW).Shrink(0).Gap(4).Wrap().Children(func() {
 					for _, id := range projectAgents(r.p) {
 						ui.Box(c).Size(20, 20).Radius(10).Center().BorderWidth(1).BorderColor(pal.Line).
 							Tooltip(agentTitle(id)).Children(func() {
@@ -184,8 +229,8 @@ func (a *App) projectRows(c *ui.Context) {
 						})
 					}
 				})
-				ui.Row(c).Width(160).Shrink(0).Children(func() { projectChip(c, r.p, r.statuses, r.problem) })
-				ui.Row(c).Width(98).Shrink(0).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				ui.Row(c).Width(stateW).Shrink(0).Children(func() { projectChip(c, r.p, r.statuses, r.problem) })
+				ui.Row(c).Width(actionsW).Shrink(0).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 					ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
 						if a.Shell != nil {
 							iconButton(c.Key("folder:"+dir), "folder-open", showInFolder()).
@@ -309,6 +354,7 @@ func (a *App) project(c *ui.Context, dir string) {
 					a.requirementTable(c, statuses)
 				}
 				a.projectDockerCard(c, p)
+				a.projectDatabasesCard(c, p)
 				a.projectKubeCard(c, p)
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
@@ -317,6 +363,129 @@ func (a *App) project(c *ui.Context, dir string) {
 			})
 		})
 	})
+}
+
+// projectMatches reports whether project p matches the lowercased filter query
+// by directory path, required tools, titles, versions, config files, databases,
+// or AI agents.
+func projectMatches(p projects.Project, statuses []projects.Status, q string) bool {
+	if strings.Contains(strings.ToLower(p.Dir), q) {
+		return true
+	}
+	for _, st := range statuses {
+		if strings.Contains(strings.ToLower(st.Tool), q) ||
+			strings.Contains(strings.ToLower(toolTitle(st.Tool)), q) {
+			return true
+		}
+		for _, ch := range st.Checks {
+			if strings.Contains(strings.ToLower(ch.Want), q) ||
+				strings.Contains(strings.ToLower(ch.File), q) ||
+				strings.Contains(strings.ToLower(st.Tool+" "+ch.Want), q) ||
+				strings.Contains(strings.ToLower(toolTitle(st.Tool)+" "+ch.Want), q) {
+				return true
+			}
+		}
+	}
+	for _, f := range p.Files {
+		if strings.Contains(strings.ToLower(f), q) {
+			return true
+		}
+	}
+	for _, db := range p.Databases {
+		if strings.Contains(strings.ToLower(db.Kind), q) ||
+			strings.Contains(strings.ToLower(db.Service), q) ||
+			slices.ContainsFunc(db.Ports, func(port string) bool { return strings.Contains(port, q) }) {
+			return true
+		}
+	}
+	for _, id := range projectAgents(p) {
+		if strings.Contains(strings.ToLower(id), q) ||
+			strings.Contains(strings.ToLower(agentTitle(id)), q) {
+			return true
+		}
+	}
+	return false
+}
+
+// projectDatabasesCard shows the local databases referenced by Compose and .env
+// for project p, matched against observed servers, listeners, and port conflicts.
+func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
+	if len(p.Databases) == 0 {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	servers := inventory.DatabaseServers(a.Snapshot)
+	var listeners []inventory.DatabaseListener
+	if st, ok := a.Snapshot.Tool("databases"); ok && st.Databases != nil {
+		listeners = st.Databases.Listeners
+	}
+	conflictPorts := map[string]bool{}
+	for _, is := range a.issues(c) {
+		if is.Kind == issues.DatabasePortConflict && is.Project == p.Dir {
+			for _, d := range is.Dirs {
+				conflictPorts[d] = true
+			}
+		}
+	}
+	listCard(c, locales.ProjectDatabasesTitle(), "compose · .env", func() {
+		for i, ref := range p.Databases {
+			title := ref.Kind
+			if ref.Service != "" {
+				title += " · " + ref.Service
+			}
+			caption := ref.File
+			if len(ref.Ports) > 0 {
+				ports := make([]string, len(ref.Ports))
+				for j, port := range ref.Ports {
+					ports[j] = ":" + port
+				}
+				caption += " · " + strings.Join(ports, ", ")
+			}
+			busyPort := ""
+			for _, port := range ref.Ports {
+				if conflictPorts[port] {
+					busyPort = port
+					break
+				}
+			}
+			running, knownStopped := projectDatabaseState(ref, servers, listeners)
+			key := strconv.Itoa(i)
+			listRow(c, title, false, caption, func() {
+				switch {
+				case busyPort != "":
+					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ProjectDatabasePortBusy(busyPort))
+				case running:
+					chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.DatabaseRunning())
+				case knownStopped:
+					chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.DatabaseStopped())
+				}
+				ui.Button(c.Key("project-db-open:"+key), locales.OpenDatabases()).Height(controlHeight).OnClick(func() {
+					a.router.Push("/tools/databases")
+				})
+			})
+		}
+	})
+}
+
+func projectDatabaseState(ref projects.DatabaseReference, servers []inventory.Database, listeners []inventory.DatabaseListener) (running, knownStopped bool) {
+	for _, port := range ref.Ports {
+		if slices.ContainsFunc(listeners, func(l inventory.DatabaseListener) bool { return l.Port == port }) {
+			return true, false
+		}
+	}
+	for _, db := range servers {
+		if db.Kind != ref.Kind {
+			continue
+		}
+		if db.Status == "running" {
+			return true, false
+		}
+		if db.Status == "stopped" {
+			knownStopped = true
+		}
+	}
+	return false, knownStopped
 }
 
 // projectMenu is the project's "…": show its folder, and remove it from
@@ -381,26 +550,54 @@ func (a *App) pinItems(m *ui.Menu, dir string) {
 	}
 }
 
-// projectInstall is the plan that installs the Node version a project
-// needs and does not have: the newest release its file asks for, the
-// recommended one when it names none, through the manager in use.
+// projectInstall is the plan that installs the version a project needs and
+// does not have: the newest matching release through the manager in use (or
+// system package manager for PHP).
 func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
 	ch, ok := st.Unmet()
-	nv := a.NodeVersions
-	if !ok || ch.Installed != nil || st.Tool != "node" || nv == nil {
+	if !ok || ch.Installed != nil {
 		return ops.Plan{}, false
 	}
-	releases := make([]string, len(nv.Releases))
-	for i, r := range nv.Releases {
-		releases[i] = r.Version
+	releases := a.projectReleases()
+	var version string
+	if st.Tool == "dotnet" && ch.SDK != nil {
+		v, found := projects.PickDotnetSDK(releases["dotnet"], *ch.SDK)
+		if !found {
+			return ops.Plan{}, false
+		}
+		version = v
+	} else {
+		selection, err := projects.SelectVersion(st, releases[st.Tool], a.nodeLines())
+		if err != nil || selection.Installed != nil {
+			return ops.Plan{}, false
+		}
+		version = selection.Version
 	}
-	selection, err := projects.SelectVersion(st, releases, nv.Lines)
-	if err != nil || selection.Installed != nil {
+	if st.Tool == "php" {
+		newest := ""
+		if a.PHPVersions != nil {
+			newest = a.PHPVersions.Newest(time.Now())
+		}
+		return a.phpInstall(version, newest)
+	}
+	ts, _ := a.toolState(st.Tool)
+	if ts.Tool == "" {
+		ts.Tool = st.Tool
+	}
+	manager := a.installManager(ts)
+	if manager == "" {
 		return ops.Plan{}, false
 	}
-	version := selection.Version
-	node, _ := a.toolState("node")
-	return a.versionPlan(ops.VersionInstall, "node", a.installManager(node), version, versionText(version), "")
+	installVersion := version
+	label := versionLabel(st.Tool, version)
+	switch st.Tool {
+	case "java":
+		installVersion, _, _ = strings.Cut(version, ".")
+		label = "Temurin " + version
+	case "dotnet":
+		label = "SDK " + version
+	}
+	return a.versionPlan(ops.VersionInstall, st.Tool, manager, installVersion, label, "")
 }
 
 // projectHero is the folder, its name and what it needs, and on the right
