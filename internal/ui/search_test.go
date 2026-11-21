@@ -189,3 +189,84 @@ func TestSearchScroll(t *testing.T) {
 		t.Fatalf("the chosen row is out of view: %v, footer %v", last, footer)
 	}
 }
+
+func TestSearchExtendedIndex(t *testing.T) {
+	a := searchApp()
+	a.Home = home
+	a.Snapshot.Agents = []inventory.Agent{
+		{ID: "claude", Installations: []inventory.Installation{{Tool: "claude", Version: "1.0.12", Path: home + "/.local/bin/claude", OnPath: 1}}},
+	}
+	a.Snapshot.Tools = append(a.Snapshot.Tools,
+		inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
+			Ollama: &inventory.ModelApp{Models: []inventory.Model{{Name: "qwen2.5-coder:7b", Format: "GGUF", Quant: "Q4_K_M", Size: 4_700_000_000}}},
+		}},
+		inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{
+			{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Packages: []inventory.SystemPackage{
+				{Name: "ripgrep", Version: "14.1.1", Kind: "formula"},
+			}},
+		}},
+	)
+	a.Snapshot.TerminalPath = []inventory.PathEntry{
+		{Dir: home + "/.cargo/bin", Sources: []inventory.PathSource{{File: home + "/.zshrc"}}},
+		{Dir: "/no/such/path-entry", Missing: true},
+	}
+	a.Snapshot.Variables = []inventory.EnvironmentVariable{
+		{Name: "GOPATH", Terminal: home + "/go"},
+	}
+
+	for _, tc := range []struct {
+		name, query, wantID, wantPath string
+		check                         func(*testing.T, *App)
+	}{
+		{name: "AI agent", query: "claude 1.0.12", wantID: "agent:claude", wantPath: agentPage, check: func(t *testing.T, a *App) {
+			if a.router.Query("id") != "claude" {
+				t.Errorf("agent query id = %q, want claude", a.router.Query("id"))
+			}
+		}},
+		{name: "local model", query: "qwen2.5-coder", wantID: "model:Ollama:qwen2.5-coder:7b", wantPath: modelsPage},
+		{name: "visible issue", query: "/no/such/path-entry", wantID: "issue:", wantPath: problemsPage, check: func(t *testing.T, a *App) {
+			if a.problemsTab != 0 || a.problemsFilter == "" {
+				t.Errorf("problemsTab=%d problemsFilter=%q", a.problemsTab, a.problemsFilter)
+			}
+		}},
+		{name: "PATH entry", query: ".cargo/bin", wantID: "path:" + home + "/.cargo/bin", wantPath: pathPage, check: func(t *testing.T, a *App) {
+			if a.pathTab != 0 || a.pathFilter != home+"/.cargo/bin" {
+				t.Errorf("pathTab=%d pathFilter=%q", a.pathTab, a.pathFilter)
+			}
+		}},
+		{name: "environment variable", query: "GOPATH", wantID: "var:GOPATH", wantPath: pathPage, check: func(t *testing.T, a *App) {
+			if a.pathTab != 2 || a.pathFilter != "GOPATH" {
+				t.Errorf("pathTab=%d pathFilter=%q", a.pathTab, a.pathFilter)
+			}
+		}},
+		{name: "system package", query: "ripgrep", wantID: "pkg:/opt/homebrew/bin/brew:ripgrep", wantPath: "/system/packages", check: func(t *testing.T, a *App) {
+			if a.packageManager != "/opt/homebrew/bin/brew" || a.packageFilter != "ripgrep" {
+				t.Errorf("packageManager=%q packageFilter=%q", a.packageManager, a.packageFilter)
+			}
+		}},
+		{name: "install catalog", query: "python install", wantID: "install:python", wantPath: setupPage, check: func(t *testing.T, a *App) {
+			if a.setup.wizard || a.setup.filter != 0 {
+				t.Errorf("wizard=%v filter=%d", a.setup.wizard, a.setup.filter)
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a.router.Push(overview.path)
+			a.search.query = tc.query
+			got := a.searchResults()
+			i := slices.IndexFunc(got, func(r searchResult) bool {
+				return len(r.id) >= len(tc.wantID) && r.id[:len(tc.wantID)] == tc.wantID
+			})
+			if i < 0 {
+				t.Fatalf("query %q missing %q in %v", tc.query, tc.wantID, got)
+			}
+			got[i].open()
+			if a.router.Path() != tc.wantPath {
+				t.Errorf("open %q went to %q, want %q", got[i].id, a.router.Path(), tc.wantPath)
+			}
+			if tc.check != nil {
+				tc.check(t, a)
+			}
+		})
+	}
+}

@@ -43,12 +43,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
-		items := a.attentionItems(a.issues(c))
-		hidden := len(items)
-		items = slices.DeleteFunc(items, func(it attentionItem) bool {
-			return it.severity == issues.Info && slices.Contains(a.Hidden, it.key)
-		})
-		hidden -= len(items)
+		items, hidden := a.visibleIssues(a.issues(c))
 		a.header(c, p.title(), p.subtitle())
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -201,7 +196,8 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 
 // problemsEnd is the Issues item's end in the sidebar: how many there are.
 func (a *App) problemsEnd(c *ui.Context) func() {
-	return warningCount(c, len(needAttention(a.attentionItems(a.issues(c)))))
+	visible, _ := a.visibleIssues(a.issues(c))
+	return warningCount(c, len(needAttention(visible)))
 }
 
 // warningCount shows n in the warning color, as the other items show

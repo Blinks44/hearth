@@ -84,3 +84,38 @@ func TestPrivate(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteExcludesCloudContexts(t *testing.T) {
+	s := &inventory.Snapshot{
+		Taken: time.Date(2026, 11, 21, 12, 0, 0, 0, time.UTC),
+		Tools: []inventory.ToolState{
+			{
+				Tool: "cli",
+				Cli: &inventory.CliState{
+					Tools: []inventory.Installation{
+						{Tool: "aws", Version: "2.22.1", Path: "/opt/homebrew/bin/aws", OnPath: 1},
+					},
+					Contexts: []inventory.CliContext{
+						{
+							Tool: "aws", Name: "acme-secret-prod", Region: "eu-central-1", File: home + "/.aws/config",
+							Choices: []inventory.CliChoice{{Name: "acme-secret-prod", Region: "eu-central-1"}},
+						},
+						{
+							Tool: "gcloud", Name: "corp-work", Project: "acme-gcp-4242", File: home + "/.config/gcloud",
+						},
+						{
+							Tool: "az", Name: "Acme Enterprise Sub", SubscriptionID: "11111111-2222-3333-4444-555555555555",
+							File: home + "/.azure/azureProfile.json",
+						},
+					},
+				},
+			},
+		},
+	}
+	got := Write(s, nil, nil, Info{OS: "macOS 15.4 (arm64)", Home: home})
+	for _, leak := range []string{"acme-secret-prod", "corp-work", "acme-gcp-4242", "Acme Enterprise Sub", "11111111-2222-3333-4444-555555555555"} {
+		if strings.Contains(got, leak) {
+			t.Errorf("cloud context leaked %q into report:\n%s", leak, got)
+		}
+	}
+}

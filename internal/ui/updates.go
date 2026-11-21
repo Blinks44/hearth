@@ -218,10 +218,9 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					if when := a.updatesChecked(); !when.IsZero() {
 						checked = ago(c, when)
 					}
-					for _, busy := range a.PackageChecks {
-						if busy {
-							caption = locales.Checking()
-						}
+					checking := a.updatesChecking()
+					if checking {
+						caption = locales.Checking()
 					}
 					stateCard(c, t.Success, locales.ProblemsChecked(), checked, caption)
 				})
@@ -238,14 +237,33 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("updates-filter"), &a.updatesFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
+				checking := a.updatesChecking()
+				errs := a.updateErrors()
 				columns(c, 12, func() {
-					switch {
-					case a.Snapshot == nil:
+					if a.Snapshot == nil {
 						toolNote(c, locales.UpdatesWaiting())
 						return
-					case nv+np == 0:
-						toolNote(c, locales.UpdatesEmpty())
-						return
+					}
+					if checking {
+						toolNote(c, locales.UpdatesChecking())
+					}
+					if !a.VersionLists {
+						toolNote(c, locales.UpdatesOffline())
+					}
+					for _, msg := range errs {
+						warningRow(c, msg)
+					}
+					if nv+np == 0 {
+						switch {
+						case checking || !a.VersionLists:
+							return
+						case len(errs) > 0:
+							toolNote(c, locales.UpdatesCheckFailed())
+							return
+						default:
+							toolNote(c, locales.UpdatesEmpty())
+							return
+						}
 					}
 					filter := strings.ToLower(a.updatesFilter)
 					ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
@@ -335,6 +353,69 @@ func (a *App) updatesChecked() time.Time {
 		}
 	}
 	return oldest
+}
+
+// updatesChecking reports whether any package manager, version list, or
+// mise outdated check is currently running.
+func (a *App) updatesChecking() bool {
+	if a.MiseChecking {
+		return true
+	}
+	for _, busy := range a.PackageChecks {
+		if busy {
+			return true
+		}
+	}
+	for _, busy := range a.VersionChecks {
+		if busy {
+			return true
+		}
+	}
+	return false
+}
+
+// updateErrors lists update-check failures for installed tools, mise,
+// and package managers. Offline notices are omitted when VersionLists
+// is turned off, because the page already shows a dedicated offline note.
+func (a *App) updateErrors() []string {
+	if a.Snapshot == nil {
+		return nil
+	}
+	offline := locales.VersionsOffline()
+	var out []string
+	add := func(source, msg string) {
+		if msg == "" || (!a.VersionLists && msg == offline) {
+			return
+		}
+		out = append(out, source+": "+msg)
+	}
+	versionErrs := []struct {
+		tool, title, err string
+	}{
+		{"node", "Node.js", a.NodeVersionsErr},
+		{"bun", "Bun", a.BunLatestErr},
+		{"go", "Go", a.GoVersionsErr},
+		{"python", "Python", a.PythonVersionsErr},
+		{"php", "PHP", a.PHPVersionsErr},
+		{"rust", "Rust", a.RustVersionsErr},
+		{"dotnet", ".NET", a.DotnetVersionsErr},
+		{"ruby", "Ruby", a.RubyVersionsErr},
+		{"java", "Java", a.JavaVersionsErr},
+	}
+	for _, v := range versionErrs {
+		if st, ok := a.Snapshot.Tool(v.tool); ok && len(listed(st.Installations)) > 0 {
+			add(v.title, v.err)
+		}
+	}
+	if a.MiseOutdatedErr != "" {
+		add("mise", a.MiseOutdatedErr)
+	}
+	for _, m := range a.managersChecked() {
+		if m.UpdateError != "" {
+			add(m.Name, m.UpdateError)
+		}
+	}
+	return out
 }
 
 // updateRowView is an update in the table: its check box when Hearth

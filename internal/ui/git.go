@@ -72,7 +72,7 @@ func (a *App) gitHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 		stateCard(c, pal.TextFaint, locales.Installed(), locales.CopiesCount(len(rows)), strings.Join(sourceNames(ins, rows, -1), " · "))
 		if active >= 0 {
 			in := ins[active]
-			stateCard(c, t.Success, locales.InTerminal(), copyVersion(in), "which git → "+sourceName(in.Source))
+			stateCard(c, t.Success, locales.InTerminal(), copyVersion(in), whichCommand+" git → "+sourceName(in.Source))
 		} else {
 			stateCard(c, pal.TextFaint, locales.InTerminal(), "—", locales.NotInPath())
 		}

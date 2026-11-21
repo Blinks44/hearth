@@ -18,9 +18,15 @@ type UserPathEdit struct {
 // registry.
 const UserVarsName = `HKCU\Environment`
 
-// UserVarEdit sets the user's environment variable Name to Value in the
-// Windows registry, as a step of a plan: one there already, at another
-// value, is not changed. It comes back as an Edit does.
+// UserVarEdit sets, updates, or deletes the user's environment variable
+// Name in the Windows registry, as a step of a plan. By default an existing
+// variable with another value is not changed; Replace updates it and Delete
+// removes it, both restoring the previous value on rollback. Public shows
+// Value in the plan preview instead of masking it as a secret.
 type UserVarEdit struct {
 	Name, Value string
+	Before      string
+	Replace     bool
+	Delete      bool
+	Public      bool
 }

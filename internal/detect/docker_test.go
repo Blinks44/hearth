@@ -53,12 +53,14 @@ func TestDocker(t *testing.T) {
 			r.Stdout(`{"Name":"default","DockerEndpoint":"`+dockerDefaultEndpoint+`"}
 {"Name":"colima","DockerEndpoint":"unix:///tmp/colima/docker.sock"}
 {"Name":"remote","DockerEndpoint":"ssh://user:secret@server/path?token=hidden"}`, exe, "context", "ls", "--format", "{{json .}}")
-			r.Set(run.Result{Stdout: []byte(tc.server), Stderr: []byte("PRIVATE " + tc.stderr), ExitCode: tc.code}, nil, exe, "--host", func() string {
-				if tc.selected == "colima" {
-					return "unix:///tmp/colima/docker.sock"
-				}
-				return dockerDefaultEndpoint
-			}(), "version", "--format", "{{json .}}")
+			host := dockerDefaultEndpoint
+			if tc.selected == "colima" {
+				host = "unix:///tmp/colima/docker.sock"
+			}
+			r.Set(run.Result{Stdout: []byte(tc.server), Stderr: []byte("PRIVATE " + tc.stderr), ExitCode: tc.code}, nil, exe, "--host", host, "version", "--format", "{{json .}}")
+			if tc.status == "available" {
+				r.Stdout(`{"ServerVersion":"27.4.1","Containers":7,"ContainersRunning":3}`, exe, "--host", host, "info", "--format", "{{json .}}")
+			}
 			st, err := detectDocker(t.Context(), r, env, env, nil, nil)
 			if err != nil {
 				t.Fatal(err)
@@ -68,6 +70,9 @@ func TestDocker(t *testing.T) {
 			}
 			if st.Docker.Selected != tc.selected || len(st.Docker.Plugins) != 1 {
 				t.Fatalf("%+v", st.Docker)
+			}
+			if tc.status == "available" && (st.Docker.Running != 3 || st.Docker.Containers != 7) {
+				t.Errorf("containers = %d/%d, want 3/7", st.Docker.Running, st.Docker.Containers)
 			}
 			probes := 0
 			for _, call := range r.Calls() {

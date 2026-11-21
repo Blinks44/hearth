@@ -70,12 +70,30 @@ func TestCli(t *testing.T) {
 	}
 	wantContexts := []inventory.CliContext{
 		{Tool: "kubectl", Name: "kind-dev", File: filepath.Join(dir, ".kube", "config")},
-		{Tool: "aws", Name: "work", Region: "eu-central-1", File: filepath.Join(dir, ".aws", "config")},
-		{Tool: "gcloud", Name: "shop-prod", File: filepath.Join(gcloud, "configurations", "config_work")},
-		{Tool: "az", Name: "Prod", File: filepath.Join(dir, ".azure", "azureProfile.json")},
+		{
+			Tool: "aws", Name: "work", Region: "eu-central-1", File: filepath.Join(dir, ".aws", "config"),
+			NameSource: "AWS_PROFILE", RegionSource: "file",
+			Choices: []inventory.CliChoice{
+				{Name: "default", Region: "us-east-1"},
+				{Name: "work", Region: "eu-central-1"},
+			},
+		},
+		{
+			Tool: "gcloud", Name: "work", Project: "shop-prod", File: filepath.Join(gcloud, "configurations", "config_work"),
+			NameSource: "file", ProjectSource: "file",
+			Choices: []inventory.CliChoice{{Name: "work", Project: "shop-prod"}},
+		},
+		{
+			Tool: "az", Name: "Prod", File: filepath.Join(dir, ".azure", "azureProfile.json"),
+			NameSource: "file",
+			Choices: []inventory.CliChoice{
+				{Name: "Dev"},
+				{Name: "Prod"},
+			},
+		},
 	}
 	if !reflect.DeepEqual(st.Cli.Contexts, wantContexts) {
-		t.Errorf("contexts = %+v, want %+v", st.Cli.Contexts, wantContexts)
+		t.Errorf("contexts =\n %+v\nwant\n %+v", st.Cli.Contexts, wantContexts)
 	}
 }
 

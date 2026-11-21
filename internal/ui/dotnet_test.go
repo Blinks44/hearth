@@ -59,3 +59,30 @@ func TestDotnetEmpty(t *testing.T) {
 		t.Fatalf("%q", tt.Texts())
 	}
 }
+
+func TestDotnetRowsPreserveSourceRoot(t *testing.T) {
+	miseRoot := home + "/.local/share/mise/installs/dotnet/9.0.102"
+	sdkPath := miseRoot + "/sdk/9.0.102"
+	rtPath := miseRoot + "/shared/Microsoft.NETCore.App/9.0.1"
+	st := inventory.ToolState{Tool: "dotnet", Installations: []inventory.Installation{{
+		Tool: "dotnet", Version: "9.0.102", Path: miseRoot + "/dotnet", RealPath: miseRoot + "/dotnet", OnPath: 1,
+		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "mise", Root: miseRoot, Version: "9.0.102"},
+		Dotnet: &inventory.Dotnet{
+			SDKs:     []inventory.DotnetEntry{{Name: "SDK", Version: "9.0.102", Path: sdkPath}},
+			Runtimes: []inventory.DotnetEntry{{Name: "Microsoft.NETCore.App", Version: "9.0.1", Path: rtPath}},
+		},
+	}}}
+	ins, active, sdks, runtimes := dotnetRows(st)
+	if active != 0 || sdks != 1 || runtimes != 1 || len(ins) != 2 {
+		t.Fatalf("rows=%d active=%d sdks=%d runtimes=%d", len(ins), active, sdks, runtimes)
+	}
+	if ins[0].Source.Root != miseRoot || ins[1].Source.Root != miseRoot {
+		t.Fatalf("Source.Root overwritten: sdk=%q runtime=%q, want %q", ins[0].Source.Root, ins[1].Source.Root, miseRoot)
+	}
+	if got := displayPath(ins[0], home); got != tilde(sdkPath, home) {
+		t.Errorf("sdk displayPath=%q, want %q", got, tilde(sdkPath, home))
+	}
+	if got := displayPath(ins[1], home); got != tilde(rtPath, home) {
+		t.Errorf("runtime displayPath=%q, want %q", got, tilde(rtPath, home))
+	}
+}

@@ -149,6 +149,7 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 				readCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
 				target := docker.Target{Docker: exe, Context: c.Name, Endpoint: c.Endpoint}
 				if engine, err := docker.Read(readCtx, r, term, target); err == nil {
+					d.Running, d.Containers = engine.Running, engine.Containers
 					d.Health = docker.ReadHealth(readCtx, r, term, target, engine)
 				}
 				cancel()

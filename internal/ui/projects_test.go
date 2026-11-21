@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"path/filepath"
 	"reflect"
 	"slices"
@@ -355,5 +356,39 @@ func TestProjectDockerEngineDown(t *testing.T) {
 	want := "The project needs a running Docker engine (compose.yaml), but the engine of the selected context does not answer. Start it with “Prepare environment” or on the Docker page."
 	if got := problemBanner([]projects.Status{st}); got != want {
 		t.Errorf("banner %q", got)
+	}
+}
+
+func TestProjectReadErrorInAttentionAndColumnAlignment(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = calmSnapshot()
+	a.Projects = []projects.Project{
+		testProjects()[0], // shop-web: All set
+		{Dir: home + "/work/broken-json", Errs: []error{errors.New("package.json: invalid character")}},
+	}
+	a.router.Push("/projects")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "broken-json", "could not read")
+	// Verify header State column aligns with the rows' status chips (chip text starts ~16px inside chip for padding + dot).
+	stateHead, okHead := tt.Find("State")
+	chip1, ok1 := tt.Find("All set")
+	chip2, ok2 := tt.Find("could not read")
+	if !okHead || !ok1 || !ok2 {
+		t.Fatalf("missing State (%v), All set (%v), or could not read (%v)", okHead, ok1, ok2)
+	}
+	if chip1.X != chip2.X {
+		t.Errorf("State chips misaligned between rows: row1 X=%v, row2 X=%v", chip1.X, chip2.X)
+	}
+	if diff := chip1.X - stateHead.X; diff < 0 || diff > 24 {
+		t.Errorf("State column misaligned: header X=%v, chip text X=%v", stateHead.X, chip1.X)
+	}
+	if err := tt.Click("Need attention"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("shop-web") || !tt.HasText("broken-json") {
+		t.Errorf("Need attention tab did not include read-error project: %q", tt.Texts())
 	}
 }

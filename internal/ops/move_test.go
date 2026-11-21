@@ -23,7 +23,8 @@ func TestMovePlan(t *testing.T) {
 		{"go", "1.24.1", []string{"mise", "use", "-g", "go@1.24.1"}, false},
 		{"java", "21", []string{"mise", "use", "-g", "java@temurin-21"}, false},
 		{"php", "8.4.3", nil, false},
-		{"dotnet", "9.0.100", nil, false},
+		{"dotnet", "9.0.100", []string{"mise", "use", "-g", "dotnet@9.0.100"}, false},
+		{"bun", "1.1.42", []string{"mise", "use", "-g", "bun@1.1.42"}, false},
 		{"python", "", nil, false},
 	}
 	for _, tc := range tests {

@@ -93,7 +93,7 @@ func (a *App) setupHave(id string) bool {
 	case "mise":
 		m, ok := a.miseManager()
 		return ok && (m.Activated || m.Shims)
-	case "kubectl", "helm", "kind":
+	case "kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu":
 		_, found := cliCopy(a.cliState(), id)
 		return found
 	case "uv":
@@ -247,6 +247,16 @@ func setupTitle(id string) string {
 		return "Node.js LTS"
 	case "docker":
 		return locales.SetupDockerEngine()
+	case "aws":
+		return "AWS CLI"
+	case "gcloud":
+		return "Google Cloud CLI"
+	case "az":
+		return "Azure CLI"
+	case "terraform":
+		return "Terraform"
+	case "tofu":
+		return "OpenTofu"
 	}
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		return agentTitle(id)
@@ -1104,6 +1114,22 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 		}
 		return inventory.Installation{}, checkMissing
 	}
+	if id == "uv" {
+		st, _ := a.Snapshot.Tool("python")
+		for _, m := range st.Managers {
+			if m.Name == "uv" && m.Version != "" {
+				return inventory.Installation{Version: m.Version}, checkWorks
+			}
+		}
+		return inventory.Installation{}, checkMissing
+	}
+	if lang, command, ok := languageCommand(id); ok {
+		st, _ := a.Snapshot.Tool(lang)
+		if path := st.Vars[command]; path != "" {
+			return inventory.Installation{Path: path}, checkWorks
+		}
+		return inventory.Installation{}, checkMissing
+	}
 	if kind, ok := catalog.DatabaseKinds[id]; ok {
 		db, found := a.databaseServer(kind)
 		if !found {
@@ -1117,18 +1143,27 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 	}
 	var ins []inventory.Installation
 	var docker *inventory.DockerState
-	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
-		if i := slices.IndexFunc(a.Snapshot.Agents, func(ag inventory.Agent) bool { return ag.ID == id }); i >= 0 {
-			ag := a.Snapshot.Agents[i]
-			ins = ag.Installations
-			// An agent that is an app alone, as Cursor, works as one.
-			if len(ins) == 0 && ag.App != "" {
-				return inventory.Installation{Version: ag.AppVersion, Path: ag.App}, checkWorks
+	switch {
+	case slices.Contains(kubeCommands, id) || isCLICommand(id):
+		for _, in := range a.cliState().Tools {
+			if in.Tool == id {
+				ins = append(ins, in)
 			}
 		}
-	} else {
-		st, _ := a.Snapshot.Tool(id)
-		ins, docker = st.Installations, st.Docker
+	default:
+		if e, _ := catalog.Find(id); e.Group == catalog.Agent {
+			if i := slices.IndexFunc(a.Snapshot.Agents, func(ag inventory.Agent) bool { return ag.ID == id }); i >= 0 {
+				ag := a.Snapshot.Agents[i]
+				ins = ag.Installations
+				// An agent that is an app alone, as Cursor, works as one.
+				if len(ins) == 0 && ag.App != "" {
+					return inventory.Installation{Version: ag.AppVersion, Path: ag.App}, checkWorks
+				}
+			}
+		} else {
+			st, _ := a.Snapshot.Tool(id)
+			ins, docker = st.Installations, st.Docker
+		}
 	}
 	i := inventory.TerminalCopy(ins)
 	// A shim first on PATH whose version is picked as it runs, as Yarn's
@@ -1204,7 +1239,14 @@ func (a *App) setupCheckRow(c *ui.Context, i int, id string) {
 	in, r := a.setupResult(id)
 	caption := locales.SetupNotOnPath()
 	if r != checkMissing {
-		caption = strings.TrimPrefix(cmp.Or(in.Version, "…")+" · "+tilde(in.Path, a.Home), " · ")
+		switch path := tilde(in.Path, a.Home); {
+		case in.Version != "" && path != "":
+			caption = in.Version + " · " + path
+		case path != "":
+			caption = path
+		default:
+			caption = cmp.Or(in.Version, "…")
+		}
 	}
 	label, bg, fg := locales.SetupTagWorks(), pal.SuccessSoft, pal.SuccessText
 	switch {

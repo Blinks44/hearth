@@ -15782,16 +15782,16 @@ func (msgs Messages) SectionToolsCli() string {
 	return Catalog.Format(msgs.locale, "sectionToolsCli", nil)
 }
 
-// CliLead says "Version, source and where each stands in one table"
+// CliLead says "Cloud CLIs, infrastructure tools and which profile a command will use"
 // in the language the app shows.
 //
-// Under the CLI page's big title.
+// CLI & clouds string: cliLead.
 func CliLead() string { return In(i18n.Locale()).CliLead() }
 
-// CliLead says "Version, source and where each stands in one table"
+// CliLead says "Cloud CLIs, infrastructure tools and which profile a command will use"
 // in the language of msgs.
 //
-// Under the CLI page's big title.
+// CLI & clouds string: cliLead.
 func (msgs Messages) CliLead() string {
 	return Catalog.Format(msgs.locale, "cliLead", nil)
 }
@@ -38142,4 +38142,1872 @@ func PrepareCopyExact(command string) string { return In(i18n.Locale()).PrepareC
 // Operation result and project preparation string: prepareCopyExact.
 func (msgs Messages) PrepareCopyExact(command string) string {
 	return Catalog.Format(msgs.locale, "prepareCopyExact", map[string]any{"command": command})
+}
+
+// CatalogAws says "Amazon Web Services command-line interface."
+// in the language the app shows.
+//
+// CLI & clouds string: catalogAws.
+func CatalogAws() string { return In(i18n.Locale()).CatalogAws() }
+
+// CatalogAws says "Amazon Web Services command-line interface."
+// in the language of msgs.
+//
+// CLI & clouds string: catalogAws.
+func (msgs Messages) CatalogAws() string {
+	return Catalog.Format(msgs.locale, "catalogAws", nil)
+}
+
+// CatalogGcloud says "Google Cloud command-line interface."
+// in the language the app shows.
+//
+// CLI & clouds string: catalogGcloud.
+func CatalogGcloud() string { return In(i18n.Locale()).CatalogGcloud() }
+
+// CatalogGcloud says "Google Cloud command-line interface."
+// in the language of msgs.
+//
+// CLI & clouds string: catalogGcloud.
+func (msgs Messages) CatalogGcloud() string {
+	return Catalog.Format(msgs.locale, "catalogGcloud", nil)
+}
+
+// CatalogAz says "Microsoft Azure command-line interface."
+// in the language the app shows.
+//
+// CLI & clouds string: catalogAz.
+func CatalogAz() string { return In(i18n.Locale()).CatalogAz() }
+
+// CatalogAz says "Microsoft Azure command-line interface."
+// in the language of msgs.
+//
+// CLI & clouds string: catalogAz.
+func (msgs Messages) CatalogAz() string {
+	return Catalog.Format(msgs.locale, "catalogAz", nil)
+}
+
+// CatalogTerraform says "Infrastructure as code tool by HashiCorp."
+// in the language the app shows.
+//
+// CLI & clouds string: catalogTerraform.
+func CatalogTerraform() string { return In(i18n.Locale()).CatalogTerraform() }
+
+// CatalogTerraform says "Infrastructure as code tool by HashiCorp."
+// in the language of msgs.
+//
+// CLI & clouds string: catalogTerraform.
+func (msgs Messages) CatalogTerraform() string {
+	return Catalog.Format(msgs.locale, "catalogTerraform", nil)
+}
+
+// CatalogTofu says "Open-source Terraform-compatible infrastructure as code tool."
+// in the language the app shows.
+//
+// CLI & clouds string: catalogTofu.
+func CatalogTofu() string { return In(i18n.Locale()).CatalogTofu() }
+
+// CatalogTofu says "Open-source Terraform-compatible infrastructure as code tool."
+// in the language of msgs.
+//
+// CLI & clouds string: catalogTofu.
+func (msgs Messages) CatalogTofu() string {
+	return Catalog.Format(msgs.locale, "catalogTofu", nil)
+}
+
+// CliInstallMenu says "Install…"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInstallMenu.
+func CliInstallMenu() string { return In(i18n.Locale()).CliInstallMenu() }
+
+// CliInstallMenu says "Install…"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInstallMenu.
+func (msgs Messages) CliInstallMenu() string {
+	return Catalog.Format(msgs.locale, "cliInstallMenu", nil)
+}
+
+// CliAuthCard says "Sign-in checked"
+// in the language the app shows.
+//
+// CLI & clouds string: cliAuthCard.
+func CliAuthCard() string { return In(i18n.Locale()).CliAuthCard() }
+
+// CliAuthCard says "Sign-in checked"
+// in the language of msgs.
+//
+// CLI & clouds string: cliAuthCard.
+func (msgs Messages) CliAuthCard() string {
+	return Catalog.Format(msgs.locale, "cliAuthCard", nil)
+}
+
+// CliAuthCount says "{checked} of {total}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliAuthCount.
+func CliAuthCount(checked int, total int) string {
+	return In(i18n.Locale()).CliAuthCount(checked, total)
+}
+
+// CliAuthCount says "{checked} of {total}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliAuthCount.
+func (msgs Messages) CliAuthCount(checked int, total int) string {
+	return Catalog.Format(msgs.locale, "cliAuthCount", map[string]any{"checked": checked, "total": total})
+}
+
+// CliAuthNoneFound says "no cloud CLIs found"
+// in the language the app shows.
+//
+// CLI & clouds string: cliAuthNoneFound.
+func CliAuthNoneFound() string { return In(i18n.Locale()).CliAuthNoneFound() }
+
+// CliAuthNoneFound says "no cloud CLIs found"
+// in the language of msgs.
+//
+// CLI & clouds string: cliAuthNoneFound.
+func (msgs Messages) CliAuthNoneFound() string {
+	return Catalog.Format(msgs.locale, "cliAuthNoneFound", nil)
+}
+
+// CliAuthNotChecked says "not checked yet"
+// in the language the app shows.
+//
+// CLI & clouds string: cliAuthNotChecked.
+func CliAuthNotChecked() string { return In(i18n.Locale()).CliAuthNotChecked() }
+
+// CliAuthNotChecked says "not checked yet"
+// in the language of msgs.
+//
+// CLI & clouds string: cliAuthNotChecked.
+func (msgs Messages) CliAuthNotChecked() string {
+	return Catalog.Format(msgs.locale, "cliAuthNotChecked", nil)
+}
+
+// CliAuthSomeMissing says "{ok} · {missing} not signed in"
+// in the language the app shows.
+//
+// CLI & clouds string: cliAuthSomeMissing.
+func CliAuthSomeMissing(ok string, missing string) string {
+	return In(i18n.Locale()).CliAuthSomeMissing(ok, missing)
+}
+
+// CliAuthSomeMissing says "{ok} · {missing} not signed in"
+// in the language of msgs.
+//
+// CLI & clouds string: cliAuthSomeMissing.
+func (msgs Messages) CliAuthSomeMissing(ok string, missing string) string {
+	return Catalog.Format(msgs.locale, "cliAuthSomeMissing", map[string]any{"ok": ok, "missing": missing})
+}
+
+// CliProjectsCard says "Projects need"
+// in the language the app shows.
+//
+// CLI & clouds string: cliProjectsCard.
+func CliProjectsCard() string { return In(i18n.Locale()).CliProjectsCard() }
+
+// CliProjectsCard says "Projects need"
+// in the language of msgs.
+//
+// CLI & clouds string: cliProjectsCard.
+func (msgs Messages) CliProjectsCard() string {
+	return Catalog.Format(msgs.locale, "cliProjectsCard", nil)
+}
+
+// CliProjectsAllMet says "all requirements met"
+// in the language the app shows.
+//
+// CLI & clouds string: cliProjectsAllMet.
+func CliProjectsAllMet() string { return In(i18n.Locale()).CliProjectsAllMet() }
+
+// CliProjectsAllMet says "all requirements met"
+// in the language of msgs.
+//
+// CLI & clouds string: cliProjectsAllMet.
+func (msgs Messages) CliProjectsAllMet() string {
+	return Catalog.Format(msgs.locale, "cliProjectsAllMet", nil)
+}
+
+// CliProjectsNone says "no Terraform or OpenTofu projects"
+// in the language the app shows.
+//
+// CLI & clouds string: cliProjectsNone.
+func CliProjectsNone() string { return In(i18n.Locale()).CliProjectsNone() }
+
+// CliProjectsNone says "no Terraform or OpenTofu projects"
+// in the language of msgs.
+//
+// CLI & clouds string: cliProjectsNone.
+func (msgs Messages) CliProjectsNone() string {
+	return Catalog.Format(msgs.locale, "cliProjectsNone", nil)
+}
+
+// CliMissingNotNeeded says "not found · {name} · not needed by projects"
+// in the language the app shows.
+//
+// CLI & clouds string: cliMissingNotNeeded.
+func CliMissingNotNeeded(name string) string { return In(i18n.Locale()).CliMissingNotNeeded(name) }
+
+// CliMissingNotNeeded says "not found · {name} · not needed by projects"
+// in the language of msgs.
+//
+// CLI & clouds string: cliMissingNotNeeded.
+func (msgs Messages) CliMissingNotNeeded(name string) string {
+	return Catalog.Format(msgs.locale, "cliMissingNotNeeded", map[string]any{"name": name})
+}
+
+// CliMissingNeeded says "not found · {name} · needed by {project}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliMissingNeeded.
+func CliMissingNeeded(name string, project string) string {
+	return In(i18n.Locale()).CliMissingNeeded(name, project)
+}
+
+// CliMissingNeeded says "not found · {name} · needed by {project}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliMissingNeeded.
+func (msgs Messages) CliMissingNeeded(name string, project string) string {
+	return Catalog.Format(msgs.locale, "cliMissingNeeded", map[string]any{"name": name, "project": project})
+}
+
+// CliProjectAsks says "project {project} asks {want}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliProjectAsks.
+func CliProjectAsks(project string, want string) string {
+	return In(i18n.Locale()).CliProjectAsks(project, want)
+}
+
+// CliProjectAsks says "project {project} asks {want}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliProjectAsks.
+func (msgs Messages) CliProjectAsks(project string, want string) string {
+	return Catalog.Format(msgs.locale, "cliProjectAsks", map[string]any{"project": project, "want": want})
+}
+
+// CliProjectNeeds says "project {project} uses it"
+// in the language the app shows.
+//
+// CLI & clouds string: cliProjectNeeds.
+func CliProjectNeeds(project string) string { return In(i18n.Locale()).CliProjectNeeds(project) }
+
+// CliProjectNeeds says "project {project} uses it"
+// in the language of msgs.
+//
+// CLI & clouds string: cliProjectNeeds.
+func (msgs Messages) CliProjectNeeds(project string) string {
+	return Catalog.Format(msgs.locale, "cliProjectNeeds", map[string]any{"project": project})
+}
+
+// CliTargetTitle says "Where commands go"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetTitle.
+func CliTargetTitle() string { return In(i18n.Locale()).CliTargetTitle() }
+
+// CliTargetTitle says "Where commands go"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetTitle.
+func (msgs Messages) CliTargetTitle() string {
+	return Catalog.Format(msgs.locale, "cliTargetTitle", nil)
+}
+
+// CliTargetEmpty says "No cloud CLI settings found"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetEmpty.
+func CliTargetEmpty() string { return In(i18n.Locale()).CliTargetEmpty() }
+
+// CliTargetEmpty says "No cloud CLI settings found"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetEmpty.
+func (msgs Messages) CliTargetEmpty() string {
+	return Catalog.Format(msgs.locale, "cliTargetEmpty", nil)
+}
+
+// CliTargetFromEnv says "from {var}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetFromEnv.
+func CliTargetFromEnv(var_ string) string { return In(i18n.Locale()).CliTargetFromEnv(var_) }
+
+// CliTargetFromEnv says "from {var}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetFromEnv.
+func (msgs Messages) CliTargetFromEnv(var_ string) string {
+	return Catalog.Format(msgs.locale, "cliTargetFromEnv", map[string]any{"var": var_})
+}
+
+// CliTargetFromDefault says "default profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetFromDefault.
+func CliTargetFromDefault() string { return In(i18n.Locale()).CliTargetFromDefault() }
+
+// CliTargetFromDefault says "default profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetFromDefault.
+func (msgs Messages) CliTargetFromDefault() string {
+	return Catalog.Format(msgs.locale, "cliTargetFromDefault", nil)
+}
+
+// CliTargetConfigEnv says "config from {var}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetConfigEnv.
+func CliTargetConfigEnv(var_ string) string { return In(i18n.Locale()).CliTargetConfigEnv(var_) }
+
+// CliTargetConfigEnv says "config from {var}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetConfigEnv.
+func (msgs Messages) CliTargetConfigEnv(var_ string) string {
+	return Catalog.Format(msgs.locale, "cliTargetConfigEnv", map[string]any{"var": var_})
+}
+
+// CliTargetSwitch says "Switch…"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetSwitch.
+func CliTargetSwitch() string { return In(i18n.Locale()).CliTargetSwitch() }
+
+// CliTargetSwitch says "Switch…"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetSwitch.
+func (msgs Messages) CliTargetSwitch() string {
+	return Catalog.Format(msgs.locale, "cliTargetSwitch", nil)
+}
+
+// CliTargetChoose says "Choose…"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetChoose.
+func CliTargetChoose() string { return In(i18n.Locale()).CliTargetChoose() }
+
+// CliTargetChoose says "Choose…"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetChoose.
+func (msgs Messages) CliTargetChoose() string {
+	return Catalog.Format(msgs.locale, "cliTargetChoose", nil)
+}
+
+// CliIssueConfigMissing says "config file not found"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueConfigMissing.
+func CliIssueConfigMissing() string { return In(i18n.Locale()).CliIssueConfigMissing() }
+
+// CliIssueConfigMissing says "config file not found"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueConfigMissing.
+func (msgs Messages) CliIssueConfigMissing() string {
+	return Catalog.Format(msgs.locale, "cliIssueConfigMissing", nil)
+}
+
+// CliIssueProfileMissing says "profile not found in config"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueProfileMissing.
+func CliIssueProfileMissing() string { return In(i18n.Locale()).CliIssueProfileMissing() }
+
+// CliIssueProfileMissing says "profile not found in config"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueProfileMissing.
+func (msgs Messages) CliIssueProfileMissing() string {
+	return Catalog.Format(msgs.locale, "cliIssueProfileMissing", nil)
+}
+
+// CliIssueConfigInvalid says "config file could not be read"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueConfigInvalid.
+func CliIssueConfigInvalid() string { return In(i18n.Locale()).CliIssueConfigInvalid() }
+
+// CliIssueConfigInvalid says "config file could not be read"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueConfigInvalid.
+func (msgs Messages) CliIssueConfigInvalid() string {
+	return Catalog.Format(msgs.locale, "cliIssueConfigInvalid", nil)
+}
+
+// CliIssueEnvCreds says "environment credentials override profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueEnvCreds.
+func CliIssueEnvCreds() string { return In(i18n.Locale()).CliIssueEnvCreds() }
+
+// CliIssueEnvCreds says "environment credentials override profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueEnvCreds.
+func (msgs Messages) CliIssueEnvCreds() string {
+	return Catalog.Format(msgs.locale, "cliIssueEnvCreds", nil)
+}
+
+// CliIssueProfileConflict says "AWS_PROFILE and AWS_DEFAULT_PROFILE differ"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueProfileConflict.
+func CliIssueProfileConflict() string { return In(i18n.Locale()).CliIssueProfileConflict() }
+
+// CliIssueProfileConflict says "AWS_PROFILE and AWS_DEFAULT_PROFILE differ"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueProfileConflict.
+func (msgs Messages) CliIssueProfileConflict() string {
+	return Catalog.Format(msgs.locale, "cliIssueProfileConflict", nil)
+}
+
+// CliIssueRegionConflict says "AWS_REGION and AWS_DEFAULT_REGION differ"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueRegionConflict.
+func CliIssueRegionConflict() string { return In(i18n.Locale()).CliIssueRegionConflict() }
+
+// CliIssueRegionConflict says "AWS_REGION and AWS_DEFAULT_REGION differ"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueRegionConflict.
+func (msgs Messages) CliIssueRegionConflict() string {
+	return Catalog.Format(msgs.locale, "cliIssueRegionConflict", nil)
+}
+
+// CliIssueActiveConfigMissing says "active configuration file missing"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueActiveConfigMissing.
+func CliIssueActiveConfigMissing() string { return In(i18n.Locale()).CliIssueActiveConfigMissing() }
+
+// CliIssueActiveConfigMissing says "active configuration file missing"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueActiveConfigMissing.
+func (msgs Messages) CliIssueActiveConfigMissing() string {
+	return Catalog.Format(msgs.locale, "cliIssueActiveConfigMissing", nil)
+}
+
+// CliIssueProjectOverride says "project overridden by {var}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueProjectOverride.
+func CliIssueProjectOverride(var_ string) string {
+	return In(i18n.Locale()).CliIssueProjectOverride(var_)
+}
+
+// CliIssueProjectOverride says "project overridden by {var}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueProjectOverride.
+func (msgs Messages) CliIssueProjectOverride(var_ string) string {
+	return Catalog.Format(msgs.locale, "cliIssueProjectOverride", map[string]any{"var": var_})
+}
+
+// CliIssueMultipleDefaults says "multiple default subscriptions in profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cliIssueMultipleDefaults.
+func CliIssueMultipleDefaults() string { return In(i18n.Locale()).CliIssueMultipleDefaults() }
+
+// CliIssueMultipleDefaults says "multiple default subscriptions in profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cliIssueMultipleDefaults.
+func (msgs Messages) CliIssueMultipleDefaults() string {
+	return Catalog.Format(msgs.locale, "cliIssueMultipleDefaults", nil)
+}
+
+// CliTargetNoProfile says "no profile selected"
+// in the language the app shows.
+//
+// CLI & clouds string: cliTargetNoProfile.
+func CliTargetNoProfile() string { return In(i18n.Locale()).CliTargetNoProfile() }
+
+// CliTargetNoProfile says "no profile selected"
+// in the language of msgs.
+//
+// CLI & clouds string: cliTargetNoProfile.
+func (msgs Messages) CliTargetNoProfile() string {
+	return Catalog.Format(msgs.locale, "cliTargetNoProfile", nil)
+}
+
+// CliWhoTitle says "Who the provider sees"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoTitle.
+func CliWhoTitle() string { return In(i18n.Locale()).CliWhoTitle() }
+
+// CliWhoTitle says "Who the provider sees"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoTitle.
+func (msgs Messages) CliWhoTitle() string {
+	return Catalog.Format(msgs.locale, "cliWhoTitle", nil)
+}
+
+// CliWhoNotChecked says "not checked"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoNotChecked.
+func CliWhoNotChecked() string { return In(i18n.Locale()).CliWhoNotChecked() }
+
+// CliWhoNotChecked says "not checked"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoNotChecked.
+func (msgs Messages) CliWhoNotChecked() string {
+	return Catalog.Format(msgs.locale, "cliWhoNotChecked", nil)
+}
+
+// CliWhoNotCheckedCaption says "Hearth checks only when you click"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoNotCheckedCaption.
+func CliWhoNotCheckedCaption() string { return In(i18n.Locale()).CliWhoNotCheckedCaption() }
+
+// CliWhoNotCheckedCaption says "Hearth checks only when you click"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoNotCheckedCaption.
+func (msgs Messages) CliWhoNotCheckedCaption() string {
+	return Catalog.Format(msgs.locale, "cliWhoNotCheckedCaption", nil)
+}
+
+// CliWhoChecking says "checking…"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoChecking.
+func CliWhoChecking() string { return In(i18n.Locale()).CliWhoChecking() }
+
+// CliWhoChecking says "checking…"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoChecking.
+func (msgs Messages) CliWhoChecking() string {
+	return Catalog.Format(msgs.locale, "cliWhoChecking", nil)
+}
+
+// CliWhoNotLoggedIn says "not signed in"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoNotLoggedIn.
+func CliWhoNotLoggedIn() string { return In(i18n.Locale()).CliWhoNotLoggedIn() }
+
+// CliWhoNotLoggedIn says "not signed in"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoNotLoggedIn.
+func (msgs Messages) CliWhoNotLoggedIn() string {
+	return Catalog.Format(msgs.locale, "cliWhoNotLoggedIn", nil)
+}
+
+// CliWhoNotLoggedInCaption says "sign in never ran or session expired"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoNotLoggedInCaption.
+func CliWhoNotLoggedInCaption() string { return In(i18n.Locale()).CliWhoNotLoggedInCaption() }
+
+// CliWhoNotLoggedInCaption says "sign in never ran or session expired"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoNotLoggedInCaption.
+func (msgs Messages) CliWhoNotLoggedInCaption() string {
+	return Catalog.Format(msgs.locale, "cliWhoNotLoggedInCaption", nil)
+}
+
+// CliWhoExpired says "session expired"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoExpired.
+func CliWhoExpired() string { return In(i18n.Locale()).CliWhoExpired() }
+
+// CliWhoExpired says "session expired"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoExpired.
+func (msgs Messages) CliWhoExpired() string {
+	return Catalog.Format(msgs.locale, "cliWhoExpired", nil)
+}
+
+// CliWhoNetwork says "provider unreachable"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoNetwork.
+func CliWhoNetwork() string { return In(i18n.Locale()).CliWhoNetwork() }
+
+// CliWhoNetwork says "provider unreachable"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoNetwork.
+func (msgs Messages) CliWhoNetwork() string {
+	return Catalog.Format(msgs.locale, "cliWhoNetwork", nil)
+}
+
+// CliWhoUnknown says "could not verify"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoUnknown.
+func CliWhoUnknown() string { return In(i18n.Locale()).CliWhoUnknown() }
+
+// CliWhoUnknown says "could not verify"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoUnknown.
+func (msgs Messages) CliWhoUnknown() string {
+	return Catalog.Format(msgs.locale, "cliWhoUnknown", nil)
+}
+
+// CliWhoVerifiedCaption says "checked {ago} · account {account}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoVerifiedCaption.
+func CliWhoVerifiedCaption(ago string, account string) string {
+	return In(i18n.Locale()).CliWhoVerifiedCaption(ago, account)
+}
+
+// CliWhoVerifiedCaption says "checked {ago} · account {account}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoVerifiedCaption.
+func (msgs Messages) CliWhoVerifiedCaption(ago string, account string) string {
+	return Catalog.Format(msgs.locale, "cliWhoVerifiedCaption", map[string]any{"ago": ago, "account": account})
+}
+
+// CliWhoVerifiedNoAccount says "checked {ago}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoVerifiedNoAccount.
+func CliWhoVerifiedNoAccount(ago string) string {
+	return In(i18n.Locale()).CliWhoVerifiedNoAccount(ago)
+}
+
+// CliWhoVerifiedNoAccount says "checked {ago}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoVerifiedNoAccount.
+func (msgs Messages) CliWhoVerifiedNoAccount(ago string) string {
+	return Catalog.Format(msgs.locale, "cliWhoVerifiedNoAccount", map[string]any{"ago": ago})
+}
+
+// CliWhoSignIn says "Sign in…"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoSignIn.
+func CliWhoSignIn() string { return In(i18n.Locale()).CliWhoSignIn() }
+
+// CliWhoSignIn says "Sign in…"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoSignIn.
+func (msgs Messages) CliWhoSignIn() string {
+	return Catalog.Format(msgs.locale, "cliWhoSignIn", nil)
+}
+
+// CliWhoCheck says "Check"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoCheck.
+func CliWhoCheck() string { return In(i18n.Locale()).CliWhoCheck() }
+
+// CliWhoCheck says "Check"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoCheck.
+func (msgs Messages) CliWhoCheck() string {
+	return Catalog.Format(msgs.locale, "cliWhoCheck", nil)
+}
+
+// CliWhoCheckAgain says "Check again"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoCheckAgain.
+func CliWhoCheckAgain() string { return In(i18n.Locale()).CliWhoCheckAgain() }
+
+// CliWhoCheckAgain says "Check again"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoCheckAgain.
+func (msgs Messages) CliWhoCheckAgain() string {
+	return Catalog.Format(msgs.locale, "cliWhoCheckAgain", nil)
+}
+
+// CliWhoBadgeVerified says "verified"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoBadgeVerified.
+func CliWhoBadgeVerified() string { return In(i18n.Locale()).CliWhoBadgeVerified() }
+
+// CliWhoBadgeVerified says "verified"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoBadgeVerified.
+func (msgs Messages) CliWhoBadgeVerified() string {
+	return Catalog.Format(msgs.locale, "cliWhoBadgeVerified", nil)
+}
+
+// CliWhoBadgeNotSignedIn says "not signed in"
+// in the language the app shows.
+//
+// CLI & clouds string: cliWhoBadgeNotSignedIn.
+func CliWhoBadgeNotSignedIn() string { return In(i18n.Locale()).CliWhoBadgeNotSignedIn() }
+
+// CliWhoBadgeNotSignedIn says "not signed in"
+// in the language of msgs.
+//
+// CLI & clouds string: cliWhoBadgeNotSignedIn.
+func (msgs Messages) CliWhoBadgeNotSignedIn() string {
+	return Catalog.Format(msgs.locale, "cliWhoBadgeNotSignedIn", nil)
+}
+
+// CliInfraCardTitle says "Needed by projects"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraCardTitle.
+func CliInfraCardTitle() string { return In(i18n.Locale()).CliInfraCardTitle() }
+
+// CliInfraCardTitle says "Needed by projects"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraCardTitle.
+func (msgs Messages) CliInfraCardTitle() string {
+	return Catalog.Format(msgs.locale, "cliInfraCardTitle", nil)
+}
+
+// CliInfraCardEmpty says "No added projects use Terraform or OpenTofu"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraCardEmpty.
+func CliInfraCardEmpty() string { return In(i18n.Locale()).CliInfraCardEmpty() }
+
+// CliInfraCardEmpty says "No added projects use Terraform or OpenTofu"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraCardEmpty.
+func (msgs Messages) CliInfraCardEmpty() string {
+	return Catalog.Format(msgs.locale, "cliInfraCardEmpty", nil)
+}
+
+// CliInfraMet says "installed {version} · matches"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraMet.
+func CliInfraMet(version string) string { return In(i18n.Locale()).CliInfraMet(version) }
+
+// CliInfraMet says "installed {version} · matches"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraMet.
+func (msgs Messages) CliInfraMet(version string) string {
+	return Catalog.Format(msgs.locale, "cliInfraMet", map[string]any{"version": version})
+}
+
+// CliInfraMismatch says "installed {version} · does not match"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraMismatch.
+func CliInfraMismatch(version string) string { return In(i18n.Locale()).CliInfraMismatch(version) }
+
+// CliInfraMismatch says "installed {version} · does not match"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraMismatch.
+func (msgs Messages) CliInfraMismatch(version string) string {
+	return Catalog.Format(msgs.locale, "cliInfraMismatch", map[string]any{"version": version})
+}
+
+// CliInfraNotInstalled says "not installed"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraNotInstalled.
+func CliInfraNotInstalled() string { return In(i18n.Locale()).CliInfraNotInstalled() }
+
+// CliInfraNotInstalled says "not installed"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraNotInstalled.
+func (msgs Messages) CliInfraNotInstalled() string {
+	return Catalog.Format(msgs.locale, "cliInfraNotInstalled", nil)
+}
+
+// CliInfraInvalidConstraint says "version constraint could not be parsed"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraInvalidConstraint.
+func CliInfraInvalidConstraint() string { return In(i18n.Locale()).CliInfraInvalidConstraint() }
+
+// CliInfraInvalidConstraint says "version constraint could not be parsed"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraInvalidConstraint.
+func (msgs Messages) CliInfraInvalidConstraint() string {
+	return Catalog.Format(msgs.locale, "cliInfraInvalidConstraint", nil)
+}
+
+// CliInfraNoExec says "Project code is never run"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraNoExec.
+func CliInfraNoExec() string { return In(i18n.Locale()).CliInfraNoExec() }
+
+// CliInfraNoExec says "Project code is never run"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraNoExec.
+func (msgs Messages) CliInfraNoExec() string {
+	return Catalog.Format(msgs.locale, "cliInfraNoExec", nil)
+}
+
+// CliInfraNoExecCaption says "Hearth never runs init, plan or apply"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraNoExecCaption.
+func CliInfraNoExecCaption() string { return In(i18n.Locale()).CliInfraNoExecCaption() }
+
+// CliInfraNoExecCaption says "Hearth never runs init, plan or apply"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraNoExecCaption.
+func (msgs Messages) CliInfraNoExecCaption() string {
+	return Catalog.Format(msgs.locale, "cliInfraNoExecCaption", nil)
+}
+
+// CliInfraInstallVersion says "↓ {version}"
+// in the language the app shows.
+//
+// CLI & clouds string: cliInfraInstallVersion.
+func CliInfraInstallVersion(version string) string {
+	return In(i18n.Locale()).CliInfraInstallVersion(version)
+}
+
+// CliInfraInstallVersion says "↓ {version}"
+// in the language of msgs.
+//
+// CLI & clouds string: cliInfraInstallVersion.
+func (msgs Messages) CliInfraInstallVersion(version string) string {
+	return Catalog.Format(msgs.locale, "cliInfraInstallVersion", map[string]any{"version": version})
+}
+
+// CloudAwsSwitchTitle says "Switch AWS profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsSwitchTitle.
+func CloudAwsSwitchTitle() string { return In(i18n.Locale()).CloudAwsSwitchTitle() }
+
+// CloudAwsSwitchTitle says "Switch AWS profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsSwitchTitle.
+func (msgs Messages) CloudAwsSwitchTitle() string {
+	return Catalog.Format(msgs.locale, "cloudAwsSwitchTitle", nil)
+}
+
+// CloudAwsSwitchWhy says "Sets AWS_PROFILE for new terminals in Hearth's shell block without touching AWS credentials."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsSwitchWhy.
+func CloudAwsSwitchWhy() string { return In(i18n.Locale()).CloudAwsSwitchWhy() }
+
+// CloudAwsSwitchWhy says "Sets AWS_PROFILE for new terminals in Hearth's shell block without touching AWS credentials."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsSwitchWhy.
+func (msgs Messages) CloudAwsSwitchWhy() string {
+	return Catalog.Format(msgs.locale, "cloudAwsSwitchWhy", nil)
+}
+
+// CloudAwsSwitchChange says "AWS profile: {change}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsSwitchChange.
+func CloudAwsSwitchChange(change string) string {
+	return In(i18n.Locale()).CloudAwsSwitchChange(change)
+}
+
+// CloudAwsSwitchChange says "AWS profile: {change}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsSwitchChange.
+func (msgs Messages) CloudAwsSwitchChange(change string) string {
+	return Catalog.Format(msgs.locale, "cloudAwsSwitchChange", map[string]any{"change": change})
+}
+
+// CloudAwsRegionChange says "AWS region for {profile}: {region}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsRegionChange.
+func CloudAwsRegionChange(profile string, region string) string {
+	return In(i18n.Locale()).CloudAwsRegionChange(profile, region)
+}
+
+// CloudAwsRegionChange says "AWS region for {profile}: {region}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsRegionChange.
+func (msgs Messages) CloudAwsRegionChange(profile string, region string) string {
+	return Catalog.Format(msgs.locale, "cloudAwsRegionChange", map[string]any{"profile": profile, "region": region})
+}
+
+// CloudAwsRegionLabel says "Region (optional)"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsRegionLabel.
+func CloudAwsRegionLabel() string { return In(i18n.Locale()).CloudAwsRegionLabel() }
+
+// CloudAwsRegionLabel says "Region (optional)"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsRegionLabel.
+func (msgs Messages) CloudAwsRegionLabel() string {
+	return Catalog.Format(msgs.locale, "cloudAwsRegionLabel", nil)
+}
+
+// CloudAwsProfileLabel says "Profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsProfileLabel.
+func CloudAwsProfileLabel() string { return In(i18n.Locale()).CloudAwsProfileLabel() }
+
+// CloudAwsProfileLabel says "Profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsProfileLabel.
+func (msgs Messages) CloudAwsProfileLabel() string {
+	return Catalog.Format(msgs.locale, "cloudAwsProfileLabel", nil)
+}
+
+// CloudAwsEnvCredsNoteTitle says "Environment credentials are set"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsEnvCredsNoteTitle.
+func CloudAwsEnvCredsNoteTitle() string { return In(i18n.Locale()).CloudAwsEnvCredsNoteTitle() }
+
+// CloudAwsEnvCredsNoteTitle says "Environment credentials are set"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsEnvCredsNoteTitle.
+func (msgs Messages) CloudAwsEnvCredsNoteTitle() string {
+	return Catalog.Format(msgs.locale, "cloudAwsEnvCredsNoteTitle", nil)
+}
+
+// CloudAwsEnvCredsNoteText says "AWS_ACCESS_KEY_ID is set in your terminal environment and takes precedence over AWS_PROFILE until unset."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsEnvCredsNoteText.
+func CloudAwsEnvCredsNoteText() string { return In(i18n.Locale()).CloudAwsEnvCredsNoteText() }
+
+// CloudAwsEnvCredsNoteText says "AWS_ACCESS_KEY_ID is set in your terminal environment and takes precedence over AWS_PROFILE until unset."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsEnvCredsNoteText.
+func (msgs Messages) CloudAwsEnvCredsNoteText() string {
+	return Catalog.Format(msgs.locale, "cloudAwsEnvCredsNoteText", nil)
+}
+
+// CloudAwsOutsideBlockTitle says "AWS_PROFILE is set outside Hearth's block"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsOutsideBlockTitle.
+func CloudAwsOutsideBlockTitle() string { return In(i18n.Locale()).CloudAwsOutsideBlockTitle() }
+
+// CloudAwsOutsideBlockTitle says "AWS_PROFILE is set outside Hearth's block"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsOutsideBlockTitle.
+func (msgs Messages) CloudAwsOutsideBlockTitle() string {
+	return Catalog.Format(msgs.locale, "cloudAwsOutsideBlockTitle", nil)
+}
+
+// CloudAwsOutsideBlockText says "{file} sets AWS_PROFILE outside Hearth's block. Hearth will not edit your line; check it if the new profile does not …"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsOutsideBlockText.
+func CloudAwsOutsideBlockText(file string) string {
+	return In(i18n.Locale()).CloudAwsOutsideBlockText(file)
+}
+
+// CloudAwsOutsideBlockText says "{file} sets AWS_PROFILE outside Hearth's block. Hearth will not edit your line; check it if the new profile does not …"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsOutsideBlockText.
+func (msgs Messages) CloudAwsOutsideBlockText(file string) string {
+	return Catalog.Format(msgs.locale, "cloudAwsOutsideBlockText", map[string]any{"file": file})
+}
+
+// CloudAwsRegionMismatch says "AWS region for {profile} is not {region}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsRegionMismatch.
+func CloudAwsRegionMismatch(profile string, region string) string {
+	return In(i18n.Locale()).CloudAwsRegionMismatch(profile, region)
+}
+
+// CloudAwsRegionMismatch says "AWS region for {profile} is not {region}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsRegionMismatch.
+func (msgs Messages) CloudAwsRegionMismatch(profile string, region string) string {
+	return Catalog.Format(msgs.locale, "cloudAwsRegionMismatch", map[string]any{"profile": profile, "region": region})
+}
+
+// CloudAwsRegionSet says "AWS region for {profile} is {region}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsRegionSet.
+func CloudAwsRegionSet(profile string, region string) string {
+	return In(i18n.Locale()).CloudAwsRegionSet(profile, region)
+}
+
+// CloudAwsRegionSet says "AWS region for {profile} is {region}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsRegionSet.
+func (msgs Messages) CloudAwsRegionSet(profile string, region string) string {
+	return Catalog.Format(msgs.locale, "cloudAwsRegionSet", map[string]any{"profile": profile, "region": region})
+}
+
+// CloudAwsInvalid says "Invalid AWS profile or region name."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAwsInvalid.
+func CloudAwsInvalid() string { return In(i18n.Locale()).CloudAwsInvalid() }
+
+// CloudAwsInvalid says "Invalid AWS profile or region name."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAwsInvalid.
+func (msgs Messages) CloudAwsInvalid() string {
+	return Catalog.Format(msgs.locale, "cloudAwsInvalid", nil)
+}
+
+// CloudGcloudSwitchTitle says "Switch Google Cloud selection"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudSwitchTitle.
+func CloudGcloudSwitchTitle() string { return In(i18n.Locale()).CloudGcloudSwitchTitle() }
+
+// CloudGcloudSwitchTitle says "Switch Google Cloud selection"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudSwitchTitle.
+func (msgs Messages) CloudGcloudSwitchTitle() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudSwitchTitle", nil)
+}
+
+// CloudGcloudSwitchWhy says "Updates the active gcloud configuration or project locally using gcloud's own commands."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudSwitchWhy.
+func CloudGcloudSwitchWhy() string { return In(i18n.Locale()).CloudGcloudSwitchWhy() }
+
+// CloudGcloudSwitchWhy says "Updates the active gcloud configuration or project locally using gcloud's own commands."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudSwitchWhy.
+func (msgs Messages) CloudGcloudSwitchWhy() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudSwitchWhy", nil)
+}
+
+// CloudGcloudConfigLabel says "Configuration"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudConfigLabel.
+func CloudGcloudConfigLabel() string { return In(i18n.Locale()).CloudGcloudConfigLabel() }
+
+// CloudGcloudConfigLabel says "Configuration"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudConfigLabel.
+func (msgs Messages) CloudGcloudConfigLabel() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudConfigLabel", nil)
+}
+
+// CloudGcloudProjectLabel says "Project"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudProjectLabel.
+func CloudGcloudProjectLabel() string { return In(i18n.Locale()).CloudGcloudProjectLabel() }
+
+// CloudGcloudProjectLabel says "Project"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudProjectLabel.
+func (msgs Messages) CloudGcloudProjectLabel() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudProjectLabel", nil)
+}
+
+// CloudGcloudLoadProjects says "Load projects from account"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudLoadProjects.
+func CloudGcloudLoadProjects() string { return In(i18n.Locale()).CloudGcloudLoadProjects() }
+
+// CloudGcloudLoadProjects says "Load projects from account"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudLoadProjects.
+func (msgs Messages) CloudGcloudLoadProjects() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudLoadProjects", nil)
+}
+
+// CloudGcloudConfigChange says "gcloud configuration: {change}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudConfigChange.
+func CloudGcloudConfigChange(change string) string {
+	return In(i18n.Locale()).CloudGcloudConfigChange(change)
+}
+
+// CloudGcloudConfigChange says "gcloud configuration: {change}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudConfigChange.
+func (msgs Messages) CloudGcloudConfigChange(change string) string {
+	return Catalog.Format(msgs.locale, "cloudGcloudConfigChange", map[string]any{"change": change})
+}
+
+// CloudGcloudProjectChange says "gcloud project: {change}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudProjectChange.
+func CloudGcloudProjectChange(change string) string {
+	return In(i18n.Locale()).CloudGcloudProjectChange(change)
+}
+
+// CloudGcloudProjectChange says "gcloud project: {change}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudProjectChange.
+func (msgs Messages) CloudGcloudProjectChange(change string) string {
+	return Catalog.Format(msgs.locale, "cloudGcloudProjectChange", map[string]any{"change": change})
+}
+
+// CloudGcloudEnvOverrideTitle says "Environment variable overrides gcloud config"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudEnvOverrideTitle.
+func CloudGcloudEnvOverrideTitle() string { return In(i18n.Locale()).CloudGcloudEnvOverrideTitle() }
+
+// CloudGcloudEnvOverrideTitle says "Environment variable overrides gcloud config"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudEnvOverrideTitle.
+func (msgs Messages) CloudGcloudEnvOverrideTitle() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudEnvOverrideTitle", nil)
+}
+
+// CloudGcloudEnvOverrideText says "{var} is set in the terminal environment and overrides the saved gcloud configuration until unset."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudEnvOverrideText.
+func CloudGcloudEnvOverrideText(var_ string) string {
+	return In(i18n.Locale()).CloudGcloudEnvOverrideText(var_)
+}
+
+// CloudGcloudEnvOverrideText says "{var} is set in the terminal environment and overrides the saved gcloud configuration until unset."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudEnvOverrideText.
+func (msgs Messages) CloudGcloudEnvOverrideText(var_ string) string {
+	return Catalog.Format(msgs.locale, "cloudGcloudEnvOverrideText", map[string]any{"var": var_})
+}
+
+// CloudGcloudMismatch says "gcloud did not switch to the selected configuration or project"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudMismatch.
+func CloudGcloudMismatch() string { return In(i18n.Locale()).CloudGcloudMismatch() }
+
+// CloudGcloudMismatch says "gcloud did not switch to the selected configuration or project"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudMismatch.
+func (msgs Messages) CloudGcloudMismatch() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudMismatch", nil)
+}
+
+// CloudGcloudSet says "gcloud now points to {target}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudSet.
+func CloudGcloudSet(target string) string { return In(i18n.Locale()).CloudGcloudSet(target) }
+
+// CloudGcloudSet says "gcloud now points to {target}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudSet.
+func (msgs Messages) CloudGcloudSet(target string) string {
+	return Catalog.Format(msgs.locale, "cloudGcloudSet", map[string]any{"target": target})
+}
+
+// CloudGcloudInvalid says "Invalid gcloud configuration or project."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudGcloudInvalid.
+func CloudGcloudInvalid() string { return In(i18n.Locale()).CloudGcloudInvalid() }
+
+// CloudGcloudInvalid says "Invalid gcloud configuration or project."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudGcloudInvalid.
+func (msgs Messages) CloudGcloudInvalid() string {
+	return Catalog.Format(msgs.locale, "cloudGcloudInvalid", nil)
+}
+
+// CloudAzSwitchTitle says "Switch Azure subscription"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzSwitchTitle.
+func CloudAzSwitchTitle() string { return In(i18n.Locale()).CloudAzSwitchTitle() }
+
+// CloudAzSwitchTitle says "Switch Azure subscription"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzSwitchTitle.
+func (msgs Messages) CloudAzSwitchTitle() string {
+	return Catalog.Format(msgs.locale, "cloudAzSwitchTitle", nil)
+}
+
+// CloudAzSwitchWhy says "Switches the active Azure subscription locally using az account set."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzSwitchWhy.
+func CloudAzSwitchWhy() string { return In(i18n.Locale()).CloudAzSwitchWhy() }
+
+// CloudAzSwitchWhy says "Switches the active Azure subscription locally using az account set."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzSwitchWhy.
+func (msgs Messages) CloudAzSwitchWhy() string {
+	return Catalog.Format(msgs.locale, "cloudAzSwitchWhy", nil)
+}
+
+// CloudAzSubLabel says "Subscription"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzSubLabel.
+func CloudAzSubLabel() string { return In(i18n.Locale()).CloudAzSubLabel() }
+
+// CloudAzSubLabel says "Subscription"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzSubLabel.
+func (msgs Messages) CloudAzSubLabel() string {
+	return Catalog.Format(msgs.locale, "cloudAzSubLabel", nil)
+}
+
+// CloudAzSubChange says "Azure subscription: {change}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzSubChange.
+func CloudAzSubChange(change string) string { return In(i18n.Locale()).CloudAzSubChange(change) }
+
+// CloudAzSubChange says "Azure subscription: {change}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzSubChange.
+func (msgs Messages) CloudAzSubChange(change string) string {
+	return Catalog.Format(msgs.locale, "cloudAzSubChange", map[string]any{"change": change})
+}
+
+// CloudAzMismatch says "Azure CLI did not switch to {sub}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzMismatch.
+func CloudAzMismatch(sub string) string { return In(i18n.Locale()).CloudAzMismatch(sub) }
+
+// CloudAzMismatch says "Azure CLI did not switch to {sub}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzMismatch.
+func (msgs Messages) CloudAzMismatch(sub string) string {
+	return Catalog.Format(msgs.locale, "cloudAzMismatch", map[string]any{"sub": sub})
+}
+
+// CloudAzSet says "Azure subscription: {sub}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzSet.
+func CloudAzSet(sub string) string { return In(i18n.Locale()).CloudAzSet(sub) }
+
+// CloudAzSet says "Azure subscription: {sub}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzSet.
+func (msgs Messages) CloudAzSet(sub string) string {
+	return Catalog.Format(msgs.locale, "cloudAzSet", map[string]any{"sub": sub})
+}
+
+// CloudAzInvalid says "Invalid Azure subscription."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudAzInvalid.
+func CloudAzInvalid() string { return In(i18n.Locale()).CloudAzInvalid() }
+
+// CloudAzInvalid says "Invalid Azure subscription."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudAzInvalid.
+func (msgs Messages) CloudAzInvalid() string {
+	return Catalog.Format(msgs.locale, "cloudAzInvalid", nil)
+}
+
+// CloudSwitchApply says "Review plan…"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudSwitchApply.
+func CloudSwitchApply() string { return In(i18n.Locale()).CloudSwitchApply() }
+
+// CloudSwitchApply says "Review plan…"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudSwitchApply.
+func (msgs Messages) CloudSwitchApply() string {
+	return Catalog.Format(msgs.locale, "cloudSwitchApply", nil)
+}
+
+// CloudNoChoices says "No local entries found in config files."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudNoChoices.
+func CloudNoChoices() string { return In(i18n.Locale()).CloudNoChoices() }
+
+// CloudNoChoices says "No local entries found in config files."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudNoChoices.
+func (msgs Messages) CloudNoChoices() string {
+	return Catalog.Format(msgs.locale, "cloudNoChoices", nil)
+}
+
+// CloudLoginTitle says "Sign in to {provider}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginTitle.
+func CloudLoginTitle(provider string) string { return In(i18n.Locale()).CloudLoginTitle(provider) }
+
+// CloudLoginTitle says "Sign in to {provider}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginTitle.
+func (msgs Messages) CloudLoginTitle(provider string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginTitle", map[string]any{"provider": provider})
+}
+
+// CloudLoginLead says "Hearth runs the official {tool} CLI, which opens your browser. Hearth never sees your password or stores tokens; {too…"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginLead.
+func CloudLoginLead(tool string, dir string) string {
+	return In(i18n.Locale()).CloudLoginLead(tool, dir)
+}
+
+// CloudLoginLead says "Hearth runs the official {tool} CLI, which opens your browser. Hearth never sees your password or stores tokens; {too…"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginLead.
+func (msgs Messages) CloudLoginLead(tool string, dir string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginLead", map[string]any{"tool": tool, "dir": dir})
+}
+
+// CloudLoginStep1Desc says "Opens your browser for sign-in and writes tokens to {dir}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep1Desc.
+func CloudLoginStep1Desc(dir string) string { return In(i18n.Locale()).CloudLoginStep1Desc(dir) }
+
+// CloudLoginStep1Desc says "Opens your browser for sign-in and writes tokens to {dir}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep1Desc.
+func (msgs Messages) CloudLoginStep1Desc(dir string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep1Desc", map[string]any{"dir": dir})
+}
+
+// CloudLoginStep2Desc says "After sign-in, Hearth checks which account {tool} sees"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep2Desc.
+func CloudLoginStep2Desc(tool string) string { return In(i18n.Locale()).CloudLoginStep2Desc(tool) }
+
+// CloudLoginStep2Desc says "After sign-in, Hearth checks which account {tool} sees"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep2Desc.
+func (msgs Messages) CloudLoginStep2Desc(tool string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep2Desc", map[string]any{"tool": tool})
+}
+
+// CloudLoginStep3TitleGcloud says "Choose a project"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3TitleGcloud.
+func CloudLoginStep3TitleGcloud() string { return In(i18n.Locale()).CloudLoginStep3TitleGcloud() }
+
+// CloudLoginStep3TitleGcloud says "Choose a project"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3TitleGcloud.
+func (msgs Messages) CloudLoginStep3TitleGcloud() string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3TitleGcloud", nil)
+}
+
+// CloudLoginStep3DescGcloud says "After signing in you can pick the default project for {config}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3DescGcloud.
+func CloudLoginStep3DescGcloud(config string) string {
+	return In(i18n.Locale()).CloudLoginStep3DescGcloud(config)
+}
+
+// CloudLoginStep3DescGcloud says "After signing in you can pick the default project for {config}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3DescGcloud.
+func (msgs Messages) CloudLoginStep3DescGcloud(config string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3DescGcloud", map[string]any{"config": config})
+}
+
+// CloudLoginStep3TitleAz says "Choose a subscription"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3TitleAz.
+func CloudLoginStep3TitleAz() string { return In(i18n.Locale()).CloudLoginStep3TitleAz() }
+
+// CloudLoginStep3TitleAz says "Choose a subscription"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3TitleAz.
+func (msgs Messages) CloudLoginStep3TitleAz() string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3TitleAz", nil)
+}
+
+// CloudLoginStep3DescAz says "After signing in you can switch the active Azure subscription"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3DescAz.
+func CloudLoginStep3DescAz() string { return In(i18n.Locale()).CloudLoginStep3DescAz() }
+
+// CloudLoginStep3DescAz says "After signing in you can switch the active Azure subscription"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3DescAz.
+func (msgs Messages) CloudLoginStep3DescAz() string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3DescAz", nil)
+}
+
+// CloudLoginStep3TitleAws says "Check active profile"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3TitleAws.
+func CloudLoginStep3TitleAws() string { return In(i18n.Locale()).CloudLoginStep3TitleAws() }
+
+// CloudLoginStep3TitleAws says "Check active profile"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3TitleAws.
+func (msgs Messages) CloudLoginStep3TitleAws() string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3TitleAws", nil)
+}
+
+// CloudLoginStep3DescAws says "After signing in, AWS CLI commands for profile {profile} use the new SSO session"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginStep3DescAws.
+func CloudLoginStep3DescAws(profile string) string {
+	return In(i18n.Locale()).CloudLoginStep3DescAws(profile)
+}
+
+// CloudLoginStep3DescAws says "After signing in, AWS CLI commands for profile {profile} use the new SSO session"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginStep3DescAws.
+func (msgs Messages) CloudLoginStep3DescAws(profile string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep3DescAws", map[string]any{"profile": profile})
+}
+
+// CloudLoginBanner says "Hearth only starts the native CLI sign-in. You can revoke the session or switch accounts at any time."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginBanner.
+func CloudLoginBanner() string { return In(i18n.Locale()).CloudLoginBanner() }
+
+// CloudLoginBanner says "Hearth only starts the native CLI sign-in. You can revoke the session or switch accounts at any time."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginBanner.
+func (msgs Messages) CloudLoginBanner() string {
+	return Catalog.Format(msgs.locale, "cloudLoginBanner", nil)
+}
+
+// CloudLoginOpenBrowser says "Open sign-in in browser"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginOpenBrowser.
+func CloudLoginOpenBrowser() string { return In(i18n.Locale()).CloudLoginOpenBrowser() }
+
+// CloudLoginOpenBrowser says "Open sign-in in browser"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginOpenBrowser.
+func (msgs Messages) CloudLoginOpenBrowser() string {
+	return Catalog.Format(msgs.locale, "cloudLoginOpenBrowser", nil)
+}
+
+// CloudLoginOpenTerminal says "Run in terminal"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginOpenTerminal.
+func CloudLoginOpenTerminal() string { return In(i18n.Locale()).CloudLoginOpenTerminal() }
+
+// CloudLoginOpenTerminal says "Run in terminal"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginOpenTerminal.
+func (msgs Messages) CloudLoginOpenTerminal() string {
+	return Catalog.Format(msgs.locale, "cloudLoginOpenTerminal", nil)
+}
+
+// CloudLoginAwsNoSso says "Profile {profile} does not configure AWS SSO. Run aws configure sso in your terminal to set up browser sign-in withou…"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginAwsNoSso.
+func CloudLoginAwsNoSso(profile string) string { return In(i18n.Locale()).CloudLoginAwsNoSso(profile) }
+
+// CloudLoginAwsNoSso says "Profile {profile} does not configure AWS SSO. Run aws configure sso in your terminal to set up browser sign-in withou…"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginAwsNoSso.
+func (msgs Messages) CloudLoginAwsNoSso(profile string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginAwsNoSso", map[string]any{"profile": profile})
+}
+
+// CloudLoginVerifyFailed says "Sign-in command finished, but the provider did not confirm an active session yet."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginVerifyFailed.
+func CloudLoginVerifyFailed() string { return In(i18n.Locale()).CloudLoginVerifyFailed() }
+
+// CloudLoginVerifyFailed says "Sign-in command finished, but the provider did not confirm an active session yet."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginVerifyFailed.
+func (msgs Messages) CloudLoginVerifyFailed() string {
+	return Catalog.Format(msgs.locale, "cloudLoginVerifyFailed", nil)
+}
+
+// CloudLoginVerified says "Signed in as {identity}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudLoginVerified.
+func CloudLoginVerified(identity string) string {
+	return In(i18n.Locale()).CloudLoginVerified(identity)
+}
+
+// CloudLoginVerified says "Signed in as {identity}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudLoginVerified.
+func (msgs Messages) CloudLoginVerified(identity string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginVerified", map[string]any{"identity": identity})
+}
+
+// CloudInfraInstallTitle says "Install {tool} {version}"
+// in the language the app shows.
+//
+// CLI & clouds string: cloudInfraInstallTitle.
+func CloudInfraInstallTitle(tool string, version string) string {
+	return In(i18n.Locale()).CloudInfraInstallTitle(tool, version)
+}
+
+// CloudInfraInstallTitle says "Install {tool} {version}"
+// in the language of msgs.
+//
+// CLI & clouds string: cloudInfraInstallTitle.
+func (msgs Messages) CloudInfraInstallTitle(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "cloudInfraInstallTitle", map[string]any{"tool": tool, "version": version})
+}
+
+// CloudInfraInstallWhy says "Installs {tool} {version} through mise without modifying project files or running init, plan, or apply."
+// in the language the app shows.
+//
+// CLI & clouds string: cloudInfraInstallWhy.
+func CloudInfraInstallWhy(tool string, version string) string {
+	return In(i18n.Locale()).CloudInfraInstallWhy(tool, version)
+}
+
+// CloudInfraInstallWhy says "Installs {tool} {version} through mise without modifying project files or running init, plan, or apply."
+// in the language of msgs.
+//
+// CLI & clouds string: cloudInfraInstallWhy.
+func (msgs Messages) CloudInfraInstallWhy(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "cloudInfraInstallWhy", map[string]any{"tool": tool, "version": version})
+}
+
+// AttentionMore says "And {count} more"
+// in the language the app shows.
+//
+// Overview attention card footer when more issues exist than shown.
+func AttentionMore(count int) string { return In(i18n.Locale()).AttentionMore(count) }
+
+// AttentionMore says "And {count} more"
+// in the language of msgs.
+//
+// Overview attention card footer when more issues exist than shown.
+func (msgs Messages) AttentionMore(count int) string {
+	return Catalog.Format(msgs.locale, "attentionMore", map[string]any{"count": count})
+}
+
+// UpdatesChecking says "Checking for updates…"
+// in the language the app shows.
+//
+// Updates page notice while version lists or package managers are still
+// checking.
+func UpdatesChecking() string { return In(i18n.Locale()).UpdatesChecking() }
+
+// UpdatesChecking says "Checking for updates…"
+// in the language of msgs.
+//
+// Updates page notice while version lists or package managers are still
+// checking.
+func (msgs Messages) UpdatesChecking() string {
+	return Catalog.Format(msgs.locale, "updatesChecking", nil)
+}
+
+// UpdatesOffline says "Online update checks are turned off in Settings."
+// in the language the app shows.
+//
+// Updates page notice when online checks are disabled in Settings.
+func UpdatesOffline() string { return In(i18n.Locale()).UpdatesOffline() }
+
+// UpdatesOffline says "Online update checks are turned off in Settings."
+// in the language of msgs.
+//
+// Updates page notice when online checks are disabled in Settings.
+func (msgs Messages) UpdatesOffline() string {
+	return Catalog.Format(msgs.locale, "updatesOffline", nil)
+}
+
+// UpdatesCheckFailed says "Could not check all sources for updates."
+// in the language the app shows.
+//
+// Updates page notice when update checks failed instead of claiming
+// everything is up to date.
+func UpdatesCheckFailed() string { return In(i18n.Locale()).UpdatesCheckFailed() }
+
+// UpdatesCheckFailed says "Could not check all sources for updates."
+// in the language of msgs.
+//
+// Updates page notice when update checks failed instead of claiming
+// everything is up to date.
+func (msgs Messages) UpdatesCheckFailed() string {
+	return Catalog.Format(msgs.locale, "updatesCheckFailed", nil)
+}
+
+// LiveSummaryTitle says "Right now"
+// in the language the app shows.
+//
+// Overview live summary section title
+func LiveSummaryTitle() string { return In(i18n.Locale()).LiveSummaryTitle() }
+
+// LiveSummaryTitle says "Right now"
+// in the language of msgs.
+//
+// Overview live summary section title
+func (msgs Messages) LiveSummaryTitle() string {
+	return Catalog.Format(msgs.locale, "liveSummaryTitle", nil)
+}
+
+// LiveDockerRunning says "{count} running"
+// in the language the app shows.
+//
+// Running Docker containers count on Overview
+func LiveDockerRunning(count int) string { return In(i18n.Locale()).LiveDockerRunning(count) }
+
+// LiveDockerRunning says "{count} running"
+// in the language of msgs.
+//
+// Running Docker containers count on Overview
+func (msgs Messages) LiveDockerRunning(count int) string {
+	return Catalog.Format(msgs.locale, "liveDockerRunning", map[string]any{"count": count})
+}
+
+// LiveDockerTotal says "{count} total"
+// in the language the app shows.
+//
+// Total Docker containers count on Overview
+func LiveDockerTotal(count int) string { return In(i18n.Locale()).LiveDockerTotal(count) }
+
+// LiveDockerTotal says "{count} total"
+// in the language of msgs.
+//
+// Total Docker containers count on Overview
+func (msgs Messages) LiveDockerTotal(count int) string {
+	return Catalog.Format(msgs.locale, "liveDockerTotal", map[string]any{"count": count})
+}
+
+// LiveDockerStopped says "Stopped"
+// in the language the app shows.
+//
+// Stopped Docker engine label on Overview
+func LiveDockerStopped() string { return In(i18n.Locale()).LiveDockerStopped() }
+
+// LiveDockerStopped says "Stopped"
+// in the language of msgs.
+//
+// Stopped Docker engine label on Overview
+func (msgs Messages) LiveDockerStopped() string {
+	return Catalog.Format(msgs.locale, "liveDockerStopped", nil)
+}
+
+// LiveKubeContexts says "{count, plural, one {# context} other {# contexts}}"
+// in the language the app shows.
+//
+// Kubernetes context count on Overview
+func LiveKubeContexts(count int) string { return In(i18n.Locale()).LiveKubeContexts(count) }
+
+// LiveKubeContexts says "{count, plural, one {# context} other {# contexts}}"
+// in the language of msgs.
+//
+// Kubernetes context count on Overview
+func (msgs Messages) LiveKubeContexts(count int) string {
+	return Catalog.Format(msgs.locale, "liveKubeContexts", map[string]any{"count": count})
+}
+
+// LiveKubeNoContext says "No context"
+// in the language the app shows.
+//
+// No active Kubernetes context label on Overview
+func LiveKubeNoContext() string { return In(i18n.Locale()).LiveKubeNoContext() }
+
+// LiveKubeNoContext says "No context"
+// in the language of msgs.
+//
+// No active Kubernetes context label on Overview
+func (msgs Messages) LiveKubeNoContext() string {
+	return Catalog.Format(msgs.locale, "liveKubeNoContext", nil)
+}
+
+// LiveDatabasesAndPorts says "Databases & ports"
+// in the language the app shows.
+//
+// Overview live summary tile title for databases and ports
+func LiveDatabasesAndPorts() string { return In(i18n.Locale()).LiveDatabasesAndPorts() }
+
+// LiveDatabasesAndPorts says "Databases & ports"
+// in the language of msgs.
+//
+// Overview live summary tile title for databases and ports
+func (msgs Messages) LiveDatabasesAndPorts() string {
+	return Catalog.Format(msgs.locale, "liveDatabasesAndPorts", nil)
+}
+
+// LiveDbAndPorts says "{db} DB · {ports, plural, one {# port} other {# ports}}"
+// in the language the app shows.
+//
+// Running databases and listening ports summary on Overview
+func LiveDbAndPorts(db int, ports int) string { return In(i18n.Locale()).LiveDbAndPorts(db, ports) }
+
+// LiveDbAndPorts says "{db} DB · {ports, plural, one {# port} other {# ports}}"
+// in the language of msgs.
+//
+// Running databases and listening ports summary on Overview
+func (msgs Messages) LiveDbAndPorts(db int, ports int) string {
+	return Catalog.Format(msgs.locale, "liveDbAndPorts", map[string]any{"db": db, "ports": ports})
+}
+
+// LiveServersCount says "{count, plural, one {# server} other {# servers}}"
+// in the language the app shows.
+//
+// Server count on Overview live summary
+func LiveServersCount(count int) string { return In(i18n.Locale()).LiveServersCount(count) }
+
+// LiveServersCount says "{count, plural, one {# server} other {# servers}}"
+// in the language of msgs.
+//
+// Server count on Overview live summary
+func (msgs Messages) LiveServersCount(count int) string {
+	return Catalog.Format(msgs.locale, "liveServersCount", map[string]any{"count": count})
+}
+
+// LivePortsListening says "{count, plural, one {# port} other {# ports}}"
+// in the language the app shows.
+//
+// Listening ports count on Overview live summary
+func LivePortsListening(count int) string { return In(i18n.Locale()).LivePortsListening(count) }
+
+// LivePortsListening says "{count, plural, one {# port} other {# ports}}"
+// in the language of msgs.
+//
+// Listening ports count on Overview live summary
+func (msgs Messages) LivePortsListening(count int) string {
+	return Catalog.Format(msgs.locale, "livePortsListening", map[string]any{"count": count})
+}
+
+// LivePortsInProjects says "{count} in projects"
+// in the language the app shows.
+//
+// Ports tied to projects count on Overview
+func LivePortsInProjects(count int) string { return In(i18n.Locale()).LivePortsInProjects(count) }
+
+// LivePortsInProjects says "{count} in projects"
+// in the language of msgs.
+//
+// Ports tied to projects count on Overview
+func (msgs Messages) LivePortsInProjects(count int) string {
+	return Catalog.Format(msgs.locale, "livePortsInProjects", map[string]any{"count": count})
+}
+
+// LiveAiToday says "AI today"
+// in the language the app shows.
+//
+// Overview live summary tile title for AI usage today
+func LiveAiToday() string { return In(i18n.Locale()).LiveAiToday() }
+
+// LiveAiToday says "AI today"
+// in the language of msgs.
+//
+// Overview live summary tile title for AI usage today
+func (msgs Messages) LiveAiToday() string {
+	return Catalog.Format(msgs.locale, "liveAiToday", nil)
+}
+
+// LiveAiMonth says "{amount} in 30d"
+// in the language the app shows.
+//
+// 30-day AI spend fallback caption on Overview
+func LiveAiMonth(amount string) string { return In(i18n.Locale()).LiveAiMonth(amount) }
+
+// LiveAiMonth says "{amount} in 30d"
+// in the language of msgs.
+//
+// 30-day AI spend fallback caption on Overview
+func (msgs Messages) LiveAiMonth(amount string) string {
+	return Catalog.Format(msgs.locale, "liveAiMonth", map[string]any{"amount": amount})
+}
+
+// LiveMcpAgents says "{count, plural, one {# agent} other {# agents}}"
+// in the language the app shows.
+//
+// Agent count in MCP live summary on Overview
+func LiveMcpAgents(count int) string { return In(i18n.Locale()).LiveMcpAgents(count) }
+
+// LiveMcpAgents says "{count, plural, one {# agent} other {# agents}}"
+// in the language of msgs.
+//
+// Agent count in MCP live summary on Overview
+func (msgs Messages) LiveMcpAgents(count int) string {
+	return Catalog.Format(msgs.locale, "liveMcpAgents", map[string]any{"count": count})
 }

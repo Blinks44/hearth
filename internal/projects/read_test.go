@@ -39,11 +39,13 @@ func TestRead(t *testing.T) {
 		{dir: "tool-versions", want: []Requirement{
 			{Tool: "node", Want: "22.11.0", File: ".tool-versions", Key: "nodejs"},
 			{Tool: "python", Want: "3.12.4", File: ".tool-versions", Key: "python"},
+			{Tool: "terraform", Want: "1.9.0", File: ".tool-versions", Key: "terraform"},
 			{Tool: "go", Want: "1.23.2", File: ".tool-versions", Key: "golang"},
 		}},
 		{dir: "mise-toml", want: []Requirement{
 			{Tool: "python", Want: "3.12", File: "mise.toml", Key: "tools.python"},
 			{Tool: "node", Want: "22", File: "mise.toml", Key: "tools.node"},
+			{Tool: "terraform", Want: "1.9", File: "mise.toml", Key: "tools.terraform"},
 			{Tool: "rust", Want: "1.80", File: "mise.toml", Key: "tools.rust"},
 		}},
 		{dir: "dot-mise-toml", want: []Requirement{{Tool: "bun", Want: "latest", File: ".mise.toml", Key: "tools.bun"}}},

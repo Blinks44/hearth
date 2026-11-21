@@ -50,15 +50,19 @@ const agentPage = "/ai/agents/agent"
 
 func agentPath(id string) string { return agentPage + "?id=" + url.QueryEscape(id) }
 
-// agentLogo is an agent's logo, size wide, in its colors.
-func agentLogo(c *ui.Context, id string, size float32) {
-	key := "lucide/bot"
+// agentIcon returns the logo or fallback icon key for the agent id.
+func agentIcon(id string) string {
 	for _, ag := range agentInfos {
 		if ag.id == id && ag.brand != "" {
-			key = "brand/" + ag.brand
+			return "brand/" + ag.brand
 		}
 	}
-	iconOrLogo(c, key, size, c.Theme().Text)
+	return "lucide/bot"
+}
+
+// agentLogo is an agent's logo, size wide, in its colors.
+func agentLogo(c *ui.Context, id string, size float32) {
+	iconOrLogo(c, agentIcon(id), size, c.Theme().Text)
 }
 
 // agentTile is an agent's logo on a tile size wide.

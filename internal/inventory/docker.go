@@ -24,6 +24,9 @@ type DockerState struct {
 	// KindClusters are the kind clusters whose nodes are the selected
 	// engine's containers, read from the same list as Databases.
 	KindClusters []KindCluster `json:",omitempty"`
+	// Running and Containers are the selected engine's counts from docker info.
+	Running    int `json:",omitempty"`
+	Containers int `json:",omitempty"`
 }
 
 // KindCluster is a local kind cluster, as its node containers show it.

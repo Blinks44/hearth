@@ -41,8 +41,14 @@ func (a *App) installTool(id string) {
 	if kind, ok := catalog.DatabaseKinds[id]; ok {
 		verify = ops.DatabaseFound(title, kind, a.detect("databases"))
 	}
-	if slices.Contains(kubeCommands, id) {
+	if slices.Contains(kubeCommands, id) || isCLICommand(id) {
 		verify = ops.CommandFound(title, id, a.detect("cli"))
+	}
+	if id == "uv" {
+		verify = ops.ManagerFound(title, "uv", a.detect("python"))
+	}
+	if lang, command, ok := languageCommand(id); ok {
+		verify = ops.VarCommandFound(title, command, a.detect(lang))
 	}
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		p, parts, err := ops.SetupPlan(s, env)

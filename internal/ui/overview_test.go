@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/store"
@@ -511,4 +512,210 @@ func TestAlphabeticalOrderRussian(t *testing.T) {
 	if !slices.IsSorted(skills) {
 		t.Errorf("skills %q", skills)
 	}
+}
+
+func TestOverviewToolCardsClickable(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{
+		{Tool: "docker", Installations: []inventory.Installation{{Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1}}},
+		{Tool: "git", Installations: []inventory.Installation{{Tool: "git", Version: "2.48.0", Path: "/opt/homebrew/bin/git", OnPath: 1}}},
+		{Tool: "cpp", Installations: []inventory.Installation{{Tool: "cpp", Version: "16.0.0", Path: "/usr/bin/clang", OnPath: 1}}},
+	}}
+	// Every tool that populates Installations must route to a page.
+	for _, id := range []string{"node", "bun", "python", "php", "cpp", "rust", "go", "java", "ruby", "dotnet", "npm", "pnpm", "yarn", "corepack", "git", "docker"} {
+		if _, path := a.toolCardTarget(id); path == "" {
+			t.Errorf("toolCardTarget(%q) returned empty path", id)
+		}
+	}
+	tt := openOverview(t, a)
+	if err := tt.Click("Docker"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != dockerPage {
+		t.Errorf("clicking Docker card went to %q, want %q", a.router.Path(), dockerPage)
+	}
+}
+
+func TestOverviewAttentionMore(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	legacy := testProjects()[1]
+	for i := range 5 {
+		p := legacy
+		p.Dir = home + "/work/app-" + strconv.Itoa(i)
+		a.Projects = append(a.Projects, p)
+	}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "And 2 more")
+	if err := tt.Click("And 2 more"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != problemsPage {
+		t.Errorf("clicking And 2 more went to %q, want %q", a.router.Path(), problemsPage)
+	}
+}
+
+func TestIssueKeyUniqueness(t *testing.T) {
+	list := []issues.Issue{
+		{Kind: issues.ProjectMissing, Tool: "node", Project: "/p", Check: projects.Check{File: ".nvmrc", Want: "18"}},
+		{Kind: issues.ProjectMissing, Tool: "node", Project: "/p", Check: projects.Check{File: "package.json", Want: "20"}},
+		{Kind: issues.SkillCopies, Skills: []inventory.Skill{{Name: "review"}}},
+		{Kind: issues.SkillCopies, Skills: []inventory.Skill{{Name: "testing"}}},
+		{Kind: issues.MCPMissing, MCP: []inventory.MCPServer{{Agent: "claude", Name: "db", Command: "uvx"}}},
+		{Kind: issues.MCPMissing, MCP: []inventory.MCPServer{{Agent: "claude", Name: "git", Command: "npx"}}},
+		{Kind: issues.PlainSecret, MCP: []inventory.MCPServer{{Agent: "claude", Name: "s1"}}},
+		{Kind: issues.PlainSecret, MCP: []inventory.MCPServer{{Agent: "claude", Name: "s2"}}},
+		{Kind: issues.PlainSecret}, // must not panic on empty MCP slice
+		{Kind: issues.SlowStartup, Startup: &inventory.ShellStartup{Shell: "zsh"}},
+		{Kind: issues.SlowStartup, Startup: &inventory.ShellStartup{Shell: "bash"}},
+		{Kind: issues.PathMissing, Dirs: []string{"/a"}},
+		{Kind: issues.PathMissing, Dirs: []string{"/b"}},
+	}
+	seen := map[string]int{}
+	for i, is := range list {
+		k := issueKey(is)
+		if prev, dup := seen[k]; dup {
+			t.Errorf("duplicate issueKey %q for items %d and %d", k, prev, i)
+		}
+		seen[k] = i
+	}
+}
+
+func TestOverviewLiveSummary(t *testing.T) {
+	today := time.Now().Format("2006-01-02")
+	liveSnap := func() *inventory.Snapshot {
+		return &inventory.Snapshot{
+			Tools: []inventory.ToolState{
+				{Tool: "node", Installations: []inventory.Installation{{Tool: "node", Version: "22.12.0", Path: "/opt/homebrew/bin/node", OnPath: 1, InGUI: 1}}},
+				{Tool: "docker", Installations: []inventory.Installation{{Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1, InGUI: 1}},
+					Docker: &inventory.DockerState{
+						Selected: "orbstack", Running: 4, Containers: 7,
+						Contexts: []inventory.DockerContext{{Name: "orbstack", Engine: "OrbStack", Endpoint: "unix:///tmp/orbstack.sock", Local: true, Status: "available"}},
+					}},
+				{Tool: "cli", Cli: &inventory.CliState{
+					Tools: []inventory.Installation{{Tool: "kubectl", Version: "1.34.1", Path: "/opt/homebrew/bin/kubectl", OnPath: 1}},
+					KubeContexts: []inventory.KubeContext{
+						{Name: "staging-eu", Cluster: "staging-eu", Namespace: "default", File: home + "/.kube/config"},
+						{Name: "dev-local", Cluster: "dev-local", Namespace: "app", File: home + "/.kube/config"},
+					},
+					Contexts: []inventory.CliContext{{Tool: "kubectl", Name: "staging-eu", File: home + "/.kube/config"}},
+				}},
+				{Tool: "databases", Databases: &inventory.DatabaseState{
+					Servers: []inventory.Database{
+						{Kind: "PostgreSQL", Version: "17.2", Status: "running", Ports: []string{"5432"}},
+						{Kind: "Redis", Version: "7.4", Status: "running", Ports: []string{"6379"}},
+					},
+					Listeners: []inventory.DatabaseListener{
+						{Port: "5432", Process: "postgres", PID: "101"},
+						{Port: "6379", Process: "redis-server", PID: "102"},
+						{Port: "3000", Process: "node", PID: "103"},
+					},
+				}},
+			},
+			Sessions: []inventory.AgentSession{
+				{Agent: "claude", ID: "s1", Usage: []inventory.TokenUsage{{Day: today, Model: "claude-sonnet-4-5-20250929", Input: 120_000, Output: 24_000}}},
+			},
+			MCP: []inventory.MCPServer{
+				{Name: "postgres", Agent: "claude", Transport: "stdio", Command: "npx"},
+				{Name: "github", Agent: "cursor", Transport: "stdio", Command: "npx"},
+				{Name: "broken", Agent: "claude", Transport: "stdio", Command: "missing-bin", Missing: true},
+			},
+		}
+	}
+
+	t.Run("all five tiles render and navigate", func(t *testing.T) {
+		a := NewApp()
+		a.StartHidden = true
+		a.Snapshot = liveSnap()
+		tt := openOverview(t, a)
+		hasTexts(t, tt,
+			"Right now",
+			"4 running", "OrbStack · 7 total",
+			"staging-eu", "default · 2 contexts",
+			"Databases & ports", "2 DB · 3 ports", "PostgreSQL, Redis",
+			"AI today", "144.0K tokens",
+			"3 servers", "2 agents · 1 issue",
+		)
+		for _, tc := range []struct{ click, want string }{
+			{"4 running", dockerPage},
+			{"staging-eu", kubePage},
+			{"2 DB · 3 ports", "/tools/databases"},
+			{"AI today", usagePage},
+			{"3 servers", mcpPage},
+		} {
+			a.router.Push(overview.path)
+			tt.Advance(time.Second)
+			if err := tt.Click(tc.click); err != nil {
+				t.Fatalf("click %q: %v", tc.click, err)
+			}
+			tt.Advance(time.Second)
+			if a.router.Path() != tc.want {
+				t.Errorf("click %q went to %q, want %q", tc.click, a.router.Path(), tc.want)
+			}
+		}
+	})
+
+	t.Run("ports-only and stopped docker and month fallback", func(t *testing.T) {
+		a := NewApp()
+		a.StartHidden = true
+		yesterday := time.Now().AddDate(0, 0, -2).Format("2006-01-02")
+		a.Snapshot = &inventory.Snapshot{
+			Tools: []inventory.ToolState{
+				{Tool: "docker", Installations: []inventory.Installation{{Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1}},
+					Docker: &inventory.DockerState{
+						Selected: "colima",
+						Contexts: []inventory.DockerContext{{Name: "colima", Engine: "Colima", Endpoint: "unix:///tmp/colima.sock", Local: true, Status: "unavailable"}},
+					}},
+				{Tool: "cli", Cli: &inventory.CliState{
+					Tools: []inventory.Installation{{Tool: "kubectl", Version: "1.34.1", Path: "/opt/homebrew/bin/kubectl", OnPath: 1}},
+				}},
+				{Tool: "databases", Databases: &inventory.DatabaseState{
+					Listeners: []inventory.DatabaseListener{{Port: "3000", Process: "node", PID: "103"}},
+				}},
+			},
+			Sessions: []inventory.AgentSession{
+				{Agent: "claude", ID: "s1", Usage: []inventory.TokenUsage{{Day: yesterday, Model: "claude-sonnet-4-5-20250929", Input: 50_000, Output: 5_000}}},
+			},
+		}
+		tt := openOverview(t, a)
+		hasTexts(t, tt, "Stopped", "Colima", "No context", "1 port", "in 30d")
+		if err := tt.Click("1 port"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Advance(time.Second)
+		if a.router.Path() != portsPage {
+			t.Errorf("ports tile went to %q, want %q", a.router.Path(), portsPage)
+		}
+	})
+
+	t.Run("hidden on bare computer and first scan", func(t *testing.T) {
+		a := NewApp()
+		a.Snapshot = &inventory.Snapshot{}
+		tt := openOverview(t, a)
+		if tt.HasText("Right now") {
+			t.Error("live summary should not appear on a bare computer")
+		}
+	})
+
+	t.Run("ru screenshots wide and narrow", func(t *testing.T) {
+		i18n.SetLocaleFunc(func() string { return "ru" })
+		t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+		for _, tc := range []struct {
+			name          string
+			width, height int
+		}{
+			{"overview-live", 1280, 820},
+			{"overview-live-narrow", 1000, 680},
+		} {
+			a := NewApp()
+			a.StartHidden = true
+			a.Home = home
+			a.Snapshot = liveSnap()
+			tt := ui.NewTester(a.View, tc.width, tc.height)
+			tt.Advance(time.Second)
+			screenshot(t, tt, tc.name)
+		}
+	})
 }

@@ -61,3 +61,21 @@ func TestPorts(t *testing.T) {
 		t.Fatalf("plan %+v", a.op)
 	}
 }
+
+func TestPortsFilterByProcess(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{
+		Listeners: []inventory.DatabaseListener{
+			{Address: "127.0.0.1", Port: "5432", Process: "postgres", PID: "812", Path: "/opt/homebrew/bin/pg", Own: true},
+			{Address: "*", Port: "3000", Process: "myworker", PID: "4312", Path: "/usr/local/bin/app", Own: true},
+		}}}}}
+	a.router.Push(portsPage)
+	a.portsFilter = "myworker"
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "3000", "myworker")
+	if tt.HasText("5432") || tt.HasText("postgres") {
+		t.Errorf("filter by process name did not narrow rows: %q", tt.Texts())
+	}
+}

@@ -307,3 +307,42 @@ func TestUpdatesGroupSelection(t *testing.T) {
 	hasTexts(t, tt, "Update selected · 3")
 	screenshot(t, tt, "updates-groups")
 }
+
+func TestUpdatesStatusStates(t *testing.T) {
+	t.Run("checking", func(t *testing.T) {
+		a := NewApp()
+		a.Snapshot = calmSnapshot()
+		a.VersionChecks = map[string]bool{"node": true}
+		a.router.Push(updatesPage)
+		tt := ui.NewTester(a.View, 1280, 820)
+		tt.Advance(time.Second)
+		hasTexts(t, tt, "Checking for updates…", "Checking…")
+		if tt.HasText("Everything is up to date.") {
+			t.Errorf("showed up-to-date while checking: %q", tt.Texts())
+		}
+	})
+	t.Run("offline", func(t *testing.T) {
+		a := NewApp()
+		a.Snapshot = calmSnapshot()
+		a.VersionLists = false
+		a.router.Push(updatesPage)
+		tt := ui.NewTester(a.View, 1280, 820)
+		tt.Advance(time.Second)
+		hasTexts(t, tt, "Online update checks are turned off in Settings.")
+		if tt.HasText("Everything is up to date.") {
+			t.Errorf("showed up-to-date while offline: %q", tt.Texts())
+		}
+	})
+	t.Run("errors", func(t *testing.T) {
+		a := NewApp()
+		a.Snapshot = calmSnapshot()
+		a.NodeVersionsErr = "could not reach nodejs.org"
+		a.router.Push(updatesPage)
+		tt := ui.NewTester(a.View, 1280, 820)
+		tt.Advance(time.Second)
+		hasTexts(t, tt, "Node.js: could not reach nodejs.org", "Could not check all sources for updates.")
+		if tt.HasText("Everything is up to date.") {
+			t.Errorf("showed up-to-date despite check error: %q", tt.Texts())
+		}
+	})
+}

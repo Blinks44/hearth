@@ -127,6 +127,9 @@ var readers = []struct {
 	{"docker-compose.yml", needs("docker")},
 	{"docker-compose.yaml", needs("docker")},
 	{"Dockerfile", needs("docker")},
+	{".terraform-version", firstLine("terraform")},
+	{".opentofu-version", firstLine("tofu")},
+	{".tofu-version", firstLine("tofu")},
 }
 
 // Read reads the project files in dir. A file that is missing is skipped;
@@ -170,6 +173,7 @@ func Read(dir string) Project {
 	p.Instructions = ReadInstructions(dir)
 	readDatabases(&p)
 	readKube(&p)
+	readTerraform(&p)
 	readInheritedGlobalJSON(&p)
 	for _, name := range aiFiles {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
@@ -316,6 +320,8 @@ var toolNames = map[string]string{
 	"ruby":   "ruby",
 	"php":    "php",
 	"dotnet": "dotnet", "dotnet-core": "dotnet",
+	"terraform": "terraform",
+	"tofu":      "tofu", "opentofu": "tofu",
 }
 
 // readToolVersions reads asdf's .tool-versions: "nodejs 22.11.0", and with

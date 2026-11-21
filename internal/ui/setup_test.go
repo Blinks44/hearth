@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"runtime"
 	"testing"
 	"time"
@@ -327,4 +328,59 @@ func TestSetupCheckDockerDenied(t *testing.T) {
 		Docker:        &inventory.DockerState{Selected: "default", Contexts: []inventory.DockerContext{{Name: "default", Status: "unavailable", Denied: true}}}})
 	tt := newTester(a)
 	hasTexts(t, tt, "Done, one thing left", "after signing in again", "Sign out and back in", "then docker works without sudo")
+}
+
+func TestSetupResultAndInstallVerifyExtended(t *testing.T) {
+	a := setupApp(t)
+	cliTools := []string{"kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu"}
+	var cliIns []inventory.Installation
+	for _, cmd := range cliTools {
+		cliIns = append(cliIns, inventory.Installation{Tool: cmd, Version: "1.2.3", Path: "/opt/homebrew/bin/" + cmd, OnPath: 1})
+	}
+	a.Snapshot.Tools = append(a.Snapshot.Tools,
+		inventory.ToolState{Tool: "cli", Cli: &inventory.CliState{Tools: cliIns}},
+		inventory.ToolState{Tool: "python",
+			Managers: []inventory.Manager{{Name: "uv", Version: "0.9.5"}},
+			Vars:     map[string]string{"pipx": "/opt/homebrew/bin/pipx"},
+		},
+		inventory.ToolState{Tool: "ruby", Vars: map[string]string{"bundle": "/opt/homebrew/bin/bundle"}},
+		inventory.ToolState{Tool: "java", Vars: map[string]string{"mvn": "/opt/homebrew/bin/mvn", "gradle": "/opt/homebrew/bin/gradle"}},
+	)
+	for _, id := range append(cliTools, "uv", "pipx", "bundler", "maven", "gradle") {
+		in, res := a.setupResult(id)
+		if res != checkWorks {
+			t.Errorf("setupResult(%q) = %v, want checkWorks", id, res)
+		}
+		if in.Version == "" && in.Path == "" {
+			t.Errorf("setupResult(%q) returned empty version and path", id)
+		}
+	}
+	// Verify ops.CommandFound, ops.ManagerFound, and ops.VarCommandFound pass through installTool:
+	// before install the tools are absent from a.Snapshot, and DetectTool returns the post-install snapshot.
+	after := a.Snapshot
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Version: "Homebrew 4.6.3"}}},
+		{Tool: "python", Installations: []inventory.Installation{{Tool: "python", Version: "3.13.0", Path: "/opt/homebrew/bin/python3", OnPath: 1}}},
+		{Tool: "ruby", Installations: []inventory.Installation{{Tool: "ruby", Version: "3.4.1", Path: "/opt/homebrew/bin/ruby", OnPath: 1}}},
+		{Tool: "java", Installations: []inventory.Installation{{Tool: "java", Version: "21.0.5", Path: "/opt/homebrew/bin/java", OnPath: 1}}},
+	}}
+	a.DetectTool = func(_ context.Context, tool string) (inventory.ToolState, error) {
+		st, _ := after.Tool(tool)
+		return st, nil
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		p, err := build(sysenv.Env{"SHELL=/bin/zsh", "HOME=" + home}, nil)
+		done(p, err)
+	}
+	for _, id := range []string{"uv", "pipx", "bundler", "maven", "gradle", "kubectl", "helm", "kind"} {
+		a.op = nil
+		a.installTool(id)
+		if a.op == nil || a.op.plan.Verify == nil {
+			t.Fatalf("installTool(%q) did not produce a plan with Verify (planErr=%q)", id, a.planErr)
+		}
+		msg, err := a.op.plan.Verify(context.Background())
+		if err != nil || msg == "" {
+			t.Errorf("installTool(%q).Verify() = (%q, %v), want found message and nil error", id, msg, err)
+		}
+	}
 }

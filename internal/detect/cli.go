@@ -2,8 +2,11 @@ package detect
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -200,84 +203,342 @@ func kubeContext(env sysenv.Env, home string) *inventory.CliContext {
 	return readKubeConfig(env, home).current
 }
 
-// awsProfile is the AWS CLI's profile, AWS_PROFILE or default, and its
-// region, from ~/.aws/config; ~/.aws/credentials is never read.
+var errInvalidINI = errors.New("invalid INI syntax")
+
+// awsProfile is the AWS CLI's selected profile, region, sources, and local
+// profiles from ~/.aws/config (or AWS_CONFIG_FILE). ~/.aws/credentials and
+// secret env values are never read or retained.
 func awsProfile(env sysenv.Env, home string) *inventory.CliContext {
-	file := or(env.Get("AWS_CONFIG_FILE"), filepath.Join(home, ".aws", "config"))
-	profile := or(env.Get("AWS_PROFILE"), or(env.Get("AWS_DEFAULT_PROFILE"), "default"))
-	section := "profile " + profile
-	if profile == "default" {
-		section = "default"
+	file := env.Get("AWS_CONFIG_FILE")
+	configEnv := ""
+	if file != "" {
+		configEnv = "AWS_CONFIG_FILE"
+	} else {
+		file = filepath.Join(home, ".aws", "config")
 	}
-	values, ok := iniSection(file, section)
-	if !ok && env.Get("AWS_PROFILE") == "" {
-		return nil
-	}
-	region := or(env.Get("AWS_REGION"), or(env.Get("AWS_DEFAULT_REGION"), values["region"]))
-	return &inventory.CliContext{Tool: "aws", Name: profile, Region: region, File: file}
-}
+	envProfile := env.Get("AWS_PROFILE")
+	envDefProfile := env.Get("AWS_DEFAULT_PROFILE")
+	envRegion := env.Get("AWS_REGION")
+	envDefRegion := env.Get("AWS_DEFAULT_REGION")
+	hasEnvCreds := env.Get("AWS_ACCESS_KEY_ID") != "" || env.Get("AWS_SESSION_TOKEN") != ""
 
-// gcloudProject is the project of gcloud's active configuration.
-func gcloudProject(env sysenv.Env, home string) *inventory.CliContext {
-	dir := or(env.Get("CLOUDSDK_CONFIG"), gcloudConfigDir(env, home))
-	if !exists(dir) {
+	sections, order, err := readINI(file)
+	notExist := errors.Is(err, fs.ErrNotExist)
+	hasAnyEnv := configEnv != "" || envProfile != "" || envDefProfile != "" || envRegion != "" || envDefRegion != "" || hasEnvCreds
+	if notExist && !hasAnyEnv {
 		return nil
 	}
-	active := env.Get("CLOUDSDK_ACTIVE_CONFIG_NAME")
-	if active == "" {
-		data, _ := os.ReadFile(filepath.Join(dir, "active_config"))
-		active = or(strings.TrimSpace(string(data)), "default")
-	}
-	file := filepath.Join(dir, "configurations", "config_"+active)
-	core, _ := iniSection(file, "core")
-	return &inventory.CliContext{Tool: "gcloud", Name: or(env.Get("CLOUDSDK_CORE_PROJECT"), core["project"]), File: file}
-}
 
-// azSubscription is Azure CLI's default subscription by name, from
-// azureProfile.json; its tokens are in other files.
-func azSubscription(env sysenv.Env, home string) *inventory.CliContext {
-	file := filepath.Join(or(env.Get("AZURE_CONFIG_DIR"), filepath.Join(home, ".azure")), "azureProfile.json")
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return nil
-	}
-	var profile struct {
-		Subscriptions []struct {
-			Name      string `json:"name"`
-			IsDefault bool   `json:"isDefault"`
-		} `json:"subscriptions"`
-	}
-	_ = json.Unmarshal([]byte(strings.TrimPrefix(string(data), "\ufeff")), &profile) // az writes a BOM
-	cc := &inventory.CliContext{Tool: "az", File: file}
-	for _, s := range profile.Subscriptions {
-		if s.IsDefault {
-			cc.Name = s.Name
+	var choices []inventory.CliChoice
+	seenChoice := map[string]bool{}
+	for _, sec := range order {
+		name := ""
+		switch {
+		case sec == "default":
+			name = "default"
+		case strings.HasPrefix(sec, "profile "):
+			name = strings.TrimSpace(strings.TrimPrefix(sec, "profile "))
+		default:
+			continue
 		}
+		if name == "" || seenChoice[name] {
+			continue
+		}
+		seenChoice[name] = true
+		vals := sections[sec]
+		choices = append(choices, inventory.CliChoice{
+			Name:   name,
+			Region: vals["region"],
+			HasSSO: vals["sso_start_url"] != "" || vals["sso_session"] != "",
+		})
+	}
+	sortCliChoices(choices)
+	if err == nil && len(choices) == 0 && !hasAnyEnv {
+		return nil
+	}
+
+	profile, nameSource := "default", "default"
+	switch {
+	case envProfile != "":
+		profile, nameSource = envProfile, "AWS_PROFILE"
+	case envDefProfile != "":
+		profile, nameSource = envDefProfile, "AWS_DEFAULT_PROFILE"
+	case seenChoice["default"]:
+		nameSource = "file"
+	}
+
+	sectionKey := "profile " + profile
+	if profile == "default" {
+		sectionKey = "default"
+	}
+	vals, hasProfile := sections[sectionKey]
+
+	region, regionSource := "", ""
+	switch {
+	case envRegion != "":
+		region, regionSource = envRegion, "AWS_REGION"
+	case envDefRegion != "":
+		region, regionSource = envDefRegion, "AWS_DEFAULT_REGION"
+	case vals["region"] != "":
+		region, regionSource = vals["region"], "file"
+	}
+
+	cc := &inventory.CliContext{
+		Tool:         "aws",
+		Name:         profile,
+		Region:       region,
+		File:         file,
+		NameSource:   nameSource,
+		RegionSource: regionSource,
+		ConfigEnv:    configEnv,
+		HasSSO:       vals["sso_start_url"] != "" || vals["sso_session"] != "",
+		Choices:      choices,
+	}
+	switch {
+	case err != nil && !notExist:
+		cc.Status, cc.Issue = "invalid", "config_invalid"
+	case notExist && configEnv != "":
+		cc.Status, cc.Issue = "missing", "config_missing"
+	case hasEnvCreds:
+		cc.Status, cc.Issue = "ambiguous", "env_creds"
+	case envProfile != "" && envDefProfile != "" && envProfile != envDefProfile:
+		cc.Status, cc.Issue = "ambiguous", "profile_conflict"
+	case envRegion != "" && envDefRegion != "" && envRegion != envDefRegion:
+		cc.Status, cc.Issue = "ambiguous", "region_conflict"
+	case !hasProfile:
+		cc.Status, cc.Issue = "missing", "profile_missing"
 	}
 	return cc
 }
 
-// iniSection reads the keys of one [section] of an INI file, as AWS's and
-// gcloud's settings are; ok reports that the section is there.
-func iniSection(path, section string) (values map[string]string, ok bool) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, false
+// gcloudProject is gcloud's active configuration, selected project, their
+// sources, and local configurations from ~/.config/gcloud (or CLOUDSDK_CONFIG).
+// Credentials and token databases are never read.
+func gcloudProject(env sysenv.Env, home string) *inventory.CliContext {
+	dir := env.Get("CLOUDSDK_CONFIG")
+	configEnv := ""
+	if dir != "" {
+		configEnv = "CLOUDSDK_CONFIG"
+	} else {
+		dir = gcloudConfigDir(env, home)
 	}
-	defer file.Close() //nolint:errcheck // read only
-	values = map[string]string{}
-	in := false
-	s := bufio.NewScanner(file)
-	for s.Scan() {
-		line := strings.TrimSpace(s.Text())
-		if name, isSection := strings.CutPrefix(line, "["); isSection {
-			in = strings.TrimSpace(strings.TrimSuffix(name, "]")) == section
-			ok = ok || in
+	envActive := env.Get("CLOUDSDK_ACTIVE_CONFIG_NAME")
+	envProject := env.Get("CLOUDSDK_CORE_PROJECT")
+	envRegion := env.Get("CLOUDSDK_COMPUTE_REGION")
+
+	dirExists := exists(dir)
+	hasAnyEnv := configEnv != "" || envActive != "" || envProject != "" || envRegion != ""
+	if !dirExists && !hasAnyEnv {
+		return nil
+	}
+
+	fileActive := ""
+	if dirExists {
+		if data, err := os.ReadFile(filepath.Join(dir, "active_config")); err == nil {
+			fileActive = strings.TrimSpace(string(data))
+		}
+	}
+	active, nameSource := "default", "default"
+	switch {
+	case envActive != "":
+		active, nameSource = envActive, "CLOUDSDK_ACTIVE_CONFIG_NAME"
+	case fileActive != "":
+		active, nameSource = fileActive, "file"
+	}
+
+	var choices []inventory.CliChoice
+	if dirExists {
+		entries, _ := os.ReadDir(filepath.Join(dir, "configurations"))
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasPrefix(e.Name(), "config_") {
+				continue
+			}
+			cname := strings.TrimPrefix(e.Name(), "config_")
+			if cname == "" {
+				continue
+			}
+			secs, _, err := readINI(filepath.Join(dir, "configurations", e.Name()))
+			ch := inventory.CliChoice{Name: cname}
+			if err == nil {
+				ch.Project = secs["core"]["project"]
+				ch.Region = secs["compute"]["region"]
+			}
+			choices = append(choices, ch)
+		}
+		sortCliChoices(choices)
+	}
+
+	file := filepath.Join(dir, "configurations", "config_"+active)
+	if !dirExists {
+		file = dir
+	}
+	secs, _, activeErr := readINI(file)
+	core := secs["core"]
+	compute := secs["compute"]
+
+	project, projectSource := "", ""
+	switch {
+	case envProject != "":
+		project, projectSource = envProject, "CLOUDSDK_CORE_PROJECT"
+	case core["project"] != "":
+		project, projectSource = core["project"], "file"
+	}
+	region, regionSource := "", ""
+	switch {
+	case envRegion != "":
+		region, regionSource = envRegion, "CLOUDSDK_COMPUTE_REGION"
+	case compute["region"] != "":
+		region, regionSource = compute["region"], "file"
+	}
+
+	cc := &inventory.CliContext{
+		Tool:          "gcloud",
+		Name:          active,
+		Project:       project,
+		Region:        region,
+		File:          file,
+		NameSource:    nameSource,
+		ProjectSource: projectSource,
+		RegionSource:  regionSource,
+		ConfigEnv:     configEnv,
+		Choices:       choices,
+	}
+	switch {
+	case !dirExists:
+		cc.Status, cc.Issue = "missing", "config_missing"
+	case activeErr != nil && !errors.Is(activeErr, fs.ErrNotExist):
+		cc.Status, cc.Issue = "invalid", "config_invalid"
+	case errors.Is(activeErr, fs.ErrNotExist):
+		cc.Status, cc.Issue = "missing", "active_config_missing"
+	case envProject != "" && core["project"] != "" && envProject != core["project"]:
+		cc.Status, cc.Issue = "ambiguous", "project_override"
+	}
+	return cc
+}
+
+// azSubscription is Azure CLI's default subscription and local subscriptions
+// from azureProfile.json (under ~/.azure or AZURE_CONFIG_DIR). Token caches
+// are never read.
+func azSubscription(env sysenv.Env, home string) *inventory.CliContext {
+	dir := env.Get("AZURE_CONFIG_DIR")
+	configEnv := ""
+	if dir != "" {
+		configEnv = "AZURE_CONFIG_DIR"
+	} else {
+		dir = filepath.Join(home, ".azure")
+	}
+	file := filepath.Join(dir, "azureProfile.json")
+	data, err := os.ReadFile(file)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) && configEnv == "" {
+			return nil
+		}
+		cc := &inventory.CliContext{Tool: "az", File: file, ConfigEnv: configEnv}
+		if errors.Is(err, fs.ErrNotExist) {
+			cc.Status, cc.Issue = "missing", "config_missing"
+		} else {
+			cc.Status, cc.Issue = "invalid", "config_invalid"
+		}
+		return cc
+	}
+	var profile struct {
+		Subscriptions []struct {
+			ID        string `json:"id"`
+			Name      string `json:"name"`
+			State     string `json:"state"`
+			IsDefault bool   `json:"isDefault"`
+		} `json:"subscriptions"`
+	}
+	cc := &inventory.CliContext{Tool: "az", File: file, ConfigEnv: configEnv}
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(string(data), "\ufeff")), &profile); err != nil { // az writes a BOM
+		cc.Status, cc.Issue = "invalid", "config_invalid"
+		return cc
+	}
+	defaults := 0
+	for _, s := range profile.Subscriptions {
+		if s.Name == "" && s.ID == "" {
 			continue
 		}
-		if key, value, found := strings.Cut(line, "="); in && found {
-			values[strings.TrimSpace(key)] = strings.TrimSpace(value)
+		if s.State == "" || strings.EqualFold(s.State, "Enabled") {
+			cc.Choices = append(cc.Choices, inventory.CliChoice{Name: s.Name, ID: s.ID})
+		}
+		if s.IsDefault {
+			defaults++
+			if defaults == 1 {
+				cc.Name, cc.SubscriptionID, cc.NameSource = s.Name, s.ID, "file"
+			}
 		}
 	}
-	return values, ok
+	if defaults > 1 {
+		cc.Status, cc.Issue = "ambiguous", "multiple_defaults"
+	}
+	return cc
+}
+
+// sortCliChoices puts "default" first and sorts the rest by name.
+func sortCliChoices(choices []inventory.CliChoice) {
+	slices.SortFunc(choices, func(a, b inventory.CliChoice) int {
+		if a.Name == "default" && b.Name != "default" {
+			return -1
+		}
+		if b.Name == "default" && a.Name != "default" {
+			return 1
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+}
+
+// readINI parses an INI file into sections and key/value maps, preserving
+// section order. Indented lines (AWS CLI sub-properties) stay inside their
+// section. Unclosed section headers or binary NUL bytes report errInvalidINI.
+func readINI(path string) (sections map[string]map[string]string, order []string, err error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	if bytes.IndexByte(data, 0) >= 0 {
+		return nil, nil, errInvalidINI
+	}
+	sections = map[string]map[string]string{}
+	current := ""
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	for sc.Scan() {
+		raw := sc.Text()
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
+			continue
+		}
+		if strings.HasPrefix(line, "[") {
+			if !strings.HasSuffix(line, "]") {
+				return nil, nil, errInvalidINI
+			}
+			name := strings.TrimSpace(line[1 : len(line)-1])
+			if name == "" {
+				return nil, nil, errInvalidINI
+			}
+			current = name
+			if _, ok := sections[current]; !ok {
+				sections[current] = map[string]string{}
+				order = append(order, current)
+			}
+			continue
+		}
+		key, value, found := strings.Cut(line, "=")
+		if !found {
+			return nil, nil, errInvalidINI
+		}
+		if current == "" {
+			return nil, nil, errInvalidINI
+		}
+		// Keep top-level keys only; indented AWS sub-properties (under s3 =)
+		// do not overwrite top-level keys like region.
+		if len(raw) > 0 && (raw[0] == ' ' || raw[0] == '\t') {
+			continue
+		}
+		sections[current][strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+	if err := sc.Err(); err != nil {
+		return nil, nil, err
+	}
+	return sections, order, nil
 }

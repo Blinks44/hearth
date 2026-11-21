@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 )
 
@@ -133,5 +134,29 @@ func TestProblemsHide(t *testing.T) {
 	tt.Advance(time.Second)
 	if saved != 2 || len(a.Hidden) != 0 || !tt.HasText("Apps outside the terminal do not see Node") {
 		t.Errorf("saved %d, hidden %q: %q", saved, a.Hidden, tt.Texts())
+	}
+}
+
+func TestHiddenInfoExcludedFromOverviewAndSidebar(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true, Sources: []inventory.PathSource{{File: filepath.Join(home, ".zshrc"), Line: 1}}}}
+	a.PlanPath = func([]inventory.PathEntry, []string, func(ops.Plan, error)) {}
+	tt := openProblems(t, a)
+	hasTexts(t, tt, "PATH lists folders that do not exist")
+	// Before hiding, the fixable Info issue counts in the sidebar badge.
+	if texts := tt.Texts(); slices.Index(texts, "Issues") < 0 || texts[slices.Index(texts, "Issues")+1] != "1" {
+		t.Fatalf("expected sidebar badge 1 before hiding: %q", texts)
+	}
+	if err := tt.Click("Hide"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	// After hiding, the sidebar badge clears and Overview shows Everything is in order.
+	a.router.Push(overview.path)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Everything is in order", "No issues found")
+	if texts := tt.Texts(); slices.Index(texts, "Issues") < 0 || texts[slices.Index(texts, "Issues")+1] != "Updates" {
+		t.Errorf("hidden issue still counted in sidebar: %q", texts)
 	}
 }

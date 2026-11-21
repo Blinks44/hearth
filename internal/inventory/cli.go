@@ -20,16 +20,54 @@ type CliState struct {
 	Contexts []CliContext `json:",omitempty"`
 }
 
+// CliChoice is one local profile, configuration, or subscription read
+// from a cloud CLI's config files; credentials and tokens are never read.
+type CliChoice struct {
+	Name    string `json:",omitempty"`
+	ID      string `json:",omitempty"`
+	Project string `json:",omitempty"`
+	Region  string `json:",omitempty"`
+	HasSSO  bool   `json:",omitempty"`
+}
+
 // CliContext is where one tool points now.
 type CliContext struct {
 	// Tool is kubectl, aws, gcloud or az.
 	Tool string
-	// Name is the context, profile, project or subscription; empty when
-	// none is chosen.
+	// Name is the context (kubectl), profile (aws), configuration name
+	// (gcloud) or subscription name (az); empty when none is chosen.
 	Name   string `json:",omitempty"`
 	Region string `json:",omitempty"`
-	// File is the settings file it is read from.
+	// Project is the selected GCP project for gcloud.
+	Project string `json:",omitempty"`
+	// SubscriptionID is the selected Azure subscription ID for az.
+	SubscriptionID string `json:",omitempty"`
+	// File is the settings file or directory it is read from.
 	File string
+	// NameSource says where Name came from: "file", "default", or an env
+	// variable name such as "AWS_PROFILE" or "CLOUDSDK_ACTIVE_CONFIG_NAME".
+	NameSource string `json:",omitempty"`
+	// RegionSource says where Region came from: "file", "AWS_REGION",
+	// "AWS_DEFAULT_REGION", or "CLOUDSDK_COMPUTE_REGION".
+	RegionSource string `json:",omitempty"`
+	// ProjectSource says where Project came from: "file" or
+	// "CLOUDSDK_CORE_PROJECT".
+	ProjectSource string `json:",omitempty"`
+	// ConfigEnv is the env variable that changed the config path, if any:
+	// "AWS_CONFIG_FILE", "CLOUDSDK_CONFIG", or "AZURE_CONFIG_DIR".
+	ConfigEnv string `json:",omitempty"`
+	// Status is "", "missing", "invalid", or "ambiguous".
+	Status string `json:",omitempty"`
+	// Issue identifies the specific missing, invalid, or ambiguous state:
+	// "config_missing", "profile_missing", "config_invalid", "env_creds",
+	// "profile_conflict", "region_conflict", "active_config_missing",
+	// "project_override", or "multiple_defaults".
+	Issue string `json:",omitempty"`
+	// HasSSO reports that the selected AWS profile configures SSO.
+	HasSSO bool `json:",omitempty"`
+	// Choices are the local profiles, configurations, or subscriptions
+	// found in the settings files, for switching.
+	Choices []CliChoice `json:",omitempty"`
 }
 
 // KubeContext names a local kubectl context and the cluster and namespace it selects.

@@ -221,7 +221,7 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		for _, r := range rows {
 			about, plan, stoppable := a.portAbout(r)
-			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+about), filter) {
+			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about), filter) {
 				continue
 			}
 			shown++

@@ -787,7 +787,7 @@ func sourceName(s inventory.Source) string {
 // manager's directory of the version, or the path found.
 func displayPath(in inventory.Installation, home string) string {
 	p := in.Path
-	if in.Source.Kind == inventory.KindVersionManager && in.Source.Root != "" {
+	if in.Source.Kind == inventory.KindVersionManager && in.Source.Root != "" && in.Tool != "dotnet" && in.Tool != "dotnet-runtime" {
 		p = in.Source.Root
 	}
 	return tilde(p, home)

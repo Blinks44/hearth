@@ -9,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -24,7 +25,8 @@ const shownIssues = 3
 // the projects, and what needs attention.
 func (a *App) overviewPage(c *ui.Context, p page) {
 	found := a.issues(c)
-	items := needAttention(a.attentionItems(found))
+	visible, _ := a.visibleIssues(found)
+	items := needAttention(visible)
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			ui.Button(c.Key("copy-report"), "").Label(locales.CopyReport()).Tooltip(locales.CopyReportHint()).OnClick(func() {
@@ -40,6 +42,9 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 				a.hero(c, items)
 				if !a.StartHidden {
 					a.startActions(c)
+				}
+				if !a.firstScan() && !a.bareComputer() {
+					a.liveSummary(c, found)
 				}
 				// A narrow window has one column: what needs attention
 				// right under the summary, then the rest.
@@ -137,6 +142,243 @@ func (a *App) startCard(c *ui.Context, key, title, hint string, enabled bool, op
 			ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevron)
 		})
 		ui.Text(c, hint).FontSize(12).TextColor(t.TextMuted)
+	})
+}
+
+// liveTile is one compact status card in the Overview's "Right now" row.
+type liveTile struct {
+	key, title, value, caption string
+	dot, captionColor          ui.Color
+	open                       func()
+}
+
+// liveSummary shows compact live status tiles for Docker, Kubernetes,
+// databases/ports, today's AI spend, and MCP servers, each opening its page.
+func (a *App) liveSummary(c *ui.Context, found []issues.Issue) {
+	tiles := a.liveSummaryTiles(c, found)
+	if len(tiles) == 0 {
+		return
+	}
+	cols := max(3, len(tiles))
+	if narrow(c) {
+		cols = 2
+	}
+	ui.Column(c.Key("live-summary")).Gap(10).Children(func() {
+		ui.Text(c, locales.LiveSummaryTitle()).FontSize(14).FontWeight(600).SingleLine()
+		ui.Grid(c).Columns(cols).Gap(10).Children(func() {
+			for _, tile := range tiles {
+				liveSummaryTile(c, tile)
+			}
+		})
+	})
+}
+
+func (a *App) liveSummaryTiles(c *ui.Context, found []issues.Issue) []liveTile {
+	t := c.Theme()
+	pal := Colors(t)
+	var out []liveTile
+
+	// 1. Docker engine status and running containers.
+	if st, ok := a.Snapshot.Tool("docker"); ok && st.Docker != nil && (len(listed(st.Installations)) > 0 || len(st.Docker.Contexts) > 0) {
+		d := st.Docker
+		var sel *inventory.DockerContext
+		for i := range d.Contexts {
+			if d.Contexts[i].Name == d.Selected {
+				sel = &d.Contexts[i]
+				break
+			}
+		}
+		label := d.Selected
+		if sel != nil && sel.Engine != "" {
+			label = sel.Engine
+		}
+		if label == "" {
+			label = "Docker"
+		}
+		running, total := d.Running, d.Containers
+		if sel != nil && a.engine.data != nil && a.engine.target == sel.Endpoint {
+			running, total = a.engine.data.Running, a.engine.data.Containers
+		}
+		tile := liveTile{
+			key: "live-docker", title: "Docker", dot: pal.TextFaint, captionColor: pal.TextFaint,
+			open: func() { a.router.Push(a.entryPath(dockerPage)) },
+		}
+		switch {
+		case sel != nil && sel.Local && sel.Status == "available":
+			tile.dot = t.Success
+			tile.value = locales.LiveDockerRunning(running)
+			tile.caption = label
+			if total > 0 {
+				tile.caption = label + " · " + locales.LiveDockerTotal(total)
+			}
+		case sel != nil && sel.Local && sel.Denied:
+			tile.dot = t.Warning
+			tile.value = locales.DockerDeniedTitle()
+			tile.caption = label
+		case sel != nil && sel.Local && sel.Status == "unavailable":
+			tile.dot = t.Warning
+			tile.value = locales.LiveDockerStopped()
+			tile.caption = label
+		default:
+			tile.value = label
+			tile.caption = locales.DockerRemote()
+		}
+		out = append(out, tile)
+	}
+
+	// 2. Active Kubernetes context.
+	cli := a.cliState()
+	_, hasKubectl := cliCopy(cli, "kubectl")
+	if len(cli.KubeContexts) > 0 || hasKubectl {
+		current := kubeCurrent(cli)
+		active := kubeContextCount(cli)
+		tile := liveTile{
+			key: "live-kube", title: "Kubernetes", dot: pal.TextFaint, captionColor: pal.TextFaint,
+			open: func() { a.router.Push(a.entryPath(kubePage)) },
+		}
+		if current != nil {
+			tile.dot = pal.Info
+			if ch, ok := a.kubeChecks[current.Name]; ok && !ch.running {
+				if ch.res.State == detect.KubeReachable {
+					tile.dot = t.Success
+				} else {
+					tile.dot = t.Warning
+				}
+			}
+			tile.value = current.Name
+			tile.caption = namespaceOf(*current) + " · " + locales.LiveKubeContexts(active)
+		} else {
+			tile.value = locales.LiveKubeNoContext()
+			tile.caption = "kubectl"
+		}
+		out = append(out, tile)
+	}
+
+	// 3. Active databases and listening ports.
+	servers := inventory.DatabaseServers(a.Snapshot)
+	ports := a.portRows()
+	if len(servers) > 0 || len(ports) > 0 {
+		runningDB := 0
+		var kinds []string
+		for _, db := range servers {
+			if db.Status == "running" {
+				runningDB++
+				if !slices.Contains(kinds, db.Kind) && len(kinds) < 2 {
+					kinds = append(kinds, db.Kind)
+				}
+			}
+		}
+		hasConflict := slices.ContainsFunc(found, func(is issues.Issue) bool { return is.Kind == issues.DatabasePortConflict })
+		if len(servers) > 0 {
+			tile := liveTile{
+				key: "live-db", title: locales.LiveDatabasesAndPorts(), dot: pal.TextFaint, captionColor: pal.TextFaint,
+				open: func() { a.router.Push("/tools/databases") },
+			}
+			if hasConflict {
+				tile.dot = t.Warning
+			} else if runningDB > 0 {
+				tile.dot = t.Success
+			}
+			if len(ports) > 0 {
+				tile.value = locales.LiveDbAndPorts(runningDB, len(ports))
+			} else {
+				tile.value = locales.LiveDockerRunning(runningDB)
+			}
+			if len(kinds) > 0 {
+				tile.caption = strings.Join(kinds, ", ")
+			} else {
+				tile.caption = locales.LiveServersCount(len(servers))
+			}
+			out = append(out, tile)
+		} else {
+			inProjects := 0
+			for _, r := range ports {
+				if r.Project != "" {
+					inProjects++
+				}
+			}
+			caption := locales.PortsListeningCaption()
+			if inProjects > 0 {
+				caption = locales.LivePortsInProjects(inProjects)
+			}
+			out = append(out, liveTile{
+				key: "live-ports", title: locales.PortsTitle(), value: locales.LivePortsListening(len(ports)),
+				caption: caption, dot: pal.Info, captionColor: pal.TextFaint,
+				open: func() { a.router.Push(portsPage) },
+			})
+		}
+	}
+
+	// 4. Today's AI usage spend.
+	if a.Snapshot != nil && len(a.Snapshot.Sessions) > 0 {
+		sum := a.usageSummary(c.Now(), 30)
+		tile := liveTile{
+			key: "live-usage", title: locales.LiveAiToday(), dot: pal.TextFaint, captionColor: pal.TextFaint,
+			open: func() { a.router.Push(usagePage) },
+		}
+		if sum.today.tokens > 0 {
+			tile.dot = Accent
+			tile.value = usageCost(sum.today)
+			tile.caption = usageTokens(sum.today.tokens)
+		} else {
+			tile.value = "—"
+			tile.caption = locales.LiveAiMonth(usageCost(sum.total))
+		}
+		out = append(out, tile)
+	}
+
+	// 5. MCP servers summary.
+	if mcps := a.mcpItems(); len(mcps) > 0 {
+		agents := map[string]bool{}
+		mcpIssues := 0
+		for _, m := range mcps {
+			for _, ag := range m.agents() {
+				agents[ag] = true
+			}
+			if m.conflict() {
+				mcpIssues++
+			}
+		}
+		for _, is := range found {
+			if is.Kind == issues.MCPMissing || is.Kind == issues.PlainSecret {
+				mcpIssues++
+			}
+		}
+		tile := liveTile{
+			key: "live-mcp", title: "MCP", value: locales.LiveServersCount(len(mcps)),
+			caption: locales.LiveMcpAgents(len(agents)), dot: t.Success, captionColor: pal.TextFaint,
+			open: func() { a.router.Push(mcpPage) },
+		}
+		if mcpIssues > 0 {
+			tile.dot = t.Warning
+			tile.caption += " · " + locales.ChipIssues(mcpIssues)
+			tile.captionColor = pal.WarningText
+		}
+		out = append(out, tile)
+	}
+	return out
+}
+
+func liveSummaryTile(c *ui.Context, tile liveTile) {
+	t := c.Theme()
+	pal := Colors(t)
+	e := ui.ButtonBase(c.Key(tile.key)).Column().AlignItems(ui.Stretch).TextAlign(ui.Start).
+		Gap(5).Padding(11, 13).MinHeight(76).MinWidth(0).
+		Label(tile.title).OnClick(tile.open).Radius(12).Background(t.Background).
+		BorderWidth(1).BorderColor(pal.Divider).Transition(colorFade)
+	chevron := pal.TextFaint
+	if e.Hovered() {
+		e.Background(pal.Subtle)
+		chevron = Accent
+	}
+	e.Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Box(c).Size(7, 7).Radius(4).Shrink(0).Background(tile.dot)
+			ui.Text(c, tile.title).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted).Grow(1).MinWidth(0).SingleLine()
+			ui.Icon(c, Icon("chevron-right")).Size(12, 12).Shrink(0).TextColor(chevron)
+		})
+		clipped(c, tile.value).FontSize(15).FontWeight(600)
+		clipped(c, tile.caption).FontSize(11).TextColor(tile.captionColor)
 	})
 }
 
@@ -368,18 +610,7 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 	if active >= 0 {
 		shown = ts.Installations[active]
 	}
-	name, path := toolTitle(ts.Tool), ""
-	if jsTool(ts.Tool) {
-		path = "/tools/jspm"
-	}
-	if ts.Tool == "git" {
-		path = gitPage
-	}
-	for _, l := range languages {
-		if l.id == ts.Tool {
-			name, path = l.title(), l.path
-		}
-	}
+	name, path := a.toolCardTarget(ts.Tool)
 	e := ui.ButtonBase(c.Key("tool:" + ts.Tool)).Column().AlignItems(ui.Stretch).Gap(12).Padding(14).Radius(12).
 		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Label(name).Transition(cardEnter)
 	if e.Hovered() {
@@ -416,6 +647,40 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 	if e.Clicked() && path != "" {
 		a.router.Push(path)
 	}
+}
+
+// toolCardTarget maps any tool shown in the overview grid to its title
+// and destination page path.
+func (a *App) toolCardTarget(id string) (name, path string) {
+	name = toolTitle(id)
+	for _, l := range languages {
+		if l.id == id {
+			return l.title(), l.path
+		}
+	}
+	switch {
+	case jsTool(id):
+		return name, "/tools/jspm"
+	case id == "git":
+		return name, gitPage
+	case id == "docker":
+		return name, a.entryPath(dockerPage)
+	case id == "cpp":
+		return name, cppPage
+	case id == "kube" || slices.Contains(kubeCommands, id):
+		return name, a.entryPath(kubePage)
+	case id == "cli":
+		return name, cliPage
+	case id == "databases":
+		return name, "/tools/databases"
+	case id == "editors":
+		return name, editorsPage
+	case id == "mobile":
+		return name, mobilePage
+	case id == "models":
+		return name, modelsPage
+	}
+	return name, ""
 }
 
 // toolChip is the short label of an issue on the card of tool, "" when
@@ -625,6 +890,20 @@ func (a *App) attention(c *ui.Context, found []attentionItem) {
 		for _, it := range found[:min(len(found), shownIssues)] {
 			a.issueRow(c, it)
 		}
+		if more := len(found) - shownIssues; more > 0 {
+			pal := Colors(c.Theme())
+			label := locales.AttentionMore(more)
+			row := ui.ButtonBase(c.Key("attention-more")).Gap(6).Padding(10, 14).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
+				Label(label).OnClick(func() { a.router.Push(problemsPage) })
+			if row.Hovered() {
+				row.Background(pal.Subtle)
+			}
+			row.Children(func() {
+				ui.Text(c, label).FontSize(12.5).TextColor(c.Theme().TextMuted).Grow(1).SingleLine()
+				ui.Icon(c, Icon("chevron-right")).Size(13, 13).TextColor(pal.TextFaint)
+			})
+		}
 	})
 }
 
@@ -707,18 +986,33 @@ type attentionItem struct {
 	fix                       func() // proposes the plan that fixes it; nil for none
 }
 
-// issueKey names is among the scan's issues, for the hidden ones: its
-// kind, tool and project, the server or agent of one about secrets, and
-// the rule of one about an agent's permissions.
+// issueKey uniquely identifies is among the scan's issues for hiding
+// and UI widget keys across all issue kinds.
 func issueKey(is issues.Issue) string {
 	key := string(is.Kind) + ":" + is.Tool + ":" + is.Project
-	switch {
-	case is.Kind == issues.PlainSecret:
+	if is.Check.File != "" || is.Check.Want != "" {
+		key += ":" + is.Check.File + ":" + is.Check.Want
+	}
+	if len(is.Skills) > 0 {
+		key += ":" + is.Skills[0].Name
+	}
+	if len(is.MCP) > 0 {
 		key += ":" + is.MCP[0].Agent + ":" + is.MCP[0].Name
-	case is.Agent != nil:
+		if is.Kind != issues.PlainSecret && is.MCP[0].Command != "" {
+			key += ":" + is.MCP[0].Command
+		}
+	}
+	if is.Agent != nil {
 		key += ":" + is.Agent.ID
-	case is.Rule != nil:
+	}
+	if is.Rule != nil {
 		key += ":" + is.Rule.Agent + ":" + is.Rule.File + ":" + is.Rule.Rule
+	}
+	if is.Startup != nil {
+		key += ":" + is.Startup.Shell
+	}
+	if len(is.Dirs) > 0 {
+		key += ":" + strings.Join(is.Dirs, ",")
 	}
 	return key
 }
@@ -726,6 +1020,17 @@ func issueKey(is issues.Issue) string {
 // grouped are the kinds whose issues the card shows as one when there are
 // several: each is the same advice about another skill or server.
 var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
+
+// visibleIssues returns the attention items with Info items hidden by
+// the user removed, along with how many were hidden.
+func (a *App) visibleIssues(found []issues.Issue) (items []attentionItem, hidden int) {
+	items = a.attentionItems(found)
+	total := len(items)
+	items = slices.DeleteFunc(items, func(it attentionItem) bool {
+		return it.severity == issues.Info && slices.Contains(a.Hidden, it.key)
+	})
+	return items, total - len(items)
+}
 
 // needAttention are the items that need attention: warnings, and what is
 // only worth knowing when Hearth can fix it. The rest waits on the Issues

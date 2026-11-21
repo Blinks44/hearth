@@ -4,10 +4,13 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -85,6 +88,33 @@ func (a *App) searchIndex() []searchResult {
 		}
 		add(searchResult{id: projectPath(p.Dir), group: locales.ProjectsTitle(), title: filepath.Base(p.Dir), detail: strings.Join(reqs, " · "), words: p.Dir, icon: "lucide/folder-git-2", open: func() { a.router.Push(projectPath(p.Dir)) }})
 	}
+	for _, ag := range a.agents() {
+		id := ag.ID
+		detail := locales.AgentNotFound()
+		words := id
+		if ag.Found() {
+			path := ag.App
+			if active := inventory.TerminalCopy(ag.Installations); active >= 0 {
+				path = ag.Installations[active].Path
+				words += " " + ag.Installations[active].Source.Manager
+			} else if len(ag.Installations) > 0 {
+				path = ag.Installations[0].Path
+				words += " " + ag.Installations[0].Source.Manager
+			}
+			detail = strings.Trim(agentVersion(ag)+" · "+tilde(path, a.Home), " ·")
+		}
+		add(searchResult{id: "agent:" + id, group: locales.AiAgentsTitle(), title: agentTitle(id), detail: detail, words: words, icon: agentIcon(id), open: func() {
+			a.router.Push(agentPath(id))
+		}})
+	}
+	for _, app := range a.modelApps() {
+		for _, m := range app.app.Models {
+			detail := strings.Trim(app.name+" · "+formatBytes(m.Size)+" · "+m.Format, " ·")
+			add(searchResult{id: "model:" + app.name + ":" + m.Name, group: locales.ModelsTitle(), title: m.Name, detail: detail, words: app.name + " " + m.Format + " " + m.Quant, icon: "lucide/cpu", open: func() {
+				a.router.Push(modelsPage)
+			}})
+		}
+	}
 	for _, sk := range a.allSkills() {
 		if len(sk.Paths) == 0 {
 			continue
@@ -101,6 +131,92 @@ func (a *App) searchIndex() []searchResult {
 			a.mcpAgent, a.mcpQuery, a.mcpScope = "", "", 0
 			a.mcpChosen = m.key()
 			a.router.Push(mcpPage)
+		}})
+	}
+	if a.Snapshot != nil {
+		found := issues.Find(a.Snapshot, a.Projects, a.NodeVersions, time.Now())
+		visible, _ := a.visibleIssues(found)
+		for _, it := range visible {
+			icon := "lucide/triangle-alert"
+			if it.severity == issues.Info {
+				icon = "lucide/info"
+			}
+			title := it.title
+			add(searchResult{id: "issue:" + it.key, group: locales.ProblemsTitle(), title: it.title, detail: it.explain, icon: icon, open: func() {
+				a.problemsTab = 0
+				a.problemsFilter = title
+				a.router.Push(problemsPage)
+			}})
+		}
+		seenPath := map[string]bool{}
+		for _, entry := range a.Snapshot.TerminalPath {
+			if entry.Dir == "" || seenPath[entry.Dir] {
+				continue
+			}
+			seenPath[entry.Dir] = true
+			dir := entry.Dir
+			detail := "PATH"
+			if len(entry.Sources) > 0 {
+				detail = "PATH · " + tilde(entry.Sources[0].File, a.Home)
+			}
+			add(searchResult{id: "path:" + dir, group: locales.PathTitle(), title: tilde(dir, a.Home), detail: detail, words: dir + " path", icon: "lucide/terminal", open: func() {
+				a.pathTab = 0
+				a.pathFilter = dir
+				a.router.Push(pathPage)
+			}})
+		}
+		for _, v := range a.Snapshot.Variables {
+			name := v.Name
+			raw := v.Terminal
+			if raw == "" {
+				raw = v.GUI
+			}
+			val := tilde(raw, a.Home)
+			if val == "" {
+				val = "—"
+			}
+			add(searchResult{id: "var:" + name, group: locales.PathTitle(), title: name, detail: val, words: name + " " + raw + " env", icon: "lucide/terminal", open: func() {
+				a.pathTab = 2
+				a.pathFilter = name
+				a.router.Push(pathPage)
+			}})
+		}
+		for _, m := range a.packageManagers() {
+			mgr := m
+			if checked, ok := a.PackageUpdates[m.Path]; ok {
+				mgr = checked
+			}
+			mgrPath := mgr.Path
+			for _, pkg := range mgr.Packages {
+				pkgName := pkg.Name
+				detail := strings.Trim(mgr.Name+" · "+pkg.Version, " ·")
+				if pkg.Available != "" {
+					detail += " → " + pkg.Available
+				}
+				add(searchResult{id: "pkg:" + mgrPath + ":" + pkgName, group: locales.PackageManagersTitle(), title: pkgName, detail: detail, words: mgr.ID + " " + pkg.Kind, icon: "lucide/package", open: func() {
+					a.packageManager = mgrPath
+					a.packageTab = 0
+					a.packageFilter = pkgName
+					a.router.Push("/system/packages")
+				}})
+			}
+		}
+	}
+	for _, e := range a.setupEntries() {
+		entry := e
+		title := setupTitle(entry.ID)
+		detail := locales.InstallTitle()
+		if ms := entry.On(goos); len(ms) > 0 {
+			detail = locales.InstallTitle() + " · " + managerTitle(ms[0])
+		}
+		add(searchResult{id: "install:" + entry.ID, group: locales.InstallTitle(), title: title, detail: detail, words: entry.ID + " install", icon: "lucide/download", open: func() {
+			a.setup.wizard = false
+			a.setup.filter = 0
+			if a.setup.more == nil {
+				a.setup.more = map[catalog.Group]bool{}
+			}
+			a.setup.more[entry.Group] = true
+			a.router.Push(setupPage)
 		}})
 	}
 	add(searchResult{id: "action:scan", group: locales.SearchActions(), title: locales.Scan(), detail: locales.OverviewSubtitle(), icon: "lucide/refresh-cw", open: a.Scan})

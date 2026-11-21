@@ -269,6 +269,33 @@ var Tools = []Entry{
 	{ID: "helm", Group: Tool, Methods: mise("helm")},
 	{ID: "kind", Group: Tool, Methods: mise("kind")},
 
+	// Cloud CLIs and infrastructure tools: Homebrew on macOS, WinGet on
+	// Windows, distro packages or mise on Linux; Terraform and OpenTofu
+	// install through mise so projects can pin versions.
+	{ID: "aws", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "awscli", Kind: "formula"},
+		{Manager: "winget", Package: "Amazon.AWSCLI"},
+		{Manager: "dnf", Package: "awscli2"},
+		{Manager: "pacman", Package: "aws-cli-v2"},
+		{Manager: "apk", Package: "aws-cli"},
+		{Manager: "mise", Package: "awscli"},
+	}},
+	{ID: "gcloud", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "gcloud-cli", Kind: "cask"},
+		{Manager: "winget", Package: "Google.CloudSDK"},
+		{Manager: "mise", Package: "gcloud"},
+	}},
+	{ID: "az", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "azure-cli", Kind: "formula"},
+		{Manager: "winget", Package: "Microsoft.AzureCLI"},
+		{Manager: "dnf", Package: "azure-cli"},
+		{Manager: "pacman", Package: "azure-cli"},
+		{Manager: "zypper", Package: "azure-cli"},
+		{Manager: "mise", Package: "azure-cli"},
+	}},
+	{ID: "terraform", Group: Tool, Methods: mise("terraform")},
+	{ID: "tofu", Group: Tool, Methods: mise("opentofu")},
+
 	// Database servers install through the system's manager, which
 	// sets their service up; Homebrew's starts with brew services. On
 	// Linux only Debian's and Ubuntu's packages create a server that runs
@@ -383,6 +410,11 @@ func About(id string) string {
 		"kubectl":     locales.CatalogKubectl,
 		"helm":        locales.CatalogHelm,
 		"kind":        locales.CatalogKind,
+		"aws":         locales.CatalogAws,
+		"gcloud":      locales.CatalogGcloud,
+		"az":          locales.CatalogAz,
+		"terraform":   locales.CatalogTerraform,
+		"tofu":        locales.CatalogTofu,
 		"pnpm":        locales.CatalogPnpm,
 		"yarn":        locales.CatalogYarn,
 		"git":         locales.CatalogGit,

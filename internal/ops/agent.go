@@ -149,3 +149,41 @@ func DatabaseFound(title, kind string, detect Detect) func(context.Context) (str
 		return "", errors.New(locales.AgentCheckMissing(title))
 	}
 }
+
+// ManagerFound is the check of a plan that installs a tool manager the
+// language detector finds in Managers, as uv in Python.
+func ManagerFound(title, manager string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		for _, m := range st.Managers {
+			if m.Name == manager && m.Version != "" {
+				return locales.AgentCheckFound(title, m.Version), nil
+			}
+		}
+		return "", errors.New(locales.AgentCheckMissing(title))
+	}
+}
+
+// VarCommandFound is the check of a plan that installs a command a
+// language detector records in Vars, as pipx, bundle, mvn, or gradle.
+func VarCommandFound(title, command string, detect Detect) func(context.Context) (string, error) {
+	if detect == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detect(ctx)
+		if err != nil {
+			return "", err
+		}
+		if path := st.Vars[command]; path != "" {
+			return locales.AgentCheckFound(title, path), nil
+		}
+		return "", errors.New(locales.AgentCheckMissing(title))
+	}
+}

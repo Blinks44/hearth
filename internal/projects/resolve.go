@@ -3,6 +3,7 @@ package projects
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
@@ -73,7 +74,7 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 	}
 	for i := range out {
 		st := &out[i]
-		ts, ok := s.Tool(st.Tool)
+		ts, ok := snapshotTool(s, st.Tool)
 		if !ok || ts.Err != "" {
 			continue
 		}
@@ -250,6 +251,9 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 			}, nil
 		}
 	}
+	if tool == "terraform" || tool == "tofu" {
+		want = terraformConstraint(want)
+	}
 	c, err := semver.NewConstraint(want)
 	if err != nil {
 		return nil, fmt.Errorf("version %q: %w", want, err)
@@ -258,6 +262,113 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 		v, err := installedVersion(in.Version)
 		return err == nil && c.Check(v)
 	}, nil
+}
+
+// snapshotTool returns a tool's state from s, synthesizing terraform and tofu
+// from the cli detector and mise installs since they share the CLI page.
+func snapshotTool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool) {
+	if s == nil {
+		return inventory.ToolState{}, false
+	}
+	if ts, ok := s.Tool(tool); ok {
+		return ts, true
+	}
+	if tool != "terraform" && tool != "tofu" {
+		return inventory.ToolState{}, false
+	}
+	cli, ok := s.Tool("cli")
+	if !ok || cli.Err != "" {
+		return inventory.ToolState{}, false
+	}
+	ts := inventory.ToolState{Tool: tool}
+	if cli.Cli != nil {
+		for _, in := range cli.Cli.Tools {
+			if in.Tool == tool {
+				ts.Installations = append(ts.Installations, in)
+			}
+		}
+	}
+	if mise, ok := s.Tool("mise"); ok && mise.Err == "" {
+		for _, mt := range mise.MiseTools {
+			if mt.Name != tool && (tool != "tofu" || mt.Name != "opentofu") {
+				continue
+			}
+			for _, in := range mt.Installations {
+				in.Tool = tool
+				dup := false
+				for i := range ts.Installations {
+					ex := &ts.Installations[i]
+					if ex.Source.Manager == "mise" && !ex.Source.Shim && ex.Version == in.Version {
+						ex.Default = ex.Default || in.Default
+						dup = true
+						break
+					}
+				}
+				if !dup {
+					ts.Installations = append(ts.Installations, in)
+				}
+			}
+		}
+	}
+	for _, t := range s.Tools {
+		for _, m := range t.Managers {
+			if m.Name != "mise" {
+				continue
+			}
+			mm := m
+			mm.Files = slices.Clone(m.Files)
+			if tool == "terraform" {
+				mm.Files = append(mm.Files, ".terraform-version")
+			} else {
+				mm.Files = append(mm.Files, ".opentofu-version", ".tofu-version")
+			}
+			ts.Managers = append(ts.Managers, mm)
+			return ts, true
+		}
+	}
+	return ts, true
+}
+
+// terraformConstraint translates HashiCorp/OpenTofu pessimistic constraints
+// (~> 1.10 -> >= 1.10.0, < 2.0.0; ~> 1.10.2 -> >= 1.10.2, < 1.11.0) into
+// semver constraints.
+func terraformConstraint(want string) string {
+	parts := strings.Split(want, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if !strings.HasPrefix(p, "~>") {
+			out = append(out, p)
+			continue
+		}
+		v := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(p[2:]), "v"))
+		core, _, _ := strings.Cut(v, "-")
+		segs := strings.Split(core, ".")
+		switch len(segs) {
+		case 1:
+			if maj, err := strconv.Atoi(segs[0]); err == nil {
+				out = append(out, fmt.Sprintf(">= %d.0.0, < %d.0.0", maj, maj+1))
+				continue
+			}
+		case 2:
+			maj, err1 := strconv.Atoi(segs[0])
+			min, err2 := strconv.Atoi(segs[1])
+			if err1 == nil && err2 == nil {
+				out = append(out, fmt.Sprintf(">= %d.%d.0, < %d.0.0", maj, min, maj+1))
+				continue
+			}
+		case 3:
+			maj, err1 := strconv.Atoi(segs[0])
+			min, err2 := strconv.Atoi(segs[1])
+			_, err3 := strconv.Atoi(segs[2])
+			if err1 == nil && err2 == nil && err3 == nil {
+				out = append(out, fmt.Sprintf(">= %s, < %d.%d.0", v, maj, min+1))
+				continue
+			}
+		}
+		out = append(out, p)
+	}
+	return strings.Join(out, ", ")
 }
 
 // Pick returns the newest of releases, newest first, that want asks of

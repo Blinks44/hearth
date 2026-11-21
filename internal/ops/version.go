@@ -139,11 +139,13 @@ var managerTools = map[string][]string{
 // tells: only that default can be made and checked.
 var knownDefaults = map[string][]string{
 	"node":   {"fnm", "nvm", "nvm-windows", "mise", "asdf", "nodenv", "n", "volta"},
+	"bun":    {"mise"},
 	"python": {"pyenv", "mise"},
 	"ruby":   {"rbenv", "rvm", "asdf", "mise"},
 	"java":   {"sdkman", "mise"},
 	"go":     {"mise"},
 	"php":    {"mise"},
+	"dotnet": {"mise"},
 	"pnpm":   {"corepack"},
 	"yarn":   {"corepack"},
 }

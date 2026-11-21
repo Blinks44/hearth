@@ -170,6 +170,31 @@ func main() {
 				win.Update(func() { done(res) })
 			}()
 		}
+		a.CheckCloudAuth = func(tool, bin string, done func(detect.CloudAuth)) {
+			env := scanner.Terminal()
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), detect.CloudAuthTimeout)
+				defer cancel()
+				res := detect.CheckCloudAuth(ctx, run.Exec{}, tool, bin, env)
+				win.Update(func() { done(res) })
+			}()
+		}
+		a.ListGcloudProjects = func(bin string, done func([]string, error)) {
+			env := scanner.Terminal()
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), detect.CloudAuthTimeout)
+				defer cancel()
+				res, err := detect.ListGcloudProjects(ctx, run.Exec{}, bin, env)
+				win.Update(func() { done(res, err) })
+			}()
+		}
+		a.OpenCloudLogin = func(argv []string, done func(error)) {
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, argv, env, env.Get("PATH"), "", hint)
+				win.Update(func() { done(err) })
+			}()
+		}
 		// The cluster view's reads keep their sign-in and connection.
 		api := kube.NewAPI()
 		a.WatchCluster = func(t kube.Target, got func(kube.Cluster, error)) func() {
@@ -653,30 +678,27 @@ func main() {
 			managers := slices.Clone(st.PackageManagers)
 			env := slices.Clone(scanner.Terminal())
 			for _, m := range managers {
-				if pkgmgr.HasNetworkQuery(m.ID) {
-					a.PackageChecks[m.Path] = true
+				if !pkgmgr.HasNetworkQuery(m.ID) {
+					continue
 				}
-			}
-			go func() {
-				for _, m := range managers {
+				a.PackageChecks[m.Path] = true
+				mgr := m
+				go func() {
 					if ctx.Err() != nil {
 						return
 					}
-					if !pkgmgr.HasNetworkQuery(m.ID) {
-						continue
-					}
 					queryCtx, stop := context.WithTimeout(ctx, 2*time.Minute)
-					result := pkgmgr.Network(queryCtx, lists, run.Exec{}, env, m)
+					result := pkgmgr.Network(queryCtx, lists, run.Exec{}, env, mgr)
 					stop()
 					win.Update(func() {
 						if ctx.Err() != nil {
 							return
 						}
-						a.PackageUpdates[m.Path] = result
-						delete(a.PackageChecks, m.Path)
+						a.PackageUpdates[mgr.Path] = result
+						delete(a.PackageChecks, mgr.Path)
 					})
-				}
-			}()
+				}()
+			}
 		}
 		fetchVersions := func() {
 			if cancelVersions != nil {
@@ -685,16 +707,17 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelVersions = cancel
 			lists.SetOffline(!a.VersionLists)
-			fetchList(ctx, win, lists, versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchJSManagers, &a.JSVersions, &a.JSVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
-			fetchList(ctx, win, lists, versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchRust, &a.RustVersions, &a.RustVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchDotnet, &a.DotnetVersions, &a.DotnetVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
-			fetchList(ctx, win, lists, versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
+			a.VersionChecks = map[string]bool{}
+			fetchList(ctx, win, lists, a.VersionChecks, "node", versions.FetchNode, &a.NodeVersions, &a.NodeVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "js", versions.FetchJSManagers, &a.JSVersions, &a.JSVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "bun", versions.FetchBun, &a.BunLatest, &a.BunLatestErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "go", versions.FetchGo, &a.GoVersions, &a.GoVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "python", versions.FetchPython, &a.PythonVersions, &a.PythonVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "php", versions.FetchPHP, &a.PHPVersions, &a.PHPVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "rust", versions.FetchRust, &a.RustVersions, &a.RustVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "dotnet", versions.FetchDotnet, &a.DotnetVersions, &a.DotnetVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "ruby", versions.FetchRuby, &a.RubyVersions, &a.RubyVersionsErr)
+			fetchList(ctx, win, lists, a.VersionChecks, "java", versions.FetchJava, &a.JavaVersions, &a.JavaVersionsErr)
 		}
 		a.CachePath = lists.Dir
 		win.OnClose(func(*mygo.CloseEvent) { a.ClearSecretClipboard() })
@@ -864,8 +887,12 @@ func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *
 	}
 	if len(installed) == 0 || len(found) == 0 {
 		a.MiseOutdated = nil
+		a.MiseOutdatedErr = ""
+		a.MiseChecking = false
 		return
 	}
+	a.MiseChecking = true
+	a.MiseOutdatedErr = ""
 	env = slices.Clone(env)
 	go func() {
 		m, err := versions.FetchMise(ctx, lists, run.Exec{}, env, found[0], installed)
@@ -873,8 +900,24 @@ func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *
 			log.Print(err)
 		}
 		win.Update(func() {
-			if ctx.Err() == nil && (err == nil || len(m.Tools) > 0) {
+			if ctx.Err() != nil {
+				return
+			}
+			a.MiseChecking = false
+			switch {
+			case errors.Is(err, versions.ErrOffline):
+				a.MiseOutdatedErr = locales.VersionsOffline()
+				if len(m.Tools) > 0 {
+					a.MiseOutdated = &m
+				}
+			case err != nil:
+				a.MiseOutdatedErr = err.Error()
+				if len(m.Tools) > 0 {
+					a.MiseOutdated = &m
+				}
+			default:
 				a.MiseOutdated = &m
+				a.MiseOutdatedErr = ""
 			}
 		})
 	}()
@@ -883,7 +926,8 @@ func fetchMise(ctx context.Context, win *mygo.Window, lists *versions.Cache, a *
 // fetchList gets a version list through lists in the background and
 // puts it in *dst on the UI thread; when it cannot, the list shown before
 // stays and *errText says why.
-func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cache, fetch func(context.Context, *versions.Cache) (T, error), dst **T, errText *string) {
+func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cache, checks map[string]bool, key string, fetch func(context.Context, *versions.Cache) (T, error), dst **T, errText *string) {
+	checks[key] = true
 	go func() {
 		list, err := fetch(ctx, lists)
 		if err != nil && !errors.Is(err, versions.ErrOffline) {
@@ -893,6 +937,7 @@ func fetchList[T any](ctx context.Context, win *mygo.Window, lists *versions.Cac
 			if ctx.Err() != nil {
 				return
 			}
+			delete(checks, key)
 			switch {
 			case errors.Is(err, versions.ErrOffline):
 				*errText = locales.VersionsOffline()

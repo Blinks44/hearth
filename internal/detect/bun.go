@@ -44,6 +44,7 @@ func Bun(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 	// runs it.
 	globals := bunGlobals(install)
 	state := inventory.ToolState{Tool: "bun", Installations: f.ins}
+	var miseVersions []string
 	for i := range state.Installations {
 		in := &state.Installations[i]
 		if in.Source.Shim {
@@ -64,6 +65,17 @@ func Bun(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 		}
 		if in.Version == "" {
 			in.Version = versionOf(ctx, r, term, in.RealPath)
+		}
+		if in.Source.Manager == "mise" && in.Version != "" {
+			miseVersions = append(miseVersions, in.Version)
+		}
+	}
+	if want := miseDefault(dirs, term, "bun", miseVersions); want != "" {
+		for i := range state.Installations {
+			in := &state.Installations[i]
+			if in.Source.Manager == "mise" && !in.Source.Shim && in.Version == want {
+				in.Default = true
+			}
 		}
 	}
 	return state, ctx.Err()

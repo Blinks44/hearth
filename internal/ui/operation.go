@@ -373,7 +373,22 @@ func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 		return ops.FileEdit{Path: ops.UserPathName, Before: lines(step.UserPath.Before), After: lines(step.UserPath.After)}, true, true
 	case step.UserVar != nil:
 		v := step.UserVar
-		return ops.FileEdit{Path: ops.UserVarsName + `\` + v.Name, After: v.Name + "=" + v.Value + "\n", Hide: []string{v.Value}}, true, true
+		e := ops.FileEdit{Path: ops.UserVarsName + `\` + v.Name}
+		if v.Before != "" {
+			e.Before = v.Name + "=" + v.Before + "\n"
+		}
+		if !v.Delete {
+			e.After = v.Name + "=" + v.Value + "\n"
+		}
+		if !v.Public {
+			if v.Before != "" {
+				e.Hide = append(e.Hide, v.Before)
+			}
+			if v.Value != "" {
+				e.Hide = append(e.Hide, v.Value)
+			}
+		}
+		return e, true, true
 	}
 	return ops.FileEdit{}, false, false
 }

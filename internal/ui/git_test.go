@@ -36,7 +36,7 @@ func TestGitPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "git")
-	hasTexts(t, tt, "Tools · version control", "2 copies", "which git → brew", "Dev User", "~/.gitconfig",
+	hasTexts(t, tt, "Tools · version control", "2 copies", whichCommand+" git → brew", "Dev User", "~/.gitconfig",
 		"2.47.1", "available 2.48.1", "2.39.5", "Global settings", "init.defaultBranch", "main", "code --wait",
 		"macOS keychain", "osxkeychain · passwords and tokens are kept there",
 		"GitHub CLI 2.63.2", "signed in to github.com · devuser · the token is not shown",

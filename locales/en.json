@@ -5020,9 +5020,9 @@
   "@sectionToolsCli": {
     "description": "Subtitle of the CLI page."
   },
-  "cliLead": "Version, source and where each stands in one table",
+  "cliLead": "Cloud CLIs, infrastructure tools and which profile a command will use",
   "@cliLead": {
-    "description": "Under the CLI page's big title."
+    "description": "CLI & clouds string: cliLead."
   },
   "cliFoundCaption": "of {count} known",
   "@cliFoundCaption": {
@@ -14537,6 +14537,792 @@
     "placeholders": {
       "command": {
         "type": "String"
+      }
+    }
+  },
+  "catalogAws": "Amazon Web Services command-line interface.",
+  "@catalogAws": {
+    "description": "CLI & clouds string: catalogAws."
+  },
+  "catalogGcloud": "Google Cloud command-line interface.",
+  "@catalogGcloud": {
+    "description": "CLI & clouds string: catalogGcloud."
+  },
+  "catalogAz": "Microsoft Azure command-line interface.",
+  "@catalogAz": {
+    "description": "CLI & clouds string: catalogAz."
+  },
+  "catalogTerraform": "Infrastructure as code tool by HashiCorp.",
+  "@catalogTerraform": {
+    "description": "CLI & clouds string: catalogTerraform."
+  },
+  "catalogTofu": "Open-source Terraform-compatible infrastructure as code tool.",
+  "@catalogTofu": {
+    "description": "CLI & clouds string: catalogTofu."
+  },
+  "cliInstallMenu": "Install…",
+  "@cliInstallMenu": {
+    "description": "CLI & clouds string: cliInstallMenu."
+  },
+  "cliAuthCard": "Sign-in checked",
+  "@cliAuthCard": {
+    "description": "CLI & clouds string: cliAuthCard."
+  },
+  "cliAuthCount": "{checked} of {total}",
+  "@cliAuthCount": {
+    "description": "CLI & clouds string: cliAuthCount.",
+    "placeholders": {
+      "checked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cliAuthNoneFound": "no cloud CLIs found",
+  "@cliAuthNoneFound": {
+    "description": "CLI & clouds string: cliAuthNoneFound."
+  },
+  "cliAuthNotChecked": "not checked yet",
+  "@cliAuthNotChecked": {
+    "description": "CLI & clouds string: cliAuthNotChecked."
+  },
+  "cliAuthSomeMissing": "{ok} · {missing} not signed in",
+  "@cliAuthSomeMissing": {
+    "description": "CLI & clouds string: cliAuthSomeMissing.",
+    "placeholders": {
+      "ok": {
+        "type": "String"
+      },
+      "missing": {
+        "type": "String"
+      }
+    }
+  },
+  "cliProjectsCard": "Projects need",
+  "@cliProjectsCard": {
+    "description": "CLI & clouds string: cliProjectsCard."
+  },
+  "cliProjectsAllMet": "all requirements met",
+  "@cliProjectsAllMet": {
+    "description": "CLI & clouds string: cliProjectsAllMet."
+  },
+  "cliProjectsNone": "no Terraform or OpenTofu projects",
+  "@cliProjectsNone": {
+    "description": "CLI & clouds string: cliProjectsNone."
+  },
+  "cliMissingNotNeeded": "not found · {name} · not needed by projects",
+  "@cliMissingNotNeeded": {
+    "description": "CLI & clouds string: cliMissingNotNeeded.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cliMissingNeeded": "not found · {name} · needed by {project}",
+  "@cliMissingNeeded": {
+    "description": "CLI & clouds string: cliMissingNeeded.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "cliProjectAsks": "project {project} asks {want}",
+  "@cliProjectAsks": {
+    "description": "CLI & clouds string: cliProjectAsks.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "want": {
+        "type": "String"
+      }
+    }
+  },
+  "cliProjectNeeds": "project {project} uses it",
+  "@cliProjectNeeds": {
+    "description": "CLI & clouds string: cliProjectNeeds.",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "cliTargetTitle": "Where commands go",
+  "@cliTargetTitle": {
+    "description": "CLI & clouds string: cliTargetTitle."
+  },
+  "cliTargetEmpty": "No cloud CLI settings found",
+  "@cliTargetEmpty": {
+    "description": "CLI & clouds string: cliTargetEmpty."
+  },
+  "cliTargetFromEnv": "from {var}",
+  "@cliTargetFromEnv": {
+    "description": "CLI & clouds string: cliTargetFromEnv.",
+    "placeholders": {
+      "var": {
+        "type": "String"
+      }
+    }
+  },
+  "cliTargetFromDefault": "default profile",
+  "@cliTargetFromDefault": {
+    "description": "CLI & clouds string: cliTargetFromDefault."
+  },
+  "cliTargetConfigEnv": "config from {var}",
+  "@cliTargetConfigEnv": {
+    "description": "CLI & clouds string: cliTargetConfigEnv.",
+    "placeholders": {
+      "var": {
+        "type": "String"
+      }
+    }
+  },
+  "cliTargetSwitch": "Switch…",
+  "@cliTargetSwitch": {
+    "description": "CLI & clouds string: cliTargetSwitch."
+  },
+  "cliTargetChoose": "Choose…",
+  "@cliTargetChoose": {
+    "description": "CLI & clouds string: cliTargetChoose."
+  },
+  "cliIssueConfigMissing": "config file not found",
+  "@cliIssueConfigMissing": {
+    "description": "CLI & clouds string: cliIssueConfigMissing."
+  },
+  "cliIssueProfileMissing": "profile not found in config",
+  "@cliIssueProfileMissing": {
+    "description": "CLI & clouds string: cliIssueProfileMissing."
+  },
+  "cliIssueConfigInvalid": "config file could not be read",
+  "@cliIssueConfigInvalid": {
+    "description": "CLI & clouds string: cliIssueConfigInvalid."
+  },
+  "cliIssueEnvCreds": "environment credentials override profile",
+  "@cliIssueEnvCreds": {
+    "description": "CLI & clouds string: cliIssueEnvCreds."
+  },
+  "cliIssueProfileConflict": "AWS_PROFILE and AWS_DEFAULT_PROFILE differ",
+  "@cliIssueProfileConflict": {
+    "description": "CLI & clouds string: cliIssueProfileConflict."
+  },
+  "cliIssueRegionConflict": "AWS_REGION and AWS_DEFAULT_REGION differ",
+  "@cliIssueRegionConflict": {
+    "description": "CLI & clouds string: cliIssueRegionConflict."
+  },
+  "cliIssueActiveConfigMissing": "active configuration file missing",
+  "@cliIssueActiveConfigMissing": {
+    "description": "CLI & clouds string: cliIssueActiveConfigMissing."
+  },
+  "cliIssueProjectOverride": "project overridden by {var}",
+  "@cliIssueProjectOverride": {
+    "description": "CLI & clouds string: cliIssueProjectOverride.",
+    "placeholders": {
+      "var": {
+        "type": "String"
+      }
+    }
+  },
+  "cliIssueMultipleDefaults": "multiple default subscriptions in profile",
+  "@cliIssueMultipleDefaults": {
+    "description": "CLI & clouds string: cliIssueMultipleDefaults."
+  },
+  "cliTargetNoProfile": "no profile selected",
+  "@cliTargetNoProfile": {
+    "description": "CLI & clouds string: cliTargetNoProfile."
+  },
+  "cliWhoTitle": "Who the provider sees",
+  "@cliWhoTitle": {
+    "description": "CLI & clouds string: cliWhoTitle."
+  },
+  "cliWhoNotChecked": "not checked",
+  "@cliWhoNotChecked": {
+    "description": "CLI & clouds string: cliWhoNotChecked."
+  },
+  "cliWhoNotCheckedCaption": "Hearth checks only when you click",
+  "@cliWhoNotCheckedCaption": {
+    "description": "CLI & clouds string: cliWhoNotCheckedCaption."
+  },
+  "cliWhoChecking": "checking…",
+  "@cliWhoChecking": {
+    "description": "CLI & clouds string: cliWhoChecking."
+  },
+  "cliWhoNotLoggedIn": "not signed in",
+  "@cliWhoNotLoggedIn": {
+    "description": "CLI & clouds string: cliWhoNotLoggedIn."
+  },
+  "cliWhoNotLoggedInCaption": "sign in never ran or session expired",
+  "@cliWhoNotLoggedInCaption": {
+    "description": "CLI & clouds string: cliWhoNotLoggedInCaption."
+  },
+  "cliWhoExpired": "session expired",
+  "@cliWhoExpired": {
+    "description": "CLI & clouds string: cliWhoExpired."
+  },
+  "cliWhoNetwork": "provider unreachable",
+  "@cliWhoNetwork": {
+    "description": "CLI & clouds string: cliWhoNetwork."
+  },
+  "cliWhoUnknown": "could not verify",
+  "@cliWhoUnknown": {
+    "description": "CLI & clouds string: cliWhoUnknown."
+  },
+  "cliWhoVerifiedCaption": "checked {ago} · account {account}",
+  "@cliWhoVerifiedCaption": {
+    "description": "CLI & clouds string: cliWhoVerifiedCaption.",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "cliWhoVerifiedNoAccount": "checked {ago}",
+  "@cliWhoVerifiedNoAccount": {
+    "description": "CLI & clouds string: cliWhoVerifiedNoAccount.",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "cliWhoSignIn": "Sign in…",
+  "@cliWhoSignIn": {
+    "description": "CLI & clouds string: cliWhoSignIn."
+  },
+  "cliWhoCheck": "Check",
+  "@cliWhoCheck": {
+    "description": "CLI & clouds string: cliWhoCheck."
+  },
+  "cliWhoCheckAgain": "Check again",
+  "@cliWhoCheckAgain": {
+    "description": "CLI & clouds string: cliWhoCheckAgain."
+  },
+  "cliWhoBadgeVerified": "verified",
+  "@cliWhoBadgeVerified": {
+    "description": "CLI & clouds string: cliWhoBadgeVerified."
+  },
+  "cliWhoBadgeNotSignedIn": "not signed in",
+  "@cliWhoBadgeNotSignedIn": {
+    "description": "CLI & clouds string: cliWhoBadgeNotSignedIn."
+  },
+  "cliInfraCardTitle": "Needed by projects",
+  "@cliInfraCardTitle": {
+    "description": "CLI & clouds string: cliInfraCardTitle."
+  },
+  "cliInfraCardEmpty": "No added projects use Terraform or OpenTofu",
+  "@cliInfraCardEmpty": {
+    "description": "CLI & clouds string: cliInfraCardEmpty."
+  },
+  "cliInfraMet": "installed {version} · matches",
+  "@cliInfraMet": {
+    "description": "CLI & clouds string: cliInfraMet.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "cliInfraMismatch": "installed {version} · does not match",
+  "@cliInfraMismatch": {
+    "description": "CLI & clouds string: cliInfraMismatch.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "cliInfraNotInstalled": "not installed",
+  "@cliInfraNotInstalled": {
+    "description": "CLI & clouds string: cliInfraNotInstalled."
+  },
+  "cliInfraInvalidConstraint": "version constraint could not be parsed",
+  "@cliInfraInvalidConstraint": {
+    "description": "CLI & clouds string: cliInfraInvalidConstraint."
+  },
+  "cliInfraNoExec": "Project code is never run",
+  "@cliInfraNoExec": {
+    "description": "CLI & clouds string: cliInfraNoExec."
+  },
+  "cliInfraNoExecCaption": "Hearth never runs init, plan or apply",
+  "@cliInfraNoExecCaption": {
+    "description": "CLI & clouds string: cliInfraNoExecCaption."
+  },
+  "cliInfraInstallVersion": "↓ {version}",
+  "@cliInfraInstallVersion": {
+    "description": "CLI & clouds string: cliInfraInstallVersion.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsSwitchTitle": "Switch AWS profile",
+  "@cloudAwsSwitchTitle": {
+    "description": "CLI & clouds string: cloudAwsSwitchTitle."
+  },
+  "cloudAwsSwitchWhy": "Sets AWS_PROFILE for new terminals in Hearth's shell block without touching AWS credentials.",
+  "@cloudAwsSwitchWhy": {
+    "description": "CLI & clouds string: cloudAwsSwitchWhy."
+  },
+  "cloudAwsSwitchChange": "AWS profile: {change}",
+  "@cloudAwsSwitchChange": {
+    "description": "CLI & clouds string: cloudAwsSwitchChange.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsRegionChange": "AWS region for {profile}: {region}",
+  "@cloudAwsRegionChange": {
+    "description": "CLI & clouds string: cloudAwsRegionChange.",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsRegionLabel": "Region (optional)",
+  "@cloudAwsRegionLabel": {
+    "description": "CLI & clouds string: cloudAwsRegionLabel."
+  },
+  "cloudAwsProfileLabel": "Profile",
+  "@cloudAwsProfileLabel": {
+    "description": "CLI & clouds string: cloudAwsProfileLabel."
+  },
+  "cloudAwsEnvCredsNoteTitle": "Environment credentials are set",
+  "@cloudAwsEnvCredsNoteTitle": {
+    "description": "CLI & clouds string: cloudAwsEnvCredsNoteTitle."
+  },
+  "cloudAwsEnvCredsNoteText": "AWS_ACCESS_KEY_ID is set in your terminal environment and takes precedence over AWS_PROFILE until unset.",
+  "@cloudAwsEnvCredsNoteText": {
+    "description": "CLI & clouds string: cloudAwsEnvCredsNoteText."
+  },
+  "cloudAwsOutsideBlockTitle": "AWS_PROFILE is set outside Hearth's block",
+  "@cloudAwsOutsideBlockTitle": {
+    "description": "CLI & clouds string: cloudAwsOutsideBlockTitle."
+  },
+  "cloudAwsOutsideBlockText": "{file} sets AWS_PROFILE outside Hearth's block. Hearth will not edit your line; check it if the new profile does not apply.",
+  "@cloudAwsOutsideBlockText": {
+    "description": "CLI & clouds string: cloudAwsOutsideBlockText.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsRegionMismatch": "AWS region for {profile} is not {region}",
+  "@cloudAwsRegionMismatch": {
+    "description": "CLI & clouds string: cloudAwsRegionMismatch.",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsRegionSet": "AWS region for {profile} is {region}",
+  "@cloudAwsRegionSet": {
+    "description": "CLI & clouds string: cloudAwsRegionSet.",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAwsInvalid": "Invalid AWS profile or region name.",
+  "@cloudAwsInvalid": {
+    "description": "CLI & clouds string: cloudAwsInvalid."
+  },
+  "cloudGcloudSwitchTitle": "Switch Google Cloud selection",
+  "@cloudGcloudSwitchTitle": {
+    "description": "CLI & clouds string: cloudGcloudSwitchTitle."
+  },
+  "cloudGcloudSwitchWhy": "Updates the active gcloud configuration or project locally using gcloud's own commands.",
+  "@cloudGcloudSwitchWhy": {
+    "description": "CLI & clouds string: cloudGcloudSwitchWhy."
+  },
+  "cloudGcloudConfigLabel": "Configuration",
+  "@cloudGcloudConfigLabel": {
+    "description": "CLI & clouds string: cloudGcloudConfigLabel."
+  },
+  "cloudGcloudProjectLabel": "Project",
+  "@cloudGcloudProjectLabel": {
+    "description": "CLI & clouds string: cloudGcloudProjectLabel."
+  },
+  "cloudGcloudLoadProjects": "Load projects from account",
+  "@cloudGcloudLoadProjects": {
+    "description": "CLI & clouds string: cloudGcloudLoadProjects."
+  },
+  "cloudGcloudConfigChange": "gcloud configuration: {change}",
+  "@cloudGcloudConfigChange": {
+    "description": "CLI & clouds string: cloudGcloudConfigChange.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudGcloudProjectChange": "gcloud project: {change}",
+  "@cloudGcloudProjectChange": {
+    "description": "CLI & clouds string: cloudGcloudProjectChange.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudGcloudEnvOverrideTitle": "Environment variable overrides gcloud config",
+  "@cloudGcloudEnvOverrideTitle": {
+    "description": "CLI & clouds string: cloudGcloudEnvOverrideTitle."
+  },
+  "cloudGcloudEnvOverrideText": "{var} is set in the terminal environment and overrides the saved gcloud configuration until unset.",
+  "@cloudGcloudEnvOverrideText": {
+    "description": "CLI & clouds string: cloudGcloudEnvOverrideText.",
+    "placeholders": {
+      "var": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudGcloudMismatch": "gcloud did not switch to the selected configuration or project",
+  "@cloudGcloudMismatch": {
+    "description": "CLI & clouds string: cloudGcloudMismatch."
+  },
+  "cloudGcloudSet": "gcloud now points to {target}",
+  "@cloudGcloudSet": {
+    "description": "CLI & clouds string: cloudGcloudSet.",
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudGcloudInvalid": "Invalid gcloud configuration or project.",
+  "@cloudGcloudInvalid": {
+    "description": "CLI & clouds string: cloudGcloudInvalid."
+  },
+  "cloudAzSwitchTitle": "Switch Azure subscription",
+  "@cloudAzSwitchTitle": {
+    "description": "CLI & clouds string: cloudAzSwitchTitle."
+  },
+  "cloudAzSwitchWhy": "Switches the active Azure subscription locally using az account set.",
+  "@cloudAzSwitchWhy": {
+    "description": "CLI & clouds string: cloudAzSwitchWhy."
+  },
+  "cloudAzSubLabel": "Subscription",
+  "@cloudAzSubLabel": {
+    "description": "CLI & clouds string: cloudAzSubLabel."
+  },
+  "cloudAzSubChange": "Azure subscription: {change}",
+  "@cloudAzSubChange": {
+    "description": "CLI & clouds string: cloudAzSubChange.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAzMismatch": "Azure CLI did not switch to {sub}",
+  "@cloudAzMismatch": {
+    "description": "CLI & clouds string: cloudAzMismatch.",
+    "placeholders": {
+      "sub": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAzSet": "Azure subscription: {sub}",
+  "@cloudAzSet": {
+    "description": "CLI & clouds string: cloudAzSet.",
+    "placeholders": {
+      "sub": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAzInvalid": "Invalid Azure subscription.",
+  "@cloudAzInvalid": {
+    "description": "CLI & clouds string: cloudAzInvalid."
+  },
+  "cloudSwitchApply": "Review plan…",
+  "@cloudSwitchApply": {
+    "description": "CLI & clouds string: cloudSwitchApply."
+  },
+  "cloudNoChoices": "No local entries found in config files.",
+  "@cloudNoChoices": {
+    "description": "CLI & clouds string: cloudNoChoices."
+  },
+  "cloudLoginTitle": "Sign in to {provider}",
+  "@cloudLoginTitle": {
+    "description": "CLI & clouds string: cloudLoginTitle.",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginLead": "Hearth runs the official {tool} CLI, which opens your browser. Hearth never sees your password or stores tokens; {tool} keeps them in its own folder {dir}.",
+  "@cloudLoginLead": {
+    "description": "CLI & clouds string: cloudLoginLead.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginStep1Desc": "Opens your browser for sign-in and writes tokens to {dir}",
+  "@cloudLoginStep1Desc": {
+    "description": "CLI & clouds string: cloudLoginStep1Desc.",
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginStep2Desc": "After sign-in, Hearth checks which account {tool} sees",
+  "@cloudLoginStep2Desc": {
+    "description": "CLI & clouds string: cloudLoginStep2Desc.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginStep3TitleGcloud": "Choose a project",
+  "@cloudLoginStep3TitleGcloud": {
+    "description": "CLI & clouds string: cloudLoginStep3TitleGcloud."
+  },
+  "cloudLoginStep3DescGcloud": "After signing in you can pick the default project for {config}",
+  "@cloudLoginStep3DescGcloud": {
+    "description": "CLI & clouds string: cloudLoginStep3DescGcloud.",
+    "placeholders": {
+      "config": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginStep3TitleAz": "Choose a subscription",
+  "@cloudLoginStep3TitleAz": {
+    "description": "CLI & clouds string: cloudLoginStep3TitleAz."
+  },
+  "cloudLoginStep3DescAz": "After signing in you can switch the active Azure subscription",
+  "@cloudLoginStep3DescAz": {
+    "description": "CLI & clouds string: cloudLoginStep3DescAz."
+  },
+  "cloudLoginStep3TitleAws": "Check active profile",
+  "@cloudLoginStep3TitleAws": {
+    "description": "CLI & clouds string: cloudLoginStep3TitleAws."
+  },
+  "cloudLoginStep3DescAws": "After signing in, AWS CLI commands for profile {profile} use the new SSO session",
+  "@cloudLoginStep3DescAws": {
+    "description": "CLI & clouds string: cloudLoginStep3DescAws.",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginBanner": "Hearth only starts the native CLI sign-in. You can revoke the session or switch accounts at any time.",
+  "@cloudLoginBanner": {
+    "description": "CLI & clouds string: cloudLoginBanner."
+  },
+  "cloudLoginOpenBrowser": "Open sign-in in browser",
+  "@cloudLoginOpenBrowser": {
+    "description": "CLI & clouds string: cloudLoginOpenBrowser."
+  },
+  "cloudLoginOpenTerminal": "Run in terminal",
+  "@cloudLoginOpenTerminal": {
+    "description": "CLI & clouds string: cloudLoginOpenTerminal."
+  },
+  "cloudLoginAwsNoSso": "Profile {profile} does not configure AWS SSO. Run aws configure sso in your terminal to set up browser sign-in without static keys.",
+  "@cloudLoginAwsNoSso": {
+    "description": "CLI & clouds string: cloudLoginAwsNoSso.",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginVerifyFailed": "Sign-in command finished, but the provider did not confirm an active session yet.",
+  "@cloudLoginVerifyFailed": {
+    "description": "CLI & clouds string: cloudLoginVerifyFailed."
+  },
+  "cloudLoginVerified": "Signed in as {identity}",
+  "@cloudLoginVerified": {
+    "description": "CLI & clouds string: cloudLoginVerified.",
+    "placeholders": {
+      "identity": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudInfraInstallTitle": "Install {tool} {version}",
+  "@cloudInfraInstallTitle": {
+    "description": "CLI & clouds string: cloudInfraInstallTitle.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudInfraInstallWhy": "Installs {tool} {version} through mise without modifying project files or running init, plan, or apply.",
+  "@cloudInfraInstallWhy": {
+    "description": "CLI & clouds string: cloudInfraInstallWhy.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "attentionMore": "And {count} more",
+  "@attentionMore": {
+    "description": "Overview attention card footer when more issues exist than shown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesChecking": "Checking for updates…",
+  "@updatesChecking": {
+    "description": "Updates page notice while version lists or package managers are still checking."
+  },
+  "updatesOffline": "Online update checks are turned off in Settings.",
+  "@updatesOffline": {
+    "description": "Updates page notice when online checks are disabled in Settings."
+  },
+  "updatesCheckFailed": "Could not check all sources for updates.",
+  "@updatesCheckFailed": {
+    "description": "Updates page notice when update checks failed instead of claiming everything is up to date."
+  },
+  "liveSummaryTitle": "Right now",
+  "@liveSummaryTitle": {
+    "description": "Overview live summary section title"
+  },
+  "liveDockerRunning": "{count} running",
+  "@liveDockerRunning": {
+    "description": "Running Docker containers count on Overview",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveDockerTotal": "{count} total",
+  "@liveDockerTotal": {
+    "description": "Total Docker containers count on Overview",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveDockerStopped": "Stopped",
+  "@liveDockerStopped": {
+    "description": "Stopped Docker engine label on Overview"
+  },
+  "liveKubeContexts": "{count, plural, one {# context} other {# contexts}}",
+  "@liveKubeContexts": {
+    "description": "Kubernetes context count on Overview",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveKubeNoContext": "No context",
+  "@liveKubeNoContext": {
+    "description": "No active Kubernetes context label on Overview"
+  },
+  "liveDatabasesAndPorts": "Databases & ports",
+  "@liveDatabasesAndPorts": {
+    "description": "Overview live summary tile title for databases and ports"
+  },
+  "liveDbAndPorts": "{db} DB · {ports, plural, one {# port} other {# ports}}",
+  "@liveDbAndPorts": {
+    "description": "Running databases and listening ports summary on Overview",
+    "placeholders": {
+      "db": {
+        "type": "int"
+      },
+      "ports": {
+        "type": "int"
+      }
+    }
+  },
+  "liveServersCount": "{count, plural, one {# server} other {# servers}}",
+  "@liveServersCount": {
+    "description": "Server count on Overview live summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "livePortsListening": "{count, plural, one {# port} other {# ports}}",
+  "@livePortsListening": {
+    "description": "Listening ports count on Overview live summary",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "livePortsInProjects": "{count} in projects",
+  "@livePortsInProjects": {
+    "description": "Ports tied to projects count on Overview",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveAiToday": "AI today",
+  "@liveAiToday": {
+    "description": "Overview live summary tile title for AI usage today"
+  },
+  "liveAiMonth": "{amount} in 30d",
+  "@liveAiMonth": {
+    "description": "30-day AI spend fallback caption on Overview",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveMcpAgents": "{count, plural, one {# agent} other {# agents}}",
+  "@liveMcpAgents": {
+    "description": "Agent count in MCP live summary on Overview",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

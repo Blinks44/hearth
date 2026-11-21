@@ -90,9 +90,10 @@ func TestVersionPlanCommands(t *testing.T) {
 		{"php", "mise", VersionUninstall, "8.3.15", "/m/installs/php/8.3.15", false, []string{"mise", "uninstall", "php@8.3.15"}},
 		{"php", "mise", VersionDefault, "8.3.15", "/m/installs/php/8.3.15", false, []string{"mise", "use", "-g", "php@8.3.15"}},
 		{"dotnet", "mise", VersionInstall, "9.0.101", "", false, []string{"mise", "install", "dotnet@9.0.101"}},
-		{"dotnet", "mise", VersionDefault, "9.0.101", "", false, nil},
+		{"dotnet", "mise", VersionDefault, "9.0.101", "", false, []string{"mise", "use", "-g", "dotnet@9.0.101"}},
 		{"dotnet", "asdf", VersionInstall, "9.0.101", "", true, []string{"asdf", "install", "dotnet-core", "9.0.101"}},
 		{"bun", "mise", VersionInstall, "1.1.42", "", false, []string{"mise", "install", "bun@1.1.42"}},
+		{"bun", "mise", VersionDefault, "1.1.42", "", false, []string{"mise", "use", "-g", "bun@1.1.42"}},
 
 		{"pnpm", "corepack", VersionInstall, "9.15.0", "", false, []string{"corepack", "install", "-g", "pnpm@9.15.0"}},
 		{"pnpm", "corepack", VersionUninstall, "9.15.0", "", false, nil},

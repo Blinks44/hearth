@@ -122,7 +122,7 @@ func (a *App) changesView(c *ui.Context, p page) {
 }
 
 // changeRow is a change in the table: a dot of its kind, what changed, and
-// the space or a mark.
+// the space or a mark. Clicking opens the page the change belongs to.
 func (a *App) changeRow(c *ui.Context, ch history.Change) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -148,14 +148,94 @@ func (a *App) changeRow(c *ui.Context, ch history.Change) {
 		}
 	}
 	title, caption := a.changeText(ch)
-	ui.Row(c).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	open := a.changeAction(ch)
+	content := func(chevron ui.Color) {
 		ui.Box(c).Size(8, 8).Radius(4).Shrink(0).Background(dot)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, title).FontSize(13)
 			clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint)
 		})
 		ui.Text(c, mark).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
-	})
+		if open != nil {
+			ui.Icon(c, Icon("chevron-right")).Size(13, 13).Shrink(0).TextColor(chevron)
+		}
+	}
+	if open == nil {
+		ui.Row(c).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+			content(pal.TextFaint)
+		})
+		return
+	}
+	row := ui.ButtonBase(c).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).
+		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Label(title).OnClick(open).Transition(colorFade)
+	chevron := pal.TextFaint
+	if row.Hovered() {
+		row.Background(pal.Subtle)
+		chevron = Accent
+	}
+	row.Children(func() { content(chevron) })
+}
+
+// changeAction returns the navigation handler for a history change row, or nil
+// when there is no matching destination page.
+func (a *App) changeAction(ch history.Change) func() {
+	switch ch.Area {
+	case history.Copy, history.Terminal:
+		if _, path := a.toolCardTarget(ch.Name); path != "" {
+			return func() { a.router.Push(path) }
+		}
+	case history.Packages:
+		return func() {
+			for _, m := range a.packageManagers() {
+				if m.ID == ch.Name || m.Name == ch.Manager {
+					a.packageManager = m.Path
+					break
+				}
+			}
+			a.packageTab = 0
+			if len(ch.Names) == 1 {
+				a.packageFilter = ch.Names[0]
+			} else {
+				a.packageFilter = ""
+			}
+			a.router.Push("/system/packages")
+		}
+	case history.PathEntry:
+		return func() {
+			a.pathTab = 0
+			a.pathFilter = ch.Path
+			a.router.Push(pathPage)
+		}
+	case history.Agent:
+		if ch.Name != "" {
+			return func() { a.router.Push(agentPath(ch.Name)) }
+		}
+		return func() { a.router.Push("/ai/agents") }
+	case history.Skill:
+		return func() {
+			a.skillAgent, a.skillQuery, a.skillScope = "", "", 0
+			if i := slices.IndexFunc(a.allSkills(), func(sk inventory.Skill) bool { return sk.Name == ch.Name && len(sk.Paths) > 0 }); i >= 0 {
+				sk := a.allSkills()[i]
+				a.skillChosen = skillKey(sk)
+				a.loadSkill(sk)
+			} else {
+				a.skillQuery = ch.Name
+			}
+			a.router.Push(skillsPage)
+		}
+	case history.MCP:
+		return func() {
+			a.mcpAgent, a.mcpQuery, a.mcpScope = "", "", 0
+			items := a.mcpItems()
+			if i := slices.IndexFunc(items, func(m mcpItem) bool { return m.name == ch.Name }); i >= 0 {
+				a.mcpChosen = items[i].key()
+			} else {
+				a.mcpQuery = ch.Name
+			}
+			a.router.Push(mcpPage)
+		}
+	}
+	return nil
 }
 
 // changeText says what changed and where, in plain words.
@@ -284,15 +364,21 @@ func (a *App) triesCard(c *ui.Context) {
 // checkDate names when a check was: "Today, 10:42", "Yesterday, 18:20",
 // or the date and time.
 func checkDate(c *ui.Context, t time.Time) string {
-	now := c.Now()
-	day := func(t time.Time) time.Time { y, m, d := t.Date(); return time.Date(y, m, d, 0, 0, 0, 0, t.Location()) }
-	switch day(now).Sub(day(t)) {
-	case 0:
-		return locales.ChangesToday(t)
-	case 24 * time.Hour:
-		return locales.ChangesYesterday(t)
+	return formatCheckDate(c.Now(), t)
+}
+
+func formatCheckDate(now, t time.Time) string {
+	loc := now.Location()
+	local := t.In(loc)
+	day := func(ts time.Time) time.Time { y, m, d := ts.Date(); return time.Date(y, m, d, 0, 0, 0, 0, loc) }
+	today := day(now)
+	switch thatDay := day(local); {
+	case thatDay.Equal(today):
+		return locales.ChangesToday(local)
+	case thatDay.Equal(today.AddDate(0, 0, -1)):
+		return locales.ChangesYesterday(local)
 	}
-	return locales.ChangesOn(t)
+	return locales.ChangesOn(local)
 }
 
 // changesSince is what the last check changed, for the overview's link;

@@ -96,6 +96,7 @@ type App struct {
 	// PackageUpdates overlays immutable local inventory with cached online results.
 	PackageUpdates map[string]inventory.PackageManager
 	PackageChecks  map[string]bool
+	VersionChecks  map[string]bool
 	// Sizes are what the count of disk space found, kept from the last
 	// one until the next ends; nil before the first. Counting reports a
 	// count under way.
@@ -139,7 +140,9 @@ type App struct {
 	JavaVersionsErr   string
 	// MiseOutdated is what mise says of newer versions of its tools
 	// without a page of their own; nil until it comes, or without mise.
-	MiseOutdated *versions.Mise
+	MiseOutdated    *versions.Mise
+	MiseOutdatedErr string
+	MiseChecking    bool
 	// Shell reveals and opens files; nil hides those actions.
 	Shell Shell
 	// OnScan starts a scan, whose snapshot comes back through
@@ -181,6 +184,15 @@ type App struct {
 	// terminal's environment, in the background, giving done the answer
 	// through Window.Update; nil hides the check.
 	CheckKube func(kubectl string, k inventory.KubeContext, done func(detect.KubeAccess))
+	// CheckCloudAuth checks who a cloud CLI sees as signed in, on demand
+	// only, returning the result on the UI thread via Window.Update.
+	CheckCloudAuth func(tool, bin string, done func(detect.CloudAuth))
+	// ListGcloudProjects asks gcloud for accessible GCP projects on demand,
+	// returning them on the UI thread via Window.Update.
+	ListGcloudProjects func(bin string, done func([]string, error))
+	// OpenCloudLogin opens a terminal running a cloud CLI command (such as
+	// aws configure sso) when interactive setup is needed.
+	OpenCloudLogin func(argv []string, done func(error))
 	// WatchCluster reads the target's cluster now and again, giving each
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
@@ -296,6 +308,9 @@ type App struct {
 	modelPullOpen      bool   // the dialog to download an Ollama model is open
 	cliTab             int    // the CLI & clouds page's tab
 	cliFilter          string // the CLI & clouds table's filter
+	cloudAuth          map[string]cloudAuthEntry
+	cloudSwitch        cloudSwitchDialog
+	cloudLogin         cloudLoginDialog
 	kubeTab            int    // the Kubernetes page's tab
 	kubeFilter         string // the Kubernetes page's filter
 	kubeNS             kubeNamespaceDialog

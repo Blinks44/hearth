@@ -101,7 +101,6 @@ func dotnetRows(st inventory.ToolState) (ins []inventory.Installation, active, s
 		for _, sdk := range in.Dotnet.SDKs {
 			row := in
 			row.Version, row.Path, row.RealPath = sdk.Version, sdk.Path, sdk.Path
-			row.Source.Root = sdk.Path
 			row.OnPath, row.InGUI = 0, 0
 			row.Default = i == host && sdk.Version == in.Version
 			if row.Default {
@@ -114,7 +113,6 @@ func dotnetRows(st inventory.ToolState) (ins []inventory.Installation, active, s
 			row := in
 			row.Tool, row.Version, row.Path, row.RealPath = "dotnet-runtime", runtime.Version, runtime.Path, runtime.Path
 			row.OnPath, row.InGUI = 0, 0
-			row.Source.Root = runtime.Path
 			row.Dotnet = &inventory.Dotnet{Runtimes: []inventory.DotnetEntry{runtime}}
 			ins = append(ins, row)
 			runtimes++

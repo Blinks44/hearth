@@ -35,21 +35,34 @@ func applyUserPath(e UserPathEdit) (string, error) {
 // restoreUserPath puts back the user's Path as it was before applyUserPath.
 func restoreUserPath(before string) error { return sysenv.SetUserPath(before) }
 
-// applyUserVar sets the user's variable e.Name to e.Value, and tells the
-// running apps it changed; one at another value is an error. It returns
-// what puts back the variable as it was.
+// applyUserVar sets, updates, or deletes the user's variable e.Name, and
+// tells the running apps it changed. It returns what puts back the variable
+// as it was.
 func applyUserVar(e UserVarEdit) (func() error, error) {
 	value, ok, err := sysenv.UserVar(e.Name)
-	switch {
-	case err != nil:
+	if err != nil {
 		return nil, err
-	case ok && value != e.Value:
-		return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
-	case ok:
+	}
+	if e.Delete {
+		if !ok {
+			return func() error { return nil }, nil
+		}
+		if err := sysenv.DeleteUserVar(e.Name); err != nil {
+			return nil, err
+		}
+		return func() error { return sysenv.SetUserVar(e.Name, value) }, nil
+	}
+	if ok && value == e.Value {
 		return func() error { return nil }, nil
+	}
+	if ok && !e.Replace {
+		return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
 	}
 	if err := sysenv.SetUserVar(e.Name, e.Value); err != nil {
 		return nil, err
+	}
+	if ok {
+		return func() error { return sysenv.SetUserVar(e.Name, value) }, nil
 	}
 	return func() error { return sysenv.DeleteUserVar(e.Name) }, nil
 }
