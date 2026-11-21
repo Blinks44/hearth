@@ -41,7 +41,7 @@ func MisePlan(env sysenv.Env, terminal Terminal) (Plan, error) {
 	}
 	p := Plan{
 		Title: locales.MiseSetupTitle(), Why: locales.MiseSetupWhy(), Steps: s.Steps, Notes: s.Notes,
-		Changes: []string{locales.MiseSetupChange()},
+		Changes: []string{locales.MiseSetupChange()}, RestartTerminal: true,
 	}
 	if terminal != nil {
 		p.Verify = func(ctx context.Context) (string, error) {
@@ -71,6 +71,7 @@ func WithMise(p Plan, s MiseSetup) Plan {
 	p.Notes = append(append([]Note(nil), s.Notes...), p.Notes...)
 	if len(s.Steps) > 0 {
 		p.Why = locales.MiseFirst(p.Why)
+		p.RestartTerminal = true
 	}
 	return p
 }

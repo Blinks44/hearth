@@ -29,6 +29,7 @@ func MovePlan(t VersionTarget, source string, detect Detect) (p Plan, ok bool) {
 	p.Steps = []Step{{Argv: versionCommand(VersionDefault, t)}}
 	p.Title, p.Why = locales.MoveTitle(t.Title, label), locales.MoveWhy(source)
 	p.Changes = []string{"+ " + t.Title + " " + label + " · mise", locales.VersionDefaultChange(t.Title, label, "mise")}
+	p.RestartTerminal = true
 	p.Notes = []Note{{Title: locales.MovePackagesTitle(), Text: locales.MovePackagesText(source)}}
 	if t.Tool == "python" {
 		p.Notes = append(p.Notes, Note{Title: locales.MoveVenvTitle(), Text: locales.MoveVenvText()})

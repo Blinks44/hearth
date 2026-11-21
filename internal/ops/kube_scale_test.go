@@ -109,7 +109,7 @@ func TestPlanKubeScale(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if previews != 1 || writes != 0 || p.Steps[0].Kube.ConfirmName() != "" {
+			if previews != 1 || writes != 0 || p.Steps[0].Kube.DeletesResource() {
 				t.Fatalf("preview = %d, writes = %d, plan = %+v", previews, writes, p)
 			}
 			hpaNote := locales.KubeScaleAutoscalerManages("demo-hpa")

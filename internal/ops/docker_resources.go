@@ -75,9 +75,6 @@ func PlanDockerResourcesRemoval(ctx context.Context, r run.Runner, target docker
 		p.Why = locales.DockerVolumeRemoveWhy(target.Context)
 		if len(unique) == 1 {
 			p.Title = locales.DockerVolumeRemoveTitle(unique[0].Name)
-			if unique[0].Project != "" {
-				p.ConfirmName = unique[0].Name
-			}
 		} else {
 			p.Title = locales.DockerVolumesRemoveTitle(len(unique))
 		}
@@ -90,7 +87,7 @@ func PlanDockerResourcesRemoval(ctx context.Context, r run.Runner, target docker
 		}
 	}
 	if blocked != "" {
-		p.Why, p.ConfirmName = blocked, ""
+		p.Why = blocked
 		return p, nil
 	}
 	var projects []string

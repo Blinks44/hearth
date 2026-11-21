@@ -127,7 +127,7 @@ func TestPlanKubeCronRun(t *testing.T) {
 				return run.Result{}, nil
 			})
 			p, err := PlanKubeCronRun(t.Context(), r, nil, ref)
-			if err != nil || p.Steps[0].Kube.ConfirmName() != "" {
+			if err != nil || p.Steps[0].Kube.DeletesResource() {
 				t.Fatalf("plan = %+v, err = %v", p, err)
 			}
 			confirmed = true

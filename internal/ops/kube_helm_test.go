@@ -80,8 +80,8 @@ func TestKubeHelmPlan(t *testing.T) {
 			if err != nil || writes != 0 {
 				t.Fatalf("plan error: %v, writes: %d", err, writes)
 			}
-			if got := p.Steps[0].Kube.ConfirmName(); (tc.to == 0 && got != tgt.Name) || (tc.to != 0 && got != "") {
-				t.Fatalf("confirmation name = %q", got)
+			if got := p.Steps[0].Kube.DeletesResource(); got != (tc.to == 0) {
+				t.Fatalf("DeletesResource = %v, want %v", got, tc.to == 0)
 			}
 			var journal bytes.Buffer
 			state := Execute(t.Context(), r, p, &journal, func(State) {})

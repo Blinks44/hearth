@@ -51,7 +51,7 @@ func TestKubeNamespaceCreate(t *testing.T) {
 				return run.Result{Stdout: []byte(tc.actual)}, nil
 			})
 			p, err := PlanKubeNamespaceCreate(t.Context(), r, nil, "kubectl", "staging", "demo")
-			if err != nil || p.Steps[0].Kube.ConfirmName() != "" ||
+			if err != nil || p.Steps[0].Kube.DeletesResource() ||
 				!slices.Equal(calls, []string{"json", namespaceCollection + "&dryRun=All"}) {
 				t.Fatalf("preview: calls %v, err %v", calls, err)
 			}
@@ -130,7 +130,7 @@ func TestKubeNamespaceDeletionInventory(t *testing.T) {
 				}
 				return
 			}
-			if err != nil || p.Steps[0].Kube.ConfirmName() != "demo" || writes != 0 || p.Notes[0].Text != "Secret credentials" {
+			if err != nil || !p.Steps[0].Kube.DeletesResource() || writes != 0 || p.Notes[0].Text != "Secret credentials" {
 				t.Fatalf("preview: %+v, writes %d, err %v", p, writes, err)
 			}
 			applying = true

@@ -368,3 +368,33 @@ func TestOperationInvalidatesSizes(t *testing.T) {
 		})
 	}
 }
+
+func TestOperationResultTerminalRestartAndNotVerified(t *testing.T) {
+	a := NewApp()
+	var update func(ops.State)
+	a.RunPlan = func(_ ops.Plan, u func(ops.State)) func() { update = u; return func() {} }
+	tt := ui.NewTester(a.View, 1280, 820)
+	plan := ops.Plan{
+		Title:           "Default Node.js 22.14.0",
+		Why:             "Sets the default version for new terminals.",
+		Steps:           []ops.Step{{Argv: []string{"fnm", "default", "22.14.0"}}},
+		Changes:         []string{"Default Node.js → 22.14.0 · fnm"},
+		RestartTerminal: true,
+	}
+	a.Propose(plan)
+	tt.Frame()
+	a.startOperation()
+	update(ops.State{Phase: ops.Succeeded, Steps: []ops.StepStatus{ops.Done}, Verified: "Node.js 22.14.0 is the default"})
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "WORTH KNOWING", "Open a new terminal or restart your editor", "Default Node.js → 22.14.0 · fnm")
+	screenshot(t, tt, "r36-op-restart-en")
+
+	a.Propose(plan)
+	tt.Frame()
+	a.startOperation()
+	update(ops.State{Phase: ops.NotVerified, Steps: []ops.StepStatus{ops.Done}, Err: "terminal still reports Node.js 20.11.0"})
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "The commands finished, but the verification check did not confirm the result.", "terminal still reports Node.js 20.11.0")
+}

@@ -1694,15 +1694,6 @@
       }
     }
   },
-  "kubeResourceConfirm": "Type {name} to confirm deletion.",
-  "@kubeResourceConfirm": {
-    "description": "kubeResourceConfirm",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "kubeHelmReleases": "Helm releases",
   "@kubeHelmReleases": {
     "description": "kubeHelmReleases"
@@ -14234,5 +14225,319 @@
   "dockerQuickViews": "Engine sections",
   "@dockerQuickViews": {
     "description": "Docker page: quick jump card title for opening views of the active engine."
+  },
+  "opRestartTerminalTitle": "Open a new terminal or restart your editor",
+  "@opRestartTerminalTitle": {
+    "description": "Operation result and project preparation string: opRestartTerminalTitle."
+  },
+  "opRestartTerminalText": "Already open terminals and editors may keep the previous PATH or default version until reopened.",
+  "@opRestartTerminalText": {
+    "description": "Operation result and project preparation string: opRestartTerminalText."
+  },
+  "opNotVerifiedSummary": "The commands finished, but the verification check did not confirm the result.",
+  "@opNotVerifiedSummary": {
+    "description": "Operation result and project preparation string: opNotVerifiedSummary."
+  },
+  "prepareResultReadyTitle": "Project tools are ready",
+  "@prepareResultReadyTitle": {
+    "description": "Operation result and project preparation string: prepareResultReadyTitle."
+  },
+  "prepareResultReadySubtitle": "{name} · tool requirements confirmed",
+  "@prepareResultReadySubtitle": {
+    "description": "Operation result and project preparation string: prepareResultReadySubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareResultActionsTitle": "Tools installed. Your action is needed",
+  "@prepareResultActionsTitle": {
+    "description": "Operation result and project preparation string: prepareResultActionsTitle."
+  },
+  "prepareResultActionsSubtitle": "{name} · commands finished, some items still need attention",
+  "@prepareResultActionsSubtitle": {
+    "description": "Operation result and project preparation string: prepareResultActionsSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareResultPartialTitle": "Preparation finished partially",
+  "@prepareResultPartialTitle": {
+    "description": "Operation result and project preparation string: prepareResultPartialTitle."
+  },
+  "prepareResultFailedTitle": "Preparation did not finish",
+  "@prepareResultFailedTitle": {
+    "description": "Operation result and project preparation string: prepareResultFailedTitle."
+  },
+  "prepareResultStoppedTitle": "Preparation stopped by you",
+  "@prepareResultStoppedTitle": {
+    "description": "Operation result and project preparation string: prepareResultStoppedTitle."
+  },
+  "prepareResultUnverifiedTitle": "Commands finished. Readiness not verified",
+  "@prepareResultUnverifiedTitle": {
+    "description": "Operation result and project preparation string: prepareResultUnverifiedTitle."
+  },
+  "prepareResultUnverifiedSubtitle": "{name} · post-operation check did not confirm readiness",
+  "@prepareResultUnverifiedSubtitle": {
+    "description": "Operation result and project preparation string: prepareResultUnverifiedSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareResultCheckingTitle": "Checking project requirements",
+  "@prepareResultCheckingTitle": {
+    "description": "Operation result and project preparation string: prepareResultCheckingTitle."
+  },
+  "prepareResultCheckingSubtitle": "{name} · commands finished, rescanning tools and project selection…",
+  "@prepareResultCheckingSubtitle": {
+    "description": "Operation result and project preparation string: prepareResultCheckingSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareConflictTitle": "Conflicting requirements",
+  "@prepareConflictTitle": {
+    "description": "Operation result and project preparation string: prepareConflictTitle."
+  },
+  "prepareConflictSubtitle": "{name} · project files ask for incompatible versions",
+  "@prepareConflictSubtitle": {
+    "description": "Operation result and project preparation string: prepareConflictSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareUnknownTitle": "Requirement not recognized",
+  "@prepareUnknownTitle": {
+    "description": "Operation result and project preparation string: prepareUnknownTitle."
+  },
+  "prepareUnknownSubtitle": "{name} · check the source files and tool status",
+  "@prepareUnknownSubtitle": {
+    "description": "Operation result and project preparation string: prepareUnknownSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareAlreadyInstalledTitle": "Version is already installed",
+  "@prepareAlreadyInstalledTitle": {
+    "description": "Operation result and project preparation string: prepareAlreadyInstalledTitle."
+  },
+  "prepareAlreadyInstalledSubtitle": "{name} · no reinstallation needed",
+  "@prepareAlreadyInstalledSubtitle": {
+    "description": "Operation result and project preparation string: prepareAlreadyInstalledSubtitle.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareConfirmedSection": "What is confirmed",
+  "@prepareConfirmedSection": {
+    "description": "Operation result and project preparation string: prepareConfirmedSection."
+  },
+  "prepareConfirmedCaption": "Re-checked after the operation",
+  "@prepareConfirmedCaption": {
+    "description": "Operation result and project preparation string: prepareConfirmedCaption."
+  },
+  "prepareResultSection": "Result",
+  "@prepareResultSection": {
+    "description": "Operation result and project preparation string: prepareResultSection."
+  },
+  "prepareCommandsNotReadiness": "Command results · not a readiness check",
+  "@prepareCommandsNotReadiness": {
+    "description": "Operation result and project preparation string: prepareCommandsNotReadiness."
+  },
+  "prepareSourcesSection": "Source files",
+  "@prepareSourcesSection": {
+    "description": "Operation result and project preparation string: prepareSourcesSection."
+  },
+  "prepareFolderSelects": "{tool} {version} is selected in this folder",
+  "@prepareFolderSelects": {
+    "description": "Operation result and project preparation string: prepareFolderSelects.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareFolderCurrentlySelects": "Currently selected in this folder: {tool} {version}",
+  "@prepareFolderCurrentlySelects": {
+    "description": "Operation result and project preparation string: prepareFolderCurrentlySelects.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareFolderNoneSelected": "No {tool} version is currently selected in this folder",
+  "@prepareFolderNoneSelected": {
+    "description": "Operation result and project preparation string: prepareFolderNoneSelected.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareInstalledVia": "Installed via {manager}: {tool} {version}",
+  "@prepareInstalledVia": {
+    "description": "Operation result and project preparation string: prepareInstalledVia.",
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      },
+      "tool": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareDockerEngineAnswers": "Local engine {engine} answers",
+  "@prepareDockerEngineAnswers": {
+    "description": "Operation result and project preparation string: prepareDockerEngineAnswers.",
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareDockerReady": "Local Docker engine answers",
+  "@prepareDockerReady": {
+    "description": "Operation result and project preparation string: prepareDockerReady."
+  },
+  "prepareStepDone": "Completed: {step}",
+  "@prepareStepDone": {
+    "description": "Operation result and project preparation string: prepareStepDone.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareStepFailed": "Failed: {step}",
+  "@prepareStepFailed": {
+    "description": "Operation result and project preparation string: prepareStepFailed.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareStepStopped": "Stopped: {step}",
+  "@prepareStepStopped": {
+    "description": "Operation result and project preparation string: prepareStepStopped.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareStepSkipped": "Skipped: {step}",
+  "@prepareStepSkipped": {
+    "description": "Operation result and project preparation string: prepareStepSkipped.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareTerminalNoteTitle": "Open terminals may still use the old version",
+  "@prepareTerminalNoteTitle": {
+    "description": "Operation result and project preparation string: prepareTerminalNoteTitle."
+  },
+  "prepareTerminalNoteText": "Open a new terminal window or restart your editor in the project folder to pick up the updated selection.",
+  "@prepareTerminalNoteText": {
+    "description": "Operation result and project preparation string: prepareTerminalNoteText."
+  },
+  "prepareDepsNoteTitle": "Dependencies and app startup were not checked",
+  "@prepareDepsNoteTitle": {
+    "description": "Operation result and project preparation string: prepareDepsNoteTitle."
+  },
+  "prepareDepsNoteText": "Hearth prepared only the tools. Open the project folder and its instructions to install dependencies, create .venv or run the app.",
+  "@prepareDepsNoteText": {
+    "description": "Operation result and project preparation string: prepareDepsNoteText."
+  },
+  "prepareContinueNoteTitle": "Continue builds a fresh plan",
+  "@prepareContinueNoteTitle": {
+    "description": "Operation result and project preparation string: prepareContinueNoteTitle."
+  },
+  "prepareContinueNoteText": "\"Continue preparation…\" re-checks what is already installed and shows a plan only for the remaining steps.",
+  "@prepareContinueNoteText": {
+    "description": "Operation result and project preparation string: prepareContinueNoteText."
+  },
+  "prepareKeepInstalledNoteTitle": "Completed installations stay",
+  "@prepareKeepInstalledNoteTitle": {
+    "description": "Operation result and project preparation string: prepareKeepInstalledNoteTitle."
+  },
+  "prepareKeepInstalledNoteText": "Packages installed on completed steps are not removed automatically.",
+  "@prepareKeepInstalledNoteText": {
+    "description": "Operation result and project preparation string: prepareKeepInstalledNoteText."
+  },
+  "prepareUnverifiedNoteTitle": "Successful commands do not confirm readiness",
+  "@prepareUnverifiedNoteTitle": {
+    "description": "Operation result and project preparation string: prepareUnverifiedNoteTitle."
+  },
+  "prepareUnverifiedNoteText": "Run \"Check again\" to re-read project files and verify which tool versions are actually selected.",
+  "@prepareUnverifiedNoteText": {
+    "description": "Operation result and project preparation string: prepareUnverifiedNoteText."
+  },
+  "prepareConflictNoteTitle": "Files are not rewritten automatically",
+  "@prepareConflictNoteTitle": {
+    "description": "Operation result and project preparation string: prepareConflictNoteTitle."
+  },
+  "prepareConflictNoteText": "Open the source files above, reconcile the required versions, and click \"Check again\".",
+  "@prepareConflictNoteText": {
+    "description": "Operation result and project preparation string: prepareConflictNoteText."
+  },
+  "prepareGlobalUnchangedTitle": "Global version was not changed",
+  "@prepareGlobalUnchangedTitle": {
+    "description": "Operation result and project preparation string: prepareGlobalUnchangedTitle."
+  },
+  "prepareGlobalUnchangedText": "Run the shown command in the project folder in your terminal, then click \"Check again\".",
+  "@prepareGlobalUnchangedText": {
+    "description": "Operation result and project preparation string: prepareGlobalUnchangedText."
+  },
+  "prepareToProject": "Go to project",
+  "@prepareToProject": {
+    "description": "Operation result and project preparation string: prepareToProject."
+  },
+  "prepareOpenReadme": "Open {file}",
+  "@prepareOpenReadme": {
+    "description": "Operation result and project preparation string: prepareOpenReadme.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "prepareOpenSource": "Open",
+  "@prepareOpenSource": {
+    "description": "Operation result and project preparation string: prepareOpenSource."
+  },
+  "prepareCopyExact": "Copy {command}",
+  "@prepareCopyExact": {
+    "description": "Operation result and project preparation string: prepareCopyExact.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
   }
 }

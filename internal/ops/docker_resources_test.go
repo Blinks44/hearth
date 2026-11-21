@@ -75,11 +75,7 @@ func TestDockerResourceRemoval(t *testing.T) {
 				}
 				return
 			}
-			wantName := ""
-			if tc.kind == docker.VolumeResource && tc.project != "" {
-				wantName = tc.resource
-			}
-			if p.ConfirmName != wantName || len(p.Steps) != 1 {
+			if len(p.Steps) != 1 {
 				t.Fatalf("confirmation = %+v", p)
 			}
 			if tc.replaced {
@@ -133,7 +129,7 @@ func TestPlanDockerResourcesRemoval(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(p.Steps) != 2 || p.ConfirmName != "" || p.DockerAction != DockerResourceRemove {
+	if len(p.Steps) != 2 || p.DockerAction != DockerResourceRemove {
 		t.Fatalf("bulk volume plan = %+v", p)
 	}
 	// Including a system network blocks the entire bulk plan.

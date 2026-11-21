@@ -213,3 +213,74 @@ func TestProjectPreparationDoesNotRewriteExistingPin(t *testing.T) {
 		}
 	}
 }
+
+func TestAssessProjectClassifiesStates(t *testing.T) {
+	in, _ := projectFixture(t)
+	in.Project.Requirements = []projects.Requirement{
+		{Tool: "node", Want: "22", File: ".nvmrc"},
+		{Tool: "python", Want: "3.12", File: ".python-version"},
+		{Tool: "docker", File: "compose.yaml"},
+		{Tool: "go", Want: "not-a-semver!!!", File: "go.mod"},
+		{Tool: "ruby", Want: "3.3", File: ".ruby-version"},
+	}
+	in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{
+			Tool:          "node",
+			Managers:      []inventory.Manager{{Name: "fnm"}},
+			Installations: []inventory.Installation{{Version: "24.0.0", OnPath: 1, Source: inventory.Source{Manager: "fnm"}}, {Version: "22.14.0", Source: inventory.Source{Manager: "fnm"}}},
+		},
+		{
+			Tool:          "python",
+			Managers:      []inventory.Manager{{Name: "uv"}},
+			Installations: []inventory.Installation{{Version: "3.12.12", Source: inventory.Source{Manager: "uv"}}},
+		},
+		{
+			Tool: "docker",
+			Docker: &inventory.DockerState{
+				Selected: "orbstack",
+				Contexts: []inventory.DockerContext{{Name: "orbstack", Local: true, Status: "available", Engine: "OrbStack"}},
+			},
+		},
+		{Tool: "go"},
+		{Tool: "ruby", Err: "detector failed"},
+	}}
+	got := AssessProject(in)
+	byTool := map[string]ProjectItem{}
+	for _, it := range got.Items {
+		byTool[it.Tool] = it
+	}
+	if n := byTool["node"]; n.Kind != ProjectNeedsSelection || n.Version != "22.14.0" || n.Selected != "24.0.0" || n.Manager != "fnm" {
+		t.Fatalf("node assessment = %+v", n)
+	}
+	if py := byTool["python"]; py.Kind != ProjectPythonAvailable || py.Version != "3.12.12" {
+		t.Fatalf("python assessment = %+v", py)
+	}
+	if d := byTool["docker"]; d.Kind != ProjectReady || d.SelectedEngine != "OrbStack" {
+		t.Fatalf("docker assessment = %+v", d)
+	}
+	if g := byTool["go"]; g.Kind != ProjectUnknown || len(g.Sources) != 1 || g.Sources[0].File != "go.mod" {
+		t.Fatalf("go assessment = %+v", g)
+	}
+	if r := byTool["ruby"]; r.Kind != ProjectUnchecked {
+		t.Fatalf("ruby assessment = %+v", r)
+	}
+}
+
+func TestPlansMarkTerminalRestart(t *testing.T) {
+	def, ok := VersionPlan(VersionDefault, VersionTarget{Tool: "node", Title: "Node.js", Manager: "fnm", Version: "22.14.0"}, nil)
+	if !ok || !def.RestartTerminal {
+		t.Fatalf("default version plan RestartTerminal=%v ok=%v", def.RestartTerminal, ok)
+	}
+	inst, ok := VersionPlan(VersionInstall, VersionTarget{Tool: "node", Title: "Node.js", Manager: "fnm", Version: "22.14.0"}, nil)
+	if !ok || inst.RestartTerminal {
+		t.Fatalf("install-only plan unexpectedly sets RestartTerminal=%v", inst.RestartTerminal)
+	}
+	mv, ok := MovePlan(VersionTarget{Tool: "node", Title: "Node.js", Version: "22.14.0"}, "Homebrew", nil)
+	if !ok || !mv.RestartTerminal {
+		t.Fatalf("move plan RestartTerminal=%v ok=%v", mv.RestartTerminal, ok)
+	}
+	joined, ok := UpdatePlan([]Plan{inst, def})
+	if !ok || !joined.RestartTerminal {
+		t.Fatalf("joined plan did not propagate RestartTerminal=%v", joined.RestartTerminal)
+	}
+}

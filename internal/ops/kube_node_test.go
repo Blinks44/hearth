@@ -86,8 +86,8 @@ func TestKubeDrainPlan(t *testing.T) {
 				!strings.Contains(p.Notes[1].Text, "disruption budget") {
 				t.Fatalf("unexpected plan: %+v, %v", p.Notes, err)
 			}
-			if p.Steps[0].Kube.ConfirmName() != "" {
-				t.Fatal("drain must use the operation confirmation without the deletion prompt")
+			if p.Steps[0].Kube.DeletesResource() {
+				t.Fatal("drain must not be classified as a resource deletion")
 			}
 			executing = true
 			got := Execute(t.Context(), r, p, io.Discard, func(State) {})

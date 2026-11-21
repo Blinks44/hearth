@@ -127,7 +127,7 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 	if len(parts) == 0 {
 		return Plan{}, nil, errors.New(locales.SetupNothing())
 	}
-	p := Plan{Title: locales.SetupPlanTitle(), Why: locales.SetupPlanWhy()}
+	p := Plan{Title: locales.SetupPlanTitle(), Why: locales.SetupPlanWhy(), RestartTerminal: true}
 	planned := func(id string) bool {
 		return slices.ContainsFunc(parts, func(part SetupPart) bool { return part.Tool == id })
 	}

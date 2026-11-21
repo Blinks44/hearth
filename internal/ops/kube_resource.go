@@ -306,19 +306,6 @@ type KubeChange struct {
 	Diff             []DiffLine
 }
 
-// ConfirmName is the name to type before the change runs: only deletions
-// that take many objects with them, a namespace's and a Helm release's,
-// ask for it. Deleting one object needs only the dialog's button.
-func (m *KubeChange) ConfirmName() string {
-	switch {
-	case m.helm != nil && m.helm.to.Revision == 0:
-		return m.draft.Ref.Name
-	case m.helm == nil && m.draft.Ref.Kind == "Namespace" && !m.createNamespace && m.want == nil:
-		return m.draft.Ref.Name
-	}
-	return ""
-}
-
 func (m *KubeChange) Target() string {
 	if m.createNamespace {
 		return m.draft.Ref.Context

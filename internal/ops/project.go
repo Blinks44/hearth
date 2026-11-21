@@ -17,10 +17,37 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
+// ProjectItemKind classifies a project requirement's observed state.
+type ProjectItemKind int
+
+const (
+	ProjectReady ProjectItemKind = iota
+	ProjectInstall
+	ProjectNeedsSelection
+	ProjectPythonAvailable
+	ProjectConflict
+	ProjectUnknown
+	ProjectUnchecked
+	ProjectManual
+)
+
+// ProjectSource is one file requirement contributing to a ProjectItem.
+type ProjectSource struct {
+	File string
+	Key  string
+	Want string
+	Err  string
+}
+
 // ProjectItem explains the observed state and the next action. A command here
 // is for copying only; execution always goes through the confirmed Plan.
 type ProjectItem struct {
 	Tool, Title, Text, Version string
+	Kind                       ProjectItemKind
+	Manager                    string
+	Selected                   string
+	SelectedEngine             string
+	Sources                    []ProjectSource
 	Config                     string
 	Files                      []string
 	Command                    []string
@@ -33,6 +60,7 @@ type ProjectPreparation struct {
 	Project projects.Project
 	Items   []ProjectItem
 	Plan    Plan
+	ReadErr string
 }
 
 // ProjectInput is an immutable copy of what the plan builder needs.
@@ -46,6 +74,147 @@ type ProjectInput struct {
 	Detect   func(context.Context, string) (inventory.ToolState, error)
 }
 
+// AssessProject evaluates project requirements purely from in.Project and
+// in.Snapshot without building commands, mutating state or performing I/O.
+func AssessProject(in ProjectInput) ProjectPreparation {
+	out := ProjectPreparation{Project: in.Project}
+	if in.Title == nil {
+		in.Title = func(s string) string { return s }
+	}
+	statuses := projects.Resolve(in.Project, in.Snapshot, in.Lines)
+	slices.SortStableFunc(statuses, func(a, b projects.Status) int { return projectOrder(a.Tool) - projectOrder(b.Tool) })
+	for _, st := range statuses {
+		item := newProjectItem(st, in.Title(st.Tool))
+		state, _ := in.Snapshot.Tool(st.Tool)
+		switch {
+		case !st.Checked:
+			item.Kind = ProjectUnchecked
+			item.Text = locales.PrepareUnchecked(item.Title)
+		case st.Tool == "docker":
+			if engine, ready := dockerReadyEngine(state); ready {
+				item.Kind = ProjectReady
+				item.Ready = true
+				item.SelectedEngine = engine
+				item.Text = locales.PrepareReady(item.Title)
+			} else {
+				item.Kind = ProjectManual
+				item.Text = locales.PrepareDockerManual()
+			}
+		default:
+			selection, err := projects.SelectVersion(st, in.Releases[st.Tool], in.Lines)
+			switch {
+			case err != nil:
+				item.Kind = classifySelectError(st, err)
+				item.Text = locales.PrepareNoVersion(item.Title, err.Error())
+			case selection.Ready:
+				item.Kind = ProjectReady
+				item.Ready = true
+				item.Version = selection.Version
+				item.Selected = selection.Version
+				if selection.Installed != nil {
+					item.Manager = selection.Installed.Source.Manager
+				}
+				item.Text = locales.PrepareReady(item.Title + " " + selection.Version)
+			default:
+				item.Version = selection.Version
+				manager := projectManager(state)
+				if selection.Installed != nil {
+					manager = selection.Installed.Source.Manager
+					item.Manager = manager
+					item.Kind = ProjectNeedsSelection
+					item.Text = locales.PrepareChoose(item.Title, selection.Version)
+					if manager == "uv" && st.Tool == "python" {
+						item.Kind = ProjectPythonAvailable
+						item.Ready = true
+						item.Text = locales.PreparePythonAvailable(selection.Version)
+					}
+				} else {
+					item.Kind = ProjectManual
+					item.Manager = manager
+					item.Text = locales.PrepareManual(item.Title)
+				}
+				item.Command = projectCommand(st.Tool, manager, selection.Version)
+				if manager == "mise" {
+					attachExistingMiseConfig(&item, in.Project, st.Tool, selection.Version)
+				}
+				if manager == "nvm-windows" || manager == "n" {
+					item.Text += " " + locales.PrepareGlobalSelection()
+				}
+				if len(item.Command) > 0 {
+					item.Text += " " + locales.PrepareCommandInFolder()
+				}
+			}
+		}
+		out.Items = append(out.Items, item)
+	}
+	return out
+}
+
+func newProjectItem(st projects.Status, title string) ProjectItem {
+	item := ProjectItem{Tool: st.Tool, Title: title}
+	if st.Terminal != nil && !st.Downloads {
+		item.Selected = st.Terminal.Version
+	}
+	for _, ch := range st.Checks {
+		if !slices.Contains(item.Files, ch.File) {
+			item.Files = append(item.Files, ch.File)
+		}
+		item.Sources = append(item.Sources, ProjectSource{
+			File: ch.File,
+			Key:  ch.Key,
+			Want: ch.Want,
+			Err:  ch.Err,
+		})
+	}
+	return item
+}
+
+func classifySelectError(st projects.Status, err error) ProjectItemKind {
+	for _, ch := range st.Checks {
+		if ch.Err != "" || (ch.SDK != nil && !ch.Met) {
+			return ProjectUnknown
+		}
+	}
+	if errors.Is(err, projects.ErrNoCommonVersion) {
+		return ProjectConflict
+	}
+	return ProjectUnknown
+}
+
+func attachExistingMiseConfig(item *ProjectItem, proj projects.Project, tool, version string) {
+	file := "mise.toml"
+	if _, ok := proj.Texts[".mise.toml"]; ok {
+		file = ".mise.toml"
+	}
+	if _, ok := proj.Texts[file]; ok {
+		spec := version
+		if tool == "java" {
+			spec = javaSpec("mise", version)
+		}
+		item.Config = fmt.Sprintf("%s = %q", tool, spec)
+		item.Text += " " + locales.PrepareMiseSetting(file)
+		if !slices.Contains(item.Files, file) {
+			item.Files = append(item.Files, file)
+		}
+	}
+}
+
+func dockerReadyEngine(st inventory.ToolState) (string, bool) {
+	d := st.Docker
+	if d == nil {
+		return "", false
+	}
+	for _, c := range d.Contexts {
+		if c.Name != d.Selected || !c.Local {
+			continue
+		}
+		if c.Status == "available" {
+			return c.Engine, true
+		}
+	}
+	return "", false
+}
+
 // PrepareProject builds a project-scoped plan. Existing managers are respected;
 // global defaults, project scripts and dependency installations are excluded.
 func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error) {
@@ -57,15 +226,11 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 	// Runtime tools precede package managers that may need them.
 	slices.SortStableFunc(statuses, func(a, b projects.Status) int { return projectOrder(a.Tool) - projectOrder(b.Tool) })
 	for _, st := range statuses {
-		item := ProjectItem{Tool: st.Tool, Title: in.Title(st.Tool)}
-		for _, ch := range st.Checks {
-			if !slices.Contains(item.Files, ch.File) {
-				item.Files = append(item.Files, ch.File)
-			}
-		}
+		item := newProjectItem(st, in.Title(st.Tool))
 		state, _ := in.Snapshot.Tool(st.Tool)
 		switch {
 		case !st.Checked:
+			item.Kind = ProjectUnchecked
 			item.Text = locales.PrepareUnchecked(item.Title)
 		case st.Tool == "docker":
 			p, ready := projectDocker(state, in.Detect)
@@ -83,12 +248,16 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 				}
 			}
 			if ready {
+				item.Kind = ProjectReady
+				item.SelectedEngine, _ = dockerReadyEngine(state)
 				item.Text = locales.PrepareReady(item.Title)
 			} else {
+				item.Kind = ProjectManual
 				item.Text = locales.PrepareDockerManual()
 			}
 			if len(p.Steps) > 0 {
 				plans = append(plans, p)
+				item.Kind = ProjectInstall
 				item.Text = locales.PrepareDockerStart()
 				if install {
 					item.Text = locales.PrepareDockerInstall()
@@ -98,18 +267,27 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 			selection, err := projects.SelectVersion(st, in.Releases[st.Tool], in.Lines)
 			switch {
 			case err != nil:
+				item.Kind = classifySelectError(st, err)
 				item.Text = locales.PrepareNoVersion(item.Title, err.Error())
 			case selection.Ready:
+				item.Kind = ProjectReady
 				item.Ready = true
 				item.Version = selection.Version
+				item.Selected = selection.Version
+				if selection.Installed != nil {
+					item.Manager = selection.Installed.Source.Manager
+				}
 				item.Text = locales.PrepareReady(item.Title + " " + selection.Version)
 			default:
 				item.Version = selection.Version
 				manager := projectManager(state)
 				if selection.Installed != nil {
 					manager = selection.Installed.Source.Manager
+					item.Manager = manager
+					item.Kind = ProjectNeedsSelection
 					item.Text = locales.PrepareChoose(item.Title, selection.Version)
 					if manager == "uv" && st.Tool == "python" {
+						item.Kind = ProjectPythonAvailable
 						item.Ready = true
 						item.Text = locales.PreparePythonAvailable(selection.Version)
 					}
@@ -118,6 +296,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 						manager = "mise"
 						needsMise = true
 					}
+					item.Manager = manager
 					target := VersionTarget{Tool: st.Tool, Title: item.Title, Manager: manager, Version: selection.Version, AsdfSet: true}
 					for _, m := range state.Managers {
 						if m.Name == manager {
@@ -135,8 +314,10 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 							p.Steps = []Step{{Argv: []string{"corepack", "pack", st.Tool + "@" + selection.Version, "--output", "corepack.tgz"}, Env: []string{"COREPACK_DEFAULT_TO_LATEST=0"}}}
 						}
 						plans = append(plans, p)
+						item.Kind = ProjectInstall
 						item.Text = locales.PrepareInstall(item.Title, selection.Version, manager)
 					} else {
+						item.Kind = ProjectManual
 						item.Text = locales.PrepareManual(item.Title)
 					}
 				}
@@ -195,6 +376,8 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		p, _, err := SetupPlan(setup, env)
 		if err == nil {
 			plans = append(plans, p)
+			item.Kind = ProjectInstall
+			item.Manager = parts[0].Method.Manager
 			item.Text = locales.PrepareInstall(item.Title, "", parts[0].Method.Manager)
 		}
 	}
@@ -357,7 +540,11 @@ func ProjectSources(p projects.Project, tool string) string {
 			if r.Key != "" {
 				where += " · " + r.Key
 			}
-			rows = append(rows, where+" → "+r.Want)
+			if r.Want != "" {
+				rows = append(rows, where+" → "+r.Want)
+			} else {
+				rows = append(rows, where)
+			}
 		}
 	}
 	return strings.Join(rows, "; ")

@@ -9,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -16,16 +17,17 @@ import (
 // operation is a plan the operation dialog shows, and how it goes once
 // the user confirmed it.
 type operation struct {
-	project        *ops.ProjectPreparation
-	plan           ops.Plan
-	confirm        string
-	state          ops.State
-	started        bool   // confirmed: state says how it goes
-	open           bool   // the dialog shows; hidden while it runs, a toast does
-	stop           func() // stops it while it runs
-	told           bool   // the toast of its end showed
-	after          func() // runs once it succeeds; nil when nothing waits for it
-	chooseManifest func()
+	project         *ops.ProjectPreparation
+	plan            ops.Plan
+	state           ops.State
+	started         bool   // confirmed: state says how it goes
+	open            bool   // the dialog shows; hidden while it runs, a toast does
+	stop            func() // stops it while it runs
+	told            bool   // the toast of its end showed
+	after           func() // runs once it succeeds; nil when nothing waits for it
+	chooseManifest  func()
+	beforeSnapshot  *inventory.Snapshot // snapshot before startOperation; detects R-33 post-scan
+	rescanTriggered bool                // OnScan was started after Phase.Over()
 }
 
 // running reports that the operation was confirmed and is not over.
@@ -37,6 +39,26 @@ func (op *operation) kubeChange() *ops.KubeChange {
 }
 
 func (op *operation) running() bool { return op != nil && op.started && !op.state.Phase.Over() }
+
+func (op *operation) rescanning(a *App) bool {
+	return op != nil && op.rescanTriggered && a.Scanning
+}
+
+func (op *operation) hasFreshSnapshot(a *App) bool {
+	return op != nil && a.Snapshot != nil && a.Snapshot != op.beforeSnapshot
+}
+
+func (op *operation) needsTerminalRestart() bool {
+	if op.plan.RestartTerminal {
+		return true
+	}
+	for _, s := range op.plan.Steps {
+		if s.UserPath != nil || s.UserVar != nil {
+			return true
+		}
+	}
+	return false
+}
 
 // Propose shows p in the operation dialog, for the user to read and
 // confirm. While another operation runs, that one shows instead: one
@@ -81,6 +103,8 @@ func (a *App) startOperation() {
 		a.engine.resources.slots[1].bulk.clear()
 	}
 	op.started, op.told = true, false
+	op.beforeSnapshot = a.Snapshot
+	op.rescanTriggered = false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
 		if a.op != op || op.state.Phase.Over() {
@@ -99,6 +123,7 @@ func (a *App) startOperation() {
 		if s.Phase.Over() && a.OnScan != nil {
 			// Cached sizes describe the system before this operation. Do not
 			// offer them again while the automatic refresh is running.
+			op.rescanTriggered = true
 			a.Sizes = nil
 			a.Counting = true
 			a.Scanning = true
@@ -160,14 +185,18 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
 		ui.Column(c).Children(func() {
 			ui.Column(c).Gap(4).Padding(20, 20, 14, 20).Children(func() {
-				ui.Text(c, op.plan.Title).FontSize(18).FontWeight(600)
-				ui.Text(c, operationCaption(op)).FontSize(12).TextColor(t.TextMuted).ContentTransition(ui.ContentTransition{})
+				ui.Text(c, a.operationTitle(op)).FontSize(18).FontWeight(600)
+				ui.Text(c, a.operationCaption(op)).FontSize(12).TextColor(t.TextMuted).Wrap().ContentTransition(ui.ContentTransition{})
 				if op.started {
 					a.operationProgress(c, op).Margin(10, 0, 0, 0)
 				}
 			})
 			ui.Scroll(c).MaxHeight(440).Children(func() {
 				if !op.started {
+					if op.project != nil && len(op.plan.Steps) == 0 {
+						a.projectNoPlanBody(c, op)
+						return
+					}
 					if change := op.kubeChange(); change != nil && change.Manifests != nil {
 						a.manifestPreview(c, op, change.Manifests)
 						return
@@ -189,32 +218,37 @@ func (a *App) operationDialog(c *ui.Context, op *operation) {
 						a.projectPreparationItems(c, op.project, false)
 					}
 					a.operationPlan(c, op.plan)
-					if name := op.confirmName(); name != "" {
-						ui.Column(c).Padding(4, 20, 14, 20).Gap(6).Children(func() {
-							ui.Text(c, locales.KubeResourceConfirm(name)).FontSize(12).Wrap()
-							ui.TextInput(c.Key("op-target-name"), &op.confirm).Label(locales.KubeResourceConfirm(name))
-						})
-					}
+					return
+				}
+				if op.project != nil && op.state.Phase.Over() {
+					a.projectResultView(c, op)
 					return
 				}
 				dialogSection(c, strings.ToUpper(locales.OpSteps()))
 				operationSteps(c, op.plan.Steps, op.state, a.Home)
 				a.operationResult(c, op)
 			})
-			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).Wrap().BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				a.operationButtons(c, op)
 			})
 		})
 	})
 }
 
+func (a *App) operationTitle(op *operation) string {
+	if op.project != nil && (!op.started || op.state.Phase.Over()) {
+		return a.projectTitle(op)
+	}
+	return op.plan.Title
+}
+
 // operationCaption says, under the title, why before the user confirms,
 // then where the operation is and how it ended.
-func operationCaption(op *operation) string {
-	s := op.state
-	if op.project != nil && op.started && s.Phase == ops.Succeeded {
-		return locales.PrepareCommandsDone()
+func (a *App) operationCaption(op *operation) string {
+	if op.project != nil && (!op.started || op.state.Phase.Over()) {
+		return a.projectCaption(op)
 	}
+	s := op.state
 	n, total := s.Current+1, len(op.plan.Steps)
 	switch {
 	case !op.started:
@@ -262,11 +296,25 @@ func (a *App) operationProgress(c *ui.Context, op *operation) ui.Element {
 		value += 0.5 / float64(len(op.state.Steps))
 	}
 	color := t.Accent
-	switch op.state.Phase {
-	case ops.Succeeded:
-		color = t.Success
-	case ops.Failed, ops.NotVerified:
-		color = t.Danger
+	if op.project != nil && op.state.Phase.Over() {
+		outcome, _ := a.projectOutcome(op)
+		switch outcome {
+		case outcomeReady:
+			color = t.Success
+		case outcomeChecking:
+			color = t.Accent
+		case outcomeFailed:
+			color = t.Danger
+		default:
+			color = t.Warning
+		}
+	} else {
+		switch op.state.Phase {
+		case ops.Succeeded:
+			color = t.Success
+		case ops.Failed, ops.NotVerified:
+			color = t.Danger
+		}
 	}
 	// ui.Progress fills with the accent only: the bar is two parts that
 	// share its width.
@@ -280,8 +328,6 @@ func (a *App) operationProgress(c *ui.Context, op *operation) ui.Element {
 // operationPlan is what will change: the commands in order and what is
 // worth knowing first.
 func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
-	t := c.Theme()
-	pal := Colors(t)
 	// A plan that only edits files shows their changes alone.
 	notes := p.Notes
 	commands := false
@@ -309,30 +355,7 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 			notes = append(notes, ops.Note{Title: locales.OpBackup(), Text: text, Tag: locales.OpTagBackup()})
 		}
 	}
-	if len(notes) == 0 {
-		return
-	}
-	dialogSection(c, strings.ToUpper(locales.OpWorthKnowing()))
-	for i, n := range notes {
-		bottom := float32(8)
-		if i == len(notes)-1 {
-			bottom = 14
-		}
-		ui.Row(c).Gap(12).Padding(8, 20, bottom, 20).AlignItems(ui.Center).Children(func() {
-			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-				ui.Text(c, n.Title).FontSize(13)
-				if n.Text != "" {
-					ui.Text(c, n.Text).FontSize(11.5).TextColor(pal.TextFaint).Wrap()
-				}
-			})
-			switch {
-			case n.URL != "":
-				ui.Button(c.Key("note:"+n.URL), locales.OpOpenLink()+" ↗").OnClick(func() { c.OpenURL(n.URL) })
-			case n.Tag != "":
-				ui.Text(c, n.Tag).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-			}
-		})
-	}
+	worthKnowingList(c, notes)
 }
 
 // stepEdit is the change step makes to a file or, setting, to a setting
@@ -507,14 +530,6 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		return
 	}
 	pal := Colors(c.Theme())
-	if op.project != nil && s.Phase.Over() {
-		text := locales.PrepareCommandsDone()
-		if s.Phase != ops.Succeeded {
-			text = locales.PreparePartial()
-		}
-		logBlock(c, []string{text}, c.Theme().TextMuted, "", true)
-		a.projectPreparationItems(c, op.project, true)
-	}
 	switch s.Phase {
 	case ops.Running, ops.Verifying:
 		command := ""
@@ -528,11 +543,20 @@ func (a *App) operationResult(c *ui.Context, op *operation) {
 		if len(s.Log) > 0 {
 			dialogSection(c, locales.OpLastLines())
 			logBlock(c, lastLines(s.Log, 5), pal.DangerText, locales.OpFullLog(), true)
+		} else if s.Phase == ops.NotVerified && s.Err != "" && len(s.Restored)+len(s.Undone) == 0 {
+			dialogSection(c, strings.ToUpper(locales.PrepareResultSection()))
+			logBlock(c, []string{locales.OpNotVerifiedSummary(), s.Err}, pal.DangerText, "", true)
 		}
 	case ops.Succeeded:
 		if len(op.plan.Changes) > 0 {
 			dialogSection(c, strings.ToUpper(locales.OpChanged()))
 			logBlock(c, op.plan.Changes, c.Theme().Text, "", true)
+		}
+		if op.needsTerminalRestart() {
+			worthKnowingList(c, []ops.Note{{
+				Title: locales.OpRestartTerminalTitle(),
+				Text:  locales.OpRestartTerminalText(),
+			}})
 		}
 	case ops.Stopped:
 		done := 0
@@ -688,7 +712,9 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		}
 		button := ui.PrimaryButton(c.Key("op-run"), action).Height(controlHeight).Disabled(a.RunPlan == nil || !op.canConfirm()).
 			OnClick(a.startOperation)
-		if op.confirmName() != "" || op.plan.DockerAction == ops.DockerResourceRemove || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
+		if (op.kubeChange() != nil && op.kubeChange().DeletesResource()) ||
+			op.plan.DockerAction == ops.DockerResourceRemove ||
+			(op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource()) {
 			button.Background(c.Theme().Danger)
 		}
 	case !op.state.Phase.Over():
@@ -743,15 +769,8 @@ func (op *operation) instructionAgent() string {
 	return ""
 }
 
-func (op *operation) confirmName() string {
-	if change := op.kubeChange(); change != nil {
-		return change.ConfirmName()
-	}
-	return op.plan.ConfirmName
-}
-
 func (op *operation) canConfirm() bool {
-	if name := op.confirmName(); op.blockedDockerRemoval() || name != "" && op.confirm != name {
+	if op.blockedDockerRemoval() {
 		return false
 	}
 	change := op.kubeChange()
@@ -773,7 +792,7 @@ func (a *App) operationToast(c *ui.Context, op *operation) {
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 					ui.Text(c, op.plan.Title+"…").FontSize(13.5).FontWeight(600)
-					caption := operationCaption(op)
+					caption := a.operationCaption(op)
 					// The wizard's installation counts its tools, as its page.
 					if op == a.setup.op {
 						i := a.setupCurrent()

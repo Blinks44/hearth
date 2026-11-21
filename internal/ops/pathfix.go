@@ -84,7 +84,7 @@ func wanted(entries []inventory.PathEntry, dirs []string) []PathProblem {
 // terminal's PATH: every directory still found in the order it was,
 // fixed repeats there once, missing ones gone.
 func pathPlan(steps []Step, why, action string, entries []inventory.PathEntry, fixed []PathProblem, terminal Terminal) Plan {
-	p := Plan{Title: locales.PathFixTitle(len(fixed)), Why: why, Action: action, Steps: steps}
+	p := Plan{Title: locales.PathFixTitle(len(fixed)), Why: why, Action: action, Steps: steps, RestartTerminal: true}
 	for _, f := range fixed {
 		p.Changes = append(p.Changes, "− "+f.Dir)
 	}
@@ -156,7 +156,7 @@ func firstable(entries []inventory.PathEntry, i int) bool {
 // PATH: dir there, the other directories in the order they were.
 func pathFirstPlan(steps []Step, why string, entries []inventory.PathEntry, dir string, at int, terminal Terminal) Plan {
 	p := Plan{Title: locales.PathFirstTitle(dir), Why: why, Action: locales.PathFirstAction(), Steps: steps,
-		Changes: []string{"↑ " + dir}}
+		Changes: []string{"↑ " + dir}, RestartTerminal: true}
 	if terminal == nil {
 		return p
 	}

@@ -70,6 +70,9 @@ type Project struct {
 	// Installs are the folders of dependencies its tools install and can
 	// install again, as node_modules and .venv, that it has.
 	Installs []string
+	// Readme is the project's setup documentation file in Dir, when present
+	// (such as README.md), shown only as a file link for the user to open.
+	Readme string
 	// Texts are the version files Hearth may write, by name, as Read
 	// found them: an edit starts from them.
 	Texts map[string]string
@@ -178,6 +181,7 @@ func Read(dir string) Project {
 			p.Installs = append(p.Installs, name)
 		}
 	}
+	p.Readme = findReadme(dir)
 	p.Changed = changed(p)
 	p.Skills = ai.ProjectSkills(dir)
 	mcp, errs := ai.ProjectMCP(dir)
@@ -185,6 +189,17 @@ func Read(dir string) Project {
 	p.Rules, p.Hooks, errs = ai.ProjectAccess(dir)
 	p.Errs = append(p.Errs, errs...)
 	return p
+}
+
+var readmeFiles = []string{"README.md", "README.MD", "Readme.md", "README", "DEVELOPMENT.md", "CONTRIBUTING.md"}
+
+func findReadme(dir string) string {
+	for _, name := range readmeFiles {
+		if info, err := os.Stat(filepath.Join(dir, name)); err == nil && !info.IsDir() {
+			return name
+		}
+	}
+	return ""
 }
 
 // Names are the names of the files and folders in a project folder that

@@ -6186,20 +6186,6 @@ func (msgs Messages) KubeResourceReadAge(age string) string {
 	return Catalog.Format(msgs.locale, "kubeResourceReadAge", map[string]any{"age": age})
 }
 
-// KubeResourceConfirm says "Type {name} to confirm deletion."
-// in the language the app shows.
-//
-// kubeResourceConfirm
-func KubeResourceConfirm(name string) string { return In(i18n.Locale()).KubeResourceConfirm(name) }
-
-// KubeResourceConfirm says "Type {name} to confirm deletion."
-// in the language of msgs.
-//
-// kubeResourceConfirm
-func (msgs Messages) KubeResourceConfirm(name string) string {
-	return Catalog.Format(msgs.locale, "kubeResourceConfirm", map[string]any{"name": name})
-}
-
 // KubeHelmReleases says "Helm releases"
 // in the language the app shows.
 //
@@ -37340,4 +37326,820 @@ func DockerQuickViews() string { return In(i18n.Locale()).DockerQuickViews() }
 // engine.
 func (msgs Messages) DockerQuickViews() string {
 	return Catalog.Format(msgs.locale, "dockerQuickViews", nil)
+}
+
+// OpRestartTerminalTitle says "Open a new terminal or restart your editor"
+// in the language the app shows.
+//
+// Operation result and project preparation string: opRestartTerminalTitle.
+func OpRestartTerminalTitle() string { return In(i18n.Locale()).OpRestartTerminalTitle() }
+
+// OpRestartTerminalTitle says "Open a new terminal or restart your editor"
+// in the language of msgs.
+//
+// Operation result and project preparation string: opRestartTerminalTitle.
+func (msgs Messages) OpRestartTerminalTitle() string {
+	return Catalog.Format(msgs.locale, "opRestartTerminalTitle", nil)
+}
+
+// OpRestartTerminalText says "Already open terminals and editors may keep the previous PATH or default version until reopened."
+// in the language the app shows.
+//
+// Operation result and project preparation string: opRestartTerminalText.
+func OpRestartTerminalText() string { return In(i18n.Locale()).OpRestartTerminalText() }
+
+// OpRestartTerminalText says "Already open terminals and editors may keep the previous PATH or default version until reopened."
+// in the language of msgs.
+//
+// Operation result and project preparation string: opRestartTerminalText.
+func (msgs Messages) OpRestartTerminalText() string {
+	return Catalog.Format(msgs.locale, "opRestartTerminalText", nil)
+}
+
+// OpNotVerifiedSummary says "The commands finished, but the verification check did not confirm the result."
+// in the language the app shows.
+//
+// Operation result and project preparation string: opNotVerifiedSummary.
+func OpNotVerifiedSummary() string { return In(i18n.Locale()).OpNotVerifiedSummary() }
+
+// OpNotVerifiedSummary says "The commands finished, but the verification check did not confirm the result."
+// in the language of msgs.
+//
+// Operation result and project preparation string: opNotVerifiedSummary.
+func (msgs Messages) OpNotVerifiedSummary() string {
+	return Catalog.Format(msgs.locale, "opNotVerifiedSummary", nil)
+}
+
+// PrepareResultReadyTitle says "Project tools are ready"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareResultReadyTitle.
+func PrepareResultReadyTitle() string { return In(i18n.Locale()).PrepareResultReadyTitle() }
+
+// PrepareResultReadyTitle says "Project tools are ready"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareResultReadyTitle.
+func (msgs Messages) PrepareResultReadyTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultReadyTitle", nil)
+}
+
+// PrepareResultReadySubtitle says "{name} · tool requirements confirmed"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultReadySubtitle.
+func PrepareResultReadySubtitle(name string) string {
+	return In(i18n.Locale()).PrepareResultReadySubtitle(name)
+}
+
+// PrepareResultReadySubtitle says "{name} · tool requirements confirmed"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultReadySubtitle.
+func (msgs Messages) PrepareResultReadySubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareResultReadySubtitle", map[string]any{"name": name})
+}
+
+// PrepareResultActionsTitle says "Tools installed. Your action is needed"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultActionsTitle.
+func PrepareResultActionsTitle() string { return In(i18n.Locale()).PrepareResultActionsTitle() }
+
+// PrepareResultActionsTitle says "Tools installed. Your action is needed"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultActionsTitle.
+func (msgs Messages) PrepareResultActionsTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultActionsTitle", nil)
+}
+
+// PrepareResultActionsSubtitle says "{name} · commands finished, some items still need attention"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultActionsSubtitle.
+func PrepareResultActionsSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareResultActionsSubtitle(name)
+}
+
+// PrepareResultActionsSubtitle says "{name} · commands finished, some items still need attention"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultActionsSubtitle.
+func (msgs Messages) PrepareResultActionsSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareResultActionsSubtitle", map[string]any{"name": name})
+}
+
+// PrepareResultPartialTitle says "Preparation finished partially"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultPartialTitle.
+func PrepareResultPartialTitle() string { return In(i18n.Locale()).PrepareResultPartialTitle() }
+
+// PrepareResultPartialTitle says "Preparation finished partially"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultPartialTitle.
+func (msgs Messages) PrepareResultPartialTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultPartialTitle", nil)
+}
+
+// PrepareResultFailedTitle says "Preparation did not finish"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultFailedTitle.
+func PrepareResultFailedTitle() string { return In(i18n.Locale()).PrepareResultFailedTitle() }
+
+// PrepareResultFailedTitle says "Preparation did not finish"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultFailedTitle.
+func (msgs Messages) PrepareResultFailedTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultFailedTitle", nil)
+}
+
+// PrepareResultStoppedTitle says "Preparation stopped by you"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultStoppedTitle.
+func PrepareResultStoppedTitle() string { return In(i18n.Locale()).PrepareResultStoppedTitle() }
+
+// PrepareResultStoppedTitle says "Preparation stopped by you"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultStoppedTitle.
+func (msgs Messages) PrepareResultStoppedTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultStoppedTitle", nil)
+}
+
+// PrepareResultUnverifiedTitle says "Commands finished. Readiness not verified"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultUnverifiedTitle.
+func PrepareResultUnverifiedTitle() string { return In(i18n.Locale()).PrepareResultUnverifiedTitle() }
+
+// PrepareResultUnverifiedTitle says "Commands finished. Readiness not verified"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultUnverifiedTitle.
+func (msgs Messages) PrepareResultUnverifiedTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultUnverifiedTitle", nil)
+}
+
+// PrepareResultUnverifiedSubtitle says "{name} · post-operation check did not confirm readiness"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultUnverifiedSubtitle.
+func PrepareResultUnverifiedSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareResultUnverifiedSubtitle(name)
+}
+
+// PrepareResultUnverifiedSubtitle says "{name} · post-operation check did not confirm readiness"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultUnverifiedSubtitle.
+func (msgs Messages) PrepareResultUnverifiedSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareResultUnverifiedSubtitle", map[string]any{"name": name})
+}
+
+// PrepareResultCheckingTitle says "Checking project requirements"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultCheckingTitle.
+func PrepareResultCheckingTitle() string { return In(i18n.Locale()).PrepareResultCheckingTitle() }
+
+// PrepareResultCheckingTitle says "Checking project requirements"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultCheckingTitle.
+func (msgs Messages) PrepareResultCheckingTitle() string {
+	return Catalog.Format(msgs.locale, "prepareResultCheckingTitle", nil)
+}
+
+// PrepareResultCheckingSubtitle says "{name} · commands finished, rescanning tools and project selection…"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareResultCheckingSubtitle.
+func PrepareResultCheckingSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareResultCheckingSubtitle(name)
+}
+
+// PrepareResultCheckingSubtitle says "{name} · commands finished, rescanning tools and project selection…"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareResultCheckingSubtitle.
+func (msgs Messages) PrepareResultCheckingSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareResultCheckingSubtitle", map[string]any{"name": name})
+}
+
+// PrepareConflictTitle says "Conflicting requirements"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareConflictTitle.
+func PrepareConflictTitle() string { return In(i18n.Locale()).PrepareConflictTitle() }
+
+// PrepareConflictTitle says "Conflicting requirements"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareConflictTitle.
+func (msgs Messages) PrepareConflictTitle() string {
+	return Catalog.Format(msgs.locale, "prepareConflictTitle", nil)
+}
+
+// PrepareConflictSubtitle says "{name} · project files ask for incompatible versions"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareConflictSubtitle.
+func PrepareConflictSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareConflictSubtitle(name)
+}
+
+// PrepareConflictSubtitle says "{name} · project files ask for incompatible versions"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareConflictSubtitle.
+func (msgs Messages) PrepareConflictSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareConflictSubtitle", map[string]any{"name": name})
+}
+
+// PrepareUnknownTitle says "Requirement not recognized"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareUnknownTitle.
+func PrepareUnknownTitle() string { return In(i18n.Locale()).PrepareUnknownTitle() }
+
+// PrepareUnknownTitle says "Requirement not recognized"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareUnknownTitle.
+func (msgs Messages) PrepareUnknownTitle() string {
+	return Catalog.Format(msgs.locale, "prepareUnknownTitle", nil)
+}
+
+// PrepareUnknownSubtitle says "{name} · check the source files and tool status"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareUnknownSubtitle.
+func PrepareUnknownSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareUnknownSubtitle(name)
+}
+
+// PrepareUnknownSubtitle says "{name} · check the source files and tool status"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareUnknownSubtitle.
+func (msgs Messages) PrepareUnknownSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareUnknownSubtitle", map[string]any{"name": name})
+}
+
+// PrepareAlreadyInstalledTitle says "Version is already installed"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareAlreadyInstalledTitle.
+func PrepareAlreadyInstalledTitle() string { return In(i18n.Locale()).PrepareAlreadyInstalledTitle() }
+
+// PrepareAlreadyInstalledTitle says "Version is already installed"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareAlreadyInstalledTitle.
+func (msgs Messages) PrepareAlreadyInstalledTitle() string {
+	return Catalog.Format(msgs.locale, "prepareAlreadyInstalledTitle", nil)
+}
+
+// PrepareAlreadyInstalledSubtitle says "{name} · no reinstallation needed"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareAlreadyInstalledSubtitle.
+func PrepareAlreadyInstalledSubtitle(name string) string {
+	return In(i18n.Locale()).PrepareAlreadyInstalledSubtitle(name)
+}
+
+// PrepareAlreadyInstalledSubtitle says "{name} · no reinstallation needed"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareAlreadyInstalledSubtitle.
+func (msgs Messages) PrepareAlreadyInstalledSubtitle(name string) string {
+	return Catalog.Format(msgs.locale, "prepareAlreadyInstalledSubtitle", map[string]any{"name": name})
+}
+
+// PrepareConfirmedSection says "What is confirmed"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareConfirmedSection.
+func PrepareConfirmedSection() string { return In(i18n.Locale()).PrepareConfirmedSection() }
+
+// PrepareConfirmedSection says "What is confirmed"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareConfirmedSection.
+func (msgs Messages) PrepareConfirmedSection() string {
+	return Catalog.Format(msgs.locale, "prepareConfirmedSection", nil)
+}
+
+// PrepareConfirmedCaption says "Re-checked after the operation"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareConfirmedCaption.
+func PrepareConfirmedCaption() string { return In(i18n.Locale()).PrepareConfirmedCaption() }
+
+// PrepareConfirmedCaption says "Re-checked after the operation"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareConfirmedCaption.
+func (msgs Messages) PrepareConfirmedCaption() string {
+	return Catalog.Format(msgs.locale, "prepareConfirmedCaption", nil)
+}
+
+// PrepareResultSection says "Result"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareResultSection.
+func PrepareResultSection() string { return In(i18n.Locale()).PrepareResultSection() }
+
+// PrepareResultSection says "Result"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareResultSection.
+func (msgs Messages) PrepareResultSection() string {
+	return Catalog.Format(msgs.locale, "prepareResultSection", nil)
+}
+
+// PrepareCommandsNotReadiness says "Command results · not a readiness check"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareCommandsNotReadiness.
+func PrepareCommandsNotReadiness() string { return In(i18n.Locale()).PrepareCommandsNotReadiness() }
+
+// PrepareCommandsNotReadiness says "Command results · not a readiness check"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareCommandsNotReadiness.
+func (msgs Messages) PrepareCommandsNotReadiness() string {
+	return Catalog.Format(msgs.locale, "prepareCommandsNotReadiness", nil)
+}
+
+// PrepareSourcesSection says "Source files"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareSourcesSection.
+func PrepareSourcesSection() string { return In(i18n.Locale()).PrepareSourcesSection() }
+
+// PrepareSourcesSection says "Source files"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareSourcesSection.
+func (msgs Messages) PrepareSourcesSection() string {
+	return Catalog.Format(msgs.locale, "prepareSourcesSection", nil)
+}
+
+// PrepareFolderSelects says "{tool} {version} is selected in this folder"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareFolderSelects.
+func PrepareFolderSelects(tool string, version string) string {
+	return In(i18n.Locale()).PrepareFolderSelects(tool, version)
+}
+
+// PrepareFolderSelects says "{tool} {version} is selected in this folder"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareFolderSelects.
+func (msgs Messages) PrepareFolderSelects(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "prepareFolderSelects", map[string]any{"tool": tool, "version": version})
+}
+
+// PrepareFolderCurrentlySelects says "Currently selected in this folder: {tool} {version}"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareFolderCurrentlySelects.
+func PrepareFolderCurrentlySelects(tool string, version string) string {
+	return In(i18n.Locale()).PrepareFolderCurrentlySelects(tool, version)
+}
+
+// PrepareFolderCurrentlySelects says "Currently selected in this folder: {tool} {version}"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareFolderCurrentlySelects.
+func (msgs Messages) PrepareFolderCurrentlySelects(tool string, version string) string {
+	return Catalog.Format(msgs.locale, "prepareFolderCurrentlySelects", map[string]any{"tool": tool, "version": version})
+}
+
+// PrepareFolderNoneSelected says "No {tool} version is currently selected in this folder"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareFolderNoneSelected.
+func PrepareFolderNoneSelected(tool string) string {
+	return In(i18n.Locale()).PrepareFolderNoneSelected(tool)
+}
+
+// PrepareFolderNoneSelected says "No {tool} version is currently selected in this folder"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareFolderNoneSelected.
+func (msgs Messages) PrepareFolderNoneSelected(tool string) string {
+	return Catalog.Format(msgs.locale, "prepareFolderNoneSelected", map[string]any{"tool": tool})
+}
+
+// PrepareInstalledVia says "Installed via {manager}: {tool} {version}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareInstalledVia.
+func PrepareInstalledVia(manager string, tool string, version string) string {
+	return In(i18n.Locale()).PrepareInstalledVia(manager, tool, version)
+}
+
+// PrepareInstalledVia says "Installed via {manager}: {tool} {version}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareInstalledVia.
+func (msgs Messages) PrepareInstalledVia(manager string, tool string, version string) string {
+	return Catalog.Format(msgs.locale, "prepareInstalledVia", map[string]any{"manager": manager, "tool": tool, "version": version})
+}
+
+// PrepareDockerEngineAnswers says "Local engine {engine} answers"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareDockerEngineAnswers.
+func PrepareDockerEngineAnswers(engine string) string {
+	return In(i18n.Locale()).PrepareDockerEngineAnswers(engine)
+}
+
+// PrepareDockerEngineAnswers says "Local engine {engine} answers"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareDockerEngineAnswers.
+func (msgs Messages) PrepareDockerEngineAnswers(engine string) string {
+	return Catalog.Format(msgs.locale, "prepareDockerEngineAnswers", map[string]any{"engine": engine})
+}
+
+// PrepareDockerReady says "Local Docker engine answers"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareDockerReady.
+func PrepareDockerReady() string { return In(i18n.Locale()).PrepareDockerReady() }
+
+// PrepareDockerReady says "Local Docker engine answers"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareDockerReady.
+func (msgs Messages) PrepareDockerReady() string {
+	return Catalog.Format(msgs.locale, "prepareDockerReady", nil)
+}
+
+// PrepareStepDone says "Completed: {step}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareStepDone.
+func PrepareStepDone(step string) string { return In(i18n.Locale()).PrepareStepDone(step) }
+
+// PrepareStepDone says "Completed: {step}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareStepDone.
+func (msgs Messages) PrepareStepDone(step string) string {
+	return Catalog.Format(msgs.locale, "prepareStepDone", map[string]any{"step": step})
+}
+
+// PrepareStepFailed says "Failed: {step}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareStepFailed.
+func PrepareStepFailed(step string) string { return In(i18n.Locale()).PrepareStepFailed(step) }
+
+// PrepareStepFailed says "Failed: {step}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareStepFailed.
+func (msgs Messages) PrepareStepFailed(step string) string {
+	return Catalog.Format(msgs.locale, "prepareStepFailed", map[string]any{"step": step})
+}
+
+// PrepareStepStopped says "Stopped: {step}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareStepStopped.
+func PrepareStepStopped(step string) string { return In(i18n.Locale()).PrepareStepStopped(step) }
+
+// PrepareStepStopped says "Stopped: {step}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareStepStopped.
+func (msgs Messages) PrepareStepStopped(step string) string {
+	return Catalog.Format(msgs.locale, "prepareStepStopped", map[string]any{"step": step})
+}
+
+// PrepareStepSkipped says "Skipped: {step}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareStepSkipped.
+func PrepareStepSkipped(step string) string { return In(i18n.Locale()).PrepareStepSkipped(step) }
+
+// PrepareStepSkipped says "Skipped: {step}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareStepSkipped.
+func (msgs Messages) PrepareStepSkipped(step string) string {
+	return Catalog.Format(msgs.locale, "prepareStepSkipped", map[string]any{"step": step})
+}
+
+// PrepareTerminalNoteTitle says "Open terminals may still use the old version"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareTerminalNoteTitle.
+func PrepareTerminalNoteTitle() string { return In(i18n.Locale()).PrepareTerminalNoteTitle() }
+
+// PrepareTerminalNoteTitle says "Open terminals may still use the old version"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareTerminalNoteTitle.
+func (msgs Messages) PrepareTerminalNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareTerminalNoteTitle", nil)
+}
+
+// PrepareTerminalNoteText says "Open a new terminal window or restart your editor in the project folder to pick up the updated selection."
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareTerminalNoteText.
+func PrepareTerminalNoteText() string { return In(i18n.Locale()).PrepareTerminalNoteText() }
+
+// PrepareTerminalNoteText says "Open a new terminal window or restart your editor in the project folder to pick up the updated selection."
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareTerminalNoteText.
+func (msgs Messages) PrepareTerminalNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareTerminalNoteText", nil)
+}
+
+// PrepareDepsNoteTitle says "Dependencies and app startup were not checked"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareDepsNoteTitle.
+func PrepareDepsNoteTitle() string { return In(i18n.Locale()).PrepareDepsNoteTitle() }
+
+// PrepareDepsNoteTitle says "Dependencies and app startup were not checked"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareDepsNoteTitle.
+func (msgs Messages) PrepareDepsNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareDepsNoteTitle", nil)
+}
+
+// PrepareDepsNoteText says "Hearth prepared only the tools. Open the project folder and its instructions to install dependencies, create .venv or…"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareDepsNoteText.
+func PrepareDepsNoteText() string { return In(i18n.Locale()).PrepareDepsNoteText() }
+
+// PrepareDepsNoteText says "Hearth prepared only the tools. Open the project folder and its instructions to install dependencies, create .venv or…"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareDepsNoteText.
+func (msgs Messages) PrepareDepsNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareDepsNoteText", nil)
+}
+
+// PrepareContinueNoteTitle says "Continue builds a fresh plan"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareContinueNoteTitle.
+func PrepareContinueNoteTitle() string { return In(i18n.Locale()).PrepareContinueNoteTitle() }
+
+// PrepareContinueNoteTitle says "Continue builds a fresh plan"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareContinueNoteTitle.
+func (msgs Messages) PrepareContinueNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareContinueNoteTitle", nil)
+}
+
+// PrepareContinueNoteText says "\"Continue preparation…\" re-checks what is already installed and shows a plan only for the remaining steps."
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareContinueNoteText.
+func PrepareContinueNoteText() string { return In(i18n.Locale()).PrepareContinueNoteText() }
+
+// PrepareContinueNoteText says "\"Continue preparation…\" re-checks what is already installed and shows a plan only for the remaining steps."
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareContinueNoteText.
+func (msgs Messages) PrepareContinueNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareContinueNoteText", nil)
+}
+
+// PrepareKeepInstalledNoteTitle says "Completed installations stay"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareKeepInstalledNoteTitle.
+func PrepareKeepInstalledNoteTitle() string { return In(i18n.Locale()).PrepareKeepInstalledNoteTitle() }
+
+// PrepareKeepInstalledNoteTitle says "Completed installations stay"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareKeepInstalledNoteTitle.
+func (msgs Messages) PrepareKeepInstalledNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareKeepInstalledNoteTitle", nil)
+}
+
+// PrepareKeepInstalledNoteText says "Packages installed on completed steps are not removed automatically."
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareKeepInstalledNoteText.
+func PrepareKeepInstalledNoteText() string { return In(i18n.Locale()).PrepareKeepInstalledNoteText() }
+
+// PrepareKeepInstalledNoteText says "Packages installed on completed steps are not removed automatically."
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareKeepInstalledNoteText.
+func (msgs Messages) PrepareKeepInstalledNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareKeepInstalledNoteText", nil)
+}
+
+// PrepareUnverifiedNoteTitle says "Successful commands do not confirm readiness"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareUnverifiedNoteTitle.
+func PrepareUnverifiedNoteTitle() string { return In(i18n.Locale()).PrepareUnverifiedNoteTitle() }
+
+// PrepareUnverifiedNoteTitle says "Successful commands do not confirm readiness"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareUnverifiedNoteTitle.
+func (msgs Messages) PrepareUnverifiedNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareUnverifiedNoteTitle", nil)
+}
+
+// PrepareUnverifiedNoteText says "Run \"Check again\" to re-read project files and verify which tool versions are actually selected."
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareUnverifiedNoteText.
+func PrepareUnverifiedNoteText() string { return In(i18n.Locale()).PrepareUnverifiedNoteText() }
+
+// PrepareUnverifiedNoteText says "Run \"Check again\" to re-read project files and verify which tool versions are actually selected."
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareUnverifiedNoteText.
+func (msgs Messages) PrepareUnverifiedNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareUnverifiedNoteText", nil)
+}
+
+// PrepareConflictNoteTitle says "Files are not rewritten automatically"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareConflictNoteTitle.
+func PrepareConflictNoteTitle() string { return In(i18n.Locale()).PrepareConflictNoteTitle() }
+
+// PrepareConflictNoteTitle says "Files are not rewritten automatically"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareConflictNoteTitle.
+func (msgs Messages) PrepareConflictNoteTitle() string {
+	return Catalog.Format(msgs.locale, "prepareConflictNoteTitle", nil)
+}
+
+// PrepareConflictNoteText says "Open the source files above, reconcile the required versions, and click \"Check again\"."
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareConflictNoteText.
+func PrepareConflictNoteText() string { return In(i18n.Locale()).PrepareConflictNoteText() }
+
+// PrepareConflictNoteText says "Open the source files above, reconcile the required versions, and click \"Check again\"."
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareConflictNoteText.
+func (msgs Messages) PrepareConflictNoteText() string {
+	return Catalog.Format(msgs.locale, "prepareConflictNoteText", nil)
+}
+
+// PrepareGlobalUnchangedTitle says "Global version was not changed"
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareGlobalUnchangedTitle.
+func PrepareGlobalUnchangedTitle() string { return In(i18n.Locale()).PrepareGlobalUnchangedTitle() }
+
+// PrepareGlobalUnchangedTitle says "Global version was not changed"
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareGlobalUnchangedTitle.
+func (msgs Messages) PrepareGlobalUnchangedTitle() string {
+	return Catalog.Format(msgs.locale, "prepareGlobalUnchangedTitle", nil)
+}
+
+// PrepareGlobalUnchangedText says "Run the shown command in the project folder in your terminal, then click \"Check again\"."
+// in the language the app shows.
+//
+// Operation result and project preparation string:
+// prepareGlobalUnchangedText.
+func PrepareGlobalUnchangedText() string { return In(i18n.Locale()).PrepareGlobalUnchangedText() }
+
+// PrepareGlobalUnchangedText says "Run the shown command in the project folder in your terminal, then click \"Check again\"."
+// in the language of msgs.
+//
+// Operation result and project preparation string:
+// prepareGlobalUnchangedText.
+func (msgs Messages) PrepareGlobalUnchangedText() string {
+	return Catalog.Format(msgs.locale, "prepareGlobalUnchangedText", nil)
+}
+
+// PrepareToProject says "Go to project"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareToProject.
+func PrepareToProject() string { return In(i18n.Locale()).PrepareToProject() }
+
+// PrepareToProject says "Go to project"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareToProject.
+func (msgs Messages) PrepareToProject() string {
+	return Catalog.Format(msgs.locale, "prepareToProject", nil)
+}
+
+// PrepareOpenReadme says "Open {file}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareOpenReadme.
+func PrepareOpenReadme(file string) string { return In(i18n.Locale()).PrepareOpenReadme(file) }
+
+// PrepareOpenReadme says "Open {file}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareOpenReadme.
+func (msgs Messages) PrepareOpenReadme(file string) string {
+	return Catalog.Format(msgs.locale, "prepareOpenReadme", map[string]any{"file": file})
+}
+
+// PrepareOpenSource says "Open"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareOpenSource.
+func PrepareOpenSource() string { return In(i18n.Locale()).PrepareOpenSource() }
+
+// PrepareOpenSource says "Open"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareOpenSource.
+func (msgs Messages) PrepareOpenSource() string {
+	return Catalog.Format(msgs.locale, "prepareOpenSource", nil)
+}
+
+// PrepareCopyExact says "Copy {command}"
+// in the language the app shows.
+//
+// Operation result and project preparation string: prepareCopyExact.
+func PrepareCopyExact(command string) string { return In(i18n.Locale()).PrepareCopyExact(command) }
+
+// PrepareCopyExact says "Copy {command}"
+// in the language of msgs.
+//
+// Operation result and project preparation string: prepareCopyExact.
+func (msgs Messages) PrepareCopyExact(command string) string {
+	return Catalog.Format(msgs.locale, "prepareCopyExact", map[string]any{"command": command})
 }

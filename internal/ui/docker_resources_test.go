@@ -116,7 +116,7 @@ func TestDockerResourcesView(t *testing.T) {
 	}
 }
 
-func TestDockerVolumeRequiresExactName(t *testing.T) {
+func TestDockerVolumeRemovesByButton(t *testing.T) {
 	a := NewApp()
 	runs := 0
 	a.RunPlan = func(ops.Plan, func(ops.State)) func() {
@@ -125,23 +125,18 @@ func TestDockerVolumeRequiresExactName(t *testing.T) {
 	}
 	name := "shop_data"
 	a.Propose(ops.Plan{Title: locales.DockerVolumeRemoveTitle(name), Action: locales.DockerContainerRemove(),
-		ConfirmName: name, DockerAction: ops.DockerResourceRemove, Steps: []ops.Step{{Argv: []string{"docker", "volume", "rm", "--", name}}}})
+		DockerAction: ops.DockerResourceRemove, Steps: []ops.Step{{Argv: []string{"docker", "volume", "rm", "--", name}}}})
 	tt := ui.NewTester(a.View, 1000, 680)
 	tt.Advance(time.Second)
-	if !tt.HasText(locales.KubeResourceConfirm(name)) || a.op.canConfirm() {
-		t.Fatal("name confirmation missing")
+	if !a.op.canConfirm() {
+		t.Fatal("volume removal should confirm directly with the dialog button")
 	}
-	for _, decision := range []struct {
-		typed string
-		runs  int
-	}{{"SHOP_DATA", 0}, {name, 1}} {
-		a.op.confirm = decision.typed
-		tt.Advance(time.Second)
-		_ = tt.Click(locales.DockerContainerRemove())
-		tt.Advance(time.Second)
-		if runs != decision.runs {
-			t.Fatalf("after %q, ran %d times", decision.typed, runs)
-		}
+	if err := tt.Click(locales.DockerContainerRemove()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if runs != 1 {
+		t.Fatalf("after clicking remove, ran %d times", runs)
 	}
 }
 

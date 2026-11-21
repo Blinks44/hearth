@@ -28,6 +28,7 @@ func UpdatePlan(plans []Plan) (p Plan, ok bool) {
 	for _, one := range plans {
 		p.Steps = append(p.Steps, one.Steps...)
 		p.Changes = append(p.Changes, one.Changes...)
+		p.RestartTerminal = p.RestartTerminal || one.RestartTerminal
 		for _, n := range one.Notes {
 			if !slices.Contains(p.Notes, n) {
 				p.Notes = append(p.Notes, n)
@@ -112,6 +113,7 @@ func VersionUpdatePlan(u VersionUpdate, detect Detect) (p Plan, ok bool) {
 		if !ok {
 			return Plan{}, false
 		}
+		p.RestartTerminal = true
 		parts = append(parts, def)
 	}
 	// Volta keeps the versions it fetched: the old one stays.

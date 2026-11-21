@@ -88,6 +88,7 @@ func VersionPlan(action VersionAction, t VersionTarget, detect Detect) (p Plan, 
 	case VersionDefault:
 		p.Title, p.Why = locales.VersionDefaultTitle(t.Title, label), locales.VersionDefaultWhy(manager)
 		p.Changes = []string{locales.VersionDefaultChange(t.Title, label, manager)}
+		p.RestartTerminal = true
 		if manager == "nvm-windows" {
 			p.Notes = []Note{{Title: locales.NoteAdmin(), Text: locales.NoteNvmWindowsUAC(), Tag: "UAC"}}
 		}
