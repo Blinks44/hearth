@@ -5,6 +5,7 @@ package sysenv
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -81,5 +82,75 @@ func TestPathSourceBrewShellenv(t *testing.T) {
 		if s := got[dir]; len(s) != 1 || s[0].Line != 2 {
 			t.Errorf("%s: %+v", dir, s)
 		}
+	}
+}
+
+func TestPathSourcesFollowsIncludes(t *testing.T) {
+	root := t.TempDir()
+	mustWrite := func(rel, body string) string {
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	zprofile := mustWrite(".zprofile", strings.Join([]string{
+		"source ~/.orbstack/shell/init.zsh 2>/dev/null || :",
+		`[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"`,
+		"source ~/.cycle-a.zsh",
+		"# source ~/.commented.zsh",
+		"source ~/.glob/*.zsh",
+	}, "\n")+"\n")
+	orb := mustWrite(".orbstack/shell/init.zsh", "export PATH=\"$PATH\":"+filepath.Join(root, ".orbstack/bin")+"\n")
+	cargo := mustWrite(".cargo/env", "export PATH=\"$HOME/.cargo/bin:$PATH\"\n")
+	mustWrite(".cycle-a.zsh", "source ~/.cycle-b.zsh\n")
+	mustWrite(".cycle-b.zsh", "source ~/.cycle-a.zsh\nexport PATH=\"$HOME/cycle/bin:$PATH\"\n")
+	mustWrite(".commented.zsh", "export PATH=\"$HOME/nope/bin:$PATH\"\n")
+
+	got := sourceFiles(Env{"HOME=" + root}, []string{zprofile})
+	if s := got[filepath.Join(root, ".orbstack/bin")]; len(s) != 1 || s[0].File != orb || s[0].Line != 1 {
+		t.Errorf("orbstack source = %+v, want %s:1", s, orb)
+	}
+	if s := got[filepath.Join(root, ".cargo/bin")]; len(s) != 1 || s[0].File != cargo || s[0].Line != 1 {
+		t.Errorf("cargo source = %+v, want %s:1", s, cargo)
+	}
+	if s := got[filepath.Join(root, "cycle/bin")]; len(s) != 1 || s[0].Line != 2 {
+		t.Errorf("cycle source = %+v, want line 2", s)
+	}
+	if s := got[filepath.Join(root, "nope/bin")]; len(s) != 0 {
+		t.Errorf("commented source should be ignored: %+v", s)
+	}
+}
+
+func TestPathSourceManagerHooks(t *testing.T) {
+	root := t.TempDir()
+	file := filepath.Join(root, ".zprofile")
+	body := strings.Join([]string{
+		`eval "$(/opt/homebrew/bin/mise activate zsh --shims)"`,
+		`eval "$(/opt/homebrew/bin/mise activate zsh)"`,
+		`eval "$(pyenv init -)"`,
+		`eval "$(rbenv init - zsh)"`,
+	}, "\n") + "\n"
+	if err := os.WriteFile(file, []byte(body), 0600); err != nil {
+		t.Fatal(err)
+	}
+	got := sourceFiles(Env{"HOME=" + root}, []string{file})
+	for dir, wantLine := range map[string]int{
+		filepath.Join(root, ".local/share/mise/shims"): 1,
+		filepath.Join(root, ".pyenv/shims"):            3,
+		filepath.Join(root, ".rbenv/shims"):            4,
+	} {
+		if s := got[dir]; len(s) != 1 || s[0].File != file || s[0].Line != wantLine {
+			t.Errorf("%s: got %+v, want %s:%d", dir, s, file, wantLine)
+		}
+	}
+	// Custom MISE_DATA_DIR overrides the default mise shims directory.
+	custom := filepath.Join(root, "mise-data")
+	gotCustom := sourceFiles(Env{"HOME=" + root, "MISE_DATA_DIR=" + custom}, []string{file})
+	if s := gotCustom[filepath.Join(custom, "shims")]; len(s) != 1 || s[0].Line != 1 {
+		t.Errorf("custom MISE_DATA_DIR shims: %+v", s)
 	}
 }

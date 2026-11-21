@@ -195,7 +195,8 @@ type ToolState struct {
 // PathSource is a possible declaration of a PATH directory.
 type PathSource struct {
 	File string
-	Line int `json:",omitempty"`
+	Line int  `json:",omitempty"`
+	Hook bool `json:",omitempty"`
 }
 
 // EnvironmentVariable is an allowlisted tool setting in both environments.

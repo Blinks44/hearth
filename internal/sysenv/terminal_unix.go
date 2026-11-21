@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
@@ -33,7 +34,7 @@ func terminal(ctx context.Context, r run.Runner, gui Env, marker string) (Env, e
 	script := "printf %s " + marker + "; /usr/bin/env -0; printf %s " + marker
 	res, err := r.Run(ctx, run.Cmd{
 		Args:    append(shellArgs(sh), script),
-		Env:     gui.with(resolvingFlag, "1"),
+		Env:     loginEnv(gui).with(resolvingFlag, "1"),
 		Timeout: shellTimeout,
 	})
 	if err != nil {
@@ -45,6 +46,26 @@ func terminal(ctx context.Context, r run.Runner, gui Env, marker string) (Env, e
 			sh, res.ExitCode, res.Stderr, err)
 	}
 	return env.without(resolvingFlag), nil
+}
+
+// loginEnv prepares gui as the starting environment of a brand-new login shell:
+// it resets PATH to the OS login baseline and clears inherited interactive
+// shell hook state (such as mise's session variables) so launching Hearth from a
+// terminal, an IDE, or with launchctl setenv PATH never duplicates PATH entries
+// or leaks parent-process directories like go tool's GOROOT/bin.
+func loginEnv(gui Env) Env {
+	out := make(Env, 0, len(gui)+1)
+	for _, kv := range gui {
+		key, _, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		if key == "PATH" || key == "MISE_SHELL" || strings.HasPrefix(key, "__MISE_") {
+			continue
+		}
+		out = append(out, kv)
+	}
+	return append(out, "PATH="+loginPath())
 }
 
 // loginShell is $SHELL, else the user's shell from the system's user

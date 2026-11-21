@@ -101,6 +101,7 @@ func TestPathFix(t *testing.T) {
 		{Dir: "/usr/bin", Sources: []inventory.PathSource{{File: "/etc/paths", Line: 1}}},
 		{Dir: "/opt/homebrew/bin", Sources: []inventory.PathSource{{File: home + "/.zprofile", Line: 3}, {File: zshrc, Line: 41}}},
 		{Dir: home + "/.nvm/versions/node/v16.20.2/bin", Missing: true, Sources: []inventory.PathSource{{File: zshrc, Line: 12}}},
+		{Dir: home + "/.local/share/mise/shims", Missing: true, Sources: []inventory.PathSource{{File: home + "/.zprofile", Line: 9, Hook: true}}},
 		{Dir: "/nowhere", Missing: true},
 	}}
 	var asked [][]string
@@ -114,13 +115,13 @@ func TestPathFix(t *testing.T) {
 	tt.Advance(time.Second)
 	screenshot(t, tt, "path-fix")
 	// The repeat's row and the missing folder's from the user's file can
-	// be fixed; the first /opt/homebrew/bin and /nowhere cannot.
+	// be fixed; the first /opt/homebrew/bin, a tool-manager hook, and /nowhere cannot.
 	for _, dir := range []string{"/opt/homebrew/bin", "~/.nvm/versions/node/v16.20.2/bin"} {
 		if _, ok := tt.Find("Remove " + dir + " from PATH"); !ok {
 			t.Errorf("no button removes %s", dir)
 		}
 	}
-	if n := slices.Index(tt.Texts(), "Remove…"); n < 0 || slices.Index(tt.Texts()[n+1:], "Remove…") < 0 || tt.HasText("Remove /nowhere from PATH") {
+	if n := slices.Index(tt.Texts(), "Remove…"); n < 0 || slices.Index(tt.Texts()[n+1:], "Remove…") < 0 || tt.HasText("Remove /nowhere from PATH") || tt.HasText("Remove ~/.local/share/mise/shims from PATH") {
 		t.Errorf("want two rows to remove: %q", tt.Texts())
 	}
 	if err := tt.Click("Fix…"); err != nil {

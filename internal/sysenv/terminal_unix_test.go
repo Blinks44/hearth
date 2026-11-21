@@ -114,13 +114,40 @@ func TestTerminal(t *testing.T) {
 			if len(calls) != 1 {
 				t.Fatalf("calls = %d, want 1", len(calls))
 			}
-			if shellEnv := Env(calls[0].Env); shellEnv.Get(resolvingFlag) != "1" || shellEnv.Get("PATH") != "/usr/bin" {
-				t.Errorf("shell env = %q, want the GUI env with %s=1", calls[0].Env, resolvingFlag)
+			if shellEnv := Env(calls[0].Env); shellEnv.Get(resolvingFlag) != "1" || shellEnv.Get("PATH") != loginPath() {
+				t.Errorf("shell env = %q, want baseline PATH %q with %s=1", calls[0].Env, loginPath(), resolvingFlag)
 			}
 			if calls[0].Timeout != shellTimeout {
 				t.Errorf("timeout = %v, want %v", calls[0].Timeout, shellTimeout)
 			}
 		})
+	}
+}
+
+func TestLoginEnvResetsPathAndMiseSession(t *testing.T) {
+	gui := Env{
+		"HOME=/Users/me",
+		"SHELL=/bin/zsh",
+		"LANG=en_US.UTF-8",
+		"PATH=/Users/me/.orbstack/bin:/opt/homebrew/sbin:/opt/homebrew/Cellar/go/1.27.4/libexec/bin:/usr/bin",
+		"MISE_SHELL=zsh",
+		"__MISE_DIFF=abc",
+		"__MISE_ORIG_PATH=/Users/me/.orbstack/bin:/usr/bin",
+		"__MISE_SESSION=xyz",
+	}
+	got := loginEnv(gui)
+	if got.Get("PATH") != loginPath() {
+		t.Fatalf("PATH = %q, want %q", got.Get("PATH"), loginPath())
+	}
+	for _, k := range []string{"MISE_SHELL", "__MISE_DIFF", "__MISE_ORIG_PATH", "__MISE_SESSION"} {
+		if v := got.Get(k); v != "" {
+			t.Errorf("%s = %q, want cleared", k, v)
+		}
+	}
+	for k, want := range map[string]string{"HOME": "/Users/me", "SHELL": "/bin/zsh", "LANG": "en_US.UTF-8"} {
+		if v := got.Get(k); v != want {
+			t.Errorf("%s = %q, want %q", k, v, want)
+		}
 	}
 }
 

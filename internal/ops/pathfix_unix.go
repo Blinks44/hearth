@@ -15,10 +15,11 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-// PathFixable reports that e comes from a startup file of the user's,
-// where Hearth may comment out the line that adds it.
+// PathFixable reports that e comes from a plain PATH line in a startup file of
+// the user's (not a tool-manager eval/source hook), where Hearth may comment
+// out the line that adds it.
 func PathFixable(e inventory.PathEntry, home string) bool {
-	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return userLine(s, home) })
+	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return !s.Hook && userLine(s, home) })
 }
 
 // PathEntryFixable matches PathPlan's preconditions for a single entry:
@@ -71,7 +72,11 @@ func PathPlan(entries []inventory.PathEntry, dirs []string, env sysenv.Env, term
 			if err != nil {
 				return Plan{}, err
 			}
-			// The file must still have the line, adding p.Dir alone.
+			// The file must still have the line, adding p.Dir alone (never a
+			// shell eval/source hook that also configures a tool manager).
+			if strings.Contains(line, "$(") || strings.Contains(line, "`") || strings.Contains(line, "| source") {
+				continue
+			}
 			added := sysenv.LineDirs(s.File, line, env)
 			if len(added) != 1 || !sysenv.SamePath(added[0], p.Dir) {
 				continue

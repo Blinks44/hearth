@@ -65,6 +65,13 @@ func TestPathPlan(t *testing.T) {
 			},
 		},
 		{
+			name:     "a manager eval hook stays even when its shims folder is missing",
+			zprofile: "eval \"$(/opt/homebrew/bin/mise activate zsh --shims)\"\n",
+			entries: []inventory.PathEntry{
+				{Dir: filepath.Join(home, ".local/share/mise/shims"), Missing: true, Sources: []inventory.PathSource{src(zprofile, 1)}},
+			},
+		},
+		{
 			name:  "a folder that is not there",
 			zshrc: "export PATH=\"$HOME/.nvm/versions/node/v16.20.2/bin:$PATH\"\n",
 			entries: []inventory.PathEntry{

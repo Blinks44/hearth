@@ -18,6 +18,9 @@ func TestTerminalReal(t *testing.T) {
 	}
 	t.Logf("GUI PATH:      %s", GUI().Get("PATH"))
 	t.Logf("terminal PATH: %s", env.Get("PATH"))
+	for i, e := range Paths(env) {
+		t.Logf("#%d %s sources=%+v missing=%v", i+1, e.Dir, e.Sources, e.Missing)
+	}
 }
 
 func TestReadOSReal(t *testing.T) {

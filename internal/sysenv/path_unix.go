@@ -26,6 +26,15 @@ var pathLine = regexp.MustCompile(`(^|[\s;])(PATH\+?=|path\+?=\()|^set\s.*\s(PAT
 // that prefix on PATH.
 var brewShellenv = regexp.MustCompile(`([^\s"'$(]+)/bin/brew\s+shellenv`)
 
+// miseActivateShims, pyenvInit, and rbenvInit match the deterministic shim
+// hooks their installers (and Hearth) add to shell startup files.
+var (
+	miseActivateShims = regexp.MustCompile(`(^|[\s"'$(/])mise\s+activate\b.*--shims\b`)
+	pyenvInit         = regexp.MustCompile(`(^|[\s"'$(/])pyenv\s+init\b`)
+	rbenvInit         = regexp.MustCompile(`(^|[\s"'$(/])rbenv\s+init\b`)
+	sourceInclude     = regexp.MustCompile(`(?:^|[;&|]\s*|\bthen\s+)(?:source|\\?\.)\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|<>]+))`)
+)
+
 func pathSources(env Env) map[string][]inventory.PathSource {
 	home := env.Get("HOME")
 	files := []string{"/etc/profile", "/etc/environment", "/etc/paths"}
@@ -67,48 +76,124 @@ func pathSources(env Env) map[string][]inventory.PathSource {
 	return sourceFiles(env, files)
 }
 
+const maxSourceDepth = 4
+
 func sourceFiles(env Env, files []string) map[string][]inventory.PathSource {
 	out := map[string][]inventory.PathSource{}
-	for _, file := range files {
-		info, err := os.Stat(file)
-		if err != nil || info.Size() > 1<<20 || !info.Mode().IsRegular() {
-			continue
+	visited := map[string]bool{}
+	var scan func(file string, depth int)
+	scan = func(file string, depth int) {
+		if depth > maxSourceDepth {
+			return
 		}
-		b, err := os.ReadFile(file)
+		clean := filepath.Clean(file)
+		if visited[clean] {
+			return
+		}
+		visited[clean] = true
+		info, err := os.Stat(clean)
+		if err != nil || info.Size() > 1<<20 || !info.Mode().IsRegular() {
+			return
+		}
+		b, err := os.ReadFile(clean)
 		if err != nil {
-			continue
+			return
 		}
 		for i, line := range strings.Split(string(b), "\n") {
-			for _, v := range LineDirs(file, line, env) {
+			dirs, hook := lineDirs(clean, line, env)
+			for _, v := range dirs {
 				key := pathKey(v)
-				out[key] = append(out[key], inventory.PathSource{File: file, Line: i + 1})
+				out[key] = append(out[key], inventory.PathSource{File: clean, Line: i + 1, Hook: hook})
+			}
+			for _, inc := range sourcedFiles(clean, line, env) {
+				scan(inc, depth+1)
 			}
 		}
+	}
+	for _, file := range files {
+		scan(file, 0)
+	}
+	return out
+}
+
+// sourcedFiles returns static absolute file paths included by `source` or `.`
+// statements in line, without executing shell code.
+func sourcedFiles(file, line string, env Env) []string {
+	if file == "/etc/paths" || strings.HasPrefix(file, "/etc/paths.d/") {
+		return nil
+	}
+	line, _, _ = strings.Cut(line, "#")
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return nil
+	}
+	matches := sourceInclude.FindAllStringSubmatch(line, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	var out []string
+	for _, m := range matches {
+		target := m[1]
+		if target == "" {
+			target = m[2]
+		}
+		if target == "" {
+			target = m[3]
+		}
+		v := expandPath(target, env)
+		if !filepath.IsAbs(v) || strings.ContainsAny(v, "`;$()*?[]<>") {
+			continue
+		}
+		out = append(out, filepath.Clean(v))
 	}
 	return out
 }
 
 // LineDirs are the directories a line of file puts on PATH, as far as
 // Hearth can tell without running it, each once: none for a line that
-// computes them, as a command substitution does.
+// computes them, as an arbitrary command substitution does.
 func LineDirs(file, line string, env Env) []string {
+	dirs, _ := lineDirs(file, line, env)
+	return dirs
+}
+
+func lineDirs(file, line string, env Env) ([]string, bool) {
 	plain := file == "/etc/paths" || strings.HasPrefix(file, "/etc/paths.d/")
 	line, _, _ = strings.Cut(line, "#")
 	line = strings.TrimSpace(line)
 	if line == "" {
-		return nil
+		return nil, false
 	}
 	var values []string
-	if plain {
+	hook := false
+	switch {
+	case plain:
 		values = []string{line}
-	} else if m := brewShellenv.FindStringSubmatch(line); m != nil {
+	case brewShellenv.MatchString(line):
+		m := brewShellenv.FindStringSubmatch(line)
 		values = []string{m[1] + "/bin", m[1] + "/sbin"}
-	} else {
+		hook = true
+	case miseActivateShims.MatchString(line):
+		if dir := miseShimsDir(env); dir != "" {
+			values = []string{dir}
+		}
+		hook = true
+	case pyenvInit.MatchString(line):
+		if dir := managerShimsDir(env, "PYENV_ROOT", ".pyenv"); dir != "" {
+			values = []string{dir}
+		}
+		hook = true
+	case rbenvInit.MatchString(line):
+		if dir := managerShimsDir(env, "RBENV_ROOT", ".rbenv"); dir != "" {
+			values = []string{dir}
+		}
+		hook = true
+	default:
 		// A command substitution is computed: its directories stay unknown.
 		if !pathLine.MatchString(line) || strings.Contains(line, "$(") || strings.Contains(line, "`") {
-			return nil
+			return nil, false
 		}
-		values = strings.FieldsFunc(line, func(r rune) bool { return strings.ContainsRune(" \t:=()\"'", r) })
+		values = strings.FieldsFunc(line, func(r rune) bool { return strings.ContainsRune(" \t:=()\"';", r) })
 	}
 	var dirs []string
 	seen := map[string]bool{}
@@ -123,7 +208,30 @@ func LineDirs(file, line string, env Env) []string {
 		seen[pathKey(v)] = true
 		dirs = append(dirs, v)
 	}
-	return dirs
+	return dirs, hook
+}
+
+func miseShimsDir(env Env) string {
+	if d := env.Get("MISE_DATA_DIR"); d != "" {
+		return filepath.Join(d, "shims")
+	}
+	if d := env.Get("XDG_DATA_HOME"); d != "" {
+		return filepath.Join(d, "mise", "shims")
+	}
+	if h := env.Get("HOME"); h != "" {
+		return filepath.Join(h, ".local", "share", "mise", "shims")
+	}
+	return ""
+}
+
+func managerShimsDir(env Env, rootVar, homeSubdir string) string {
+	if d := env.Get(rootVar); d != "" {
+		return filepath.Join(d, "shims")
+	}
+	if h := env.Get("HOME"); h != "" {
+		return filepath.Join(h, homeSubdir, "shims")
+	}
+	return ""
 }
 
 func expandPath(value string, env Env) string {

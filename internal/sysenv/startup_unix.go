@@ -24,7 +24,8 @@ func Startup(ctx context.Context, r run.Runner, _, gui Env) *inventory.ShellStar
 
 func startup(ctx context.Context, r run.Runner, gui Env, marker string) *inventory.ShellStartup {
 	sh := loginShell(ctx, r, gui)
-	res, err := r.Run(ctx, run.Cmd{Args: append(shellArgs(sh), "exit"), Env: gui, Timeout: shellTimeout})
+	base := loginEnv(gui)
+	res, err := r.Run(ctx, run.Cmd{Args: append(shellArgs(sh), "exit"), Env: base, Timeout: shellTimeout})
 	if err != nil {
 		return nil
 	}
@@ -48,7 +49,7 @@ func startup(ctx context.Context, r run.Runner, gui Env, marker string) *invento
 	default:
 		return s
 	}
-	res, err = r.Run(ctx, run.Cmd{Args: args, Env: gui.with("PS4", ps4), Timeout: shellTimeout, MaxOutput: maxTraceBytes})
+	res, err = r.Run(ctx, run.Cmd{Args: args, Env: base.with("PS4", ps4), Timeout: shellTimeout, MaxOutput: maxTraceBytes})
 	if err != nil || res.Truncated {
 		return s
 	}

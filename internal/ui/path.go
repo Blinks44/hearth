@@ -138,11 +138,13 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 						ui.Text(c, locales.EnvPathUnknown()).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 					for _, src := range entry.Sources {
-						label := tilde(src.File, a.Home)
+						full := tilde(src.File, a.Home)
+						label := full
 						if src.Line > 0 {
 							label = filepath.Base(src.File) + ":" + strconv.Itoa(src.Line)
+							full = full + ":" + strconv.Itoa(src.Line)
 						}
-						ui.Text(c, label).Font(FontMono).FontSize(10.5).SingleLine()
+						ui.Text(c, label).Font(FontMono).FontSize(10.5).SingleLine().Tooltip(full)
 					}
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
