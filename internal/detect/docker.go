@@ -21,7 +21,8 @@ import (
 )
 
 // Docker finds Docker CLI copies and installed engines, reads contexts,
-// and probes only the selected local endpoint. It never starts an engine,
+// and probes the selected local endpoint and the default socket if they differ.
+// It never starts an engine,
 // changes a context, invokes credential helpers or contacts a remote host.
 func Docker(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
 	engines, candidates := dockerLocations(term, sources.ManagerDirs(term).Home)
@@ -62,7 +63,6 @@ func dockerCLIEngine(real string, engines []inventory.DockerEngine) inventory.Do
 func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engines []inventory.DockerEngine, candidates []string) (inventory.ToolState, error) {
 	f := newFinder("docker", term)
 	f.lookPath("docker", term, gui)
-	home := sources.ManagerDirs(term).Home
 	for _, p := range candidates {
 		if exists(p) {
 			f.add(p)
@@ -108,11 +108,13 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 			in.Version = strings.TrimSuffix(fields[2], ",")
 		}
 	}
-	config := term.Get("DOCKER_CONFIG")
-	if config == "" && home != "" {
-		config = filepath.Join(home, ".docker")
+	config := docker.ConfigDir(term)
+	d.ConfigDir = config
+	cfg, cfgErr := readDockerConfig(config)
+	d.Contexts, d.Selected, d.Err = dockerContextFiles(config, cfg.CurrentContext, cfgErr)
+	if cfgErr == nil {
+		dockerConfigHealth(d, cfg, term)
 	}
-	d.Contexts, d.Selected, d.Err = dockerContextFiles(config)
 	active := inventory.TerminalCopy(st.Installations)
 	if active >= 0 && !st.Installations[active].Source.Shim {
 		exe := st.Installations[active].Path
@@ -124,9 +126,10 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 		}
 	}
 	dockerSelect(d, term)
-	d.Plugins = dockerPlugins(config)
+	d.Plugins = dockerPlugins(config, cfg.CLIPluginsExtraDirs)
 	if config != "" {
 		d.PluginDir = filepath.Join(config, "cli-plugins")
+		d.BrokenPlugins = brokenDockerPlugins(d.PluginDir)
 	}
 	if active >= 0 && !st.Installations[active].Source.Shim && d.Err == "" {
 		for i := range d.Contexts {
@@ -143,7 +146,14 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 			if err == nil && res.ExitCode == 0 && !res.Truncated && json.Unmarshal(res.Stdout, &version) == nil && version.Server != nil && version.Server.Version != "" {
 				c.Status, c.Version = "available", version.Server.Version
 				dockerDatabases(ctx, r, term, exe, c.Endpoint, d)
+				readCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
+				target := docker.Target{Docker: exe, Context: c.Name, Endpoint: c.Endpoint}
+				if engine, err := docker.Read(readCtx, r, term, target); err == nil {
+					d.Health = docker.ReadHealth(readCtx, r, term, target, engine)
+				}
+				cancel()
 			}
+			d.DefaultSocketIssue = dockerSocketHealth(ctx, r, term, exe, dockerDefaultEndpoint, *c)
 		}
 	}
 	return st, ctx.Err()
@@ -167,18 +177,16 @@ func dockerContextList(data []byte) ([]inventory.DockerContext, error) {
 	}
 }
 
-func dockerContextFiles(config string) ([]inventory.DockerContext, string, string) {
+func dockerContextFiles(config, currentContext string, configErr error) ([]inventory.DockerContext, string, string) {
 	out := []inventory.DockerContext{dockerContext("default", dockerDefaultEndpoint)}
 	selected, problem := "default", ""
 	if config == "" {
 		return out, selected, problem
 	}
-	var cfg struct{ CurrentContext string }
-	data, err := os.ReadFile(filepath.Join(config, "config.json"))
-	if err != nil && !errors.Is(err, os.ErrNotExist) || err == nil && json.Unmarshal(data, &cfg) != nil {
+	if configErr != nil {
 		problem = "config.json"
-	} else if cfg.CurrentContext != "" {
-		selected = cfg.CurrentContext
+	} else if currentContext != "" {
+		selected = currentContext
 	}
 	files, _ := filepath.Glob(filepath.Join(config, "contexts", "meta", "*", "meta.json"))
 	for _, p := range files {
@@ -247,15 +255,11 @@ func dockerContext(name, endpoint string) inventory.DockerContext {
 	return c
 }
 
-func dockerPlugins(config string) []inventory.Package {
+func dockerPlugins(config string, extras []string) []inventory.Package {
 	if config == "" {
 		return nil
 	}
-	dirs := []string{filepath.Join(config, "cli-plugins")}
-	var settings struct{ CLIPluginsExtraDirs []string }
-	if data, err := os.ReadFile(filepath.Join(config, "config.json")); err == nil && json.Unmarshal(data, &settings) == nil {
-		dirs = append(dirs, settings.CLIPluginsExtraDirs...)
-	}
+	dirs := append([]string{filepath.Join(config, "cli-plugins")}, extras...)
 	var out []inventory.Package
 	for _, name := range []string{"compose", "buildx"} {
 		if slices.ContainsFunc(dirs, func(dir string) bool {

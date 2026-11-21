@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
@@ -36,6 +37,7 @@ type Engine struct {
 	// Containers counts all of them; Running, Paused and Stopped by state.
 	Containers, Running, Paused, Stopped int
 	Images                               int
+	Health                               inventory.DockerHealth
 }
 
 // Error is an engine that did not answer, with what docker said.
@@ -92,9 +94,14 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Engine, 
 
 // Watch reads the engine now and every Every after, giving each read to
 // got, until ctx is done.
-func Watch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, got func(Engine, error)) {
+func Watch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, overview bool, got func(Engine, error)) {
 	for {
 		e, err := Read(ctx, r, env, t)
+		if overview && err == nil {
+			readCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
+			e.Health = ReadHealth(readCtx, r, env, t, e)
+			cancel()
+		}
 		if ctx.Err() != nil {
 			return
 		}

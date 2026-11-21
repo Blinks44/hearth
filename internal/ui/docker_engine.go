@@ -133,6 +133,10 @@ func (a *App) syncDocker() {
 	a.syncDockerContainers(t, running)
 	a.syncDockerImages(t, running)
 	a.syncDockerResources(t, running)
+	overview := s.view == dockerOverview
+	if running != "" && overview {
+		running += "/overview"
+	}
 	if running == s.running {
 		return
 	}
@@ -152,7 +156,7 @@ func (a *App) syncDocker() {
 	}
 	watch := s.watch
 	s.reading = true
-	s.stop = a.WatchDocker(t, func(e docker.Engine, err error) {
+	s.stop = a.WatchDocker(t, overview, func(e docker.Engine, err error) {
 		if s.watch != watch {
 			return
 		}
@@ -227,12 +231,21 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 				}
 				switch s.view {
 				case dockerOverview:
-					dockerOverviewView(c, *s.data)
-					if st, _ := a.Snapshot.Tool("docker"); st.Docker != nil && st.Docker.Colima != nil {
-						if profile, ok := dockerColimaProfile(st.Docker, name); ok {
-							a.colimaCard(c, *st.Docker.Colima, profile)
-						}
-					}
+					ui.Scroll(c).Grow(1).Children(func() {
+						ui.Column(c).Gap(14).Children(func() {
+							dockerOverviewView(c, *s.data)
+							st, _ := a.Snapshot.Tool("docker")
+							if st.Docker != nil {
+								columns(c, 14, func() {
+									a.dockerHealthCard(c, st, name, s.data.Health, true)
+								}, func() {
+									if profile, ok := dockerColimaProfile(st.Docker, name); ok {
+										a.colimaCard(c, *st.Docker.Colima, profile)
+									}
+								})
+							}
+						})
+					})
 				case dockerContainers:
 					a.dockerContainersView(c)
 				case dockerImages:

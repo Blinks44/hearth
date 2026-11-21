@@ -99,6 +99,8 @@ func (a *App) docker(c *ui.Context, p page) {
 					}
 				}, func() {
 					a.dockerManagement(c, st)
+					a.dockerHealthCard(c, st, d.Selected, d.Health, false)
+					a.dockerRegistries(c, st, active)
 					listCard(c, locales.DockerHow(), "", func() {
 						listRow(c, locales.DockerHowScan(), false, locales.DockerHowScanCaption(), func() {})
 						listRow(c, locales.DockerHowView(), false, locales.DockerHowViewCaption(), func() {})

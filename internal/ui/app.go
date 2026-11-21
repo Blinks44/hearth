@@ -188,7 +188,7 @@ type App struct {
 	// WatchDocker reads a local Docker engine now and again, giving each
 	// read to got on the UI thread, until stop is called; nil hides the
 	// engine view.
-	WatchDocker           func(t docker.Target, got func(docker.Engine, error)) (stop func())
+	WatchDocker           func(t docker.Target, overview bool, got func(docker.Engine, error)) (stop func())
 	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
 	WatchDockerResources  func(docker.Target, docker.ResourceKind, func([]docker.Resource, error, error)) (stop func())
 	WatchDockerImages     func(t docker.Target, got func([]docker.Image, error)) (stop func())
@@ -196,6 +196,7 @@ type App struct {
 	ReadDockerEnv         func(docker.Target, string, string, func([]byte, error)) (stop func())
 	StreamDockerLogs      func(docker.Logs, func([]containerlog.LogLine), func(error)) (stop func())
 	OpenDockerShell       func(docker.Target, string, func(error))
+	OpenDockerLogin       func([]string, func(error))
 	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.

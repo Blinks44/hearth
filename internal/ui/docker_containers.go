@@ -32,6 +32,7 @@ type dockerContainersState struct {
 	bulk          resourceSelection
 	planning      bool
 	detail        dockerDetailState
+	openID        string
 	logs          *dockerLogState
 }
 
@@ -71,6 +72,12 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 		s.err, s.statsErr = err, statsErr
 		if err == nil {
 			s.items, s.loaded = items, true
+			if id := s.openID; id != "" {
+				s.openID = ""
+				if slices.ContainsFunc(items, func(c docker.Container) bool { return c.ID == id }) {
+					s.selectContainer(id)
+				}
+			}
 			for id := range s.bulk.selected {
 				if !slices.ContainsFunc(items, func(c docker.Container) bool { return c.ID == id }) {
 					delete(s.bulk.selected, id)

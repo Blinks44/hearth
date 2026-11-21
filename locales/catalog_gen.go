@@ -36,6 +36,280 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// DockerAttention says "Needs attention"
+// in the language the app shows.
+func DockerAttention() string { return In(i18n.Locale()).DockerAttention() }
+
+// DockerAttention says "Needs attention"
+// in the language of msgs.
+func (msgs Messages) DockerAttention() string {
+	return Catalog.Format(msgs.locale, "dockerAttention", nil)
+}
+
+// DockerHelperTitle says "Docker credential store is unavailable"
+// in the language the app shows.
+func DockerHelperTitle() string { return In(i18n.Locale()).DockerHelperTitle() }
+
+// DockerHelperTitle says "Docker credential store is unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerHelperTitle() string {
+	return Catalog.Format(msgs.locale, "dockerHelperTitle", nil)
+}
+
+// DockerHelperRegistry says "Credential helper for {registry} is unavailable"
+// in the language the app shows.
+func DockerHelperRegistry(registry string) string {
+	return In(i18n.Locale()).DockerHelperRegistry(registry)
+}
+
+// DockerHelperRegistry says "Credential helper for {registry} is unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerHelperRegistry(registry string) string {
+	return Catalog.Format(msgs.locale, "dockerHelperRegistry", map[string]any{"registry": registry})
+}
+
+// DockerHelperInvalid says "Check the configured helper name."
+// in the language the app shows.
+func DockerHelperInvalid() string { return In(i18n.Locale()).DockerHelperInvalid() }
+
+// DockerHelperInvalid says "Check the configured helper name."
+// in the language of msgs.
+func (msgs Messages) DockerHelperInvalid() string {
+	return Catalog.Format(msgs.locale, "dockerHelperInvalid", nil)
+}
+
+// DockerHelperMissing says "{helper} is missing from the terminal PATH."
+// in the language the app shows.
+func DockerHelperMissing(helper string) string { return In(i18n.Locale()).DockerHelperMissing(helper) }
+
+// DockerHelperMissing says "{helper} is missing from the terminal PATH."
+// in the language of msgs.
+func (msgs Messages) DockerHelperMissing(helper string) string {
+	return Catalog.Format(msgs.locale, "dockerHelperMissing", map[string]any{"helper": helper})
+}
+
+// DockerHelperFix says "Fix…"
+// in the language the app shows.
+func DockerHelperFix() string { return In(i18n.Locale()).DockerHelperFix() }
+
+// DockerHelperFix says "Fix…"
+// in the language of msgs.
+func (msgs Messages) DockerHelperFix() string {
+	return Catalog.Format(msgs.locale, "dockerHelperFix", nil)
+}
+
+// DockerHelperChanged says "Docker's configuration or available credential helpers changed. Scan again and review the result."
+// in the language the app shows.
+func DockerHelperChanged() string { return In(i18n.Locale()).DockerHelperChanged() }
+
+// DockerHelperChanged says "Docker's configuration or available credential helpers changed. Scan again and review the result."
+// in the language of msgs.
+func (msgs Messages) DockerHelperChanged() string {
+	return Catalog.Format(msgs.locale, "dockerHelperChanged", nil)
+}
+
+// DockerHelperPlanTitle says "Fix Docker credential helper"
+// in the language the app shows.
+func DockerHelperPlanTitle() string { return In(i18n.Locale()).DockerHelperPlanTitle() }
+
+// DockerHelperPlanTitle says "Fix Docker credential helper"
+// in the language of msgs.
+func (msgs Messages) DockerHelperPlanTitle() string {
+	return Catalog.Format(msgs.locale, "dockerHelperPlanTitle", nil)
+}
+
+// DockerHelperPlanWhy says "Replace the affected {key} entry with {helper}, which is already installed."
+// in the language the app shows.
+func DockerHelperPlanWhy(key string, helper string) string {
+	return In(i18n.Locale()).DockerHelperPlanWhy(key, helper)
+}
+
+// DockerHelperPlanWhy says "Replace the affected {key} entry with {helper}, which is already installed."
+// in the language of msgs.
+func (msgs Messages) DockerHelperPlanWhy(key string, helper string) string {
+	return Catalog.Format(msgs.locale, "dockerHelperPlanWhy", map[string]any{"key": key, "helper": helper})
+}
+
+// DockerHelperReplace says "Replace helper"
+// in the language the app shows.
+func DockerHelperReplace() string { return In(i18n.Locale()).DockerHelperReplace() }
+
+// DockerHelperReplace says "Replace helper"
+// in the language of msgs.
+func (msgs Messages) DockerHelperReplace() string {
+	return Catalog.Format(msgs.locale, "dockerHelperReplace", nil)
+}
+
+// DockerHelperLoginAgainTitle says "Sign in again"
+// in the language the app shows.
+func DockerHelperLoginAgainTitle() string { return In(i18n.Locale()).DockerHelperLoginAgainTitle() }
+
+// DockerHelperLoginAgainTitle says "Sign in again"
+// in the language of msgs.
+func (msgs Messages) DockerHelperLoginAgainTitle() string {
+	return Catalog.Format(msgs.locale, "dockerHelperLoginAgainTitle", nil)
+}
+
+// DockerHelperLoginAgain says "Sign in again with docker login. Credentials stay in their original store."
+// in the language the app shows.
+func DockerHelperLoginAgain() string { return In(i18n.Locale()).DockerHelperLoginAgain() }
+
+// DockerHelperLoginAgain says "Sign in again with docker login. Credentials stay in their original store."
+// in the language of msgs.
+func (msgs Messages) DockerHelperLoginAgain() string {
+	return Catalog.Format(msgs.locale, "dockerHelperLoginAgain", nil)
+}
+
+// DockerBrokenPlugin says "Broken plugin link · {plugin}"
+// in the language the app shows.
+func DockerBrokenPlugin(plugin string) string { return In(i18n.Locale()).DockerBrokenPlugin(plugin) }
+
+// DockerBrokenPlugin says "Broken plugin link · {plugin}"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPlugin(plugin string) string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPlugin", map[string]any{"plugin": plugin})
+}
+
+// DockerOpenFolder says "Open folder"
+// in the language the app shows.
+func DockerOpenFolder() string { return In(i18n.Locale()).DockerOpenFolder() }
+
+// DockerOpenFolder says "Open folder"
+// in the language of msgs.
+func (msgs Messages) DockerOpenFolder() string {
+	return Catalog.Format(msgs.locale, "dockerOpenFolder", nil)
+}
+
+// DockerDefaultSocket says "Default Docker socket"
+// in the language the app shows.
+func DockerDefaultSocket() string { return In(i18n.Locale()).DockerDefaultSocket() }
+
+// DockerDefaultSocket says "Default Docker socket"
+// in the language of msgs.
+func (msgs Messages) DockerDefaultSocket() string {
+	return Catalog.Format(msgs.locale, "dockerDefaultSocket", nil)
+}
+
+// DockerSocketDifferent says "The default endpoint differs from the socket for {context}. Use the context explicitly."
+// in the language the app shows.
+func DockerSocketDifferent(context string) string {
+	return In(i18n.Locale()).DockerSocketDifferent(context)
+}
+
+// DockerSocketDifferent says "The default endpoint differs from the socket for {context}. Use the context explicitly."
+// in the language of msgs.
+func (msgs Messages) DockerSocketDifferent(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketDifferent", map[string]any{"context": context})
+}
+
+// DockerSocketMissing says "The default socket is missing. Use context {context} explicitly."
+// in the language the app shows.
+func DockerSocketMissing(context string) string {
+	return In(i18n.Locale()).DockerSocketMissing(context)
+}
+
+// DockerSocketMissing says "The default socket is missing. Use context {context} explicitly."
+// in the language of msgs.
+func (msgs Messages) DockerSocketMissing(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketMissing", map[string]any{"context": context})
+}
+
+// DockerSocketUnavailable says "The engine at the default socket did not respond."
+// in the language the app shows.
+func DockerSocketUnavailable() string { return In(i18n.Locale()).DockerSocketUnavailable() }
+
+// DockerSocketUnavailable says "The engine at the default socket did not respond."
+// in the language of msgs.
+func (msgs Messages) DockerSocketUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerSocketUnavailable", nil)
+}
+
+// DockerLowMemory says "Colima VM is low on memory"
+// in the language the app shows.
+func DockerLowMemory() string { return In(i18n.Locale()).DockerLowMemory() }
+
+// DockerLowMemory says "Colima VM is low on memory"
+// in the language of msgs.
+func (msgs Messages) DockerLowMemory() string {
+	return Catalog.Format(msgs.locale, "dockerLowMemory", nil)
+}
+
+// DockerLowMemoryDetail says "Containers alone use {used} of {total} available to the engine."
+// in the language the app shows.
+func DockerLowMemoryDetail(used string, total string) string {
+	return In(i18n.Locale()).DockerLowMemoryDetail(used, total)
+}
+
+// DockerLowMemoryDetail says "Containers alone use {used} of {total} available to the engine."
+// in the language of msgs.
+func (msgs Messages) DockerLowMemoryDetail(used string, total string) string {
+	return Catalog.Format(msgs.locale, "dockerLowMemoryDetail", map[string]any{"used": used, "total": total})
+}
+
+// DockerEmulatedContainer says "{name} runs through emulation"
+// in the language the app shows.
+func DockerEmulatedContainer(name string) string {
+	return In(i18n.Locale()).DockerEmulatedContainer(name)
+}
+
+// DockerEmulatedContainer says "{name} runs through emulation"
+// in the language of msgs.
+func (msgs Messages) DockerEmulatedContainer(name string) string {
+	return Catalog.Format(msgs.locale, "dockerEmulatedContainer", map[string]any{"name": name})
+}
+
+// DockerEmulatedDetail says "Image architecture {image} on a {engine} engine."
+// in the language the app shows.
+func DockerEmulatedDetail(image string, engine string) string {
+	return In(i18n.Locale()).DockerEmulatedDetail(image, engine)
+}
+
+// DockerEmulatedDetail says "Image architecture {image} on a {engine} engine."
+// in the language of msgs.
+func (msgs Messages) DockerEmulatedDetail(image string, engine string) string {
+	return Catalog.Format(msgs.locale, "dockerEmulatedDetail", map[string]any{"image": image, "engine": engine})
+}
+
+// DockerRegistries says "Registries"
+// in the language the app shows.
+func DockerRegistries() string { return In(i18n.Locale()).DockerRegistries() }
+
+// DockerRegistries says "Registries"
+// in the language of msgs.
+func (msgs Messages) DockerRegistries() string {
+	return Catalog.Format(msgs.locale, "dockerRegistries", nil)
+}
+
+// DockerRegistryConfigured says "Listed in Docker configuration. Sign-in status is unchecked."
+// in the language the app shows.
+func DockerRegistryConfigured() string { return In(i18n.Locale()).DockerRegistryConfigured() }
+
+// DockerRegistryConfigured says "Listed in Docker configuration. Sign-in status is unchecked."
+// in the language of msgs.
+func (msgs Messages) DockerRegistryConfigured() string {
+	return Catalog.Format(msgs.locale, "dockerRegistryConfigured", nil)
+}
+
+// DockerRegistryBlocked says "Fix the credential helper before signing in."
+// in the language the app shows.
+func DockerRegistryBlocked() string { return In(i18n.Locale()).DockerRegistryBlocked() }
+
+// DockerRegistryBlocked says "Fix the credential helper before signing in."
+// in the language of msgs.
+func (msgs Messages) DockerRegistryBlocked() string {
+	return Catalog.Format(msgs.locale, "dockerRegistryBlocked", nil)
+}
+
+// DockerRegistryLogin says "Sign in…"
+// in the language the app shows.
+func DockerRegistryLogin() string { return In(i18n.Locale()).DockerRegistryLogin() }
+
+// DockerRegistryLogin says "Sign in…"
+// in the language of msgs.
+func (msgs Messages) DockerRegistryLogin() string {
+	return Catalog.Format(msgs.locale, "dockerRegistryLogin", nil)
+}
+
 // ColimaBrewRequired says "Colima is installed through Homebrew."
 // in the language the app shows.
 func ColimaBrewRequired() string { return In(i18n.Locale()).ColimaBrewRequired() }
@@ -11550,11 +11824,11 @@ func (msgs Messages) DockerUnavailableExplain() string {
 	return Catalog.Format(msgs.locale, "dockerUnavailableExplain", nil)
 }
 
-// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts sta…"
+// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks the selected local endpoint and the default socket."
 // in the language the app shows.
 func DockerContextNote() string { return In(i18n.Locale()).DockerContextNote() }
 
-// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts sta…"
+// DockerContextNote says "The context selects the engine Docker connects to. Hearth checks the selected local endpoint and the default socket."
 // in the language of msgs.
 func (msgs Messages) DockerContextNote() string {
 	return Catalog.Format(msgs.locale, "dockerContextNote", nil)
@@ -36566,13 +36840,13 @@ func (msgs Messages) DockerHowScan() string {
 	return Catalog.Format(msgs.locale, "dockerHowScan", nil)
 }
 
-// DockerHowScanCaption says "an engine is read only while its view is open"
+// DockerHowScanCaption says "the open engine view refreshes automatically"
 // in the language the app shows.
 //
 // Docker how card row caption.
 func DockerHowScanCaption() string { return In(i18n.Locale()).DockerHowScanCaption() }
 
-// DockerHowScanCaption says "an engine is read only while its view is open"
+// DockerHowScanCaption says "the open engine view refreshes automatically"
 // in the language of msgs.
 //
 // Docker how card row caption.

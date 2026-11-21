@@ -144,12 +144,9 @@ const dockerPluginDirs = "cliPluginsExtraDirs"
 // colimaPluginEdit appends a directory inside Docker's plugin directory list.
 // JSON has no comments, so the array entry is the unit Hearth manages.
 func colimaPluginEdit(env sysenv.Env, dir string) (*FileEdit, error) {
-	config := env.Get("DOCKER_CONFIG")
+	config := docker.ConfigDir(env)
 	if config == "" {
-		if env.Get("HOME") == "" {
-			return nil, errors.New(locales.ColimaConfigError())
-		}
-		config = filepath.Join(env.Get("HOME"), ".docker")
+		return nil, errors.New(locales.ColimaConfigError())
 	}
 	path := filepath.Join(config, "config.json")
 	data, err := os.ReadFile(path)

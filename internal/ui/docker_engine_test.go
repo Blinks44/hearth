@@ -18,7 +18,7 @@ type engineWatches struct {
 	stopped []bool
 }
 
-func (w *engineWatches) watch(t docker.Target, got func(docker.Engine, error)) func() {
+func (w *engineWatches) watch(t docker.Target, _ bool, got func(docker.Engine, error)) func() {
 	i := len(w.targets)
 	w.targets = append(w.targets, t)
 	w.got = append(w.got, got)

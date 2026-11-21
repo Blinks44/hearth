@@ -1,4 +1,102 @@
 {
+  "dockerAttention": "Needs attention",
+  "dockerHelperTitle": "Docker credential store is unavailable",
+  "dockerHelperRegistry": "Credential helper for {registry} is unavailable",
+  "@dockerHelperRegistry": {
+    "placeholders": {
+      "registry": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerHelperInvalid": "Check the configured helper name.",
+  "dockerHelperMissing": "{helper} is missing from the terminal PATH.",
+  "@dockerHelperMissing": {
+    "placeholders": {
+      "helper": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerHelperFix": "Fix…",
+  "dockerHelperChanged": "Docker's configuration or available credential helpers changed. Scan again and review the result.",
+  "dockerHelperPlanTitle": "Fix Docker credential helper",
+  "dockerHelperPlanWhy": "Replace the affected {key} entry with {helper}, which is already installed.",
+  "@dockerHelperPlanWhy": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "helper": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerHelperReplace": "Replace helper",
+  "dockerHelperLoginAgainTitle": "Sign in again",
+  "dockerHelperLoginAgain": "Sign in again with docker login. Credentials stay in their original store.",
+  "dockerBrokenPlugin": "Broken plugin link · {plugin}",
+  "@dockerBrokenPlugin": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOpenFolder": "Open folder",
+  "dockerDefaultSocket": "Default Docker socket",
+  "dockerSocketDifferent": "The default endpoint differs from the socket for {context}. Use the context explicitly.",
+  "@dockerSocketDifferent": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketMissing": "The default socket is missing. Use context {context} explicitly.",
+  "@dockerSocketMissing": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketUnavailable": "The engine at the default socket did not respond.",
+  "dockerLowMemory": "Colima VM is low on memory",
+  "dockerLowMemoryDetail": "Containers alone use {used} of {total} available to the engine.",
+  "@dockerLowMemoryDetail": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEmulatedContainer": "{name} runs through emulation",
+  "@dockerEmulatedContainer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEmulatedDetail": "Image architecture {image} on a {engine} engine.",
+  "@dockerEmulatedDetail": {
+    "placeholders": {
+      "image": {
+        "type": "String"
+      },
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerRegistries": "Registries",
+  "dockerRegistryConfigured": "Listed in Docker configuration. Sign-in status is unchecked.",
+  "dockerRegistryBlocked": "Fix the credential helper before signing in.",
+  "dockerRegistryLogin": "Sign in…",
   "colimaBrewRequired": "Colima is installed through Homebrew.",
   "colimaConfigError": "Could not read the Docker CLI plugin settings in config.json.",
   "colimaInstall": "Install Colima…",
@@ -3784,7 +3882,7 @@
   "dockerDeniedExplain": "This user has no access to the Docker socket, so docker ps and docker compose up will not work. Add the user to the docker group (sudo usermod -aG docker $USER), then sign out and back in.",
   "dockerUnavailableTitle": "Docker engine is unavailable",
   "dockerUnavailableExplain": "The selected engine did not answer: docker ps and docker compose up will not work. The engine may be stopped, or the connection may have failed.",
-  "dockerContextNote": "The context selects the engine Docker connects to. Hearth checks only the selected local endpoint; other contexts stay unchecked.",
+  "dockerContextNote": "The context selects the engine Docker connects to. Hearth checks the selected local endpoint and the default socket.",
   "dockerRemoteNote": "Remote endpoint: Hearth does not connect during a scan.",
   "dockerOverrideNote": "The {variable} environment variable overrides the selected context.",
   "dockerConfigError": "Some Docker configuration files could not be read. Context information may be incomplete.",
@@ -13937,7 +14035,7 @@
   "@dockerHowScan": {
     "description": "Docker how card row."
   },
-  "dockerHowScanCaption": "an engine is read only while its view is open",
+  "dockerHowScanCaption": "the open engine view refreshes automatically",
   "@dockerHowScanCaption": {
     "description": "Docker how card row caption."
   },

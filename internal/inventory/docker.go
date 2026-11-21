@@ -1,16 +1,22 @@
 package inventory
 
-// DockerState describes the terminal's Docker CLI configuration. Only the
-// selected local endpoint is probed; remote contexts stay unchecked.
+// DockerState describes the terminal's Docker CLI configuration. Remote
+// contexts stay unchecked.
 type DockerState struct {
-	PluginDir string
-	Contexts  []DockerContext
-	Selected  string
-	Override  string // DOCKER_CONTEXT or DOCKER_HOST, without its value
-	Err       string
-	Engines   []DockerEngine
-	Plugins   []Package
-	Colima    *ColimaState `json:",omitempty"`
+	PluginDir          string
+	ConfigDir          string                  `json:",omitempty"`
+	CredentialIssues   []DockerCredentialIssue `json:",omitempty"`
+	Registries         []DockerRegistry        `json:",omitempty"`
+	BrokenPlugins      []string                `json:",omitempty"`
+	DefaultSocketIssue string                  `json:",omitempty"`
+	Health             DockerHealth            `json:",omitzero"`
+	Contexts           []DockerContext
+	Selected           string
+	Override           string // DOCKER_CONTEXT or DOCKER_HOST, without its value
+	Err                string
+	Engines            []DockerEngine
+	Plugins            []Package
+	Colima             *ColimaState `json:",omitempty"`
 	// Databases are the database containers of the selected engine, once
 	// it answered; DatabaseErr reports that they could not all be listed.
 	Databases   []Database
@@ -48,4 +54,24 @@ type DockerContext struct {
 // platform's installation option when Path is empty.
 type DockerEngine struct {
 	Name, Path string
+}
+
+// DockerRegistry describes a host mentioned in config, without testing login.
+type DockerRegistry struct {
+	Name          string
+	MissingHelper bool `json:",omitempty"`
+}
+
+type DockerCredentialIssue struct {
+	Registry, Key     string `json:",omitempty"`
+	Name, Replacement string `json:",omitempty"`
+}
+
+type DockerHealth struct {
+	Memory, ContainerMemory int64
+	Emulated                []DockerEmulatedContainer `json:",omitempty"`
+}
+
+type DockerEmulatedContainer struct {
+	ID, Name, ImageArch, EngineArch string
 }

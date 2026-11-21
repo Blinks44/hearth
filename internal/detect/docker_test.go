@@ -71,7 +71,7 @@ func TestDocker(t *testing.T) {
 			}
 			probes := 0
 			for _, call := range r.Calls() {
-				if call.Args[1] == "--host" && call.Args[3] == "version" {
+				if call.Args[1] == "--host" && call.Args[3] == "version" && call.Args[5] == "{{json .}}" {
 					probes++
 					if call.Timeout == 0 {
 						t.Error("no explicit probe timeout")
@@ -105,12 +105,14 @@ func TestDockerContextFiles(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "config.json"), `{"currentContext":"orbstack"}`)
 	writeFile(t, filepath.Join(dir, "contexts", "meta", "one", "meta.json"), `{"Name":"orbstack","Endpoints":{"docker":{"Host":"unix:///tmp/orbstack/docker.sock"}}}`)
 	writeFile(t, filepath.Join(dir, "contexts", "meta", "bad", "meta.json"), `{`)
-	contexts, selected, problem := dockerContextFiles(dir)
+	cfg, err := readDockerConfig(dir)
+	contexts, selected, problem := dockerContextFiles(dir, cfg.CurrentContext, err)
 	if len(contexts) != 2 || selected != "orbstack" || problem == "" || contexts[1].Engine != "OrbStack" {
 		t.Fatalf("%+v %s %s", contexts, selected, problem)
 	}
 	writeFile(t, filepath.Join(dir, "config.json"), `{`)
-	_, selected, problem = dockerContextFiles(dir)
+	cfg, err = readDockerConfig(dir)
+	_, selected, problem = dockerContextFiles(dir, cfg.CurrentContext, err)
 	if selected != "default" || problem == "" {
 		t.Fatalf("%s %s", selected, problem)
 	}

@@ -28,6 +28,7 @@ type FileEdit struct {
 	// DropCopy removes the copy of the file once the plan got through, as
 	// one holding a secret the plan takes out of it would keep it.
 	DropCopy bool
+	preview  []DiffLine
 }
 
 // Masked is text with e.Hide's values hidden, as the diff shows it.
@@ -38,6 +39,14 @@ func (e FileEdit) Masked(text string) string {
 		}
 	}
 	return text
+}
+
+// PreviewDiff returns the display-safe changes for the plan dialog.
+func (e FileEdit) PreviewDiff() []DiffLine {
+	if e.preview != nil {
+		return e.preview
+	}
+	return Diff(e.Masked(e.Before), e.Masked(e.After))
 }
 
 // The lines around Hearth's block in a file with # comments: what is

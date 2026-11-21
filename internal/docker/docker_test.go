@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"reflect"
 	"slices"
 	"testing"
 	"time"
@@ -63,7 +64,7 @@ func TestRead(t *testing.T) {
 				t.Error("Taken not set")
 			}
 			got.Taken = time.Time{}
-			if got != tt.want {
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("got %+v, want %+v", got, tt.want)
 			}
 			// The terminal's context must not win over the engine read.
@@ -92,7 +93,7 @@ func TestWatchStops(t *testing.T) {
 	reads := 0
 	go func() {
 		defer close(done)
-		Watch(ctx, &r, nil, colima, func(e Engine, err error) {
+		Watch(ctx, &r, nil, colima, false, func(e Engine, err error) {
 			if err != nil || e.Running != 4 {
 				t.Errorf("read %+v, %v", e, err)
 			}

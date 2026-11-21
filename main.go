@@ -181,10 +181,10 @@ func main() {
 			})
 			return cancel
 		}
-		a.WatchDocker = func(t docker.Target, got func(docker.Engine, error)) func() {
+		a.WatchDocker = func(t docker.Target, overview bool, got func(docker.Engine, error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())
-			go docker.Watch(ctx, run.Exec{}, env, t, func(e docker.Engine, err error) {
+			go docker.Watch(ctx, run.Exec{}, env, t, overview, func(e docker.Engine, err error) {
 				win.Update(func() { got(e, err) })
 			})
 			return cancel
@@ -278,6 +278,14 @@ func main() {
 				if err == nil {
 					err = run.OpenTerminal(ctx, run.Exec{}, terminal, cmd.Args, cmd.Env, env.Get("PATH"), env.Get("KUBECONFIG"), hint, "DOCKER_CONTEXT=")
 				}
+				win.Update(func() { done(err) })
+			}()
+		}
+
+		a.OpenDockerLogin = func(argv []string, done func(error)) {
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, argv, env, env.Get("PATH"), "", hint)
 				win.Update(func() { done(err) })
 			}()
 		}
