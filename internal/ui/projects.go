@@ -136,7 +136,7 @@ func (a *App) projectRows(c *ui.Context) {
 			{locales.TabAttention(), strconv.Itoa(attention)},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Bind(&a.filterField).Placeholder(locales.FilterProjects()).Width(200)
+		ui.SearchField(c.Key("project-filter"), &a.projectFilter).Bind(&a.filterField).Placeholder(locales.FilterProjects()).Height(controlHeight).Width(200)
 	})
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
@@ -147,18 +147,17 @@ func (a *App) projectRows(c *ui.Context) {
 			head(locales.ColumnProjectTools()).Grow(1).MinWidth(0)
 			head("AI").Width(90).Shrink(0)
 			head(locales.ColumnState()).Width(170).Shrink(0)
-			if a.RemoveProject != nil {
-				ui.Box(c).Width(36).Shrink(0) // over the remove buttons
-			}
+			ui.Box(c).Width(84).Shrink(0) // over the quick actions
 		})
 		if len(rows) == 0 {
 			cardNote(c, locales.NoProjectsMatch())
 		}
 		for _, r := range rows {
 			dir := r.p.Dir
+			menu := func(m *ui.Menu) { a.projectItems(m, dir, true) }
 			e := ui.ButtonBase(c.Key("project:"+dir)).Gap(12).Padding(10, 12, 10, 16).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(dir)).
-				ContextMenu(func(m *ui.Menu) { a.projectItems(m, dir, true) }).
+				ContextMenu(menu).
 				Transition(colorFade)
 			if e.Hovered() {
 				e.Background(pal.Subtle)
@@ -185,19 +184,26 @@ func (a *App) projectRows(c *ui.Context) {
 					}
 				})
 				ui.Row(c).Width(146).Shrink(0).Children(func() { projectChip(c, r.p, r.statuses, r.problem) })
-				if a.RemoveProject != nil {
-					rm := ui.ButtonBase(c.Key("remove:"+dir)).Size(24, 24).Shrink(0).Radius(6).Center().
-						Label(locales.RemoveFromList()).Tooltip(locales.RemoveFromList()).
-						OnClick(func() { a.RemoveProject(dir) })
-					color := pal.TextFaint
-					if rm.Hovered() {
-						rm.Background(pal.Muted)
-						color = t.Danger
+				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if a.Shell != nil {
+						iconButton(c.Key("folder:"+dir), "folder-open", showInFolder()).
+							OnClick(func() { a.Shell.ShowItemInFolder(dir) })
 					}
-					rm.Children(func() {
-						ui.Icon(c, Icon("trash-2")).Size(14, 14).TextColor(color)
-					})
-				}
+					if a.RemoveProject != nil {
+						rm := ui.ButtonBase(c.Key("remove:"+dir)).Size(24, 24).Shrink(0).Radius(6).Center().
+							Label(locales.RemoveFromList()).Tooltip(locales.RemoveFromList()).
+							OnClick(func() { a.RemoveProject(dir) })
+						color := pal.TextFaint
+						if rm.Hovered() {
+							rm.Background(pal.Muted)
+							color = t.Danger
+						}
+						rm.Children(func() {
+							ui.Icon(c, Icon("trash-2")).Size(14, 14).TextColor(color)
+						})
+					}
+					iconButton(c.Key("menu:"+dir), "ellipsis", locales.MoreActions()).Menu(menu)
+				})
 				ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
 			})
 			if e.Clicked() {
@@ -252,7 +258,7 @@ func (a *App) project(c *ui.Context, dir string) {
 			back: func() { a.router.Push(projectsPage.path) },
 			after: func() {
 				if i >= 0 {
-					ui.PrimaryButton(c.Key("prepare-project"), locales.PrepareButton()).Disabled(a.Snapshot == nil || a.BuildPlan == nil || a.preparing != nil).OnClick(func() { a.prepareProject(dir) })
+					ui.PrimaryButton(c.Key("prepare-project"), locales.PrepareButton()).Height(controlHeight).Disabled(a.Snapshot == nil || a.BuildPlan == nil || a.preparing != nil).OnClick(func() { a.prepareProject(dir) })
 				}
 			},
 			before: func() {
@@ -313,7 +319,7 @@ func (a *App) project(c *ui.Context, dir string) {
 // projectMenu is the project's "…": show its folder, and remove it from
 // the list, which leaves the folder be.
 func (a *App) projectMenu(c *ui.Context, dir string) {
-	ui.Button(c.Key("project-menu"), "").Size(28, 26).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
+	ui.Button(c.Key("project-menu"), "").Size(controlHeight, controlHeight).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
 		a.pinItems(m, dir)
 		a.projectItems(m, dir, false)
 	}).Children(func() {
@@ -669,8 +675,8 @@ func (a *App) addDialog(c *ui.Context) {
 				if add.folders != nil {
 					cancel = locales.NotNow()
 				}
-				ui.Button(c, cancel).OnClick(func() { a.addOpen = false })
-				ui.PrimaryButton(c, locales.AddProjects(count)).Disabled(count == 0).OnClick(func() {
+				ui.Button(c, cancel).Height(controlHeight).OnClick(func() { a.addOpen = false })
+				ui.PrimaryButton(c, locales.AddProjects(count)).Height(controlHeight).Disabled(count == 0).OnClick(func() {
 					var dirs []string
 					if !add.container() {
 						dirs = append(dirs, add.root.Dir)
@@ -954,9 +960,9 @@ func segments(c *ui.Context, key string, tab *int, segs []segment) {
 	pal := Colors(t)
 	ui.Row(c).Children(func() {
 		seg := ui.SegmentedBase(c.Key(key), tab, len(segs))
-		seg.Track.Gap(2).Padding(2).Radius(8).Background(pal.Muted).Children(func() {
+		seg.Track.Height(controlHeight).Gap(2).Padding(2).Radius(8).Background(pal.Muted).Children(func() {
 			for i, s := range segs {
-				e := seg.Segment(i).Gap(5).Padding(5, 12).Radius(6).AlignItems(ui.Center).Label(s.label)
+				e := seg.Segment(i).Height(controlHeight-4).Gap(5).Padding(0, 12).Radius(6).AlignItems(ui.Center).Label(s.label)
 				color := t.TextMuted
 				if i == *tab {
 					e.Background(t.Background).Shadow(0, 1, 2, 0, t.Text.Alpha(0.1))

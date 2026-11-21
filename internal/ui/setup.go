@@ -403,11 +403,11 @@ func (a *App) setupButtons(c *ui.Context) {
 	switch {
 	case s.step == 3:
 		if a.Shell != nil && a.JournalPath != "" {
-			ui.Button(c.Key("setup-journal"), locales.OpOpenJournal()).OnClick(func() { a.openFile(c, a.JournalPath) })
+			ui.Button(c.Key("setup-journal"), locales.OpOpenJournal()).Height(controlHeight).OnClick(func() { a.openFile(c, a.JournalPath) })
 		}
 		// The wizard ends on the Overview; the page shows the catalog
 		// again, with what installed.
-		ui.PrimaryButton(c.Key("setup-done"), locales.OpDone()).OnClick(func() {
+		ui.PrimaryButton(c.Key("setup-done"), locales.OpDone()).Height(controlHeight).OnClick(func() {
 			wizard := a.setupWizard()
 			a.setup = setupState{}
 			if wizard {
@@ -416,31 +416,31 @@ func (a *App) setupButtons(c *ui.Context) {
 		})
 	case s.step == 2 && !s.op.state.Phase.Over():
 		// The operation's toast shows it away from the wizard.
-		ui.Button(c.Key("setup-hide"), locales.OpHide()).OnClick(func() { a.router.Push(overview.path) })
-		ui.Button(c.Key("setup-stop"), locales.OpStop()).TextColor(c.Theme().Danger).OnClick(func() { s.op.stop() })
+		ui.Button(c.Key("setup-hide"), locales.OpHide()).Height(controlHeight).OnClick(func() { a.router.Push(overview.path) })
+		ui.Button(c.Key("setup-stop"), locales.OpStop()).Height(controlHeight).TextColor(c.Theme().Danger).OnClick(func() { s.op.stop() })
 	case s.step == 2:
-		ui.Button(c.Key("setup-details"), locales.OpDetails()).OnClick(func() { s.op.open = true })
+		ui.Button(c.Key("setup-details"), locales.OpDetails()).Height(controlHeight).OnClick(func() { s.op.open = true })
 		label := locales.SetupAgain()
 		if s.building {
 			label = locales.SetupBuilding()
 		}
 		// The plan made again leaves out what the scan after the
 		// installation found.
-		ui.PrimaryButton(c.Key("setup-again"), label).Disabled(s.building || a.Scanning || a.BuildPlan == nil).OnClick(a.setupNext)
+		ui.PrimaryButton(c.Key("setup-again"), label).Height(controlHeight).Disabled(s.building || a.Scanning || a.BuildPlan == nil).OnClick(a.setupNext)
 	case s.step == 1:
-		ui.Button(c.Key("setup-back"), locales.SetupBack()).OnClick(func() { s.step, s.diff = 0, "" })
-		ui.PrimaryButton(c.Key("setup-install"), s.plan.Action).Disabled(a.op.running()).OnClick(a.setupInstall)
+		ui.Button(c.Key("setup-back"), locales.SetupBack()).Height(controlHeight).OnClick(func() { s.step, s.diff = 0, "" })
+		ui.PrimaryButton(c.Key("setup-install"), s.plan.Action).Height(controlHeight).Disabled(a.op.running()).OnClick(a.setupInstall)
 	default:
 		label := locales.SetupNext()
 		if a.setupWizard() {
-			ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).OnClick(func() { a.router.Push(overview.path) })
+			ui.Button(c.Key("setup-cancel"), locales.SetupCancel()).Height(controlHeight).OnClick(func() { a.router.Push(overview.path) })
 			if a.OpenSet != nil {
-				ui.Button(c.Key("set-open"), locales.SetOpen()).OnClick(a.openSet)
+				ui.Button(c.Key("set-open"), locales.SetOpen()).Height(controlHeight).OnClick(a.openSet)
 			}
 		} else {
 			a.setMenu(c)
 			if chosen := a.setupChosenTools(); len(chosen) > 0 {
-				ui.Button(c.Key("setup-clear"), locales.InstallClear()).OnClick(func() {
+				ui.Button(c.Key("setup-clear"), locales.InstallClear()).Height(controlHeight).OnClick(func() {
 					for _, id := range chosen {
 						s.choice[id] = false
 					}
@@ -451,7 +451,7 @@ func (a *App) setupButtons(c *ui.Context) {
 		if s.building {
 			label = locales.SetupBuilding()
 		}
-		ui.PrimaryButton(c.Key("setup-next"), label).
+		ui.PrimaryButton(c.Key("setup-next"), label).Height(controlHeight).
 			Disabled(s.building || a.BuildPlan == nil || len(a.setupInput().Parts()) == 0).OnClick(a.setupNext)
 	}
 }
@@ -494,15 +494,15 @@ func (a *App) setMenu(c *ui.Context) {
 	if a.SaveSet == nil && a.OpenSet == nil {
 		return
 	}
-	ui.Row(c.Key("set-menu")).Shrink(0).Children(func() {
-		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
-			if a.SaveSet != nil && m.Item(locales.SetSave()).Disabled(len(a.setupSetTools()) == 0).Chosen() {
-				a.saveSet()
-			}
-			if a.OpenSet != nil && m.Item(locales.SetOpen()).Chosen() {
-				a.openSet()
-			}
-		})
+	ui.Button(c.Key("set-menu"), "").Size(controlHeight, controlHeight).Shrink(0).Padding(0).Label(locales.MoreActions()).Menu(func(m *ui.Menu) {
+		if a.SaveSet != nil && m.Item(locales.SetSave()).Disabled(len(a.setupSetTools()) == 0).Chosen() {
+			a.saveSet()
+		}
+		if a.OpenSet != nil && m.Item(locales.SetOpen()).Chosen() {
+			a.openSet()
+		}
+	}).Children(func() {
+		ui.Icon(c, Icon("ellipsis")).Size(14, 14).TextColor(c.Theme().TextMuted)
 	})
 }
 

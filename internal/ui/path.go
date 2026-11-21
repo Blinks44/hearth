@@ -56,7 +56,7 @@ func (a *App) paths(c *ui.Context, p page) {
 					segments(c, "path-tabs", &a.pathTab, tabs)
 					ui.Box(c).Grow(1)
 					if a.pathTab != startupTab {
-						ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Width(200)
+						ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Height(controlHeight).Width(200)
 					}
 				})
 				if a.pathTab == startupTab {
@@ -291,6 +291,10 @@ func pathProblemCount(term, gui []inventory.PathEntry) int {
 // pathBanner says the PATH has problems, with a button that fixes those
 // Hearth can in the terminal's, and why it could not when it could not.
 func (a *App) pathBanner(c *ui.Context, term []inventory.PathEntry) {
+	if a.pathFixSnap != a.Snapshot {
+		a.pathFixErr, a.pathFixAllNone = "", false
+		a.pathFixSnap = a.Snapshot
+	}
 	pal := Colors(c.Theme())
 	fixable := false
 	for i := range term {
@@ -300,7 +304,7 @@ func (a *App) pathBanner(c *ui.Context, term []inventory.PathEntry) {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
 			ui.Text(c, locales.EnvPathWarnings()).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
-			if fixable {
+			if fixable && !a.pathFixAllNone {
 				// Dark, as in the design: the page's one accent stays for
 				// the header.
 				ui.Button(c.Key("path-fix"), locales.PathFix()).Background(c.Theme().Text).TextColor(c.Theme().Background).
@@ -317,11 +321,14 @@ func (a *App) pathBanner(c *ui.Context, term []inventory.PathEntry) {
 // Hearth may fix where it is declared: the repeat, not the first, or a
 // directory that is not there.
 func (a *App) fixable(term []inventory.PathEntry, i int) bool {
-	if a.PlanPath == nil || !ops.PathFixable(term[i], a.Home) {
+	if a.PlanPath == nil {
 		return false
 	}
 	for _, p := range ops.PathProblems(term) {
 		if sysenv.SamePath(p.Dir, term[i].Dir) {
+			if !ops.PathEntryFixable(term[i], a.Home, p.Repeat) {
+				return false
+			}
 			return !p.Repeat || slices.ContainsFunc(term[:i], func(e inventory.PathEntry) bool { return sysenv.SamePath(e.Dir, p.Dir) })
 		}
 	}
@@ -332,10 +339,17 @@ func (a *App) fixable(term []inventory.PathEntry, i int) bool {
 // problems when dirs is nil, once it is made.
 func (a *App) fixPath(dirs []string) {
 	a.pathFixErr = ""
+	a.pathFixSnap = a.Snapshot
+	if dirs == nil {
+		a.pathFixAllNone = false
+	}
 	a.PlanPath(a.Snapshot.TerminalPath, dirs, func(p ops.Plan, err error) {
 		switch {
 		case errors.Is(err, ops.ErrNoFix):
 			a.pathFixErr = locales.PathNoFix()
+			if dirs == nil {
+				a.pathFixAllNone = true
+			}
 		case err != nil:
 			a.pathFixErr = err.Error()
 		default:

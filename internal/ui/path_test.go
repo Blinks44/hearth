@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestPathPage(t *testing.T) {
@@ -175,5 +176,36 @@ func TestPathFirst(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.op == nil || a.op.plan.Title != "Put "+dir+"/bin first in PATH" || a.op.plan.Steps[0].Edit.Path != dir+"/.zshrc" {
 		t.Fatalf("plan %+v", a.op)
+	}
+}
+
+func TestPathBannerHidesFixOnErrNoFix(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix paths and startup files")
+	}
+	a := NewApp()
+	a.Home = home
+	zshrc := home + "/.zshrc"
+	a.Snapshot = &inventory.Snapshot{
+		TerminalPath: []inventory.PathEntry{
+			{Dir: "/opt/homebrew/bin", Sources: []inventory.PathSource{{File: home + "/.zprofile", Line: 1}, {File: zshrc, Line: 2}}},
+			{Dir: "/opt/homebrew/bin", Sources: []inventory.PathSource{{File: home + "/.zprofile", Line: 1}, {File: zshrc, Line: 2}}},
+		},
+	}
+	a.PlanPath = func(_ []inventory.PathEntry, _ []string, done func(ops.Plan, error)) {
+		done(ops.Plan{}, ops.ErrNoFix)
+	}
+	a.router.Push(pathPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if err := tt.Click(locales.PathFix()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText(locales.PathNoFix()) {
+		t.Fatalf("missing PathNoFix message: %q", tt.Texts())
+	}
+	if tt.HasText(locales.PathFix()) {
+		t.Fatalf("Fix button should hide after ErrNoFix for all entries: %q", tt.Texts())
 	}
 }

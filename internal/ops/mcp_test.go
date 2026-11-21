@@ -214,3 +214,52 @@ func TestAntigravityMCP(t *testing.T) {
 	}
 	runEdits(t, p)
 }
+
+func TestMCPConnectBlankConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		before  string
+		changed bool
+	}{
+		{name: "empty file"},
+		{name: "whitespace", before: " \t\r\n"},
+		{name: "file changed after preview", changed: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			home, env := mcpHome(t)
+			path := filepath.Join(home, ".gemini", "config", "mcp_config.json")
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte(tc.before), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			p, err := MCPConnectPlan(server(t, env, "claude", "github"), "antigravity", env, title)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.changed {
+				const updated = "{}\n"
+				if err := os.WriteFile(path, []byte(updated), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				s := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+				if s.Phase != Failed || !s.FileChanged {
+					t.Fatalf("phase %v, file changed %t, error %q, want a stale plan failure", s.Phase, s.FileChanged, s.Err)
+				}
+				checkFile(t, path, updated, 0o600)
+				return
+			}
+			runEdits(t, p)
+			if s := server(t, env, "antigravity", "github"); s.Command != "npx" {
+				t.Errorf("connected command = %q, want npx", s.Command)
+			}
+			backups, err := filepath.Glob(path + ".hearth-*.bak")
+			if err != nil || len(backups) != 1 {
+				t.Fatalf("backups = %v, err = %v, want one backup", backups, err)
+			}
+			checkFile(t, backups[0], tc.before, 0o600)
+		})
+	}
+}

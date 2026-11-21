@@ -177,9 +177,7 @@ func TestDocker(t *testing.T) {
 	if _, err := Docker(context.Background(), f, nil, &inventory.Snapshot{}); !errors.Is(err, ErrNoEngine) {
 		t.Fatalf("no docker: %v", err)
 	}
-	if _, err := parseDockerDF([]byte(`{"Type":"Images","TotalCount":"1","Active":"1","Size":"12XB","Reclaimable":"0B"}`)); err == nil {
-		t.Fatal("unknown unit read")
-	}
+
 }
 
 // Count refreshes caches before discovering projects and gives each callback

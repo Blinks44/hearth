@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"slices"
 	"strconv"
@@ -16,18 +17,32 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
+type dockerResourceSlot struct {
+	items        []docker.Resource
+	err, sizeErr error
+	loaded       bool
+	filter       int
+	query        string
+	collapsed    bool
+	sort         tableSort
+	bulk         resourceSelection
+}
+
 type dockerResourcesState struct {
-	target           docker.Target
-	kind             docker.ResourceKind
-	watching         string
-	revision         int
-	stop             func()
-	items            []docker.Resource
-	err, sizeErr     error
-	loaded, planning bool
-	filter           [2]int
-	query            [2]string
-	collapsed        [2]bool
+	target   docker.Target
+	kind     docker.ResourceKind
+	watching string
+	revision int
+	stop     func()
+	planning bool
+	slots    [2]dockerResourceSlot
+}
+
+func dockerResourceSlotIndex(kind docker.ResourceKind) int {
+	if kind == docker.NetworkResource {
+		return 1
+	}
+	return 0
 }
 
 func (s *dockerResourcesState) stopWatch() {
@@ -55,21 +70,34 @@ func (a *App) syncDockerResources(target docker.Target, key string) {
 		return
 	}
 	s.stopWatch()
-	if key == "" || s.target != target || s.kind != kind {
-		s.items, s.err, s.sizeErr, s.loaded = nil, nil, nil, false
+	if target != (docker.Target{}) && s.target != target {
+		for i := range s.slots {
+			s.slots[i].items, s.slots[i].err, s.slots[i].sizeErr, s.slots[i].loaded = nil, nil, nil, false
+			s.slots[i].bulk.clear()
+		}
+	} else if key == "" || s.kind != kind {
+		s.slots[0].bulk.clear()
+		s.slots[1].bulk.clear()
 	}
 	if key == "" {
 		return
 	}
 	s.target, s.kind, s.watching = target, kind, key
+	index := dockerResourceSlotIndex(kind)
 	revision := s.revision
 	s.stop = a.WatchDockerResources(target, kind, func(items []docker.Resource, err, sizeErr error) {
 		if s.revision != revision {
 			return
 		}
-		s.err, s.sizeErr = err, sizeErr
+		slot := &s.slots[index]
+		slot.err, slot.sizeErr = err, sizeErr
 		if err == nil {
-			s.items, s.loaded = items, true
+			slot.items, slot.loaded = items, true
+			for id := range slot.bulk.selected {
+				if !slices.ContainsFunc(items, func(item docker.Resource) bool { return item.ID == id }) {
+					delete(slot.bulk.selected, id)
+				}
+			}
 		}
 	})
 }
@@ -100,41 +128,49 @@ func matchesDockerResource(item docker.Resource, query string) bool {
 func (a *App) dockerResourcesView(c *ui.Context) {
 	s := &a.engine.resources
 	index := a.engine.view - dockerVolumes
-	kind := s.kind
+	slot := &s.slots[index]
+	kind := docker.VolumeResource
+	if index == 1 {
+		kind = docker.NetworkResource
+	}
 	reading, empty := locales.DockerVolumesReading(), locales.DockerVolumesEmpty()
-	search, name, unused := locales.DockerVolumeSearch(), locales.DockerVolumesLocal(), locales.DockerImagesDangling()
+	search, name, unused := locales.DockerVolumeSearch(), locales.DockerVolumesLocal(), locales.DockerNetworksUnused()
 	column, hint := locales.DockerImageSize(), locales.DockerVolumesHint()
 	if index == 1 {
 		reading, empty = locales.DockerNetworksReading(), locales.DockerNetworksEmpty()
 		search, name, unused = locales.DockerNetworkSearch(), locales.DockerViewNetworks(), locales.DockerNetworksUnused()
 		column, hint = locales.DockerNetworkDriver(), locales.DockerNetworksHint()
 	}
-	if !s.loaded {
-		if s.err != nil {
-			toolNote(c, s.err.Error())
+	if !slot.loaded {
+		if slot.err != nil {
+			toolNote(c, slot.err.Error())
 		} else {
 			tableSkeleton(c, reading)
 		}
 		return
 	}
-	if s.err != nil {
-		toolNote(c, locales.KubeClusterStale(s.err.Error()))
+	if slot.err != nil {
+		toolNote(c, locales.KubeClusterStale(slot.err.Error()))
 	}
-	if s.sizeErr != nil {
-		toolNote(c, locales.DockerVolumeSizeUnavailable(s.sizeErr.Error()))
+	if slot.sizeErr != nil {
+		toolNote(c, locales.DockerVolumeSizeUnavailable(slot.sizeErr.Error()))
 	}
 	var counts [3]int
 	var items []docker.Resource
+	var selectableIDs []string
 	var total int64
 	allSizes := true
-	query := strings.ToLower(strings.TrimSpace(s.query[index]))
-	for _, item := range s.items {
+	query := strings.ToLower(strings.TrimSpace(slot.query))
+	for _, item := range slot.items {
 		status := dockerResourceStatus(kind, item)
 		if status != dockerResourceAll {
 			counts[status]++
 		}
-		if (s.filter[index] == dockerResourceAll || status == s.filter[index]) && matchesDockerResource(item, query) {
+		if (slot.filter == dockerResourceAll || status == slot.filter) && matchesDockerResource(item, query) {
 			items = append(items, item)
+			if kind != docker.NetworkResource || !item.SystemNetwork() {
+				selectableIDs = append(selectableIDs, item.ID)
+			}
 			if item.Size >= 0 {
 				total += item.Size
 			} else {
@@ -142,9 +178,10 @@ func (a *App) dockerResourcesView(c *ui.Context) {
 			}
 		}
 	}
-	counts[dockerResourceAll] = len(s.items)
+	sortDockerResources(slot.sort, items, kind)
+	counts[dockerResourceAll] = len(slot.items)
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Wrap().Shrink(0).Children(func() {
-		segments(c, "docker-resource-filter", &s.filter[index], []segment{
+		segments(c, "docker-resource-filter", &slot.filter, []segment{
 			{locales.TabAll(), strconv.Itoa(counts[dockerResourceAll])},
 			{locales.DockerImagesUsed(), strconv.Itoa(counts[dockerResourceUsed])},
 			{unused, strconv.Itoa(counts[dockerResourceUnused])},
@@ -154,37 +191,58 @@ func (a *App) dockerResourcesView(c *ui.Context) {
 		if narrow(c) {
 			width = 220
 		}
-		ui.SearchField(c.Key("docker-resource-search"), &s.query[index]).Label(search).Placeholder(search).
-			Width(width).MinWidth(110).Shrink(1)
+		ui.SearchField(c.Key("docker-resource-search"), &slot.query).Label(search).Placeholder(search).
+			Height(controlHeight).Width(width).MinWidth(110).Shrink(1)
 	})
-	tracks := []ui.Track{ui.Fr(1), ui.Fixed(162), ui.Fixed(226), ui.Fixed(63), ui.Fixed(89), ui.Fixed(24)}
+	tracks := []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(200), ui.Fixed(70), ui.Fixed(86), ui.Fixed(54)}
 	if narrow(c) {
-		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116), ui.Fixed(130), ui.Fixed(64), ui.Fixed(54), ui.Fixed(24)}
+		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(110), ui.Fixed(116), ui.Fixed(64), ui.Fixed(54), ui.Fixed(54)}
 	}
 	summary := strconv.Itoa(len(items))
 	if kind == docker.VolumeResource && allSizes && len(items) > 0 {
 		summary += " · " + formatBytes(total)
 	}
 	pal := Colors(c.Theme())
+	hasBulk := len(slot.bulk.selected) > 0
 	workloadPanes(c.Key("docker-resource-panes-"+string(kind)), func() {
-		resourceHead(c, tracks, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.DockerImageUsers(),
-			column, locales.DockerContainerCreated(), "")
+		sortHead(c, tracks, func() {
+			slot.bulk.checkbox(c, "resource-select-all", locales.KubeBulkSelectAll(), selectableIDs)
+		}, &slot.sort,
+			sortColumn{locales.KubeClusterName(), "name"},
+			sortColumn{locales.KubeClusterStatus(), "status"},
+			sortColumn{locales.DockerImageUsers(), "users"},
+			sortColumn{column, "metric"},
+			sortColumn{locales.DockerContainerCreated(), "created"},
+			sortColumn{"", ""},
+		)
 	}, func() {
 		if len(items) == 0 {
 			ui.Text(c, empty).FontSize(13).TextColor(c.Theme().TextMuted).Padding(12, 16).Wrap()
 			return
 		}
-		open := !s.collapsed[index] || query != ""
-		ui.Row(c).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).
-			AlignItems(ui.Center).Gap(8).Padding(0, 16).Children(func() {
-			ui.ButtonBase(c.Key("docker-resource-group")).MinHeight(40).Grow(1).MinWidth(0).Gap(8).
+		open := !slot.collapsed || query != ""
+		line := workloadSelectionRow(c.Key("docker-resource-group-row"), pal.Line).AlignItems(ui.Center)
+		line.Children(func() {
+			ui.Column(c).Width(18).Shrink(0).Children(func() {
+				slot.bulk.checkbox(c, "resource-select-group", locales.KubeBulkSelect(name), selectableIDs)
+			})
+			btn := ui.ButtonBase(c.Key("docker-resource-group")).MinHeight(40).Grow(1).MinWidth(0).Gap(8).
 				AlignItems(ui.Center).Justify(ui.Start).Label(name).Disabled(query != "").
-				OnClick(func() { s.collapsed[index] = open }).Children(func() {
-				icon := "chevron-right"
+				OnClick(func() { slot.collapsed = open })
+			bg := pal.Subtle
+			if btn.Hovered() && query == "" {
+				bg = pal.Muted
+			}
+			line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
+			btn.Children(func() {
+				turn := float32(0)
 				if open {
-					icon = "chevron-down"
+					turn = 90
 				}
-				ui.Icon(c, Icon(icon)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+				chevron := ui.Box(c).Size(14, 14).Shrink(0).Center()
+				chevron.Rotate(chevron.AnimateTo("turn", turn, ui.Animation{Duration: 160 * time.Millisecond})).Children(func() {
+					ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
+				})
 				clipped(c, name).FontSize(13).FontWeight(600).MinWidth(0)
 				aiTag(c, summary, pal.Muted, c.Theme().TextMuted).Shrink(0)
 			})
@@ -193,15 +251,58 @@ func (a *App) dockerResourcesView(c *ui.Context) {
 			}
 		})
 		if open {
-			for _, item := range items {
-				a.dockerResourceRow(c.Key(item.ID), item, tracks)
-			}
+			ui.Column(c.Key("docker-resource-items")).Transition(rowMotion).Children(func() {
+				for _, item := range items {
+					a.dockerResourceRow(c.Key(item.ID), kind, slot, item, tracks)
+				}
+			})
+		}
+		if hasBulk {
+			ui.Box(c).Height(56).Shrink(0)
 		}
 	}, "", nil)
+	a.dockerResourceBulkBar(c, slot)
 }
 
-func (a *App) dockerResourceRow(c *ui.Context, item docker.Resource, tracks []ui.Track) {
-	kind := a.engine.resources.kind
+func sortDockerResources(s tableSort, items []docker.Resource, kind docker.ResourceKind) {
+	statusRank := func(item docker.Resource) int {
+		switch {
+		case kind == docker.NetworkResource && item.SystemNetwork():
+			return 0
+		case slices.ContainsFunc(item.Users, func(user docker.ResourceUser) bool { return user.Active }):
+			return 1
+		case len(item.Users) > 0:
+			return 2
+		default:
+			return 3
+		}
+	}
+	sortRows(s, items, map[string]func(x, y docker.Resource) int{
+		"name": func(x, y docker.Resource) int {
+			return cmp.Compare(strings.ToLower(x.Name), strings.ToLower(y.Name))
+		},
+		"status": func(x, y docker.Resource) int {
+			if n := cmp.Compare(statusRank(x), statusRank(y)); n != 0 {
+				return n
+			}
+			return cmp.Compare(strings.ToLower(x.Name), strings.ToLower(y.Name))
+		},
+		"users": func(x, y docker.Resource) int {
+			return cmp.Compare(len(x.Users), len(y.Users))
+		},
+		"metric": func(x, y docker.Resource) int {
+			if kind == docker.VolumeResource {
+				return cmp.Compare(x.Size, y.Size)
+			}
+			return cmp.Compare(strings.ToLower(x.Driver), strings.ToLower(y.Driver))
+		},
+		"created": func(x, y docker.Resource) int {
+			return x.Created.Compare(y.Created)
+		},
+	})
+}
+
+func (a *App) dockerResourceRow(c *ui.Context, kind docker.ResourceKind, slot *dockerResourceSlot, item docker.Resource, tracks []ui.Track) {
 	pal, theme := Colors(c.Theme()), c.Theme()
 	var users []string
 	for _, user := range item.Users {
@@ -213,7 +314,7 @@ func (a *App) dockerResourceRow(c *ui.Context, item docker.Resource, tracks []ui
 	}
 	names := strings.Join(users, ", ")
 	if names == "" {
-		names = "–"
+		names = "—"
 	}
 	status, bg, fg := locales.KubeStorageUnused(), pal.Muted, theme.TextMuted
 	system := kind == docker.NetworkResource && item.SystemNetwork()
@@ -227,7 +328,7 @@ func (a *App) dockerResourceRow(c *ui.Context, item docker.Resource, tracks []ui
 	}
 	metric := item.Driver
 	if kind == docker.VolumeResource {
-		metric = "–"
+		metric = "—"
 		if item.Size >= 0 {
 			metric = formatBytes(item.Size)
 		}
@@ -242,11 +343,22 @@ func (a *App) dockerResourceRow(c *ui.Context, item docker.Resource, tracks []ui
 			copyName(c, item.Name)
 		}
 		if !system && a.canActOnDockerResources() && m.Item(remove).Chosen() {
-			a.planDockerResourceRemoval(item)
+			a.planDockerResourcesRemoval([]docker.Resource{item})
 		}
 	}
-	ui.Column(c).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu).Children(func() {
-		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(39).Children(func() {
+	row := ui.Column(c).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
+	rowBg := theme.Background.Alpha(0)
+	if row.Hovered() {
+		rowBg = pal.Subtle
+	}
+	row.Background(row.AnimateColor("bg", rowBg, ui.Animation{Duration: 120 * time.Millisecond}))
+	row.Children(func() {
+		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(44).Children(func() {
+			var boxIDs []string
+			if !system {
+				boxIDs = []string{item.ID}
+			}
+			slot.bulk.checkbox(c, "docker-select-resource", locales.KubeBulkSelect(item.Name), boxIDs)
 			ui.Column(c).Gap(1).MinWidth(0).Children(func() {
 				clipped(c, item.Name).Font(FontMono).FontSize(12.5).Tooltip(item.Name)
 				if detail != "" {
@@ -256,42 +368,64 @@ func (a *App) dockerResourceRow(c *ui.Context, item docker.Resource, tracks []ui
 			workloadStatus(c, status, bg, fg)
 			clipped(c, names).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(names)
 			clipped(c, metric).FontSize(11.5).Tooltip(metric)
-			created, date := "–", ""
+			created, date := "—", ""
 			if !item.Created.IsZero() {
 				created, date = age(c, item.Created), item.Created.Local().Format(time.DateTime)
 			}
 			clipped(c, created).FontSize(11.5).Tooltip(date)
-			iconButton(c.Key("docker-resource-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
+			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				if !system && len(item.Users) == 0 && a.canActOnDockerResources() {
+					iconButton(c.Key("docker-resource-remove"), "trash-2", remove).
+						OnClick(func() { a.planDockerResourcesRemoval([]docker.Resource{item}) })
+				}
+				iconButton(c.Key("docker-resource-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
+			})
 		})
 		if !system && len(item.Users) == 0 {
 			hint := locales.DockerVolumeUnusedHint()
 			if kind == docker.NetworkResource {
 				hint = locales.DockerNetworkUnusedHint()
 			}
-			ui.Row(c).Gap(7).AlignItems(ui.Center).Padding(0, 16, 8, 16).Children(func() {
-				ui.Icon(c, Icon("info")).Size(13, 13).Shrink(0).TextColor(theme.TextMuted)
-				ui.Text(c, hint).FontSize(11.5).TextColor(theme.TextMuted).Wrap().MinWidth(0)
-				ui.Button(c.Key("docker-resource-remove"), remove).Height(24).Shrink(0).
-					Disabled(!a.canActOnDockerResources()).OnClick(func() { a.planDockerResourceRemoval(item) })
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(0, 16, 7, 44).Children(func() {
+				ui.Icon(c, Icon("info")).Size(12, 12).Shrink(0).TextColor(pal.TextFaint)
+				ui.Text(c, hint).FontSize(11).TextColor(pal.TextFaint).Wrap().Grow(1).MinWidth(0)
 			})
 		}
 	})
 }
 
-func (a *App) canActOnDockerResources() bool {
-	s := &a.engine.resources
-	return a.canPlanDocker() && s.watching != "" && !s.planning && s.err == nil && a.engine.err == nil
+func (a *App) dockerResourceBulkBar(c *ui.Context, slot *dockerResourceSlot) {
+	var selected []docker.Resource
+	for _, item := range slot.items {
+		if slot.bulk.selected[item.ID] {
+			selected = append(selected, item)
+		}
+	}
+	if len(selected) == 0 {
+		return
+	}
+	floatingBulkBar(c, "docker-resource-bulk", locales.DockerSelected(len(selected)), slot.bulk.clear, func(_, dangerFg, dangerBg ui.Color) {
+		bulkAction(c.Key("remove"), "trash-2", locales.DockerContainerRemove()+"…", dangerFg, dangerBg, !a.canActOnDockerResources(), func() {
+			a.planDockerResourcesRemoval(selected)
+		})
+	})
 }
 
-func (a *App) planDockerResourceRemoval(item docker.Resource) {
-	if !a.canActOnDockerResources() {
+func (a *App) canActOnDockerResources() bool {
+	s := &a.engine.resources
+	slot := &s.slots[dockerResourceSlotIndex(s.kind)]
+	return a.canPlanDocker() && s.watching != "" && !s.planning && slot.err == nil && a.engine.err == nil
+}
+
+func (a *App) planDockerResourcesRemoval(items []docker.Resource) {
+	if !a.canActOnDockerResources() || len(items) == 0 {
 		return
 	}
 	s := &a.engine.resources
 	target, kind, revision, view := s.target, s.kind, s.revision, a.engine.view
 	s.planning = true
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.PlanDockerResourceRemoval(context.Background(), run.Exec{}, target, env, kind, item)
+		return ops.PlanDockerResourcesRemoval(context.Background(), run.Exec{}, target, env, kind, items)
 	}, func(p ops.Plan, err error) {
 		if revision != s.revision {
 			return

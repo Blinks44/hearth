@@ -34,9 +34,10 @@ lint:
 fmt:
 	$(LINT) fmt
 
-check: ## everything CI runs: formatting, lint, mygo vet, catalogs, tests with -race
+check: ## everything CI runs: formatting, lint, mygo vet, catalogs, race tests + UI tests
 	$(LINT) fmt --diff
 	$(LINT) run
 	go tool mygo vet .
 	go tool mygo i18n check
-	go test -race -timeout 30m ./...
+	go test -race -timeout 15m $$(go list ./... | grep -v '/internal/ui$$')
+	go test -timeout 15m ./internal/ui

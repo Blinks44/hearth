@@ -79,8 +79,8 @@ func main() {
 	// controls and the menus.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 	forwardCtx, stopForwards := context.WithCancel(context.Background())
-	dockerLogsCtx, stopDockerLogs := context.WithCancel(context.Background())
-	var forwards, dockerLogs sync.WaitGroup
+	dockerCtx, stopDocker := context.WithCancel(context.Background())
+	var forwards, dockerWorkers sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
@@ -183,55 +183,63 @@ func main() {
 		}
 		a.WatchDocker = func(t docker.Target, overview bool, got func(docker.Engine, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go docker.Watch(ctx, run.Exec{}, env, t, overview, func(e docker.Engine, err error) {
-				win.Update(func() { got(e, err) })
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
+				docker.Watch(ctx, run.Exec{}, env, t, overview, func(e docker.Engine, err error) {
+					win.Update(func() { got(e, err) })
+				})
 			})
 			return cancel
 		}
 		a.WatchDockerContainers = func(t docker.Target, got func([]docker.Container, error, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go docker.WatchContainers(ctx, run.Exec{}, env, t, func(items []docker.Container, err, statsErr error) {
-				win.Update(func() { got(items, err, statsErr) })
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
+				docker.WatchContainers(ctx, run.Exec{}, env, t, func(items []docker.Container, err, statsErr error) {
+					win.Update(func() { got(items, err, statsErr) })
+				})
 			})
 			return cancel
 		}
 
 		a.WatchDockerResources = func(t docker.Target, kind docker.ResourceKind, got func([]docker.Resource, error, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go docker.WatchResources(ctx, run.Exec{}, env, t, kind, func(items []docker.Resource, err, sizeErr error) {
-				win.Update(func() { got(items, err, sizeErr) })
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
+				docker.WatchResources(ctx, run.Exec{}, env, t, kind, func(items []docker.Resource, err, sizeErr error) {
+					win.Update(func() { got(items, err, sizeErr) })
+				})
 			})
 			return cancel
 		}
 		a.WatchDockerImages = func(t docker.Target, got func([]docker.Image, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go docker.WatchImages(ctx, run.Exec{}, env, t, func(items []docker.Image, err error) {
-				win.Update(func() { got(items, err) })
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
+				docker.WatchImages(ctx, run.Exec{}, env, t, func(items []docker.Image, err error) {
+					win.Update(func() { got(items, err) })
+				})
 			})
 			return cancel
 		}
 
 		a.ReadDockerDetail = func(t docker.Target, id string, done func(docker.ContainerDetail, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go func() {
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
 				d, err := docker.ReadContainerDetail(ctx, run.Exec{}, env, t, id)
 				win.Update(func() {
 					if ctx.Err() == nil {
 						done(d, err)
 					}
 				})
-			}()
+			})
 			return cancel
 		}
 		a.ReadDockerEnv = func(t docker.Target, id, key string, done func([]byte, error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(context.Background())
-			go func() {
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
 				value, err := docker.ReadContainerEnv(ctx, run.Exec{}, env, t, id, key)
 				if ctx.Err() != nil {
 					clear(value)
@@ -244,13 +252,13 @@ func main() {
 					}
 					done(value, err)
 				})
-			}()
+			})
 			return cancel
 		}
 		a.StreamDockerLogs = func(l docker.Logs, got func([]containerlog.LogLine), done func(error)) func() {
 			env := scanner.Terminal()
-			ctx, cancel := context.WithCancel(dockerLogsCtx)
-			dockerLogs.Go(func() {
+			ctx, cancel := context.WithCancel(dockerCtx)
+			dockerWorkers.Go(func() {
 				err := l.Stream(ctx, run.CombinedLines, env, func(batch []containerlog.LogLine) {
 					if ctx.Err() == nil {
 						win.Update(func() {
@@ -825,9 +833,9 @@ func main() {
 	})
 	err := mygo.App.Run()
 	stopForwards()
-	stopDockerLogs()
+	stopDocker()
 	forwards.Wait()
-	dockerLogs.Wait()
+	dockerWorkers.Wait()
 	if err != nil {
 		log.Fatal(err)
 	}

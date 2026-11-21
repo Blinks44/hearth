@@ -438,7 +438,11 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 						}
 					}
 					if shown == 0 {
-						ui.Text(c, locales.NoInstructions()).FontSize(12).TextColor(pal.TextFaint).SingleLine()
+						if ag.Instructions != nil && ag.Instructions.State == "shared" {
+							chip(c, Accent, pal.AccentSoft, pal.AccentInk, locales.GlobalInstructionsChipShared())
+						} else {
+							ui.Text(c, locales.NoInstructions()).FontSize(12).TextColor(pal.TextFaint).SingleLine()
+						}
 					}
 				})
 				ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
@@ -510,8 +514,8 @@ func (a *App) agentDetail(c *ui.Context, id string) {
 						})
 					})
 				}
-				if ag.ID == "codex" {
-					a.globalInstructionsCard(c, ag.Instructions)
+				if ag.Instructions != nil {
+					a.globalInstructionsCard(c, ag.ID, ag.Instructions)
 				}
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {

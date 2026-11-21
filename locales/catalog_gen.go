@@ -36,6 +36,264 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// DockerOverviewDisk says "Disk"
+// in the language the app shows.
+func DockerOverviewDisk() string { return In(i18n.Locale()).DockerOverviewDisk() }
+
+// DockerOverviewDisk says "Disk"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewDisk() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewDisk", nil)
+}
+
+// DockerOverviewDiskUnavailable says "Disk usage unavailable"
+// in the language the app shows.
+func DockerOverviewDiskUnavailable() string { return In(i18n.Locale()).DockerOverviewDiskUnavailable() }
+
+// DockerOverviewDiskUnavailable says "Disk usage unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewDiskUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewDiskUnavailable", nil)
+}
+
+// DockerOverviewReclaimable says "≈ {size} reclaimable"
+// in the language the app shows.
+func DockerOverviewReclaimable(size string) string {
+	return In(i18n.Locale()).DockerOverviewReclaimable(size)
+}
+
+// DockerOverviewReclaimable says "≈ {size} reclaimable"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewReclaimable(size string) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewReclaimable", map[string]any{"size": size})
+}
+
+// DockerOverviewCPUCapacity says "{count, plural, one {# core} other {# cores}}"
+// in the language the app shows.
+func DockerOverviewCPUCapacity(count int) string {
+	return In(i18n.Locale()).DockerOverviewCPUCapacity(count)
+}
+
+// DockerOverviewCPUCapacity says "{count, plural, one {# core} other {# cores}}"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewCPUCapacity(count int) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewCPUCapacity", map[string]any{"count": count})
+}
+
+// DockerOverviewMemoryAmount says "{used} of {total}"
+// in the language the app shows.
+func DockerOverviewMemoryAmount(used string, total string) string {
+	return In(i18n.Locale()).DockerOverviewMemoryAmount(used, total)
+}
+
+// DockerOverviewMemoryAmount says "{used} of {total}"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewMemoryAmount(used string, total string) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewMemoryAmount", map[string]any{"used": used, "total": total})
+}
+
+// DockerOverviewCPU says "Container CPU"
+// in the language the app shows.
+func DockerOverviewCPU() string { return In(i18n.Locale()).DockerOverviewCPU() }
+
+// DockerOverviewCPU says "Container CPU"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewCPU() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewCPU", nil)
+}
+
+// DockerOverviewMemory says "Container memory"
+// in the language the app shows.
+func DockerOverviewMemory() string { return In(i18n.Locale()).DockerOverviewMemory() }
+
+// DockerOverviewMemory says "Container memory"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewMemory() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewMemory", nil)
+}
+
+// DockerOverviewSampleUnavailable says "Current usage unavailable"
+// in the language the app shows.
+func DockerOverviewSampleUnavailable() string {
+	return In(i18n.Locale()).DockerOverviewSampleUnavailable()
+}
+
+// DockerOverviewSampleUnavailable says "Current usage unavailable"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewSampleUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewSampleUnavailable", nil)
+}
+
+// DockerOverviewContainersUnavailable says "Could not check containers."
+// in the language the app shows.
+func DockerOverviewContainersUnavailable() string {
+	return In(i18n.Locale()).DockerOverviewContainersUnavailable()
+}
+
+// DockerOverviewContainersUnavailable says "Could not check containers."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewContainersUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewContainersUnavailable", nil)
+}
+
+// DockerOverviewContainerFailed says "Docker reports a container failure."
+// in the language the app shows.
+func DockerOverviewContainerFailed() string { return In(i18n.Locale()).DockerOverviewContainerFailed() }
+
+// DockerOverviewContainerFailed says "Docker reports a container failure."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewContainerFailed() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewContainerFailed", nil)
+}
+
+// DockerOverviewNoProblems says "No issues found."
+// in the language the app shows.
+func DockerOverviewNoProblems() string { return In(i18n.Locale()).DockerOverviewNoProblems() }
+
+// DockerOverviewNoProblems says "No issues found."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewNoProblems() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewNoProblems", nil)
+}
+
+// DockerOverviewVMDisk says "VM disk on the host · {size}"
+// in the language the app shows.
+func DockerOverviewVMDisk(size string) string { return In(i18n.Locale()).DockerOverviewVMDisk(size) }
+
+// DockerOverviewVMDisk says "VM disk on the host · {size}"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewVMDisk(size string) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewVMDisk", map[string]any{"size": size})
+}
+
+// DockerOverviewVMDiskUnavailable says "VM disk file unavailable."
+// in the language the app shows.
+func DockerOverviewVMDiskUnavailable() string {
+	return In(i18n.Locale()).DockerOverviewVMDiskUnavailable()
+}
+
+// DockerOverviewVMDiskUnavailable says "VM disk file unavailable."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewVMDiskUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewVMDiskUnavailable", nil)
+}
+
+// DockerOverviewPrune says "Docker cleanup frees space inside the VM. The file keeps its capacity. The engine may return unused blocks to the hos…"
+// in the language the app shows.
+func DockerOverviewPrune() string { return In(i18n.Locale()).DockerOverviewPrune() }
+
+// DockerOverviewPrune says "Docker cleanup frees space inside the VM. The file keeps its capacity. The engine may return unused blocks to the hos…"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewPrune() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewPrune", nil)
+}
+
+// DockerOverviewOrbReclaim says "OrbStack returns unused blocks automatically."
+// in the language the app shows.
+func DockerOverviewOrbReclaim() string { return In(i18n.Locale()).DockerOverviewOrbReclaim() }
+
+// DockerOverviewOrbReclaim says "OrbStack returns unused blocks automatically."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewOrbReclaim() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewOrbReclaim", nil)
+}
+
+// DockerOverviewDesktopHelp says "Docker Desktop disk settings"
+// in the language the app shows.
+func DockerOverviewDesktopHelp() string { return In(i18n.Locale()).DockerOverviewDesktopHelp() }
+
+// DockerOverviewDesktopHelp says "Docker Desktop disk settings"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewDesktopHelp() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewDesktopHelp", nil)
+}
+
+// DockerOverviewTrim says "Reclaim space…"
+// in the language the app shows.
+func DockerOverviewTrim() string { return In(i18n.Locale()).DockerOverviewTrim() }
+
+// DockerOverviewTrim says "Reclaim space…"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewTrim() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewTrim", nil)
+}
+
+// DockerOverviewTrimTitle says "Reclaim Colima disk space"
+// in the language the app shows.
+func DockerOverviewTrimTitle() string { return In(i18n.Locale()).DockerOverviewTrimTitle() }
+
+// DockerOverviewTrimTitle says "Reclaim Colima disk space"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewTrimTitle() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewTrimTitle", nil)
+}
+
+// DockerOverviewTrimWhy says "Run fstrim in Colima profile {profile} to return unused blocks to the host. Containers, images and volumes stay in pl…"
+// in the language the app shows.
+func DockerOverviewTrimWhy(profile string) string {
+	return In(i18n.Locale()).DockerOverviewTrimWhy(profile)
+}
+
+// DockerOverviewTrimWhy says "Run fstrim in Colima profile {profile} to return unused blocks to the host. Containers, images and volumes stay in pl…"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewTrimWhy(profile string) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewTrimWhy", map[string]any{"profile": profile})
+}
+
+// DockerOverviewTrimResult says "Colima completed the trim. Refresh the engine overview to see the current disk usage."
+// in the language the app shows.
+func DockerOverviewTrimResult() string { return In(i18n.Locale()).DockerOverviewTrimResult() }
+
+// DockerOverviewTrimResult says "Colima completed the trim. Refresh the engine overview to see the current disk usage."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewTrimResult() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewTrimResult", nil)
+}
+
+// DockerOverviewEvents says "Events"
+// in the language the app shows.
+func DockerOverviewEvents() string { return In(i18n.Locale()).DockerOverviewEvents() }
+
+// DockerOverviewEvents says "Events"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewEvents() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewEvents", nil)
+}
+
+// DockerOverviewEventCount says "Past hour · {count}"
+// in the language the app shows.
+func DockerOverviewEventCount(count string) string {
+	return In(i18n.Locale()).DockerOverviewEventCount(count)
+}
+
+// DockerOverviewEventCount says "Past hour · {count}"
+// in the language of msgs.
+func (msgs Messages) DockerOverviewEventCount(count string) string {
+	return Catalog.Format(msgs.locale, "dockerOverviewEventCount", map[string]any{"count": count})
+}
+
+// DockerOverviewEventsUnavailable says "Could not read Docker events."
+// in the language the app shows.
+func DockerOverviewEventsUnavailable() string {
+	return In(i18n.Locale()).DockerOverviewEventsUnavailable()
+}
+
+// DockerOverviewEventsUnavailable says "Could not read Docker events."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewEventsUnavailable() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewEventsUnavailable", nil)
+}
+
+// DockerOverviewNoEvents says "No failures or restarts in the available events."
+// in the language the app shows.
+func DockerOverviewNoEvents() string { return In(i18n.Locale()).DockerOverviewNoEvents() }
+
+// DockerOverviewNoEvents says "No failures or restarts in the available events."
+// in the language of msgs.
+func (msgs Messages) DockerOverviewNoEvents() string {
+	return Catalog.Format(msgs.locale, "dockerOverviewNoEvents", nil)
+}
+
 // DockerAttention says "Needs attention"
 // in the language the app shows.
 func DockerAttention() string { return In(i18n.Locale()).DockerAttention() }
@@ -904,11 +1162,11 @@ func (msgs Messages) DockerVolumesLocal() string {
 	return Catalog.Format(msgs.locale, "dockerVolumesLocal", nil)
 }
 
-// DockerVolumesHint says "Container data · removed individually"
+// DockerVolumesHint says "Container data · removal is permanent"
 // in the language the app shows.
 func DockerVolumesHint() string { return In(i18n.Locale()).DockerVolumesHint() }
 
-// DockerVolumesHint says "Container data · removed individually"
+// DockerVolumesHint says "Container data · removal is permanent"
 // in the language of msgs.
 func (msgs Messages) DockerVolumesHint() string {
 	return Catalog.Format(msgs.locale, "dockerVolumesHint", nil)
@@ -2036,6 +2294,16 @@ func DockerComposeConfig() string { return In(i18n.Locale()).DockerComposeConfig
 // in the language of msgs.
 func (msgs Messages) DockerComposeConfig() string {
 	return Catalog.Format(msgs.locale, "dockerComposeConfig", nil)
+}
+
+// DockerComposeConfigChanged says "The Compose configuration changed. Review the operation again."
+// in the language the app shows.
+func DockerComposeConfigChanged() string { return In(i18n.Locale()).DockerComposeConfigChanged() }
+
+// DockerComposeConfigChanged says "The Compose configuration changed. Review the operation again."
+// in the language of msgs.
+func (msgs Messages) DockerComposeConfigChanged() string {
+	return Catalog.Format(msgs.locale, "dockerComposeConfigChanged", nil)
 }
 
 // DockerComposeChanged says "A Compose project with this name uses a different directory or set of files on this engine."
@@ -17836,6 +18104,20 @@ func (msgs Messages) OpFailed(n int, why string) string {
 	return Catalog.Format(msgs.locale, "opFailed", map[string]any{"n": n, "why": why})
 }
 
+// OpFileChanged says "The file changed after the preview. Close this window and start the action again to review a new plan."
+// in the language the app shows.
+//
+// Operation failed because a file to edit changed after the preview.
+func OpFileChanged() string { return In(i18n.Locale()).OpFileChanged() }
+
+// OpFileChanged says "The file changed after the preview. Close this window and start the action again to review a new plan."
+// in the language of msgs.
+//
+// Operation failed because a file to edit changed after the preview.
+func (msgs Messages) OpFileChanged() string {
+	return Catalog.Format(msgs.locale, "opFileChanged", nil)
+}
+
 // OpOffline says "no connection to {host}, check the internet"
 // in the language the app shows.
 //
@@ -28822,18 +29104,36 @@ func (msgs Messages) GlobalInstructionsTitle() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsTitle", nil)
 }
 
-// GlobalInstructionsLinkedLead says "Codex reads the shared file through a link: edits to it are visible to Codex at once."
+// GlobalInstructionsLinkedLead says "{agent} reads the shared file through a link: edits to it are visible to {agent} at once."
 // in the language the app shows.
 //
-// Global Codex instructions card on the agent page.
-func GlobalInstructionsLinkedLead() string { return In(i18n.Locale()).GlobalInstructionsLinkedLead() }
+// Global instruction files card on an agent page.
+func GlobalInstructionsLinkedLead(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsLinkedLead(agent)
+}
 
-// GlobalInstructionsLinkedLead says "Codex reads the shared file through a link: edits to it are visible to Codex at once."
+// GlobalInstructionsLinkedLead says "{agent} reads the shared file through a link: edits to it are visible to {agent} at once."
 // in the language of msgs.
 //
-// Global Codex instructions card on the agent page.
-func (msgs Messages) GlobalInstructionsLinkedLead() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsLinkedLead", nil)
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsLinkedLead(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinkedLead", map[string]any{"agent": agent})
+}
+
+// GlobalInstructionsImportedLead says "{agent} imports the shared file: edits to it are visible to {agent} at once."
+// in the language the app shows.
+//
+// Global instruction files card on an agent page.
+func GlobalInstructionsImportedLead(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsImportedLead(agent)
+}
+
+// GlobalInstructionsImportedLead says "{agent} imports the shared file: edits to it are visible to {agent} at once."
+// in the language of msgs.
+//
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsImportedLead(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsImportedLead", map[string]any{"agent": agent})
 }
 
 // GlobalInstructionsLinkFile says "link to the shared file"
@@ -28848,6 +29148,22 @@ func GlobalInstructionsLinkFile() string { return In(i18n.Locale()).GlobalInstru
 // Global Codex instructions card on the agent page.
 func (msgs Messages) GlobalInstructionsLinkFile() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsLinkFile", nil)
+}
+
+// GlobalInstructionsImportedFile says "imports the shared file"
+// in the language the app shows.
+//
+// Global instruction files card on an agent page.
+func GlobalInstructionsImportedFile() string {
+	return In(i18n.Locale()).GlobalInstructionsImportedFile()
+}
+
+// GlobalInstructionsImportedFile says "imports the shared file"
+// in the language of msgs.
+//
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsImportedFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsImportedFile", nil)
 }
 
 // GlobalInstructionsChipLinked says "connected"
@@ -28920,18 +29236,20 @@ func (msgs Messages) GlobalInstructionsChipMissing() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsChipMissing", nil)
 }
 
-// GlobalInstructionsLead says "Codex reads instructions from its own directory. The shared file is not connected automatically."
+// GlobalInstructionsLead says "{agent} reads instructions from its own directory. The shared file is not connected automatically."
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsLead() string { return In(i18n.Locale()).GlobalInstructionsLead() }
+// Global instruction files card on an agent page.
+func GlobalInstructionsLead(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsLead(agent)
+}
 
-// GlobalInstructionsLead says "Codex reads instructions from its own directory. The shared file is not connected automatically."
+// GlobalInstructionsLead says "{agent} reads instructions from its own directory. The shared file is not connected automatically."
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsLead() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsLead", nil)
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsLead(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLead", map[string]any{"agent": agent})
 }
 
 // GlobalInstructionsSharedFile says "Shared file"
@@ -28948,18 +29266,18 @@ func (msgs Messages) GlobalInstructionsSharedFile() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsSharedFile", nil)
 }
 
-// GlobalInstructionsCodexFile says "Codex file"
+// GlobalInstructionsAgentFile says "Agent file"
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsCodexFile() string { return In(i18n.Locale()).GlobalInstructionsCodexFile() }
+// Global instruction files card on an agent page.
+func GlobalInstructionsAgentFile() string { return In(i18n.Locale()).GlobalInstructionsAgentFile() }
 
-// GlobalInstructionsCodexFile says "Codex file"
+// GlobalInstructionsAgentFile says "Agent file"
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsCodexFile() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsCodexFile", nil)
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsAgentFile() string {
+	return Catalog.Format(msgs.locale, "globalInstructionsAgentFile", nil)
 }
 
 // GlobalInstructionsOverrideFile says "Override"
@@ -29006,18 +29324,20 @@ func (msgs Messages) GlobalInstructionsNotFound() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsNotFound", nil)
 }
 
-// GlobalInstructionsActive says "read by Codex"
+// GlobalInstructionsActive says "read by {agent}"
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsActive() string { return In(i18n.Locale()).GlobalInstructionsActive() }
+// Global instruction files card on an agent page.
+func GlobalInstructionsActive(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsActive(agent)
+}
 
-// GlobalInstructionsActive says "read by Codex"
+// GlobalInstructionsActive says "read by {agent}"
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsActive() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsActive", nil)
+// Global instruction files card on an agent page.
+func (msgs Messages) GlobalInstructionsActive(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsActive", map[string]any{"agent": agent})
 }
 
 // GlobalInstructionsEmpty says "Empty file: review it manually; Hearth will not replace it."
@@ -29160,60 +29480,68 @@ func (msgs Messages) GlobalInstructionsCompare() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsCompare", nil)
 }
 
-// GlobalInstructionsCompareWhy says "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed."
+// GlobalInstructionsCompareWhy says "Comparison only: red lines are from {agent}, green lines are from the shared file. No files will be changed."
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsCompareWhy() string { return In(i18n.Locale()).GlobalInstructionsCompareWhy() }
-
-// GlobalInstructionsCompareWhy says "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed."
-// in the language of msgs.
-//
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsCompareWhy() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsCompareWhy", nil)
+// Global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCompareWhy(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsCompareWhy(agent)
 }
 
-// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; on…"
-// in the language the app shows.
-//
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsLinkWhy() string { return In(i18n.Locale()).GlobalInstructionsLinkWhy() }
-
-// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; on…"
+// GlobalInstructionsCompareWhy says "Comparison only: red lines are from {agent}, green lines are from the shared file. No files will be changed."
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsLinkWhy() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsLinkWhy", nil)
+// Global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCompareWhy(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCompareWhy", map[string]any{"agent": agent})
 }
 
-// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directo…"
+// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to {agent}.\nHearth shows a plan first; …"
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsCreateWhy() string { return In(i18n.Locale()).GlobalInstructionsCreateWhy() }
-
-// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directo…"
-// in the language of msgs.
-//
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsCreateWhy() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsCreateWhy", nil)
+// Global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsLinkWhy(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsLinkWhy(agent)
 }
 
-// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new p…"
-// in the language the app shows.
-//
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsCopyWhy() string { return In(i18n.Locale()).GlobalInstructionsCopyWhy() }
-
-// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new p…"
+// GlobalInstructionsLinkWhy says "Connecting creates a file symlink. Changes to the shared file will be visible to {agent}.\nHearth shows a plan first; …"
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsCopyWhy() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsCopyWhy", nil)
+// Global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsLinkWhy(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsLinkWhy", map[string]any{"agent": agent})
+}
+
+// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new {file} for {agent}. Start a ne…"
+// in the language the app shows.
+//
+// Global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCreateWhy(file string, agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsCreateWhy(file, agent)
+}
+
+// GlobalInstructionsCreateWhy says "Review and edit the instructions. Hearth will show the full plan before creating a new {file} for {agent}. Start a ne…"
+// in the language of msgs.
+//
+// Global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCreateWhy(file string, agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCreateWhy", map[string]any{"file": file, "agent": agent})
+}
+
+// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach {agent}. Confirm this new…"
+// in the language the app shows.
+//
+// Global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsCopyWhy(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsCopyWhy(agent)
+}
+
+// GlobalInstructionsCopyWhy says "This creates an independent copy, not a link. Later edits to the shared file will not reach {agent}. Confirm this new…"
+// in the language of msgs.
+//
+// Global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsCopyWhy(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsCopyWhy", map[string]any{"agent": agent})
 }
 
 // GlobalInstructionsProtection says "Existing files are protected"
@@ -29233,17 +29561,17 @@ func (msgs Messages) GlobalInstructionsProtection() string {
 // GlobalInstructionsProtectionText says "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so n…"
 // in the language the app shows.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func GlobalInstructionsProtectionText() string {
-	return In(i18n.Locale()).GlobalInstructionsProtectionText()
+// Global instruction files, preview and confirmed installation plan.
+func GlobalInstructionsProtectionText(agent string) string {
+	return In(i18n.Locale()).GlobalInstructionsProtectionText(agent)
 }
 
 // GlobalInstructionsProtectionText says "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so n…"
 // in the language of msgs.
 //
-// Codex global instruction files, preview and confirmed installation plan.
-func (msgs Messages) GlobalInstructionsProtectionText() string {
-	return Catalog.Format(msgs.locale, "globalInstructionsProtectionText", nil)
+// Global instruction files, preview and confirmed installation plan.
+func (msgs Messages) GlobalInstructionsProtectionText(agent string) string {
+	return Catalog.Format(msgs.locale, "globalInstructionsProtectionText", map[string]any{"agent": agent})
 }
 
 // GlobalInstructionsChanged says "Instructions changed or an existing file prevents this action. Scan again and review the files."
@@ -29414,13 +29742,13 @@ func (msgs Messages) CleanupUpTo(size string) string {
 	return Catalog.Format(msgs.locale, "cleanupUpTo", map[string]any{"size": size})
 }
 
-// CleanupPnpmCaption says "pnpm store prune · keeps packages still in use"
+// CleanupPnpmCaption says "shared package store · existing node_modules keep working"
 // in the language the app shows.
 //
 // Cleanup: cleanupPnpmCaption.
 func CleanupPnpmCaption() string { return In(i18n.Locale()).CleanupPnpmCaption() }
 
-// CleanupPnpmCaption says "pnpm store prune · keeps packages still in use"
+// CleanupPnpmCaption says "shared package store · existing node_modules keep working"
 // in the language of msgs.
 //
 // Cleanup: cleanupPnpmCaption.
@@ -29428,13 +29756,13 @@ func (msgs Messages) CleanupPnpmCaption() string {
 	return Catalog.Format(msgs.locale, "cleanupPnpmCaption", nil)
 }
 
-// CleanupPnpmNote says "pnpm keeps packages still in use"
+// CleanupPnpmNote says "pnpm store will be cleared completely"
 // in the language the app shows.
 //
 // Cleanup: cleanupPnpmNote.
 func CleanupPnpmNote() string { return In(i18n.Locale()).CleanupPnpmNote() }
 
-// CleanupPnpmNote says "pnpm keeps packages still in use"
+// CleanupPnpmNote says "pnpm store will be cleared completely"
 // in the language of msgs.
 //
 // Cleanup: cleanupPnpmNote.
@@ -29442,13 +29770,13 @@ func (msgs Messages) CleanupPnpmNote() string {
 	return Catalog.Format(msgs.locale, "cleanupPnpmNote", nil)
 }
 
-// CleanupPnpmNoteText says "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space o…"
+// CleanupPnpmNoteText says "Hearth removes the entire pnpm store folder. Existing project node_modules stay working, and pnpm will download packa…"
 // in the language the app shows.
 //
 // Cleanup: cleanupPnpmNoteText.
 func CleanupPnpmNoteText() string { return In(i18n.Locale()).CleanupPnpmNoteText() }
 
-// CleanupPnpmNoteText says "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space o…"
+// CleanupPnpmNoteText says "Hearth removes the entire pnpm store folder. Existing project node_modules stay working, and pnpm will download packa…"
 // in the language of msgs.
 //
 // Cleanup: cleanupPnpmNoteText.
@@ -36908,4 +37236,108 @@ func DockerHowPlanCaption() string { return In(i18n.Locale()).DockerHowPlanCapti
 // Docker how card row caption.
 func (msgs Messages) DockerHowPlanCaption() string {
 	return Catalog.Format(msgs.locale, "dockerHowPlanCaption", nil)
+}
+
+// DockerHealthHealthy says "Healthy"
+// in the language the app shows.
+//
+// Docker container detail: healthy status chip.
+func DockerHealthHealthy() string { return In(i18n.Locale()).DockerHealthHealthy() }
+
+// DockerHealthHealthy says "Healthy"
+// in the language of msgs.
+//
+// Docker container detail: healthy status chip.
+func (msgs Messages) DockerHealthHealthy() string {
+	return Catalog.Format(msgs.locale, "dockerHealthHealthy", nil)
+}
+
+// DockerHealthUnhealthy says "Unhealthy"
+// in the language the app shows.
+//
+// Docker container detail: unhealthy status chip.
+func DockerHealthUnhealthy() string { return In(i18n.Locale()).DockerHealthUnhealthy() }
+
+// DockerHealthUnhealthy says "Unhealthy"
+// in the language of msgs.
+//
+// Docker container detail: unhealthy status chip.
+func (msgs Messages) DockerHealthUnhealthy() string {
+	return Catalog.Format(msgs.locale, "dockerHealthUnhealthy", nil)
+}
+
+// DockerHealthStarting says "Starting"
+// in the language the app shows.
+//
+// Docker container detail: healthcheck starting status chip.
+func DockerHealthStarting() string { return In(i18n.Locale()).DockerHealthStarting() }
+
+// DockerHealthStarting says "Starting"
+// in the language of msgs.
+//
+// Docker container detail: healthcheck starting status chip.
+func (msgs Messages) DockerHealthStarting() string {
+	return Catalog.Format(msgs.locale, "dockerHealthStarting", nil)
+}
+
+// DockerHealthPassed says "Passed"
+// in the language the app shows.
+//
+// Docker container detail: healthcheck exit code 0 badge.
+func DockerHealthPassed() string { return In(i18n.Locale()).DockerHealthPassed() }
+
+// DockerHealthPassed says "Passed"
+// in the language of msgs.
+//
+// Docker container detail: healthcheck exit code 0 badge.
+func (msgs Messages) DockerHealthPassed() string {
+	return Catalog.Format(msgs.locale, "dockerHealthPassed", nil)
+}
+
+// DockerVolumesRemoveTitle says "Remove {count, plural, one {# volume} other {# volumes}}?"
+// in the language the app shows.
+//
+// Docker volumes bulk removal plan title.
+func DockerVolumesRemoveTitle(count int) string {
+	return In(i18n.Locale()).DockerVolumesRemoveTitle(count)
+}
+
+// DockerVolumesRemoveTitle says "Remove {count, plural, one {# volume} other {# volumes}}?"
+// in the language of msgs.
+//
+// Docker volumes bulk removal plan title.
+func (msgs Messages) DockerVolumesRemoveTitle(count int) string {
+	return Catalog.Format(msgs.locale, "dockerVolumesRemoveTitle", map[string]any{"count": count})
+}
+
+// DockerNetworksRemoveTitle says "Remove {count, plural, one {# network} other {# networks}}?"
+// in the language the app shows.
+//
+// Docker networks bulk removal plan title.
+func DockerNetworksRemoveTitle(count int) string {
+	return In(i18n.Locale()).DockerNetworksRemoveTitle(count)
+}
+
+// DockerNetworksRemoveTitle says "Remove {count, plural, one {# network} other {# networks}}?"
+// in the language of msgs.
+//
+// Docker networks bulk removal plan title.
+func (msgs Messages) DockerNetworksRemoveTitle(count int) string {
+	return Catalog.Format(msgs.locale, "dockerNetworksRemoveTitle", map[string]any{"count": count})
+}
+
+// DockerQuickViews says "Engine sections"
+// in the language the app shows.
+//
+// Docker page: quick jump card title for opening views of the active
+// engine.
+func DockerQuickViews() string { return In(i18n.Locale()).DockerQuickViews() }
+
+// DockerQuickViews says "Engine sections"
+// in the language of msgs.
+//
+// Docker page: quick jump card title for opening views of the active
+// engine.
+func (msgs Messages) DockerQuickViews() string {
+	return Catalog.Format(msgs.locale, "dockerQuickViews", nil)
 }

@@ -7,6 +7,7 @@ package ops
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -180,6 +181,8 @@ type State struct {
 	// Err says why a step failed or the check did not pass; Verified
 	// what the check found.
 	Err, Verified string
+	// FileChanged reports a file edit that needs a new plan.
+	FileChanged bool
 	// Restored are the files put back from their copies as the plan did
 	// not get through.
 	Restored []string
@@ -389,6 +392,7 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			}
 			e.mu.Lock()
 			if err != nil {
+				e.state.FileChanged = step.Edit != nil && errors.Is(err, ErrChanged)
 				e.end(i, StepFailed, Failed, -1, err.Error())
 			} else {
 				e.state.Steps[i] = Done

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"slices"
 	"strconv"
@@ -27,6 +28,7 @@ type dockerImagesState struct {
 	loaded   bool
 	filter   int
 	query    string
+	sort     tableSort
 	groups   [2]*bool
 	bulk     resourceSelection
 	pullOpen bool
@@ -52,8 +54,11 @@ func (a *App) syncDockerImages(t docker.Target, key string) {
 		return
 	}
 	s.stopWatch()
-	if key == "" || s.target != t {
+	if t != (docker.Target{}) && s.target != t {
 		s.items, s.err, s.loaded = nil, nil, false
+		s.pullOpen, s.pullRef = false, ""
+		s.bulk.clear()
+	} else if key == "" {
 		s.pullOpen, s.pullRef = false, ""
 		s.bulk.clear()
 	}
@@ -130,7 +135,7 @@ func (a *App) dockerImagesView(c *ui.Context) {
 			{locales.DockerImagesEmulation(), strconv.Itoa(counts[dockerImagesEmulated])},
 		})
 		ui.Box(c).Grow(1)
-		pull := ui.Button(c.Key("docker-pull"), locales.DockerImageDownload()+"…").Height(24).Shrink(0).
+		pull := ui.Button(c.Key("docker-pull"), locales.DockerImageDownload()+"…").Height(controlHeight).Shrink(0).
 			Disabled(!a.canActOnDockerImages()).OnClick(func() { s.pullOpen = !s.pullOpen })
 		ui.Popover(c, pull, &s.pullOpen, func() { a.dockerPullForm(c) })
 		width := float32(270)
@@ -138,7 +143,7 @@ func (a *App) dockerImagesView(c *ui.Context) {
 			width = 160
 		}
 		ui.SearchField(c.Key("docker-image-search"), &s.query).Label(locales.DockerImageSearch()).
-			Placeholder(locales.DockerImageSearch()).Width(width).MinWidth(110).Shrink(1)
+			Placeholder(locales.DockerImageSearch()).Height(controlHeight).Width(width).MinWidth(110).Shrink(1)
 	})
 	var groups [2][]docker.Image
 	var ids []string
@@ -156,11 +161,22 @@ func (a *App) dockerImagesView(c *ui.Context) {
 		ids = append(ids, item.ID)
 		total += item.Size
 	}
+	for i := range groups {
+		sortDockerImages(s.sort, groups[i], arch)
+	}
 	tracks := dockerImageTracks(c)
+	hasBulk := len(s.bulk.selected) > 0
 	workloadPanes(c.Key("docker-image-panes"), func() {
-		workloadHead(c, tracks, func() {
+		sortHead(c, tracks, func() {
 			s.bulk.checkbox(c, "image-select-all", locales.KubeBulkSelectAll(), ids)
-		}, locales.KubeClusterName(), locales.KubeClusterStatus(), locales.DockerImageUsers(), locales.DockerImageSize(), locales.DockerContainerCreated(), "")
+		}, &s.sort,
+			sortColumn{locales.KubeClusterName(), "name"},
+			sortColumn{locales.KubeClusterStatus(), "status"},
+			sortColumn{locales.DockerImageUsers(), "users"},
+			sortColumn{locales.DockerImageSize(), "size"},
+			sortColumn{locales.DockerContainerCreated(), "created"},
+			sortColumn{"", ""},
+		)
 	}, func() {
 		expand := false
 		for i, items := range groups {
@@ -197,15 +213,53 @@ func (a *App) dockerImagesView(c *ui.Context) {
 				})
 			}
 		})
+		if hasBulk {
+			ui.Box(c).Height(56).Shrink(0)
+		}
 	}, "", nil)
 	a.dockerImageBulkBar(c)
 }
 
 func dockerImageTracks(c *ui.Context) []ui.Track {
 	if narrow(c) {
-		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(116), ui.Fixed(130), ui.Fixed(64), ui.Fixed(54), ui.Fixed(24)}
+		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(110), ui.Fixed(116), ui.Fixed(64), ui.Fixed(54), ui.Fixed(54)}
 	}
-	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(162), ui.Fixed(226), ui.Fixed(63), ui.Fixed(89), ui.Fixed(24)}
+	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(200), ui.Fixed(70), ui.Fixed(86), ui.Fixed(54)}
+}
+
+func sortDockerImages(s tableSort, items []docker.Image, arch string) {
+	statusRank := func(item docker.Image) int {
+		switch {
+		case item.Emulated(arch):
+			return 0
+		case slices.ContainsFunc(item.Users, func(user docker.ImageUser) bool { return user.Active }):
+			return 1
+		case len(item.Users) > 0:
+			return 2
+		default:
+			return 3
+		}
+	}
+	sortRows(s, items, map[string]func(x, y docker.Image) int{
+		"name": func(x, y docker.Image) int {
+			return cmp.Compare(strings.ToLower(x.Name()), strings.ToLower(y.Name()))
+		},
+		"status": func(x, y docker.Image) int {
+			if n := cmp.Compare(statusRank(x), statusRank(y)); n != 0 {
+				return n
+			}
+			return cmp.Compare(strings.ToLower(x.Name()), strings.ToLower(y.Name()))
+		},
+		"users": func(x, y docker.Image) int {
+			return cmp.Compare(len(x.Users), len(y.Users))
+		},
+		"size": func(x, y docker.Image) int {
+			return cmp.Compare(x.Size, y.Size)
+		},
+		"created": func(x, y docker.Image) int {
+			return x.Created.Compare(y.Created)
+		},
+	})
 }
 
 func (s *dockerImagesState) groupOpen(i int) bool {
@@ -228,30 +282,44 @@ func (a *App) dockerImageGroup(c *ui.Context, group int, items []docker.Image, t
 		ids = append(ids, item.ID)
 		size += item.Size
 	}
-	workloadSelectionRow(c, pal.Line).Background(pal.Subtle).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Width(18).Shrink(0).Children(func() {
-			s.bulk.checkbox(c, "image-select-group", locales.KubeBulkSelect(name), ids)
-		})
-		ui.ButtonBase(c.Key("image-group")).MinHeight(40).Grow(1).MinWidth(0).Gap(8).
-			AlignItems(ui.Center).Justify(ui.Start).Label(name).OnClick(func() { s.groups[group] = new(!open) }).Children(func() {
-			icon := "chevron-right"
-			if open {
-				icon = "chevron-down"
+	ui.Column(c).Children(func() {
+		line := workloadSelectionRow(c.Key("image-group-row"), pal.Line).AlignItems(ui.Center)
+		line.Children(func() {
+			ui.Column(c).Width(18).Shrink(0).Children(func() {
+				s.bulk.checkbox(c, "image-select-group", locales.KubeBulkSelect(name), ids)
+			})
+			btn := ui.ButtonBase(c.Key("image-group")).MinHeight(40).Grow(1).MinWidth(0).Gap(8).
+				AlignItems(ui.Center).Justify(ui.Start).Label(name).OnClick(func() { s.groups[group] = new(!open) })
+			bg := pal.Subtle
+			if btn.Hovered() {
+				bg = pal.Muted
 			}
-			ui.Icon(c, Icon(icon)).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
-			clipped(c, name).FontSize(13).FontWeight(600).MinWidth(0)
-			aiTag(c, strconv.Itoa(len(items))+" · "+formatBytes(size), pal.Muted, c.Theme().TextMuted).Shrink(0)
+			line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
+			btn.Children(func() {
+				turn := float32(0)
+				if open {
+					turn = 90
+				}
+				chevron := ui.Box(c).Size(14, 14).Shrink(0).Center()
+				chevron.Rotate(chevron.AnimateTo("turn", turn, ui.Animation{Duration: 160 * time.Millisecond})).Children(func() {
+					ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
+				})
+				clipped(c, name).FontSize(13).FontWeight(600).MinWidth(0)
+				aiTag(c, strconv.Itoa(len(items))+" · "+formatBytes(size), pal.Muted, c.Theme().TextMuted).Shrink(0)
+			})
+			if group == 1 {
+				a.dockerImageCleanup(c)
+			}
+			ui.Box(c).Width(24)
 		})
-		if group == 1 {
-			a.dockerImageCleanup(c)
+		if open {
+			ui.Column(c.Key("image-group-items")).Transition(rowMotion).Children(func() {
+				for _, item := range items {
+					a.dockerImageRow(c.Key(item.ID), item, tracks, arch)
+				}
+			})
 		}
-		ui.Box(c).Width(24)
 	})
-	if open {
-		for _, item := range items {
-			a.dockerImageRow(c.Key(item.ID), item, tracks, arch)
-		}
-	}
 }
 
 func (a *App) dockerImageCacheSize() int64 {
@@ -274,7 +342,8 @@ func (a *App) dockerImageCleanup(c *ui.Context) {
 }
 
 func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track, arch string) {
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	var users []string
 	for _, user := range item.Users {
 		users = append(users, user.Name)
@@ -287,7 +356,7 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 	if !item.Created.IsZero() {
 		created, createdAt = age(c, item.Created), item.Created.Local().Format(time.DateTime)
 	}
-	status, bg, fg := locales.KubeStorageUnused(), pal.Muted, c.Theme().TextMuted
+	status, bg, fg := locales.KubeStorageUnused(), pal.Muted, t.TextMuted
 	switch {
 	case item.Emulated(arch):
 		status, bg, fg = item.Architecture+" · "+locales.DockerImagesEmulation(), pal.WarningSoft, pal.WarningText
@@ -308,16 +377,24 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 		}
 	}
 	row := ui.Column(c).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
-	if item.Emulated(arch) {
-		row.Background(bg.Alpha(0.24))
+	rowBg := t.Background.Alpha(0)
+	switch {
+	case item.Emulated(arch):
+		rowBg = bg.Alpha(0.10)
+	case row.Hovered():
+		rowBg = pal.Subtle
 	}
+	row.Background(row.AnimateColor("bg", rowBg, ui.Animation{Duration: 120 * time.Millisecond}))
 	row.Children(func() {
-		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(39).Children(func() {
+		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(44).Children(func() {
 			a.engine.images.bulk.checkbox(c, "docker-select-image", locales.KubeBulkSelect(item.Name()), []string{item.ID})
-			ui.Column(c).Gap(1).Padding(0, 0, 0, 23).MinWidth(0).Children(func() {
-				clipped(c, item.Name()).Font(FontMono).FontSize(12.5).Tooltip(strings.TrimSpace(item.Name() + "\n" + tags))
-				clipped(c, strings.TrimSpace(platform+"  "+id[:min(12, len(id))])).
-					Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(platform + " · " + item.ID)
+			ui.Row(c).Gap(10).Padding(0, 0, 0, 10).AlignItems(ui.Center).MinWidth(0).Children(func() {
+				dockerTechTile(c, item.Name(), 26, nil)
+				ui.Column(c).Gap(1).Grow(1).MinWidth(0).Children(func() {
+					clipped(c, item.Name()).Font(FontMono).FontSize(12.5).Tooltip(strings.TrimSpace(item.Name() + "\n" + tags))
+					clipped(c, strings.TrimSpace(platform+"  "+id[:min(12, len(id))])).
+						Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Tooltip(platform + " · " + item.ID)
+				})
 			})
 			workloadStatus(c, status, bg, fg)
 			if names == "" {
@@ -326,10 +403,16 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 			clipped(c, names).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(names)
 			clipped(c, formatBytes(item.Size)).FontSize(11.5)
 			clipped(c, created).FontSize(11.5).Tooltip(createdAt)
-			iconButton(c.Key("image-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
+			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				if len(item.Users) == 0 && a.canActOnDockerImages() {
+					iconButton(c.Key("image-remove"), "trash-2", locales.DockerContainerRemove()+"…").
+						OnClick(func() { a.planDockerImageRemoval([]docker.Image{item}) })
+				}
+				iconButton(c.Key("image-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
+			})
 		})
 		if item.Emulated(arch) {
-			ui.Row(c).AlignItems(ui.Center).Gap(7).Padding(0, 16, 8, 67).Children(func() {
+			ui.Row(c).AlignItems(ui.Center).Gap(7).Padding(0, 16, 8, 90).Children(func() {
 				ui.Icon(c, Icon("triangle-alert")).Size(13, 13).Shrink(0).TextColor(fg)
 				ui.Text(c, locales.DockerImageEmulationHint(item.Architecture, arch)).FontSize(11.5).TextColor(fg).Wrap().Grow(1).MinWidth(0)
 			})
@@ -378,15 +461,11 @@ func (a *App) dockerImageBulkBar(c *ui.Context) {
 	if len(selected) == 0 {
 		return
 	}
-	fg, bg := ui.RGB(250, 249, 247), ui.RGB(31, 29, 26)
-	ui.Row(c.Key("docker-image-bulk")).Gap(5).Padding(6, 10).Radius(10).AlignItems(ui.Center).Background(bg).Shrink(0).Children(func() {
-		ui.Text(c, locales.DockerSelected(len(selected))).FontSize(12).TextColor(fg)
-		bulkAction(c.Key("remove"), "trash-2", locales.DockerContainerRemove()+"…", fg, ui.Transparent, !a.canActOnDockerImages(), func() {
+	floatingBulkBar(c, "docker-image-bulk", locales.DockerSelected(len(selected)), s.bulk.clear, func(_, dangerFg, dangerBg ui.Color) {
+		bulkAction(c.Key("remove"), "trash-2", locales.DockerContainerRemove()+"…", dangerFg, dangerBg, !a.canActOnDockerImages(), func() {
 			a.planDockerImageRemoval(selected)
 		})
-		bulkAction(c.Key("clear"), "", locales.KubeBulkClear(), fg, ui.Transparent, false, s.bulk.clear)
 	})
-	c.OnShortcut(0, ui.KeyEscape, s.bulk.clear)
 }
 
 func (a *App) planDockerImageRemoval(items []docker.Image) {

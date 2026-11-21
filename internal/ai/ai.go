@@ -63,8 +63,8 @@ var agents = []agent{
 	}, []string{"skills", sharedSkills}, []string{".github/skills", ".claude/skills", ".agents/skills"}},
 	{"antigravity", []string{"agy"}, []string{"~/.gemini/antigravity-cli"}, []file{
 		{"settings.json", settings}, {"~/.gemini/config/hooks.json", settings}, {"~/.gemini/config/mcp_config.json", mcp},
-		{"~/.gemini/AGENTS.md", instructions}, {"~/.gemini/GEMINI.md", instructions},
-		{"~/.gemini/config/AGENTS.md", instructions}, {"~/.gemini/config/GEMINI.md", instructions},
+		{"~/.gemini/config/AGENTS.md", instructions}, {"~/.gemini/AGENTS.md", instructions},
+		{"~/.gemini/config/GEMINI.md", instructions}, {"~/.gemini/GEMINI.md", instructions},
 	}, []string{"~/.gemini/config/skills", "skills", "~/.gemini/skills"},
 		[]string{".agents/skills", ".agent/skills", "_agents/skills", "_agent/skills"}},
 	{"gemini", []string{"gemini"}, []string{"~/.gemini"}, []file{
@@ -83,7 +83,7 @@ var agents = []agent{
 	}, []string{"skills"}, []string{".devin/skills", ".agents/skills", ".windsurf/skills"}},
 	// Grok Build also reads Claude Code's and Cursor's skills directories.
 	{"grok", []string{"grok"}, []string{"$GROK_HOME", "~/.grok"}, []file{
-		{"config.toml", settings},
+		{"config.toml", settings}, {"AGENTS.md", instructions},
 	}, []string{"skills", sharedSkills, "~/.claude/skills", "~/.cursor/skills"},
 		[]string{".grok/skills", ".agents/skills", ".claude/skills", ".cursor/skills"}},
 	// Kimi Code, the successor of the archived Kimi CLI and its ~/.kimi.
@@ -132,8 +132,7 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 		found.App, found.AppVersion = cursorApp(term, home)
 	}
 	found.Dir = dir(a.dir, term, home)
-	if a.id == "codex" {
-		instructions := CodexInstructions(term)
+	if instructions, ok := AgentInstructions(a.id, term); ok {
 		found.Instructions = &instructions
 	}
 	add := func(path string, kind inventory.FileKind) {
@@ -144,6 +143,13 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 	}
 	for _, f := range a.files {
 		add(f.path, f.kind)
+	}
+	if a.id == "antigravity" {
+		for _, rulesDir := range []string{"~/.gemini/config/rules", "rules"} {
+			for _, p := range markdownFiles(resolve(rulesDir, found.Dir, home)) {
+				found.Files = append(found.Files, inventory.AgentFile{Path: p, Kind: instructions})
+			}
+		}
 	}
 	for _, s := range a.skills {
 		add(s, skills)
@@ -264,4 +270,27 @@ func runVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string) 
 		return ""
 	}
 	return version.FindString(string(res.Stdout))
+}
+
+// markdownFiles returns non-hidden regular .md files directly inside dir, sorted by name.
+func markdownFiles(dir string) []string {
+	if dir == "" {
+		return nil
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range entries {
+		name := e.Name()
+		if strings.HasPrefix(name, ".") || !strings.HasSuffix(strings.ToLower(name), ".md") {
+			continue
+		}
+		p := filepath.Join(dir, name)
+		if info, err := os.Stat(p); err == nil && info.Mode().IsRegular() {
+			out = append(out, p)
+		}
+	}
+	return out
 }

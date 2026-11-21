@@ -7,12 +7,15 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
 )
 
 func TestKubeDrainPlan(t *testing.T) {
-	t.Parallel()
+	prev := drainPoll
+	drainPoll = time.Millisecond
+	t.Cleanup(func() { drainPoll = prev })
 	ref := KubeResource{Kubectl: "kubectl", Context: "test", Kind: "Node", Name: "worker", UID: "node-uid"}
 	node := func(cordoned bool) string {
 		return fmt.Sprintf(`{"apiVersion":"v1","kind":"Node","metadata":{"name":"worker","uid":"node-uid","resourceVersion":"17"},"spec":{"unschedulable":%t},"status":{"conditions":[{"type":"Ready","status":"True"}]}}`, cordoned)

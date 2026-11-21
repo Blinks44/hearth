@@ -141,23 +141,39 @@ func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Sn
 	return s, nil
 }
 
-// activeCaches resolves pnpm's configured, versioned store through pnpm itself.
-// Its parent may contain other store versions that this pnpm cannot prune.
-// When resolution fails, omit pnpm rather than offering a different directory.
+// activeCaches resolves pnpm's configured store through pnpm itself.
+// When the active store lives under pnpm's default store root (e.g.
+// ~/Library/pnpm/store/v10), the parent root is kept so older store versions
+// are cleaned too; otherwise the custom path is used.
 func activeCaches(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot) []inventory.Cache {
 	caches := Caches(env, snap)
-	caches = slices.DeleteFunc(caches, func(c inventory.Cache) bool { return c.ID == "pnpm" })
+	defaultPath := ""
+	for _, c := range caches {
+		if c.ID == "pnpm" {
+			defaultPath = c.Path
+			break
+		}
+	}
 	paths := sysenv.LookPathAll("pnpm", env)
 	if len(paths) == 0 {
 		return caches
 	}
+	caches = slices.DeleteFunc(caches, func(c inventory.Cache) bool { return c.ID == "pnpm" })
 	result, err := r.Run(ctx, run.Cmd{Args: []string{paths[0], "store", "path"}, Env: env})
 	if err != nil || result.ExitCode != 0 || result.Truncated {
 		return caches
 	}
 	path := strings.TrimSpace(string(result.Stdout))
 	if filepath.IsAbs(path) && !strings.ContainsAny(path, "\r\n") && isDir(path) {
+		if defaultPath != "" && withinDir(path, defaultPath) {
+			path = defaultPath
+		}
 		caches = append(caches, inventory.Cache{ID: "pnpm", Path: path})
 	}
 	return caches
+}
+
+func withinDir(path, root string) bool {
+	rel, err := filepath.Rel(root, path)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }

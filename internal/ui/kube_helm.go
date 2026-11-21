@@ -36,7 +36,7 @@ func (a *App) helmView(c *ui.Context, releases []kube.HelmRelease, version strin
 			{locales.KubeHelmPending(), strconv.Itoa(counts[2])},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeHelmSearch()).Width(270).MinWidth(100)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeHelmSearch()).Height(controlHeight).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 && s.helmDetail == nil {
 		empty := locales.KubeHelmNoMatches()

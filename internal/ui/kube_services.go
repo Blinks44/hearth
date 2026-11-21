@@ -61,7 +61,7 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 			{locales.KubeServicesExternal(), strconv.Itoa(counts[serviceExternal])},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeServicesSearch()).Width(270).MinWidth(100)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeServicesSearch()).Height(controlHeight).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 {
 		toolNote(c, locales.CleanupNone())

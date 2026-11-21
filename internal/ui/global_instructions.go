@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -14,6 +15,7 @@ import (
 )
 
 type globalInstructionPreview struct {
+	agent                     string
 	open, create, loading     bool
 	text, shared, native, err string
 	files                     inventory.GlobalInstructions
@@ -42,10 +44,11 @@ func globalInstructionState(state string) string {
 	}
 }
 
-func (a *App) globalInstructionsCard(c *ui.Context, in *inventory.GlobalInstructions) {
+func (a *App) globalInstructionsCard(c *ui.Context, agentID string, in *inventory.GlobalInstructions) {
 	if in == nil {
 		return
 	}
+	name := agentTitle(agentID)
 	t, pal := c.Theme(), Colors(c.Theme())
 	listFrame(c, func() {
 		ui.Row(c).Gap(8).Padding(12, 14, 10, 14).AlignItems(ui.Center).Children(func() {
@@ -67,38 +70,48 @@ func (a *App) globalInstructionsCard(c *ui.Context, in *inventory.GlobalInstruct
 		lead := globalInstructionState(in.State)
 		switch in.State {
 		case "linked":
-			lead = locales.GlobalInstructionsLinkedLead()
+			if in.Native.Link {
+				lead = locales.GlobalInstructionsLinkedLead(name)
+			} else {
+				lead = locales.GlobalInstructionsImportedLead(name)
+			}
 		case "shared":
-			lead = locales.GlobalInstructionsLead()
+			lead = locales.GlobalInstructionsLead(name)
 		}
 		ui.Text(c, lead).FontSize(12.5).TextColor(t.TextMuted).Padding(0, 14, 12, 14)
-		for _, row := range []struct {
+		for i, row := range []struct {
 			label string
 			f     inventory.InstructionFile
 		}{
-			{locales.GlobalInstructionsSharedFile(), in.Shared}, {locales.GlobalInstructionsCodexFile(), in.Native}, {locales.GlobalInstructionsOverrideFile(), in.Override},
+			{locales.GlobalInstructionsSharedFile(), in.Shared},
+			{locales.GlobalInstructionsAgentFile(), in.Native},
+			{locales.GlobalInstructionsOverrideFile(), in.Override},
 		} {
-			if row.f == in.Override && !row.f.Exists && row.f.Err == "" {
+			if i == 2 && (row.f.Path == "" || (!row.f.Exists && row.f.Err == "")) {
 				continue
 			}
 			status := locales.GlobalInstructionsNotFound()
 			switch {
 			case row.f.Err != "":
 				status = locales.InstructionsUnreadable()
-			case row.f.Link && in.State == "linked":
-				status = locales.GlobalInstructionsLinkFile()
-			case row.f.Path == in.Active:
-				status = locales.GlobalInstructionsActive()
+			case i == 1 && in.State == "linked":
+				if row.f.Link {
+					status = locales.GlobalInstructionsLinkFile()
+				} else {
+					status = locales.GlobalInstructionsImportedFile()
+				}
+			case in.Active != "" && row.f.Path == in.Active:
+				status = locales.GlobalInstructionsActive(name)
 			case row.f.Exists && row.f.Empty:
 				status = locales.GlobalInstructionsEmptyFile()
 			case row.f.Exists:
 				status = locales.GlobalInstructionsFound()
 			}
 			ui.Row(c.Key(row.label)).Gap(10).Padding(8, 12, 8, 14).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Text(c, row.label).FontSize(12.5).Width(120).Shrink(0).SingleLine()
+				ui.Text(c, row.label).FontSize(12.5).Width(136).Shrink(0).SingleLine()
 				clipped(c, tilde(row.f.Path, a.Home)).Font(FontMono).FontSize(12).Grow(1)
 				color := pal.TextFaint
-				if row.f.Path == in.Active {
+				if in.Active != "" && row.f.Path == in.Active {
 					color = t.TextMuted
 				}
 				ui.Text(c, status).FontSize(11.5).TextColor(color).SingleLine()
@@ -118,30 +131,34 @@ func (a *App) globalInstructionsCard(c *ui.Context, in *inventory.GlobalInstruct
 		ui.Row(c).Gap(8).Padding(10, 14, 12, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 			switch in.State {
 			case "shared":
-				ui.PrimaryButton(c.Key("global-connect"), locales.GlobalInstructionsConnect()).Disabled(a.BuildPlan == nil).OnClick(func() { a.globalInstructionPlan("link", "") })
+				ui.PrimaryButton(c.Key("global-connect:"+agentID), locales.GlobalInstructionsConnect()).Disabled(a.BuildPlan == nil).OnClick(func() { a.globalInstructionPlan(agentID, "link", "") })
 			case "missing":
-				ui.Button(c.Key("global-create"), locales.GlobalInstructionsCreate()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(true) })
+				ui.Button(c.Key("global-create:"+agentID), locales.GlobalInstructionsCreate()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(agentID, true) })
 			}
 			if compare {
-				ui.Button(c.Key("global-compare"), locales.GlobalInstructionsCompare()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(false) })
+				ui.Button(c.Key("global-compare:"+agentID), locales.GlobalInstructionsCompare()).Disabled(a.BuildPlan == nil).OnClick(func() { a.previewGlobalInstructions(agentID, false) })
 			}
 		})
 	})
 }
 
-func (a *App) globalInstructionPlan(mode, text string) {
+func (a *App) globalInstructionPlan(agentID, mode, text string) {
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.CodexInstructionPlan(env, mode, text)
+		return ops.GlobalInstructionPlan(agentID, agentTitle(agentID), env, mode, text)
 	}, a.proposeOrSay)
 }
 
-func (a *App) previewGlobalInstructions(create bool) {
-	p := &globalInstructionPreview{open: true, create: create, loading: true}
+func (a *App) previewGlobalInstructions(agentID string, create bool) {
+	p := &globalInstructionPreview{agent: agentID, open: true, create: create, loading: true}
 	a.globalInstructions = p
 	var files inventory.GlobalInstructions
 	var shared, native string
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		files = ai.CodexInstructions(env)
+		var ok bool
+		files, ok = ai.AgentInstructions(agentID, env)
+		if !ok {
+			return ops.Plan{}, errors.New(locales.GlobalInstructionsChanged())
+		}
 		var err error
 		if !create {
 			shared, err = ai.InstructionText(files.Shared.Path)
@@ -175,6 +192,7 @@ func (a *App) globalInstructionsDialog(c *ui.Context) {
 	if p == nil || !p.open {
 		return
 	}
+	name := agentTitle(p.agent)
 	dialogBase(c.Key("global-instructions"), &p.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
 		panel.Width(640).Radius(12).Clip().Background(c.Theme().Background).BorderWidth(1).BorderColor(Colors(c.Theme()).Line)
@@ -186,11 +204,11 @@ func (a *App) globalInstructionsDialog(c *ui.Context) {
 			case p.err != "":
 				ui.Text(c, p.err).FontSize(12)
 			case p.create:
-				ui.Text(c, locales.GlobalInstructionsCreateWhy()).FontSize(12).TextColor(c.Theme().TextMuted)
+				ui.Text(c, locales.GlobalInstructionsCreateWhy(filepath.Base(p.files.Native.Path), name)).FontSize(12).TextColor(c.Theme().TextMuted)
 				ui.Text(c, tilde(p.files.Native.Path, a.Home)).Font(FontMono).FontSize(12)
 				ui.TextArea(c.Key("global-instructions-text"), &p.text).Height(240).Font(FontMono).Label(locales.GlobalInstructionsTitle())
 			default:
-				ui.Text(c, locales.GlobalInstructionsCompareWhy()).FontSize(12).TextColor(c.Theme().TextMuted)
+				ui.Text(c, locales.GlobalInstructionsCompareWhy(name)).FontSize(12).TextColor(c.Theme().TextMuted)
 				ui.Scroll(c).MaxHeight(340).Children(func() {
 					a.editDiff(c, ops.FileEdit{Path: tilde(p.files.Native.Path, a.Home) + " ↔ " + tilde(p.files.Shared.Path, a.Home), Before: p.native, After: p.shared}, true)
 				})
@@ -198,7 +216,7 @@ func (a *App) globalInstructionsDialog(c *ui.Context) {
 			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 				ui.Button(c, locales.Cancel()).OnClick(func() { p.open = false })
 				if p.create {
-					ui.PrimaryButton(c, locales.GlobalInstructionsPlan()).Disabled(p.loading || p.err != "" || strings.TrimSpace(p.text) == "").OnClick(func() { p.open = false; a.globalInstructionPlan("create", p.text) })
+					ui.PrimaryButton(c, locales.GlobalInstructionsPlan()).Disabled(p.loading || p.err != "" || strings.TrimSpace(p.text) == "").OnClick(func() { p.open = false; a.globalInstructionPlan(p.agent, "create", p.text) })
 				}
 			})
 		})

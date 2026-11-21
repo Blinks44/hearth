@@ -211,3 +211,67 @@ func TestInstructionInstallParentChanged(t *testing.T) {
 		t.Fatal("wrote through a new parent link")
 	}
 }
+
+func TestGlobalInstructionPlanOtherAgents(t *testing.T) {
+	for _, tc := range []struct {
+		id, name, rel string
+	}{
+		{"antigravity", "Antigravity CLI", ".gemini/config/AGENTS.md"},
+		{"claude", "Claude Code", ".claude/CLAUDE.md"},
+		{"gemini", "Gemini CLI", ".gemini/GEMINI.md"},
+		{"opencode", "OpenCode", ".config/opencode/AGENTS.md"},
+		{"grok", "Grok Build", ".grok/AGENTS.md"},
+	} {
+		t.Run(tc.id, func(t *testing.T) {
+			home := t.TempDir()
+			env := sysenv.Env{"HOME=" + home}
+			shared := filepath.Join(home, ".agents", "AGENTS.md")
+			native := filepath.Join(home, filepath.FromSlash(tc.rel))
+			const text = "Global rules\n"
+			instructionWrite(t, shared, text)
+
+			p, err := GlobalInstructionPlan(tc.id, tc.name, env, "link", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			st := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+			if st.InstructionCopyAvailable {
+				cp, err := GlobalInstructionPlan(tc.id, tc.name, env, "copy", "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				st = Execute(t.Context(), &run.Fake{}, cp, io.Discard, func(State) {})
+			}
+			if st.Phase != Succeeded {
+				t.Fatalf("execution failed: %+v", st)
+			}
+			data, err := os.ReadFile(native)
+			if err != nil || string(data) != text {
+				t.Fatalf("installed %q (%v)", data, err)
+			}
+			got, ok := ai.AgentInstructions(tc.id, env)
+			if !ok || got.Active != native {
+				t.Fatalf("post-install instructions: %+v (%v)", got, ok)
+			}
+		})
+	}
+
+	t.Run("antigravity stale alternate path aborts write", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		instructionWrite(t, filepath.Join(home, ".agents/AGENTS.md"), "Common\n")
+		p, err := GlobalInstructionPlan("antigravity", "Antigravity CLI", env, "copy", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// User creates an alternate global instruction file before confirming.
+		instructionWrite(t, filepath.Join(home, ".gemini/GEMINI.md"), "Manual\n")
+		st := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+		if st.Phase != Failed {
+			t.Fatalf("stale antigravity plan ran: %+v", st)
+		}
+		if _, err := os.Lstat(filepath.Join(home, ".gemini/config/AGENTS.md")); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("wrote canonical file after alternate file appeared")
+		}
+	})
+}

@@ -243,13 +243,13 @@ func projectToolPath(tool string) string {
 
 func (a *App) projectPreparationButtons(c *ui.Context, op *operation) {
 	dir := op.project.Project.Dir
-	ui.Button(c.Key("prepare-close"), locales.OpClose()).OnClick(func() { op.open = false })
+	ui.Button(c.Key("prepare-close"), locales.OpClose()).Height(controlHeight).OnClick(func() { op.open = false })
 	if a.Shell != nil {
-		ui.Button(c.Key("prepare-folder"), locales.PrepareOpenFolder()).OnClick(func() { a.openFile(c, dir) })
+		ui.Button(c.Key("prepare-folder"), locales.PrepareOpenFolder()).Height(controlHeight).OnClick(func() { a.openFile(c, dir) })
 	}
 	label := locales.PrepareAgain()
 	if op.started && (op.state.Phase == ops.Failed || op.state.Phase == ops.Stopped) {
 		label = locales.PrepareContinue()
 	}
-	ui.PrimaryButton(c.Key("prepare-again"), label).Disabled(a.BuildPlan == nil).OnClick(func() { op.open = false; a.prepareProject(dir) })
+	ui.PrimaryButton(c.Key("prepare-again"), label).Height(controlHeight).Disabled(a.BuildPlan == nil).OnClick(func() { op.open = false; a.prepareProject(dir) })
 }

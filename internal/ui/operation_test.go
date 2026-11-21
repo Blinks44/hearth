@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -235,6 +236,67 @@ func TestOperationEditDialog(t *testing.T) {
 		t.Errorf("not verified: %q", tt.Texts())
 	}
 	screenshot(t, tt, "operation-edit-restored")
+}
+
+func TestOperationFileChanged(t *testing.T) {
+	for _, tc := range []struct {
+		lang, caption, close, confirm, retry, copyLog string
+		width, height                                 int
+	}{
+		{
+			lang: "en", width: 1000, height: 680,
+			caption: "The file changed after the preview. Close this window and start the action again to review a new plan.",
+			close:   "Close", confirm: "Connect", retry: "Retry", copyLog: "Copy log",
+		},
+		{
+			lang: "ru", width: 1280, height: 820,
+			caption: "Файл изменился после предпросмотра. Закройте окно и начните действие заново, чтобы увидеть новый план.",
+			close:   "Закрыть", confirm: "Подключить", retry: "Повторить", copyLog: "Скопировать лог",
+		},
+	} {
+		t.Run(tc.lang, func(t *testing.T) {
+			i18n.SetLocaleFunc(func() string { return tc.lang })
+			t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+			a := NewApp()
+			a.Home = "/Users/ann"
+			var update func(ops.State)
+			a.RunPlan = func(_ ops.Plan, u func(ops.State)) func() {
+				update = u
+				return func() {}
+			}
+			tt := ui.NewTester(a.View, tc.width, tc.height)
+			const path = "/.gemini/config/mcp_config.json"
+			a.Propose(ops.Plan{Title: "Sketch MCP · Antigravity CLI", Action: tc.confirm,
+				Steps: []ops.Step{{Edit: &ops.FileEdit{Path: a.Home + path, After: "{}\n"}}}})
+			tt.Frame()
+			tt.Advance(time.Second)
+			if err := tt.Click(tc.confirm); err != nil {
+				t.Fatal(err)
+			}
+			errText := path + ": " + ops.ErrChanged.Error()
+			update(ops.State{Phase: ops.Failed, Steps: []ops.StepStatus{ops.StepFailed}, FileChanged: true, Err: a.Home + errText})
+			tt.Frame()
+			tt.Advance(time.Second)
+			hasTexts(t, tt, tc.caption, tc.copyLog, "~/.gemini/config/mcp_config.json")
+			if tt.HasText(tc.retry) {
+				t.Fatalf("stale plan offers retry: %q", tt.Texts())
+			}
+			screenshot(t, tt, "operation-file-changed-"+tc.lang)
+			if err := tt.Click(tc.copyLog); err != nil {
+				t.Fatal(err)
+			}
+			if got := tt.Clipboard(); got != "~"+errText {
+				t.Errorf("copied log = %q, want %q", got, "~"+errText)
+			}
+			if err := tt.Click(tc.close); err != nil {
+				t.Fatal(err)
+			}
+			tt.Advance(time.Second)
+			if tt.HasText(tc.caption) {
+				t.Error("Close does not dismiss the stale plan")
+			}
+		})
+	}
 }
 
 func TestFailReason(t *testing.T) {

@@ -273,10 +273,14 @@ func (k resourceClient) evictNodePods(ctx context.Context, node KubeResource, ap
 		if pending == "" {
 			return "", nil
 		}
+		timer := time.NewTimer(drainPoll)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return pending, ctx.Err()
-		case <-time.After(3 * time.Second):
+		case <-timer.C:
 		}
 	}
 }
+
+var drainPoll = 3 * time.Second

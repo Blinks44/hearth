@@ -73,3 +73,38 @@ func TestDockerInspectTemplateWithNoHealthCheck(t *testing.T) {
 		t.Fatalf("container = %+v, error = %v", got, err)
 	}
 }
+
+func TestContainerStoppedHealthAndExitCodes(t *testing.T) {
+	unhealthy := &struct{ Status string }{Status: "unhealthy"}
+	for _, tc := range []struct {
+		name     string
+		status   string
+		exit     int
+		oom      bool
+		health   *struct{ Status string }
+		wantErr  bool
+		wantProb bool
+	}{
+		{name: "stopped clean 0 with stale unhealthy", status: "exited", exit: 0, health: unhealthy, wantErr: false, wantProb: false},
+		{name: "stopped SIGTERM 143", status: "exited", exit: 143, wantErr: false, wantProb: false},
+		{name: "stopped SIGINT 130 with stale unhealthy", status: "exited", exit: 130, health: unhealthy, wantErr: false, wantProb: false},
+		{name: "stopped OOMKilled even on 143", status: "exited", exit: 143, oom: true, wantErr: true, wantProb: true},
+		{name: "stopped crash exit 1", status: "exited", exit: 1, wantErr: true, wantProb: true},
+		{name: "running unhealthy", status: "running", exit: 0, health: unhealthy, wantErr: false, wantProb: true},
+		{name: "running healthy", status: "running", exit: 0, health: &struct{ Status string }{Status: "healthy"}, wantErr: false, wantProb: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var c Container
+			c.State.Status = tc.status
+			c.State.ExitCode = tc.exit
+			c.State.OOMKilled = tc.oom
+			c.State.Health = tc.health
+			if got := c.ExitedError(); got != tc.wantErr {
+				t.Errorf("ExitedError() = %v, want %v", got, tc.wantErr)
+			}
+			if got := c.Problem(); got != tc.wantProb {
+				t.Errorf("Problem() = %v, want %v", got, tc.wantProb)
+			}
+		})
+	}
+}

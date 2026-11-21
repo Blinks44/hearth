@@ -6,8 +6,9 @@ type InstructionFile struct {
 	Exists, Link, Empty    bool
 }
 
-// GlobalInstructions compares Codex's global files with the optional shared file.
-// Active is the file Codex reads; State describes their relationship.
+// GlobalInstructions compares an agent's global instruction files with the
+// optional shared file (~/.agents/AGENTS.md). Active is the file the agent
+// reads; State describes their relationship.
 type GlobalInstructions struct {
 	Shared, Native, Override InstructionFile
 	Active, State            string

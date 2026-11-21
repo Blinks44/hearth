@@ -153,7 +153,7 @@ func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort)
 	}
 	forwardField(c, label, func() {
 		if len(ports) == 0 {
-			ui.TextInput(c.Key("forward-remote"), &d.remote).Label(label).Width(112).Height(26).Font(FontMono).FontSize(12)
+			ui.TextInput(c.Key("forward-remote"), &d.remote).Label(label).Width(112).Height(podActionHeight).Font(FontMono).FontSize(12)
 			return
 		}
 		labels := make([]string, 0, len(ports))
@@ -163,14 +163,14 @@ func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort)
 				remote = p.number
 			}
 		}
-		ui.Select(c.Key("forward-remote-select"), &d.portLabel, labels).Label(label).Width(145).Height(26).FontSize(12)
+		ui.Select(c.Key("forward-remote-select"), &d.portLabel, labels).Label(label).Width(145).Height(podActionHeight).FontSize(12)
 	})
 	local := parseForwardPort(d.local)
 	blocked := local != 0 && a.forwardBusy(local)
 	conflict := blocked || local != 0 && d.checkedPort == local && errors.Is(d.checkErr, ops.ErrForwardPortBusy)
 	forwardField(c, locales.KubeForwardLocalPort(), func() {
 		input := ui.TextInput(c.Key("forward-local"), &d.local).Label(locales.KubeForwardLocalPort()).
-			Width(88).Height(26).Font(FontMono).FontSize(12).OnChange(func() { a.probeForwardPort(d) })
+			Width(88).Height(podActionHeight).Font(FontMono).FontSize(12).OnChange(func() { a.probeForwardPort(d) })
 		if conflict {
 			input.BorderColor(t.Warning)
 		}
@@ -185,7 +185,7 @@ func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort)
 			})
 			if d.suggestion != 0 {
 				ui.Button(c.Key("forward-suggest"), locales.KubeForwardSuggestion(strconv.Itoa(d.suggestion))).
-					AlignSelf(ui.End).Height(24).OnClick(func() {
+					AlignSelf(ui.End).Height(podActionHeight).OnClick(func() {
 					d.local = strconv.Itoa(d.suggestion)
 					a.probeForwardPort(d)
 				})
@@ -212,8 +212,8 @@ func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort)
 	})
 	ui.Text(c, locales.KubeForwardLifetime()).FontSize(11.5).TextColor(Colors(t).TextFaint).Wrap()
 	ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
-		ui.Button(c.Key("forward-cancel"), locales.Cancel()).Height(24).OnClick(func() { d.open = false })
-		ui.PrimaryButton(c.Key("forward-start"), locales.KubeForwardStart()).Height(24).
+		ui.Button(c.Key("forward-cancel"), locales.Cancel()).Height(podActionHeight).OnClick(func() { d.open = false })
+		ui.PrimaryButton(c.Key("forward-start"), locales.KubeForwardStart()).Height(podActionHeight).
 			Disabled(remote == 0 || local == 0 || d.checkedPort != local || d.checkErr != nil || blocked).
 			OnClick(func() { a.startForward(d, remote) })
 	})

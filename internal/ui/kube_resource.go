@@ -210,12 +210,12 @@ func (a *App) resourceEditor(c *ui.Context, f *kubeResourceForm) {
 					FontSize(11).TextColor(t.TextMuted)
 			})
 			if f.previous != "" {
-				iconButton(c.Key("yaml-previous"), "copy", locales.KubeResourceCopyDraft()).Disabled(f.busy).
+				iconButton(c.Key("yaml-previous"), "copy", locales.KubeResourceCopyDraft()).Size(controlHeight, controlHeight).Disabled(f.busy).
 					OnClick(func() { c.WriteClipboard(f.previous) })
 			}
-			ui.Button(c.Key("yaml-reload"), locales.KubeResourceReload()).Disabled(f.busy).
+			ui.Button(c.Key("yaml-reload"), locales.KubeResourceReload()).Height(controlHeight).Disabled(f.busy).
 				OnClick(func() { a.loadResourceEditor(f) })
-			ui.PrimaryButton(c.Key("yaml-check"), locales.KubeResourceCheck()).Disabled(f.busy || !changed).
+			ui.PrimaryButton(c.Key("yaml-check"), locales.KubeResourceCheck()).Height(controlHeight).Disabled(f.busy || !changed).
 				OnClick(func() { a.planResourceChange(f, false) })
 		})
 		if f.err != nil {

@@ -193,8 +193,8 @@ func (a *App) namespaceCreate(c *ui.Context) {
 				if f.busy {
 					ui.Spinner(c).Size(14, 14)
 				}
-				ui.Button(c, locales.Cancel()).OnClick(func() { f.open = false })
-				ui.PrimaryButton(c.Key("new-namespace-review"), locales.KubeResourceCheck()).
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { f.open = false })
+				ui.PrimaryButton(c.Key("new-namespace-review"), locales.KubeResourceCheck()).Height(controlHeight).
 					Disabled(f.busy || !ops.KubeNamespaceValid(f.name)).OnClick(func() { a.planNamespaceCreate(f) })
 			})
 		})

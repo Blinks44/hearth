@@ -60,7 +60,7 @@ func TestCleanupPlan(t *testing.T) {
 		}
 	}
 	want := []string{
-		"pnpm store prune",
+		"remove /c/pnpm",
 		"remove /c/npm",
 		"remove /c/cargo",
 		"flutter pub cache clean --force",

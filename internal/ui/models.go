@@ -83,8 +83,8 @@ func (a *App) modelPullDialog(c *ui.Context) {
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Link(c, locales.ModelsPullLibrary()+" ↗", "https://ollama.com/library").FontSize(12.5)
 				ui.Box(c).Grow(1).Height(1)
-				ui.Button(c, locales.Cancel()).OnClick(func() { a.modelPullOpen = false })
-				ui.PrimaryButton(c, locales.Next()).Disabled(!ok || has).OnClick(next)
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { a.modelPullOpen = false })
+				ui.PrimaryButton(c, locales.Next()).Height(controlHeight).Disabled(!ok || has).OnClick(next)
 			})
 		})
 	})
@@ -146,7 +146,7 @@ func (a *App) modelsView(c *ui.Context, p page) {
 				toolbar.Children(func() {
 					segments(c, "models-tabs", &a.modelsTab, segs)
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("models-filter"), &a.modelsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("models-filter"), &a.modelsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.Snapshot == nil {

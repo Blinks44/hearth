@@ -74,7 +74,7 @@ func (a *App) changesView(c *ui.Context, p page) {
 						{locales.ChangesRemoved(), strconv.Itoa(count[history.Removed])},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("changes-filter"), &a.changesFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("changes-filter"), &a.changesFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if len(a.History) == 0 {

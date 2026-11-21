@@ -76,6 +76,10 @@ func (a *App) startOperation() {
 	if op.plan.DockerAction == ops.DockerImageRemove {
 		a.engine.images.bulk.clear()
 	}
+	if op.plan.DockerAction == ops.DockerResourceRemove {
+		a.engine.resources.slots[0].bulk.clear()
+		a.engine.resources.slots[1].bulk.clear()
+	}
 	op.started, op.told = true, false
 	op.state = ops.State{Phase: ops.Running, Steps: make([]ops.StepStatus, len(op.plan.Steps))}
 	op.stop = a.RunPlan(op.plan, func(s ops.State) {
@@ -223,6 +227,8 @@ func operationCaption(op *operation) string {
 		return locales.OpVerified(s.Verified)
 	case s.Phase == ops.Succeeded:
 		return locales.OpSucceeded()
+	case s.Phase == ops.Failed && s.FileChanged:
+		return locales.OpFileChanged()
 	case s.Phase == ops.Failed:
 		return locales.OpFailed(n, failReason(s))
 	case s.Phase == ops.NotVerified && (op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers()):
@@ -673,46 +679,68 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 	hide := func() { op.open = false }
 	switch {
 	case !op.started && op.blockedDockerRemoval():
-		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
+		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).Height(controlHeight).OnClick(hide)
 	case !op.started:
-		ui.Button(c.Key("op-cancel"), locales.Cancel()).OnClick(hide)
+		ui.Button(c.Key("op-cancel"), locales.Cancel()).Height(controlHeight).OnClick(hide)
 		action := op.plan.Action
 		if action == "" {
 			action = locales.OpRun()
 		}
-		button := ui.PrimaryButton(c.Key("op-run"), action).Disabled(a.RunPlan == nil || !op.canConfirm()).
+		button := ui.PrimaryButton(c.Key("op-run"), action).Height(controlHeight).Disabled(a.RunPlan == nil || !op.canConfirm()).
 			OnClick(a.startOperation)
 		if op.confirmName() != "" || op.plan.DockerAction == ops.DockerResourceRemove || op.plan.KubeBulk && op.plan.Steps[0].Kube.DeletesResource() {
 			button.Background(c.Theme().Danger)
 		}
 	case !op.state.Phase.Over():
-		ui.Button(c.Key("op-hide"), locales.OpHide()).OnClick(hide)
-		ui.Button(c.Key("op-stop"), locales.OpStop()).TextColor(c.Theme().Danger).
+		ui.Button(c.Key("op-hide"), locales.OpHide()).Height(controlHeight).OnClick(hide)
+		ui.Button(c.Key("op-stop"), locales.OpStop()).Height(controlHeight).TextColor(c.Theme().Danger).
 			Disabled(op.state.Phase.Over()).OnClick(func() { op.stop() })
 	case op.state.Phase == ops.Succeeded:
 		if a.JournalPath != "" && a.Shell != nil {
-			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).OnClick(openJournal)
+			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).Height(controlHeight).OnClick(openJournal)
 		}
-		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).OnClick(hide)
+		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).Height(controlHeight).OnClick(hide)
 	case op.kubeChange() != nil || op.plan.KubeBulk || op.plan.DockerContainers() || op.plan.DockerAction == ops.DockerResourceRemove:
-		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).OnClick(hide)
+		ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).Height(controlHeight).OnClick(hide)
 	case op.state.Phase == ops.Stopped:
-		ui.Button(c.Key("op-close"), locales.OpClose()).OnClick(hide)
-		ui.PrimaryButton(c.Key("op-again"), locales.OpRestart()).OnClick(a.startOperation)
+		ui.Button(c.Key("op-close"), locales.OpClose()).Height(controlHeight).OnClick(hide)
+		ui.PrimaryButton(c.Key("op-again"), locales.OpRestart()).Height(controlHeight).OnClick(a.startOperation)
 	default:
 		if op.state.InstructionCopyAvailable && a.BuildPlan != nil {
-			ui.Button(c.Key("op-instructions-copy"), locales.GlobalInstructionsCopy()).OnClick(func() { a.globalInstructionPlan("copy", "") })
+			if agent := op.instructionAgent(); agent != "" {
+				ui.Button(c.Key("op-instructions-copy"), locales.GlobalInstructionsCopy()).Height(controlHeight).OnClick(func() { a.globalInstructionPlan(agent, "copy", "") })
+			}
 		}
-		ui.Button(c.Key("op-copy"), locales.OpCopyLog()).OnClick(func() {
-			c.WriteClipboard(strings.Join(op.state.Log, "\n"))
+		ui.Button(c.Key("op-copy"), locales.OpCopyLog()).Height(controlHeight).OnClick(func() {
+			log := strings.Join(op.state.Log, "\n")
+			if log == "" && op.state.FileChanged {
+				log = tilde(op.state.Err, a.Home)
+			}
+			c.WriteClipboard(log)
 			c.Toast(locales.OpLogCopied())
 		})
-		ui.PrimaryButton(c.Key("op-again"), locales.OpRetry()).OnClick(a.startOperation)
+		if op.state.FileChanged {
+			ui.PrimaryButton(c.Key("op-close"), locales.OpClose()).Height(controlHeight).OnClick(hide)
+		} else {
+			ui.PrimaryButton(c.Key("op-again"), locales.OpRetry()).Height(controlHeight).OnClick(a.startOperation)
+		}
 	}
 }
 
 func (op *operation) blockedDockerRemoval() bool {
 	return len(op.plan.Steps) == 0 && (op.plan.DockerAction == ops.DockerImageRemove || op.plan.DockerAction == ops.DockerResourceRemove)
+}
+
+func (op *operation) instructionAgent() string {
+	for _, s := range op.plan.Steps {
+		if s.Instructions != nil {
+			if s.Instructions.Agent != "" {
+				return s.Instructions.Agent
+			}
+			return "codex"
+		}
+	}
+	return ""
 }
 
 func (op *operation) confirmName() string {

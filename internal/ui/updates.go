@@ -236,7 +236,7 @@ func (a *App) updatesView(c *ui.Context, p page) {
 						{locales.UpdatesPackages(), strconv.Itoa(np)},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("updates-filter"), &a.updatesFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("updates-filter"), &a.updatesFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					switch {

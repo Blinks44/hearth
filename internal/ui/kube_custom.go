@@ -176,14 +176,14 @@ func (a *App) customResourcesView(c *ui.Context, cl *kube.Cluster) {
 		tracks = append(tracks, ui.Fr(1))
 	}
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-		kubeActionButton(c.Key("custom-definitions"), "layers", locales.KubeCustomDefinitions(), podActionHeight).
+		kubeActionButton(c.Key("custom-definitions"), "layers", locales.KubeCustomDefinitions(), controlHeight).
 			OnClick(func() { a.selectClusterKind(kindCustom, nil) })
 		if len(columns) > 0 && !narrow(c) {
 			ui.Text(c, locales.KubeCustomColumns()).FontSize(11.5).TextColor(pal.TextFaint)
 		}
 		ui.Box(c).Grow(1)
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(locales.KubeCustomSearch()).Label(locales.KubeCustomSearch()).Width(240).OnChange(s.other.reset)
+			Placeholder(locales.KubeCustomSearch()).Label(locales.KubeCustomSearch()).Height(controlHeight).Width(240).OnChange(s.other.reset)
 	})
 	var items []kube.Resource
 	query := resourceQuery(s.query)

@@ -3,7 +3,6 @@ package docker
 import (
 	"context"
 	"slices"
-	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
@@ -15,13 +14,23 @@ import (
 // sample could not account for every running container.
 func ReadHealth(ctx context.Context, r run.Runner, env sysenv.Env, target Target, engine Engine) inventory.DockerHealth {
 	var health inventory.DockerHealth
-	if engine.Running == 0 && engine.Paused == 0 {
+	if engine.Running+engine.Paused == 0 {
 		return health
 	}
 	items, err := ReadContainers(ctx, r, env, target)
 	if err != nil {
 		return health
 	}
+	health = readContainerHealth(ctx, r, env, target, engine, items)
+	_, _, memory, sampled := readContainerUsage(ctx, r, env, target, items)
+	if sampled {
+		health.Memory, health.ContainerMemory = engine.Memory, memory
+	}
+	return health
+}
+
+func readContainerHealth(ctx context.Context, r run.Runner, env sysenv.Env, target Target, engine Engine, items []Container) inventory.DockerHealth {
+	var health inventory.DockerHealth
 	var ids []string
 	for _, item := range items {
 		if (item.State.Status == "running" || item.State.Status == "paused") && ImageID(item.ImageID) && !slices.Contains(ids, item.ImageID) {
@@ -40,23 +49,6 @@ func ReadHealth(ctx context.Context, r run.Runner, env sysenv.Env, target Target
 					ID: item.ID, Name: item.Name, ImageArch: image.Architecture, EngineArch: canonicalArch(engine.Arch),
 				})
 			}
-		}
-	}
-	if engine.Memory > 0 && sampleContainers(ctx, r, env, target, items) == nil {
-		var used int64
-		var sampled int
-		for _, item := range items {
-			if item.State.Status != "running" && item.State.Status != "paused" {
-				continue
-			}
-			size, err := ParseSize(strings.TrimSpace(item.Memory))
-			if err == nil && size >= 0 {
-				used += size
-				sampled++
-			}
-		}
-		if sampled == engine.Running+engine.Paused {
-			health.Memory, health.ContainerMemory = engine.Memory, used
 		}
 	}
 	return health

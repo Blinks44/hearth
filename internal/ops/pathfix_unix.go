@@ -21,6 +21,16 @@ func PathFixable(e inventory.PathEntry, home string) bool {
 	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return userLine(s, home) })
 }
 
+// PathEntryFixable matches PathPlan's preconditions for a single entry:
+// a repeat on Unix needs at least two known declarations so Hearth knows
+// which line to keep and which to comment out.
+func PathEntryFixable(e inventory.PathEntry, home string, repeat bool) bool {
+	if repeat && len(e.Sources) < 2 {
+		return false
+	}
+	return PathFixable(e, home)
+}
+
 func userLine(s inventory.PathSource, home string) bool {
 	return s.Line > 0 && home != "" && strings.HasPrefix(s.File, home+string(filepath.Separator))
 }

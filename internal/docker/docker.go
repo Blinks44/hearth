@@ -25,6 +25,7 @@ const Every = 5 * time.Second
 // address of a local context's engine.
 type Target struct {
 	Docker, Context, Endpoint string
+	Provider, ColimaProfile   string
 }
 
 // Engine is what the engine said of itself when it was read.
@@ -38,6 +39,7 @@ type Engine struct {
 	Containers, Running, Paused, Stopped int
 	Images                               int
 	Health                               inventory.DockerHealth
+	Overview                             Overview
 }
 
 // Error is an engine that did not answer, with what docker said.
@@ -95,12 +97,20 @@ func Read(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Engine, 
 // Watch reads the engine now and every Every after, giving each read to
 // got, until ctx is done.
 func Watch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, overview bool, got func(Engine, error)) {
+	var disk OverviewDisk
+	var events OverviewEvents
+	var nextDetails time.Time
 	for {
 		e, err := Read(ctx, r, env, t)
 		if overview && err == nil {
-			readCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
-			e.Health = ReadHealth(readCtx, r, env, t, e)
-			cancel()
+			readDetails := !e.Taken.Before(nextDetails)
+			e.Overview, e.Health = readOverview(ctx, r, env, t, e, readDetails, disk, events)
+			disk, events = e.Overview.Disk, e.Overview.Events
+			if readDetails {
+				nextDetails = e.Taken.Add(30 * time.Second)
+			}
+		} else if err != nil {
+			nextDetails = time.Time{}
 		}
 		if ctx.Err() != nil {
 			return

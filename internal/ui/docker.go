@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/catalog"
+	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/ops"
 
 	"github.com/egoist/mygo/ui"
@@ -77,13 +78,15 @@ func (a *App) docker(c *ui.Context, p page) {
 					})
 					ui.Box(c).Grow(1)
 					if a.dockerTab == 0 {
-						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Width(200)
+						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Height(controlHeight).Width(200)
 					}
 				})
 				columns(c, 12, func() {
 					switch a.dockerTab {
 					case 0:
 						a.dockerContexts(c, d)
+						a.dockerQuickViewsCard(c, d)
+						a.dockerDiskSummaryCard(c)
 						toolNote(c, locales.DockerContextNote())
 						if d.Override != "" {
 							toolNote(c, locales.DockerOverrideNote(d.Override))
@@ -98,8 +101,8 @@ func (a *App) docker(c *ui.Context, p page) {
 						pathCard(c, "docker", st.Installations, active, a.Home)
 					}
 				}, func() {
-					a.dockerManagement(c, st)
 					a.dockerHealthCard(c, st, d.Selected, d.Health, false)
+					a.dockerManagement(c, st)
 					a.dockerRegistries(c, st, active)
 					listCard(c, locales.DockerHow(), "", func() {
 						listRow(c, locales.DockerHowScan(), false, locales.DockerHowScanCaption(), func() {})
@@ -304,9 +307,93 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 	})
 }
 
+func (a *App) dockerQuickViewsCard(c *ui.Context, d *inventory.DockerState) {
+	if !a.dockerAnswers() || !a.dockerOpenable(d.Selected) {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	selected := d.Selected
+	listCard(c, locales.DockerQuickViews(), selected, func() {
+		ui.Row(c).Gap(8).Padding(12, 14).Wrap().Children(func() {
+			for i, v := range dockerViews() {
+				view := i
+				tile := ui.ButtonBase(c.Key("quick-view-"+strconv.Itoa(view))).Padding(8, 12).
+					Radius(9).BorderWidth(1).BorderColor(pal.Line).Gap(7).AlignItems(ui.Center).
+					Label(v.label).Transition(colorFade).OnClick(func() {
+					a.engine.view = view
+					a.router.Push(dockerEnginePath(selected))
+				})
+				if tile.Hovered() {
+					tile.Background(pal.Subtle).BorderColor(pal.ControlBorder)
+				} else {
+					tile.Background(t.Background)
+				}
+				tile.Children(func() {
+					ui.Icon(c, Icon(v.icon)).Size(15, 15).Shrink(0).TextColor(t.TextMuted)
+					clipped(c, v.label).FontSize(12.5).FontWeight(500).MinWidth(0)
+				})
+			}
+		})
+	})
+}
+
+func (a *App) dockerDiskSummaryCard(c *ui.Context) {
+	if a.Sizes == nil || len(a.Sizes.Docker) == 0 {
+		return
+	}
+	pal := Colors(c.Theme())
+	var total, reclaimable int64
+	for _, row := range a.Sizes.Docker {
+		total += row.Bytes
+		reclaimable += row.Reclaimable
+	}
+	if total <= 0 {
+		return
+	}
+	listCard(c, locales.DockerOverviewDisk(), formatBytes(total), func() {
+		for _, row := range a.Sizes.Docker {
+			label := row.Type
+			switch row.Type {
+			case "Images":
+				label = locales.DockerViewImages()
+			case "Containers":
+				label = locales.DockerViewContainers()
+			case "Local Volumes":
+				label = locales.DockerViewVolumes()
+			case "Build Cache":
+				label = locales.DockerImageBuildCache()
+			}
+			ui.Column(c.Key("disk-"+row.Type)).Gap(5).Padding(8, 14).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, label).Grow(1).MinWidth(0).FontSize(12).SingleLine()
+					ui.Text(c, formatBytes(row.Bytes)).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+					if row.Reclaimable > 0 {
+						ui.Text(c, "· "+locales.DockerOverviewReclaimable(formatBytes(row.Reclaimable))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+					}
+				})
+				requestBar(c, float64(row.Bytes)/float64(total), pal.InfoText)
+			})
+		}
+		ui.Row(c).Gap(8).Padding(9, 14).AlignItems(ui.Center).Children(func() {
+			caption := locales.DockerOverviewReclaimable(formatBytes(reclaimable))
+			ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
+			ui.Button(c.Key("docker-disk-cleanup"), locales.ChangesOpenCleanup()).Height(24).Shrink(0).OnClick(func() {
+				a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
+				a.cleanupFilter = ""
+				a.router.Push(cleanupPage)
+			})
+		})
+	})
+}
+
 func (a *App) dockerProjects() []int {
 	var out []int
 	for i, p := range a.Projects {
+		if _, ok := composeProject(p); ok {
+			out = append(out, i)
+			continue
+		}
 		for _, r := range p.Requirements {
 			if r.Tool == "docker" {
 				out = append(out, i)

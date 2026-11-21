@@ -332,10 +332,10 @@ func TestOverviewSummaryLongAmount(t *testing.T) {
 			}
 			tt := ui.NewTester(a.View, width, 820)
 			tt.Advance(time.Second)
-			amount, ok := tt.Find("до 29,9 ГБ")
+			amount, ok := tt.Find("29,9 ГБ")
 			card, cardOK := tt.Find("Можно освободить")
 			if !ok || !cardOK {
-				t.Fatal("missing upper-bound estimate or cleanup card")
+				t.Fatal("missing amount or cleanup card")
 			}
 			if amount.X+amount.W > card.X+card.W-14-8-14 {
 				t.Errorf("estimate reaches the chevron: amount=%v card=%v", amount, card)

@@ -71,7 +71,7 @@ func (a *App) databases(c *ui.Context, p page) {
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 					segments(c, "database-tabs", &a.databaseTab, []segment{{locales.TabAll(), strconv.Itoa(len(servers))}, {locales.DatabaseServices(), ""}, {locales.ProjectsTitle(), ""}, {locales.DatabaseContainers(), ""}})
 					ui.Box(c).Grow(1)
-					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Bind(&a.filterField).Placeholder(locales.DatabaseFilter()).Width(200)
+					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Bind(&a.filterField).Placeholder(locales.DatabaseFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.databaseTab == 2 {
@@ -191,6 +191,14 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						ui.Text(c, locales.DatabaseClient(client.Tool+" "+client.Version)).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
+				plan, canService := a.servicePlan(db)
+				if canService {
+					icon, label := "play", locales.ServiceStart()
+					if db.Status == "running" {
+						icon, label = "square", locales.ServiceStop()
+					}
+					iconButton(c.Key("service-power"), icon, label).OnClick(func() { a.Propose(plan) })
+				}
 				if url, _ := databaseURL(db, filepath.Base(a.Home)); url != "" && db.Source != "docker" {
 					iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
 				} else if db.Path != "" {
@@ -199,7 +207,6 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 				if db.Path != "" && a.Shell != nil {
 					iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
 				}
-				plan, canService := a.servicePlan(db)
 				if canService || db.Path != "" && db.Source != "docker" {
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
 						if canService {

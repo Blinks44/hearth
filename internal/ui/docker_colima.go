@@ -327,9 +327,9 @@ func (a *App) colimaResizeDialog(c *ui.Context) {
 			}
 		})
 		ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-			ui.Button(c.Key("colima-cancel"), locales.Cancel()).OnClick(func() { d.open = false })
+			ui.Button(c.Key("colima-cancel"), locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
 			unchanged := int(d.cpu) == d.profile.CPU && d.memory == memory && d.disk == minDisk
-			ui.PrimaryButton(c.Key("colima-apply"), locales.ColimaRestart()).
+			ui.PrimaryButton(c.Key("colima-apply"), locales.ColimaRestart()).Height(controlHeight).
 				Disabled(err != nil || unchanged || a.BuildPlan == nil || a.RunPlan == nil || a.op.running()).
 				OnClick(func() {
 					d.open = false

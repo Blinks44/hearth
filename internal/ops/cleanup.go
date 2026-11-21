@@ -22,10 +22,12 @@ import (
 // cache ID. A cache without one, or whose tool the terminal does not
 // find, is removed as a folder. Homebrew's is a folder: brew cleanup
 // also removes older versions of formulae, which are not its cache;
-// Yarn Berry's cache clean works only inside a project.
+// Yarn Berry's cache clean works only inside a project; pnpm's store is
+// removed as a folder because pnpm store prune leaves packages linked by
+// older projects, while existing node_modules keep working via hard links
+// or clones and pnpm re-downloads on the next install.
 var cacheCommands = map[string][]string{
 	"npm":       {"npm", "cache", "clean", "--force"},
-	"pnpm":      {"pnpm", "store", "prune"},
 	"yarn":      {"yarn", "cache", "clean"},
 	"bun":       {"bun", "pm", "cache", "rm"},
 	"uv":        {"uv", "cache", "clean"},
@@ -178,11 +180,11 @@ func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, e
 			if len(argv) > 0 && len(sysenv.LookPathAll(argv[0], env)) > 0 {
 				steps = []Step{{Argv: argv}}
 				pub = pub || c.ID == "pub"
-				pnpm = pnpm || c.ID == "pnpm"
 			} else {
 				steps = []Step{{Remove: c.Paths[0]}}
 				removes = true
 			}
+			pnpm = pnpm || c.ID == "pnpm"
 		case cleanup.BuildCache, cleanup.UnusedImages, cleanup.StoppedContainers:
 			if target.CLI == "" || !contextRef.MatchString(target.Context) {
 				continue

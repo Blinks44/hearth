@@ -270,19 +270,21 @@ type App struct {
 	search         searchState
 	filterField    ui.Handle // the filter of the page shown, which / focuses
 	router         *ui.Router
-	notFoundOpen   bool   // the languages and tools not found show in the sidebar
-	nodeTab        int    // the tab of the Node.js page shown
-	jspmTab        int    // the tab of the package managers page shown
-	jspmFilter     string // the package managers table's filter
-	pathTab        int    // the tab of the PATH page shown
-	pathFilter     string // the PATH table's filter
-	pathFixErr     string // why the PATH problems asked to fix have no plan
-	planErr        string // why a plan asked for could not be made, until a toast says it
-	notice         string // what a toast says next, as a set saved
-	packageTab     int    // the tab of the system package managers page shown
-	packageManager string // the path of the package manager shown
-	packageFilter  string // the package table's filter
-	packageSort    int    // the package table's order: sortByName, sortByDependents or sortBySize
+	notFoundOpen   bool                // the languages and tools not found show in the sidebar
+	nodeTab        int                 // the tab of the Node.js page shown
+	jspmTab        int                 // the tab of the package managers page shown
+	jspmFilter     string              // the package managers table's filter
+	pathTab        int                 // the tab of the PATH page shown
+	pathFilter     string              // the PATH table's filter
+	pathFixErr     string              // why the PATH problems asked to fix have no plan
+	pathFixSnap    *inventory.Snapshot // snapshot pathFixErr belongs to
+	pathFixAllNone bool                // fixing all PATH problems already returned ErrNoFix
+	planErr        string              // why a plan asked for could not be made, until a toast says it
+	notice         string              // what a toast says next, as a set saved
+	packageTab     int                 // the tab of the system package managers page shown
+	packageManager string              // the path of the package manager shown
+	packageFilter  string              // the package table's filter
+	packageSort    int                 // the package table's order: sortByName, sortByDependents or sortBySize
 	// packageChosen are the updates checked to run, by manager path and
 	// packageKey.
 	packageChosen      map[string]bool
@@ -609,7 +611,7 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 
 func headerBackButton(c *ui.Context, label string, back func()) {
 	ui.Button(c.Key("back"), "").Label(label).Tooltip(label).
-		Size(28, 26).Shrink(0).Padding(0).Margin(0, 4, 0, 0).OnClick(back).Children(func() {
+		Size(controlHeight, controlHeight).Shrink(0).Padding(0).Margin(0, 4, 0, 0).OnClick(back).Children(func() {
 		ui.Icon(c, Icon("chevron-left")).Size(14, 14).TextColor(c.Theme().TextMuted)
 	})
 }
@@ -639,8 +641,8 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		}
 		brand(c, a.Machine)
 		a.searchButton(c)
-		ui.Scroll(c).Grow(1).Children(func() {
-			ui.Column(c).Gap(1).Children(func() {
+		ui.Scroll(c).Grow(1).Margin(0, -8, 0, 0).Children(func() {
+			ui.Column(c).Gap(1).Padding(0, 14, 0, 0).Children(func() {
 				a.item(c, overview, nil)
 				a.item(c, projectsPage, func() {
 					if len(a.Projects) > 0 {

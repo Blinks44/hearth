@@ -1,13 +1,11 @@
 package disk
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -35,22 +33,8 @@ func Docker(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.S
 	if i < 0 {
 		return nil, ErrNoEngine
 	}
-	df := func(args ...string) ([]byte, error) {
-		res, err := r.Run(ctx, run.Cmd{Args: append([]string{st.Installations[active].Path, "--host", st.Docker.Contexts[i].Endpoint, "system", "df"}, args...),
-			Env: append(slices.Clone(env), "DOCKER_CONTEXT="), Timeout: time.Minute})
-		if err != nil {
-			return nil, fmt.Errorf("docker system df: %w", err)
-		}
-		if res.ExitCode != 0 || res.Truncated {
-			return nil, fmt.Errorf("docker system df: exit %d: %s", res.ExitCode, strings.TrimSpace(string(res.Stderr)))
-		}
-		return res.Stdout, nil
-	}
-	out, err := df("--format", "{{json .}}")
-	if err != nil {
-		return nil, err
-	}
-	rows, err := parseDockerDF(out)
+	target := docker.Target{Docker: st.Installations[active].Path, Endpoint: st.Docker.Contexts[i].Endpoint}
+	rows, err := docker.ReadUsage(ctx, r, env, target)
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +49,16 @@ func Docker(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.S
 			rows[j].Reclaimable = 0
 			continue
 		}
-		out, err := df("--verbose", "--format", "{{json .Images}}")
+		cmd := target.Command(env, "system", "df", "--verbose", "--format", "{{json .Images}}")
+		cmd.Timeout = time.Minute
+		res, err := r.Run(ctx, cmd)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("docker system df --verbose: %w", err)
 		}
-		if rows[j].Reclaimable, err = parseUnusedImages(out); err != nil {
+		if res.ExitCode != 0 || res.Truncated {
+			return nil, fmt.Errorf("docker system df --verbose: exit %d: %s", res.ExitCode, strings.TrimSpace(string(res.Stderr)))
+		}
+		if rows[j].Reclaimable, err = parseUnusedImages(res.Stdout); err != nil {
 			return nil, err
 		}
 	}
@@ -95,27 +84,4 @@ func parseUnusedImages(data []byte) (int64, error) {
 		n += size
 	}
 	return n, nil
-}
-
-func parseDockerDF(data []byte) ([]inventory.DockerUsage, error) {
-	var out []inventory.DockerUsage
-	for line := range bytes.SplitSeq(bytes.TrimSpace(data), []byte("\n")) {
-		var row struct{ Type, TotalCount, Active, Size, Reclaimable string }
-		if err := json.Unmarshal(line, &row); err != nil {
-			return nil, fmt.Errorf("docker system df: %w", err)
-		}
-		u := inventory.DockerUsage{Type: row.Type}
-		var errs [4]error
-		u.Count, errs[0] = strconv.Atoi(row.TotalCount)
-		u.Active, errs[1] = strconv.Atoi(row.Active)
-		u.Bytes, errs[2] = docker.ParseSize(row.Size)
-		// Reclaimable comes with a share: "1.664GB (14%)".
-		reclaimable, _, _ := strings.Cut(row.Reclaimable, " ")
-		u.Reclaimable, errs[3] = docker.ParseSize(reclaimable)
-		if err := errors.Join(errs[:]...); err != nil {
-			return nil, fmt.Errorf("docker system df %s: %w", row.Type, err)
-		}
-		out = append(out, u)
-	}
-	return out, nil
 }

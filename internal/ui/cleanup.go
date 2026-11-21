@@ -84,15 +84,9 @@ func freeable(cands []cleanup.Candidate) int64 {
 	return n
 }
 
-// cleanupAmount marks a sum containing a partially pruned store as an upper bound.
+// cleanupAmount formats the total space candidates free.
 func cleanupAmount(cands []cleanup.Candidate) string {
-	size := formatBytes(freeable(cands))
-	for _, cand := range cands {
-		if cand.Estimated() {
-			return locales.CleanupUpTo(size)
-		}
-	}
-	return size
+	return formatBytes(freeable(cands))
 }
 
 func (a *App) cleanupView(c *ui.Context, p page) {
@@ -129,9 +123,10 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						counted, caption = ago(c, a.Sizes.Taken), locales.CleanupCountedCaption()
 					}
 					if a.Counting {
-						caption = locales.CleanupCounting()
+						stateCardBusy(c, locales.CleanupCounted(), counted, locales.CleanupCounting())
+					} else {
+						stateCard(c, t.Success, locales.CleanupCounted(), counted, caption)
 					}
-					stateCard(c, t.Success, locales.CleanupCounted(), counted, caption)
 				})
 				groups := cleanupGroups
 				count := func(g cleanup.Group) string {
@@ -158,7 +153,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						{locales.CleanupGroupHistory(), count(cleanup.History)},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					switch {
@@ -323,9 +318,6 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 		size := "—"
 		if cand.Known {
 			size = formatUsage(inventory.Usage{Bytes: cand.Frees(), Partial: cand.Usage.Partial})
-			if cand.Estimated() {
-				size = locales.CleanupUpTo(size)
-			}
 		}
 		ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
 	})
@@ -368,9 +360,6 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 	var parts []string
 	switch cand.Kind {
 	case cleanup.Cache:
-		if cand.Estimated() {
-			return locales.CleanupPnpmCaption()
-		}
 		if argv := ops.CacheCommand(cand.ID); argv != nil {
 			return ops.Command(argv)
 		}

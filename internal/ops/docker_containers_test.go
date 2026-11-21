@@ -72,7 +72,12 @@ func TestDockerComposeRemovesEnvironmentButKeepsVolumes(t *testing.T) {
 	if result := Execute(t.Context(), &r, p, io.Discard, func(State) {}); result.Phase != Succeeded {
 		t.Fatalf("result %+v", result)
 	}
-	if last := r.Calls()[3]; !slices.Equal(last.Args, want) || last.Dir != dir {
+	if last := r.Calls()[4]; !slices.Equal(last.Args, want) || last.Dir != dir {
 		t.Fatalf("executed %+v", last)
 	}
+	r.Stdout(`{"name":"shop","services":{"web":{"image":"example.invalid/web"}}}`, target.Command(nil, "compose", "--project-directory", dir, "-f", file, "config", "--format", "json").Args...)
+	if result := Execute(t.Context(), &r, p, io.Discard, func(State) {}); result.Phase == Succeeded || len(r.Calls()) != 6 {
+		t.Fatalf("changed config was executed: %+v, commands %+v", result, r.Calls())
+	}
+
 }

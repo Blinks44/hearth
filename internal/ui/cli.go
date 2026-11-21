@@ -175,7 +175,7 @@ func (a *App) cliView(c *ui.Context, p page) {
 					}
 					segments(c, "cli-tabs", &a.cliTab, segs)
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("cli-filter"), &a.cliFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("cli-filter"), &a.cliFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.Snapshot == nil {

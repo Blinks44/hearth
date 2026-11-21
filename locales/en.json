@@ -1,4 +1,73 @@
 {
+  "dockerOverviewDisk": "Disk",
+  "dockerOverviewDiskUnavailable": "Disk usage unavailable",
+  "dockerOverviewReclaimable": "≈ {size} reclaimable",
+  "@dockerOverviewReclaimable": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOverviewCPUCapacity": "{count, plural, one {# core} other {# cores}}",
+  "@dockerOverviewCPUCapacity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dockerOverviewMemoryAmount": "{used} of {total}",
+  "@dockerOverviewMemoryAmount": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOverviewCPU": "Container CPU",
+  "dockerOverviewMemory": "Container memory",
+  "dockerOverviewSampleUnavailable": "Current usage unavailable",
+  "dockerOverviewContainersUnavailable": "Could not check containers.",
+  "dockerOverviewContainerFailed": "Docker reports a container failure.",
+  "dockerOverviewNoProblems": "No issues found.",
+  "dockerOverviewVMDisk": "VM disk on the host · {size}",
+  "@dockerOverviewVMDisk": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOverviewVMDiskUnavailable": "VM disk file unavailable.",
+  "dockerOverviewPrune": "Docker cleanup frees space inside the VM. The file keeps its capacity. The engine may return unused blocks to the host separately.",
+  "dockerOverviewOrbReclaim": "OrbStack returns unused blocks automatically.",
+  "dockerOverviewDesktopHelp": "Docker Desktop disk settings",
+  "dockerOverviewTrim": "Reclaim space…",
+  "dockerOverviewTrimTitle": "Reclaim Colima disk space",
+  "dockerOverviewTrimWhy": "Run fstrim in Colima profile {profile} to return unused blocks to the host. Containers, images and volumes stay in place.",
+  "@dockerOverviewTrimWhy": {
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOverviewTrimResult": "Colima completed the trim. Refresh the engine overview to see the current disk usage.",
+  "dockerOverviewEvents": "Events",
+  "dockerOverviewEventCount": "Past hour · {count}",
+  "@dockerOverviewEventCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerOverviewEventsUnavailable": "Could not read Docker events.",
+  "dockerOverviewNoEvents": "No failures or restarts in the available events.",
   "dockerAttention": "Needs attention",
   "dockerHelperTitle": "Docker credential store is unavailable",
   "dockerHelperRegistry": "Credential helper for {registry} is unavailable",
@@ -211,7 +280,7 @@
   "dockerVolumesEmpty": "No matching volumes.",
   "dockerVolumeSearch": "Name or project",
   "dockerVolumesLocal": "Local volumes",
-  "dockerVolumesHint": "Container data · removed individually",
+  "dockerVolumesHint": "Container data · removal is permanent",
   "dockerVolumeSizeUnavailable": "Could not read volume sizes. {error}",
   "@dockerVolumeSizeUnavailable": {
     "placeholders": {
@@ -502,6 +571,7 @@
   "dockerContainerPartial": "Some containers need attention. See the result for each container.",
   "dockerComposeMissing": "The Compose files for this project are unavailable.",
   "dockerComposeConfig": "Docker Compose could not read the project name. Check the Compose plugin and project configuration.",
+  "dockerComposeConfigChanged": "The Compose configuration changed. Review the operation again.",
   "dockerComposeChanged": "A Compose project with this name uses a different directory or set of files on this engine.",
   "dockerComposeDownWhy": "Compose stops and removes the project's containers and networks. Data in volumes stays.",
   "dockerComposeDownRemoved": "The writable layers of the removed containers are deleted.",
@@ -5892,6 +5962,10 @@
       }
     }
   },
+  "opFileChanged": "The file changed after the preview. Close this window and start the action again to review a new plan.",
+  "@opFileChanged": {
+    "description": "Operation failed because a file to edit changed after the preview."
+  },
   "opOffline": "no connection to {host}, check the internet",
   "@opOffline": {
     "description": "Why a step failed: a download could not reach its server.",
@@ -10795,13 +10869,33 @@
   "@globalInstructionsTitle": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsLinkedLead": "Codex reads the shared file through a link: edits to it are visible to Codex at once.",
+  "globalInstructionsLinkedLead": "{agent} reads the shared file through a link: edits to it are visible to {agent} at once.",
   "@globalInstructionsLinkedLead": {
-    "description": "Global Codex instructions card on the agent page."
+    "description": "Global instruction files card on an agent page.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "globalInstructionsImportedLead": "{agent} imports the shared file: edits to it are visible to {agent} at once.",
+  "@globalInstructionsImportedLead": {
+    "description": "Global instruction files card on an agent page.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
   "globalInstructionsLinkFile": "link to the shared file",
   "@globalInstructionsLinkFile": {
     "description": "Global Codex instructions card on the agent page."
+  },
+  "globalInstructionsImportedFile": "imports the shared file",
+  "@globalInstructionsImportedFile": {
+    "description": "Global instruction files card on an agent page."
   },
   "globalInstructionsChipLinked": "connected",
   "@globalInstructionsChipLinked": {
@@ -10823,17 +10917,23 @@
   "@globalInstructionsChipMissing": {
     "description": "Global Codex instructions card on the agent page."
   },
-  "globalInstructionsLead": "Codex reads instructions from its own directory. The shared file is not connected automatically.",
+  "globalInstructionsLead": "{agent} reads instructions from its own directory. The shared file is not connected automatically.",
   "@globalInstructionsLead": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files card on an agent page.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
   "globalInstructionsSharedFile": "Shared file",
   "@globalInstructionsSharedFile": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsCodexFile": "Codex file",
-  "@globalInstructionsCodexFile": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+  "globalInstructionsAgentFile": "Agent file",
+  "@globalInstructionsAgentFile": {
+    "description": "Global instruction files card on an agent page."
   },
   "globalInstructionsOverrideFile": "Override",
   "@globalInstructionsOverrideFile": {
@@ -10847,9 +10947,15 @@
   "@globalInstructionsNotFound": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsActive": "read by Codex",
+  "globalInstructionsActive": "read by {agent}",
   "@globalInstructionsActive": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files card on an agent page.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
   "globalInstructionsEmpty": "Empty file: review it manually; Hearth will not replace it.",
   "@globalInstructionsEmpty": {
@@ -10891,29 +10997,63 @@
   "@globalInstructionsCompare": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsCompareWhy": "Comparison only: red lines are from Codex, green lines are from the shared file. No files will be changed.",
+  "globalInstructionsCompareWhy": "Comparison only: red lines are from {agent}, green lines are from the shared file. No files will be changed.",
   "@globalInstructionsCompareWhy": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files, preview and confirmed installation plan.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
-  "globalInstructionsLinkWhy": "Connecting creates a file symlink. Changes to the shared file will be visible to Codex.\nHearth shows a plan first; only you can confirm it in the window.",
+  "globalInstructionsLinkWhy": "Connecting creates a file symlink. Changes to the shared file will be visible to {agent}.\nHearth shows a plan first; only you can confirm it in the window.",
   "@globalInstructionsLinkWhy": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files, preview and confirmed installation plan.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
-  "globalInstructionsCreateWhy": "Review and edit the instructions. Hearth will show the full plan before creating a new AGENTS.md in the Codex directory. Start a new Codex session to load it.",
+  "globalInstructionsCreateWhy": "Review and edit the instructions. Hearth will show the full plan before creating a new {file} for {agent}. Start a new {agent} session to load it.",
   "@globalInstructionsCreateWhy": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files, preview and confirmed installation plan.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "AGENTS.md"
+      },
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
-  "globalInstructionsCopyWhy": "This creates an independent copy, not a link. Later edits to the shared file will not reach Codex. Confirm this new plan to create the copy.",
+  "globalInstructionsCopyWhy": "This creates an independent copy, not a link. Later edits to the shared file will not reach {agent}. Confirm this new plan to create the copy.",
   "@globalInstructionsCopyWhy": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files, preview and confirmed installation plan.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
   "globalInstructionsProtection": "Existing files are protected",
   "@globalInstructionsProtection": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsProtectionText": "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so no backup is needed. A failed plan removes only the new file it created. Start a new Codex session afterwards.",
+  "globalInstructionsProtectionText": "Hearth refuses if a file or link already exists, or the source or override has changed. No original is replaced, so no backup is needed. A failed plan removes only the new file it created. Start a new {agent} session afterwards.",
   "@globalInstructionsProtectionText": {
-    "description": "Codex global instruction files, preview and confirmed installation plan."
+    "description": "Global instruction files, preview and confirmed installation plan.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
   },
   "globalInstructionsChanged": "Instructions changed or an existing file prevents this action. Scan again and review the files.",
   "@globalInstructionsChanged": {
@@ -10962,15 +11102,15 @@
       }
     }
   },
-  "cleanupPnpmCaption": "pnpm store prune · keeps packages still in use",
+  "cleanupPnpmCaption": "shared package store · existing node_modules keep working",
   "@cleanupPnpmCaption": {
     "description": "Cleanup: cleanupPnpmCaption."
   },
-  "cleanupPnpmNote": "pnpm keeps packages still in use",
+  "cleanupPnpmNote": "pnpm store will be cleared completely",
   "@cleanupPnpmNote": {
     "description": "Cleanup: cleanupPnpmNote."
   },
-  "cleanupPnpmNoteText": "The size shown is an upper limit for the active store. pnpm removes only unused packages, so it may free less space or none. Other store versions are not cleared.",
+  "cleanupPnpmNoteText": "Hearth removes the entire pnpm store folder. Existing project node_modules stay working, and pnpm will download packages again on the next install.",
   "@cleanupPnpmNoteText": {
     "description": "Cleanup: cleanupPnpmNoteText."
   },
@@ -14054,5 +14194,45 @@
   "dockerHowPlanCaption": "with commands, consequences and confirmation",
   "@dockerHowPlanCaption": {
     "description": "Docker how card row caption."
+  },
+  "dockerHealthHealthy": "Healthy",
+  "@dockerHealthHealthy": {
+    "description": "Docker container detail: healthy status chip."
+  },
+  "dockerHealthUnhealthy": "Unhealthy",
+  "@dockerHealthUnhealthy": {
+    "description": "Docker container detail: unhealthy status chip."
+  },
+  "dockerHealthStarting": "Starting",
+  "@dockerHealthStarting": {
+    "description": "Docker container detail: healthcheck starting status chip."
+  },
+  "dockerHealthPassed": "Passed",
+  "@dockerHealthPassed": {
+    "description": "Docker container detail: healthcheck exit code 0 badge."
+  },
+  "dockerVolumesRemoveTitle": "Remove {count, plural, one {# volume} other {# volumes}}?",
+  "@dockerVolumesRemoveTitle": {
+    "description": "Docker volumes bulk removal plan title.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "dockerNetworksRemoveTitle": "Remove {count, plural, one {# network} other {# networks}}?",
+  "@dockerNetworksRemoveTitle": {
+    "description": "Docker networks bulk removal plan title.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "dockerQuickViews": "Engine sections",
+  "@dockerQuickViews": {
+    "description": "Docker page: quick jump card title for opening views of the active engine."
   }
 }

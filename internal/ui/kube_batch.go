@@ -69,7 +69,7 @@ func (a *App) batchFilters(c *ui.Context, filter *int, counts [4]int, placeholde
 			{locales.KubeJobSuspended(), strconv.Itoa(counts[batchSuspended])},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(placeholder).Width(240).MinWidth(100)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(placeholder).Height(controlHeight).Width(240).MinWidth(100)
 	})
 }
 

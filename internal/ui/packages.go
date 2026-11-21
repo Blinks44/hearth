@@ -109,11 +109,11 @@ func (a *App) packages(c *ui.Context, p page) {
 							labels[i] = sortLabel(sort)
 						}
 						value := labels[max(slices.Index(sorts, a.packageSort), 0)]
-						ui.Select(c.Key("package-sort"), &value, labels).Label(locales.PkgSort()).Width(170).OnChange(func() {
+						ui.Select(c.Key("package-sort"), &value, labels).Label(locales.PkgSort()).Height(controlHeight).Width(170).OnChange(func() {
 							a.packageSort = sorts[slices.Index(labels, value)]
 						})
 					}
-					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Width(200)
+					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if m.Unlisted && !partial {

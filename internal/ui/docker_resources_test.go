@@ -103,13 +103,13 @@ func TestDockerResourcesView(t *testing.T) {
 		checkColumns(size, "shop-api-1")
 		screenshot(t, tt, fmt.Sprintf("docker-networks-%d", size[0]))
 	}
-	a.engine.resources.query[1] = "192.0.2"
+	a.engine.resources.slots[1].query = "192.0.2"
 	tt.Advance(time.Second)
 	if !tt.HasText("shop_default") || tt.HasText("old-api_default") || tt.HasText("shop_uploads") {
 		t.Fatalf("subnet filter = %q", tt.Texts())
 	}
-	a.engine.resources.query[1] = ""
-	a.engine.resources.filter[1] = dockerResourceUnused
+	a.engine.resources.slots[1].query = ""
+	a.engine.resources.slots[1].filter = dockerResourceUnused
 	tt.Advance(time.Second)
 	if !tt.HasText("old-api_default") || tt.HasText("shop_default") {
 		t.Fatalf("unused networks = %q", tt.Texts())
@@ -142,5 +142,65 @@ func TestDockerVolumeRequiresExactName(t *testing.T) {
 		if runs != decision.runs {
 			t.Fatalf("after %q, ran %d times", decision.typed, runs)
 		}
+	}
+}
+
+func TestDockerResourcesBulkAndCache(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = colimaSnapshot()
+	a.WatchDocker = (&engineWatches{}).watch
+	var receive func([]docker.Resource, error, error)
+	a.WatchDockerResources = func(_ docker.Target, _ docker.ResourceKind, got func([]docker.Resource, error, error)) func() {
+		receive = got
+		return func() {}
+	}
+	planned := 0
+	a.BuildPlan = func(_ func(sysenv.Env, ops.Terminal) (ops.Plan, error), got func(ops.Plan, error)) {
+		planned++
+		got(ops.Plan{
+			Title: locales.DockerVolumesRemoveTitle(2), Action: locales.DockerContainerRemove(),
+			DockerAction: ops.DockerResourceRemove,
+			Steps:        []ops.Step{{Argv: []string{"docker", "volume", "rm", "--", "v1"}}, {Argv: []string{"docker", "volume", "rm", "--", "v2"}}},
+		}, nil)
+	}
+	a.engine.view = dockerVolumes
+	a.router.Push(dockerEnginePath("colima"))
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	a.engine.data = new(colimaEngine())
+	receive([]docker.Resource{
+		{ID: "v1", Name: "vol-alpha", Size: 200},
+		{ID: "v2", Name: "vol-beta", Size: 100},
+	}, nil, nil)
+	tt.Advance(time.Second)
+	if err := tt.Click(locales.KubeBulkSelect("vol-alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click(locales.KubeBulkSelect("vol-beta")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	bar, ok := tt.Find(locales.DockerSelected(2))
+	if !ok {
+		t.Fatalf("missing floating bulk bar: %q", tt.Texts())
+	}
+	tt.ClickAt(bar.X+bar.W+48, bar.Y+bar.H/2)
+	tt.Advance(time.Second)
+	if planned != 1 || a.op == nil || len(a.op.plan.Steps) != 2 {
+		t.Fatalf("bulk volume plan = %+v, planned = %d", a.op, planned)
+	}
+	a.op.open = false
+	tt.Advance(time.Second)
+	// Switch to Networks and back to Volumes: cached volumes render immediately.
+	if err := tt.Click(locales.DockerViewNetworks()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click(locales.DockerViewVolumes()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("vol-alpha") || !tt.HasText("vol-beta") {
+		t.Fatalf("returning to Volumes did not reuse cached list immediately: %q", tt.Texts())
 	}
 }

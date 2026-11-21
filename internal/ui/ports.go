@@ -189,7 +189,7 @@ func (a *App) portsView(c *ui.Context, p page) {
 				a.forwardList(c, "")
 				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("ports-filter"), &a.portsFilter).Bind(&a.filterField).Placeholder(locales.PortsFilter()).Width(200)
+					ui.SearchField(c.Key("ports-filter"), &a.portsFilter).Bind(&a.filterField).Placeholder(locales.PortsFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.Snapshot == nil {
@@ -236,17 +236,29 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 				} else {
 					chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
 				}
-				if !stoppable && r.Project == "" {
-					ui.Box(c).Size(24, 24).Shrink(0)
-					return
-				}
-				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-					if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
-						a.router.Push(projectPath(r.Project))
+				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if r.Project != "" {
+						iconButton(c.Key("port-project"), "folder-open", locales.OpenProject()).OnClick(func() {
+							a.router.Push(projectPath(r.Project))
+						})
 					}
-					if stoppable && menu.Item(locales.PortsStop()).Chosen() {
-						a.Propose(plan)
+					if stoppable {
+						iconButton(c.Key("port-stop"), "square", locales.PortsStop()).OnClick(func() {
+							a.Propose(plan)
+						})
 					}
+					if !stoppable && r.Project == "" {
+						ui.Box(c).Size(24, 24).Shrink(0)
+						return
+					}
+					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+						if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
+							a.router.Push(projectPath(r.Project))
+						}
+						if stoppable && menu.Item(locales.PortsStop()).Chosen() {
+							a.Propose(plan)
+						}
+					})
 				})
 			})
 		}

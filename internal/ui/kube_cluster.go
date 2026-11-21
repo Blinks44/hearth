@@ -66,6 +66,7 @@ type kubeClusterState struct {
 	// reads its own namespace, an empty entry all of them.
 	namespaces map[string][]string
 	kind       int
+	entry      clusterEntry
 	// target is what the data was read from; running is what the watch
 	// reads, with refresh, and stop ends it.
 	target, running string
@@ -148,6 +149,23 @@ type kubeClusterState struct {
 	logStop    func()
 }
 
+// clusterEntry records access for the last context opened this session.
+type clusterEntry struct {
+	context  inventory.KubeContext
+	kubectl  string
+	verified bool
+}
+
+func (a *App) kubeEntryPath() string {
+	entry := a.cluster.entry
+	current := a.kubeContext(entry.context.Name)
+	kubectl, found := cliCopy(a.cliState(), "kubectl")
+	if a.WatchCluster == nil || !found || !entry.verified || current == nil || *current != entry.context || kubectl.Path != entry.kubectl {
+		return kubePage
+	}
+	return kubeClusterPath(entry.context.Name)
+}
+
 // clusterNamespaces are the namespaces the page reads in the context:
 // none means all of them.
 func (a *App) clusterNamespaces(name string) []string {
@@ -192,6 +210,13 @@ func (a *App) syncCluster() {
 			s.custom.reset(name)
 		}
 		if in, ok := cliCopy(a.cliState(), "kubectl"); ok && name != "" {
+			if ctx := a.kubeContext(name); ctx == nil {
+				s.entry = clusterEntry{}
+			} else if s.entry.context != *ctx || s.entry.kubectl != in.Path {
+				check := a.kubeChecks[name]
+				verified := check.context == *ctx && check.kubectl == in.Path && !check.running && check.res.State == detect.KubeReachable
+				s.entry = clusterEntry{context: *ctx, kubectl: in.Path, verified: verified}
+			}
 			t = kube.Target{Kubectl: in.Path, Context: name, Namespaces: a.clusterNamespaces(name)}
 			t.Overview = s.kind == kindOverview
 			t.Metrics = s.kind == kindPods || t.Overview || s.kind == kindNodes
@@ -207,7 +232,8 @@ func (a *App) syncCluster() {
 			if s.kind == kindCustom {
 				t.CustomKind = s.custom.name
 			}
-			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ","), t.AccessNamespace})
+			target = fmt.Sprintf("%q", []string{t.Kubectl, t.Context, strings.Join(t.Namespaces, ","), t.AccessNamespace,
+				s.entry.context.File, s.entry.context.Cluster, s.entry.context.Namespace, s.entry.context.Auth})
 			if s.kind == kindHelm {
 				if helm, found := cliCopy(a.cliState(), "helm"); found {
 					t.Helm, t.HelmVersion = helm.Path, helm.Version
@@ -269,6 +295,7 @@ func (a *App) syncCluster() {
 		return
 	}
 	watch, refresh := s.watch, s.refresh
+	entry, kind := s.entry, s.kind
 	s.reading = true
 	s.stop = a.WatchCluster(t, func(cl kube.Cluster, err error) {
 		if s.watch != watch {
@@ -281,6 +308,11 @@ func (a *App) syncCluster() {
 				ownerLog.pods = cl.Pods
 			}
 			return
+		}
+		check := a.kubeChecks[t.Context]
+		checking := check.running && check.context == entry.context && check.kubectl == entry.kubectl
+		if kind == s.kind && entry.kubectl == s.entry.kubectl && entry.context == s.entry.context && !checking {
+			s.entry.verified = err == nil && kubeViewRead(kind, cl)
 		}
 		if err != nil {
 			s.err, s.failedAt = err, time.Now()
@@ -312,6 +344,23 @@ func (a *App) syncCluster() {
 		}
 		s.batchData = t.Batch && !t.Overview
 	})
+}
+
+// Some views return independent replies and keep their errors in the snapshot.
+func kubeViewRead(kind int, cl kube.Cluster) bool {
+	switch kind {
+	case kindJobs:
+		return cl.Batch != nil && cl.Batch.JobsErr == nil
+	case kindCronJobs:
+		return cl.Batch != nil && cl.Batch.CronJobsErr == nil
+	case kindAccess:
+		return cl.Access != nil && (cl.Access.IdentityErr == nil || cl.Access.RulesErr == nil ||
+			slices.ContainsFunc(cl.Access.Resources, func(list kube.ResourceList) bool { return list.Err == nil }))
+	case kindPolicies:
+		return slices.ContainsFunc(cl.Policies, func(list kube.ResourceList) bool { return list.Err == nil })
+	default:
+		return true
+	}
 }
 
 // viewKey names what a target reads besides its cluster and namespaces:
@@ -712,7 +761,7 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 // chevron.
 func pathButton(c *ui.Context, key, icon, value string, width float32) ui.Element {
 	t := c.Theme()
-	b := ui.ButtonBase(c.Key(key)).Height(30).Padding(0, 8).Radius(7).AlignItems(ui.Center).Gap(7).Label(value)
+	b := ui.ButtonBase(c.Key(key)).Height(controlHeight).Padding(0, 8).Radius(7).AlignItems(ui.Center).Gap(7).Label(value)
 	if width > 0 {
 		b.MinWidth(0).Shrink(1)
 	}

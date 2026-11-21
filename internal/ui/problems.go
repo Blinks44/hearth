@@ -98,7 +98,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 						{locales.ProjectsTitle(), count(areaProjects)},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("problems-filter"), &a.problemsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("problems-filter"), &a.problemsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				if hidden > 0 && !a.firstScan() {
 					// Under the table, or the note that stands for it.

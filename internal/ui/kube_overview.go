@@ -75,7 +75,7 @@ func overviewStat(c *ui.Context, label, value string, caption func()) {
 	ui.Column(c).Grow(1).Basis(0).MinWidth(0).MinHeight(92).Gap(3).Padding(10, 13).Radius(10).
 		BorderWidth(1).BorderColor(pal.Line).Background(pal.Subtle).Children(func() {
 		clipped(c, label).FontSize(12).TextColor(t.TextMuted)
-		clipped(c, value).FontSize(19).FontWeight(600)
+		ui.Text(c, value).FontSize(19).FontWeight(600).Wrap()
 		caption()
 	})
 }

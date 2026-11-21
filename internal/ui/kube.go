@@ -128,9 +128,9 @@ func (a *App) kubeView(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					if in, ok := cliCopy(cli, "kubectl"); ok && a.kubeTab == 0 && a.CheckKube != nil && kubeContextCount(cli) > 1 {
 						busy := slices.ContainsFunc(cli.KubeContexts, func(k inventory.KubeContext) bool { return a.kubeChecks[k.Name].running })
-						ui.Button(c.Key("kube-check-all"), "").Height(podActionHeight).Label(locales.KubeCheckAll()).Disabled(busy).Children(func() {
+						ui.Button(c.Key("kube-check-all"), "").Height(controlHeight).Label(locales.KubeCheckAll()).Disabled(busy).Children(func() {
 							spinIcon(c, "refresh-cw", 14, t.Text, busy)
-							ui.Text(c, locales.KubeCheckAll()).FontSize(12).SingleLine()
+							ui.Text(c, locales.KubeCheckAll()).FontSize(12.5).SingleLine()
 						}).OnClick(func() {
 							for _, k := range cli.KubeContexts {
 								if !k.Shadowed {
@@ -139,7 +139,7 @@ func (a *App) kubeView(c *ui.Context, p page) {
 							}
 						})
 					}
-					ui.SearchField(c.Key("kube-filter"), &a.kubeFilter).Bind(&a.filterField).Placeholder(locales.KubeFilter()).Width(220)
+					ui.SearchField(c.Key("kube-filter"), &a.kubeFilter).Bind(&a.filterField).Placeholder(locales.KubeFilter()).Height(controlHeight).Width(220)
 				})
 				columns(c, 12, func() {
 					if a.Snapshot == nil {
@@ -329,6 +329,8 @@ func kubeToolNeed(cmd string) string {
 
 // kubeCheck is the last check of a context's cluster this session.
 type kubeCheck struct {
+	context inventory.KubeContext
+	kubectl string
 	running bool
 	res     detect.KubeAccess
 }
@@ -339,9 +341,20 @@ func (a *App) checkKube(kubectl string, k inventory.KubeContext) {
 	if a.kubeChecks == nil {
 		a.kubeChecks = map[string]kubeCheck{}
 	}
-	a.kubeChecks[k.Name] = kubeCheck{running: true}
+	check := kubeCheck{context: k, kubectl: kubectl, running: true}
+	a.kubeChecks[k.Name] = check
+	entry := &a.cluster.entry
+	if entry.context == k && entry.kubectl == kubectl {
+		entry.verified = false
+	}
 	a.CheckKube(kubectl, k, func(res detect.KubeAccess) {
-		a.kubeChecks[k.Name] = kubeCheck{res: res}
+		if a.kubeChecks[k.Name] != check {
+			return
+		}
+		a.kubeChecks[k.Name] = kubeCheck{context: k, kubectl: kubectl, res: res}
+		if entry.context == k && entry.kubectl == kubectl {
+			entry.verified = res.State == detect.KubeReachable
+		}
 	})
 }
 
@@ -513,8 +526,8 @@ func (a *App) kubeNamespaceDialog(c *ui.Context) {
 			})
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Box(c).Grow(1).Height(1)
-				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })
-				ui.PrimaryButton(c, locales.Next()).Disabled(!ok).OnClick(next)
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
+				ui.PrimaryButton(c, locales.Next()).Height(controlHeight).Disabled(!ok).OnClick(next)
 			})
 		})
 	})
@@ -768,8 +781,8 @@ func (a *App) kindDialog(c *ui.Context) {
 			}
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Box(c).Grow(1).Height(1)
-				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })
-				ui.PrimaryButton(c, locales.Next()).Disabled(!ok).OnClick(next)
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
+				ui.PrimaryButton(c, locales.Next()).Height(controlHeight).Disabled(!ok).OnClick(next)
 			})
 		})
 	})

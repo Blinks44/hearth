@@ -106,7 +106,7 @@ func (a *App) clusterAccessView(c *ui.Context, context string, review *kube.Acce
 		if v.tab != accessRulesTab {
 			placeholder = locales.KubeDeploymentsSearch()
 		}
-		ui.SearchField(c.Key("access-search"), &s.query).Bind(&s.queryField).Width(220).
+		ui.SearchField(c.Key("access-search"), &s.query).Bind(&s.queryField).Height(controlHeight).Width(220).
 			Label(placeholder).Placeholder(placeholder).OnChange(v.resetSelection)
 	})
 	ui.Column(c.Key("access-tab-" + strconv.Itoa(v.tab))).Grow(1).MinHeight(0).Children(func() {

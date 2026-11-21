@@ -284,7 +284,7 @@ func (a *App) mobileView(c *ui.Context, p page) {
 					}
 					segments(c, "mobile-tabs", &a.mobileTab, segs)
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("mobile-filter"), &a.mobileFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("mobile-filter"), &a.mobileFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					switch {

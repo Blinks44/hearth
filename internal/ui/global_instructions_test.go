@@ -156,8 +156,126 @@ func TestGlobalInstructionsScreenshot(t *testing.T) {
 
 func TestGlobalInstructionsLargeComparison(t *testing.T) {
 	a, _ := globalInstructionApp(t, strings.Repeat("shared\n", 501), "Native")
-	a.previewGlobalInstructions(false)
+	a.previewGlobalInstructions("codex", false)
 	if a.globalInstructions.err == "" {
 		t.Fatal("unbounded text reached the UI diff")
+	}
+}
+
+func TestGlobalInstructionsAllAgents(t *testing.T) {
+	root := t.TempDir()
+	write := func(rel, txt string) {
+		t.Helper()
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(txt), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(".agents/AGENTS.md", "Shared rules\n")
+	write(".claude/CLAUDE.md", "@~/.agents/AGENTS.md\n")
+
+	env := sysenv.Env{"HOME=" + root}
+	agyIn, ok := ai.AgentInstructions("antigravity", env)
+	if !ok || agyIn.State != "shared" {
+		t.Fatalf("antigravity instructions: %+v (%v)", agyIn, ok)
+	}
+	claudeIn, ok := ai.AgentInstructions("claude", env)
+	if !ok || claudeIn.State != "linked" {
+		t.Fatalf("claude instructions: %+v (%v)", claudeIn, ok)
+	}
+
+	a := NewApp()
+	a.Home = root
+	a.Snapshot = &inventory.Snapshot{
+		Agents: []inventory.Agent{
+			{
+				ID:            "claude",
+				Dir:           filepath.Join(root, ".claude"),
+				Installations: []inventory.Installation{{Tool: "claude", Version: "2.1.311", Path: "/opt/homebrew/bin/claude", OnPath: 1}},
+				Files:         []inventory.AgentFile{{Path: filepath.Join(root, ".claude/CLAUDE.md"), Kind: inventory.FileInstructions}},
+				Instructions:  &claudeIn,
+			},
+			{
+				ID:            "antigravity",
+				Dir:           filepath.Join(root, ".gemini/antigravity-cli"),
+				Installations: []inventory.Installation{{Tool: "antigravity", Version: "1.5.13", Path: "/opt/homebrew/bin/agy", OnPath: 1}},
+				Instructions:  &agyIn,
+			},
+		},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+
+	// Agents table surfaces connectable shared instructions for Antigravity.
+	tt := openAI(t, a, "/ai/agents")
+	hasTexts(t, tt, "Antigravity CLI", locales.GlobalInstructionsChipShared(), "CLAUDE.md")
+
+	// Opening Antigravity page shows the Global instructions card and proposes a link plan.
+	if err := tt.Click("Antigravity CLI"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.GlobalInstructionsTitle(), locales.GlobalInstructionsConnect())
+	if err := tt.Click(locales.GlobalInstructionsConnect()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 {
+		t.Fatalf("expected pending link plan: %+v", a.op)
+	}
+	in := a.op.plan.Steps[0].Instructions
+	if in == nil || in.Agent != "antigravity" || in.Mode != "link" || in.Observed.Native.Path != filepath.Join(root, ".gemini/config/AGENTS.md") {
+		t.Fatalf("unexpected antigravity plan: %+v", in)
+	}
+
+	// Copy fallback after a refused symlink targets Antigravity, not Codex.
+	a.op = &operation{
+		plan:    a.op.plan,
+		open:    true,
+		started: true,
+		state:   ops.State{Phase: ops.Failed, InstructionCopyAvailable: true, Steps: []ops.StepStatus{ops.StepFailed}},
+	}
+	tt.Frame()
+	if err := tt.Click(locales.GlobalInstructionsCopy()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op.started || a.op.plan.Steps[0].Instructions.Agent != "antigravity" || a.op.plan.Steps[0].Instructions.Mode != "copy" {
+		t.Fatalf("copy fallback lost target agent: %+v", a.op.plan.Steps[0].Instructions)
+	}
+
+	// Claude page recognizes @~/.agents/AGENTS.md import as linked and hides Connect/Compare.
+	a.op = nil
+	a.router.Push(agentPath("claude"))
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.GlobalInstructionsTitle(), locales.GlobalInstructionsChipLinked(), locales.GlobalInstructionsImportedFile())
+	if tt.HasText(locales.GlobalInstructionsConnect()) || tt.HasText(locales.GlobalInstructionsCompare()) {
+		t.Fatal("linked Claude import should not offer Connect or Compare")
+	}
+
+	if os.Getenv("HEARTH_SCREENSHOTS") != "" {
+		i18n.SetLocaleFunc(func() string { return "ru" })
+		defer i18n.SetLocaleFunc(nil)
+		a.Home = root
+		a.Shell = &fakeShell{}
+		for _, page := range []struct{ name, route string }{
+			{"agents-table-ru", "/ai/agents"},
+			{"antigravity-instructions-ru", agentPath("antigravity")},
+			{"claude-instructions-ru", agentPath("claude")},
+		} {
+			for _, size := range []struct {
+				suffix string
+				w, h   int
+			}{{"", 1280, 820}, {"-narrow", 1000, 680}} {
+				a.router.Push(page.route)
+				st := ui.NewTester(a.View, size.w, size.h)
+				st.Advance(time.Second)
+				screenshot(t, st, page.name+size.suffix)
+			}
+		}
 	}
 }

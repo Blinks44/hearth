@@ -61,8 +61,8 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 	t, pal := c.Theme(), Colors(c.Theme())
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			ui.Button(c.Key("catalog-refresh"), locales.SkillCatalogRefresh()).Disabled(s.loading).OnClick(func() { a.openSkillCatalog(s.repo) })
-			ui.PrimaryButton(c.Key("catalog-installed"), locales.SkillCatalogInstalled()).OnClick(func() { a.skillCatalogOpen = false })
+			ui.Button(c.Key("catalog-refresh"), locales.SkillCatalogRefresh()).Height(controlHeight).Disabled(s.loading).OnClick(func() { a.openSkillCatalog(s.repo) })
+			ui.PrimaryButton(c.Key("catalog-installed"), locales.SkillCatalogInstalled()).Height(controlHeight).OnClick(func() { a.skillCatalogOpen = false })
 		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -82,7 +82,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 					}
 					segments(c, "catalog-repository", &s.tab, segs)
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Width(240)
+					ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Height(controlHeight).Width(240)
 				})
 				if s.tab != s.repo {
 					a.openSkillCatalog(s.tab)
@@ -208,12 +208,12 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, sk skillca
 			})
 		})
 		ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-			ui.PrimaryButton(c.Key("catalog-plan"), locales.SkillCatalogPlan()).Disabled(agent == "" || a.BuildPlan == nil).OnClick(func() {
+			ui.PrimaryButton(c.Key("catalog-plan"), locales.SkillCatalogPlan()).Height(controlHeight).Disabled(agent == "" || a.BuildPlan == nil).OnClick(func() {
 				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 					return ops.SkillInstallPlan(sk, agent, env, agentTitle)
 				}, a.proposeOrSay)
 			})
-			ui.Button(c.Key("catalog-github"), locales.SkillCatalogGitHub()).OnClick(func() { c.OpenURL(sk.URL()) })
+			ui.Button(c.Key("catalog-github"), locales.SkillCatalogGitHub()).Height(controlHeight).OnClick(func() { c.OpenURL(sk.URL()) })
 		})
 	})
 }

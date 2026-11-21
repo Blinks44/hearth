@@ -91,7 +91,14 @@ func TestDockerContainersView(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	receive([]docker.Container{web}, nil, nil)
-	if stops != 2 || len(a.engine.containers.items) != 0 {
-		t.Fatalf("stops = %d, late data = %+v", stops, a.engine.containers.items)
+	if stops != 2 || len(a.engine.containers.items) != 3 {
+		t.Fatalf("stops = %d, cached items = %+v (late callback should be ignored)", stops, a.engine.containers.items)
+	}
+	if err := tt.Click("Containers"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("8080 → 80") {
+		t.Fatalf("returning to Containers did not reuse cached items immediately: %q", tt.Texts())
 	}
 }

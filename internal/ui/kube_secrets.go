@@ -237,7 +237,7 @@ func (a *App) secretsView(c *ui.Context, list []kube.Secret) {
 		})
 		ui.Box(c).Grow(1)
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(locales.KubeSecretSearch()).Width(270).MinWidth(100)
+			Placeholder(locales.KubeSecretSearch()).Height(controlHeight).Width(270).MinWidth(100)
 	})
 	if len(shown) == 0 {
 		message := locales.KubeSecretNoMatches()

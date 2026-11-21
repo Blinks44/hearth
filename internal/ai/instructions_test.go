@@ -112,3 +112,132 @@ func TestInstructionText(t *testing.T) {
 		t.Fatal("read directory")
 	}
 }
+
+func TestAgentInstructionsAllAgents(t *testing.T) {
+	home := t.TempDir()
+	env := sysenv.Env{
+		"HOME=" + home,
+		"CLAUDE_CONFIG_DIR=" + filepath.Join(home, "claude-cfg"),
+		"CODEX_HOME=" + filepath.Join(home, "codex-cfg"),
+		"COPILOT_HOME=" + filepath.Join(home, "copilot-cfg"),
+		"OPENCODE_CONFIG_DIR=" + filepath.Join(home, "opencode-cfg"),
+		"XDG_CONFIG_HOME=" + filepath.Join(home, "xdg"),
+		"GROK_HOME=" + filepath.Join(home, "grok-cfg"),
+		"KIMI_CODE_HOME=" + filepath.Join(home, "kimi-cfg"),
+	}
+	shared := filepath.Join(home, ".agents", "AGENTS.md")
+	if err := os.MkdirAll(filepath.Dir(shared), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(shared, []byte("Common rules\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	wantNative := map[string]string{
+		"claude":      filepath.Join(home, "claude-cfg", "CLAUDE.md"),
+		"codex":       filepath.Join(home, "codex-cfg", "AGENTS.md"),
+		"copilot":     filepath.Join(home, "copilot-cfg", "copilot-instructions.md"),
+		"antigravity": filepath.Join(home, ".gemini", "config", "AGENTS.md"),
+		"gemini":      filepath.Join(home, ".gemini", "GEMINI.md"),
+		"opencode":    filepath.Join(home, "opencode-cfg", "AGENTS.md"),
+		"devin":       filepath.Join(home, "xdg", "devin", "AGENTS.md"),
+		"grok":        filepath.Join(home, "grok-cfg", "AGENTS.md"),
+		"kimi":        filepath.Join(home, "kimi-cfg", "AGENTS.md"),
+	}
+	for id, wantPath := range wantNative {
+		got, ok := AgentInstructions(id, env)
+		if !ok {
+			t.Fatalf("%s: expected global instructions support", id)
+		}
+		if got.State != "shared" || got.Native.Path != wantPath {
+			t.Errorf("%s: state=%q path=%q, want shared / %q", id, got.State, got.Native.Path, wantPath)
+		}
+	}
+	for _, id := range []string{"cursor", "aider", "unknown"} {
+		if _, ok := AgentInstructions(id, env); ok {
+			t.Errorf("%s: unexpected global instructions support", id)
+		}
+	}
+
+	detected := byID(Detect(t.Context(), &run.Fake{}, env, nil))
+	for id := range wantNative {
+		if detected[id].Instructions == nil || detected[id].Instructions.State != "shared" {
+			t.Errorf("Detect(%s) missing shared instructions: %+v", id, detected[id].Instructions)
+		}
+	}
+	if detected["cursor"].Instructions != nil || detected["aider"].Instructions != nil {
+		t.Error("cursor/aider should not report file-based global instructions")
+	}
+}
+
+func TestAgentInstructionsImportsAndAntigravityPaths(t *testing.T) {
+	write := func(t *testing.T, p, txt string) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(txt), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	t.Run("claude and gemini @ import", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		write(t, filepath.Join(home, ".agents/AGENTS.md"), "Shared\n")
+		write(t, filepath.Join(home, ".claude/CLAUDE.md"), "@~/.agents/AGENTS.md\n")
+		write(t, filepath.Join(home, ".gemini/GEMINI.md"), "@"+filepath.Join(home, ".agents/AGENTS.md")+"\n")
+		for _, id := range []string{"claude", "gemini"} {
+			got, ok := AgentInstructions(id, env)
+			if !ok || got.State != "linked" || got.Native.Link {
+				t.Errorf("%s: got %+v (%v), want linked non-symlink import", id, got, ok)
+			}
+		}
+	})
+
+	t.Run("fenced or commented import is not linked", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		write(t, filepath.Join(home, ".agents/AGENTS.md"), "Shared\n")
+		write(t, filepath.Join(home, ".claude/CLAUDE.md"), "```md\n@~/.agents/AGENTS.md\n```\n<!-- @~/.agents/AGENTS.md -->\n")
+		got, _ := AgentInstructions("claude", env)
+		if got.State != "different" {
+			t.Fatalf("got state %q, want different", got.State)
+		}
+	})
+
+	t.Run("antigravity markdown include and alternate path", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		write(t, filepath.Join(home, ".agents/AGENTS.md"), "Shared\n")
+		// Bare @path is not an Antigravity inline include.
+		write(t, filepath.Join(home, ".gemini/GEMINI.md"), "@~/.agents/AGENTS.md\n")
+		got, _ := AgentInstructions("antigravity", env)
+		if got.State != "different" || got.Native.Path != filepath.Join(home, ".gemini/GEMINI.md") {
+			t.Fatalf("bare @ in antigravity: %+v", got)
+		}
+		// @[label](path) is an inline include and takes precedence over a non-linked sibling.
+		write(t, filepath.Join(home, ".gemini/config/AGENTS.md"), "@[Global](~/.agents/AGENTS.md)\n")
+		got, _ = AgentInstructions("antigravity", env)
+		if got.State != "linked" || got.Native.Path != filepath.Join(home, ".gemini/config/AGENTS.md") {
+			t.Fatalf("markdown include in antigravity: %+v", got)
+		}
+	})
+
+	t.Run("antigravity broken link in alternate path is surfaced", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		write(t, filepath.Join(home, ".agents/AGENTS.md"), "Shared\n")
+		alt := filepath.Join(home, ".gemini/AGENTS.md")
+		if err := os.MkdirAll(filepath.Dir(alt), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(filepath.Join(home, "missing"), alt); err != nil {
+			t.Skipf("symlinks unavailable: %v", err)
+		}
+		got, _ := AgentInstructions("antigravity", env)
+		if got.State != "unreadable" || got.Native.Path != alt {
+			t.Fatalf("broken alternate link: %+v", got)
+		}
+	})
+}

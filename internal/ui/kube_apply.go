@@ -67,12 +67,12 @@ func (a *App) kubeApplyView(c *ui.Context) {
 					sources = append(sources, d.source.Path)
 				}
 				if len(sources) > 0 {
-					ui.Select(c.Key("kube-apply-detected"), &d.source.Path, sources).Label(locales.KubeApplySource()).Disabled(d.busy)
+					ui.Select(c.Key("kube-apply-detected"), &d.source.Path, sources).Label(locales.KubeApplySource()).Height(controlHeight).Disabled(d.busy)
 				}
 				ui.Row(c).Gap(8).Children(func() {
 					if a.PickManifest != nil {
-						ui.Button(c.Key("kube-apply-file"), locales.KubeApplyChooseFile()).Disabled(d.busy).OnClick(func() { a.pickManifest(d, false) })
-						ui.Button(c.Key("kube-apply-folder"), locales.KubeApplyChooseFolder()).Disabled(d.busy).OnClick(func() { a.pickManifest(d, true) })
+						ui.Button(c.Key("kube-apply-file"), locales.KubeApplyChooseFile()).Height(controlHeight).Disabled(d.busy).OnClick(func() { a.pickManifest(d, false) })
+						ui.Button(c.Key("kube-apply-folder"), locales.KubeApplyChooseFolder()).Height(controlHeight).Disabled(d.busy).OnClick(func() { a.pickManifest(d, true) })
 					}
 				})
 				if d.busy {
@@ -82,8 +82,8 @@ func (a *App) kubeApplyView(c *ui.Context) {
 				}
 			})
 			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })
-				ui.PrimaryButton(c.Key("kube-apply-review"), locales.KubeResourceCheck()).Disabled(d.busy || d.source.Path == "").
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
+				ui.PrimaryButton(c.Key("kube-apply-review"), locales.KubeResourceCheck()).Height(controlHeight).Disabled(d.busy || d.source.Path == "").
 					OnClick(func() { a.reviewManifests(d) })
 			})
 		})

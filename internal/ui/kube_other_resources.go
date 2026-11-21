@@ -151,7 +151,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		if s.kind == kindNamespaces && a.BuildPlan != nil {
 			name := a.router.Query("context")
 			cli, ok := cliCopy(a.cliState(), "kubectl")
-			kubeActionButton(c.Key("new-namespace"), "plus", locales.KubeNamespaceNew(), podActionHeight).
+			kubeActionButton(c.Key("new-namespace"), "plus", locales.KubeNamespaceNew(), controlHeight).
 				Disabled(!ok || a.op.running()).OnClick(func() {
 				s.namespaceCreate = &namespaceCreateForm{context: name, kubectl: cli.Path, open: true}
 			})
@@ -174,7 +174,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 			placeholder = locales.KubeAutoscalerSearch()
 		}
 		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).
-			Placeholder(placeholder).Label(placeholder).Width(width).OnChange(func() {
+			Placeholder(placeholder).Label(placeholder).Height(controlHeight).Width(width).OnChange(func() {
 			if item := s.otherResource(); item != nil && !visible(*item) {
 				v.reset()
 			}

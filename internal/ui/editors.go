@@ -175,7 +175,7 @@ func (a *App) editorsView(c *ui.Context, p page) {
 						{locales.EditorsCommands(), strconv.Itoa(len(eds))},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Width(200)
+					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					switch {

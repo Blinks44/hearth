@@ -90,7 +90,11 @@ func (a *App) engineTarget(name string) (docker.Target, string) {
 	if active < 0 {
 		return docker.Target{}, locales.DockerEngineNoCli()
 	}
-	return docker.Target{Docker: st.Installations[active].Path, Context: name, Endpoint: context.Endpoint}, ""
+	target := docker.Target{Docker: st.Installations[active].Path, Context: name, Endpoint: context.Endpoint, Provider: context.Engine}
+	if profile, ok := dockerColimaProfile(st.Docker, name); ok {
+		target.Provider, target.ColimaProfile = "Colima", profile.Name
+	}
+	return target, ""
 }
 
 // dockerOpenable reports that the context's engine has a page: a local
@@ -100,9 +104,11 @@ func (a *App) dockerOpenable(name string) bool {
 	return problem == "" && a.WatchDocker != nil
 }
 
-// entryPath is where the sidebar's item for path goes: Docker opens the
-// selected engine at once when it answers, its page otherwise.
+// entryPath resolves the sidebar destination for the current session.
 func (a *App) entryPath(path string) string {
+	if path == kubePage {
+		return a.kubeEntryPath()
+	}
 	if path != dockerPage || !a.dockerAnswers() {
 		return path
 	}
@@ -123,7 +129,7 @@ func (a *App) syncDocker() {
 	if a.router.Path() == dockerEnginePage && a.WatchDocker != nil && a.Snapshot != nil {
 		if tt, problem := a.engineTarget(a.router.Query("context")); problem == "" {
 			t = tt
-			target = fmt.Sprintf("%q", []string{t.Docker, t.Context, t.Endpoint})
+			target = fmt.Sprintf("%q", []string{t.Docker, t.Context, t.Endpoint, t.Provider, t.ColimaProfile})
 		}
 	}
 	running := ""
@@ -173,6 +179,7 @@ func (a *App) syncDocker() {
 func (a *App) StopDocker() {
 	s := &a.engine
 	s.containers.stopWatch()
+	s.containers.pending = nil
 	s.containers.closeLogs()
 	s.containers.closeDetail()
 	s.images.stopWatch()
@@ -205,7 +212,9 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 			ui.Row(c).Gap(6).Wrap().Shrink(0).Children(func() {
 				for i, v := range dockerViews() {
 					count := 0
-					if i == dockerContainers {
+					if i == dockerContainers && s.view == dockerOverview && s.data != nil {
+						count = len(s.data.Overview.Problems)
+					} else if i == dockerContainers {
 						for _, item := range s.containers.items {
 							if item.Problem() {
 								count++
@@ -233,17 +242,7 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 				case dockerOverview:
 					ui.Scroll(c).Grow(1).Children(func() {
 						ui.Column(c).Gap(14).Children(func() {
-							dockerOverviewView(c, *s.data)
-							st, _ := a.Snapshot.Tool("docker")
-							if st.Docker != nil {
-								columns(c, 14, func() {
-									a.dockerHealthCard(c, st, name, s.data.Health, true)
-								}, func() {
-									if profile, ok := dockerColimaProfile(st.Docker, name); ok {
-										a.colimaCard(c, *st.Docker.Colima, profile)
-									}
-								})
-							}
+							a.dockerOverviewView(c, name, *s.data)
 						})
 					})
 				case dockerContainers:
@@ -431,32 +430,12 @@ func (a *App) dockerEngineDown(c *ui.Context, name string, err error) {
 		ui.Row(c).Gap(8).Padding(4, 0, 0, 0).Children(func() {
 			st, _ := a.Snapshot.Tool("docker")
 			if profile, ok := dockerColimaProfile(st.Docker, name); ok && profile.Status == "stopped" {
-				ui.PrimaryButton(c.Key("engine-start-colima"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+				ui.PrimaryButton(c.Key("engine-start-colima"), locales.ColimaStart()).Height(controlHeight).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
 			} else if plan, ok := a.engineStartPlan(); ok && st.Docker != nil && st.Docker.Selected == name {
-				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
+				ui.PrimaryButton(c.Key("engine-start"), plan.Title).Height(controlHeight).OnClick(func() { a.Propose(plan) })
 			}
-			ui.Button(c.Key("engine-contexts"), locales.KubeClusterAllContexts()).OnClick(func() { a.router.Push(dockerPage) })
-		})
-	})
-}
-
-// dockerOverviewView is the engine at a glance: its containers, images,
-// processors and memory.
-func dockerOverviewView(c *ui.Context, e docker.Engine) {
-	pal := Colors(c.Theme())
-	ui.Row(c).Gap(12).Children(func() {
-		overviewStat(c, locales.DockerViewContainers(), locales.DockerRunningOf(strconv.Itoa(e.Running), strconv.Itoa(e.Containers)), func() {
-			overviewCaption(c, locales.DockerStoppedPaused(strconv.Itoa(e.Stopped), strconv.Itoa(e.Paused)), pal.TextFaint)
-		})
-		overviewStat(c, locales.DockerImagesCount(), strconv.Itoa(e.Images), func() {
-			overviewCaption(c, "Docker "+e.Version, pal.TextFaint)
-		})
-		overviewStat(c, locales.DockerCpus(), strconv.Itoa(e.CPUs), func() {
-			overviewCaption(c, locales.DockerForEngine(), pal.TextFaint)
-		})
-		overviewStat(c, locales.DockerMemory(), formatBytes(e.Memory), func() {
-			overviewCaption(c, e.OS+" · "+e.Arch, pal.TextFaint)
+			ui.Button(c.Key("engine-contexts"), locales.KubeClusterAllContexts()).Height(controlHeight).OnClick(func() { a.router.Push(dockerPage) })
 		})
 	})
 }

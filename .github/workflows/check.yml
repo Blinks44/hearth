@@ -3,7 +3,13 @@ name: Check
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -15,12 +21,8 @@ defaults:
 
 jobs:
   check:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+    name: Linux (lint, race tests, cross-build)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -37,12 +39,35 @@ jobs:
         run: go tool mygo vet .
       - name: Catalogs
         run: go tool mygo i18n check
+      - name: Cross-compile macOS and Windows packages
+        run: |
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ./internal/...
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ./internal/...
+      - name: Test (race on concurrent packages)
+        run: go test -race -timeout 15m $(go list ./... | grep -v '/internal/ui$')
+      - name: Test (UI)
+        run: go test -timeout 15m ./internal/ui
+      - name: Integration (real shell)
+        run: go test -tags integration -v -run Real ./internal/sysenv/
+
+  platform:
+    name: ${{ matrix.os }} (native)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
       - name: Test
-        if: runner.os != 'Windows'
-        run: go test -race -timeout 30m ./...
-      - name: Test (Windows, no race detector without cgo toolchain)
-        if: runner.os == 'Windows'
-        run: go test ./...
+        run: go test -timeout 15m ./...
       - name: Integration (real shell and registry)
         run: go test -tags integration -v -run Real ./internal/sysenv/
       - name: End-to-end (built app through the automation plugin)

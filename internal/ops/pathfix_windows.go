@@ -22,6 +22,11 @@ func PathFixable(e inventory.PathEntry, _ string) bool {
 	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return s.File == userPathSource })
 }
 
+// PathEntryFixable matches PathPlan's preconditions for a single entry on Windows.
+func PathEntryFixable(e inventory.PathEntry, home string, _ bool) bool {
+	return PathFixable(e, home)
+}
+
 // PathPlan returns the plan that takes dirs off the user's Path in the
 // registry: a repeat of a directory earlier in the computer's Path or the
 // user's, or one that is not there; all of them when dirs is nil. The

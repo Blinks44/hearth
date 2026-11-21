@@ -80,9 +80,16 @@ func TestDockerImagesView(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	receive(items, nil)
-	if stops != 1 || len(a.engine.images.items) != 0 {
-		t.Fatalf("stops = %d, late images = %+v", stops, a.engine.images.items)
+	receive(items[:1], nil)
+	if stops != 1 || len(a.engine.images.items) != 2 {
+		t.Fatalf("stops = %d, cached images = %+v (late callback should be ignored)", stops, a.engine.images.items)
+	}
+	if err := tt.Click("Images"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("legacy-worker") {
+		t.Fatalf("returning to Images did not reuse cached items immediately: %q", tt.Texts())
 	}
 }
 

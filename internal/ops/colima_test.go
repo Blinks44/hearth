@@ -224,3 +224,39 @@ func TestSetupPrefersNativeDockerOnLinuxWithHomebrew(t *testing.T) {
 		t.Fatalf("native Docker install = %+v", plan.Steps)
 	}
 }
+
+func TestColimaTrimPlan(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	disk := filepath.Join(dir, "colima-work", "disk")
+	if err := os.MkdirAll(filepath.Dir(disk), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(disk, []byte("test"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	const cli = "/brew/bin/colima"
+	var r run.Fake
+	state := inventory.ColimaState{Path: cli}
+	profile := inventory.ColimaProfile{Name: "work", Status: "running", Runtime: "docker"}
+	r.Stdout(`{"name":"work","status":"Running","runtime":"docker"}`, cli, "list", "--json")
+	plan, err := ColimaPlan(&r, sysenv.Env{"LIMA_HOME=" + dir}, state, profile, ColimaTrim, ColimaLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Steps) != 1 || !slices.Equal(plan.Steps[0].Argv, []string{cli, "ssh", "--profile", "work", "--", "sudo", "fstrim", "-a"}) {
+		t.Fatalf("trim steps = %+v", plan.Steps)
+	}
+	if err := plan.Before(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := plan.Verify(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(disk); err != nil {
+		t.Fatal(err)
+	}
+	if err := plan.Before(t.Context()); err == nil {
+		t.Fatal("trim accepted after the disk disappeared")
+	}
+}

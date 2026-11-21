@@ -15,24 +15,22 @@ import (
 // their details have, so that a pod's log or a deletion is one click
 // away from the list. Each item does what its button in the details does.
 
-// podMenu is a pod row's context menu.
-func (a *App) podMenu(c *ui.Context, row ui.Element, cl *kube.Cluster, p kube.Pod, crashed string) {
+func podLogContainer(p kube.Pod, crashed string) string {
+	if crashed != "" || len(p.Containers) == 0 {
+		return crashed
+	}
+	return p.Containers[0].Name
+}
+
+// podMenu is shared by right-click and the visible menu button.
+func (a *App) podMenu(c *ui.Context, cl *kube.Cluster, p kube.Pod, log func(), crashed string) func(*ui.Menu) {
 	s := &a.cluster
-	row.ContextMenu(func(m *ui.Menu) {
-		if a.StreamLogs != nil && len(p.Containers) > 0 {
-			container := p.Containers[0].Name
-			if crashed != "" {
-				container = crashed
-			}
-			if m.Item(locales.KubeLogsOpen()).Chosen() {
-				a.openLogs(p, container, false)
-			}
+	return func(m *ui.Menu) {
+		if log != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
+			log()
 		}
 		if a.OpenKubeShell != nil && len(p.Containers) > 0 && m.Item(locales.KubeShellAction()+"…").Chosen() {
-			container := crashed
-			if container == "" {
-				container = p.Containers[0].Name
-			}
+			container := podLogContainer(p, crashed)
 			s.pod, s.tab, s.revealWorkload = p.UID, 0, p.UID
 			s.shell = &shellForm{uid: p.UID, container: container, open: true}
 		}
@@ -51,25 +49,28 @@ func (a *App) podMenu(c *ui.Context, row ui.Element, cl *kube.Cluster, p kube.Po
 			copyName(c, p.Name)
 		}
 		a.resourceMenuItems(m, a.resourceRef("Pod", p.Namespace, p.Name, p.UID))
-	})
+	}
 }
 
-// ownerMenu is the context menu of a group of pods' owner.
-func (a *App) ownerMenu(c *ui.Context, row ui.Element, cl *kube.Cluster, g podGroup) {
-	s := &a.cluster
-	var ref ops.KubeResource
+func (a *App) podGroupRef(cl *kube.Cluster, g podGroup) ops.KubeResource {
 	if d := slices.IndexFunc(cl.Deployments, func(d kube.Deployment) bool {
 		return g.owner.Kind == "Deployment" && d.Namespace == g.namespace && d.Name == g.owner.Name
 	}); d >= 0 {
-		ref = a.resourceRef("Deployment", g.namespace, g.owner.Name, cl.Deployments[d].UID)
+		return a.resourceRef("Deployment", g.namespace, g.owner.Name, cl.Deployments[d].UID)
 	}
-	row.ContextMenu(func(m *ui.Menu) {
+	return ops.KubeResource{}
+}
+
+// ownerMenu is shared by right-click and the group's menu button.
+func (a *App) ownerMenu(c *ui.Context, g podGroup, ref ops.KubeResource, log func()) func(*ui.Menu) {
+	s := &a.cluster
+	return func(m *ui.Menu) {
 		if ref.UID != "" {
 			if m.Item(locales.KubeOpenOwner(g.owner.Name)).Chosen() {
 				s.kind, s.deployment, s.tab = kindDeployments, ref.UID, 0
 			}
-			if a.StreamLogs != nil && a.WatchCluster != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
-				a.openOwnerLogs(ref)
+			if log != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
+				log()
 			}
 		}
 		label := locales.KubeOpenGroup()
@@ -85,7 +86,7 @@ func (a *App) ownerMenu(c *ui.Context, row ui.Element, cl *kube.Cluster, g podGr
 		if ref.UID != "" {
 			a.resourceMenuItems(m, ref)
 		}
-	})
+	}
 }
 
 // resourceContextMenu gives a row the actions every resource has.

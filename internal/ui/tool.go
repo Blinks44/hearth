@@ -122,23 +122,51 @@ func globalsCard(c *ui.Context, title, empty string, pkgs []inventory.Package, a
 	})
 }
 
+// controlHeight is the standard height for adjacent buttons, search fields,
+// selects, and segmented tracks in toolbars, headers, and dialog footers.
+const controlHeight = 28
+
 // stateCard is one of the header's cards: a dot and a label, a value and
 // a caption.
 func stateCard(c *ui.Context, dot ui.Color, label, value, caption string) {
+	drawStateCard(c, dot, false, label, value, caption)
+}
+
+func stateCardBusy(c *ui.Context, label, value, caption string) {
+	drawStateCard(c, Colors(c.Theme()).Info, true, label, value, caption)
+}
+
+func drawStateCard(c *ui.Context, dot ui.Color, busy bool, label, value, caption string) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.Column(c).MinWidth(128).Gap(3).Padding(10, 14)
+	bg, border := pal.Subtle, pal.Line
+	if busy {
+		bg, border = pal.InfoSoft, pal.Info.Alpha(0.28)
+	}
+	e := ui.Column(c.Key("state-card:"+label)).Transition(stateCardMotion).MinWidth(128).Gap(3).Padding(10, 14)
 	if narrow(c) {
 		e.Grow(1).Basis(0)
 	}
-	e.Radius(10).Background(pal.Subtle).
-		BorderWidth(1).BorderColor(pal.Line).Children(func() {
+	e.Radius(10).Background(bg).
+		BorderWidth(1).BorderColor(border).Children(func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-			ui.Box(c).Size(7, 7).Radius(3.5).Background(dot)
-			ui.Text(c, label).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
+			if busy {
+				ui.Spinner(c).Size(11, 11).TextColor(pal.Info)
+			} else {
+				ui.Box(c).Size(7, 7).Radius(3.5).Background(dot)
+			}
+			labelColor := t.TextMuted
+			if busy {
+				labelColor = pal.InfoText
+			}
+			ui.Text(c, label).FontSize(11.5).TextColor(labelColor).SingleLine()
 		})
 		ui.Text(c, value).Font(FontMono).FontSize(14).SingleLine().ContentTransition(ui.ContentTransition{Numeric: true})
-		ui.Text(c, caption).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+		captionColor := pal.TextFaint
+		if busy {
+			captionColor = pal.InfoText
+		}
+		ui.Text(c, caption).FontSize(10.5).TextColor(captionColor).SingleLine()
 	})
 }
 
@@ -447,7 +475,7 @@ func listRowWrapped(c *ui.Context, name, caption string, end func()) {
 
 func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap bool, end func()) {
 	pal := Colors(c.Theme())
-	ui.Row(c).Gap(8).Padding(9, 12, 9, 14).AlignItems(ui.Center).
+	ui.Row(c).Gap(8).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			n := ui.Text(c, name).FontSize(13)

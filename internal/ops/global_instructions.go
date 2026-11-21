@@ -18,6 +18,7 @@ import (
 // InstructionInstall creates a new file or file symlink, never replacing one.
 // Observed includes the source and override so a stale plan fails before writing.
 type InstructionInstall struct {
+	Agent      string
 	Observed   inventory.GlobalInstructions
 	Env        sysenv.Env
 	Mode, Text string
@@ -30,7 +31,17 @@ func (in InstructionInstall) Preview() FileEdit {
 
 // CodexInstructionPlan reads again in the background. Merely building it writes nothing.
 func CodexInstructionPlan(env sysenv.Env, mode, text string) (Plan, error) {
-	observed := ai.CodexInstructions(env)
+	return GlobalInstructionPlan("codex", "Codex", env, mode, text)
+}
+
+// GlobalInstructionPlan builds a plan to create, link, or copy global
+// instructions for agentID (displayed as agentName). Merely building it writes
+// nothing.
+func GlobalInstructionPlan(agentID, agentName string, env sysenv.Env, mode, text string) (Plan, error) {
+	observed, ok := ai.AgentInstructions(agentID, env)
+	if !ok {
+		return Plan{}, errors.New(locales.GlobalInstructionsChanged())
+	}
 	switch mode {
 	case "create":
 		if observed.State != "missing" {
@@ -45,7 +56,7 @@ func CodexInstructionPlan(env sysenv.Env, mode, text string) (Plan, error) {
 		if err != nil {
 			return Plan{}, fmt.Errorf("read shared instructions: %w", err)
 		}
-		if ai.CodexInstructions(env) != observed {
+		if again, ok := ai.AgentInstructions(agentID, env); !ok || again != observed {
 			return Plan{}, ErrChanged
 		}
 	default:
@@ -57,22 +68,25 @@ func CodexInstructionPlan(env sysenv.Env, mode, text string) (Plan, error) {
 	if !filepath.IsAbs(observed.Native.Path) {
 		return Plan{}, errors.New(locales.GlobalInstructionsChanged())
 	}
-	in := InstructionInstall{Observed: observed, Env: append(sysenv.Env(nil), env...), Mode: mode, Text: text}
-	why, action := locales.GlobalInstructionsCreateWhy(), locales.GlobalInstructionsCreate()
+	if agentName == "" {
+		agentName = agentID
+	}
+	in := InstructionInstall{Agent: agentID, Observed: observed, Env: append(sysenv.Env(nil), env...), Mode: mode, Text: text}
+	why, action := locales.GlobalInstructionsCreateWhy(filepath.Base(observed.Native.Path), agentName), locales.GlobalInstructionsCreate()
 	if mode == "link" {
-		why, action = locales.GlobalInstructionsLinkWhy(), locales.GlobalInstructionsConnect()
+		why, action = locales.GlobalInstructionsLinkWhy(agentName), locales.GlobalInstructionsConnect()
 	}
 	if mode == "copy" {
-		why, action = locales.GlobalInstructionsCopyWhy(), locales.GlobalInstructionsCopy()
+		why, action = locales.GlobalInstructionsCopyWhy(agentName), locales.GlobalInstructionsCopy()
 	}
 	p := Plan{Title: locales.GlobalInstructionsTitle(), Why: why, Action: action, Steps: []Step{{Instructions: &in}}, Changes: []string{observed.Native.Path}}
 	if mode == "link" {
 		p.Notes = []Note{{Title: locales.GlobalInstructionsConnect(), Text: observed.Native.Path + " → " + observed.Shared.Path}}
 	}
-	p.Notes = append(p.Notes, Note{Title: locales.GlobalInstructionsProtection(), Text: locales.GlobalInstructionsProtectionText()})
+	p.Notes = append(p.Notes, Note{Title: locales.GlobalInstructionsProtection(), Text: locales.GlobalInstructionsProtectionText(agentName)})
 	p.Verify = func(context.Context) (string, error) {
-		got := ai.CodexInstructions(env)
-		if got.Shared != observed.Shared || got.Override != observed.Override {
+		got, ok := ai.AgentInstructions(agentID, env)
+		if !ok || got.Shared != observed.Shared || got.Override != observed.Override {
 			return "", ErrChanged
 		}
 		if got.Active != observed.Native.Path || got.Native.Sum == "" || got.Native.Err != "" {
@@ -94,7 +108,11 @@ func applyInstructionInstall(ctx context.Context, in InstructionInstall) (func()
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	if ai.CodexInstructions(in.Env) != in.Observed {
+	agentID := in.Agent
+	if agentID == "" {
+		agentID = "codex"
+	}
+	if got, ok := ai.AgentInstructions(agentID, in.Env); !ok || got != in.Observed {
 		return nil, ErrChanged
 	}
 	path := in.Observed.Native.Path

@@ -54,10 +54,16 @@ func (c Container) Active() bool {
 	}
 }
 
+// ExitedError reports whether a non-zero exit code reflects a failure rather
+// than a normal graceful stop (SIGTERM 143 or SIGINT 130).
+func (c Container) ExitedError() bool {
+	return c.State.ExitCode != 0 && (c.State.OOMKilled || (c.State.ExitCode != 143 && c.State.ExitCode != 130))
+}
+
 func (c Container) Problem() bool {
 	return c.State.Error != "" || c.State.Status == "dead" || c.State.Status == "restarting" ||
-		(c.State.Status == "exited" && c.State.ExitCode != 0) ||
-		(c.State.Health != nil && c.State.Health.Status == "unhealthy")
+		(c.State.Status == "exited" && c.ExitedError()) ||
+		(c.State.Status == "running" && c.State.Health != nil && c.State.Health.Status == "unhealthy")
 }
 
 var boundPort = regexp.MustCompile(`(?i)(?:address already in use|port is already allocated|only one usage)`)

@@ -110,7 +110,7 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 			{locales.KubeDeploymentsStopped(), strconv.Itoa(counts[deploymentsStopped])},
 		})
 		ui.Box(c).Grow(1)
-		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeDeploymentsSearch()).Width(270)
+		ui.SearchField(c.Key("cluster-query"), &s.query).Bind(&s.queryField).Placeholder(locales.KubeDeploymentsSearch()).Height(controlHeight).Width(270)
 	})
 	chosen := slices.IndexFunc(cl.Deployments, func(d kube.Deployment) bool { return d.UID == s.deployment })
 	if s.deployment != "" && chosen < 0 {
@@ -128,14 +128,22 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 		detail = func() { a.deploymentDetail(c, cl, resource) }
 	}
 	compact := chosen >= 0
-	tracks := append([]ui.Track{ui.Fixed(18)}, workloadTracks(c, compact)...)
+	columns := workloadTracks(c, compact)
+	if !compact {
+		if narrow(c) {
+			columns = []ui.Track{ui.Fr(1), ui.Fixed(106), ui.Fixed(46), ui.Fixed(64), ui.Fixed(110), ui.Fixed(50)}
+		} else {
+			columns = []ui.Track{ui.Fr(1), ui.Fixed(170), ui.Fixed(54), ui.Fixed(74), ui.Fixed(110), ui.Fixed(60)}
+		}
+	}
+	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("deployments-panes"), func() {
 		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
 		if !compact {
 			headers = append(headers, sortColumn{locales.KubeClusterReady(), "ready"}, sortColumn{locales.KubeClusterUpdated(), "updated"},
 				sortColumn{locales.KubeImage(), "image"}, sortColumn{locales.KubeClusterAge(), "age"})
 		}
-		sortHead(c, tracks, func() {
+		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth)), func() {
 			s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
 		}, sort, headers...)
 	}, func() {
@@ -164,11 +172,20 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 			Padding(8, 0).MinHeight(40).Grow(1).MinWidth(0).Label(d.Name).
 			OnClick(func() { s.toggleWorkload(&s.deployment, d.UID) })
 		ref := a.resourceRef("Deployment", d.Namespace, d.Name, d.UID)
-		a.resourceContextMenu(c, row, ref, func(m *ui.Menu) {
-			if a.StreamLogs != nil && a.WatchCluster != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
-				a.openOwnerLogs(ref)
+		var logs func()
+		if a.StreamLogs != nil && a.WatchCluster != nil {
+			logs = func() { a.openOwnerLogs(ref) }
+		}
+		menu := func(m *ui.Menu) {
+			if logs != nil && m.Item(locales.KubeOwnerLogsAll()).Chosen() {
+				logs()
 			}
-		})
+			if m.Item(locales.KubeCopyName()).Chosen() {
+				copyName(c, ref.Name)
+			}
+			a.resourceMenuItems(m, ref)
+		}
+		row.ContextMenu(menu)
 		s.revealWorkloadRow(row, d.UID)
 		switch {
 		case s.deployment == d.UID:
@@ -192,6 +209,7 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 			clipped(c, imageTag(d.Images)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).Tooltip(strings.Join(d.Images, "\n"))
 			ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
 		})
+		podRowActions(c.Key("deployment-actions-"+d.UID), d.Name, locales.KubeOwnerLogsAll(), logs, menu)
 	})
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // cleanupApp is a computer with the design's candidates: caches, an extra
@@ -68,29 +69,29 @@ func TestCleanupPage(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "cleanup")
-	hasTexts(t, tt, "CACHES · COME BACK BY THEMSELVES", "pnpm cache", "pnpm store prune · keeps packages still in use", "up to 6.4 GB",
+	hasTexts(t, tt, "CACHES · COME BACK BY THEMSELVES", "pnpm cache", "~/Library/pnpm/store", "6.4 GB",
 		"EXTRA COPIES AND LEFTOVERS", "Node.js 23.6.0 · brew", "shadowed by fnm · no project asks for it",
 		"nvm", "nvm is not set up in the shell · 2 versions of Node.js inside · no project asks for it", "1.0 GB",
 		"DOCKER", "Build Cache", "docker builder prune · rebuilt when needed", "Images without containers", "4 images · pulled again when needed",
 		"Stopped containers", "6 containers · not running",
 		"PROJECT DEPENDENCIES", "old-landing: node_modules",
-		"Found", "up to 22.1 GB", "9 candidates", "Selected", "up to 18.1 GB", "5 candidates", "5 min ago",
-		"Docker volumes", "come back by themselves · up to 17.2 GB")
+		"Found", "22.1 GB", "9 candidates", "Selected", "18.1 GB", "5 candidates", "5 min ago",
+		"Docker volumes", "come back by themselves · 17.2 GB")
 	if tt.HasText("Local Volumes") {
 		t.Error("volumes are offered")
 	}
 	// The sidebar says what can be freed.
-	if !tt.HasText("up to 22.1 GB") {
+	if !tt.HasText("22.1 GB") {
 		t.Error("no size in the sidebar")
 	}
 	if err := tt.Click("nvm"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "up to 19.1 GB", "6 candidates")
+	hasTexts(t, tt, "19.1 GB", "6 candidates")
 	// Docker's check box is mixed, with only the build cache chosen: a
 	// click chooses the whole group, the next one none of it.
-	for _, want := range []string{"up to 21.9 GB", "up to 13.6 GB"} {
+	for _, want := range []string{"21.9 GB", "13.6 GB"} {
 		if err := tt.Click("Select all: Docker"); err != nil {
 			t.Fatal(err)
 		}
@@ -122,7 +123,7 @@ func TestCleanupCounting(t *testing.T) {
 	a.Sizes, a.Counting = sizes, false
 	tt.Frame()
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Can be freed", "up to 22.1 GB", "caches and extra copies")
+	hasTexts(t, tt, "Can be freed", "22.1 GB", "caches and extra copies")
 }
 
 // In Russian in a narrow window the side cards go under the table and
@@ -135,7 +136,7 @@ func TestCleanupNarrowRussian(t *testing.T) {
 	tt := ui.NewTester(a.View, 1000, 680)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "cleanup-narrow-ru")
-	hasTexts(t, tt, "Уборка", "КЭШИ · ВОССТАНОВЯТСЯ САМИ", "Кэш pnpm", "до 6,4 ГБ", "9 кандидатов", "5 кандидатов",
+	hasTexts(t, tt, "Уборка", "КЭШИ · ВОССТАНОВЯТСЯ САМИ", "Кэш pnpm", "6,4 ГБ", "9 кандидатов", "5 кандидатов",
 		"nvm не подключён к шеллу · внутри 2 версии Node.js · проекты не просят", "Не предлагаем")
 }
 
@@ -171,14 +172,14 @@ func TestCleanupRemove(t *testing.T) {
 		}
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Remove selected · up to 19.1 GB", "6 candidates")
+	hasTexts(t, tt, "Remove selected · 19.1 GB", "6 candidates")
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{brew}})
 	tt.Frame()
 	if err := tt.Click("Node.js 23.6.0 · brew"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if err := tt.Click("Remove selected · up to 19.3 GB"); err != nil {
+	if err := tt.Click("Remove selected · 19.3 GB"); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
 	tt.Advance(time.Second)
@@ -186,8 +187,20 @@ func TestCleanupRemove(t *testing.T) {
 		t.Fatalf("plan %+v, error %q", a.op, a.planErr)
 	}
 	screenshot(t, tt, "cleanup-plan")
-	hasTexts(t, tt, "Clean up the selected", "pnpm store prune", "remove ~/.bun/install/cache", "remove ~/.cache/uv",
+	hasTexts(t, tt, "Clean up the selected", "remove ~/Library/pnpm/store", "remove ~/.bun/install/cache", "remove ~/.cache/uv",
 		"/usr/local/bin/docker --context orbstack builder prune --force", "for good", "Folders are removed for good",
 		"remove ~/.nvm/versions/node/v20.18.0", "remove ~/.nvm/versions/node/v18.20.4", "/opt/homebrew/bin/brew uninstall --formula node",
 		"Packages of the versions go with them")
+}
+
+func TestCleanupCountingBanner(t *testing.T) {
+	a := cleanupApp()
+	a.Counting = true
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.CleanupCounting())
+	if tt.HasText(locales.CleanupWaiting()) {
+		t.Errorf("unexpected full-width waiting banner while candidates are already shown")
+	}
 }

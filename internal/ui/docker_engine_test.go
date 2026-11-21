@@ -75,7 +75,7 @@ func TestDockerEngineOpenAndBack(t *testing.T) {
 	if a.router.Path() != dockerEnginePage || a.router.Query("context") != "colima" {
 		t.Fatalf("at %s", a.router.Path())
 	}
-	want := docker.Target{Docker: "/opt/homebrew/bin/docker", Context: "colima", Endpoint: "unix://" + home + "/.colima/default/docker.sock"}
+	want := docker.Target{Docker: "/opt/homebrew/bin/docker", Context: "colima", Endpoint: "unix://" + home + "/.colima/default/docker.sock", Provider: "Colima"}
 	if got := w.running(); len(got) != 1 || got[0] != want {
 		t.Fatalf("watching %+v", got)
 	}
@@ -90,7 +90,7 @@ func TestDockerEngineOpenAndBack(t *testing.T) {
 	a.engine.view = dockerOverview
 	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-engine")
-	for _, text := range []string{"Overview", "Containers", "Images", "Volumes", "Networks", "4 of 8 running", "23", "Docker 27.5.1", "8.6 GB"} {
+	for _, text := range []string{"Overview", "Containers", "Images", "Volumes", "Networks", "4 of 8 running", "Colima · Docker 27.5.1 · aarch64", "8.6 GB"} {
 		if !tt.HasText(text) {
 			t.Errorf("missing %q: %q", text, tt.Texts())
 		}

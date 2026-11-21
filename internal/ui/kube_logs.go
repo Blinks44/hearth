@@ -252,9 +252,9 @@ func (a *App) logsCrumb(c *ui.Context) {
 func (a *App) logActions(c *ui.Context, l *logView, name string) {
 	action := func(key, icon, label string) ui.Element {
 		if narrow(c) {
-			return iconButton(c.Key(key), icon, label).Shrink(0).Disabled(len(l.lines) == 0)
+			return iconButton(c.Key(key), icon, label).Size(controlHeight, controlHeight).Shrink(0).Disabled(len(l.lines) == 0)
 		}
-		return kubeActionButton(c.Key(key), icon, label, 28).Shrink(0).Disabled(len(l.lines) == 0)
+		return kubeActionButton(c.Key(key), icon, label, controlHeight).Shrink(0).Disabled(len(l.lines) == 0)
 	}
 	action("logs-copy", "copy", locales.KubeLogsCopy()).OnClick(func() {
 		c.WriteClipboard(l.text())
@@ -355,7 +355,7 @@ func (l *logView) searchControls(c *ui.Context, rows []int) {
 	pal := Colors(c.Theme())
 	ui.Box(c).Grow(1)
 	ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
-		ui.SearchField(c.Key("logs-query"), &l.query).Bind(&l.queryField).Placeholder(locales.KubeLogsFind()).Width(155).
+		ui.SearchField(c.Key("logs-query"), &l.query).Bind(&l.queryField).Placeholder(locales.KubeLogsFind()).Height(controlHeight).Width(155).
 			OnChange(func() {
 				l.match = 0
 				if rows := l.matches(); len(rows) > 0 {
@@ -368,8 +368,8 @@ func (l *logView) searchControls(c *ui.Context, rows []int) {
 				count = locales.KubeLogsMatches(l.match+1, len(rows))
 			}
 			ui.Text(c, count).FontSize(11.5).TextColor(pal.TextFaint).Shrink(0).SingleLine()
-			iconButton(c, "chevron-up", locales.KubeLogsPreviousMatch()).OnClick(func() { l.step(-1) })
-			iconButton(c, "chevron-down", locales.KubeLogsNextMatch()).OnClick(func() { l.step(1) })
+			iconButton(c, "chevron-up", locales.KubeLogsPreviousMatch()).Size(controlHeight, controlHeight).OnClick(func() { l.step(-1) })
+			iconButton(c, "chevron-down", locales.KubeLogsNextMatch()).Size(controlHeight, controlHeight).OnClick(func() { l.step(1) })
 		}
 		logToggle(c, &l.times, "logs-times", "", locales.KubeLogsTime())
 		logToggle(c, &l.wrap, "logs-wrap", "wrap-text", locales.KubeLogsWrap())
@@ -526,7 +526,7 @@ func (l *logView) logLines(c *ui.Context, rows []int) {
 func logSelect(c *ui.Context, key, label, value string) ui.Element {
 	t := c.Theme()
 	pal := Colors(t)
-	b := ui.ButtonBase(c.Key(key)).Height(26).Padding(0, 8, 0, 9).Radius(7).AlignItems(ui.Center).Gap(5).
+	b := ui.ButtonBase(c.Key(key)).Height(controlHeight).Padding(0, 8, 0, 9).Radius(7).AlignItems(ui.Center).Gap(5).
 		BorderWidth(1).BorderColor(pal.ControlBorder).Label(strings.TrimSpace(label + " " + value))
 	if b.Hovered() {
 		b.Background(pal.Muted)
@@ -544,7 +544,7 @@ func logSelect(c *ui.Context, key, label, value string) ui.Element {
 func logToggle(c *ui.Context, on *bool, key, icon, label string) {
 	t := c.Theme()
 	pal := Colors(t)
-	b := ui.ToggleBase(c.Key(key), on).Height(26).Padding(0, 10).Radius(13).AlignItems(ui.Center).Gap(6).
+	b := ui.ToggleBase(c.Key(key), on).Height(controlHeight).Padding(0, 10).Radius(controlHeight / 2).AlignItems(ui.Center).Gap(6).
 		BorderWidth(1).BorderColor(pal.ControlBorder).Label(label)
 	fg := t.Text
 	switch {

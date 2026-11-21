@@ -227,6 +227,7 @@ type ColimaAction string
 const (
 	ColimaStart   ColimaAction = "start"
 	ColimaStop    ColimaAction = "stop"
+	ColimaTrim    ColimaAction = "trim"
 	ColimaResize  ColimaAction = "resize"
 	ColimaEnable  ColimaAction = "enable"
 	ColimaDisable ColimaAction = "disable"
@@ -251,6 +252,7 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 		return Step{Argv: []string{colima.Brew, "services", verb, "colima"}, Timeout: 2 * time.Minute}
 	}
 	var wantRunning bool
+	var trimDisk docker.VMDisk
 	switch action {
 	case ColimaStart:
 		if profile.Status != "" && profile.Status != "stopped" {
@@ -275,6 +277,19 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 			p.Steps = []Step{service("stop"), stop}
 			p.Notes = append(p.Notes, Note{Title: locales.ColimaDisable(), Text: locales.ColimaDisableWhy()})
 		}
+	case ColimaTrim:
+		if profile.Status != "running" {
+			return Plan{}, errors.New(locales.ColimaUnavailable())
+		}
+		var err error
+		trimDisk, err = docker.ColimaDisk(env, profile.Name)
+		if err != nil {
+			return Plan{}, err
+		}
+		trim := cmd("ssh", "--", "sudo", "fstrim", "-a")
+		trim.Timeout = 2 * time.Minute
+		p.Title, p.Why, p.Steps = locales.DockerOverviewTrimTitle(), locales.DockerOverviewTrimWhy(profile.Name), []Step{trim}
+		wantRunning = true
 	case ColimaResize:
 		if (profile.Status != "running" && profile.Status != "stopped") || profile.Disk <= 0 ||
 			limits.CPU < 1 || !(limits.Memory > 0 && limits.Memory <= 1024) ||
@@ -336,6 +351,12 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 			(profile.Name == "default" && colima.Brew != "" && docker.ColimaUsesServiceProfile(env) && docker.ColimaAutostart(ctx, r, env, colima.Brew) != colima.Autostart) {
 			return errors.New(locales.ColimaChanged())
 		}
+		if action == ColimaTrim {
+			currentDisk, err := docker.ColimaDisk(env, profile.Name)
+			if err != nil || currentDisk.Path != trimDisk.Path {
+				return errors.New(locales.ColimaChanged())
+			}
+		}
 		return nil
 	}
 	p.Verify = func(ctx context.Context) (string, error) {
@@ -367,6 +388,13 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 		}
 		if wantRunning && current.Status == "running" &&
 			(action != ColimaResize || current.CPU == limits.CPU && current.Memory == int64(float32(limits.Memory)*float32(docker.ColimaGiB)) && current.Disk >= limits.Disk*docker.ColimaGiB) {
+			if action == ColimaTrim {
+				after, err := docker.ColimaDisk(env, profile.Name)
+				if err != nil || after.Path != trimDisk.Path {
+					return "", errors.New(locales.ColimaChanged())
+				}
+				return locales.DockerOverviewTrimResult(), nil
+			}
 			return locales.ColimaRunning(), nil
 		}
 		return "", errors.New(locales.ColimaUnavailable())

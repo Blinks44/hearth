@@ -179,14 +179,14 @@ func (a *App) kubeLinkView(c *ui.Context) {
 			}
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				if d.linked && a.LinkKube != nil {
-					ui.Button(c.Key("kube-unlink"), locales.KubeUnlink()).OnClick(func() {
+					ui.Button(c.Key("kube-unlink"), locales.KubeUnlink()).Height(controlHeight).OnClick(func() {
 						d.open = false
 						a.LinkKube(d.dir, nil)
 					})
 				}
 				ui.Box(c).Grow(1).Height(1)
-				ui.Button(c, locales.Cancel()).OnClick(func() { d.open = false })
-				ui.PrimaryButton(c.Key("kube-link-save"), locales.KubeLinkSave()).Disabled(!ok).OnClick(save)
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
+				ui.PrimaryButton(c.Key("kube-link-save"), locales.KubeLinkSave()).Height(controlHeight).Disabled(!ok).OnClick(save)
 			})
 		})
 	})

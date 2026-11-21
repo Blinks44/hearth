@@ -90,7 +90,6 @@ func (a *App) kubeBulkBar(c *ui.Context, targets []kubeBulkTarget) {
 	if len(targets) == 0 || a.BuildPlan == nil {
 		return
 	}
-	t := c.Theme()
 	ns := make(map[string]bool)
 	refs := make([]ops.KubeResource, 0, len(targets))
 	restartable := true
@@ -112,20 +111,31 @@ func (a *App) kubeBulkBar(c *ui.Context, targets []kubeBulkTarget) {
 	s := &a.cluster.bulk
 	blocked := s.busy || a.op.running()
 	caption := locales.KubeBulkSelected(len(refs), len(ns))
+	floatingBulkBar(c, "bulk-bar", caption, s.clear, func(fg, dangerFg, dangerBg ui.Color) {
+		bulkAction(c.Key("bulk-restart"), "refresh-cw", restart+"…", fg, ui.Transparent, blocked || !restartable, func() {
+			a.planKubeBulk(refs, true)
+		})
+		bulkAction(c.Key("bulk-delete"), "trash-2", locales.KubeBulkDelete()+"…", dangerFg,
+			dangerBg, blocked, func() { a.planKubeBulk(refs, false) })
+	})
+}
+
+// floatingBulkBar renders the centered floating dark-pill action bar shared by
+// Kubernetes and Docker tables, with Escape shortcut and smooth entrance motion.
+func floatingBulkBar(c *ui.Context, key, caption string, clearFn func(), actions func(fg, dangerFg, dangerBg ui.Color)) {
+	t := c.Theme()
 	bg, fg := ui.RGB(31, 29, 26), ui.RGB(250, 249, 247)
-	ui.Row(c.Key("bulk-bar-position")).Absolute().Left(0).Right(0).Bottom(8).Justify(ui.Center).Children(func() {
-		ui.Row(c.Key("bulk-bar")).MinHeight(40).Padding(4, 8, 4, 14).Gap(6).AlignItems(ui.Center).
+	dangerFg, dangerBg := ui.RGB(255, 151, 140), t.Danger.Alpha(0.18)
+	ui.Row(c.Key(key + "-position")).Absolute().Left(0).Right(0).Bottom(8).Justify(ui.Center).Children(func() {
+		ui.Row(c.Key(key)).Transition(bulkBarEnter).MinHeight(40).Padding(4, 8, 4, 14).Gap(6).AlignItems(ui.Center).
 			Radius(12).Background(bg).Shadow(0, 5, 18, 0, ui.RGBA(0, 0, 0, 0.18)).Children(func() {
 			ui.Text(c, caption).FontSize(12.5).TextColor(fg).SingleLine()
 			ui.Box(c).Size(1, 18).Background(fg.Alpha(0.2)).Margin(0, 3)
-			bulkAction(c.Key("bulk-restart"), "refresh-cw", restart+"…", fg, ui.Transparent, blocked || !restartable, func() {
-				a.planKubeBulk(refs, true)
-			})
-			bulkAction(c.Key("bulk-delete"), "trash-2", locales.KubeBulkDelete()+"…", ui.RGB(255, 151, 140),
-				t.Danger.Alpha(0.18), blocked, func() { a.planKubeBulk(refs, false) })
-			bulkAction(c.Key("bulk-clear"), "", locales.KubeBulkClear(), fg, ui.Transparent, false, s.clear)
+			actions(fg, dangerFg, dangerBg)
+			bulkAction(c.Key("bulk-clear"), "", locales.KubeBulkClear(), fg, ui.Transparent, false, clearFn)
 		})
 	})
+	c.OnShortcut(0, ui.KeyEscape, clearFn)
 }
 
 func bulkAction(c *ui.Context, icon, label string, fg, bg ui.Color, disabled bool, click func()) {

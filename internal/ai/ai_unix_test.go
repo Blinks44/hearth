@@ -32,6 +32,7 @@ func TestAntigravityInventory(t *testing.T) {
 			"off":{"enabled":false,"Stop":[{"command":"not-loaded"}]}
 		}`,
 		".gemini/config/mcp_config.json":     `{"mcpServers":{"remote":{"serverUrl":"https://example.test/mcp","disabled":true}}}`,
+		".gemini/config/rules/style.md":      "---\ntrigger: always_on\n---\nKeep replies concise.\n",
 		".gemini/config/skills/agy/SKILL.md": "---\nname: agy\n---\n",
 		".gemini/skills/shared/SKILL.md":     "---\nname: shared\n---\n",
 	}, nil)
@@ -59,6 +60,12 @@ func TestAntigravityInventory(t *testing.T) {
 	}
 	if len(a.Rules) != 4 || !a.Rules[0].Risky || !a.Rules[1].Risky {
 		t.Errorf("permissions = %+v", a.Rules)
+	}
+	if !slices.Contains(a.Files, inventory.AgentFile{Path: filepath.Join(home, ".gemini/config/rules/style.md"), Kind: inventory.FileInstructions}) {
+		t.Errorf("modular rule file missing from Files: %+v", a.Files)
+	}
+	if a.Instructions == nil || a.Instructions.State != "native" || a.Instructions.Active != filepath.Join(home, ".gemini/GEMINI.md") {
+		t.Errorf("instructions = %+v", a.Instructions)
 	}
 	user, issues := MCP(env)
 	if len(issues) != 0 || len(user) != 2 || user[0].Agent != "antigravity" ||

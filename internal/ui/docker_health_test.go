@@ -55,7 +55,7 @@ func TestDockerHealthUI(t *testing.T) {
 	if want := []string{"/opt/homebrew/bin/docker", "--config", d.ConfigDir, "login", "registry.example:5000"}; !slices.Equal(login, want) {
 		t.Errorf("login argv = %q, want %q", login, want)
 	}
-	for _, size := range [][2]int{{1280, 820}, {1000, 680}} {
+	for _, size := range [][2]int{{1000, 680}, {1280, 820}} {
 		tt.SetSize(size[0], size[1])
 		tt.Advance(time.Second)
 		for _, label := range []string{

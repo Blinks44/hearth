@@ -10,6 +10,10 @@ import (
 // the pointer comes to and goes from, or a step's status tag.
 var colorFade = ui.ElementTransition{Colors: true, Shadows: true, Duration: 140 * time.Millisecond}
 
+// stateCardMotion smoothly shifts a header state card between active/counting
+// tint and its resting neutral state.
+var stateCardMotion = ui.ElementTransition{Colors: true, Duration: 260 * time.Millisecond}
+
 // cardEnter brings a card in, rising a little, where the scan adds it to a
 // page already shown, and eases its hover as colorFade does.
 var cardEnter = ui.ElementTransition{
@@ -59,6 +63,13 @@ func stepMotion(back bool) ui.ElementTransition {
 var detailEnter = ui.ElementTransition{
 	Duration: 180 * time.Millisecond,
 	Enter:    &ui.Motion{X: 12},
+}
+
+// bulkBarEnter lifts the floating bulk action bar smoothly into view from
+// below the list when items are selected.
+var bulkBarEnter = ui.ElementTransition{
+	Duration: 180 * time.Millisecond,
+	Enter:    &ui.Motion{Y: 10},
 }
 
 // barMotion moves a progress bar's fill to its new share and color.

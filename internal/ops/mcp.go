@@ -341,10 +341,11 @@ func mcpAddPlan(s inventory.MCPServer, def ai.MCPDef, id string, env sysenv.Env,
 		}
 		p.Steps = []Step{{Edit: &FileEdit{Path: path, Before: text, After: after + table, New: isNew, Hide: hide}}}
 	default:
-		text, isNew, err := readText(path)
+		before, isNew, err := readText(path)
 		if err != nil {
 			return Plan{}, err
 		}
+		text := before
 		if strings.TrimSpace(text) == "" {
 			text = "{}\n"
 		}
@@ -355,10 +356,6 @@ func mcpAddPlan(s inventory.MCPServer, def ai.MCPDef, id string, env sysenv.Env,
 		after, err := JSONSet(text, []string{key, s.Name}, jsonDef(def, id, format))
 		if err != nil {
 			return Plan{}, fmt.Errorf("%s: %w", path, err)
-		}
-		before := text
-		if isNew {
-			before = ""
 		}
 		p.Steps = []Step{{Edit: &FileEdit{Path: path, Before: before, After: after, New: isNew, Hide: hideMCPFile(id, before, hide)}}}
 	}

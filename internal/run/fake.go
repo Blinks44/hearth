@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -59,7 +60,9 @@ func (f *Fake) Run(ctx context.Context, c Cmd) (Result, error) {
 		_, _ = c.Output.Write(a.res.Stdout)
 		_, _ = c.Output.Write(a.res.Stderr)
 	}
-	return a.res, a.err
+	res := a.res
+	res.Stdout, res.Stderr = slices.Clone(res.Stdout), slices.Clone(res.Stderr)
+	return res, a.err
 }
 
 // key joins an argv with a separator no argument contains.

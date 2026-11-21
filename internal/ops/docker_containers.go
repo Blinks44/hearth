@@ -2,6 +2,7 @@ package ops
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -199,7 +200,8 @@ func PlanDockerCompose(ctx context.Context, r run.Runner, env sysenv.Env, target
 		base = append(base, "-p", project.Name)
 	}
 	files := strings.Split(project.Files, ",")
-	if project.Name == "" && len(files) == 1 {
+	if project.Name == "" {
+		files = []string{project.Files}
 		for _, name := range []string{"compose.override.yaml", "compose.override.yml", "docker-compose.override.yml", "docker-compose.override.yaml"} {
 			path := filepath.Join(project.Dir, name)
 			if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
@@ -214,26 +216,33 @@ func PlanDockerCompose(ctx context.Context, r run.Runner, env sysenv.Env, target
 		}
 		base = append(base, "-f", file)
 	}
-	if project.Name == "" {
-		cmd := target.Command(env, append(slices.Clone(base), "config", "--format", "json")...)
-		cmd.Dir = project.Dir
-		result, err := r.Run(ctx, cmd)
+	configCmd := target.Command(env, append(slices.Clone(base), "config", "--format", "json")...)
+	configCmd.Dir = project.Dir
+	readConfig := func(ctx context.Context) (string, [sha256.Size]byte, error) {
+		result, err := r.Run(ctx, configCmd)
+		defer clear(result.Stdout)
 		if err != nil {
-			return Plan{}, fmt.Errorf("compose config: %w", err)
-		}
-		if result.ExitCode != 0 {
-			return Plan{}, errors.New(locales.DockerComposeConfig())
+			return "", [sha256.Size]byte{}, fmt.Errorf("compose config: %w", err)
 		}
 		var config struct{ Name string }
-		if err := json.Unmarshal(result.Stdout, &config); err != nil {
-			return Plan{}, fmt.Errorf("compose config: %w", err)
+		if result.ExitCode != 0 || result.Truncated || json.Unmarshal(result.Stdout, &config) != nil || config.Name == "" {
+			return "", [sha256.Size]byte{}, errors.New(locales.DockerComposeConfig())
 		}
-		if config.Name == "" {
-			return Plan{}, errors.New(locales.DockerComposeConfig())
-		}
-		project.Name, project.Files = config.Name, strings.Join(files, ",")
-		base = append(base, "-p", project.Name)
+		// Only the fingerprint survives planning. docker compose config can
+		// include secrets from the environment and service env files.
+		return config.Name, sha256.Sum256(result.Stdout), nil
 	}
+	name, configHash, err := readConfig(ctx)
+	if err != nil {
+		return Plan{}, err
+	}
+	if project.Name == "" {
+		project.Name, project.Files = name, strings.Join(files, ",")
+		base = append(base, "-p", name)
+	} else if project.Name != name {
+		return Plan{}, errors.New(locales.DockerComposeChanged())
+	}
+
 	readProject := func(ctx context.Context) ([]docker.Container, error) {
 		for _, file := range files {
 			info, err := os.Stat(file)
@@ -265,6 +274,13 @@ func PlanDockerCompose(ctx context.Context, r run.Runner, env sysenv.Env, target
 		return Plan{}, err
 	}
 	check := func(ctx context.Context) error {
+		_, currentHash, err := readConfig(ctx)
+		if err != nil {
+			return err
+		}
+		if currentHash != configHash {
+			return errors.New(locales.DockerComposeConfigChanged())
+		}
 		next, err := readProject(ctx)
 		if err != nil {
 			return err

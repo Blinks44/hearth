@@ -158,12 +158,16 @@ func readLines(ctx context.Context, c Cmd, line func(string), combined bool) err
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)
 	}
+	// A child of the command may still hold the write end after
+	// CommandContext stops the command. Unblock the read on cancellation.
+	stopRead := context.AfterFunc(ctx, func() { _ = stdout.Close() })
+	defer stopRead()
 	sc := bufio.NewScanner(stdout)
 	sc.Buffer(nil, limit)
 	for sc.Scan() {
 		line(sc.Text())
 	}
-	if err := sc.Err(); err != nil {
+	if err := sc.Err(); err != nil && ctx.Err() == nil {
 		cancel()
 		_ = cmd.Wait() // killed: the line is the error
 		return fmt.Errorf("run %s: %w", c.Args[0], err)

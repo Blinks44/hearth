@@ -24,6 +24,9 @@ type dockerHealthRow struct {
 func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context string, health inventory.DockerHealth, overview bool) {
 	d := st.Docker
 	var rows []dockerHealthRow
+	if overview && a.engine.data != nil {
+		rows = a.dockerProblemRows(a.engine.data.Overview.Problems, context)
+	}
 	for _, issue := range d.CredentialIssues {
 		title := locales.DockerHelperTitle()
 		if issue.Registry != "" {
@@ -98,21 +101,22 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 		}
 		if a.dockerOpenable(context) && a.WatchDockerContainers != nil {
 			row.button = locales.KubeClusterOpen()
-			row.action = func() {
-				a.engine.view = dockerContainers
-				a.engine.containers.filter, a.engine.containers.query = dockerAll, item.Name
-				a.engine.containers.openID = item.ID
-				if !overview {
-					a.router.Push(dockerEnginePath(context))
-				}
-			}
+			row.action = func() { a.requestDockerContainer(context, item.ID, item.Name, overview, false) }
 		}
 		rows = append(rows, row)
 	}
-	if len(rows) == 0 {
+	if len(rows) == 0 && !overview {
 		return
 	}
+
 	body := func() {
+		if overview {
+			if a.engine.data.Overview.ContainersErr != nil {
+				overviewMessage(c, locales.DockerOverviewContainersUnavailable())
+			} else if len(rows) == 0 {
+				overviewMessage(c, locales.DockerOverviewNoProblems())
+			}
+		}
 		for i, row := range rows {
 			if overview {
 				dockerOverviewHealthRow(c.Key(row.key), row, i > 0)
