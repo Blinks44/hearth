@@ -121,10 +121,10 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 			}
 			listRow(c, filepath.Base(dir), false, strings.Join(parts, " · "), func() {
 				ui.Text(c, run).Font(FontMono).FontSize(12).TextColor(pal.MonoText).SingleLine()
-				plan, canInstall := a.projectInstall(pst)
+				label, runInstall, canInstall := a.projectInstallAction(pst, a.proposeOrSay)
 				switch {
 				case canInstall:
-					ui.Button(c.Key("tool-proj-install:"+dir), "").Height(controlHeight).Label(plan.Title).OnClick(func() { a.Propose(plan) }).Children(func() {
+					ui.Button(c.Key("tool-proj-install:"+dir), "").Height(controlHeight).Label(label).OnClick(runInstall).Children(func() {
 						ui.Icon(c, Icon("download")).Size(13, 13).TextColor(t.TextMuted)
 						ui.Text(c, locales.Install()).SingleLine()
 					})

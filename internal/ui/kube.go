@@ -68,19 +68,26 @@ func namespaceOf(k inventory.KubeContext) string {
 }
 
 func (a *App) kubeView(c *ui.Context, p page) {
+	cli := a.cliState()
+	current := kubeCurrent(cli)
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			if a.Snapshot != nil {
-				ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
+			if a.Snapshot == nil {
+				return
 			}
+			if current != nil && a.kubeContext(current.Name) != nil && a.WatchCluster != nil {
+				name := current.Name
+				ui.Button(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
+				ui.PrimaryButton(c.Key("kube-open-context"), locales.DockerOpenContext(name)).OnClick(func() { a.openCluster(name) })
+				return
+			}
+			ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
 		}})
 		a.kubeNamespaceDialog(c)
 		a.kindDialog(c)
 		a.kubeLinkView(c)
 		t := c.Theme()
 		pal := Colors(t)
-		cli := a.cliState()
-		current := kubeCurrent(cli)
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
@@ -126,11 +133,15 @@ func (a *App) kubeView(c *ui.Context, p page) {
 						{locales.KubeFilesTab(), strconv.Itoa(len(cli.KubeFiles))},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					if in, ok := cliCopy(cli, "kubectl"); ok && a.kubeTab == 0 && a.CheckKube != nil && kubeContextCount(cli) > 1 {
+					if in, ok := cliCopy(cli, "kubectl"); ok && a.kubeTab == 0 && a.CheckKube != nil && kubeContextCount(cli) > 0 {
 						busy := slices.ContainsFunc(cli.KubeContexts, func(k inventory.KubeContext) bool { return a.kubeChecks[k.Name].running })
-						ui.Button(c.Key("kube-check-all"), "").Height(controlHeight).Label(locales.KubeCheckAll()).Disabled(busy).Children(func() {
+						checkLabel := locales.KubeCheckAll()
+						if kubeContextCount(cli) == 1 {
+							checkLabel = locales.KubeCheckAccess()
+						}
+						ui.Button(c.Key("kube-check-all"), "").Height(controlHeight).Label(checkLabel).Disabled(busy).Children(func() {
 							spinIcon(c, "refresh-cw", 14, t.Text, busy)
-							ui.Text(c, locales.KubeCheckAll()).FontSize(12.5).SingleLine()
+							ui.Text(c, checkLabel).FontSize(12.5).SingleLine()
 						}).OnClick(func() {
 							for _, k := range cli.KubeContexts {
 								if !k.Shadowed {

@@ -400,18 +400,96 @@ func TestPackagesShowMoreAndRefresh(t *testing.T) {
 	a.packageFilter = ""
 	tt.Frame()
 
-	// Narrow window check: both Refresh index and Update selected stay visible.
+	// Narrow window check: Installed hides Update selected; Updates shows both.
 	narrow := ui.NewTester(a.View, 1000, 680)
+	narrow.Advance(time.Second)
+	if !narrow.HasText("Refresh index…") {
+		t.Fatalf("Refresh index missing at 1000x680: %q", narrow.Texts())
+	}
+	if narrow.HasText("Update selected") {
+		t.Fatalf("Update selected should be hidden outside Updates tab: %q", narrow.Texts())
+	}
+	a.packageTab = 1
+	narrow.Frame()
 	narrow.Advance(time.Second)
 	screenshot(t, narrow, "packages-narrow")
 	if !narrow.HasText("Refresh index…") || !narrow.HasText("Update selected") {
-		t.Fatalf("header actions missing at 1000x680: %q", narrow.Texts())
+		t.Fatalf("header actions missing on Updates tab at 1000x680: %q", narrow.Texts())
 	}
+	a.packageTab = 0
+	tt.Frame()
 
 	// Switching to pacman hides Refresh index (Arch forbids -Sy without -u).
 	a.packageManager = "/usr/bin/pacman"
 	tt.Frame()
 	if tt.HasText("Refresh index…") {
 		t.Fatal("pacman should not show Refresh index button")
+	}
+}
+
+func TestPackagesManagedSelectAllAndCancel(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "packages",
+		PackageManagers: []inventory.PackageManager{
+			{
+				ID: "brew", Name: "Homebrew", Version: "4.4.20", Path: "/opt/homebrew/bin/brew",
+				UpdatesKnown: true, ReasonsKnown: true,
+				Packages: []inventory.SystemPackage{
+					{Name: "git", Version: "2.48.0", Available: "2.49.0", Kind: "formula"},
+					{Name: "ripgrep", Version: "14.1.0", Available: "14.1.1", Kind: "formula"},
+				},
+			},
+			{
+				ID: "nix", Name: "Nix", Version: "2.24", Path: "/nix/var/nix/profiles/default/bin/nix",
+				Packages: []inventory.SystemPackage{{Name: "hello", Version: "2.12"}},
+			},
+		},
+	}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Managed brew must not claim read-only.
+	if tt.HasText("view only") || tt.HasText("read-only") {
+		t.Fatalf("managed Homebrew must not display read-only labels: %q", tt.Texts())
+	}
+	// Switch to Updates tab (index 3 when ReasonsKnown is true: All/Explicit/Deps/Updates).
+	a.packageTab = 3
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("Update selected") {
+		t.Fatalf("Updates tab should show Update selected: %q", tt.Texts())
+	}
+	// Select all via header checkbox.
+	if err := tt.Click("Select all"); err != nil {
+		t.Fatalf("click Select all: %v", err)
+	}
+	tt.Advance(time.Second)
+	brew := a.Snapshot.Tools[0].PackageManagers[0]
+	if len(a.packageChosen) != 2 || !a.packageChosen[brew.Path+"\x00"+packageKey(brew.Packages[0])] || !a.packageChosen[brew.Path+"\x00"+packageKey(brew.Packages[1])] {
+		t.Fatalf("Select all did not select both updates: %+v", a.packageChosen)
+	}
+	// Opening proposal and cancelling preserves selection.
+	if err := tt.Click("Update selected"); err != nil {
+		t.Fatalf("click Update selected: %v", err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil {
+		t.Fatal("expected upgrade proposal dialog")
+	}
+	a.op = nil
+	tt.Frame()
+	if len(a.packageChosen) != 2 {
+		t.Fatalf("cancelling proposal cleared packageChosen: %+v", a.packageChosen)
+	}
+
+	// Unmanaged nix still shows read-only label.
+	a.packageManager = "/nix/var/nix/profiles/default/bin/nix"
+	tt.Frame()
+	tt.Advance(time.Second)
+	if !tt.HasText("read only") {
+		t.Fatalf("unmanaged nix should show read-only label: %q", tt.Texts())
 	}
 }

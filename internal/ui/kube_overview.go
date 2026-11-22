@@ -179,7 +179,13 @@ func (a *App) overviewAttention(c *ui.Context, cl *kube.Cluster) {
 	}
 	for _, n := range cl.Overview.Nodes {
 		if !n.Ready {
-			problems = append(problems, overviewProblem{key: "node-" + n.Name, name: locales.KubeOverviewNode(n.Name), detail: locales.KubeOverviewNodeNoReady()})
+			name := n.Name
+			problems = append(problems, overviewProblem{
+				key:    "node-" + name,
+				name:   locales.KubeOverviewNode(name),
+				detail: locales.KubeOverviewNodeNoReady(),
+				open:   func() { a.openResourceLink(resourceLink{kind: kindNodes, name: name}) },
+			})
 		}
 	}
 	overviewPanel(c, locales.KubeOverviewAttention(), strconv.Itoa(len(problems)), func() {
@@ -231,13 +237,13 @@ func (a *App) overviewNodes(c *ui.Context, o *kube.Overview) {
 			overviewMessage(c, locales.KubeOverviewNoNodes())
 		default:
 			for _, n := range o.Nodes {
-				overviewNodeRow(c, n, o.RequestsErr == nil)
+				a.overviewNodeRow(c, n, o.RequestsErr == nil)
 			}
 		}
 	})
 }
 
-func overviewNodeRow(c *ui.Context, n kube.Node, requests bool) {
+func (a *App) overviewNodeRow(c *ui.Context, n kube.Node, requests bool) {
 	t := c.Theme()
 	pal := Colors(t)
 	dot := t.Success
@@ -254,28 +260,37 @@ func overviewNodeRow(c *ui.Context, n kube.Node, requests bool) {
 		shares[1] = n.Requested.Memory / n.Allocatable.Memory
 		labels[1] = requestPercent(shares[1])
 	}
-	ui.Column(c.Key("overview-node-"+n.Name)).MinHeight(48).Gap(6).Padding(8, 13).Children(func() {
-		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-			ui.Box(c).Size(7, 7).Radius(4).Background(dot).Shrink(0)
-			clipped(c, n.Name).Font(FontMono).FontSize(12).Grow(1).MinWidth(0)
-			overviewCaption(c, locales.KubeOverviewNodeRequests(labels[0], labels[1]), pal.TextFaint)
-		})
-		if n.Usage != nil {
-			overviewCaption(c, locales.KubeMetricsNodeUse(metricsCPU(n.Usage.CPU), metricsMemory(n.Usage.Memory)), pal.TextFaint)
-		}
-		if requests {
-			ui.Row(c).Gap(8).Children(func() {
-				for _, share := range shares {
-					ui.Column(c).Grow(1).Basis(0).Children(func() {
-						color := pal.Info
-						if share >= .7 {
-							color = t.Warning
-						}
-						requestBar(c, share, color)
-					})
-				}
+	name := n.Name
+	row := ui.ButtonBase(c.Key("overview-node-"+name)).MinHeight(48).Padding(8, 13).
+		AlignItems(ui.Stretch).Label(locales.KubeClusterOpen() + " " + name).
+		OnClick(func() { a.openResourceLink(resourceLink{kind: kindNodes, name: name}) })
+	if row.Hovered() {
+		row.Background(pal.Subtle)
+	}
+	row.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Box(c).Size(7, 7).Radius(4).Background(dot).Shrink(0)
+				clipped(c, n.Name).Font(FontMono).FontSize(12).Grow(1).MinWidth(0)
+				overviewCaption(c, locales.KubeOverviewNodeRequests(labels[0], labels[1]), pal.TextFaint)
 			})
-		}
+			if n.Usage != nil {
+				overviewCaption(c, locales.KubeMetricsNodeUse(metricsCPU(n.Usage.CPU), metricsMemory(n.Usage.Memory)), pal.TextFaint)
+			}
+			if requests {
+				ui.Row(c).Gap(8).Children(func() {
+					for _, share := range shares {
+						ui.Column(c).Grow(1).Basis(0).Children(func() {
+							color := pal.Info
+							if share >= .7 {
+								color = t.Warning
+							}
+							requestBar(c, share, color)
+						})
+					}
+				})
+			}
+		})
 	})
 }
 

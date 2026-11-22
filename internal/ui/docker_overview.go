@@ -2,10 +2,12 @@ package ui
 
 import (
 	"cmp"
+	"slices"
 	"strconv"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -172,6 +174,20 @@ func (a *App) dockerOverviewDisk(c *ui.Context, d *inventory.DockerState, target
 					share = float64(usage.Bytes) / float64(bytes)
 				}
 				requestBar(c, share, pal.InfoText)
+			})
+		}
+		if disk.Usage != nil {
+			var reclaimable int64
+			for _, u := range disk.Usage {
+				reclaimable += u.Reclaimable
+			}
+			ui.Row(c).Gap(8).Padding(9, 13).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, locales.DockerOverviewReclaimable(formatBytes(reclaimable))).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
+				ui.Button(c.Key("docker-overview-cleanup"), locales.ChangesOpenCleanup()).Height(24).Shrink(0).OnClick(func() {
+					a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
+					a.cleanupFilter = ""
+					a.router.Push(cleanupPage)
+				})
 			})
 		}
 		switch target.Provider {

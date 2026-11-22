@@ -15,6 +15,7 @@ import (
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -338,12 +339,12 @@ func (a *App) project(c *ui.Context, dir string) {
 						ui.Text(c, text).FontSize(12).TextColor(Colors(c.Theme()).WarningText).Grow(1).MinWidth(0)
 						for _, st := range statuses {
 							if ch, ok := st.Unmet(); ok {
-								if plan, ok := a.projectInstall(st); ok {
+								if _, run, ok := a.projectInstallAction(st, a.proposeOrSay); ok {
 									// Dark, as in the design: the page's one accent
 									// stays for the header's action.
 									ui.Button(c.Key("banner-install"), locales.InstallEllipsis(toolTitle(st.Tool)+withSpace(ch.Want))).
 										Background(c.Theme().Text).TextColor(c.Theme().Background).BorderColor(c.Theme().Text).
-										OnClick(func() { a.Propose(plan) })
+										OnClick(run)
 								}
 								break
 							}
@@ -356,10 +357,15 @@ func (a *App) project(c *ui.Context, dir string) {
 				a.projectDockerCard(c, p)
 				a.projectDatabasesCard(c, p)
 				a.projectKubeCard(c, p)
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
-					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { filesCard(c, p) })
-				})
+				if narrow(c) {
+					aiCard(c, p)
+					filesCard(c, p)
+				} else {
+					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
+						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
+						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { filesCard(c, p) })
+					})
+				}
 			})
 		})
 	})
@@ -558,20 +564,9 @@ func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
 	if !ok || ch.Installed != nil {
 		return ops.Plan{}, false
 	}
-	releases := a.projectReleases()
-	var version string
-	if st.Tool == "dotnet" && ch.SDK != nil {
-		v, found := projects.PickDotnetSDK(releases["dotnet"], *ch.SDK)
-		if !found {
-			return ops.Plan{}, false
-		}
-		version = v
-	} else {
-		selection, err := projects.SelectVersion(st, releases[st.Tool], a.nodeLines())
-		if err != nil || selection.Installed != nil {
-			return ops.Plan{}, false
-		}
-		version = selection.Version
+	version, ok := a.projectInstallVersion(st, ch)
+	if !ok {
+		return ops.Plan{}, false
 	}
 	if st.Tool == "php" {
 		newest := ""
@@ -588,16 +583,76 @@ func (a *App) projectInstall(st projects.Status) (ops.Plan, bool) {
 	if manager == "" {
 		return ops.Plan{}, false
 	}
-	installVersion := version
-	label := versionLabel(st.Tool, version)
-	switch st.Tool {
+	installVersion, label := projectInstallTarget(st.Tool, version)
+	return a.versionPlan(ops.VersionInstall, st.Tool, manager, installVersion, label, "")
+}
+
+func (a *App) projectInstallVersion(st projects.Status, ch projects.Check) (string, bool) {
+	releases := a.projectReleases()
+	if st.Tool == "dotnet" && ch.SDK != nil {
+		return projects.PickDotnetSDK(releases["dotnet"], *ch.SDK)
+	}
+	selection, err := projects.SelectVersion(st, releases[st.Tool], a.nodeLines())
+	if err != nil || selection.Installed != nil {
+		return "", false
+	}
+	return selection.Version, true
+}
+
+func projectInstallTarget(tool, version string) (installVersion, label string) {
+	installVersion = version
+	label = versionLabel(tool, version)
+	switch tool {
 	case "java":
 		installVersion, _, _ = strings.Cut(version, ".")
 		label = "Temurin " + version
 	case "dotnet":
 		label = "SDK " + version
 	}
-	return a.versionPlan(ops.VersionInstall, st.Tool, manager, installVersion, label, "")
+	return installVersion, label
+}
+
+// projectInstallAction returns an inline install action for an unmet,
+// uninstalled requirement: through the installed version manager, the tool
+// catalog for unversioned tools (Composer, uv, Docker, Git…), or auto-mise
+// when a versioned tool has no version manager yet.
+func (a *App) projectInstallAction(st projects.Status, done func(ops.Plan, error)) (label string, run func(), ok bool) {
+	ch, unmet := st.Unmet()
+	if !unmet || ch.Installed != nil {
+		return "", nil, false
+	}
+	if plan, ok := a.projectInstall(st); ok {
+		return plan.Title, func() { done(plan, nil) }, true
+	}
+	if ch.Want == "" && statusWant(st) == "" && a.canInstallTool(st.Tool) {
+		tool := st.Tool
+		return locales.PkgInstallTitle(toolTitle(tool)), func() { a.installToolPlan(tool, done) }, true
+	}
+	if st.Tool == "php" || a.BuildPlan == nil {
+		return "", nil, false
+	}
+	version, ok := a.projectInstallVersion(st, ch)
+	if !ok {
+		return "", nil, false
+	}
+	ts, _ := a.toolState(st.Tool)
+	if ts.Tool == "" {
+		ts.Tool = st.Tool
+	}
+	if a.installManager(ts) != "" {
+		return "", nil, false
+	}
+	installVersion, verLabel := projectInstallTarget(st.Tool, version)
+	p, ok := a.versionPlan(ops.VersionInstall, st.Tool, "mise", installVersion, verLabel, "")
+	if !ok {
+		return "", nil, false
+	}
+	return p.Title, func() {
+		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+			s, err := ops.SetUpMise(env)
+			return ops.WithMise(p, s), err
+		}, done)
+	}, true
 }
 
 // projectHero is the folder, its name and what it needs, and on the right
@@ -649,7 +704,7 @@ func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects
 }
 
 // requirementTable is a row per tool: what the project needs and from
-// which file, what is installed, and what the terminal runs in its folder.
+// which files, what is installed, and what the terminal runs in its folder.
 func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -661,17 +716,23 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 			ui.Box(c).Width(110).Shrink(0)
 		})
 		for _, st := range statuses {
-			src := primaryCheck(st)
-			ui.Row(c).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+			dest := projectToolPath(st.Tool)
+			row := ui.ButtonBase(c.Key("req:"+st.Tool)).Gap(12).Padding(12, 16).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(toolTitle(st.Tool)).Transition(colorFade)
+			if row.Hovered() {
+				row.Background(pal.Subtle)
+			}
+			childClicked := false
+			row.Children(func() {
 				ui.Row(c).Grow(columnGrow[0]).Basis(0).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
 					iconOrLogo(c, toolIcon(st.Tool), 16, t.TextMuted)
 					ui.Text(c, toolTitle(st.Tool)).FontSize(13.5).SingleLine()
 				})
-				want := statusWant(st)
+				want := statusWants(st)
 				if want == "" {
 					want = locales.AnyVersion()
 				}
-				cell(c, columnGrow[1], want, checkSource(src), pal.TextFaint)
+				cell(c, columnGrow[1], want, checkSources(st), pal.TextFaint)
 				installed, caption, warn := installedCell(st)
 				color := pal.TextFaint
 				if warn {
@@ -689,10 +750,13 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 				}
 				cell(c, columnGrow[3], run, runCaption, pal.TextFaint)
 				ui.Row(c).Width(110).Shrink(0).Justify(ui.End).Children(func() {
-					plan, install := a.projectInstall(st)
+					label, runInstall, install := a.projectInstallAction(st, a.proposeOrSay)
 					switch {
 					case install:
-						ui.Button(c.Key("install:"+st.Tool), "").Label(plan.Title).OnClick(func() { a.Propose(plan) }).Children(func() {
+						ui.Button(c.Key("install:"+st.Tool), "").Label(label).OnClick(func() {
+							childClicked = true
+							runInstall()
+						}).Children(func() {
 							ui.Icon(c, Icon("download")).Size(13, 13).TextColor(t.TextMuted)
 							ui.Text(c, locales.Install()).SingleLine()
 						})
@@ -705,6 +769,9 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 					}
 				})
 			})
+			if row.Clicked() && !childClicked && dest != "" {
+				a.router.Push(dest)
+			}
 		}
 	})
 }
@@ -717,9 +784,9 @@ var columnGrow = [4]float32{0.8, 1, 1.4, 1}
 // caption in color.
 func cell(c *ui.Context, grow float32, value, caption string, color ui.Color) {
 	ui.Column(c).Grow(grow).Basis(0).MinWidth(0).Gap(2).Children(func() {
-		ui.Text(c, value).Font(FontMono).FontSize(13).SingleLine()
+		clipped(c, value).Font(FontMono).FontSize(13)
 		if caption != "" {
-			ui.Text(c, caption).FontSize(11.5).TextColor(color).SingleLine()
+			clipped(c, caption).FontSize(11.5).TextColor(color)
 		}
 	})
 }
@@ -976,6 +1043,17 @@ func statusWant(st projects.Status) string {
 	return ""
 }
 
+// statusWants joins every distinct non-empty version requirement for a tool.
+func statusWants(st projects.Status) string {
+	var wants []string
+	for _, ch := range st.Checks {
+		if ch.Want != "" && !slices.Contains(wants, ch.Want) {
+			wants = append(wants, ch.Want)
+		}
+	}
+	return strings.Join(wants, " · ")
+}
+
 // checkSource is where a requirement comes from, as "package.json ·
 // packageManager".
 func checkSource(ch projects.Check) string {
@@ -983,6 +1061,17 @@ func checkSource(ch projects.Check) string {
 		return ch.File
 	}
 	return ch.File + " · " + ch.Key
+}
+
+// checkSources joins every distinct requirement source for a tool.
+func checkSources(st projects.Status) string {
+	var sources []string
+	for _, ch := range st.Checks {
+		if src := checkSource(ch); src != "" && !slices.Contains(sources, src) {
+			sources = append(sources, src)
+		}
+	}
+	return strings.Join(sources, ", ")
 }
 
 // statusProblem is what keeps a checked tool from being ready in the
@@ -1118,6 +1207,7 @@ var toolTitles = map[string]string{
 	"python": "Python", "uv": "uv", "rust": "Rust", "go": "Go", "java": "Java", "ruby": "Ruby",
 	"php": "PHP", "composer": "Composer", "dotnet": ".NET", "docker": "Docker", "git": "Git", "cpp": "C/C++",
 	"pipx": "pipx", "bundler": "Bundler", "maven": "Maven", "gradle": "Gradle", "helm": "Helm",
+	"terraform": "Terraform", "tofu": "OpenTofu",
 }
 
 func toolTitle(id string) string {

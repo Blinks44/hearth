@@ -423,14 +423,20 @@ func (a *App) cloudLoginView(c *ui.Context) {
 		ui.Column(c).Children(func() {
 			ui.Column(c).Gap(16).Padding(22, 24, 18, 24).Children(func() {
 				// Header
+				lead := locales.CloudLoginLead(d.tool, d.dir)
+				step1Desc := locales.CloudLoginStep1Desc(d.dir)
+				if awsNeedsSetup {
+					lead = locales.CloudLoginLeadTerminal(d.tool, d.dir)
+					step1Desc = locales.CloudLoginStep1DescTerminal(d.dir)
+				}
 				ui.Column(c).Gap(6).Children(func() {
 					ui.Text(c, locales.CloudLoginTitle(provider)).FontSize(18).FontWeight(600)
-					ui.Text(c, locales.CloudLoginLead(d.tool, d.dir)).FontSize(13).TextColor(t.TextMuted).Wrap()
+					ui.Text(c, lead).FontSize(13).TextColor(t.TextMuted).Wrap()
 				})
 
 				// Numbered steps card (matching Frame 99)
 				ui.Column(c).Radius(10).Clip().Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
-					cloudLoginStepRow(c, 1, step1Cmd, true, locales.CloudLoginStep1Desc(d.dir), false)
+					cloudLoginStepRow(c, 1, step1Cmd, true, step1Desc, false)
 					cloudLoginStepRow(c, 2, step2Cmd, true, locales.CloudLoginStep2Desc(d.tool), true)
 					cloudLoginStepRow(c, 3, step3Title, false, step3Desc, true)
 				})
@@ -467,6 +473,16 @@ func (a *App) cloudLoginView(c *ui.Context) {
 							Label(locales.CloudLoginOpenTerminal()).OnClick(runSignIn).Children(func() {
 							ui.Icon(c, Icon("terminal")).Size(14, 14)
 							ui.Text(c, locales.CloudLoginOpenTerminal()).FontSize(12.5).FontWeight(500).SingleLine()
+						})
+					} else {
+						ui.PrimaryButton(c.Key("cloud-login-copy"), "").Height(controlHeight).
+							Label(locales.CloudLoginCopyCommand()).OnClick(func() {
+							c.WriteClipboard(step1Cmd)
+							c.Toast(locales.PrepareCopied())
+							d.open = false
+						}).Children(func() {
+							ui.Icon(c, Icon("copy")).Size(14, 14)
+							ui.Text(c, locales.CloudLoginCopyCommand()).FontSize(12.5).FontWeight(500).SingleLine()
 						})
 					}
 				} else if a.BuildPlan != nil {

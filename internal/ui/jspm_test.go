@@ -61,8 +61,11 @@ func TestJSManagersPage(t *testing.T) {
 	a.jspmFilter = "no-match"
 	tt.Frame()
 	tt.Advance(time.Second)
-	if !tt.HasText("No package managers found") {
-		t.Error("filter did not apply")
+	if !tt.HasText("No managers match the filter.") {
+		t.Errorf("filter did not apply; texts: %q", tt.Texts())
+	}
+	if tt.HasText("Install Node") {
+		t.Error("non-matching filter must not show Install Node button")
 	}
 }
 

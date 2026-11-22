@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/locales"
 	"github.com/Blinks44/hearth/resources"
 )
@@ -217,7 +218,7 @@ func (a *App) hiddenIssuesCard(c *ui.Context) {
 			}
 		}
 		for _, key := range a.Hidden {
-			title, hint := key, locales.SettingsHiddenInactive()
+			title, hint := staleIssueTitle(key, a.Home), locales.SettingsHiddenInactive()
 			if it, ok := byKey[key]; ok {
 				title, hint = it.title, it.explain
 			}
@@ -227,6 +228,60 @@ func (a *App) hiddenIssuesCard(c *ui.Context) {
 			})
 		}
 	})
+}
+
+// staleIssueTitle turns a structured issueKey ("kind:tool:project:...") into a
+// readable fallback label when the issue is no longer active; plain keys are
+// returned as-is.
+func staleIssueTitle(key, home string) string {
+	raw := strings.Split(key, ":")
+	if len(raw) < 3 {
+		return key
+	}
+	parts := make([]string, 0, len(raw))
+	for i := 0; i < len(raw); i++ {
+		if i+1 < len(raw) && len(raw[i]) == 1 && ((raw[i][0] >= 'A' && raw[i][0] <= 'Z') || (raw[i][0] >= 'a' && raw[i][0] <= 'z')) && (strings.HasPrefix(raw[i+1], `\`) || strings.HasPrefix(raw[i+1], "/")) {
+			parts = append(parts, raw[i]+":"+raw[i+1])
+			i++
+			continue
+		}
+		parts = append(parts, raw[i])
+	}
+	if len(parts) < 3 {
+		return key
+	}
+	kind := issues.Kind(parts[0])
+	switch kind {
+	case issues.InstructionDiffers,
+		issues.DockerUnavailable, issues.DockerDenied, issues.DockerSignIn,
+		issues.Duplicate, issues.GUIDiffers,
+		issues.ProjectMissing, issues.ProjectTerminal,
+		issues.Unsupported, issues.PathCurrentDir, issues.PathMissing,
+		issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing, issues.PlainSecret, issues.SettingsSecret, issues.AgentUnasked,
+		issues.StubOnPath, issues.ExtraVersion, issues.SlowStartup:
+	default:
+		return key
+	}
+	var label []string
+	if tool := parts[1]; tool != "" {
+		label = append(label, toolName(tool))
+	}
+	if proj := parts[2]; proj != "" {
+		label = append(label, filepath.Base(proj))
+	}
+	for _, extra := range parts[3:] {
+		if extra == "" {
+			continue
+		}
+		if filepath.IsAbs(extra) {
+			extra = tilde(extra, home)
+		}
+		label = append(label, extra)
+	}
+	if len(label) == 0 {
+		return key
+	}
+	return strings.Join(label, " · ")
 }
 
 // licensesDialog shows Hearth's license and those of the fonts, icons and
@@ -375,8 +430,8 @@ func (a *App) customAppPathRow(c *ui.Context, key, targetLabel string, input *st
 		if trimmed == "" {
 			return
 		}
-		if !filepath.IsAbs(trimmed) {
-			a.SettingsError = locales.PathAddInvalid()
+		if !validCustomApp(trimmed) {
+			a.SettingsError = locales.SettingsCustomAppInvalid()
 			return
 		}
 		*input = trimmed

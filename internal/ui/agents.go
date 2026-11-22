@@ -642,6 +642,9 @@ func (a *App) openFile(c *ui.Context, path string) {
 		})
 		return
 	}
+	if a.Shell == nil {
+		return
+	}
 	if err := a.Shell.OpenPath(path); err != nil {
 		c.Toast(locales.OpenFailed(tilde(path, a.Home), err.Error()))
 	}
@@ -668,7 +671,7 @@ func (a *App) editorChoices() []run.App {
 	return choices
 }
 
-// chosenEditor is the editor chosen in Settings, while it is installed or a custom path.
+// chosenEditor is the editor chosen in Settings, while it is installed or a custom path/command.
 func (a *App) chosenEditor() (run.App, bool) {
 	if a.Editor == "" {
 		return run.App{}, false
@@ -678,7 +681,7 @@ func (a *App) chosenEditor() (run.App, bool) {
 			return e, true
 		}
 	}
-	if isCustomAppPath(a.Editor) {
+	if validCustomApp(a.Editor) {
 		return run.App{Name: a.Editor, Path: a.Editor}, true
 	}
 	return run.App{}, false
@@ -687,6 +690,32 @@ func (a *App) chosenEditor() (run.App, bool) {
 func isCustomAppPath(p string) bool {
 	trimmed := strings.TrimSpace(p)
 	return filepath.IsAbs(trimmed) || strings.HasPrefix(trimmed, "~") || strings.ContainsAny(trimmed, `/\`)
+}
+
+// isPathCommand reports whether s is a single executable name (without path
+// separators, whitespace, or shell metacharacters) suitable for PATH lookup.
+func isPathCommand(s string) bool {
+	if s == "" || s == "." || s == ".." || strings.HasPrefix(s, "-") {
+		return false
+	}
+	for _, r := range s {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		case r == '.' || r == '-' || r == '_' || r == '+' || r == '@':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// validCustomApp reports whether s is an absolute path or a bare PATH command name.
+func validCustomApp(s string) bool {
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" || strings.ContainsAny(trimmed, "\"'\r\n\x00") {
+		return false
+	}
+	return filepath.IsAbs(trimmed) || isPathCommand(trimmed)
 }
 
 // fileKind says what an agent's file holds.

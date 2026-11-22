@@ -94,7 +94,7 @@ func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 	ins := st.Installations
 	pal := Colors(c.Theme())
 	asOf := ""
-	if a.RubyVersions != nil {
+	if a.RubyVersions != nil && !a.RubyVersions.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(a.RubyVersions.Fetched)
 	}
 	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {

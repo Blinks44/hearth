@@ -59,6 +59,13 @@ func (a *App) mobileCount() int {
 	return n
 }
 
+// mobileFound reports whether the Mobile page has any detected installation,
+// runtime, SDK, or CocoaPods to display (so it is not hidden in the sidebar).
+func (a *App) mobileFound() bool {
+	m := a.mobileState()
+	return len(m.Xcodes) > 0 || len(m.Runtimes) > 0 || m.CocoaPods != nil || m.Android != nil || m.Flutter != nil
+}
+
 // pathSize is the space the last count found at path.
 func (a *App) pathSize(path string) (int64, bool) {
 	if a.Sizes == nil {
@@ -222,16 +229,24 @@ func (a *App) mobileView(c *ui.Context, p page) {
 		m := a.mobileState()
 		groups := a.mobileGroups(m)
 		var total int64
+		totalKnown := a.Sizes != nil
 		for _, g := range groups {
 			for _, r := range g.rows {
+				if r.path != "" && !r.sized {
+					totalKnown = false
+				}
 				total += r.size
 			}
 		}
 		var removable []cleanup.Candidate
 		var frees int64
+		freesKnown := a.Sizes != nil
 		for _, cand := range a.candidates(c) {
 			if cand.Kind == cleanup.Cache && slices.Contains(mobileCaches, cand.ID) {
 				removable = append(removable, cand)
+				if !cand.Known {
+					freesKnown = false
+				}
 				frees += cand.Frees()
 			}
 		}
@@ -249,12 +264,13 @@ func (a *App) mobileView(c *ui.Context, p page) {
 					if len(m.Xcodes) > 0 {
 						x := m.Xcodes[0]
 						caption := locales.MobileNotSelected()
+						dot := t.Warning
 						for _, o := range m.Xcodes {
 							if o.Selected {
-								x, caption = o, "xcode-select"
+								x, caption, dot = o, "xcode-select", t.Success
 							}
 						}
-						stateCard(c, t.Success, "Xcode", x.Version, caption)
+						stateCard(c, dot, "Xcode", x.Version, caption)
 					}
 					switch sdk := m.Android; {
 					case sdk == nil:
@@ -268,7 +284,19 @@ func (a *App) mobileView(c *ui.Context, p page) {
 						}
 						stateCard(c, t.Success, "Android SDK", "API "+strconv.Itoa(sdk.Platforms[0].API), caption)
 					}
-					stateCard(c, t.Warning, locales.MobileTake(), formatBytes(total), locales.MobileToCleanup(formatBytes(frees)))
+					totalText := "…"
+					if totalKnown {
+						totalText = formatBytes(total)
+					}
+					freesText := locales.MobileCounting()
+					spaceDot := pal.TextFaint
+					if freesKnown {
+						freesText = locales.MobileToCleanup(formatBytes(frees))
+						if frees > 0 {
+							spaceDot = t.Warning
+						}
+					}
+					stateCard(c, spaceDot, locales.MobileTake(), totalText, freesText)
 				})
 				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
 				if narrow(c) {
@@ -327,12 +355,27 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 				continue
 			}
 			var size int64
+			sized := true
+			hasPath := false
 			for _, r := range rows {
+				if r.path != "" {
+					hasPath = true
+					if !r.sized {
+						sized = false
+					}
+				}
 				size += r.size
+			}
+			groupSize := "—"
+			switch {
+			case hasPath && !sized:
+				groupSize = "…"
+			case hasPath:
+				groupSize = formatBytes(size)
 			}
 			ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 				ui.Text(c, strings.ToUpper(g.title)).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
-				ui.Text(c, formatBytes(size)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+				ui.Text(c, groupSize).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 				if a.Shell != nil {
 					ui.Box(c).Width(50).Shrink(0)
 				}

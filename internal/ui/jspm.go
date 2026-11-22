@@ -47,9 +47,13 @@ func (a *App) jspm(c *ui.Context, p page) {
 						stateCard(c, dot, id, value, caption)
 					}
 				})
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					segments(c, "jspm-tabs", &a.jspmTab, []segment{{locales.JsManagers(), strconv.Itoa(a.jsCount())}, {locales.GlobalPackages(), ""}, {locales.ProjectsTitle(), strconv.Itoa(len(a.Projects))}, {"PATH", ""}})
-					ui.Box(c).Grow(1)
+				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
+					segments(c, "jspm-tabs", &a.jspmTab, []segment{{locales.JsManagers(), strconv.Itoa(a.jsCount())}, {locales.GlobalPackages(), ""}, {locales.ProjectsTitle(), strconv.Itoa(a.jsProjectCount())}, {"PATH", ""}})
+					ui.Box(c).Grow(1).Height(1)
 					if a.jspmTab == 0 {
 						ui.SearchField(c.Key("jspm-filter"), &a.jspmFilter).Bind(&a.filterField).Placeholder(locales.JsFilter()).Height(controlHeight).Width(200)
 					}
@@ -96,6 +100,34 @@ func (a *App) jsCount() int {
 	return n
 }
 
+func (a *App) jsProjectCount() int {
+	n := 0
+	for _, p := range a.Projects {
+		if labels, _ := jsProjectLabels(p); len(labels) > 0 {
+			n++
+		}
+	}
+	return n
+}
+
+func jsProjectLabels(p projects.Project) ([]string, int) {
+	var labels []string
+	locks := 0
+	for _, r := range p.Requirements {
+		if !slices.Contains(jsManagers, r.Tool) {
+			continue
+		}
+		if r.Key == "packageManager" {
+			labels = append(labels, r.Tool+"@"+r.Want)
+		}
+		if r.File == "package-lock.json" || r.File == "pnpm-lock.yaml" || r.File == "yarn.lock" {
+			labels = append(labels, r.File)
+			locks++
+		}
+	}
+	return labels, locks
+}
+
 func (a *App) jsTable(c *ui.Context) {
 	pal := Colors(c.Theme())
 	// The projects each copy runs in, as the terminal there picks it.
@@ -110,6 +142,7 @@ func (a *App) jsTable(c *ui.Context) {
 	}
 	listCard(c, locales.JsManagers(), locales.ColumnPath(), func() {
 		count := 0
+		total := 0
 		for _, id := range jsManagers {
 			st, checked := a.Snapshot.Tool(id)
 			if st.Err != "" {
@@ -125,6 +158,7 @@ func (a *App) jsTable(c *ui.Context) {
 				if in.Source.Shim && in.Source.Manager != "corepack" {
 					continue
 				}
+				total++
 				text := id + " " + versionText(in.Version)
 				if in.Source.Shim {
 					text = id
@@ -171,8 +205,12 @@ func (a *App) jsTable(c *ui.Context) {
 			}
 		}
 		if count == 0 {
-			cardNote(c, locales.JsNoManagers())
-			ui.Row(c).Padding(0, 14, 12, 14).Children(func() { a.installPrimary(c, "node") })
+			if total > 0 && strings.TrimSpace(a.jspmFilter) != "" {
+				cardNote(c, locales.JsNoMatches())
+			} else {
+				cardNote(c, locales.JsNoManagers())
+				ui.Row(c).Padding(0, 14, 12, 14).Children(func() { a.installPrimary(c, "node") })
+			}
 		}
 		for _, id := range []string{"pnpm", "yarn"} {
 			if a.canInstallTool(id) {
@@ -259,20 +297,7 @@ func (a *App) jsProjects(c *ui.Context) {
 	listCard(c, locales.JsProjectManagers(), "packageManager · lockfile", func() {
 		count := 0
 		for _, p := range a.Projects {
-			var labels []string
-			locks := 0
-			for _, r := range p.Requirements {
-				if !slices.Contains(jsManagers, r.Tool) {
-					continue
-				}
-				if r.Key == "packageManager" {
-					labels = append(labels, r.Tool+"@"+r.Want)
-				}
-				if r.File == "package-lock.json" || r.File == "pnpm-lock.yaml" || r.File == "yarn.lock" {
-					labels = append(labels, r.File)
-					locks++
-				}
-			}
+			labels, locks := jsProjectLabels(p)
 			if len(labels) == 0 {
 				continue
 			}

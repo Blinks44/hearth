@@ -60,6 +60,11 @@ func (a *App) packages(c *ui.Context, p page) {
 		} else if partial {
 			updateCount = atLeast(updates)
 		}
+		maxTab := 1
+		if m.ReasonsKnown {
+			maxTab = 3
+		}
+		a.packageTab = min(a.packageTab, maxTab)
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			a.refreshIndexButton(c, m)
 			a.upgradeButton(c, m)
@@ -84,7 +89,14 @@ func (a *App) packages(c *ui.Context, p page) {
 					}
 					stateCard(c, c.Theme().Success, m.Name, version, "")
 					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, countNote)
-					stateCard(c, c.Theme().Warning, locales.PkgUpdateSummary(), updateCount, updateNote)
+					updateDot := pal.TextFaint
+					switch {
+					case updates > 0:
+						updateDot = c.Theme().Warning
+					case m.UpdatesKnown:
+						updateDot = c.Theme().Success
+					}
+					stateCard(c, updateDot, locales.PkgUpdateSummary(), updateCount, updateNote)
 				})
 				// A narrow window puts the order and the filter under the tabs.
 				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
@@ -131,8 +143,12 @@ func (a *App) packages(c *ui.Context, p page) {
 						warningRow(c, locales.PkgProbeFailed()+" "+warning)
 					}
 					a.packageTable(c, m)
-					toolNote(c, locales.PkgReadOnly())
-					listCard(c, locales.PkgStatus(), locales.PkgReadOnlyLabel(), func() {
+					statusAside := ""
+					if !ops.PackageManaged(m.ID) {
+						toolNote(c, locales.PkgReadOnly())
+						statusAside = locales.PkgReadOnlyLabel()
+					}
+					listCard(c, locales.PkgStatus(), statusAside, func() {
 						listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
 							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
 						})
@@ -194,9 +210,45 @@ func (a *App) packages(c *ui.Context, p page) {
 
 func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 	pal := Colors(c.Theme())
+	filter := strings.ToLower(a.packageFilter)
+	updatesTab, askedTab, depsTab := a.packageTab == updatesTabIndex(m), false, false
+	if m.ReasonsKnown {
+		askedTab, depsTab = a.packageTab == 1, a.packageTab == 2
+	}
+	var visibleUpdates []string
+	if updatesTab && choosable(m) {
+		for _, pkg := range m.Packages {
+			if pkg.Available != "" && strings.Contains(strings.ToLower(pkg.Name), filter) {
+				visibleUpdates = append(visibleUpdates, m.Path+"\x00"+packageKey(pkg))
+			}
+		}
+	}
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.PkgPackage()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
+		ui.Row(c).Gap(12).Padding(8, 16).AlignItems(ui.Center).Background(pal.Subtle).Children(func() {
+			ui.Row(c).Width(nameWidth(c)).Gap(10).AlignItems(ui.Center).Children(func() {
+				if len(visibleUpdates) > 0 {
+					allSelected := true
+					for _, key := range visibleUpdates {
+						if !a.packageChosen[key] {
+							allSelected = false
+							break
+						}
+					}
+					if ui.Checkbox(c.Key("select-all"), &allSelected, "").Label(locales.PkgSelectAll()).Changed() {
+						if a.packageChosen == nil {
+							a.packageChosen = map[string]bool{}
+						}
+						for _, key := range visibleUpdates {
+							if allSelected {
+								a.packageChosen[key] = true
+							} else {
+								delete(a.packageChosen, key)
+							}
+						}
+					}
+				}
+				ui.Text(c, locales.PkgPackage()).FontSize(11.5).TextColor(pal.TextFaint)
+			})
 			ui.Text(c, locales.PkgKind()).Width(64).FontSize(11.5).TextColor(pal.TextFaint)
 			usage := locales.PkgPathUsage()
 			if m.ReasonsKnown {
@@ -204,7 +256,6 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 			}
 			ui.Text(c, usage).FontSize(11.5).TextColor(pal.TextFaint)
 		})
-		filter := strings.ToLower(a.packageFilter)
 		dependents := packageDependents(m)
 		order := make([]int, len(m.Packages))
 		for i := range order {
@@ -221,10 +272,6 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 				sy, _ := a.Sizes.Size(m.Packages[y])
 				return cmp.Compare(sy.Bytes, sx.Bytes)
 			})
-		}
-		updatesTab, askedTab, depsTab := a.packageTab == updatesTabIndex(m), false, false
-		if m.ReasonsKnown {
-			askedTab, depsTab = a.packageTab == 1, a.packageTab == 2
 		}
 		limitKey := m.Path + "\x00" + strconv.Itoa(a.packageTab) + "\x00" + strconv.Itoa(a.packageSort) + "\x00" + filter
 		if a.packageLimitKey != limitKey || a.packageLimit < maxPackageRows {
@@ -562,7 +609,7 @@ func (a *App) upgradeButton(c *ui.Context, m inventory.PackageManager) {
 		}
 		return
 	}
-	if !choosable(m) {
+	if !choosable(m) || a.packageTab != updatesTabIndex(m) {
 		return
 	}
 	var chosen []inventory.SystemPackage
@@ -573,8 +620,7 @@ func (a *App) upgradeButton(c *ui.Context, m inventory.PackageManager) {
 	}
 	ui.PrimaryButton(c.Key("package-upgrade"), locales.PkgUpgradeChosen()).Disabled(len(chosen) == 0).OnClick(func() {
 		if p, ok := a.packagePlan(ops.PackageUpgrade, m, chosen); ok {
-			a.packageChosen = nil
-			a.Propose(p)
+			a.proposeThen(func() { a.packageChosen = nil })(p, nil)
 		}
 	})
 }

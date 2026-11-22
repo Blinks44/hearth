@@ -92,7 +92,7 @@ func Resolve(p Project, s *inventory.Snapshot, lines map[int]versions.Line) []St
 		}
 		for j := range st.Checks {
 			c := &st.Checks[j]
-			match, err := matcher(st.Tool, c.Want, lines)
+			match, err := requirementMatcher(st.Tool, c.Requirement, lines)
 			if err != nil {
 				c.Err = err.Error()
 				continue
@@ -212,6 +212,26 @@ func installedVersion(version string) (*semver.Version, error) {
 		version = strings.Join(parts[:3], ".")
 	}
 	return semver.NewVersion(version)
+}
+
+// requirementMatcher turns one project requirement into an installation check.
+// An exact packageManager pin (such as pnpm@9.15.0) accepts the pinned version
+// and newer releases in the same major so minor/patch updates do not cause a
+// false warning, while a different major or a conflicting engines range still fails.
+func requirementMatcher(tool string, req Requirement, lines map[int]versions.Line) (func(inventory.Installation) bool, error) {
+	if req.Key == "packageManager" {
+		want := strings.TrimSpace(req.Want)
+		if v, err := semver.StrictNewVersion(want); err == nil {
+			c, err := semver.NewConstraint(fmt.Sprintf(">= %s, < %d.0.0", v.String(), v.Major()+1))
+			if err == nil {
+				return func(in inventory.Installation) bool {
+					iv, err := installedVersion(in.Version)
+					return err == nil && c.Check(iv)
+				}, nil
+			}
+		}
+	}
+	return matcher(tool, req.Want, lines)
 }
 
 // matcher reads want, as a project file writes it, into a test of

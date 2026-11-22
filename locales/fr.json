@@ -181,7 +181,7 @@
   "dockerContainersRunning": "En cours",
   "dockerContainersStopped": "Arrêtés",
   "dockerContainerSearch": "Nom, image ou port",
-  "dockerUptime": "Durée d’activité",
+  "dockerUptime": "Durée",
   "dockerContainersEmpty": "Aucun conteneur correspondant",
   "dockerContainersCount": "{shown} affichés · {running} en cours",
   "dockerCollapseAll": "Tout replier",
@@ -3185,5 +3185,15 @@
   "settingsPickEditor": "Choisir l'application ou l'exécutable de l'éditeur",
   "settingsHiddenIssues": "Problèmes masqués",
   "settingsNoHiddenIssues": "Aucun problème masqué",
-  "settingsHiddenInactive": "Absent de la dernière vérification"
+  "settingsHiddenInactive": "Absent de la dernière vérification",
+  "pkgSelectAll": "Tout sélectionner",
+  "settingsCustomAppInvalid": "Indiquez un nom de commande dans PATH ou un chemin absolu vers une application.",
+  "mobileCounting": "Calcul…",
+  "jsNoMatches": "Aucun gestionnaire ne correspond au filtre.",
+  "cloudLoginLeadTerminal": "Hearth lance la CLI officielle de {tool} dans votre terminal pour configurer la connexion. Hearth ne voit jamais votre mot de passe et ne stocke aucun jeton ; {tool} les enregistre dans {dir}.",
+  "cloudLoginStep1DescTerminal": "Lance la configuration interactive dans votre terminal et enregistre le profil dans {dir}",
+  "cloudLoginCopyCommand": "Copier la commande",
+  "projectInstructionsTemplate": "# Instructions du projet\n\n## Build et tests\n- Documentez les commandes de build, lint et test de ce dépôt.\n\n## Conventions\n- Décrivez la structure du projet, le style de code et les règles pour les agents.\n",
+  "backToOverview": "Retour à l'aperçu",
+  "changeSkillTitle": "Skill {name}"
 }

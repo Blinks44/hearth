@@ -16,11 +16,21 @@ import (
 func TestTerminalLauncher(t *testing.T) {
 	script := "/tmp/a b.command"
 	if runtime.GOOS == "darwin" {
+		orig := lookPath
+		lookPath = func(name string) (string, error) {
+			if name == "rio" || name == "alacritty" {
+				return "/opt/homebrew/bin/" + name, nil
+			}
+			return "", errors.New("not found")
+		}
+		t.Cleanup(func() { lookPath = orig })
 		for app, want := range map[string][]string{
 			"":                            {"/usr/bin/open", "-a", "Terminal", script},
 			"Warp":                        {"/usr/bin/open", "-a", "Warp", script},
 			"Ghostty":                     {"/usr/bin/open", "-na", "Ghostty", "--args", "-e", script},
 			"unknown":                     {"/usr/bin/open", "-a", "Terminal", script},
+			"rio":                         {"/opt/homebrew/bin/rio", "-e", "/bin/sh", script},
+			"alacritty":                   {"/opt/homebrew/bin/alacritty", "-e", "/bin/sh", script},
 			"/Applications/Ghostty.app/":  {"/usr/bin/open", "-na", "/Applications/Ghostty.app", "--args", "-e", script},
 			"/Applications/WezTerm.app":   {"/usr/bin/open", "-na", "/Applications/WezTerm.app", "--args", "start", "--", script},
 			"/Applications/MyTerm.app":    {"/usr/bin/open", "-a", "/Applications/MyTerm.app", script},

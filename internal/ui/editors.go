@@ -167,12 +167,16 @@ func (a *App) editorsView(c *ui.Context, p page) {
 					})
 				}, func() {
 					stateCard(c, pal.TextFaint, locales.EditorsFound(), strconv.Itoa(len(eds)), locales.EditorsFoundCaption())
-					stateCard(c, t.Success, locales.EditorsCommands(), locales.EditorsOf(len(commands), len(eds)), strings.Join(commands, ", "))
+					cmdDot := pal.TextFaint
+					if len(commands) > 0 {
+						cmdDot = t.Success
+					}
+					stateCard(c, cmdDot, locales.EditorsCommands(), locales.EditorsOf(len(commands), len(eds)), strings.Join(commands, ", "))
 					total := "…" // until the count reaches every folder
 					if counted {
 						total = formatBytes(size)
 					}
-					stateCard(c, t.Warning, locales.EditorsExtensionsCard(), total, locales.EditorsExtensions(extensions))
+					stateCard(c, pal.TextFaint, locales.EditorsExtensionsCard(), total, locales.EditorsExtensions(extensions))
 				})
 				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
 				if narrow(c) {

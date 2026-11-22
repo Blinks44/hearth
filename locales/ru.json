@@ -181,7 +181,7 @@
   "dockerContainersRunning": "Работают",
   "dockerContainersStopped": "Остановлены",
   "dockerContainerSearch": "Имя, образ или порт",
-  "dockerUptime": "Время работы",
+  "dockerUptime": "Время",
   "dockerContainersEmpty": "Подходящих контейнеров нет",
   "dockerContainersCount": "Показано {shown} · работают {running}",
   "dockerCollapseAll": "Свернуть все",
@@ -3225,5 +3225,15 @@
   "settingsPickEditor": "Выберите приложение или файл редактора",
   "settingsHiddenIssues": "Скрытые проблемы",
   "settingsNoHiddenIssues": "Скрытых проблем нет",
-  "settingsHiddenInactive": "Не обнаружена в последней проверке"
+  "settingsHiddenInactive": "Не обнаружена в последней проверке",
+  "pkgSelectAll": "Выбрать все",
+  "settingsCustomAppInvalid": "Укажите имя команды из PATH или абсолютный путь к приложению.",
+  "mobileCounting": "Подсчёт…",
+  "jsNoMatches": "Подходящих менеджеров нет.",
+  "cloudLoginLeadTerminal": "Hearth запустит штатную команду {tool} в терминале для настройки входа. Пароль и токены Hearth не видит и не хранит, {tool} сохранит их в {dir}.",
+  "cloudLoginStep1DescTerminal": "Запустит интерактивную настройку входа в терминале и сохранит профиль в {dir}",
+  "cloudLoginCopyCommand": "Скопировать команду",
+  "projectInstructionsTemplate": "# Инструкции проекта\n\n## Сборка и тесты\n- Укажите команды для сборки, линтинга и запуска тестов в этом репозитории.\n\n## Правила\n- Опишите структуру проекта, стиль кода и правила для агентов.\n",
+  "backToOverview": "Назад к обзору",
+  "changeSkillTitle": "Скилл {name}"
 }

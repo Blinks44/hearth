@@ -69,3 +69,66 @@ func TestSelectVersionNeverTreatsUnknownOrDownloadAsReady(t *testing.T) {
 		t.Fatal("unknown additional requirement ignored")
 	}
 }
+
+func TestSelectVersionPackageManager(t *testing.T) {
+	tests := []struct {
+		name      string
+		checks    []Check
+		installed []string
+		wantVer   string
+		wantHave  bool
+		wantErr   bool
+	}{
+		{
+			name:      "exact installed",
+			checks:    []Check{{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"}},
+			installed: []string{"10.6.0"},
+			wantVer:   "10.6.0",
+			wantHave:  true,
+		},
+		{
+			name:      "newer in same major satisfies packageManager",
+			checks:    []Check{{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"}},
+			installed: []string{"10.12.1"},
+			wantVer:   "10.12.1",
+			wantHave:  true,
+		},
+		{
+			name:      "different major falls back to exact requested version",
+			checks:    []Check{{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"}},
+			installed: []string{"9.15.0"},
+			wantVer:   "10.6.0",
+			wantHave:  false,
+		},
+		{
+			name: "conflict with engines returns ErrNoCommonVersion",
+			checks: []Check{
+				{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"},
+				{Tool: "pnpm", Want: "^9.0.0", File: "package.json", Key: "engines.pnpm"},
+			},
+			installed: []string{"10.6.0"},
+			wantErr:   true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			st := Status{Tool: "pnpm", Checked: true, Checks: tc.checks}
+			for _, v := range tc.installed {
+				st.Installations = append(st.Installations, inventory.Installation{Tool: "pnpm", Version: v})
+			}
+			got, err := SelectVersion(st, nil, nil)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("SelectVersion err=%v wantErr=%v (got=%+v)", err, tc.wantErr, got)
+			}
+			if tc.wantErr {
+				if !errors.Is(err, ErrNoCommonVersion) {
+					t.Fatalf("expected ErrNoCommonVersion, got %v", err)
+				}
+				return
+			}
+			if got.Version != tc.wantVer || (got.Installed != nil) != tc.wantHave {
+				t.Fatalf("got %+v, want version=%q have=%v", got, tc.wantVer, tc.wantHave)
+			}
+		})
+	}
+}

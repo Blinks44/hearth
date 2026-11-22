@@ -16113,5 +16113,39 @@
   "settingsPickEditor": "Choose editor app or executable",
   "settingsHiddenIssues": "Hidden issues",
   "settingsNoHiddenIssues": "No hidden issues",
-  "settingsHiddenInactive": "Not present in the latest scan"
+  "settingsHiddenInactive": "Not present in the latest scan",
+  "pkgSelectAll": "Select all",
+  "settingsCustomAppInvalid": "Enter a command name from PATH or an absolute path to an app.",
+  "mobileCounting": "Counting…",
+  "jsNoMatches": "No managers match the filter.",
+  "cloudLoginLeadTerminal": "Hearth runs the official {tool} CLI in your terminal to set up sign-in. Hearth never sees your password or stores tokens; {tool} saves them in {dir}.",
+  "@cloudLoginLeadTerminal": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginStep1DescTerminal": "Starts interactive sign-in setup in your terminal and saves profile settings to {dir}",
+  "@cloudLoginStep1DescTerminal": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLoginCopyCommand": "Copy command",
+  "projectInstructionsTemplate": "# Project instructions\n\n## Build and tests\n- Document commands to build, lint, and test this repository.\n\n## Conventions\n- Describe project structure, code style, and rules for agents.\n",
+  "backToOverview": "Back to overview",
+  "changeSkillTitle": "Skill {name}",
+  "@changeSkillTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

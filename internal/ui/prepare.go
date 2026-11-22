@@ -944,7 +944,7 @@ func projectToolPath(tool string) string {
 		return cppPage
 	case "docker":
 		return "/tools/docker"
-	case "kubectl", "helm":
+	case "kubectl", "helm", "kind":
 		return kubePage
 	}
 	for _, l := range languages {

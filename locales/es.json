@@ -181,7 +181,7 @@
   "dockerContainersRunning": "En ejecución",
   "dockerContainersStopped": "Detenidos",
   "dockerContainerSearch": "Nombre, imagen o puerto",
-  "dockerUptime": "Tiempo activo",
+  "dockerUptime": "Tiempo",
   "dockerContainersEmpty": "No hay contenedores que coincidan",
   "dockerContainersCount": "{shown} visibles · {running} en ejecución",
   "dockerCollapseAll": "Contraer todo",
@@ -3185,5 +3185,15 @@
   "settingsPickEditor": "Elegir app o ejecutable de editor",
   "settingsHiddenIssues": "Problemas ocultos",
   "settingsNoHiddenIssues": "No hay problemas ocultos",
-  "settingsHiddenInactive": "No aparece en la última comprobación"
+  "settingsHiddenInactive": "No aparece en la última comprobación",
+  "pkgSelectAll": "Seleccionar todo",
+  "settingsCustomAppInvalid": "Introduce un nombre de comando en PATH o una ruta absoluta a una aplicación.",
+  "mobileCounting": "Calculando…",
+  "jsNoMatches": "Ningún gestor coincide con el filtro.",
+  "cloudLoginLeadTerminal": "Hearth ejecuta la CLI oficial de {tool} en tu terminal para configurar el inicio de sesión. Hearth nunca ve tu contraseña ni guarda tokens; {tool} los guarda en {dir}.",
+  "cloudLoginStep1DescTerminal": "Inicia la configuración interactiva de acceso en tu terminal y guarda el perfil en {dir}",
+  "cloudLoginCopyCommand": "Copiar comando",
+  "projectInstructionsTemplate": "# Instrucciones del proyecto\n\n## Compilación y pruebas\n- Documenta los comandos para compilar, analizar y probar este repositorio.\n\n## Convenciones\n- Describe la estructura del proyecto, el estilo de código y las reglas para los agentes.\n",
+  "backToOverview": "Volver al resumen",
+  "changeSkillTitle": "Skill {name}"
 }

@@ -62,7 +62,7 @@ func (a *App) createProjectInstructions(dir, text string) {
 func (a *App) openCreateProjectInstructions(dir string) {
 	a.projectInstructionsCreate = &projectInstructionCreate{
 		dir:  dir,
-		text: locales.GlobalInstructionsTemplate(),
+		text: locales.ProjectInstructionsTemplate(),
 		open: true,
 	}
 }
@@ -132,7 +132,7 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 					listFrame(c, func() { a.noProjects(c, locales.InstructionsEmpty()) })
 					return
 				}
-				query := strings.ToLower(a.instructionsQuery)
+				query := strings.ToLower(strings.TrimSpace(a.instructionsQuery))
 				var shownGlobal []inventory.Agent
 				for _, ag := range globalAgents {
 					title := strings.ToLower(agentTitle(ag.ID))
@@ -177,7 +177,7 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 							ui.Row(c).Padding(6, 10).Children(func() {
 								ui.SearchField(c.Key("instructions-search"), &a.instructionsQuery).Placeholder(locales.InstructionsSearch()).Grow(1)
 							})
-							if len(shownGlobal) == 0 && len(shownProjects) == 0 && len(a.Projects) > 0 {
+							if query != "" && len(shownGlobal) == 0 && len(shownProjects) == 0 {
 								cardNote(c, locales.NothingMatches())
 							}
 							if len(shownGlobal) > 0 {
@@ -208,12 +208,12 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 									}
 								}
 							}
-							if len(globalAgents) > 0 {
+							if len(globalAgents) > 0 && (len(shownProjects) > 0 || (len(a.Projects) == 0 && query == "")) {
 								ui.Row(c).Padding(6, 14).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 									ui.Text(c, strings.ToUpper(locales.InstructionsProjects())).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								})
 							}
-							if len(a.Projects) == 0 {
+							if len(a.Projects) == 0 && query == "" {
 								a.noProjects(c, locales.InstructionsEmpty())
 							}
 							for i := range shownProjects {

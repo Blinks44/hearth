@@ -209,24 +209,31 @@ func (a *App) hiddenProblemRow(c *ui.Context, it attentionItem) {
 	if it.severity == issues.Info {
 		icon = "info"
 	}
-	ui.Row(c.Key("hidden-problem:"+it.key)).Gap(10).Padding(13, 14).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	actions := func() {
+		ui.Row(c).Gap(6).Shrink(0).Wrap().Children(func() {
+			ui.Button(c.Key("restore"), locales.ProblemsRestore()).Height(controlHeight).OnClick(func() { a.unhideIssue(it.key) })
+			ui.Button(c.Key("open"), locales.IssueOpen()).Height(controlHeight).OnClick(func() { a.router.Push(it.page) })
+		})
+	}
+	align := ui.Center
+	if narrow(c) {
+		align = ui.Start
+	}
+	ui.Row(c.Key("hidden-problem:"+it.key)).Gap(10).Padding(13, 14).AlignItems(align).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		ui.Box(c).Size(28, 28).Shrink(0).Radius(8).Center().Background(pal.Muted).Children(func() {
 			ui.Icon(c, Icon(icon)).Size(16, 16).TextColor(t.TextMuted)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Text(c, it.title).FontSize(13.5).FontWeight(500).TextColor(t.TextMuted)
 			ui.Text(c, it.explain).FontSize(11.5).TextColor(pal.TextFaint)
+			if narrow(c) {
+				ui.Box(c).Height(5)
+				actions()
+			}
 		})
-		ui.Row(c).Gap(6).Shrink(0).Children(func() {
-			ui.Button(c.Key("restore"), "").Height(22).Padding(0, 10).
-				Label(locales.ProblemsRestore()).OnClick(func() { a.unhideIssue(it.key) }).Children(func() {
-				ui.Text(c, locales.ProblemsRestore()).FontSize(12).SingleLine()
-			})
-			ui.Button(c.Key("open"), "").Height(22).Padding(0, 10).
-				Label(locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
-				ui.Text(c, locales.IssueOpen()).FontSize(12).SingleLine()
-			})
-		})
+		if !narrow(c) {
+			actions()
+		}
 	})
 }
 
@@ -239,30 +246,39 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 	if it.severity == issues.Info {
 		icon, bg, color = "info", pal.Muted, t.TextMuted
 	}
-	ui.Row(c.Key("problem:"+it.key)).Gap(10).Padding(13, 14).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	actions := func() {
+		ui.Row(c).Gap(6).Shrink(0).Wrap().Children(func() {
+			if it.fix != nil {
+				ui.Button(c.Key("fix"), "").Height(controlHeight).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
+					Label(locales.IssueFix()).OnClick(it.fix).Children(func() {
+					ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
+				})
+			}
+			ui.Button(c.Key("hide"), locales.ProblemHide()).Height(controlHeight).Tooltip(locales.ProblemHideHint()).
+				OnClick(func() { a.hideIssue(it.key) })
+			ui.Button(c.Key("open"), locales.IssueOpen()).Height(controlHeight).
+				OnClick(func() { a.router.Push(it.page) })
+		})
+	}
+	align := ui.Center
+	if narrow(c) {
+		align = ui.Start
+	}
+	ui.Row(c.Key("problem:"+it.key)).Gap(10).Padding(13, 14).AlignItems(align).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		ui.Box(c).Size(28, 28).Shrink(0).Radius(8).Center().Background(bg).Children(func() {
 			ui.Icon(c, Icon(icon)).Size(16, 16).TextColor(color)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 			ui.Text(c, it.title).FontSize(13.5).FontWeight(500)
 			ui.Text(c, it.explain).FontSize(11.5).TextColor(t.TextMuted)
-		})
-		ui.Row(c).Gap(6).Shrink(0).Children(func() {
-			if it.fix != nil {
-				ui.Button(c.Key("fix"), "").Height(22).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
-					Label(locales.IssueFix()).OnClick(it.fix).Children(func() {
-					ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
-				})
+			if narrow(c) {
+				ui.Box(c).Height(5)
+				actions()
 			}
-			ui.Button(c.Key("hide"), "").Height(22).Padding(0, 10).Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
-				OnClick(func() { a.hideIssue(it.key) }).Children(func() {
-				ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
-			})
-			ui.Button(c.Key("open"), "").Height(22).Padding(0, 10).
-				Label(locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
-				ui.Text(c, locales.IssueOpen()).FontSize(12).SingleLine()
-			})
 		})
+		if !narrow(c) {
+			actions()
+		}
 	})
 }
 

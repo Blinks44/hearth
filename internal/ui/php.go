@@ -105,7 +105,7 @@ func (a *App) phpChannel(c *ui.Context) func(inventory.Installation) (string, bo
 func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []int, active int) {
 	pal := Colors(c.Theme())
 	asOf := ""
-	if a.PHPVersions != nil {
+	if a.PHPVersions != nil && !a.PHPVersions.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(a.PHPVersions.Fetched)
 	}
 	if m, ok := a.phpManager(); ok && phpPackage(m.ID, "8.4.0", "8.4.0") != "" {
@@ -151,11 +151,9 @@ func (a *App) phpConfig(c *ui.Context, in inventory.Installation) {
 		}
 		for _, path := range cfg.Files {
 			listRow(c, filepath.Base(path), false, tilde(path, a.Home), func() {
-				if a.Shell != nil {
+				if a.Shell != nil || a.OpenInEditor != nil {
 					iconButton(c, "external-link", locales.PhpOpenIni()).OnClick(func() {
-						if err := a.Shell.OpenPath(path); err != nil {
-							c.Toast(locales.OpenFailed(tilde(path, a.Home), err.Error()))
-						}
+						a.openFile(c, path)
 					})
 				}
 			})

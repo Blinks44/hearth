@@ -61,10 +61,11 @@ type dockerEngineState struct {
 	data            *docker.Engine
 	err             error
 	// reading is true from a read the user waits for to its answer.
-	reading    bool
-	containers dockerContainersState
-	images     dockerImagesState
-	resources  dockerResourcesState
+	reading      bool
+	problemCount int
+	containers   dockerContainersState
+	images       dockerImagesState
+	resources    dockerResourcesState
 }
 
 // engineTarget is the engine of the context name, or why Hearth cannot
@@ -154,7 +155,7 @@ func (a *App) syncDocker() {
 	s.watch++
 	if target != s.target {
 		// Another engine: what was read is not its.
-		s.target, s.data, s.err = target, nil, nil
+		s.target, s.data, s.err, s.problemCount = target, nil, nil, 0
 	}
 	if running == "" {
 		s.reading = false
@@ -170,6 +171,9 @@ func (a *App) syncDocker() {
 		if err != nil {
 			s.err = err
 			return
+		}
+		if overview {
+			s.problemCount = len(e.Overview.Problems)
 		}
 		s.data, s.err = &e, nil
 	})
@@ -212,13 +216,18 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 			ui.Row(c).Gap(6).Wrap().Shrink(0).Children(func() {
 				for i, v := range dockerViews() {
 					count := 0
-					if i == dockerContainers && s.view == dockerOverview && s.data != nil {
-						count = len(s.data.Overview.Problems)
-					} else if i == dockerContainers {
-						for _, item := range s.containers.items {
-							if item.Problem() {
-								count++
+					if i == dockerContainers {
+						switch {
+						case s.containers.loaded:
+							for _, item := range s.containers.items {
+								if item.Problem() {
+									count++
+								}
 							}
+						case s.view == dockerOverview && s.data != nil:
+							count = len(s.data.Overview.Problems)
+						default:
+							count = s.problemCount
 						}
 					}
 					kindChip(c, &s.view, i, v.icon, v.label, count)

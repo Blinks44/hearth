@@ -2,9 +2,13 @@ package run
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+// lookPath finds a terminal executable on PATH; tests replace it.
+var lookPath = exec.LookPath
 
 // macTerminals are the terminal apps Hearth opens a command in, Apple's
 // first: each takes the script as its maker documents. Terminal, iTerm
@@ -41,8 +45,8 @@ func Terminals() []string {
 	return names
 }
 
-// terminalLauncher opens script in the terminal app of that name or custom
-// path, falling back to Terminal for "" or an unknown name.
+// terminalLauncher opens script in the terminal app of that name, custom
+// path, or PATH command, falling back to Terminal for "" or an unknown name.
 func terminalLauncher(app, script string) []string {
 	for _, t := range macTerminals {
 		if t.name == app {
@@ -64,14 +68,23 @@ func terminalLauncher(app, script string) []string {
 				return []string{"/usr/bin/open", "-a", trimmed, script}
 			}
 		}
-		switch strings.ToLower(filepath.Base(trimmed)) {
-		case "wezterm", "wezterm-gui":
-			return []string{trimmed, "start", "--", "/bin/sh", script}
-		case "kitty":
-			return []string{trimmed, "/bin/sh", script}
-		default:
-			return []string{trimmed, "-e", "/bin/sh", script}
+		return terminalBinaryArgs(trimmed, script)
+	}
+	if trimmed != "" {
+		if p, err := lookPath(trimmed); err == nil {
+			return terminalBinaryArgs(p, script)
 		}
 	}
 	return macTerminals[0].args(script)
+}
+
+func terminalBinaryArgs(bin, script string) []string {
+	switch strings.ToLower(filepath.Base(bin)) {
+	case "wezterm", "wezterm-gui":
+		return []string{bin, "start", "--", "/bin/sh", script}
+	case "kitty":
+		return []string{bin, "/bin/sh", script}
+	default:
+		return []string{bin, "-e", "/bin/sh", script}
+	}
 }

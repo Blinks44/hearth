@@ -660,6 +660,7 @@ func (a *App) header(c *ui.Context, title, subtitle string) {
 // headerExtras are what a page adds to its header: a button going back
 // before the title, and actions before and after Scan.
 type headerExtras struct {
+	backLabel           string
 	back, before, after func()
 }
 
@@ -673,7 +674,11 @@ func (a *App) headerWith(c *ui.Context, title, subtitle string, x headerExtras) 
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(8).Padding(0, right, 0, 28).
 		BorderWidth(0, 0, 1, 0).BorderColor(Colors(t).Divider).DragWindow().Children(func() {
 		if x.back != nil {
-			headerBackButton(c, locales.BackToProjects(), x.back)
+			label := x.backLabel
+			if label == "" {
+				label = locales.BackToProjects()
+			}
+			headerBackButton(c, label, x.back)
 		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			ui.Text(c, title).FontSize(15).FontWeight(600).SingleLine()
@@ -983,7 +988,7 @@ func (a *App) missing(p page) bool {
 	case editorsPage:
 		return len(a.editorsState().Editors) == 0
 	case mobilePage:
-		return a.mobileCount() == 0
+		return !a.mobileFound()
 	case modelsPage:
 		return len(a.modelApps()) == 0
 	}

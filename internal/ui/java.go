@@ -87,11 +87,11 @@ func (a *App) javaHeader(c *ui.Context, ins []inventory.Installation, rows []int
 	pal := Colors(c.Theme())
 	toolHead(c, "java", "Java", func() {}, managedBy(ins, rows, active), func() {
 		stateCard(c, pal.TextFaint, locales.Installed(), locales.JavaCount(len(rows)), strings.Join(sourceNames(ins, rows, -1), " · "))
-		v, via := "—", locales.NotInPath()
+		v, via, dot := "—", locales.NotInPath(), pal.TextFaint
 		if active >= 0 {
-			v, via = copyVersion(ins[active]), "java → "+sourceName(ins[active].Source)
+			v, via, dot = copyVersion(ins[active]), "java → "+sourceName(ins[active].Source), c.Theme().Success
 		}
-		stateCard(c, c.Theme().Success, locales.InTerminal(), v, via)
+		stateCard(c, dot, locales.InTerminal(), v, via)
 		a.toolProjectCard(c, "java", projs)
 	})
 }

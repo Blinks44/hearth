@@ -32,7 +32,10 @@ func shownChanges(e history.Entry) []history.Change {
 
 func (a *App) changesView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{
+			backLabel: locales.BackToOverview(),
+			back:      func() { a.router.Push("/") },
+		})
 		t := c.Theme()
 		pal := Colors(t)
 		count := map[history.Kind]int{}
@@ -294,13 +297,14 @@ func (a *App) changeText(ch history.Change) (title, caption string) {
 		}
 		return agentTitle(ch.Name), locales.ChangeAgentRemoved()
 	case history.Skill:
+		title := locales.ChangeSkillTitle(ch.Name)
 		switch ch.Kind {
 		case history.Added:
-			return "Skill " + ch.Name, locales.ChangeSkillAdded(tilde(ch.Path, a.Home))
+			return title, locales.ChangeSkillAdded(tilde(ch.Path, a.Home))
 		case history.Updated:
-			return "Skill " + ch.Name, locales.ChangeSkillUpdated()
+			return title, locales.ChangeSkillUpdated()
 		}
-		return "Skill " + ch.Name, locales.ChangeSkillRemoved(tilde(ch.Path, a.Home))
+		return title, locales.ChangeSkillRemoved(tilde(ch.Path, a.Home))
 	case history.MCP:
 		title := "MCP " + ch.Name + " · " + agentTitle(ch.Agent)
 		if ch.Kind == history.Added {

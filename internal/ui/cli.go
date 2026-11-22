@@ -683,9 +683,6 @@ func (a *App) cliWhoCard(c *ui.Context, cli inventory.CliState) {
 		}
 		footer := ui.Row(c.Key("who-check-all")).Gap(8).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
 			BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
-		if a.CheckCloudAuth != nil && !anyChecking {
-			footer.Cursor(ui.CursorPointer).OnClick(func() { a.checkAllCloudAuth(cli) })
-		}
 		footer.Children(func() {
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 				clipped(c, btnLabel).FontSize(13).FontWeight(500)
@@ -802,8 +799,19 @@ func (a *App) installInfraVersion(tool, title, want string) {
 // found or not, then mise's tools.
 func (a *App) cliTable(c *ui.Context, cli inventory.CliState, tools []inventory.MiseTool, infraReqs []cliInfraReq) {
 	pal := Colors(c.Theme())
-	filter := strings.ToLower(a.cliFilter)
-	match := func(name string) bool { return strings.Contains(strings.ToLower(name), filter) }
+	filter := strings.ToLower(strings.TrimSpace(a.cliFilter))
+	match := func(name string) bool {
+		if filter == "" {
+			return true
+		}
+		if strings.Contains(strings.ToLower(name), filter) {
+			return true
+		}
+		if product := cliProducts[name]; product != "" && strings.Contains(strings.ToLower(product), filter) {
+			return true
+		}
+		return false
+	}
 	tab := -2 // All
 	if a.cliTab > 0 && a.cliTab <= len(cliTabs) {
 		tab = cliTabs[a.cliTab-1]
@@ -872,6 +880,15 @@ func (a *App) cliRowWithReqs(c *ui.Context, cli inventory.CliState, cmd string, 
 		parts = append(parts, sourceName(in.Source))
 		if cc := cliContext(cli, cmd); cc != nil {
 			parts = append(parts, cliContextText(*cc))
+			if issue := cliIssueText(*cc); issue != "" {
+				parts = append(parts, issue)
+				switch cc.Status {
+				case "invalid":
+					aboutColor = pal.DangerText
+				case "missing", "ambiguous":
+					aboutColor = pal.WarningText
+				}
+			}
 		}
 		if cmd == "helm" && cli.HelmRepos > 0 {
 			parts = append(parts, locales.CliHelmRepos(cli.HelmRepos))

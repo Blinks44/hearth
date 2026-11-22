@@ -42181,3 +42181,107 @@ func SettingsHiddenInactive() string { return In(i18n.Locale()).SettingsHiddenIn
 func (msgs Messages) SettingsHiddenInactive() string {
 	return Catalog.Format(msgs.locale, "settingsHiddenInactive", nil)
 }
+
+// PkgSelectAll says "Select all"
+// in the language the app shows.
+func PkgSelectAll() string { return In(i18n.Locale()).PkgSelectAll() }
+
+// PkgSelectAll says "Select all"
+// in the language of msgs.
+func (msgs Messages) PkgSelectAll() string {
+	return Catalog.Format(msgs.locale, "pkgSelectAll", nil)
+}
+
+// SettingsCustomAppInvalid says "Enter a command name from PATH or an absolute path to an app."
+// in the language the app shows.
+func SettingsCustomAppInvalid() string { return In(i18n.Locale()).SettingsCustomAppInvalid() }
+
+// SettingsCustomAppInvalid says "Enter a command name from PATH or an absolute path to an app."
+// in the language of msgs.
+func (msgs Messages) SettingsCustomAppInvalid() string {
+	return Catalog.Format(msgs.locale, "settingsCustomAppInvalid", nil)
+}
+
+// MobileCounting says "Counting…"
+// in the language the app shows.
+func MobileCounting() string { return In(i18n.Locale()).MobileCounting() }
+
+// MobileCounting says "Counting…"
+// in the language of msgs.
+func (msgs Messages) MobileCounting() string {
+	return Catalog.Format(msgs.locale, "mobileCounting", nil)
+}
+
+// JsNoMatches says "No managers match the filter."
+// in the language the app shows.
+func JsNoMatches() string { return In(i18n.Locale()).JsNoMatches() }
+
+// JsNoMatches says "No managers match the filter."
+// in the language of msgs.
+func (msgs Messages) JsNoMatches() string {
+	return Catalog.Format(msgs.locale, "jsNoMatches", nil)
+}
+
+// CloudLoginLeadTerminal says "Hearth runs the official {tool} CLI in your terminal to set up sign-in. Hearth never sees your password or stores tok…"
+// in the language the app shows.
+func CloudLoginLeadTerminal(tool string, dir string) string {
+	return In(i18n.Locale()).CloudLoginLeadTerminal(tool, dir)
+}
+
+// CloudLoginLeadTerminal says "Hearth runs the official {tool} CLI in your terminal to set up sign-in. Hearth never sees your password or stores tok…"
+// in the language of msgs.
+func (msgs Messages) CloudLoginLeadTerminal(tool string, dir string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginLeadTerminal", map[string]any{"tool": tool, "dir": dir})
+}
+
+// CloudLoginStep1DescTerminal says "Starts interactive sign-in setup in your terminal and saves profile settings to {dir}"
+// in the language the app shows.
+func CloudLoginStep1DescTerminal(dir string) string {
+	return In(i18n.Locale()).CloudLoginStep1DescTerminal(dir)
+}
+
+// CloudLoginStep1DescTerminal says "Starts interactive sign-in setup in your terminal and saves profile settings to {dir}"
+// in the language of msgs.
+func (msgs Messages) CloudLoginStep1DescTerminal(dir string) string {
+	return Catalog.Format(msgs.locale, "cloudLoginStep1DescTerminal", map[string]any{"dir": dir})
+}
+
+// CloudLoginCopyCommand says "Copy command"
+// in the language the app shows.
+func CloudLoginCopyCommand() string { return In(i18n.Locale()).CloudLoginCopyCommand() }
+
+// CloudLoginCopyCommand says "Copy command"
+// in the language of msgs.
+func (msgs Messages) CloudLoginCopyCommand() string {
+	return Catalog.Format(msgs.locale, "cloudLoginCopyCommand", nil)
+}
+
+// ProjectInstructionsTemplate says "# Project instructions\n\n## Build and tests\n- Document commands to build, lint, and test this repository.\n\n## Conventi…"
+// in the language the app shows.
+func ProjectInstructionsTemplate() string { return In(i18n.Locale()).ProjectInstructionsTemplate() }
+
+// ProjectInstructionsTemplate says "# Project instructions\n\n## Build and tests\n- Document commands to build, lint, and test this repository.\n\n## Conventi…"
+// in the language of msgs.
+func (msgs Messages) ProjectInstructionsTemplate() string {
+	return Catalog.Format(msgs.locale, "projectInstructionsTemplate", nil)
+}
+
+// BackToOverview says "Back to overview"
+// in the language the app shows.
+func BackToOverview() string { return In(i18n.Locale()).BackToOverview() }
+
+// BackToOverview says "Back to overview"
+// in the language of msgs.
+func (msgs Messages) BackToOverview() string {
+	return Catalog.Format(msgs.locale, "backToOverview", nil)
+}
+
+// ChangeSkillTitle says "Skill {name}"
+// in the language the app shows.
+func ChangeSkillTitle(name string) string { return In(i18n.Locale()).ChangeSkillTitle(name) }
+
+// ChangeSkillTitle says "Skill {name}"
+// in the language of msgs.
+func (msgs Messages) ChangeSkillTitle(name string) string {
+	return Catalog.Format(msgs.locale, "changeSkillTitle", map[string]any{"name": name})
+}

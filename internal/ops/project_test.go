@@ -93,7 +93,7 @@ func TestProjectPreparationFailedThenContinuedSkipsCompletedInstall(t *testing.T
 	}
 	fake := &run.Fake{}
 	fake.Stdout("installed", "fnm", "install", "22.14.0")
-	fake.Set(run.Result{ExitCode: 1}, nil, "corepack", "pack", "pnpm@9.15.0", "--output", "corepack.tgz")
+	fake.Set(run.Result{ExitCode: 1}, nil, "corepack", "prepare", "pnpm@9.15.0")
 	state := Execute(context.Background(), fake, got.Plan, io.Discard, func(State) {})
 	if state.Phase != Failed || state.Steps[0] != Done {
 		t.Fatalf("partial failure %+v", state)
@@ -143,7 +143,7 @@ func TestProjectPreparationCorepackKeepsGlobalSelection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Plan.Steps) != 1 || !reflect.DeepEqual(got.Plan.Steps[0].Argv, []string{"corepack", "pack", "pnpm@9.15.0", "--output", "corepack.tgz"}) {
+	if len(got.Plan.Steps) != 1 || !reflect.DeepEqual(got.Plan.Steps[0].Argv, []string{"corepack", "prepare", "pnpm@9.15.0"}) {
 		t.Fatalf("changed Corepack default: %+v", got.Plan.Steps)
 	}
 	if !got.Plan.Isolated || !slices.Contains(got.Plan.Steps[0].Env, "COREPACK_DEFAULT_TO_LATEST=0") {
@@ -282,5 +282,65 @@ func TestPlansMarkTerminalRestart(t *testing.T) {
 	joined, ok := UpdatePlan([]Plan{inst, def})
 	if !ok || !joined.RestartTerminal {
 		t.Fatalf("joined plan did not propagate RestartTerminal=%v", joined.RestartTerminal)
+	}
+}
+
+func TestPrepareProjectCorepackPrepare(t *testing.T) {
+	in, env := projectFixture(t)
+	in.Project.Requirements = []projects.Requirement{
+		{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"},
+	}
+	in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{
+			Tool:          "corepack",
+			Installations: []inventory.Installation{{Tool: "corepack", Version: "0.32.0", Path: "/opt/homebrew/bin/corepack", OnPath: 1}},
+		},
+		{
+			Tool:     "pnpm",
+			Managers: []inventory.Manager{{Name: "corepack", SwitchOnCD: true}},
+			Installations: []inventory.Installation{
+				{Tool: "pnpm", Version: "9.15.0", Path: "/opt/homebrew/bin/pnpm", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
+			},
+		},
+	}}
+	got, err := PrepareProject(in, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Plan.Steps) == 0 {
+		t.Fatalf("expected corepack prepare step, got empty plan: %+v", got)
+	}
+	var sawPrepare bool
+	for _, step := range got.Plan.Steps {
+		cmd := strings.Join(step.Argv, " ")
+		if strings.Contains(cmd, "corepack pack") {
+			t.Fatalf("plan must never use corepack pack: %q", cmd)
+		}
+		if slices.Equal(step.Argv, []string{"corepack", "prepare", "pnpm@10.6.0"}) {
+			sawPrepare = true
+		}
+	}
+	if !sawPrepare {
+		t.Fatalf("expected corepack prepare pnpm@10.6.0, got steps: %+v", got.Plan.Steps)
+	}
+}
+
+func TestAssessProjectSingleJSFileNoConflict(t *testing.T) {
+	in, _ := projectFixture(t)
+	in.Project.Requirements = []projects.Requirement{
+		{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"},
+	}
+	in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "pnpm"},
+	}}
+	got := AssessProject(in)
+	if len(got.Items) != 1 {
+		t.Fatalf("items = %+v", got.Items)
+	}
+	if got.Items[0].Kind == ProjectConflict {
+		t.Fatalf("single package.json requirement must not report ProjectConflict: %+v", got.Items[0])
+	}
+	if got.Items[0].Kind != ProjectInstall && got.Items[0].Kind != ProjectManual {
+		t.Fatalf("unexpected kind for missing pnpm: %+v", got.Items[0])
 	}
 }

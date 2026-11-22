@@ -8,7 +8,7 @@ import (
 )
 
 func TestLinuxTerminalLauncher(t *testing.T) {
-	found := map[string]bool{"/usr/bin/konsole": true, "/usr/bin/kitty": true}
+	found := map[string]bool{"/usr/bin/konsole": true, "/usr/bin/kitty": true, "/usr/bin/rio": true}
 	lookPath = func(name string) (string, error) {
 		if found["/usr/bin/"+name] {
 			return "/usr/bin/" + name, nil
@@ -20,6 +20,7 @@ func TestLinuxTerminalLauncher(t *testing.T) {
 	for app, want := range map[string][]string{
 		"":               {"/usr/bin/konsole", "-e", "/bin/sh", script},
 		"kitty":          {"/usr/bin/kitty", "/bin/sh", script},
+		"rio":            {"/usr/bin/rio", "-e", "/bin/sh", script},
 		"gnome-terminal": {"/usr/bin/konsole", "-e", "/bin/sh", script},
 	} {
 		if got := terminalLauncher(app, script); !slices.Equal(got, want) {

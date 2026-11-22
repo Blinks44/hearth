@@ -692,11 +692,11 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 			if m.Item(showInFolder()).Chosen() {
 				reveal()
 			}
-			if !a.versionMenu(m, in) && in.Tool != "node" {
-				if pm, pkg, ok := a.copyPackage(in); ok && a.packageCan(pm, pkg) {
-					m.Separator()
-					a.packageItems(m, pm, pkg)
-				}
+			if pm, pkg, ok := a.copyPackage(in); ok && a.packageCan(pm, pkg) {
+				m.Separator()
+				a.packageItems(m, pm, pkg)
+			} else {
+				a.versionMenu(m, in)
 			}
 			a.moveMenu(m, in)
 			if in.Tool != "node" || a.Home == "" {
@@ -704,10 +704,7 @@ func (a *App) rowActions(c *ui.Context, in inventory.Installation) {
 			}
 			m.Separator()
 			if m.Item(locales.OpenNpmrc()).Chosen() {
-				npmrc := filepath.Join(a.Home, ".npmrc")
-				if err := a.Shell.OpenPath(npmrc); err != nil {
-					c.Toast(locales.OpenFailed(tilde(npmrc, a.Home), err.Error()))
-				}
+				a.openFile(c, filepath.Join(a.Home, ".npmrc"))
 			}
 		})
 	})

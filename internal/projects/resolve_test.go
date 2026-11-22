@@ -278,3 +278,57 @@ func TestResolveDockerEngine(t *testing.T) {
 		})
 	}
 }
+
+func TestResolvePackageManagerCompatibility(t *testing.T) {
+	tests := []struct {
+		name      string
+		installed string
+		want      string
+		engines   string
+		wantMet   bool
+		wantReady bool
+	}{
+		{name: "exact match", installed: "10.6.0", want: "10.6.0", wantMet: true, wantReady: true},
+		{name: "newer in same major", installed: "10.12.1", want: "10.6.0", wantMet: true, wantReady: true},
+		{name: "older in same major", installed: "10.4.0", want: "10.6.0", wantMet: false, wantReady: false},
+		{name: "previous major", installed: "9.15.0", want: "10.6.0", wantMet: false, wantReady: false},
+		{name: "next major", installed: "11.0.0", want: "10.6.0", wantMet: false, wantReady: false},
+		{name: "compatible with engines", installed: "10.12.1", want: "10.6.0", engines: ">=10.0.0", wantMet: true, wantReady: true},
+		{name: "conflicts with engines", installed: "10.12.1", want: "10.6.0", engines: "^9.0.0", wantMet: true, wantReady: false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			reqs := []Requirement{{Tool: "pnpm", Want: tc.want, File: "package.json", Key: "packageManager"}}
+			if tc.engines != "" {
+				reqs = append(reqs, Requirement{Tool: "pnpm", Want: tc.engines, File: "package.json", Key: "engines.pnpm"})
+			}
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{
+				Tool: "pnpm",
+				Installations: []inventory.Installation{{
+					Tool:    "pnpm",
+					Version: tc.installed,
+					OnPath:  1,
+					Path:    "/opt/homebrew/bin/pnpm",
+					Source:  inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"},
+				}},
+			}}}
+			got := Resolve(Project{Requirements: reqs}, s, nil)
+			if len(got) != 1 || len(got[0].Checks) != len(reqs) {
+				t.Fatalf("unexpected resolve result: %+v", got)
+			}
+			if got[0].Checks[0].Met != tc.wantMet {
+				t.Errorf("packageManager Met = %v, want %v (installed %s, want %s)", got[0].Checks[0].Met, tc.wantMet, tc.installed, tc.want)
+			}
+			sel, err := SelectVersion(got[0], nil, nil)
+			if tc.engines == "^9.0.0" {
+				if err == nil {
+					t.Fatalf("expected conflict error with engines %q, got selection %+v", tc.engines, sel)
+				}
+				return
+			}
+			if sel.Ready != tc.wantReady {
+				t.Errorf("SelectVersion.Ready = %v, want %v (sel=%+v err=%v)", sel.Ready, tc.wantReady, sel, err)
+			}
+		})
+	}
+}

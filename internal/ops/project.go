@@ -175,10 +175,41 @@ func classifySelectError(st projects.Status, err error) ProjectItemKind {
 			return ProjectUnknown
 		}
 	}
-	if errors.Is(err, projects.ErrNoCommonVersion) {
+	if errors.Is(err, projects.ErrNoCommonVersion) && hasRequirementConflict(st) {
 		return ProjectConflict
 	}
 	return ProjectUnknown
+}
+
+func hasRequirementConflict(st projects.Status) bool {
+	var nonEmpty []projects.Check
+	files := map[string]bool{}
+	for _, ch := range st.Checks {
+		if strings.TrimSpace(ch.Want) != "" {
+			nonEmpty = append(nonEmpty, ch)
+			files[ch.File] = true
+		}
+	}
+	if len(nonEmpty) < 2 {
+		return false
+	}
+	if len(files) > 1 {
+		return true
+	}
+	// Multiple constraints in a single file (e.g., package.json packageManager +
+	// engines) only conflict when an exact requirement explicitly violates
+	// another constraint; two compatible ranges without a release list stay unknown.
+	for _, ch := range nonEmpty {
+		single := projects.Status{Tool: st.Tool, Checked: true, Checks: []projects.Check{ch}}
+		sel, err := projects.SelectVersion(single, nil, nil)
+		if err != nil || sel.Version == "" {
+			continue
+		}
+		if _, err := projects.SelectVersion(st, []string{sel.Version}, nil); errors.Is(err, projects.ErrNoCommonVersion) {
+			return true
+		}
+	}
+	return false
 }
 
 func attachExistingMiseConfig(item *ProjectItem, proj projects.Project, tool, version string) {
@@ -311,7 +342,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 					p, ok := VersionPlan(VersionInstall, target, detect)
 					if ok {
 						if manager == "corepack" {
-							p.Steps = []Step{{Argv: []string{"corepack", "pack", st.Tool + "@" + selection.Version, "--output", "corepack.tgz"}, Env: []string{"COREPACK_DEFAULT_TO_LATEST=0"}}}
+							p.Steps = []Step{{Argv: []string{"corepack", "prepare", st.Tool + "@" + selection.Version}, Env: []string{"COREPACK_DEFAULT_TO_LATEST=0"}}}
 						}
 						plans = append(plans, p)
 						item.Kind = ProjectInstall

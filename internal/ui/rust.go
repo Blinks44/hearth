@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/egoist/mygo/ui"
+	"golang.org/x/mod/semver"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -96,12 +97,22 @@ func (a *App) rustInstallHeader(c *ui.Context) {
 	if stableIdx >= 0 {
 		upToDate = true
 		if a.RustVersions != nil {
-			if train, err := a.RustVersions.Train(); err == nil && st.Installations[stableIdx].Version != train.Stable {
+			if train, err := a.RustVersions.Train(); err == nil && rustVersionOlder(st.Installations[stableIdx].Version, train.Stable) {
 				upToDate = false
 			}
 		}
 	}
 	installVersionButton(c, "rust", upToDate, func() { a.installRustToolchain("stable") })
+}
+
+// rustVersionOlder reports whether installed version have is strictly older
+// than available version want using semver comparison.
+func rustVersionOlder(have, want string) bool {
+	hv, wv := "v"+strings.TrimPrefix(have, "v"), "v"+strings.TrimPrefix(want, "v")
+	if !semver.IsValid(hv) || !semver.IsValid(wv) {
+		return have != "" && want != "" && have != want
+	}
+	return semver.Compare(hv, wv) < 0
 }
 
 // installRustToolchain proposes installing or updating a rustup toolchain.
@@ -198,7 +209,7 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 	pal := Colors(c.Theme())
 	canRustup := a.installManager(st) == "rustup"
 	asOf := ""
-	if a.RustVersions != nil {
+	if a.RustVersions != nil && !a.RustVersions.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(a.RustVersions.Fetched)
 	}
 	aside := asOf
@@ -224,10 +235,11 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 				return -1
 			}
 			stableIdx := installed("stable")
-			caption, update := "", false
+			caption, update, stableOlder := "", false, false
 			if stableIdx >= 0 {
 				caption = locales.NoteInstalled()
-				if ins[stableIdx].Version != train.Stable {
+				stableOlder = rustVersionOlder(ins[stableIdx].Version, train.Stable)
+				if stableOlder {
 					caption, update = locales.NoteUpdateFor(ins[stableIdx].Version), stableIdx == active
 				}
 			}
@@ -240,7 +252,7 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 					if stableIdx < 0 {
 						iconButton(c.Key("install:stable"), "download", locales.InstallNamed("stable")).
 							OnClick(func() { a.installRustToolchain("stable") })
-					} else if ins[stableIdx].Version != train.Stable {
+					} else if stableOlder {
 						iconButton(c.Key("update:stable"), "download", locales.RustUpdateChannel("stable")).
 							OnClick(func() { a.installRustToolchain("stable") })
 					}
@@ -248,21 +260,28 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 			})
 
 			betaIdx := installed("beta")
+			betaOlder := false
 			caption = locales.RustBetaNext()
 			if days := train.NextStable.Sub(c.Now()).Hours() / 24; days > 0 {
 				caption = locales.RustBetaWeeks(int(math.Ceil(days / 7)))
+			}
+			if betaIdx >= 0 {
+				base, _, _ := strings.Cut(ins[betaIdx].Version, "-")
+				if rustVersionOlder(base, train.Beta) {
+					betaOlder = true
+					caption = locales.NoteUpdateFor(ins[betaIdx].Version)
+				} else {
+					caption = locales.NoteInstalled()
+				}
 			}
 			listRow(c, "beta "+train.Beta, true, caption, func() {
 				if canRustup {
 					if betaIdx < 0 {
 						iconButton(c.Key("install:beta"), "download", locales.InstallNamed("beta")).
 							OnClick(func() { a.installRustToolchain("beta") })
-					} else {
-						base, _, _ := strings.Cut(ins[betaIdx].Version, "-")
-						if base != train.Beta {
-							iconButton(c.Key("update:beta"), "download", locales.RustUpdateChannel("beta")).
-								OnClick(func() { a.installRustToolchain("beta") })
-						}
+					} else if betaOlder {
+						iconButton(c.Key("update:beta"), "download", locales.RustUpdateChannel("beta")).
+							OnClick(func() { a.installRustToolchain("beta") })
 					}
 				}
 			})
@@ -355,7 +374,7 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 		if canRustup {
 			add := func() {
 				v := strings.TrimSpace(a.rustTargetInput)
-				if !ops.ValidRustupIdent(v) {
+				if !ops.ValidRustupIdent(v) || slices.Contains(tc.Targets, v) {
 					return
 				}
 				a.rustTargetInput = ""
@@ -372,7 +391,7 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 					label = locales.RustTargetAddTitle(v)
 				}
 				ui.Button(c.Key("rust-target-add"), locales.RustTargetAdd()).Label(label).
-					Disabled(!ops.ValidRustupIdent(v)).Shrink(0).OnClick(add)
+					Disabled(!ops.ValidRustupIdent(v) || slices.Contains(tc.Targets, v)).Shrink(0).OnClick(add)
 			})
 		}
 	})

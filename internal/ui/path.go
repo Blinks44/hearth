@@ -43,9 +43,17 @@ func (a *App) paths(c *ui.Context, p page) {
 						ui.Text(c, locales.EnvPathDescription()).FontSize(12).TextColor(c.Theme().TextMuted)
 					})
 				}, func() {
-					stateCard(c, c.Theme().Success, locales.EnvPathTerminal(), strconv.Itoa(len(term)), locales.EnvPathEntries())
+					termDot := pal.TextFaint
+					if len(term) > 0 {
+						termDot = c.Theme().Success
+					}
+					stateCard(c, termDot, locales.EnvPathTerminal(), strconv.Itoa(len(term)), locales.EnvPathEntries())
 					stateCard(c, pal.TextFaint, locales.EnvPathApps(), strconv.Itoa(len(gui)), locales.EnvPathEntries())
-					stateCard(c, c.Theme().Warning, locales.EnvPathProblems(), strconv.Itoa(problems), "")
+					probDot := c.Theme().Success
+					if problems > 0 {
+						probDot = c.Theme().Warning
+					}
+					stateCard(c, probDot, locales.EnvPathProblems(), strconv.Itoa(problems), "")
 					if st != nil {
 						startupCard(c, st)
 					}
@@ -53,7 +61,11 @@ func (a *App) paths(c *ui.Context, p page) {
 				if problems > 0 {
 					a.pathBanner(c, term)
 				}
-				ui.Row(c).Gap(12).Children(func() {
+				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
 					tabs := []segment{{locales.EnvPathTerminal(), strconv.Itoa(len(term))}, {locales.EnvPathApps(), strconv.Itoa(len(gui))}, {locales.EnvPathVariables(), strconv.Itoa(len(a.Snapshot.Variables))}, {locales.EnvPathDifferences(), ""}}
 					if st != nil {
 						tabs = append(tabs, segment{locales.StartupLabel(), seconds(st.Took)})
@@ -61,7 +73,7 @@ func (a *App) paths(c *ui.Context, p page) {
 						a.pathTab = 0
 					}
 					segments(c, "path-tabs", &a.pathTab, tabs)
-					ui.Box(c).Grow(1)
+					ui.Box(c).Grow(1).Height(1)
 					if a.pathTab != startupTab {
 						ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Height(controlHeight).Width(200)
 					}
@@ -244,7 +256,9 @@ func (a *App) pathVariables(c *ui.Context) {
 
 func (a *App) pathDifferences(c *ui.Context, term, gui []inventory.PathEntry) {
 	listCard(c, locales.EnvPathDifferences(), "", func() {
-		count := 0
+		q := strings.ToLower(strings.TrimSpace(a.pathFilter))
+		totalDiffs := 0
+		shown := 0
 		for _, side := range []struct {
 			entries, other []inventory.PathEntry
 			label          string
@@ -254,18 +268,26 @@ func (a *App) pathDifferences(c *ui.Context, term, gui []inventory.PathEntry) {
 				if hasPath(side.other, e.Dir) || hasPath(side.entries[:i], e.Dir) {
 					continue
 				}
-				dirs = append(dirs, tilde(e.Dir, a.Home))
+				totalDiffs++
+				shownDir := tilde(e.Dir, a.Home)
+				if q != "" && !strings.Contains(strings.ToLower(e.Dir), q) && !strings.Contains(strings.ToLower(shownDir), q) {
+					continue
+				}
+				dirs = append(dirs, shownDir)
 			}
 			if len(dirs) > 0 {
-				count += len(dirs)
+				shown += len(dirs)
 				listRow(c, side.label, false, strings.Join(dirs, " · "), func() {})
 			}
 		}
-		if count == 0 {
+		switch {
+		case totalDiffs == 0:
 			cardNote(c, locales.EnvPathNoDifference())
+		case shown == 0:
+			cardNote(c, locales.EnvPathNoMatches())
 		}
 		if ops.AppsPathSettable && a.BuildPlan != nil {
-			a.appsPath(c, count > 0)
+			a.appsPath(c, totalDiffs > 0)
 		}
 	})
 }

@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"cmp"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -21,6 +24,27 @@ type searchResult struct {
 	open                                  func()
 }
 
+type searchCacheKey struct {
+	snap       *inventory.Snapshot
+	projectsN  int
+	project0   *projects.Project
+	hiddenN    int
+	pkgUpdN    int
+	home       string
+	langMarker string
+	hasChoose  bool
+	day        int
+	nodeV      *versions.Node
+	goV        *versions.Go
+	pyV        *versions.Cycles
+	phpV       *versions.Cycles
+	rustV      *versions.Cycles
+	rubyV      *versions.Cycles
+	javaV      *versions.Cycles
+	dotnetV    *versions.Dotnet
+	bunV       *versions.Latest
+}
+
 type searchState struct {
 	open      bool
 	available bool // the lists of versions to install are searched
@@ -28,10 +52,22 @@ type searchState struct {
 	selected  int
 	scroll    bool // the keyboard moved the selection: bring it into view
 	recent    []string
+
+	indexKey    searchCacheKey
+	indexCached []searchResult
+	indexValid  bool
+	availKey    searchCacheKey
+	availCached []searchResult
+	availValid  bool
+	indexBuilds int
 }
 
 func (a *App) toggleSearch() {
-	a.search = searchState{open: !a.search.open, recent: a.search.recent}
+	a.search.open = !a.search.open
+	a.search.available = false
+	a.search.query = ""
+	a.search.selected = 0
+	a.search.scroll = false
 }
 
 // searchAvailable switches between the local results and the versions to
@@ -40,16 +76,90 @@ func (a *App) searchAvailable(on bool) {
 	a.search.available, a.search.selected = on, 0
 }
 
+func (a *App) searchKey(now time.Time) searchCacheKey {
+	var p0 *projects.Project
+	if len(a.Projects) > 0 {
+		p0 = &a.Projects[0]
+	}
+	return searchCacheKey{
+		snap:       a.Snapshot,
+		projectsN:  len(a.Projects),
+		project0:   p0,
+		hiddenN:    len(a.Hidden),
+		pkgUpdN:    len(a.PackageUpdates),
+		home:       a.Home,
+		langMarker: locales.SearchTools(),
+		hasChoose:  a.ChooseFolder != nil,
+		day:        now.Year()*1000 + now.YearDay(),
+		nodeV:      a.NodeVersions,
+		goV:        a.GoVersions,
+		pyV:        a.PythonVersions,
+		phpV:       a.PHPVersions,
+		rustV:      a.RustVersions,
+		rubyV:      a.RubyVersions,
+		javaV:      a.JavaVersions,
+		dotnetV:    a.DotnetVersions,
+		bunV:       a.BunLatest,
+	}
+}
+
+func (a *App) resetPageTab(path string) {
+	switch path {
+	case "/tools/node":
+		a.nodeTab = 0
+	case "/tools/go":
+		a.goTab = 0
+	case "/tools/python":
+		a.pythonTab = 0
+	case "/tools/php":
+		a.phpTab = 0
+	case "/tools/rust":
+		a.rustTab = 0
+	case "/tools/ruby":
+		a.rubyTab = 0
+	case "/tools/java":
+		a.javaTab = 0
+	case "/tools/dotnet":
+		a.dotnetTab = 0
+	case "/tools/bun":
+		a.bunTab = 0
+	case "/tools/jspm":
+		a.jspmTab = 0
+	case "/system/packages":
+		a.packageTab = 0
+	case pathPage:
+		a.pathTab = 0
+	case problemsPage:
+		a.problemsTab = 0
+	case cliPage:
+		a.cliTab = 0
+	case kubePage:
+		a.kubeTab = 0
+	case mobilePage:
+		a.mobileTab = 0
+	case editorsPage:
+		a.editorsTab = 0
+	}
+}
+
 func (a *App) searchIndex() []searchResult {
 	return a.searchIndexAt(time.Now())
 }
 
 func (a *App) searchIndexAt(now time.Time) []searchResult {
+	key := a.searchKey(now)
+	if a.search.indexValid && a.search.indexKey == key {
+		return a.search.indexCached
+	}
 	var out []searchResult
 	add := func(r searchResult) { out = append(out, r) }
 	all := pages()
 	for _, p := range all {
-		add(searchResult{id: p.path, group: locales.SearchTools(), title: p.title(), detail: p.subtitle(), icon: p.icon, open: func() { a.router.Push(p.path) }})
+		path := p.path
+		add(searchResult{id: path, group: locales.SearchTools(), title: p.title(), detail: p.subtitle(), icon: p.icon, open: func() {
+			a.resetPageTab(path)
+			a.router.Push(path)
+		}})
 	}
 	if a.Snapshot != nil {
 		for _, tool := range a.Snapshot.Tools {
@@ -73,7 +183,10 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 				if tool.Cli != nil && slices.Contains(kubeCommands, in.Tool) {
 					to = kubePage
 				}
-				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: strings.TrimSpace(name + " " + in.Version), detail: detail, icon: "lucide/box", open: func() { a.router.Push(to) }})
+				add(searchResult{id: "version:" + tool.Tool + ":" + in.Path, group: locales.SearchVersions(), title: strings.TrimSpace(name + " " + in.Version), detail: detail, icon: "lucide/box", open: func() {
+					a.resetPageTab(to)
+					a.router.Push(to)
+				}})
 			}
 		}
 		for _, k := range a.cliState().KubeContexts {
@@ -233,6 +346,10 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 		a.search.open, a.search.query = true, ""
 		a.searchAvailable(true)
 	}})
+	a.search.indexKey = key
+	a.search.indexCached = out
+	a.search.indexValid = true
+	a.search.indexBuilds++
 	return out
 }
 
@@ -243,9 +360,10 @@ func (a *App) searchResults() []searchResult {
 func (a *App) searchResultsAt(now time.Time) []searchResult {
 	all := a.searchIndexAt(now)
 	if a.search.available {
-		all = a.availableSearchIndex()
+		all = a.availableSearchIndex(now)
 	}
-	q := strings.Fields(strings.ToLower(a.search.query))
+	query := strings.TrimSpace(strings.ToLower(a.search.query))
+	q := strings.Fields(query)
 	var out []searchResult
 	if len(q) == 0 && a.search.available {
 		return all[:min(len(all), 60)]
@@ -265,14 +383,37 @@ func (a *App) searchResultsAt(now time.Time) []searchResult {
 		}
 		return out
 	}
+	type scored struct {
+		result searchResult
+		rank   int
+	}
+	var matched []scored
 	for _, r := range all {
-		text := strings.ToLower(r.title + " " + r.detail + " " + r.words)
-		if !slices.ContainsFunc(q, func(word string) bool { return !strings.Contains(text, word) }) {
-			out = append(out, r)
+		title := strings.ToLower(r.title)
+		text := title + " " + strings.ToLower(r.detail+" "+r.words)
+		if slices.ContainsFunc(q, func(word string) bool { return !strings.Contains(text, word) }) {
+			continue
 		}
-		if len(out) == 60 {
-			break
+		rank := 4
+		switch {
+		case title == query:
+			rank = 0
+		case strings.HasPrefix(title, query):
+			rank = 1
+		case strings.Contains(title, query):
+			rank = 2
+		case !slices.ContainsFunc(q, func(word string) bool { return !strings.Contains(title, word) }):
+			rank = 3
 		}
+		matched = append(matched, scored{result: r, rank: rank})
+	}
+	slices.SortStableFunc(matched, func(a, b scored) int {
+		return cmp.Compare(a.rank, b.rank)
+	})
+	limit := min(len(matched), 60)
+	out = make([]searchResult, limit)
+	for i := range limit {
+		out[i] = matched[i].result
 	}
 	return out
 }
@@ -388,7 +529,11 @@ func (a *App) searchDialog(c *ui.Context) {
 }
 
 // availableSearchIndex uses lists already fetched or read from cache.
-func (a *App) availableSearchIndex() []searchResult {
+func (a *App) availableSearchIndex(now time.Time) []searchResult {
+	key := a.searchKey(now)
+	if a.search.availValid && a.search.availKey == key {
+		return a.search.availCached
+	}
 	var out []searchResult
 	add := func(tool, v string, tab *int) {
 		if v == "" {
@@ -398,6 +543,13 @@ func (a *App) availableSearchIndex() []searchResult {
 	}
 	if a.NodeVersions != nil {
 		for _, r := range a.NodeVersions.Releases {
+			if before, _, _ := strings.Cut(r.Version, "."); before != "" {
+				if major, err := strconv.Atoi(before); err == nil {
+					if line, ok := a.NodeVersions.Lines[major]; ok && line.Ended(now) {
+						continue
+					}
+				}
+			}
 			add("node", r.Version, &a.nodeTab)
 		}
 	}
@@ -418,15 +570,24 @@ func (a *App) availableSearchIndex() []searchResult {
 	} {
 		if t.list != nil {
 			for _, l := range t.list.Lines {
+				if l.Ended(now) || (!l.Release.IsZero() && now.Before(l.Release)) {
+					continue
+				}
 				add(t.id, l.Latest, t.tab)
 			}
 		}
 	}
 	if a.DotnetVersions != nil {
 		for _, l := range a.DotnetVersions.Lines {
+			if l.Ended(now) {
+				continue
+			}
 			add("dotnet", l.Version, &a.dotnetTab)
 		}
 	}
+	a.search.availKey = key
+	a.search.availCached = out
+	a.search.availValid = true
 	return out
 }
 

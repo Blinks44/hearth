@@ -281,12 +281,8 @@ func (a *App) issueFixPlan(is issues.Issue, found []issues.Issue, done func(ops.
 				if st.Tool != is.Tool {
 					continue
 				}
-				if plan, ok := a.projectInstall(st); ok {
-					return func() { done(plan, nil) }
-				}
-				if ch, ok := st.Unmet(); ok && ch.Installed == nil && ch.Want == "" && a.canInstallTool(st.Tool) {
-					tool := st.Tool
-					return func() { a.installToolPlan(tool, done) }
+				if _, run, ok := a.projectInstallAction(st, done); ok {
+					return run
 				}
 			}
 		}

@@ -3185,5 +3185,15 @@
   "settingsPickEditor": "Editor-App oder ausführbare Datei wählen",
   "settingsHiddenIssues": "Ausgeblendete Probleme",
   "settingsNoHiddenIssues": "Keine ausgeblendeten Probleme",
-  "settingsHiddenInactive": "In der letzten Prüfung nicht vorhanden"
+  "settingsHiddenInactive": "In der letzten Prüfung nicht vorhanden",
+  "pkgSelectAll": "Alle auswählen",
+  "settingsCustomAppInvalid": "Gib einen Befehlsnamen aus PATH oder einen absoluten Pfad zu einer App ein.",
+  "mobileCounting": "Wird gezählt…",
+  "jsNoMatches": "Keine Manager entsprechen dem Filter.",
+  "cloudLoginLeadTerminal": "Hearth startet die offizielle {tool}-CLI im Terminal zur Anmeldung. Hearth sieht weder dein Passwort noch speichert es Tokens; {tool} speichert sie in {dir}.",
+  "cloudLoginStep1DescTerminal": "Startet die interaktive Anmeldeeinrichtung im Terminal und speichert die Profileinstellungen in {dir}",
+  "cloudLoginCopyCommand": "Befehl kopieren",
+  "projectInstructionsTemplate": "# Projektanweisungen\n\n## Build und Tests\n- Dokumentiere Befehle für Build, Lint und Tests in diesem Repository.\n\n## Konventionen\n- Beschreibe Projektstruktur, Codestil und Regeln für Agenten.\n",
+  "backToOverview": "Zurück zur Übersicht",
+  "changeSkillTitle": "Skill {name}"
 }

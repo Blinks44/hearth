@@ -696,7 +696,15 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 	}
 	ui.Row(c).Height(56).Shrink(0).AlignItems(ui.Center).Gap(6).Padding(0, right, 0, 24).
 		BorderWidth(0, 0, 1, 0).BorderColor(pal.Divider).DragWindow().Children(func() {
-		headerBackButton(c, locales.BackToKubernetes(), func() { a.router.Push(kubePage) })
+		if s.logs != nil {
+			back := locales.KubeLogsBack()
+			if s.logs.owner.UID != "" {
+				back = locales.KubeLogsBackToOwner()
+			}
+			headerBackButton(c, back, a.closeLogs)
+		} else {
+			headerBackButton(c, locales.BackToKubernetes(), func() { a.router.Push(kubePage) })
+		}
 		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name, contextWidth)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen

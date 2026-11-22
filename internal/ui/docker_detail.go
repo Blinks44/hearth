@@ -210,6 +210,10 @@ func (a *App) dockerDetailActions(c *ui.Context, item docker.Container) {
 			kubeActionButton(c.Key("docker-detail-pause"), "pause", ops.DockerPause.Label(), 28).
 				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerPause) })
 		}
+		if ops.DockerRestart.Applies(item) {
+			kubeActionButton(c.Key("docker-detail-restart"), "refresh-cw", ops.DockerRestart.Label(), 28).
+				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerRestart) })
+		}
 		kubeActionButton(c.Key("docker-detail-shell"), "terminal", locales.KubeShellAction(), 28).
 			Disabled(a.OpenDockerShell == nil || item.State.Status != "running" || s.detail.shellRequest != nil || s.err != nil).
 			OnClick(func() { a.openDockerShell(item) })

@@ -94,6 +94,13 @@ func (a *App) syncDockerContainers(t docker.Target, key string) {
 		s.err, s.statsErr = err, statsErr
 		if err == nil {
 			s.items, s.loaded = items, true
+			problems := 0
+			for _, item := range items {
+				if item.Problem() {
+					problems++
+				}
+			}
+			a.engine.problemCount = problems
 			s.applyPendingContainer()
 			for id := range s.bulk.selected {
 				if !slices.ContainsFunc(items, func(c docker.Container) bool { return c.ID == id }) {
@@ -145,7 +152,7 @@ func showDockerContainer(item docker.Container, filter int, query string) bool {
 type dockerGroup struct {
 	key, name, kind, dir string
 	compose              docker.ComposeProject
-	items                []docker.Container
+	all, items           []docker.Container
 	running, problems    int
 }
 
@@ -170,6 +177,7 @@ func (a *App) dockerGroups(items []docker.Container, filter int, query string) [
 			groups[g.key] = &g
 		}
 		group := groups[g.key]
+		group.all = append(group.all, item)
 		if item.Problem() {
 			group.problems++
 		}
@@ -535,10 +543,6 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track, c
 						iconButton(c.Key("compose-up"), "play", ops.DockerUp.Label()+"…").
 							OnClick(func() { a.planDockerCompose(g.compose, ops.DockerUp) })
 					} else {
-						if a.StreamDockerLogs != nil && len(g.items) > 0 {
-							iconButton(c.Key("compose-logs"), "scroll-text", locales.DockerComposeLogs()).
-								OnClick(func() { a.openDockerComposeLogs(g) })
-						}
 						if g.running > 0 {
 							iconButton(c.Key("compose-stop"), "square", ops.DockerStop.Label()+"…").
 								OnClick(func() { a.planDockerCompose(g.compose, ops.DockerStop) })
@@ -549,6 +553,10 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track, c
 							}
 							iconButton(c.Key("compose-start"), "play", action.Label()+"…").
 								OnClick(func() { a.planDockerCompose(g.compose, action) })
+						}
+						if a.StreamDockerLogs != nil && len(g.items) > 0 {
+							iconButton(c.Key("compose-logs"), "scroll-text", locales.DockerComposeLogs()).
+								OnClick(func() { a.openDockerComposeLogs(g) })
 						}
 					}
 				}
@@ -892,14 +900,18 @@ func (a *App) dockerGroupMenu(m *ui.Menu, g dockerGroup) {
 	if !a.canActOnDockerContainers() || g.compose.Files == "" {
 		return
 	}
-	actions := dockerComposeActions
-	if g.dir != "" {
-		actions = append(slices.Clone(actions), ops.DockerUp)
-		if g.compose.Name != "" {
-			actions = append(actions, ops.DockerDown)
-		} else {
-			actions = []ops.DockerAction{ops.DockerUp}
+	var actions []ops.DockerAction
+	if g.compose.Name != "" {
+		for _, action := range dockerComposeActions {
+			if slices.ContainsFunc(g.all, action.Applies) {
+				actions = append(actions, action)
+			}
 		}
+		if g.dir != "" {
+			actions = append(actions, ops.DockerUp, ops.DockerDown)
+		}
+	} else if g.dir != "" {
+		actions = []ops.DockerAction{ops.DockerUp}
 	}
 	for _, action := range actions {
 		if m.Item(action.Label() + "…").Chosen() {

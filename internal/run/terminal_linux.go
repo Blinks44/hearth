@@ -60,6 +60,11 @@ func terminalLauncher(app, script string) []string {
 			}
 		}
 	}
+	if trimmed != "" {
+		if p, err := lookPath(trimmed); err == nil {
+			return []string{p, "-e", "/bin/sh", script}
+		}
+	}
 	for _, t := range linuxTerminals {
 		if p, err := lookPath(t.name); err == nil {
 			return t.args(p, script)

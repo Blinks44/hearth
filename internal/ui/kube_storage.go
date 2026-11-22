@@ -20,7 +20,7 @@ type resourceLink struct {
 
 func (a *App) openResourceLink(link resourceLink) {
 	s := &a.cluster
-	s.kind, s.query, s.podFilter, s.claimFilter = link.kind, "", 0, 0
+	s.kind, s.query, s.podFilter, s.claimFilter, s.nodeFilter = link.kind, "", 0, 0, 0
 	if link.kind == kindPolicies {
 		s.policyTab = link.policyTab
 	}

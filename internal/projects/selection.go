@@ -34,7 +34,7 @@ func SelectVersion(st Status, releases []string, lines map[int]versions.Line) (S
 			}
 			continue
 		}
-		match, err := matcher(st.Tool, ch.Want, lines)
+		match, err := requirementMatcher(st.Tool, ch.Requirement, lines)
 		if err != nil {
 			return Selection{}, fmt.Errorf("%s: %w", ch.File, err)
 		}
@@ -58,12 +58,23 @@ func SelectVersion(st Status, releases []string, lines map[int]versions.Line) (S
 	if in := newest(st.Installations, all); in != nil {
 		return Selection{Version: in.Version, Installed: in}, nil
 	}
-	// An exact pin can be installed offline from a retained requirement, without
-	// silently replacing it with the latest release when the index is missing.
-	candidates := append([]string(nil), releases...)
+	// When installing from scratch, prefer an exact packageManager pin if it
+	// satisfies every constraint (including engines), then available releases,
+	// then any other exact pin for offline installs without a release index.
+	var candidates []string
 	for _, ch := range st.Checks {
-		if v, err := semver.StrictNewVersion(ch.Want); err == nil {
-			candidates = append(candidates, v.String())
+		if ch.Key == "packageManager" {
+			if v, err := semver.StrictNewVersion(ch.Want); err == nil {
+				candidates = append(candidates, v.String())
+			}
+		}
+	}
+	candidates = append(candidates, releases...)
+	for _, ch := range st.Checks {
+		if ch.Key != "packageManager" {
+			if v, err := semver.StrictNewVersion(ch.Want); err == nil {
+				candidates = append(candidates, v.String())
+			}
 		}
 	}
 	for _, v := range candidates {

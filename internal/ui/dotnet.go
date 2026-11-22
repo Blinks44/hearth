@@ -28,11 +28,11 @@ func (a *App) dotnet(c *ui.Context, p page) {
 				pal := Colors(c.Theme())
 				toolHead(c, "dotnet", ".NET", func() {}, locales.DotnetSubtitle(), func() {
 					stateCard(c, pal.TextFaint, locales.Installed(), locales.DotnetSDKCount(sdks), locales.DotnetRuntimeCount(runtimes))
-					v := "—"
+					v, dot := "—", pal.TextFaint
 					if i := inventory.TerminalCopy(st.Installations); i >= 0 && st.Installations[i].Version != "" {
-						v = st.Installations[i].Version
+						v, dot = st.Installations[i].Version, c.Theme().Success
 					}
-					stateCard(c, c.Theme().Success, locales.InTerminal(), v, "dotnet · SDK")
+					stateCard(c, dot, locales.InTerminal(), v, "dotnet · SDK")
 					a.toolProjectCard(c, "dotnet", projs)
 				})
 				toolTabs(c, "dotnet-tabs", &a.dotnetTab, len(rows), len(projs))

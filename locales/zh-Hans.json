@@ -3185,5 +3185,15 @@
   "settingsPickEditor": "选择编辑器应用或可执行文件",
   "settingsHiddenIssues": "已隐藏的问题",
   "settingsNoHiddenIssues": "没有已隐藏的问题",
-  "settingsHiddenInactive": "上次检查未发现此问题"
+  "settingsHiddenInactive": "上次检查未发现此问题",
+  "pkgSelectAll": "全选",
+  "settingsCustomAppInvalid": "请输入 PATH 中的命令名或应用的绝对路径。",
+  "mobileCounting": "正在计算…",
+  "jsNoMatches": "没有符合筛选条件的管理器。",
+  "cloudLoginLeadTerminal": "Hearth 会在终端中运行官方 {tool} CLI 以配置登录。Hearth 不会查看你的密码或保存令牌；{tool} 会将其保存在 {dir}。",
+  "cloudLoginStep1DescTerminal": "在终端中启动交互式登录配置并将配置文件保存到 {dir}",
+  "cloudLoginCopyCommand": "复制命令",
+  "projectInstructionsTemplate": "# 项目说明\n\n## 构建与测试\n- 记录此仓库的构建、检查和测试命令。\n\n## 约定\n- 说明项目结构、代码风格和面向代理的规则。\n",
+  "backToOverview": "返回概览",
+  "changeSkillTitle": "Skill {name}"
 }
