@@ -668,14 +668,24 @@ func (a *App) editorChoices() []run.App {
 	return choices
 }
 
-// chosenEditor is the editor chosen in Settings, while it is installed.
+// chosenEditor is the editor chosen in Settings, while it is installed or a custom path.
 func (a *App) chosenEditor() (run.App, bool) {
+	if a.Editor == "" {
+		return run.App{}, false
+	}
 	for _, e := range a.editorChoices() {
-		if a.Editor != "" && e.Name == a.Editor {
+		if e.Name == a.Editor {
 			return e, true
 		}
 	}
+	if isCustomAppPath(a.Editor) {
+		return run.App{Name: a.Editor, Path: a.Editor}, true
+	}
 	return run.App{}, false
+}
+
+func isCustomAppPath(p string) bool {
+	return filepath.IsAbs(p) || strings.ContainsAny(p, `/\`)
 }
 
 // fileKind says what an agent's file holds.

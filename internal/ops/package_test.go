@@ -212,3 +212,80 @@ func TestPackagePlanVerify(t *testing.T) {
 		})
 	}
 }
+
+func TestPackageRefreshPlan(t *testing.T) {
+	const scoopPath = `C:\Users\Ann\scoop\shims\scoop.ps1`
+	tests := []struct {
+		id    string
+		path  string
+		argv  []string
+		admin bool
+		ok    bool
+	}{
+		{"brew", "/opt/homebrew/bin/brew", []string{"/opt/homebrew/bin/brew", "update"}, false, true},
+		{"apt", "/usr/bin/apt", []string{"/usr/bin/apt-get", "-oDPkg::Lock::Timeout=600", "update"}, true, true},
+		{"dnf", "/usr/bin/dnf", []string{"/usr/bin/dnf", "makecache"}, true, true},
+		{"zypper", "/usr/bin/zypper", []string{"/usr/bin/zypper", "--non-interactive", "refresh"}, true, true},
+		{"apk", "/sbin/apk", []string{"/sbin/apk", "update"}, true, true},
+		{"scoop", scoopPath, []string{"powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scoopPath, "update"}, false, true},
+		{"winget", "", []string{"winget", "source", "update", "--disable-interactivity"}, false, true},
+		{"flatpak", "/usr/bin/flatpak", []string{"/usr/bin/flatpak", "update", "--appstream", "-y", "--noninteractive"}, false, true},
+		{"pacman", "/usr/bin/pacman", nil, false, false},
+		{"choco", `C:\ProgramData\chocolatey\bin\choco.exe`, nil, false, false},
+		{"snap", "/usr/bin/snap", nil, false, false},
+		{"nix", "/nix/var/nix/profiles/default/bin/nix-env", nil, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.id, func(t *testing.T) {
+			m := inventory.PackageManager{ID: tt.id, Name: tt.id, Path: tt.path}
+			p, ok := PackageRefreshPlan(m, nil)
+			if ok != tt.ok {
+				t.Fatalf("ok = %v, want %v", ok, tt.ok)
+			}
+			if !ok {
+				return
+			}
+			if len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, tt.argv) || p.Steps[0].Admin != tt.admin {
+				t.Errorf("steps = %+v, want argv=%v admin=%v", p.Steps, tt.argv, tt.admin)
+			}
+			if tt.admin && len(p.Notes) == 0 {
+				t.Error("expected AdminNote for admin refresh plan")
+			}
+		})
+	}
+
+	t.Run("verify counts available updates", func(t *testing.T) {
+		m := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
+		p, ok := PackageRefreshPlan(m, func(context.Context) (inventory.PackageManager, error) {
+			return inventory.PackageManager{
+				ID:   "brew",
+				Name: "Homebrew",
+				Packages: []inventory.SystemPackage{
+					{Name: "jq", Version: "1.7", Available: "1.8"},
+					{Name: "git", Version: "2.48"},
+				},
+			}, nil
+		})
+		if !ok {
+			t.Fatal("expected refresh plan for brew")
+		}
+		got, err := p.Verify(context.Background())
+		if err != nil || got != locales.PkgRefreshChecked("Homebrew", 1) {
+			t.Fatalf("Verify = (%q, %v), want (%q, nil)", got, err, locales.PkgRefreshChecked("Homebrew", 1))
+		}
+	})
+
+	t.Run("verify reports up to date", func(t *testing.T) {
+		m := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
+		p, ok := PackageRefreshPlan(m, func(context.Context) (inventory.PackageManager, error) {
+			return inventory.PackageManager{ID: "brew", Name: "Homebrew"}, nil
+		})
+		if !ok {
+			t.Fatal("expected refresh plan for brew")
+		}
+		got, err := p.Verify(context.Background())
+		if err != nil || got != locales.PkgRefreshUpToDate("Homebrew") {
+			t.Fatalf("Verify = (%q, %v), want (%q, nil)", got, err, locales.PkgRefreshUpToDate("Homebrew"))
+		}
+	})
+}

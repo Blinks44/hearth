@@ -32,10 +32,10 @@ func powershellQuote(s string) string {
 	return "'" + strings.NewReplacer("'", "''", "‘", "‘‘", "’", "’’", "‚", "‚‚", "‛", "‛‛").Replace(s) + "'"
 }
 
-// OpenTerminal opens a visible PowerShell console through the system's
-// default terminal host. PowerShell owns the interactive child and stays open
-// so the user can read errors from kubectl.
-func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _, _, _ string, overrides ...string) error {
+// OpenTerminal opens a visible PowerShell console through the chosen terminal
+// executable or the system's default terminal host. PowerShell owns the
+// interactive child and stays open so the user can read errors from kubectl.
+func OpenTerminal(ctx context.Context, _ Runner, app string, argv, env []string, _, _, _ string, overrides ...string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("open terminal: %w", err)
 	}
@@ -44,7 +44,8 @@ func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _
 		return fmt.Errorf("locate PowerShell: %w", err)
 	}
 	program := filepath.Join(system, "WindowsPowerShell", "v1.0", "powershell.exe")
-	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine(append([]string{program}, terminalArgs(argv)...)))
+	cmd, newConsole := windowsTerminalCmd(app, program, argv)
+	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine(cmd))
 	if err != nil {
 		return fmt.Errorf("encode PowerShell command: %w", err)
 	}
@@ -52,13 +53,37 @@ func OpenTerminal(ctx context.Context, _ Runner, _ string, argv, env []string, _
 	// os/exec supplies redirected handles even for a new console.
 	info := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{}))}
 	var process windows.ProcessInformation
-	flags := uint32(windows.CREATE_NEW_CONSOLE | windows.CREATE_UNICODE_ENVIRONMENT)
+	flags := uint32(windows.CREATE_UNICODE_ENVIRONMENT)
+	if newConsole {
+		flags |= windows.CREATE_NEW_CONSOLE
+	}
 	if err := windows.CreateProcess(nil, line, nil, nil, false, flags, terminalEnvironment(append(slices.Clone(env), overrides...)), nil, &info, &process); err != nil {
-		return fmt.Errorf("open PowerShell: %w", err)
+		return fmt.Errorf("open terminal: %w", err)
 	}
 	_ = windows.CloseHandle(process.Thread)
 	_ = windows.CloseHandle(process.Process)
 	return nil
+}
+
+func windowsTerminalCmd(app, powershell string, argv []string) ([]string, bool) {
+	psArgs := append([]string{powershell}, terminalArgs(argv)...)
+	trimmed := strings.TrimSpace(app)
+	if trimmed == "" {
+		return psArgs, true
+	}
+	base := strings.ToLower(strings.TrimSuffix(filepath.Base(trimmed), ".exe"))
+	switch base {
+	case "wt":
+		return append([]string{trimmed, "new-tab", "--"}, psArgs...), false
+	case "wezterm", "wezterm-gui":
+		return append([]string{trimmed, "start", "--"}, psArgs...), false
+	case "alacritty", "ghostty":
+		return append([]string{trimmed, "-e"}, psArgs...), false
+	case "pwsh", "powershell":
+		return append([]string{trimmed}, terminalArgs(argv)...), true
+	default:
+		return append([]string{trimmed}, psArgs...), false
+	}
 }
 
 func terminalEnvironment(env []string) *uint16 {

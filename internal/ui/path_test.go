@@ -210,3 +210,79 @@ func TestPathBannerHidesFixOnErrNoFix(t *testing.T) {
 		t.Fatalf("Fix button should hide after ErrNoFix for all entries: %q", tt.Texts())
 	}
 }
+
+func TestPathAddDialog(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix paths and startup files")
+	}
+	dir := t.TempDir()
+	a := NewApp()
+	a.Home = dir
+	a.Snapshot = &inventory.Snapshot{
+		TerminalPath: []inventory.PathEntry{{Dir: "/usr/bin"}},
+		Variables: []inventory.EnvironmentVariable{
+			{Name: "OLLAMA_MODELS", Terminal: dir + "/models", GUI: dir + "/models"},
+			{Name: "HTTP_PROXY", Terminal: "http://•••@proxy.local:8080", GUI: "http://•••@proxy.local:8080"},
+		},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		p, err := build(sysenv.Env{"HOME=" + dir, "SHELL=/bin/zsh"}, nil)
+		done(p, err)
+	}
+	a.PickPath = func(_ string, directory bool, done func(string, error)) {
+		if !directory {
+			t.Error("expected directory picker for PATH add")
+		}
+		done(dir+"/custom/bin", nil)
+	}
+	a.router.Push(pathPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if !tt.HasText("OLLAMA_MODELS") || !tt.HasText("HTTP_PROXY") {
+		t.Fatalf("new variables missing: %q", tt.Texts())
+	}
+	if err := tt.Click(locales.PathAdd()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	screenshot(t, tt, "path-add-dialog")
+	if !tt.HasText(locales.PathAddTitle()) {
+		t.Fatalf("dialog did not open: %q", tt.Texts())
+	}
+	// Typing a relative path shows inline validation error without closing the dialog.
+	a.pathAddInput = "relative/bin"
+	tt.Frame()
+	if err := tt.Click(locales.Next()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !a.pathAddOpen || !tt.HasText(locales.PathAddInvalid()) {
+		t.Fatalf("expected validation error, open=%v err=%q texts=%q", a.pathAddOpen, a.pathAddErr, tt.Texts())
+	}
+	// Choosing a folder populates the field and clears the error; submitting proposes ops.PathAddPlan.
+	if err := tt.Click(locales.PathAddBrowse()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.pathAddInput != dir+"/custom/bin" || a.pathAddErr != "" {
+		t.Fatalf("after browse: input=%q err=%q", a.pathAddInput, a.pathAddErr)
+	}
+	if err := tt.Click(locales.Next()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.pathAddOpen {
+		t.Fatal("dialog remained open after valid submission")
+	}
+	if a.op == nil || a.op.plan.Title != locales.PathAddPlanTitle(dir+"/custom/bin") {
+		t.Fatalf("unexpected plan: %+v", a.op)
+	}
+	// Narrow window check.
+	a.op.open = false
+	narrow := ui.NewTester(a.View, 1000, 680)
+	narrow.Advance(time.Second)
+	screenshot(t, narrow, "path-narrow")
+	if _, ok := narrow.Find(locales.PathAdd()); !ok {
+		t.Fatalf("Add directory button missing at 1000x680: %q", narrow.Texts())
+	}
+}

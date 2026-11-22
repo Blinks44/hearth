@@ -3,6 +3,7 @@ package run
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // macTerminals are the terminal apps Hearth opens a command in, Apple's
@@ -40,12 +41,36 @@ func Terminals() []string {
 	return names
 }
 
-// terminalLauncher opens script in the terminal app of that name, in
-// Terminal for "" or one Hearth does not know.
+// terminalLauncher opens script in the terminal app of that name or custom
+// path, falling back to Terminal for "" or an unknown name.
 func terminalLauncher(app, script string) []string {
 	for _, t := range macTerminals {
 		if t.name == app {
 			return t.args(script)
+		}
+	}
+	trimmed := strings.TrimRight(strings.TrimSpace(app), "/")
+	if trimmed != "" && (filepath.IsAbs(trimmed) || strings.Contains(trimmed, "/")) {
+		if strings.HasSuffix(trimmed, ".app") {
+			base := strings.ToLower(strings.TrimSuffix(filepath.Base(trimmed), ".app"))
+			switch base {
+			case "ghostty", "alacritty":
+				return []string{"/usr/bin/open", "-na", trimmed, "--args", "-e", script}
+			case "kitty":
+				return []string{"/usr/bin/open", "-na", trimmed, "--args", script}
+			case "wezterm":
+				return []string{"/usr/bin/open", "-na", trimmed, "--args", "start", "--", script}
+			default:
+				return []string{"/usr/bin/open", "-a", trimmed, script}
+			}
+		}
+		switch strings.ToLower(filepath.Base(trimmed)) {
+		case "wezterm", "wezterm-gui":
+			return []string{trimmed, "start", "--", "/bin/sh", script}
+		case "kitty":
+			return []string{trimmed, "/bin/sh", script}
+		default:
+			return []string{trimmed, "-e", "/bin/sh", script}
 		}
 	}
 	return macTerminals[0].args(script)

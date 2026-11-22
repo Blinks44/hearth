@@ -54,6 +54,13 @@ type App struct {
 	AppVersion string
 	// CachePath is where the version lists are kept.
 	CachePath string
+	// DataDir and LogsDir are Hearth's user data and logs directories shown in Settings.
+	DataDir string
+	LogsDir string
+	// OpenFolder opens a folder in the OS file manager after checking it exists off the UI thread.
+	OpenFolder func(path string, done func(error))
+	// PickPath opens a native file or folder picker off the UI thread.
+	PickPath func(title string, directory bool, done func(string, error))
 	// CacheBusy is true while the version lists are being cleared.
 	CacheBusy bool
 	// Hidden are the keys of the issues worth knowing the user hid: they
@@ -300,75 +307,84 @@ type App struct {
 	// runs on the operation's goroutine.
 	RereadPackages func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error)
 
-	preparing      *preparing
-	op             *operation // the operation shown or running; nil when none
-	setup          setupState // where the new computer wizard is
-	search         searchState
-	filterField    ui.Handle // the filter of the page shown, which / focuses
-	router         *ui.Router
-	notFoundOpen   bool                // the languages and tools not found show in the sidebar
-	nodeTab        int                 // the tab of the Node.js page shown
-	jspmTab        int                 // the tab of the package managers page shown
-	jspmFilter     string              // the package managers table's filter
-	pathTab        int                 // the tab of the PATH page shown
-	pathFilter     string              // the PATH table's filter
-	pathFixErr     string              // why the PATH problems asked to fix have no plan
-	pathFixSnap    *inventory.Snapshot // snapshot pathFixErr belongs to
-	pathFixAllNone bool                // fixing all PATH problems already returned ErrNoFix
-	planErr        string              // why a plan asked for could not be made, until a toast says it
-	notice         string              // what a toast says next, as a set saved
-	packageTab     int                 // the tab of the system package managers page shown
-	packageManager string              // the path of the package manager shown
-	packageFilter  string              // the package table's filter
-	packageSort    int                 // the package table's order: sortByName, sortByDependents or sortBySize
+	preparing       *preparing
+	op              *operation // the operation shown or running; nil when none
+	setup           setupState // where the new computer wizard is
+	search          searchState
+	filterField     ui.Handle // the filter of the page shown, which / focuses
+	router          *ui.Router
+	notFoundOpen    bool                // the languages and tools not found show in the sidebar
+	nodeTab         int                 // the tab of the Node.js page shown
+	jspmTab         int                 // the tab of the package managers page shown
+	jspmFilter      string              // the package managers table's filter
+	pathTab         int                 // the tab of the PATH page shown
+	pathFilter      string              // the PATH table's filter
+	pathFixErr      string              // why the PATH problems asked to fix have no plan
+	pathFixSnap     *inventory.Snapshot // snapshot pathFixErr belongs to
+	pathFixAllNone  bool                // fixing all PATH problems already returned ErrNoFix
+	pathAddOpen     bool                // the dialog to add a directory to PATH is open
+	pathAddInput    string              // the directory typed in the PATH add dialog
+	pathAddErr      string              // why the entered directory cannot be added
+	planErr         string              // why a plan asked for could not be made, until a toast says it
+	notice          string              // what a toast says next, as a set saved
+	packageTab      int                 // the tab of the system package managers page shown
+	packageManager  string              // the path of the package manager shown
+	packageFilter   string              // the package table's filter
+	packageSort     int                 // the package table's order: sortByName, sortByDependents or sortBySize
+	packageLimit    int                 // max rows shown in the package table before "Show more"
+	packageLimitKey string              // resets packageLimit when manager/tab/sort/filter changes
 	// packageChosen are the updates checked to run, by manager path and
 	// packageKey.
-	packageChosen      map[string]bool
-	gitTab             int    // the Git page's tab: installed, settings, PATH
-	cppTab             int    // the C/C++ page's tab: installed, PATH
-	modelsTab          int    // the local models page's tab: all, then an app each
-	modelsFilter       string // the local models table's filter
-	modelPull          string // the name of the Ollama model to download
-	modelPullOpen      bool   // the dialog to download an Ollama model is open
-	cliTab             int    // the CLI & clouds page's tab
-	cliFilter          string // the CLI & clouds table's filter
-	cloudAuth          map[string]cloudAuthEntry
-	cloudSwitch        cloudSwitchDialog
-	cloudLogin         cloudLoginDialog
-	kubeTab            int    // the Kubernetes page's tab
-	kubeFilter         string // the Kubernetes page's filter
-	kubeNS             kubeNamespaceDialog
-	kubeChecks         map[string]kubeCheck
-	cluster            kubeClusterState
-	engine             dockerEngineState // the Docker engine page's
-	issuePopover       string            // key of the open row issue popover; "" when none
-	issuePopoverOn     bool
-	kind               kindCreateDialog
-	kubeLink           kubeLinkDialog
-	kubeApply          *kubeApplyDialog
-	forwards           []*portForward
-	portsFilter        string // the Ports table's filter
-	portsRefreshing    bool
-	portsRefreshSeq    int
-	instructionsQuery  string // the Instructions page's filter
-	instructionsChosen string // the project shown on the Instructions page
-	usageTab           int    // the Usage page's period, by usagePeriods
-	usageMetric        int    // the Usage page's metric: 0 cost, 1 tokens
-	usageAgent         string // the Usage page's agent filter, "" for all
-	usageAgentLabel    string
-	usageProject       string // the Usage page's project filter, "" for all
-	usageProjectLabel  string
-	mobileTab          int    // the mobile page's tab: all, then a group each
-	mobileFilter       string // the mobile table's filter
-	editorsTab         int    // the editors page's tab: all, extensions, commands
-	editorsFilter      string // the editors table's filter
-	changesTab         int    // the What changed page's tab: all, added, updated, removed
-	changesFilter      string // the What changed table's filter
-	problemsTab        int    // the Issues page's tab: all, then an area each
-	problemsFilter     string // the Issues table's filter
-	problemsShowHidden bool   // whether the hidden issues list is expanded on the Issues page
-	cleanupTab         int    // the Cleanup page's tab: all, then a group each
-	cleanupFilter      string // the Cleanup table's filter
+	packageChosen       map[string]bool
+	terminalCustomOpen  bool   // whether the custom terminal path input is expanded in Settings
+	terminalCustomInput string // custom terminal path being edited in Settings
+	editorCustomOpen    bool   // whether the custom editor path input is expanded in Settings
+	editorCustomInput   string // custom editor path being edited in Settings
+	gitTab              int    // the Git page's tab: installed, settings, PATH
+	cppTab              int    // the C/C++ page's tab: installed, PATH
+	modelsTab           int    // the local models page's tab: all, then an app each
+	modelsFilter        string // the local models table's filter
+	modelPull           string // the name of the Ollama model to download
+	modelPullOpen       bool   // the dialog to download an Ollama model is open
+	cliTab              int    // the CLI & clouds page's tab
+	cliFilter           string // the CLI & clouds table's filter
+	cloudAuth           map[string]cloudAuthEntry
+	cloudSwitch         cloudSwitchDialog
+	cloudLogin          cloudLoginDialog
+	kubeTab             int    // the Kubernetes page's tab
+	kubeFilter          string // the Kubernetes page's filter
+	kubeNS              kubeNamespaceDialog
+	kubeChecks          map[string]kubeCheck
+	cluster             kubeClusterState
+	engine              dockerEngineState // the Docker engine page's
+	issuePopover        string            // key of the open row issue popover; "" when none
+	issuePopoverOn      bool
+	kind                kindCreateDialog
+	kubeLink            kubeLinkDialog
+	kubeApply           *kubeApplyDialog
+	forwards            []*portForward
+	portsFilter         string // the Ports table's filter
+	portsRefreshing     bool
+	portsRefreshSeq     int
+	instructionsQuery   string // the Instructions page's filter
+	instructionsChosen  string // the project shown on the Instructions page
+	usageTab            int    // the Usage page's period, by usagePeriods
+	usageMetric         int    // the Usage page's metric: 0 cost, 1 tokens
+	usageAgent          string // the Usage page's agent filter, "" for all
+	usageAgentLabel     string
+	usageProject        string // the Usage page's project filter, "" for all
+	usageProjectLabel   string
+	mobileTab           int    // the mobile page's tab: all, then a group each
+	mobileFilter        string // the mobile table's filter
+	editorsTab          int    // the editors page's tab: all, extensions, commands
+	editorsFilter       string // the editors table's filter
+	changesTab          int    // the What changed page's tab: all, added, updated, removed
+	changesFilter       string // the What changed table's filter
+	problemsTab         int    // the Issues page's tab: all, then an area each
+	problemsFilter      string // the Issues table's filter
+	problemsShowHidden  bool   // whether the hidden issues list is expanded on the Issues page
+	cleanupTab          int    // the Cleanup page's tab: all, then a group each
+	cleanupFilter       string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice map[string]bool

@@ -1,8 +1,12 @@
 package ui
 
 import (
+	"errors"
+	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/egoist/mygo/ui"
 
@@ -51,7 +55,7 @@ func (a *App) settingsPage(c *ui.Context) {
 									lang = languageNames[i]
 								}
 							}
-							ui.Select(c.Key("settings-language"), &lang, languageNames).Label(locales.SettingsChooseLanguage()).Width(145).OnChange(func() {
+							ui.Select(c.Key("settings-language"), &lang, languageNames).Label(locales.SettingsChooseLanguage()).Width(160).OnChange(func() {
 								for i, name := range languageNames {
 									if name == lang {
 										a.Locale = languageTags[i]
@@ -72,7 +76,7 @@ func (a *App) settingsPage(c *ui.Context) {
 							if a.ThemeMode == "dark" {
 								value = values[2]
 							}
-							ui.Select(c.Key("settings-theme"), &value, values).Label(locales.SettingsChooseTheme()).Width(145).OnChange(func() {
+							ui.Select(c.Key("settings-theme"), &value, values).Label(locales.SettingsChooseTheme()).Width(160).OnChange(func() {
 								a.ThemeMode = "system"
 								if value == values[1] {
 									a.ThemeMode = "light"
@@ -106,11 +110,8 @@ func (a *App) settingsPage(c *ui.Context) {
 						}
 					})
 				}, func() {
-					card(c, locales.SettingsData(), "", nil, func() {
-						settingRow(c, locales.SettingsCache(), tilde(a.CachePath, a.Home), func() {
-							ui.Button(c, locales.SettingsClear()).Disabled(a.ClearCache == nil || a.CacheBusy).OnClick(a.ClearCache)
-						})
-					})
+					a.dataCard(c)
+					a.hiddenIssuesCard(c)
 					card(c, locales.SettingsAbout(), "", nil, func() {
 						v := a.AppVersion
 						if v == "" {
@@ -126,6 +127,106 @@ func (a *App) settingsPage(c *ui.Context) {
 		})
 	})
 	a.licensesDialog(c)
+}
+
+func (a *App) canOpenFolder() bool {
+	return a.OpenFolder != nil || a.Shell != nil
+}
+
+func (a *App) openSettingsFolder(c *ui.Context, path string) {
+	if path == "" {
+		return
+	}
+	a.SettingsError = ""
+	if a.OpenFolder != nil {
+		a.OpenFolder(path, func(err error) {
+			switch {
+			case err == nil:
+			case errors.Is(err, os.ErrNotExist):
+				a.SettingsError = locales.SettingsFolderMissing(tilde(path, a.Home))
+			default:
+				a.SettingsError = locales.OpenFailed(tilde(path, a.Home), err.Error())
+			}
+		})
+		return
+	}
+	if a.Shell != nil {
+		if err := a.Shell.OpenPath(path); err != nil {
+			a.SettingsError = locales.OpenFailed(tilde(path, a.Home), err.Error())
+		}
+	}
+}
+
+func (a *App) dataCard(c *ui.Context) {
+	canOpen := a.canOpenFolder()
+	card(c, locales.SettingsData(), "", nil, func() {
+		settingRow(c.Key("settings-cache"), locales.SettingsCache(), tilde(a.CachePath, a.Home), func() {
+			ui.Row(c).Gap(6).Shrink(0).AlignItems(ui.Center).Children(func() {
+				if a.CachePath != "" && canOpen {
+					ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsCache()).
+						OnClick(func() { a.openSettingsFolder(c, a.CachePath) })
+				}
+				ui.Button(c.Key("clear"), locales.SettingsClear()).Disabled(a.ClearCache == nil || a.CacheBusy).OnClick(a.ClearCache)
+			})
+		})
+		if a.DataDir != "" {
+			settingRow(c.Key("settings-data-dir"), locales.SettingsDataDir(), tilde(a.DataDir, a.Home), func() {
+				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsDataDir()).
+					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.DataDir) })
+			})
+		}
+		if a.LogsDir != "" {
+			settingRow(c.Key("settings-logs-dir"), locales.SettingsLogsDir(), tilde(a.LogsDir, a.Home), func() {
+				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsLogsDir()).
+					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.LogsDir) })
+			})
+		}
+		if a.SkillBackups != "" {
+			settingRow(c.Key("settings-backups-dir"), locales.SettingsBackupsDir(), locales.SettingsBackupsHint(tilde(a.SkillBackups, a.Home)), func() {
+				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsBackupsDir()).
+					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.SkillBackups) })
+			})
+		}
+	})
+}
+
+func (a *App) hiddenIssuesCard(c *ui.Context) {
+	count := ""
+	if len(a.Hidden) > 0 {
+		count = strconv.Itoa(len(a.Hidden))
+	}
+	var end func()
+	if len(a.Hidden) > 0 {
+		end = func() {
+			ui.Button(c.Key("settings-hidden-restore-all"), locales.ProblemsRestoreAll()).OnClick(func() {
+				a.problemsShowHidden = false
+				a.setHidden(nil)
+			})
+		}
+	}
+	card(c, locales.SettingsHiddenIssues(), count, end, func() {
+		if len(a.Hidden) == 0 {
+			settingRow(c, locales.SettingsNoHiddenIssues(), "", nil)
+			return
+		}
+		byKey := map[string]attentionItem{}
+		if a.Snapshot != nil {
+			_, hiddenItems := a.visibleIssues(a.issues(c))
+			for _, it := range hiddenItems {
+				byKey[it.key] = it
+			}
+		}
+		for _, key := range a.Hidden {
+			title, hint := key, locales.SettingsHiddenInactive()
+			if it, ok := byKey[key]; ok {
+				title, hint = it.title, it.explain
+			}
+			settingRow(c.Key("settings-hidden:"+key), title, hint, func() {
+				ui.Button(c.Key("restore"), locales.ProblemsRestore()).Label(locales.ProblemsRestore() + " " + title).
+					OnClick(func() { a.unhideIssue(key) })
+			})
+		}
+	})
 }
 
 // licensesDialog shows Hearth's license and those of the fonts, icons and
@@ -150,51 +251,164 @@ func (a *App) licensesDialog(c *ui.Context) {
 }
 
 // appsCard chooses the apps Hearth opens things in: the terminal for a
-// container's shell, the editor for files. Each starts as the system's.
+// container's shell, the editor for files. Each starts as the system's and
+// also accepts a custom application or executable path.
 func (a *App) appsCard(c *ui.Context) {
 	editors := a.editorChoices()
-	if len(a.Terminals) == 0 && len(editors) == 0 {
-		return
-	}
+	customLabel := locales.SettingsCustomPath()
 	card(c, locales.SettingsApps(), "", nil, func() {
-		if len(a.Terminals) > 0 {
-			settingRow(c, locales.SettingsTerminal(), locales.SettingsTerminalHint(), func() {
-				names := append([]string{locales.SettingsSystem()}, a.Terminals...)
-				value := names[0]
-				if slices.Contains(a.Terminals, a.Terminal) {
-					value = a.Terminal
-				}
-				ui.Select(c.Key("settings-terminal"), &value, names).Label(locales.SettingsTerminal()).Width(145).OnChange(func() {
-					a.Terminal = value
-					if value == names[0] {
-						a.Terminal = ""
-					}
-					a.savePreferences()
-				})
-			})
+		termNames := append([]string{locales.SettingsSystem()}, a.Terminals...)
+		termNames = append(termNames, customLabel)
+		termIsCustom := a.Terminal != "" && !slices.Contains(a.Terminals, a.Terminal)
+		termShowCustom := a.terminalCustomOpen || termIsCustom
+		termValue := termNames[0]
+		switch {
+		case slices.Contains(a.Terminals, a.Terminal):
+			termValue = a.Terminal
+		case termShowCustom:
+			termValue = customLabel
 		}
-		if len(editors) > 0 {
-			settingRow(c, locales.SettingsEditor(), locales.SettingsEditorHint(), func() {
-				names := []string{locales.SettingsSystem()}
-				for _, e := range editors {
-					names = append(names, e.Name)
-				}
-				value := names[0]
-				for _, e := range editors {
-					if e.Name == a.Editor {
-						value = e.Name
+		termHint := locales.SettingsTerminalHint()
+		if termIsCustom {
+			termHint = tilde(a.Terminal, a.Home)
+		}
+		settingRow(c.Key("settings-terminal-row"), locales.SettingsTerminal(), termHint, func() {
+			ui.Select(c.Key("settings-terminal"), &termValue, termNames).Label(locales.SettingsPickTerminal()).Width(160).OnChange(func() {
+				switch termValue {
+				case termNames[0]:
+					a.Terminal = ""
+					a.terminalCustomOpen = false
+					a.savePreferences()
+				case customLabel:
+					a.terminalCustomOpen = true
+					if termIsCustom {
+						a.terminalCustomInput = a.Terminal
+					} else {
+						a.terminalCustomInput = ""
 					}
+				default:
+					a.Terminal = termValue
+					a.terminalCustomOpen = false
+					a.savePreferences()
 				}
-				ui.Select(c.Key("settings-editor"), &value, names).Label(locales.SettingsEditor()).Width(145).OnChange(func() {
-					a.Editor = ""
-					if value != names[0] {
-						a.Editor = value
-					}
+			})
+		})
+		if termShowCustom {
+			if !a.terminalCustomOpen && termIsCustom && a.terminalCustomInput == "" {
+				a.terminalCustomInput = a.Terminal
+			}
+			a.customAppPathRow(c, "settings-terminal-custom", locales.SettingsTerminal(), &a.terminalCustomInput,
+				locales.SettingsCustomTerminalPlaceholder(), locales.SettingsPickTerminal(),
+				func(saved string) {
+					a.Terminal = saved
+					a.terminalCustomOpen = saved != ""
 					a.savePreferences()
 				})
+		}
+
+		editorNames := []string{locales.SettingsSystem()}
+		editorKnown := false
+		for _, e := range editors {
+			editorNames = append(editorNames, e.Name)
+			if e.Name == a.Editor {
+				editorKnown = true
+			}
+		}
+		editorNames = append(editorNames, customLabel)
+		editorIsCustom := a.Editor != "" && !editorKnown
+		editorShowCustom := a.editorCustomOpen || editorIsCustom
+		editorValue := editorNames[0]
+		switch {
+		case editorKnown:
+			editorValue = a.Editor
+		case editorShowCustom:
+			editorValue = customLabel
+		}
+		editorHint := locales.SettingsEditorHint()
+		if editorIsCustom {
+			editorHint = tilde(a.Editor, a.Home)
+		}
+		settingRow(c.Key("settings-editor-row"), locales.SettingsEditor(), editorHint, func() {
+			ui.Select(c.Key("settings-editor"), &editorValue, editorNames).Label(locales.SettingsPickEditor()).Width(160).OnChange(func() {
+				switch editorValue {
+				case editorNames[0]:
+					a.Editor = ""
+					a.editorCustomOpen = false
+					a.savePreferences()
+				case customLabel:
+					a.editorCustomOpen = true
+					if editorIsCustom {
+						a.editorCustomInput = a.Editor
+					} else {
+						a.editorCustomInput = ""
+					}
+				default:
+					a.Editor = editorValue
+					a.editorCustomOpen = false
+					a.savePreferences()
+				}
 			})
+		})
+		if editorShowCustom {
+			if !a.editorCustomOpen && editorIsCustom && a.editorCustomInput == "" {
+				a.editorCustomInput = a.Editor
+			}
+			a.customAppPathRow(c, "settings-editor-custom", locales.SettingsEditor(), &a.editorCustomInput,
+				locales.SettingsCustomEditorPlaceholder(), locales.SettingsPickEditor(),
+				func(saved string) {
+					a.Editor = saved
+					a.editorCustomOpen = saved != ""
+					a.savePreferences()
+				})
 		}
 	})
+}
+
+func (a *App) customAppPathRow(c *ui.Context, key, targetLabel string, input *string, placeholder, pickTitle string, onSave func(string)) {
+	save := func() {
+		trimmed := expandHomePath(strings.TrimSpace(*input), a.Home)
+		if trimmed == "" {
+			return
+		}
+		*input = trimmed
+		a.SettingsError = ""
+		onSave(trimmed)
+	}
+	ui.Row(c.Key(key)).Padding(0, 14, 12, 14).Gap(8).AlignItems(ui.Center).Children(func() {
+		in := ui.TextInput(c.Key("input"), input).Grow(1).Placeholder(placeholder).Label(pickTitle)
+		if in.Submitted() {
+			save()
+		}
+		if a.PickPath != nil {
+			ui.Button(c.Key("browse"), locales.SettingsBrowse()).Label(locales.SettingsBrowse() + " " + targetLabel).Height(controlHeight).OnClick(func() {
+				a.PickPath(pickTitle, false, func(path string, err error) {
+					if err != nil {
+						a.SettingsError = err.Error()
+						return
+					}
+					if path != "" {
+						*input = path
+						a.SettingsError = ""
+						onSave(path)
+					}
+				})
+			})
+		}
+		ui.Button(c.Key("save"), locales.SettingsSave()).Label(locales.SettingsSave() + " " + targetLabel).Height(controlHeight).Disabled(strings.TrimSpace(*input) == "").OnClick(save)
+	})
+}
+
+func expandHomePath(p, home string) string {
+	if home == "" {
+		return p
+	}
+	if p == "~" {
+		return home
+	}
+	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, `~\`) {
+		return filepath.Join(home, p[2:])
+	}
+	return p
 }
 
 func (a *App) savePreferences() {

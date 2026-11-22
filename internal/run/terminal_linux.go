@@ -1,6 +1,10 @@
 package run
 
-import "os/exec"
+import (
+	"os/exec"
+	"path/filepath"
+	"strings"
+)
 
 // linuxTerminals are the terminal emulators Hearth opens a command in, in
 // the order it looks for one: the desktop's chosen one first, as Debian
@@ -36,11 +40,21 @@ func Terminals() []string {
 	return names
 }
 
-// terminalLauncher opens script in the terminal of that name, or, for ""
-// or one not found, in the first one found; GNOME's when none is.
+// terminalLauncher opens script in the terminal of that name or custom path,
+// or, for "" or one not found, in the first one found; GNOME's when none is.
 func terminalLauncher(app, script string) []string {
+	trimmed := strings.TrimSpace(app)
+	if trimmed != "" && (filepath.IsAbs(trimmed) || strings.Contains(trimmed, "/")) {
+		base := filepath.Base(trimmed)
+		for _, t := range linuxTerminals {
+			if t.name == base {
+				return t.args(trimmed, script)
+			}
+		}
+		return []string{trimmed, "-e", "/bin/sh", script}
+	}
 	for _, t := range linuxTerminals {
-		if t.name == app {
+		if t.name == trimmed {
 			if p, err := lookPath(t.name); err == nil {
 				return t.args(p, script)
 			}

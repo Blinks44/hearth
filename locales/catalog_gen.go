@@ -41775,3 +41775,399 @@ func SkillCatalogScopeUser() string { return In(i18n.Locale()).SkillCatalogScope
 func (msgs Messages) SkillCatalogScopeUser() string {
 	return Catalog.Format(msgs.locale, "skillCatalogScopeUser", nil)
 }
+
+// PathAdd says "Add directory…"
+// in the language the app shows.
+func PathAdd() string { return In(i18n.Locale()).PathAdd() }
+
+// PathAdd says "Add directory…"
+// in the language of msgs.
+func (msgs Messages) PathAdd() string {
+	return Catalog.Format(msgs.locale, "pathAdd", nil)
+}
+
+// PathAddTitle says "Add directory to PATH"
+// in the language the app shows.
+func PathAddTitle() string { return In(i18n.Locale()).PathAddTitle() }
+
+// PathAddTitle says "Add directory to PATH"
+// in the language of msgs.
+func (msgs Messages) PathAddTitle() string {
+	return Catalog.Format(msgs.locale, "pathAddTitle", nil)
+}
+
+// PathAddLead says "Hearth adds the directory to its block in your shell startup file (or your user Path on Windows) after showing the plan."
+// in the language the app shows.
+func PathAddLead() string { return In(i18n.Locale()).PathAddLead() }
+
+// PathAddLead says "Hearth adds the directory to its block in your shell startup file (or your user Path on Windows) after showing the plan."
+// in the language of msgs.
+func (msgs Messages) PathAddLead() string {
+	return Catalog.Format(msgs.locale, "pathAddLead", nil)
+}
+
+// PathAddPlaceholder says "/usr/local/custom/bin or ~/bin"
+// in the language the app shows.
+func PathAddPlaceholder() string { return In(i18n.Locale()).PathAddPlaceholder() }
+
+// PathAddPlaceholder says "/usr/local/custom/bin or ~/bin"
+// in the language of msgs.
+func (msgs Messages) PathAddPlaceholder() string {
+	return Catalog.Format(msgs.locale, "pathAddPlaceholder", nil)
+}
+
+// PathAddBrowse says "Choose folder…"
+// in the language the app shows.
+func PathAddBrowse() string { return In(i18n.Locale()).PathAddBrowse() }
+
+// PathAddBrowse says "Choose folder…"
+// in the language of msgs.
+func (msgs Messages) PathAddBrowse() string {
+	return Catalog.Format(msgs.locale, "pathAddBrowse", nil)
+}
+
+// PathAddAction says "Add to PATH"
+// in the language the app shows.
+func PathAddAction() string { return In(i18n.Locale()).PathAddAction() }
+
+// PathAddAction says "Add to PATH"
+// in the language of msgs.
+func (msgs Messages) PathAddAction() string {
+	return Catalog.Format(msgs.locale, "pathAddAction", nil)
+}
+
+// PathAddPlanTitle says "Add {dir} to PATH"
+// in the language the app shows.
+func PathAddPlanTitle(dir string) string { return In(i18n.Locale()).PathAddPlanTitle(dir) }
+
+// PathAddPlanTitle says "Add {dir} to PATH"
+// in the language of msgs.
+func (msgs Messages) PathAddPlanTitle(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddPlanTitle", map[string]any{"dir": dir})
+}
+
+// PathAddWhy says "A line in Hearth's block in your shell startup file puts this directory on PATH. Your own lines stay as they are, wit…"
+// in the language the app shows.
+func PathAddWhy() string { return In(i18n.Locale()).PathAddWhy() }
+
+// PathAddWhy says "A line in Hearth's block in your shell startup file puts this directory on PATH. Your own lines stay as they are, wit…"
+// in the language of msgs.
+func (msgs Messages) PathAddWhy() string {
+	return Catalog.Format(msgs.locale, "pathAddWhy", nil)
+}
+
+// PathAddWhyRegistry says "The directory is added to your user Path in the Windows registry. The old value goes to the operations log and comes …"
+// in the language the app shows.
+func PathAddWhyRegistry() string { return In(i18n.Locale()).PathAddWhyRegistry() }
+
+// PathAddWhyRegistry says "The directory is added to your user Path in the Windows registry. The old value goes to the operations log and comes …"
+// in the language of msgs.
+func (msgs Messages) PathAddWhyRegistry() string {
+	return Catalog.Format(msgs.locale, "pathAddWhyRegistry", nil)
+}
+
+// PathAddInvalid says "Enter an absolute directory path without shell quotes or path separators."
+// in the language the app shows.
+func PathAddInvalid() string { return In(i18n.Locale()).PathAddInvalid() }
+
+// PathAddInvalid says "Enter an absolute directory path without shell quotes or path separators."
+// in the language of msgs.
+func (msgs Messages) PathAddInvalid() string {
+	return Catalog.Format(msgs.locale, "pathAddInvalid", nil)
+}
+
+// PathAddExists says "{dir} is already in PATH."
+// in the language the app shows.
+func PathAddExists(dir string) string { return In(i18n.Locale()).PathAddExists(dir) }
+
+// PathAddExists says "{dir} is already in PATH."
+// in the language of msgs.
+func (msgs Messages) PathAddExists(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddExists", map[string]any{"dir": dir})
+}
+
+// PathAddNotDir says "{dir} is a file, not a directory."
+// in the language the app shows.
+func PathAddNotDir(dir string) string { return In(i18n.Locale()).PathAddNotDir(dir) }
+
+// PathAddNotDir says "{dir} is a file, not a directory."
+// in the language of msgs.
+func (msgs Messages) PathAddNotDir(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddNotDir", map[string]any{"dir": dir})
+}
+
+// PathAddMissingTitle says "Directory does not exist yet"
+// in the language the app shows.
+func PathAddMissingTitle() string { return In(i18n.Locale()).PathAddMissingTitle() }
+
+// PathAddMissingTitle says "Directory does not exist yet"
+// in the language of msgs.
+func (msgs Messages) PathAddMissingTitle() string {
+	return Catalog.Format(msgs.locale, "pathAddMissingTitle", nil)
+}
+
+// PathAddMissingText says "{dir} was not found on disk. Commands in it will be found once you create the folder."
+// in the language the app shows.
+func PathAddMissingText(dir string) string { return In(i18n.Locale()).PathAddMissingText(dir) }
+
+// PathAddMissingText says "{dir} was not found on disk. Commands in it will be found once you create the folder."
+// in the language of msgs.
+func (msgs Messages) PathAddMissingText(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddMissingText", map[string]any{"dir": dir})
+}
+
+// PathAddCheckOk says "{dir} is in a new terminal's PATH"
+// in the language the app shows.
+func PathAddCheckOk(dir string) string { return In(i18n.Locale()).PathAddCheckOk(dir) }
+
+// PathAddCheckOk says "{dir} is in a new terminal's PATH"
+// in the language of msgs.
+func (msgs Messages) PathAddCheckOk(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddCheckOk", map[string]any{"dir": dir})
+}
+
+// PathAddCheckFail says "{dir} is not in a new terminal's PATH"
+// in the language the app shows.
+func PathAddCheckFail(dir string) string { return In(i18n.Locale()).PathAddCheckFail(dir) }
+
+// PathAddCheckFail says "{dir} is not in a new terminal's PATH"
+// in the language of msgs.
+func (msgs Messages) PathAddCheckFail(dir string) string {
+	return Catalog.Format(msgs.locale, "pathAddCheckFail", map[string]any{"dir": dir})
+}
+
+// PkgShowMore says "Show {count} more"
+// in the language the app shows.
+func PkgShowMore(count int) string { return In(i18n.Locale()).PkgShowMore(count) }
+
+// PkgShowMore says "Show {count} more"
+// in the language of msgs.
+func (msgs Messages) PkgShowMore(count int) string {
+	return Catalog.Format(msgs.locale, "pkgShowMore", map[string]any{"count": count})
+}
+
+// PkgShownMore says "Showing {shown} of {total} packages."
+// in the language the app shows.
+func PkgShownMore(shown int, total int) string { return In(i18n.Locale()).PkgShownMore(shown, total) }
+
+// PkgShownMore says "Showing {shown} of {total} packages."
+// in the language of msgs.
+func (msgs Messages) PkgShownMore(shown int, total int) string {
+	return Catalog.Format(msgs.locale, "pkgShownMore", map[string]any{"shown": shown, "total": total})
+}
+
+// PkgRefresh says "Refresh index…"
+// in the language the app shows.
+func PkgRefresh() string { return In(i18n.Locale()).PkgRefresh() }
+
+// PkgRefresh says "Refresh index…"
+// in the language of msgs.
+func (msgs Messages) PkgRefresh() string {
+	return Catalog.Format(msgs.locale, "pkgRefresh", nil)
+}
+
+// PkgRefreshTitle says "Refresh {manager} index"
+// in the language the app shows.
+func PkgRefreshTitle(manager string) string { return In(i18n.Locale()).PkgRefreshTitle(manager) }
+
+// PkgRefreshTitle says "Refresh {manager} index"
+// in the language of msgs.
+func (msgs Messages) PkgRefreshTitle(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgRefreshTitle", map[string]any{"manager": manager})
+}
+
+// PkgRefreshWhy says "Updates {manager}'s local package lists without installing or upgrading packages."
+// in the language the app shows.
+func PkgRefreshWhy(manager string) string { return In(i18n.Locale()).PkgRefreshWhy(manager) }
+
+// PkgRefreshWhy says "Updates {manager}'s local package lists without installing or upgrading packages."
+// in the language of msgs.
+func (msgs Messages) PkgRefreshWhy(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgRefreshWhy", map[string]any{"manager": manager})
+}
+
+// PkgRefreshChange says "Updated {manager} package index"
+// in the language the app shows.
+func PkgRefreshChange(manager string) string { return In(i18n.Locale()).PkgRefreshChange(manager) }
+
+// PkgRefreshChange says "Updated {manager} package index"
+// in the language of msgs.
+func (msgs Messages) PkgRefreshChange(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgRefreshChange", map[string]any{"manager": manager})
+}
+
+// PkgRefreshChecked says "{manager} index updated: {count, plural, one {# update available} other {# updates available}}"
+// in the language the app shows.
+func PkgRefreshChecked(manager string, count int) string {
+	return In(i18n.Locale()).PkgRefreshChecked(manager, count)
+}
+
+// PkgRefreshChecked says "{manager} index updated: {count, plural, one {# update available} other {# updates available}}"
+// in the language of msgs.
+func (msgs Messages) PkgRefreshChecked(manager string, count int) string {
+	return Catalog.Format(msgs.locale, "pkgRefreshChecked", map[string]any{"manager": manager, "count": count})
+}
+
+// PkgRefreshUpToDate says "{manager} index updated: all packages are up to date"
+// in the language the app shows.
+func PkgRefreshUpToDate(manager string) string { return In(i18n.Locale()).PkgRefreshUpToDate(manager) }
+
+// PkgRefreshUpToDate says "{manager} index updated: all packages are up to date"
+// in the language of msgs.
+func (msgs Messages) PkgRefreshUpToDate(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgRefreshUpToDate", map[string]any{"manager": manager})
+}
+
+// SettingsDataDir says "App data"
+// in the language the app shows.
+func SettingsDataDir() string { return In(i18n.Locale()).SettingsDataDir() }
+
+// SettingsDataDir says "App data"
+// in the language of msgs.
+func (msgs Messages) SettingsDataDir() string {
+	return Catalog.Format(msgs.locale, "settingsDataDir", nil)
+}
+
+// SettingsLogsDir says "Operations log"
+// in the language the app shows.
+func SettingsLogsDir() string { return In(i18n.Locale()).SettingsLogsDir() }
+
+// SettingsLogsDir says "Operations log"
+// in the language of msgs.
+func (msgs Messages) SettingsLogsDir() string {
+	return Catalog.Format(msgs.locale, "settingsLogsDir", nil)
+}
+
+// SettingsBackupsDir says "Skill backups"
+// in the language the app shows.
+func SettingsBackupsDir() string { return In(i18n.Locale()).SettingsBackupsDir() }
+
+// SettingsBackupsDir says "Skill backups"
+// in the language of msgs.
+func (msgs Messages) SettingsBackupsDir() string {
+	return Catalog.Format(msgs.locale, "settingsBackupsDir", nil)
+}
+
+// SettingsBackupsHint says "{path} · config .bak files sit next to edited files"
+// in the language the app shows.
+func SettingsBackupsHint(path string) string { return In(i18n.Locale()).SettingsBackupsHint(path) }
+
+// SettingsBackupsHint says "{path} · config .bak files sit next to edited files"
+// in the language of msgs.
+func (msgs Messages) SettingsBackupsHint(path string) string {
+	return Catalog.Format(msgs.locale, "settingsBackupsHint", map[string]any{"path": path})
+}
+
+// SettingsFolderMissing says "Folder does not exist yet: {path}"
+// in the language the app shows.
+func SettingsFolderMissing(path string) string { return In(i18n.Locale()).SettingsFolderMissing(path) }
+
+// SettingsFolderMissing says "Folder does not exist yet: {path}"
+// in the language of msgs.
+func (msgs Messages) SettingsFolderMissing(path string) string {
+	return Catalog.Format(msgs.locale, "settingsFolderMissing", map[string]any{"path": path})
+}
+
+// SettingsCustomPath says "Custom path…"
+// in the language the app shows.
+func SettingsCustomPath() string { return In(i18n.Locale()).SettingsCustomPath() }
+
+// SettingsCustomPath says "Custom path…"
+// in the language of msgs.
+func (msgs Messages) SettingsCustomPath() string {
+	return Catalog.Format(msgs.locale, "settingsCustomPath", nil)
+}
+
+// SettingsCustomTerminalPlaceholder says "/Applications/Ghostty.app or /usr/bin/alacritty"
+// in the language the app shows.
+func SettingsCustomTerminalPlaceholder() string {
+	return In(i18n.Locale()).SettingsCustomTerminalPlaceholder()
+}
+
+// SettingsCustomTerminalPlaceholder says "/Applications/Ghostty.app or /usr/bin/alacritty"
+// in the language of msgs.
+func (msgs Messages) SettingsCustomTerminalPlaceholder() string {
+	return Catalog.Format(msgs.locale, "settingsCustomTerminalPlaceholder", nil)
+}
+
+// SettingsCustomEditorPlaceholder says "/Applications/Zed.app or /usr/local/bin/nvim"
+// in the language the app shows.
+func SettingsCustomEditorPlaceholder() string {
+	return In(i18n.Locale()).SettingsCustomEditorPlaceholder()
+}
+
+// SettingsCustomEditorPlaceholder says "/Applications/Zed.app or /usr/local/bin/nvim"
+// in the language of msgs.
+func (msgs Messages) SettingsCustomEditorPlaceholder() string {
+	return Catalog.Format(msgs.locale, "settingsCustomEditorPlaceholder", nil)
+}
+
+// SettingsBrowse says "Browse…"
+// in the language the app shows.
+func SettingsBrowse() string { return In(i18n.Locale()).SettingsBrowse() }
+
+// SettingsBrowse says "Browse…"
+// in the language of msgs.
+func (msgs Messages) SettingsBrowse() string {
+	return Catalog.Format(msgs.locale, "settingsBrowse", nil)
+}
+
+// SettingsSave says "Save"
+// in the language the app shows.
+func SettingsSave() string { return In(i18n.Locale()).SettingsSave() }
+
+// SettingsSave says "Save"
+// in the language of msgs.
+func (msgs Messages) SettingsSave() string {
+	return Catalog.Format(msgs.locale, "settingsSave", nil)
+}
+
+// SettingsPickTerminal says "Choose terminal app or executable"
+// in the language the app shows.
+func SettingsPickTerminal() string { return In(i18n.Locale()).SettingsPickTerminal() }
+
+// SettingsPickTerminal says "Choose terminal app or executable"
+// in the language of msgs.
+func (msgs Messages) SettingsPickTerminal() string {
+	return Catalog.Format(msgs.locale, "settingsPickTerminal", nil)
+}
+
+// SettingsPickEditor says "Choose editor app or executable"
+// in the language the app shows.
+func SettingsPickEditor() string { return In(i18n.Locale()).SettingsPickEditor() }
+
+// SettingsPickEditor says "Choose editor app or executable"
+// in the language of msgs.
+func (msgs Messages) SettingsPickEditor() string {
+	return Catalog.Format(msgs.locale, "settingsPickEditor", nil)
+}
+
+// SettingsHiddenIssues says "Hidden issues"
+// in the language the app shows.
+func SettingsHiddenIssues() string { return In(i18n.Locale()).SettingsHiddenIssues() }
+
+// SettingsHiddenIssues says "Hidden issues"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenIssues() string {
+	return Catalog.Format(msgs.locale, "settingsHiddenIssues", nil)
+}
+
+// SettingsNoHiddenIssues says "No hidden issues"
+// in the language the app shows.
+func SettingsNoHiddenIssues() string { return In(i18n.Locale()).SettingsNoHiddenIssues() }
+
+// SettingsNoHiddenIssues says "No hidden issues"
+// in the language of msgs.
+func (msgs Messages) SettingsNoHiddenIssues() string {
+	return Catalog.Format(msgs.locale, "settingsNoHiddenIssues", nil)
+}
+
+// SettingsHiddenInactive says "Not present in the latest scan"
+// in the language the app shows.
+func SettingsHiddenInactive() string { return In(i18n.Locale()).SettingsHiddenInactive() }
+
+// SettingsHiddenInactive says "Not present in the latest scan"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenInactive() string {
+	return Catalog.Format(msgs.locale, "settingsHiddenInactive", nil)
+}

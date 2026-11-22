@@ -17,10 +17,15 @@ func TestTerminalLauncher(t *testing.T) {
 	script := "/tmp/a b.command"
 	if runtime.GOOS == "darwin" {
 		for app, want := range map[string][]string{
-			"":        {"/usr/bin/open", "-a", "Terminal", script},
-			"Warp":    {"/usr/bin/open", "-a", "Warp", script},
-			"Ghostty": {"/usr/bin/open", "-na", "Ghostty", "--args", "-e", script},
-			"unknown": {"/usr/bin/open", "-a", "Terminal", script},
+			"":                            {"/usr/bin/open", "-a", "Terminal", script},
+			"Warp":                        {"/usr/bin/open", "-a", "Warp", script},
+			"Ghostty":                     {"/usr/bin/open", "-na", "Ghostty", "--args", "-e", script},
+			"unknown":                     {"/usr/bin/open", "-a", "Terminal", script},
+			"/Applications/Ghostty.app/":  {"/usr/bin/open", "-na", "/Applications/Ghostty.app", "--args", "-e", script},
+			"/Applications/WezTerm.app":   {"/usr/bin/open", "-na", "/Applications/WezTerm.app", "--args", "start", "--", script},
+			"/Applications/MyTerm.app":    {"/usr/bin/open", "-a", "/Applications/MyTerm.app", script},
+			"/opt/homebrew/bin/wezterm":   {"/opt/homebrew/bin/wezterm", "start", "--", "/bin/sh", script},
+			"/opt/homebrew/bin/alacritty": {"/opt/homebrew/bin/alacritty", "-e", "/bin/sh", script},
 		} {
 			if got := terminalLauncher(app, script); !slices.Equal(got, want) {
 				t.Errorf("launcher(%q) = %q, want %q", app, got, want)

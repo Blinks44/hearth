@@ -320,3 +320,98 @@ func TestPackageOperations(t *testing.T) {
 		t.Fatalf("plan %+v", a.op)
 	}
 }
+
+func TestPackagesShowMoreAndRefresh(t *testing.T) {
+	pkgs := make([]inventory.SystemPackage, 650)
+	for i := range pkgs {
+		pkgs[i] = inventory.SystemPackage{
+			Name:    "pkg-" + string(rune('a'+i/100)) + "-" + time.Duration(i).String(),
+			Version: "1.0.0",
+			Kind:    "formula",
+		}
+		if i == 0 {
+			pkgs[i].Available = "1.1.0"
+		}
+	}
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", Version: "4.4.20", UpdatesKnown: true, Packages: pkgs},
+		{ID: "pacman", Name: "pacman", Path: "/usr/bin/pacman", Version: "7.0", Packages: pkgs[:2]},
+	}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Refresh index button is shown for brew and proposes brew update.
+	if !tt.HasText("Refresh index…") {
+		t.Fatalf("missing Refresh index button: %q", tt.Texts())
+	}
+	if err := tt.Click("Refresh index…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"/opt/homebrew/bin/brew", "update"}) {
+		t.Fatalf("refresh plan = %+v", a.op)
+	}
+	a.op.open = false
+	tt.Frame()
+
+	// Initially shows 300 of 650 packages with "Show 300 more".
+	if !tt.HasText("Showing 300 of 650 packages.") || !tt.HasText("Show 300 more") {
+		t.Fatalf("initial pagination missing: %q", tt.Texts())
+	}
+	if a.packageLimit != 300 {
+		t.Fatalf("packageLimit = %d, want 300", a.packageLimit)
+	}
+	scrollTo := func(label string) {
+		t.Helper()
+		b, ok := tt.Find(label)
+		if !ok {
+			t.Fatalf("cannot find %q", label)
+		}
+		tt.Scroll(500, 400, 0, b.Y-400)
+		tt.Frame()
+	}
+	scrollTo("Show 300 more")
+	screenshot(t, tt, "packages-more")
+	if err := tt.Click("Show 300 more"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.packageLimit != 600 || !tt.HasText("Showing 600 of 650 packages.") || !tt.HasText("Show 50 more") {
+		t.Fatalf("after first expand: limit=%d", a.packageLimit)
+	}
+	scrollTo("Show 50 more")
+	if err := tt.Click("Show 50 more"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if tt.HasText("Show 50 more") || tt.HasText("Showing 600 of 650 packages.") {
+		t.Fatal("pagination footer should disappear once all rows are shown")
+	}
+
+	// Filtering resets packageLimit back to 300.
+	a.packageFilter = "pkg-"
+	tt.Frame()
+	if a.packageLimit != 300 {
+		t.Fatalf("filter did not reset packageLimit: %d", a.packageLimit)
+	}
+	a.packageFilter = ""
+	tt.Frame()
+
+	// Narrow window check: both Refresh index and Update selected stay visible.
+	narrow := ui.NewTester(a.View, 1000, 680)
+	narrow.Advance(time.Second)
+	screenshot(t, narrow, "packages-narrow")
+	if !narrow.HasText("Refresh index…") || !narrow.HasText("Update selected") {
+		t.Fatalf("header actions missing at 1000x680: %q", narrow.Texts())
+	}
+
+	// Switching to pacman hides Refresh index (Arch forbids -Sy without -u).
+	a.packageManager = "/usr/bin/pacman"
+	tt.Frame()
+	if tt.HasText("Refresh index…") {
+		t.Fatal("pacman should not show Refresh index button")
+	}
+}

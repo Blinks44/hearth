@@ -60,7 +60,10 @@ func (a *App) packages(c *ui.Context, p page) {
 		} else if partial {
 			updateCount = atLeast(updates)
 		}
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.upgradeButton(c, m) }})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.refreshIndexButton(c, m)
+			a.upgradeButton(c, m)
+		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				pal := Colors(c.Theme())
@@ -223,6 +226,11 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 		if m.ReasonsKnown {
 			askedTab, depsTab = a.packageTab == 1, a.packageTab == 2
 		}
+		limitKey := m.Path + "\x00" + strconv.Itoa(a.packageTab) + "\x00" + strconv.Itoa(a.packageSort) + "\x00" + filter
+		if a.packageLimitKey != limitKey || a.packageLimit < maxPackageRows {
+			a.packageLimitKey = limitKey
+			a.packageLimit = maxPackageRows
+		}
 		shown, total := 0, 0
 		for _, i := range order {
 			pkg := m.Packages[i]
@@ -231,9 +239,9 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 				continue
 			}
 			total++
-			// A system's packages run to thousands; the view builds every
-			// row each frame.
-			if shown == maxPackageRows {
+			// A system's packages run to thousands; render in chunks and let
+			// the user expand with "Show more".
+			if shown == a.packageLimit {
 				continue
 			}
 			shown++
@@ -297,7 +305,13 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 		if shown == 0 {
 			cardNote(c, locales.PkgNone())
 		} else if shown < total {
-			cardNote(c, locales.PkgShown(shown, total))
+			more := min(maxPackageRows, total-shown)
+			ui.Row(c.Key("packages-more-row")).Gap(12).Padding(10, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, locales.PkgShownMore(shown, total)).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+				ui.Button(c.Key("packages-more"), locales.PkgShowMore(more)).Height(controlHeight).OnClick(func() {
+					a.packageLimit += maxPackageRows
+				})
+			})
 		}
 	})
 }
@@ -523,6 +537,15 @@ func (a *App) packageItems(menu *ui.Menu, m inventory.PackageManager, pkg invent
 	if remove, ok := a.packagePlan(ops.PackageUninstall, m, one); ok && removable(pkg) && menu.Item(locales.RemoveEllipsis()).Chosen() {
 		a.Propose(remove)
 	}
+}
+
+// refreshIndexButton proposes refreshing m's local package index when supported.
+func (a *App) refreshIndexButton(c *ui.Context, m inventory.PackageManager) {
+	p, ok := ops.PackageRefreshPlan(m, a.reread(m))
+	if !ok {
+		return
+	}
+	ui.Button(c.Key("package-refresh"), locales.PkgRefresh()).OnClick(func() { a.Propose(p) })
 }
 
 // upgradeButton is the header's button that updates the packages checked

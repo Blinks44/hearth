@@ -18,7 +18,14 @@ import (
 
 func (a *App) paths(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if a.Snapshot != nil && a.BuildPlan != nil {
+				ui.PrimaryButton(c.Key("path-add"), locales.PathAdd()).OnClick(func() {
+					a.pathAddInput, a.pathAddErr, a.pathAddOpen = "", "", true
+				})
+			}
+		}})
+		a.pathAddDialog(c)
 		if a.Snapshot == nil {
 			toolNote(c, locales.EnvPathEmpty())
 			return
@@ -371,4 +378,72 @@ func (a *App) putFirst(dir string) {
 		}
 		return p, err
 	}, a.proposeOrSay)
+}
+
+// pathAddDialog asks for a directory to add to the terminal's PATH and
+// proposes ops.PathAddPlan after validating it in the background.
+func (a *App) pathAddDialog(c *ui.Context) {
+	t := c.Theme()
+	pal := Colors(t)
+	dialogBase(c.Key("path-add-dialog"), &a.pathAddOpen, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(480).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		submit := func() {
+			raw := strings.TrimSpace(a.pathAddInput)
+			if raw == "" || a.BuildPlan == nil || a.Snapshot == nil {
+				return
+			}
+			term := a.Snapshot.TerminalPath
+			a.pathAddErr = ""
+			a.BuildPlan(func(env sysenv.Env, terminal ops.Terminal) (ops.Plan, error) {
+				return ops.PathAddPlan(term, raw, env, terminal)
+			}, func(p ops.Plan, err error) {
+				if err != nil {
+					a.pathAddErr = err.Error()
+					return
+				}
+				a.pathAddOpen = false
+				a.Propose(p)
+			})
+		}
+		ui.Column(c).Children(func() {
+			ui.Column(c).Gap(4).Padding(20, 20, 16, 20).Children(func() {
+				ui.Text(c, locales.PathAddTitle()).FontSize(18).FontWeight(600)
+				ui.Text(c, locales.PathAddLead()).FontSize(12).TextColor(t.TextMuted)
+				ui.Row(c).Gap(8).Margin(10, 0, 0, 0).AlignItems(ui.Center).Children(func() {
+					prev := a.pathAddInput
+					in := ui.TextInput(c.Key("path-add-input"), &a.pathAddInput).Grow(1).Placeholder(locales.PathAddPlaceholder()).Label(locales.PathAddTitle()).AutoFocus()
+					if a.pathAddInput != prev {
+						a.pathAddErr = ""
+					}
+					if in.Submitted() {
+						submit()
+					}
+					if a.PickPath != nil {
+						ui.Button(c.Key("path-add-browse"), locales.PathAddBrowse()).Height(controlHeight).OnClick(func() {
+							a.PickPath(locales.PathAddBrowse(), true, func(path string, err error) {
+								if err != nil {
+									a.pathAddErr = err.Error()
+									return
+								}
+								if path != "" {
+									a.pathAddInput = path
+									a.pathAddErr = ""
+								}
+							})
+						})
+					}
+				})
+				if a.pathAddErr != "" {
+					ui.Text(c, a.pathAddErr).FontSize(12).TextColor(t.Danger).Margin(6, 0, 0, 0)
+				}
+			})
+			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Box(c).Grow(1).Height(1)
+				ui.Button(c.Key("path-add-cancel"), locales.Cancel()).Height(controlHeight).OnClick(func() { a.pathAddOpen = false })
+				ui.PrimaryButton(c.Key("path-add-next"), locales.Next()).Height(controlHeight).Disabled(strings.TrimSpace(a.pathAddInput) == "").OnClick(submit)
+			})
+		})
+	})
 }

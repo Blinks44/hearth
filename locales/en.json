@@ -15962,5 +15962,155 @@
   "skillCatalogRepoPlaceholder": "owner/repo or https://github.com/…",
   "skillCatalogLoad": "Load",
   "skillCatalogScope": "Scope",
-  "skillCatalogScopeUser": "User (all projects)"
+  "skillCatalogScopeUser": "User (all projects)",
+  "pathAdd": "Add directory…",
+  "pathAddTitle": "Add directory to PATH",
+  "pathAddLead": "Hearth adds the directory to its block in your shell startup file (or your user Path on Windows) after showing the plan.",
+  "pathAddPlaceholder": "/usr/local/custom/bin or ~/bin",
+  "pathAddBrowse": "Choose folder…",
+  "pathAddAction": "Add to PATH",
+  "pathAddPlanTitle": "Add {dir} to PATH",
+  "@pathAddPlanTitle": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathAddWhy": "A line in Hearth's block in your shell startup file puts this directory on PATH. Your own lines stay as they are, with a backup and a check in a new terminal.",
+  "pathAddWhyRegistry": "The directory is added to your user Path in the Windows registry. The old value goes to the operations log and comes back if the check does not pass.",
+  "pathAddInvalid": "Enter an absolute directory path without shell quotes or path separators.",
+  "pathAddExists": "{dir} is already in PATH.",
+  "@pathAddExists": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathAddNotDir": "{dir} is a file, not a directory.",
+  "@pathAddNotDir": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathAddMissingTitle": "Directory does not exist yet",
+  "pathAddMissingText": "{dir} was not found on disk. Commands in it will be found once you create the folder.",
+  "@pathAddMissingText": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathAddCheckOk": "{dir} is in a new terminal's PATH",
+  "@pathAddCheckOk": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathAddCheckFail": "{dir} is not in a new terminal's PATH",
+  "@pathAddCheckFail": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgShowMore": "Show {count} more",
+  "@pkgShowMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgShownMore": "Showing {shown} of {total} packages.",
+  "@pkgShownMore": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgRefresh": "Refresh index…",
+  "pkgRefreshTitle": "Refresh {manager} index",
+  "@pkgRefreshTitle": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgRefreshWhy": "Updates {manager}'s local package lists without installing or upgrading packages.",
+  "@pkgRefreshWhy": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgRefreshChange": "Updated {manager} package index",
+  "@pkgRefreshChange": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgRefreshChecked": "{manager} index updated: {count, plural, one {# update available} other {# updates available}}",
+  "@pkgRefreshChecked": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgRefreshUpToDate": "{manager} index updated: all packages are up to date",
+  "@pkgRefreshUpToDate": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDataDir": "App data",
+  "settingsLogsDir": "Operations log",
+  "settingsBackupsDir": "Skill backups",
+  "settingsBackupsHint": "{path} · config .bak files sit next to edited files",
+  "@settingsBackupsHint": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFolderMissing": "Folder does not exist yet: {path}",
+  "@settingsFolderMissing": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCustomPath": "Custom path…",
+  "settingsCustomTerminalPlaceholder": "/Applications/Ghostty.app or /usr/bin/alacritty",
+  "settingsCustomEditorPlaceholder": "/Applications/Zed.app or /usr/local/bin/nvim",
+  "settingsBrowse": "Browse…",
+  "settingsSave": "Save",
+  "settingsPickTerminal": "Choose terminal app or executable",
+  "settingsPickEditor": "Choose editor app or executable",
+  "settingsHiddenIssues": "Hidden issues",
+  "settingsNoHiddenIssues": "No hidden issues",
+  "settingsHiddenInactive": "Not present in the latest scan"
 }

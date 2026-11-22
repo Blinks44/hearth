@@ -21,8 +21,43 @@ func TestPaths(t *testing.T) {
 }
 
 func TestVariables(t *testing.T) {
-	got := Variables(Env{"JAVA_HOME=/old", "JAVA_HOME=/jdk", "API_TOKEN=secret", "CUSTOM_SECRET=secret"}, Env{"GOPATH=/go"})
-	if len(got) != 2 || got[0].Terminal != "/jdk" || got[0].GUI != "" || got[1].GUI != "/go" {
-		t.Fatalf("variables: %+v", got)
+	got := Variables(Env{
+		"JAVA_HOME=/old",
+		"JAVA_HOME=/jdk",
+		"API_TOKEN=secret",
+		"CUSTOM_SECRET=secret",
+		"OLLAMA_MODELS=/models",
+		"CLAUDE_CONFIG_DIR=/home/dev/.claude-work",
+		"CODEX_HOME=/home/dev/.codex",
+		"ANDROID_HOME=/sdk/android",
+		"FLUTTER_ROOT=/sdk/flutter",
+		"HTTP_PROXY=http://alice:supersecret@proxy.internal:8080",
+		"HTTPS_PROXY=https://proxy.internal:8443",
+	}, Env{
+		"GOPATH=/go",
+		"HTTP_PROXY=user:pass@proxy.local:3128",
+	})
+	want := map[string][2]string{
+		"JAVA_HOME":         {"/jdk", ""},
+		"GOPATH":            {"", "/go"},
+		"OLLAMA_MODELS":     {"/models", ""},
+		"CLAUDE_CONFIG_DIR": {"/home/dev/.claude-work", ""},
+		"CODEX_HOME":        {"/home/dev/.codex", ""},
+		"ANDROID_HOME":      {"/sdk/android", ""},
+		"FLUTTER_ROOT":      {"/sdk/flutter", ""},
+		"HTTP_PROXY":        {"http://•••@proxy.internal:8080", "•••@proxy.local:3128"},
+		"HTTPS_PROXY":       {"https://proxy.internal:8443", ""},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("variables (%d): %+v", len(got), got)
+	}
+	for _, v := range got {
+		pair, ok := want[v.Name]
+		if !ok {
+			t.Fatalf("unexpected variable %q = (%q, %q)", v.Name, v.Terminal, v.GUI)
+		}
+		if v.Terminal != pair[0] || v.GUI != pair[1] {
+			t.Errorf("%s = (%q, %q), want (%q, %q)", v.Name, v.Terminal, v.GUI, pair[0], pair[1])
+		}
 	}
 }

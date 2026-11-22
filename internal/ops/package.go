@@ -115,6 +115,81 @@ func PackagePlan(action PackageAction, m inventory.PackageManager, pkgs []invent
 	return p, true
 }
 
+// PackageRefreshPlan returns the plan that refreshes m's local package index
+// without installing or upgrading packages; ok is false for managers without a
+// safe separate index refresh (e.g. pacman, choco, snap, nix).
+func PackageRefreshPlan(m inventory.PackageManager, reread Reread) (Plan, bool) {
+	if m.ID != "winget" && m.Path == "" {
+		return Plan{}, false
+	}
+	steps := packageRefreshSteps(m)
+	if len(steps) == 0 {
+		return Plan{}, false
+	}
+	name := cmp.Or(m.Name, m.ID)
+	p := Plan{
+		Title:   locales.PkgRefreshTitle(name),
+		Why:     locales.PkgRefreshWhy(name),
+		Steps:   steps,
+		Changes: []string{locales.PkgRefreshChange(name)},
+	}
+	if slices.ContainsFunc(steps, func(s Step) bool { return s.Admin }) {
+		p.Notes = append(p.Notes, AdminNote())
+	}
+	if reread != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			after, err := reread(ctx)
+			if err != nil {
+				return "", err
+			}
+			updates := 0
+			for _, pkg := range after.Packages {
+				if pkg.Available != "" {
+					updates++
+				}
+			}
+			if updates == 0 {
+				return locales.PkgRefreshUpToDate(name), nil
+			}
+			return locales.PkgRefreshChecked(name, updates), nil
+		}
+	}
+	return p, true
+}
+
+func packageRefreshSteps(m inventory.PackageManager) []Step {
+	sibling := func(name string) string {
+		if path.IsAbs(m.Path) {
+			return path.Join(path.Dir(m.Path), name)
+		}
+		return name
+	}
+	switch m.ID {
+	case "brew":
+		return []Step{{Argv: []string{m.Path, "update"}}}
+	case "apt":
+		aptGet := sibling("apt-get")
+		return []Step{{
+			Argv:  []string{aptGet, "-oDPkg::Lock::Timeout=600", "update"},
+			Runs:  []string{aptGet, "update"},
+			Admin: true,
+		}}
+	case "dnf":
+		return []Step{{Argv: []string{m.Path, "makecache"}, Admin: true}}
+	case "zypper":
+		return []Step{{Argv: []string{m.Path, "--non-interactive", "refresh"}, Admin: true}}
+	case "apk":
+		return []Step{{Argv: []string{m.Path, "update"}, Admin: true}}
+	case "scoop":
+		return []Step{{Argv: []string{"powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", m.Path, "update"}}}
+	case "winget":
+		return []Step{{Argv: []string{"winget", "source", "update", "--disable-interactivity"}}}
+	case "flatpak":
+		return []Step{{Argv: []string{m.Path, "update", "--appstream", "-y", "--noninteractive"}}}
+	}
+	return nil
+}
+
 // packageRef is how m's commands name pkg: Flatpak by its full ref, the
 // others by name.
 func packageRef(manager string, pkg inventory.SystemPackage) string {

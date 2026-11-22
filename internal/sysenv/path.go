@@ -2,8 +2,10 @@ package sysenv
 
 import (
 	"errors"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 )
@@ -31,13 +33,47 @@ func Paths(env Env) []inventory.PathEntry {
 // credentials and tokens must never enter the snapshot.
 func Variables(term, gui Env) []inventory.EnvironmentVariable {
 	var out []inventory.EnvironmentVariable
-	for _, key := range []string{"JAVA_HOME", "GOPATH", "GOROOT", "GOTOOLCHAIN", "NVM_DIR", "FNM_DIR", "VOLTA_HOME", "MISE_DATA_DIR", "ASDF_DATA_DIR", "BUN_INSTALL", "PNPM_HOME", "COREPACK_HOME", "PYENV_ROOT", "VIRTUAL_ENV", "CONDA_PREFIX", "CARGO_HOME", "RUSTUP_HOME", "GEM_HOME", "GEM_PATH", "RBENV_ROOT", "DOTNET_ROOT"} {
+	for _, key := range []string{
+		"JAVA_HOME", "GOPATH", "GOROOT", "GOTOOLCHAIN",
+		"NVM_DIR", "FNM_DIR", "VOLTA_HOME", "MISE_DATA_DIR", "ASDF_DATA_DIR",
+		"BUN_INSTALL", "PNPM_HOME", "COREPACK_HOME",
+		"PYENV_ROOT", "VIRTUAL_ENV", "CONDA_PREFIX",
+		"CARGO_HOME", "RUSTUP_HOME",
+		"GEM_HOME", "GEM_PATH", "RBENV_ROOT",
+		"DOTNET_ROOT",
+		"OLLAMA_MODELS", "CLAUDE_CONFIG_DIR", "CODEX_HOME",
+		"ANDROID_HOME", "FLUTTER_ROOT",
+		"HTTP_PROXY", "HTTPS_PROXY",
+	} {
 		t, g := term.Get(key), gui.Get(key)
+		if key == "HTTP_PROXY" || key == "HTTPS_PROXY" {
+			t, g = sanitizeProxy(t), sanitizeProxy(g)
+		}
 		if t != "" || g != "" {
 			out = append(out, inventory.EnvironmentVariable{Name: key, Terminal: t, GUI: g})
 		}
 	}
 	return out
+}
+
+// sanitizeProxy masks credentials embedded in proxy URLs before they enter the snapshot.
+func sanitizeProxy(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if strings.Contains(raw, "://") {
+		if u, err := url.Parse(raw); err == nil && u.Scheme != "" {
+			if u.User == nil {
+				return raw
+			}
+			u.User = nil
+			return strings.Replace(u.String(), "://", "://"+inventory.Hidden+"@", 1)
+		}
+	}
+	if _, host, ok := strings.Cut(raw, "@"); ok {
+		return inventory.Hidden + "@" + host
+	}
+	return raw
 }
 
 // SamePath compares directory spelling using the platform's path rules.

@@ -66,6 +66,7 @@ func main() {
 		log.Print(err)
 	} else {
 		list.dir = dir
+		a.DataDir = dir
 		a.SkillBackups = filepath.Join(dir, "skill-backups")
 		// A broken file is kept aside; Hearth starts with the defaults.
 		if list.settings, err = store.LoadSettings(dir); err != nil {
@@ -503,12 +504,34 @@ func main() {
 		a.SaveLogs = func(name, text string, done func(string, error)) { saveLogs(win, name, text, done) }
 		a.OpenSet = func(done func(string, []byte, error)) { openSet(win, done) }
 		a.PickManifest = func(dir string, folder bool, done func(string, error)) { pickManifest(win, dir, folder, done) }
+		a.OpenFolder = func(path string, done func(error)) {
+			go func() {
+				var err error
+				if _, statErr := os.Stat(path); statErr != nil {
+					err = statErr
+				} else {
+					err = mygo.Shell.OpenPath(path)
+				}
+				win.Update(func() { done(err) })
+			}()
+		}
+		a.PickPath = func(title string, directory bool, done func(string, error)) {
+			go func() {
+				paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: title, Directory: directory})
+				var chosen string
+				if len(paths) > 0 {
+					chosen = paths[0]
+				}
+				win.Update(func() { done(chosen, err) })
+			}()
+		}
 		// Operations run one at a time in the background, as the user's
 		// own commands would in the terminal, and append all their output
 		// to the operations log.
 		if logs, err := mygo.App.Path(mygo.PathLogs); err != nil {
 			log.Print(err)
 		} else {
+			a.LogsDir = logs
 			a.JournalPath = filepath.Join(logs, "operations.log")
 		}
 		a.DetectTool = scanner.Detect

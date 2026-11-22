@@ -17,5 +17,11 @@ func TestEditorLauncher(t *testing.T) {
 		if got := editorLauncher("/Applications/Zed.app", "zed", "/tmp/a"); !slices.Equal(got, []string{"/usr/bin/open", "-a", "/Applications/Zed.app", "/tmp/a"}) {
 			t.Errorf("app launcher = %q", got)
 		}
+		if got := editorLauncher("/Applications/Zed.app/", "", "/tmp/a"); !slices.Equal(got, []string{"/usr/bin/open", "-a", "/Applications/Zed.app", "/tmp/a"}) {
+			t.Errorf("trailing slash app launcher = %q", got)
+		}
+		if got := editorLauncher("/usr/local/bin/nvim", "", "/tmp/a"); !slices.Equal(got, []string{"/usr/local/bin/nvim", "/tmp/a"}) {
+			t.Errorf("custom binary launcher = %q", got)
+		}
 	}
 }
