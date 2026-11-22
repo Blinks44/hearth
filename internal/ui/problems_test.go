@@ -217,3 +217,50 @@ func TestHiddenInfoExcludedFromOverviewAndSidebar(t *testing.T) {
 		t.Errorf("hidden issue still counted in sidebar: %q", texts)
 	}
 }
+
+func TestProblemCountsMatchAcrossOverviewSidebarAndProblems(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	// Non-fixable Info: apps outside terminal do not see Node (InGUI = 0).
+	a.Snapshot.Tools[0].Installations[0].InGUI = 0
+	// Fixable Info: missing PATH directory with a known source file.
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{
+		Dir:     filepath.Join(t.TempDir(), "gone"),
+		Missing: true,
+		Sources: []inventory.PathSource{{File: filepath.Join(home, ".zshrc"), Line: 1}},
+	}}
+	// Warning: project requires missing Node 18.
+	a.Projects = []projects.Project{testProjects()[1]}
+	a.PlanPath = func([]inventory.PathEntry, []string, func(ops.Plan, error)) {}
+
+	// 1. Overview & Sidebar must both report 2 actionable issues (Warning + fixable Info), not 1 or 3.
+	tt := openOverview(t, a)
+	if texts := tt.Texts(); slices.Index(texts, "Issues") < 0 || texts[slices.Index(texts, "Issues")+1] != "2" {
+		t.Fatalf("sidebar badge on Overview != 2: %q", texts)
+	}
+	hasTexts(t, tt, "2 issues", "Needs attention")
+
+	// 2. Problems page must place both actionable issues in Important (2) and the non-fixable Info in For information (1).
+	a.router.Push(problemsPage)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "IMPORTANT · WORTH FIXING", "FOR INFORMATION · SAFE TO LEAVE",
+		"legacy-admin needs Node 18", "PATH lists folders that do not exist", "Apps outside the terminal do not see Node")
+	pathPos, okP := tt.Find("PATH lists folders that do not exist")
+	infoHdr, okI := tt.Find("FOR INFORMATION · SAFE TO LEAVE")
+	guiPos, okG := tt.Find("Apps outside the terminal do not see Node")
+	if !okP || !okI || !okG {
+		t.Fatalf("missing expected issue positions: %v %v %v", okP, okI, okG)
+	}
+	if pathPos.Y >= infoHdr.Y {
+		t.Errorf("fixable PATH issue (%v) appeared below For information header (%v)", pathPos.Y, infoHdr.Y)
+	}
+	if guiPos.Y <= infoHdr.Y {
+		t.Errorf("non-fixable Info issue (%v) appeared above For information header (%v)", guiPos.Y, infoHdr.Y)
+	}
+	if texts := tt.Texts(); slices.Index(texts, "Important") < 0 || texts[slices.Index(texts, "Important")+1] != "2" {
+		t.Fatalf("Problems Important card != 2: %q", texts)
+	}
+	if texts := tt.Texts(); slices.Index(texts, "For information") < 0 || texts[slices.Index(texts, "For information")+1] != "1" {
+		t.Fatalf("Problems For information card != 1: %q", texts)
+	}
+}

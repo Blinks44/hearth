@@ -316,29 +316,35 @@ func (a *App) changeText(ch history.Change) (title, caption string) {
 }
 
 // triesCard lists the cleanup's candidates that came in the history: a
-// version installed to try, and left.
+// version installed to try, and left. Clicking a row filters the history
+// to the matching added change.
 func (a *App) triesCard(c *ui.Context) {
-	added := map[string]time.Time{}
+	type tryMatch struct {
+		when   time.Time
+		change history.Change
+	}
+	added := map[string]tryMatch{}
 	for _, e := range slices.Backward(a.History) {
 		for _, ch := range e.Changes {
 			if ch.Area == history.Copy && ch.Kind == history.Added && ch.Root != "" {
-				added[ch.Root] = e.Taken
+				added[ch.Root] = tryMatch{when: e.Taken, change: ch}
 			}
 		}
 	}
 	listCard(c, locales.ChangesTries(), "", func() {
+		pal := Colors(c.Theme())
 		n := 0
 		for _, cand := range a.candidates(c) {
 			if cand.Kind != cleanup.ExtraCopy && cand.Kind != cleanup.Leftover {
 				continue
 			}
-			var when time.Time
+			var match tryMatch
 			for _, p := range cand.Paths {
-				if t, ok := added[p]; ok && t.After(when) {
-					when = t
+				if m, ok := added[p]; ok && m.when.After(match.when) {
+					match = m
 				}
 			}
-			if when.IsZero() {
+			if match.when.IsZero() {
 				continue
 			}
 			n++
@@ -346,13 +352,32 @@ func (a *App) triesCard(c *ui.Context) {
 			if cand.Known {
 				title += " · " + formatBytes(cand.Frees())
 			}
-			listRow(c, title, false, locales.ChangesTryCaption(when), func() {})
+			caption := locales.ChangesTryCaption(match.when)
+			filterQuery, _ := a.changeText(match.change)
+			row := ui.ButtonBase(c.Key("try:"+strings.Join(cand.Paths, "|"))).Gap(8).Padding(9, 12, 9, 14).
+				AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
+				Label(title).Transition(colorFade).OnClick(func() {
+				a.changesTab = 0
+				a.changesFilter = filterQuery
+				a.router.Push(changesPage.path)
+			})
+			chevron := pal.TextFaint
+			if row.Hovered() {
+				row.Background(pal.Subtle)
+				chevron = Accent
+			}
+			row.Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+					clipped(c, title).FontSize(13)
+					clipped(c, caption).FontSize(11.5).TextColor(pal.TextFaint)
+				})
+				ui.Icon(c, Icon("chevron-right")).Size(13, 13).Shrink(0).TextColor(chevron)
+			})
 		}
 		if n == 0 {
 			cardNote(c, locales.ChangesNoTries())
 			return
 		}
-		pal := Colors(c.Theme())
 		open := ui.ButtonBase(c.Key("open-cleanup")).Column().AlignItems(ui.Start).Gap(1).Padding(9, 12, 9, 14).
 			BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(locales.ChangesOpenCleanup()).OnClick(func() { a.router.Push(cleanupPage) })
 		if open.Hovered() {

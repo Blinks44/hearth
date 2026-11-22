@@ -19,7 +19,10 @@ import (
 
 // shownIssues is how many issues the overview's card lists; the rest go
 // in a line under them.
-const shownIssues = 3
+const (
+	shownIssues           = 3
+	shownOverviewProjects = 4
+)
 
 // overviewPage is how the environment stands: a summary, the tools found,
 // the projects, and what needs attention.
@@ -47,24 +50,30 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 					a.liveSummary(c, found)
 				}
 				// A narrow window has one column: what needs attention
-				// right under the summary, then the rest.
+				// right under the summary, then tools, projects, and agents.
 				if narrow(c) {
 					a.attention(c, items)
-					a.overviewProjects(c)
 					a.toolCards(c, found)
+					a.overviewProjects(c)
 					a.overviewAgents(c)
 					return
 				}
-				// Projects sit in the side column: the tool grid grows with
-				// every install and would push them out of sight.
+				// Tools stay immediately visible in the main column regardless
+				// of how many projects exist; Attention, compact Projects, and
+				// AI Agents form a uniform stack of cards in the side column.
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(18).Children(func() {
 						a.toolCards(c, found)
 					})
-					ui.Column(c).Width(342).Shrink(0).Padding(27, 0, 0, 0).Gap(18).Children(func() {
+					ui.Column(c).Width(342).Shrink(0).Padding(34, 0, 0, 0).Gap(18).Children(func() {
 						a.attention(c, items)
-						a.overviewAgents(c)
-						a.overviewProjects(c)
+						if len(a.Projects) > 0 {
+							a.overviewProjects(c)
+							a.overviewAgents(c)
+						} else {
+							a.overviewAgents(c)
+							a.overviewProjects(c)
+						}
 					})
 				})
 			})
@@ -152,6 +161,36 @@ type liveTile struct {
 	open                       func()
 }
 
+// liveSummaryRows keeps 1-5 tiles on a single uniform row in a wide window
+// (no mismatched 3/2 grid seams) and wraps evenly in narrow windows.
+func liveSummaryRows(tiles []liveTile, isNarrow bool) [][]liveTile {
+	n := len(tiles)
+	if n == 0 {
+		return nil
+	}
+	if !isNarrow && n <= 5 {
+		return [][]liveTile{tiles}
+	}
+	switch {
+	case n <= 3:
+		return [][]liveTile{tiles}
+	case n == 4:
+		return [][]liveTile{tiles[:2], tiles[2:]}
+	case n == 5:
+		return [][]liveTile{tiles[:3], tiles[3:]}
+	default:
+		per := 3
+		if isNarrow {
+			per = 2
+		}
+		var rows [][]liveTile
+		for i := 0; i < n; i += per {
+			rows = append(rows, tiles[i:min(i+per, n)])
+		}
+		return rows
+	}
+}
+
 // liveSummary shows compact live status tiles for Docker, Kubernetes,
 // databases/ports, today's AI spend, and MCP servers, each opening its page.
 func (a *App) liveSummary(c *ui.Context, found []issues.Issue) {
@@ -159,17 +198,17 @@ func (a *App) liveSummary(c *ui.Context, found []issues.Issue) {
 	if len(tiles) == 0 {
 		return
 	}
-	cols := max(3, len(tiles))
-	if narrow(c) {
-		cols = 2
-	}
+	rows := liveSummaryRows(tiles, narrow(c))
 	ui.Column(c.Key("live-summary")).Gap(10).Children(func() {
 		ui.Text(c, locales.LiveSummaryTitle()).FontSize(14).FontWeight(600).SingleLine()
-		ui.Grid(c).Columns(cols).Gap(10).Children(func() {
-			for _, tile := range tiles {
-				liveSummaryTile(c, tile)
-			}
-		})
+		for i, row := range rows {
+			compact := len(row) >= 5
+			ui.Grid(c.Key("live-row:" + strconv.Itoa(i))).Columns(len(row)).Gap(10).Children(func() {
+				for _, tile := range row {
+					liveSummaryTile(c, tile, compact)
+				}
+			})
+		}
 	})
 }
 
@@ -359,11 +398,17 @@ func (a *App) liveSummaryTiles(c *ui.Context, found []issues.Issue) []liveTile {
 	return out
 }
 
-func liveSummaryTile(c *ui.Context, tile liveTile) {
+func liveSummaryTile(c *ui.Context, tile liveTile, compact bool) {
 	t := c.Theme()
 	pal := Colors(t)
+	padX := float32(13)
+	valSize := float32(15)
+	if compact {
+		padX = 12
+		valSize = 14.5
+	}
 	e := ui.ButtonBase(c.Key(tile.key)).Column().AlignItems(ui.Stretch).TextAlign(ui.Start).
-		Gap(5).Padding(11, 13).MinHeight(76).MinWidth(0).
+		Gap(5).Padding(11, padX).MinHeight(76).MinWidth(0).
 		Label(tile.title).OnClick(tile.open).Radius(12).Background(t.Background).
 		BorderWidth(1).BorderColor(pal.Divider).Transition(colorFade)
 	chevron := pal.TextFaint
@@ -377,7 +422,7 @@ func liveSummaryTile(c *ui.Context, tile liveTile) {
 			ui.Text(c, tile.title).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted).Grow(1).MinWidth(0).SingleLine()
 			ui.Icon(c, Icon("chevron-right")).Size(12, 12).Shrink(0).TextColor(chevron)
 		})
-		clipped(c, tile.value).FontSize(15).FontWeight(600)
+		clipped(c, tile.value).FontSize(valSize).FontWeight(600)
 		clipped(c, tile.caption).FontSize(11).TextColor(tile.captionColor)
 	})
 }
@@ -589,7 +634,7 @@ func (a *App) toolCards(c *ui.Context, found []issues.Issue) {
 		return a.byTitle(toolName(x.Tool), toolName(y.Tool))
 	})
 	ui.Column(c).Gap(10).Children(func() {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(24).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.SectionTools()).FontSize(14).FontWeight(600).SingleLine()
 			if !a.firstScan() {
 				ui.Text(c, strconv.Itoa(len(tools))).FontSize(12.5).TextColor(pal.TextFaint).SingleLine()
@@ -779,79 +824,118 @@ func card(c *ui.Context, title, count string, end, rows func()) {
 	})
 }
 
-// overviewProjects are the projects with their tools and state, or a way
-// to add the first.
+// overviewProjects is the overview's compact Projects card in the side column
+// (matching AI Agents): problematic projects first, up to 4 rows, with an
+// icon button to add a folder, "All projects ›", and an overflow footer.
 func (a *App) overviewProjects(c *ui.Context) {
 	t := c.Theme()
+	pal := Colors(t)
 	count := ""
+	var end func()
 	if len(a.Projects) > 0 {
 		count = strconv.Itoa(len(a.Projects))
-	}
-	var add func()
-	if a.ChooseFolder != nil && len(a.Projects) > 0 {
-		add = func() {
-			b := ui.ButtonBase(c.Key("overview-add")).Gap(4).AlignItems(ui.Center).Label(locales.AddFolder()).OnClick(a.ChooseFolder)
-			color := t.TextMuted
-			if b.Hovered() {
-				color = t.Text
-			}
-			b.Children(func() {
-				ui.Icon(c, Icon("plus")).Size(13, 13).TextColor(color)
-				ui.Text(c, locales.AddFolder()).FontSize(12.5).TextColor(color).SingleLine()
+		end = func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				if a.ChooseFolder != nil {
+					b := ui.ButtonBase(c.Key("overview-add")).Size(22, 22).Center().Radius(6).
+						Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+						Label(locales.AddFolder()).Tooltip(locales.AddFolder()).
+						OnClick(a.ChooseFolder).Transition(colorFade)
+					iconColor := t.TextMuted
+					if b.Hovered() {
+						b.Background(pal.Subtle)
+						iconColor = t.Text
+					}
+					b.Children(func() {
+						ui.Icon(c, Icon("plus")).Size(12, 12).TextColor(iconColor)
+					})
+				}
+				a.pageLink(c, "all-projects", locales.OverviewAllProjects(), projectsPage.path)
 			})
 		}
 	}
-	card(c, projectsPage.title(), count, add, func() {
+	card(c, projectsPage.title(), count, end, func() {
 		if len(a.Projects) == 0 {
-			a.noProjects(c, locales.NoProjectsYet())
+			ui.Column(c).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				a.noProjects(c, locales.NoProjectsYet())
+			})
 			return
 		}
 		lines := a.nodeLines()
+		type projectItem struct {
+			project  projects.Project
+			statuses []projects.Status
+			problem  string
+		}
+		items := make([]projectItem, 0, len(a.Projects))
 		for _, p := range a.Projects {
-			a.overviewProject(c, p, projects.Resolve(p, a.Snapshot, lines))
+			statuses := projects.Resolve(p, a.Snapshot, lines)
+			problem := projectProblem(statuses)
+			if problem == "" && len(p.Errs) > 0 {
+				problem = locales.ChipReadFailed()
+			}
+			items = append(items, projectItem{project: p, statuses: statuses, problem: problem})
+		}
+		slices.SortStableFunc(items, func(x, y projectItem) int {
+			switch hx, hy := x.problem != "", y.problem != ""; {
+			case hx && !hy:
+				return -1
+			case hy && !hx:
+				return 1
+			}
+			return 0
+		})
+		shown := items[:min(len(items), shownOverviewProjects)]
+		for _, it := range shown {
+			a.overviewProjectRow(c, it.project, it.statuses, it.problem)
+		}
+		if more := len(items) - len(shown); more > 0 {
+			label := locales.AttentionMore(more)
+			row := ui.ButtonBase(c.Key("projects-more")).Gap(6).Padding(10, 14).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
+				Label(label).OnClick(func() { a.router.Push(projectsPage.path) })
+			if row.Hovered() {
+				row.Background(pal.Subtle)
+			}
+			row.Children(func() {
+				ui.Text(c, label).FontSize(12.5).TextColor(t.TextMuted).Grow(1).SingleLine()
+				ui.Icon(c, Icon("chevron-right")).Size(13, 13).TextColor(pal.TextFaint)
+			})
 		}
 	})
 }
 
-// overviewProject is a project's row: its folder, the tools it needs and
-// its state. It opens the project's page.
-func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []projects.Status) {
+// overviewProjectRow is one compact row in the overview's Projects card:
+// folder icon, name, single-line problem or stack summary, and status icon.
+func (a *App) overviewProjectRow(c *ui.Context, p projects.Project, statuses []projects.Status, problem string) {
 	t := c.Theme()
 	pal := Colors(t)
-	e := ui.ButtonBase(c.Key("overview-project:"+p.Dir)).Gap(8).Padding(9, 14).AlignItems(ui.Center).
-		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(p.Dir)).Transition(colorFade)
+	e := ui.ButtonBase(c.Key("overview-project:"+p.Dir)).Gap(10).Padding(10, 14).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(p.Dir)).
+		Tooltip(tilde(p.Dir, a.Home)).Transition(colorFade)
 	if e.Hovered() {
 		e.Background(pal.Subtle)
 	}
-	problem := projectProblem(statuses)
-	if problem == "" && len(p.Errs) > 0 {
-		problem = locales.ChipReadFailed()
-	}
-	e.AlignItems(ui.Start).Children(func() {
-		folderTile(c, 28)
-		// The side column is narrow: the tools wrap under the name, and
-		// the state is a line of its own rather than a chip.
-		ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-			ui.Text(c, filepath.Base(p.Dir)).FontSize(13.5).SingleLine()
-			if len(statuses) > 0 {
-				ui.Row(c).Gap(4).Wrap().Children(func() {
-					for _, st := range statuses {
-						toolTag(c, st)
-					}
-				})
-			}
+	e.Children(func() {
+		folderTile(c, 26)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			ui.Text(c, filepath.Base(p.Dir)).FontSize(13).FontWeight(500).SingleLine()
 			switch {
 			case problem != "":
-				ui.Text(c, problem).FontSize(11.5).TextColor(pal.WarningText).MaxLines(2)
+				clipped(c, problem).FontSize(11.5).TextColor(pal.WarningText)
+			case len(statuses) == 0:
+				ui.Text(c, locales.ChipNoVersions()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 			case !anyChecked(statuses):
 				ui.Text(c, locales.ChipNotChecked()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			default:
+				clipped(c, projectToolsSummary(statuses)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			}
 		})
 		switch {
 		case problem != "":
-			ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).Margin(6, 0, 0, 0).TextColor(t.Warning)
+			ui.Icon(c, Icon("triangle-alert")).Size(15, 15).Shrink(0).TextColor(t.Warning)
 		case anyChecked(statuses):
-			ui.Icon(c, Icon("circle-check")).Size(16, 16).Shrink(0).Margin(6, 0, 0, 0).TextColor(t.Success)
+			ui.Icon(c, Icon("circle-check")).Size(15, 15).Shrink(0).TextColor(t.Success)
 		}
 	})
 	if e.Clicked() {
@@ -859,18 +943,34 @@ func (a *App) overviewProject(c *ui.Context, p projects.Project, statuses []proj
 	}
 }
 
+// projectToolsSummary formats a project's required tools as a compact
+// middot-separated line (e.g. "node 22 · pnpm") for the side-column card.
+func projectToolsSummary(statuses []projects.Status) string {
+	parts := make([]string, 0, len(statuses))
+	for _, st := range statuses {
+		text := st.Tool
+		if w := statusWant(st); w != "" {
+			text += " " + w
+		}
+		if !slices.Contains(parts, text) {
+			parts = append(parts, text)
+		}
+	}
+	return strings.Join(parts, " · ")
+}
+
 // noProjects asks to add the first project; text says what it gives.
 func (a *App) noProjects(c *ui.Context, text string) {
 	t := c.Theme()
 	pal := Colors(t)
-	ui.Column(c).Gap(6).Padding(18, 24, 24, 24).AlignItems(ui.Center).Children(func() {
-		ui.Box(c).Size(40, 40).Radius(10).Center().Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).
-			Margin(0, 0, 6, 0).Children(func() {
-			ui.Icon(c, Icon("folder-open")).Size(18, 18).TextColor(t.TextMuted)
+	ui.Column(c).Gap(6).Padding(16, 18, 20, 18).AlignItems(ui.Center).Children(func() {
+		ui.Box(c).Size(36, 36).Radius(9).Center().Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).
+			Margin(0, 0, 4, 0).Children(func() {
+			ui.Icon(c, Icon("folder-open")).Size(17, 17).TextColor(t.TextMuted)
 		})
 		ui.Text(c, locales.NoProjectsHeading()).FontSize(13.5).FontWeight(500).SingleLine()
-		ui.Text(c, text).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(340)
-		ui.Row(c).Gap(8).Margin(8, 0, 0, 0).Children(func() {
+		ui.Text(c, text).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(300)
+		ui.Row(c).Gap(8).Wrap().Justify(ui.Center).Margin(8, 0, 0, 0).Children(func() {
 			if a.ChooseFolder != nil {
 				ui.Button(c.Key("overview-add-folder"), locales.AddFolder()).OnClick(a.ChooseFolder)
 			}
@@ -1047,12 +1147,19 @@ func (a *App) visibleIssues(found []issues.Issue) (visible, hidden []attentionIt
 	return visible, hidden
 }
 
+// isActionableIssue reports whether an item counts as needing attention
+// across Overview, Sidebar, and Problems: warnings, plus info items Hearth
+// can fix directly.
+func isActionableIssue(it attentionItem) bool {
+	return it.severity != issues.Info || it.fix != nil
+}
+
 // needAttention are the items that need attention: warnings, and what is
 // only worth knowing when Hearth can fix it. The rest waits on the Issues
 // page, so that a computer nothing is wrong with, as macOS with its Java
 // stub, counts none.
 func needAttention(items []attentionItem) []attentionItem {
-	return slices.DeleteFunc(items, func(it attentionItem) bool { return it.severity == issues.Info && it.fix == nil })
+	return slices.DeleteFunc(slices.Clone(items), func(it attentionItem) bool { return !isActionableIssue(it) })
 }
 
 // attentionItems are the card's lines for found, in its order, a group

@@ -70,6 +70,30 @@ func EngineInstallPlan(engine string, m inventory.PackageManager, cli bool, rere
 	return p, true
 }
 
+// dockerSwitchNotes explains the three explicit consequences of switching from
+// an existing container engine to Colima or native Docker Engine.
+func dockerSwitchNotes() []Note {
+	return []Note{
+		{Title: locales.DockerSwitchUntouchedTitle(), Text: locales.DockerSwitchUntouchedText()},
+		{Title: locales.DockerSwitchAutostartTitle(), Text: locales.DockerSwitchAutostartText()},
+		{Title: locales.DockerSwitchRollbackTitle(), Text: locales.DockerSwitchRollbackText()},
+	}
+}
+
+// EngineSwitchPlan builds an installation plan for switching to a native
+// engine (such as Docker Engine on Linux) while another engine is already present.
+func EngineSwitchPlan(engine string, m inventory.PackageManager, cli bool, reread Reread) (Plan, bool) {
+	p, ok := EngineInstallPlan(engine, m, cli, reread)
+	if !ok {
+		return Plan{}, false
+	}
+	if engine == "Docker Engine" {
+		p.Title = locales.DockerEngineInstall()
+	}
+	p.Notes = append(p.Notes, dockerSwitchNotes()...)
+	return p, true
+}
+
 // Engine is an installed container engine to start: its name, as
 // inventory.DockerEngine has it, and its app or command.
 type Engine struct{ Name, Path string }

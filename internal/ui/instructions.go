@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/markdown"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -112,22 +113,41 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				globalAgents := a.globalInstructionAgents()
-				different, connected := 0, 0
+				problems, connected := 0, 0
+				for _, ag := range globalAgents {
+					switch ag.Instructions.State {
+					case "linked":
+						connected++
+					case "different", "unreadable", "empty", "override":
+						problems++
+					}
+				}
 				for _, pr := range a.Projects {
 					switch pr.Instructions.State() {
-					case "different":
-						different++
+					case "different", "unreadable":
+						problems++
 					case "linked":
 						connected++
 					}
 				}
-				// Counters of nothing only add noise before the first project.
+				// Show header counters whenever either global agent instructions
+				// or added projects exist.
 				var stats []aiStat
-				if len(a.Projects) > 0 {
-					stats = []aiStat{{strconv.Itoa(len(a.Projects)), locales.StatProjects()}, {strconv.Itoa(connected), locales.StatLinked()}, {strconv.Itoa(different), locales.StatProblems(different)}}
+				if len(globalAgents) > 0 || len(a.Projects) > 0 {
+					if len(globalAgents) > 0 {
+						stats = append(stats, aiStat{strconv.Itoa(len(globalAgents)), locales.InstructionsGlobal()})
+					}
+					if len(a.Projects) > 0 {
+						stats = append(stats, aiStat{strconv.Itoa(len(a.Projects)), locales.StatProjects()})
+					}
+					stats = append(stats,
+						aiStat{strconv.Itoa(connected), locales.StatLinked()},
+						aiStat{strconv.Itoa(problems), locales.StatProblems(problems)},
+					)
 				}
 				aiIntro(c, "file-text", locales.InstructionsTitle(), locales.InstructionsLead(), stats)
 				toolNote(c, locales.InstructionsScope())
+				a.sharedInstructionsBanner(c)
 				if len(a.Projects) == 0 && len(globalAgents) == 0 {
 					listFrame(c, func() { a.noProjects(c, locales.InstructionsEmpty()) })
 					return
@@ -239,12 +259,35 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 					detailColumn(c).Children(func() {
 						switch {
 						case chosenAgent != nil:
-							a.globalInstructionsCard(c, chosenAgent.ID, chosenAgent.Instructions)
+							ui.Column(c).Gap(12).Children(func() {
+								a.globalInstructionsCard(c, chosenAgent.ID, chosenAgent.Instructions)
+								a.globalInstructionMarkdownCard(c, chosenAgent.ID, chosenAgent.Instructions)
+							})
 						case chosenProject != nil:
 							a.instructionDetail(c, *chosenProject)
 						}
 					})
 				})
+			})
+		})
+	})
+}
+
+func (a *App) instructionMarkdownBody(c *ui.Context, key, text string) {
+	if strings.TrimSpace(text) == "" {
+		cardNote(c, locales.InstructionsPreviewEmpty())
+		return
+	}
+	const maxPreviewRunes = 4000
+	runes := []rune(text)
+	if len(runes) > maxPreviewRunes {
+		text = string(runes[:maxPreviewRunes]) + "\n…"
+	}
+	pal := Colors(c.Theme())
+	ui.Column(c.Key(key)).Padding(8, 16, 12, 16).Children(func() {
+		ui.Scroll(c).MaxHeight(280).Radius(8).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+			ui.Column(c).Padding(10, 12).Children(func() {
+				markdown.View(c, text, &a.markdown)
 			})
 		})
 	})
@@ -277,11 +320,7 @@ func (a *App) instructionDetail(c *ui.Context, p projects.Project) {
 			if f.file.Err != "" {
 				cardNote(c, f.file.Err)
 			} else {
-				text := f.file.Text
-				if len([]rune(text)) > 2000 {
-					text = string([]rune(text)[:2000]) + "…"
-				}
-				ui.Text(c, text).Font(FontMono).FontSize(11).Padding(10, 16)
+				a.instructionMarkdownBody(c, "proj-md:"+f.name, f.file.Text)
 			}
 		}
 		if state == "different" {

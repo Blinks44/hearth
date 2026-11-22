@@ -214,7 +214,7 @@ func aiIntro(c *ui.Context, icon, title, text string, stats []aiStat) {
 		})
 	}, func() {
 		for _, s := range stats {
-			e := ui.Column(c).Width(88).Gap(1).Padding(8, 14)
+			e := ui.Column(c).MinWidth(88).Gap(1).Padding(8, 14)
 			if narrow(c) {
 				e.Grow(1).Basis(0)
 			}
@@ -342,6 +342,7 @@ func (a *App) agentsPage(c *ui.Context, p page) {
 					{strconv.Itoa(len(servers)), "MCP"},
 				})
 				if len(found) > 0 {
+					a.sharedInstructionsBanner(c)
 					a.agentTable(c, found)
 				} else {
 					listFrame(c, func() {

@@ -26,8 +26,8 @@ func TestDockerLinuxInstallsNativeEngineWithHomebrew(t *testing.T) {
 		t.Fatal("opening the Docker page built a Colima installation plan")
 	}
 	tt := openDocker(a)
-	title := locales.PkgInstallTitle("Docker Engine")
-	hasTexts(t, tt, locales.ColimaRecommended(), title, "Colima")
+	title := locales.DockerEngineInstall()
+	hasTexts(t, tt, locales.DockerLinuxChoice(), locales.ColimaRecommended(), title, "Colima")
 	if tt.HasText(locales.ColimaInstall()) || tt.HasText(locales.ColimaMigrate()) {
 		t.Fatalf("offered Colima installation: %v", tt.Texts())
 	}
@@ -38,5 +38,53 @@ func TestDockerLinuxInstallsNativeEngineWithHomebrew(t *testing.T) {
 		return step.Admin && strings.Contains(strings.Join(step.Argv, " "), "docker.io")
 	}) {
 		t.Fatalf("expected native apt plan: %+v", a.op)
+	}
+}
+
+func TestDockerLinuxKiriServiceAndSwitchNotes(t *testing.T) {
+	if got := dockerManagementLabel("Kiri"); got != locales.ColimaExternalService() {
+		t.Fatalf("Kiri management label = %q, want %q", got, locales.ColimaExternalService())
+	}
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{
+			Tool: "docker",
+			Installations: []inventory.Installation{
+				{Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1},
+			},
+			Docker: &inventory.DockerState{
+				Selected: "kiri",
+				Contexts: []inventory.DockerContext{{Name: "kiri", Engine: "Kiri", Endpoint: "unix:///run/kiri.sock", Local: true, Status: "available"}},
+				Engines: []inventory.DockerEngine{
+					{Name: "Kiri", Path: "/usr/bin/kiri"},
+					{Name: "Docker Engine"},
+				},
+			},
+		},
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{
+			{ID: "apt", Path: "/usr/bin/apt-get"},
+		}},
+	}}
+	tt := openDocker(a)
+	hasTexts(t, tt,
+		locales.ColimaExternalService(),
+		locales.ColimaOnlyHearth("Kiri"),
+		locales.DockerEngineSwitchHint("Kiri"),
+		locales.DockerEngineInstall(),
+	)
+	if err := tt.Click(locales.DockerEngineInstall()); err != nil {
+		t.Fatal(err)
+	}
+	if a.op == nil {
+		t.Fatal("expected native Docker Engine switch plan")
+	}
+	for _, want := range []string{
+		locales.DockerSwitchUntouchedTitle(),
+		locales.DockerSwitchAutostartTitle(),
+		locales.DockerSwitchRollbackTitle(),
+	} {
+		if !slices.ContainsFunc(a.op.plan.Notes, func(n ops.Note) bool { return n.Title == want }) {
+			t.Errorf("missing switch consequence note %q in %+v", want, a.op.plan.Notes)
+		}
 	}
 }

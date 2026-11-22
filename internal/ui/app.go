@@ -96,7 +96,12 @@ type App struct {
 	Home string
 	// globalInstructions is the open global instructions preview; nil when none.
 	globalInstructions        *globalInstructionPreview
+	sharedInstructions        *sharedInstructionsSetup
 	projectInstructionsCreate *projectInstructionCreate
+	globalPreviewCache        map[string]*globalMarkdownCache
+	// ReadInstruction reads a global instruction file off the UI thread and
+	// delivers its text to done via Window.Update; nil hides global markdown preview.
+	ReadInstruction func(path string, done func(string, error))
 	// Snapshot is what the last scan found; nil before the first.
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
@@ -620,6 +625,7 @@ func (a *App) View(c *ui.Context) {
 	a.colimaResizeDialog(c)
 	a.operationView(c)
 	a.globalInstructionsDialog(c)
+	a.sharedInstructionsDialog(c)
 	a.projectInstructionsCreateDialog(c)
 	a.mcpFormDialog(c)
 	a.skillDiffDialog(c)

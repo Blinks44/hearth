@@ -188,3 +188,37 @@ func TestChangesRowsClickable(t *testing.T) {
 		})
 	}
 }
+
+func TestTriesCardClickFiltersHistory(t *testing.T) {
+	a := cleanupApp()
+	now := time.Now()
+	a.History = []history.Entry{
+		{Taken: now.Add(-time.Hour), Changes: []history.Change{
+			{Kind: history.Added, Area: history.Copy, Name: "bun", Manager: "script", Path: home + "/.bun/bin/bun", Root: home + "/.bun", To: "1.2.5"},
+		}},
+		{Taken: now.AddDate(0, 0, -3), Changes: []history.Change{
+			{Kind: history.Added, Area: history.Copy, Name: "node", Manager: "brew", Path: "/opt/homebrew/Cellar/node/23.6.0/bin/node", Root: "/opt/homebrew/Cellar/node/23.6.0", To: "23.6.0"},
+		}},
+	}
+	a.router.Push(changesPage.path)
+	a.changesTab = 2 // Updated tab initially so click must reset to All tab
+	tt := ui.NewTester(a.View, 1280, 900)
+	tt.Advance(time.Second)
+	if err := tt.Click("Node.js 23.6.0 · brew · 200 MB"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != changesPage.path {
+		t.Fatalf("went to %q, want %q", a.router.Path(), changesPage.path)
+	}
+	if a.changesTab != 0 {
+		t.Errorf("changesTab = %d, want 0", a.changesTab)
+	}
+	if a.changesFilter == "" {
+		t.Fatal("changesFilter was not populated from tries row click")
+	}
+	hasTexts(t, tt, "Node.js 23.6.0 · brew")
+	if tt.HasText("Bun 1.2.5 · script") {
+		t.Errorf("history was not filtered to clicked try item: %q", tt.Texts())
+	}
+}

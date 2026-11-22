@@ -13,6 +13,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestColimaPluginEdit(t *testing.T) {
@@ -98,6 +99,22 @@ func TestColimaInstallPlan(t *testing.T) {
 	}
 	if want := append([]string{"/opt/brew/bin/colima", "start", "--profile", "default", "--ssh-config=false"}, colimaFirstStart()...); !slices.Equal(plan.Steps[2].Argv, want) {
 		t.Errorf("start = %v, want %v", plan.Steps[2].Argv, want)
+	}
+	for _, want := range []string{
+		locales.DockerSwitchUntouchedTitle(),
+		locales.DockerSwitchAutostartTitle(),
+		locales.DockerSwitchRollbackTitle(),
+	} {
+		if !slices.ContainsFunc(plan.Notes, func(n Note) bool { return n.Title == want }) {
+			t.Errorf("Colima migration plan missing consequence note %q: %+v", want, plan.Notes)
+		}
+	}
+	cleanPlan, err := ColimaInstallPlan(brew, false, env, &r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if slices.ContainsFunc(cleanPlan.Notes, func(n Note) bool { return n.Title == locales.DockerSwitchAutostartTitle() }) {
+		t.Errorf("clean Colima plan should not include switch-only autostart note: %+v", cleanPlan.Notes)
 	}
 	r.Stdout(`{"runtime":"docker","docker_socket":"unix:///tmp/default/docker.sock"}`, "/opt/brew/bin/colima", "status", "--profile", "default", "--json")
 	target := docker.Target{Docker: "/opt/brew/bin/docker", Endpoint: "unix:///tmp/default/docker.sock"}

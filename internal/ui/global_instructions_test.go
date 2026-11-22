@@ -279,3 +279,110 @@ func TestGlobalInstructionsAllAgents(t *testing.T) {
 		}
 	}
 }
+
+func TestSharedInstructionsBannerAndDialog(t *testing.T) {
+	if locales.GlobalInstructionsTemplate() == locales.ProjectInstructionsTemplate() {
+		t.Fatal("global and project AGENTS.md templates must differ")
+	}
+	root := t.TempDir()
+	claudeFile := filepath.Join(root, ".claude", "CLAUDE.md")
+	if err := os.MkdirAll(filepath.Dir(claudeFile), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const existingClaude = "# My Claude rules\n\n- Keep answers concise.\n"
+	if err := os.WriteFile(claudeFile, []byte(existingClaude), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	env := sysenv.Env{"HOME=" + root}
+	claudeIn, _ := ai.AgentInstructions("claude", env)
+	codexIn, _ := ai.AgentInstructions("codex", env)
+
+	a := NewApp()
+	a.Home = root
+	a.Snapshot = &inventory.Snapshot{
+		Agents: []inventory.Agent{
+			{
+				ID:            "claude",
+				Dir:           filepath.Join(root, ".claude"),
+				Installations: []inventory.Installation{{Tool: "claude", Version: "2.1.0", Path: "/opt/homebrew/bin/claude", OnPath: 1}},
+				Files:         []inventory.AgentFile{{Path: claudeFile, Kind: inventory.FileInstructions}},
+				Instructions:  &claudeIn,
+			},
+			{
+				ID:            "codex",
+				Dir:           filepath.Join(root, ".codex"),
+				Installations: []inventory.Installation{{Tool: "codex", Version: "0.40.0", Path: "/opt/homebrew/bin/codex", OnPath: 1}},
+				Instructions:  &codexIn,
+			},
+		},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+
+	// Banner appears on both /ai/agents and /ai/instructions when ~/.agents/AGENTS.md is absent.
+	tt := openAI(t, a, "/ai/agents")
+	a.Home = root
+	tt.Frame()
+	hasTexts(t, tt, locales.SharedInstructionsBannerTitle(), locales.SharedInstructionsSetup())
+	a.router.Push(instructionsPage)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.SharedInstructionsBannerTitle(), locales.SharedInstructionsSetup())
+
+	// Opening setup dialog defaults to Migrate mode because ~/.claude/CLAUDE.md exists.
+	if err := tt.Click(locales.SharedInstructionsSetup()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.sharedInstructions == nil || !a.sharedInstructions.open || a.sharedInstructions.mode != 1 || a.sharedInstructions.sourceAgent != "claude" {
+		t.Fatalf("unexpected shared setup dialog state: %+v", a.sharedInstructions)
+	}
+	hasTexts(t, tt, locales.SharedInstructionsDialogTitle(), locales.SharedInstructionsModeTemplate(), locales.SharedInstructionsModeMigrate())
+	screenshot(t, tt, "shared-instructions-dialog-en")
+
+	if os.Getenv("HEARTH_SCREENSHOTS") != "" {
+		i18n.SetLocaleFunc(func() string { return "ru" })
+		for _, sz := range []struct {
+			name string
+			w, h int
+		}{{"shared-instructions-dialog-ru", 1280, 820}, {"shared-instructions-dialog-ru-narrow", 1000, 680}} {
+			st := ui.NewTester(a.View, sz.w, sz.h)
+			st.Advance(time.Second)
+			screenshot(t, st, sz.name)
+		}
+		a.sharedInstructions.open = false
+		a.router.Push("/ai/agents")
+		st := ui.NewTester(a.View, 1280, 820)
+		st.Advance(time.Second)
+		screenshot(t, st, "agents-shared-banner-ru")
+		a.router.Push(instructionsPage)
+		a.sharedInstructions.open = true
+		i18n.SetLocaleFunc(nil)
+		tt.Frame()
+	}
+
+	// Submitting Review plan proposes a 3-step plan (create-shared + migrate-link claude + link codex) without touching disk.
+	if err := tt.Click(locales.GlobalInstructionsPlan()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 3 {
+		t.Fatalf("expected 3-step pending plan, got: %+v", a.op)
+	}
+	if _, err := os.Lstat(filepath.Join(root, ".agents", "AGENTS.md")); !os.IsNotExist(err) {
+		t.Fatal("reviewing plan wrote ~/.agents/AGENTS.md before confirmation")
+	}
+
+	// Once ~/.agents/AGENTS.md exists, banner disappears on both pages.
+	a.op = nil
+	claudeIn.Shared.Exists = true
+	codexIn.Shared.Exists = true
+	a.Snapshot.Agents[0].Instructions = &claudeIn
+	a.Snapshot.Agents[1].Instructions = &codexIn
+	a.router.Push("/ai/agents")
+	tt.Advance(time.Second)
+	if tt.HasText(locales.SharedInstructionsBannerTitle()) {
+		t.Fatal("banner should disappear when ~/.agents/AGENTS.md already exists")
+	}
+}

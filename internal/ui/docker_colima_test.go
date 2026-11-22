@@ -107,7 +107,7 @@ func TestColimaChoiceAndExternalEngine(t *testing.T) {
 				action = locales.ColimaInstall()
 				hasTexts(t, tt, locales.ColimaChoice(), locales.ColimaRecommended(), locales.ColimaOtherEngineHint())
 			} else {
-				hasTexts(t, tt, locales.ColimaOnlyHearth("OrbStack"), locales.ColimaSeparateDataHint())
+				hasTexts(t, tt, locales.ColimaOnlyHearth("OrbStack"), locales.ColimaSwitchHint("OrbStack"), action)
 			}
 			screenshot(t, tt, "docker-colima-"+tc.name)
 			if planned {

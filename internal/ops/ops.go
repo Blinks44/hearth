@@ -311,11 +311,14 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 			var err error
 			if in := step.Instructions; in != nil {
 				name = in.Observed.Native.Path
+				if in.Mode == "create-shared" {
+					name = in.Observed.Shared.Path
+				}
 				e.printf("create instructions %s\n", name)
 				e.emit()
 				restore, err = applyInstructionInstall(ctx, *in)
 				e.mu.Lock()
-				e.state.InstructionCopyAvailable = in.Mode == "link" && instructionLinkDenied(err)
+				e.state.InstructionCopyAvailable = in.Mode == "link" && !in.SharedCreatedInPlan && instructionLinkDenied(err)
 				e.mu.Unlock()
 			} else {
 				name = step.Skill.Path

@@ -19,12 +19,12 @@ import (
 )
 
 func dockerManagementLabel(engine string) string {
-	switch engine {
-	case "Colima":
+	switch {
+	case engine == "Colima":
 		return locales.ColimaManaged()
-	case "":
+	case engine == "":
 		return ""
-	case "Docker Engine", "Podman":
+	case dockerEngineIsService(engine):
 		return locales.ColimaExternalService()
 	default:
 		return locales.ColimaExternalApp()
@@ -168,6 +168,11 @@ func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 			listRowWrapped(c, locales.ColimaPackages(), locales.ColimaPackagesHint(), func() {})
 			listRowWrapped(c, locales.ColimaOtherEngine(), locales.ColimaOtherEngineHint(), func() {})
 		})
+	} else if _, ok := a.nativeDockerInstallPlan(st); ok {
+		listCard(c, locales.DockerLinuxChoice(), "", func() {
+			listRowWrapped(c, locales.ColimaEverything(), locales.DockerLinuxWizard(), func() {})
+			listRowWrapped(c, locales.ColimaOtherEngine(), locales.ColimaOtherEngineHint(), func() {})
+		})
 	}
 }
 
@@ -198,9 +203,15 @@ func (a *App) dockerExternalCard(c *ui.Context, st inventory.ToolState, name str
 		}
 		listRow(c, locales.ColimaDockerResources(), false, locales.ColimaDockerResourcesHint(), func() {})
 		if a.canInstallColima() && colimaNeedsSetup(st.Docker.Colima) {
-			listRowWrapped(c, locales.ColimaOnlyHearth(name), locales.ColimaSeparateDataHint(), func() {
+			listRowWrapped(c, locales.ColimaOnlyHearth(name), locales.ColimaSwitchHint(name), func() {
 				ui.Button(c.Key("colima-migrate"), locales.ColimaMigrate()).OnClick(func() { a.installColima(true) })
 			})
+		} else if recommendedDockerEngine == "Docker Engine" && name != "Docker Engine" {
+			if plan, ok := a.dockerEngineSwitchPlan(st); ok {
+				listRowWrapped(c, locales.ColimaOnlyHearth(name), locales.DockerEngineSwitchHint(name), func() {
+					ui.Button(c.Key("docker-engine-switch"), locales.DockerEngineInstall()).OnClick(func() { a.Propose(plan) })
+				})
+			}
 		} else if st.Docker.Colima != nil && !st.Docker.Colima.Unreadable {
 			for _, p := range st.Docker.Colima.Profiles {
 				if p.Name == "default" && p.Runtime == "docker" {

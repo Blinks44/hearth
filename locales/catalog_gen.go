@@ -608,11 +608,11 @@ func (msgs Messages) ColimaInstallWhy() string {
 	return Catalog.Format(msgs.locale, "colimaInstallWhy", nil)
 }
 
-// ColimaMigrate says "How to switch…"
+// ColimaMigrate says "Switch to Colima…"
 // in the language the app shows.
 func ColimaMigrate() string { return In(i18n.Locale()).ColimaMigrate() }
 
-// ColimaMigrate says "How to switch…"
+// ColimaMigrate says "Switch to Colima…"
 // in the language of msgs.
 func (msgs Messages) ColimaMigrate() string {
 	return Catalog.Format(msgs.locale, "colimaMigrate", nil)
@@ -918,11 +918,11 @@ func (msgs Messages) ColimaRecommended() string {
 	return Catalog.Format(msgs.locale, "colimaRecommended", nil)
 }
 
-// ColimaWizard says "With Colima, Hearth installs the engine, configures its resources and autostart, and shows its containers."
+// ColimaWizard says "Hearth can replace a separate Docker desktop app using open-source Colima: install the engine, tune CPU/RAM/disk, tog…"
 // in the language the app shows.
 func ColimaWizard() string { return In(i18n.Locale()).ColimaWizard() }
 
-// ColimaWizard says "With Colima, Hearth installs the engine, configures its resources and autostart, and shows its containers."
+// ColimaWizard says "Hearth can replace a separate Docker desktop app using open-source Colima: install the engine, tune CPU/RAM/disk, tog…"
 // in the language of msgs.
 func (msgs Messages) ColimaWizard() string {
 	return Catalog.Format(msgs.locale, "colimaWizard", nil)
@@ -978,11 +978,11 @@ func (msgs Messages) ColimaOtherEngine() string {
 	return Catalog.Format(msgs.locale, "colimaOtherEngine", nil)
 }
 
-// ColimaOtherEngineHint says "Hearth shows containers. Manage the engine and its resources in its own app."
+// ColimaOtherEngineHint says "Already using OrbStack, Docker Desktop, or another engine? Hearth works alongside it and shows its containers, while …"
 // in the language the app shows.
 func ColimaOtherEngineHint() string { return In(i18n.Locale()).ColimaOtherEngineHint() }
 
-// ColimaOtherEngineHint says "Hearth shows containers. Manage the engine and its resources in its own app."
+// ColimaOtherEngineHint says "Already using OrbStack, Docker Desktop, or another engine? Hearth works alongside it and shows its containers, while …"
 // in the language of msgs.
 func (msgs Messages) ColimaOtherEngineHint() string {
 	return Catalog.Format(msgs.locale, "colimaOtherEngineHint", nil)
@@ -29728,13 +29728,13 @@ func (msgs Messages) GlobalInstructionsPlan() string {
 	return Catalog.Format(msgs.locale, "globalInstructionsPlan", nil)
 }
 
-// GlobalInstructionsTemplate says "# Global instructions\n\n- Explain changes and how they were checked.\n"
+// GlobalInstructionsTemplate says "# Global instructions\n\n## Communication\n- Be direct and concise; explain trade-offs and assumptions clearly.\n- Ask be…"
 // in the language the app shows.
 //
 // Codex global instruction files, preview and confirmed installation plan.
 func GlobalInstructionsTemplate() string { return In(i18n.Locale()).GlobalInstructionsTemplate() }
 
-// GlobalInstructionsTemplate says "# Global instructions\n\n- Explain changes and how they were checked.\n"
+// GlobalInstructionsTemplate says "# Global instructions\n\n## Communication\n- Be direct and concise; explain trade-offs and assumptions clearly.\n- Ask be…"
 // in the language of msgs.
 //
 // Codex global instruction files, preview and confirmed installation plan.
@@ -42284,4 +42284,388 @@ func ChangeSkillTitle(name string) string { return In(i18n.Locale()).ChangeSkill
 // in the language of msgs.
 func (msgs Messages) ChangeSkillTitle(name string) string {
 	return Catalog.Format(msgs.locale, "changeSkillTitle", map[string]any{"name": name})
+}
+
+// OverviewAllProjects says "All projects"
+// in the language the app shows.
+func OverviewAllProjects() string { return In(i18n.Locale()).OverviewAllProjects() }
+
+// OverviewAllProjects says "All projects"
+// in the language of msgs.
+func (msgs Messages) OverviewAllProjects() string {
+	return Catalog.Format(msgs.locale, "overviewAllProjects", nil)
+}
+
+// DockerEngineInstall says "Install Docker Engine…"
+// in the language the app shows.
+func DockerEngineInstall() string { return In(i18n.Locale()).DockerEngineInstall() }
+
+// DockerEngineInstall says "Install Docker Engine…"
+// in the language of msgs.
+func (msgs Messages) DockerEngineInstall() string {
+	return Catalog.Format(msgs.locale, "dockerEngineInstall", nil)
+}
+
+// DockerLinuxChoice says "Docker Engine + Hearth"
+// in the language the app shows.
+func DockerLinuxChoice() string { return In(i18n.Locale()).DockerLinuxChoice() }
+
+// DockerLinuxChoice says "Docker Engine + Hearth"
+// in the language of msgs.
+func (msgs Messages) DockerLinuxChoice() string {
+	return Catalog.Format(msgs.locale, "dockerLinuxChoice", nil)
+}
+
+// DockerLinuxWizard says "Hearth works directly with standard open-source Docker Engine on Linux: manage containers, images, and volumes in one…"
+// in the language the app shows.
+func DockerLinuxWizard() string { return In(i18n.Locale()).DockerLinuxWizard() }
+
+// DockerLinuxWizard says "Hearth works directly with standard open-source Docker Engine on Linux: manage containers, images, and volumes in one…"
+// in the language of msgs.
+func (msgs Messages) DockerLinuxWizard() string {
+	return Catalog.Format(msgs.locale, "dockerLinuxWizard", nil)
+}
+
+// ColimaSwitchHint says "Run open-source Colima directly inside Hearth instead of a separate {engine} app. Your current containers and data st…"
+// in the language the app shows.
+func ColimaSwitchHint(engine string) string { return In(i18n.Locale()).ColimaSwitchHint(engine) }
+
+// ColimaSwitchHint says "Run open-source Colima directly inside Hearth instead of a separate {engine} app. Your current containers and data st…"
+// in the language of msgs.
+func (msgs Messages) ColimaSwitchHint(engine string) string {
+	return Catalog.Format(msgs.locale, "colimaSwitchHint", map[string]any{"engine": engine})
+}
+
+// DockerEngineSwitchHint says "Use standard open-source Docker Engine directly with Hearth instead of {engine}. Your current containers and data sta…"
+// in the language the app shows.
+func DockerEngineSwitchHint(engine string) string {
+	return In(i18n.Locale()).DockerEngineSwitchHint(engine)
+}
+
+// DockerEngineSwitchHint says "Use standard open-source Docker Engine directly with Hearth instead of {engine}. Your current containers and data sta…"
+// in the language of msgs.
+func (msgs Messages) DockerEngineSwitchHint(engine string) string {
+	return Catalog.Format(msgs.locale, "dockerEngineSwitchHint", map[string]any{"engine": engine})
+}
+
+// DockerSwitchUntouchedTitle says "Old engine and data stay untouched"
+// in the language the app shows.
+func DockerSwitchUntouchedTitle() string { return In(i18n.Locale()).DockerSwitchUntouchedTitle() }
+
+// DockerSwitchUntouchedTitle says "Old engine and data stay untouched"
+// in the language of msgs.
+func (msgs Messages) DockerSwitchUntouchedTitle() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchUntouchedTitle", nil)
+}
+
+// DockerSwitchUntouchedText says "Containers, images, and volumes stay in the original engine. Hearth does not remove or move them."
+// in the language the app shows.
+func DockerSwitchUntouchedText() string { return In(i18n.Locale()).DockerSwitchUntouchedText() }
+
+// DockerSwitchUntouchedText says "Containers, images, and volumes stay in the original engine. Hearth does not remove or move them."
+// in the language of msgs.
+func (msgs Messages) DockerSwitchUntouchedText() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchUntouchedText", nil)
+}
+
+// DockerSwitchAutostartTitle says "Disable autostart of the old app"
+// in the language the app shows.
+func DockerSwitchAutostartTitle() string { return In(i18n.Locale()).DockerSwitchAutostartTitle() }
+
+// DockerSwitchAutostartTitle says "Disable autostart of the old app"
+// in the language of msgs.
+func (msgs Messages) DockerSwitchAutostartTitle() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchAutostartTitle", nil)
+}
+
+// DockerSwitchAutostartText says "Turn off launch-at-login in the previous desktop app so two container engines do not consume RAM at the same time."
+// in the language the app shows.
+func DockerSwitchAutostartText() string { return In(i18n.Locale()).DockerSwitchAutostartText() }
+
+// DockerSwitchAutostartText says "Turn off launch-at-login in the previous desktop app so two container engines do not consume RAM at the same time."
+// in the language of msgs.
+func (msgs Messages) DockerSwitchAutostartText() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchAutostartText", nil)
+}
+
+// DockerSwitchRollbackTitle says "One-click rollback"
+// in the language the app shows.
+func DockerSwitchRollbackTitle() string { return In(i18n.Locale()).DockerSwitchRollbackTitle() }
+
+// DockerSwitchRollbackTitle says "One-click rollback"
+// in the language of msgs.
+func (msgs Messages) DockerSwitchRollbackTitle() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchRollbackTitle", nil)
+}
+
+// DockerSwitchRollbackText says "Switch back to the previous engine anytime in the Contexts tab."
+// in the language the app shows.
+func DockerSwitchRollbackText() string { return In(i18n.Locale()).DockerSwitchRollbackText() }
+
+// DockerSwitchRollbackText says "Switch back to the previous engine anytime in the Contexts tab."
+// in the language of msgs.
+func (msgs Messages) DockerSwitchRollbackText() string {
+	return Catalog.Format(msgs.locale, "dockerSwitchRollbackText", nil)
+}
+
+// SharedInstructionsBannerTitle says "One global instructions file for your agents"
+// in the language the app shows.
+func SharedInstructionsBannerTitle() string { return In(i18n.Locale()).SharedInstructionsBannerTitle() }
+
+// SharedInstructionsBannerTitle says "One global instructions file for your agents"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsBannerTitle() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsBannerTitle", nil)
+}
+
+// SharedInstructionsBannerText says "Keep shared personal rules in ~/.agents/AGENTS.md and link installed agents to it."
+// in the language the app shows.
+func SharedInstructionsBannerText() string { return In(i18n.Locale()).SharedInstructionsBannerText() }
+
+// SharedInstructionsBannerText says "Keep shared personal rules in ~/.agents/AGENTS.md and link installed agents to it."
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsBannerText() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsBannerText", nil)
+}
+
+// SharedInstructionsBannerMigrateText says "Create ~/.agents/AGENTS.md or move {file} there with a backup and link your agents."
+// in the language the app shows.
+func SharedInstructionsBannerMigrateText(file string) string {
+	return In(i18n.Locale()).SharedInstructionsBannerMigrateText(file)
+}
+
+// SharedInstructionsBannerMigrateText says "Create ~/.agents/AGENTS.md or move {file} there with a backup and link your agents."
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsBannerMigrateText(file string) string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsBannerMigrateText", map[string]any{"file": file})
+}
+
+// SharedInstructionsSetup says "Set up AGENTS.md…"
+// in the language the app shows.
+func SharedInstructionsSetup() string { return In(i18n.Locale()).SharedInstructionsSetup() }
+
+// SharedInstructionsSetup says "Set up AGENTS.md…"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsSetup() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsSetup", nil)
+}
+
+// SharedInstructionsDialogTitle says "Shared global instructions"
+// in the language the app shows.
+func SharedInstructionsDialogTitle() string { return In(i18n.Locale()).SharedInstructionsDialogTitle() }
+
+// SharedInstructionsDialogTitle says "Shared global instructions"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsDialogTitle() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsDialogTitle", nil)
+}
+
+// SharedInstructionsModeTemplate says "Create from template"
+// in the language the app shows.
+func SharedInstructionsModeTemplate() string {
+	return In(i18n.Locale()).SharedInstructionsModeTemplate()
+}
+
+// SharedInstructionsModeTemplate says "Create from template"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsModeTemplate() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsModeTemplate", nil)
+}
+
+// SharedInstructionsModeMigrate says "Move existing file"
+// in the language the app shows.
+func SharedInstructionsModeMigrate() string { return In(i18n.Locale()).SharedInstructionsModeMigrate() }
+
+// SharedInstructionsModeMigrate says "Move existing file"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsModeMigrate() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsModeMigrate", nil)
+}
+
+// SharedInstructionsSourceLabel says "Move file from"
+// in the language the app shows.
+func SharedInstructionsSourceLabel() string { return In(i18n.Locale()).SharedInstructionsSourceLabel() }
+
+// SharedInstructionsSourceLabel says "Move file from"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsSourceLabel() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsSourceLabel", nil)
+}
+
+// SharedInstructionsAgentsLabel says "Connect agents via symlink"
+// in the language the app shows.
+func SharedInstructionsAgentsLabel() string { return In(i18n.Locale()).SharedInstructionsAgentsLabel() }
+
+// SharedInstructionsAgentsLabel says "Connect agents via symlink"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsAgentsLabel() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsAgentsLabel", nil)
+}
+
+// SharedInstructionsAgentMigrateNote says "original file will be backed up and replaced with a symlink"
+// in the language the app shows.
+func SharedInstructionsAgentMigrateNote() string {
+	return In(i18n.Locale()).SharedInstructionsAgentMigrateNote()
+}
+
+// SharedInstructionsAgentMigrateNote says "original file will be backed up and replaced with a symlink"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsAgentMigrateNote() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsAgentMigrateNote", nil)
+}
+
+// SharedInstructionsAgentExistsNote says "already has its own file (left untouched)"
+// in the language the app shows.
+func SharedInstructionsAgentExistsNote() string {
+	return In(i18n.Locale()).SharedInstructionsAgentExistsNote()
+}
+
+// SharedInstructionsAgentExistsNote says "already has its own file (left untouched)"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsAgentExistsNote() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsAgentExistsNote", nil)
+}
+
+// SharedInstructionsAgentLinkNote says "will create symlink"
+// in the language the app shows.
+func SharedInstructionsAgentLinkNote() string {
+	return In(i18n.Locale()).SharedInstructionsAgentLinkNote()
+}
+
+// SharedInstructionsAgentLinkNote says "will create symlink"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsAgentLinkNote() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsAgentLinkNote", nil)
+}
+
+// SharedInstructionsPlanTitle says "Set up ~/.agents/AGENTS.md"
+// in the language the app shows.
+func SharedInstructionsPlanTitle() string { return In(i18n.Locale()).SharedInstructionsPlanTitle() }
+
+// SharedInstructionsPlanTitle says "Set up ~/.agents/AGENTS.md"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsPlanTitle() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsPlanTitle", nil)
+}
+
+// SharedInstructionsCreateWhy says "Creates ~/.agents/AGENTS.md and connects the selected agents through file symlinks. Unselected agents and existing fi…"
+// in the language the app shows.
+func SharedInstructionsCreateWhy() string { return In(i18n.Locale()).SharedInstructionsCreateWhy() }
+
+// SharedInstructionsCreateWhy says "Creates ~/.agents/AGENTS.md and connects the selected agents through file symlinks. Unselected agents and existing fi…"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsCreateWhy() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsCreateWhy", nil)
+}
+
+// SharedInstructionsMigrateWhy says "Creates ~/.agents/AGENTS.md from {agent} ({file}), keeps a backup copy, replaces it with a symlink, and links any oth…"
+// in the language the app shows.
+func SharedInstructionsMigrateWhy(agent string, file string) string {
+	return In(i18n.Locale()).SharedInstructionsMigrateWhy(agent, file)
+}
+
+// SharedInstructionsMigrateWhy says "Creates ~/.agents/AGENTS.md from {agent} ({file}), keeps a backup copy, replaces it with a symlink, and links any oth…"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsMigrateWhy(agent string, file string) string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsMigrateWhy", map[string]any{"agent": agent, "file": file})
+}
+
+// SharedInstructionsAction says "Create & connect"
+// in the language the app shows.
+func SharedInstructionsAction() string { return In(i18n.Locale()).SharedInstructionsAction() }
+
+// SharedInstructionsAction says "Create & connect"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsAction() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsAction", nil)
+}
+
+// SharedInstructionsCreateOnlyAction says "Create ~/.agents/AGENTS.md"
+// in the language the app shows.
+func SharedInstructionsCreateOnlyAction() string {
+	return In(i18n.Locale()).SharedInstructionsCreateOnlyAction()
+}
+
+// SharedInstructionsCreateOnlyAction says "Create ~/.agents/AGENTS.md"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsCreateOnlyAction() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsCreateOnlyAction", nil)
+}
+
+// SharedInstructionsMigrateAction says "Move & connect"
+// in the language the app shows.
+func SharedInstructionsMigrateAction() string {
+	return In(i18n.Locale()).SharedInstructionsMigrateAction()
+}
+
+// SharedInstructionsMigrateAction says "Move & connect"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsMigrateAction() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsMigrateAction", nil)
+}
+
+// SharedInstructionsLinksNote says "Symlinks to create"
+// in the language the app shows.
+func SharedInstructionsLinksNote() string { return In(i18n.Locale()).SharedInstructionsLinksNote() }
+
+// SharedInstructionsLinksNote says "Symlinks to create"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsLinksNote() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsLinksNote", nil)
+}
+
+// SharedInstructionsProtectionText says "Hearth refuses if ~/.agents/AGENTS.md already exists or the source file changed before confirmation. If any step fail…"
+// in the language the app shows.
+func SharedInstructionsProtectionText() string {
+	return In(i18n.Locale()).SharedInstructionsProtectionText()
+}
+
+// SharedInstructionsProtectionText says "Hearth refuses if ~/.agents/AGENTS.md already exists or the source file changed before confirmation. If any step fail…"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsProtectionText() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsProtectionText", nil)
+}
+
+// SharedInstructionsLinkStep says "link {native} → {shared}"
+// in the language the app shows.
+func SharedInstructionsLinkStep(native string, shared string) string {
+	return In(i18n.Locale()).SharedInstructionsLinkStep(native, shared)
+}
+
+// SharedInstructionsLinkStep says "link {native} → {shared}"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsLinkStep(native string, shared string) string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsLinkStep", map[string]any{"native": native, "shared": shared})
+}
+
+// SharedInstructionsMigrateStep says "backup & link {native} → {shared}"
+// in the language the app shows.
+func SharedInstructionsMigrateStep(native string, shared string) string {
+	return In(i18n.Locale()).SharedInstructionsMigrateStep(native, shared)
+}
+
+// SharedInstructionsMigrateStep says "backup & link {native} → {shared}"
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsMigrateStep(native string, shared string) string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsMigrateStep", map[string]any{"native": native, "shared": shared})
+}
+
+// SharedInstructionsReady says "Shared global instructions are ready."
+// in the language the app shows.
+func SharedInstructionsReady() string { return In(i18n.Locale()).SharedInstructionsReady() }
+
+// SharedInstructionsReady says "Shared global instructions are ready."
+// in the language of msgs.
+func (msgs Messages) SharedInstructionsReady() string {
+	return Catalog.Format(msgs.locale, "sharedInstructionsReady", nil)
+}
+
+// InstructionsPreviewEmpty says "Empty file."
+// in the language the app shows.
+func InstructionsPreviewEmpty() string { return In(i18n.Locale()).InstructionsPreviewEmpty() }
+
+// InstructionsPreviewEmpty says "Empty file."
+// in the language of msgs.
+func (msgs Messages) InstructionsPreviewEmpty() string {
+	return Catalog.Format(msgs.locale, "instructionsPreviewEmpty", nil)
 }

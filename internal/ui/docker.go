@@ -22,7 +22,7 @@ func (a *App) docker(c *ui.Context, p page) {
 			if st.Docker != nil && inventory.TerminalCopy(st.Installations) < 0 && a.canInstallColima() {
 				ui.PrimaryButton(c.Key("colima-install"), locales.ColimaInstall()).OnClick(func() { a.installColima(false) })
 			} else if plan, ok := a.nativeDockerInstallPlan(st); ok {
-				ui.PrimaryButton(c.Key("docker-install"), plan.Title).OnClick(func() { a.Propose(plan) })
+				ui.PrimaryButton(c.Key("docker-install"), locales.DockerEngineInstall()).OnClick(func() { a.Propose(plan) })
 			} else if profile, ok := dockerSelectedColima(st.Docker); ok && profile.Status == "stopped" {
 				ui.PrimaryButton(c.Key("colima-start"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
@@ -276,8 +276,19 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.ColimaRecommended())
 				}
 				if engine.Name == "Colima" && engine.Path == "" && a.canInstallColima() {
-					ui.Button(c.Key("install-colima"), locales.PkgInstallTitle("Colima")).OnClick(func() { a.installColima(false) })
+					label := locales.ColimaInstall()
+					migrate := cli
+					if migrate {
+						label = locales.ColimaMigrate()
+					}
+					ui.Button(c.Key("install-colima"), label).OnClick(func() { a.installColima(migrate) })
 					return
+				}
+				if engine.Name == "Docker Engine" && engine.Path == "" && recommendedDockerEngine == "Docker Engine" {
+					if plan, ok := a.dockerEngineInstallOrSwitchPlan(st, cli); ok {
+						ui.Button(c.Key("install-docker-engine"), locales.DockerEngineInstall()).OnClick(func() { a.Propose(plan) })
+						return
+					}
 				}
 				if engine.Path != "" {
 					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.DockerInstalled())
@@ -486,12 +497,46 @@ func (a *App) engineInstallPlan(engine string, cli bool) (ops.Plan, bool) {
 	return ops.Plan{}, false
 }
 
-func (a *App) nativeDockerInstallPlan(st inventory.ToolState) (ops.Plan, bool) {
-	if recommendedDockerEngine == "Docker Engine" && st.Docker != nil && inventory.TerminalCopy(st.Installations) < 0 &&
+func (a *App) engineSwitchPlan(engine string, cli bool) (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok {
+		return ops.Plan{}, false
+	}
+	for _, m := range st.PackageManagers {
+		if p, ok := ops.EngineSwitchPlan(engine, m, cli, a.reread(m)); ok {
+			return p, true
+		}
+	}
+	return ops.Plan{}, false
+}
+
+func (a *App) dockerEngineUninstalled(st inventory.ToolState) bool {
+	return recommendedDockerEngine == "Docker Engine" && st.Docker != nil &&
 		slices.ContainsFunc(st.Docker.Engines, func(e inventory.DockerEngine) bool {
 			return e.Name == recommendedDockerEngine && e.Path == ""
-		}) {
+		})
+}
+
+func (a *App) nativeDockerInstallPlan(st inventory.ToolState) (ops.Plan, bool) {
+	if a.dockerEngineUninstalled(st) && inventory.TerminalCopy(st.Installations) < 0 {
 		return a.engineInstallPlan(recommendedDockerEngine, false)
 	}
 	return ops.Plan{}, false
+}
+
+func (a *App) dockerEngineSwitchPlan(st inventory.ToolState) (ops.Plan, bool) {
+	if a.dockerEngineUninstalled(st) {
+		return a.engineSwitchPlan(recommendedDockerEngine, inventory.TerminalCopy(st.Installations) >= 0)
+	}
+	return ops.Plan{}, false
+}
+
+func (a *App) dockerEngineInstallOrSwitchPlan(st inventory.ToolState, hasCLI bool) (ops.Plan, bool) {
+	if !a.dockerEngineUninstalled(st) {
+		return ops.Plan{}, false
+	}
+	if hasCLI {
+		return a.engineSwitchPlan(recommendedDockerEngine, true)
+	}
+	return a.engineInstallPlan(recommendedDockerEngine, false)
 }

@@ -47,12 +47,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 		a.header(c, p.title(), p.subtitle())
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				warnings := 0
-				for _, it := range items {
-					if it.severity == issues.Warning {
-						warnings++
-					}
-				}
+				importantCount := len(needAttention(items))
 				headRow(c, func() {
 					ui.Box(c).Size(48, 48).Radius(12).Background(pal.WarningSoft).Center().Children(func() {
 						ui.Icon(c, Icon("triangle-alert")).Size(26, 26).TextColor(t.Warning)
@@ -64,7 +59,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 				}, func() {
 					important, info, checkedAt := "—", "—", "—"
 					if !a.firstScan() {
-						important, info = strconv.Itoa(warnings), strconv.Itoa(len(items)-warnings)
+						important, info = strconv.Itoa(importantCount), strconv.Itoa(len(items)-importantCount)
 						checkedAt = ago(c, a.Snapshot.Taken)
 					}
 					stateCard(c, t.Warning, locales.ProblemsImportant(), important, locales.HeroProblemsCaption())
@@ -112,10 +107,10 @@ func (a *App) problemsView(c *ui.Context, p page) {
 				filter := strings.ToLower(a.problemsFilter)
 				ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 					shown := 0
-					for _, level := range []issues.Severity{issues.Warning, issues.Info} {
+					for _, actionable := range []bool{true, false} {
 						var rows []attentionItem
 						for _, it := range items {
-							if it.severity == level && (a.problemsTab == 0 || it.area == a.problemsTab) &&
+							if isActionableIssue(it) == actionable && (a.problemsTab == 0 || it.area == a.problemsTab) &&
 								strings.Contains(strings.ToLower(it.title+" "+it.explain), filter) {
 								rows = append(rows, it)
 							}
@@ -124,7 +119,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 							continue
 						}
 						title := locales.ProblemsGroupImportant()
-						if level == issues.Info {
+						if !actionable {
 							title = locales.ProblemsGroupInfo()
 						}
 						ui.Row(c).Gap(12).Padding(6, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {

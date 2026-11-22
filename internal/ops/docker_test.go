@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestEngineInstallPlan(t *testing.T) {
@@ -115,5 +116,25 @@ func TestContextPlan(t *testing.T) {
 	}
 	if _, ok := ContextPlan("", "default", "colima", nil); ok {
 		t.Error("plan without a CLI")
+	}
+}
+
+func TestEngineSwitchPlan(t *testing.T) {
+	apt := inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}
+	p, ok := EngineSwitchPlan("Docker Engine", apt, true, nil)
+	if !ok {
+		t.Fatal("expected Linux Docker Engine switch plan")
+	}
+	if p.Title != locales.DockerEngineInstall() {
+		t.Errorf("Title = %q, want %q", p.Title, locales.DockerEngineInstall())
+	}
+	for _, want := range []string{
+		locales.DockerSwitchUntouchedTitle(),
+		locales.DockerSwitchAutostartTitle(),
+		locales.DockerSwitchRollbackTitle(),
+	} {
+		if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == want }) {
+			t.Errorf("missing switch consequence note %q in %+v", want, p.Notes)
+		}
 	}
 }

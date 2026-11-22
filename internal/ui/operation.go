@@ -365,6 +365,9 @@ func (a *App) operationPlan(c *ui.Context, p ops.Plan) {
 func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 	switch {
 	case step.Instructions != nil:
+		if step.Instructions.SharedCreatedInPlan {
+			return ops.FileEdit{}, false, false
+		}
 		return step.Instructions.Preview(), false, true
 	case step.Edit != nil:
 		return *step.Edit, false, true
@@ -494,6 +497,15 @@ func operationSteps(c *ui.Context, steps []ops.Step, s ops.State, home string) {
 				e, _, edit := stepEdit(step)
 				if edit {
 					command = locales.OpEditStep(tilde(e.Path, home))
+				}
+				if step.Instructions != nil && step.Instructions.SharedCreatedInPlan {
+					native := tilde(step.Instructions.Observed.Native.Path, home)
+					shared := tilde(step.Instructions.Observed.Shared.Path, home)
+					if step.Instructions.Mode == "migrate-link" {
+						command = locales.SharedInstructionsMigrateStep(native, shared)
+					} else {
+						command = locales.SharedInstructionsLinkStep(native, shared)
+					}
 				}
 				if step.Skill != nil {
 					command = locales.SkillInstallStep(tilde(step.Skill.Path, home))

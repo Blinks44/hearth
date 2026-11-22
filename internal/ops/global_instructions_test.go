@@ -275,3 +275,213 @@ func TestGlobalInstructionPlanOtherAgents(t *testing.T) {
 		}
 	})
 }
+
+func canCreateFileSymlink(t *testing.T) bool {
+	t.Helper()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	if err := os.WriteFile(target, []byte("ok\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	err := os.Symlink(target, filepath.Join(dir, "link.txt"))
+	if err == nil {
+		return true
+	}
+	if instructionLinkDenied(err) {
+		return false
+	}
+	t.Fatalf("probe symlink failed unexpectedly: %v", err)
+	return false
+}
+
+func TestSharedInstructionsPlanCreateAndLink(t *testing.T) {
+	t.Run("creates shared file without symlinks", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		const text = "# Personal rules\n\n- Keep diffs small.\n"
+
+		p, err := SharedInstructionsPlan(SharedInstructionsRequest{Text: text}, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(p.Steps) != 1 {
+			t.Fatalf("steps = %d, want 1", len(p.Steps))
+		}
+		shared := filepath.Join(home, ".agents", "AGENTS.md")
+		if _, err := os.Lstat(shared); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("building plan created shared file")
+		}
+		st := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+		if st.Phase != Succeeded {
+			t.Fatalf("execution failed: %+v", st)
+		}
+		got, err := os.ReadFile(shared)
+		if err != nil || string(got) != text {
+			t.Fatalf("shared = %q (%v)", got, err)
+		}
+		if _, err := SharedInstructionsPlan(SharedInstructionsRequest{Text: text}, env); err == nil {
+			t.Fatal("accepted SharedInstructionsPlan when shared file already exists")
+		}
+	})
+
+	t.Run("creates shared file and links agents", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		const text = "# Personal rules\n\n- Keep diffs small.\n"
+
+		p, err := SharedInstructionsPlan(SharedInstructionsRequest{
+			Text:       text,
+			LinkAgents: []string{"claude", "codex"},
+		}, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(p.Steps) != 3 {
+			t.Fatalf("steps = %d, want 3", len(p.Steps))
+		}
+		shared := filepath.Join(home, ".agents", "AGENTS.md")
+		if _, err := os.Lstat(shared); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("building plan created shared file")
+		}
+
+		st := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+		if !canCreateFileSymlink(t) {
+			if st.Phase != Failed {
+				t.Fatalf("expected failure when symlinks are denied, got %+v", st)
+			}
+			if _, err := os.Lstat(shared); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("shared AGENTS.md survived rollback on symlink denial: %v", err)
+			}
+			t.Skip("symlinks unavailable on this platform/account")
+		}
+		if st.Phase != Succeeded {
+			t.Fatalf("execution failed: %+v", st)
+		}
+		got, err := os.ReadFile(shared)
+		if err != nil || string(got) != text {
+			t.Fatalf("shared = %q (%v)", got, err)
+		}
+		for _, tc := range []struct{ id, rel string }{
+			{"claude", ".claude/CLAUDE.md"},
+			{"codex", ".codex/AGENTS.md"},
+		} {
+			native := filepath.Join(home, filepath.FromSlash(tc.rel))
+			info, err := os.Lstat(native)
+			if err != nil || info.Mode()&os.ModeSymlink == 0 {
+				t.Fatalf("%s native %s is not symlink: %v", tc.id, native, err)
+			}
+			in, ok := ai.AgentInstructions(tc.id, env)
+			if !ok || in.State != "linked" {
+				t.Fatalf("%s state = %+v (%v), want linked", tc.id, in, ok)
+			}
+		}
+		// Refuses if ~/.agents/AGENTS.md already exists.
+		if _, err := SharedInstructionsPlan(SharedInstructionsRequest{Text: text}, env); err == nil {
+			t.Fatal("accepted SharedInstructionsPlan when shared file already exists")
+		}
+	})
+}
+
+func TestSharedInstructionsPlanMigrateAndRollback(t *testing.T) {
+	t.Run("migrates with backup and links another agent", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		claudeNative := filepath.Join(home, ".claude", "CLAUDE.md")
+		const orig = "# My Claude rules\n\n- Always write tests.\n"
+		instructionWrite(t, claudeNative, orig)
+
+		p, err := SharedInstructionsPlan(SharedInstructionsRequest{
+			Text:            orig,
+			MigrateFrom:     "claude",
+			MigrateFromName: "Claude Code",
+			LinkAgents:      []string{"codex"},
+		}, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(p.Steps) != 3 || p.Steps[0].Instructions.Mode != "create-shared" || p.Steps[1].Instructions.Mode != "migrate-link" || p.Steps[2].Instructions.Mode != "link" {
+			t.Fatalf("unexpected steps: %+v", p.Steps)
+		}
+		shared := filepath.Join(home, ".agents", "AGENTS.md")
+		st := Execute(t.Context(), &run.Fake{}, p, io.Discard, func(State) {})
+		if !canCreateFileSymlink(t) {
+			if st.Phase != Failed {
+				t.Fatalf("expected failure when symlinks are denied, got %+v", st)
+			}
+			if _, err := os.Lstat(shared); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("shared AGENTS.md survived rollback on symlink denial: %v", err)
+			}
+			if got, err := os.ReadFile(claudeNative); err != nil || string(got) != orig {
+				t.Fatalf("CLAUDE.md not restored after symlink denial: %q (%v)", got, err)
+			}
+			t.Skip("symlinks unavailable on this platform/account")
+		}
+		if st.Phase != Succeeded {
+			t.Fatalf("migration failed: %+v", st)
+		}
+		if got, err := os.ReadFile(shared); err != nil || string(got) != orig {
+			t.Fatalf("shared = %q (%v)", got, err)
+		}
+		backups, err := filepath.Glob(claudeNative + ".hearth-*.bak")
+		if err != nil || len(backups) != 1 {
+			t.Fatalf("expected 1 backup of CLAUDE.md, got %v (%v)", backups, err)
+		}
+		if b, err := os.ReadFile(backups[0]); err != nil || string(b) != orig {
+			t.Fatalf("backup content = %q (%v)", b, err)
+		}
+		info, err := os.Lstat(claudeNative)
+		if err != nil || info.Mode()&os.ModeSymlink == 0 {
+			t.Fatalf("CLAUDE.md should be symlink after migration: %v", err)
+		}
+		if in, ok := ai.AgentInstructions("codex", env); !ok || in.State != "linked" {
+			t.Fatalf("codex not linked: %+v (%v)", in, ok)
+		}
+	})
+
+	t.Run("rolls back migration and shared file when later step fails", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		claudeNative := filepath.Join(home, ".claude", "CLAUDE.md")
+		const orig = "# Original rules\n"
+		instructionWrite(t, claudeNative, orig)
+
+		p, err := SharedInstructionsPlan(SharedInstructionsRequest{
+			Text:            orig,
+			MigrateFrom:     "claude",
+			MigrateFromName: "Claude Code",
+		}, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p.Steps = append(p.Steps, Step{Argv: []string{"fail"}})
+		fake := &run.Fake{}
+		fake.Set(run.Result{ExitCode: 1}, nil, "fail")
+
+		st := Execute(t.Context(), fake, p, io.Discard, func(State) {})
+		if st.Phase != Failed {
+			t.Fatalf("expected failure, got %+v", st)
+		}
+		if _, err := os.Lstat(filepath.Join(home, ".agents", "AGENTS.md")); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("shared AGENTS.md survived rollback: %v", err)
+		}
+		info, err := os.Lstat(claudeNative)
+		if err != nil || info.Mode()&os.ModeSymlink != 0 {
+			t.Fatalf("CLAUDE.md was not restored as regular file: %v", err)
+		}
+		if got, err := os.ReadFile(claudeNative); err != nil || string(got) != orig {
+			t.Fatalf("restored CLAUDE.md content = %q (%v)", got, err)
+		}
+	})
+
+	t.Run("refuses to overwrite another agent's existing file", func(t *testing.T) {
+		home := t.TempDir()
+		env := sysenv.Env{"HOME=" + home}
+		instructionWrite(t, filepath.Join(home, ".codex", "AGENTS.md"), "Keep codex\n")
+		if _, err := SharedInstructionsPlan(SharedInstructionsRequest{
+			Text:       "New shared\n",
+			LinkAgents: []string{"codex"},
+		}, env); err == nil {
+			t.Fatal("accepted linking over an existing agent file")
+		}
+	})
+}

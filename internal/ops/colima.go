@@ -103,7 +103,7 @@ func ColimaInstallPlan(manager inventory.PackageManager, migrate bool, env sysen
 	}
 	if migrate {
 		p.Title = locales.ColimaMigrate()
-		p.Notes = append(p.Notes, Note{Title: locales.ColimaSeparateData(), Text: locales.ColimaSeparateDataHint()})
+		p.Notes = append(p.Notes, dockerSwitchNotes()...)
 	}
 	p.Notes = append(p.Notes, Note{Title: locales.DockerContext(), Text: locales.ColimaSelectContext()})
 	// Colima invokes docker itself to create its context. Put the same

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -718,4 +719,172 @@ func TestOverviewLiveSummary(t *testing.T) {
 			screenshot(t, tt, tc.name)
 		}
 	})
+}
+
+func TestOverviewProjectsCompactCard(t *testing.T) {
+	a := NewApp()
+	a.StartHidden = true
+	a.Snapshot = calmSnapshot()
+	a.ChooseFolder = func() {}
+	// 8 projects: 2 problematic (need Node 18) placed at the end of input;
+	// Overview must lift problematic ones first, cap at 4 compact rows in the
+	// right column so Tools stay immediately visible in the main column, and
+	// link the remaining 4 via the footer.
+	okProj := testProjects()[0]
+	badProj := testProjects()[1]
+	for i := range 6 {
+		p := okProj
+		p.Dir = home + "/dev/ok-" + strconv.Itoa(i)
+		a.Projects = append(a.Projects, p)
+	}
+	for i := range 2 {
+		p := badProj
+		p.Dir = home + "/work/bad-" + strconv.Itoa(i)
+		a.Projects = append(a.Projects, p)
+	}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "Projects", "All projects", "bad-0", "bad-1", "ok-0", "ok-1", "And 4 more")
+	if tt.HasText("ok-2") || tt.HasText("ok-5") {
+		t.Fatalf("overview showed more than 4 projects in compact card: %q", tt.Texts())
+	}
+	// Check side-column placement: Tools sit in the main column on the left,
+	// Projects rows stack vertically in the right column to the right of Tools.
+	toolsRect, okTools := tt.Find("Tools")
+	b0, ok0 := tt.Find("bad-0")
+	b1, ok1 := tt.Find("bad-1")
+	if !okTools || !ok0 || !ok1 {
+		t.Fatalf("missing rects: tools=%v b0=%v b1=%v", okTools, ok0, ok1)
+	}
+	if b0.X <= toolsRect.X+200 {
+		t.Errorf("expected Projects card (%+v) in the right column to the right of Tools (%+v)", b0, toolsRect)
+	}
+	if b1.Y <= b0.Y || b1.X != b0.X {
+		t.Errorf("expected bad-1 (%+v) stacked directly under bad-0 (%+v)", b1, b0)
+	}
+	// Clicking "And 4 more" navigates to /projects.
+	if err := tt.Click("And 4 more"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != projectsPage.path {
+		t.Errorf("projects overflow went to %q, want %q", a.router.Path(), projectsPage.path)
+	}
+
+	if os.Getenv("HEARTH_SCREENSHOTS") != "" {
+		i18n.SetLocaleFunc(func() string { return "ru" })
+		defer i18n.SetLocaleFunc(nil)
+		today := time.Now().Format("2006-01-02")
+
+		// 1. Realistic 5 live tiles + 1 project + Tools + Attention + AI agents.
+		a1 := NewApp()
+		a1.StartHidden = true
+		a1.Home = home
+		a1.ChooseFolder = func() {}
+		a1.Snapshot = &inventory.Snapshot{
+			Tools: []inventory.ToolState{
+				calmSnapshot().Tools[0],
+				{Tool: "go", Installations: []inventory.Installation{{Tool: "go", Version: "1.27.0", Path: "/opt/homebrew/bin/go", OnPath: 1, InGUI: 1}}},
+				{Tool: "python", Installations: []inventory.Installation{{Tool: "python", Version: "3.13.2", Path: "/opt/homebrew/bin/python3", OnPath: 1, InGUI: 1}}},
+				{Tool: "docker", Installations: []inventory.Installation{{Tool: "docker", Version: "29.8.2", Path: "/usr/local/bin/docker", OnPath: 1, InGUI: 1}},
+					Docker: &inventory.DockerState{Selected: "orbstack", Running: 0, Containers: 10, Contexts: []inventory.DockerContext{{Name: "orbstack", Engine: "OrbStack", Endpoint: "unix:///tmp/orbstack.sock", Local: true, Status: "available"}}}},
+				{Tool: "cli", Cli: &inventory.CliState{
+					Tools: []inventory.Installation{{Tool: "kubectl", Version: "1.34.1", Path: "/opt/homebrew/bin/kubectl", OnPath: 1}},
+					KubeContexts: []inventory.KubeContext{
+						{Name: "staging-n3", Cluster: "staging-n3", Namespace: "digital", File: home + "/.kube/config"},
+						{Name: "dev-local", Cluster: "dev-local", Namespace: "default", File: home + "/.kube/config"},
+					},
+					Contexts: []inventory.CliContext{{Tool: "kubectl", Name: "staging-n3", File: home + "/.kube/config"}},
+				}},
+				{Tool: "databases", Databases: &inventory.DatabaseState{
+					Servers:   []inventory.Database{{Kind: "PostgreSQL", Version: "17.2", Status: "stopped", Ports: []string{"5432"}}},
+					Listeners: []inventory.DatabaseListener{{Port: "3000", Process: "node", PID: "101"}},
+				}},
+			},
+			Agents: []inventory.Agent{
+				{ID: "claude", Installations: []inventory.Installation{{Tool: "claude", Version: "2.1.311", Path: "/opt/homebrew/bin/claude", OnPath: 1}}},
+				{ID: "codex", Installations: []inventory.Installation{{Tool: "codex", Version: "0.171.0", Path: "/opt/homebrew/bin/codex", OnPath: 1}}},
+			},
+			Skills: []inventory.Skill{
+				{Name: "golang-testing", Paths: []inventory.SkillPath{{Path: home + "/.claude/skills/golang-testing", Agents: []string{"claude"}}}},
+				{Name: "mygo-maintenance", Paths: []inventory.SkillPath{{Path: home + "/.claude/skills/mygo-maintenance", Agents: []string{"claude"}}}},
+				{Name: "review", Paths: []inventory.SkillPath{{Path: home + "/.codex/skills/review", Agents: []string{"codex"}}}},
+			},
+			MCP: []inventory.MCPServer{
+				{Name: "figma", Agent: "claude", Transport: "stdio", Command: "npx"},
+				{Name: "github", Agent: "codex", Transport: "stdio", Command: "npx"},
+			},
+			Sessions: []inventory.AgentSession{
+				{Agent: "claude", ID: "s1", Usage: []inventory.TokenUsage{{Day: today, Model: "claude-sonnet-4-5-20250929", Input: 200_000, Output: 50_000}}},
+			},
+		}
+		a1.Projects = []projects.Project{{
+			Dir: home + "/dev/planeta",
+			Requirements: []projects.Requirement{
+				{Tool: "node", Want: ">=22.13", File: "package.json"},
+				{Tool: "php", Want: "~8.3.36", File: "composer.json"},
+				{Tool: "composer", Want: "*", File: "composer.json"},
+				{Tool: "docker", File: "compose.yaml"},
+			},
+		}}
+		for _, sz := range []struct {
+			name string
+			w, h int
+		}{{"overview-one-project-five-live-ru", 1280, 820}, {"overview-one-project-five-live-ru-narrow", 1000, 680}} {
+			st := ui.NewTester(a1.View, sz.w, sz.h)
+			st.Advance(time.Second)
+			screenshot(t, st, sz.name)
+		}
+
+		// 2. Many projects (8): right column shows 4 + "И ещё 4", Tools stay at top.
+		a.router.Push(overview.path)
+		a.Snapshot.Agents = a1.Snapshot.Agents
+		a.Snapshot.Skills = a1.Snapshot.Skills
+		a.Snapshot.MCP = a1.Snapshot.MCP
+		for _, sz := range []struct {
+			name string
+			w, h int
+		}{{"overview-many-projects-ru", 1280, 820}, {"overview-many-projects-ru-narrow", 1000, 680}} {
+			st := ui.NewTester(a.View, sz.w, sz.h)
+			st.Advance(time.Second)
+			screenshot(t, st, sz.name)
+		}
+	}
+}
+
+func TestLiveSummaryBalancedRows(t *testing.T) {
+	makeTiles := func(n int) []liveTile {
+		out := make([]liveTile, n)
+		for i := range n {
+			out[i] = liveTile{key: strconv.Itoa(i)}
+		}
+		return out
+	}
+	rowLens := func(rows [][]liveTile) []int {
+		out := make([]int, len(rows))
+		for i, r := range rows {
+			out[i] = len(r)
+		}
+		return out
+	}
+	for _, tc := range []struct {
+		n      int
+		narrow bool
+		want   []int
+	}{
+		{1, false, []int{1}},
+		{2, false, []int{2}},
+		{3, false, []int{3}},
+		{4, false, []int{4}},
+		{5, false, []int{5}},
+		{1, true, []int{1}},
+		{2, true, []int{2}},
+		{3, true, []int{3}},
+		{4, true, []int{2, 2}},
+		{5, true, []int{3, 2}},
+	} {
+		got := rowLens(liveSummaryRows(makeTiles(tc.n), tc.narrow))
+		if !slices.Equal(got, tc.want) {
+			t.Errorf("liveSummaryRows(n=%d, narrow=%t) = %v, want %v", tc.n, tc.narrow, got, tc.want)
+		}
+	}
 }

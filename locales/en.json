@@ -170,7 +170,7 @@
   "colimaConfigError": "Could not read the Docker CLI plugin settings in config.json.",
   "colimaInstall": "Install Colima…",
   "colimaInstallWhy": "Homebrew installs Colima and the Docker CLI plugins. Hearth registers the plugin folder and starts the default Colima profile.",
-  "colimaMigrate": "How to switch…",
+  "colimaMigrate": "Switch to Colima…",
   "colimaSeparateData": "Colima has its own storage",
   "colimaSeparateDataHint": "Containers, images and volumes stay in the original engine.",
   "colimaSelectContext": "Colima selects its Docker context on first start. Environment overrides still take precedence.",
@@ -208,13 +208,13 @@
   "colimaExternalApp": "Own app",
   "colimaExternalService": "External service",
   "colimaRecommended": "Recommended",
-  "colimaWizard": "With Colima, Hearth installs the engine, configures its resources and autostart, and shows its containers.",
+  "colimaWizard": "Hearth can replace a separate Docker desktop app using open-source Colima: install the engine, tune CPU/RAM/disk, toggle autostart, and manage containers in one window.",
   "colimaChoice": "Colima + Hearth",
   "colimaEverything": "Engine and containers in Hearth",
   "colimaPackages": "Packages to install",
   "colimaPackagesHint": "Colima, Docker CLI, Compose and Buildx through Homebrew.",
   "colimaOtherEngine": "With another engine",
-  "colimaOtherEngineHint": "Hearth shows containers. Manage the engine and its resources in its own app.",
+  "colimaOtherEngineHint": "Already using OrbStack, Docker Desktop, or another engine? Hearth works alongside it and shows its containers, while engine settings stay in its own app.",
   "colimaExternalResources": "Resources and updates",
   "colimaExternalResourcesHint": "In the {engine} app",
   "@colimaExternalResourcesHint": {
@@ -11097,7 +11097,7 @@
   "@globalInstructionsPlan": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsTemplate": "# Global instructions\n\n- Explain changes and how they were checked.\n",
+  "globalInstructionsTemplate": "# Global instructions\n\n## Communication\n- Be direct and concise; explain trade-offs and assumptions clearly.\n- Ask before making irreversible changes or changing external APIs.\n\n## Engineering habits\n- Prefer simple, idiomatic solutions over premature abstractions.\n- Run existing tests and linters after edits and report what was actually verified.\n\n## Git and safety\n- Never commit secrets, credentials, or unrelated local files.\n- Do not run destructive git commands or push changes without explicit confirmation.\n",
   "@globalInstructionsTemplate": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
@@ -16147,5 +16147,92 @@
         "type": "String"
       }
     }
-  }
+  },
+  "overviewAllProjects": "All projects",
+  "dockerEngineInstall": "Install Docker Engine…",
+  "dockerLinuxChoice": "Docker Engine + Hearth",
+  "dockerLinuxWizard": "Hearth works directly with standard open-source Docker Engine on Linux: manage containers, images, and volumes in one window without a separate desktop app.",
+  "colimaSwitchHint": "Run open-source Colima directly inside Hearth instead of a separate {engine} app. Your current containers and data stay untouched.",
+  "@colimaSwitchHint": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerEngineSwitchHint": "Use standard open-source Docker Engine directly with Hearth instead of {engine}. Your current containers and data stay untouched.",
+  "@dockerEngineSwitchHint": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSwitchUntouchedTitle": "Old engine and data stay untouched",
+  "dockerSwitchUntouchedText": "Containers, images, and volumes stay in the original engine. Hearth does not remove or move them.",
+  "dockerSwitchAutostartTitle": "Disable autostart of the old app",
+  "dockerSwitchAutostartText": "Turn off launch-at-login in the previous desktop app so two container engines do not consume RAM at the same time.",
+  "dockerSwitchRollbackTitle": "One-click rollback",
+  "dockerSwitchRollbackText": "Switch back to the previous engine anytime in the Contexts tab.",
+  "sharedInstructionsBannerTitle": "One global instructions file for your agents",
+  "sharedInstructionsBannerText": "Keep shared personal rules in ~/.agents/AGENTS.md and link installed agents to it.",
+  "sharedInstructionsBannerMigrateText": "Create ~/.agents/AGENTS.md or move {file} there with a backup and link your agents.",
+  "@sharedInstructionsBannerMigrateText": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedInstructionsSetup": "Set up AGENTS.md…",
+  "sharedInstructionsDialogTitle": "Shared global instructions",
+  "sharedInstructionsModeTemplate": "Create from template",
+  "sharedInstructionsModeMigrate": "Move existing file",
+  "sharedInstructionsSourceLabel": "Move file from",
+  "sharedInstructionsAgentsLabel": "Connect agents via symlink",
+  "sharedInstructionsAgentMigrateNote": "original file will be backed up and replaced with a symlink",
+  "sharedInstructionsAgentExistsNote": "already has its own file (left untouched)",
+  "sharedInstructionsAgentLinkNote": "will create symlink",
+  "sharedInstructionsPlanTitle": "Set up ~/.agents/AGENTS.md",
+  "sharedInstructionsCreateWhy": "Creates ~/.agents/AGENTS.md and connects the selected agents through file symlinks. Unselected agents and existing files are not touched.",
+  "sharedInstructionsMigrateWhy": "Creates ~/.agents/AGENTS.md from {agent} ({file}), keeps a backup copy, replaces it with a symlink, and links any other selected agents.",
+  "@sharedInstructionsMigrateWhy": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedInstructionsAction": "Create & connect",
+  "sharedInstructionsCreateOnlyAction": "Create ~/.agents/AGENTS.md",
+  "sharedInstructionsMigrateAction": "Move & connect",
+  "sharedInstructionsLinksNote": "Symlinks to create",
+  "sharedInstructionsProtectionText": "Hearth refuses if ~/.agents/AGENTS.md already exists or the source file changed before confirmation. If any step fails, backups are restored and created files are removed. Start a new agent session afterwards.",
+  "sharedInstructionsLinkStep": "link {native} → {shared}",
+  "@sharedInstructionsLinkStep": {
+    "placeholders": {
+      "native": {
+        "type": "String"
+      },
+      "shared": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedInstructionsMigrateStep": "backup & link {native} → {shared}",
+  "@sharedInstructionsMigrateStep": {
+    "placeholders": {
+      "native": {
+        "type": "String"
+      },
+      "shared": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedInstructionsReady": "Shared global instructions are ready.",
+  "instructionsPreviewEmpty": "Empty file."
 }

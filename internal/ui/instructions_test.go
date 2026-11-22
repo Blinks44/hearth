@@ -184,3 +184,46 @@ func TestInstructionsGlobalDiffCreateAndExtras(t *testing.T) {
 		t.Fatalf("unexpected create plan: %+v", a.op)
 	}
 }
+
+func TestInstructionsGlobalStatsAndMarkdownPreview(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	snap := aiSnapshot()
+	sharedPath := filepath.Join(home, ".agents", "AGENTS.md")
+	codexPath := filepath.Join(home, ".codex", "AGENTS.md")
+	snap.Agents[1].Instructions = &inventory.GlobalInstructions{
+		State:  "linked",
+		Active: codexPath,
+		Shared: inventory.InstructionFile{Path: sharedPath, Exists: true, Sum: "abc"},
+		Native: inventory.InstructionFile{Path: codexPath, Exists: true, Link: true, Sum: "abc"},
+	}
+	a.Snapshot = snap
+	a.ReadInstruction = func(path string, done func(string, error)) {
+		if path == codexPath {
+			done("# Global Rules\n\n- Use **plain** Markdown.\n", nil)
+			return
+		}
+		done("", os.ErrNotExist)
+	}
+
+	// With 0 projects and 1 global instruction agent, header stats must still appear and show Global preview.
+	tt := openAI(t, a, instructionsPage)
+	hasTexts(t, tt, "Global", "connected", "issues", "Global Rules", "Use plain Markdown.")
+
+	// Adding a project with Markdown content renders rendered Markdown (headings/text without raw '#').
+	a.Projects = []projects.Project{{
+		Dir: filepath.Join(home, "dev", "md-app"),
+		Instructions: projects.Instructions{
+			Agents: projects.InstructionFile{Text: "# Project Guide\n\n- Run `make check`.\n", Exists: true},
+		},
+	}}
+	tt.Frame()
+	if err := tt.Click("md-app"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Global", "projects", "Project Guide", "Run make check.")
+	if tt.HasText("# Project Guide") {
+		t.Fatalf("project instructions rendered raw markdown instead of formatted view: %q", tt.Texts())
+	}
+}

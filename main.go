@@ -155,6 +155,12 @@ func main() {
 				win.Update(func() { done(entries, text, err) })
 			}()
 		}
+		a.ReadInstruction = func(path string, done func(string, error)) {
+			go func() {
+				text, err := ai.InstructionText(path)
+				win.Update(func() { done(text, err) })
+			}()
+		}
 		a.DiffSkills = func(dirA, dirB string, done func([]ai.SkillFileDiff, error)) {
 			go func() {
 				diffs, err := ai.SkillDiff(dirA, dirB)
