@@ -111,9 +111,13 @@ func MCP(env sysenv.Env) (servers []inventory.MCPServer, errs []string) {
 }
 
 // ProjectMCP reads the MCP servers in the files of the project in dir.
-// Only commands given by a path are checked: one by name is looked for on
-// the terminal's PATH, which a project is read without.
-func ProjectMCP(dir string) (servers []inventory.MCPServer, errs []error) {
+// When env is provided, commands given by name are checked on env's PATH;
+// otherwise only path commands are checked.
+func ProjectMCP(dir string, env ...sysenv.Env) (servers []inventory.MCPServer, errs []error) {
+	var term sysenv.Env
+	if len(env) > 0 {
+		term = env[0]
+	}
 	for _, a := range agents {
 		for _, f := range mcpFiles[a.id].project {
 			ss, err := readMCP(filepath.Join(dir, filepath.FromSlash(f.path)), f.format, a.id)
@@ -128,7 +132,7 @@ func ProjectMCP(dir string) (servers []inventory.MCPServer, errs []error) {
 					checkCommand(&s, nil)
 					s.Command = c
 				} else {
-					checkCommand(&s, nil)
+					checkCommand(&s, term)
 				}
 				servers = append(servers, s)
 			}
@@ -337,6 +341,9 @@ var (
 	secretName  = regexp.MustCompile(`(?i)token|secret|passw|api[-_]?key|auth|credential|bearer|private[-_]?key`)
 	secretValue = regexp.MustCompile(`^(ghp_|gho_|ghs_|github_pat_|sk-|xox[abpr]-|glpat-|AKIA)`)
 )
+
+// MaskMCP hides what looks secret in s's arguments and URL.
+func MaskMCP(s inventory.MCPServer) inventory.MCPServer { return masked(s) }
 
 // masked hides in s's arguments and URL what looks secret.
 func masked(s inventory.MCPServer) inventory.MCPServer {

@@ -21,6 +21,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // Requirement is what one project file asks of a tool.
@@ -94,7 +95,7 @@ var VersionFiles = []string{".nvmrc", ".node-version", ".tool-versions", "mise.t
 var installDirs = []string{"node_modules", ".venv"}
 
 // aiFiles are the AI settings a project may have, in the order shown.
-var aiFiles = []string{"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".agents", ".agent", "_agents", "_agent", ".claude", ".cursor", ".mcp.json"}
+var aiFiles = []string{"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md", ".agents", ".agent", "_agents", "_agent", ".claude", ".cursor", ".mcp.json"}
 
 type fileReader struct {
 	file string
@@ -153,6 +154,12 @@ var readers = []fileReader{
 // one that cannot be read or parsed goes to Errs, as does dir when it is
 // gone.
 func Read(dir string) Project {
+	return ReadWithEnv(dir, nil)
+}
+
+// ReadWithEnv reads the project files in dir, using env's PATH to verify
+// project MCP server commands when env is non-nil.
+func ReadWithEnv(dir string, env sysenv.Env) Project {
 	p := Project{Dir: dir}
 	if _, err := os.Stat(dir); err != nil {
 		p.Errs = append(p.Errs, err)
@@ -211,7 +218,7 @@ func Read(dir string) Project {
 	p.Readme = findReadme(dir)
 	p.Changed = changed(p)
 	p.Skills = ai.ProjectSkills(dir)
-	mcp, errs := ai.ProjectMCP(dir)
+	mcp, errs := ai.ProjectMCP(dir, env)
 	p.MCP, p.Errs = mcp, append(p.Errs, errs...)
 	p.Rules, p.Hooks, errs = ai.ProjectAccess(dir)
 	p.Errs = append(p.Errs, errs...)

@@ -220,6 +220,8 @@ func TestHistory(t *testing.T) {
 		{Agent: "claude", Files: []string{"/h/.claude/projects/p/c.jsonl"}, Size: 9_000_000, Modified: recent},
 		// Too little to be worth a look.
 		{Agent: "codex", Files: []string{"/h/.codex/sessions/r.jsonl"}, Size: 500, Modified: old},
+		// Shared SQLite DB session without standalone Files must never be offered.
+		{Agent: "opencode", Files: nil, Size: 50_000_000, Modified: old},
 	}}
 	var got []Candidate
 	for _, c := range Find(s, nil, nil, nil, now) {

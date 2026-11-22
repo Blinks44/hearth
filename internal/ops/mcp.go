@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -92,25 +93,41 @@ func object(pairs ...any) json.RawMessage {
 // jsonDef is def as agent's JSON file declares a server: the keys differ
 // a little between the agents.
 func jsonDef(def ai.MCPDef, agent string, format mcpFormat) json.RawMessage {
+	return jsonDefWithDisabled(def, agent, format, false)
+}
+
+func jsonDefWithDisabled(def ai.MCPDef, agent string, format mcpFormat, disabled bool) json.RawMessage {
 	if format == mcpOpenCode {
 		if def.Transport == "stdio" {
+			if disabled {
+				return object("type", "local", "command", append([]string{def.Command}, def.Args...), "environment", def.Env, "enabled", false)
+			}
 			return object("type", "local", "command", append([]string{def.Command}, def.Args...), "environment", def.Env)
+		}
+		if disabled {
+			return object("type", "remote", "url", def.URL, "headers", def.Headers, "enabled", false)
 		}
 		return object("type", "remote", "url", def.URL, "headers", def.Headers)
 	}
+	var pairs []any
 	switch {
 	case def.Transport == "stdio" && agent == "copilot":
-		return object("type", "local", "command", def.Command, "args", def.Args, "env", def.Env, "tools", []string{"*"})
+		pairs = []any{"type", "local", "command", def.Command, "args", def.Args, "env", def.Env, "tools", []string{"*"}}
 	case def.Transport == "stdio":
-		return object("command", def.Command, "args", def.Args, "env", def.Env)
+		pairs = []any{"command", def.Command, "args", def.Args, "env", def.Env}
 	case agent == "copilot":
-		return object("type", def.Transport, "url", def.URL, "headers", def.Headers, "tools", []string{"*"})
+		pairs = []any{"type", def.Transport, "url", def.URL, "headers", def.Headers, "tools", []string{"*"}}
 	case agent == "gemini" && def.Transport == "http":
-		return object("httpUrl", def.URL, "headers", def.Headers)
+		pairs = []any{"httpUrl", def.URL, "headers", def.Headers}
 	case agent == "devin" || agent == "antigravity":
-		return object("serverUrl", def.URL, "headers", def.Headers)
+		pairs = []any{"serverUrl", def.URL, "headers", def.Headers}
+	default:
+		pairs = []any{"type", def.Transport, "url", def.URL, "headers", def.Headers}
 	}
-	return object("type", def.Transport, "url", def.URL, "headers", def.Headers)
+	if disabled {
+		pairs = append(pairs, "disabled", true)
+	}
+	return object(pairs...)
 }
 
 // bareKey is a TOML key written without quotes.
@@ -127,6 +144,10 @@ func serverTable(name string) string {
 // tomlDef is def as a Codex config declares a server, its table and those
 // in it, without the [mcp_servers] line.
 func tomlDef(name string, def ai.MCPDef) (string, error) {
+	return tomlDefWithDisabled(name, def, false)
+}
+
+func tomlDefWithDisabled(name string, def ai.MCPDef, disabled bool) (string, error) {
 	server := map[string]any{}
 	if def.Command != "" {
 		server["command"] = def.Command
@@ -142,6 +163,9 @@ func tomlDef(name string, def ai.MCPDef) (string, error) {
 	}
 	if len(def.Headers) > 0 {
 		server["http_headers"] = def.Headers
+	}
+	if disabled {
+		server["enabled"] = false
 	}
 	var b strings.Builder
 	enc := toml.NewEncoder(&b)
@@ -248,7 +272,7 @@ func readText(path string) (text string, isNew bool, err error) {
 // "", as a scan would.
 func readServers(env sysenv.Env, project string) []inventory.MCPServer {
 	if project != "" {
-		servers, _ := ai.ProjectMCP(project)
+		servers, _ := ai.ProjectMCP(project, env)
 		return servers
 	}
 	servers, _ := ai.MCP(env)
@@ -471,6 +495,163 @@ func MCPEnablePlan(s inventory.MCPServer, on bool, env sysenv.Env, names func(st
 			return locales.McpCheckOn(s.Name, title), nil
 		}
 		return locales.McpCheckOff(s.Name, title), nil
+	}
+	return p, nil
+}
+
+func validateMCPDef(name string, def ai.MCPDef) (string, ai.MCPDef, error) {
+	name = strings.TrimSpace(name)
+	if name == "" || strings.ContainsAny(name, "\r\n\t/\\") {
+		return "", def, errors.New(locales.McpFormBadName())
+	}
+	def.Transport = strings.ToLower(strings.TrimSpace(def.Transport))
+	if def.Transport == "" {
+		def.Transport = "stdio"
+	}
+	switch def.Transport {
+	case "stdio":
+		def.Command = strings.TrimSpace(def.Command)
+		if def.Command == "" {
+			return "", def, errors.New(locales.McpFormBadCommand())
+		}
+		def.URL = ""
+		def.Headers = nil
+	case "http", "sse":
+		def.URL = strings.TrimSpace(def.URL)
+		u, err := url.Parse(def.URL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return "", def, errors.New(locales.McpFormBadURL())
+		}
+		def.Command = ""
+		def.Args = nil
+		def.Env = nil
+	default:
+		return "", def, errors.New(locales.McpFormBadTransport())
+	}
+	return name, def, nil
+}
+
+func defSecrets(def ai.MCPDef) []string {
+	s := ai.MaskMCP(inventory.MCPServer{
+		Transport: def.Transport,
+		Command:   def.Command,
+		Args:      def.Args,
+		URL:       def.URL,
+	})
+	return secrets(def, s)
+}
+
+// MCPAddPlan returns a plan that declares a new MCP server for agent in user
+// or project scope. Secret values are masked in diffs and command previews.
+func MCPAddPlan(name, agent, project string, def ai.MCPDef, env sysenv.Env, names func(string) string) (Plan, error) {
+	name, def, err := validateMCPDef(name, def)
+	if err != nil {
+		return Plan{}, err
+	}
+	s := ai.MaskMCP(inventory.MCPServer{
+		Name:      name,
+		Agent:     agent,
+		Project:   project,
+		Transport: def.Transport,
+		Command:   def.Command,
+		Args:      def.Args,
+		URL:       def.URL,
+	})
+	p, err := mcpAddPlan(s, def, agent, env, names)
+	if err != nil {
+		return Plan{}, err
+	}
+	title := names(agent)
+	p.Title = locales.McpAddTitle(name, title)
+	p.Why = locales.McpAddWhy(title)
+	return p, nil
+}
+
+// MCPEditable reports that Hearth can edit s in place: all declarations except
+// Claude Code's per-project entries inside ~/.claude.json.
+func MCPEditable(s inventory.MCPServer) bool {
+	return MCPRemovable(s)
+}
+
+// MCPEditPlan returns a plan that updates s's declaration to def in its config
+// file (or via claude mcp for ~/.claude.json), preserving its disabled state
+// and masking all secret values.
+func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names func(string) string) (Plan, error) {
+	if !MCPEditable(s) {
+		return Plan{}, errors.New(locales.McpClaudeLocal(s.Name))
+	}
+	_, def, err := validateMCPDef(s.Name, def)
+	if err != nil {
+		return Plan{}, err
+	}
+	if s.Agent == "antigravity" && def.Transport == "sse" {
+		return Plan{}, errors.New(locales.AntigravityMcpSse())
+	}
+	oldDef, _ := ai.ReadMCPDef(s)
+	hide := append(defSecrets(def), secrets(oldDef, s)...)
+	title := names(s.Agent)
+	p := Plan{
+		Title:   locales.McpEditTitle(s.Name, title),
+		Why:     locales.McpEditWhy(title),
+		Changes: []string{"~ " + s.Name + " · " + title},
+	}
+	format := formatOf(s.Agent, s.File)
+	switch format {
+	case mcpClaude:
+		original, err := claudeServer(s)
+		if err != nil {
+			return Plan{}, err
+		}
+		before, err := compactJSON(original)
+		if err != nil {
+			return Plan{}, err
+		}
+		raw := object("type", def.Transport, "command", def.Command, "args", def.Args, "env", def.Env, "url", def.URL, "headers", def.Headers)
+		after := string(raw)
+		masked := FileEdit{Hide: hide}.Masked
+		remove := []string{"claude", "mcp", "remove", "--scope", "user", s.Name}
+		restore := []string{"claude", "mcp", "add-json", "--scope", "user", s.Name, before}
+		add := []string{"claude", "mcp", "add-json", "--scope", "user", s.Name, after}
+		p.Steps = []Step{
+			{Argv: remove, Undo: &Step{Argv: restore, Runs: append(slices.Clone(restore[:6]), masked(before)), Note: s.File}},
+			{Argv: add, Runs: append(slices.Clone(add[:6]), masked(after)), Undo: &Step{Argv: remove}},
+		}
+	case mcpTOML:
+		text, _, err := readText(s.File)
+		if err != nil {
+			return Plan{}, err
+		}
+		table, err := tomlDefWithDisabled(s.Name, def, s.Disabled)
+		if err != nil {
+			return Plan{}, err
+		}
+		after, ok := replaceTOMLTable(text, serverTable(s.Name), table)
+		if !ok {
+			return Plan{}, errors.New(locales.McpCheckMissing(s.Name, title))
+		}
+		p.Steps = []Step{{Edit: &FileEdit{Path: s.File, Before: text, After: after, Hide: hide}}}
+	default:
+		before, _, err := readText(s.File)
+		if err != nil {
+			return Plan{}, err
+		}
+		key := "mcpServers"
+		if format == mcpOpenCode {
+			key = "mcp"
+		}
+		after, err := JSONSet(before, []string{key, s.Name}, jsonDefWithDisabled(def, s.Agent, format, s.Disabled))
+		if err != nil {
+			return Plan{}, fmt.Errorf("%s: %w", s.File, err)
+		}
+		p.Steps = []Step{{Edit: &FileEdit{Path: s.File, Before: before, After: after, Hide: hideMCPFile(s.Agent, before, hide)}}}
+	}
+	wantURL := ai.MaskMCP(inventory.MCPServer{URL: def.URL}).URL
+	p.Verify = func(context.Context) (string, error) {
+		found, ok := findServer(readServers(env, s.Project), s.Agent, s.Name, s.Project)
+		if !ok || found.Transport != def.Transport || (def.Transport == "stdio" && found.Command != def.Command) || (def.Transport != "stdio" && found.URL != wantURL) {
+			return "", errors.New(locales.McpCheckMissing(s.Name, title))
+		}
+		return locales.McpCheckUpdated(s.Name, title), nil
 	}
 	return p, nil
 }

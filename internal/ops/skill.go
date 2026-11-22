@@ -260,3 +260,133 @@ func SkillMergePlan(groups [][]inventory.Skill, backups string, env sysenv.Env, 
 	}
 	return p, nil
 }
+
+// SkillRemoveBrokenPlan removes a broken symlink/junction from a skills folder.
+func SkillRemoveBrokenPlan(sk inventory.Skill, env sysenv.Env) (Plan, error) {
+	if !sk.Broken || len(sk.Paths) == 0 {
+		return Plan{}, errors.New(locales.SkillNotLink(sk.Dir))
+	}
+	link := sk.Paths[0].Path
+	info, err := os.Lstat(link)
+	if err != nil || info.Mode()&linkMode == 0 {
+		return Plan{}, errors.New(locales.SkillNotLink(link))
+	}
+	if _, err := os.Stat(link); err == nil {
+		return Plan{}, errors.New(locales.SkillNotLink(link))
+	}
+	p := Plan{
+		Title:   locales.SkillRemoveBrokenTitle(sk.Name),
+		Why:     locales.SkillRemoveBrokenWhy(),
+		Steps:   []Step{{Argv: unlinkCommand(link)}},
+		Changes: []string{"− " + link},
+	}
+	p.Verify = func(context.Context) (string, error) {
+		if _, err := os.Lstat(link); !errors.Is(err, os.ErrNotExist) {
+			return "", errors.New(locales.SkillCheckBrokenStillExists(sk.Name))
+		}
+		return locales.SkillCheckBrokenRemoved(sk.Name), nil
+	}
+	return p, nil
+}
+
+// SkillRemovePlan removes a skill and its agent symlinks. When the skill's
+// folder lives outside Hearth's known skills directories (an external user
+// folder linked in), only the symlinks are removed and the external folder
+// stays untouched. Synced skills are refused.
+func SkillRemovePlan(sk inventory.Skill, env sysenv.Env, names func(string) string) (Plan, error) {
+	if sk.Synced {
+		return Plan{}, errors.New(locales.SkillRemoveSynced())
+	}
+	if sk.Broken {
+		return SkillRemoveBrokenPlan(sk, env)
+	}
+	var steps []Step
+	var changes []string
+	var linkPaths []string
+	for _, sp := range sk.Paths {
+		info, err := os.Lstat(sp.Path)
+		if err != nil || info.Mode()&linkMode == 0 {
+			continue
+		}
+		if slices.Contains(linkPaths, sp.Path) {
+			continue
+		}
+		linkPaths = append(linkPaths, sp.Path)
+		steps = append(steps, Step{Argv: unlinkCommand(sp.Path)})
+		changes = append(changes, "− "+sp.Path+" → "+sk.Dir)
+	}
+	managed := isManagedSkillDir(sk.Dir, ai.SkillRoots(env, sk.Project))
+	why := locales.SkillRemoveWhy()
+	var notes []Note
+	if managed {
+		if _, err := os.Stat(sk.Dir); err != nil {
+			return Plan{}, err
+		}
+		steps = append(steps, Step{Remove: sk.Dir})
+		changes = append(changes, "− "+sk.Dir)
+	} else {
+		if len(steps) == 0 {
+			return Plan{}, errors.New(locales.SkillNotLink(sk.Dir))
+		}
+		why = locales.SkillRemoveExternalWhy()
+		notes = append(notes, Note{Title: locales.SkillRemoveExternalNote(), Text: locales.SkillRemoveExternalText(sk.Dir)})
+	}
+	var titles []string
+	for _, sp := range sk.Paths {
+		for _, id := range sp.Agents {
+			title := names(id)
+			if !slices.Contains(titles, title) {
+				titles = append(titles, title)
+			}
+		}
+	}
+	if len(titles) > 0 {
+		notes = append(notes, Note{Title: locales.AvailableToAgents(), Text: strings.Join(titles, ", ")})
+	}
+	p := Plan{
+		Title:   locales.SkillRemoveTitle(sk.Name),
+		Why:     why,
+		Steps:   steps,
+		Changes: changes,
+		Notes:   notes,
+	}
+	p.Verify = func(context.Context) (string, error) {
+		for _, lp := range linkPaths {
+			if _, err := os.Lstat(lp); !errors.Is(err, os.ErrNotExist) {
+				return "", errors.New(locales.SkillCheckStillExists(sk.Name))
+			}
+		}
+		if managed {
+			if _, err := os.Lstat(sk.Dir); !errors.Is(err, os.ErrNotExist) {
+				return "", errors.New(locales.SkillCheckStillExists(sk.Name))
+			}
+		}
+		for _, s := range readSkills(env, sk.Project) {
+			if sameSkillPath(s.Dir, sk.Dir) {
+				return "", errors.New(locales.SkillCheckStillExists(sk.Name))
+			}
+		}
+		return locales.SkillCheckRemoved(sk.Name), nil
+	}
+	return p, nil
+}
+
+func isManagedSkillDir(dir string, roots []string) bool {
+	if dir == "" {
+		return false
+	}
+	if real, err := sysenv.RealPath(dir); err == nil {
+		dir = real
+	}
+	dir = filepath.Clean(dir)
+	for _, root := range roots {
+		rel, err := filepath.Rel(root, dir)
+		if err != nil {
+			continue
+		}
+		if rel != "." && rel != "" && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && !filepath.IsAbs(rel) {
+			return true
+		}
+	}
+	return false
+}

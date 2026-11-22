@@ -87,8 +87,9 @@ type App struct {
 	SettingsNotice string
 	// Home is the user's home directory, which paths show as ~.
 	Home string
-	// globalInstructions is the open Codex instructions preview; nil when none.
-	globalInstructions *globalInstructionPreview
+	// globalInstructions is the open global instructions preview; nil when none.
+	globalInstructions        *globalInstructionPreview
+	projectInstructionsCreate *projectInstructionCreate
 	// Snapshot is what the last scan found; nil before the first.
 	Snapshot *inventory.Snapshot
 	// Scanning reports a scan under way.
@@ -188,11 +189,16 @@ type App struct {
 	// background, and gives them to done through Window.Update; nil shows
 	// neither.
 	LoadSkill func(dir string, done func(entries []inventory.Entry, skillMD string, err error))
+	// DiffSkills compares two local skill folders in the background and returns
+	// per-file diffs through Window.Update.
+	DiffSkills func(dirA, dirB string, done func([]ai.SkillFileDiff, error))
 	// LoadCatalog downloads on request and publishes through Window.Update.
 	// The returned function cancels a superseded request.
-	LoadCatalog      func(repo skillcatalog.Repository, done func([]skillcatalog.Skill, map[string]string, error)) func()
-	skillCatalogOpen bool
-	skillCatalog     *skillCatalogState
+	LoadCatalog       func(repo skillcatalog.Repository, force bool, done func([]skillcatalog.Skill, map[string]string, error)) func()
+	skillCatalogOpen  bool
+	skillCatalog      *skillCatalogState
+	skillCatalogCache map[string]skillCatalogCached
+	skillDiff         *skillDiffState
 	// CheckMCP starts or reaches an MCP server as its agent would, with
 	// the terminal's environment, and asks for its tools, in the
 	// background, giving done the answer through Window.Update; nil hides
@@ -347,6 +353,11 @@ type App struct {
 	instructionsQuery  string // the Instructions page's filter
 	instructionsChosen string // the project shown on the Instructions page
 	usageTab           int    // the Usage page's period, by usagePeriods
+	usageMetric        int    // the Usage page's metric: 0 cost, 1 tokens
+	usageAgent         string // the Usage page's agent filter, "" for all
+	usageAgentLabel    string
+	usageProject       string // the Usage page's project filter, "" for all
+	usageProjectLabel  string
 	mobileTab          int    // the mobile page's tab: all, then a group each
 	mobileFilter       string // the mobile table's filter
 	editorsTab         int    // the editors page's tab: all, extensions, commands
@@ -396,8 +407,10 @@ type App struct {
 	skillScope, mcpScope   int
 	skillQuery, mcpQuery   string
 	skillChosen, mcpChosen string
-	skillFolder            skillFolder // what was read of the skill shown
-	mcpCheck               mcpCheck    // the last check of an MCP server
+	skillFolder            skillFolder    // what was read of the skill shown
+	mcpCheck               mcpCheck       // the last check of an MCP server
+	mcpCheckDecl           map[string]int // chosen declaration index per MCP item key
+	mcpForm                *mcpFormState  // open add/edit MCP server dialog; nil when none
 	markdown               markdown.Options
 }
 
@@ -590,6 +603,14 @@ func (a *App) View(c *ui.Context) {
 	a.colimaResizeDialog(c)
 	a.operationView(c)
 	a.globalInstructionsDialog(c)
+	a.projectInstructionsCreateDialog(c)
+	a.mcpFormDialog(c)
+	a.skillDiffDialog(c)
+}
+
+// ClearSkillCatalogCache drops the in-memory skill catalog cache.
+func (a *App) ClearSkillCatalogCache() {
+	a.skillCatalogCache = nil
 }
 
 // Scan starts a scan, as the header and the sidebar do, unless one is

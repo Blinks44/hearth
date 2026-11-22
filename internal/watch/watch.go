@@ -45,6 +45,8 @@ type Service struct {
 	// Err is told of a watch that could not start or stopped; nil drops
 	// it.
 	Err func(err error)
+	// Env returns the terminal environment used when re-reading projects.
+	Env func() sysenv.Env
 
 	mu      sync.Mutex
 	watches map[string]context.CancelFunc // by kind and path
@@ -57,7 +59,11 @@ func (s *Service) Projects(dirs []string) {
 	s.set("project:", dirs, func(ctx context.Context, dir string) {
 		s.run(ctx, dir, func(events []mygo.FileEvent) {
 			if touches(events) {
-				s.Project(projects.Read(dir))
+				var env sysenv.Env
+				if s.Env != nil {
+					env = slices.Clone(s.Env())
+				}
+				s.Project(projects.ReadWithEnv(dir, env))
 			}
 		})
 	})

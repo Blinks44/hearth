@@ -263,3 +263,97 @@ func TestMCPConnectBlankConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestMCPAddAndEditPlan(t *testing.T) {
+	home, env := mcpHome(t)
+
+	// Add stdio server to Cursor with secret env var masked in diff.
+	p, err := MCPAddPlan("linear", "cursor", "", ai.MCPDef{
+		Transport: "stdio",
+		Command:   "npx",
+		Args:      []string{"-y", "@linear/mcp"},
+		Env:       map[string]string{"LINEAR_API_KEY": token},
+	}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := p.Steps[0].Edit
+	if e == nil || !e.New || !strings.Contains(e.After, token) || strings.Contains(e.Masked(e.After), token) {
+		t.Fatalf("add edit did not mask secret: %+v", e)
+	}
+	runEdits(t, p)
+
+	// Edit Cursor server to HTTP with secret header; both old and new secrets masked.
+	newToken := "sk-newsecret999"
+	cur := server(t, env, "cursor", "linear")
+	p, err = MCPEditPlan(cur, ai.MCPDef{
+		Transport: "http",
+		URL:       "https://mcp.linear.app/mcp",
+		Headers:   map[string]string{"Authorization": "Bearer " + newToken},
+	}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = p.Steps[0].Edit
+	if e == nil || strings.Contains(e.Masked(e.Before), token) || strings.Contains(e.Masked(e.After), newToken) {
+		t.Fatalf("edit did not mask old/new secrets: %+v", e)
+	}
+	runEdits(t, p)
+	updated := server(t, env, "cursor", "linear")
+	if updated.Transport != "http" || updated.URL != "https://mcp.linear.app/mcp" {
+		t.Fatalf("updated cursor server = %+v", updated)
+	}
+
+	// Add + Edit Codex TOML preserving disabled state.
+	p, err = MCPAddPlan("docs", "codex", "", ai.MCPDef{Transport: "stdio", Command: "uvx", Args: []string{"docs-mcp"}}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runEdits(t, p)
+	codexSrv := server(t, env, "codex", "docs")
+	p, err = MCPEnablePlan(codexSrv, false, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runEdits(t, p)
+	codexSrv = server(t, env, "codex", "docs")
+	p, err = MCPEditPlan(codexSrv, ai.MCPDef{Transport: "stdio", Command: "npx", Args: []string{"docs-v2"}}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runEdits(t, p)
+	codexSrv = server(t, env, "codex", "docs")
+	if codexSrv.Command != "npx" || !codexSrv.Disabled {
+		t.Fatalf("edited codex server = %+v, want command=npx and Disabled=true", codexSrv)
+	}
+
+	// Edit Claude Code server uses claude mcp remove + add-json with Undo and masks secrets.
+	claudeSrv := server(t, env, "claude", "github")
+	p, err = MCPEditPlan(claudeSrv, ai.MCPDef{
+		Transport: "stdio",
+		Command:   "npx",
+		Args:      []string{"-y", "@modelcontextprotocol/server-github@latest"},
+		Env:       map[string]string{"GITHUB_TOKEN": newToken},
+	}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Steps) != 2 || p.Steps[0].Argv[2] != "remove" || p.Steps[0].Undo == nil || p.Steps[1].Argv[2] != "add-json" {
+		t.Fatalf("unexpected claude edit steps: %+v", p.Steps)
+	}
+	if strings.Contains(strings.Join(p.Steps[1].Shown(), " "), newToken) {
+		t.Fatalf("claude edit step leaked secret: %v", p.Steps[1].Shown())
+	}
+
+	// Validation & Antigravity SSE rejection.
+	if _, err := MCPAddPlan("", "cursor", "", ai.MCPDef{Transport: "stdio", Command: "npx"}, env, title); err == nil {
+		t.Error("empty name accepted")
+	}
+	if _, err := MCPAddPlan("bad", "cursor", "", ai.MCPDef{Transport: "http", URL: "ftp://example.com"}, env, title); err == nil {
+		t.Error("non-http URL accepted")
+	}
+	if _, err := MCPAddPlan("sse-test", "antigravity", "", ai.MCPDef{Transport: "sse", URL: "https://example.com/sse"}, env, title); err == nil {
+		t.Error("antigravity SSE accepted")
+	}
+	_ = home
+}

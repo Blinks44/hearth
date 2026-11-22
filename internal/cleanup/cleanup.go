@@ -466,7 +466,7 @@ func history(sessions []inventory.AgentSession, now time.Time) []Candidate {
 	var out []Candidate
 	at := map[string]int{}
 	for _, s := range sessions {
-		if now.Sub(s.Modified) < HistoryAfter {
+		if len(s.Files) == 0 || now.Sub(s.Modified) < HistoryAfter {
 			continue
 		}
 		i, ok := at[s.Agent]

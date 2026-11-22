@@ -109,3 +109,43 @@ func TestOllamaLoaded(t *testing.T) {
 		t.Errorf("loaded %q", got)
 	}
 }
+
+func TestLMStudioPort(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func(home string)
+		wantPort string
+	}{
+		{
+			name: "modern http-server-config",
+			setup: func(home string) {
+				writeFile(t, filepath.Join(home, ".lmstudio", ".internal", "http-server-config.json"), `{"port":4321}`)
+			},
+			wantPort: "4321",
+		},
+		{
+			name: "legacy http-server-config",
+			setup: func(home string) {
+				writeFile(t, filepath.Join(home, ".cache", "lm-studio", ".internal", "http-server-config.json"), `{"port":5555}`)
+			},
+			wantPort: "5555",
+		},
+		{
+			name: "invalid port falls back to 1234",
+			setup: func(home string) {
+				writeFile(t, filepath.Join(home, ".lmstudio", ".internal", "http-server-config.json"), `{"port":99999}`)
+			},
+			wantPort: "1234",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			home := root(t)
+			tt.setup(home)
+			app := lmStudio(home)
+			if app == nil || app.Port != tt.wantPort {
+				t.Fatalf("lmStudio = %+v, want port %s", app, tt.wantPort)
+			}
+		})
+	}
+}

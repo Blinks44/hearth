@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"slices"
@@ -550,5 +551,88 @@ func TestAgentRulesAndHooks(t *testing.T) {
 	tt = openAI(t, a, agentPath("aider"))
 	if tt.HasText("Without asking") || tt.HasText("Hooks") {
 		t.Error("an agent whose rules Hearth does not read has the cards")
+	}
+}
+
+func TestMCPAddEditAndConflictSelector(t *testing.T) {
+	homeDir := t.TempDir()
+	cursorFile := filepath.Join(homeDir, ".cursor", "mcp.json")
+	if err := os.MkdirAll(filepath.Dir(cursorFile), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cursorFile, []byte(`{"mcpServers":{"github":{"command":"npx","args":["-y","server-v2"]}}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	env := sysenv.Env{"HOME=" + homeDir, "USERPROFILE=" + homeDir}
+	a := NewApp()
+	a.Home = homeDir
+	a.Snapshot = aiSnapshot()
+	// Add a conflicting declaration for github in Cursor so CheckMCP offers a declaration selector.
+	a.Snapshot.MCP = append(a.Snapshot.MCP, inventory.MCPServer{
+		Name: "github", Agent: "cursor", File: cursorFile, Transport: "stdio", Command: "npx", Args: []string{"-y", "server-v2"},
+	})
+	var checked []inventory.MCPServer
+	a.CheckMCP = func(s inventory.MCPServer, done func(ai.MCPCheck, error)) {
+		checked = append(checked, s)
+		done(ai.MCPCheck{Server: s.Agent + "-srv", Took: 100 * time.Millisecond}, nil)
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(env, nil))
+	}
+	tt := openAI(t, a, mcpPage)
+	hasTexts(t, tt, "Add server…", "Check", "Claude Code", "Cursor")
+
+	// Select Cursor declaration in Check selector and verify CheckMCP gets Cursor's server.
+	if err := tt.Click("Cursor"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("Check"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(checked) != 1 || checked[0].Agent != "cursor" {
+		t.Fatalf("checked = %+v, want cursor declaration", checked)
+	}
+
+	// Open Add server form and propose adding a new HTTP server.
+	if err := tt.Click("Add server…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.mcpForm == nil || !a.mcpForm.open {
+		t.Fatal("add MCP form did not open")
+	}
+	a.mcpForm.name = "docs"
+	a.mcpForm.agent = slices.Index(mcpCapableAgents, "cursor")
+	a.mcpForm.transport = 1
+	a.mcpForm.url = "https://mcp.example.com/mcp"
+	tt.Frame()
+	if err := tt.Click("Review plan"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Add docs to Cursor" {
+		t.Fatalf("add plan = %+v", a.op)
+	}
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	// Open Edit form via helper (same path as menu item) and verify prefilled values + plan.
+	a.openEditMCPForm(a.Snapshot.MCP[len(a.Snapshot.MCP)-1])
+	tt.Frame()
+	if a.mcpForm == nil || !a.mcpForm.edit || a.mcpForm.command != "npx" {
+		t.Fatalf("edit form not prefilled: %+v", a.mcpForm)
+	}
+	a.mcpForm.command = "uvx"
+	tt.Frame()
+	if err := tt.Click("Review plan"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Update github in Cursor" {
+		t.Fatalf("edit plan = %+v", a.op)
 	}
 }

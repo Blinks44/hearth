@@ -169,3 +169,47 @@ func TestMCPClaudeConfigDir(t *testing.T) {
 		t.Fatalf("servers %+v errors %v", servers, errs)
 	}
 }
+
+func TestProjectMCPWithTermEnv(t *testing.T) {
+	dir := t.TempDir()
+	binDir := t.TempDir()
+	cmdName := "fake-mcp-runner"
+	cmdPath := filepath.Join(binDir, cmdName)
+	if err := os.WriteFile(cmdPath, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".mcp.json"), []byte(`{
+  "mcpServers": {
+    "found-srv": {"command": "`+cmdName+`"},
+    "missing-srv": {"command": "no-such-mcp-binary-xyz"}
+  }
+}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	env := sysenv.Env{"PATH=" + binDir}
+	got, errs := ProjectMCP(dir, env)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errs: %v", errs)
+	}
+	var sawFound, sawMissing bool
+	for _, s := range got {
+		if s.Agent != "claude" {
+			continue
+		}
+		switch s.Name {
+		case "found-srv":
+			sawFound = true
+			if s.Missing || s.CommandPath == "" {
+				t.Errorf("found-srv: Missing=%v CommandPath=%q, want resolved", s.Missing, s.CommandPath)
+			}
+		case "missing-srv":
+			sawMissing = true
+			if !s.Missing {
+				t.Errorf("missing-srv: Missing=false, want true")
+			}
+		}
+	}
+	if !sawFound || !sawMissing {
+		t.Fatalf("expected both servers in %+v", got)
+	}
+}

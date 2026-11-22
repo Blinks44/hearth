@@ -137,3 +137,28 @@ func TestSkillInstallSymlink(t *testing.T) {
 		t.Fatal("plan accepted a symlink")
 	}
 }
+
+func TestSkillInstallProject(t *testing.T) {
+	home := t.TempDir()
+	project := filepath.Join(home, "work", "app")
+	if err := os.MkdirAll(project, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home}
+	p, err := SkillInstallPlanFor(installSkill(), "claude", project, env, func(id string) string { return id })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Steps[0].Skill.Path != filepath.Join(project, ".agents", "skills", "example") ||
+		p.Steps[0].Skill.Link != filepath.Join(project, ".claude", "skills", "example") {
+		t.Fatalf("unexpected project install paths: %+v", p.Steps[0].Skill)
+	}
+	state := Execute(t.Context(), nil, p, io.Discard, func(State) {})
+	if state.Phase != Succeeded {
+		t.Fatalf("state = %+v", state)
+	}
+	found := ai.ProjectSkills(project)
+	if len(found) != 1 || found[0].Name != "example" || found[0].Project != project {
+		t.Fatalf("project skills = %+v", found)
+	}
+}

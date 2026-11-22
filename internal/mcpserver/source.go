@@ -75,7 +75,7 @@ func (r *Reader) Get(ctx context.Context, refresh bool) (State, error) {
 	if err := ctx.Err(); err != nil {
 		return State{}, err
 	}
-	st.Projects, err = readProjects(r.SettingsDir)
+	st.Projects, err = readProjects(r.SettingsDir, sysenv.GUI())
 	if err != nil {
 		return State{}, err
 	}
@@ -100,7 +100,7 @@ func DefaultReader(appName string) (*Reader, error) {
 	return &Reader{CacheDir: filepath.Join(cache, appName), SettingsDir: filepath.Join(config, appName)}, nil
 }
 
-func readProjects(dir string) ([]projects.Project, error) {
+func readProjects(dir string, env sysenv.Env) ([]projects.Project, error) {
 	data, err := os.ReadFile(filepath.Join(dir, "settings.json"))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
@@ -122,7 +122,7 @@ func readProjects(dir string) ([]projects.Project, error) {
 	var out []projects.Project
 	for _, p := range cfg.Projects {
 		if filepath.IsAbs(p.Path) {
-			out = append(out, projects.Read(p.Path))
+			out = append(out, projects.ReadWithEnv(p.Path, env))
 		}
 	}
 	return out, nil

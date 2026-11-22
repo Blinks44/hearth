@@ -435,17 +435,36 @@ func operationDiffCard(c *ui.Context, path string, diff []ops.DiffLine) {
 			ui.Text(c, "$").FontSize(12).TextColor(pal.TextFaint)
 			ui.Text(c, path).FontSize(12)
 		})
-		for _, d := range diff {
-			mark, bg, fg := "-", pal.DangerSoft, pal.DangerText
-			if d.Added {
-				mark, bg, fg = "+", pal.SuccessSoft, pal.SuccessText
-			}
-			ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
-				ui.Text(c, strconv.Itoa(d.Line)).FontSize(11.5).TextColor(pal.TextFaint).Width(24).Shrink(0)
-				clipped(c, mark+" "+d.Text).FontSize(12).TextColor(fg).Grow(1).MinWidth(0).Tooltip(d.Text)
+		diffRows(c, diff)
+	})
+}
+
+// compareDiffCard renders a read-only line diff card for comparing two existing files.
+func compareDiffCard(c *ui.Context, header string, diff []ops.DiffLine) {
+	pal := Colors(c.Theme())
+	ui.Column(c).Gap(2).Padding(6).Radius(9).Background(pal.Subtle).
+		BorderWidth(1).BorderColor(pal.Line).Font(FontMono).Children(func() {
+		if header != "" {
+			ui.Row(c).Gap(6).Padding(4, 10, 4, 10).Children(func() {
+				ui.Text(c, header).FontSize(11.5).TextColor(pal.TextFaint)
 			})
 		}
+		diffRows(c, diff)
 	})
+}
+
+func diffRows(c *ui.Context, diff []ops.DiffLine) {
+	pal := Colors(c.Theme())
+	for _, d := range diff {
+		mark, bg, fg := "-", pal.DangerSoft, pal.DangerText
+		if d.Added {
+			mark, bg, fg = "+", pal.SuccessSoft, pal.SuccessText
+		}
+		ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
+			ui.Text(c, strconv.Itoa(d.Line)).FontSize(11.5).TextColor(pal.TextFaint).Width(24).Shrink(0)
+			clipped(c, mark+" "+d.Text).FontSize(12).TextColor(fg).Grow(1).MinWidth(0).Tooltip(d.Text)
+		})
+	}
 }
 
 // operationSteps are the commands, numbered, each with its status once

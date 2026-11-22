@@ -105,12 +105,13 @@ func main() {
 			Content:  ui.View(a.View),
 		})
 		catalogCtx, stopCatalog := context.WithCancel(context.Background())
-		a.LoadCatalog = func(repo skillcatalog.Repository, done func([]skillcatalog.Skill, map[string]string, error)) func() {
+		skillCache := &skillcatalog.Cache{}
+		a.LoadCatalog = func(repo skillcatalog.Repository, force bool, done func([]skillcatalog.Skill, map[string]string, error)) func() {
 			ctx, cancel := context.WithTimeout(catalogCtx, 2*time.Minute)
 			env := scanner.Terminal()
 			go func() {
 				defer cancel()
-				skills, err := skillcatalog.Fetch(ctx, nil, repo)
+				skills, err := skillCache.Fetch(ctx, nil, repo, force)
 				dirs := ai.SkillDirectories(env)
 				win.Update(func() { done(skills, dirs, err) })
 			}()
@@ -151,6 +152,12 @@ func main() {
 			go func() {
 				entries, text, err := ai.SkillFolder(dir)
 				win.Update(func() { done(entries, text, err) })
+			}()
+		}
+		a.DiffSkills = func(dirA, dirB string, done func([]ai.SkillFileDiff, error)) {
+			go func() {
+				diffs, err := ai.SkillDiff(dirA, dirB)
+				win.Update(func() { done(diffs, err) })
 			}()
 		}
 		a.CheckMCP = func(s inventory.MCPServer, done func(ai.MCPCheck, error)) {
@@ -570,7 +577,9 @@ func main() {
 				})
 			},
 			Err: func(err error) { log.Print(err) },
+			Env: scanner.Terminal,
 		}
+		list.env = scanner.Terminal
 		list.watch.StartupFiles(append(detect.StartupFiles(sysenv.GUI(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
 		list.read()
 		cache, err := mygo.App.Path(mygo.PathCache)
@@ -647,6 +656,9 @@ func main() {
 				countSizes(&s)
 				list.watch.StartupFiles(append(detect.StartupFiles(scanner.Terminal(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
 				list.watch.Docker(&s, scanner.Terminal())
+				if len(list.dirs()) > 0 {
+					list.read()
+				}
 			})
 			if cache != "" {
 				go func() {
@@ -658,9 +670,14 @@ func main() {
 		}
 		// The version lists, kept a day, come again with every scan.
 		lists := &versions.Cache{Dir: filepath.Join(cache, "versions")}
+		skillCache.Dir = filepath.Join(cache, "skillcatalog")
+		usageCache := filepath.Join(cache, "usage-cache.json")
 		if cache == "" {
 			lists.Dir = filepath.Join(os.TempDir(), "hearth-versions")
+			skillCache.Dir = filepath.Join(os.TempDir(), "hearth-skillcatalog")
+			usageCache = filepath.Join(os.TempDir(), "hearth-usage-cache.json")
 		}
+		scanner.UsageCache = usageCache
 		a.RereadPackages = func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error) {
 			env := scanner.Terminal()
 			if err := pkgmgr.Forget(lists, env, m); err != nil {
@@ -810,13 +827,14 @@ func main() {
 				cancelVersions()
 			}
 			go func() {
-				err := lists.Clear()
+				err := errors.Join(lists.Clear(), skillCache.Clear(), ai.ClearUsageCache(usageCache))
 				win.Update(func() {
 					a.CacheBusy = false
 					if err != nil {
 						a.SettingsError = locales.SettingsCacheError(err.Error())
 						return
 					}
+					a.ClearSkillCatalogCache()
 					a.NodeVersions = nil
 					a.JSVersions = nil
 					a.BunLatest = nil

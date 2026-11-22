@@ -32,16 +32,32 @@ type cached struct {
 	t    transcript
 }
 
-// transcripts keeps what each transcript gave, by its path, for the next
-// scan: a long history is gigabytes, and only the latest files change.
+// transcripts keeps what each transcript or SQLite database gave, by its
+// path, for the next scan: a long history is gigabytes, and only the
+// latest files change.
 var transcripts = struct {
 	sync.Mutex
 	files map[string]cached
-}{files: map[string]cached{}}
+	dbs   map[string]cachedDB
+	dirty bool
+}{
+	files: map[string]cached{},
+	dbs:   map[string]cachedDB{},
+}
 
-// Sessions finds the sessions in Claude Code's and Codex's local history,
-// in its folders of term's home or of CLAUDE_CONFIG_DIR and CODEX_HOME.
-// A file it cannot read is left out.
+// UsageSupport reports whether Hearth can read local token history for the
+// agent id. Agents like Cursor and Aider do not write local token counts.
+func UsageSupport(id string) bool {
+	switch id {
+	case "claude", "codex", "gemini", "copilot", "kimi", "grok", "opencode", "devin", "antigravity":
+		return true
+	}
+	return false
+}
+
+// Sessions finds the sessions in local history for every supported AI
+// agent, using term's home and agent-specific environment variables.
+// A file or database it cannot read is left out.
 func Sessions(term sysenv.Env) []inventory.AgentSession {
 	home := homeDir(term)
 	var out []inventory.AgentSession
@@ -65,6 +81,21 @@ func Sessions(term sysenv.Env) []inventory.AgentSession {
 			out = append(out, codexSessions(filepath.Join(d, sub), time.Local)...)
 		}
 	}
+	if d := dir([]string{"$GEMINI_CLI_HOME", "~/.gemini"}, term, home); d != "" {
+		out = append(out, geminiSessions(d, time.Local)...)
+	}
+	if d := dir(agentDirs("copilot"), term, home); d != "" {
+		out = append(out, copilotSessions(d, time.Local)...)
+	}
+	if d := dir(agentDirs("kimi"), term, home); d != "" {
+		out = append(out, kimiSessions(d, time.Local)...)
+	}
+	if d := dir(agentDirs("grok"), term, home); d != "" {
+		out = append(out, grokSessions(d, time.Local)...)
+	}
+	out = append(out, opencodeSessions(term, home, time.Local)...)
+	out = append(out, devinSessions(term, home, time.Local)...)
+	out = append(out, antigravitySessions(home, time.Local)...)
 	return out
 }
 
@@ -177,7 +208,7 @@ func read(path string, info fs.FileInfo, parse func(io.Reader) (transcript, erro
 	transcripts.Lock()
 	c, ok := transcripts.files[path]
 	transcripts.Unlock()
-	if ok && c.size == info.Size() && c.mod.Equal(info.ModTime()) {
+	if ok && c.size == info.Size() && c.mod.UnixNano() == info.ModTime().UnixNano() {
 		return c.t, nil
 	}
 	f, err := os.Open(path)
@@ -191,6 +222,7 @@ func read(path string, info fs.FileInfo, parse func(io.Reader) (transcript, erro
 	}
 	transcripts.Lock()
 	transcripts.files[path] = cached{size: info.Size(), mod: info.ModTime(), t: t}
+	transcripts.dirty = true
 	transcripts.Unlock()
 	return t, nil
 }

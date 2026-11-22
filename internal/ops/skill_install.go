@@ -27,16 +27,21 @@ type SkillInstall struct {
 	Link  string
 }
 
-// SkillInstallPlan reads the destination without creating it.
+// SkillInstallPlan reads the user destination without creating it.
 func SkillInstallPlan(sk skillcatalog.Skill, id string, env sysenv.Env, names func(string) string) (Plan, error) {
+	return SkillInstallPlanFor(sk, id, "", env, names)
+}
+
+// SkillInstallPlanFor reads the user or project destination without creating it.
+func SkillInstallPlanFor(sk skillcatalog.Skill, id, project string, env sysenv.Env, names func(string) string) (Plan, error) {
 	if err := sk.Validate(); err != nil {
 		return Plan{}, fmt.Errorf("prepare skill: %w", err)
 	}
-	dir, _ := ai.SkillsDir(id, env, "")
+	dir, _ := ai.SkillsDir(id, env, project)
 	if dir == "" || !filepath.IsAbs(dir) {
 		return Plan{}, errors.New(locales.SkillNoDir(names(id)))
 	}
-	dest := filepath.Join(ai.SharedSkillsDir(env, ""), sk.Dir)
+	dest := filepath.Join(ai.SharedSkillsDir(env, project), sk.Dir)
 	link := filepath.Join(dir, sk.Dir)
 	if link != dest {
 		if _, err := os.Lstat(link); !errors.Is(err, os.ErrNotExist) {
@@ -61,7 +66,7 @@ func SkillInstallPlan(sk skillcatalog.Skill, id string, env sysenv.Env, names fu
 		p.Notes = append(p.Notes, Note{Title: locales.SkillStorageLinks(), Text: link + " → " + dest})
 	}
 	// Common storage is visible to every agent that reads it.
-	_, readers := ai.SkillsDir("codex", env, "")
+	_, readers := ai.SkillsDir("codex", env, project)
 	if len(readers) > 1 {
 		var titles []string
 		for _, r := range readers {

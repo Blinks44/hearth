@@ -57,3 +57,40 @@ func TestInstructionReadFailures(t *testing.T) {
 		t.Fatalf("broken link: %+v", in)
 	}
 }
+
+func TestReadExtraInstructions(t *testing.T) {
+	dir := t.TempDir()
+	for rel, body := range map[string]string{
+		"GEMINI.md":                       "Gemini rules",
+		".github/copilot-instructions.md": "Copilot rules",
+		".cursor/rules/go.mdc":            "Go cursor rules",
+		".cursor/rules/style.md":          "Style cursor rules",
+		".cursor/rules/.hidden.mdc":       "Ignored",
+		".cursor/rules/notes.txt":         "Ignored",
+	} {
+		p := filepath.Join(dir, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	p := Read(dir)
+	if !p.Instructions.HasAny() {
+		t.Fatal("HasAny() = false, want true")
+	}
+	if p.Instructions.State() != "missing" {
+		t.Fatalf("State() = %q, want missing when AGENTS.md/CLAUDE.md absent", p.Instructions.State())
+	}
+	extra := p.Instructions.ExtraFiles()
+	if len(extra) != 4 {
+		t.Fatalf("ExtraFiles() len = %d, want 4: %+v", len(extra), extra)
+	}
+	wantPaths := []string{"GEMINI.md", ".github/copilot-instructions.md", ".cursor/rules/go.mdc", ".cursor/rules/style.md"}
+	for i, want := range wantPaths {
+		if extra[i].Path != want {
+			t.Errorf("extra[%d].Path = %q, want %q", i, extra[i].Path, want)
+		}
+	}
+}

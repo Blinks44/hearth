@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"go.yaml.in/yaml/v3"
 
@@ -375,4 +377,153 @@ func SkillDirectories(env sysenv.Env) map[string]string {
 		}
 	}
 	return out
+}
+
+// ProjectSkillDirectories returns the project skills directories for agents
+// that support project-scoped skills.
+func ProjectSkillDirectories(project string) map[string]string {
+	if project == "" {
+		return nil
+	}
+	out := map[string]string{}
+	for _, a := range agents {
+		if dir, _ := SkillsDir(a.id, nil, project); dir != "" {
+			out[a.id] = dir
+		}
+	}
+	return out
+}
+
+// SkillRoots returns all known skills directories for the user or project,
+// including canonical shared storage.
+func SkillRoots(env sysenv.Env, project string) []string {
+	var out []string
+	add := func(p string) {
+		if p == "" {
+			return
+		}
+		if real, err := sysenv.RealPath(p); err == nil {
+			p = real
+		}
+		p = filepath.Clean(p)
+		if !slices.Contains(out, p) {
+			out = append(out, p)
+		}
+	}
+	add(SharedSkillsDir(env, project))
+	if project != "" {
+		for _, a := range agents {
+			for _, s := range a.projectSkills {
+				add(filepath.Join(project, filepath.FromSlash(s)))
+			}
+		}
+		return out
+	}
+	home := homeDir(env)
+	for _, a := range agents {
+		d := dir(a.dir, env, home)
+		for _, s := range a.skills {
+			add(resolve(s, d, home))
+		}
+	}
+	return out
+}
+
+// SkillFileDiff describes a file that differs between two copies of a skill.
+type SkillFileDiff struct {
+	Path     string
+	Status   string // "modified", "added", "removed"
+	Before   string
+	After    string
+	Binary   bool
+	TooLarge bool
+}
+
+const (
+	skillDiffMaxBytes = 32 * 1024
+	skillDiffMaxLines = 500
+)
+
+// SkillDiff compares regular non-hidden files between dirA and dirB, matching
+// the set of files hashed by sum.
+func SkillDiff(dirA, dirB string) ([]SkillFileDiff, error) {
+	filesA, err := readSkillTree(dirA)
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", dirA, err)
+	}
+	filesB, err := readSkillTree(dirB)
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", dirB, err)
+	}
+	var paths []string
+	for p := range filesA {
+		paths = append(paths, p)
+	}
+	for p := range filesB {
+		if _, ok := filesA[p]; !ok {
+			paths = append(paths, p)
+		}
+	}
+	slices.Sort(paths)
+	var out []SkillFileDiff
+	for _, p := range paths {
+		a, okA := filesA[p]
+		b, okB := filesB[p]
+		if okA && okB && bytes.Equal(a, b) {
+			continue
+		}
+		d := SkillFileDiff{Path: p}
+		switch {
+		case okA && !okB:
+			d.Status = "removed"
+		case !okA && okB:
+			d.Status = "added"
+		default:
+			d.Status = "modified"
+		}
+		if isBinarySkillFile(a) || isBinarySkillFile(b) {
+			d.Binary = true
+		} else if len(a) > skillDiffMaxBytes || len(b) > skillDiffMaxBytes ||
+			bytes.Count(a, []byte{'\n'}) > skillDiffMaxLines || bytes.Count(b, []byte{'\n'}) > skillDiffMaxLines {
+			d.TooLarge = true
+		} else {
+			d.Before = string(a)
+			d.After = string(b)
+		}
+		out = append(out, d)
+	}
+	return out, nil
+}
+
+func readSkillTree(dir string) (map[string][]byte, error) {
+	files := map[string][]byte{}
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if path != dir && strings.HasPrefix(d.Name(), ".") {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !d.Type().IsRegular() {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		files[filepath.ToSlash(rel)] = data
+		return nil
+	})
+	return files, err
+}
+
+func isBinarySkillFile(data []byte) bool {
+	return len(data) > 0 && (!utf8.Valid(data) || bytes.IndexByte(data, 0) >= 0)
 }

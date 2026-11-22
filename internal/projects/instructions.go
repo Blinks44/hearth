@@ -10,22 +10,89 @@ import (
 	"unicode/utf8"
 )
 
-// Instructions describes the two instruction files at a project's root.
-// It compares files, not the effective context of an agent session.
+// Instructions describes the instruction files found in a project.
+// State compares root AGENTS.md and CLAUDE.md, not the effective context of an agent session.
 type Instructions struct {
-	Agents, Claude InstructionFile
+	Agents, Claude  InstructionFile
+	Gemini, Copilot InstructionFile
+	CursorRules     []InstructionFile
 }
 
 // InstructionFile is a bounded, UTF-8 instruction file read during discovery.
 type InstructionFile struct {
+	Path         string
 	Text         string
 	Exists, Link bool
 	Err          string
 }
 
-// ReadInstructions reads only root instruction files; failures stay on their file.
+const maxCursorRuleFiles = 50
+
+// ReadInstructions reads root and agent-specific project instruction files; failures stay on their file.
 func ReadInstructions(dir string) Instructions {
-	return Instructions{readInstruction(filepath.Join(dir, "AGENTS.md")), readInstruction(filepath.Join(dir, "CLAUDE.md"))}
+	return Instructions{
+		Agents:      readInstruction(filepath.Join(dir, "AGENTS.md")),
+		Claude:      readInstruction(filepath.Join(dir, "CLAUDE.md")),
+		Gemini:      readInstruction(filepath.Join(dir, "GEMINI.md")),
+		Copilot:     readInstruction(filepath.Join(dir, ".github", "copilot-instructions.md")),
+		CursorRules: readCursorRules(dir),
+	}
+}
+
+func readCursorRules(dir string) []InstructionFile {
+	rulesDir := filepath.Join(dir, ".cursor", "rules")
+	entries, err := os.ReadDir(rulesDir)
+	if err != nil {
+		return nil
+	}
+	var out []InstructionFile
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		ext := strings.ToLower(filepath.Ext(name))
+		if ext != ".mdc" && ext != ".md" {
+			continue
+		}
+		f := readInstruction(filepath.Join(rulesDir, name))
+		if !f.Exists {
+			continue
+		}
+		f.Path = ".cursor/rules/" + name
+		out = append(out, f)
+		if len(out) >= maxCursorRuleFiles {
+			break
+		}
+	}
+	return out
+}
+
+// ExtraFiles returns non-AGENTS/CLAUDE project instruction files that exist,
+// each with its project-relative Path populated.
+func (in Instructions) ExtraFiles() []InstructionFile {
+	var out []InstructionFile
+	if in.Gemini.Exists {
+		f := in.Gemini
+		f.Path = "GEMINI.md"
+		out = append(out, f)
+	}
+	if in.Copilot.Exists {
+		f := in.Copilot
+		f.Path = ".github/copilot-instructions.md"
+		out = append(out, f)
+	}
+	for _, f := range in.CursorRules {
+		if f.Exists {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// HasAny reports whether the project has any recognized instruction file.
+func (in Instructions) HasAny() bool {
+	return in.Agents.Exists || in.Claude.Exists || in.Gemini.Exists || in.Copilot.Exists || len(in.CursorRules) > 0
 }
 
 func readInstruction(path string) InstructionFile {

@@ -71,7 +71,7 @@ func TestInvalidSettingsStayUnchanged(t *testing.T) {
 	if err := os.WriteFile(file, []byte("broken file"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := readProjects(dir); err == nil {
+	if _, err := readProjects(dir, nil); err == nil {
 		t.Fatal("invalid settings accepted")
 	}
 	data, err := os.ReadFile(file)
@@ -123,7 +123,7 @@ func TestReadRegisteredProjects(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(base, "settings.json"), cfg, 0644); err != nil {
 		t.Fatal(err)
 	}
-	ps, err := readProjects(base)
+	ps, err := readProjects(base, nil)
 	if err != nil || len(ps) != 1 || len(ps[0].Requirements) != 1 || ps[0].Requirements[0].Want != "20" {
 		t.Fatalf("projects %+v err %v", ps, err)
 	}

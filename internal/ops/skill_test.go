@@ -210,3 +210,78 @@ func TestSkillCommonDestinationConflict(t *testing.T) {
 		t.Fatal("changed original before confirmation")
 	}
 }
+
+func TestSkillRemoveAndBrokenPlan(t *testing.T) {
+	home, env := skillHome(t)
+	// Link pdf to codex so it lives in ~/.agents/skills/pdf with a symlink in ~/.claude/skills/pdf.
+	pdf := skillNamed(t, env, "pdf")[0]
+	linkPlan, err := SkillLinkPlan(pdf, "codex", env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, linkPlan, env)
+	pdf = skillNamed(t, env, "pdf")[0]
+
+	// Synced skills are rejected.
+	synced := pdf
+	synced.Synced = true
+	if _, err := SkillRemovePlan(synced, env, title); err == nil {
+		t.Fatal("synced skill accepted for removal")
+	}
+
+	// Managed skill: removes symlinks and folder.
+	rmPlan, err := SkillRemovePlan(pdf, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, rmPlan, env)
+	if len(skillNamed(t, env, "pdf")) != 0 {
+		t.Fatal("removed skill still discovered")
+	}
+	if _, err := os.Lstat(pdf.Dir); !os.IsNotExist(err) {
+		t.Fatalf("skill dir still exists: %v", err)
+	}
+
+	// External folder linked into ~/.claude/skills: only unlinks symlink, keeps external folder.
+	extDir := filepath.Join(home, "external", "custom")
+	if err := os.MkdirAll(extDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(extDir, "SKILL.md"), []byte("---\nname: custom\n---\nhi\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	extLink := filepath.Join(home, ".claude", "skills", "custom")
+	if err := os.Symlink(extDir, extLink); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	custom := skillNamed(t, env, "custom")[0]
+	extPlan, err := SkillRemovePlan(custom, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, extPlan, env)
+	if _, err := os.Lstat(extLink); !os.IsNotExist(err) {
+		t.Fatalf("external link still exists: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(extDir, "SKILL.md")); err != nil {
+		t.Fatalf("external folder was deleted: %v", err)
+	}
+
+	// Broken symlink removal.
+	brokenLink := filepath.Join(home, ".claude", "skills", "dangling")
+	if err := os.Symlink(filepath.Join(home, "nowhere"), brokenLink); err != nil {
+		t.Fatal(err)
+	}
+	broken := skillNamed(t, env, "dangling")[0]
+	if !broken.Broken {
+		t.Fatalf("expected broken skill: %+v", broken)
+	}
+	brokenPlan, err := SkillRemoveBrokenPlan(broken, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, brokenPlan, env)
+	if _, err := os.Lstat(brokenLink); !os.IsNotExist(err) {
+		t.Fatalf("broken link still exists: %v", err)
+	}
+}

@@ -76,3 +76,60 @@ func TestOllamaRemovePlan(t *testing.T) {
 		t.Errorf("left: %v", err)
 	}
 }
+
+func TestOllamaStopPlan(t *testing.T) {
+	m := inventory.Model{Name: "qwen2.5-coder:32b", Loaded: true}
+	unloaded := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
+			Ollama: &inventory.ModelApp{Models: []inventory.Model{{Name: m.Name, Loaded: false}}},
+		}}, nil
+	}
+	stillLoaded := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
+			Ollama: &inventory.ModelApp{Models: []inventory.Model{{Name: m.Name, Loaded: true}}},
+		}}, nil
+	}
+	p := OllamaStopPlan(m, unloaded)
+	if !slices.Equal(p.Steps[0].Argv, []string{"ollama", "stop", m.Name}) {
+		t.Fatalf("plan %+v", p)
+	}
+	if got, err := p.Verify(context.Background()); err != nil || got != "qwen2.5-coder:32b is unloaded from memory" {
+		t.Errorf("unloaded verify: %q, %v", got, err)
+	}
+	p = OllamaStopPlan(m, stillLoaded)
+	if _, err := p.Verify(context.Background()); err == nil || err.Error() != "qwen2.5-coder:32b is still loaded in memory" {
+		t.Errorf("still loaded verify: %v", err)
+	}
+}
+
+func TestLMStudioRemovePlan(t *testing.T) {
+	if _, err := LMStudioRemovePlan(inventory.Model{Name: "bad", Path: "relative/path"}, nil, nil); err == nil {
+		t.Fatal("accepted relative path")
+	}
+	dir := t.TempDir()
+	m := inventory.Model{Name: "Mistral-Nemo-12B-GGUF", Path: dir}
+	gone := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
+			LMStudio: &inventory.ModelApp{},
+		}}, nil
+	}
+	still := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
+			LMStudio: &inventory.ModelApp{Models: []inventory.Model{m}},
+		}}, nil
+	}
+	p, err := LMStudioRemovePlan(m, []string{"local · Claude Code"}, gone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Steps) != 1 || p.Steps[0].Remove != dir || len(p.Notes) != 1 {
+		t.Fatalf("plan %+v", p)
+	}
+	if got, err := p.Verify(context.Background()); err != nil || got != "Mistral-Nemo-12B-GGUF is removed" {
+		t.Errorf("gone verify: %q, %v", got, err)
+	}
+	p, _ = LMStudioRemovePlan(m, nil, still)
+	if _, err := p.Verify(context.Background()); err == nil || err.Error() != "LM Studio still has Mistral-Nemo-12B-GGUF" {
+		t.Errorf("still verify: %v", err)
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -118,4 +119,68 @@ func TestInstructionsEmptyOffersProject(t *testing.T) {
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "Add project", "demo", "Add 1 project")
 	screenshot(t, tt, "instructions-add-project")
+}
+
+func TestInstructionsGlobalDiffCreateAndExtras(t *testing.T) {
+	dir := t.TempDir()
+	a := NewApp()
+	a.Home = home
+	snap := aiSnapshot()
+	snap.Agents[1].Instructions = &inventory.GlobalInstructions{
+		State:  "shared",
+		Shared: inventory.InstructionFile{Path: filepath.Join(home, ".agents", "AGENTS.md"), Exists: true},
+		Native: inventory.InstructionFile{Path: filepath.Join(home, ".codex", "AGENTS.md")},
+	}
+	a.Snapshot = snap
+	a.Projects = []projects.Project{
+		{
+			Dir: filepath.Join(home, "dev", "diff-app"),
+			Instructions: projects.Instructions{
+				Agents:  projects.InstructionFile{Text: "Run make check\n", Exists: true},
+				Claude:  projects.InstructionFile{Text: "Run npm test\n", Exists: true},
+				Gemini:  projects.InstructionFile{Text: "Use Gemini style\n", Exists: true},
+				Copilot: projects.InstructionFile{Text: "Copilot tips\n", Exists: true},
+				CursorRules: []projects.InstructionFile{
+					{Path: ".cursor/rules/go.mdc", Text: "Use gofmt\n", Exists: true},
+				},
+			},
+		},
+		{
+			Dir: dir,
+			Instructions: projects.Instructions{
+				Gemini: projects.InstructionFile{Text: "Only Gemini\n", Exists: true},
+			},
+		},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(nil, nil))
+	}
+	tt := openAI(t, a, instructionsPage)
+	hasTexts(t, tt, "GLOBAL", "Codex", "PROJECTS", "diff-app", "Differences", "AGENTS.md ↔ CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md", ".cursor/rules/go.mdc")
+	// Switch to global Codex instructions
+	if err := tt.Click("Codex"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Global instructions", "Connect…")
+	// Switch to project without AGENTS.md (only GEMINI.md) and open Create AGENTS.md dialog
+	if err := tt.Click(filepath.Base(dir)); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Other instruction files", "GEMINI.md", "Create AGENTS.md…")
+	if err := tt.Click("Create AGENTS.md…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.projectInstructionsCreate == nil || !a.projectInstructionsCreate.open {
+		t.Fatal("create dialog did not open")
+	}
+	if err := tt.Click("Review plan"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Action != "Create AGENTS.md" {
+		t.Fatalf("unexpected create plan: %+v", a.op)
+	}
 }

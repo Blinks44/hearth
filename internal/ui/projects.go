@@ -1100,6 +1100,8 @@ func aiFileCaption(f string) string {
 		return locales.AiInstructions("Codex, Copilot, Gemini CLI, Antigravity CLI")
 	case "GEMINI.md":
 		return locales.AiInstructions("Gemini CLI, Antigravity CLI")
+	case ".github/copilot-instructions.md":
+		return locales.AiInstructions("GitHub Copilot")
 	case ".agents":
 		return locales.AiSkills()
 	case ".agent", "_agents", "_agent":

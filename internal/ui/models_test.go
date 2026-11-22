@@ -130,3 +130,55 @@ func TestModelsNoOllamaCommand(t *testing.T) {
 		t.Error("offers operations without ollama")
 	}
 }
+
+func TestModelsUnloadAndLMStudioRemove(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	tt := ui.NewTester(a.View, 1280, 820)
+	a.Snapshot = &inventory.Snapshot{Taken: tt.Now(), Tools: []inventory.ToolState{
+		{Tool: "models", Models: &inventory.ModelsState{
+			Ollama: &inventory.ModelApp{Path: "/usr/local/bin/ollama", Port: "11434", Models: []inventory.Model{
+				{Name: "qwen2.5-coder:32b", Loaded: true, Size: 19_000_000_000},
+			}},
+			LMStudio: &inventory.ModelApp{Port: "4321", Dir: home + "/.lmstudio/models", Models: []inventory.Model{
+				{Name: "Mistral-Nemo-12B-GGUF", Path: home + "/.lmstudio/models/lmstudio-community/Mistral-Nemo-12B-GGUF", Size: 7_500_000_000},
+			}},
+		}},
+	}}
+	a.router.Push(modelsPage)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "LM Studio · localhost:4321")
+	tt.Key(0, ui.KeySlash)
+	tt.Type("qwen2.5")
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Unload from memory…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Unload qwen2.5-coder:32b from memory" {
+		t.Fatalf("unload plan %+v", a.op)
+	}
+	hasTexts(t, tt, "ollama stop qwen2.5-coder:32b")
+	if err := tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	a.modelsFilter = ""
+	if err := tt.Click("LM Studio"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if err := tt.Click("More"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Remove…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Remove Mistral-Nemo-12B-GGUF" {
+		t.Fatalf("lm studio remove plan %+v", a.op)
+	}
+	hasTexts(t, tt, "remove ~/.lmstudio/models/lmstudio-community/Mistral-Nemo-12B-GGUF")
+}

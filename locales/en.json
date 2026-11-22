@@ -10016,7 +10016,7 @@
   "@usageSubtitle": {
     "description": "Under the usage page's title."
   },
-  "usageLead": "Claude Code and Codex, from their local history",
+  "usageLead": "AI agents, from their local history",
   "@usageLead": {
     "description": "Usage page: what the numbers come from."
   },
@@ -10206,11 +10206,11 @@
   "@usageOldCaption": {
     "description": "Usage: where to remove old sessions."
   },
-  "usageNone": "No Claude Code or Codex sessions in this period.",
+  "usageNone": "No agent sessions in this period.",
   "@usageNone": {
     "description": "Usage: no sessions in the period."
   },
-  "usageEmpty": "Hearth found no history of Claude Code or Codex on this computer.",
+  "usageEmpty": "Hearth found no local agent session history on this computer.",
   "@usageEmpty": {
     "description": "Usage: no history at all."
   },
@@ -10257,6 +10257,44 @@
   "usageOpenCleanup": "Open in Cleanup",
   "@usageOpenCleanup": {
     "description": "Usage: the button opening the old sessions in Cleanup."
+  },
+  "usageMetricCost": "Cost",
+  "@usageMetricCost": {
+    "description": "Usage: chart metric tab for approximate API cost."
+  },
+  "usageMetricTokens": "Tokens",
+  "@usageMetricTokens": {
+    "description": "Usage: chart metric tab for token count."
+  },
+  "usageAllAgents": "All agents",
+  "@usageAllAgents": {
+    "description": "Usage: option in the agent filter showing all agents."
+  },
+  "usageAllProjects": "All projects",
+  "@usageAllProjects": {
+    "description": "Usage: option in the project filter showing all projects."
+  },
+  "usageFilterAgent": "Agent",
+  "@usageFilterAgent": {
+    "description": "Usage: accessibility label for the agent filter selector."
+  },
+  "usageFilterProject": "Project",
+  "@usageFilterProject": {
+    "description": "Usage: accessibility label for the project filter selector."
+  },
+  "usageUnsupportedTitle": "No local token history",
+  "@usageUnsupportedTitle": {
+    "description": "Usage: row title for installed agents that do not save local token logs."
+  },
+  "usageUnsupportedText": "{agents} do not store token counts locally, so Hearth cannot include them here.",
+  "@usageUnsupportedText": {
+    "description": "Usage: explanation for installed agents that do not save local token logs.",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "Cursor, Aider"
+      }
+    }
   },
   "mcpCheckSection": "Check",
   "@mcpCheckSection": {
@@ -15748,5 +15786,181 @@
         "type": "String"
       }
     }
-  }
+  },
+  "ollamaUnloadTitle": "Unload {name} from memory",
+  "@ollamaUnloadTitle": {
+    "description": "Plan title: unload a running model from Ollama's memory.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ollamaUnloadWhy": "Stops the running model in Ollama and frees its memory; the downloaded files stay on disk.",
+  "@ollamaUnloadWhy": {
+    "description": "Plan explanation for unloading an Ollama model."
+  },
+  "ollamaUnloadAction": "Unload",
+  "@ollamaUnloadAction": {
+    "description": "Confirm button for unloading an Ollama model from memory."
+  },
+  "ollamaUnloadDone": "{name} is unloaded from memory",
+  "@ollamaUnloadDone": {
+    "description": "Verify result: the Ollama model is no longer loaded in memory.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ollamaUnloadStill": "{name} is still loaded in memory",
+  "@ollamaUnloadStill": {
+    "description": "Verify error: the Ollama model is still loaded in memory.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "modelsUnloadEllipsis": "Unload from memory…",
+  "@modelsUnloadEllipsis": {
+    "description": "Menu item on a loaded Ollama model row."
+  },
+  "lmStudioRemoveWhy": "Deletes the model's folder from LM Studio's directory; the model is no longer available locally until downloaded again.",
+  "@lmStudioRemoveWhy": {
+    "description": "Plan explanation for removing an LM Studio model folder."
+  },
+  "lmStudioRemoveBadPath": "LM Studio model path is unavailable.",
+  "@lmStudioRemoveBadPath": {
+    "description": "Error when an LM Studio model has no valid absolute folder path."
+  },
+  "lmStudioRemoveLeft": "LM Studio still has {name}",
+  "@lmStudioRemoveLeft": {
+    "description": "Verify error: the LM Studio model folder is still present after removal.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "instructionsGlobal": "Global",
+  "instructionsProjects": "Projects",
+  "instructionsOther": "Other instruction files",
+  "instructionsDiffTitle": "Differences",
+  "instructionsCreate": "Create AGENTS.md…",
+  "instructionsCreateTitle": "Create AGENTS.md in {name}",
+  "instructionsCreateWhy": "Creates a shared AGENTS.md file in the project root so coding agents follow the same rules.",
+  "instructionsCreateAction": "Create AGENTS.md",
+  "instructionsCreateDone": "AGENTS.md created",
+  "instructionsCreateExists": "AGENTS.md already exists in this project.",
+  "instructionsCreatePrompt": "Write project instructions for {name}.",
+  "mcpAddButton": "Add server…",
+  "mcpEditEllipsis": "Edit…",
+  "mcpAddTitle": "Add {name} to {agent}",
+  "mcpAddWhy": "Adds the MCP server to {agent}'s configuration file.",
+  "mcpEditTitle": "Update {name} in {agent}",
+  "mcpEditWhy": "Updates the MCP server declaration in {agent}'s configuration file.",
+  "mcpCheckUpdated": "{name} updated for {agent}",
+  "mcpFormAddTitle": "Add MCP server",
+  "mcpFormEditTitle": "Edit {name}",
+  "mcpFormName": "Server name",
+  "mcpFormAgent": "Agent",
+  "mcpFormScope": "Scope",
+  "mcpFormTransport": "Transport",
+  "mcpFormCommand": "Command",
+  "mcpFormArgs": "Arguments",
+  "mcpFormEnv": "Environment variables",
+  "mcpFormEnvHint": "One KEY=VALUE per line. Prefer $'{VAR}' references for secrets.",
+  "mcpFormURL": "Server URL",
+  "mcpFormHeaders": "HTTP headers",
+  "mcpFormHeadersHint": "One Name: Value per line. Prefer $'{VAR}' references for tokens.",
+  "mcpFormBadName": "Enter a valid server name without slashes or line breaks.",
+  "mcpFormBadCommand": "Enter the command to launch the server.",
+  "mcpFormBadURL": "Enter an http:// or https:// server URL.",
+  "mcpFormBadTransport": "Unsupported transport type.",
+  "mcpFormBadKV": "Invalid line \"{line}\": expected KEY=VALUE.",
+  "skillRemoveTitle": "Remove skill {name}",
+  "@skillRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillRemoveWhy": "Removes the skill from its folder and unlinks all agents that read it.",
+  "skillRemoveExternalWhy": "Unlinks the skill from agents. The original folder is outside Hearth's skills directories and stays on disk.",
+  "skillRemoveExternalNote": "External folder kept",
+  "skillRemoveExternalText": "Only links in agent skills directories are removed. The folder {path} is not deleted.",
+  "@skillRemoveExternalText": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "skillRemoveButton": "Remove…",
+  "skillRemoveBrokenTitle": "Remove broken link {name}",
+  "@skillRemoveBrokenTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillRemoveBrokenWhy": "Removes the broken symlink whose target folder no longer exists.",
+  "skillRemoveBrokenButton": "Remove broken link…",
+  "skillRemoveSynced": "Synced skills are managed by Claude and cannot be removed here.",
+  "skillCheckRemoved": "Skill {name} removed",
+  "@skillCheckRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCheckStillExists": "Skill {name} still exists",
+  "@skillCheckStillExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCheckBrokenRemoved": "Broken link {name} removed",
+  "@skillCheckBrokenRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCheckBrokenStillExists": "Broken link {name} still exists",
+  "@skillCheckBrokenStillExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tagDiffers": "differs",
+  "skillDiffersBanner": "Copies of this skill have different contents.",
+  "skillCompareCopies": "Compare copies…",
+  "skillDiffTitle": "Differences in {name}",
+  "@skillDiffTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillDiffIdentical": "These two copies have identical files.",
+  "skillDiffAdded": "only in second copy",
+  "skillDiffRemoved": "only in first copy",
+  "skillDiffModified": "modified",
+  "skillDiffBinary": "Binary file differs.",
+  "skillDiffTooLarge": "File is too large for an inline diff.",
+  "skillCatalogRepoPlaceholder": "owner/repo or https://github.com/…",
+  "skillCatalogLoad": "Load",
+  "skillCatalogScope": "Scope",
+  "skillCatalogScopeUser": "User (all projects)"
 }

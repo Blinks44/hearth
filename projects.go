@@ -11,6 +11,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/store"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	hearthui "github.com/Blinks44/hearth/internal/ui"
 	"github.com/Blinks44/hearth/internal/watch"
 	"github.com/Blinks44/hearth/locales"
@@ -24,8 +25,9 @@ type projectList struct {
 	app      *hearthui.App
 	dir      string // where the settings are kept; "" keeps them nowhere
 	settings store.Settings
-	reads    int            // the latest read, whose result alone is shown
-	watch    *watch.Service // follows the project folders; nil follows none
+	reads    int               // the latest read, whose result alone is shown
+	watch    *watch.Service    // follows the project folders; nil follows none
+	env      func() sysenv.Env // terminal environment for project checks
 
 	saving sync.Mutex   // one save at a time
 	saves  atomic.Int64 // the latest save, which an older one does not undo
@@ -40,10 +42,14 @@ func (l *projectList) read() {
 	l.reads++
 	gen := l.reads
 	dirs := l.dirs()
+	var env sysenv.Env
+	if l.env != nil {
+		env = slices.Clone(l.env())
+	}
 	go func() {
 		ps := make([]projects.Project, len(dirs))
 		for i, d := range dirs {
-			ps[i] = projects.Read(d)
+			ps[i] = projects.ReadWithEnv(d, env)
 		}
 		l.win.Update(func() {
 			if gen == l.reads {

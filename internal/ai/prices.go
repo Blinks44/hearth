@@ -15,9 +15,10 @@ type price struct{ input, output, cacheRead float64 }
 // PricesAsOf is the month the prices are of.
 const PricesAsOf = "2026-11"
 
-// prices are the first-party API prices of the models, by ID: Anthropic's
-// pricing and OpenAI's as of PricesAsOf.
+// prices are the first-party API prices of the models, by normalized ID:
+// Anthropic, OpenAI, Google Gemini, xAI Grok, and Moonshot Kimi as of PricesAsOf.
 var prices = map[string]price{
+	// Anthropic Claude
 	"claude-fable-5-1":  {10, 50, 0.25},
 	"claude-mythos-5-1": {10, 50, 0.25},
 	"claude-fable-5":    {10, 50, 1},
@@ -37,18 +38,123 @@ var prices = map[string]price{
 	"claude-sonnet-4":   {3, 15, 0.3},
 	"claude-haiku-5-5":  {0.1, 0.5, 0.01},
 	"claude-haiku-4-5":  {1, 5, 0.1},
-	"gpt-6.1-sol":       {2, 10, 0.1},
-	"gpt-6.1-terra":     {1, 5, 0.05},
+	"claude-3-7-sonnet": {3, 15, 0.3},
+	"claude-3-5-sonnet": {3, 15, 0.3},
+	"claude-3-5-haiku":  {0.8, 4, 0.08},
+
+	// OpenAI GPT / o-series / Codex
+	"gpt-6.1-sol":        {2, 10, 0.1},
+	"gpt-6.1-terra":      {1, 5, 0.05},
+	"gpt-5.4":            {2.5, 15, 0.25},
+	"gpt-5.4-mini":       {0.75, 4.5, 0.075},
+	"gpt-5.4-nano":       {0.2, 1.25, 0.02},
+	"gpt-5.3-codex":      {1.75, 14, 0.175},
+	"gpt-5.2-codex":      {1.75, 14, 0.175},
+	"gpt-5.2":            {1.75, 14, 0.175},
+	"gpt-5.1-codex":      {1.25, 10, 0.125},
+	"gpt-5.1-codex-max":  {1.25, 10, 0.125},
+	"gpt-5.1-codex-mini": {0.25, 2, 0.025},
+	"gpt-5.1":            {1.25, 10, 0.125},
+	"gpt-5-codex":        {1.25, 10, 0.125},
+	"gpt-5":              {1.25, 10, 0.125},
+	"gpt-5-mini":         {0.25, 2, 0.025},
+	"gpt-5-nano":         {0.05, 0.4, 0.005},
+	"gpt-4.1":            {2, 8, 0.5},
+	"gpt-4.1-mini":       {0.4, 1.6, 0.1},
+	"gpt-4.1-nano":       {0.1, 0.4, 0.025},
+	"gpt-4o":             {2.5, 10, 1.25},
+	"gpt-4o-mini":        {0.15, 0.6, 0.075},
+	"o3":                 {2, 8, 0.5},
+	"o3-mini":            {1.1, 4.4, 0.55},
+	"o4-mini":            {1.1, 4.4, 0.275},
+	"codex-mini":         {1.5, 6, 0.375},
+
+	// Google Gemini
+	"gemini-3.1-pro":        {2, 12, 0.2},
+	"gemini-3-pro":          {2, 12, 0.2},
+	"gemini-3-flash":        {0.5, 3, 0.05},
+	"gemini-2.5-pro":        {1.25, 10, 0.125},
+	"gemini-2.5-flash":      {0.3, 2.5, 0.03},
+	"gemini-2.5-flash-lite": {0.1, 0.4, 0.01},
+	"gemini-2.0-flash":      {0.1, 0.4, 0.025},
+	"gemini-2.0-flash-lite": {0.075, 0.3, 0.01875},
+
+	// xAI Grok
+	"grok-4":                    {3, 15, 0.75},
+	"grok-4-fast":               {0.2, 0.5, 0.05},
+	"grok-4-fast-reasoning":     {0.2, 0.5, 0.05},
+	"grok-4-fast-non-reasoning": {0.2, 0.5, 0.05},
+	"grok-4.1-fast":             {0.2, 0.5, 0.05},
+	"grok-code-fast-1":          {0.2, 1.5, 0.02},
+	"grok-3":                    {3, 15, 0.75},
+	"grok-3-mini":               {0.3, 0.5, 0.075},
+
+	// Moonshot Kimi
+	"kimi-k2.5":              {0.6, 3, 0.1},
+	"kimi-k2-thinking":       {0.6, 2.5, 0.15},
+	"kimi-k2-thinking-turbo": {1.15, 8, 0.15},
+	"kimi-k2-turbo":          {1.15, 8, 0.15},
+	"kimi-k2":                {0.6, 2.5, 0.15},
+	"kimi-for-coding":        {0.6, 3, 0.1},
 }
 
-// dated is the date some model IDs end in, as "claude-haiku-4-5-20251001".
-var dated = regexp.MustCompile(`-\d{8}$`)
+// dated suffixes that model IDs may end in:
+//   - "claude-haiku-4-5-20251001"
+//   - "gpt-5-2025-08-07"
+//   - "gemini-2.5-pro-preview-06-05" / "gemini-3-pro-preview"
+//   - "grok-4-0709"
+var (
+	datedCompact = regexp.MustCompile(`-\d{8}$`)
+	datedISO     = regexp.MustCompile(`-\d{4}-\d{2}-\d{2}$`)
+	datedShort   = regexp.MustCompile(`-\d{4}$`)
+	datedPreview = regexp.MustCompile(`-preview(?:-\d{2}-\d{2})?$`)
+)
+
+// lookupPrice resolves a raw model ID to its API price, normalizing provider
+// prefixes, context-window brackets, variant suffixes, and release dates.
+func lookupPrice(raw string) (price, bool) {
+	model := strings.TrimSpace(strings.ToLower(raw))
+	model, _, _ = strings.Cut(model, "[") // "claude-opus-5-5[1m]"
+	model, _, _ = strings.Cut(model, ":") // "claude-sonnet-4-6:thinking"
+	if i := strings.LastIndex(model, "/"); i >= 0 {
+		model = model[i+1:] // "anthropic/claude-sonnet-4-6", "models/gemini-2.5-pro"
+	}
+	if model == "" {
+		return price{}, false
+	}
+	try := func(id string) (price, bool) {
+		if p, ok := prices[id]; ok {
+			return p, true
+		}
+		if strings.HasPrefix(id, "claude-") && strings.Contains(id, ".") {
+			if p, ok := prices[strings.ReplaceAll(id, ".", "-")]; ok {
+				return p, true
+			}
+		}
+		return price{}, false
+	}
+	if p, ok := try(model); ok {
+		return p, true
+	}
+	stripped := datedCompact.ReplaceAllString(model, "")
+	stripped = datedISO.ReplaceAllString(stripped, "")
+	stripped = datedPreview.ReplaceAllString(stripped, "")
+	stripped = strings.TrimSuffix(stripped, "-latest")
+	if p, ok := try(stripped); ok {
+		return p, true
+	}
+	if s := datedShort.ReplaceAllString(stripped, ""); s != stripped {
+		if p, ok := try(s); ok {
+			return p, true
+		}
+	}
+	return price{}, false
+}
 
 // Cost is what u's tokens cost at the API's prices, in US dollars; ok is
 // false for a model Hearth has no price of.
 func Cost(u inventory.TokenUsage) (usd float64, ok bool) {
-	model, _, _ := strings.Cut(strings.ToLower(u.Model), "[") // "claude-opus-5-5[1m]"
-	p, ok := prices[dated.ReplaceAllString(model, "")]
+	p, ok := lookupPrice(u.Model)
 	if !ok {
 		return 0, false
 	}

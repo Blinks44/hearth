@@ -221,3 +221,53 @@ func TestReadFrontmatter(t *testing.T) {
 		}
 	}
 }
+
+func TestSkillDiff(t *testing.T) {
+	root := t.TempDir()
+	tree(t, root, map[string]string{
+		"a/SKILL.md":    "---\nname: x\n---\nold\n",
+		"a/same.txt":    "same\n",
+		"a/removed.txt": "gone\n",
+		"a/bin.dat":     string([]byte{0, 1, 2}),
+		"a/.hidden":     "ignored",
+		"b/SKILL.md":    "---\nname: x\n---\nnew\n",
+		"b/same.txt":    "same\n",
+		"b/added.txt":   "fresh\n",
+		"b/bin.dat":     string([]byte{0, 1, 3}),
+		"b/.hidden":     "different-but-ignored",
+	}, nil)
+	diffs, err := SkillDiff(filepath.Join(root, "a"), filepath.Join(root, "b"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(diffs) != 4 {
+		t.Fatalf("diffs = %+v, want 4", diffs)
+	}
+	byPath := map[string]SkillFileDiff{}
+	for _, d := range diffs {
+		byPath[d.Path] = d
+	}
+	if d := byPath["SKILL.md"]; d.Status != "modified" || d.Before == d.After {
+		t.Errorf("SKILL.md diff = %+v", d)
+	}
+	if d := byPath["added.txt"]; d.Status != "added" || d.After != "fresh\n" {
+		t.Errorf("added.txt diff = %+v", d)
+	}
+	if d := byPath["removed.txt"]; d.Status != "removed" || d.Before != "gone\n" {
+		t.Errorf("removed.txt diff = %+v", d)
+	}
+	if d := byPath["bin.dat"]; d.Status != "modified" || !d.Binary {
+		t.Errorf("bin.dat diff = %+v", d)
+	}
+}
+
+func TestProjectSkillDirectories(t *testing.T) {
+	proj := t.TempDir()
+	dirs := ProjectSkillDirectories(proj)
+	if dirs["claude"] != filepath.Join(proj, ".claude", "skills") {
+		t.Errorf("claude project dir = %q", dirs["claude"])
+	}
+	if dirs["codex"] != filepath.Join(proj, ".agents", "skills") {
+		t.Errorf("codex project dir = %q", dirs["codex"])
+	}
+}

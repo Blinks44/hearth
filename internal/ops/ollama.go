@@ -3,6 +3,7 @@ package ops
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -53,6 +54,28 @@ func OllamaPullPlan(name string, detect Detect) (p Plan, ok bool) {
 	return p, true
 }
 
+// OllamaStopPlan returns the plan that unloads a loaded model from Ollama's
+// memory via `ollama stop` without removing its files from disk.
+func OllamaStopPlan(m inventory.Model, detect Detect) Plan {
+	p := Plan{
+		Title:   locales.OllamaUnloadTitle(m.Name),
+		Why:     locales.OllamaUnloadWhy(),
+		Action:  locales.OllamaUnloadAction(),
+		Steps:   []Step{{Argv: []string{"ollama", "stop", m.Name}, Timeout: time.Minute}},
+		Changes: []string{m.Name + " · Ollama"},
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			loaded, err := ollamaIsLoaded(ctx, detect, m.Name)
+			if err == nil && loaded {
+				err = errors.New(locales.OllamaUnloadStill(m.Name))
+			}
+			return locales.OllamaUnloadDone(m.Name), err
+		}
+	}
+	return p
+}
+
 // OllamaRemovePlan returns the plan that removes m, a model Ollama
 // downloaded, through ollama rm; askedBy are the MCP servers that name
 // it, which lose it.
@@ -78,6 +101,34 @@ func OllamaRemovePlan(m inventory.Model, askedBy []string, detect Detect) Plan {
 	return p
 }
 
+// LMStudioRemovePlan returns the plan that removes m, a model folder LM Studio
+// downloaded, after checking its path is absolute and non-root.
+func LMStudioRemovePlan(m inventory.Model, askedBy []string, detect Detect) (Plan, error) {
+	dir := filepath.Clean(m.Path)
+	if m.Path == "" || !filepath.IsAbs(dir) || dir == filepath.Dir(dir) {
+		return Plan{}, errors.New(locales.LmStudioRemoveBadPath())
+	}
+	p := Plan{
+		Title:   locales.PkgUninstallTitle(m.Name),
+		Why:     locales.LmStudioRemoveWhy(),
+		Steps:   []Step{{Remove: dir}},
+		Changes: []string{"− " + m.Name + " · LM Studio"},
+	}
+	for _, s := range askedBy {
+		p.Notes = append(p.Notes, Note{Title: locales.OllamaRemoveAsked(s), Text: locales.OllamaRemoveAskedText()})
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			has, err := lmStudioHas(ctx, detect, dir)
+			if err == nil && has {
+				err = errors.New(locales.LmStudioRemoveLeft(m.Name))
+			}
+			return locales.OllamaRemoveGone(m.Name), err
+		}
+	}
+	return p, nil
+}
+
 // ollamaHas finds the models again and reports that Ollama has name.
 func ollamaHas(ctx context.Context, detect Detect, name string) (bool, error) {
 	st, err := detect(ctx)
@@ -91,4 +142,38 @@ func ollamaHas(ctx context.Context, detect Detect, name string) (bool, error) {
 		return false, errors.New(e)
 	}
 	return slices.ContainsFunc(st.Models.Ollama.Models, func(m inventory.Model) bool { return strings.EqualFold(m.Name, name) }), nil
+}
+
+// ollamaIsLoaded finds the models again and reports whether Ollama still keeps name in memory.
+func ollamaIsLoaded(ctx context.Context, detect Detect, name string) (bool, error) {
+	st, err := detect(ctx)
+	if err != nil {
+		return false, err
+	}
+	if st.Models == nil || st.Models.Ollama == nil {
+		return false, nil
+	}
+	if e := st.Models.Ollama.Err; e != "" {
+		return false, errors.New(e)
+	}
+	return slices.ContainsFunc(st.Models.Ollama.Models, func(m inventory.Model) bool {
+		return strings.EqualFold(m.Name, name) && m.Loaded
+	}), nil
+}
+
+// lmStudioHas finds the models again and reports whether LM Studio still lists dir.
+func lmStudioHas(ctx context.Context, detect Detect, dir string) (bool, error) {
+	st, err := detect(ctx)
+	if err != nil {
+		return false, err
+	}
+	if st.Models == nil || st.Models.LMStudio == nil {
+		return false, nil
+	}
+	if e := st.Models.LMStudio.Err; e != "" {
+		return false, errors.New(e)
+	}
+	return slices.ContainsFunc(st.Models.LMStudio.Models, func(m inventory.Model) bool {
+		return filepath.Clean(m.Path) == dir
+	}), nil
 }

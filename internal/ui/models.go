@@ -258,14 +258,28 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 				clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
 			})
 			ui.Text(c, formatBytes(md.Size)).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
-			if m.name == "Ollama" && m.app.Path != "" {
+			askedBy := func() []string {
+				var out []string
+				for _, s := range inventory.ModelMentions(servers, md) {
+					out = append(out, s.Name+" · "+agentTitle(s.Agent))
+				}
+				return out
+			}
+			switch {
+			case m.name == "Ollama" && m.app.Path != "":
+				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+					if md.Loaded && menu.Item(locales.ModelsUnloadEllipsis()).Chosen() {
+						a.Propose(ops.OllamaStopPlan(md, a.detect("models")))
+					}
+					if menu.Item(locales.RemoveEllipsis()).Chosen() {
+						a.Propose(ops.OllamaRemovePlan(md, askedBy(), a.detect("models")))
+					}
+				})
+			case m.name == "LM Studio" && md.Path != "":
 				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
 					if menu.Item(locales.RemoveEllipsis()).Chosen() {
-						var askedBy []string
-						for _, s := range inventory.ModelMentions(servers, md) {
-							askedBy = append(askedBy, s.Name+" · "+agentTitle(s.Agent))
-						}
-						a.Propose(ops.OllamaRemovePlan(md, askedBy, a.detect("models")))
+						plan, err := ops.LMStudioRemovePlan(md, askedBy(), a.detect("models"))
+						a.proposeOrSay(plan, err)
 					}
 				})
 			}

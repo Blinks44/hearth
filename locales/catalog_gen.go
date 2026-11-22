@@ -27150,13 +27150,13 @@ func (msgs Messages) UsageSubtitle() string {
 	return Catalog.Format(msgs.locale, "usageSubtitle", nil)
 }
 
-// UsageLead says "Claude Code and Codex, from their local history"
+// UsageLead says "AI agents, from their local history"
 // in the language the app shows.
 //
 // Usage page: what the numbers come from.
 func UsageLead() string { return In(i18n.Locale()).UsageLead() }
 
-// UsageLead says "Claude Code and Codex, from their local history"
+// UsageLead says "AI agents, from their local history"
 // in the language of msgs.
 //
 // Usage page: what the numbers come from.
@@ -27542,13 +27542,13 @@ func (msgs Messages) UsageOldCaption() string {
 	return Catalog.Format(msgs.locale, "usageOldCaption", nil)
 }
 
-// UsageNone says "No Claude Code or Codex sessions in this period."
+// UsageNone says "No agent sessions in this period."
 // in the language the app shows.
 //
 // Usage: no sessions in the period.
 func UsageNone() string { return In(i18n.Locale()).UsageNone() }
 
-// UsageNone says "No Claude Code or Codex sessions in this period."
+// UsageNone says "No agent sessions in this period."
 // in the language of msgs.
 //
 // Usage: no sessions in the period.
@@ -27556,13 +27556,13 @@ func (msgs Messages) UsageNone() string {
 	return Catalog.Format(msgs.locale, "usageNone", nil)
 }
 
-// UsageEmpty says "Hearth found no history of Claude Code or Codex on this computer."
+// UsageEmpty says "Hearth found no local agent session history on this computer."
 // in the language the app shows.
 //
 // Usage: no history at all.
 func UsageEmpty() string { return In(i18n.Locale()).UsageEmpty() }
 
-// UsageEmpty says "Hearth found no history of Claude Code or Codex on this computer."
+// UsageEmpty says "Hearth found no local agent session history on this computer."
 // in the language of msgs.
 //
 // Usage: no history at all.
@@ -27682,6 +27682,122 @@ func UsageOpenCleanup() string { return In(i18n.Locale()).UsageOpenCleanup() }
 // Usage: the button opening the old sessions in Cleanup.
 func (msgs Messages) UsageOpenCleanup() string {
 	return Catalog.Format(msgs.locale, "usageOpenCleanup", nil)
+}
+
+// UsageMetricCost says "Cost"
+// in the language the app shows.
+//
+// Usage: chart metric tab for approximate API cost.
+func UsageMetricCost() string { return In(i18n.Locale()).UsageMetricCost() }
+
+// UsageMetricCost says "Cost"
+// in the language of msgs.
+//
+// Usage: chart metric tab for approximate API cost.
+func (msgs Messages) UsageMetricCost() string {
+	return Catalog.Format(msgs.locale, "usageMetricCost", nil)
+}
+
+// UsageMetricTokens says "Tokens"
+// in the language the app shows.
+//
+// Usage: chart metric tab for token count.
+func UsageMetricTokens() string { return In(i18n.Locale()).UsageMetricTokens() }
+
+// UsageMetricTokens says "Tokens"
+// in the language of msgs.
+//
+// Usage: chart metric tab for token count.
+func (msgs Messages) UsageMetricTokens() string {
+	return Catalog.Format(msgs.locale, "usageMetricTokens", nil)
+}
+
+// UsageAllAgents says "All agents"
+// in the language the app shows.
+//
+// Usage: option in the agent filter showing all agents.
+func UsageAllAgents() string { return In(i18n.Locale()).UsageAllAgents() }
+
+// UsageAllAgents says "All agents"
+// in the language of msgs.
+//
+// Usage: option in the agent filter showing all agents.
+func (msgs Messages) UsageAllAgents() string {
+	return Catalog.Format(msgs.locale, "usageAllAgents", nil)
+}
+
+// UsageAllProjects says "All projects"
+// in the language the app shows.
+//
+// Usage: option in the project filter showing all projects.
+func UsageAllProjects() string { return In(i18n.Locale()).UsageAllProjects() }
+
+// UsageAllProjects says "All projects"
+// in the language of msgs.
+//
+// Usage: option in the project filter showing all projects.
+func (msgs Messages) UsageAllProjects() string {
+	return Catalog.Format(msgs.locale, "usageAllProjects", nil)
+}
+
+// UsageFilterAgent says "Agent"
+// in the language the app shows.
+//
+// Usage: accessibility label for the agent filter selector.
+func UsageFilterAgent() string { return In(i18n.Locale()).UsageFilterAgent() }
+
+// UsageFilterAgent says "Agent"
+// in the language of msgs.
+//
+// Usage: accessibility label for the agent filter selector.
+func (msgs Messages) UsageFilterAgent() string {
+	return Catalog.Format(msgs.locale, "usageFilterAgent", nil)
+}
+
+// UsageFilterProject says "Project"
+// in the language the app shows.
+//
+// Usage: accessibility label for the project filter selector.
+func UsageFilterProject() string { return In(i18n.Locale()).UsageFilterProject() }
+
+// UsageFilterProject says "Project"
+// in the language of msgs.
+//
+// Usage: accessibility label for the project filter selector.
+func (msgs Messages) UsageFilterProject() string {
+	return Catalog.Format(msgs.locale, "usageFilterProject", nil)
+}
+
+// UsageUnsupportedTitle says "No local token history"
+// in the language the app shows.
+//
+// Usage: row title for installed agents that do not save local token logs.
+func UsageUnsupportedTitle() string { return In(i18n.Locale()).UsageUnsupportedTitle() }
+
+// UsageUnsupportedTitle says "No local token history"
+// in the language of msgs.
+//
+// Usage: row title for installed agents that do not save local token logs.
+func (msgs Messages) UsageUnsupportedTitle() string {
+	return Catalog.Format(msgs.locale, "usageUnsupportedTitle", nil)
+}
+
+// UsageUnsupportedText says "{agents} do not store token counts locally, so Hearth cannot include them here."
+// in the language the app shows.
+//
+// Usage: explanation for installed agents that do not save local token
+// logs.
+func UsageUnsupportedText(agents string) string {
+	return In(i18n.Locale()).UsageUnsupportedText(agents)
+}
+
+// UsageUnsupportedText says "{agents} do not store token counts locally, so Hearth cannot include them here."
+// in the language of msgs.
+//
+// Usage: explanation for installed agents that do not save local token
+// logs.
+func (msgs Messages) UsageUnsupportedText(agents string) string {
+	return Catalog.Format(msgs.locale, "usageUnsupportedText", map[string]any{"agents": agents})
 }
 
 // McpCheckSection says "Check"
@@ -40876,4 +40992,786 @@ func KubeScaleWorkloadAutoscalerManages(names string, kind string) string {
 // in the language of msgs.
 func (msgs Messages) KubeScaleWorkloadAutoscalerManages(names string, kind string) string {
 	return Catalog.Format(msgs.locale, "kubeScaleWorkloadAutoscalerManages", map[string]any{"names": names, "kind": kind})
+}
+
+// OllamaUnloadTitle says "Unload {name} from memory"
+// in the language the app shows.
+//
+// Plan title: unload a running model from Ollama's memory.
+func OllamaUnloadTitle(name string) string { return In(i18n.Locale()).OllamaUnloadTitle(name) }
+
+// OllamaUnloadTitle says "Unload {name} from memory"
+// in the language of msgs.
+//
+// Plan title: unload a running model from Ollama's memory.
+func (msgs Messages) OllamaUnloadTitle(name string) string {
+	return Catalog.Format(msgs.locale, "ollamaUnloadTitle", map[string]any{"name": name})
+}
+
+// OllamaUnloadWhy says "Stops the running model in Ollama and frees its memory; the downloaded files stay on disk."
+// in the language the app shows.
+//
+// Plan explanation for unloading an Ollama model.
+func OllamaUnloadWhy() string { return In(i18n.Locale()).OllamaUnloadWhy() }
+
+// OllamaUnloadWhy says "Stops the running model in Ollama and frees its memory; the downloaded files stay on disk."
+// in the language of msgs.
+//
+// Plan explanation for unloading an Ollama model.
+func (msgs Messages) OllamaUnloadWhy() string {
+	return Catalog.Format(msgs.locale, "ollamaUnloadWhy", nil)
+}
+
+// OllamaUnloadAction says "Unload"
+// in the language the app shows.
+//
+// Confirm button for unloading an Ollama model from memory.
+func OllamaUnloadAction() string { return In(i18n.Locale()).OllamaUnloadAction() }
+
+// OllamaUnloadAction says "Unload"
+// in the language of msgs.
+//
+// Confirm button for unloading an Ollama model from memory.
+func (msgs Messages) OllamaUnloadAction() string {
+	return Catalog.Format(msgs.locale, "ollamaUnloadAction", nil)
+}
+
+// OllamaUnloadDone says "{name} is unloaded from memory"
+// in the language the app shows.
+//
+// Verify result: the Ollama model is no longer loaded in memory.
+func OllamaUnloadDone(name string) string { return In(i18n.Locale()).OllamaUnloadDone(name) }
+
+// OllamaUnloadDone says "{name} is unloaded from memory"
+// in the language of msgs.
+//
+// Verify result: the Ollama model is no longer loaded in memory.
+func (msgs Messages) OllamaUnloadDone(name string) string {
+	return Catalog.Format(msgs.locale, "ollamaUnloadDone", map[string]any{"name": name})
+}
+
+// OllamaUnloadStill says "{name} is still loaded in memory"
+// in the language the app shows.
+//
+// Verify error: the Ollama model is still loaded in memory.
+func OllamaUnloadStill(name string) string { return In(i18n.Locale()).OllamaUnloadStill(name) }
+
+// OllamaUnloadStill says "{name} is still loaded in memory"
+// in the language of msgs.
+//
+// Verify error: the Ollama model is still loaded in memory.
+func (msgs Messages) OllamaUnloadStill(name string) string {
+	return Catalog.Format(msgs.locale, "ollamaUnloadStill", map[string]any{"name": name})
+}
+
+// ModelsUnloadEllipsis says "Unload from memory…"
+// in the language the app shows.
+//
+// Menu item on a loaded Ollama model row.
+func ModelsUnloadEllipsis() string { return In(i18n.Locale()).ModelsUnloadEllipsis() }
+
+// ModelsUnloadEllipsis says "Unload from memory…"
+// in the language of msgs.
+//
+// Menu item on a loaded Ollama model row.
+func (msgs Messages) ModelsUnloadEllipsis() string {
+	return Catalog.Format(msgs.locale, "modelsUnloadEllipsis", nil)
+}
+
+// LmStudioRemoveWhy says "Deletes the model's folder from LM Studio's directory; the model is no longer available locally until downloaded again."
+// in the language the app shows.
+//
+// Plan explanation for removing an LM Studio model folder.
+func LmStudioRemoveWhy() string { return In(i18n.Locale()).LmStudioRemoveWhy() }
+
+// LmStudioRemoveWhy says "Deletes the model's folder from LM Studio's directory; the model is no longer available locally until downloaded again."
+// in the language of msgs.
+//
+// Plan explanation for removing an LM Studio model folder.
+func (msgs Messages) LmStudioRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "lmStudioRemoveWhy", nil)
+}
+
+// LmStudioRemoveBadPath says "LM Studio model path is unavailable."
+// in the language the app shows.
+//
+// Error when an LM Studio model has no valid absolute folder path.
+func LmStudioRemoveBadPath() string { return In(i18n.Locale()).LmStudioRemoveBadPath() }
+
+// LmStudioRemoveBadPath says "LM Studio model path is unavailable."
+// in the language of msgs.
+//
+// Error when an LM Studio model has no valid absolute folder path.
+func (msgs Messages) LmStudioRemoveBadPath() string {
+	return Catalog.Format(msgs.locale, "lmStudioRemoveBadPath", nil)
+}
+
+// LmStudioRemoveLeft says "LM Studio still has {name}"
+// in the language the app shows.
+//
+// Verify error: the LM Studio model folder is still present after removal.
+func LmStudioRemoveLeft(name string) string { return In(i18n.Locale()).LmStudioRemoveLeft(name) }
+
+// LmStudioRemoveLeft says "LM Studio still has {name}"
+// in the language of msgs.
+//
+// Verify error: the LM Studio model folder is still present after removal.
+func (msgs Messages) LmStudioRemoveLeft(name string) string {
+	return Catalog.Format(msgs.locale, "lmStudioRemoveLeft", map[string]any{"name": name})
+}
+
+// InstructionsGlobal says "Global"
+// in the language the app shows.
+func InstructionsGlobal() string { return In(i18n.Locale()).InstructionsGlobal() }
+
+// InstructionsGlobal says "Global"
+// in the language of msgs.
+func (msgs Messages) InstructionsGlobal() string {
+	return Catalog.Format(msgs.locale, "instructionsGlobal", nil)
+}
+
+// InstructionsProjects says "Projects"
+// in the language the app shows.
+func InstructionsProjects() string { return In(i18n.Locale()).InstructionsProjects() }
+
+// InstructionsProjects says "Projects"
+// in the language of msgs.
+func (msgs Messages) InstructionsProjects() string {
+	return Catalog.Format(msgs.locale, "instructionsProjects", nil)
+}
+
+// InstructionsOther says "Other instruction files"
+// in the language the app shows.
+func InstructionsOther() string { return In(i18n.Locale()).InstructionsOther() }
+
+// InstructionsOther says "Other instruction files"
+// in the language of msgs.
+func (msgs Messages) InstructionsOther() string {
+	return Catalog.Format(msgs.locale, "instructionsOther", nil)
+}
+
+// InstructionsDiffTitle says "Differences"
+// in the language the app shows.
+func InstructionsDiffTitle() string { return In(i18n.Locale()).InstructionsDiffTitle() }
+
+// InstructionsDiffTitle says "Differences"
+// in the language of msgs.
+func (msgs Messages) InstructionsDiffTitle() string {
+	return Catalog.Format(msgs.locale, "instructionsDiffTitle", nil)
+}
+
+// InstructionsCreate says "Create AGENTS.md…"
+// in the language the app shows.
+func InstructionsCreate() string { return In(i18n.Locale()).InstructionsCreate() }
+
+// InstructionsCreate says "Create AGENTS.md…"
+// in the language of msgs.
+func (msgs Messages) InstructionsCreate() string {
+	return Catalog.Format(msgs.locale, "instructionsCreate", nil)
+}
+
+// InstructionsCreateTitle says "Create AGENTS.md in {name}"
+// in the language the app shows.
+func InstructionsCreateTitle(name string) string {
+	return In(i18n.Locale()).InstructionsCreateTitle(name)
+}
+
+// InstructionsCreateTitle says "Create AGENTS.md in {name}"
+// in the language of msgs.
+func (msgs Messages) InstructionsCreateTitle(name string) string {
+	return Catalog.Format(msgs.locale, "instructionsCreateTitle", map[string]any{"name": name})
+}
+
+// InstructionsCreateWhy says "Creates a shared AGENTS.md file in the project root so coding agents follow the same rules."
+// in the language the app shows.
+func InstructionsCreateWhy() string { return In(i18n.Locale()).InstructionsCreateWhy() }
+
+// InstructionsCreateWhy says "Creates a shared AGENTS.md file in the project root so coding agents follow the same rules."
+// in the language of msgs.
+func (msgs Messages) InstructionsCreateWhy() string {
+	return Catalog.Format(msgs.locale, "instructionsCreateWhy", nil)
+}
+
+// InstructionsCreateAction says "Create AGENTS.md"
+// in the language the app shows.
+func InstructionsCreateAction() string { return In(i18n.Locale()).InstructionsCreateAction() }
+
+// InstructionsCreateAction says "Create AGENTS.md"
+// in the language of msgs.
+func (msgs Messages) InstructionsCreateAction() string {
+	return Catalog.Format(msgs.locale, "instructionsCreateAction", nil)
+}
+
+// InstructionsCreateDone says "AGENTS.md created"
+// in the language the app shows.
+func InstructionsCreateDone() string { return In(i18n.Locale()).InstructionsCreateDone() }
+
+// InstructionsCreateDone says "AGENTS.md created"
+// in the language of msgs.
+func (msgs Messages) InstructionsCreateDone() string {
+	return Catalog.Format(msgs.locale, "instructionsCreateDone", nil)
+}
+
+// InstructionsCreateExists says "AGENTS.md already exists in this project."
+// in the language the app shows.
+func InstructionsCreateExists() string { return In(i18n.Locale()).InstructionsCreateExists() }
+
+// InstructionsCreateExists says "AGENTS.md already exists in this project."
+// in the language of msgs.
+func (msgs Messages) InstructionsCreateExists() string {
+	return Catalog.Format(msgs.locale, "instructionsCreateExists", nil)
+}
+
+// InstructionsCreatePrompt says "Write project instructions for {name}."
+// in the language the app shows.
+func InstructionsCreatePrompt(name string) string {
+	return In(i18n.Locale()).InstructionsCreatePrompt(name)
+}
+
+// InstructionsCreatePrompt says "Write project instructions for {name}."
+// in the language of msgs.
+func (msgs Messages) InstructionsCreatePrompt(name string) string {
+	return Catalog.Format(msgs.locale, "instructionsCreatePrompt", map[string]any{"name": name})
+}
+
+// McpAddButton says "Add server…"
+// in the language the app shows.
+func McpAddButton() string { return In(i18n.Locale()).McpAddButton() }
+
+// McpAddButton says "Add server…"
+// in the language of msgs.
+func (msgs Messages) McpAddButton() string {
+	return Catalog.Format(msgs.locale, "mcpAddButton", nil)
+}
+
+// McpEditEllipsis says "Edit…"
+// in the language the app shows.
+func McpEditEllipsis() string { return In(i18n.Locale()).McpEditEllipsis() }
+
+// McpEditEllipsis says "Edit…"
+// in the language of msgs.
+func (msgs Messages) McpEditEllipsis() string {
+	return Catalog.Format(msgs.locale, "mcpEditEllipsis", nil)
+}
+
+// McpAddTitle says "Add {name} to {agent}"
+// in the language the app shows.
+func McpAddTitle(name string, agent string) string { return In(i18n.Locale()).McpAddTitle(name, agent) }
+
+// McpAddTitle says "Add {name} to {agent}"
+// in the language of msgs.
+func (msgs Messages) McpAddTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpAddTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpAddWhy says "Adds the MCP server to {agent}'s configuration file."
+// in the language the app shows.
+func McpAddWhy(agent string) string { return In(i18n.Locale()).McpAddWhy(agent) }
+
+// McpAddWhy says "Adds the MCP server to {agent}'s configuration file."
+// in the language of msgs.
+func (msgs Messages) McpAddWhy(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpAddWhy", map[string]any{"agent": agent})
+}
+
+// McpEditTitle says "Update {name} in {agent}"
+// in the language the app shows.
+func McpEditTitle(name string, agent string) string {
+	return In(i18n.Locale()).McpEditTitle(name, agent)
+}
+
+// McpEditTitle says "Update {name} in {agent}"
+// in the language of msgs.
+func (msgs Messages) McpEditTitle(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpEditTitle", map[string]any{"name": name, "agent": agent})
+}
+
+// McpEditWhy says "Updates the MCP server declaration in {agent}'s configuration file."
+// in the language the app shows.
+func McpEditWhy(agent string) string { return In(i18n.Locale()).McpEditWhy(agent) }
+
+// McpEditWhy says "Updates the MCP server declaration in {agent}'s configuration file."
+// in the language of msgs.
+func (msgs Messages) McpEditWhy(agent string) string {
+	return Catalog.Format(msgs.locale, "mcpEditWhy", map[string]any{"agent": agent})
+}
+
+// McpCheckUpdated says "{name} updated for {agent}"
+// in the language the app shows.
+func McpCheckUpdated(name string, agent string) string {
+	return In(i18n.Locale()).McpCheckUpdated(name, agent)
+}
+
+// McpCheckUpdated says "{name} updated for {agent}"
+// in the language of msgs.
+func (msgs Messages) McpCheckUpdated(name string, agent string) string {
+	return Catalog.Format(msgs.locale, "mcpCheckUpdated", map[string]any{"name": name, "agent": agent})
+}
+
+// McpFormAddTitle says "Add MCP server"
+// in the language the app shows.
+func McpFormAddTitle() string { return In(i18n.Locale()).McpFormAddTitle() }
+
+// McpFormAddTitle says "Add MCP server"
+// in the language of msgs.
+func (msgs Messages) McpFormAddTitle() string {
+	return Catalog.Format(msgs.locale, "mcpFormAddTitle", nil)
+}
+
+// McpFormEditTitle says "Edit {name}"
+// in the language the app shows.
+func McpFormEditTitle(name string) string { return In(i18n.Locale()).McpFormEditTitle(name) }
+
+// McpFormEditTitle says "Edit {name}"
+// in the language of msgs.
+func (msgs Messages) McpFormEditTitle(name string) string {
+	return Catalog.Format(msgs.locale, "mcpFormEditTitle", map[string]any{"name": name})
+}
+
+// McpFormName says "Server name"
+// in the language the app shows.
+func McpFormName() string { return In(i18n.Locale()).McpFormName() }
+
+// McpFormName says "Server name"
+// in the language of msgs.
+func (msgs Messages) McpFormName() string {
+	return Catalog.Format(msgs.locale, "mcpFormName", nil)
+}
+
+// McpFormAgent says "Agent"
+// in the language the app shows.
+func McpFormAgent() string { return In(i18n.Locale()).McpFormAgent() }
+
+// McpFormAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) McpFormAgent() string {
+	return Catalog.Format(msgs.locale, "mcpFormAgent", nil)
+}
+
+// McpFormScope says "Scope"
+// in the language the app shows.
+func McpFormScope() string { return In(i18n.Locale()).McpFormScope() }
+
+// McpFormScope says "Scope"
+// in the language of msgs.
+func (msgs Messages) McpFormScope() string {
+	return Catalog.Format(msgs.locale, "mcpFormScope", nil)
+}
+
+// McpFormTransport says "Transport"
+// in the language the app shows.
+func McpFormTransport() string { return In(i18n.Locale()).McpFormTransport() }
+
+// McpFormTransport says "Transport"
+// in the language of msgs.
+func (msgs Messages) McpFormTransport() string {
+	return Catalog.Format(msgs.locale, "mcpFormTransport", nil)
+}
+
+// McpFormCommand says "Command"
+// in the language the app shows.
+func McpFormCommand() string { return In(i18n.Locale()).McpFormCommand() }
+
+// McpFormCommand says "Command"
+// in the language of msgs.
+func (msgs Messages) McpFormCommand() string {
+	return Catalog.Format(msgs.locale, "mcpFormCommand", nil)
+}
+
+// McpFormArgs says "Arguments"
+// in the language the app shows.
+func McpFormArgs() string { return In(i18n.Locale()).McpFormArgs() }
+
+// McpFormArgs says "Arguments"
+// in the language of msgs.
+func (msgs Messages) McpFormArgs() string {
+	return Catalog.Format(msgs.locale, "mcpFormArgs", nil)
+}
+
+// McpFormEnv says "Environment variables"
+// in the language the app shows.
+func McpFormEnv() string { return In(i18n.Locale()).McpFormEnv() }
+
+// McpFormEnv says "Environment variables"
+// in the language of msgs.
+func (msgs Messages) McpFormEnv() string {
+	return Catalog.Format(msgs.locale, "mcpFormEnv", nil)
+}
+
+// McpFormEnvHint says "One KEY=VALUE per line. Prefer $'{VAR}' references for secrets."
+// in the language the app shows.
+func McpFormEnvHint() string { return In(i18n.Locale()).McpFormEnvHint() }
+
+// McpFormEnvHint says "One KEY=VALUE per line. Prefer $'{VAR}' references for secrets."
+// in the language of msgs.
+func (msgs Messages) McpFormEnvHint() string {
+	return Catalog.Format(msgs.locale, "mcpFormEnvHint", nil)
+}
+
+// McpFormURL says "Server URL"
+// in the language the app shows.
+func McpFormURL() string { return In(i18n.Locale()).McpFormURL() }
+
+// McpFormURL says "Server URL"
+// in the language of msgs.
+func (msgs Messages) McpFormURL() string {
+	return Catalog.Format(msgs.locale, "mcpFormURL", nil)
+}
+
+// McpFormHeaders says "HTTP headers"
+// in the language the app shows.
+func McpFormHeaders() string { return In(i18n.Locale()).McpFormHeaders() }
+
+// McpFormHeaders says "HTTP headers"
+// in the language of msgs.
+func (msgs Messages) McpFormHeaders() string {
+	return Catalog.Format(msgs.locale, "mcpFormHeaders", nil)
+}
+
+// McpFormHeadersHint says "One Name: Value per line. Prefer $'{VAR}' references for tokens."
+// in the language the app shows.
+func McpFormHeadersHint() string { return In(i18n.Locale()).McpFormHeadersHint() }
+
+// McpFormHeadersHint says "One Name: Value per line. Prefer $'{VAR}' references for tokens."
+// in the language of msgs.
+func (msgs Messages) McpFormHeadersHint() string {
+	return Catalog.Format(msgs.locale, "mcpFormHeadersHint", nil)
+}
+
+// McpFormBadName says "Enter a valid server name without slashes or line breaks."
+// in the language the app shows.
+func McpFormBadName() string { return In(i18n.Locale()).McpFormBadName() }
+
+// McpFormBadName says "Enter a valid server name without slashes or line breaks."
+// in the language of msgs.
+func (msgs Messages) McpFormBadName() string {
+	return Catalog.Format(msgs.locale, "mcpFormBadName", nil)
+}
+
+// McpFormBadCommand says "Enter the command to launch the server."
+// in the language the app shows.
+func McpFormBadCommand() string { return In(i18n.Locale()).McpFormBadCommand() }
+
+// McpFormBadCommand says "Enter the command to launch the server."
+// in the language of msgs.
+func (msgs Messages) McpFormBadCommand() string {
+	return Catalog.Format(msgs.locale, "mcpFormBadCommand", nil)
+}
+
+// McpFormBadURL says "Enter an http:// or https:// server URL."
+// in the language the app shows.
+func McpFormBadURL() string { return In(i18n.Locale()).McpFormBadURL() }
+
+// McpFormBadURL says "Enter an http:// or https:// server URL."
+// in the language of msgs.
+func (msgs Messages) McpFormBadURL() string {
+	return Catalog.Format(msgs.locale, "mcpFormBadURL", nil)
+}
+
+// McpFormBadTransport says "Unsupported transport type."
+// in the language the app shows.
+func McpFormBadTransport() string { return In(i18n.Locale()).McpFormBadTransport() }
+
+// McpFormBadTransport says "Unsupported transport type."
+// in the language of msgs.
+func (msgs Messages) McpFormBadTransport() string {
+	return Catalog.Format(msgs.locale, "mcpFormBadTransport", nil)
+}
+
+// McpFormBadKV says "Invalid line \"{line}\": expected KEY=VALUE."
+// in the language the app shows.
+func McpFormBadKV(line string) string { return In(i18n.Locale()).McpFormBadKV(line) }
+
+// McpFormBadKV says "Invalid line \"{line}\": expected KEY=VALUE."
+// in the language of msgs.
+func (msgs Messages) McpFormBadKV(line string) string {
+	return Catalog.Format(msgs.locale, "mcpFormBadKV", map[string]any{"line": line})
+}
+
+// SkillRemoveTitle says "Remove skill {name}"
+// in the language the app shows.
+func SkillRemoveTitle(name string) string { return In(i18n.Locale()).SkillRemoveTitle(name) }
+
+// SkillRemoveTitle says "Remove skill {name}"
+// in the language of msgs.
+func (msgs Messages) SkillRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "skillRemoveTitle", map[string]any{"name": name})
+}
+
+// SkillRemoveWhy says "Removes the skill from its folder and unlinks all agents that read it."
+// in the language the app shows.
+func SkillRemoveWhy() string { return In(i18n.Locale()).SkillRemoveWhy() }
+
+// SkillRemoveWhy says "Removes the skill from its folder and unlinks all agents that read it."
+// in the language of msgs.
+func (msgs Messages) SkillRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "skillRemoveWhy", nil)
+}
+
+// SkillRemoveExternalWhy says "Unlinks the skill from agents. The original folder is outside Hearth's skills directories and stays on disk."
+// in the language the app shows.
+func SkillRemoveExternalWhy() string { return In(i18n.Locale()).SkillRemoveExternalWhy() }
+
+// SkillRemoveExternalWhy says "Unlinks the skill from agents. The original folder is outside Hearth's skills directories and stays on disk."
+// in the language of msgs.
+func (msgs Messages) SkillRemoveExternalWhy() string {
+	return Catalog.Format(msgs.locale, "skillRemoveExternalWhy", nil)
+}
+
+// SkillRemoveExternalNote says "External folder kept"
+// in the language the app shows.
+func SkillRemoveExternalNote() string { return In(i18n.Locale()).SkillRemoveExternalNote() }
+
+// SkillRemoveExternalNote says "External folder kept"
+// in the language of msgs.
+func (msgs Messages) SkillRemoveExternalNote() string {
+	return Catalog.Format(msgs.locale, "skillRemoveExternalNote", nil)
+}
+
+// SkillRemoveExternalText says "Only links in agent skills directories are removed. The folder {path} is not deleted."
+// in the language the app shows.
+func SkillRemoveExternalText(path string) string {
+	return In(i18n.Locale()).SkillRemoveExternalText(path)
+}
+
+// SkillRemoveExternalText says "Only links in agent skills directories are removed. The folder {path} is not deleted."
+// in the language of msgs.
+func (msgs Messages) SkillRemoveExternalText(path string) string {
+	return Catalog.Format(msgs.locale, "skillRemoveExternalText", map[string]any{"path": path})
+}
+
+// SkillRemoveButton says "Remove…"
+// in the language the app shows.
+func SkillRemoveButton() string { return In(i18n.Locale()).SkillRemoveButton() }
+
+// SkillRemoveButton says "Remove…"
+// in the language of msgs.
+func (msgs Messages) SkillRemoveButton() string {
+	return Catalog.Format(msgs.locale, "skillRemoveButton", nil)
+}
+
+// SkillRemoveBrokenTitle says "Remove broken link {name}"
+// in the language the app shows.
+func SkillRemoveBrokenTitle(name string) string {
+	return In(i18n.Locale()).SkillRemoveBrokenTitle(name)
+}
+
+// SkillRemoveBrokenTitle says "Remove broken link {name}"
+// in the language of msgs.
+func (msgs Messages) SkillRemoveBrokenTitle(name string) string {
+	return Catalog.Format(msgs.locale, "skillRemoveBrokenTitle", map[string]any{"name": name})
+}
+
+// SkillRemoveBrokenWhy says "Removes the broken symlink whose target folder no longer exists."
+// in the language the app shows.
+func SkillRemoveBrokenWhy() string { return In(i18n.Locale()).SkillRemoveBrokenWhy() }
+
+// SkillRemoveBrokenWhy says "Removes the broken symlink whose target folder no longer exists."
+// in the language of msgs.
+func (msgs Messages) SkillRemoveBrokenWhy() string {
+	return Catalog.Format(msgs.locale, "skillRemoveBrokenWhy", nil)
+}
+
+// SkillRemoveBrokenButton says "Remove broken link…"
+// in the language the app shows.
+func SkillRemoveBrokenButton() string { return In(i18n.Locale()).SkillRemoveBrokenButton() }
+
+// SkillRemoveBrokenButton says "Remove broken link…"
+// in the language of msgs.
+func (msgs Messages) SkillRemoveBrokenButton() string {
+	return Catalog.Format(msgs.locale, "skillRemoveBrokenButton", nil)
+}
+
+// SkillRemoveSynced says "Synced skills are managed by Claude and cannot be removed here."
+// in the language the app shows.
+func SkillRemoveSynced() string { return In(i18n.Locale()).SkillRemoveSynced() }
+
+// SkillRemoveSynced says "Synced skills are managed by Claude and cannot be removed here."
+// in the language of msgs.
+func (msgs Messages) SkillRemoveSynced() string {
+	return Catalog.Format(msgs.locale, "skillRemoveSynced", nil)
+}
+
+// SkillCheckRemoved says "Skill {name} removed"
+// in the language the app shows.
+func SkillCheckRemoved(name string) string { return In(i18n.Locale()).SkillCheckRemoved(name) }
+
+// SkillCheckRemoved says "Skill {name} removed"
+// in the language of msgs.
+func (msgs Messages) SkillCheckRemoved(name string) string {
+	return Catalog.Format(msgs.locale, "skillCheckRemoved", map[string]any{"name": name})
+}
+
+// SkillCheckStillExists says "Skill {name} still exists"
+// in the language the app shows.
+func SkillCheckStillExists(name string) string { return In(i18n.Locale()).SkillCheckStillExists(name) }
+
+// SkillCheckStillExists says "Skill {name} still exists"
+// in the language of msgs.
+func (msgs Messages) SkillCheckStillExists(name string) string {
+	return Catalog.Format(msgs.locale, "skillCheckStillExists", map[string]any{"name": name})
+}
+
+// SkillCheckBrokenRemoved says "Broken link {name} removed"
+// in the language the app shows.
+func SkillCheckBrokenRemoved(name string) string {
+	return In(i18n.Locale()).SkillCheckBrokenRemoved(name)
+}
+
+// SkillCheckBrokenRemoved says "Broken link {name} removed"
+// in the language of msgs.
+func (msgs Messages) SkillCheckBrokenRemoved(name string) string {
+	return Catalog.Format(msgs.locale, "skillCheckBrokenRemoved", map[string]any{"name": name})
+}
+
+// SkillCheckBrokenStillExists says "Broken link {name} still exists"
+// in the language the app shows.
+func SkillCheckBrokenStillExists(name string) string {
+	return In(i18n.Locale()).SkillCheckBrokenStillExists(name)
+}
+
+// SkillCheckBrokenStillExists says "Broken link {name} still exists"
+// in the language of msgs.
+func (msgs Messages) SkillCheckBrokenStillExists(name string) string {
+	return Catalog.Format(msgs.locale, "skillCheckBrokenStillExists", map[string]any{"name": name})
+}
+
+// TagDiffers says "differs"
+// in the language the app shows.
+func TagDiffers() string { return In(i18n.Locale()).TagDiffers() }
+
+// TagDiffers says "differs"
+// in the language of msgs.
+func (msgs Messages) TagDiffers() string {
+	return Catalog.Format(msgs.locale, "tagDiffers", nil)
+}
+
+// SkillDiffersBanner says "Copies of this skill have different contents."
+// in the language the app shows.
+func SkillDiffersBanner() string { return In(i18n.Locale()).SkillDiffersBanner() }
+
+// SkillDiffersBanner says "Copies of this skill have different contents."
+// in the language of msgs.
+func (msgs Messages) SkillDiffersBanner() string {
+	return Catalog.Format(msgs.locale, "skillDiffersBanner", nil)
+}
+
+// SkillCompareCopies says "Compare copies…"
+// in the language the app shows.
+func SkillCompareCopies() string { return In(i18n.Locale()).SkillCompareCopies() }
+
+// SkillCompareCopies says "Compare copies…"
+// in the language of msgs.
+func (msgs Messages) SkillCompareCopies() string {
+	return Catalog.Format(msgs.locale, "skillCompareCopies", nil)
+}
+
+// SkillDiffTitle says "Differences in {name}"
+// in the language the app shows.
+func SkillDiffTitle(name string) string { return In(i18n.Locale()).SkillDiffTitle(name) }
+
+// SkillDiffTitle says "Differences in {name}"
+// in the language of msgs.
+func (msgs Messages) SkillDiffTitle(name string) string {
+	return Catalog.Format(msgs.locale, "skillDiffTitle", map[string]any{"name": name})
+}
+
+// SkillDiffIdentical says "These two copies have identical files."
+// in the language the app shows.
+func SkillDiffIdentical() string { return In(i18n.Locale()).SkillDiffIdentical() }
+
+// SkillDiffIdentical says "These two copies have identical files."
+// in the language of msgs.
+func (msgs Messages) SkillDiffIdentical() string {
+	return Catalog.Format(msgs.locale, "skillDiffIdentical", nil)
+}
+
+// SkillDiffAdded says "only in second copy"
+// in the language the app shows.
+func SkillDiffAdded() string { return In(i18n.Locale()).SkillDiffAdded() }
+
+// SkillDiffAdded says "only in second copy"
+// in the language of msgs.
+func (msgs Messages) SkillDiffAdded() string {
+	return Catalog.Format(msgs.locale, "skillDiffAdded", nil)
+}
+
+// SkillDiffRemoved says "only in first copy"
+// in the language the app shows.
+func SkillDiffRemoved() string { return In(i18n.Locale()).SkillDiffRemoved() }
+
+// SkillDiffRemoved says "only in first copy"
+// in the language of msgs.
+func (msgs Messages) SkillDiffRemoved() string {
+	return Catalog.Format(msgs.locale, "skillDiffRemoved", nil)
+}
+
+// SkillDiffModified says "modified"
+// in the language the app shows.
+func SkillDiffModified() string { return In(i18n.Locale()).SkillDiffModified() }
+
+// SkillDiffModified says "modified"
+// in the language of msgs.
+func (msgs Messages) SkillDiffModified() string {
+	return Catalog.Format(msgs.locale, "skillDiffModified", nil)
+}
+
+// SkillDiffBinary says "Binary file differs."
+// in the language the app shows.
+func SkillDiffBinary() string { return In(i18n.Locale()).SkillDiffBinary() }
+
+// SkillDiffBinary says "Binary file differs."
+// in the language of msgs.
+func (msgs Messages) SkillDiffBinary() string {
+	return Catalog.Format(msgs.locale, "skillDiffBinary", nil)
+}
+
+// SkillDiffTooLarge says "File is too large for an inline diff."
+// in the language the app shows.
+func SkillDiffTooLarge() string { return In(i18n.Locale()).SkillDiffTooLarge() }
+
+// SkillDiffTooLarge says "File is too large for an inline diff."
+// in the language of msgs.
+func (msgs Messages) SkillDiffTooLarge() string {
+	return Catalog.Format(msgs.locale, "skillDiffTooLarge", nil)
+}
+
+// SkillCatalogRepoPlaceholder says "owner/repo or https://github.com/…"
+// in the language the app shows.
+func SkillCatalogRepoPlaceholder() string { return In(i18n.Locale()).SkillCatalogRepoPlaceholder() }
+
+// SkillCatalogRepoPlaceholder says "owner/repo or https://github.com/…"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogRepoPlaceholder() string {
+	return Catalog.Format(msgs.locale, "skillCatalogRepoPlaceholder", nil)
+}
+
+// SkillCatalogLoad says "Load"
+// in the language the app shows.
+func SkillCatalogLoad() string { return In(i18n.Locale()).SkillCatalogLoad() }
+
+// SkillCatalogLoad says "Load"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogLoad() string {
+	return Catalog.Format(msgs.locale, "skillCatalogLoad", nil)
+}
+
+// SkillCatalogScope says "Scope"
+// in the language the app shows.
+func SkillCatalogScope() string { return In(i18n.Locale()).SkillCatalogScope() }
+
+// SkillCatalogScope says "Scope"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogScope() string {
+	return Catalog.Format(msgs.locale, "skillCatalogScope", nil)
+}
+
+// SkillCatalogScopeUser says "User (all projects)"
+// in the language the app shows.
+func SkillCatalogScopeUser() string { return In(i18n.Locale()).SkillCatalogScopeUser() }
+
+// SkillCatalogScopeUser says "User (all projects)"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogScopeUser() string {
+	return Catalog.Format(msgs.locale, "skillCatalogScopeUser", nil)
 }

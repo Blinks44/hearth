@@ -95,7 +95,13 @@ func (a *App) mcpItems() []mcpItem {
 // text, with the chosen one's details beside them.
 func (a *App) mcpPageView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.header(c, p.title(), p.subtitle())
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if a.BuildPlan != nil {
+				ui.PrimaryButton(c.Key("mcp-add"), locales.McpAddButton()).OnClick(func() {
+					a.openAddMCPForm()
+				})
+			}
+		}})
 		all := a.mcpItems()
 		if len(all) == 0 && (a.Snapshot == nil || len(a.Snapshot.MCPErrs) == 0) {
 			a.aiEmpty(c, "plug", locales.NoServers())
@@ -463,12 +469,21 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 		})
 	}
 	removable := plans && ops.MCPRemovable(s)
-	if a.Shell == nil && !removable {
+	editable := plans && ops.MCPEditable(s)
+	if a.Shell == nil && !removable && !editable {
 		return
 	}
 	ui.Row(c.Key("mcp-menu:" + id)).Shrink(0).Children(func() {
 		iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+			if editable {
+				if menu.Item(locales.McpEditEllipsis()).Chosen() {
+					a.openEditMCPForm(s)
+				}
+			}
 			if a.Shell != nil {
+				if editable {
+					menu.Separator()
+				}
 				if menu.Item(locales.OpenFile(filepath.Base(s.File))).Chosen() {
 					a.openFile(c, s.File)
 				}
@@ -477,7 +492,7 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 				}
 			}
 			if removable {
-				if a.Shell != nil {
+				if a.Shell != nil || editable {
 					menu.Separator()
 				}
 				if menu.Item(locales.McpRemove(agentTitle(id))).Chosen() {
@@ -488,8 +503,8 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 	})
 }
 
-// mcpCheck is the last check of an MCP server: the key of its item, and,
-// once it is done, what the server answered or why it failed.
+// mcpCheck is the last check of an MCP server: the key of its item and
+// declaration, and once done, what the server answered or why it failed.
 type mcpCheck struct {
 	key      string
 	running  bool
@@ -505,25 +520,58 @@ const (
 	shownErrLines = 12
 )
 
-// mcpCheckView checks m on a button: Hearth starts, or reaches, its first
-// declaration in use as the agent would, and lists its tools or says why
-// it does not answer.
+// mcpCheckView checks m on a button: Hearth starts, or reaches, the chosen
+// declaration as the agent would, and lists its tools or says why it does not
+// answer. When multiple declarations exist, the user can select which one to
+// test.
 func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
 	if a.CheckMCP == nil {
 		return
 	}
 	t := c.Theme()
 	pal := Colors(t)
-	s := m.decls[0]
+	idx := 0
 	if i := slices.IndexFunc(m.decls, func(s inventory.MCPServer) bool { return !s.Disabled }); i >= 0 {
-		s = m.decls[i]
+		idx = i
 	}
+	if a.mcpCheckDecl != nil {
+		if saved, ok := a.mcpCheckDecl[m.key()]; ok && saved >= 0 && saved < len(m.decls) {
+			idx = saved
+		}
+	}
+	detailSection(c, locales.McpCheckSection())
+	if len(m.decls) > 1 {
+		agentCounts := map[string]int{}
+		for _, d := range m.decls {
+			agentCounts[d.Agent]++
+		}
+		segs := make([]segment, len(m.decls))
+		for i, d := range m.decls {
+			label := agentTitle(d.Agent)
+			if agentCounts[d.Agent] > 1 && d.File != "" {
+				label += " · " + filepath.Base(d.File)
+			}
+			segs[i] = segment{label: label}
+		}
+		prev := idx
+		ui.Row(c).Padding(0, 16, 8, 16).Wrap().Children(func() {
+			segments(c, "mcp-check-decl:"+m.key(), &idx, segs)
+		})
+		if idx != prev {
+			if a.mcpCheckDecl == nil {
+				a.mcpCheckDecl = map[string]int{}
+			}
+			a.mcpCheckDecl[m.key()] = idx
+		}
+	}
+	s := m.decls[idx]
+	declKey := m.key() + "\x00" + strconv.Itoa(idx) + "\x00" + s.Agent + "\x00" + s.File
 	ch := a.mcpCheck
-	if ch.key != m.key() {
+	if ch.key != declKey {
 		ch = mcpCheck{}
 	}
 	check := func() {
-		key := m.key()
+		key := declKey
 		a.mcpCheck = mcpCheck{key: key, running: true}
 		a.CheckMCP(s, func(res ai.MCPCheck, err error) {
 			if a.mcpCheck.key == key {
@@ -531,7 +579,6 @@ func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
 			}
 		})
 	}
-	detailSection(c, locales.McpCheckSection())
 	// The icon stays by the first line of a long message.
 	ui.Row(c).Gap(8).Padding(0, 16, 10, 16).AlignItems(ui.Start).Children(func() {
 		text := func(s string, color ui.Color) {
@@ -608,4 +655,342 @@ func mcpFailure(err error) string {
 		return locales.McpFailDenied()
 	}
 	return locales.McpFailed()
+}
+
+var mcpCapableAgents = []string{"claude", "codex", "copilot", "gemini", "antigravity", "cursor", "opencode", "devin", "grok", "kimi"}
+
+type mcpFormState struct {
+	open       bool
+	edit       bool
+	loading    bool
+	err        string
+	orig       inventory.MCPServer
+	name       string
+	agent      int
+	agentLabel string
+	scope      int
+	scopeLabel string
+	transport  int // 0=stdio, 1=http, 2=sse
+	command    string
+	args       string
+	url        string
+	env        string
+	headers    string
+}
+
+func (a *App) defaultMCPAgentIndex() int {
+	for _, id := range a.foundIDs() {
+		if idx := slices.Index(mcpCapableAgents, id); idx >= 0 {
+			return idx
+		}
+	}
+	return 0
+}
+
+func (a *App) openAddMCPForm() {
+	idx := a.defaultMCPAgentIndex()
+	a.mcpForm = &mcpFormState{
+		open:       true,
+		agent:      idx,
+		agentLabel: agentTitle(mcpCapableAgents[idx]),
+		scopeLabel: locales.ScopeUser(),
+	}
+}
+
+func (a *App) openEditMCPForm(s inventory.MCPServer) {
+	f := &mcpFormState{
+		open:    true,
+		edit:    true,
+		loading: true,
+		orig:    s,
+		name:    s.Name,
+		agent:   max(0, slices.Index(mcpCapableAgents, s.Agent)),
+	}
+	a.mcpForm = f
+	if a.BuildPlan == nil {
+		f.loading = false
+		return
+	}
+	var loaded ai.MCPDef
+	a.BuildPlan(func(_ sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		var err error
+		loaded, err = ai.ReadMCPDef(s)
+		return ops.Plan{}, err
+	}, func(_ ops.Plan, err error) {
+		if a.mcpForm != f {
+			return
+		}
+		f.loading = false
+		if err != nil {
+			f.err = err.Error()
+			return
+		}
+		switch loaded.Transport {
+		case "http":
+			f.transport = 1
+		case "sse":
+			f.transport = 2
+		default:
+			f.transport = 0
+		}
+		f.command = loaded.Command
+		f.args = joinMCPArgs(loaded.Args)
+		f.url = loaded.URL
+		f.env = formatKVLines(loaded.Env, "=")
+		f.headers = formatKVLines(loaded.Headers, ": ")
+	})
+}
+
+func (a *App) mcpFormDialog(c *ui.Context) {
+	f := a.mcpForm
+	if f == nil || !f.open {
+		return
+	}
+	t, pal := c.Theme(), Colors(c.Theme())
+	dialogBase(c.Key("mcp-form"), &f.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(560).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		title := locales.McpFormAddTitle()
+		if f.edit {
+			title = locales.McpFormEditTitle(f.orig.Name)
+		}
+		agentOptions := make([]string, len(mcpCapableAgents))
+		for i, id := range mcpCapableAgents {
+			agentOptions[i] = agentTitle(id)
+		}
+		if f.agent < 0 || f.agent >= len(agentOptions) {
+			f.agent = 0
+		}
+		f.agentLabel = agentOptions[f.agent]
+		scopeOptions := []string{locales.ScopeUser()}
+		for _, pr := range a.Projects {
+			scopeOptions = append(scopeOptions, filepath.Base(pr.Dir))
+		}
+		if f.scope < 0 || f.scope >= len(scopeOptions) {
+			f.scope = 0
+		}
+		f.scopeLabel = scopeOptions[f.scope]
+		transportNames := []string{"stdio", "http", "sse"}
+		submit := func() {
+			f.err = ""
+			def := ai.MCPDef{Transport: transportNames[f.transport]}
+			if def.Transport == "stdio" {
+				def.Command = strings.TrimSpace(f.command)
+				def.Args = splitMCPArgs(f.args)
+				envMap, err := parseKVLines(f.env, false)
+				if err != nil {
+					f.err = err.Error()
+					return
+				}
+				def.Env = envMap
+			} else {
+				def.URL = strings.TrimSpace(f.url)
+				hdrMap, err := parseKVLines(f.headers, true)
+				if err != nil {
+					f.err = err.Error()
+					return
+				}
+				def.Headers = hdrMap
+			}
+			if a.BuildPlan == nil {
+				return
+			}
+			if f.edit {
+				orig := f.orig
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+					return ops.MCPEditPlan(orig, def, env, agentTitle)
+				}, func(p ops.Plan, err error) {
+					if err != nil {
+						f.err = err.Error()
+						return
+					}
+					f.open = false
+					a.Propose(p)
+				})
+				return
+			}
+			agentID := mcpCapableAgents[f.agent]
+			project := ""
+			if f.scope > 0 && f.scope-1 < len(a.Projects) {
+				project = a.Projects[f.scope-1].Dir
+			}
+			name := strings.TrimSpace(f.name)
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.MCPAddPlan(name, agentID, project, def, env, agentTitle)
+			}, func(p ops.Plan, err error) {
+				if err != nil {
+					f.err = err.Error()
+					return
+				}
+				f.open = false
+				a.Propose(p)
+			})
+		}
+		ui.Column(c).Children(func() {
+			ui.Scroll(c).MaxHeight(560).Children(func() {
+				ui.Column(c).Gap(12).Padding(20, 20, 16, 20).Children(func() {
+					ui.Text(c, title).FontSize(18).FontWeight(600)
+					if f.loading {
+						ui.Text(c, locales.OpVerifying()).FontSize(12).TextColor(t.TextMuted)
+						return
+					}
+					if f.edit {
+						ui.Text(c, agentTitle(f.orig.Agent)+" · "+a.declFile(f.orig)).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
+					} else {
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormName()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextInput(c.Key("mcp-form-name"), &f.name).Placeholder("github").Label(locales.McpFormName()).AutoFocus()
+						})
+						ui.Row(c).Gap(12).Children(func() {
+							ui.Column(c).Grow(1).Basis(0).Gap(4).Children(func() {
+								ui.Text(c, locales.McpFormAgent()).FontSize(12).TextColor(t.TextMuted)
+								ui.Select(c.Key("mcp-form-agent"), &f.agentLabel, agentOptions).Label(locales.McpFormAgent()).FillWidth().OnChange(func() {
+									if i := slices.Index(agentOptions, f.agentLabel); i >= 0 {
+										f.agent = i
+									}
+								})
+							})
+							ui.Column(c).Grow(1).Basis(0).Gap(4).Children(func() {
+								ui.Text(c, locales.McpFormScope()).FontSize(12).TextColor(t.TextMuted)
+								ui.Select(c.Key("mcp-form-scope"), &f.scopeLabel, scopeOptions).Label(locales.McpFormScope()).FillWidth().OnChange(func() {
+									if i := slices.Index(scopeOptions, f.scopeLabel); i >= 0 {
+										f.scope = i
+									}
+								})
+							})
+						})
+					}
+					ui.Column(c).Gap(4).Children(func() {
+						ui.Text(c, locales.McpFormTransport()).FontSize(12).TextColor(t.TextMuted)
+						segments(c, "mcp-form-transport", &f.transport, []segment{{label: "stdio"}, {label: "http"}, {label: "sse"}})
+					})
+					if f.transport == 0 {
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormCommand()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextInput(c.Key("mcp-form-command"), &f.command).Placeholder("npx").Label(locales.McpFormCommand())
+						})
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormArgs()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextInput(c.Key("mcp-form-args"), &f.args).Placeholder("-y @modelcontextprotocol/server-github").Label(locales.McpFormArgs())
+						})
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormEnv()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextArea(c.Key("mcp-form-env"), &f.env).Height(88).Font(FontMono).Label(locales.McpFormEnv())
+							ui.Text(c, locales.McpFormEnvHint()).FontSize(11).TextColor(pal.TextFaint)
+						})
+					} else {
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormURL()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextInput(c.Key("mcp-form-url"), &f.url).Placeholder("https://mcp.example.com/mcp").Label(locales.McpFormURL())
+						})
+						ui.Column(c).Gap(4).Children(func() {
+							ui.Text(c, locales.McpFormHeaders()).FontSize(12).TextColor(t.TextMuted)
+							ui.TextArea(c.Key("mcp-form-headers"), &f.headers).Height(88).Font(FontMono).Label(locales.McpFormHeaders())
+							ui.Text(c, locales.McpFormHeadersHint()).FontSize(11).TextColor(pal.TextFaint)
+						})
+					}
+					if f.err != "" {
+						ui.Text(c, f.err).FontSize(12).TextColor(pal.WarningText)
+					}
+				})
+			})
+			ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { f.open = false })
+				ui.PrimaryButton(c, locales.GlobalInstructionsPlan()).Height(controlHeight).Disabled(f.loading).OnClick(submit)
+			})
+		})
+	})
+}
+
+func splitMCPArgs(raw string) []string {
+	var args []string
+	var cur strings.Builder
+	var quote rune
+	inTok := false
+	for _, r := range raw {
+		switch {
+		case quote != 0:
+			if r == quote {
+				quote = 0
+			} else {
+				cur.WriteRune(r)
+			}
+		case r == '"' || r == '\'':
+			quote = r
+			inTok = true
+		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
+			if inTok {
+				args = append(args, cur.String())
+				cur.Reset()
+				inTok = false
+			}
+		default:
+			cur.WriteRune(r)
+			inTok = true
+		}
+	}
+	if inTok {
+		args = append(args, cur.String())
+	}
+	return args
+}
+
+func joinMCPArgs(args []string) string {
+	out := make([]string, len(args))
+	for i, a := range args {
+		if strings.ContainsAny(a, " \t\"'") {
+			out[i] = strconv.Quote(a)
+		} else {
+			out[i] = a
+		}
+	}
+	return strings.Join(out, " ")
+}
+
+func formatKVLines(m map[string]string, sep string) string {
+	if len(m) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	lines := make([]string, len(keys))
+	for i, k := range keys {
+		lines[i] = k + sep + m[k]
+	}
+	return strings.Join(lines, "\n")
+}
+
+func parseKVLines(raw string, allowColon bool) (map[string]string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	out := map[string]string{}
+	for line := range strings.SplitSeq(raw, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		var k, v string
+		var ok bool
+		if allowColon {
+			k, v, ok = strings.Cut(line, ":")
+			if !ok {
+				k, v, ok = strings.Cut(line, "=")
+			}
+		} else {
+			k, v, ok = strings.Cut(line, "=")
+		}
+		k = strings.TrimSpace(k)
+		v = strings.TrimSpace(v)
+		if !ok || k == "" {
+			return nil, errors.New(locales.McpFormBadKV(line))
+		}
+		out[k] = v
+	}
+	return out, nil
 }

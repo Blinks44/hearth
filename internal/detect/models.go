@@ -225,7 +225,9 @@ func lmStudio(home string) *inventory.ModelApp {
 		return nil
 	}
 	own := filepath.Join(home, ".lmstudio")
+	legacy := filepath.Join(home, ".cache", "lm-studio")
 	app := &inventory.ModelApp{Port: "1234", Dir: filepath.Join(own, "models")}
+	cfgRoot := own
 	var settings struct {
 		Downloads string `json:"downloadsFolder"`
 	}
@@ -233,11 +235,19 @@ func lmStudio(home string) *inventory.ModelApp {
 	case json.Unmarshal([]byte(readFile(filepath.Join(own, "settings.json"))), &settings) == nil && settings.Downloads != "":
 		app.Dir = settings.Downloads
 	case exists(own):
-	case exists(filepath.Join(home, ".cache", "lm-studio")):
+	case exists(legacy):
 		// Before 0.3 LM Studio kept its files there.
-		app.Dir = filepath.Join(home, ".cache", "lm-studio", "models")
+		cfgRoot = legacy
+		app.Dir = filepath.Join(legacy, "models")
 	default:
 		return nil
+	}
+	if port := lmStudioPort(cfgRoot); port != "" {
+		app.Port = port
+	} else if cfgRoot == own {
+		if port := lmStudioPort(legacy); port != "" {
+			app.Port = port
+		}
 	}
 	repos, _ := filepath.Glob(filepath.Join(app.Dir, "*", "*"))
 	for _, repo := range repos {
@@ -246,6 +256,21 @@ func lmStudio(home string) *inventory.ModelApp {
 		}
 	}
 	return app
+}
+
+// lmStudioPort reads the configured HTTP server port from LM Studio's
+// .internal/http-server-config.json; "" when absent or invalid.
+func lmStudioPort(root string) string {
+	var cfg struct {
+		Port int `json:"port"`
+	}
+	if json.Unmarshal([]byte(readFile(filepath.Join(root, ".internal", "http-server-config.json"))), &cfg) != nil {
+		return ""
+	}
+	if cfg.Port <= 0 || cfg.Port > 65535 {
+		return ""
+	}
+	return strconv.Itoa(cfg.Port)
 }
 
 // lmStudioModel is a model's folder: its files' size, the newest file's

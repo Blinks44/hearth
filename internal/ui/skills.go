@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
 
+	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -58,7 +59,7 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 			a.aiEmpty(c, "puzzle", locales.NoSkills())
 			return
 		}
-		copies := skillCopies(all)
+		copies, differs := skillCopies(all)
 		withCopies, inProjects := 0, 0
 		for _, n := range copies {
 			if n > 1 {
@@ -100,14 +101,14 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 				})
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
-						a.skillList(c, groups, copies, shown, chosen)
+						a.skillList(c, groups, copies, differs, shown, chosen)
 						if withCopies > 0 {
 							a.copiesHint(c, withCopies)
 						}
 					})
 					detailColumn(c).Children(func() {
 						if chosen >= 0 {
-							a.skillDetail(c, shown[chosen])
+							a.skillDetail(c, shown[chosen], all)
 						}
 					})
 				})
@@ -117,15 +118,24 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 }
 
 // skillCopies counts the folders of each skill name in each scope, broken
-// links and skills synced from claude.ai aside, as issues counts them.
-func skillCopies(skills []inventory.Skill) map[string]int {
+// links and skills synced from claude.ai aside, as issues counts them, and
+// reports which groups have differing file sums.
+func skillCopies(skills []inventory.Skill) (map[string]int, map[string]bool) {
 	n := map[string]int{}
+	sums := map[string]string{}
+	differs := map[string]bool{}
 	for _, sk := range skills {
 		if !sk.Broken && !sk.Synced {
-			n[sk.Project+"\x00"+sk.Name]++
+			key := sk.Project + "\x00" + sk.Name
+			n[key]++
+			if prev, ok := sums[key]; !ok {
+				sums[key] = sk.Sum
+			} else if prev != sk.Sum {
+				differs[key] = true
+			}
 		}
 	}
-	return n
+	return n, differs
 }
 
 // skillGroups are the skills shown, the projects' first in their order,
@@ -160,7 +170,7 @@ func (a *App) skillGroups() []skillGroup {
 }
 
 // skillList is the search field and the skills by scope.
-func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]int, shown []inventory.Skill, chosen int) {
+func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]int, differs map[string]bool, shown []inventory.Skill, chosen int) {
 	t := c.Theme()
 	pal := Colors(t)
 	listFrame(c, func() {
@@ -193,11 +203,14 @@ func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]in
 							ui.Text(c, sk.Description).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 						}
 					})
-					switch n := copies[sk.Project+"\x00"+sk.Name]; {
+					copyKey := sk.Project + "\x00" + sk.Name
+					switch n := copies[copyKey]; {
 					case sk.Broken:
 						aiTag(c, locales.TagBroken(), pal.WarningSoft, pal.WarningText)
 					case sk.Synced:
 						aiTag(c, locales.TagSynced(), pal.Info.Alpha(0.12), pal.Info)
+					case differs[copyKey]:
+						aiTag(c, locales.TagDiffers(), pal.WarningSoft, pal.WarningText)
 					case n > 1:
 						aiTag(c, locales.ChipCopies(n), pal.WarningSoft, pal.WarningText)
 					}
@@ -306,10 +319,11 @@ func (a *App) skillAgentControl(c *ui.Context, sk inventory.Skill, id string, vi
 
 // skillDetail is the chosen skill: what it is, where it is, the agents it
 // is available to, its files and SKILL.md, and actions on it.
-func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
+func (a *App) skillDetail(c *ui.Context, sk inventory.Skill, all []inventory.Skill) {
 	t := c.Theme()
 	pal := Colors(t)
 	a.loadSkill(sk)
+	peers := skillCopyPeers(all, sk)
 	listFrame(c, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -328,6 +342,17 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 			}
 			if sk.Synced {
 				ui.Text(c, locales.SkillSyncedNote()).FontSize(12).TextColor(t.TextMuted)
+			}
+			if skillCopiesDiffer(peers) {
+				ui.Row(c).Gap(8).Padding(8, 10).Radius(8).AlignItems(ui.Center).
+					Background(pal.WarningSoft).Children(func() {
+					ui.Text(c, locales.SkillDiffersBanner()).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
+					if a.DiffSkills != nil {
+						ui.Button(c.Key("skill-compare"), locales.SkillCompareCopies()).Shrink(0).OnClick(func() {
+							a.openSkillDiff(sk, peers)
+						})
+					}
+				})
 			}
 		})
 		detailSection(c, locales.AvailableToAgents())
@@ -357,16 +382,38 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill) {
 		}
 		detailSection(c, locales.FilesSection())
 		a.skillFiles(c, sk)
-		if a.Shell != nil && !sk.Broken {
-			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Button(c.Key("skill-open"), "").OnClick(func() { a.openFile(c, filepath.Join(sk.Dir, "SKILL.md")) }).Children(func() {
-					ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
-					ui.Text(c, locales.OpenInEditor()).SingleLine()
-				})
-				ui.Button(c.Key("skill-reveal"), "").OnClick(func() { a.Shell.ShowItemInFolder(sk.Dir) }).Children(func() {
-					ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
-					ui.Text(c, showInFolder()).SingleLine()
-				})
+		canRemoveBroken := sk.Broken && a.BuildPlan != nil
+		canRemove := !sk.Broken && !sk.Synced && a.BuildPlan != nil
+		hasOpen := a.Shell != nil && !sk.Broken
+		if hasOpen || canRemove || canRemoveBroken {
+			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
+				if hasOpen {
+					ui.Button(c.Key("skill-open"), "").OnClick(func() { a.openFile(c, filepath.Join(sk.Dir, "SKILL.md")) }).Children(func() {
+						ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
+						ui.Text(c, locales.OpenInEditor()).SingleLine()
+					})
+					ui.Button(c.Key("skill-reveal"), "").OnClick(func() { a.Shell.ShowItemInFolder(sk.Dir) }).Children(func() {
+						ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
+						ui.Text(c, showInFolder()).SingleLine()
+					})
+				}
+				if hasOpen && canRemove {
+					ui.Box(c).Grow(1).Height(1)
+				}
+				if canRemove {
+					ui.Button(c.Key("skill-remove"), locales.SkillRemoveButton()).OnClick(func() {
+						a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+							return ops.SkillRemovePlan(sk, env, agentTitle)
+						}, a.proposeOrSay)
+					})
+				}
+				if canRemoveBroken {
+					ui.Button(c.Key("skill-remove-broken"), locales.SkillRemoveBrokenButton()).OnClick(func() {
+						a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+							return ops.SkillRemoveBrokenPlan(sk, env)
+						}, a.proposeOrSay)
+					})
+				}
 			})
 		}
 	})
@@ -468,6 +515,158 @@ func pathChip(c *ui.Context, shown, full string) {
 		iconButton(c, "copy", locales.CopyPath()).OnClick(func() {
 			c.WriteClipboard(full)
 			c.Toast(locales.PathCopied())
+		})
+	})
+}
+
+func skillCopyPeers(all []inventory.Skill, sk inventory.Skill) []inventory.Skill {
+	if sk.Broken || sk.Synced {
+		return nil
+	}
+	var out []inventory.Skill
+	for _, s := range all {
+		if !s.Broken && !s.Synced && s.Project == sk.Project && s.Name == sk.Name {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func skillCopiesDiffer(peers []inventory.Skill) bool {
+	if len(peers) < 2 {
+		return false
+	}
+	for _, p := range peers[1:] {
+		if p.Sum != peers[0].Sum {
+			return true
+		}
+	}
+	return false
+}
+
+type skillDiffState struct {
+	open      bool
+	name      string
+	baseDir   string
+	otherDirs []string
+	other     string
+	otherLbl  string
+	loading   bool
+	diffs     []ai.SkillFileDiff
+	err       string
+}
+
+func (a *App) openSkillDiff(sk inventory.Skill, peers []inventory.Skill) {
+	var others []string
+	for _, p := range peers {
+		if p.Dir != sk.Dir && !slices.Contains(others, p.Dir) {
+			others = append(others, p.Dir)
+		}
+	}
+	if len(others) == 0 {
+		return
+	}
+	d := &skillDiffState{
+		open:      true,
+		name:      sk.Name,
+		baseDir:   sk.Dir,
+		otherDirs: others,
+		other:     others[0],
+		otherLbl:  tilde(others[0], a.Home),
+	}
+	a.skillDiff = d
+	a.loadSkillDiff(d)
+}
+
+func (a *App) loadSkillDiff(d *skillDiffState) {
+	if a.DiffSkills == nil {
+		return
+	}
+	d.loading = true
+	d.err = ""
+	d.diffs = nil
+	baseDir, otherDir := d.baseDir, d.other
+	a.DiffSkills(baseDir, otherDir, func(diffs []ai.SkillFileDiff, err error) {
+		if a.skillDiff != d || d.baseDir != baseDir || d.other != otherDir {
+			return
+		}
+		d.loading = false
+		d.diffs = diffs
+		if err != nil {
+			d.err = err.Error()
+		}
+	})
+}
+
+func (a *App) skillDiffDialog(c *ui.Context) {
+	d := a.skillDiff
+	if d == nil || !d.open {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	dialogBase(c.Key("skill-diff"), &d.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(680).MaxHeight(620).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Line)
+		ui.Column(c).Padding(20).Gap(12).Children(func() {
+			ui.Text(c, locales.SkillDiffTitle(d.name)).FontSize(18).FontWeight(600)
+			ui.Column(c).Gap(6).Children(func() {
+				ui.Text(c, tilde(d.baseDir, a.Home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
+				if len(d.otherDirs) > 1 {
+					labels := make([]string, len(d.otherDirs))
+					for i, dir := range d.otherDirs {
+						labels[i] = tilde(dir, a.Home)
+					}
+					ui.Select(c.Key("skill-diff-other"), &d.otherLbl, labels).FillWidth().OnChange(func() {
+						if i := slices.Index(labels, d.otherLbl); i >= 0 && d.otherDirs[i] != d.other {
+							d.other = d.otherDirs[i]
+							a.loadSkillDiff(d)
+						}
+					})
+				} else {
+					ui.Text(c, tilde(d.other, a.Home)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
+				}
+			})
+			ui.Scroll(c.Key("skill-diff-scroll")).MaxHeight(420).Children(func() {
+				ui.Column(c).Gap(12).Children(func() {
+					switch {
+					case d.loading:
+						ui.Text(c, locales.Loading()).FontSize(12.5).TextColor(t.TextMuted)
+					case d.err != "":
+						ui.Text(c, d.err).FontSize(12.5).TextColor(pal.WarningText)
+					case len(d.diffs) == 0:
+						ui.Text(c, locales.SkillDiffIdentical()).FontSize(12.5).TextColor(t.TextMuted)
+					default:
+						for _, f := range d.diffs {
+							ui.Column(c).Gap(6).Children(func() {
+								ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+									ui.Text(c, f.Path).Font(FontMono).FontSize(12).FontWeight(600).Shrink(1).MinWidth(0).SingleLine()
+									switch f.Status {
+									case "added":
+										aiTag(c, locales.SkillDiffAdded(), pal.SuccessSoft, pal.SuccessText)
+									case "removed":
+										aiTag(c, locales.SkillDiffRemoved(), pal.DangerSoft, pal.DangerText)
+									default:
+										aiTag(c, locales.SkillDiffModified(), pal.WarningSoft, pal.WarningText)
+									}
+								})
+								switch {
+								case f.Binary:
+									ui.Text(c, locales.SkillDiffBinary()).FontSize(12).TextColor(t.TextMuted)
+								case f.TooLarge:
+									ui.Text(c, locales.SkillDiffTooLarge()).FontSize(12).TextColor(t.TextMuted)
+								default:
+									diff := (ops.FileEdit{Before: f.Before, After: f.After}).PreviewDiff()
+									compareDiffCard(c, "", diff)
+								}
+							})
+						}
+					}
+				})
+			})
+			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
+				ui.Button(c, locales.SettingsClose()).OnClick(func() { d.open = false })
+			})
 		})
 	})
 }

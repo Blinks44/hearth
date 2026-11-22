@@ -63,12 +63,16 @@ type Scanner struct {
 	// Env returns the terminal's and the GUI's environment; nil reads this
 	// computer's.
 	Env func(ctx context.Context, r run.Runner) (term, gui sysenv.Env)
+	// UsageCache is the disk path for persisting parsed AI agent session
+	// transcripts across app restarts; empty disables disk persistence.
+	UsageCache string
 
-	mu         sync.Mutex
-	gen        int // counts the scans started, so that an older one is dropped
-	cancel     context.CancelFunc
-	refreshGen int        // counts the refreshes, as gen the scans
-	term, gui  sysenv.Env // of the last scan, for refreshes
+	mu             sync.Mutex
+	gen            int // counts the scans started, so that an older one is dropped
+	cancel         context.CancelFunc
+	refreshGen     int        // counts the refreshes, as gen the scans
+	term, gui      sysenv.Env // of the last scan, for refreshes
+	usageCacheOnce sync.Once
 }
 
 // Start cancels the scan under way, if any, and scans again. done gets the
@@ -87,6 +91,13 @@ func (s *Scanner) Start(done func(inventory.Snapshot)) {
 
 	go func() {
 		defer cancel()
+		if s.UsageCache != "" {
+			s.usageCacheOnce.Do(func() {
+				if err := ai.LoadUsageCache(s.UsageCache); err != nil {
+					log.Printf("scan: load usage cache: %v", err)
+				}
+			})
+		}
 		env := s.Env
 		if env == nil {
 			env = systemEnv
@@ -96,6 +107,11 @@ func (s *Scanner) Start(done func(inventory.Snapshot)) {
 		s.term, s.gui = term, gui
 		s.mu.Unlock()
 		snap := Run(ctx, s.Runner, term, gui, s.Detectors)
+		if s.UsageCache != "" {
+			if err := ai.SaveUsageCache(s.UsageCache); err != nil {
+				log.Printf("scan: save usage cache: %v", err)
+			}
+		}
 		// Under the lock, so that a Start meanwhile cannot let this older
 		// snapshot arrive after the newer one.
 		s.mu.Lock()
