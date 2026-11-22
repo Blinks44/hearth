@@ -301,7 +301,7 @@ func TestAgentOperations(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"npm", "install", "--global", "--prefix", filepath.Dir(a.Snapshot.Agents[1].Installations[0].Path), "@openai/codex@latest"}) {
+	if a.op == nil || !slices.Equal(a.op.plan.Steps[0].Argv, []string{"npm", "install", "--global", "--prefix", filepath.Dir(filepath.Dir(a.Snapshot.Agents[1].Installations[0].Path)), "@openai/codex@latest"}) {
 		t.Fatalf("plan %+v", a.op)
 	}
 }

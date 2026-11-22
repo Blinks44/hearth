@@ -142,14 +142,18 @@ func TestCloudLoginPlan(t *testing.T) {
 
 func TestInfraVersionPlanAndMiseSpec(t *testing.T) {
 	specs := map[string]string{
-		"":            "latest",
-		"*":           "latest",
-		"~> 1.10":     "1.10",
-		"~> 1.10.2":   "1.10",
-		">= 1.8":      "latest",
-		">= 1.8, < 2": "1.8",
-		"= 1.9.8":     "1.9.8",
-		"1.10.5":      "1.10.5",
+		"":              "latest",
+		"*":             "latest",
+		"~> 1.10":       "1.10",
+		"~> 1.10.2":     "1.10",
+		">= 1.8":        "latest",
+		">= 1.8, < 2":   "1.8",
+		"= 1.9.8":       "1.9.8",
+		"1.10.5":        "1.10.5",
+		"!= 1.9.0":      "latest",
+		"< 1.10":        "latest",
+		"<= 1.9.5":      "1.9.5",
+		"> 1.8, < 1.10": "latest",
 	}
 	for want, exp := range specs {
 		if got := MiseSpecForConstraint(want); got != exp {

@@ -673,6 +673,7 @@ func main() {
 					}
 				}
 				a.Snapshot, a.Scanning = &s, false
+				a.ClearCloudAuth()
 				if fetchPackages != nil {
 					fetchPackages(false)
 				}
@@ -794,13 +795,21 @@ func main() {
 				countSizes(a.Snapshot)
 			}
 		}
+		var cancelPorts context.CancelFunc
 		a.RefreshPorts = func(done func(detect.PortsSnapshot)) {
+			if cancelPorts != nil {
+				cancelPorts()
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			cancelPorts = cancel
 			env := scanner.Terminal()
 			snap := a.Snapshot
 			go func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				res := detect.RefreshPorts(ctx, run.Exec{}, env, snap)
+				if ctx.Err() != nil {
+					return
+				}
 				win.Update(func() { done(res) })
 			}()
 		}
@@ -812,6 +821,9 @@ func main() {
 			a.StopDocker()
 			stopForwards()
 			stopCatalog()
+			if cancelPorts != nil {
+				cancelPorts()
+			}
 			if cancelVersions != nil {
 				cancelVersions()
 			}
@@ -844,11 +856,14 @@ func main() {
 			}
 			a.PackageUpdates = nil
 			a.PackageChecks = nil
+			a.VersionChecks = nil
 			a.AgentChecking = false
+			a.MiseChecking = false
 			a.SettingsNotice = ""
 			if cancelVersions != nil {
 				cancelVersions()
 			}
+			stopCatalog()
 			go func() {
 				err := errors.Join(lists.Clear(), skillCache.Clear(), ai.ClearUsageCache(usageCache))
 				win.Update(func() {
@@ -896,6 +911,7 @@ func main() {
 			}
 			a.PackageChecks = nil
 			a.AgentChecking = false
+			a.MiseChecking = false
 			scanner.Start(scanned)
 			fetchVersions(false)
 			list.read()

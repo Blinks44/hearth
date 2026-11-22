@@ -1,11 +1,13 @@
 package detect
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -211,14 +213,15 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 			d.DatabaseErr = true
 			continue
 		}
-		ports := publishedTCPPorts(row.Ports)
+		ports, bindings := publishedTCPBindings(row.Ports)
 		if row.State == "running" && len(ports) > 0 {
 			d.PortContainers = append(d.PortContainers, inventory.DockerPortContainer{
-				ID:     row.ID,
-				Name:   row.Name,
-				Image:  row.Image,
-				Status: row.State,
-				Ports:  ports,
+				ID:       row.ID,
+				Name:     row.Name,
+				Image:    row.Image,
+				Status:   row.State,
+				Ports:    ports,
+				Bindings: bindings,
 			})
 		}
 		if row.Kind != "" {
@@ -245,14 +248,14 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 			Project:     row.Project,
 			Service:     row.Service,
 			ContainerID: row.ID,
-			Ports:       ports,
+			Ports:       preferDatabaseDefaultPort(kind, ports),
 		}
 		if len(db.Ports) == 0 && databaseContainerID.MatchString(row.ID) {
 			inspected, ok := databaseContainerPorts(ctx, r, env, exe, endpoint, row.ID)
 			if !ok {
 				d.DatabaseErr = true
 			} else {
-				db.Ports = inspected
+				db.Ports = preferDatabaseDefaultPort(kind, inspected)
 			}
 		}
 		d.Databases = append(d.Databases, db)
@@ -261,10 +264,11 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 
 // PortsSnapshot is the result of a targeted Ports refresh without a full scan.
 type PortsSnapshot struct {
-	Listeners  []inventory.DatabaseListener
-	Warnings   []string
-	Containers []inventory.DockerPortContainer
-	HasDocker  bool
+	Listeners      []inventory.DatabaseListener
+	Warnings       []string
+	Containers     []inventory.DockerPortContainer
+	HasDocker      bool
+	DockerSelected string
 }
 
 // RefreshPorts reads active TCP listeners and, when a local Docker engine is
@@ -307,37 +311,58 @@ func RefreshPorts(ctx context.Context, r run.Runner, env sysenv.Env, snap *inven
 		return out
 	}
 	out.HasDocker = true
+	out.DockerSelected = st.Docker.Selected
 	for line := range strings.Lines(string(res.Stdout)) {
 		var row struct{ ID, Name, Image, State, Ports string }
 		if json.Unmarshal([]byte(line), &row) != nil {
 			continue
 		}
-		ports := publishedTCPPorts(row.Ports)
+		ports, bindings := publishedTCPBindings(row.Ports)
 		if len(ports) == 0 {
 			continue
 		}
 		out.Containers = append(out.Containers, inventory.DockerPortContainer{
-			ID:     row.ID,
-			Name:   row.Name,
-			Image:  row.Image,
-			Status: row.State,
-			Ports:  ports,
+			ID:       row.ID,
+			Name:     row.Name,
+			Image:    row.Image,
+			Status:   row.State,
+			Ports:    ports,
+			Bindings: bindings,
 		})
 	}
 	return out
 }
 
-func publishedTCPPorts(raw string) []string {
+func publishedTCPBindings(raw string) ([]string, []inventory.DockerPortBinding) {
 	var ports []string
+	var bindings []inventory.DockerPortBinding
 	for _, m := range databasePublished.FindAllStringSubmatch(raw, -1) {
-		if !slices.Contains(ports, m[1]) {
-			ports = append(ports, m[1])
+		hostIP := strings.Trim(m[1], "[]")
+		start, err := strconv.Atoi(m[2])
+		if err != nil {
+			continue
+		}
+		end := start
+		if m[3] != "" {
+			if parsed, err := strconv.Atoi(m[3]); err == nil && parsed >= start && parsed-start < 64 {
+				end = parsed
+			}
+		}
+		for p := start; p <= end; p++ {
+			port := strconv.Itoa(p)
+			if !slices.Contains(ports, port) {
+				ports = append(ports, port)
+			}
+			b := inventory.DockerPortBinding{HostIP: hostIP, HostPort: port}
+			if !slices.Contains(bindings, b) {
+				bindings = append(bindings, b)
+			}
 		}
 	}
-	return ports
+	return ports, bindings
 }
 
-var databasePublished = regexp.MustCompile(`:([0-9]+)->[0-9]+/tcp`)
+var databasePublished = regexp.MustCompile(`((?:\[[0-9a-fA-F:]+\]|[0-9.]+|::)?):([0-9]+)(?:-([0-9]+))?->[0-9]+(?:-[0-9]+)?/tcp`)
 
 var databaseContainerID = regexp.MustCompile(`^[0-9a-f]{12,64}$`)
 
@@ -358,6 +383,40 @@ func databaseContainerPorts(ctx context.Context, r run.Runner, env sysenv.Env, e
 			}
 		}
 	}
-	slices.Sort(out)
+	slices.SortFunc(out, func(a, b string) int {
+		na, erra := strconv.Atoi(a)
+		nb, errb := strconv.Atoi(b)
+		if erra == nil && errb == nil {
+			return cmp.Compare(na, nb)
+		}
+		return cmp.Compare(a, b)
+	})
 	return out, true
+}
+
+func preferDatabaseDefaultPort(kind string, ports []string) []string {
+	if len(ports) <= 1 {
+		return ports
+	}
+	var def string
+	switch kind {
+	case "PostgreSQL":
+		def = "5432"
+	case "MySQL", "MariaDB":
+		def = "3306"
+	case "Redis":
+		def = "6379"
+	case "MongoDB":
+		def = "27017"
+	case "SQL Server":
+		def = "1433"
+	}
+	idx := slices.Index(ports, def)
+	if idx <= 0 {
+		return ports
+	}
+	out := slices.Clone(ports)
+	copy(out[1:idx+1], out[0:idx])
+	out[0] = def
+	return out
 }

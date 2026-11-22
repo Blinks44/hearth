@@ -685,7 +685,8 @@ func (a *App) chosenEditor() (run.App, bool) {
 }
 
 func isCustomAppPath(p string) bool {
-	return filepath.IsAbs(p) || strings.ContainsAny(p, `/\`)
+	trimmed := strings.TrimSpace(p)
+	return filepath.IsAbs(trimmed) || strings.HasPrefix(trimmed, "~") || strings.ContainsAny(trimmed, `/\`)
 }
 
 // fileKind says what an agent's file holds.

@@ -10,7 +10,13 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-var rustupIdent = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+var rustupIdent = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
+// ValidRustupIdent reports whether s is a safe rustup toolchain or target
+// identifier (no spaces, control characters, or leading dash).
+func ValidRustupIdent(s string) bool {
+	return rustupIdent.MatchString(strings.TrimSpace(s))
+}
 
 // RustTargetPlan returns the plan that adds or removes target in toolchain
 // through rustup.
@@ -39,13 +45,22 @@ func RustTargetPlan(add bool, toolchain, target string, detect Detect) (Plan, er
 			if err != nil {
 				return "", err
 			}
+			exact := false
+			for _, in := range st.Installations {
+				if in.Rust != nil && in.Rust.Name == toolchain {
+					exact = true
+					break
+				}
+			}
 			has := false
 			for _, in := range st.Installations {
-				if in.Rust != nil && (in.Rust.Name == toolchain || strings.HasPrefix(in.Rust.Name, toolchain+"-")) {
-					if slices.Contains(in.Rust.Targets, target) {
-						has = true
-						break
-					}
+				if in.Rust == nil {
+					continue
+				}
+				matched := in.Rust.Name == toolchain || (!exact && strings.HasPrefix(in.Rust.Name, toolchain+"-"))
+				if matched && slices.Contains(in.Rust.Targets, target) {
+					has = true
+					break
 				}
 			}
 			switch {

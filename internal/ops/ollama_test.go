@@ -2,6 +2,8 @@ package ops
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -103,24 +105,48 @@ func TestOllamaStopPlan(t *testing.T) {
 }
 
 func TestLMStudioRemovePlan(t *testing.T) {
-	if _, err := LMStudioRemovePlan(inventory.Model{Name: "bad", Path: "relative/path"}, nil, nil); err == nil {
+	root := t.TempDir()
+	outside := t.TempDir()
+	if _, err := LMStudioRemovePlan(root, inventory.Model{Name: "bad", Path: "relative/path"}, nil, nil); err == nil {
 		t.Fatal("accepted relative path")
 	}
-	dir := t.TempDir()
+	if _, err := LMStudioRemovePlan(root, inventory.Model{Name: "root", Path: root}, nil, nil); err == nil {
+		t.Fatal("accepted models root itself")
+	}
+	if _, err := LMStudioRemovePlan(root, inventory.Model{Name: "outside", Path: outside}, nil, nil); err == nil {
+		t.Fatal("accepted path outside models root")
+	}
+	link := filepath.Join(root, "escape-link")
+	if err := os.Symlink(outside, link); err == nil {
+		pEsc, err := LMStudioRemovePlan(root, inventory.Model{Name: "escape", Path: link}, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if pEsc.Before == nil || pEsc.Before(context.Background()) == nil {
+			t.Fatal("Before accepted symlink escaping models root")
+		}
+	}
+	dir := filepath.Join(root, "lmstudio-community", "Mistral-Nemo-12B-GGUF")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	m := inventory.Model{Name: "Mistral-Nemo-12B-GGUF", Path: dir}
 	gone := func(context.Context) (inventory.ToolState, error) {
 		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
-			LMStudio: &inventory.ModelApp{},
+			LMStudio: &inventory.ModelApp{Dir: root},
 		}}, nil
 	}
 	still := func(context.Context) (inventory.ToolState, error) {
 		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{
-			LMStudio: &inventory.ModelApp{Models: []inventory.Model{m}},
+			LMStudio: &inventory.ModelApp{Dir: root, Models: []inventory.Model{m}},
 		}}, nil
 	}
-	p, err := LMStudioRemovePlan(m, []string{"local · Claude Code"}, gone)
+	p, err := LMStudioRemovePlan(root, m, []string{"local · Claude Code"}, gone)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if p.Before == nil || p.Before(context.Background()) != nil {
+		t.Fatalf("Before rejected valid model dir %s", dir)
 	}
 	if len(p.Steps) != 1 || p.Steps[0].Remove != dir || len(p.Notes) != 1 {
 		t.Fatalf("plan %+v", p)
@@ -128,7 +154,7 @@ func TestLMStudioRemovePlan(t *testing.T) {
 	if got, err := p.Verify(context.Background()); err != nil || got != "Mistral-Nemo-12B-GGUF is removed" {
 		t.Errorf("gone verify: %q, %v", got, err)
 	}
-	p, _ = LMStudioRemovePlan(m, nil, still)
+	p, _ = LMStudioRemovePlan(root, m, nil, still)
 	if _, err := p.Verify(context.Background()); err == nil || err.Error() != "LM Studio still has Mistral-Nemo-12B-GGUF" {
 		t.Errorf("still verify: %v", err)
 	}

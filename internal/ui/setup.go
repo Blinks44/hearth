@@ -1168,6 +1168,13 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 		}
 		return inventory.Installation{}, checkMissing
 	}
+	if id == "gh" {
+		st, _ := a.Snapshot.Tool("git")
+		if st.Git != nil && st.Git.GitHub != nil {
+			return inventory.Installation{Version: st.Git.GitHub.Version, Path: st.Git.GitHub.Path}, checkWorks
+		}
+		return inventory.Installation{}, checkMissing
+	}
 	if lang, command, ok := languageCommand(id); ok {
 		st, _ := a.Snapshot.Tool(lang)
 		if path := st.Vars[command]; path != "" {

@@ -155,6 +155,9 @@ func simRuntimeIDs() map[string]string {
 					for _, plat := range []string{"iOS", "watchOS", "tvOS", "xrOS", "visionOS"} {
 						if strings.Contains(runtimeID, "."+plat+"-") {
 							out[plat+"\x00"+version] = uuid
+							if plat == "xrOS" {
+								out["visionOS\x00"+version] = uuid
+							}
 						}
 					}
 				}

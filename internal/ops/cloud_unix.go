@@ -34,6 +34,9 @@ func awsProfileSteps(profile string, env sysenv.Env) ([]Step, []Note, error) {
 			Tag:   "AWS_PROFILE",
 		})
 	}
+	if after == text {
+		return nil, notes, nil
+	}
 	edit := &FileEdit{
 		Path:   rc,
 		Before: text,

@@ -131,6 +131,9 @@ func normalizeJavaVersion(raw string) string {
 	if after, ok := strings.CutPrefix(raw, "1."); ok {
 		raw = after
 	}
+	if major, _, ok := strings.Cut(raw, "."); ok {
+		raw = major
+	}
 	n, err := strconv.Atoi(raw)
 	if err != nil || n <= 0 {
 		return ""

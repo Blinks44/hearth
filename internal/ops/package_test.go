@@ -278,7 +278,7 @@ func TestPackageRefreshPlan(t *testing.T) {
 	t.Run("verify reports up to date", func(t *testing.T) {
 		m := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
 		p, ok := PackageRefreshPlan(m, func(context.Context) (inventory.PackageManager, error) {
-			return inventory.PackageManager{ID: "brew", Name: "Homebrew"}, nil
+			return inventory.PackageManager{ID: "brew", Name: "Homebrew", UpdatesKnown: true}, nil
 		})
 		if !ok {
 			t.Fatal("expected refresh plan for brew")
@@ -286,6 +286,20 @@ func TestPackageRefreshPlan(t *testing.T) {
 		got, err := p.Verify(context.Background())
 		if err != nil || got != locales.PkgRefreshUpToDate("Homebrew") {
 			t.Fatalf("Verify = (%q, %v), want (%q, nil)", got, err, locales.PkgRefreshUpToDate("Homebrew"))
+		}
+	})
+
+	t.Run("verify does not claim up to date when updates unknown", func(t *testing.T) {
+		m := inventory.PackageManager{ID: "flatpak", Name: "Flatpak", Path: "/usr/bin/flatpak"}
+		p, ok := PackageRefreshPlan(m, func(context.Context) (inventory.PackageManager, error) {
+			return inventory.PackageManager{ID: "flatpak", Name: "Flatpak", UpdatesKnown: false}, nil
+		})
+		if !ok {
+			t.Fatal("expected refresh plan for flatpak")
+		}
+		got, err := p.Verify(context.Background())
+		if err != nil || got != locales.PkgRefreshChange("Flatpak") {
+			t.Fatalf("Verify = (%q, %v), want (%q, nil)", got, err, locales.PkgRefreshChange("Flatpak"))
 		}
 	})
 }

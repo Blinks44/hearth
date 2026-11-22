@@ -135,7 +135,7 @@ func TestLoginEnvResetsPathAndMiseSession(t *testing.T) {
 		"__MISE_ORIG_PATH=/Users/me/.orbstack/bin:/usr/bin",
 		"__MISE_SESSION=xyz",
 	}
-	got := loginEnv(gui)
+	got := loginEnv(gui, "/bin/zsh")
 	if got.Get("PATH") != loginPath() {
 		t.Fatalf("PATH = %q, want %q", got.Get("PATH"), loginPath())
 	}
@@ -148,6 +148,13 @@ func TestLoginEnvResetsPathAndMiseSession(t *testing.T) {
 		if v := got.Get(k); v != want {
 			t.Errorf("%s = %q, want %q", k, v, want)
 		}
+	}
+}
+
+func TestLoginEnvSetsShellWhenMissing(t *testing.T) {
+	got := loginEnv(Env{"HOME=/home/me", "PATH=/usr/bin"}, "/bin/bash")
+	if got.Get("SHELL") != "/bin/bash" {
+		t.Fatalf("SHELL = %q, want /bin/bash", got.Get("SHELL"))
 	}
 }
 

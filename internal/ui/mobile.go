@@ -345,13 +345,14 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 				case r.path != "":
 					size = "…"
 				}
-				ui.Row(c.Key(g.title+":"+r.name)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				rowKey := g.title + ":" + r.name + ":" + r.path
+				ui.Row(c.Key(rowKey)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 						clipped(c, r.name).FontSize(13)
 						clipped(c, r.about).FontSize(10.5).TextColor(pal.TextFaint)
 					})
 					ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
-					a.pathActions(c, g.title+":"+r.name, r.path)
+					a.pathActions(c, rowKey, r.path)
 				})
 			}
 			shown += len(rows)
@@ -405,14 +406,18 @@ func (a *App) mobileEnv(c *ui.Context, m inventory.MobileState) {
 			}
 		}
 		javaHome := locales.MobileUnset()
-		for _, v := range a.Snapshot.Variables {
-			if v.Name == "JAVA_HOME" && v.Terminal != "" {
-				javaHome = tilde(v.Terminal, a.Home)
+		if a.Snapshot != nil {
+			for _, v := range a.Snapshot.Variables {
+				if v.Name == "JAVA_HOME" && v.Terminal != "" {
+					javaHome = tilde(v.Terminal, a.Home)
+				}
 			}
 		}
 		listRow(c, locales.MobileJavaHome(), false, javaHome, func() {})
-		if st, _ := a.Snapshot.Tool("cpp"); st.Cpp != nil && st.Cpp.Base != nil && len(m.Xcodes) > 0 {
-			listRow(c, "xcode-select", true, st.Cpp.Base.Path, func() {})
+		if a.Snapshot != nil {
+			if st, _ := a.Snapshot.Tool("cpp"); st.Cpp != nil && st.Cpp.Base != nil && len(m.Xcodes) > 0 {
+				listRow(c, "xcode-select", true, st.Cpp.Base.Path, func() {})
+			}
 		}
 	})
 }
@@ -435,7 +440,7 @@ func (a *App) mobileRemovable(c *ui.Context, m inventory.MobileState, caches []c
 			}
 			listRow(c, locales.MobileOldSimulator(), false, caption, func() {
 				if a.BuildPlan != nil {
-					ui.Button(c.Key("remove-sim:"+runtime.Path), locales.RemoveEllipsis()).Shrink(0).
+					ui.Button(c.Key("remove-sim:"+runtime.ID+":"+runtime.Path+":"+runtime.Platform+":"+runtime.Version), locales.RemoveEllipsis()).Shrink(0).
 						OnClick(func() { a.removeSimRuntime(runtime) })
 				}
 			})

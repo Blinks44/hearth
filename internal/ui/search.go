@@ -41,6 +41,10 @@ func (a *App) searchAvailable(on bool) {
 }
 
 func (a *App) searchIndex() []searchResult {
+	return a.searchIndexAt(time.Now())
+}
+
+func (a *App) searchIndexAt(now time.Time) []searchResult {
 	var out []searchResult
 	add := func(r searchResult) { out = append(out, r) }
 	all := pages()
@@ -134,7 +138,7 @@ func (a *App) searchIndex() []searchResult {
 		}})
 	}
 	if a.Snapshot != nil {
-		found := issues.FindWithLists(a.Snapshot, a.Projects, a.issueLists(), time.Now())
+		found := issues.FindWithLists(a.Snapshot, a.Projects, a.issueLists(), now)
 		visible, _ := a.visibleIssues(found)
 		for _, it := range visible {
 			icon := "lucide/triangle-alert"
@@ -193,7 +197,7 @@ func (a *App) searchIndex() []searchResult {
 				if pkg.Available != "" {
 					detail += " → " + pkg.Available
 				}
-				add(searchResult{id: "pkg:" + mgrPath + ":" + pkgName, group: locales.PackageManagersTitle(), title: pkgName, detail: detail, words: mgr.ID + " " + pkg.Kind, icon: "lucide/package", open: func() {
+				add(searchResult{id: "pkg:" + mgrPath + ":" + packageKey(pkg), group: locales.PackageManagersTitle(), title: pkgName, detail: detail, words: mgr.ID + " " + pkg.Kind, icon: "lucide/package", open: func() {
 					a.packageManager = mgrPath
 					a.packageTab = 0
 					a.packageFilter = pkgName
@@ -211,6 +215,8 @@ func (a *App) searchIndex() []searchResult {
 		}
 		add(searchResult{id: "install:" + entry.ID, group: locales.InstallTitle(), title: title, detail: detail, words: entry.ID + " install", icon: "lucide/download", open: func() {
 			a.setup.wizard = false
+			a.setup.step = 0
+			a.setup.query = ""
 			a.setup.filter = 0
 			if a.setup.more == nil {
 				a.setup.more = map[catalog.Group]bool{}
@@ -231,7 +237,11 @@ func (a *App) searchIndex() []searchResult {
 }
 
 func (a *App) searchResults() []searchResult {
-	all := a.searchIndex()
+	return a.searchResultsAt(time.Now())
+}
+
+func (a *App) searchResultsAt(now time.Time) []searchResult {
+	all := a.searchIndexAt(now)
 	if a.search.available {
 		all = a.availableSearchIndex()
 	}
@@ -311,14 +321,15 @@ func (a *App) searchDialog(c *ui.Context) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.18)).Justify(ui.Start).Padding(min(float32(80), height/10), 0, 0, 0)
 		panel.Width(640).MaxWidth(width-32).Radius(14).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Shadow(0, 12, 32, 0, pal.Shadow)
 		ui.Column(c).Children(func() {
+			now := c.Now()
 			ui.Row(c).Padding(14, 16, 12, 16).Children(func() {
 				ui.SearchField(c.Key("global-query"), &a.search.query).Label(locales.SearchPlaceholder()).Placeholder(locales.SearchPlaceholder()).AutoFocus().Grow(1).Height(37).
-					OnChange(func() { a.search.selected = 0 }).OnSubmit(a.submitSearch)
+					OnChange(func() { a.search.selected = 0 }).OnSubmit(func() { a.submitSearchAt(now) })
 			})
 			if a.search.available {
 				ui.Button(c, locales.SearchLocal()).Margin(0, 16, 8, 16).OnClick(func() { a.searchAvailable(false) })
 			}
-			results := a.searchResults()
+			results := a.searchResultsAt(now)
 			selected := min(a.search.selected, max(len(results)-1, 0))
 			scroll := a.search.scroll
 			a.search.scroll = false
@@ -419,8 +430,8 @@ func (a *App) availableSearchIndex() []searchResult {
 	return out
 }
 
-func (a *App) submitSearch() {
-	results := a.searchResults()
+func (a *App) submitSearchAt(now time.Time) {
+	results := a.searchResultsAt(now)
 	if len(results) > 0 {
 		a.openSearchResult(results[min(a.search.selected, len(results)-1)])
 	}

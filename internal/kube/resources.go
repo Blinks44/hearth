@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -185,7 +186,7 @@ type resourceObject struct {
 	RBACDetails
 	storageClassFields
 	Spec struct {
-		Replicas                                           int
+		Replicas                                           *int
 		ServiceName, PodManagementPolicy, IngressClassName string
 		UpdateStrategy                                     struct{ Type string }
 		Selector, PodSelector                              struct{ MatchLabels map[string]string }
@@ -278,7 +279,11 @@ func (o resourceObject) resource(kind ResourceKind) Resource {
 	case Roles, ClusterRoles, RoleBindings, ClusterRoleBindings:
 		r.RBAC = &o.RBACDetails
 	case StatefulSets, DaemonSets, ReplicaSets:
-		r.Desired, r.Ready, r.Updated = o.Spec.Replicas, o.Status.ReadyReplicas, o.Status.UpdatedReplicas
+		desired := 1
+		if o.Spec.Replicas != nil {
+			desired = *o.Spec.Replicas
+		}
+		r.Desired, r.Ready, r.Updated = desired, o.Status.ReadyReplicas, o.Status.UpdatedReplicas
 		if kind == DaemonSets {
 			r.Desired, r.Ready, r.Updated = o.Status.DesiredNumberScheduled, o.Status.NumberReady, o.Status.UpdatedNumberScheduled
 		}
@@ -369,14 +374,21 @@ func ReadResourceYAML(ctx context.Context, r run.Runner, env sysenv.Env, t Targe
 		if namespaced {
 			apiArgs = append(apiArgs, "--namespace="+resource.Namespace)
 		}
-		var obj map[string]any
-		err := t.API.get(ctx, env, t, apiArgs, &obj)
+		var raw json.RawMessage
+		err := t.API.get(ctx, env, t, apiArgs, &raw)
 		if err != nil {
 			if errors.Is(err, errUseKubectl) {
 				return "", &Error{Access: detect.KubeAccess{Detail: "kubectl is required to read this resource"}}
 			}
 			return "", err
 		}
+		var obj map[string]any
+		dec := json.NewDecoder(bytes.NewReader(raw))
+		dec.UseNumber()
+		if err := dec.Decode(&obj); err != nil {
+			return "", fmt.Errorf("decode Kubernetes resource: %w", err)
+		}
+		customNumbers(obj)
 		metadata, _ := obj["metadata"].(map[string]any)
 		uid, _ := metadata["uid"].(string)
 		if uid != resource.UID {

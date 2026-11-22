@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 )
+
+var usageCacheFileMu sync.Mutex
 
 const usageCacheVersion = 2
 
@@ -102,14 +106,21 @@ func SaveUsageCache(path string) error {
 		transcripts.Unlock()
 		return nil
 	}
+	gen := transcripts.gen
+	filesSnap := maps.Clone(transcripts.files)
+	dbsSnap := maps.Clone(transcripts.dbs)
+	transcripts.dirty = false
+	transcripts.Unlock()
+
 	out := usageCacheFile{
 		Version: usageCacheVersion,
-		Files:   make(map[string]cachedFileJSON, len(transcripts.files)),
-		DBs:     make(map[string]cachedDBJSON, len(transcripts.dbs)),
+		Files:   make(map[string]cachedFileJSON, len(filesSnap)),
+		DBs:     make(map[string]cachedDBJSON, len(dbsSnap)),
 	}
-	for p, c := range transcripts.files {
+	var missingFiles, missingDBs []string
+	for p, c := range filesSnap {
 		if _, err := os.Stat(p); err != nil {
-			delete(transcripts.files, p)
+			missingFiles = append(missingFiles, p)
 			continue
 		}
 		out.Files[p] = cachedFileJSON{
@@ -120,9 +131,9 @@ func SaveUsageCache(path string) error {
 			Usage: c.t.usage,
 		}
 	}
-	for p, c := range transcripts.dbs {
+	for p, c := range dbsSnap {
 		if _, err := os.Stat(p); err != nil {
-			delete(transcripts.dbs, p)
+			missingDBs = append(missingDBs, p)
 			continue
 		}
 		out.DBs[p] = cachedDBJSON{
@@ -133,8 +144,18 @@ func SaveUsageCache(path string) error {
 			Sessions: c.sessions,
 		}
 	}
-	transcripts.dirty = false
-	transcripts.Unlock()
+	if len(missingFiles) > 0 || len(missingDBs) > 0 {
+		transcripts.Lock()
+		if transcripts.gen == gen {
+			for _, p := range missingFiles {
+				delete(transcripts.files, p)
+			}
+			for _, p := range missingDBs {
+				delete(transcripts.dbs, p)
+			}
+		}
+		transcripts.Unlock()
+	}
 
 	data, err := json.Marshal(out)
 	if err != nil {
@@ -158,6 +179,16 @@ func SaveUsageCache(path string) error {
 		_ = os.Remove(tmpName)
 		return fmt.Errorf("close usage cache: %w", err)
 	}
+
+	usageCacheFileMu.Lock()
+	defer usageCacheFileMu.Unlock()
+	transcripts.Lock()
+	stale := transcripts.gen != gen
+	transcripts.Unlock()
+	if stale {
+		_ = os.Remove(tmpName)
+		return nil
+	}
 	if err := os.Rename(tmpName, path); err != nil {
 		_ = os.Remove(tmpName)
 		return fmt.Errorf("rename usage cache: %w", err)
@@ -168,7 +199,10 @@ func SaveUsageCache(path string) error {
 // ClearUsageCache empties the in-memory session cache and deletes path if
 // non-empty.
 func ClearUsageCache(path string) error {
+	usageCacheFileMu.Lock()
+	defer usageCacheFileMu.Unlock()
 	transcripts.Lock()
+	transcripts.gen++
 	clear(transcripts.files)
 	clear(transcripts.dbs)
 	transcripts.dirty = false

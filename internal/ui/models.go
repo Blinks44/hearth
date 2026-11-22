@@ -278,7 +278,7 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 			case m.name == "LM Studio" && md.Path != "":
 				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
 					if menu.Item(locales.RemoveEllipsis()).Chosen() {
-						plan, err := ops.LMStudioRemovePlan(md, askedBy(), a.detect("models"))
+						plan, err := ops.LMStudioRemovePlan(m.app.Dir, md, askedBy(), a.detect("models"))
 						a.proposeOrSay(plan, err)
 					}
 				})

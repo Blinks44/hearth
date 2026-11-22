@@ -195,13 +195,18 @@ func checkAzAuth(ctx context.Context, r run.Runner, bin string, env sysenv.Env) 
 			identity := or(user.UPN, user.DisplayName)
 			return CloudAuth{State: CloudAuthVerified, Identity: identity}
 		}
+		return CloudAuth{State: CloudAuthUnknown, Detail: "unexpected az output"}
 	}
 	errText := firstNonEmpty(string(out.Stderr), string(out.Stdout))
+	classified := classifyCloudError(errText)
+	if classified.State == CloudAuthExpired || classified.State == CloudAuthNotLoggedIn {
+		return classified
+	}
 	lower := strings.ToLower(errText)
 	// Service principals and restricted directories cannot query /me; fall back
 	// to account metadata only if the error is a directory/permission refusal
 	// rather than expired or missing login.
-	if strings.Contains(lower, "authorization_requestdenied") || strings.Contains(lower, "service principal") || strings.Contains(lower, "does not exist") {
+	if strings.Contains(lower, "authorization_requestdenied") || strings.Contains(lower, "service principal") || strings.Contains(lower, "request_resourcenotfound") {
 		accOut, accErr := r.Run(ctx, run.Cmd{
 			Args:    []string{bin, "account", "show", "--query", "{user:user.name,id:id}", "--output", "json"},
 			Env:     runEnv,
@@ -217,7 +222,7 @@ func checkAzAuth(ctx context.Context, r run.Runner, bin string, env sysenv.Env) 
 			}
 		}
 	}
-	return classifyCloudError(errText)
+	return classified
 }
 
 // ListGcloudProjects returns up to 50 project IDs visible to the active gcloud

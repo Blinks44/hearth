@@ -449,7 +449,9 @@ func (a *App) dockerPortsMounts(c *ui.Context, item docker.Container, d *docker.
 				button = locales.OpOpenLink()
 			}
 			info := cmp.Or(address, strings.Trim(binding.HostIP+":"+binding.HostPort, ":"))
-			if item.State.Status != "running" {
+			if item.State.Status == "paused" {
+				info = strings.TrimSpace(info + " · " + locales.DockerContainerPaused())
+			} else if item.State.Status != "running" {
 				info = strings.TrimSpace(info + " · " + locales.DockerContainerStopped())
 			}
 			entries = append(entries, entry{

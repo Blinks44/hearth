@@ -257,9 +257,12 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 					if betaIdx < 0 {
 						iconButton(c.Key("install:beta"), "download", locales.InstallNamed("beta")).
 							OnClick(func() { a.installRustToolchain("beta") })
-					} else if ins[betaIdx].Version != train.Beta {
-						iconButton(c.Key("update:beta"), "download", locales.RustUpdateChannel("beta")).
-							OnClick(func() { a.installRustToolchain("beta") })
+					} else {
+						base, _, _ := strings.Cut(ins[betaIdx].Version, "-")
+						if base != train.Beta {
+							iconButton(c.Key("update:beta"), "download", locales.RustUpdateChannel("beta")).
+								OnClick(func() { a.installRustToolchain("beta") })
+						}
 					}
 				}
 			})
@@ -283,7 +286,7 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 		if canRustup {
 			install := func() {
 				v := strings.TrimSpace(a.rustToolchainInput)
-				if v == "" {
+				if !ops.ValidRustupIdent(v) {
 					return
 				}
 				a.rustToolchainInput = ""
@@ -300,7 +303,7 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 					label = locales.InstallNamed(v)
 				}
 				ui.Button(c.Key("rust-toolchain-install"), locales.Install()).Label(label).
-					Disabled(v == "").Shrink(0).OnClick(install)
+					Disabled(!ops.ValidRustupIdent(v)).Shrink(0).OnClick(install)
 			})
 		}
 	})
@@ -352,7 +355,7 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 		if canRustup {
 			add := func() {
 				v := strings.TrimSpace(a.rustTargetInput)
-				if v == "" {
+				if !ops.ValidRustupIdent(v) {
 					return
 				}
 				a.rustTargetInput = ""
@@ -369,7 +372,7 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 					label = locales.RustTargetAddTitle(v)
 				}
 				ui.Button(c.Key("rust-target-add"), locales.RustTargetAdd()).Label(label).
-					Disabled(v == "").Shrink(0).OnClick(add)
+					Disabled(!ops.ValidRustupIdent(v)).Shrink(0).OnClick(add)
 			})
 		}
 	})

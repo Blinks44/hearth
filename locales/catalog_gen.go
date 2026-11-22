@@ -6022,6 +6022,16 @@ func (msgs Messages) KubeResourceRolloutDetails() string {
 	return Catalog.Format(msgs.locale, "kubeResourceRolloutDetails", nil)
 }
 
+// KubeResourceRolloutOnDelete says "The OnDelete strategy updates pods only when they are deleted manually. Hearth will apply the template change without…"
+// in the language the app shows.
+func KubeResourceRolloutOnDelete() string { return In(i18n.Locale()).KubeResourceRolloutOnDelete() }
+
+// KubeResourceRolloutOnDelete says "The OnDelete strategy updates pods only when they are deleted manually. Hearth will apply the template change without…"
+// in the language of msgs.
+func (msgs Messages) KubeResourceRolloutOnDelete() string {
+	return Catalog.Format(msgs.locale, "kubeResourceRolloutOnDelete", nil)
+}
+
 // KubeResourceRolloutPaused says "The Deployment is paused. Its updated pod template will take effect when the rollout resumes."
 // in the language the app shows.
 func KubeResourceRolloutPaused() string { return In(i18n.Locale()).KubeResourceRolloutPaused() }

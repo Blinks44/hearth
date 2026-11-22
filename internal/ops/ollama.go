@@ -3,6 +3,7 @@ package ops
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -102,10 +103,12 @@ func OllamaRemovePlan(m inventory.Model, askedBy []string, detect Detect) Plan {
 }
 
 // LMStudioRemovePlan returns the plan that removes m, a model folder LM Studio
-// downloaded, after checking its path is absolute and non-root.
-func LMStudioRemovePlan(m inventory.Model, askedBy []string, detect Detect) (Plan, error) {
+// downloaded, after checking its path stays strictly inside modelsRoot without
+// traversing symlinks.
+func LMStudioRemovePlan(modelsRoot string, m inventory.Model, askedBy []string, detect Detect) (Plan, error) {
+	root := filepath.Clean(modelsRoot)
 	dir := filepath.Clean(m.Path)
-	if m.Path == "" || !filepath.IsAbs(dir) || dir == filepath.Dir(dir) {
+	if !lexicalInsideModelsRoot(root, dir) {
 		return Plan{}, errors.New(locales.LmStudioRemoveBadPath())
 	}
 	p := Plan{
@@ -113,6 +116,12 @@ func LMStudioRemovePlan(m inventory.Model, askedBy []string, detect Detect) (Pla
 		Why:     locales.LmStudioRemoveWhy(),
 		Steps:   []Step{{Remove: dir}},
 		Changes: []string{"− " + m.Name + " · LM Studio"},
+		Before: func(context.Context) error {
+			if !realInsideModelsRoot(root, dir) {
+				return errors.New(locales.LmStudioRemoveBadPath())
+			}
+			return nil
+		},
 	}
 	for _, s := range askedBy {
 		p.Notes = append(p.Notes, Note{Title: locales.OllamaRemoveAsked(s), Text: locales.OllamaRemoveAskedText()})
@@ -127,6 +136,42 @@ func LMStudioRemovePlan(m inventory.Model, askedBy []string, detect Detect) (Pla
 		}
 	}
 	return p, nil
+}
+
+func lexicalInsideModelsRoot(root, dir string) bool {
+	if root == "" || dir == "" {
+		return false
+	}
+	if !filepath.IsAbs(root) || !filepath.IsAbs(dir) || dir == filepath.Dir(dir) {
+		return false
+	}
+	return strictSubpath(root, dir)
+}
+
+func realInsideModelsRoot(root, dir string) bool {
+	if !lexicalInsideModelsRoot(root, dir) {
+		return false
+	}
+	if info, err := os.Lstat(dir); err != nil || info.Mode()&os.ModeSymlink != 0 {
+		return false
+	}
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return false
+	}
+	realDir, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		return false
+	}
+	return strictSubpath(realRoot, realDir)
+}
+
+func strictSubpath(root, target string) bool {
+	rel, err := filepath.Rel(root, target)
+	if err != nil || rel == "" || rel == "." || rel == ".." {
+		return false
+	}
+	return !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 // ollamaHas finds the models again and reports that Ollama has name.

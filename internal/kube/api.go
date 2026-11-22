@@ -103,6 +103,7 @@ func (a *API) get(ctx context.Context, env sysenv.Env, t Target, args []string, 
 	case <-ctx.Done():
 		return &Error{Access: detect.KubeFailure(ctx.Err().Error())}
 	}
+	defer clear(res.data)
 	if res.err != nil {
 		if errors.Is(res.err, errUseKubectl) || (t.Kubectl != "" && strings.Contains(res.err.Error(), "getting credentials")) {
 			return errUseKubectl

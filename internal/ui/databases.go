@@ -2,6 +2,8 @@ package ui
 
 import (
 	"cmp"
+	"net"
+	"net/url"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -57,26 +59,30 @@ func (a *App) databases(c *ui.Context, p page) {
 				for _, is := range conflicts {
 					title, explain := issueText(is, a.Home)
 					var action func()
+					dirKey := ""
+					if len(is.Dirs) > 0 {
+						dirKey = is.Dirs[0]
+					}
 					if plan, ok := a.conflictPlan(is, servers); ok {
 						action = func() {
-							ui.Button(c.Key("stop:"+is.Project+is.Dirs[0]), locales.ServiceStop()).Shrink(0).OnClick(func() { a.Propose(plan) })
+							ui.Button(c.Key("stop:"+is.Project+dirKey), locales.ServiceStop()).Shrink(0).OnClick(func() { a.Propose(plan) })
 						}
 					} else if ct, ok := a.conflictContainer(is, servers); ok {
 						target, hasTarget := a.selectedDockerTarget()
-						canStop := hasTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running()
+						canStop := hasTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running() && !a.databaseBusy
 						canOpen := a.canOpenDockerContainer()
 						if canStop || canOpen {
 							action = func() {
 								ui.Row(c).Gap(6).Shrink(0).AlignItems(ui.Center).Children(func() {
 									if canStop {
-										ui.Button(c.Key("stop-container:"+is.Project+is.Dirs[0]), locales.DatabaseStopContainer()).Shrink(0).OnClick(func() {
+										ui.Button(c.Key("stop-container:"+is.Project+dirKey), locales.DatabaseStopContainer()).Shrink(0).OnClick(func() {
 											item := docker.Container{ID: ct.ID, Name: ct.Name}
 											item.State.Status = "running"
 											a.planDockerDatabase(target, item, ops.DockerStop)
 										})
 									}
 									if canOpen {
-										ui.Button(c.Key("open-docker:"+is.Project+is.Dirs[0]), locales.OpenInDocker()).Shrink(0).OnClick(func() {
+										ui.Button(c.Key("open-docker:"+is.Project+dirKey), locales.OpenInDocker()).Shrink(0).OnClick(func() {
 											a.openDockerContainer(ct.ID, ct.Name)
 										})
 									}
@@ -184,7 +190,7 @@ func (a *App) launchDBClient(argv []string) {
 }
 
 func (a *App) dockerDatabaseAction(db inventory.Database) (ops.DockerAction, docker.Target, docker.Container, bool) {
-	if db.Source != "docker" || !docker.ContainerID(db.ContainerID) || a.BuildPlan == nil || a.op.running() {
+	if db.Source != "docker" || !docker.ContainerID(db.ContainerID) || a.BuildPlan == nil || a.op.running() || a.databaseBusy {
 		return "", docker.Target{}, docker.Container{}, false
 	}
 	target, ok := a.selectedDockerTarget()
@@ -205,15 +211,20 @@ func (a *App) dockerDatabaseAction(db inventory.Database) (ops.DockerAction, doc
 }
 
 func (a *App) planDockerDatabase(target docker.Target, ct docker.Container, action ops.DockerAction) {
-	if a.BuildPlan == nil || a.op.running() {
+	if a.BuildPlan == nil || a.op.running() || a.databaseBusy {
 		return
 	}
+	a.databaseBusy = true
 	a.databaseErr = ""
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 		return ops.PlanDockerContainers(target, env, []docker.Container{ct}, action)
 	}, func(p ops.Plan, err error) {
+		a.databaseBusy = false
 		if err != nil {
 			a.databaseErr = err.Error()
+			return
+		}
+		if a.router.Path() != "/tools/databases" || a.op.running() {
 			return
 		}
 		a.Propose(p)
@@ -459,6 +470,9 @@ func databasePort(db inventory.Database, listeners []inventory.DatabaseListener)
 	if db.Source == "docker" {
 		return ""
 	}
+	if db.Status == "stopped" {
+		return databaseDefaultPort(db.Kind)
+	}
 	if db.Path != "" {
 		clean := filepath.Clean(db.Path)
 		for _, l := range listeners {
@@ -560,7 +574,19 @@ func (a *App) servicePlan(db inventory.Database) (ops.Plan, bool) {
 // one running service of the kind the project asks for there, when no
 // container publishes the port.
 func (a *App) conflictPlan(is issues.Issue, servers []inventory.Database) (ops.Plan, bool) {
+	if len(is.Dirs) == 0 {
+		return ops.Plan{}, false
+	}
 	port := is.Dirs[0]
+	if _, hasContainer := a.portContainer(port); hasContainer {
+		return ops.Plan{}, false
+	}
+	var listeners []inventory.DatabaseListener
+	if a.Snapshot != nil {
+		if st, ok := a.Snapshot.Tool("databases"); ok && st.Databases != nil {
+			listeners = st.Databases.Listeners
+		}
+	}
 	kind := ""
 	for _, p := range a.Projects {
 		if p.Dir != is.Project {
@@ -578,6 +604,9 @@ func (a *App) conflictPlan(is issues.Issue, servers []inventory.Database) (ops.P
 			return ops.Plan{}, false
 		}
 		if db.Service != "" && db.Source != "docker" && db.Status == "running" && db.Kind == kind {
+			if len(listeners) > 0 && databasePort(db, listeners) != port {
+				continue
+			}
 			holder = append(holder, db)
 		}
 	}
@@ -677,29 +706,35 @@ func (a *App) autostartSwitch(c *ui.Context, db inventory.Database) {
 // Homebrew's PostgreSQL lets the user in as themselves, its MySQL root,
 // without a password; password reports a server that asks one. "" for a kind
 // Hearth has none for, or a Docker container without a published port.
-func databaseURL(db inventory.Database, user, port string) (url string, password bool) {
+func databaseURL(db inventory.Database, user, port string) (rawURL string, password bool) {
 	if port == "" {
 		if db.Source == "docker" {
 			return "", false
 		}
 		port = databaseDefaultPort(db.Kind)
 	}
+	host := net.JoinHostPort("localhost", port)
 	switch db.Kind {
 	case "PostgreSQL":
-		if db.Source == "brew" && user != "" {
-			return "postgresql://" + user + "@localhost:" + port + "/postgres", false
+		if db.Source == "brew" && validDBUser(user) {
+			u := url.URL{Scheme: "postgresql", User: url.User(user), Host: host, Path: "/postgres"}
+			return u.String(), false
 		}
-		return "postgresql://postgres@localhost:" + port + "/postgres", true
+		return "postgresql://postgres@" + host + "/postgres", true
 	case "MySQL":
-		return "mysql://root@localhost:" + port, db.Source != "brew"
+		return "mysql://root@" + host, db.Source != "brew"
 	case "MariaDB":
-		return "mysql://root@localhost:" + port, true
+		return "mysql://root@" + host, true
 	case "Redis":
-		return "redis://localhost:" + port, false
+		return "redis://" + host, false
 	case "MongoDB":
-		return "mongodb://localhost:" + port, false
+		return "mongodb://" + host, false
 	case "SQL Server":
-		return "sqlserver://sa@localhost:" + port, true
+		return "sqlserver://sa@" + host, true
 	}
 	return "", false
+}
+
+func validDBUser(user string) bool {
+	return user != "" && user != "." && user != "/" && user != string(filepath.Separator)
 }

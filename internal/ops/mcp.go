@@ -158,11 +158,20 @@ func tomlDefWithDisabled(name string, def ai.MCPDef, disabled bool) (string, err
 	if len(def.Env) > 0 {
 		server["env"] = def.Env
 	}
+	if len(def.EnvVars) > 0 {
+		server["env_vars"] = def.EnvVars
+	}
 	if def.URL != "" {
 		server["url"] = def.URL
 	}
 	if len(def.Headers) > 0 {
 		server["http_headers"] = def.Headers
+	}
+	if len(def.EnvHeaders) > 0 {
+		server["env_http_headers"] = def.EnvHeaders
+	}
+	if def.BearerVar != "" {
+		server["bearer_token_env_var"] = def.BearerVar
 	}
 	if disabled {
 		server["enabled"] = false
@@ -217,22 +226,40 @@ func replaceTOMLTable(text, table, body string) (string, bool) {
 // secrets are the values in def that s, as the snapshot keeps it, hides:
 // the variables', the headers', and the arguments and URL it masked.
 func secrets(def ai.MCPDef, s inventory.MCPServer) []string {
-	var out []string
+	var raw []string
 	for _, v := range def.Env {
-		out = append(out, v)
+		raw = append(raw, v)
 	}
 	for _, v := range def.Headers {
-		out = append(out, v)
+		raw = append(raw, v)
 	}
 	for i, a := range def.Args {
 		if i < len(s.Args) && s.Args[i] != a {
-			out = append(out, a)
+			raw = append(raw, a)
 		}
 	}
 	if def.URL != s.URL {
-		out = append(out, def.URL)
+		raw = append(raw, def.URL)
 	}
-	return slices.DeleteFunc(out, func(v string) bool { return v == "" })
+	var out []string
+	add := func(v string) {
+		if v != "" && !slices.Contains(out, v) {
+			out = append(out, v)
+		}
+	}
+	for _, v := range raw {
+		if v == "" {
+			continue
+		}
+		add(v)
+		if b, err := json.Marshal(v); err == nil && len(b) >= 2 {
+			add(string(b[1 : len(b)-1]))
+		}
+		if q := strconv.Quote(v); len(q) >= 2 {
+			add(q[1 : len(q)-1])
+		}
+	}
+	return out
 }
 
 // hideMCPFile includes Antigravity's OAuth client secrets, which can also
@@ -501,7 +528,7 @@ func MCPEnablePlan(s inventory.MCPServer, on bool, env sysenv.Env, names func(st
 
 func validateMCPDef(name string, def ai.MCPDef) (string, ai.MCPDef, error) {
 	name = strings.TrimSpace(name)
-	if name == "" || strings.ContainsAny(name, "\r\n\t/\\") {
+	if name == "" || strings.HasPrefix(name, "-") || strings.ContainsAny(name, "\r\n\t/\\") {
 		return "", def, errors.New(locales.McpFormBadName())
 	}
 	def.Transport = strings.ToLower(strings.TrimSpace(def.Transport))
@@ -621,6 +648,17 @@ func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names fun
 		if err != nil {
 			return Plan{}, err
 		}
+		if def.Transport == "stdio" && len(def.EnvVars) == 0 {
+			def.EnvVars = oldDef.EnvVars
+		}
+		if def.Transport != "stdio" {
+			if len(def.EnvHeaders) == 0 {
+				def.EnvHeaders = oldDef.EnvHeaders
+			}
+			if def.BearerVar == "" {
+				def.BearerVar = oldDef.BearerVar
+			}
+		}
 		table, err := tomlDefWithDisabled(s.Name, def, s.Disabled)
 		if err != nil {
 			return Plan{}, err
@@ -646,9 +684,13 @@ func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names fun
 		p.Steps = []Step{{Edit: &FileEdit{Path: s.File, Before: before, After: after, Hide: hideMCPFile(s.Agent, before, hide)}}}
 	}
 	wantURL := ai.MaskMCP(inventory.MCPServer{URL: def.URL}).URL
+	wantTransport := def.Transport
+	if wantTransport == "sse" && (format == mcpTOML || format == mcpOpenCode || s.Agent == "devin") {
+		wantTransport = "http"
+	}
 	p.Verify = func(context.Context) (string, error) {
 		found, ok := findServer(readServers(env, s.Project), s.Agent, s.Name, s.Project)
-		if !ok || found.Transport != def.Transport || (def.Transport == "stdio" && found.Command != def.Command) || (def.Transport != "stdio" && found.URL != wantURL) {
+		if !ok || found.Transport != wantTransport || (def.Transport == "stdio" && found.Command != def.Command) || (def.Transport != "stdio" && found.URL != wantURL) {
 			return "", errors.New(locales.McpCheckMissing(s.Name, title))
 		}
 		return locales.McpCheckUpdated(s.Name, title), nil

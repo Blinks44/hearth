@@ -746,6 +746,12 @@ func (a *App) cliInfraCard(c *ui.Context, reqs []cliInfraReq) {
 	})
 }
 
+// ClearCloudAuth drops cached per-provider cloud auth check results, e.g.
+// after a full rescan when external CLI state may have changed.
+func (a *App) ClearCloudAuth() {
+	a.cloudAuth = nil
+}
+
 func (a *App) checkCloudAuth(tool, bin string) {
 	if a.CheckCloudAuth == nil || bin == "" {
 		return

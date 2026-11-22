@@ -530,6 +530,7 @@
   "kubeResourceApply": "应用",
   "kubeResourceRollout": "Deployment 滚动更新",
   "kubeResourceRolloutDetails": "更改 Pod 模板会按 Deployment 的策略触发更新。Pod 可能重启，流量可能中断。",
+  "kubeResourceRolloutOnDelete": "OnDelete 策略仅在手动删除 Pod 时才会更新。Hearth 会直接应用模板更改，而不等待滚动更新。",
   "kubeResourceRolloutPaused": "Deployment 已暂停。更新恢复后，新的 Pod 模板将生效。",
   "kubeResourceRolloutUnverified": "已确认编辑结果，无法验证 Deployment 滚动更新",
   "kubeResourceRolloutVerified": "编辑结果与预览一致，且 Deployment 已更新完毕。",

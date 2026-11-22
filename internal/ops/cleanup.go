@@ -129,16 +129,22 @@ func cleanupPackage(c cleanup.Candidate, s *inventory.Snapshot) (inventory.Packa
 	case c.Kind == cleanup.ExtraCopy && len(c.Paths) == 1 && len(c.Copies) > 0 && c.Copies[0].Source.Manager == "brew":
 	case c.Kind == cleanup.UnneededPackage && c.Manager == "brew" && len(c.Paths) > 0:
 	case c.Kind == cleanup.UnneededPackage && (c.Manager == "apt" || c.Manager == "pacman"):
+		wantName, wantArch, hasArch := strings.Cut(c.ID, ":")
 		for _, st := range s.Tools {
 			for _, m := range st.PackageManagers {
 				if m.ID != c.Manager {
 					continue
 				}
-				i := slices.IndexFunc(m.Packages, func(p inventory.SystemPackage) bool { return p.Name == c.ID })
+				i := slices.IndexFunc(m.Packages, func(p inventory.SystemPackage) bool {
+					return p.Orphan && p.Name == wantName && (!hasArch || p.Architecture == wantArch)
+				})
 				if i < 0 {
 					continue
 				}
 				pkg := m.Packages[i]
+				if m.ID == "apt" && hasArch {
+					pkg.Reference = c.ID
+				}
 				if !packageName.MatchString(packageRef(m.ID, pkg)) || slices.Contains(managerPackages[m.ID], strings.ToLower(pkg.Name)) {
 					return inventory.PackageManager{}, inventory.SystemPackage{}, false
 				}

@@ -661,7 +661,7 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 			ui.Box(c).Width(110).Shrink(0)
 		})
 		for _, st := range statuses {
-			first := st.Checks[0]
+			src := primaryCheck(st)
 			ui.Row(c).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Row(c).Grow(columnGrow[0]).Basis(0).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
 					iconOrLogo(c, toolIcon(st.Tool), 16, t.TextMuted)
@@ -671,7 +671,7 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 				if want == "" {
 					want = locales.AnyVersion()
 				}
-				cell(c, columnGrow[1], want, checkSource(first), pal.TextFaint)
+				cell(c, columnGrow[1], want, checkSource(src), pal.TextFaint)
 				installed, caption, warn := installedCell(st)
 				color := pal.TextFaint
 				if warn {

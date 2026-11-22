@@ -530,6 +530,7 @@
   "kubeResourceApply": "Appliquer",
   "kubeResourceRollout": "Déploiement progressif",
   "kubeResourceRolloutDetails": "Une modification du modèle de pod déclenche un déploiement selon la stratégie du Deployment. Les pods peuvent redémarrer et le trafic peut être interrompu.",
+  "kubeResourceRolloutOnDelete": "La stratégie OnDelete ne met à jour les pods que lorsqu’ils sont supprimés manuellement. Hearth appliquera la modification du modèle sans attendre de déploiement.",
   "kubeResourceRolloutPaused": "Le Deployment est en pause. Le modèle prendra effet à la reprise du déploiement.",
   "kubeResourceRolloutUnverified": "La modification est confirmée. Le déploiement n’a pas pu être vérifié",
   "kubeResourceRolloutVerified": "La modification correspond à l’aperçu et le déploiement est terminé.",

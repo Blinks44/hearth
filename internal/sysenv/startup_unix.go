@@ -24,7 +24,7 @@ func Startup(ctx context.Context, r run.Runner, _, gui Env) *inventory.ShellStar
 
 func startup(ctx context.Context, r run.Runner, gui Env, marker string) *inventory.ShellStartup {
 	sh := loginShell(ctx, r, gui)
-	base := loginEnv(gui)
+	base := loginEnv(gui, sh)
 	res, err := r.Run(ctx, run.Cmd{Args: append(shellArgs(sh), "exit"), Env: base, Timeout: shellTimeout})
 	if err != nil {
 		return nil

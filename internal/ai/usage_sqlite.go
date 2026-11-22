@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io/fs"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -34,10 +35,14 @@ func openSQLiteRO(path string) (*sql.DB, error) {
 	uri := sqliteFileURI(path)
 	db, err := sql.Open("sqlite", uri+"?mode=ro&_pragma=busy_timeout(1000)&_pragma=query_only(1)")
 	if err == nil {
-		if probeSQLiteRO(db) == nil {
+		err = probeSQLiteRO(db)
+		if err == nil {
 			return db, nil
 		}
 		_ = db.Close()
+	}
+	if wfi, werr := os.Stat(path + "-wal"); werr == nil && wfi.Size() > 0 {
+		return nil, err
 	}
 	db, err = sql.Open("sqlite", uri+"?mode=ro&immutable=1")
 	if err != nil {
@@ -628,8 +633,11 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 	if err != nil {
 		return nil, err
 	}
-	size, _, walSize, _, _ := dbStat(path)
+	size, mod, walSize, walMod, _ := dbStat(path)
 	fileMod := fi.ModTime()
+	if walMod > mod {
+		fileMod = time.Unix(0, walMod)
+	}
 	fallbackDay := fileMod.In(loc).Format(time.DateOnly)
 
 	var dir string
@@ -798,6 +806,9 @@ func extractPathString(b []byte) string {
 	if strings.HasPrefix(s, "file://") {
 		if u, err := url.Parse(s); err == nil && u.Path != "" {
 			s = u.Path
+			if len(s) >= 4 && s[0] == '/' && s[2] == ':' && (s[3] == '/' || s[3] == '\\') {
+				s = s[1:]
+			}
 		}
 	}
 	if strings.HasPrefix(s, "/") || (len(s) >= 3 && s[1] == ':' && (s[2] == '\\' || s[2] == '/')) {
@@ -864,13 +875,13 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 	var respID string
 	for _, f := range decodeProtoFields(usageBytes) {
 		switch {
-		case f.num == 2 && f.wireType == 0:
+		case f.num == 2 && f.wireType == 0 && f.varint <= math.MaxInt64:
 			in = int64(f.varint)
-		case f.num == 3 && f.wireType == 0:
+		case f.num == 3 && f.wireType == 0 && f.varint <= math.MaxInt64:
 			out = int64(f.varint)
-		case f.num == 4 && f.wireType == 0:
+		case f.num == 4 && f.wireType == 0 && f.varint <= math.MaxInt64:
 			cw = int64(f.varint)
-		case f.num == 5 && f.wireType == 0:
+		case f.num == 5 && f.wireType == 0 && f.varint <= math.MaxInt64:
 			cr = int64(f.varint)
 		case f.num == 11 && f.wireType == 2 && utf8.Valid(f.bytes):
 			respID = strings.TrimSpace(string(f.bytes))

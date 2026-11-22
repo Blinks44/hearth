@@ -51,6 +51,15 @@ func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string,
 		return err
 	}
 	args := terminalLauncher(app, name)
+	if _, isExec := r.(Exec); isExec && args[0] != "/usr/bin/open" {
+		if err = ctx.Err(); err != nil {
+			return fmt.Errorf("open terminal: %w", err)
+		}
+		if err = startDetached(args, env); err != nil {
+			return fmt.Errorf("open terminal: %w", err)
+		}
+		return nil
+	}
 	res, err := r.Run(ctx, Cmd{Args: args, Env: env})
 	if err != nil {
 		return fmt.Errorf("open terminal: %w", err)

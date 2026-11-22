@@ -45,7 +45,13 @@ func applyUserVar(e UserVarEdit) (func() error, error) {
 	}
 	if e.Delete {
 		if !ok {
+			if e.Before != "" {
+				return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
+			}
 			return func() error { return nil }, nil
+		}
+		if value != e.Before {
+			return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
 		}
 		if err := sysenv.DeleteUserVar(e.Name); err != nil {
 			return nil, err
@@ -57,6 +63,15 @@ func applyUserVar(e UserVarEdit) (func() error, error) {
 	}
 	if ok && !e.Replace {
 		return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
+	}
+	if e.Replace {
+		cur := ""
+		if ok {
+			cur = value
+		}
+		if cur != e.Before {
+			return nil, fmt.Errorf("%s\\%s: %w", UserVarsName, e.Name, ErrChanged)
+		}
 	}
 	if err := sysenv.SetUserVar(e.Name, e.Value); err != nil {
 		return nil, err

@@ -148,10 +148,13 @@ func PackageRefreshPlan(m inventory.PackageManager, reread Reread) (Plan, bool) 
 					updates++
 				}
 			}
-			if updates == 0 {
-				return locales.PkgRefreshUpToDate(name), nil
+			if updates > 0 {
+				return locales.PkgRefreshChecked(name, updates), nil
 			}
-			return locales.PkgRefreshChecked(name, updates), nil
+			if !after.UpdatesKnown {
+				return locales.PkgRefreshChange(name), nil
+			}
+			return locales.PkgRefreshUpToDate(name), nil
 		}
 	}
 	return p, true
@@ -193,7 +196,7 @@ func packageRefreshSteps(m inventory.PackageManager) []Step {
 // packageRef is how m's commands name pkg: Flatpak by its full ref, the
 // others by name.
 func packageRef(manager string, pkg inventory.SystemPackage) string {
-	if manager == "flatpak" && pkg.Reference != "" {
+	if (manager == "flatpak" || manager == "apt") && pkg.Reference != "" {
 		return pkg.Reference
 	}
 	return pkg.Name

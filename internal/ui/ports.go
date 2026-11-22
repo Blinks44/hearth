@@ -131,31 +131,80 @@ func (a *App) portService(r portRow) (inventory.Database, bool) {
 
 // portContainer is the running Docker container publishing port; false for none.
 func (a *App) portContainer(port string) (inventory.DockerPortContainer, bool) {
+	var r portRow
+	r.Port = port
+	return a.portContainerFor(r)
+}
+
+func (a *App) portContainerFor(r portRow) (inventory.DockerPortContainer, bool) {
 	if st, ok := a.Snapshot.Tool("docker"); ok && st.Docker != nil {
 		for _, ct := range st.Docker.PortContainers {
-			if (ct.Status == "" || ct.Status == "running") && slices.Contains(ct.Ports, port) {
+			if (ct.Status == "" || ct.Status == "running") && containerMatchesPort(ct, r) {
 				return ct, true
 			}
 		}
-		for _, db := range st.Docker.Databases {
-			if db.Status == "running" && slices.Contains(db.Ports, port) {
-				return inventory.DockerPortContainer{
-					ID:     db.ContainerID,
-					Name:   db.Name,
-					Image:  db.Version,
-					Status: db.Status,
-					Ports:  db.Ports,
-				}, true
+		if !st.Docker.PortContainersFresh {
+			for _, db := range st.Docker.Databases {
+				if db.Status == "running" && slices.Contains(db.Ports, r.Port) {
+					return inventory.DockerPortContainer{
+						ID:     db.ContainerID,
+						Name:   db.Name,
+						Image:  db.Version,
+						Status: db.Status,
+						Ports:  db.Ports,
+					}, true
+				}
 			}
 		}
 	}
 	return inventory.DockerPortContainer{}, false
 }
 
+func containerMatchesPort(ct inventory.DockerPortContainer, r portRow) bool {
+	if len(ct.Bindings) == 0 {
+		return slices.Contains(ct.Ports, r.Port)
+	}
+	isDockerProc := r.Process == "" || slices.Contains(dockerProcesses, r.Process)
+	addrs := r.Addresses
+	if len(addrs) == 0 && r.Address != "" {
+		addrs = []string{r.Address}
+	}
+	for _, b := range ct.Bindings {
+		if b.HostPort != r.Port {
+			continue
+		}
+		if len(addrs) == 0 {
+			return true
+		}
+		if bindingMatchesAddresses(b.HostIP, addrs) {
+			if isDockerProc || !isWildcardIP(b.HostIP) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isWildcardIP(ip string) bool {
+	return ip == "" || ip == "0.0.0.0" || ip == "::" || ip == "*"
+}
+
+func bindingMatchesAddresses(hostIP string, addrs []string) bool {
+	if isWildcardIP(hostIP) {
+		return true
+	}
+	for _, addr := range addrs {
+		if addr == hostIP || isWildcardIP(addr) {
+			return true
+		}
+	}
+	return false
+}
+
 // portAbout says who listens at r, and the plan that stops it, if Hearth
 // can.
 func (a *App) portAbout(r portRow) (about string, plan ops.Plan, ok bool) {
-	if ct, found := a.portContainer(r.Port); found {
+	if ct, found := a.portContainerFor(r); found {
 		return locales.PortsContainer(ct.Name), ops.Plan{}, false
 	}
 	if slices.Contains(dockerProcesses, r.Process) {
@@ -219,13 +268,14 @@ func (a *App) applyPortsRefresh(res detect.PortsSnapshot) {
 				db = *next.Tools[i].Databases
 			}
 			db.Listeners = slices.Clone(res.Listeners)
-			db.Warnings = slices.Clone(res.Warnings)
+			db.Warnings = mergeListenerWarnings(db.Warnings, res.Warnings)
 			next.Tools[i].Databases = &db
 			updatedDB = true
 		case "docker":
-			if res.HasDocker && next.Tools[i].Docker != nil {
+			if res.HasDocker && next.Tools[i].Docker != nil && (res.DockerSelected == "" || res.DockerSelected == next.Tools[i].Docker.Selected) {
 				d := *next.Tools[i].Docker
 				d.PortContainers = slices.Clone(res.Containers)
+				d.PortContainersFresh = true
 				next.Tools[i].Docker = &d
 			}
 		}
@@ -240,6 +290,21 @@ func (a *App) applyPortsRefresh(res detect.PortsSnapshot) {
 		})
 	}
 	a.Snapshot = &next
+}
+
+func mergeListenerWarnings(existing, fresh []string) []string {
+	var out []string
+	for _, w := range existing {
+		if w != "lsof" && w != "ss" && w != "netstat" && !slices.Contains(out, w) {
+			out = append(out, w)
+		}
+	}
+	for _, w := range fresh {
+		if !slices.Contains(out, w) {
+			out = append(out, w)
+		}
+	}
+	return out
 }
 
 func (a *App) portsRefreshButton(c *ui.Context) {
@@ -325,7 +390,7 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		for _, r := range rows {
 			about, plan, stoppable := a.portAbout(r)
-			ct, hasContainer := a.portContainer(r.Port)
+			ct, hasContainer := a.portContainerFor(r)
 			canDocker := hasContainer && a.canOpenDockerContainer()
 			addrsFull := strings.Join(r.Addresses, ", ")
 			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about+" "+addrsFull+" "+ct.Image), filter) {

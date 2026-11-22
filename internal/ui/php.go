@@ -92,7 +92,7 @@ func (a *App) phpHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 func (a *App) phpChannel(c *ui.Context) func(inventory.Installation) (string, bool) {
 	return func(in inventory.Installation) (string, bool) {
 		if a.PHPVersions != nil {
-			if l, ok := a.PHPVersions.Line(in.Version); ok && !l.End.IsZero() && !c.Now().Before(l.End) {
+			if l, ok := a.PHPVersions.Line(in.Version); ok && l.Ended(c.Now()) {
 				return "", true
 			}
 		}
@@ -122,7 +122,7 @@ func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 		}
 		now := c.Now()
 		for _, l := range a.PHPVersions.Lines {
-			if l.Latest == "" || !l.End.IsZero() && !now.Before(l.End) || !l.Release.IsZero() && now.Before(l.Release) {
+			if l.Latest == "" || l.Ended(now) || !l.Release.IsZero() && now.Before(l.Release) {
 				continue
 			}
 			caption, update := goReleaseNote(l.Latest, ins, rows, active)

@@ -80,7 +80,7 @@ func (a *App) rubyHeader(c *ui.Context, ins []inventory.Installation, rows []int
 func (a *App) rubyChannel(c *ui.Context) func(inventory.Installation) (string, bool) {
 	return func(in inventory.Installation) (string, bool) {
 		if a.RubyVersions != nil {
-			if l, ok := a.RubyVersions.Line(in.Version); ok && !l.End.IsZero() && !c.Now().Before(l.End) {
+			if l, ok := a.RubyVersions.Line(in.Version); ok && l.Ended(c.Now()) {
 				return "", true
 			}
 		}
@@ -108,7 +108,7 @@ func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 		}
 		now := c.Now()
 		for _, l := range a.RubyVersions.Lines {
-			if l.Latest == "" || !l.End.IsZero() && !now.Before(l.End) || !l.Release.IsZero() && now.Before(l.Release) {
+			if l.Latest == "" || l.Ended(now) || !l.Release.IsZero() && now.Before(l.Release) {
 				continue
 			}
 			caption, update := goReleaseNote(l.Latest, ins, rows, active)

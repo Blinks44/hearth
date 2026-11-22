@@ -34,7 +34,7 @@ func terminal(ctx context.Context, r run.Runner, gui Env, marker string) (Env, e
 	script := "printf %s " + marker + "; /usr/bin/env -0; printf %s " + marker
 	res, err := r.Run(ctx, run.Cmd{
 		Args:    append(shellArgs(sh), script),
-		Env:     loginEnv(gui).with(resolvingFlag, "1"),
+		Env:     loginEnv(gui, sh).with(resolvingFlag, "1"),
 		Timeout: shellTimeout,
 	})
 	if err != nil {
@@ -49,21 +49,29 @@ func terminal(ctx context.Context, r run.Runner, gui Env, marker string) (Env, e
 }
 
 // loginEnv prepares gui as the starting environment of a brand-new login shell:
-// it resets PATH to the OS login baseline and clears inherited interactive
-// shell hook state (such as mise's session variables) so launching Hearth from a
-// terminal, an IDE, or with launchctl setenv PATH never duplicates PATH entries
-// or leaks parent-process directories like go tool's GOROOT/bin.
-func loginEnv(gui Env) Env {
-	out := make(Env, 0, len(gui)+1)
+// it resets PATH to the OS login baseline, ensures SHELL is exported when a GUI
+// launcher omitted it, and clears inherited interactive shell hook state (such
+// as mise's session variables) so launching Hearth from a terminal, an IDE, or
+// with launchctl setenv PATH never duplicates PATH entries or leaks
+// parent-process directories like go tool's GOROOT/bin.
+func loginEnv(gui Env, sh string) Env {
+	out := make(Env, 0, len(gui)+2)
+	hasShell := false
 	for _, kv := range gui {
-		key, _, ok := strings.Cut(kv, "=")
+		key, val, ok := strings.Cut(kv, "=")
 		if !ok {
 			continue
 		}
 		if key == "PATH" || key == "MISE_SHELL" || strings.HasPrefix(key, "__MISE_") {
 			continue
 		}
+		if key == "SHELL" && val != "" {
+			hasShell = true
+		}
 		out = append(out, kv)
+	}
+	if !hasShell && sh != "" {
+		out = append(out, "SHELL="+sh)
 	}
 	return append(out, "PATH="+loginPath())
 }

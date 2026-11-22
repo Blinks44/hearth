@@ -410,6 +410,15 @@ func TestSessionsAntigravityACPTableWAL(t *testing.T) {
 	}
 }
 
+func TestExtractPathStringWindowsURI(t *testing.T) {
+	if got := extractPathString([]byte("file:///C:/Users/dev/app")); got != "C:/Users/dev/app" {
+		t.Errorf("got %q, want C:/Users/dev/app", got)
+	}
+	if got := extractPathString([]byte("file:///Users/dev/app")); got != "/Users/dev/app" {
+		t.Errorf("got %q, want /Users/dev/app", got)
+	}
+}
+
 func TestUsageDiskCacheRoundTrip(t *testing.T) {
 	home := t.TempDir()
 	cachePath := filepath.Join(t.TempDir(), "usage-cache.json")

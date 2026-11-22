@@ -70,8 +70,16 @@ func sanitizeProxy(raw string) string {
 			return strings.Replace(u.String(), "://", "://"+inventory.Hidden+"@", 1)
 		}
 	}
-	if _, host, ok := strings.Cut(raw, "@"); ok {
-		return inventory.Hidden + "@" + host
+	scheme, rest := "", raw
+	if s, after, ok := strings.Cut(raw, "://"); ok {
+		scheme, rest = s+"://", after
+	}
+	authority, tail := rest, ""
+	if i := strings.IndexAny(rest, "/?#"); i >= 0 {
+		authority, tail = rest[:i], rest[i:]
+	}
+	if i := strings.LastIndex(authority, "@"); i >= 0 {
+		return scheme + inventory.Hidden + "@" + authority[i+1:] + tail
 	}
 	return raw
 }

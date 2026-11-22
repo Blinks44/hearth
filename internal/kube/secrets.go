@@ -108,17 +108,18 @@ func clearSecretRaw(data map[string]json.RawMessage) {
 
 func decodeBase64JSON(raw json.RawMessage) ([]byte, error) {
 	trimmed := bytes.TrimSpace(raw)
+	if bytes.Equal(trimmed, []byte("null")) {
+		return nil, nil
+	}
 	if len(trimmed) < 2 || trimmed[0] != '"' || trimmed[len(trimmed)-1] != '"' {
 		return nil, errors.New("invalid Secret value")
 	}
-	encoded := trimmed[1 : len(trimmed)-1]
-	value := make([]byte, base64.StdEncoding.DecodedLen(len(encoded)))
-	size, err := base64.StdEncoding.Decode(value, encoded)
-	if err != nil {
+	var value []byte
+	if err := json.Unmarshal(trimmed, &value); err != nil {
 		clear(value)
 		return nil, errors.New("invalid Secret value")
 	}
-	return value[:size], nil
+	return value, nil
 }
 
 func readSecretsAPI(ctx context.Context, env sysenv.Env, t Target, scope []string) ([]Secret, error) {

@@ -138,8 +138,12 @@ func scaleOf(obj resourceJSON) scaleStatus {
 		value, _ := n.Int64()
 		return value
 	}
+	desired := int64(1)
+	if raw, ok := spec["replicas"]; ok && raw != nil {
+		desired = number(spec, "replicas")
+	}
 	return scaleStatus{
-		desired: int(number(spec, "replicas")), actual: int(number(status, "replicas")), ready: int(number(status, "readyReplicas")),
+		desired: int(desired), actual: int(number(status, "replicas")), ready: int(number(status, "readyReplicas")),
 		generation: number(obj.metadata(), "generation"), observedGeneration: number(status, "observedGeneration"),
 	}
 }

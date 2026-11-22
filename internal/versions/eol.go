@@ -73,6 +73,9 @@ func parseCycles(tool string, data []byte) ([]Cycle, error) {
 // Line returns the line of version, as 3.13 of 3.13.1, and whether it is
 // known.
 func (p *Cycles) Line(version string) (Cycle, bool) {
+	if p == nil {
+		return Cycle{}, false
+	}
 	for _, l := range p.Lines {
 		if version == l.Cycle || len(version) > len(l.Cycle) && version[:len(l.Cycle)+1] == l.Cycle+"." {
 			return l, true

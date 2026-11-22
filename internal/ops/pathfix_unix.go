@@ -65,7 +65,7 @@ func PathPlan(entries []inventory.PathEntry, dirs []string, env sysenv.Env, term
 		}
 		var commented []inventory.PathSource
 		for _, s := range sources {
-			if !userLine(s, home) {
+			if s.Hook || !userLine(s, home) {
 				continue
 			}
 			line, err := sourceLine(s, texts)

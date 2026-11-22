@@ -134,7 +134,7 @@ func (a *App) javaAvailable(c *ui.Context, st inventory.ToolState) {
 			return
 		}
 		for _, l := range a.JavaVersions.Lines {
-			if l.Latest == "" || !l.End.IsZero() && !c.Now().Before(l.End) || !l.Release.IsZero() && c.Now().Before(l.Release) {
+			if l.Latest == "" || l.Ended(c.Now()) || !l.Release.IsZero() && c.Now().Before(l.Release) {
 				continue
 			}
 			listRow(c, "Temurin "+l.Latest, true, locales.JavaReleaseLine(l.Cycle), func() { a.installButton(c, st, l.Cycle, "Temurin "+l.Latest) })

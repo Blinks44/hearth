@@ -71,7 +71,10 @@ func Cli(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 		cli.HelmRepos = helmRepos(term, home)
 		kc := readKubeConfig(term, home)
 		cli.KubeContexts, cli.KubeFiles, cli.KubeconfigSet = kc.contexts, kc.files, strings.Trim(term.Get("KUBECONFIG"), string(os.PathListSeparator)) != ""
-		for _, c := range []func(sysenv.Env, string) *inventory.CliContext{kubeContext, awsProfile, gcloudProject, azSubscription} {
+		if cc := kubeContextFrom(kc); cc != nil {
+			cli.Contexts = append(cli.Contexts, *cc)
+		}
+		for _, c := range []func(sysenv.Env, string) *inventory.CliContext{awsProfile, gcloudProject, azSubscription} {
 			if cc := c(term, home); cc != nil {
 				cli.Contexts = append(cli.Contexts, *cc)
 			}
@@ -199,8 +202,12 @@ func readKubeConfig(env sysenv.Env, home string) kubeConfig {
 	return kc
 }
 
+func kubeContextFrom(kc kubeConfig) *inventory.CliContext {
+	return kc.current
+}
+
 func kubeContext(env sysenv.Env, home string) *inventory.CliContext {
-	return readKubeConfig(env, home).current
+	return kubeContextFrom(readKubeConfig(env, home))
 }
 
 var errInvalidINI = errors.New("invalid INI syntax")
@@ -230,7 +237,7 @@ func awsProfile(env sysenv.Env, home string) *inventory.CliContext {
 	}
 
 	var choices []inventory.CliChoice
-	seenChoice := map[string]bool{}
+	profileVals := map[string]map[string]string{}
 	for _, sec := range order {
 		name := ""
 		switch {
@@ -241,11 +248,14 @@ func awsProfile(env sysenv.Env, home string) *inventory.CliContext {
 		default:
 			continue
 		}
-		if name == "" || seenChoice[name] {
+		if name == "" {
 			continue
 		}
-		seenChoice[name] = true
+		if _, exists := profileVals[name]; exists {
+			continue
+		}
 		vals := sections[sec]
+		profileVals[name] = vals
 		choices = append(choices, inventory.CliChoice{
 			Name:   name,
 			Region: vals["region"],
@@ -263,15 +273,11 @@ func awsProfile(env sysenv.Env, home string) *inventory.CliContext {
 		profile, nameSource = envProfile, "AWS_PROFILE"
 	case envDefProfile != "":
 		profile, nameSource = envDefProfile, "AWS_DEFAULT_PROFILE"
-	case seenChoice["default"]:
+	case profileVals["default"] != nil:
 		nameSource = "file"
 	}
 
-	sectionKey := "profile " + profile
-	if profile == "default" {
-		sectionKey = "default"
-	}
-	vals, hasProfile := sections[sectionKey]
+	vals, hasProfile := profileVals[profile]
 
 	region, regionSource := "", ""
 	switch {
@@ -499,6 +505,7 @@ func readINI(path string) (sections map[string]map[string]string, order []string
 	if bytes.IndexByte(data, 0) >= 0 {
 		return nil, nil, errInvalidINI
 	}
+	data = bytes.TrimPrefix(data, []byte{0xef, 0xbb, 0xbf})
 	sections = map[string]map[string]string{}
 	current := ""
 	sc := bufio.NewScanner(bytes.NewReader(data))

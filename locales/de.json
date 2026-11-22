@@ -530,6 +530,7 @@
   "kubeResourceApply": "Anwenden",
   "kubeResourceRollout": "Deployment-Rollout",
   "kubeResourceRolloutDetails": "Eine Änderung an der Pod-Vorlage löst einen Rollout gemäß der Deployment-Strategie aus. Pods können neu starten, und der Datenverkehr kann unterbrochen werden.",
+  "kubeResourceRolloutOnDelete": "Die OnDelete-Strategie aktualisiert Pods erst, wenn sie manuell gelöscht werden. Hearth übernimmt die Vorlagenänderung ohne auf einen Rollout zu warten.",
   "kubeResourceRolloutPaused": "Das Deployment ist pausiert. Die geänderte Pod-Vorlage wird wirksam, sobald der Rollout fortgesetzt wird.",
   "kubeResourceRolloutUnverified": "Die Änderung wurde bestätigt. Der Deployment-Rollout konnte nicht überprüft werden",
   "kubeResourceRolloutVerified": "Die Änderung entspricht der Vorschau, und der Deployment-Rollout ist abgeschlossen.",

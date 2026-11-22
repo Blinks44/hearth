@@ -321,3 +321,37 @@ func TestCache(t *testing.T) {
 		t.Fatal("cache was not cleared")
 	}
 }
+
+func TestCacheClearDuringFetch(t *testing.T) {
+	sha := strings.Repeat("d", 40)
+	data := archive(t, []File{{"race/SKILL.md", []byte("---\nname: race\n---\nText"), false}}, "")
+	inFlight := make(chan struct{})
+	release := make(chan struct{})
+	client := &http.Client{Transport: transport(func(r *http.Request) (*http.Response, error) {
+		if !strings.Contains(r.URL.Host, "codeload") {
+			close(inFlight)
+			<-release
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"sha":%q}`, sha))), Header: http.Header{}}, nil
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(data)), Header: http.Header{}}, nil
+	})}
+	cache := &Cache{Dir: t.TempDir(), TTL: time.Hour}
+	repo := Repositories()[0]
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := cache.Fetch(t.Context(), client, repo, false)
+		done <- err
+	}()
+	<-inFlight
+	if err := cache.Clear(); err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := cache.read(cache.path(repo)); ok {
+		t.Fatal("stale fetch resurrected cache after Clear")
+	}
+}

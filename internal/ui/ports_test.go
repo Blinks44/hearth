@@ -161,3 +161,49 @@ func TestPortsRefreshAndDockerJump(t *testing.T) {
 		t.Fatalf("after Open in Docker: path=%q view=%d selected=%q", a.router.Path(), a.engine.view, a.engine.containers.detail.id)
 	}
 }
+
+func TestPortsBindIPAndWarningPreservation(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{
+			{Tool: "databases", Databases: &inventory.DatabaseState{
+				Listeners: []inventory.DatabaseListener{
+					{Port: "8080", Address: "127.0.0.1", Process: "docker-proxy", PID: "100"},
+					{Port: "8080", Address: "127.0.0.2", Process: "node", PID: "200"},
+				},
+				Warnings: []string{"brew services", "lsof"},
+			}},
+			{Tool: "docker", Docker: &inventory.DockerState{
+				Selected: "default",
+				PortContainers: []inventory.DockerPortContainer{{
+					ID:       "abcdef123456",
+					Name:     "api",
+					Status:   "running",
+					Ports:    []string{"8080"},
+					Bindings: []inventory.DockerPortBinding{{HostIP: "127.0.0.1", HostPort: "8080"}},
+				}},
+			}},
+		},
+	}
+	rows := a.portRows()
+	if len(rows) != 2 {
+		t.Fatalf("expected 2 port rows, got %d", len(rows))
+	}
+	if ct, ok := a.portContainerFor(rows[0]); !ok || ct.Name != "api" {
+		t.Fatalf("127.0.0.1 docker-proxy should match api, got %+v, %v", ct, ok)
+	}
+	if ct, ok := a.portContainerFor(rows[1]); ok {
+		t.Fatalf("127.0.0.2 non-docker listener should not match api, got %+v", ct)
+	}
+
+	a.applyPortsRefresh(detect.PortsSnapshot{
+		Listeners: []inventory.DatabaseListener{{Port: "9000", Address: "127.0.0.1", Process: "vite", PID: "300"}},
+	})
+	st, _ := a.Snapshot.Tool("databases")
+	if !slices.Contains(st.Databases.Warnings, "brew services") {
+		t.Fatalf("service warning was wiped on ports refresh: %v", st.Databases.Warnings)
+	}
+	if slices.Contains(st.Databases.Warnings, "lsof") {
+		t.Fatalf("stale listener warning remained after clean refresh: %v", st.Databases.Warnings)
+	}
+}

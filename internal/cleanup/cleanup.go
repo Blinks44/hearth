@@ -398,13 +398,26 @@ func copies(s *inventory.Snapshot, ps []projects.Project, lines map[int]versions
 						Usage: u, Known: ok, Reasons: []Reason{NothingNeeds}})
 				}
 			case "apt", "pacman":
+				nameCounts := map[string]int{}
+				if m.ID == "apt" {
+					for _, p := range m.Packages {
+						nameCounts[p.Name]++
+					}
+				}
 				seen := map[string]bool{}
 				for _, p := range m.Packages {
-					if !p.Orphan || seen[p.Name] {
+					if !p.Orphan {
 						continue
 					}
-					seen[p.Name] = true
-					out = append(out, Candidate{Kind: UnneededPackage, ID: p.Name, Manager: m.ID,
+					id := p.Name
+					if m.ID == "apt" && nameCounts[p.Name] > 1 && p.Architecture != "" {
+						id = p.Name + ":" + p.Architecture
+					}
+					if seen[id] {
+						continue
+					}
+					seen[id] = true
+					out = append(out, Candidate{Kind: UnneededPackage, ID: id, Manager: m.ID,
 						Usage: inventory.Usage{Bytes: p.Size}, Known: p.Size > 0, Reasons: []Reason{NothingNeeds}})
 				}
 			}

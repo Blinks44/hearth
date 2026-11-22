@@ -138,7 +138,7 @@ func hasGitMarker(dir string) bool {
 func localPinnedTools(p *Project) map[string]bool {
 	out := map[string]bool{}
 	for _, r := range p.Requirements {
-		if !r.Inherited() && r.Want != "" && slices.Contains(inheritedVersionFiles, r.File) {
+		if !r.Inherited() && r.Want != "" && (slices.Contains(inheritedVersionFiles, r.File) || r.File == "global.json" || r.SDK != nil) {
 			out[r.Tool] = true
 		}
 	}

@@ -530,6 +530,7 @@
   "kubeResourceApply": "Aplicar",
   "kubeResourceRollout": "Despliegue del Deployment",
   "kubeResourceRolloutDetails": "Un cambio en la plantilla de pods inicia un despliegue según la estrategia del Deployment. Los pods pueden reiniciarse y puede interrumpirse el tráfico.",
+  "kubeResourceRolloutOnDelete": "La estrategia OnDelete actualiza los pods solo cuando se eliminan manualmente. Hearth aplicará el cambio de plantilla sin esperar un despliegue.",
   "kubeResourceRolloutPaused": "El Deployment está en pausa. La plantilla actualizada se usará cuando se reanude el despliegue.",
   "kubeResourceRolloutUnverified": "Se confirmó la edición. No se pudo verificar el despliegue del Deployment",
   "kubeResourceRolloutVerified": "La edición coincide con la vista previa y el despliegue terminó.",

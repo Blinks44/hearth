@@ -220,6 +220,9 @@ func versionCommand(action VersionAction, t VersionTarget) []string {
 		argvs = shellFunction(sdkScript, "sdk", nil, []string{"uninstall", "java", v}, []string{"default", "java", v})
 		argvs[VersionInstall] = []string{"bash", "-c", sdkTemurinScript, "sdk", "install", "java", v}
 	case "rustup":
+		if !ValidRustupIdent(v) {
+			return nil
+		}
 		argvs = [3][]string{{"rustup", "toolchain", "install", v}, {"rustup", "toolchain", "uninstall", v}, {"rustup", "default", v}}
 	case "corepack":
 		// corepack install -g makes the version the default; Corepack has

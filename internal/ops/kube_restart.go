@@ -82,12 +82,18 @@ func PlanKubeRestart(ctx context.Context, r run.Runner, env sysenv.Env, ref Kube
 		case 1:
 			p.Notes = []Note{{Title: locales.KubeReplicas(), Text: locales.KubeRestartSingle()}}
 		}
+		if isOnDeleteStrategy(ref.Kind, spec) {
+			p.Notes = append(p.Notes, Note{Title: locales.KubeResourceRollout(), Text: locales.KubeResourceRolloutOnDelete()})
+		}
 	case "DaemonSet":
 		switch daemonDesired(obj) {
 		case 0:
 			p.Notes = []Note{{Title: locales.KubeReplicas(), Text: locales.KubeRestartWorkloadZero(ref.Kind)}}
 		case 1:
 			p.Notes = []Note{{Title: locales.KubeReplicas(), Text: locales.KubeRestartSingle()}}
+		}
+		if isOnDeleteStrategy(ref.Kind, spec) {
+			p.Notes = append(p.Notes, Note{Title: locales.KubeResourceRollout(), Text: locales.KubeResourceRolloutOnDelete()})
 		}
 	}
 	return p, nil
@@ -123,7 +129,15 @@ func (k resourceClient) planRestart(ctx context.Context, ref KubeResource, hash 
 		return nil, nil, errors.New(locales.KubeResourceNoChanges())
 	}
 	change := &KubeChange{
-		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: true, patch: command, restart: true,
+		draft: KubeDraft{Ref: ref, Version: obj.version(), config: hash}, want: preview, rollout: !isOnDeleteStrategy(ref.Kind, resourceSpec(preview)), patch: command, restart: true,
 	}
 	return change, obj, nil
+}
+
+func isOnDeleteStrategy(kind string, spec map[string]any) bool {
+	if kind != "StatefulSet" && kind != "DaemonSet" {
+		return false
+	}
+	strategy, _ := spec["updateStrategy"].(map[string]any)
+	return strategy["type"] == "OnDelete"
 }

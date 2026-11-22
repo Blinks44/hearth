@@ -77,7 +77,7 @@ func PlanDockerImageUntag(ctx context.Context, r run.Runner, target docker.Targe
 			if err != nil {
 				return "", err
 			}
-			if len(fresh) == 1 && slices.Contains(fresh[0].RepoTags, tag) {
+			if len(fresh) != 1 || fresh[0].ID != item.ID || slices.Contains(fresh[0].RepoTags, tag) {
 				return "", errors.New(locales.DockerImageUntagCheck())
 			}
 			return "", nil

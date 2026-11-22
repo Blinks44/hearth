@@ -58,10 +58,22 @@ func (a *App) toolProjectCard(c *ui.Context, tool string, items []toolProject) {
 		value = toolProjectVersion(tool, *chosen.status.Terminal)
 	}
 	caption := filepath.Base(chosen.project.Dir)
-	if len(chosen.status.Checks) > 0 && chosen.status.Checks[0].File != "" {
-		caption += " · " + chosen.status.Checks[0].File
+	if src := primaryCheck(chosen.status); src.File != "" {
+		caption += " · " + src.File
 	}
 	stateCard(c, dot, locales.Project(), value, caption)
+}
+
+func primaryCheck(st projects.Status) projects.Check {
+	for _, ch := range st.Checks {
+		if ch.Want != "" {
+			return ch
+		}
+	}
+	if len(st.Checks) > 0 {
+		return st.Checks[0]
+	}
+	return projects.Check{}
 }
 
 func toolProjectVersion(tool string, in inventory.Installation) string {
@@ -98,9 +110,7 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 				if ch.Want != "" {
 					s += " · " + ch.Want
 				}
-				if !pst.Checked {
-					s = locales.NotChecked()
-				} else if ch.Err != "" {
+				if pst.Checked && ch.Err != "" {
 					s += " · " + ch.Err
 				}
 				parts = append(parts, s)

@@ -128,6 +128,7 @@ func TestInstallsEcosystems(t *testing.T) {
 	mkDir("dev/java/target")
 	mkFile("dev/php/composer.json")
 	mkDir("dev/php/vendor")
+	// Go vendor/ is often committed and must not be suggested for automatic cleanup.
 	mkFile("dev/goapp/go.mod")
 	mkDir("dev/goapp/vendor")
 
@@ -155,7 +156,6 @@ func TestInstallsEcosystems(t *testing.T) {
 	}
 	slices.Sort(pairs)
 	want := []string{
-		"dev/goapp/vendor",
 		"dev/java/target",
 		"dev/php/vendor",
 		"dev/py/.venv",

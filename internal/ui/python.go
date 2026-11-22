@@ -86,10 +86,12 @@ func (a *App) pythonChannel(c *ui.Context) func(inventory.Installation) (string,
 		}
 		l, ok := a.PythonVersions.Line(in.Version)
 		switch {
-		case !ok || l.End.IsZero():
+		case !ok:
 			return "", false
-		case !c.Now().Before(l.End):
+		case l.Ended(c.Now()):
 			return "", true
+		case l.End.IsZero():
+			return "", false
 		}
 		return locales.SupportUntilYear(strconv.Itoa(l.End.Year())), false
 	}
@@ -116,7 +118,7 @@ func (a *App) pythonAvailable(c *ui.Context, st inventory.ToolState, rows []int,
 		}
 		now := c.Now()
 		for _, l := range pv.Lines {
-			if l.Latest == "" || !l.End.IsZero() && !now.Before(l.End) || !l.Release.IsZero() && now.Before(l.Release) {
+			if l.Latest == "" || l.Ended(now) || !l.Release.IsZero() && now.Before(l.Release) {
 				continue
 			}
 			caption, update := pythonReleaseNote(l.Latest, l.Cycle, ins, rows, active)

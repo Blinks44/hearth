@@ -385,7 +385,24 @@ func unsupported(ts inventory.ToolState, l Lists, now time.Time) []Issue {
 	term := inventory.TerminalCopy(ts.Installations)
 	is := Issue{Kind: Unsupported, Severity: Info, Tool: ts.Tool}
 	for i, in := range ts.Installations {
-		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || !versionEnded(ts.Tool, in, l, now) {
+		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) {
+			continue
+		}
+		if ts.Tool == "dotnet" && in.Dotnet != nil && len(in.Dotnet.SDKs) > 0 {
+			for _, sdk := range in.Dotnet.SDKs {
+				cp := in
+				cp.Version = sdk.Version
+				if !versionEnded("dotnet", cp, l, now) {
+					continue
+				}
+				is.Copies = append(is.Copies, cp)
+				if i == term && sdk.Version == in.Version {
+					is.Severity = Warning
+				}
+			}
+			continue
+		}
+		if !versionEnded(ts.Tool, in, l, now) {
 			continue
 		}
 		is.Copies = append(is.Copies, in)

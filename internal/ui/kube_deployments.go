@@ -136,6 +136,7 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 			columns = []ui.Track{ui.Fr(1), ui.Fixed(170), ui.Fixed(54), ui.Fixed(74), ui.Fixed(110), ui.Fixed(60)}
 		}
 	}
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("deployments-panes"), func() {
 		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
@@ -144,7 +145,9 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 				sortColumn{locales.KubeImage(), "image"}, sortColumn{locales.KubeClusterAge(), "age"})
 		}
 		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth)), func() {
-			s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
+			if hasKubectl {
+				s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
+			}
 		}, sort, headers...)
 	}, func() {
 		for _, d := range shown {
@@ -159,6 +162,7 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 	t := c.Theme()
 	pal := Colors(t)
 	label, bg, fg := deploymentTag(c, d)
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	line := workloadSelectionRow(c.Key("deployment-select-row-"+d.UID), pal.Line)
 	line.Children(func() {
 		var ids []string
@@ -166,7 +170,9 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 			ids = []string{d.UID}
 		}
 		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
-			s.bulk.checkbox(c, "deployment-select", locales.KubeBulkSelect(d.Name), ids)
+			if hasKubectl {
+				s.bulk.checkbox(c, "deployment-select", locales.KubeBulkSelect(d.Name), ids)
+			}
 		})
 		row := resourceGrid(ui.ButtonBase(c.Key("deployment-"+d.UID)), tracks[1:]).
 			Padding(8, 0).MinHeight(40).Grow(1).MinWidth(0).Label(d.Name).

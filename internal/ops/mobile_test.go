@@ -52,12 +52,12 @@ func TestRemoveAndroidImagePlan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantArgv := []string{sdkmgr, "--uninstall", "system-images;android-34;google_apis;arm64-v8a"}
-	if len(pCmd.Steps) != 1 || !slices.Equal(pCmd.Steps[0].Argv, wantArgv) {
-		t.Fatalf("cmd steps = %+v, want %v", pCmd.Steps, wantArgv)
+	wantStep := sdkmanagerUninstallStep(sdkmgr, sdk, "system-images;android-34;google_apis;arm64-v8a")
+	if len(pCmd.Steps) != 1 || !slices.Equal(pCmd.Steps[0].Argv, wantStep.Argv) || !slices.Equal(pCmd.Steps[0].Env, wantStep.Env) {
+		t.Fatalf("cmd steps = %+v, want %+v", pCmd.Steps, wantStep)
 	}
 	f := &run.Fake{}
-	f.Stdout("", wantArgv...)
+	f.Stdout("", wantStep.Argv...)
 	if got := Execute(t.Context(), f, pCmd, &strings.Builder{}, func(State) {}); got.Phase != Succeeded {
 		t.Fatalf("phase = %d, err = %q", got.Phase, got.Err)
 	}

@@ -30,7 +30,7 @@ func RemoveAndroidImagePlan(sdkRoot string, img inventory.AndroidPart, env sysen
 	}
 	if sdkmgr := findSDKManager(sdkRoot, env); sdkmgr != "" && img.Name != "" {
 		pkg := "system-images;" + strings.ReplaceAll(filepath.ToSlash(img.Name), "/", ";")
-		p.Steps = []Step{{Argv: []string{sdkmgr, "--uninstall", pkg}, Timeout: cleanupTimeout}}
+		p.Steps = []Step{sdkmanagerUninstallStep(sdkmgr, sdkRoot, pkg)}
 	} else {
 		p.Steps = []Step{{Remove: img.Path, Timeout: cleanupTimeout}}
 		p.Notes = []Note{{Title: locales.CleanupRemoveNote(), Text: locales.CleanupRemoveNoteText()}}

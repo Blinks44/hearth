@@ -156,3 +156,47 @@ func TestPathAddPlanVerify(t *testing.T) {
 		t.Fatalf("Verify fail err = %v, want %q", err, locales.PathAddCheckFail(dir))
 	}
 }
+
+func TestPathAddPlanBashLoginSourcesRC(t *testing.T) {
+	t.Run("direct .profile -> .bashrc", func(t *testing.T) {
+		home := t.TempDir()
+		dir := filepath.Join(home, "mybin")
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		profile := filepath.Join(home, ".profile")
+		if err := os.WriteFile(profile, []byte("if [ -f \"$HOME/.bashrc\" ]; then\n  . \"$HOME/.bashrc\"\nfi\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		env := sysenv.Env{"HOME=" + home, "SHELL=/bin/bash"}
+		p, err := PathAddPlan(nil, dir, env, nil)
+		if err != nil {
+			t.Fatalf("PathAddPlan() error = %v", err)
+		}
+		if len(p.Steps) != 1 || p.Steps[0].Edit.Path != filepath.Join(home, ".bashrc") {
+			t.Fatalf("expected only .bashrc edit when .profile sources .bashrc, got %+v", p.Steps)
+		}
+	})
+
+	t.Run("transitive .bash_profile -> .profile -> .bashrc", func(t *testing.T) {
+		home := t.TempDir()
+		dir := filepath.Join(home, "mybin")
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(home, ".bash_profile"), []byte("[[ -s \"$HOME/.profile\" ]] && source \"$HOME/.profile\"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(home, ".profile"), []byte("if [ -n \"$BASH_VERSION\" ]; then\n  . \"$HOME/.bashrc\"\nfi\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		env := sysenv.Env{"HOME=" + home, "SHELL=/bin/bash"}
+		p, err := PathAddPlan(nil, dir, env, nil)
+		if err != nil {
+			t.Fatalf("PathAddPlan() error = %v", err)
+		}
+		if len(p.Steps) != 1 || p.Steps[0].Edit.Path != filepath.Join(home, ".bashrc") {
+			t.Fatalf("expected only .bashrc edit when .bash_profile transitively sources .bashrc via .profile, got %+v", p.Steps)
+		}
+	})
+}

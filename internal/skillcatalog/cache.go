@@ -25,7 +25,8 @@ type Cache struct {
 	TTL time.Duration
 	Now func() time.Time
 
-	mu sync.RWMutex
+	mu  sync.RWMutex
+	gen uint64
 }
 
 type cacheEntry struct {
@@ -42,8 +43,6 @@ func (c *Cache) Fetch(ctx context.Context, client *http.Client, repo Repository,
 	if c == nil || c.Dir == "" {
 		return Fetch(ctx, client, repo)
 	}
-	c.mu.RLock()
-	defer c.mu.RUnlock()
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -56,7 +55,10 @@ func (c *Cache) Fetch(ctx context.Context, client *http.Client, repo Repository,
 		ttl = DefaultTTL
 	}
 	path := c.path(repo)
+	c.mu.RLock()
+	gen := c.gen
 	entry, ok := c.read(path)
+	c.mu.RUnlock()
 	if !force && ok && now().Sub(entry.Fetched) < ttl {
 		return entry.Skills, nil
 	}
@@ -67,7 +69,11 @@ func (c *Cache) Fetch(ctx context.Context, client *http.Client, repo Repository,
 		}
 		return nil, err
 	}
-	_ = c.write(path, cacheEntry{Version: cacheVersion, Fetched: now().UTC(), Skills: skills})
+	c.mu.Lock()
+	if c.gen == gen {
+		_ = c.write(path, cacheEntry{Version: cacheVersion, Fetched: now().UTC(), Skills: skills})
+	}
+	c.mu.Unlock()
 	return skills, nil
 }
 
@@ -78,6 +84,7 @@ func (c *Cache) Clear() error {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.gen++
 	if err := os.RemoveAll(c.Dir); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}

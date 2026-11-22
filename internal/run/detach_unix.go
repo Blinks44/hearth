@@ -15,3 +15,9 @@ import (
 func detach(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 }
+
+// detachGUI starts a GUI terminal or editor in its own session so it outlives
+// Hearth's command context and does not attach to Hearth's controlling TTY.
+func detachGUI(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+}

@@ -31,9 +31,9 @@ func (a *App) restartStillOpen(ref ops.KubeResource) bool {
 	case "Deployment":
 		return s.kind == kindDeployments && s.deployment == ref.UID
 	case "StatefulSet":
-		return s.kind == kindStatefulSets && (s.other.uid == "" || s.other.uid == ref.UID)
+		return s.kind == kindStatefulSets
 	case "DaemonSet":
-		return s.kind == kindDaemonSets && (s.other.uid == "" || s.other.uid == ref.UID)
+		return s.kind == kindDaemonSets
 	}
 	return false
 }

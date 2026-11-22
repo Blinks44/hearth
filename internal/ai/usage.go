@@ -40,6 +40,7 @@ var transcripts = struct {
 	files map[string]cached
 	dbs   map[string]cachedDB
 	dirty bool
+	gen   uint64
 }{
 	files: map[string]cached{},
 	dbs:   map[string]cachedDB{},
@@ -143,7 +144,7 @@ func claudeSessions(root string, loc *time.Location) []inventory.AgentSession {
 				continue
 			}
 			s := inventory.AgentSession{Agent: "claude", ID: id, Dir: t.dir, Files: []string{file}, Size: info.Size(), Modified: info.ModTime()}
-			usage := t.usage
+			usage := slices.Clone(t.usage)
 			side := filepath.Join(dir, id)
 			if fi, err := os.Stat(side); err == nil && fi.IsDir() {
 				s.Files = append(s.Files, side)

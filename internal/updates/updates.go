@@ -339,7 +339,7 @@ func (l Lists) tool(tool string, now time.Time) (releases, bool) {
 			if _, seen := r.latest[minor(dl.Version)]; !seen {
 				r.latest[minor(dl.Version)] = dl.Version
 			}
-			if r.newest == "" && dl.Phase != "eol" {
+			if r.newest == "" && !dl.Ended(now) {
 				r.newest = dl.Version
 			}
 		}

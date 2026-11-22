@@ -444,6 +444,23 @@ const (
 	skillDiffMaxLines = 500
 )
 
+type skillFile struct {
+	data   []byte
+	hash   [32]byte
+	size   int64
+	capped bool
+}
+
+func (f skillFile) equal(other skillFile) bool {
+	if f.size != other.size {
+		return false
+	}
+	if !f.capped && !other.capped {
+		return bytes.Equal(f.data, other.data)
+	}
+	return f.hash == other.hash
+}
+
 // SkillDiff compares regular non-hidden files between dirA and dirB, matching
 // the set of files hashed by sum.
 func SkillDiff(dirA, dirB string) ([]SkillFileDiff, error) {
@@ -469,7 +486,7 @@ func SkillDiff(dirA, dirB string) ([]SkillFileDiff, error) {
 	for _, p := range paths {
 		a, okA := filesA[p]
 		b, okB := filesB[p]
-		if okA && okB && bytes.Equal(a, b) {
+		if okA && okB && a.equal(b) {
 			continue
 		}
 		d := SkillFileDiff{Path: p}
@@ -483,20 +500,20 @@ func SkillDiff(dirA, dirB string) ([]SkillFileDiff, error) {
 		}
 		if isBinarySkillFile(a) || isBinarySkillFile(b) {
 			d.Binary = true
-		} else if len(a) > skillDiffMaxBytes || len(b) > skillDiffMaxBytes ||
-			bytes.Count(a, []byte{'\n'}) > skillDiffMaxLines || bytes.Count(b, []byte{'\n'}) > skillDiffMaxLines {
+		} else if a.capped || b.capped || len(a.data) > skillDiffMaxBytes || len(b.data) > skillDiffMaxBytes ||
+			bytes.Count(a.data, []byte{'\n'}) > skillDiffMaxLines || bytes.Count(b.data, []byte{'\n'}) > skillDiffMaxLines {
 			d.TooLarge = true
 		} else {
-			d.Before = string(a)
-			d.After = string(b)
+			d.Before = string(a.data)
+			d.After = string(b.data)
 		}
 		out = append(out, d)
 	}
 	return out, nil
 }
 
-func readSkillTree(dir string) (map[string][]byte, error) {
-	files := map[string][]byte{}
+func readSkillTree(dir string) (map[string]skillFile, error) {
+	files := map[string]skillFile{}
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -514,16 +531,58 @@ func readSkillTree(dir string) (map[string][]byte, error) {
 		if err != nil {
 			return err
 		}
-		data, err := os.ReadFile(path)
+		sf, err := readSkillFile(path)
 		if err != nil {
 			return err
 		}
-		files[filepath.ToSlash(rel)] = data
+		files[filepath.ToSlash(rel)] = sf
 		return nil
 	})
 	return files, err
 }
 
-func isBinarySkillFile(data []byte) bool {
-	return len(data) > 0 && (!utf8.Valid(data) || bytes.IndexByte(data, 0) >= 0)
+func readSkillFile(path string) (skillFile, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return skillFile{}, err
+	}
+	defer func() { _ = f.Close() }()
+
+	h := sha256.New()
+	prefix, err := io.ReadAll(io.TeeReader(io.LimitReader(f, skillDiffMaxBytes+1), h))
+	if err != nil {
+		return skillFile{}, err
+	}
+	size := int64(len(prefix))
+	capped := len(prefix) > skillDiffMaxBytes
+	if capped {
+		prefix = prefix[:skillDiffMaxBytes]
+		n, err := io.Copy(h, f)
+		if err != nil {
+			return skillFile{}, err
+		}
+		size += n
+	}
+	var sum [32]byte
+	h.Sum(sum[:0])
+	return skillFile{data: prefix, hash: sum, size: size, capped: capped}, nil
+}
+
+func isBinarySkillFile(f skillFile) bool {
+	if len(f.data) == 0 {
+		return false
+	}
+	if bytes.IndexByte(f.data, 0) >= 0 {
+		return true
+	}
+	check := f.data
+	if f.capped {
+		// Trim up to 3 trailing bytes of a UTF-8 rune split at the prefix cap.
+		for cut := 1; cut <= 3 && cut <= len(check); cut++ {
+			if utf8.Valid(check[:len(check)-cut]) {
+				return false
+			}
+		}
+	}
+	return !utf8.Valid(check)
 }

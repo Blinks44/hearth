@@ -195,6 +195,23 @@ func Command(ctx context.Context, c Cmd) *exec.Cmd {
 	return cmd
 }
 
+// startDetached starts a GUI application or terminal without tying its
+// lifetime to a command timeout, reaping the process asynchronously when it
+// exits so it neither gets killed after a few seconds nor becomes a zombie.
+func startDetached(args, env []string) error {
+	if len(args) == 0 {
+		return errors.New("run: empty argv")
+	}
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Env = env
+	detachGUI(cmd)
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("run %s: %w", args[0], err)
+	}
+	go func() { _ = cmd.Wait() }()
+	return nil
+}
+
 // capped keeps the first limit bytes written to it and drops the rest.
 type capped struct {
 	buf     bytes.Buffer

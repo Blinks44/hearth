@@ -3,6 +3,7 @@ package ops
 import (
 	"errors"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -34,6 +35,14 @@ func PathAddPlan(entries []inventory.PathEntry, raw string, env sysenv.Env, term
 	if err != nil {
 		return Plan{}, err
 	}
-	steps := []Step{{UserPath: &UserPathEdit{Add: dir}}}
+	edit := &UserPathEdit{Add: dir}
+	if before, err := sysenv.UserPath(); err == nil {
+		entries := strings.Split(strings.TrimRight(before, ";"), ";")
+		if !slices.ContainsFunc(entries, func(d string) bool { return sysenv.SamePath(sysenv.ExpandPath(d), sysenv.ExpandPath(dir)) }) {
+			edit.Before = before
+			edit.After = strings.Join(slices.DeleteFunc(append([]string{dir}, entries...), func(d string) bool { return d == "" }), ";")
+		}
+	}
+	steps := []Step{{UserPath: edit}}
 	return pathAddPlan(steps, locales.PathAddWhyRegistry(), dir, notes, terminal), nil
 }

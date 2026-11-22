@@ -496,9 +496,12 @@ func PlanKubeChange(ctx context.Context, r run.Runner, env sysenv.Env, d KubeDra
 			before, _ := change.base["spec"].(map[string]any)
 			after, _ := change.want["spec"].(map[string]any)
 			if !reflect.DeepEqual(before["template"], after["template"]) {
-				change.rollout = ref.Kind != "Deployment" || after["paused"] != true
+				onDelete := isOnDeleteStrategy(ref.Kind, after)
+				change.rollout = (ref.Kind != "Deployment" || after["paused"] != true) && !onDelete
 				note := locales.KubeResourceRolloutPaused()
-				if change.rollout {
+				if onDelete {
+					note = locales.KubeResourceRolloutOnDelete()
+				} else if change.rollout {
 					note = locales.KubeResourceRolloutDetails()
 				}
 				p.Notes = []Note{{Title: locales.KubeResourceRollout(), Text: note}}

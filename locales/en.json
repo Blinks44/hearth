@@ -1670,6 +1670,7 @@
   "kubeResourceApply": "Apply",
   "kubeResourceRollout": "Deployment rollout",
   "kubeResourceRolloutDetails": "A change to the pod template triggers a rollout according to the Deployment’s strategy. Pods may restart and traffic may be interrupted.",
+  "kubeResourceRolloutOnDelete": "The OnDelete strategy updates pods only when they are deleted manually. Hearth will apply the template change without waiting for a rollout.",
   "kubeResourceRolloutPaused": "The Deployment is paused. Its updated pod template will take effect when the rollout resumes.",
   "kubeResourceRolloutUnverified": "The edit was confirmed. The Deployment rollout could not be verified",
   "kubeResourceRolloutVerified": "The edit matches the preview and the Deployment finished rolling out.",

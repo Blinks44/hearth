@@ -29,12 +29,18 @@ func RemoveSimRuntimePlan(ctx context.Context, r run.Runner, rt inventory.SimRun
 		Why:     locales.MobileRemoveSimWhy(),
 		Changes: []string{"− " + rt.Platform + " " + rt.Version},
 	}
+	cleanPath := filepath.Clean(rt.Path)
 	switch {
 	case id != "":
 		p.Steps = []Step{{Argv: []string{"xcrun", "simctl", "runtime", "delete", id}, Timeout: cleanupTimeout}}
-	case rt.Path != "" && filepath.IsAbs(rt.Path) && !strings.Contains(filepath.ToSlash(rt.Path), "/Volumes/"):
-		p.Steps = []Step{{Remove: rt.Path, Timeout: cleanupTimeout}}
-		p.Notes = []Note{{Title: locales.CleanupRemoveNote(), Text: locales.CleanupRemoveNoteText()}}
+	case rt.Path != "" && filepath.IsAbs(cleanPath) &&
+		filepath.Dir(filepath.ToSlash(cleanPath)) == "/Library/Developer/CoreSimulator/Profiles/Runtimes" &&
+		strings.HasSuffix(cleanPath, ".simruntime"):
+		p.Steps = []Step{{Argv: []string{"/bin/rm", "-rf", "--", cleanPath}, Admin: true, Timeout: cleanupTimeout}}
+		p.Notes = []Note{
+			AdminNote(),
+			{Title: locales.CleanupRemoveNote(), Text: locales.CleanupRemoveNoteText()},
+		}
 	default:
 		return Plan{}, errors.New(locales.MobileRemoveSimNoId())
 	}
@@ -46,7 +52,7 @@ func RemoveSimRuntimePlan(ctx context.Context, r run.Runner, rt inventory.SimRun
 			}
 			if st.Mobile != nil {
 				for _, cur := range st.Mobile.Runtimes {
-					if cur.Path == rt.Path || id != "" && cur.ID == id {
+					if (rt.Path != "" && cur.Path == rt.Path) || (id != "" && cur.ID == id) {
 						return "", errors.New(locales.MobileRemoveSimCheckFail(rt.Platform, rt.Version))
 					}
 				}
@@ -82,8 +88,11 @@ func findSimRuntimeID(ctx context.Context, r run.Runner, rt inventory.SimRuntime
 		if rt.Path != "" && (item.RuntimeBundlePath == rt.Path || item.MountPath != "" && strings.HasPrefix(rt.Path, item.MountPath+string(filepath.Separator))) {
 			return id
 		}
-		if item.Version == rt.Version && strings.Contains(item.RuntimeIdentifier, "."+rt.Platform+"-") {
-			return id
+		if item.Version == rt.Version {
+			if strings.Contains(item.RuntimeIdentifier, "."+rt.Platform+"-") ||
+				(rt.Platform == "visionOS" && strings.Contains(item.RuntimeIdentifier, ".xrOS-")) {
+				return id
+			}
 		}
 	}
 	return ""

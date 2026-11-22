@@ -82,7 +82,7 @@ func (a *App) openCloudSwitch(tool string, cc *inventory.CliContext) {
 }
 
 func (a *App) openCloudLogin(tool string, in inventory.Installation, cc *inventory.CliContext) {
-	dir := cloudDefaultDir(tool, a.Home)
+	dir := cloudDefaultDir(tool, a.Home, goos)
 	profile := "default"
 	cfg := "default"
 	hasSSO := false
@@ -116,7 +116,7 @@ func (a *App) openCloudLogin(tool string, in inventory.Installation, cc *invento
 	}
 }
 
-func cloudDefaultDir(tool, home string) string {
+func cloudDefaultDir(tool, home, goos string) string {
 	switch tool {
 	case "aws":
 		if home != "" {
@@ -124,6 +124,9 @@ func cloudDefaultDir(tool, home string) string {
 		}
 		return "~/.aws"
 	case "gcloud":
+		if goos == "windows" {
+			return `%APPDATA%\gcloud`
+		}
 		if home != "" {
 			return filepath.Join(home, ".config", "gcloud")
 		}
@@ -161,13 +164,28 @@ func (a *App) cloudSwitchView(c *ui.Context) {
 		cli := a.cliState()
 		in, found := cliCopy(cli, d.tool)
 
+		selectedChoiceRegion := ""
+		if d.tool == "aws" {
+			wantName := strings.TrimSpace(d.selectedName)
+			for _, ch := range d.choices {
+				if ch.Name == wantName {
+					selectedChoiceRegion = ch.Region
+					break
+				}
+			}
+		}
+
 		var title, lead string
 		canApply := a.BuildPlan != nil
 		switch d.tool {
 		case "aws":
 			title = locales.CloudAwsSwitchTitle()
 			lead = locales.CloudAwsSwitchWhy()
-			canApply = canApply && strings.TrimSpace(d.selectedName) != ""
+			toName := strings.TrimSpace(d.selectedName)
+			toRegion := strings.TrimSpace(d.region)
+			profileChanged := toName != "" && toName != cmp.Or(d.fromName, "default")
+			regionChanged := toRegion != "" && toRegion != selectedChoiceRegion
+			canApply = canApply && toName != "" && (profileChanged || (found && regionChanged))
 		case "gcloud":
 			title = locales.CloudGcloudSwitchTitle()
 			lead = locales.CloudGcloudSwitchWhy()
@@ -189,6 +207,9 @@ func (a *App) cloudSwitchView(c *ui.Context) {
 			fromName, fromProj := d.fromName, d.fromProject
 			toName := strings.TrimSpace(d.selectedName)
 			region := strings.TrimSpace(d.region)
+			if tool == "aws" && region == selectedChoiceRegion {
+				region = ""
+			}
 			project := strings.TrimSpace(d.project)
 			subID := strings.TrimSpace(d.selectedSubID)
 			subName := strings.TrimSpace(d.selectedSub)
@@ -230,9 +251,7 @@ func (a *App) cloudSwitchView(c *ui.Context) {
 								}
 								btn.OnClick(func() {
 									d.selectedName = choice.Name
-									if choice.Region != "" {
-										d.region = choice.Region
-									}
+									d.region = choice.Region
 								})
 							}
 						})
@@ -259,9 +278,7 @@ func (a *App) cloudSwitchView(c *ui.Context) {
 								}
 								btn.OnClick(func() {
 									d.selectedName = choice.Name
-									if choice.Project != "" {
-										d.project = choice.Project
-									}
+									d.project = choice.Project
 								})
 							}
 						})

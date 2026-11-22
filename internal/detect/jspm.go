@@ -1,11 +1,13 @@
 package detect
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -232,7 +234,15 @@ func pnpmGlobalPackages(env sysenv.Env) []inventory.Package {
 		return nil
 	}
 	manifests, _ := filepath.Glob(filepath.Join(home, "global", "*", "package.json"))
-	slices.Sort(manifests)
+	slices.SortFunc(manifests, func(a, b string) int {
+		da, db := filepath.Base(filepath.Dir(a)), filepath.Base(filepath.Dir(b))
+		na, ea := strconv.Atoi(da)
+		nb, eb := strconv.Atoi(db)
+		if ea == nil && eb == nil && na != nb {
+			return cmp.Compare(na, nb)
+		}
+		return strings.Compare(a, b)
+	})
 	byName := map[string]inventory.Package{}
 	for _, m := range manifests {
 		for _, p := range manifestPackages(filepath.Dir(m)) {

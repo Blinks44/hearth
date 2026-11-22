@@ -41,7 +41,13 @@ func AgentNpmUpdatePlan(id, title string, in inventory.Installation, find FindAg
 	if before, _, ok := strings.Cut(filepath.ToSlash(in.RealPath), "/lib/node_modules/"+name+"/"); ok {
 		prefix = filepath.FromSlash(before)
 	} else if in.Source.Manager == "npm" {
-		prefix = filepath.Dir(in.Path)
+		dir := filepath.Dir(in.Path)
+		if filepath.Base(dir) == "bin" {
+			prefix = filepath.Dir(dir)
+		} else if strings.Contains(in.Path, `\`) {
+			// Windows npm puts shims directly inside the prefix folder.
+			prefix = dir
+		}
 	}
 	if prefix == "" {
 		return Plan{}, false

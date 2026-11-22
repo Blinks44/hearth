@@ -35,7 +35,7 @@ func etcEnvironmentPath(file string) string {
 		}
 		v = strings.TrimSpace(v)
 		v = strings.Trim(v, "\"'")
-		if v != "" {
+		if v != "" && !strings.Contains(v, "$") {
 			return v
 		}
 	}

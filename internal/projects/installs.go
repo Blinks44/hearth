@@ -37,8 +37,8 @@ var installSpecs = []installSpec{
 	},
 	{
 		name:      "vendor",
-		manifests: []string{"composer.json", "go.mod"},
-		files:     []string{"composer.json", "composer.lock", "go.mod", "go.sum"},
+		manifests: []string{"composer.json"},
+		files:     []string{"composer.json", "composer.lock"},
 	},
 }
 

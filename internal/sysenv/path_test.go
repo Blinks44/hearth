@@ -61,3 +61,18 @@ func TestVariables(t *testing.T) {
 		}
 	}
 }
+
+func TestSanitizeProxyCredentialsWithAtSign(t *testing.T) {
+	tests := []struct {
+		in, want string
+	}{
+		{"http://alice:p@ss@proxy.internal:8080/path", "http://•••@proxy.internal:8080/path"},
+		{"user:p@ss@proxy.local:3128", "•••@proxy.local:3128"},
+		{"https://proxy.internal:8443/user@domain", "https://proxy.internal:8443/user@domain"},
+	}
+	for _, tt := range tests {
+		if got := sanitizeProxy(tt.in); got != tt.want {
+			t.Errorf("sanitizeProxy(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}

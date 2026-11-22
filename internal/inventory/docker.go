@@ -23,7 +23,8 @@ type DockerState struct {
 	DatabaseErr bool
 	// PortContainers are the running containers of the selected engine that
 	// publish at least one host TCP port, read from the same list as Databases.
-	PortContainers []DockerPortContainer `json:",omitempty"`
+	PortContainers      []DockerPortContainer `json:",omitempty"`
+	PortContainersFresh bool                  `json:"-"`
 	// KindClusters are the kind clusters whose nodes are the selected
 	// engine's containers, read from the same list as Databases.
 	KindClusters []KindCluster `json:",omitempty"`
@@ -32,10 +33,17 @@ type DockerState struct {
 	Containers int `json:",omitempty"`
 }
 
+// DockerPortBinding is one published host IP and TCP port of a Docker container.
+type DockerPortBinding struct {
+	HostIP   string `json:",omitempty"`
+	HostPort string
+}
+
 // DockerPortContainer is a running Docker container that publishes host TCP ports.
 type DockerPortContainer struct {
 	ID, Name, Image, Status string
 	Ports                   []string
+	Bindings                []DockerPortBinding `json:",omitempty"`
 }
 
 // KindCluster is a local kind cluster, as its node containers show it.

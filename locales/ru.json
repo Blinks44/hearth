@@ -530,6 +530,7 @@
   "kubeResourceApply": "Применить",
   "kubeResourceRollout": "Выкатка Deployment",
   "kubeResourceRolloutDetails": "Изменение шаблона pod запустит выкатку по стратегии Deployment. Pods могут перезапуститься, возможен перерыв в обслуживании.",
+  "kubeResourceRolloutOnDelete": "Стратегия OnDelete обновляет поды только при их ручном удалении. Hearth применит изменение шаблона без ожидания выкатки.",
   "kubeResourceRolloutPaused": "Выкатка Deployment приостановлена. Новый шаблон pod вступит в силу после возобновления.",
   "kubeResourceRolloutUnverified": "Изменение подтверждено. Не удалось проверить выкатку Deployment",
   "kubeResourceRolloutVerified": "Изменения совпадают с планом, выкатка Deployment завершена.",

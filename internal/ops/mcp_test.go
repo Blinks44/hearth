@@ -349,11 +349,56 @@ func TestMCPAddAndEditPlan(t *testing.T) {
 	if _, err := MCPAddPlan("", "cursor", "", ai.MCPDef{Transport: "stdio", Command: "npx"}, env, title); err == nil {
 		t.Error("empty name accepted")
 	}
+	if _, err := MCPAddPlan("-flag", "cursor", "", ai.MCPDef{Transport: "stdio", Command: "npx"}, env, title); err == nil {
+		t.Error("leading dash server name accepted")
+	}
 	if _, err := MCPAddPlan("bad", "cursor", "", ai.MCPDef{Transport: "http", URL: "ftp://example.com"}, env, title); err == nil {
 		t.Error("non-http URL accepted")
 	}
 	if _, err := MCPAddPlan("sse-test", "antigravity", "", ai.MCPDef{Transport: "sse", URL: "https://example.com/sse"}, env, title); err == nil {
 		t.Error("antigravity SSE accepted")
 	}
-	_ = home
+
+	// Codex edit preserves bearer_token_env_var / env_http_headers on HTTP and env_vars on stdio.
+	codexCfg := filepath.Join(home, ".codex", "config.toml")
+	if err := os.MkdirAll(filepath.Dir(codexCfg), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	initialTOML := "[mcp_servers.api]\nurl = \"https://old.example/mcp\"\nbearer_token_env_var = \"API_TOKEN\"\n[mcp_servers.api.env_http_headers]\nX-Org = \"ORG_ID\"\n\n[mcp_servers.local]\ncommand = \"npx\"\nargs = [\"-y\", \"demo\"]\nenv_vars = [\"EXTRA_KEY\"]\n"
+	if err := os.WriteFile(codexCfg, []byte(initialTOML), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	codexAPISrv := server(t, env, "codex", "api")
+	pCodex, err := MCPEditPlan(codexAPISrv, ai.MCPDef{
+		Transport: "sse",
+		URL:       "https://new.example/mcp",
+	}, env, title)
+	if err != nil {
+		t.Fatalf("codex http edit: %v", err)
+	}
+	codexAfter := pCodex.Steps[0].Edit.After
+	for _, keep := range []string{`bearer_token_env_var = "API_TOKEN"`, `X-Org = "ORG_ID"`} {
+		if !strings.Contains(codexAfter, keep) {
+			t.Errorf("codex http edit dropped %s:\n%s", keep, codexAfter)
+		}
+	}
+	if err := os.WriteFile(codexCfg, []byte(codexAfter), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pCodex.Verify(context.Background()); err != nil {
+		t.Fatalf("codex edit verify failed for sse->http: %v", err)
+	}
+
+	codexLocalSrv := server(t, env, "codex", "local")
+	pCodexStdio, err := MCPEditPlan(codexLocalSrv, ai.MCPDef{
+		Transport: "stdio",
+		Command:   "npx",
+		Args:      []string{"-y", "demo@2"},
+	}, env, title)
+	if err != nil {
+		t.Fatalf("codex stdio edit: %v", err)
+	}
+	if !strings.Contains(pCodexStdio.Steps[0].Edit.After, `"EXTRA_KEY"`) {
+		t.Errorf("codex stdio edit dropped env_vars:\n%s", pCodexStdio.Steps[0].Edit.After)
+	}
 }

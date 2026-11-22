@@ -48,14 +48,14 @@ func PathAddPlan(entries []inventory.PathEntry, raw string, env sysenv.Env, term
 	case "fish":
 		line = `set -gx PATH "` + named + `" $PATH`
 	default:
-		return Plan{}, errors.New(locales.MiseShellUnsupported(shell))
+		return Plan{}, errors.New(locales.SecretShellUnsupported(shell))
 	}
 	step, err := firstLineStep(file, line, true)
 	if err != nil {
 		return Plan{}, err
 	}
 	steps := []Step{step}
-	if login := bashLogin(home); shell == "bash" && login != "" {
+	if login := bashLogin(home); shell == "bash" && login != "" && !bashLoginSourcesRC(home, login) {
 		step, err := firstLineStep(login, line, false)
 		if err != nil {
 			return Plan{}, err
@@ -63,4 +63,31 @@ func PathAddPlan(entries []inventory.PathEntry, raw string, env sysenv.Env, term
 		steps = append(steps, step)
 	}
 	return pathAddPlan(steps, locales.PathAddWhy(), dir, notes, terminal), nil
+}
+
+func bashLoginSourcesRC(home, loginPath string) bool {
+	if fileMentions(loginPath, ".bashrc") {
+		return true
+	}
+	if home != "" && filepath.Base(loginPath) != ".profile" && fileMentions(loginPath, ".profile") {
+		return fileMentions(filepath.Join(home, ".profile"), ".bashrc")
+	}
+	return false
+}
+
+func fileMentions(path, needle string) bool {
+	text, isNew, err := readText(path)
+	if err != nil || isNew {
+		return false
+	}
+	for line := range strings.Lines(text) {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if strings.Contains(trimmed, needle) {
+			return true
+		}
+	}
+	return false
 }

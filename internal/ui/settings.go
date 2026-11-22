@@ -314,6 +314,11 @@ func (a *App) appsCard(c *ui.Context) {
 				editorKnown = true
 			}
 		}
+		editorLooksCustom := isCustomAppPath(a.Editor)
+		if a.Editor != "" && !editorKnown && a.Snapshot == nil && !editorLooksCustom {
+			editorNames = append(editorNames, a.Editor)
+			editorKnown = true
+		}
 		editorNames = append(editorNames, customLabel)
 		editorIsCustom := a.Editor != "" && !editorKnown
 		editorShowCustom := a.editorCustomOpen || editorIsCustom
@@ -368,6 +373,10 @@ func (a *App) customAppPathRow(c *ui.Context, key, targetLabel string, input *st
 	save := func() {
 		trimmed := expandHomePath(strings.TrimSpace(*input), a.Home)
 		if trimmed == "" {
+			return
+		}
+		if !filepath.IsAbs(trimmed) {
+			a.SettingsError = locales.PathAddInvalid()
 			return
 		}
 		*input = trimmed

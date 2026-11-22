@@ -301,6 +301,7 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 			columns = []ui.Track{ui.Fr(1), ui.Fixed(170), ui.Fixed(54), ui.Fixed(80), ui.Fixed(84), ui.Fixed(80)}
 		}
 	}
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("pods-panes"), func() {
 		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
@@ -309,7 +310,9 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 				sortColumn{"CPU", "cpu"}, sortColumn{locales.KubeMetricsMemory(), "memory"})
 		}
 		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth)), func() {
-			s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
+			if hasKubectl {
+				s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
+			}
 		}, sort, headers...)
 	}, func() {
 		for _, g := range groups {
@@ -333,6 +336,7 @@ func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact 
 	pal := Colors(t)
 	open := a.groupOpen(g)
 	key := "group-" + g.key()
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	line := workloadSelectionRow(c.Key(key+"-select-row"), pal.Line)
 	line.Children(func() {
 		var ids []string
@@ -342,7 +346,9 @@ func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact 
 			}
 		}
 		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
-			a.cluster.bulk.checkbox(c, "group-select", locales.KubeBulkSelect(g.owner.Name), ids)
+			if hasKubectl {
+				a.cluster.bulk.checkbox(c, "group-select", locales.KubeBulkSelect(g.owner.Name), ids)
+			}
 		})
 		head := resourceGrid(ui.ButtonBase(c.Key(key)), tracks[1:]).Grow(1).MinWidth(0).Padding(9, 0).
 			Label(g.owner.Kind + " " + g.owner.Name).OnClick(func() { a.toggleGroup(g) })
@@ -462,6 +468,7 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 	pal := Colors(t)
 	label, tagBg, tagFg := podTag(c, p)
 	story, trouble := storyOf(p, nil, c.Now())
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	line := workloadSelectionRow(c.Key("pod-select-row-"+p.UID), pal.Line).MinHeight(44)
 	line.Children(func() {
 		var ids []string
@@ -469,7 +476,9 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 			ids = []string{p.UID}
 		}
 		ui.Column(c).Width(18).Shrink(0).AlignItems(ui.Start).Justify(ui.Center).Children(func() {
-			s.bulk.checkbox(c, "pod-select", locales.KubeBulkSelect(p.Name), ids)
+			if hasKubectl {
+				s.bulk.checkbox(c, "pod-select", locales.KubeBulkSelect(p.Name), ids)
+			}
 		})
 		if owned {
 			// The guide line from the group's chevron down its pods.
@@ -478,7 +487,7 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 		row := ui.ButtonBase(c.Key("pod-"+p.UID)).Column().Grow(1).MinWidth(0).Padding(6, 0).
 			AlignItems(ui.Stretch).Justify(ui.Center).Label(p.Name).OnClick(func() { s.toggleWorkload(&s.pod, p.UID) })
 		var logs func()
-		if _, hasKubectl := cliCopy(a.cliState(), "kubectl"); hasKubectl {
+		if hasKubectl {
 			if container := podLogContainer(p, story.crashed); a.StreamLogs != nil && container != "" {
 				logs = func() { a.openLogs(p, container, false) }
 			}

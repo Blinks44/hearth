@@ -15,6 +15,15 @@ func OpenWith(ctx context.Context, r Runner, app, command, path string, env []st
 	if args == nil {
 		return fmt.Errorf("open %s: no app or command", path)
 	}
+	if _, isExec := r.(Exec); isExec && args[0] != "/usr/bin/open" {
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("open %s: %w", path, err)
+		}
+		if err := startDetached(args, env); err != nil {
+			return fmt.Errorf("open %s: %w", path, err)
+		}
+		return nil
+	}
 	res, err := r.Run(ctx, Cmd{Args: args, Env: env, Timeout: 20 * time.Second})
 	if err != nil {
 		return fmt.Errorf("open %s: %w", path, err)

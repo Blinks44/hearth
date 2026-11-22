@@ -146,7 +146,8 @@ func (a *App) helmDetailsView(c *ui.Context, d *helmDetails) {
 	t := c.Theme()
 	pal := Colors(t)
 	r := d.release
-	blocked := a.BuildPlan == nil || a.cluster.err != nil || a.op.running() || d.busy || d.readErr != nil ||
+	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
+	blocked := !hasKubectl || a.BuildPlan == nil || a.cluster.err != nil || a.op.running() || d.busy || d.readErr != nil ||
 		len(d.history) == 0 || r.Pending() || r.Status == "uninstalling"
 	var previous int
 	if len(d.history) != 0 {

@@ -396,6 +396,7 @@ type App struct {
 	databaseTab        int     // the tab of the databases page shown
 	databaseFilter     string  // the databases table's filter
 	databaseErr        string  // last terminal launch error on the Databases page
+	databaseBusy       bool    // a Docker database start/stop plan is being built
 	dockerTab          int     // the tab of the Docker page shown
 	dockerFilter       string  // the Docker contexts table's filter
 	bunTab             int     // the tab of the Bun page shown

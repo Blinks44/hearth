@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -45,7 +47,10 @@ func AWSProfilePlan(cli, from, to, region string, env sysenv.Env, r run.Runner) 
 	if err != nil {
 		return Plan{}, err
 	}
-	changes := []string{locales.CloudAwsSwitchChange(cmp.Or(from, "default") + " → " + to)}
+	var changes []string
+	if len(steps) > 0 {
+		changes = append(changes, locales.CloudAwsSwitchChange(cmp.Or(from, "default")+" → "+to))
+	}
 	if region != "" && cli != "" {
 		steps = append(steps, Step{
 			Argv:    []string{cli, "configure", "set", "region", region, "--profile", to},
@@ -53,6 +58,9 @@ func AWSProfilePlan(cli, from, to, region string, env sysenv.Env, r run.Runner) 
 			Env:     []string{"AWS_PAGER="},
 		})
 		changes = append(changes, locales.CloudAwsRegionChange(to, region))
+	}
+	if len(steps) == 0 {
+		return Plan{}, errors.New(locales.CloudAwsInvalid())
 	}
 	if env.Get("AWS_ACCESS_KEY_ID") != "" {
 		notes = append(notes, Note{
@@ -71,7 +79,7 @@ func AWSProfilePlan(cli, from, to, region string, env sysenv.Env, r run.Runner) 
 		RestartTerminal: true,
 	}
 	if region != "" && cli != "" && r != nil {
-		verifyEnv := withEnvVar(env, "AWS_PAGER", "")
+		verifyEnv := env.With("AWS_PAGER", "")
 		p.Verify = func(ctx context.Context) (string, error) {
 			res, err := r.Run(ctx, run.Cmd{
 				Args: []string{cli, "configure", "get", "region", "--profile", to},
@@ -136,7 +144,10 @@ func GcloudSwitchPlan(cli, fromConfig, toConfig, fromProject, toProject string, 
 		})
 	}
 
-	runEnv := withEnvVar(env, "CLOUDSDK_CORE_DISABLE_PROMPTS", "1")
+	// Clear env overrides so `gcloud config set project` edits the target
+	// configuration instead of an env-pinned one; the notes above still warn
+	// the user that their shell overrides the file.
+	runEnv := env.Without("CLOUDSDK_ACTIVE_CONFIG_NAME", "CLOUDSDK_CORE_PROJECT").With("CLOUDSDK_CORE_DISABLE_PROMPTS", "1")
 	p := Plan{
 		Title:   locales.CloudGcloudSwitchTitle(),
 		Why:     locales.CloudGcloudSwitchWhy(),
@@ -146,12 +157,11 @@ func GcloudSwitchPlan(cli, fromConfig, toConfig, fromProject, toProject string, 
 		Changes: changes,
 	}
 	if r != nil {
-		verifyEnv := withoutEnvVars(runEnv, "CLOUDSDK_ACTIVE_CONFIG_NAME", "CLOUDSDK_CORE_PROJECT")
 		p.Verify = func(ctx context.Context) (string, error) {
 			if changeConfig {
 				res, err := r.Run(ctx, run.Cmd{
 					Args: []string{cli, "config", "configurations", "list", "--filter=is_active:true", "--format=value(name)"},
-					Env:  verifyEnv,
+					Env:  runEnv,
 				})
 				if err != nil {
 					return "", fmt.Errorf("check gcloud configuration: %w", err)
@@ -163,7 +173,7 @@ func GcloudSwitchPlan(cli, fromConfig, toConfig, fromProject, toProject string, 
 			if changeProject {
 				res, err := r.Run(ctx, run.Cmd{
 					Args: []string{cli, "config", "get-value", "core/project"},
-					Env:  verifyEnv,
+					Env:  runEnv,
 				})
 				if err != nil {
 					return "", fmt.Errorf("check gcloud project: %w", err)
@@ -189,7 +199,7 @@ func AzSubscriptionPlan(cli, from, toID, toName string, env sysenv.Env, r run.Ru
 	if cli == "" || !validCloudValue(target) {
 		return Plan{}, errors.New(locales.CloudAzInvalid())
 	}
-	runEnv := withEnvVar(env, "AZURE_CORE_COLLECT_TELEMETRY", "no")
+	runEnv := env.With("AZURE_CORE_COLLECT_TELEMETRY", "no")
 	p := Plan{
 		Title:   locales.CloudAzSwitchTitle(),
 		Why:     locales.CloudAzSwitchWhy(),
@@ -237,11 +247,11 @@ func CloudLoginPlan(tool, cli, profile string, hasSSO bool, env sysenv.Env, r ru
 	case "gcloud":
 		provider = "Google Cloud"
 		argv = []string{cli, "auth", "login"}
-		runEnv = withEnvVar(runEnv, "CLOUDSDK_CORE_DISABLE_PROMPTS", "1")
+		runEnv = runEnv.With("CLOUDSDK_CORE_DISABLE_PROMPTS", "1")
 	case "az":
 		provider = "Azure"
 		argv = []string{cli, "login", "--output", "none"}
-		runEnv = withEnvVar(runEnv, "AZURE_CORE_COLLECT_TELEMETRY", "no")
+		runEnv = runEnv.With("AZURE_CORE_COLLECT_TELEMETRY", "no")
 	case "aws":
 		provider = "AWS"
 		if !hasSSO {
@@ -254,7 +264,7 @@ func CloudLoginPlan(tool, cli, profile string, hasSSO bool, env sysenv.Env, r ru
 			}
 			argv = append(argv, "--profile", profile)
 		}
-		runEnv = withEnvVar(runEnv, "AWS_PAGER", "")
+		runEnv = runEnv.With("AWS_PAGER", "")
 	default:
 		return Plan{}, errors.New(locales.CloudAwsInvalid())
 	}
@@ -287,7 +297,7 @@ func InfraVersionPlan(tool, title, want string, setup Setup, env sysenv.Env, det
 		pkg = "opentofu"
 	}
 	spec := MiseSpecForConstraint(want)
-	verify := CommandFound(title, tool, detectFn)
+	verify := infraVersionVerify(title, tool, want, spec, detectFn)
 
 	if setup.Have["mise"] {
 		return Plan{
@@ -331,6 +341,45 @@ func InfraVersionPlan(tool, title, want string, setup Setup, env sysenv.Env, det
 	return p, nil
 }
 
+func infraVersionVerify(title, tool, want, spec string, detectFn Detect) func(context.Context) (string, error) {
+	if detectFn == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		st, err := detectFn(ctx)
+		if err != nil {
+			return "", err
+		}
+		var ins []inventory.Installation
+		if st.Cli != nil {
+			for _, in := range st.Cli.Tools {
+				if in.Tool == tool {
+					ins = append(ins, in)
+				}
+			}
+		}
+		i := inventory.TerminalCopy(ins)
+		if i < 0 {
+			return "", errors.New(locales.AgentCheckMissing(title))
+		}
+		if strings.TrimSpace(want) != "" {
+			resolved := projects.Resolve(projects.Project{
+				Requirements: []projects.Requirement{{Tool: tool, Want: want}},
+			}, &inventory.Snapshot{Tools: []inventory.ToolState{st}}, nil)
+			if len(resolved) > 0 && len(resolved[0].Checks) > 0 {
+				ch := resolved[0].Checks[0]
+				if ch.Err == "" && !ch.Met {
+					if ch.Installed == nil {
+						return "", errors.New(locales.VersionCheckNotInstalled("mise", title, spec))
+					}
+					return "", errors.New(locales.VersionCheckNotDefault("mise", title, spec))
+				}
+			}
+		}
+		return locales.AgentCheckFound(title, ins[i].Version), nil
+	}
+}
+
 var semverTokenRe = regexp.MustCompile(`\d+(?:\.\d+){0,2}`)
 
 // MiseSpecForConstraint turns a Terraform/OpenTofu constraint (such as
@@ -342,9 +391,37 @@ func MiseSpecForConstraint(want string) string {
 	case "", "*", "latest":
 		return "latest"
 	}
-	clauses := strings.Split(want, ",")
-	first := strings.TrimSpace(clauses[0])
+	rawClauses := strings.Split(want, ",")
+	var clauses []string
+	hasUpperOrExclusion := false
+	for _, cl := range rawClauses {
+		cl = strings.TrimSpace(cl)
+		if cl == "" {
+			continue
+		}
+		if strings.HasPrefix(cl, "!=") || strings.HasPrefix(cl, "<") {
+			hasUpperOrExclusion = true
+			if strings.HasPrefix(cl, "!=") {
+				continue
+			}
+		}
+		clauses = append(clauses, cl)
+	}
+	// Prefer a non-upper-bound clause when one is present (e.g. "!= 1.9.0, >= 1.8.0"
+	// or "< 2.0, >= 1.8").
+	first := ""
+	for _, cl := range clauses {
+		if !strings.HasPrefix(cl, "<") {
+			first = cl
+			break
+		}
+	}
+	if first == "" && len(clauses) > 0 {
+		first = clauses[0]
+	}
 	switch {
+	case first == "":
+		return "latest"
 	case strings.HasPrefix(first, "~>"):
 		v := semverTokenRe.FindString(first)
 		if v == "" {
@@ -362,11 +439,11 @@ func MiseSpecForConstraint(want string) string {
 			return v
 		}
 	case strings.HasPrefix(first, ">="), strings.HasPrefix(first, "^"):
-		if len(clauses) == 1 {
+		if len(clauses) == 1 && !hasUpperOrExclusion {
 			return "latest"
 		}
-		// Upper bound present (e.g. ">= 1.8, < 1.10"): use the lower bound's
-		// minor line so we stay within the range.
+		// Upper bound or exclusion present (e.g. ">= 1.8, < 1.10" or "!= 1.9.0, >= 1.8.0"):
+		// use the lower bound's minor line so we stay within the range.
 		if v := semverTokenRe.FindString(first); v != "" {
 			parts := strings.Split(v, ".")
 			if len(parts) >= 2 {
@@ -374,47 +451,17 @@ func MiseSpecForConstraint(want string) string {
 			}
 			return v
 		}
+	case strings.HasPrefix(first, "<="):
+		if v := semverTokenRe.FindString(first); v != "" {
+			return v
+		}
+	case strings.HasPrefix(first, "<"), strings.HasPrefix(first, ">"):
+		// Strict "< X" or "> X" cannot pick X itself as a valid target.
+		return "latest"
 	default:
 		if v := semverTokenRe.FindString(first); v != "" {
 			return v
 		}
 	}
 	return "latest"
-}
-
-func withEnvVar(env sysenv.Env, key, val string) sysenv.Env {
-	prefix := key + "="
-	out := make(sysenv.Env, 0, len(env)+1)
-	replaced := false
-	for _, kv := range env {
-		if strings.HasPrefix(kv, prefix) {
-			if !replaced {
-				out = append(out, prefix+val)
-				replaced = true
-			}
-			continue
-		}
-		out = append(out, kv)
-	}
-	if !replaced {
-		out = append(out, prefix+val)
-	}
-	return out
-}
-
-func withoutEnvVars(env sysenv.Env, keys ...string) sysenv.Env {
-	out := make(sysenv.Env, 0, len(env))
-	for _, kv := range env {
-		drop := false
-		for _, k := range keys {
-			if strings.HasPrefix(kv, k+"=") {
-				drop = true
-				break
-			}
-		}
-		if !drop {
-			out = append(out, kv)
-		}
-	}
-	return out
 }

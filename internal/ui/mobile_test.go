@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // Xcode, the simulators, the Android SDK and Flutter with the space each
@@ -177,5 +178,15 @@ func TestMobileSearchAndRemove(t *testing.T) {
 	tt.Advance(time.Second)
 	if !tt.HasText("Remove emulator image API 33") {
 		t.Fatalf("expected Android image removal plan: %q", tt.Texts())
+	}
+}
+
+func TestMobilePageNilSnapshot(t *testing.T) {
+	a := NewApp()
+	a.router.Push(mobilePage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if !tt.HasText(locales.MobileTitle()) || !tt.HasText(locales.MobileEnv()) {
+		t.Fatalf("mobile page did not render without snapshot: %q", tt.Texts())
 	}
 }

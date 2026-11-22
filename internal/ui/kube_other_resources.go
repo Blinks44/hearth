@@ -308,7 +308,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 					if a.StreamLogs != nil && a.WatchCluster != nil && ref.Kubectl != "" && m.Item(locales.KubeLogsOpen()).Chosen() {
 						a.openOwnerLogs(ref)
 					}
-					if a.BuildPlan != nil && ref.Kubectl != "" && m.Item(locales.KubeRestartOpen()).Chosen() {
+					if a.BuildPlan != nil && ref.Kubectl != "" && !r.Deleting && m.Item(locales.KubeRestartOpen()).Chosen() {
 						a.planRestart(a.resourceForm(ref))
 					}
 				}

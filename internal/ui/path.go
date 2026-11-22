@@ -212,8 +212,17 @@ func (a *App) pathVariables(c *ui.Context) {
 	listCard(c, locales.EnvPathToolVariables(), "", func() {
 		if len(a.Snapshot.Variables) == 0 {
 			cardNote(c, locales.EnvPathNoVariables())
+			return
 		}
+		q := strings.ToLower(strings.TrimSpace(a.pathFilter))
+		shown := 0
 		for _, v := range a.Snapshot.Variables {
+			if q != "" && !strings.Contains(strings.ToLower(v.Name), q) &&
+				!strings.Contains(strings.ToLower(v.Terminal), q) &&
+				!strings.Contains(strings.ToLower(v.GUI), q) {
+				continue
+			}
+			shown++
 			listRow(c, v.Name, true, "", func() {})
 			t, g := tilde(v.Terminal, a.Home), tilde(v.GUI, a.Home)
 			if t == "" {
@@ -226,6 +235,9 @@ func (a *App) pathVariables(c *ui.Context) {
 			if v.Terminal != v.GUI {
 				cardNote(c, locales.EnvPathApps()+": "+g)
 			}
+		}
+		if shown == 0 {
+			cardNote(c, locales.EnvPathNoMatches())
 		}
 	})
 }

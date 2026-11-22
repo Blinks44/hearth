@@ -370,7 +370,11 @@ func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 		return *step.Edit, false, true
 	case step.UserPath != nil:
 		lines := func(value string) string { return strings.ReplaceAll(value, ";", "\n") }
-		return ops.FileEdit{Path: ops.UserPathName, Before: lines(step.UserPath.Before), After: lines(step.UserPath.After)}, true, true
+		before, after := lines(step.UserPath.Before), lines(step.UserPath.After)
+		if before == "" && after == "" && step.UserPath.Add != "" {
+			after = step.UserPath.Add + "\n"
+		}
+		return ops.FileEdit{Path: ops.UserPathName, Before: before, After: after}, true, true
 	case step.UserVar != nil:
 		v := step.UserVar
 		e := ops.FileEdit{Path: ops.UserVarsName + `\` + v.Name}

@@ -48,7 +48,7 @@ func TestRemoveSimRuntimePlanDarwin(t *testing.T) {
 		t.Fatalf("resolved steps = %+v, want %v", p2.Steps, want2)
 	}
 
-	// Legacy bundle fallback when not mounted under Volumes and no ID.
+	// Legacy bundle fallback when under Profiles/Runtimes and no ID uses elevated rm.
 	legacy := inventory.SimRuntime{
 		Platform: "watchOS",
 		Version:  "10.5",
@@ -58,7 +58,14 @@ func TestRemoveSimRuntimePlanDarwin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(pLegacy.Steps) != 1 || pLegacy.Steps[0].Remove != legacy.Path {
-		t.Fatalf("legacy steps = %+v, want Remove %q", pLegacy.Steps, legacy.Path)
+	wantLegacy := []string{"/bin/rm", "-rf", "--", legacy.Path}
+	if len(pLegacy.Steps) != 1 || !slices.Equal(pLegacy.Steps[0].Argv, wantLegacy) || !pLegacy.Steps[0].Admin {
+		t.Fatalf("legacy steps = %+v, want elevated %v", pLegacy.Steps, wantLegacy)
+	}
+	// Mounted volume without ID must not fall back to deleting a path.
+	mountedNoID := rt
+	mountedNoID.ID = ""
+	if _, err := RemoveSimRuntimePlan(t.Context(), &run.Fake{}, mountedNoID, nil, detectGone); err == nil {
+		t.Fatal("mounted runtime without ID should fail")
 	}
 }
