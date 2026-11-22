@@ -22,25 +22,35 @@ const cleanupPage = "/cleanup"
 
 // caches name the tools' caches by ID.
 var caches = map[string]string{
-	"npm":        "npm",
-	"pnpm":       "pnpm",
-	"yarn":       "Yarn",
-	"yarn-berry": "Yarn Berry",
-	"bun":        "Bun",
-	"uv":         "uv",
-	"pip":        "pip",
-	"brew":       "Homebrew",
-	"go-mod":     "Go modules",
-	"go-build":   "Go build",
-	"cargo":      "Cargo",
-	"gradle":     "Gradle",
-	"maven":      "Maven",
-	"composer":   "Composer",
-	"ccache":     "ccache",
-	"xcode":      "Xcode DerivedData",
-	"cocoapods":  "CocoaPods",
-	"pub":        "Flutter pub",
-	"jetbrains":  "JetBrains",
+	"npm":             "npm",
+	"pnpm":            "pnpm",
+	"yarn":            "Yarn",
+	"yarn-berry":      "Yarn Berry",
+	"bun":             "Bun",
+	"uv":              "uv",
+	"pip":             "pip",
+	"brew":            "Homebrew",
+	"go-mod":          "Go modules",
+	"go-build":        "Go build",
+	"cargo":           "Cargo",
+	"rustup":          "rustup",
+	"gradle":          "Gradle",
+	"maven":           "Maven",
+	"nuget":           "NuGet",
+	"composer":        "Composer",
+	"ccache":          "ccache",
+	"xcode":           "Xcode DerivedData",
+	"cocoapods":       "CocoaPods",
+	"pub":             "Flutter pub",
+	"playwright":      "Playwright",
+	"claude-cache":    "Claude Code",
+	"codex-cache":     "Codex",
+	"codex-worktrees": "Codex",
+	"gemini-cache":    "Gemini CLI",
+	"copilot-cache":   "Copilot CLI",
+	"opencode-cache":  "OpenCode",
+	"cursor-cache":    "Cursor",
+	"jetbrains":       "JetBrains",
 }
 
 // cleanupGroups are the Cleanup page's groups, a tab each after All.
@@ -89,13 +99,42 @@ func cleanupAmount(cands []cleanup.Candidate) string {
 	return formatBytes(freeable(cands))
 }
 
+type cleanupGroupRows struct {
+	group cleanup.Group
+	rows  []cleanup.Candidate
+}
+
+func (a *App) visibleCleanupGroups(cands []cleanup.Candidate) (groups []cleanupGroupRows, visible []cleanup.Candidate) {
+	filter := strings.ToLower(strings.TrimSpace(a.cleanupFilter))
+	for _, g := range cleanupGroups {
+		if a.cleanupTab > 0 && cleanupGroups[a.cleanupTab-1] != g {
+			continue
+		}
+		var rows []cleanup.Candidate
+		for _, cand := range cands {
+			if cand.Kind.Group() != g {
+				continue
+			}
+			if filter == "" || strings.Contains(strings.ToLower(a.candidateTitle(cand)+" "+a.candidateCaption(cand)), filter) {
+				rows = append(rows, cand)
+				visible = append(visible, cand)
+			}
+		}
+		if len(rows) > 0 {
+			groups = append(groups, cleanupGroupRows{group: g, rows: rows})
+		}
+	}
+	return groups, visible
+}
+
 func (a *App) cleanupView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
 		cands := a.candidates(c)
+		visibleGroups, visibleCands := a.visibleCleanupGroups(cands)
 		var selected []cleanup.Candidate
-		for _, cand := range cands {
+		for _, cand := range visibleCands {
 			if a.chosen(cand) {
 				selected = append(selected, cand)
 			}
@@ -131,7 +170,6 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						stateCard(c, t.Success, locales.CleanupCounted(), counted, caption)
 					}
 				})
-				groups := cleanupGroups
 				count := func(g cleanup.Group) string {
 					n := 0
 					for _, cand := range cands {
@@ -170,31 +208,18 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						toolNote(c, locales.CleanupEmpty())
 						return
 					}
-					filter := strings.ToLower(a.cleanupFilter)
 					ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 						shown := 0
-						for _, g := range groups {
-							if a.cleanupTab > 0 && groups[a.cleanupTab-1] != g {
-								continue
-							}
-							var rows []cleanup.Candidate
-							for _, cand := range cands {
-								if cand.Kind.Group() == g && strings.Contains(strings.ToLower(a.candidateTitle(cand)+" "+a.candidateCaption(cand)), filter) {
-									rows = append(rows, cand)
-								}
-							}
-							if len(rows) == 0 {
-								continue
-							}
-							ui.Row(c.Key(cleanupGroupTitle(g))).Transition(rowMotion).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-								a.groupCheckbox(c, cleanupGroupTitle(g), rows)
-								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
-								ui.Text(c, cleanupAmount(rows)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+						for _, g := range visibleGroups {
+							ui.Row(c.Key(cleanupGroupTitle(g.group))).Transition(rowMotion).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+								a.groupCheckbox(c, cleanupGroupTitle(g.group), g.rows)
+								ui.Text(c, strings.ToUpper(cleanupGroupTitle(g.group))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
+								ui.Text(c, cleanupAmount(g.rows)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 								if a.Shell != nil {
 									ui.Box(c).Size(24, 24).Shrink(0)
 								}
 							})
-							for _, cand := range rows {
+							for _, cand := range g.rows {
 								shown++
 								a.candidateRow(c, cand)
 							}
@@ -205,18 +230,30 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 					})
 					toolNote(c, locales.CleanupReadOnly())
 				}, func() {
-					var restorable []cleanup.Candidate
+					var restorable, staleProjects []cleanup.Candidate
 					for _, cand := range cands {
-						if cand.Selected && cand.Kind.Group() != cleanup.Projects {
+						if !cand.Selected || !ops.Cleans(cand, a.Snapshot) {
+							continue
+						}
+						if cand.Kind.Group() == cleanup.Projects {
+							staleProjects = append(staleProjects, cand)
+						} else {
 							restorable = append(restorable, cand)
 						}
 					}
-					listCard(c, locales.CleanupAtOnce(), "", func() {
+					atOnceAside := ""
+					if a.Sizes != nil {
+						atOnceAside = formatBytes(freeable(restorable) + freeable(staleProjects))
+					}
+					listCard(c, locales.CleanupAtOnce(), atOnceAside, func() {
 						size := "—"
 						if a.Sizes != nil {
 							size = cleanupAmount(restorable)
 						}
 						listRow(c, locales.CleanupAtOnceRow(), false, locales.CleanupAtOnceCaption(size), func() {})
+						if len(staleProjects) > 0 {
+							listRow(c, locales.CleanupAtOnceProjectsRow(), false, locales.CleanupAtOnceProjectsCaption(cleanupAmount(staleProjects)), func() {})
+						}
 					})
 					listCard(c, locales.CleanupYourChoice(), "", func() {
 						listRow(c, locales.CleanupCopiesRow(), false, locales.CleanupCopiesCaption(), func() {})
@@ -264,16 +301,19 @@ func (a *App) cleanupButton(c *ui.Context, selected []cleanup.Candidate) {
 	if len(cands) == 0 {
 		return
 	}
-	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(cleanupAmount(cands))).Height(controlHeight).OnClick(func() {
-		target, snap, count := a.dockerTarget(), a.Snapshot, a.CountDocker
-		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-			var docker ops.CountDocker
-			if count != nil {
-				docker = func(ctx context.Context) ([]inventory.DockerUsage, error) { return count(ctx, env, snap) }
-			}
-			return ops.CleanupPlan(cands, titles, snap, env, target, docker)
-		}, a.proposeOrSay)
-	})
+	ui.PrimaryButton(c.Key("cleanup-run"), locales.CleanupRemoveSelected(cleanupAmount(cands))).
+		Height(controlHeight).
+		Disabled(a.Counting).
+		OnClick(func() {
+			target, snap, count := a.dockerTarget(), a.Snapshot, a.CountDocker
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				var docker ops.CountDocker
+				if count != nil {
+					docker = func(ctx context.Context) ([]inventory.DockerUsage, error) { return count(ctx, env, snap) }
+				}
+				return ops.CleanupPlan(cands, titles, snap, env, target, docker)
+			}, a.proposeOrSay)
+		})
 }
 
 // dockerTarget is the terminal's Docker CLI and its selected context,
@@ -342,11 +382,30 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 		}
 		ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
 		if a.Shell != nil {
-			if len(cand.Paths) > 0 {
+			switch len(cand.Paths) {
+			case 0:
+				ui.Box(c).Size(24, 24).Shrink(0)
+			case 1:
 				path := cand.Paths[0]
 				iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(path) })
-			} else {
-				ui.Box(c).Size(24, 24).Shrink(0)
+			default:
+				paths := cand.Paths
+				iconButton(c, "folder-open", showInFolder()).Menu(func(m *ui.Menu) {
+					limit := min(len(paths), 12)
+					for _, p := range paths[:limit] {
+						path := p
+						if m.Item(tilde(path, a.Home)).Chosen() {
+							a.Shell.ShowItemInFolder(path)
+						}
+					}
+					if len(paths) > limit {
+						m.Separator()
+						parent := filepath.Dir(paths[0])
+						if m.Item(locales.CleanupRevealMore(len(paths)-limit, tilde(parent, a.Home))).Chosen() {
+							a.Shell.ShowItemInFolder(parent)
+						}
+					}
+				})
 			}
 		}
 	})
@@ -357,6 +416,9 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 func (a *App) candidateTitle(cand cleanup.Candidate) string {
 	switch cand.Kind {
 	case cleanup.Cache:
+		if cand.ID == "codex-worktrees" {
+			return locales.CleanupCodexWorktrees()
+		}
 		return locales.CleanupCache(cacheName(cand.ID))
 	case cleanup.ExtraCopy:
 		in := cand.Copies[0]
@@ -392,7 +454,12 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		if argv := ops.CacheCommand(cand.ID); argv != nil {
 			return ops.Command(argv)
 		}
-		return tilde(cand.Paths[0], a.Home)
+		if len(cand.Paths) > 0 {
+			parts = append(parts, tilde(cand.Paths[0], a.Home))
+			if len(cand.Paths) > 1 {
+				parts = append(parts, locales.CleanupMorePaths(len(cand.Paths)-1))
+			}
+		}
 	case cleanup.BuildCache:
 		parts = append(parts, "docker builder prune")
 	case cleanup.UnusedImages:
@@ -442,6 +509,8 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 			parts = append(parts, locales.ReasonSuperseded())
 		case cleanup.Forgotten:
 			parts = append(parts, locales.ReasonForgotten())
+		case cleanup.AbandonedWorktrees:
+			parts = append(parts, locales.ReasonAbandonedWorktrees())
 		}
 	}
 	return strings.Join(parts, " · ")

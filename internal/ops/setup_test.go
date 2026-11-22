@@ -5,8 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestSetupParts(t *testing.T) {
@@ -191,5 +193,49 @@ func TestSetupPartsConflicts(t *testing.T) {
 	s = Setup{GOOS: "darwin", Tools: []string{"mysql", "mariadb"}, Have: map[string]bool{"homebrew": true}, Managers: brew}
 	if parts := s.Parts(); len(parts) != 1 || parts[0].Tool != "mysql" {
 		t.Errorf("both chosen: %+v", parts)
+	}
+}
+
+func TestSetupTargetVersion(t *testing.T) {
+	tests := []struct {
+		id     string
+		method catalog.Method
+		want   string
+	}{
+		{"node", catalog.Method{Manager: "mise", Package: "node"}, "LTS"},
+		{"java", catalog.Method{Manager: "mise", Package: "java"}, "Temurin 25"},
+		{"python", catalog.Method{Manager: "mise", Package: "python"}, "latest"},
+		{"deno", catalog.Method{Manager: "mise", Package: "deno"}, "latest"},
+		{"postgresql", catalog.Method{Manager: "brew", Package: "postgresql@17"}, "17"},
+		{"postgresql", catalog.Method{Manager: "winget", Package: "PostgreSQL.PostgreSQL.17"}, "17"},
+		{"mysql", catalog.Method{Manager: "brew", Package: "mysql@8.4"}, "8.4"},
+		{"php", catalog.Method{Manager: "zypper", Package: "php8"}, "8"},
+		{"git", catalog.Method{Manager: "brew", Package: "git"}, ""},
+	}
+	for _, tc := range tests {
+		if got := SetupTargetVersion(tc.id, tc.method); got != tc.want {
+			t.Errorf("SetupTargetVersion(%q, %+v) = %q, want %q", tc.id, tc.method, got, tc.want)
+		}
+	}
+}
+
+func TestSetupPlanLinuxDnfPacmanDatabases(t *testing.T) {
+	dnf := []inventory.PackageManager{{ID: "dnf", Name: "DNF", Path: "/usr/bin/dnf"}}
+	s := Setup{GOOS: "linux", Tools: []string{"postgresql"}, Managers: dnf, Title: func(id string) string { return "PostgreSQL" }}
+	p, _, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.SetupLinuxDbNoteTitle() }) {
+		t.Errorf("expected Linux DB note for dnf, got notes %+v", p.Notes)
+	}
+	pacman := []inventory.PackageManager{{ID: "pacman", Name: "pacman", Path: "/usr/bin/pacman"}}
+	s = Setup{GOOS: "linux", Tools: []string{"redis"}, Managers: pacman, Title: func(id string) string { return "Redis" }}
+	p, _, err = SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/bash"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(p.Notes, func(n Note) bool { return n.Title == locales.SetupLinuxDbNoteTitle() }) {
+		t.Errorf("expected Linux DB note for pacman, got notes %+v", p.Notes)
 	}
 }

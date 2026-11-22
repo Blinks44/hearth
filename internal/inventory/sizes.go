@@ -33,12 +33,30 @@ type Usage struct {
 	Partial bool `json:",omitempty"`
 }
 
-// Cache is a tool's cache folder: files the tool downloads again when
-// they are gone.
+// Cache is a tool's cache folder or set of temporary folders: files the
+// tool downloads or recreates again when they are gone.
 type Cache struct {
 	// ID names the cache: "npm", "pnpm", "uv", "go-build", ...
 	ID   string
 	Path string
+	// Paths holds every path belonging to a multi-path cache (for example
+	// cargo registry + git, or an agent's temporary cache subfolders). When
+	// non-empty, Path is Paths[0].
+	Paths []string `json:",omitempty"`
+	// OptIn marks a cache that Cleanup leaves unchecked by default, such as
+	// abandoned agent worktrees.
+	OptIn bool `json:",omitempty"`
+}
+
+// AllPaths returns all paths of c: Paths when set, else Path when non-empty.
+func (c Cache) AllPaths() []string {
+	if len(c.Paths) > 0 {
+		return c.Paths
+	}
+	if c.Path != "" {
+		return []string{c.Path}
+	}
+	return nil
 }
 
 // ProjectInstall is a project's folder of dependencies, Project/Name, with

@@ -610,6 +610,13 @@ func antigravitySessions(home string, loc *time.Location) []inventory.AgentSessi
 }
 
 func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSession, error) {
+	files := []string{path}
+	for _, suffix := range []string{"-wal", "-shm"} {
+		sidecar := path + suffix
+		if fi, err := os.Stat(sidecar); err == nil && !fi.IsDir() {
+			files = append(files, sidecar)
+		}
+	}
 	db, err := openSQLiteRO(path)
 	if err != nil {
 		return nil, err
@@ -712,6 +719,7 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 		Agent:    "antigravity",
 		ID:       id,
 		Dir:      dir,
+		Files:    files,
 		Size:     size + walSize,
 		Modified: fileMod,
 		Usage:    merge(usage),

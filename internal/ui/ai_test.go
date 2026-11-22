@@ -138,6 +138,19 @@ func TestAgentsPage(t *testing.T) {
 	}
 }
 
+func TestAgentDirSizeShown(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.Sizes = &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			home + "/.claude": {Bytes: 420_000_000},
+		},
+	}
+	tt := openAI(t, a, agentPath("claude"))
+	hasTexts(t, tt, "~/.claude · 420 MB")
+	screenshot(t, tt, "agent-dir-size")
+}
+
 // Skills show by scope with their copies and broken links; the first is
 // chosen, its agents, files and SKILL.md show, and filters narrow the list.
 func TestSkillsPage(t *testing.T) {

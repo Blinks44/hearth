@@ -186,13 +186,45 @@ func updateCounts(groups []updateGroup) (versions, packages int) {
 	return versions, packages
 }
 
+func (a *App) visibleUpdateGroups(groups []updateGroup) []updateGroup {
+	filter := strings.ToLower(strings.TrimSpace(a.updatesFilter))
+	var out []updateGroup
+	for _, g := range groups {
+		if a.updatesTab == 1 && !g.versions || a.updatesTab == 2 && g.versions {
+			continue
+		}
+		var rows []updateRow
+		for _, r := range g.rows {
+			if updateRowMatches(g, r, filter) {
+				rows = append(rows, r)
+			}
+		}
+		if len(rows) > 0 {
+			out = append(out, updateGroup{title: g.title, versions: g.versions, rows: rows})
+		}
+	}
+	return out
+}
+
+func updateRowMatches(g updateGroup, r updateRow, filter string) bool {
+	if filter == "" {
+		return true
+	}
+	parts := []string{r.title, r.caption, r.from, r.to, g.title, r.m.ID, r.m.Name}
+	if r.version != nil {
+		parts = append(parts, r.version.Tool, r.version.Copy.Source.Manager)
+	}
+	return strings.Contains(strings.ToLower(strings.Join(parts, " ")), filter)
+}
+
 func (a *App) updatesView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
 		groups := a.updateGroups(c)
+		visibleGroups := a.visibleUpdateGroups(groups)
 		var chosen []updateRow
-		for _, g := range groups {
+		for _, g := range visibleGroups {
 			for _, r := range g.rows {
 				if a.updateChosen(r) {
 					chosen = append(chosen, r)
@@ -272,28 +304,15 @@ func (a *App) updatesView(c *ui.Context, p page) {
 							return
 						}
 					}
-					filter := strings.ToLower(a.updatesFilter)
 					ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 						shown := 0
-						for _, g := range groups {
-							if a.updatesTab == 1 && !g.versions || a.updatesTab == 2 && g.versions {
-								continue
-							}
-							var rows []updateRow
-							for _, r := range g.rows {
-								if strings.Contains(strings.ToLower(r.title+" "+r.caption), filter) {
-									rows = append(rows, r)
-								}
-							}
-							if len(rows) == 0 {
-								continue
-							}
+						for _, g := range visibleGroups {
 							ui.Row(c.Key("group:"+g.title)).Gap(12).Padding(6, 16).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-								a.updateGroupCheckbox(c, g.title, rows)
+								a.updateGroupCheckbox(c, g.title, g.rows)
 								ui.Text(c, strings.ToUpper(g.title)).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
-								ui.Text(c, strconv.Itoa(len(rows))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+								ui.Text(c, strconv.Itoa(len(g.rows))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
 							})
-							for _, r := range rows {
+							for _, r := range g.rows {
 								shown++
 								a.updateRowView(c, r)
 							}
@@ -486,10 +505,46 @@ func (a *App) updateErrors() []string {
 	return out
 }
 
+// updateRowAction returns the navigation callback when clicking an update row,
+// or nil if the row has no dedicated destination.
+func (a *App) updateRowAction(r updateRow) func() {
+	if r.version != nil {
+		u := *r.version
+		if u.Agent {
+			return func() { a.router.Push(agentPath(u.Tool)) }
+		}
+		switch u.Tool {
+		case "npm", "pnpm", "yarn":
+			return func() { a.router.Push("/tools/jspm") }
+		case "kubectl", "helm", "kind":
+			return func() { a.router.Push(kubePage) }
+		case "node", "bun", "python", "php", "rust", "go", "java", "ruby", "dotnet":
+			return func() { a.router.Push("/tools/" + u.Tool) }
+		default:
+			return func() {
+				a.cliTab = 0
+				a.cliFilter = u.Tool
+				a.router.Push(cliPage)
+			}
+		}
+	}
+	if r.m.Path != "" {
+		mgrPath, pkgName := r.m.Path, r.pkg.Name
+		return func() {
+			a.packageManager = mgrPath
+			a.packageTab = 0
+			a.packageFilter = pkgName
+			a.router.Push("/system/packages")
+		}
+	}
+	return nil
+}
+
 // updateRowView is an update in the table: its check box when Hearth
 // updates it, what it is and how it goes, and from what version to what.
 func (a *App) updateRowView(c *ui.Context, r updateRow) {
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	ui.Row(c.Key(r.key)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		if r.choosable {
 			on := a.updateChosen(r)
@@ -503,12 +558,6 @@ func (a *App) updateRowView(c *ui.Context, r updateRow) {
 			// Keeps the titles in line with the checked rows'.
 			ui.Box(c).Size(16, 16).Shrink(0)
 		}
-		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			clipped(c, r.title).FontSize(13)
-			if r.caption != "" {
-				clipped(c, r.caption).FontSize(10.5).TextColor(pal.TextFaint)
-			}
-		})
 		// A cask's version adds its download's hash, as 3.29.9,306d153d…:
 		// the tooltip has it whole.
 		short := func(v string) string { v, _, _ = strings.Cut(v, ","); return v }
@@ -516,7 +565,32 @@ func (a *App) updateRowView(c *ui.Context, r updateRow) {
 		if r.from != "" {
 			versions, whole = short(r.from)+" → "+versions, r.from+" → "+r.to
 		}
-		ui.Text(c, versions).Font(FontMono).FontSize(12).Shrink(0).MaxWidth(280).SingleLine().Tooltip(whole)
+		body := func(chevronColor ui.Color) {
+			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+				clipped(c, r.title).FontSize(13)
+				if r.caption != "" {
+					clipped(c, r.caption).FontSize(10.5).TextColor(pal.TextFaint)
+				}
+			})
+			ui.Text(c, versions).Font(FontMono).FontSize(12).Shrink(0).MaxWidth(280).SingleLine().Tooltip(whole)
+			if chevronColor.A > 0 {
+				ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(chevronColor)
+			}
+		}
+		if open := a.updateRowAction(r); open != nil {
+			b := ui.ButtonBase(c.Key("open")).Grow(1).MinWidth(0).Gap(12).Padding(2, 4).Radius(6).AlignItems(ui.Center).Label(locales.UpdatesOpenTool(r.title))
+			chev := pal.TextFaint
+			if b.Hovered() {
+				b.Background(pal.Subtle)
+				chev = t.TextMuted
+			}
+			b.Children(func() { body(chev) })
+			if b.Clicked() {
+				open()
+			}
+		} else {
+			ui.Row(c).Grow(1).MinWidth(0).Gap(12).AlignItems(ui.Center).Children(func() { body(ui.Color{}) })
+		}
 	})
 }
 

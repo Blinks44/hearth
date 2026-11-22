@@ -343,8 +343,8 @@ func TestSessionsAntigravityProtobufSQLite(t *testing.T) {
 	}
 	want := []inventory.TokenUsage{{Day: "2026-11-13", Model: "gemini-2.5-pro", Input: 1200, CacheWrite: 50, CacheRead: 400, Output: 300}}
 	if got[0].Agent != "antigravity" || got[0].ID != "conv-42" || got[0].Dir != "/Users/dev/agy-proj" ||
-		len(got[0].Files) != 0 || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
-		t.Errorf("antigravity = %+v, want %+v", got[0], want)
+		!reflect.DeepEqual(got[0].Files, []string{dbPath}) || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
+		t.Errorf("antigravity = %+v, want %+v (files [%s])", got[0], want, dbPath)
 	}
 }
 
@@ -405,8 +405,20 @@ func TestSessionsAntigravityACPTableWAL(t *testing.T) {
 	}
 	want := []inventory.TokenUsage{{Day: "2026-11-21", Model: "gemini-4-neon", Input: 1500, CacheRead: 900, Output: 350}}
 	if got[0].Agent != "antigravity" || got[0].ID != "acp-session" || got[0].Dir != "/Users/dev/acp-proj" ||
-		!reflect.DeepEqual(got[0].Usage, want) {
+		!reflect.DeepEqual(got[0].Files, []string{dbPath}) || !reflect.DeepEqual(got[0].Usage, want) {
 		t.Errorf("antigravity acp = %+v, want %+v", got[0], want)
+	}
+	// When -wal and -shm sidecars exist alongside the DB, Files includes them too.
+	if err := os.WriteFile(dbPath+"-wal", []byte("wal"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dbPath+"-shm", []byte("shm"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gotWAL := antigravitySessions(home, time.UTC)
+	wantFiles := []string{dbPath, dbPath + "-wal", dbPath + "-shm"}
+	if len(gotWAL) != 1 || !reflect.DeepEqual(gotWAL[0].Files, wantFiles) {
+		t.Errorf("antigravity acp with sidecars = %+v, want files %q", gotWAL, wantFiles)
 	}
 }
 

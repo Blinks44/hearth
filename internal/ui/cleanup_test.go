@@ -235,3 +235,116 @@ func TestCleanupRecountDockerErrAndReveal(t *testing.T) {
 		t.Fatalf("expected ShowItemInFolder to be called with candidate path, got %q", sh.revealed)
 	}
 }
+
+func TestCleanupVisibleOnlyAndCountingDisabled(t *testing.T) {
+	a := cleanupApp()
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "docker",
+		Installations: []inventory.Installation{{Tool: "docker", Path: "/usr/local/bin/docker", OnPath: 1}},
+		Docker:        &inventory.DockerState{Selected: "orbstack"}})
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"PATH=/usr/bin"}, nil))
+	}
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Side card "Selected at once" matches the default Selected total (18.1 GB = 17.2 GB caches/build + 900 MB stale project).
+	hasTexts(t, tt, "Selected at once", "18.1 GB", "Stale project dependencies", "unchanged for long · 900 MB")
+
+	// While sizes are counting, Remove selected is disabled and clicking it does not propose a plan.
+	a.Counting = true
+	tt.Frame()
+	if err := tt.Click("Remove selected · 18.1 GB"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op != nil {
+		t.Fatalf("Remove selected proposed a plan while Counting: %+v", a.op)
+	}
+	a.Counting = false
+
+	// Switching to Docker tab narrows Selected and Remove selected to visible Docker items only.
+	a.cleanupTab = 3 // Docker
+	tt.Frame()
+	hasTexts(t, tt, "Remove selected · 5.5 GB", "1 candidate")
+	if err := tt.Click("Remove selected · 5.5 GB"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !a.op.open {
+		t.Fatalf("expected Docker-only plan, got %+v err=%q", a.op, a.planErr)
+	}
+	if len(a.op.plan.Steps) != 1 {
+		t.Fatalf("Docker-only plan has %d steps, want 1: %+v", len(a.op.plan.Steps), a.op.plan.Steps)
+	}
+	a.op = nil
+
+	// Filtering to "bun" removes only the visible bun cache, not hidden pnpm/uv/Docker/project selections.
+	a.cleanupTab = 0
+	a.cleanupFilter = "bun"
+	tt.Frame()
+	hasTexts(t, tt, "Remove selected · 2.7 GB", "1 candidate")
+	if err := tt.Click("Remove selected · 2.7 GB"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !a.op.open {
+		t.Fatalf("expected bun-only plan, got %+v err=%q", a.op, a.planErr)
+	}
+	if len(a.op.plan.Steps) != 1 || a.op.plan.Steps[0].Remove != home+"/.bun/install/cache" {
+		t.Fatalf("bun-only plan steps = %+v", a.op.plan.Steps)
+	}
+}
+
+func TestCleanupMultiPathAndOptInWorktrees(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = calmSnapshot()
+	sh := &fakeShell{}
+	a.Shell = sh
+	p1 := home + "/.claude/debug"
+	p2 := home + "/.claude/file-history"
+	p3 := home + "/.claude/shell-snapshots"
+	wt := home + "/.codex/worktrees"
+	a.Sizes = &inventory.Sizes{
+		Taken: time.Now().Add(-time.Minute),
+		Paths: map[string]inventory.Usage{
+			p1: {Bytes: 100_000_000},
+			p2: {Bytes: 80_000_000},
+			p3: {Bytes: 70_000_000},
+			wt: {Bytes: 400_000_000},
+		},
+		Caches: []inventory.Cache{
+			{ID: "claude-cache", Paths: []string{p1, p2, p3}},
+			{ID: "codex-worktrees", Path: wt, OptIn: true},
+		},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"PATH=/usr/bin"}, nil))
+	}
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// claude-cache is selected by default (250 MB) and shows "+2 more"; codex-worktrees is opt-in (unchecked).
+	hasTexts(t, tt, "Claude Code cache", "~/.claude/debug · +2 more", "250 MB",
+		"Codex worktrees", "abandoned worktrees", "400 MB",
+		"Found", "650 MB", "2 candidates", "Selected", "250 MB", "1 candidate", "Remove selected · 250 MB")
+
+	// Filter to Claude Code cache so its multi-path reveal button is the target, then open its menu.
+	a.cleanupFilter = "claude"
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click(showInFolder()); err != nil {
+		t.Fatalf("click multi-path reveal: %v", err)
+	}
+	if menu := tt.Menu(); len(menu) != 3 || menu[0] != "~/.claude/debug" || menu[1] != "~/.claude/file-history" || menu[2] != "~/.claude/shell-snapshots" {
+		t.Fatalf("multi-path menu = %q, want 3 Claude cache paths", menu)
+	}
+	if err := tt.ChooseMenuItem("~/.claude/file-history"); err != nil {
+		t.Fatalf("choose menu path: %v", err)
+	}
+	if len(sh.revealed) != 1 || sh.revealed[0] != p2 {
+		t.Fatalf("revealed = %q, want [%q]", sh.revealed, p2)
+	}
+}

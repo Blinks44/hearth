@@ -402,3 +402,97 @@ func TestUpdatesCheckNowAndJSAgents(t *testing.T) {
 		t.Fatalf("steps = %+v", a.op.plan.Steps)
 	}
 }
+
+func TestUpdatesFilterVersionManagerAndVisibleOnly(t *testing.T) {
+	a := updatesApp()
+	a.router.Push(updatesPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Search by target version matches Go 1.26.9 and excludes packages.
+	a.updatesFilter = "1.26.9"
+	tt.Frame()
+	if !tt.HasText("1.26.5 → 1.26.9") || tt.HasText("git") {
+		t.Fatalf("version filter 1.26.9: %q", tt.Texts())
+	}
+	hasTexts(t, tt, "Update selected · 1")
+
+	// Search by manager name matches Homebrew packages only.
+	a.updatesFilter = "homebrew"
+	tt.Frame()
+	if !tt.HasText("git") || tt.HasText("curl") || tt.HasText("1.26.5 → 1.26.9") {
+		t.Fatalf("manager filter homebrew: %q", tt.Texts())
+	}
+	// Clicking Update selected under filter updates only visible chosen rows (git), not hidden Go.
+	if err := tt.Click("Update selected · 1"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || !a.op.open {
+		t.Fatalf("expected filtered plan, got %+v", a.op)
+	}
+	if len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Shown(), []string{"/opt/homebrew/bin/brew", "upgrade", "--formula", "git"}) {
+		t.Fatalf("filtered plan steps = %+v", a.op.plan.Steps)
+	}
+	a.op = nil
+
+	// Switching to Versions tab updates only visible Go, excluding hidden git.
+	a.updatesFilter = ""
+	a.updatesTab = 1
+	tt.Frame()
+	if err := tt.Click("Update selected · 1"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Shown(), []string{"mise", "upgrade", "--prune", "go"}) {
+		t.Fatalf("versions-tab plan = %+v", a.op)
+	}
+}
+
+func TestUpdatesRowNavigation(t *testing.T) {
+	a := updatesApp()
+	a.Snapshot.Agents = []inventory.Agent{{
+		ID: "claude",
+		Installations: []inventory.Installation{{
+			Tool: "claude", Version: "2.1.0", Path: "/Users/me/.npm-global/bin/claude", OnPath: 1,
+			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "npm"},
+		}},
+	}}
+	a.AgentVersions = &versions.Agents{Latest: map[string]versions.Latest{"claude": {Version: "2.2.0"}}}
+	a.router.Push(updatesPage)
+	tt := ui.NewTester(a.View, 1280, 900)
+	tt.Advance(time.Second)
+
+	// Clicking Go row navigates to /tools/go.
+	if err := tt.Click("Open Go"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Location() != "/tools/go" {
+		t.Fatalf("Go row navigated to %q, want /tools/go", a.router.Location())
+	}
+
+	// Clicking Claude Code row navigates to /ai/agents/claude.
+	a.router.Push(updatesPage)
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Open Claude Code"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Location() != agentPath("claude") {
+		t.Fatalf("Agent row navigated to %q, want %q", a.router.Location(), agentPath("claude"))
+	}
+
+	// Clicking git package row navigates to /system/packages filtered to brew + git.
+	a.router.Push(updatesPage)
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Open git"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Location() != "/system/packages" || a.packageManager != "/opt/homebrew/bin/brew" || a.packageTab != 0 || a.packageFilter != "git" {
+		t.Fatalf("Package row navigated to %q mgr=%q tab=%d filter=%q", a.router.Location(), a.packageManager, a.packageTab, a.packageFilter)
+	}
+}

@@ -260,3 +260,58 @@ func TestOrphanPackages(t *testing.T) {
 		t.Fatalf("orphans = %+v", got)
 	}
 }
+
+func TestMultiPathAndOptInCaches(t *testing.T) {
+	s := &inventory.Snapshot{}
+	sizes := &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			"/h/.rustup/downloads": {Bytes: 300_000_000},
+			"/h/.rustup/tmp":       {Bytes: 50_000_000},
+			"/h/.codex/worktrees":  {Bytes: 400_000_000},
+			"/h/.claude/debug":     {Bytes: 20_000_000},
+			"/h/.claude/telemetry": {Bytes: 10_000_000},
+		},
+		Caches: []inventory.Cache{
+			{ID: "rustup", Paths: []string{"/h/.rustup/downloads", "/h/.rustup/tmp"}},
+			{ID: "codex-worktrees", Path: "/h/.codex/worktrees", OptIn: true},
+			{ID: "claude-cache", Paths: []string{"/h/.claude/debug", "/h/.claude/telemetry"}},
+		},
+	}
+	got := Find(s, sizes, nil, nil, now)
+	byID := map[string]Candidate{}
+	for _, c := range got {
+		byID[c.ID] = c
+	}
+	rustup, ok := byID["rustup"]
+	if !ok || !rustup.Selected || rustup.Frees() != 350_000_000 || len(rustup.Paths) != 2 {
+		t.Fatalf("rustup = %+v (ok=%v)", rustup, ok)
+	}
+	wt, ok := byID["codex-worktrees"]
+	if !ok || wt.Selected || wt.Frees() != 400_000_000 || !slices.Contains(wt.Reasons, AbandonedWorktrees) {
+		t.Fatalf("codex-worktrees = %+v (ok=%v)", wt, ok)
+	}
+	claude, ok := byID["claude-cache"]
+	if !ok || !claude.Selected || claude.Frees() != 30_000_000 || len(claude.Paths) != 2 {
+		t.Fatalf("claude-cache = %+v (ok=%v)", claude, ok)
+	}
+}
+
+func TestHistory30DaysAndAntigravity(t *testing.T) {
+	if HistoryAfter != 30*24*time.Hour {
+		t.Fatalf("HistoryAfter = %v, want 30d", HistoryAfter)
+	}
+	s := &inventory.Snapshot{Sessions: []inventory.AgentSession{
+		{Agent: "antigravity", Files: []string{"/h/.gemini/antigravity-cli/conversations/old.db", "/h/.gemini/antigravity-cli/conversations/old.db-wal"}, Size: 4_000_000, Modified: now.Add(-45 * 24 * time.Hour)},
+		{Agent: "antigravity", Files: []string{"/h/.gemini/antigravity-cli/conversations/new.db"}, Size: 8_000_000, Modified: now.Add(-15 * 24 * time.Hour)},
+	}}
+	var got []Candidate
+	for _, c := range Find(s, nil, nil, nil, now) {
+		if c.Kind == AgentHistory {
+			got = append(got, c)
+		}
+	}
+	wantFiles := []string{"/h/.gemini/antigravity-cli/conversations/old.db", "/h/.gemini/antigravity-cli/conversations/old.db-wal"}
+	if len(got) != 1 || got[0].ID != "antigravity" || got[0].Selected || got[0].Count != 1 || got[0].Frees() != 4_000_000 || !slices.Equal(got[0].Paths, wantFiles) {
+		t.Fatalf("antigravity history = %+v", got)
+	}
+}

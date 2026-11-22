@@ -77,7 +77,7 @@ func TestUsageView(t *testing.T) {
 	tt.Advance(time.Second)
 	screenshot(t, tt, "usage")
 	hasTexts(t, tt, "Usage", "Last 30 days", "≈ $17.00", "shop", "Outside projects", "gpt-6.1-sol", "price unknown",
-		"Older than 90 days", "Claude Code", "Codex")
+		"Older than 30 days", "Claude Code", "Codex")
 	if err := tt.Click("7 days"); err != nil {
 		t.Fatal(err)
 	}

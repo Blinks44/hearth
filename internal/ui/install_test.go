@@ -160,9 +160,10 @@ func TestInstallPage(t *testing.T) {
 	screenshot(t, tt, "install-page")
 	hasTexts(t, tt, "Install", "Everything Hearth can install", "All", "Not installed", "Installed",
 		"installed · 24.11.0", "mise · ~/.local/share/mise/installs/node/24.11.0/bin/node", "installed · 4.6.3", "installed · 2026.11.1", "installed · 2.1.322", "installed · 3.29.9", "/Applications/Cursor.app",
-		"5 more", "Bun, PHP, Java, Ruby, .NET", "15 more", "GitHub CLI, Composer, uv, pipx, Bundler, Maven, Gradle, kubectl, Helm, kind, AWS CLI, Google Cloud CLI, Azure CLI, Terraform, OpenTofu", "installed: 1 of 9",
+		"4 more", ".NET, Deno, Zig, Elixir", "19 more", "Bundler, Maven, Gradle, kubectl, Helm, kind, AWS CLI, Google Cloud CLI, Azure CLI, Terraform, OpenTofu, jq, ripgrep, fzf, fd, bat, just, direnv, k9s", "installed: 1 of 12",
+		"Temurin 25", "17", "8.4", "latest",
 		"Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before anything changes.")
-	for _, text := range []string{"Let's set up this computer", "required", "The package manager of PHP"} {
+	for _, text := range []string{"Let's set up this computer", "required", "Manages Ruby gems"} {
 		if tt.HasText(text) {
 			t.Errorf("%q on the page out of the wizard: %q", text, tt.Texts())
 		}
@@ -198,12 +199,26 @@ func TestInstallPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Bun", "Java")
-	// The filter leaves what is there alone.
+	hasTexts(t, tt, "Deno", "Zig", "Elixir")
+	// On the Not installed tab, items are not collapsed behind "N more".
+	a.setup.filter = 1
+	tt.Frame()
+	hasTexts(t, tt, "ripgrep", "k9s", "direnv")
+	if tt.HasText("show ›") {
+		t.Errorf("filtered tab still collapses behind show ›: %q", tt.Texts())
+	}
+	// The Installed filter leaves what is there alone.
 	a.setup.filter = 2
 	tt.Frame()
 	if tt.HasText("Install Go") || !tt.HasText("installed · 24.11.0") {
 		t.Errorf("installed filter: %q", tt.Texts())
+	}
+	// Empty search renders full-width Nothing matches note.
+	a.setup.filter, a.setup.query = 0, "no-such-tool-xyz"
+	tt.Frame()
+	hasTexts(t, tt, "Nothing matches")
+	if r, ok := tt.Find("Nothing matches"); !ok || r.X > 360 {
+		t.Errorf("Nothing matches rendered at %+v (found=%v), expected full-width left-aligned card", r, ok)
 	}
 }
 

@@ -36,6 +36,40 @@ var cliVersionArgs = map[string][]string{
 // cliCommands are the command-line tools the CLI page lists, in its order.
 var cliCommands = []string{"kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu"}
 
+type catalogCliSpec struct {
+	tool string
+	bins []string
+	args []string
+}
+
+// catalogCliSpecs are catalog runtimes and utilities detected alongside
+// cliCommands so the Install catalog can show what is already present and
+// verify installations without adding them to the CLI & clouds table.
+var catalogCliSpecs = []catalogCliSpec{
+	{tool: "deno", bins: []string{"deno"}, args: []string{"--version"}},
+	{tool: "zig", bins: []string{"zig"}, args: []string{"version"}},
+	{tool: "elixir", bins: []string{"elixir"}, args: []string{"--version"}},
+	{tool: "jq", bins: []string{"jq"}, args: []string{"--version"}},
+	{tool: "ripgrep", bins: []string{"rg"}, args: []string{"--version"}},
+	{tool: "fzf", bins: []string{"fzf"}, args: []string{"--version"}},
+	{tool: "fd", bins: []string{"fd", "fdfind"}, args: []string{"--version"}},
+	{tool: "bat", bins: []string{"bat", "batcat"}, args: []string{"--version"}},
+	{tool: "just", bins: []string{"just"}, args: []string{"--version"}},
+	{tool: "direnv", bins: []string{"direnv"}, args: []string{"--version"}},
+	{tool: "k9s", bins: []string{"k9s"}, args: []string{"version", "--short"}},
+}
+
+func parseCatalogCliVersion(tool, out string) string {
+	if tool == "elixir" {
+		if _, after, ok := strings.Cut(out, "Elixir "); ok {
+			if v := gitVersion.FindString(after); v != "" {
+				return v
+			}
+		}
+	}
+	return gitVersion.FindString(out)
+}
+
 // Cli finds the command-line tools of Kubernetes, the clouds and
 // infrastructure, and the context each points to now, from their settings
 // files: credentials and keys are never read.
@@ -62,6 +96,19 @@ func Cli(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 			// aws-cli/2.22.1 Python/3.12.6; {"azure-cli": "2.67.0", ...}
 			if res, err := r.Run(ctx, run.Cmd{Args: append([]string{in.Path}, cliVersionArgs[cmd]...), Env: env}); err == nil && res.ExitCode == 0 {
 				in.Version = gitVersion.FindString(string(res.Stdout))
+			}
+		}
+		cli.Tools = append(cli.Tools, f.ins...)
+	}
+	for _, spec := range catalogCliSpecs {
+		f := newFinder(spec.tool, term)
+		for _, bin := range spec.bins {
+			f.lookPath(bin, term, gui)
+		}
+		for i := range f.ins {
+			in := &f.ins[i]
+			if res, err := r.Run(ctx, run.Cmd{Args: append([]string{in.Path}, spec.args...), Env: env}); err == nil && res.ExitCode == 0 {
+				in.Version = parseCatalogCliVersion(spec.tool, string(res.Stdout))
 			}
 		}
 		cli.Tools = append(cli.Tools, f.ins...)

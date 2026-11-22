@@ -115,6 +115,9 @@ const (
 	// Forgotten: the sessions leave the usage page, and the agent can no
 	// longer resume them.
 	Forgotten Reason = "forgotten"
+	// AbandonedWorktrees: temporary git worktrees left behind by an agent;
+	// unchecked by default in case one still holds work in progress.
+	AbandonedWorktrees Reason = "abandoned-worktrees"
 )
 
 // Candidate is something the user may remove to free space.
@@ -189,9 +192,17 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 	}
 	if sizes != nil {
 		for _, c := range sizes.Caches {
-			u, ok := usage(c.Path)
+			paths := c.AllPaths()
+			u, ok := usage(paths...)
 			if ok && u.Bytes-u.Shared >= minFrees {
-				out = append(out, Candidate{Kind: Cache, ID: c.ID, Paths: []string{c.Path}, Usage: u, Known: true, Selected: true, Reasons: []Reason{Restorable}})
+				reasons := []Reason{Restorable}
+				if c.OptIn {
+					reasons = []Reason{AbandonedWorktrees}
+				}
+				out = append(out, Candidate{
+					Kind: Cache, ID: c.ID, Paths: slices.Clone(paths),
+					Usage: u, Known: true, Selected: !c.OptIn, Reasons: reasons,
+				})
 			}
 		}
 		out = append(out, docker(sizes.Docker)...)
@@ -471,7 +482,7 @@ func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
 
 // HistoryAfter is how long an agent's session goes unwritten before
 // Cleanup offers it.
-const HistoryAfter = 90 * 24 * time.Hour
+const HistoryAfter = 30 * 24 * time.Hour
 
 // history offers the sessions of each agent not written to for
 // HistoryAfter, never chosen at once: the user may want to resume one.

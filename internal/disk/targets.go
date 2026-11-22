@@ -1,16 +1,17 @@
 package disk
 
 import (
+	"path/filepath"
 	"slices"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
 // Targets are the paths to count for snap, each once: the folders of the
-// copies of tools and agents, the packages whose manager records no size,
-// and caches. The system's copies are left out, and an installer's
-// without a manager: their root is a folder they share, as /usr or
-// /usr/local, not their own.
+// copies of tools and agents, the agents' home folders, the packages whose
+// manager records no size, and caches. The system's copies are left out, and
+// an installer's without a manager: their root is a folder they share, as
+// /usr or /usr/local, not their own.
 func Targets(snap *inventory.Snapshot, caches []inventory.Cache) []string {
 	var out []string
 	add := func(path string) {
@@ -69,10 +70,15 @@ func Targets(snap *inventory.Snapshot, caches []inventory.Cache) []string {
 		}
 		for _, a := range snap.Agents {
 			copies(a.Installations)
+			if a.Dir != "" && filepath.IsAbs(a.Dir) && filepath.Dir(a.Dir) != a.Dir {
+				add(a.Dir)
+			}
 		}
 	}
 	for _, c := range caches {
-		add(c.Path)
+		for _, p := range c.AllPaths() {
+			add(p)
+		}
 	}
 	return out
 }

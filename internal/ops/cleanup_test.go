@@ -371,3 +371,33 @@ func TestCleanupPlanOrphans(t *testing.T) {
 		t.Errorf("missing admin note: %+v", p.Notes)
 	}
 }
+
+func TestCleanupPlanMultiPathAgentCaches(t *testing.T) {
+	cands := []cleanup.Candidate{
+		{Kind: cleanup.Cache, ID: "rustup", Paths: []string{"/h/.rustup/downloads", "/h/.rustup/tmp"}, Usage: inventory.Usage{Bytes: 2e8}},
+		{Kind: cleanup.Cache, ID: "claude-cache", Paths: []string{"/h/.claude/debug", "/h/.claude/file-history", "/h/.local/share/claude/versions/1.0.0"}, Usage: inventory.Usage{Bytes: 3e8}},
+		{Kind: cleanup.Cache, ID: "codex-worktrees", Paths: []string{"/h/.codex/worktrees"}, Usage: inventory.Usage{Bytes: 5e8}},
+	}
+	p, err := CleanupPlan(cands, []string{"rustup cache", "Claude Code cache", "Codex worktrees"}, nil, nil, DockerTarget{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var removed []string
+	for _, s := range p.Steps {
+		if s.Remove == "" {
+			t.Fatalf("expected folder remove step, got %+v", s)
+		}
+		removed = append(removed, s.Remove)
+	}
+	want := []string{
+		"/h/.rustup/downloads",
+		"/h/.rustup/tmp",
+		"/h/.claude/debug",
+		"/h/.claude/file-history",
+		"/h/.local/share/claude/versions/1.0.0",
+		"/h/.codex/worktrees",
+	}
+	if !slices.Equal(removed, want) {
+		t.Fatalf("removed = %q, want %q", removed, want)
+	}
+}

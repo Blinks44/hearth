@@ -107,7 +107,9 @@ func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Sn
 		publish()
 	}
 	for _, cache := range s.Caches {
-		measure(cache.Path)
+		for _, path := range cache.AllPaths() {
+			measure(path)
+		}
 	}
 	if ctx.Err() != nil {
 		return s, ctx.Err()

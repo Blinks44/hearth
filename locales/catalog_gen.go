@@ -23930,6 +23930,20 @@ func (msgs Messages) SetupClaudeInstaller() string {
 	return Catalog.Format(msgs.locale, "setupClaudeInstaller", nil)
 }
 
+// SetupComposerInstaller says "downloads Composer's official Windows installer from getcomposer.org and runs it"
+// in the language the app shows.
+//
+// New computer: what the Composer Windows installer step does.
+func SetupComposerInstaller() string { return In(i18n.Locale()).SetupComposerInstaller() }
+
+// SetupComposerInstaller says "downloads Composer's official Windows installer from getcomposer.org and runs it"
+// in the language of msgs.
+//
+// New computer: what the Composer Windows installer step does.
+func (msgs Messages) SetupComposerInstaller() string {
+	return Catalog.Format(msgs.locale, "setupComposerInstaller", nil)
+}
+
 // SetupShellUnsupported says "Hearth cannot add lines to the startup files of the {shell} shell: install this tool by hand"
 // in the language the app shows.
 //
@@ -42668,4 +42682,218 @@ func InstructionsPreviewEmpty() string { return In(i18n.Locale()).InstructionsPr
 // in the language of msgs.
 func (msgs Messages) InstructionsPreviewEmpty() string {
 	return Catalog.Format(msgs.locale, "instructionsPreviewEmpty", nil)
+}
+
+// CleanupCodexWorktrees says "Codex worktrees"
+// in the language the app shows.
+func CleanupCodexWorktrees() string { return In(i18n.Locale()).CleanupCodexWorktrees() }
+
+// CleanupCodexWorktrees says "Codex worktrees"
+// in the language of msgs.
+func (msgs Messages) CleanupCodexWorktrees() string {
+	return Catalog.Format(msgs.locale, "cleanupCodexWorktrees", nil)
+}
+
+// CleanupMorePaths says "{count, plural, one {+# more} other {+# more}}"
+// in the language the app shows.
+func CleanupMorePaths(count int) string { return In(i18n.Locale()).CleanupMorePaths(count) }
+
+// CleanupMorePaths says "{count, plural, one {+# more} other {+# more}}"
+// in the language of msgs.
+func (msgs Messages) CleanupMorePaths(count int) string {
+	return Catalog.Format(msgs.locale, "cleanupMorePaths", map[string]any{"count": count})
+}
+
+// CleanupRevealMore says "{count, plural, one {+# more in {dir}} other {+# more in {dir}}}"
+// in the language the app shows.
+func CleanupRevealMore(count int, dir string) string {
+	return In(i18n.Locale()).CleanupRevealMore(count, dir)
+}
+
+// CleanupRevealMore says "{count, plural, one {+# more in {dir}} other {+# more in {dir}}}"
+// in the language of msgs.
+func (msgs Messages) CleanupRevealMore(count int, dir string) string {
+	return Catalog.Format(msgs.locale, "cleanupRevealMore", map[string]any{"count": count, "dir": dir})
+}
+
+// ReasonAbandonedWorktrees says "abandoned worktrees · check before removing"
+// in the language the app shows.
+func ReasonAbandonedWorktrees() string { return In(i18n.Locale()).ReasonAbandonedWorktrees() }
+
+// ReasonAbandonedWorktrees says "abandoned worktrees · check before removing"
+// in the language of msgs.
+func (msgs Messages) ReasonAbandonedWorktrees() string {
+	return Catalog.Format(msgs.locale, "reasonAbandonedWorktrees", nil)
+}
+
+// CleanupAtOnceProjectsRow says "Stale project dependencies"
+// in the language the app shows.
+func CleanupAtOnceProjectsRow() string { return In(i18n.Locale()).CleanupAtOnceProjectsRow() }
+
+// CleanupAtOnceProjectsRow says "Stale project dependencies"
+// in the language of msgs.
+func (msgs Messages) CleanupAtOnceProjectsRow() string {
+	return Catalog.Format(msgs.locale, "cleanupAtOnceProjectsRow", nil)
+}
+
+// CleanupAtOnceProjectsCaption says "unchanged for long · {size}"
+// in the language the app shows.
+func CleanupAtOnceProjectsCaption(size string) string {
+	return In(i18n.Locale()).CleanupAtOnceProjectsCaption(size)
+}
+
+// CleanupAtOnceProjectsCaption says "unchanged for long · {size}"
+// in the language of msgs.
+func (msgs Messages) CleanupAtOnceProjectsCaption(size string) string {
+	return Catalog.Format(msgs.locale, "cleanupAtOnceProjectsCaption", map[string]any{"size": size})
+}
+
+// UpdatesOpenTool says "Open {name}"
+// in the language the app shows.
+func UpdatesOpenTool(name string) string { return In(i18n.Locale()).UpdatesOpenTool(name) }
+
+// UpdatesOpenTool says "Open {name}"
+// in the language of msgs.
+func (msgs Messages) UpdatesOpenTool(name string) string {
+	return Catalog.Format(msgs.locale, "updatesOpenTool", map[string]any{"name": name})
+}
+
+// CatalogDeno says "JavaScript and TypeScript runtime with built-in tooling."
+// in the language the app shows.
+func CatalogDeno() string { return In(i18n.Locale()).CatalogDeno() }
+
+// CatalogDeno says "JavaScript and TypeScript runtime with built-in tooling."
+// in the language of msgs.
+func (msgs Messages) CatalogDeno() string {
+	return Catalog.Format(msgs.locale, "catalogDeno", nil)
+}
+
+// CatalogZig says "Systems programming language and C/C++ toolchain."
+// in the language the app shows.
+func CatalogZig() string { return In(i18n.Locale()).CatalogZig() }
+
+// CatalogZig says "Systems programming language and C/C++ toolchain."
+// in the language of msgs.
+func (msgs Messages) CatalogZig() string {
+	return Catalog.Format(msgs.locale, "catalogZig", nil)
+}
+
+// CatalogElixir says "Functional language for concurrent and fault-tolerant apps."
+// in the language the app shows.
+func CatalogElixir() string { return In(i18n.Locale()).CatalogElixir() }
+
+// CatalogElixir says "Functional language for concurrent and fault-tolerant apps."
+// in the language of msgs.
+func (msgs Messages) CatalogElixir() string {
+	return Catalog.Format(msgs.locale, "catalogElixir", nil)
+}
+
+// CatalogJq says "Command-line JSON processor."
+// in the language the app shows.
+func CatalogJq() string { return In(i18n.Locale()).CatalogJq() }
+
+// CatalogJq says "Command-line JSON processor."
+// in the language of msgs.
+func (msgs Messages) CatalogJq() string {
+	return Catalog.Format(msgs.locale, "catalogJq", nil)
+}
+
+// CatalogRipgrep says "Fast line-oriented code search (rg)."
+// in the language the app shows.
+func CatalogRipgrep() string { return In(i18n.Locale()).CatalogRipgrep() }
+
+// CatalogRipgrep says "Fast line-oriented code search (rg)."
+// in the language of msgs.
+func (msgs Messages) CatalogRipgrep() string {
+	return Catalog.Format(msgs.locale, "catalogRipgrep", nil)
+}
+
+// CatalogFzf says "Interactive command-line fuzzy finder."
+// in the language the app shows.
+func CatalogFzf() string { return In(i18n.Locale()).CatalogFzf() }
+
+// CatalogFzf says "Interactive command-line fuzzy finder."
+// in the language of msgs.
+func (msgs Messages) CatalogFzf() string {
+	return Catalog.Format(msgs.locale, "catalogFzf", nil)
+}
+
+// CatalogFd says "Fast, user-friendly alternative to find."
+// in the language the app shows.
+func CatalogFd() string { return In(i18n.Locale()).CatalogFd() }
+
+// CatalogFd says "Fast, user-friendly alternative to find."
+// in the language of msgs.
+func (msgs Messages) CatalogFd() string {
+	return Catalog.Format(msgs.locale, "catalogFd", nil)
+}
+
+// CatalogBat says "cat clone with syntax highlighting and Git integration."
+// in the language the app shows.
+func CatalogBat() string { return In(i18n.Locale()).CatalogBat() }
+
+// CatalogBat says "cat clone with syntax highlighting and Git integration."
+// in the language of msgs.
+func (msgs Messages) CatalogBat() string {
+	return Catalog.Format(msgs.locale, "catalogBat", nil)
+}
+
+// CatalogJust says "Command runner for project tasks (justfile)."
+// in the language the app shows.
+func CatalogJust() string { return In(i18n.Locale()).CatalogJust() }
+
+// CatalogJust says "Command runner for project tasks (justfile)."
+// in the language of msgs.
+func (msgs Messages) CatalogJust() string {
+	return Catalog.Format(msgs.locale, "catalogJust", nil)
+}
+
+// CatalogDirenv says "Loads and unloads environment variables per directory."
+// in the language the app shows.
+func CatalogDirenv() string { return In(i18n.Locale()).CatalogDirenv() }
+
+// CatalogDirenv says "Loads and unloads environment variables per directory."
+// in the language of msgs.
+func (msgs Messages) CatalogDirenv() string {
+	return Catalog.Format(msgs.locale, "catalogDirenv", nil)
+}
+
+// CatalogK9s says "Terminal UI for inspecting and managing Kubernetes clusters."
+// in the language the app shows.
+func CatalogK9s() string { return In(i18n.Locale()).CatalogK9s() }
+
+// CatalogK9s says "Terminal UI for inspecting and managing Kubernetes clusters."
+// in the language of msgs.
+func (msgs Messages) CatalogK9s() string {
+	return Catalog.Format(msgs.locale, "catalogK9s", nil)
+}
+
+// SetupLinuxDbNoteTitle says "Service starts separately"
+// in the language the app shows.
+func SetupLinuxDbNoteTitle() string { return In(i18n.Locale()).SetupLinuxDbNoteTitle() }
+
+// SetupLinuxDbNoteTitle says "Service starts separately"
+// in the language of msgs.
+func (msgs Messages) SetupLinuxDbNoteTitle() string {
+	return Catalog.Format(msgs.locale, "setupLinuxDbNoteTitle", nil)
+}
+
+// SetupLinuxDbNoteText says "On this distribution {name} installs its package without initializing or starting the systemd service automatically."
+// in the language the app shows.
+func SetupLinuxDbNoteText(name string) string { return In(i18n.Locale()).SetupLinuxDbNoteText(name) }
+
+// SetupLinuxDbNoteText says "On this distribution {name} installs its package without initializing or starting the systemd service automatically."
+// in the language of msgs.
+func (msgs Messages) SetupLinuxDbNoteText(name string) string {
+	return Catalog.Format(msgs.locale, "setupLinuxDbNoteText", map[string]any{"name": name})
+}
+
+// SetupVersionLatest says "latest"
+// in the language the app shows.
+func SetupVersionLatest() string { return In(i18n.Locale()).SetupVersionLatest() }
+
+// SetupVersionLatest says "latest"
+// in the language of msgs.
+func (msgs Messages) SetupVersionLatest() string {
+	return Catalog.Format(msgs.locale, "setupVersionLatest", nil)
 }

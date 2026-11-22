@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/internal/versions"
 )
 
 // setupApp is a Mac with Node and Claude Code and nothing else, as the
@@ -39,7 +40,7 @@ func TestSetupChoice(t *testing.T) {
 	tt := newTester(a)
 	screenshot(t, tt, "setup-choice")
 	hasTexts(t, tt, "Install", "Step 1 of 4 · choice", "Let's set up this computer",
-		"Languages and runtimes", "installed: 1 of 9", "Node.js LTS", "installed · 24.11.0", "/usr/local/bin/node", "Python", "via mise", "via rustup, as Rust recommends",
+		"Languages and runtimes", "installed: 1 of 12", "Node.js LTS", "installed · 24.11.0", "/usr/local/bin/node", "Python", "via mise", "via rustup, as Rust recommends",
 		"Tools", "pnpm", "Docker engine", "Hearth can replace a separate Docker desktop app using open-source Colima", "Git", "via Xcode Command Line Tools",
 		"Base · installs first", "Homebrew", "via the official installer", "required", "mise", "via Homebrew",
 		"AI agents", "Claude Code", "Codex",
@@ -332,7 +333,8 @@ func TestSetupCheckDockerDenied(t *testing.T) {
 
 func TestSetupResultAndInstallVerifyExtended(t *testing.T) {
 	a := setupApp(t)
-	cliTools := []string{"kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu"}
+	cliTools := []string{"kubectl", "helm", "kind", "aws", "gcloud", "az", "terraform", "tofu",
+		"deno", "zig", "elixir", "jq", "ripgrep", "fzf", "fd", "bat", "just", "direnv", "k9s"}
 	var cliIns []inventory.Installation
 	for _, cmd := range cliTools {
 		cliIns = append(cliIns, inventory.Installation{Tool: cmd, Version: "1.2.3", Path: "/opt/homebrew/bin/" + cmd, OnPath: 1})
@@ -372,7 +374,7 @@ func TestSetupResultAndInstallVerifyExtended(t *testing.T) {
 		p, err := build(sysenv.Env{"SHELL=/bin/zsh", "HOME=" + home}, nil)
 		done(p, err)
 	}
-	for _, id := range []string{"uv", "pipx", "bundler", "maven", "gradle", "kubectl", "helm", "kind"} {
+	for _, id := range []string{"uv", "pipx", "bundler", "maven", "gradle", "kubectl", "helm", "kind", "jq", "ripgrep", "k9s"} {
 		a.op = nil
 		a.installTool(id)
 		if a.op == nil || a.op.plan.Verify == nil {
@@ -383,4 +385,20 @@ func TestSetupResultAndInstallVerifyExtended(t *testing.T) {
 			t.Errorf("installTool(%q).Verify() = (%q, %v), want found message and nil error", id, msg, err)
 		}
 	}
+}
+
+func TestSetupTargetVersionTags(t *testing.T) {
+	a := setupApp(t)
+	a.setup.wizard = false
+	a.Snapshot.Tools = []inventory.ToolState{{Tool: "packages"}}
+	a.GoVersions = &versions.Go{Releases: []string{"1.26.2", "1.25.8"}}
+	a.PythonVersions = &versions.Python{Lines: []versions.Cycle{
+		{Cycle: "3.13", Latest: "3.13.4"},
+	}}
+	a.RustVersions = &versions.Rust{Lines: []versions.Cycle{
+		{Cycle: "1.87", Latest: "1.87.0"},
+	}}
+	a.router.Push(setupPage)
+	tt := newTester(a)
+	hasTexts(t, tt, "1.26.2", "3.13.4", "1.87.0")
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"testing"
 
@@ -90,13 +91,13 @@ func TestTargets(t *testing.T) {
 				{Path: "/var/lib/git", Size: 10},
 			}}}},
 		},
-		Agents: []inventory.Agent{{Installations: []inventory.Installation{{Source: inventory.Source{Kind: inventory.KindPackageManager, Root: "/brew/claude"}}}}},
+		Agents: []inventory.Agent{{Dir: "/home/.claude", Installations: []inventory.Installation{{Source: inventory.Source{Kind: inventory.KindPackageManager, Root: "/brew/claude"}}}}},
 	}
 	snap.Tools = append(snap.Tools, inventory.ToolState{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{
 		{App: "/Applications/Visual Studio Code.app", Extensions: "/home/.vscode/extensions", Superseded: []string{"/home/.vscode/extensions/go-0.45.0"}},
 	}}})
-	got := Targets(snap, []inventory.Cache{{ID: "npm", Path: "/home/.npm/_cacache"}})
-	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/home/.vscode/extensions", "/home/.vscode/extensions/go-0.45.0", "/brew/claude", "/home/.npm/_cacache"}
+	got := Targets(snap, []inventory.Cache{{ID: "npm", Path: "/home/.npm/_cacache"}, {ID: "rustup", Paths: []string{"/home/.rustup/downloads", "/home/.rustup/tmp"}}})
+	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/home/.vscode/extensions", "/home/.vscode/extensions/go-0.45.0", "/brew/claude", "/home/.claude", "/home/.npm/_cacache", "/home/.rustup/downloads", "/home/.rustup/tmp"}
 	if !slices.Equal(got, want) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
@@ -130,7 +131,7 @@ func TestCaches(t *testing.T) {
 		{ID: "ccache", Path: filepath.Join(home, ".ccache")},
 		{ID: "jetbrains", Path: idea},
 	}
-	if !slices.Equal(got, want) {
+	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %+v\nwant %+v", got, want)
 	}
 }
@@ -268,4 +269,174 @@ func TestActivePnpmStore(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Expanded Rust, NuGet, Playwright, and safe AI agent caches are found on disk
+// while agent configs, credentials, skills, rules, memory, and active Claude
+// versions are never included.
+func TestCachesExpandedAndSafe(t *testing.T) {
+	home := t.TempDir()
+	nugetDir := filepath.Join(home, "custom-nuget")
+	pwDir := filepath.Join(home, "custom-playwright")
+	env := sysenv.Env{
+		"HOME=" + home,
+		"USERPROFILE=" + home,
+		"XDG_CACHE_HOME=" + filepath.Join(home, ".cache"),
+		"XDG_DATA_HOME=" + filepath.Join(home, ".local", "share"),
+		"APPDATA=" + filepath.Join(home, "AppData", "Roaming"),
+		"LOCALAPPDATA=" + filepath.Join(home, "AppData", "Local"),
+		"NUGET_PACKAGES=" + nugetDir,
+		"PLAYWRIGHT_BROWSERS_PATH=" + pwDir,
+	}
+	mkdirs := []string{
+		filepath.Join(home, ".cargo", "registry"),
+		filepath.Join(home, ".cargo", "git"),
+		filepath.Join(home, ".rustup", "downloads"),
+		filepath.Join(home, ".rustup", "tmp"),
+		nugetDir,
+		pwDir,
+		// Claude Code safe dirs + versions (1.0.0 old, 2.0.0 active, 2.1.0 newest).
+		filepath.Join(home, ".claude", "file-history"),
+		filepath.Join(home, ".claude", "debug"),
+		filepath.Join(home, ".claude", "paste-cache"),
+		filepath.Join(home, ".claude", "shell-snapshots"),
+		filepath.Join(home, ".claude", "session-env"),
+		filepath.Join(home, ".claude", "telemetry"),
+		filepath.Join(home, ".claude", "statsig"),
+		filepath.Join(home, ".claude", "backups"),
+		filepath.Join(home, ".local", "share", "claude", "versions"),
+		// Codex safe dirs + opt-in worktrees.
+		filepath.Join(home, ".codex", "log"),
+		filepath.Join(home, ".codex", "tmp"),
+		filepath.Join(home, ".codex", "shell_snapshots"),
+		filepath.Join(home, ".codex", "worktrees"),
+		// Gemini safe dirs.
+		filepath.Join(home, ".gemini", "cache"),
+		filepath.Join(home, ".gemini", "tmp", "abc123", "logs"),
+		filepath.Join(home, ".gemini", "tmp", "abc123", "checkpoints"),
+		filepath.Join(home, ".gemini", "tmp", "abc123", "shell-snapshots"),
+		// Copilot safe dirs.
+		filepath.Join(home, ".copilot", "logs"),
+		filepath.Join(home, ".copilot", "pkg"),
+		// OpenCode safe dirs.
+		filepath.Join(home, ".local", "share", "opencode", "snapshot"),
+		filepath.Join(home, ".local", "share", "opencode", "log"),
+		filepath.Join(home, ".cache", "opencode"),
+		// Cursor logs + Electron caches.
+		filepath.Join(home, ".cursor", "logs"),
+	}
+	if appData := cursorAppData(env, home); appData != "" {
+		mkdirs = append(mkdirs,
+			filepath.Join(appData, "Cache"),
+			filepath.Join(appData, "CachedData"),
+			filepath.Join(appData, "GPUCache"),
+		)
+	}
+	for _, d := range mkdirs {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Claude native versions: 1.0.0 (old), 2.0.0 (active via symlink), 2.1.0 (newest).
+	claudeVerDir := filepath.Join(home, ".local", "share", "claude", "versions")
+	v100 := filepath.Join(claudeVerDir, "1.0.0")
+	v200 := filepath.Join(claudeVerDir, "2.0.0")
+	v210 := filepath.Join(claudeVerDir, "2.1.0")
+	for _, f := range []string{v100, v200, v210} {
+		write(t, f, 1024)
+	}
+	if err := os.MkdirAll(filepath.Join(home, ".local", "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.Symlink(v200, filepath.Join(home, ".local", "bin", "claude"))
+
+	// Sensitive agent files that must NEVER appear in any cache plan.
+	sensitive := []string{
+		filepath.Join(home, ".claude", "settings.json"),
+		filepath.Join(home, ".claude", "CLAUDE.md"),
+		filepath.Join(home, ".claude", ".credentials.json"),
+		filepath.Join(home, ".claude", "skills", "my-skill", "SKILL.md"),
+		filepath.Join(home, ".claude", "projects", "p", "memory", "MEMORY.md"),
+		filepath.Join(home, ".codex", "config.toml"),
+		filepath.Join(home, ".codex", "auth.json"),
+		filepath.Join(home, ".codex", "AGENTS.md"),
+		filepath.Join(home, ".gemini", "settings.json"),
+		filepath.Join(home, ".gemini", "oauth_creds.json"),
+		filepath.Join(home, ".gemini", "GEMINI.md"),
+		filepath.Join(home, ".copilot", "config.json"),
+		filepath.Join(home, ".config", "opencode", "opencode.json"),
+		filepath.Join(home, ".cursor", "mcp.json"),
+	}
+	if appData := cursorAppData(env, home); appData != "" {
+		sensitive = append(sensitive,
+			filepath.Join(appData, "User", "settings.json"),
+			filepath.Join(appData, "User", "globalStorage", "state.vscdb"),
+		)
+	}
+	for _, f := range sensitive {
+		write(t, f, 64)
+	}
+
+	snap := &inventory.Snapshot{
+		Agents: []inventory.Agent{{
+			ID:            "claude",
+			Installations: []inventory.Installation{{Path: filepath.Join(home, ".local", "bin", "claude"), RealPath: v200}},
+		}},
+	}
+	got := Caches(env, snap)
+	byID := map[string]inventory.Cache{}
+	for _, c := range got {
+		byID[c.ID] = c
+	}
+
+	for _, id := range []string{"cargo", "rustup", "nuget", "playwright", "claude-cache", "codex-cache", "codex-worktrees", "gemini-cache", "copilot-cache", "opencode-cache", "cursor-cache"} {
+		if _, ok := byID[id]; !ok {
+			t.Errorf("missing expected cache %q in %+v", id, got)
+		}
+	}
+	if len(byID["cargo"].AllPaths()) != 2 {
+		t.Errorf("cargo paths = %q, want registry+git", byID["cargo"].AllPaths())
+	}
+	if len(byID["rustup"].AllPaths()) != 2 {
+		t.Errorf("rustup paths = %q, want downloads+tmp", byID["rustup"].AllPaths())
+	}
+	if !byID["codex-worktrees"].OptIn {
+		t.Errorf("codex-worktrees OptIn = false, want true")
+	}
+	if byID["codex-cache"].OptIn {
+		t.Errorf("codex-cache OptIn = true, want false")
+	}
+
+	// Claude versions: only 1.0.0 may be offered; active (2.0.0) and newest (2.1.0) stay protected.
+	claudePaths := byID["claude-cache"].AllPaths()
+	if !slices.Contains(claudePaths, v100) {
+		t.Errorf("old Claude version %s not offered in %q", v100, claudePaths)
+	}
+	if slices.Contains(claudePaths, v200) || slices.Contains(claudePaths, v210) {
+		t.Errorf("active or newest Claude version offered in %q", claudePaths)
+	}
+
+	// Verify no sensitive file or parent of a sensitive file is ever included.
+	for _, c := range got {
+		for _, cp := range c.AllPaths() {
+			for _, sf := range sensitive {
+				if cp == sf || isSubpath(sf, cp) {
+					t.Errorf("cache %q path %q covers sensitive file %q", c.ID, cp, sf)
+				}
+			}
+		}
+	}
+
+	// PLAYWRIGHT_BROWSERS_PATH=0 means project-local browsers and must not create a relative cache.
+	envZero := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home, "PLAYWRIGHT_BROWSERS_PATH=0"}
+	for _, c := range Caches(envZero, nil) {
+		if c.ID == "playwright" {
+			t.Errorf("PLAYWRIGHT_BROWSERS_PATH=0 unexpectedly produced playwright cache: %+v", c)
+		}
+	}
+}
+
+func isSubpath(target, base string) bool {
+	rel, err := filepath.Rel(base, target)
+	return err == nil && rel != ".." && len(rel) > 0 && rel[0] != '.'
 }

@@ -8729,6 +8729,10 @@
   "@setupClaudeInstaller": {
     "description": "New computer: what the Claude Code installer step does."
   },
+  "setupComposerInstaller": "downloads Composer's official Windows installer from getcomposer.org and runs it",
+  "@setupComposerInstaller": {
+    "description": "New computer: what the Composer Windows installer step does."
+  },
   "setupShellUnsupported": "Hearth cannot add lines to the startup files of the {shell} shell: install this tool by hand",
   "@setupShellUnsupported": {
     "description": "New computer: the user's shell is one Hearth does not edit.",
@@ -16234,5 +16238,64 @@
     }
   },
   "sharedInstructionsReady": "Shared global instructions are ready.",
-  "instructionsPreviewEmpty": "Empty file."
+  "instructionsPreviewEmpty": "Empty file.",
+  "cleanupCodexWorktrees": "Codex worktrees",
+  "cleanupMorePaths": "{count, plural, one {+# more} other {+# more}}",
+  "@cleanupMorePaths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cleanupRevealMore": "{count, plural, one {+# more in {dir}} other {+# more in {dir}}}",
+  "@cleanupRevealMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonAbandonedWorktrees": "abandoned worktrees · check before removing",
+  "cleanupAtOnceProjectsRow": "Stale project dependencies",
+  "cleanupAtOnceProjectsCaption": "unchanged for long · {size}",
+  "@cleanupAtOnceProjectsCaption": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesOpenTool": "Open {name}",
+  "@updatesOpenTool": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogDeno": "JavaScript and TypeScript runtime with built-in tooling.",
+  "catalogZig": "Systems programming language and C/C++ toolchain.",
+  "catalogElixir": "Functional language for concurrent and fault-tolerant apps.",
+  "catalogJq": "Command-line JSON processor.",
+  "catalogRipgrep": "Fast line-oriented code search (rg).",
+  "catalogFzf": "Interactive command-line fuzzy finder.",
+  "catalogFd": "Fast, user-friendly alternative to find.",
+  "catalogBat": "cat clone with syntax highlighting and Git integration.",
+  "catalogJust": "Command runner for project tasks (justfile).",
+  "catalogDirenv": "Loads and unloads environment variables per directory.",
+  "catalogK9s": "Terminal UI for inspecting and managing Kubernetes clusters.",
+  "setupLinuxDbNoteTitle": "Service starts separately",
+  "setupLinuxDbNoteText": "On this distribution {name} installs its package without initializing or starting the systemd service automatically.",
+  "@setupLinuxDbNoteText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupVersionLatest": "latest"
 }

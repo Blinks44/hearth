@@ -573,8 +573,20 @@ func (a *App) agentHero(c *ui.Context, ag inventory.Agent) {
 			term, termCaption, dot = filepath.Base(ag.Installations[i].Path), sourceName(ag.Installations[i].Source), t.Success
 		}
 		stateCard(c, dot, locales.StateInTerminal(), term, termCaption)
-		stateCard(c, pal.TextFaint, locales.StateSettings(), locales.FilesCount(len(ag.Files)), tilde(ag.Dir, a.Home))
+		settingsCaption := tilde(ag.Dir, a.Home)
+		if u, ok := a.agentDirSize(ag.Dir); ok {
+			settingsCaption = tilde(ag.Dir, a.Home) + " · " + formatUsage(u)
+		}
+		stateCard(c, pal.TextFaint, locales.StateSettings(), locales.FilesCount(len(ag.Files)), settingsCaption)
 	})
+}
+
+func (a *App) agentDirSize(dir string) (inventory.Usage, bool) {
+	if a.Sizes == nil || dir == "" {
+		return inventory.Usage{}, false
+	}
+	u, ok := a.Sizes.Paths[dir]
+	return u, ok
 }
 
 // installCard lists the copies of the agent's command, by where PATH has
@@ -609,7 +621,11 @@ func (a *App) installCard(c *ui.Context, ag inventory.Agent) {
 
 // agentFilesCard lists the agent's files in the home folder, each to open.
 func (a *App) agentFilesCard(c *ui.Context, ag inventory.Agent) {
-	listCard(c, locales.SettingsCard(), tilde(ag.Dir, a.Home), func() {
+	aside := tilde(ag.Dir, a.Home)
+	if u, ok := a.agentDirSize(ag.Dir); ok {
+		aside += " · " + formatUsage(u)
+	}
+	listCard(c, locales.SettingsCard(), aside, func() {
 		if len(ag.Files) == 0 {
 			cardNote(c, locales.NoAgentFiles())
 		}

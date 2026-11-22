@@ -260,3 +260,29 @@ sso_start_url = https://corp.awsapps.com/start
 		}
 	})
 }
+
+func TestCliCatalogTools(t *testing.T) {
+	if got := parseCatalogCliVersion("elixir", "Erlang/OTP 27 [erts-15.1.2]\n\nElixir 1.18.2 (compiled with Erlang/OTP 27)\n"); got != "1.18.2" {
+		t.Errorf("elixir version = %q, want 1.18.2", got)
+	}
+	if got := parseCatalogCliVersion("deno", "deno 2.1.4 (stable)\nv8 13.0.245.12\n"); got != "2.1.4" {
+		t.Errorf("deno version = %q, want 2.1.4", got)
+	}
+	if got := parseCatalogCliVersion("k9s", "Version   v0.32.7\n"); got != "0.32.7" {
+		t.Errorf("k9s version = %q, want 0.32.7", got)
+	}
+	// Verify all 11 catalog CLI tools are registered in catalogCliSpecs with expected binary aliases.
+	byTool := map[string][]string{}
+	for _, spec := range catalogCliSpecs {
+		byTool[spec.tool] = spec.bins
+	}
+	for tool, wantBin := range map[string]string{
+		"deno": "deno", "zig": "zig", "elixir": "elixir", "jq": "jq",
+		"ripgrep": "rg", "fzf": "fzf", "fd": "fdfind", "bat": "batcat",
+		"just": "just", "direnv": "direnv", "k9s": "k9s",
+	} {
+		if !slices.Contains(byTool[tool], wantBin) {
+			t.Errorf("catalogCliSpecs[%q] = %q, missing %q", tool, byTool[tool], wantBin)
+		}
+	}
+}

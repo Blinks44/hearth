@@ -45,7 +45,7 @@ func (a *App) installToolPlan(id string, done func(ops.Plan, error)) {
 	if kind, ok := catalog.DatabaseKinds[id]; ok {
 		verify = ops.DatabaseFound(title, kind, a.detect("databases"))
 	}
-	if slices.Contains(kubeCommands, id) || isCLICommand(id) {
+	if slices.Contains(kubeCommands, id) || isCLICommand(id) || isCatalogCLITool(id) {
 		verify = ops.CommandFound(title, id, a.detect("cli"))
 	}
 	if id == "uv" {

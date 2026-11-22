@@ -224,6 +224,9 @@ var Tools = []Entry{
 	{ID: "java", Group: Language, Methods: mise("java")},
 	{ID: "ruby", Group: Language, Methods: mise("ruby")},
 	{ID: "dotnet", Group: Language, Methods: mise("dotnet")},
+	{ID: "deno", Group: Language, Methods: mise("deno")},
+	{ID: "zig", Group: Language, Methods: mise("zig")},
+	{ID: "elixir", Group: Language, Methods: mise("elixir")},
 
 	{ID: "pnpm", Group: Tool, Methods: mise("pnpm"), Needs: []string{"node"}},
 	// Yarn's current releases install through Corepack alone.
@@ -238,11 +241,12 @@ var Tools = []Entry{
 		{Manager: "zypper", Package: "git"},
 		{Manager: "apk", Package: "git"},
 	}},
-	// The engine runs containers. Colima and the engines of Linux are open
-	// source; Docker Desktop and OrbStack are paid for work at larger
-	// companies.
+	// The engine runs containers. Colima, Podman, Rancher Desktop and the
+	// engines of Linux are open source; Docker Desktop and OrbStack are
+	// paid for work at larger companies.
 	{ID: "docker", Group: Tool, Methods: engines(
-		"Colima", "brew", "OrbStack", "brew", "Docker Desktop", "winget",
+		"Colima", "brew", "OrbStack", "brew", "Docker Desktop", "brew", "Podman Desktop", "brew", "Podman", "brew", "Rancher Desktop", "brew",
+		"Docker Desktop", "winget",
 		"Docker Engine", "apt", "Docker Engine", "dnf", "Docker Engine", "zypper", "Docker Engine", "pacman", "Docker Engine", "apk",
 	)},
 	{ID: "gh", Group: Tool, Methods: []Method{
@@ -257,10 +261,14 @@ var Tools = []Entry{
 	}},
 
 	// Each language's own tools, after the language. mise has no
-	// Composer: the system's manager installs it, as it does PHP.
+	// Composer and WinGet has no official Composer package: on Windows,
+	// Chocolatey and Scoop install it when present, otherwise Composer's
+	// official Windows installer runs for the current user.
 	{ID: "composer", Group: Tool, Needs: []string{"php"}, Methods: []Method{
 		{Manager: "brew", Package: "composer", Kind: "formula"},
+		{Manager: "choco", Package: "composer"},
 		{Manager: "scoop", Package: "composer"},
+		{Manager: "installer", Package: "https://getcomposer.org/Composer-Setup.exe", OS: []string{"windows"}},
 		{Manager: "apt", Package: "composer"},
 		{Manager: "dnf", Package: "composer"},
 		{Manager: "pacman", Package: "composer"},
@@ -306,32 +314,117 @@ var Tools = []Entry{
 	{ID: "terraform", Group: Tool, Methods: mise("terraform")},
 	{ID: "tofu", Group: Tool, Methods: mise("opentofu")},
 
+	// Everyday command-line utilities: Homebrew on macOS, WinGet on
+	// Windows, distro packages or mise on Linux.
+	{ID: "jq", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "jq", Kind: "formula"},
+		{Manager: "winget", Package: "jqlang.jq"},
+		{Manager: "apt", Package: "jq"},
+		{Manager: "dnf", Package: "jq"},
+		{Manager: "pacman", Package: "jq"},
+		{Manager: "zypper", Package: "jq"},
+		{Manager: "apk", Package: "jq"},
+		{Manager: "mise", Package: "jq"},
+	}},
+	{ID: "ripgrep", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "ripgrep", Kind: "formula"},
+		{Manager: "winget", Package: "BurntSushi.ripgrep.MSVC"},
+		{Manager: "apt", Package: "ripgrep"},
+		{Manager: "dnf", Package: "ripgrep"},
+		{Manager: "pacman", Package: "ripgrep"},
+		{Manager: "zypper", Package: "ripgrep"},
+		{Manager: "apk", Package: "ripgrep"},
+		{Manager: "mise", Package: "ripgrep"},
+	}},
+	{ID: "fzf", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "fzf", Kind: "formula"},
+		{Manager: "winget", Package: "junegunn.fzf"},
+		{Manager: "apt", Package: "fzf"},
+		{Manager: "dnf", Package: "fzf"},
+		{Manager: "pacman", Package: "fzf"},
+		{Manager: "zypper", Package: "fzf"},
+		{Manager: "apk", Package: "fzf"},
+		{Manager: "mise", Package: "fzf"},
+	}},
+	{ID: "fd", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "fd", Kind: "formula"},
+		{Manager: "winget", Package: "sharkdp.fd"},
+		{Manager: "apt", Package: "fd-find"},
+		{Manager: "dnf", Package: "fd-find"},
+		{Manager: "pacman", Package: "fd"},
+		{Manager: "zypper", Package: "fd"},
+		{Manager: "apk", Package: "fd"},
+		{Manager: "mise", Package: "fd"},
+	}},
+	{ID: "bat", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "bat", Kind: "formula"},
+		{Manager: "winget", Package: "sharkdp.bat"},
+		{Manager: "apt", Package: "bat"},
+		{Manager: "dnf", Package: "bat"},
+		{Manager: "pacman", Package: "bat"},
+		{Manager: "zypper", Package: "bat"},
+		{Manager: "apk", Package: "bat"},
+		{Manager: "mise", Package: "bat"},
+	}},
+	{ID: "just", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "just", Kind: "formula"},
+		{Manager: "winget", Package: "Casey.Just"},
+		{Manager: "dnf", Package: "just"},
+		{Manager: "pacman", Package: "just"},
+		{Manager: "zypper", Package: "just"},
+		{Manager: "apk", Package: "just"},
+		{Manager: "mise", Package: "just"},
+	}},
+	{ID: "direnv", Group: Tool, OS: []string{"darwin", "linux"}, Methods: []Method{
+		{Manager: "brew", Package: "direnv", Kind: "formula"},
+		{Manager: "apt", Package: "direnv"},
+		{Manager: "dnf", Package: "direnv"},
+		{Manager: "pacman", Package: "direnv"},
+		{Manager: "zypper", Package: "direnv"},
+		{Manager: "apk", Package: "direnv"},
+		{Manager: "mise", Package: "direnv"},
+	}},
+	{ID: "k9s", Group: Tool, Methods: []Method{
+		{Manager: "brew", Package: "k9s", Kind: "formula"},
+		{Manager: "winget", Package: "Derailed.k9s"},
+		{Manager: "pacman", Package: "k9s"},
+		{Manager: "apk", Package: "k9s"},
+		{Manager: "mise", Package: "k9s"},
+	}},
+
 	// Database servers install through the system's manager, which
 	// sets their service up; Homebrew's starts with brew services. On
-	// Linux only Debian's and Ubuntu's packages create a server that runs
-	// as installed: elsewhere it waits for its first setup. On Windows
-	// EDB's PostgreSQL and MongoDB's installers set a service up:
-	// MySQL needs its configuration wizard. MariaDB requires additional
-	// server setup and is not offered on Windows; Redis has no
-	// Windows build of its own. MongoDB is in no Linux distribution and in
-	// Homebrew only through MongoDB's tap.
+	// Linux, APT packages create a server that runs as installed, while
+	// DNF and pacman install the package without initializing or starting
+	// the systemd service automatically. On Windows EDB's PostgreSQL and
+	// MongoDB's installers set a service up: MySQL needs its configuration
+	// wizard. MariaDB requires additional server setup and is not offered
+	// on Windows; Redis has no Windows build of its own. MongoDB is in no
+	// Linux distribution and in Homebrew only through MongoDB's tap.
 	{ID: "postgresql", Group: Database, Methods: []Method{
 		{Manager: "brew", Package: "postgresql@17", Kind: "formula"},
 		{Manager: "winget", Package: "PostgreSQL.PostgreSQL.17"},
 		{Manager: "apt", Package: "postgresql"},
+		{Manager: "dnf", Package: "postgresql-server"},
+		{Manager: "pacman", Package: "postgresql"},
 	}},
 	{ID: "redis", Group: Database, OS: []string{"darwin", "linux"}, Methods: []Method{
 		{Manager: "brew", Package: "redis", Kind: "formula"},
 		{Manager: "apt", Package: "redis-server"},
+		{Manager: "dnf", Package: "redis"},
+		{Manager: "pacman", Package: "redis"},
 	}},
 	{ID: "mysql", Group: Database, Conflicts: []string{"mariadb"}, Methods: []Method{
 		{Manager: "brew", Package: "mysql@8.4", Kind: "formula"},
 		{Manager: "apt", Package: "mysql-server"},
+		{Manager: "dnf", Package: "community-mysql-server"},
 		{Manager: "winget", Package: "Oracle.MySQL"},
 	}},
 	{ID: "mariadb", Group: Database, OS: []string{"darwin", "linux"}, Conflicts: []string{"mysql"}, Methods: []Method{
 		{Manager: "brew", Package: "mariadb", Kind: "formula"},
 		{Manager: "apt", Package: "mariadb-server"},
+		{Manager: "dnf", Package: "mariadb-server"},
+		{Manager: "pacman", Package: "mariadb"},
 	}},
 	{ID: "mongodb", Group: Database, OS: []string{"darwin", "windows"}, Methods: []Method{
 		{Manager: "brew", Package: "mongodb/brew/mongodb-community", Kind: "formula"},
@@ -429,6 +522,9 @@ func About(id string) string {
 		"java":        locales.CatalogJava,
 		"ruby":        locales.CatalogRuby,
 		"dotnet":      locales.CatalogDotnet,
+		"deno":        locales.CatalogDeno,
+		"zig":         locales.CatalogZig,
+		"elixir":      locales.CatalogElixir,
 		"composer":    locales.CatalogComposer,
 		"uv":          locales.CatalogUv,
 		"pipx":        locales.CatalogPipx,
@@ -443,6 +539,14 @@ func About(id string) string {
 		"az":          locales.CatalogAz,
 		"terraform":   locales.CatalogTerraform,
 		"tofu":        locales.CatalogTofu,
+		"jq":          locales.CatalogJq,
+		"ripgrep":     locales.CatalogRipgrep,
+		"fzf":         locales.CatalogFzf,
+		"fd":          locales.CatalogFd,
+		"bat":         locales.CatalogBat,
+		"just":        locales.CatalogJust,
+		"direnv":      locales.CatalogDirenv,
+		"k9s":         locales.CatalogK9s,
 		"pnpm":        locales.CatalogPnpm,
 		"yarn":        locales.CatalogYarn,
 		"git":         locales.CatalogGit,

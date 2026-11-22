@@ -56,6 +56,41 @@ var linuxManagers = []string{"apt", "dnf", "zypper", "pacman", "apk"}
 // LTS of Temurin, whose prefix mise installs the newest release of.
 var miseVersions = map[string]string{"node": "lts", "java": "temurin-25"}
 
+// SetupTargetVersion returns the target version or channel that method m
+// installs for tool id, or "" when the package manager decides without a
+// specific version pin.
+func SetupTargetVersion(id string, m catalog.Method) string {
+	switch m.Manager {
+	case "mise":
+		switch v := miseVersions[id]; v {
+		case "":
+			return "latest"
+		case "lts":
+			return "LTS"
+		case "temurin-25":
+			return "Temurin 25"
+		default:
+			return v
+		}
+	case "brew":
+		if i := strings.LastIndex(m.Package, "@"); i >= 0 && i+1 < len(m.Package) {
+			return m.Package[i+1:]
+		}
+	case "winget":
+		if i := strings.LastIndex(m.Package, "."); i >= 0 && i+1 < len(m.Package) {
+			tail := m.Package[i+1:]
+			if tail[0] >= '0' && tail[0] <= '9' {
+				return tail
+			}
+		}
+	case "zypper":
+		if m.Package == "php8" {
+			return "8"
+		}
+	}
+	return ""
+}
+
 // Parts returns the tools s installs and how, in the order they install:
 // each after what it needs. A tool there already, or with no way to
 // install here, itself or what it needs, is left out.
@@ -244,8 +279,13 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 			// Homebrew installs a server without starting it: brew
 			// services starts it now and at each login, as the system's
 			// managers do with their packages' services.
-			if e, _ := catalog.Find(part.Tool); ok && e.Group == catalog.Database && m.Manager == "brew" {
-				steps = append(steps, Step{Argv: []string{pm.Path, "services", "start", m.Package[strings.LastIndex(m.Package, "/")+1:]}, Timeout: 2 * time.Minute})
+			if e, _ := catalog.Find(part.Tool); ok && e.Group == catalog.Database {
+				switch m.Manager {
+				case "brew":
+					steps = append(steps, Step{Argv: []string{pm.Path, "services", "start", m.Package[strings.LastIndex(m.Package, "/")+1:]}, Timeout: 2 * time.Minute})
+				case "dnf", "pacman":
+					notes = append(notes, Note{Title: locales.SetupLinuxDbNoteTitle(), Text: locales.SetupLinuxDbNoteText(title)})
+				}
 			}
 			// Rust builds on Windows with Microsoft's linker, which Visual
 			// Studio Build Tools bring: rustup warns without them.

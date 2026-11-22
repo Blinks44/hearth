@@ -97,7 +97,7 @@ func TestRecommended(t *testing.T) {
 		{"claude", "windows", "winget", nil},
 		{"gemini", "linux", "npm", []string{"node"}},
 		{"composer", "darwin", "brew", []string{"php", "homebrew"}},
-		{"composer", "windows", "scoop", []string{"php"}},
+		{"composer", "windows", "choco", []string{"php"}},
 		{"composer", "linux", "apt", []string{"php"}},
 		{"uv", "windows", "mise", []string{"mise"}},
 		{"pipx", "darwin", "mise", []string{"python", "mise"}},
@@ -127,7 +127,7 @@ func TestRecommended(t *testing.T) {
 }
 
 func TestToolsNotOnASystem(t *testing.T) {
-	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}, {"redis", "windows"}, {"mariadb", "windows"}, {"mongodb", "linux"}} {
+	for _, tt := range []struct{ id, goos string }{{"homebrew", "windows"}, {"homebrew", "linux"}, {"cursor", "linux"}, {"kimi", "darwin"}, {"redis", "windows"}, {"mariadb", "windows"}, {"mongodb", "linux"}, {"direnv", "windows"}} {
 		e, _ := Find(tt.id)
 		if slices.Contains(e.Systems(), tt.goos) {
 			t.Errorf("%s installs on %s", tt.id, tt.goos)
@@ -195,7 +195,7 @@ func TestSet(t *testing.T) {
 		err  error
 	}{
 		{"saved", string(data), []string{"homebrew", "node", "claude"}, nil},
-		{"unknown tool", `{"hearth": "set", "version": 1, "tools": ["node", "zig"]}`, []string{"node"}, nil},
+		{"unknown tool", `{"hearth": "set", "version": 1, "tools": ["node", "future-tool"]}`, []string{"node"}, nil},
 		{"other json", `{"tools": ["node"]}`, nil, ErrNotSet},
 		{"not json", "node\n", nil, ErrNotSet},
 		{"newer", `{"hearth": "set", "version": 2, "tools": ["node"]}`, nil, ErrNewerSet},
@@ -207,5 +207,62 @@ func TestSet(t *testing.T) {
 				t.Errorf("ParseSet = %q, %v; want %q, %v", got, err, tc.want, tc.err)
 			}
 		})
+	}
+}
+
+func TestS1403CatalogAdditions(t *testing.T) {
+	// 11 new tools are present with non-empty descriptions.
+	for _, id := range []string{"deno", "zig", "elixir", "jq", "ripgrep", "fzf", "fd", "bat", "just", "direnv", "k9s"} {
+		e, ok := Find(id)
+		if !ok {
+			t.Fatalf("missing catalog entry %q", id)
+		}
+		if About(id) == "" {
+			t.Errorf("%q has empty About text", id)
+		}
+		if len(e.Methods) == 0 {
+			t.Errorf("%q has no install methods", id)
+		}
+	}
+	// macOS docker offers Colima, OrbStack, Docker Desktop, Podman Desktop, Podman, Rancher Desktop.
+	docker, _ := Find("docker")
+	var darwinEngines []string
+	for _, m := range docker.On("darwin") {
+		darwinEngines = append(darwinEngines, m.Engine)
+	}
+	wantEngines := []string{"Colima", "OrbStack", "Docker Desktop", "Podman Desktop", "Podman", "Rancher Desktop"}
+	if !slices.Equal(darwinEngines, wantEngines) {
+		t.Errorf("macOS docker engines = %q, want %q", darwinEngines, wantEngines)
+	}
+	// Windows composer prefers choco, then scoop, then the official installer.
+	composer, _ := Find("composer")
+	var winManagers []string
+	for _, m := range composer.On("windows") {
+		winManagers = append(winManagers, m.Manager)
+	}
+	if want := []string{"choco", "scoop", "installer"}; !slices.Equal(winManagers, want) {
+		t.Errorf("windows composer managers = %q, want %q", winManagers, want)
+	}
+	// Linux DBs support dnf and pacman (mysql dnf only).
+	dbManagers := func(id string) []string {
+		e, _ := Find(id)
+		var out []string
+		for _, m := range e.On("linux") {
+			out = append(out, m.Manager)
+		}
+		return out
+	}
+	for _, tc := range []struct {
+		id   string
+		want []string
+	}{
+		{"postgresql", []string{"apt", "dnf", "pacman"}},
+		{"redis", []string{"apt", "dnf", "pacman"}},
+		{"mysql", []string{"apt", "dnf"}},
+		{"mariadb", []string{"apt", "dnf", "pacman"}},
+	} {
+		if got := dbManagers(tc.id); !slices.Equal(got, tc.want) {
+			t.Errorf("%s linux managers = %q, want %q", tc.id, got, tc.want)
+		}
 	}
 }

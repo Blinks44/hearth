@@ -212,7 +212,9 @@ func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, e
 				steps = []Step{{Argv: argv}}
 				pub = pub || c.ID == "pub"
 			} else {
-				steps = []Step{{Remove: c.Paths[0]}}
+				for _, path := range c.Paths {
+					steps = append(steps, Step{Remove: path})
+				}
 				removes = true
 			}
 			pnpm = pnpm || c.ID == "pnpm"

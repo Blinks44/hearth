@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -60,7 +61,15 @@ type setupState struct {
 var setupOffered = []string{"node", "python", "pnpm", "git", "docker", "claude"}
 
 // setupFeatured is how many tools of a group show before "N more".
-const setupFeatured = 4
+const setupFeatured = 8
+
+// catalogCLITools are catalog runtimes and command-line utilities detected by
+// detect.Cli without being added to the CLI & clouds page table.
+var catalogCLITools = []string{"deno", "zig", "elixir", "jq", "ripgrep", "fzf", "fd", "bat", "just", "direnv", "k9s"}
+
+func isCatalogCLITool(id string) bool {
+	return slices.Contains(catalogCLITools, id)
+}
 
 // setupWizard reports that the Install page is the new computer wizard:
 // on a computer with nothing set up, it offers a set to start with and
@@ -104,6 +113,10 @@ func (a *App) setupHave(id string) bool {
 	case "gh":
 		st, _ := a.Snapshot.Tool("git")
 		return st.Git != nil && st.Git.GitHub != nil
+	}
+	if isCatalogCLITool(id) {
+		_, found := cliCopy(a.cliState(), id)
+		return found
 	}
 	// Commands a language's scan finds beside it.
 	if lang, command, ok := languageCommand(id); ok {
@@ -264,6 +277,28 @@ func setupTitle(id string) string {
 		return "OpenTofu"
 	case "gh":
 		return "GitHub CLI"
+	case "deno":
+		return "Deno"
+	case "zig":
+		return "Zig"
+	case "elixir":
+		return "Elixir"
+	case "jq":
+		return "jq"
+	case "ripgrep":
+		return "ripgrep"
+	case "fzf":
+		return "fzf"
+	case "fd":
+		return "fd"
+	case "bat":
+		return "bat"
+	case "just":
+		return "just"
+	case "direnv":
+		return "direnv"
+	case "k9s":
+		return "k9s"
 	}
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		return agentTitle(id)
@@ -641,8 +676,14 @@ func (a *App) setupChoiceView(c *ui.Context) {
 	if a.setup.setNotice != "" {
 		toolNote(c, a.setup.setNotice)
 	}
-	shown := 0
-	card := func(title string, g catalog.Group) {
+	type groupData struct {
+		title string
+		g     catalog.Group
+		all   []catalog.Entry
+		rows  []catalog.Entry
+		have  int
+	}
+	buildGroup := func(title string, g catalog.Group) groupData {
 		all := a.setupOffers(in, g)
 		var rows []catalog.Entry
 		have := 0
@@ -659,22 +700,50 @@ func (a *App) setupChoiceView(c *ui.Context) {
 			}
 			rows = append(rows, e)
 		}
-		if len(rows) == 0 {
+		return groupData{title: title, g: g, all: all, rows: rows, have: have}
+	}
+	leftGroups := []groupData{
+		buildGroup(locales.SetupLanguages(), catalog.Language),
+		buildGroup(locales.SetupTools(), catalog.Tool),
+	}
+	rightGroups := []groupData{
+		buildGroup(locales.SetupBase(), catalog.Base),
+		buildGroup(locales.SetupAgents(), catalog.Agent),
+		buildGroup(locales.SetupDatabases(), catalog.Database),
+	}
+	shown := 0
+	for _, gd := range append(slices.Clone(leftGroups), rightGroups...) {
+		if len(gd.rows) > 0 {
+			shown++
+		}
+	}
+	if shown == 0 {
+		if query != "" {
+			cardNote(c, locales.NothingMatches())
+		} else {
+			cardNote(c, locales.InstallNothingHere())
+		}
+		return
+	}
+	renderCard := func(gd groupData) {
+		if len(gd.rows) == 0 {
 			return
 		}
-		shown++
 		// The base's title is long for its narrow column.
-		aside := locales.SetupHaveOf(have, len(all))
-		if g == catalog.Base {
+		aside := locales.SetupHaveOf(gd.have, len(gd.all))
+		if gd.g == catalog.Base {
 			aside = ""
 		}
-		listCard(c, title, aside, func() {
+		// Do not collapse when searching, expanded, Base, filtered tab in
+		// catalog view, or when only 1-2 items would be hidden.
+		collapse := query == "" && !a.setup.more[gd.g] && gd.g != catalog.Base && (wizard || a.setup.filter == 0) && len(gd.rows) > setupFeatured+2
+		listCard(c, gd.title, aside, func() {
 			var more []string
-			for _, e := range rows {
+			for i, e := range gd.rows {
 				// The first of a group, what is there, what is chosen,
 				// and any search match show; the rest wait behind "N more".
 				_, system := a.setupSystemCopy(e.ID)
-				if query != "" || a.setup.more[g] || g == catalog.Base || slices.IndexFunc(all, func(x catalog.Entry) bool { return x.ID == e.ID }) < setupFeatured || a.setupHave(e.ID) || system || a.setupChosen(e.ID) {
+				if !collapse || i < setupFeatured || a.setupHave(e.ID) || system || a.setupChosen(e.ID) {
 					a.setupRow(c, in, e)
 				} else {
 					more = append(more, setupTitle(e.ID))
@@ -682,11 +751,11 @@ func (a *App) setupChoiceView(c *ui.Context) {
 			}
 			if len(more) > 0 {
 				listRow(c, locales.SetupMore(len(more)), false, strings.Join(more, ", "), func() {
-					ui.ButtonBase(c.Key("setup-more:" + strconv.Itoa(int(g)))).Label(locales.SetupShowMore()).OnClick(func() {
+					ui.ButtonBase(c.Key("setup-more:" + strconv.Itoa(int(gd.g)))).Label(locales.SetupShowMore()).OnClick(func() {
 						if a.setup.more == nil {
 							a.setup.more = map[catalog.Group]bool{}
 						}
-						a.setup.more[g] = true
+						a.setup.more[gd.g] = true
 					}).Children(func() {
 						ui.Text(c, locales.SetupShowMore()).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 					})
@@ -711,23 +780,67 @@ func (a *App) setupChoiceView(c *ui.Context) {
 		toolNote(c, locales.InstallNote(len(chosen), strings.Join(names, ", ")))
 	}
 	columns(c, 12, func() {
-		card(locales.SetupLanguages(), catalog.Language)
-		card(locales.SetupTools(), catalog.Tool)
-		if shown > 0 || query == "" {
-			note()
+		for _, gd := range leftGroups {
+			renderCard(gd)
 		}
+		note()
 	}, func() {
-		card(locales.SetupBase(), catalog.Base)
-		card(locales.SetupAgents(), catalog.Agent)
-		card(locales.SetupDatabases(), catalog.Database)
-		if shown == 0 {
-			if query != "" {
-				cardNote(c, locales.NothingMatches())
-			} else {
-				cardNote(c, locales.InstallNothingHere())
-			}
+		for _, gd := range rightGroups {
+			renderCard(gd)
 		}
 	})
+}
+
+func (a *App) setupTargetVersion(id string, m catalog.Method, now time.Time) string {
+	switch id {
+	case "node":
+		if a.NodeVersions != nil {
+			if rel, ok := a.NodeVersions.Recommended(); ok && rel.Version != "" {
+				return rel.Version + " LTS"
+			}
+		}
+	case "python":
+		if v := a.PythonVersions.Newest(now); v != "" {
+			return v
+		}
+	case "go":
+		if a.GoVersions != nil && len(a.GoVersions.Releases) > 0 {
+			return a.GoVersions.Releases[0]
+		}
+	case "rust":
+		if v := a.RustVersions.Newest(now); v != "" {
+			return v
+		}
+	case "bun":
+		if a.BunLatest != nil && a.BunLatest.Version != "" {
+			return a.BunLatest.Version
+		}
+	case "ruby":
+		if v := a.RubyVersions.Newest(now); v != "" {
+			return v
+		}
+	case "dotnet":
+		if a.DotnetVersions != nil {
+			for _, l := range a.DotnetVersions.Lines {
+				if l.Version != "" && !l.Ended(now) {
+					return l.Version
+				}
+			}
+		}
+	case "pnpm":
+		if a.JSVersions != nil && a.JSVersions.Pnpm.Version != "" {
+			return a.JSVersions.Pnpm.Version
+		}
+	case "yarn":
+		if a.JSVersions != nil && a.JSVersions.Yarn.Version != "" {
+			return a.JSVersions.Yarn.Version
+		}
+	}
+	v := ops.SetupTargetVersion(id, m)
+	if v == "latest" {
+		return locales.SetupVersionLatest()
+	}
+	return v
 }
 
 func setupMatches(e catalog.Entry, q string) bool {
@@ -827,6 +940,10 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 		}
 	}
 	version := ""
+	target := ""
+	if !have && len(methods) > 0 {
+		target = a.setupTargetVersion(e.ID, m, c.Now())
+	}
 	if in, ok := a.setupSystemCopy(e.ID); ok {
 		about = locales.SetupSystemCopy(in.Version)
 	}
@@ -844,7 +961,12 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 	ui.Row(c.Key("setup:"+e.ID)).Gap(10).Padding(9, 14).MinHeight(48).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			ui.Text(c, setupTitle(e.ID)).FontSize(13).SingleLine()
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, setupTitle(e.ID)).FontSize(13).SingleLine()
+				if target != "" {
+					aiTag(c, target, pal.Muted, t.TextMuted)
+				}
+			})
 			// What it is for, to someone new to it, then how it installs.
 			if about != "" {
 				ui.Text(c, about).FontSize(11.5).TextColor(t.TextMuted)
@@ -872,7 +994,7 @@ func (a *App) setupRow(c *ui.Context, in ops.Setup, e catalog.Entry) {
 					labels[i] = em.Engine
 				}
 				value := m.Engine
-				ui.Select(c.Key("setup-engine"), &value, labels).Label(locales.SetupDockerEngine()).Width(150).OnChange(func() {
+				ui.Select(c.Key("setup-engine"), &value, labels).Label(locales.SetupDockerEngine()).Width(160).OnChange(func() {
 					a.setup.engine = methods[slices.Index(labels, value)].Package
 				})
 			}
@@ -1196,7 +1318,7 @@ func (a *App) setupResult(id string) (inventory.Installation, checkResult) {
 	var ins []inventory.Installation
 	var docker *inventory.DockerState
 	switch {
-	case slices.Contains(kubeCommands, id) || isCLICommand(id):
+	case slices.Contains(kubeCommands, id) || isCLICommand(id) || isCatalogCLITool(id):
 		for _, in := range a.cliState().Tools {
 			if in.Tool == id {
 				ins = append(ins, in)
