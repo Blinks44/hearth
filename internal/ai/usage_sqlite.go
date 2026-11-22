@@ -28,12 +28,13 @@ func sqliteFileURI(path string) string {
 }
 
 // openSQLiteRO opens a SQLite database strictly read-only, falling back to
-// immutable=1 if the directory does not allow creating WAL/SHM sidecars.
+// immutable=1 if the directory does not allow creating WAL/SHM sidecars or
+// the database is a cleanly closed WAL database without a -shm file.
 func openSQLiteRO(path string) (*sql.DB, error) {
 	uri := sqliteFileURI(path)
 	db, err := sql.Open("sqlite", uri+"?mode=ro&_pragma=busy_timeout(1000)&_pragma=query_only(1)")
 	if err == nil {
-		if pingErr := db.Ping(); pingErr == nil {
+		if probeSQLiteRO(db) == nil {
 			return db, nil
 		}
 		_ = db.Close()
@@ -42,11 +43,20 @@ func openSQLiteRO(path string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil {
+	if err := probeSQLiteRO(db); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
 	return db, nil
+}
+
+func probeSQLiteRO(db *sql.DB) error {
+	var n int
+	err := db.QueryRow("SELECT 1 FROM sqlite_master LIMIT 1").Scan(&n)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	return err
 }
 
 // tableColumns returns the set of lowercase column names of table.
@@ -555,13 +565,15 @@ func parseDevinDB(path string, loc *time.Location) ([]inventory.AgentSession, er
 }
 
 // antigravitySessions reads per-conversation SQLite databases under
-// ~/.gemini/antigravity-cli/conversations and ~/.gemini/antigravity/conversations.
+// ~/.gemini/antigravity-cli/conversations, ~/.gemini/antigravity-acp/conversations,
+// and ~/.gemini/antigravity/conversations.
 func antigravitySessions(home string, loc *time.Location) []inventory.AgentSession {
 	if home == "" {
 		return nil
 	}
 	roots := []string{
 		filepath.Join(home, ".gemini", "antigravity-cli", "conversations"),
+		filepath.Join(home, ".gemini", "antigravity-acp", "conversations"),
 		filepath.Join(home, ".gemini", "antigravity", "conversations"),
 	}
 	seenDir := map[string]bool{}
@@ -625,24 +637,41 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 	seenResp := map[string]int{}
 
 	for _, tbl := range tables {
+		lowerTbl := strings.ToLower(tbl)
 		cols := tableColumns(db, tbl)
 		quoted := `"` + strings.ReplaceAll(tbl, `"`, `""`) + `"`
-		if dir == "" && cols["trajectory_metadata_blob"] {
-			if rows, err := db.Query("SELECT trajectory_metadata_blob FROM " + quoted + " WHERE trajectory_metadata_blob IS NOT NULL LIMIT 5"); err == nil {
-				for rows.Next() {
-					var blob []byte
-					if rows.Scan(&blob) == nil && len(blob) > 0 {
-						if d := decodeAntigravityWorkspace(blob); d != "" {
-							dir = d
-							break
+		if dir == "" {
+			var trajCol string
+			switch {
+			case lowerTbl == "trajectory_metadata_blob" && cols["data"]:
+				trajCol = "data"
+			case cols["trajectory_metadata_blob"]:
+				trajCol = "trajectory_metadata_blob"
+			}
+			if trajCol != "" {
+				if rows, err := db.Query("SELECT " + trajCol + " FROM " + quoted + " WHERE " + trajCol + " IS NOT NULL LIMIT 5"); err == nil {
+					for rows.Next() {
+						var blob []byte
+						if rows.Scan(&blob) == nil && len(blob) > 0 {
+							if d := decodeAntigravityWorkspace(blob); d != "" {
+								dir = d
+								break
+							}
 						}
 					}
+					_ = rows.Close()
 				}
-				_ = rows.Close()
 			}
 		}
-		if cols["gen_metadata"] {
-			rows, err := db.Query("SELECT gen_metadata FROM " + quoted + " WHERE gen_metadata IS NOT NULL")
+		var genCol string
+		switch {
+		case lowerTbl == "gen_metadata" && cols["data"]:
+			genCol = "data"
+		case cols["gen_metadata"]:
+			genCol = "gen_metadata"
+		}
+		if genCol != "" {
+			rows, err := db.Query("SELECT " + genCol + " FROM " + quoted + " WHERE " + genCol + " IS NOT NULL")
 			if err != nil {
 				continue
 			}
@@ -739,18 +768,21 @@ func decodeProtoFields(data []byte) []protoField {
 }
 
 func decodeAntigravityWorkspace(blob []byte) string {
-	for _, f := range decodeProtoFields(blob) {
-		if f.num != 7 || f.wireType != 2 || len(f.bytes) == 0 {
-			continue
-		}
-		if p := extractPathString(f.bytes); p != "" {
-			return p
-		}
-		// Sometimes f7 wraps a submessage whose field 1 or 2 is the path/URI.
-		for _, sub := range decodeProtoFields(f.bytes) {
-			if sub.wireType == 2 {
-				if p := extractPathString(sub.bytes); p != "" {
-					return p
+	fields := decodeProtoFields(blob)
+	for _, wantNum := range []uint64{7, 1} {
+		for _, f := range fields {
+			if f.num != wantNum || f.wireType != 2 || len(f.bytes) == 0 {
+				continue
+			}
+			if p := extractPathString(f.bytes); p != "" {
+				return p
+			}
+			// Sometimes the field wraps a submessage whose field 1 or 2 is the path/URI.
+			for _, sub := range decodeProtoFields(f.bytes) {
+				if sub.wireType == 2 {
+					if p := extractPathString(sub.bytes); p != "" {
+						return p
+					}
 				}
 			}
 		}
@@ -778,13 +810,10 @@ func extractPathString(b []byte) string {
 
 func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Location) (inventory.TokenUsage, string, bool) {
 	var chatModelBytes []byte
-	var fallbackUUID string
 	for _, f := range decodeProtoFields(blob) {
-		switch {
-		case f.num == 1 && f.wireType == 2:
+		if f.num == 1 && f.wireType == 2 {
 			chatModelBytes = f.bytes
-		case f.num == 4 && f.wireType == 2 && utf8.Valid(f.bytes):
-			fallbackUUID = string(f.bytes)
+			break
 		}
 	}
 	if len(chatModelBytes) == 0 {
@@ -792,7 +821,7 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 	}
 
 	var usageBytes, timeWrapBytes []byte
-	var model19, model22 string
+	var model19, model21, model22 string
 	for _, f := range decodeProtoFields(chatModelBytes) {
 		if f.wireType != 2 {
 			continue
@@ -805,6 +834,10 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 		case 19:
 			if utf8.Valid(f.bytes) {
 				model19 = strings.TrimSpace(string(f.bytes))
+			}
+		case 21:
+			if utf8.Valid(f.bytes) {
+				model21 = strings.TrimSpace(string(f.bytes))
 			}
 		case 22:
 			if utf8.Valid(f.bytes) {
@@ -819,6 +852,9 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 	model := model19
 	if model == "" {
 		model = model22
+	}
+	if model == "" {
+		model = model21
 	}
 	if model == "" {
 		return inventory.TokenUsage{}, "", false
@@ -847,9 +883,6 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 	day := decodeAntigravityDay(timeWrapBytes, loc)
 	if day == "" {
 		day = fallbackDay
-	}
-	if respID == "" {
-		respID = fallbackUUID
 	}
 	return inventory.TokenUsage{
 		Day:        day,

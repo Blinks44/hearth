@@ -43,6 +43,9 @@ var prices = map[string]price{
 	"claude-3-5-haiku":  {0.8, 4, 0.08},
 
 	// OpenAI GPT / o-series / Codex
+	"gpt-6.2-astra":      {8, 40, 0.4},
+	"gpt-6.2-sol":        {2, 10, 0.1},
+	"gpt-6-astra":        {10, 50, 1},
 	"gpt-6.1-sol":        {2, 10, 0.1},
 	"gpt-6.1-terra":      {1, 5, 0.05},
 	"gpt-5.4":            {2.5, 15, 0.25},
@@ -70,6 +73,7 @@ var prices = map[string]price{
 	"codex-mini":         {1.5, 6, 0.375},
 
 	// Google Gemini
+	"gemini-4-neon":         {3, 15, 0.15},
 	"gemini-3.1-pro":        {2, 12, 0.2},
 	"gemini-3-pro":          {2, 12, 0.2},
 	"gemini-3-flash":        {0.5, 3, 0.05},
@@ -108,6 +112,7 @@ var (
 	datedISO     = regexp.MustCompile(`-\d{4}-\d{2}-\d{2}$`)
 	datedShort   = regexp.MustCompile(`-\d{4}$`)
 	datedPreview = regexp.MustCompile(`-preview(?:-\d{2}-\d{2})?$`)
+	effortSuffix = regexp.MustCompile(`-(?:low|medium|high|xhigh)$`)
 )
 
 // lookupPrice resolves a raw model ID to its API price, normalizing provider
@@ -144,6 +149,11 @@ func lookupPrice(raw string) (price, bool) {
 		return p, true
 	}
 	if s := datedShort.ReplaceAllString(stripped, ""); s != stripped {
+		if p, ok := try(s); ok {
+			return p, true
+		}
+	}
+	if s := effortSuffix.ReplaceAllString(stripped, ""); s != stripped {
 		if p, ok := try(s); ok {
 			return p, true
 		}

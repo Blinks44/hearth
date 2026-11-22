@@ -39,6 +39,11 @@ func TestCostProvidersAndNormalization(t *testing.T) {
 		{inventory.TokenUsage{Model: "gpt-5-2025-08-07", Input: 1e6, Output: 1e6}, 1.25 + 10, true},
 		{inventory.TokenUsage{Model: "models/gemini-2.5-pro", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 1.25 + 0.125 + 10, true},
 		{inventory.TokenUsage{Model: "gemini-3-pro-preview", Input: 1e6, Output: 1e6}, 2 + 12, true},
+		{inventory.TokenUsage{Model: "gemini-4-neon", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 3 + 0.15 + 15, true},
+		{inventory.TokenUsage{Model: "claude-opus-5-5-medium", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 4 + 0.2 + 20, true},
+		{inventory.TokenUsage{Model: "gpt-6.2-sol", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 2 + 0.1 + 10, true},
+		{inventory.TokenUsage{Model: "gpt-6.2-astra", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 8 + 0.4 + 40, true},
+		{inventory.TokenUsage{Model: "gpt-6-astra", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 10 + 1 + 50, true},
 		{inventory.TokenUsage{Model: "xai/grok-4-0709", Input: 1e6, Output: 1e6}, 3 + 15, true},
 		{inventory.TokenUsage{Model: "moonshot/kimi-k2.5", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 0.6 + 0.1 + 3, true},
 		{inventory.TokenUsage{Model: "codex-mini-latest", Input: 1e6}, 1.5, true},
@@ -340,6 +345,68 @@ func TestSessionsAntigravityProtobufSQLite(t *testing.T) {
 	if got[0].Agent != "antigravity" || got[0].ID != "conv-42" || got[0].Dir != "/Users/dev/agy-proj" ||
 		len(got[0].Files) != 0 || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
 		t.Errorf("antigravity = %+v, want %+v", got[0], want)
+	}
+}
+
+func TestSessionsAntigravityACPTableWAL(t *testing.T) {
+	home := t.TempDir()
+	convDir := filepath.Join(home, ".gemini", "antigravity-acp", "conversations")
+	if err := os.MkdirAll(convDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dbPath := filepath.Join(convDir, "acp-session.db")
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Real Antigravity DBs use WAL mode and separate tables trajectory_metadata_blob
+	// and gen_metadata with a data BLOB column; cleanly closed WAL DBs have no -shm.
+	if _, err := db.Exec(`PRAGMA journal_mode=WAL;`); err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(`
+		CREATE TABLE trajectory_metadata_blob (id INTEGER PRIMARY KEY, data BLOB);
+		CREATE TABLE gen_metadata (idx INTEGER PRIMARY KEY, data BLOB, size INTEGER);
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	trajBlob := protoBytes(7, []byte("file:///Users/dev/acp-proj"))
+	ts := uint64(time.Date(2026, 11, 21, 14, 0, 0, 0, time.UTC).Unix())
+	tsMsg := protoVarint(1, ts)
+	timeWrap := protoBytes(4, tsMsg)
+
+	// Two turns in the same execution share top-level field 4 (execution_id) and have
+	// no usage.f11 response_id; both turns must be summed rather than overwriting.
+	usage1 := append(protoVarint(2, 1000), protoVarint(3, 200)...)
+	usage2 := append(append(protoVarint(2, 500), protoVarint(3, 150)...), protoVarint(5, 900)...)
+	chat1 := append(append(protoBytes(4, usage1), protoBytes(9, timeWrap)...), protoBytes(19, []byte("gemini-4-neon"))...)
+	chat2 := append(append(protoBytes(4, usage2), protoBytes(9, timeWrap)...), protoBytes(19, []byte("gemini-4-neon"))...)
+	gen1 := append(protoBytes(1, chat1), protoBytes(4, []byte("exec-shared"))...)
+	gen2 := append(protoBytes(1, chat2), protoBytes(4, []byte("exec-shared"))...)
+
+	if _, err := db.Exec(`INSERT INTO trajectory_metadata_blob (id, data) VALUES (1, ?)`, trajBlob); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO gen_metadata (idx, data, size) VALUES (0, ?, ?), (1, ?, ?)`, gen1, len(gen1), gen2, len(gen2)); err != nil {
+		t.Fatal(err)
+	}
+	_ = db.Close()
+
+	// Ensure no WAL/SHM sidecars exist (cleanly closed WAL DB).
+	_ = os.Remove(dbPath + "-wal")
+	_ = os.Remove(dbPath + "-shm")
+
+	got := antigravitySessions(home, time.UTC)
+	if len(got) != 1 {
+		t.Fatalf("got %d sessions: %+v", len(got), got)
+	}
+	want := []inventory.TokenUsage{{Day: "2026-11-21", Model: "gemini-4-neon", Input: 1500, CacheRead: 900, Output: 350}}
+	if got[0].Agent != "antigravity" || got[0].ID != "acp-session" || got[0].Dir != "/Users/dev/acp-proj" ||
+		!reflect.DeepEqual(got[0].Usage, want) {
+		t.Errorf("antigravity acp = %+v, want %+v", got[0], want)
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
-const usageCacheVersion = 1
+const usageCacheVersion = 2
 
 // cachedDB is the sessions parsed from a SQLite database while both the
 // main file and its -wal sidecar stay unchanged.
