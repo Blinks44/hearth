@@ -1,0 +1,67 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Hearth
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to report a bug! Please make sure not to include
+        secrets, tokens, private keys, or personal paths in logs or screenshots.
+        Hearth's built-in **Copy report** button (on the Overview page) automatically redacts secrets.
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows (x64)
+        - Windows (ARM64)
+        - Linux (x64)
+        - Linux (ARM64)
+    validations:
+      required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: OS Version & Desktop / Shell
+      placeholder: "e.g., macOS 15.6 / zsh, Windows 11 24H2 / PowerShell 7, Ubuntu 24.04 GNOME / bash"
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: Hearth Version
+      placeholder: "e.g., 1.0.0 (from Settings -> About)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open Hearth and go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostic Report or Operation Log (optional)
+      description: Paste output from Overview -> Copy report or relevant lines from operations.log (redact any private hostnames/paths).
+      render: text

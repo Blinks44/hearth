@@ -1,6 +1,5 @@
 // Package sources tells where an installation came from by its path: which
-// version manager, package manager or installer put it there. Rules follow
-// docs/research/detection.md, section 3.
+// version manager, package manager, or installer put it there.
 package sources
 
 import (
