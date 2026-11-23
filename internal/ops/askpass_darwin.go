@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
 )
+
+// askTimeout is how long the password dialog waits for the user.
+const askTimeout = 5 * time.Minute
 
 // askScript asks for the password in macOS's own dialog, saying why, the
 // first argument, and returns what the user typed.

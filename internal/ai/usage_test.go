@@ -109,9 +109,14 @@ func TestSessions(t *testing.T) {
 	if want := 2*fi.Size() + 5; claude.Size != want {
 		t.Errorf("size = %d, want %d", claude.Size, want)
 	}
-	// The subagent's tokens are the session's.
-	if u := claude.Usage[0]; u.Model != "claude-opus-5-5" || u.Output != 2*132 {
-		t.Errorf("usage[0] = %+v", u)
+	// The subagent's tokens are the session's (sum across days so the check
+	// does not depend on the test runner's local timezone).
+	outputs := map[string]int64{}
+	for _, u := range claude.Usage {
+		outputs[u.Model] += u.Output
+	}
+	if outputs["claude-opus-5-5"] != 2*(132+40) || outputs["claude-haiku-5-5"] != 2*8 {
+		t.Errorf("outputs = %+v (usage = %+v)", outputs, claude.Usage)
 	}
 	// Codex's folder of CODEX_HOME, both its sessions and archived ones;
 	// the home's .codex is not read.
