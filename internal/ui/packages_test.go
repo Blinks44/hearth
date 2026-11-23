@@ -169,14 +169,32 @@ func TestPackageReasons(t *testing.T) {
 	a.router.Push("/system/packages")
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Installed by you", "installed by you", "dependency · needed by 1 package", "dependency · nothing needs it any more")
+	hasTexts(t, tt, "Installed by you", "installed by you", "needed by node", "dependency · nothing needs it any more")
 	if err := tt.Click("Dependencies"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if tt.HasText("node") || !tt.HasText("icu4c") {
+	if slices.Contains(tt.Texts(), "node") || !tt.HasText("icu4c") {
 		t.Errorf("dependencies tab: %q", tt.Texts())
 	}
+}
+
+func TestPackageDependentNamesTruncation(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
+		{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", ReasonsKnown: true, Packages: []inventory.SystemPackage{
+			{Name: "app-b", Kind: "formula", Dependencies: []string{"libx"}},
+			{Name: "app-a", Kind: "formula", Dependencies: []string{"libx"}},
+			{Name: "app-c", Kind: "formula", Dependencies: []string{"libx"}},
+			{Name: "dep-d", Kind: "formula", Dependency: true, Dependencies: []string{"libx"}},
+			{Name: "libx", Kind: "formula", Dependency: true},
+		}},
+	}}}}
+	a.router.Push("/system/packages")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "needed by app-a, app-b, app-c (+1)")
 }
 
 // A package's size comes from the manager or from the count, a cask's

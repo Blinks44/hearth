@@ -42,7 +42,7 @@ func TestPythonInstall(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if err := tt.Click("Install version"); err != nil {
+	if err := tt.Click("Install 3.14.0"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -136,7 +136,7 @@ func TestPHPInstall(t *testing.T) {
 	if tt.HasText("Install 8.3.17") || !tt.HasText("through brew") {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	for button, want := range map[string]string{"Install version": "install --formula php", "Install 8.2.27": "install --formula php@8.2"} {
+	for button, want := range map[string]string{"Install 8.4.4": "install --formula php", "Install 8.2.27": "install --formula php@8.2"} {
 		if err := tt.Click(button); err != nil {
 			t.Fatal(err)
 		}

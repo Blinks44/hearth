@@ -91,6 +91,7 @@ func Go(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Tool
 	vars.root = readGoEnvFile(filepath.Join(goroot, "go.env"))
 	state.Vars = map[string]string{
 		"GOPATH":      gopath,
+		"GOBIN":       vars.bin(gopath),
 		"GOMODCACHE":  vars.modcache(gopath),
 		"GOTOOLCHAIN": vars.get("GOTOOLCHAIN", "auto"),
 	}

@@ -120,8 +120,9 @@ func (a *App) listening(port string) bool {
 func (a *App) modelsView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.refreshScanButton(c, "models-refresh")
 			if a.ollama() != nil {
-				ui.PrimaryButton(c.Key("models-pull"), locales.ModelsPull()).OnClick(func() {
+				ui.PrimaryButton(c.Key("models-pull"), locales.ModelsPull()).Height(controlHeight).OnClick(func() {
 					a.modelPull, a.modelPullOpen = "", true
 				})
 			}
@@ -154,7 +155,7 @@ func (a *App) modelsView(c *ui.Context, p page) {
 						return
 					}
 					if len(apps) == 0 {
-						toolNote(c, locales.ModelsNone())
+						a.modelsEmptyCard(c)
 						return
 					}
 					filter := strings.ToLower(a.modelsFilter)
@@ -172,6 +173,40 @@ func (a *App) modelsView(c *ui.Context, p page) {
 				})
 			})
 		})
+	})
+}
+
+func (a *App) refreshScanButton(c *ui.Context, key string) {
+	t := c.Theme()
+	label := locales.PortsRefresh()
+	if a.Scanning {
+		label = locales.PortsRefreshing()
+	}
+	ui.Button(c.Key(key), "").Height(controlHeight).Label(label).
+		Disabled(a.OnScan == nil || a.Scanning).
+		OnClick(a.Scan).Children(func() {
+		spinIcon(c, "refresh-cw", 14, t.Text, a.Scanning)
+		ui.Text(c, label).FontSize(12.5).SingleLine()
+	})
+}
+
+func (a *App) modelsEmptyCard(c *ui.Context) {
+	pal := Colors(c.Theme())
+	ui.Column(c).Gap(12).Padding(18, 20).Radius(12).BorderWidth(1).BorderColor(pal.Divider).AlignItems(ui.Start).Children(func() {
+		ui.Text(c, locales.ModelsNone()).FontSize(13).TextColor(c.Theme().TextMuted)
+		var mgrs []string
+		for _, m := range a.packageManagers() {
+			mgrs = append(mgrs, m.ID)
+		}
+		if plan, ok := ops.OllamaInstallPlan(mgrs, a.detect("models")); ok {
+			ui.PrimaryButton(c.Key("models-install-ollama"), locales.ModelsInstallOllama()).Height(controlHeight).OnClick(func() {
+				a.Propose(plan)
+			})
+		} else {
+			ui.Button(c.Key("models-download-ollama"), locales.ModelsDownloadOllama()+" ↗").Height(controlHeight).OnClick(func() {
+				c.OpenURL("https://ollama.com/download")
+			})
+		}
 	})
 }
 
@@ -258,6 +293,11 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 				clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
 			})
 			ui.Text(c, formatBytes(md.Size)).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+			name := md.Name
+			iconButton(c, "copy", locales.ModelsCopyName()).OnClick(func() {
+				c.WriteClipboard(name)
+				c.Toast(locales.ModelsNameCopied())
+			})
 			askedBy := func() []string {
 				var out []string
 				for _, s := range inventory.ModelMentions(servers, md) {
@@ -286,7 +326,11 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 		})
 	}
 	if shown == 0 && m.app.Err == "" {
-		cardNote(c, locales.ModelsNoModels())
+		if strings.TrimSpace(filter) != "" && len(m.app.Models) > 0 {
+			cardNote(c, locales.NothingMatches())
+		} else {
+			cardNote(c, locales.ModelsNoModels())
+		}
 	}
 }
 
@@ -299,15 +343,27 @@ func (a *App) modelServers(c *ui.Context, apps []modelApp) {
 			if m.app.Source.Kind != inventory.KindUnknown {
 				caption = append(caption, sourceName(m.app.Source))
 			}
+			running := a.listening(m.app.Port)
 			switch {
-			case a.listening(m.app.Port):
+			case running:
 				caption = append(caption, locales.ModelsRunning())
 			case m.name == "Ollama":
 				caption = append(caption, locales.ModelsStopped())
 			default:
 				caption = append(caption, locales.ModelsServerOff())
 			}
-			listRow(c, m.name+" · localhost:"+m.app.Port, false, strings.Join(caption, " · "), func() {})
+			listRow(c, m.name+" · localhost:"+m.app.Port, false, strings.Join(caption, " · "), func() {
+				if m.name != "Ollama" {
+					return
+				}
+				action, label := ops.ServiceStart, locales.ServiceStart()
+				if running {
+					action, label = ops.ServiceStop, locales.ServiceStop()
+				}
+				if plan, ok := ops.OllamaServerPlan(action, *m.app, a.detect("databases")); ok {
+					ui.Button(c.Key("ollama-server-toggle"), label).Shrink(0).OnClick(func() { a.Propose(plan) })
+				}
+			})
 		}
 		for _, m := range apps {
 			if m.name != "Ollama" {

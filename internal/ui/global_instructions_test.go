@@ -284,6 +284,15 @@ func TestSharedInstructionsBannerAndDialog(t *testing.T) {
 	if locales.GlobalInstructionsTemplate() == locales.ProjectInstructionsTemplate() {
 		t.Fatal("global and project AGENTS.md templates must differ")
 	}
+	for _, loc := range []string{"en", "ru", "de", "es", "fr", "zh-Hans"} {
+		i18n.SetLocaleFunc(func() string { return loc })
+		tpl := locales.GlobalInstructionsTemplate()
+		if len(tpl) == 0 || len(tpl) > 32*1024 || strings.Count(tpl, "\n") > 500 || !strings.Contains(tpl, "Git") {
+			i18n.SetLocaleFunc(nil)
+			t.Fatalf("locale %s globalInstructionsTemplate invalid: len=%d lines=%d", loc, len(tpl), strings.Count(tpl, "\n"))
+		}
+	}
+	i18n.SetLocaleFunc(nil)
 	root := t.TempDir()
 	claudeFile := filepath.Join(root, ".claude", "CLAUDE.md")
 	if err := os.MkdirAll(filepath.Dir(claudeFile), 0o755); err != nil {

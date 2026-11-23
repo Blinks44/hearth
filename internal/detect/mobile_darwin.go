@@ -18,10 +18,17 @@ var (
 	simulators   = "/Library/Developer/CoreSimulator"
 )
 
+// mobileDeveloperDir returns the active developer directory xcode-select uses,
+// or "" when neither Xcode nor Command Line Tools is configured.
+func mobileDeveloperDir() string {
+	dir, _ := developerDir()
+	return dir
+}
+
 // xcodes are the Xcode apps in /Applications, by their version.plist.
 func xcodes() []inventory.XcodeApp {
 	apps, _ := filepath.Glob(filepath.Join(applications, "Xcode*.app"))
-	selected, _ := filepath.EvalSymlinks(xcodeSelectLink)
+	selected := mobileDeveloperDir()
 	var out []inventory.XcodeApp
 	for _, app := range apps {
 		plist := plistStrings(filepath.Join(app, "Contents", "version.plist"))

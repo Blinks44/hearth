@@ -201,13 +201,34 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 						}
 					})
 				})
-				if a.pathTab == 0 && a.fixable(entries, i) {
+				fixable := a.pathTab == 0 && a.fixable(entries, i)
+				removable := a.pathTab == 0 && a.BuildPlan != nil && !fixable && ops.PathRemovable(entry, a.Home)
+				firstable := a.pathTab == 0 && a.BuildPlan != nil && ops.PathFirstable(entries, i, a.Home)
+				if fixable {
 					ui.Button(c.Key("path-fix:"+strconv.Itoa(i)), locales.PathRemove()).Label(locales.PathRemoveNamed(tilde(entry.Dir, a.Home))).OnClick(func() { a.fixPath([]string{entry.Dir}) })
+				} else if removable && entry.Missing {
+					dir := entry.Dir
+					ui.Button(c.Key("path-remove:"+strconv.Itoa(i)), locales.PathRemove()).Label(locales.PathRemoveNamed(tilde(dir, a.Home))).OnClick(func() { a.removePath(dir) })
 				}
-				if a.pathTab == 0 && a.BuildPlan != nil && ops.PathFirstable(entries, i, a.Home) {
+				var sourceFile string
+				for _, src := range entry.Sources {
+					if src.Line > 0 && src.File != "" {
+						sourceFile = src.File
+						break
+					}
+				}
+				if sourceFile != "" && a.Shell != nil {
+					sf := sourceFile
+					iconButton(c.Key("path-open-src:"+strconv.Itoa(i)), "external-link", locales.PathOpenSource()).OnClick(func() { a.openFile(c, sf) })
+				}
+				if firstable || (removable && !entry.Missing) {
+					dir := entry.Dir
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
-						if m.Item(locales.PathFirst()).Chosen() {
-							a.putFirst(entry.Dir)
+						if firstable && m.Item(locales.PathFirst()).Chosen() {
+							a.putFirst(dir)
+						}
+						if removable && !entry.Missing && m.Item(locales.PathRemove()).Chosen() {
+							a.removePath(dir)
 						}
 					})
 				}
@@ -218,6 +239,16 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 			cardNote(c, locales.EnvPathNoMatches())
 		}
 	})
+}
+
+func (a *App) removePath(dir string) {
+	if a.BuildPlan == nil || a.Snapshot == nil {
+		return
+	}
+	entries := a.Snapshot.TerminalPath
+	a.BuildPlan(func(env sysenv.Env, term ops.Terminal) (ops.Plan, error) {
+		return ops.PathRemovePlan(entries, dir, env, term)
+	}, a.proposeOrSay)
 }
 
 func (a *App) pathVariables(c *ui.Context) {

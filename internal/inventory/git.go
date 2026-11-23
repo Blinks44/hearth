@@ -6,8 +6,10 @@ package inventory
 type GitState struct {
 	// ConfigFile is the user's global config, there or not; Config are
 	// the settings of it Hearth shows, in git config's order.
-	ConfigFile string
-	Config     []Setting `json:",omitempty"`
+	ConfigFile       string
+	ConfigMissing    bool      `json:",omitempty"`
+	SSHConfigMissing bool      `json:",omitempty"`
+	Config           []Setting `json:",omitempty"`
 	// Helpers are credential.helper's values, as "osxkeychain".
 	Helpers []string `json:",omitempty"`
 	// GitHub is GitHub CLI's copy in the terminal; nil when none.

@@ -288,6 +288,7 @@ func parseOpenCodeDB(path string, loc *time.Location) ([]inventory.AgentSession,
 			Agent:    "opencode",
 			ID:       sid,
 			Dir:      m.dir,
+			StoreDir: filepath.Dir(path),
 			Modified: mod,
 			Usage:    merge(us),
 		})
@@ -383,6 +384,7 @@ func opencodeLegacySessions(storageDir string, loc *time.Location) []inventory.A
 			Agent:    "opencode",
 			ID:       sid,
 			Dir:      meta[sid].dir,
+			StoreDir: storageDir,
 			Size:     size,
 			Modified: mod,
 			Usage:    merge(us),
@@ -482,14 +484,21 @@ func parseDevinDB(path string, loc *time.Location) ([]inventory.AgentSession, er
 			Model     string `json:"model"`
 			Timestamp string `json:"timestamp"`
 			Usage     *struct {
-				InputTokens      int64 `json:"input_tokens"`
-				PromptTokens     int64 `json:"prompt_tokens"`
-				OutputTokens     int64 `json:"output_tokens"`
-				CompletionTokens int64 `json:"completion_tokens"`
-				CacheRead        int64 `json:"cache_read_input_tokens"`
-				CacheReadAlt     int64 `json:"cache_read_tokens"`
-				CacheWrite       int64 `json:"cache_creation_input_tokens"`
-				CacheWriteAlt    int64 `json:"cache_write_tokens"`
+				InputTokens         int64 `json:"input_tokens"`
+				PromptTokens        int64 `json:"prompt_tokens"`
+				OutputTokens        int64 `json:"output_tokens"`
+				CompletionTokens    int64 `json:"completion_tokens"`
+				CacheRead           int64 `json:"cache_read_input_tokens"`
+				CacheReadAlt        int64 `json:"cache_read_tokens"`
+				CachedTokens        int64 `json:"cached_tokens"`
+				PromptTokensDetails *struct {
+					CachedTokens int64 `json:"cached_tokens"`
+				} `json:"prompt_tokens_details"`
+				InputTokensDetails *struct {
+					CachedTokens int64 `json:"cached_tokens"`
+				} `json:"input_tokens_details"`
+				CacheWrite    int64 `json:"cache_creation_input_tokens"`
+				CacheWriteAlt int64 `json:"cache_write_tokens"`
 			} `json:"usage"`
 		}
 		if json.Unmarshal([]byte(raw), &msg) != nil || msg.Usage == nil || msg.Model == "" {
@@ -497,7 +506,20 @@ func parseDevinDB(path string, loc *time.Location) ([]inventory.AgentSession, er
 		}
 		in := max(msg.Usage.InputTokens, msg.Usage.PromptTokens)
 		outTok := max(msg.Usage.OutputTokens, msg.Usage.CompletionTokens)
-		cr := max(msg.Usage.CacheRead, msg.Usage.CacheReadAlt)
+		crAnthropic := max(msg.Usage.CacheRead, msg.Usage.CacheReadAlt)
+		crOpenAI := msg.Usage.CachedTokens
+		if msg.Usage.PromptTokensDetails != nil {
+			crOpenAI = max(crOpenAI, msg.Usage.PromptTokensDetails.CachedTokens)
+		}
+		if msg.Usage.InputTokensDetails != nil {
+			crOpenAI = max(crOpenAI, msg.Usage.InputTokensDetails.CachedTokens)
+		}
+		cr := max(crAnthropic, crOpenAI)
+		// OpenAI-style usage reports cached tokens as a subset of prompt/input
+		// tokens, whereas Anthropic input_tokens excludes cache_read_input_tokens.
+		if cr > 0 && (crOpenAI > 0 || (msg.Usage.PromptTokens > 0 && msg.Usage.InputTokens == 0)) {
+			in = max(in-cr, 0)
+		}
 		cw := max(msg.Usage.CacheWrite, msg.Usage.CacheWriteAlt)
 		if in == 0 && outTok == 0 && cr == 0 && cw == 0 {
 			continue
@@ -558,6 +580,7 @@ func parseDevinDB(path string, loc *time.Location) ([]inventory.AgentSession, er
 			Agent:    "devin",
 			ID:       sid,
 			Dir:      m.dir,
+			StoreDir: filepath.Dir(path),
 			Modified: mod,
 			Usage:    merge(us),
 		})
@@ -719,6 +742,7 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 		Agent:    "antigravity",
 		ID:       id,
 		Dir:      dir,
+		StoreDir: filepath.Dir(path),
 		Files:    files,
 		Size:     size + walSize,
 		Modified: fileMod,

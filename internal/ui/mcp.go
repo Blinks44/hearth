@@ -91,18 +91,79 @@ func (a *App) mcpItems() []mcpItem {
 	return items
 }
 
-// mcpPageView lists the MCP servers by scope, filtered by agent, scope and
-// text, with the chosen one's details beside them.
+// mcpSelectedDecl returns the declaration index currently chosen for checking m.
+func (a *App) mcpSelectedDecl(m mcpItem) int {
+	idx := 0
+	if i := slices.IndexFunc(m.decls, func(s inventory.MCPServer) bool { return !s.Disabled }); i >= 0 {
+		idx = i
+	}
+	if a.mcpCheckDecl != nil {
+		if saved, ok := a.mcpCheckDecl[m.key()]; ok && saved >= 0 && saved < len(m.decls) {
+			idx = saved
+		}
+	}
+	return idx
+}
+
+func mcpDeclKey(m mcpItem, idx int) string {
+	s := m.decls[idx]
+	return m.key() + "\x00" + strconv.Itoa(idx) + "\x00" + s.Agent + "\x00" + s.File
+}
+
+func (a *App) startMCPCheck(m mcpItem, idx int) {
+	if a.CheckMCP == nil || idx < 0 || idx >= len(m.decls) {
+		return
+	}
+	s := m.decls[idx]
+	key := mcpDeclKey(m, idx)
+	if a.mcpChecks == nil {
+		a.mcpChecks = map[string]mcpCheck{}
+	}
+	if prev, ok := a.mcpChecks[key]; ok && prev.running {
+		return
+	}
+	a.mcpChecks[key] = mcpCheck{key: key, running: true}
+	a.CheckMCP(s, func(res ai.MCPCheck, err error) {
+		if a.mcpChecks == nil {
+			return
+		}
+		if cur, ok := a.mcpChecks[key]; ok && cur.key == key {
+			a.mcpChecks[key] = mcpCheck{key: key, res: res, err: err}
+		}
+	})
+}
+
 func (a *App) mcpPageView(c *ui.Context, p page) {
+	all := a.mcpItems()
+	var checkable []mcpItem
+	for _, m := range all {
+		if !m.builtin && !m.off() {
+			checkable = append(checkable, m)
+		}
+	}
+	anyChecking := false
+	for _, m := range checkable {
+		if ch, ok := a.mcpChecks[mcpDeclKey(m, a.mcpSelectedDecl(m))]; ok && ch.running {
+			anyChecking = true
+			break
+		}
+	}
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if a.CheckMCP != nil && len(checkable) > 0 {
+				items := slices.Clone(checkable)
+				ui.Button(c.Key("mcp-check-all"), locales.McpCheckAll()).Height(controlHeight).Disabled(anyChecking).OnClick(func() {
+					for _, m := range items {
+						a.startMCPCheck(m, a.mcpSelectedDecl(m))
+					}
+				})
+			}
 			if a.BuildPlan != nil {
-				ui.PrimaryButton(c.Key("mcp-add"), locales.McpAddButton()).OnClick(func() {
+				ui.PrimaryButton(c.Key("mcp-add"), locales.McpAddButton()).Height(controlHeight).OnClick(func() {
 					a.openAddMCPForm()
 				})
 			}
 		}})
-		all := a.mcpItems()
 		if len(all) == 0 && (a.Snapshot == nil || len(a.Snapshot.MCPErrs) == 0) {
 			a.aiEmpty(c, "plug", locales.NoServers())
 			return
@@ -123,8 +184,13 @@ func (a *App) mcpPageView(c *ui.Context, p page) {
 		var shown []mcpItem
 		for _, m := range all {
 			if !inScope(a.mcpScope, m.project) ||
-				(a.mcpAgent != "" && !slices.Contains(m.agents(), a.mcpAgent)) ||
-				(q != "" && !strings.Contains(strings.ToLower(m.name+" "+launch(m.decls[0])), q)) {
+				(a.mcpAgent != "" && !slices.Contains(m.agents(), a.mcpAgent)) {
+				continue
+			}
+			if q != "" && !strings.Contains(strings.ToLower(m.name), q) &&
+				!slices.ContainsFunc(m.decls, func(s inventory.MCPServer) bool {
+					return strings.Contains(strings.ToLower(launch(s)), q)
+				}) {
 				continue
 			}
 			shown = append(shown, m)
@@ -206,6 +272,18 @@ func (a *App) mcpList(c *ui.Context, shown []mcpItem, chosen int) {
 					ui.Text(c, first.Transport+" · "+tilde(launch(first), a.Home)).Font(FontMono).FontSize(11).
 						TextColor(pal.TextFaint).SingleLine()
 				})
+				if !m.builtin {
+					if ch, ok := a.mcpChecks[mcpDeclKey(m, a.mcpSelectedDecl(m))]; ok {
+						switch {
+						case ch.running:
+							ui.Spinner(c).Label(locales.McpChecking())
+						case ch.err == nil:
+							aiTag(c, locales.McpStatusOK(len(ch.res.Tools)), pal.SuccessSoft, pal.SuccessText)
+						default:
+							aiTag(c, locales.McpStatusFailed(), pal.WarningSoft, pal.WarningText)
+						}
+					}
+				}
 				switch {
 				case m.builtin:
 					aiTag(c, locales.HearthMCPAvailable(), pal.Info.Alpha(0.12), pal.Info)
@@ -302,11 +380,15 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			ui.Text(c, text).FontSize(12.5).TextColor(t.TextMuted)
 			ui.Row(c).AlignSelf(ui.Start).Gap(6).Padding(3, 4, 3, 8).Radius(6).AlignItems(ui.Center).MaxWidth(390).
 				BorderWidth(1).BorderColor(pal.ControlBorder).Children(func() {
-				ui.Icon(c, Icon("terminal")).Size(13, 13).Shrink(0).TextColor(t.TextMuted)
+				icon, copyLabel, copiedToast := "terminal", locales.McpCopyCommand(), locales.McpCommandCopied()
+				if first.Transport != "stdio" {
+					icon, copyLabel, copiedToast = "globe", locales.McpCopyURL(), locales.McpURLCopied()
+				}
+				ui.Icon(c, Icon(icon)).Size(13, 13).Shrink(0).TextColor(t.TextMuted)
 				clipped(c, launch(first)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Shrink(1).MinWidth(0)
-				iconButton(c, "copy", locales.CopyPath()).OnClick(func() {
+				iconButton(c, "copy", copyLabel).OnClick(func() {
 					c.WriteClipboard(launch(first))
-					c.Toast(locales.PathCopied())
+					c.Toast(copiedToast)
 				})
 			})
 		})
@@ -393,12 +475,12 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 			})
 		}
 		if a.Shell != nil && !m.builtin {
-			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Button(c.Key("mcp-open"), "").OnClick(func() { a.openFile(c, first.File) }).Children(func() {
+			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Wrap().Children(func() {
+				ui.Button(c.Key("mcp-open"), "").Shrink(0).OnClick(func() { a.openFile(c, first.File) }).Children(func() {
 					ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
 					ui.Text(c, locales.OpenFile(filepath.Base(first.File))).SingleLine()
 				})
-				ui.Button(c.Key("mcp-reveal"), "").OnClick(func() { a.Shell.ShowItemInFolder(first.File) }).Children(func() {
+				ui.Button(c.Key("mcp-reveal"), "").Shrink(0).OnClick(func() { a.Shell.ShowItemInFolder(first.File) }).Children(func() {
 					ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
 					ui.Text(c, showInFolder()).SingleLine()
 				})
@@ -530,15 +612,7 @@ func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
 	}
 	t := c.Theme()
 	pal := Colors(t)
-	idx := 0
-	if i := slices.IndexFunc(m.decls, func(s inventory.MCPServer) bool { return !s.Disabled }); i >= 0 {
-		idx = i
-	}
-	if a.mcpCheckDecl != nil {
-		if saved, ok := a.mcpCheckDecl[m.key()]; ok && saved >= 0 && saved < len(m.decls) {
-			idx = saved
-		}
-	}
+	idx := a.mcpSelectedDecl(m)
 	detailSection(c, locales.McpCheckSection())
 	if len(m.decls) > 1 {
 		agentCounts := map[string]int{}
@@ -553,31 +627,21 @@ func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
 			}
 			segs[i] = segment{label: label}
 		}
-		prev := idx
+		sel := idx
 		ui.Row(c).Padding(0, 16, 8, 16).Wrap().Children(func() {
-			segments(c, "mcp-check-decl:"+m.key(), &idx, segs)
+			segments(c, "mcp-check-decl:"+m.key(), &sel, segs).OnChange(func() {
+				if a.mcpCheckDecl == nil {
+					a.mcpCheckDecl = map[string]int{}
+				}
+				a.mcpCheckDecl[m.key()] = sel
+			})
 		})
-		if idx != prev {
-			if a.mcpCheckDecl == nil {
-				a.mcpCheckDecl = map[string]int{}
-			}
-			a.mcpCheckDecl[m.key()] = idx
-		}
 	}
 	s := m.decls[idx]
-	declKey := m.key() + "\x00" + strconv.Itoa(idx) + "\x00" + s.Agent + "\x00" + s.File
-	ch := a.mcpCheck
-	if ch.key != declKey {
-		ch = mcpCheck{}
-	}
+	declKey := mcpDeclKey(m, idx)
+	ch := a.mcpChecks[declKey]
 	check := func() {
-		key := declKey
-		a.mcpCheck = mcpCheck{key: key, running: true}
-		a.CheckMCP(s, func(res ai.MCPCheck, err error) {
-			if a.mcpCheck.key == key {
-				a.mcpCheck = mcpCheck{key: key, res: res, err: err}
-			}
-		})
+		a.startMCPCheck(m, idx)
 	}
 	// The icon stays by the first line of a long message.
 	ui.Row(c).Gap(8).Padding(0, 16, 10, 16).AlignItems(ui.Start).Children(func() {
@@ -628,7 +692,13 @@ func (a *App) mcpCheckView(c *ui.Context, m mcpItem) {
 		}
 		if more := len(ch.res.Tools) - len(tools); more > 0 {
 			ui.Row(c).Padding(4, 16, 10, 16).Children(func() {
-				ui.Button(c.Key("mcp-tools-more"), locales.McpMoreTools(more)).OnClick(func() { a.mcpCheck.allTools = true })
+				key := declKey
+				ui.Button(c.Key("mcp-tools-more"), locales.McpMoreTools(more)).OnClick(func() {
+					if cur, ok := a.mcpChecks[key]; ok {
+						cur.allTools = true
+						a.mcpChecks[key] = cur
+					}
+				})
 			})
 		} else {
 			ui.Box(c).Height(8)

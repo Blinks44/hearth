@@ -60,8 +60,9 @@ func (a *App) rust(c *ui.Context, p page) {
 					}, func() {
 						a.rustAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
-						if active >= 0 && ins[active].Rust != nil {
-							a.rustTargets(c, st, *ins[active].Rust)
+						if tc, all, ok := a.selectedRustToolchain(ins, rows, active); ok {
+							a.rustTargets(c, st, tc, all)
+							a.rustComponents(c, st, tc)
 						}
 						if active >= 0 {
 							globalsCard(c, locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
@@ -102,7 +103,7 @@ func (a *App) rustInstallHeader(c *ui.Context) {
 			}
 		}
 	}
-	installVersionButton(c, "rust", upToDate, func() { a.installRustToolchain("stable") })
+	installVersionButton(c, "rust", "stable", locales.InstallVersionVia("stable", "rustup"), upToDate, func() { a.installRustToolchain("stable") })
 }
 
 // rustVersionOlder reports whether installed version have is strictly older
@@ -133,6 +134,40 @@ func (a *App) proposeRustTarget(add bool, toolchain, target string) {
 		return
 	}
 	a.proposeOrSay(ops.RustTargetPlan(add, toolchain, target, a.detect("rust")))
+}
+
+// proposeRustComponent proposes adding or removing a rustup component on toolchain.
+func (a *App) proposeRustComponent(add bool, toolchain, component string) {
+	component = strings.TrimSpace(component)
+	if component == "" {
+		return
+	}
+	a.proposeOrSay(ops.RustComponentPlan(add, toolchain, component, a.detect("rust")))
+}
+
+// selectedRustToolchain returns the rustup toolchain selected for Targets and
+// Components plus all installed rustup toolchains, without mutating App state.
+func (a *App) selectedRustToolchain(ins []inventory.Installation, rows []int, active int) (inventory.RustToolchain, []inventory.RustToolchain, bool) {
+	var all []inventory.RustToolchain
+	for _, i := range rows {
+		if ins[i].Rust != nil {
+			all = append(all, *ins[i].Rust)
+		}
+	}
+	if len(all) == 0 {
+		return inventory.RustToolchain{}, nil, false
+	}
+	if a.rustToolchain != "" {
+		for _, tc := range all {
+			if tc.Name == a.rustToolchain {
+				return tc, all, true
+			}
+		}
+	}
+	if active >= 0 && ins[active].Rust != nil {
+		return *ins[active].Rust, all, true
+	}
+	return all[0], all, true
 }
 
 // rustHeader is Rust's logo, name and how its versions are managed, and
@@ -330,7 +365,7 @@ func (a *App) rustAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 
 // rustTargets lists the targets the toolchain tc can build for, its host
 // marked, with add/remove actions when rustup is present.
-func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.RustToolchain) {
+func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.RustToolchain, all []inventory.RustToolchain) {
 	pal := Colors(c.Theme())
 	canRustup := a.installManager(st) == "rustup"
 	ch, _, _ := strings.Cut(tc.Name, "-")
@@ -342,7 +377,34 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 	}
 	aside := func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "rustup target").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			if len(all) > 1 {
+				shortCount := map[string]int{}
+				for _, item := range all {
+					s, _, _ := strings.Cut(item.Name, "-")
+					shortCount[s]++
+				}
+				labels := make([]string, len(all))
+				values := make([]string, len(all))
+				for i, item := range all {
+					label, _, _ := strings.Cut(item.Name, "-")
+					if label == "" || shortCount[label] > 1 {
+						label = item.Name
+					}
+					labels[i] = label
+					values[i] = item.Name
+					if item.Name == tc.Name {
+						a.rustToolchainLabel = label
+					}
+				}
+				ui.Select(c.Key("rust-toolchain-select"), &a.rustToolchainLabel, labels).Width(130).Label(locales.RustSelectToolchain()).
+					OnChange(func() {
+						if i := slices.Index(labels, a.rustToolchainLabel); i >= 0 {
+							a.rustToolchain = values[i]
+						}
+					})
+			} else {
+				ui.Text(c, "rustup target").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
 			if canRustup && len(available) > 0 {
 				iconButton(c.Key("rust-target-menu"), "plus", locales.RustTargetAdd()).Menu(func(m *ui.Menu) {
 					for _, target := range available {
@@ -392,6 +454,37 @@ func (a *App) rustTargets(c *ui.Context, st inventory.ToolState, tc inventory.Ru
 				}
 				ui.Button(c.Key("rust-target-add"), locales.RustTargetAdd()).Label(label).
 					Disabled(!ops.ValidRustupIdent(v) || slices.Contains(tc.Targets, v)).Shrink(0).OnClick(add)
+			})
+		}
+	})
+}
+
+var commonRustComponents = []string{"clippy", "rustfmt", "rust-src", "rust-analyzer"}
+
+// rustComponents lists common rustup components (clippy, rustfmt, rust-src,
+// rust-analyzer) for tc with install/remove actions when rustup is present.
+func (a *App) rustComponents(c *ui.Context, st inventory.ToolState, tc inventory.RustToolchain) {
+	canRustup := a.installManager(st) == "rustup"
+	ch, _, _ := strings.Cut(tc.Name, "-")
+	listCard(c, locales.RustComponents(ch), "rustup component", func() {
+		for _, comp := range commonRustComponents {
+			installed := slices.Contains(tc.Components, comp)
+			caption := ""
+			if installed {
+				caption = locales.NoteInstalled()
+			}
+			name := comp
+			listRow(c, name, true, caption, func() {
+				if !canRustup {
+					return
+				}
+				if installed {
+					iconButton(c.Key("remove-comp:"+tc.Name+":"+name), "trash-2", locales.RustComponentRemove(name)).
+						OnClick(func() { a.proposeRustComponent(false, tc.Name, name) })
+				} else {
+					iconButton(c.Key("install-comp:"+tc.Name+":"+name), "download", locales.RustComponentInstall(name)).
+						OnClick(func() { a.proposeRustComponent(true, tc.Name, name) })
+				}
 			})
 		}
 	})

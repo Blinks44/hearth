@@ -59,7 +59,8 @@ func (a *App) dotnet(c *ui.Context, p page) {
 						}
 					}, func() {
 						a.dotnetAvailable(c, st)
-						dotnetEnvironment(c, st)
+						a.managerCard(c, st, listed(st.Installations), inventory.TerminalCopy(st.Installations), nil)
+						a.dotnetEnvironment(c, st)
 						if i := inventory.TerminalCopy(st.Installations); i >= 0 {
 							globalsCard(c, locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
 						}
@@ -67,10 +68,10 @@ func (a *App) dotnet(c *ui.Context, p page) {
 				case 1:
 					a.dotnetAvailable(c, st)
 				case 2:
-					a.dotnetSelection(c, st)
+					a.toolProjectsTab(c, "dotnet", st, projs)
 				case 3:
 					pathCard(c, "dotnet", st.Installations, inventory.TerminalCopy(st.Installations), a.Home)
-					dotnetEnvironment(c, st)
+					a.dotnetEnvironment(c, st)
 				}
 			})
 		})
@@ -154,17 +155,23 @@ func (a *App) dotnetSelection(c *ui.Context, st inventory.ToolState) {
 	})
 }
 
-func dotnetEnvironment(c *ui.Context, st inventory.ToolState) {
+func (a *App) dotnetEnvironment(c *ui.Context, st inventory.ToolState) {
 	listCard(c, locales.DotnetEnvironment(), "", func() {
 		for _, key := range []string{"DOTNET_ROOT", "DOTNET_ROOT_ARM64", "DOTNET_ROOT_X64", "DOTNET_ROOT_X86"} {
-			value := st.Vars[key]
-			if key != "DOTNET_ROOT" && value == "" {
+			raw := st.Vars[key]
+			if key != "DOTNET_ROOT" && raw == "" {
 				continue
 			}
+			value := tilde(raw, a.Home)
 			if value == "" {
 				value = locales.DotnetRootDefault()
 			}
-			listRow(c, key, true, value, func() {})
+			k, p := key, raw
+			listRow(c, k, true, value, func() {
+				if p != "" {
+					a.pathActions(c, "dotnet-"+k, p)
+				}
+			})
 		}
 		value := st.Vars["DOTNET_CLI_TELEMETRY_OPTOUT"]
 		caption := "DOTNET_CLI_TELEMETRY_OPTOUT=" + value

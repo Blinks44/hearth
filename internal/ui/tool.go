@@ -27,6 +27,12 @@ func (a *App) toolState(id string) (inventory.ToolState, bool) {
 // toolEmpty is a tool page's body when there is no copy to show: the scan
 // is under way, failed, or found none.
 func (a *App) toolEmpty(c *ui.Context, id, name string) {
+	a.toolEmptyWith(c, id, name, nil)
+}
+
+// toolEmptyWith is toolEmpty with an optional extra action button rendered
+// below the empty-state message.
+func (a *App) toolEmptyWith(c *ui.Context, id, name string, action func()) {
 	text := locales.NotChecked()
 	if a.Scanning {
 		text = locales.Checking()
@@ -47,6 +53,9 @@ func (a *App) toolEmpty(c *ui.Context, id, name string) {
 			install = id
 		}
 		a.installPrimary(c, install)
+		if action != nil {
+			action()
+		}
 	})
 }
 
@@ -391,7 +400,16 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 				})
 			}
 			if m.ConfigPath != "" {
-				listRow(c, locales.ManagerGlobalConfig(), false, tilde(m.ConfigPath, a.Home), func() {})
+				cfgPath := m.ConfigPath
+				listRow(c, locales.ManagerGlobalConfig(), false, tilde(cfgPath, a.Home), func() {
+					ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() {
+						if a.Shell != nil {
+							iconButton(c.Key("mgr-open:"+m.Name), "external-link", locales.OpenFile(filepath.Base(cfgPath))).
+								OnClick(func() { a.openFile(c, cfgPath) })
+						}
+						a.pathActions(c, "mgr-cfg:"+m.Name, cfgPath)
+					})
+				})
 			}
 			for _, setting := range managerSettings(m) {
 				listRow(c, setting.title, false, setting.caption, func() { stateText(c, setting.on) })
@@ -499,6 +517,9 @@ func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap boo
 				n.Wrap()
 			} else {
 				n.SingleLine()
+				if name != "" {
+					n.Tooltip(name)
+				}
 			}
 			if mono {
 				n.Font(FontMono)
@@ -508,7 +529,7 @@ func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap boo
 				if wrap {
 					e.Wrap()
 				} else {
-					e.SingleLine()
+					e.SingleLine().Tooltip(caption)
 				}
 			}
 		})

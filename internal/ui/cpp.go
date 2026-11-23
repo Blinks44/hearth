@@ -10,6 +10,7 @@ import (
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -23,15 +24,25 @@ var cppCards = []string{"make", "pkg-config", "ccache"}
 // terminal finds cc, the OS's toolset, ccache and the build variables.
 func (a *App) cppView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			if plan, ok := a.compilerPlan(); ok {
-				ui.PrimaryButton(c.Key("compiler-install"), plan.Title).OnClick(func() { a.Propose(plan) })
-			}
-		}})
 		st, _ := a.Snapshot.Tool("cpp")
 		s := st.Cpp
-		if st.Err != "" || s == nil || len(s.Tools) == 0 && s.Base == nil && len(listed(st.Installations)) == 0 {
-			a.toolEmpty(c, "cpp", "C/C++")
+		empty := st.Err != "" || s == nil || len(s.Tools) == 0 && s.Base == nil && len(listed(st.Installations)) == 0
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if !empty {
+				if plan, ok := a.compilerPlan(); ok {
+					ui.PrimaryButton(c.Key("compiler-install"), plan.Title).OnClick(func() { a.Propose(plan) })
+				}
+			}
+		}})
+		if empty {
+			var emptyAction func()
+			if plan, ok := a.compilerPlan(); ok {
+				p := plan
+				emptyAction = func() {
+					ui.PrimaryButton(c.Key("compiler-empty-install"), p.Title).OnClick(func() { a.Propose(p) })
+				}
+			}
+			a.toolEmptyWith(c, "cpp", "C/C++", emptyAction)
 			return
 		}
 		ins := st.Installations
@@ -198,13 +209,23 @@ func (a *App) cppPath(c *ui.Context, st inventory.ToolState, active int) {
 func (a *App) cppBaseCard(c *ui.Context, s *inventory.CppState) {
 	listCard(c, locales.CppBase(), "", func() {
 		if b := s.Base; b != nil {
-			listRow(c, strings.TrimSpace(b.Name+" "+b.Version), true, tilde(b.Path, a.Home), func() {})
+			basePath := b.Path
+			listRow(c, strings.TrimSpace(b.Name+" "+b.Version), true, tilde(basePath, a.Home), func() {
+				if basePath != "" {
+					a.pathActions(c, "cpp-base", basePath)
+				}
+			})
 		} else {
 			cardNote(c, locales.CppNoBase())
 		}
 		for _, name := range []string{"make", "pkg-config"} {
 			if in, ok := cppFirst(s, name); ok {
-				listRow(c, strings.TrimSpace(name+" "+in.Version), true, sourceName(in.Source)+" · "+tilde(in.Path, a.Home), func() {})
+				toolPath := in.Path
+				listRow(c, strings.TrimSpace(name+" "+in.Version), true, sourceName(in.Source)+" · "+tilde(toolPath, a.Home), func() {
+					if toolPath != "" {
+						a.pathActions(c, "cpp-"+name, toolPath)
+					}
+				})
 			}
 		}
 	})
@@ -234,10 +255,35 @@ func (a *App) cppCacheCard(c *ui.Context, st inventory.ToolState) {
 		}
 		if counted {
 			caption := tilde(cache.Path, a.Home)
-			if slices.ContainsFunc(a.candidates(c), func(cd cleanup.Candidate) bool { return cd.Kind == cleanup.Cache && cd.ID == "ccache" }) {
+			var ccacheCand *cleanup.Candidate
+			for _, cd := range a.candidates(c) {
+				if cd.Kind == cleanup.Cache && cd.ID == "ccache" {
+					cc := cd
+					ccacheCand = &cc
+					break
+				}
+			}
+			if ccacheCand != nil {
 				caption += " · " + locales.CppInCleanup()
 			}
-			listRow(c, locales.CppCacheSize(formatBytes(usage.Bytes)), false, caption, func() {})
+			cachePath := cache.Path
+			listRow(c, locales.CppCacheSize(formatBytes(usage.Bytes)), false, caption, func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					if ccacheCand != nil && ops.Cleans(*ccacheCand, a.Snapshot) && a.BuildPlan != nil {
+						cand := *ccacheCand
+						title := a.candidateTitle(cand)
+						ui.Button(c.Key("cpp-clean-ccache"), locales.CppCleanCache()).Shrink(0).OnClick(func() {
+							snap, target := a.Snapshot, a.dockerTarget()
+							a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+								return ops.CleanupPlan([]cleanup.Candidate{cand}, []string{title}, snap, env, target, nil)
+							}, a.proposeOrSay)
+						})
+					}
+					if cachePath != "" {
+						a.pathActions(c, "cpp-ccache", cachePath)
+					}
+				})
+			})
 		} else {
 			cardNote(c, locales.CppNoCache())
 		}

@@ -25,6 +25,20 @@ type SkillInstall struct {
 	Path  string
 	Skill skillcatalog.Skill
 	Link  string
+	Links []string
+}
+
+func (in SkillInstall) allLinks() []string {
+	var out []string
+	if in.Link != "" {
+		out = append(out, in.Link)
+	}
+	for _, l := range in.Links {
+		if l != "" && !slices.Contains(out, l) {
+			out = append(out, l)
+		}
+	}
+	return out
 }
 
 // SkillInstallPlan reads the user destination without creating it.
@@ -89,6 +103,92 @@ func SkillInstallPlanFor(sk skillcatalog.Skill, id, project string, env sysenv.E
 			return "", err
 		}
 		return locales.SkillCheckLinked(sk.Name, names(id)), nil
+	}
+	return p, nil
+}
+
+// SkillInstallAllPlanFor installs sk into common storage and links every unique
+// agent skills directory for ids in a single confirmed plan.
+func SkillInstallAllPlanFor(sk skillcatalog.Skill, ids []string, project string, env sysenv.Env, names func(string) string) (Plan, error) {
+	if err := sk.Validate(); err != nil {
+		return Plan{}, fmt.Errorf("prepare skill: %w", err)
+	}
+	dest := filepath.Join(ai.SharedSkillsDir(env, project), sk.Dir)
+	if !filepath.IsAbs(dest) {
+		return Plan{}, errors.New(locales.SkillCatalogNoAgent())
+	}
+	if _, err := os.Lstat(dest); !errors.Is(err, os.ErrNotExist) {
+		return Plan{}, errors.New(locales.SkillLinkTaken(dest))
+	}
+	var links []string
+	var linkNotes []string
+	var titles []string
+	matched := 0
+	for _, id := range ids {
+		if id == "" || id == "aider" {
+			continue
+		}
+		dir, _ := ai.SkillsDir(id, env, project)
+		if dir == "" || !filepath.IsAbs(dir) {
+			continue
+		}
+		matched++
+		if t := names(id); !slices.Contains(titles, t) {
+			titles = append(titles, t)
+		}
+		link := filepath.Join(dir, sk.Dir)
+		if link == dest || slices.Contains(links, link) {
+			continue
+		}
+		if _, err := os.Lstat(link); !errors.Is(err, os.ErrNotExist) {
+			return Plan{}, errors.New(locales.SkillLinkTaken(link))
+		}
+		links = append(links, link)
+		linkNotes = append(linkNotes, link+" → "+dest)
+	}
+	if matched == 0 {
+		return Plan{}, errors.New(locales.SkillCatalogNoAgent())
+	}
+	sk.Files = slices.Clone(sk.Files)
+	var files []string
+	for i := range sk.Files {
+		sk.Files[i].Data = bytes.Clone(sk.Files[i].Data)
+		files = append(files, sk.Files[i].Path)
+	}
+	p := Plan{
+		Title:   locales.SkillInstallAllTitle(sk.Name),
+		Why:     locales.SkillInstallWhy(),
+		Action:  locales.SkillCatalogInstall(),
+		Steps:   []Step{{Skill: &SkillInstall{Path: dest, Skill: sk, Links: links}}},
+		Changes: append([]string{dest}, linkNotes...),
+	}
+	p.Notes = []Note{
+		{Title: locales.SkillInstallSource(), Text: sk.Repository + " · " + sk.Commit, URL: sk.URL()},
+		{Title: locales.FilesSection(), Text: strings.Join(files, "\n")},
+		{Title: locales.SkillInstallReview(), Text: locales.SkillInstallReviewText()},
+	}
+	p.Notes = append(p.Notes, skillStorageNotes(sk.Name, dest, linkNotes)...)
+	if len(titles) > 0 {
+		p.Notes = append(p.Notes, Note{Title: locales.AvailableToAgents(), Text: strings.Join(titles, ", ")})
+	}
+	p.Verify = func(ctx context.Context) (string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		root, err := os.OpenRoot(dest)
+		if err != nil {
+			return "", fmt.Errorf("open installed skill: %w", err)
+		}
+		defer func() { _ = root.Close() }()
+		if err = checkSkillFiles(root, sk.Files); err != nil {
+			return "", err
+		}
+		for _, link := range links {
+			if !sameSkillPath(link, dest) {
+				return "", errors.New(locales.SkillCheckNotLinked(sk.Name, link))
+			}
+		}
+		return locales.SkillCheckLinkedAll(sk.Name), nil
 	}
 	return p, nil
 }
@@ -209,23 +309,30 @@ func applySkillInstall(ctx context.Context, in SkillInstall) (func() error, erro
 		}
 		return nil, fmt.Errorf("install skill: %w", errors.Join(err, cleanErr))
 	}
-	if in.Link != "" {
-		linkErr := os.MkdirAll(filepath.Dir(in.Link), 0755)
+	links := in.allLinks()
+	var madeLinks []string
+	for _, link := range links {
+		linkErr := os.MkdirAll(filepath.Dir(link), 0755)
 		if linkErr == nil {
-			result, err := (run.Exec{}).Run(ctx, run.Cmd{Args: linkCommand(in.Path, in.Link), Timeout: time.Minute})
+			result, err := (run.Exec{}).Run(ctx, run.Cmd{Args: linkCommand(in.Path, link), Timeout: time.Minute})
 			linkErr = err
 			if linkErr == nil && result.ExitCode != 0 {
 				linkErr = fmt.Errorf("create skill link: exit %d: %s", result.ExitCode, result.Stderr)
 			}
 		}
 		if linkErr != nil {
+			var rollbackErr error
+			for _, made := range slices.Backward(madeLinks) {
+				rollbackErr = errors.Join(rollbackErr, os.Remove(made))
+			}
 			cleanErr := cleanup(root)
 			if cleanErr == nil {
 				_ = root.Close()
 				cleanErr = base.Remove(name)
 			}
-			return nil, errors.Join(linkErr, cleanErr)
+			return nil, errors.Join(linkErr, rollbackErr, cleanErr)
 		}
+		madeLinks = append(madeLinks, link)
 	}
 	undo := func() error {
 		root, err := os.OpenRoot(in.Path)
@@ -233,8 +340,10 @@ func applySkillInstall(ctx context.Context, in SkillInstall) (func() error, erro
 			return err
 		}
 		defer func() { _ = root.Close() }()
-		if in.Link != "" && !sameSkillPath(in.Link, in.Path) {
-			return ErrChanged
+		for _, link := range links {
+			if !sameSkillPath(link, in.Path) {
+				return ErrChanged
+			}
 		}
 		if err = cleanup(root); err != nil {
 			return err
@@ -242,8 +351,8 @@ func applySkillInstall(ctx context.Context, in SkillInstall) (func() error, erro
 		if err = root.Close(); err != nil {
 			return err
 		}
-		if in.Link != "" {
-			if e := os.Remove(in.Link); e != nil {
+		for _, link := range slices.Backward(links) {
+			if e := os.Remove(link); e != nil {
 				return e
 			}
 		}

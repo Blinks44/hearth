@@ -162,20 +162,26 @@ func (a *App) goRecommended() string {
 	return a.GoVersions.Releases[0]
 }
 
-// goEnvironment shows GOPATH and GOMODCACHE as go env reports them.
+// goEnvironment shows GOPATH, GOBIN, GOMODCACHE and GOTOOLCHAIN as go env reports them.
 func (a *App) goEnvironment(c *ui.Context, st inventory.ToolState) {
 	listCard(c, locales.GoEnvironment(), "go env", func() {
-		for _, name := range []string{"GOPATH", "GOMODCACHE"} {
+		for _, name := range []string{"GOPATH", "GOBIN", "GOMODCACHE"} {
 			path := st.Vars[name]
 			caption := locales.MobileUnset()
 			if path != "" {
 				caption = tilde(path, a.Home)
 			}
-			listRow(c, name, true, caption, func() {
-				if path != "" {
-					a.pathActions(c, "go-"+name, path)
+			n, p := name, path
+			listRow(c, n, true, caption, func() {
+				if p != "" {
+					a.pathActions(c, "go-"+n, p)
 				}
 			})
 		}
+		toolchain := st.Vars["GOTOOLCHAIN"]
+		if toolchain == "" {
+			toolchain = locales.MobileUnset()
+		}
+		listRow(c, "GOTOOLCHAIN", true, toolchain, func() {})
 	})
 }

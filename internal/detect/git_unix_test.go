@@ -81,3 +81,19 @@ func TestGitStubOnMacOnly(t *testing.T) {
 		t.Error("brew's git is a stub")
 	}
 }
+
+func TestGitMissingConfigs(t *testing.T) {
+	dir := root(t)
+	bin := filepath.Join(dir, "bin")
+	git := fakeExe(t, filepath.Join(bin, "git"))
+	r := &run.Fake{}
+	r.Stdout("git version 2.47.1\n", git, "--version")
+	env := sysenv.Env{"HOME=" + dir, "PATH=" + bin}
+	st, err := Git(t.Context(), r, env, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.Git == nil || !st.Git.ConfigMissing || !st.Git.SSHConfigMissing {
+		t.Fatalf("expected ConfigMissing and SSHConfigMissing, got %+v", st.Git)
+	}
+}

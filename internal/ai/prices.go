@@ -100,30 +100,66 @@ var prices = map[string]price{
 	"kimi-k2-turbo":          {1.15, 8, 0.15},
 	"kimi-k2":                {0.6, 2.5, 0.15},
 	"kimi-for-coding":        {0.6, 3, 0.1},
+
+	// DeepSeek
+	"deepseek-chat":     {0.28, 0.42, 0.028},
+	"deepseek-reasoner": {0.28, 0.42, 0.028},
+	"deepseek-v3.2":     {0.28, 0.42, 0.028},
+	"deepseek-v3.1":     {0.28, 0.42, 0.028},
+	"deepseek-v3":       {0.27, 1.1, 0.07},
+	"deepseek-r1":       {0.55, 2.19, 0.14},
+
+	// Alibaba Qwen
+	"qwen3-coder-plus":           {1, 5, 0.1},
+	"qwen3-coder":                {1, 5, 0.1},
+	"qwen3-coder-flash":          {0.3, 1.5, 0.03},
+	"qwen3-max":                  {1.2, 6, 0.24},
+	"qwen-max":                   {1.6, 6.4, 0.32},
+	"qwen-plus":                  {0.4, 1.2, 0.08},
+	"qwen-turbo":                 {0.05, 0.2, 0.01},
+	"qwen-flash":                 {0.05, 0.4, 0.01},
+	"qwen2.5-coder-32b-instruct": {0.3, 0.9, 0.03},
+	"qwen-2.5-coder-32b":         {0.3, 0.9, 0.03},
+	"qwq-32b":                    {0.4, 1.2, 0.04},
+
+	// Zhipu / Z.ai GLM
+	"glm-5":       {1, 3.2, 0.2},
+	"glm-4.7":     {0.6, 2.2, 0.11},
+	"glm-4.6":     {0.6, 2.2, 0.11},
+	"glm-4.5":     {0.6, 2.2, 0.11},
+	"glm-4.5-air": {0.2, 1.1, 0.03},
+	"glm-4-plus":  {0.7, 0.7, 0.14},
 }
 
-// dated suffixes that model IDs may end in:
+// dated and cloud-provider patterns that model IDs may contain:
 //   - "claude-haiku-4-5-20251001"
 //   - "gpt-5-2025-08-07"
 //   - "gemini-2.5-pro-preview-06-05" / "gemini-3-pro-preview"
 //   - "grok-4-0709"
+//   - "us.anthropic.claude-sonnet-4-5-20250929-v1:0" (AWS Bedrock)
+//   - "publishers/anthropic/models/claude-3-5-sonnet-v2@20241022" (Vertex AI)
 var (
-	datedCompact = regexp.MustCompile(`-\d{8}$`)
-	datedISO     = regexp.MustCompile(`-\d{4}-\d{2}-\d{2}$`)
-	datedShort   = regexp.MustCompile(`-\d{4}$`)
-	datedPreview = regexp.MustCompile(`-preview(?:-\d{2}-\d{2})?$`)
-	effortSuffix = regexp.MustCompile(`-(?:low|medium|high|xhigh)$`)
+	bedrockPrefix  = regexp.MustCompile(`^(?:(?:us|eu|ap|apac|global|au|ca|jp)\.)?(?:anthropic|openai|google|deepseek|qwen|xai|moonshot|zhipu|zai)\.`)
+	bedrockVersion = regexp.MustCompile(`-v\d+$`)
+	datedCompact   = regexp.MustCompile(`-\d{8}$`)
+	datedISO       = regexp.MustCompile(`-\d{4}-\d{2}-\d{2}$`)
+	datedShort     = regexp.MustCompile(`-\d{4}$`)
+	datedPreview   = regexp.MustCompile(`-preview(?:-\d{2}-\d{2})?$`)
+	effortSuffix   = regexp.MustCompile(`-(?:low|medium|high|xhigh)$`)
 )
 
 // lookupPrice resolves a raw model ID to its API price, normalizing provider
-// prefixes, context-window brackets, variant suffixes, and release dates.
+// prefixes (including AWS Bedrock and Vertex AI), context-window brackets,
+// variant suffixes, and release dates.
 func lookupPrice(raw string) (price, bool) {
 	model := strings.TrimSpace(strings.ToLower(raw))
 	model, _, _ = strings.Cut(model, "[") // "claude-opus-5-5[1m]"
-	model, _, _ = strings.Cut(model, ":") // "claude-sonnet-4-6:thinking"
+	model, _, _ = strings.Cut(model, ":") // "claude-sonnet-4-6:thinking", "...-v1:0"
 	if i := strings.LastIndex(model, "/"); i >= 0 {
-		model = model[i+1:] // "anthropic/claude-sonnet-4-6", "models/gemini-2.5-pro"
+		model = model[i+1:] // "anthropic/claude-sonnet-4-6", "models/gemini-2.5-pro", "publishers/anthropic/models/..."
 	}
+	model, _, _ = strings.Cut(model, "@") // Vertex AI: "claude-sonnet-4-5@20250929", "claude-3-5-sonnet-v2@20241022"
+	model = bedrockPrefix.ReplaceAllString(model, "")
 	if model == "" {
 		return price{}, false
 	}
@@ -138,15 +174,25 @@ func lookupPrice(raw string) (price, bool) {
 		}
 		return price{}, false
 	}
+	stripDates := func(id string) string {
+		s := datedCompact.ReplaceAllString(id, "")
+		s = datedISO.ReplaceAllString(s, "")
+		s = datedPreview.ReplaceAllString(s, "")
+		return strings.TrimSuffix(s, "-latest")
+	}
 	if p, ok := try(model); ok {
 		return p, true
 	}
-	stripped := datedCompact.ReplaceAllString(model, "")
-	stripped = datedISO.ReplaceAllString(stripped, "")
-	stripped = datedPreview.ReplaceAllString(stripped, "")
-	stripped = strings.TrimSuffix(stripped, "-latest")
+	stripped := stripDates(model)
 	if p, ok := try(stripped); ok {
 		return p, true
+	}
+	if v := bedrockVersion.ReplaceAllString(stripped, ""); v != stripped {
+		v = stripDates(v)
+		if p, ok := try(v); ok {
+			return p, true
+		}
+		stripped = v
 	}
 	if s := datedShort.ReplaceAllString(stripped, ""); s != stripped {
 		if p, ok := try(s); ok {

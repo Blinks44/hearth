@@ -1247,11 +1247,13 @@ func folderTile(c *ui.Context, size float32) {
 type segment struct{ label, count string }
 
 // segments are tabs switching *tab, as the Node.js page's.
-func segments(c *ui.Context, key string, tab *int, segs []segment) {
+func segments(c *ui.Context, key string, tab *int, segs []segment) ui.Element {
 	t := c.Theme()
 	pal := Colors(t)
+	var track ui.Element
 	ui.Row(c).Children(func() {
 		seg := ui.SegmentedBase(c.Key(key), tab, len(segs))
+		track = seg.Track
 		seg.Track.Height(controlHeight).Gap(2).Padding(2).Radius(8).Background(pal.Muted).Children(func() {
 			for i, s := range segs {
 				e := seg.Segment(i).Height(controlHeight-4).Gap(5).Padding(0, 12).Radius(6).AlignItems(ui.Center).Label(s.label)
@@ -1269,4 +1271,5 @@ func segments(c *ui.Context, key string, tab *int, segs []segment) {
 			}
 		})
 	})
+	return track
 }

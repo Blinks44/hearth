@@ -2329,6 +2329,22 @@
   "@showInFiles": {
     "description": "Versions table action on Linux: reveal the file in the file manager."
   },
+  "openShort": "Open",
+  "@openShort": {
+    "description": "Compact detail footer button label for opening a file in the editor."
+  },
+  "showInFinderShort": "Finder",
+  "@showInFinderShort": {
+    "description": "Compact detail footer button label on macOS for revealing a folder in Finder."
+  },
+  "showInExplorerShort": "Explorer",
+  "@showInExplorerShort": {
+    "description": "Compact detail footer button label on Windows for revealing a folder in File Explorer."
+  },
+  "showInFilesShort": "Folder",
+  "@showInFilesShort": {
+    "description": "Compact detail footer button label on Linux for revealing a folder in the file manager."
+  },
   "moreActions": "More",
   "@moreActions": {
     "description": "Accessible name of a button that opens a menu of more actions."
@@ -10301,6 +10317,26 @@
       }
     }
   },
+  "usageTokenInput": "Input",
+  "@usageTokenInput": {
+    "description": "Usage: label for non-cached input tokens in the token breakdown strip."
+  },
+  "usageTokenOutput": "Output",
+  "@usageTokenOutput": {
+    "description": "Usage: label for output tokens in the token breakdown strip."
+  },
+  "usageTokenCacheRead": "Cache read",
+  "@usageTokenCacheRead": {
+    "description": "Usage: label for cache read tokens in the token breakdown strip."
+  },
+  "usageTokenCacheWrite": "Cache write",
+  "@usageTokenCacheWrite": {
+    "description": "Usage: label for cache write tokens in the token breakdown strip."
+  },
+  "usageClearModel": "Clear model filter",
+  "@usageClearModel": {
+    "description": "Usage: tooltip and accessibility label for clearing the active model filter chip."
+  },
   "mcpCheckSection": "Check",
   "@mcpCheckSection": {
     "description": "MCP details section: checking the server."
@@ -11101,7 +11137,7 @@
   "@globalInstructionsPlan": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
-  "globalInstructionsTemplate": "# Global instructions\n\n## Communication\n- Be direct and concise; explain trade-offs and assumptions clearly.\n- Ask before making irreversible changes or changing external APIs.\n\n## Engineering habits\n- Prefer simple, idiomatic solutions over premature abstractions.\n- Run existing tests and linters after edits and report what was actually verified.\n\n## Git and safety\n- Never commit secrets, credentials, or unrelated local files.\n- Do not run destructive git commands or push changes without explicit confirmation.\n",
+  "globalInstructionsTemplate": "# Global instructions\n\nThese rules apply across all projects. Project instructions (`AGENTS.md`, `CLAUDE.md`) may refine them but do not cancel safety rules.\n\n## Language\n- Communicate with me in English: answers, questions, summaries, and plans.\n- Write code, identifiers, comments, commit messages, and repository docs in the language used by the project.\n\n## Style\n- Write plainly and to the point, without filler, empty praise, or mechanical restatements of my prompt.\n- Use headings and lists only when they genuinely make the answer easier to read.\n- Do not agree blindly: if my proposal has a mistake, risk, or better alternative, say so directly and briefly explain why.\n\n## Workflow & reporting\n- Answer short questions and small edits directly, without preamble.\n- For multi-step tasks, state a brief 2-5 line plan before editing code.\n- Give short status updates when changing stages or hitting a blocker; do not narrate every file read or command.\n- Finish with a compact summary: what changed and which files were touched, what checks or tests actually ran and their results (or say none ran), and any remaining risks, assumptions, or open questions.\n\n## Learning & explanations\nWhen I ask you to explain or teach a topic, skip brevity and explain thoroughly:\n- Start with why it exists and what problem it solves, then how it works.\n- Go from simple to complex, define terms on first use, and use concrete examples from the current project when possible.\n- Explain trade-offs, alternatives, and common mistakes, and finish with a brief takeaway.\n\n## Engineering approach\n- Pick the simplest solution that solves the task. Avoid over-engineering, premature abstractions, and unrequested features.\n- Prefer an existing project dependency or proven library over custom code.\n- Proceed directly when an assumption is easy to reverse, and mention it in the summary. Pause and present options before irreversible decisions (architecture, public APIs, data deletion, unclear goals).\n- Do not refactor unrelated code or overwrite uncommitted user changes.\n- Never claim code works until verified by running it. Fix the root cause of failing tests or linters instead of disabling checks.\n\n## Git\n- Do not add AI attribution lines (`Co-Authored-By`, \"Generated with...\", etc.) to commits or PR descriptions.\n- Do not create new branches, commit, or push unless explicitly asked.\n- Never commit secrets, credentials, or unrelated local files.\n- Never run destructive commands (`git reset --hard`, `git checkout --`, force delete, etc.) without explicit confirmation.\n",
   "@globalInstructionsTemplate": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
   },
@@ -16297,5 +16333,288 @@
       }
     }
   },
-  "setupVersionLatest": "latest"
+  "setupVersionLatest": "latest",
+  "skillConnectAll": "Connect to all agents",
+  "skillLinkAllTitle": "Connect {skill} to all agents",
+  "@skillLinkAllTitle": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillNothingToLink": "All available agents already see this skill.",
+  "skillCheckLinkedAll": "{skill} is connected to all selected agents",
+  "@skillCheckLinkedAll": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillInstallAllTitle": "Install {skill} for all agents",
+  "@skillInstallAllTitle": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillKeepAndMerge": "Keep this copy and merge…",
+  "skillMergeKeepTitle": "Keep one copy of {skill} and merge",
+  "@skillMergeKeepTitle": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillMergeKeepWhy": "Keep {keep} as the single copy. Other copies move into {backups}, and links take their place so every agent keeps finding the skill.",
+  "@skillMergeKeepWhy": {
+    "placeholders": {
+      "keep": {
+        "type": "String"
+      },
+      "backups": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpCopyURL": "Copy URL",
+  "mcpURLCopied": "URL copied",
+  "mcpCopyCommand": "Copy command",
+  "mcpCommandCopied": "Command copied",
+  "mcpCheckAll": "Check all",
+  "mcpStatusOK": "{count, plural, one {# tool} other {# tools}}",
+  "@mcpStatusOK": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpStatusFailed": "Failed",
+  "modelsCopyName": "Copy model name",
+  "modelsNameCopied": "Model name copied",
+  "modelsInstallOllama": "Install Ollama…",
+  "modelsDownloadOllama": "Download Ollama",
+  "ollamaServerStartTitle": "Start Ollama",
+  "ollamaServerStopTitle": "Stop Ollama",
+  "ollamaServerWhy": "Starts or stops the local Ollama server.",
+  "ollamaServerStartChange": "Start Ollama server",
+  "ollamaServerStopChange": "Stop Ollama server",
+  "ollamaServerRunning": "Ollama is listening on localhost:{port}",
+  "@ollamaServerRunning": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "ollamaServerNotRunning": "Ollama is not listening on localhost:{port}",
+  "@ollamaServerNotRunning": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "ollamaServerStopped": "Ollama stopped",
+  "ollamaServerStillRunning": "Ollama is still listening on localhost:{port}",
+  "@ollamaServerStillRunning": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "ollamaInstallTitle": "Install Ollama",
+  "ollamaInstallWhy": "Installs Ollama so Hearth can download and manage local AI models.",
+  "ollamaInstallFound": "Ollama is installed",
+  "ollamaInstallMissing": "Ollama was not found after installation",
+  "portsColPort": "Port",
+  "portsColProcess": "Process",
+  "portsColAddress": "Address",
+  "portsColAccess": "Access",
+  "portsTabNetwork": "Network",
+  "portsCopyAddress": "Copy localhost:{port}",
+  "@portsCopyAddress": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "portsAddressCopied": "Copied localhost:{port}",
+  "@portsAddressCopied": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "portsOpenBrowser": "Open in browser",
+  "installVersionVia": "Install {version} via {manager}",
+  "@installVersionVia": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponents": "Components · {toolchain}",
+  "@rustComponents": {
+    "placeholders": {
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentInstall": "Install {component}",
+  "@rustComponentInstall": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentRemove": "Remove {component}",
+  "@rustComponentRemove": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentAddTitle": "Add component {component}",
+  "@rustComponentAddTitle": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentRemoveTitle": "Remove component {component}",
+  "@rustComponentRemoveTitle": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentAddWhy": "Installs the rustup component for toolchain {toolchain}.",
+  "@rustComponentAddWhy": {
+    "placeholders": {
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentRemoveWhy": "Removes the rustup component from toolchain {toolchain}.",
+  "@rustComponentRemoveWhy": {
+    "placeholders": {
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentCheckAdded": "{component} is installed in {toolchain}",
+  "@rustComponentCheckAdded": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentCheckNotAdded": "{component} was not found in {toolchain}",
+  "@rustComponentCheckNotAdded": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentCheckRemoved": "{component} removed from {toolchain}",
+  "@rustComponentCheckRemoved": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustComponentCheckNotRemoved": "{component} is still installed in {toolchain}",
+  "@rustComponentCheckNotRemoved": {
+    "placeholders": {
+      "component": {
+        "type": "String"
+      },
+      "toolchain": {
+        "type": "String"
+      }
+    }
+  },
+  "rustSelectToolchain": "Toolchain",
+  "cppCleanCache": "Clean…",
+  "editorsCopyList": "Copy list",
+  "editorsListCopied": "Extensions list copied",
+  "editorsShowList": "Show list",
+  "editorsHideList": "Hide list",
+  "pkgNeededByNames": "needed by {names}",
+  "@pkgNeededByNames": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgNeededByMore": "needed by {names} (+{more})",
+  "@pkgNeededByMore": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "more": {
+        "type": "int"
+      }
+    }
+  },
+  "pathRemovePlanTitle": "Remove {dir} from PATH",
+  "@pathRemovePlanTitle": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathRemoveWhy": "Removes a PATH entry added by Hearth from your shell startup file.",
+  "pathRemoveWhyRegistry": "Removes the entry from the user's Path in the Windows registry.",
+  "pathRemoveCheckOk": "{dir} is no longer on PATH",
+  "@pathRemoveCheckOk": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathRemoveCheckFail": "{dir} is still on PATH",
+  "@pathRemoveCheckFail": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "pathOpenSource": "Open source file"
 }

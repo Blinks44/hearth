@@ -126,3 +126,95 @@ func TestVersionPlanVerifyRust(t *testing.T) {
 		t.Fatalf("phase = %d, err = %q", got.Phase, got.Err)
 	}
 }
+
+func TestRustComponentPlan(t *testing.T) {
+	tests := []struct {
+		name      string
+		add       bool
+		toolchain string
+		comp      string
+		wantArgv  []string
+		wantErr   bool
+	}{
+		{
+			name:      "add clippy",
+			add:       true,
+			toolchain: "stable-aarch64-apple-darwin",
+			comp:      "clippy",
+			wantArgv:  []string{"rustup", "component", "add", "--toolchain", "stable-aarch64-apple-darwin", "clippy"},
+		},
+		{
+			name:      "remove rust-analyzer",
+			add:       false,
+			toolchain: "nightly-aarch64-apple-darwin",
+			comp:      "rust-analyzer",
+			wantArgv:  []string{"rustup", "component", "remove", "--toolchain", "nightly-aarch64-apple-darwin", "rust-analyzer"},
+		},
+		{
+			name:      "reject unsafe component",
+			add:       true,
+			toolchain: "stable",
+			comp:      "clippy;id",
+			wantErr:   true,
+		},
+		{
+			name:      "reject empty toolchain",
+			add:       true,
+			toolchain: "",
+			comp:      "rustfmt",
+			wantErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := RustComponentPlan(tt.add, tt.toolchain, tt.comp, nil)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+			if len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, tt.wantArgv) {
+				t.Errorf("argv = %v, want %v", p.Steps, tt.wantArgv)
+			}
+		})
+	}
+}
+
+func TestRustComponentPlanVerify(t *testing.T) {
+	tc := "stable-aarch64-apple-darwin"
+	detectWith := func(comps []string) Detect {
+		return func(context.Context) (inventory.ToolState, error) {
+			return inventory.ToolState{
+				Tool: "rust",
+				Installations: []inventory.Installation{{
+					Tool:   "rust",
+					Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "rustup", Version: tc},
+					Rust:   &inventory.RustToolchain{Name: tc, Components: comps},
+				}},
+			}, nil
+		}
+	}
+	pAdd, err := RustComponentPlan(true, tc, "clippy", detectWith([]string{"clippy"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &run.Fake{}
+	f.Stdout("", pAdd.Steps[0].Argv...)
+	if got := Execute(t.Context(), f, pAdd, &strings.Builder{}, func(State) {}); got.Phase != Succeeded {
+		t.Fatalf("add phase = %d, err = %q", got.Phase, got.Err)
+	}
+	pRm, err := RustComponentPlan(false, tc, "clippy", detectWith(nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f2 := &run.Fake{}
+	f2.Stdout("", pRm.Steps[0].Argv...)
+	if got := Execute(t.Context(), f2, pRm, &strings.Builder{}, func(State) {}); got.Phase != Succeeded {
+		t.Fatalf("remove phase = %d, err = %q", got.Phase, got.Err)
+	}
+	pFail, _ := RustComponentPlan(true, tc, "rust-src", detectWith(nil))
+	if _, err := pFail.Verify(t.Context()); err == nil {
+		t.Error("expected verify error when component was not added")
+	}
+}

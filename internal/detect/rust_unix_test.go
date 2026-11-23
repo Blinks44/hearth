@@ -34,7 +34,7 @@ func TestRustRustupAndBrew(t *testing.T) {
 	}
 	symlink(t, brew, filepath.Join(brewBin, "rustc"))
 	writeFile(t, filepath.Join(home, ".rustup", "settings.toml"), "version = \"12\"\ndefault_toolchain = \"stable-aarch64-apple-darwin\"\n")
-	writeFile(t, filepath.Join(stable, "lib", "rustlib", "components"), "cargo-aarch64-apple-darwin\nrust-std-aarch64-apple-darwin\nrust-std-wasm32-unknown-unknown\nrustc-aarch64-apple-darwin\n")
+	writeFile(t, filepath.Join(stable, "lib", "rustlib", "components"), "cargo-aarch64-apple-darwin\nclippy-preview-aarch64-apple-darwin\nrust-analyzer-preview-aarch64-apple-darwin\nrust-src\nrust-std-aarch64-apple-darwin\nrust-std-wasm32-unknown-unknown\nrustc-aarch64-apple-darwin\nrustfmt-preview-aarch64-apple-darwin\n")
 	writeFile(t, filepath.Join(home, ".cargo", ".crates2.json"), `{"installs":{"ripgrep 14.1.1 (registry+https://github.com/rust-lang/crates.io-index)":{"bins":["rg"]}}}`)
 
 	env := sysenv.Env{"HOME=" + home, "HOMEBREW_PREFIX=" + filepath.Join(dir, "brew"), "PATH=" + cargoBin + string(os.PathListSeparator) + brewBin}
@@ -51,7 +51,7 @@ func TestRustRustupAndBrew(t *testing.T) {
 	for _, in := range got.Installations {
 		byRoot[filepath.Dir(filepath.Dir(in.RealPath))] = in
 	}
-	if in := byRoot[stable]; in.Version != "1.84.0" || !in.Default || in.Source.Version != "stable-aarch64-apple-darwin" || in.Rust == nil || in.Rust.Name != "stable-aarch64-apple-darwin" || len(in.Rust.Targets) != 2 || len(in.Packages) != 1 || in.Packages[0].Commands[0] != "rg" {
+	if in := byRoot[stable]; in.Version != "1.84.0" || !in.Default || in.Source.Version != "stable-aarch64-apple-darwin" || in.Rust == nil || in.Rust.Name != "stable-aarch64-apple-darwin" || len(in.Rust.Targets) != 2 || len(in.Rust.Components) != 4 || len(in.Packages) != 1 || in.Packages[0].Commands[0] != "rg" {
 		t.Errorf("stable %+v %+v", in, in.Rust)
 	}
 	// A pinned toolchain that cannot run still has the version its name says.

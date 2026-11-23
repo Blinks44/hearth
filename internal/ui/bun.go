@@ -41,6 +41,7 @@ func (a *App) bun(c *ui.Context, p page) {
 						pathCard(c, "bun", ins, active, a.Home)
 					}, func() {
 						a.bunAvailable(c, st, rows, active)
+						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
 							a.bunInstall(c, ins[active])
 							globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
@@ -159,18 +160,28 @@ func (a *App) bunInstall(c *ui.Context, in inventory.Installation) {
 		return
 	}
 	pal := Colors(c.Theme())
-	value := func(s string) func() {
+	value := func(key, s, rawPath, openPath string) func() {
 		return func() {
-			ui.Text(c, s).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, s).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				if openPath != "" && a.Shell != nil {
+					iconButton(c.Key("open:"+key), "external-link", locales.OpenFile(filepath.Base(openPath))).
+						OnClick(func() { a.openFile(c, openPath) })
+				}
+				if rawPath != "" {
+					a.pathActions(c, key, rawPath)
+				}
+			})
 		}
 	}
 	listCard(c, locales.InstallScriptTitle(), "bun.sh/install", func() {
-		listRow(c, locales.InstallFolder(), false, "BUN_INSTALL", value(tilde(in.Source.Root, a.Home)))
+		listRow(c, locales.InstallFolder(), false, "BUN_INSTALL", value("bun-root", tilde(in.Source.Root, a.Home), in.Source.Root, ""))
 		caption := ""
 		if in.PathFile != "" {
 			caption = locales.PathLineIn(tilde(in.PathFile, a.Home))
 		}
-		listRow(c, locales.AddedToPath(), false, caption, value(tilde(filepath.Dir(in.Path), a.Home)))
+		binDir := filepath.Dir(in.Path)
+		listRow(c, locales.AddedToPath(), false, caption, value("bun-path", tilde(binDir, a.Home), binDir, in.PathFile))
 	})
 }
 

@@ -10,6 +10,8 @@ import (
 // xcodes are none: Xcode is macOS's.
 func xcodes() []inventory.XcodeApp { return nil }
 
+func mobileDeveloperDir() string { return "" }
+
 func simRuntimes() []inventory.SimRuntime { return nil }
 
 // androidDefault is where Android Studio puts the SDK:

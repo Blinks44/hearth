@@ -6,6 +6,8 @@ package inventory
 type MobileState struct {
 	// Xcodes are the Xcode apps found, on macOS only.
 	Xcodes []XcodeApp `json:",omitempty"`
+	// DeveloperDir is the resolved xcode-select path on macOS.
+	DeveloperDir string `json:",omitempty"`
 	// Runtimes are the simulators' runtimes installed, on macOS only.
 	Runtimes []SimRuntime `json:",omitempty"`
 	// Android is the Android SDK; nil when none is found.

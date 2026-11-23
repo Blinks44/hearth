@@ -162,3 +162,56 @@ func TestSkillInstallProject(t *testing.T) {
 		t.Fatalf("project skills = %+v", found)
 	}
 }
+
+func TestSkillInstallAllPlanFor(t *testing.T) {
+	home := t.TempDir()
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home}
+	p, err := SkillInstallAllPlanFor(installSkill(), []string{"claude", "codex", "gemini"}, "", env, func(id string) string { return id })
+	if err != nil {
+		t.Fatal(err)
+	}
+	state := Execute(t.Context(), nil, p, io.Discard, func(State) {})
+	if state.Phase != Succeeded {
+		t.Fatalf("state = %+v", state)
+	}
+	found := ai.Skills(env)
+	if len(found) != 1 || found[0].Name != "example" {
+		t.Fatalf("installed skills = %+v", found)
+	}
+	if _, err := os.Lstat(filepath.Join(home, ".claude", "skills", "example")); err != nil {
+		t.Fatalf("claude link missing: %v", err)
+	}
+	for _, agent := range []string{"claude", "codex", "gemini"} {
+		seen := false
+		for _, sp := range found[0].Paths {
+			for _, a := range sp.Agents {
+				if a == agent {
+					seen = true
+				}
+			}
+		}
+		if !seen {
+			t.Fatalf("agent %s does not see installed skill: %+v", agent, found[0].Paths)
+		}
+	}
+
+	// Rollback removes all created links and canonical dir when verification fails.
+	home2 := t.TempDir()
+	env2 := sysenv.Env{"HOME=" + home2, "USERPROFILE=" + home2}
+	p2, err := SkillInstallAllPlanFor(installSkill(), []string{"claude", "codex", "gemini"}, "", env2, func(id string) string { return id })
+	if err != nil {
+		t.Fatal(err)
+	}
+	p2.Verify = func(context.Context) (string, error) { return "", errors.New("verify failed") }
+	if st := Execute(t.Context(), nil, p2, io.Discard, func(State) {}); st.Phase == Succeeded {
+		t.Fatal("expected verify failure")
+	}
+	for _, path := range []string{
+		filepath.Join(home2, ".agents", "skills", "example"),
+		filepath.Join(home2, ".claude", "skills", "example"),
+	} {
+		if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("rollback left %s: %v", path, err)
+		}
+	}
+}

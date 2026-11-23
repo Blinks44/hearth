@@ -56,7 +56,7 @@ func Rust(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.To
 		if slices.Contains(toolchains, root) {
 			name := filepath.Base(root)
 			in.Source = inventory.Source{Kind: inventory.KindVersionManager, Manager: Rustup, Root: root, Version: name}
-			in.Rust = &inventory.RustToolchain{Name: name, Targets: rustTargets(root)}
+			in.Rust = &inventory.RustToolchain{Name: name, Targets: rustTargets(root), Components: rustComponents(root)}
 			in.Default = def != "" && (name == def || strings.HasPrefix(name, def+"-"))
 		}
 		if v := rustcVersion.FindStringSubmatch(rustOutput(ctx, r, term, in.RealPath, "--version")); v != nil {
@@ -150,6 +150,25 @@ func rustTargets(root string) []string {
 	}
 	slices.Sort(targets)
 	return targets
+}
+
+var knownRustComponents = []string{"clippy", "rustfmt", "rust-src", "rust-analyzer"}
+
+// rustComponents reads the known optional rustup components installed in the
+// toolchain at root from lib/rustlib/components (matching exact names or
+// preview/host-suffixed entries like clippy-preview-aarch64-apple-darwin).
+func rustComponents(root string) []string {
+	var out []string
+	for line := range strings.SplitSeq(readFile(filepath.Join(root, "lib", "rustlib", "components")), "\n") {
+		entry := strings.TrimSpace(line)
+		for _, comp := range knownRustComponents {
+			if (entry == comp || strings.HasPrefix(entry, comp+"-")) && !slices.Contains(out, comp) {
+				out = append(out, comp)
+			}
+		}
+	}
+	slices.Sort(out)
+	return out
 }
 
 // cargoTools reads the packages cargo install put in CARGO_HOME, as its

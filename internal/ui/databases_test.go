@@ -301,3 +301,63 @@ func TestWindowsDatabaseInstallMenu(t *testing.T) {
 		t.Fatal("cancelling installation started the operation")
 	}
 }
+
+func TestDatabaseStoppedNoCLIProjectsFilterAndRefresh(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	scans := 0
+	a.OnScan = func() { scans++ }
+	a.OpenDBClient = func([]string, func(error)) {}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{
+		Servers: []inventory.Database{
+			{Kind: "MySQL", Name: "MySQL", Version: "8.4.3", Path: "/opt/homebrew/bin/mysqld", Source: "brew", Status: "stopped", Service: "mysql@8.4"},
+		},
+		Clients: []inventory.Installation{
+			{Tool: "mysql", Version: "8.4.3", Path: "/opt/homebrew/bin/mysql", RealPath: "/opt/homebrew/bin/mysql"},
+		},
+	}}}}
+	a.Projects = []projects.Project{
+		{Dir: home + "/dev/alpha", Databases: []projects.DatabaseReference{{Kind: "PostgreSQL", Service: "db", File: "compose.yaml", Ports: []string{"5432"}}}},
+		{Dir: home + "/dev/beta", Databases: []projects.DatabaseReference{{Kind: "Redis", Service: "cache", File: "compose.yaml", Ports: []string{"6379"}}}},
+	}
+	a.router.Push("/tools/databases")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Refresh button triggers scan.
+	if err := tt.Click(locales.PortsRefresh()); err != nil {
+		t.Fatal(err)
+	}
+	if scans != 1 {
+		t.Fatalf("scans = %d, want 1", scans)
+	}
+	a.Scanning = false
+
+	// Stopped DB row must NOT offer CLI launch inside its row menu (only the standalone Clients card offers it).
+	if err := tt.Click(locales.MoreActions()); err != nil {
+		t.Fatal(err)
+	}
+	if menu := tt.Menu(); slices.Contains(menu, locales.DatabaseOpenClient("mysql")) {
+		t.Fatalf("stopped DB menu must not offer CLI launch: %q", menu)
+	}
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
+
+	// Projects tab filters by databaseFilter and shows Nothing matches when no project matches.
+	svcTab, okS := tt.Find(locales.DatabaseServices())
+	cntTab, okC := tt.Find(locales.DatabaseContainers())
+	if !okS || !okC {
+		t.Fatalf("missing Services (%v) or Containers (%v) tab", okS, okC)
+	}
+	tt.ClickAt((svcTab.X+svcTab.W+cntTab.X)/2, svcTab.Y+svcTab.H/2)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "alpha", "beta")
+	a.databaseFilter = "redis"
+	tt.Frame()
+	if tt.HasText("alpha") || !tt.HasText("beta") {
+		t.Fatalf("Projects tab filter failed: %q", tt.Texts())
+	}
+	a.databaseFilter = "no-such-db"
+	tt.Frame()
+	hasTexts(t, tt, locales.NothingMatches())
+}

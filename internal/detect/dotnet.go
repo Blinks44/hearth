@@ -87,6 +87,12 @@ func Dotnet(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.
 			}
 		}
 	}
+	if slices.ContainsFunc(st.Installations, func(in inventory.Installation) bool { return in.Source.Manager == "mise" }) {
+		st.Managers = append(st.Managers, miseManager(ctx, r, term, gui, d))
+	}
+	if slices.ContainsFunc(st.Installations, func(in inventory.Installation) bool { return in.Source.Manager == "asdf" }) {
+		st.Managers = append(st.Managers, inventory.Manager{Name: "asdf", SwitchOnCD: true, Files: []string{".tool-versions"}})
+	}
 	if active := inventory.TerminalCopy(st.Installations); active >= 0 {
 		st.Installations[active].Packages = dotnetTools(d.Home)
 	}

@@ -205,15 +205,25 @@ func (a *App) installHeader(c *ui.Context, tool, version string) {
 	if _, ok := a.versionPlan(ops.VersionInstall, tool, manager, version, "", ""); !ok {
 		return
 	}
-	installVersionButton(c, tool, hasVersion(st.Installations, "", version), func() { a.installVersion(tool, version) })
+	label := versionLabel(tool, version)
+	tip := locales.InstallVersionVia(label, manager)
+	installVersionButton(c, tool, label, tip, hasVersion(st.Installations, "", version), func() { a.installVersion(tool, version) })
 }
 
 // installVersionButton is the header's "Install version" button.
-func installVersionButton(c *ui.Context, tool string, disabled bool, onClick func()) {
-	ui.PrimaryButton(c.Key(tool+"-install"), "").Disabled(disabled).OnClick(onClick).Children(func() {
+func installVersionButton(c *ui.Context, tool, target, tooltip string, disabled bool, onClick func()) {
+	text := locales.InstallVersion()
+	if target != "" {
+		text = locales.InstallNamed(target)
+	}
+	b := ui.PrimaryButton(c.Key(tool+"-install"), "").Disabled(disabled).OnClick(onClick)
+	if tooltip != "" {
+		b.Tooltip(tooltip)
+	}
+	b.Children(func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, Icon("plus")).Size(14, 14)
-			ui.Text(c, locales.InstallVersion())
+			ui.Text(c, text)
 		})
 	})
 }

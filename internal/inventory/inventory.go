@@ -62,6 +62,9 @@ type RustToolchain struct {
 	// Targets are the ones whose standard library is installed, the host's
 	// among them.
 	Targets []string `json:",omitempty"`
+	// Components are the optional rustup components installed in this
+	// toolchain (clippy, rustfmt, rust-src, rust-analyzer).
+	Components []string `json:",omitempty"`
 }
 
 // JDK describes a Java installation, from its release file.
@@ -194,9 +197,10 @@ type ToolState struct {
 
 // PathSource is a possible declaration of a PATH directory.
 type PathSource struct {
-	File string
-	Line int  `json:",omitempty"`
-	Hook bool `json:",omitempty"`
+	File   string
+	Line   int  `json:",omitempty"`
+	Hook   bool `json:",omitempty"`
+	Hearth bool `json:",omitempty"`
 }
 
 // EnvironmentVariable is an allowlisted tool setting in both environments.
@@ -251,6 +255,10 @@ type AgentSession struct {
 	// Dir is the folder the session ran in; "" when the history does not
 	// say.
 	Dir string `json:",omitempty"`
+	// StoreDir is the folder on disk where this session's history is stored,
+	// when it differs from the agent's settings directory (for example
+	// OpenCode, Devin CLI, and Antigravity SQLite stores).
+	StoreDir string `json:",omitempty"`
 	// Files are its transcript and the folder of what it kept beside it,
 	// which go together.
 	Files []string

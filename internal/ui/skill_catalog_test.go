@@ -282,15 +282,21 @@ func TestSkillsRemoveBrokenAndDiff(t *testing.T) {
 	tt.Frame()
 	hasTexts(t, tt, "Copies of this skill have different contents.", "Compare copies…", "Remove…")
 
-	// Open copy diff dialog.
+	// Open copy diff dialog and propose "Keep this copy and merge…".
+	a.SkillBackups = filepath.Join(dir, "backups")
 	if err := tt.Click("Compare copies…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	hasTexts(t, tt, "Differences in pdf", "SKILL.md", "modified")
-	if err := tt.Click("Close"); err != nil {
+	hasTexts(t, tt, "Differences in pdf", "SKILL.md", "modified", "Keep this copy and merge…")
+	if err := tt.Click("Keep this copy and merge…"); err != nil {
 		t.Fatal(err)
 	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Keep one copy of pdf and merge" {
+		t.Fatalf("unexpected merge-keep plan: %+v", a.op)
+	}
+	a.op = nil
 	tt.Frame()
 
 	// Propose removing managed skill.
@@ -300,5 +306,27 @@ func TestSkillsRemoveBrokenAndDiff(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.op == nil || a.op.plan.Title != "Remove skill pdf" {
 		t.Fatalf("unexpected remove plan: %+v", a.op)
+	}
+}
+
+func TestSkillCatalogInstalledBadgeAndConnectAll(t *testing.T) {
+	dir := t.TempDir()
+	a := catalogApp()
+	a.Home = dir
+	a.Snapshot.Skills = append(a.Snapshot.Skills, inventory.Skill{
+		Name: "frontend-design",
+		Dir:  filepath.Join(dir, ".claude", "skills", "frontend-design"),
+	})
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + dir, "USERPROFILE=" + dir}, nil))
+	}
+	tt := openAI(t, a, skillsPage)
+	hasTexts(t, tt, "Installed", "Connect to all agents")
+	if err := tt.Click("Connect to all agents"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Install frontend-design for all agents" {
+		t.Fatalf("install-all plan: %+v", a.op)
 	}
 }

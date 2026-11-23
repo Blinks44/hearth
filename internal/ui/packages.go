@@ -264,7 +264,7 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 		switch sorts := packageSorts(m, a.Sizes); {
 		case a.packageSort == sortByDependents && slices.Contains(sorts, sortByDependents):
 			slices.SortStableFunc(order, func(x, y int) int {
-				return cmp.Compare(dependents[m.Packages[y].Name], dependents[m.Packages[x].Name])
+				return cmp.Compare(len(dependents[m.Packages[y].Name]), len(dependents[m.Packages[x].Name]))
 			})
 		case a.packageSort == sortBySize && slices.Contains(sorts, sortBySize):
 			slices.SortStableFunc(order, func(x, y int) int {
@@ -317,14 +317,20 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 						clipped(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
 					}
 					var usage []string
+					usageTip := ""
 					if size, ok := a.Sizes.Size(pkg); ok {
 						usage = append(usage, formatUsage(size))
 					}
 					if m.ReasonsKnown {
-						usage = append(usage, packageReason(m, pkg, dependents[pkg.Name]))
+						reason, tip := packageReason(m, pkg, dependents[pkg.Name])
+						usage = append(usage, reason)
+						usageTip = tip
 					}
 					if len(usage) > 0 {
-						ui.Text(c, strings.Join(usage, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
+						u := ui.Text(c, strings.Join(usage, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
+						if usageTip != "" {
+							u.Tooltip(usageTip)
+						}
 					}
 					// Who asked for it takes the path's place; the buttons
 					// still copy and show it.
@@ -421,30 +427,54 @@ func atLeast(n int) string {
 	return locales.PkgAtLeast(n)
 }
 
-// packageDependents counts, by name, the installed packages that depend on
-// each; empty where the manager does not list dependencies.
-func packageDependents(m inventory.PackageManager) map[string]int {
-	out := map[string]int{}
+// packageDependents lists, by package name, the installed packages that depend
+// on each (user-installed packages first, then alphabetically).
+func packageDependents(m inventory.PackageManager) map[string][]string {
+	isDep := make(map[string]bool, len(m.Packages))
+	for _, pkg := range m.Packages {
+		isDep[pkg.Name] = pkg.Dependency
+	}
+	out := map[string][]string{}
 	for _, pkg := range m.Packages {
 		for _, d := range pkg.Dependencies {
-			out[d]++
+			if !slices.Contains(out[d], pkg.Name) {
+				out[d] = append(out[d], pkg.Name)
+			}
 		}
+	}
+	for name, deps := range out {
+		slices.SortFunc(deps, func(a, b string) int {
+			if isDep[a] != isDep[b] {
+				if !isDep[a] {
+					return -1
+				}
+				return 1
+			}
+			return strings.Compare(a, b)
+		})
+		out[name] = deps
 	}
 	return out
 }
 
-// packageReason says who asked for pkg: the user, or other packages, and
-// how many of them need it where the manager knows.
-func packageReason(m inventory.PackageManager, pkg inventory.SystemPackage, dependents int) string {
+// packageReason says who asked for pkg: the user, or other packages, naming
+// the main dependents with the full list in tooltip when truncated.
+func packageReason(m inventory.PackageManager, pkg inventory.SystemPackage, dependents []string) (string, string) {
 	switch {
 	case !pkg.Dependency:
-		return locales.PkgAskedByYou()
-	case dependents > 0:
-		return locales.PkgNeededBy(dependents)
+		return locales.PkgAskedByYou(), ""
+	case len(dependents) > 0:
+		full := locales.PkgNeededByNames(strings.Join(dependents, ", "))
+		const maxShown = 3
+		if len(dependents) <= maxShown {
+			return full, full
+		}
+		shown := strings.Join(dependents[:maxShown], ", ")
+		return locales.PkgNeededByMore(shown, len(dependents)-maxShown), full
 	case m.ID == "brew": // brew lists every dependency, so none is none
-		return locales.PkgNotNeeded()
+		return locales.PkgNotNeeded(), ""
 	}
-	return locales.PkgDependency()
+	return locales.PkgDependency(), ""
 }
 
 // The package table's orders.

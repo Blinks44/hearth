@@ -42,10 +42,16 @@ func Icon(name string) *ui.SVG { return mustIcon("lucide/" + name) }
 // logo/<slug>-dark variant on a dark theme when it has one; anything else is
 // an icon in color.
 func iconOrLogo(c *ui.Context, key string, size float32, color ui.Color) {
+	iconOrLogoOn(c, key, size, color, c.Theme().Dark)
+}
+
+// iconOrLogoOn is iconOrLogo for surfaces whose brightness can differ from the
+// current theme (such as inverted active filter chips).
+func iconOrLogoOn(c *ui.Context, key string, size float32, color ui.Color, darkBg bool) {
 	if slug, ok := strings.CutPrefix(key, "brand/"); ok {
 		m, _ := icons()
 		logo, ok := m["logo/"+slug]
-		if dark, has := m["logo/"+slug+"-dark"]; has && c.Theme().Dark {
+		if dark, has := m["logo/"+slug+"-dark"]; has && darkBg {
 			logo = dark
 		}
 		if ok {

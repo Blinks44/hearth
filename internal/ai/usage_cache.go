@@ -15,7 +15,7 @@ import (
 
 var usageCacheFileMu sync.Mutex
 
-const usageCacheVersion = 3
+const usageCacheVersion = 4
 
 // cachedDB is the sessions parsed from a SQLite database while both the
 // main file and its -wal sidecar stay unchanged.

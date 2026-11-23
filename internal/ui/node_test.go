@@ -470,7 +470,7 @@ func TestNodeOperations(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 
-	if err := tt.Click("Install version"); err != nil {
+	if err := tt.Click("Install v24.1.0"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

@@ -355,8 +355,37 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill, all []inventory.Ski
 				})
 			}
 		})
-		detailSection(c, locales.AvailableToAgents())
-		for _, id := range a.foundIDs() {
+		var unconnected []string
+		foundIDs := a.foundIDs()
+		for _, id := range foundIDs {
+			if id == "aider" {
+				continue
+			}
+			connected := false
+			for _, p := range sk.Paths {
+				if slices.Contains(p.Agents, id) {
+					connected = true
+					break
+				}
+			}
+			if !connected {
+				unconnected = append(unconnected, id)
+			}
+		}
+		if a.BuildPlan != nil && !sk.Broken && !sk.Synced && len(unconnected) > 1 {
+			targets := slices.Clone(unconnected)
+			ui.Row(c).Padding(10, 16, 4, 16).Gap(8).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, strings.ToUpper(locales.AvailableToAgents())).FontSize(11).FontWeight(500).TextColor(pal.TextFaint).Grow(1).SingleLine()
+				ui.Button(c.Key("skill-connect-all"), locales.SkillConnectAll()).Shrink(0).OnClick(func() {
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.SkillLinkAllPlan(sk, targets, env, agentTitle)
+					}, a.proposeOrSay)
+				})
+			})
+		} else {
+			detailSection(c, locales.AvailableToAgents())
+		}
+		for _, id := range foundIDs {
 			var via *inventory.SkillPath
 			for i, p := range sk.Paths {
 				if slices.Contains(p.Agents, id) {
@@ -386,29 +415,31 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill, all []inventory.Ski
 		canRemove := !sk.Broken && !sk.Synced && a.BuildPlan != nil
 		hasOpen := a.Shell != nil && !sk.Broken
 		if hasOpen || canRemove || canRemoveBroken {
-			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Wrap().Children(func() {
 				if hasOpen {
-					ui.Button(c.Key("skill-open"), "").OnClick(func() { a.openFile(c, filepath.Join(sk.Dir, "SKILL.md")) }).Children(func() {
+					ui.Button(c.Key("skill-open"), "").Label(locales.OpenInEditor()).Tooltip(locales.OpenInEditor()).Shrink(0).
+						OnClick(func() { a.openFile(c, filepath.Join(sk.Dir, "SKILL.md")) }).Children(func() {
 						ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
-						ui.Text(c, locales.OpenInEditor()).SingleLine()
+						ui.Text(c, locales.OpenShort()).SingleLine()
 					})
-					ui.Button(c.Key("skill-reveal"), "").OnClick(func() { a.Shell.ShowItemInFolder(sk.Dir) }).Children(func() {
+					ui.Button(c.Key("skill-reveal"), "").Label(showInFolder()).Tooltip(showInFolder()).Shrink(0).
+						OnClick(func() { a.Shell.ShowItemInFolder(sk.Dir) }).Children(func() {
 						ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
-						ui.Text(c, showInFolder()).SingleLine()
+						ui.Text(c, showInFolderShort()).SingleLine()
 					})
 				}
-				if hasOpen && canRemove {
-					ui.Box(c).Grow(1).Height(1)
+				if hasOpen && (canRemove || canRemoveBroken) {
+					ui.Box(c).Grow(1).MinWidth(0).Height(1)
 				}
 				if canRemove {
-					ui.Button(c.Key("skill-remove"), locales.SkillRemoveButton()).OnClick(func() {
+					ui.Button(c.Key("skill-remove"), locales.SkillRemoveButton()).Shrink(0).OnClick(func() {
 						a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 							return ops.SkillRemovePlan(sk, env, agentTitle)
 						}, a.proposeOrSay)
 					})
 				}
 				if canRemoveBroken {
-					ui.Button(c.Key("skill-remove-broken"), locales.SkillRemoveBrokenButton()).OnClick(func() {
+					ui.Button(c.Key("skill-remove-broken"), locales.SkillRemoveBrokenButton()).Shrink(0).OnClick(func() {
 						a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 							return ops.SkillRemoveBrokenPlan(sk, env)
 						}, a.proposeOrSay)
@@ -547,6 +578,8 @@ func skillCopiesDiffer(peers []inventory.Skill) bool {
 type skillDiffState struct {
 	open      bool
 	name      string
+	base      inventory.Skill
+	peers     []inventory.Skill
 	baseDir   string
 	otherDirs []string
 	other     string
@@ -569,6 +602,8 @@ func (a *App) openSkillDiff(sk inventory.Skill, peers []inventory.Skill) {
 	d := &skillDiffState{
 		open:      true,
 		name:      sk.Name,
+		base:      sk,
+		peers:     slices.Clone(peers),
 		baseDir:   sk.Dir,
 		otherDirs: others,
 		other:     others[0],
@@ -665,6 +700,15 @@ func (a *App) skillDiffDialog(c *ui.Context) {
 				})
 			})
 			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
+				if a.BuildPlan != nil && a.SkillBackups != "" && len(d.peers) > 1 {
+					keep, peers, backups := d.base, slices.Clone(d.peers), a.SkillBackups
+					ui.PrimaryButton(c.Key("skill-diff-merge"), locales.SkillKeepAndMerge()).OnClick(func() {
+						d.open = false
+						a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+							return ops.SkillMergeKeepPlan(keep, peers, backups, env, time.Now())
+						}, a.proposeOrSay)
+					})
+				}
 				ui.Button(c, locales.SettingsClose()).OnClick(func() { d.open = false })
 			})
 		})

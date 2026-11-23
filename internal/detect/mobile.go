@@ -22,7 +22,7 @@ import (
 // tools nor flutter are run: simctl may install Xcode's components, and
 // flutter may download its own.
 func Mobile(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
-	m := &inventory.MobileState{Xcodes: xcodes(), Runtimes: simRuntimes()}
+	m := &inventory.MobileState{Xcodes: xcodes(), DeveloperDir: mobileDeveloperDir(), Runtimes: simRuntimes()}
 	home := sources.ManagerDirs(term).Home
 	m.Android = androidSDK(term, home)
 	pods := newFinder("pod", term)

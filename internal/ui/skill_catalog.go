@@ -24,7 +24,6 @@ type skillCatalogCached struct {
 
 type skillCatalogState struct {
 	repo                 int // index into Repositories(), or len(Repositories()) for custom
-	tab                  int // the repository chosen in the toolbar; repo is the one loaded
 	custom               *skillcatalog.Repository
 	customURL            string
 	urlErr               string
@@ -33,8 +32,7 @@ type skillCatalogState struct {
 	dirs                 map[string]string
 	err                  string
 	chosen, query, agent string
-	agentLabel           string
-	project, scopeLabel  string
+	project              string
 	file                 string
 	cancel               func()
 }
@@ -103,12 +101,10 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 		}
 		target = repos[repoIdx]
 	}
-	state := &skillCatalogState{repo: repoIdx, tab: repoIdx, loading: true}
+	state := &skillCatalogState{repo: repoIdx, loading: true}
 	if a.skillCatalog != nil {
 		state.agent = a.skillCatalog.agent
-		state.agentLabel = a.skillCatalog.agentLabel
 		state.project = a.skillCatalog.project
-		state.scopeLabel = a.skillCatalog.scopeLabel
 		state.customURL = a.skillCatalog.customURL
 		if custom == nil {
 			state.custom = a.skillCatalog.custom
@@ -158,13 +154,39 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 
 func (a *App) syncCatalogAgent(s *skillCatalogState, dirs map[string]string) {
 	if s.agent != "" && dirs[s.agent] != "" {
-		s.agentLabel = agentTitle(s.agent)
 		return
 	}
 	if id := a.defaultCatalogAgent(dirs); id != "" {
 		s.agent = id
-		s.agentLabel = agentTitle(id)
 	}
+}
+
+// catalogSkillInstalled reports whether sk is already installed in project
+// ("" for user scope).
+func (a *App) catalogSkillInstalled(sk skillcatalog.Skill, project string) bool {
+	for _, have := range a.allSkills() {
+		if have.Broken || have.Project != project {
+			continue
+		}
+		if strings.EqualFold(filepath.Base(have.Dir), sk.Dir) || strings.EqualFold(have.Name, sk.Name) {
+			return true
+		}
+	}
+	return false
+}
+
+// catalogActiveProject validates s.project against currently registered projects
+// without mutating s during render.
+func (a *App) catalogActiveProject(s *skillCatalogState) string {
+	if s.project == "" {
+		return ""
+	}
+	for _, pr := range a.Projects {
+		if pr.Dir == s.project {
+			return s.project
+		}
+	}
+	return ""
 }
 
 func (a *App) skillCatalogView(c *ui.Context, p page) {
@@ -199,7 +221,18 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 						}
 						segs = append(segs, segment{s.custom.Slug, count})
 					}
-					segments(c, "catalog-repository", &s.tab, segs)
+					tab := s.repo
+					segments(c, "catalog-repository", &tab, segs).OnChange(func() {
+						if tab == s.repo {
+							return
+						}
+						if s.custom != nil && tab == len(repos) {
+							custom := *s.custom
+							a.openSkillCatalogRepo(len(repos), &custom, false)
+							return
+						}
+						a.openSkillCatalog(tab)
+					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Height(controlHeight).Width(272)
 				})
@@ -225,15 +258,6 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 						ui.Text(c, s.urlErr).FontSize(12).TextColor(pal.WarningText)
 					}
 				})
-				if s.tab != s.repo {
-					if s.custom != nil && s.tab == len(repos) {
-						custom := *s.custom
-						a.openSkillCatalogRepo(len(repos), &custom, false)
-					} else {
-						a.openSkillCatalog(s.tab)
-					}
-					return
-				}
 				if s.loading {
 					cardNote(c, locales.Loading())
 					return
@@ -254,6 +278,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 					chosen = 0
 				}
 				active := s.activeRepo()
+				scopeProject := a.catalogActiveProject(s)
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						listFrame(c, func() {
@@ -262,6 +287,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 								cardNote(c, locales.NothingMatches())
 							}
 							for i, sk := range shown {
+								installed := a.catalogSkillInstalled(sk, scopeProject)
 								row := ui.ButtonBase(c.Key("catalog-skill:"+sk.Dir)).Label(sk.Name).Gap(10).Padding(9, 14, 9, 12).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
 								if i == chosen {
 									row.Background(pal.ActiveRow)
@@ -274,6 +300,9 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 										ui.Text(c, sk.Name).FontSize(13.5).SingleLine()
 										ui.Text(c, sk.Description).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
 									})
+									if installed {
+										aiTag(c, locales.Installed(), pal.SuccessSoft, pal.SuccessText)
+									}
 								})
 							}
 						})
@@ -295,11 +324,16 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 
 func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active skillcatalog.Repository, sk skillcatalog.Skill) {
 	t, pal := c.Theme(), Colors(c.Theme())
+	project := a.catalogActiveProject(s)
+	installed := a.catalogSkillInstalled(sk, project)
 	listFrame(c, func() {
 		ui.Column(c).Gap(6).Padding(16, 16, 14, 16).Children(func() {
-			ui.Row(c).Gap(8).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, sk.Name).FontSize(17).FontWeight(500).Shrink(1).MinWidth(0).SingleLine()
 				aiTag(c, active.Name, pal.AccentSoft, pal.AccentInk)
+				if installed {
+					aiTag(c, locales.Installed(), pal.SuccessSoft, pal.SuccessText)
+				}
 			})
 			ui.Text(c, sk.Description).FontSize(12.5).TextColor(t.TextMuted).MaxLines(4)
 			pathChip(c, sk.Repository+" · "+sk.Dir, sk.URL())
@@ -307,6 +341,7 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 		detailSection(c, locales.SkillCatalogFor())
 		// Optional scope selector when the user has registered projects.
 		var scopes, scopeLabels []string
+		scopeLabel := locales.SkillCatalogScopeUser()
 		if len(a.Projects) > 0 {
 			scopes = make([]string, 0, len(a.Projects)+1)
 			scopeLabels = make([]string, 0, len(a.Projects)+1)
@@ -316,19 +351,14 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 				scopes = append(scopes, pr.Dir)
 				scopeLabels = append(scopeLabels, filepath.Base(pr.Dir))
 			}
-			si := slices.Index(scopes, s.project)
-			if si < 0 {
-				si = 0
-				s.project = ""
+			if si := slices.Index(scopes, project); si >= 0 {
+				scopeLabel = scopeLabels[si]
 			}
-			s.scopeLabel = scopeLabels[si]
-		} else {
-			s.project = ""
 		}
 
 		dirs := s.dirs
-		if s.project != "" {
-			dirs = ai.ProjectSkillDirectories(s.project)
+		if project != "" {
+			dirs = ai.ProjectSkillDirectories(project)
 		}
 		var ids []string
 		for id := range dirs {
@@ -343,12 +373,16 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 			if value < 0 {
 				value = 0
 			}
-			s.agent = ids[value]
-			s.agentLabel = agentTitle(s.agent)
 		}
 		agent := ""
 		if value >= 0 {
 			agent = ids[value]
+		}
+		var allAgents []string
+		for _, id := range a.foundIDs() {
+			if dirs[id] != "" {
+				allAgents = append(allAgents, id)
+			}
 		}
 		ui.Column(c).Gap(6).Padding(6, 16, 8, 16).Children(func() {
 			if len(ids) == 0 {
@@ -359,25 +393,23 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 			for i, id := range ids {
 				labels[i] = agentTitle(id)
 			}
-			if s.agentLabel == "" || slices.Index(labels, s.agentLabel) < 0 {
-				s.agentLabel = agentTitle(agent)
-			}
+			agentLabel := agentTitle(agent)
 			if len(scopes) > 0 {
 				ui.Row(c).Gap(8).Children(func() {
-					ui.Select(c.Key("catalog-agent"), &s.agentLabel, labels).Label(locales.SkillCatalogFor()).Grow(1).MinWidth(0).OnChange(func() {
-						if i := slices.Index(labels, s.agentLabel); i >= 0 {
+					ui.Select(c.Key("catalog-agent"), &agentLabel, labels).Label(locales.SkillCatalogFor()).Grow(1).MinWidth(0).OnChange(func() {
+						if i := slices.Index(labels, agentLabel); i >= 0 {
 							s.agent = ids[i]
 						}
 					})
-					ui.Select(c.Key("catalog-scope"), &s.scopeLabel, scopeLabels).Label(locales.SkillCatalogScope()).Grow(1).MinWidth(0).OnChange(func() {
-						if i := slices.Index(scopeLabels, s.scopeLabel); i >= 0 {
+					ui.Select(c.Key("catalog-scope"), &scopeLabel, scopeLabels).Label(locales.SkillCatalogScope()).Grow(1).MinWidth(0).OnChange(func() {
+						if i := slices.Index(scopeLabels, scopeLabel); i >= 0 {
 							s.project = scopes[i]
 						}
 					})
 				})
 			} else {
-				ui.Select(c.Key("catalog-agent"), &s.agentLabel, labels).Label(locales.SkillCatalogFor()).FillWidth().OnChange(func() {
-					if i := slices.Index(labels, s.agentLabel); i >= 0 {
+				ui.Select(c.Key("catalog-agent"), &agentLabel, labels).Label(locales.SkillCatalogFor()).FillWidth().OnChange(func() {
+					if i := slices.Index(labels, agentLabel); i >= 0 {
 						s.agent = ids[i]
 					}
 				})
@@ -401,13 +433,20 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 				ui.Text(c, catalogFileText(sk, s.file)).Font(FontMono).FontSize(11.5).TextColor(pal.MonoText).Padding(10, 12)
 			})
 		})
-		project := s.project
-		ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+		ui.Row(c).Gap(8).Wrap().Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 			ui.PrimaryButton(c.Key("catalog-plan"), locales.SkillCatalogPlan()).Height(controlHeight).Disabled(agent == "" || a.BuildPlan == nil).OnClick(func() {
 				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 					return ops.SkillInstallPlanFor(sk, agent, project, env, agentTitle)
 				}, a.proposeOrSay)
 			})
+			if len(allAgents) > 1 && a.BuildPlan != nil {
+				targets := slices.Clone(allAgents)
+				ui.Button(c.Key("catalog-plan-all"), locales.SkillConnectAll()).Height(controlHeight).OnClick(func() {
+					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+						return ops.SkillInstallAllPlanFor(sk, targets, project, env, agentTitle)
+					}, a.proposeOrSay)
+				})
+			}
 			ui.Button(c.Key("catalog-github"), locales.SkillCatalogGitHub()).Height(controlHeight).OnClick(func() { c.OpenURL(sk.URL()) })
 		})
 	})

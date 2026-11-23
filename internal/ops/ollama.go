@@ -222,3 +222,121 @@ func lmStudioHas(ctx context.Context, detect Detect, dir string) (bool, error) {
 		return filepath.Clean(m.Path) == dir
 	}), nil
 }
+
+// OllamaServerPlan returns the plan that starts or stops the local Ollama
+// server. Homebrew formula installs use brew services; other installs use the
+// platform-specific app or service control.
+func OllamaServerPlan(action ServiceAction, app inventory.ModelApp, detect Detect) (Plan, bool) {
+	port := app.Port
+	if port == "" {
+		port = "11434"
+	}
+	var (
+		step  Step
+		notes []Note
+		why   string
+		ok    bool
+	)
+	if app.Source.Manager == "brew" && !strings.Contains(app.Path, ".app/") {
+		verb := [...]string{"start", "stop"}[action]
+		step = Step{Argv: []string{"brew", "services", verb, "ollama"}, Timeout: 2 * time.Minute}
+		why = locales.ServiceWhyBrew()
+		if action == ServiceStop {
+			notes = []Note{{Title: locales.ServiceBrewLogin(), Text: locales.ServiceBrewLoginText(), Tag: "brew services"}}
+		}
+		ok = true
+	} else {
+		step, notes, ok = ollamaServerStep(action, app)
+		why = locales.OllamaServerWhy()
+	}
+	if !ok {
+		return Plan{}, false
+	}
+	p := Plan{
+		Why:   why,
+		Steps: []Step{step},
+		Notes: notes,
+	}
+	if action == ServiceStart {
+		p.Title = locales.OllamaServerStartTitle()
+		p.Changes = []string{locales.OllamaServerStartChange()}
+	} else {
+		p.Title = locales.OllamaServerStopTitle()
+		p.Changes = []string{locales.OllamaServerStopChange()}
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			up, err := ollamaListening(ctx, detect, port)
+			if err != nil {
+				return "", err
+			}
+			if action == ServiceStart {
+				if !up {
+					return "", errors.New(locales.OllamaServerNotRunning(port))
+				}
+				return locales.OllamaServerRunning(port), nil
+			}
+			if up {
+				return "", errors.New(locales.OllamaServerStillRunning(port))
+			}
+			return locales.OllamaServerStopped(), nil
+		}
+	}
+	return p, true
+}
+
+func ollamaListening(ctx context.Context, detect Detect, port string) (bool, error) {
+	st, err := detect(ctx)
+	if err != nil {
+		return false, err
+	}
+	if st.Databases == nil {
+		return false, nil
+	}
+	return slices.ContainsFunc(st.Databases.Listeners, func(l inventory.DatabaseListener) bool {
+		return l.Port == port
+	}), nil
+}
+
+// OllamaInstallPlan returns a plan to install Ollama via an available package
+// manager (Homebrew, winget, or pacman). ok is false when none of them is found.
+func OllamaInstallPlan(managers []string, detect Detect) (Plan, bool) {
+	var (
+		step  Step
+		notes []Note
+	)
+	switch {
+	case slices.Contains(managers, "brew"):
+		step = Step{Argv: []string{"brew", "install", "ollama"}, Timeout: 10 * time.Minute}
+	case slices.Contains(managers, "winget"):
+		step = Step{
+			Argv:    []string{"winget", "install", "--id", "Ollama.Ollama", "-e", "--accept-package-agreements", "--accept-source-agreements"},
+			Timeout: 10 * time.Minute,
+		}
+	case slices.Contains(managers, "pacman"):
+		step = Step{Argv: []string{"pacman", "-S", "--noconfirm", "ollama"}, Admin: true, Timeout: 10 * time.Minute}
+		notes = []Note{AdminNote()}
+	default:
+		return Plan{}, false
+	}
+	p := Plan{
+		Title:   locales.OllamaInstallTitle(),
+		Why:     locales.OllamaInstallWhy(),
+		Steps:   []Step{step},
+		Changes: []string{"+ Ollama"},
+		Notes:   notes,
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			st, err := detect(ctx)
+			if err != nil {
+				return "", err
+			}
+			if st.Models == nil || st.Models.Ollama == nil {
+				return "", errors.New(locales.OllamaInstallMissing())
+			}
+			return locales.OllamaInstallFound(), nil
+		}
+	}
+	return p, true
+}

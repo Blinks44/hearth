@@ -149,3 +149,75 @@ func TestUsageTokensFiltersAndUnsupported(t *testing.T) {
 	hasTexts(t, narrow, "Tokens", "No local token history", "Cursor, Aider")
 	screenshot(t, narrow, "usage-tokens-narrow")
 }
+
+func TestUsageBreakdownClickFiltersAndStoreDir(t *testing.T) {
+	now := time.Date(2026, 11, 14, 12, 0, 0, 0, time.Local)
+	day := func(ago int) string { return now.AddDate(0, 0, -ago).Format(time.DateOnly) }
+	shop := home + "/dev/shop"
+	a := usageApp(now)
+	a.Snapshot.Sessions = append(a.Snapshot.Sessions,
+		inventory.AgentSession{
+			Agent: "opencode", Dir: shop, StoreDir: home + "/.local/share/opencode", Size: 400_000, Modified: now,
+			Usage: []inventory.TokenUsage{
+				{Day: day(0), Model: "deepseek-chat", Input: 200_000, Output: 50_000, CacheRead: 800_000, CacheWrite: 100_000},
+			},
+		},
+		inventory.AgentSession{
+			Agent: "devin", Dir: shop, StoreDir: home + "/.local/share/devin/cli", Size: 300_000, Modified: now,
+			Usage: []inventory.TokenUsage{
+				{Day: day(0), Model: "glm-4.7", Input: 100_000, Output: 20_000},
+			},
+		},
+		inventory.AgentSession{
+			Agent: "antigravity", Dir: shop, StoreDir: home + "/.gemini/antigravity-cli/conversations", Size: 200_000, Modified: now,
+			Usage: []inventory.TokenUsage{
+				{Day: day(0), Model: "gemini-2.5-pro", Input: 50_000, Output: 10_000},
+			},
+		},
+	)
+	a.Snapshot.Agents = []inventory.Agent{
+		{ID: "opencode", Dir: home + "/.config/opencode"},
+		{ID: "devin", Dir: home + "/.config/devin"},
+		{ID: "antigravity", Dir: home + "/.gemini/antigravity-cli"},
+	}
+
+	a.router.Push(usagePage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Y-axis tick "$0", token breakdown labels, and accurate On Disk StoreDir paths.
+	hasTexts(t, tt, "$0", "Input", "Output", "Cache read", "Cache write",
+		"~/.local/share/opencode", "~/.local/share/devin/cli", "~/.gemini/antigravity-cli/conversations")
+
+	// Clicking a project row filters by project; clicking again clears it.
+	shopRow, ok := tt.Find("shop")
+	if !ok {
+		t.Fatal("shop row not found")
+	}
+	tt.ClickAt(shopRow.X+shopRow.W/2, shopRow.Y+shopRow.H/2)
+	tt.Advance(time.Second)
+	if a.usageProject != shop {
+		t.Fatalf("usageProject = %q, want %q", a.usageProject, shop)
+	}
+	tt.ClickAt(shopRow.X+shopRow.W/2, shopRow.Y+shopRow.H/2)
+	tt.Advance(time.Second)
+	if a.usageProject != "" {
+		t.Fatalf("usageProject after toggle = %q, want empty", a.usageProject)
+	}
+
+	// Clicking a model row filters by model and surfaces the clear chip.
+	if err := tt.Click("deepseek-chat"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.usageModel != "deepseek-chat" {
+		t.Fatalf("usageModel = %q, want deepseek-chat", a.usageModel)
+	}
+	if err := tt.Click("Clear model filter"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.usageModel != "" {
+		t.Fatalf("usageModel after clear = %q, want empty", a.usageModel)
+	}
+}

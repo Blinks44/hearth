@@ -51,6 +51,8 @@ func Git(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 		if xdg := filepath.Join(or(term.Get("XDG_CONFIG_HOME"), filepath.Join(home, ".config")), "git", "config"); !exists(g.ConfigFile) && exists(xdg) {
 			g.ConfigFile = xdg
 		}
+		g.ConfigMissing = !exists(g.ConfigFile)
+		g.SSHConfigMissing = !exists(filepath.Join(home, ".ssh", "config"))
 	}
 	if active := inventory.TerminalCopy(st.Installations); active >= 0 {
 		git := st.Installations[active].Path

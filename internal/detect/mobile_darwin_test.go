@@ -62,4 +62,8 @@ func TestXcodes(t *testing.T) {
 	if got := simRuntimes(); !reflect.DeepEqual(got, wantRT) {
 		t.Errorf("runtimes = %+v, want %+v", got, wantRT)
 	}
+	wantDev, _ := filepath.EvalSymlinks(filepath.Join(apps, "Xcode.app", "Contents", "Developer"))
+	if got := mobileDeveloperDir(); got != wantDev {
+		t.Errorf("mobileDeveloperDir = %q, want %q", got, wantDev)
+	}
 }

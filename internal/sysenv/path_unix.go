@@ -99,11 +99,20 @@ func sourceFiles(env Env, files []string) map[string][]inventory.PathSource {
 		if err != nil {
 			return
 		}
+		inHearth := false
 		for i, line := range strings.Split(string(b), "\n") {
+			switch strings.TrimSpace(line) {
+			case "# >>> hearth >>>":
+				inHearth = true
+				continue
+			case "# <<< hearth <<<":
+				inHearth = false
+				continue
+			}
 			dirs, hook := lineDirs(clean, line, env)
 			for _, v := range dirs {
 				key := pathKey(v)
-				out[key] = append(out[key], inventory.PathSource{File: clean, Line: i + 1, Hook: hook})
+				out[key] = append(out[key], inventory.PathSource{File: clean, Line: i + 1, Hook: hook, Hearth: inHearth})
 			}
 			for _, inc := range sourcedFiles(clean, line, env) {
 				scan(inc, depth+1)

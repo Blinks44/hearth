@@ -27,6 +27,7 @@ type editorRow struct {
 	onPath      bool
 	path        string
 	paths       []string
+	installed   []string
 	addPath     *inventory.Editor
 }
 
@@ -120,10 +121,22 @@ func (a *App) editorRows(e inventory.Editor, all []inventory.Editor) []editorRow
 		if e.Config != "" {
 			name = locales.EditorsPlugins(len(e.Installed))
 		}
-		rows = append(rows, editorRow{name: name, about: strings.Join(about, " · "), path: e.Extensions})
+		rows = append(rows, editorRow{name: name, about: strings.Join(about, " · "), path: e.Extensions, installed: e.Installed})
 	}
 	if len(e.Superseded) > 0 {
-		rows = append(rows, editorRow{name: locales.EditorsOld(), about: locales.EditorsOldAbout() + " · " + locales.EditorsFolders(len(e.Superseded)), paths: e.Superseded})
+		var names []string
+		for _, p := range e.Superseded {
+			names = append(names, filepath.Base(p))
+		}
+		preview := strings.Join(names, ", ")
+		if len(names) > 2 {
+			preview = strings.Join(names[:2], ", ") + " (+" + strconv.Itoa(len(names)-2) + ")"
+		}
+		rows = append(rows, editorRow{
+			name:  locales.EditorsOld(),
+			about: locales.EditorsOldAbout() + " · " + locales.EditorsFolders(len(e.Superseded)) + " · " + preview,
+			paths: e.Superseded,
+		})
 	}
 	if e.Caches != "" {
 		rows = append(rows, editorRow{name: locales.EditorsIndexCache(), about: tilde(filepath.Dir(e.Caches), a.Home) + " · " + locales.EditorsRestorable(), path: e.Caches})
@@ -255,7 +268,15 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 				case ok:
 					right = formatBytes(s)
 				}
-				ui.Row(c.Key(e.ID+":"+r.name)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				rowKey := e.ID + ":" + r.name
+				expandKey := ""
+				if len(r.installed) > 0 {
+					expandKey = "ext:" + e.ID
+				} else if len(r.paths) > 0 {
+					expandKey = "old:" + e.ID
+				}
+				expanded := expandKey != "" && a.editorsExpanded[expandKey]
+				ui.Row(c.Key(rowKey)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 						clipped(c, r.name).FontSize(13)
 						clipped(c, r.about).FontSize(10.5).TextColor(pal.TextFaint)
@@ -264,10 +285,49 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 						ed := *r.addPath
 						ui.Button(c.Key("add-path:"+e.ID), locales.EditorsAddToPath()).Shrink(0).OnClick(func() { a.addEditorToPath(ed) })
 					} else {
+						if expandKey != "" {
+							k := expandKey
+							icon, label := "chevron-down", locales.EditorsShowList()
+							if expanded {
+								icon, label = "chevron-up", locales.EditorsHideList()
+							}
+							iconButton(c.Key("toggle:"+k), icon, label).OnClick(func() {
+								if a.editorsExpanded == nil {
+									a.editorsExpanded = map[string]bool{}
+								}
+								a.editorsExpanded[k] = !a.editorsExpanded[k]
+							})
+						}
 						ui.Text(c, right).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
-						a.pathActions(c, e.ID+":"+r.name, r.path)
+						a.pathActions(c, rowKey, r.path)
 					}
 				})
+				if expanded && len(r.installed) > 0 {
+					list := slices.Clone(r.installed)
+					ui.Column(c.Key("ext-list:"+e.ID)).Gap(6).Padding(8, 16, 10, 28).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+						ui.Row(c).AlignItems(ui.Center).Gap(8).Children(func() {
+							ui.Text(c, locales.EditorsExtensions(len(list))).FontSize(11).TextColor(pal.TextFaint).Grow(1)
+							ui.Button(c.Key("copy-ext:"+e.ID), locales.EditorsCopyList()).Height(26).FontSize(11.5).Shrink(0).OnClick(func() {
+								c.WriteClipboard(strings.Join(list, "\n"))
+								c.Toast(locales.EditorsListCopied())
+							})
+						})
+						for _, id := range list {
+							clipped(c, id).Font(FontMono).FontSize(11).TextColor(pal.MonoText)
+						}
+					})
+				}
+				if expanded && len(r.paths) > 0 {
+					ui.Column(c.Key("old-list:"+e.ID)).Gap(4).Padding(6, 16, 8, 28).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+						for _, p := range r.paths {
+							dir := p
+							ui.Row(c.Key("old:" + dir)).Gap(8).AlignItems(ui.Center).Children(func() {
+								clipped(c, filepath.Base(dir)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Grow(1).MinWidth(0)
+								a.pathActions(c, "old:"+dir, dir)
+							})
+						}
+					})
+				}
 			}
 			shown += len(rows)
 		}

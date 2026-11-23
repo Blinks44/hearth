@@ -46,6 +46,14 @@ func TestCostProvidersAndNormalization(t *testing.T) {
 		{inventory.TokenUsage{Model: "gpt-6-astra", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 10 + 1 + 50, true},
 		{inventory.TokenUsage{Model: "xai/grok-4-0709", Input: 1e6, Output: 1e6}, 3 + 15, true},
 		{inventory.TokenUsage{Model: "moonshot/kimi-k2.5", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 0.6 + 0.1 + 3, true},
+		{inventory.TokenUsage{Model: "deepseek-chat", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 0.28 + 0.028 + 0.42, true},
+		{inventory.TokenUsage{Model: "deepseek/deepseek-r1", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 0.55 + 0.14 + 2.19, true},
+		{inventory.TokenUsage{Model: "qwen/qwen3-coder-plus", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 1 + 0.1 + 5, true},
+		{inventory.TokenUsage{Model: "zhipu/glm-4.7", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 0.6 + 0.11 + 2.2, true},
+		{inventory.TokenUsage{Model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0", Input: 1e6, CacheRead: 1e6, Output: 1e6}, 3 + 0.3 + 15, true},
+		{inventory.TokenUsage{Model: "eu.anthropic.claude-3-5-sonnet-20241022-v2:0", Input: 1e6, Output: 1e6}, 3 + 15, true},
+		{inventory.TokenUsage{Model: "publishers/anthropic/models/claude-sonnet-4-5@20250929", Input: 1e6, Output: 1e6}, 3 + 15, true},
+		{inventory.TokenUsage{Model: "claude-3-5-sonnet-v2@20241022", Input: 1e6, Output: 1e6}, 3 + 15, true},
 		{inventory.TokenUsage{Model: "codex-mini-latest", Input: 1e6}, 1.5, true},
 		{inventory.TokenUsage{Model: "codex-auto-review", Input: 1e6}, 0, false},
 	}
@@ -244,8 +252,8 @@ func TestSessionsOpenCodeSQLiteAndLegacy(t *testing.T) {
 	if nonZeroSize != 1 {
 		t.Errorf("shared DB size attached to %d sessions, want 1", nonZeroSize)
 	}
-	if got[0].ID != "s1" || got[0].Dir != "/Users/dev/oc1" || got[0].Usage[0].Output != 140 || got[0].Usage[0].CacheRead != 200 {
-		t.Errorf("s1 = %+v", got[0])
+	if got[0].ID != "s1" || got[0].Dir != "/Users/dev/oc1" || got[0].StoreDir != dataDir || got[0].Usage[0].Output != 140 || got[0].Usage[0].CacheRead != 200 {
+		t.Errorf("s1 = %+v (want StoreDir %s)", got[0], dataDir)
 	}
 
 	// Legacy JSON storage fallback when opencode.db is absent.
@@ -255,8 +263,9 @@ func TestSessionsOpenCodeSQLiteAndLegacy(t *testing.T) {
 		".local/share/opencode/storage/message/leg1/m1.json": `{"role":"assistant","modelID":"gemini-2.5-pro","time":{"created":` + formatFloat(float64(t2)) + `},"tokens":{"input":600,"output":90}}`,
 	}, nil)
 	leg := opencodeSessions(sysenv.Env{"HOME=" + legacyHome}, legacyHome, time.UTC)
-	if len(leg) != 1 || leg[0].Dir != "/Users/dev/legacy" || leg[0].Usage[0].Input != 600 {
-		t.Errorf("legacy = %+v", leg)
+	wantLegacyStore := filepath.Join(legacyHome, ".local", "share", "opencode", "storage")
+	if len(leg) != 1 || leg[0].Dir != "/Users/dev/legacy" || leg[0].StoreDir != wantLegacyStore || leg[0].Usage[0].Input != 600 {
+		t.Errorf("legacy = %+v (want StoreDir %s)", leg, wantLegacyStore)
 	}
 }
 
@@ -277,7 +286,10 @@ func TestSessionsDevinSQLite(t *testing.T) {
 		INSERT INTO sessions VALUES ('d1', '/Users/dev/devin-proj', '2026-11-12T10:00:00Z');
 		INSERT INTO message_nodes VALUES
 			('n1', 'd1', '2026-11-12T10:01:00Z', '{"request_id":"req-1","model":"claude-opus-4-6","usage":{"input_tokens":100,"output_tokens":20}}'),
-			('n2', 'd1', '2026-11-12T10:01:02Z', '{"request_id":"req-1","model":"claude-opus-4-6","usage":{"input_tokens":100,"output_tokens":90,"cache_read_input_tokens":50}}');
+			('n2', 'd1', '2026-11-12T10:01:02Z', '{"request_id":"req-1","model":"claude-opus-4-6","usage":{"input_tokens":100,"output_tokens":90,"cache_read_input_tokens":50}}'),
+			('n3', 'd1', '2026-11-12T10:02:00Z', '{"request_id":"req-2","model":"gpt-5.4","usage":{"prompt_tokens":1000,"completion_tokens":200,"prompt_tokens_details":{"cached_tokens":400}}}'),
+			('n4', 'd1', '2026-11-12T10:03:00Z', '{"request_id":"req-3","model":"gpt-5.4","usage":{"input_tokens":500,"output_tokens":100,"input_tokens_details":{"cached_tokens":200}}}'),
+			('n5', 'd1', '2026-11-12T10:04:00Z', '{"request_id":"req-4","model":"gpt-5.4","usage":{"prompt_tokens":300,"completion_tokens":50,"cache_read_tokens":100}}');
 	`)
 	if err != nil {
 		t.Fatal(err)
@@ -288,9 +300,13 @@ func TestSessionsDevinSQLite(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("got %d sessions: %+v", len(got), got)
 	}
-	want := []inventory.TokenUsage{{Day: "2026-11-12", Model: "claude-opus-4-6", Input: 100, CacheRead: 50, Output: 90}}
-	if got[0].Agent != "devin" || got[0].Dir != "/Users/dev/devin-proj" || len(got[0].Files) != 0 || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
-		t.Errorf("devin = %+v, want %+v", got[0], want)
+	want := []inventory.TokenUsage{
+		{Day: "2026-11-12", Model: "claude-opus-4-6", Input: 100, CacheRead: 50, Output: 90},
+		// n3: 600+400+200, n4: 300+200+100, n5: 200+100+50 => Input=1100, CacheRead=700, Output=350
+		{Day: "2026-11-12", Model: "gpt-5.4", Input: 1100, CacheRead: 700, Output: 350},
+	}
+	if got[0].Agent != "devin" || got[0].Dir != "/Users/dev/devin-proj" || got[0].StoreDir != dir || len(got[0].Files) != 0 || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
+		t.Errorf("devin = %+v, want %+v (StoreDir %s)", got[0], want, dir)
 	}
 }
 
@@ -342,9 +358,9 @@ func TestSessionsAntigravityProtobufSQLite(t *testing.T) {
 		t.Fatalf("got %d sessions: %+v", len(got), got)
 	}
 	want := []inventory.TokenUsage{{Day: "2026-11-13", Model: "gemini-2.5-pro", Input: 1200, CacheWrite: 50, CacheRead: 400, Output: 300}}
-	if got[0].Agent != "antigravity" || got[0].ID != "conv-42" || got[0].Dir != "/Users/dev/agy-proj" ||
+	if got[0].Agent != "antigravity" || got[0].ID != "conv-42" || got[0].Dir != "/Users/dev/agy-proj" || got[0].StoreDir != convDir ||
 		!reflect.DeepEqual(got[0].Files, []string{dbPath}) || got[0].Size == 0 || !reflect.DeepEqual(got[0].Usage, want) {
-		t.Errorf("antigravity = %+v, want %+v (files [%s])", got[0], want, dbPath)
+		t.Errorf("antigravity = %+v, want %+v (files [%s], StoreDir %s)", got[0], want, dbPath, convDir)
 	}
 }
 

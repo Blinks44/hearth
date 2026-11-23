@@ -81,7 +81,11 @@ func (a *App) gitHeader(c *ui.Context, ins []inventory.Installation, rows []int,
 		if v := gitSetting(g, "user.name"); v != "" {
 			user = v
 		}
-		stateCard(c, pal.TextFaint, locales.GitUser(), user, tilde(g.ConfigFile, a.Home))
+		userCaption := gitSetting(g, "user.email")
+		if userCaption == "" {
+			userCaption = tilde(g.ConfigFile, a.Home)
+		}
+		stateCard(c, pal.TextFaint, locales.GitUser(), user, userCaption)
 	})
 }
 
@@ -93,7 +97,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 			if label := tilde(g.ConfigFile, a.Home); label != "" {
 				ui.Text(c, label).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 			}
-			if g.ConfigFile != "" && a.Shell != nil {
+			if g.ConfigFile != "" && !g.ConfigMissing && a.Shell != nil {
 				iconButton(c.Key("open-gitconfig"), "external-link", locales.OpenFile(filepath.Base(g.ConfigFile))).
 					OnClick(func() { a.openFile(c, g.ConfigFile) })
 			}
@@ -134,7 +138,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 	sshAside := func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.GitSSHAside()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-			if a.Home != "" && a.Shell != nil {
+			if a.Home != "" && !g.SSHConfigMissing && a.Shell != nil {
 				sshConfig := filepath.Join(a.Home, ".ssh", "config")
 				iconButton(c.Key("open-ssh-config"), "external-link", locales.OpenFile("~/.ssh/config")).
 					OnClick(func() { a.openFile(c, sshConfig) })

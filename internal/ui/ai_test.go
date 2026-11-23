@@ -649,3 +649,46 @@ func TestMCPAddEditAndConflictSelector(t *testing.T) {
 		t.Fatalf("edit plan = %+v", a.op)
 	}
 }
+
+func TestMCPCheckAllSearchAndCopyLabels(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	var checked []string
+	a.CheckMCP = func(s inventory.MCPServer, done func(ai.MCPCheck, error)) {
+		checked = append(checked, s.Name)
+		if s.Name == "weftcut" {
+			done(ai.MCPCheck{}, &ai.MCPError{Kind: ai.MCPNotFound})
+			return
+		}
+		done(ai.MCPCheck{Server: s.Name, Tools: []ai.MCPTool{{Name: "ping"}}}, nil)
+	}
+	tt := openAI(t, a, mcpPage)
+	// First item is github (stdio), so copy button has "Copy command" label.
+	if _, ok := tt.Find("Copy command"); !ok {
+		t.Fatalf("expected Copy command button for stdio server")
+	}
+	// Click linear (http) -> copy button has "Copy URL" label.
+	if err := tt.Click("linear"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if _, ok := tt.Find("Copy URL"); !ok {
+		t.Fatalf("expected Copy URL button for http server")
+	}
+	// Check all probes all active servers and shows status tags in the list.
+	if err := tt.Click("Check all"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(checked) != 3 {
+		t.Fatalf("checked = %v, want 3 active servers", checked)
+	}
+	hasTexts(t, tt, "1 tool", "Failed")
+	// Search matches a command from the second (conflicting) declaration of github ("docker").
+	a.mcpQuery = "docker"
+	tt.Frame()
+	hasTexts(t, tt, "github")
+	if tt.HasText("linear") {
+		t.Fatal("linear should be filtered out when searching for docker")
+	}
+}

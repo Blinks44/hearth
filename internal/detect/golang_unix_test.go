@@ -111,6 +111,7 @@ func TestGo(t *testing.T) {
 	}
 	wantVars := map[string]string{
 		"GOPATH":      filepath.Join(home, "go"),
+		"GOBIN":       filepath.Join(home, "go", "bin"),
 		"GOMODCACHE":  filepath.Join(home, "go", "pkg", "mod"),
 		"GOTOOLCHAIN": "local",
 	}

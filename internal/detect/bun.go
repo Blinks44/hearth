@@ -78,6 +78,9 @@ func Bun(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.Too
 			}
 		}
 	}
+	if slices.ContainsFunc(state.Installations, func(in inventory.Installation) bool { return in.Source.Manager == "mise" }) {
+		state.Managers = []inventory.Manager{miseManager(ctx, r, term, gui, dirs)}
+	}
 	return state, ctx.Err()
 }
 

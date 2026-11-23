@@ -21,8 +21,9 @@ import (
 func (a *App) php(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			if plan, ok := a.phpInstall("", a.PHPVersions.Newest(c.Now())); ok {
-				installVersionButton(c, "php", false, func() { a.Propose(plan) })
+			newest := a.PHPVersions.Newest(c.Now())
+			if plan, ok := a.phpInstall("", newest); ok {
+				installVersionButton(c, "php", newest, plan.Title, false, func() { a.Propose(plan) })
 			}
 		}})
 		st, ok := a.toolState("php")

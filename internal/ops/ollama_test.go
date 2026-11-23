@@ -159,3 +159,74 @@ func TestLMStudioRemovePlan(t *testing.T) {
 		t.Errorf("still verify: %v", err)
 	}
 }
+
+func TestOllamaServerPlan(t *testing.T) {
+	listening := func(up bool) Detect {
+		return func(context.Context) (inventory.ToolState, error) {
+			var listeners []inventory.DatabaseListener
+			if up {
+				listeners = []inventory.DatabaseListener{{Address: "127.0.0.1", Port: "11434"}}
+			}
+			return inventory.ToolState{Tool: "databases", Databases: &inventory.DatabaseState{Listeners: listeners}}, nil
+		}
+	}
+	brewApp := inventory.ModelApp{Path: "/opt/homebrew/bin/ollama", Port: "11434", Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}
+	p, ok := OllamaServerPlan(ServiceStart, brewApp, listening(true))
+	if !ok || !slices.Equal(p.Steps[0].Argv, []string{"brew", "services", "start", "ollama"}) {
+		t.Fatalf("brew start plan: ok=%v %+v", ok, p)
+	}
+	if got, err := p.Verify(context.Background()); err != nil || got != "Ollama is listening on localhost:11434" {
+		t.Errorf("start verify: %q, %v", got, err)
+	}
+	p, ok = OllamaServerPlan(ServiceStart, brewApp, listening(false))
+	if !ok {
+		t.Fatal("brew start plan not ok")
+	}
+	if _, err := p.Verify(context.Background()); err == nil {
+		t.Error("expected verify error when not listening")
+	}
+
+	p, ok = OllamaServerPlan(ServiceStop, brewApp, listening(false))
+	if !ok || !slices.Equal(p.Steps[0].Argv, []string{"brew", "services", "stop", "ollama"}) || len(p.Notes) != 1 {
+		t.Fatalf("brew stop plan: ok=%v %+v", ok, p)
+	}
+	if got, err := p.Verify(context.Background()); err != nil || got != "Ollama stopped" {
+		t.Errorf("stop verify: %q, %v", got, err)
+	}
+	p, _ = OllamaServerPlan(ServiceStop, brewApp, listening(true))
+	if _, err := p.Verify(context.Background()); err == nil {
+		t.Error("expected verify error when still listening")
+	}
+
+	appBundle := inventory.ModelApp{Path: "/Applications/Ollama.app/Contents/Resources/ollama", Port: "11434"}
+	if p, ok := OllamaServerPlan(ServiceStart, appBundle, nil); !ok || len(p.Steps) != 1 || len(p.Steps[0].Argv) == 0 {
+		t.Fatalf("platform start plan: ok=%v %+v", ok, p)
+	}
+}
+
+func TestOllamaInstallPlan(t *testing.T) {
+	if _, ok := OllamaInstallPlan(nil, nil); ok {
+		t.Fatal("expected no install plan without supported package managers")
+	}
+	p, ok := OllamaInstallPlan([]string{"brew"}, ollamaState())
+	if !ok || !slices.Equal(p.Steps[0].Argv, []string{"brew", "install", "ollama"}) {
+		t.Fatalf("brew install plan: ok=%v %+v", ok, p)
+	}
+	if got, err := p.Verify(context.Background()); err != nil || got != "Ollama is installed" {
+		t.Errorf("install verify: %q, %v", got, err)
+	}
+	missing := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{Tool: "models", Models: &inventory.ModelsState{}}, nil
+	}
+	p, _ = OllamaInstallPlan([]string{"winget"}, missing)
+	if len(p.Steps) != 1 || p.Steps[0].Argv[0] != "winget" {
+		t.Fatalf("winget install plan: %+v", p)
+	}
+	if _, err := p.Verify(context.Background()); err == nil {
+		t.Error("expected verify error when ollama missing")
+	}
+	p, ok = OllamaInstallPlan([]string{"pacman"}, nil)
+	if !ok || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Argv, []string{"pacman", "-S", "--noconfirm", "ollama"}) {
+		t.Fatalf("pacman install plan: ok=%v %+v", ok, p)
+	}
+}

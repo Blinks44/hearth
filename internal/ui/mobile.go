@@ -284,6 +284,17 @@ func (a *App) mobileView(c *ui.Context, p page) {
 						}
 						stateCard(c, t.Success, "Android SDK", "API "+strconv.Itoa(sdk.Platforms[0].API), caption)
 					}
+					if m.Flutter != nil {
+						ver := m.Flutter.Version
+						if ver == "" {
+							ver = "—"
+						}
+						caption := m.Flutter.Channel
+						if caption == "" {
+							caption = "flutter"
+						}
+						stateCard(c, t.Success, "Flutter", ver, caption)
+					}
 					totalText := "…"
 					if totalKnown {
 						totalText = formatBytes(total)
@@ -442,25 +453,46 @@ func (a *App) mobileEnv(c *ui.Context, m inventory.MobileState) {
 			if sdk.Missing {
 				state = locales.MobileDirMissing()
 			}
+			root := sdk.Root
 			if sdk.Var != "" {
-				listRow(c, sdk.Var, true, tilde(sdk.Root, a.Home)+" · "+state, func() {})
+				listRow(c, sdk.Var, true, tilde(root, a.Home)+" · "+state, func() {
+					if root != "" {
+						a.pathActions(c, "mobile-android", root)
+					}
+				})
 			} else {
-				listRow(c, "ANDROID_HOME", true, locales.MobileUnset()+" · "+tilde(sdk.Root, a.Home), func() {})
+				listRow(c, "ANDROID_HOME", true, locales.MobileUnset()+" · "+tilde(root, a.Home), func() {
+					if root != "" {
+						a.pathActions(c, "mobile-android", root)
+					}
+				})
 			}
 		}
 		javaHome := locales.MobileUnset()
+		javaRaw := ""
 		if a.Snapshot != nil {
 			for _, v := range a.Snapshot.Variables {
 				if v.Name == "JAVA_HOME" && v.Terminal != "" {
+					javaRaw = v.Terminal
 					javaHome = tilde(v.Terminal, a.Home)
 				}
 			}
 		}
-		listRow(c, locales.MobileJavaHome(), false, javaHome, func() {})
-		if a.Snapshot != nil {
-			if st, _ := a.Snapshot.Tool("cpp"); st.Cpp != nil && st.Cpp.Base != nil && len(m.Xcodes) > 0 {
-				listRow(c, "xcode-select", true, st.Cpp.Base.Path, func() {})
+		listRow(c, locales.MobileJavaHome(), false, javaHome, func() {
+			if javaRaw != "" {
+				a.pathActions(c, "mobile-javahome", javaRaw)
 			}
+		})
+		devDir := m.DeveloperDir
+		if devDir == "" && a.Snapshot != nil {
+			if st, _ := a.Snapshot.Tool("cpp"); st.Cpp != nil && st.Cpp.Base != nil && len(m.Xcodes) > 0 {
+				devDir = st.Cpp.Base.Path
+			}
+		}
+		if devDir != "" {
+			listRow(c, "xcode-select", true, devDir, func() {
+				a.pathActions(c, "mobile-xcode-select", devDir)
+			})
 		}
 	})
 }

@@ -12,12 +12,12 @@ import (
 )
 
 // Every sidebar item opens its page, whose header shows its title; the
-// languages and tools not found wait under "Not found".
+// languages not found wait under "Not found".
 func TestSidebarOpensPages(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = found("node", "bun", "python", "php")
 	// Tall enough for every item without scrolling the sidebar.
-	tt := ui.NewTester(a.View, 1280, 1400)
+	tt := ui.NewTester(a.View, 1280, 1800)
 	if tt.HasText("Rust") {
 		t.Error("a language not found shows before opening the rest")
 	}
@@ -197,13 +197,14 @@ func TestSidebarNotFound(t *testing.T) {
 	a.Snapshot = found("node", "git")
 	tt := ui.NewTester(a.View, 1280, 1400)
 	tt.Frame()
-	for _, s := range []string{"Node.js", "Git", "Infrastructure", "AI", "PATH & variables"} {
+	// Installed languages and all Infrastructure, Tools, AI, and System pages stay in their own sections.
+	for _, s := range []string{"Node.js", "Git", "Infrastructure", "Docker", "Kubernetes", "CLI & clouds", "Editors", "AI", "Local models", "PATH & variables"} {
 		if !tt.HasText(s) {
 			t.Errorf("no %q in the sidebar", s)
 		}
 	}
-	// Infrastructure found nothing but ports: its others wait under Not found.
-	for _, s := range []string{"Rust", "Docker", "Kubernetes", "Editors"} {
+	// Missing languages wait under Not found.
+	for _, s := range []string{"Rust", "Go", "PHP"} {
 		if tt.HasText(s) {
 			t.Errorf("%q shows before Not found opens", s)
 		}
@@ -214,7 +215,7 @@ func TestSidebarNotFound(t *testing.T) {
 		}
 		tt.Advance(80 * time.Millisecond)
 		tt.Advance(time.Second)
-		if !a.notFoundOpen || !tt.HasText("Rust") || !tt.HasText("Docker") {
+		if !a.notFoundOpen || !tt.HasText("Rust") || !tt.HasText("Go") {
 			t.Fatal("not found did not open")
 		}
 		screenshot(t, tt, "sidebar-not-found-open")
@@ -227,11 +228,11 @@ func TestSidebarNotFound(t *testing.T) {
 			t.Fatal("not found did not close")
 		}
 	}
-	// The page shown stays in its section while it is open.
-	a.router.Push(kubePage)
+	// A missing language stays in Languages while its page is open.
+	a.router.Push("/tools/rust")
 	tt.Advance(time.Second)
-	if !tt.HasText("Kubernetes") || a.notFoundOpen {
-		t.Errorf("Kubernetes is not in its section while shown")
+	if !tt.HasText("Rust") || a.notFoundOpen {
+		t.Errorf("Rust is not in Languages while shown")
 	}
 	screenshot(t, tt, "sidebar-not-found-closed")
 }

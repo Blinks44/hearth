@@ -65,6 +65,10 @@ func agentLogo(c *ui.Context, id string, size float32) {
 	iconOrLogo(c, agentIcon(id), size, c.Theme().Text)
 }
 
+func agentLogoOn(c *ui.Context, id string, size float32, color ui.Color, darkBg bool) {
+	iconOrLogoOn(c, agentIcon(id), size, color, darkBg)
+}
+
 // agentTile is an agent's logo on a tile size wide.
 func agentTile(c *ui.Context, id string, size float32) {
 	pal := Colors(c.Theme())
@@ -248,7 +252,7 @@ func (a *App) agentFilter(c *ui.Context, key string, chosen *string, count func(
 		}
 		b.Children(func() {
 			if id != "" {
-				agentLogo(c, id, 13)
+				agentLogoOn(c, id, 13, text, t.Dark != on)
 			}
 			ui.Text(c, label).FontSize(12.5).TextColor(text).SingleLine()
 			ui.Text(c, strconv.Itoa(count(id))).FontSize(11).TextColor(faint).SingleLine()

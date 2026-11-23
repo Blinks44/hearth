@@ -10,8 +10,10 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/detect"
+	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -321,19 +323,52 @@ func (a *App) portsRefreshButton(c *ui.Context) {
 	})
 }
 
+func (a *App) isPortDocker(r portRow) bool {
+	if _, ok := a.portContainerFor(r); ok {
+		return true
+	}
+	return slices.Contains(dockerProcesses, r.Process)
+}
+
+func (a *App) planDockerPortStop(target docker.Target, ct inventory.DockerPortContainer) {
+	if a.BuildPlan == nil || a.op.running() || a.portsBusy {
+		return
+	}
+	a.portsBusy = true
+	a.portsErr = ""
+	item := docker.Container{ID: ct.ID, Name: ct.Name}
+	item.State.Status = "running"
+	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		return ops.PlanDockerContainers(target, env, []docker.Container{item}, ops.DockerStop)
+	}, func(p ops.Plan, err error) {
+		a.portsBusy = false
+		if err != nil {
+			a.portsErr = err.Error()
+			return
+		}
+		if a.router.Path() != portsPage || a.op.running() {
+			return
+		}
+		a.Propose(p)
+	})
+}
+
 func (a *App) portsView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.portsRefreshButton(c) }})
 		t := c.Theme()
 		pal := Colors(t)
 		rows := a.portRows()
-		projects, network := 0, 0
+		projects, network, dockerCount := 0, 0, 0
 		for _, r := range rows {
 			if r.Project != "" {
 				projects++
 			}
 			if r.Network {
 				network++
+			}
+			if a.isPortDocker(r) {
+				dockerCount++
 			}
 		}
 		ui.Scroll(c).Grow(1).Children(func() {
@@ -351,8 +386,21 @@ func (a *App) portsView(c *ui.Context, p page) {
 					stateCard(c, t.Success, locales.PortsInProjects(), strconv.Itoa(projects), locales.PortsInProjectsCaption())
 					stateCard(c, pal.Info, locales.PortsNetwork(), strconv.Itoa(network), locales.PortsNetworkCaption())
 				})
+				if a.portsErr != "" {
+					warningRow(c, a.portsErr)
+				}
 				a.forwardList(c, "")
-				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
+					segments(c, "ports-tabs", &a.portsTab, []segment{
+						{locales.TabAll(), strconv.Itoa(len(rows))},
+						{locales.ProjectsTitle(), strconv.Itoa(projects)},
+						{locales.PortsTabNetwork(), strconv.Itoa(network)},
+						{"Docker", strconv.Itoa(dockerCount)},
+					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("ports-filter"), &a.portsFilter).Bind(&a.filterField).Placeholder(locales.PortsFilter()).Height(controlHeight).Width(200)
 				})
@@ -383,20 +431,48 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 	pal := Colors(c.Theme())
 	filter := strings.ToLower(strings.TrimSpace(a.portsFilter))
 	addrWidth := float32(108)
+	actionsWidth := float32(132)
 	if narrow(c) {
 		addrWidth = 88
+		actionsWidth = 116
 	}
+	target, hasDockerTarget := a.selectedDockerTarget()
 	shown := 0
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.PortsColPort()).Width(56).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.PortsColProcess()).Grow(1).MinWidth(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.PortsColAddress()).Width(addrWidth).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.PortsColAccess()).Width(86).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Box(c).Width(actionsWidth).Shrink(0).Height(1)
+		})
 		for _, r := range rows {
-			about, plan, stoppable := a.portAbout(r)
 			ct, hasContainer := a.portContainerFor(r)
+			switch a.portsTab {
+			case 1:
+				if r.Project == "" {
+					continue
+				}
+			case 2:
+				if !r.Network {
+					continue
+				}
+			case 3:
+				if !hasContainer && !slices.Contains(dockerProcesses, r.Process) {
+					continue
+				}
+			}
+			about, plan, stoppable := a.portAbout(r)
 			canDocker := hasContainer && a.canOpenDockerContainer()
+			canStopDocker := hasContainer && hasDockerTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running() && !a.portsBusy
 			addrsFull := strings.Join(r.Addresses, ", ")
 			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about+" "+addrsFull+" "+ct.Image), filter) {
 				continue
 			}
 			shown++
+			port := r.Port
+			hostAddr := "localhost:" + port
+			httpURL := "http://" + hostAddr
 			ui.Row(c.Key("port:"+r.Port+":"+r.PID)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 				ui.Text(c, r.Port).Font(FontMono).FontSize(13).Width(56).Shrink(0).SingleLine()
 				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
@@ -414,7 +490,14 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 						chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
 					}
 				})
-				ui.Row(c).Width(76).Gap(2).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
+				ui.Row(c).Width(actionsWidth).Gap(2).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
+					iconButton(c.Key("port-copy"), "copy", locales.PortsCopyAddress(port)).OnClick(func() {
+						c.WriteClipboard(hostAddr)
+						c.Toast(locales.PortsAddressCopied(port))
+					})
+					iconButton(c.Key("port-open"), "external-link", locales.PortsOpenBrowser()).OnClick(func() {
+						c.OpenURL(httpURL)
+					})
 					if canDocker {
 						iconButton(c.Key("port-docker"), "container", locales.OpenInDocker()).OnClick(func() {
 							a.openDockerContainer(ct.ID, ct.Name)
@@ -425,20 +508,32 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 							a.router.Push(projectPath(r.Project))
 						})
 					}
-					if stoppable {
+					if canStopDocker {
+						ctCopy := ct
+						iconButton(c.Key("port-stop-docker"), "square", locales.DatabaseStopContainer()).OnClick(func() {
+							a.planDockerPortStop(target, ctCopy)
+						})
+					} else if stoppable {
 						iconButton(c.Key("port-stop"), "square", locales.PortsStop()).OnClick(func() {
 							a.Propose(plan)
 						})
 					}
-					if !stoppable && r.Project == "" && !canDocker {
-						return
-					}
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+						if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
+							c.WriteClipboard(hostAddr)
+							c.Toast(locales.PortsAddressCopied(port))
+						}
+						if menu.Item(locales.PortsOpenBrowser()).Chosen() {
+							c.OpenURL(httpURL)
+						}
 						if canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
 							a.openDockerContainer(ct.ID, ct.Name)
 						}
 						if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
 							a.router.Push(projectPath(r.Project))
+						}
+						if canStopDocker && menu.Item(locales.DatabaseStopContainer()).Chosen() {
+							a.planDockerPortStop(target, ct)
 						}
 						if stoppable && menu.Item(locales.PortsStop()).Chosen() {
 							a.Propose(plan)

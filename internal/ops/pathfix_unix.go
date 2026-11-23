@@ -19,7 +19,7 @@ import (
 // the user's (not a tool-manager eval/source hook), where Hearth may comment
 // out the line that adds it.
 func PathFixable(e inventory.PathEntry, home string) bool {
-	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return !s.Hook && userLine(s, home) })
+	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool { return !s.Hook && !s.Hearth && userLine(s, home) })
 }
 
 // PathEntryFixable matches PathPlan's preconditions for a single entry:

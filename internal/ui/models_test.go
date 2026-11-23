@@ -182,3 +182,62 @@ func TestModelsUnloadAndLMStudioRemove(t *testing.T) {
 	}
 	hasTexts(t, tt, "remove ~/.lmstudio/models/lmstudio-community/Mistral-Nemo-12B-GGUF")
 }
+
+func TestModelsPolishControls(t *testing.T) {
+	// Empty state with Homebrew offers Install Ollama…
+	a := NewApp()
+	scans := 0
+	a.OnScan = func() { scans++ }
+	tt := ui.NewTester(a.View, 1280, 820)
+	a.Snapshot = &inventory.Snapshot{Taken: tt.Now(), Tools: []inventory.ToolState{
+		{Tool: "models", Models: &inventory.ModelsState{}},
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew"}}},
+	}}
+	a.router.Push(modelsPage)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Refresh", "Install Ollama…")
+	if err := tt.Click("Refresh"); err != nil {
+		t.Fatal(err)
+	}
+	if scans != 1 {
+		t.Fatalf("scans = %d, want 1", scans)
+	}
+	a.Scanning = false
+	if err := tt.Click("Install Ollama…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Install Ollama" {
+		t.Fatalf("install ollama plan: %+v", a.op)
+	}
+	a.op = nil
+
+	// Without package manager, empty state falls back to Download Ollama.
+	a.Snapshot.Tools[1].PackageManagers = nil
+	tt.Frame()
+	hasTexts(t, tt, "Download Ollama ↗")
+
+	// With Ollama stopped: Start button, Copy model name button, and Nothing matches on filter miss.
+	a.Snapshot.Tools[0].Models = &inventory.ModelsState{
+		Ollama: &inventory.ModelApp{
+			Path: "/opt/homebrew/bin/ollama", Port: "11434",
+			Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"},
+			Models: []inventory.Model{{Name: "llama3.2:3b", Size: 2_000_000_000}},
+		},
+	}
+	tt.Frame()
+	if _, ok := tt.Find("Copy model name"); !ok {
+		t.Fatal("missing Copy model name button")
+	}
+	if err := tt.Click("Start service"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Title != "Start Ollama" {
+		t.Fatalf("start ollama plan: %+v", a.op)
+	}
+	a.op = nil
+	a.modelsFilter = "nonexistent-model"
+	tt.Frame()
+	hasTexts(t, tt, "Nothing matches")
+}

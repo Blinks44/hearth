@@ -285,3 +285,119 @@ func TestSkillRemoveAndBrokenPlan(t *testing.T) {
 		t.Fatalf("broken link still exists: %v", err)
 	}
 }
+
+func TestSkillLinkAllAndMergeKeep(t *testing.T) {
+	home, env := skillHome(t)
+	pdf := skillNamed(t, env, "pdf")[0]
+	p, err := SkillLinkAllPlan(pdf, []string{"codex", "gemini"}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, p, env)
+	after := skillNamed(t, env, "pdf")[0]
+	for _, agent := range []string{"claude", "codex", "gemini"} {
+		if !slices.ContainsFunc(after.Paths, func(sp inventory.SkillPath) bool { return slices.Contains(sp.Agents, agent) }) {
+			t.Fatalf("agent %s missing from pdf paths: %+v", agent, after.Paths)
+		}
+	}
+
+	// Differing copies: keep the Claude copy even though another copy occupies ~/.agents/skills/plan.
+	claudePlan := filepath.Join(home, ".claude", "skills", "plan")
+	sharedPlan := filepath.Join(home, ".agents", "skills", "plan")
+	if err := os.WriteFile(filepath.Join(claudePlan, "SKILL.md"), []byte("---\nname: plan\n---\nkeep-claude\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sharedPlan, "SKILL.md"), []byte("---\nname: plan\n---\nold-shared\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	peers := skillNamed(t, env, "plan")
+	if len(peers) != 2 || peers[0].Sum == peers[1].Sum {
+		t.Fatalf("expected 2 differing peers: %+v", peers)
+	}
+	var keep inventory.Skill
+	for _, s := range peers {
+		if sameSkillPath(s.Dir, claudePlan) {
+			keep = s
+		}
+	}
+	backups := filepath.Join(home, "backups")
+	mp, err := SkillMergeKeepPlan(keep, peers, backups, env, time.Date(2026, 11, 22, 12, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runPlan(t, mp, env)
+	merged := skillNamed(t, env, "plan")
+	if len(merged) != 1 || !sameSkillPath(merged[0].Dir, sharedPlan) {
+		t.Fatalf("merged = %+v", merged)
+	}
+	body, err := os.ReadFile(filepath.Join(merged[0].Dir, "SKILL.md"))
+	if err != nil || !strings.Contains(string(body), "keep-claude") {
+		t.Fatalf("kept content = %q, err = %v", string(body), err)
+	}
+	backupBody, err := os.ReadFile(filepath.Join(backups, "plan-2026-11-22-120000", "SKILL.md"))
+	if err != nil || !strings.Contains(string(backupBody), "old-shared") {
+		t.Fatalf("backup content = %q, err = %v", string(backupBody), err)
+	}
+}
+
+func TestSkillExternalRepoNotMovedOnLinkAndMerge(t *testing.T) {
+	home := t.TempDir()
+	env := slices.Concat(sysenv.Env(os.Environ()), sysenv.Env{
+		"HOME=" + home, "USERPROFILE=" + home, "CLAUDE_CONFIG_DIR=", "CODEX_HOME=", "COPILOT_HOME=",
+	})
+	repoSkill := filepath.Join(home, "dev", "my-skills-repo", "repo-bootstrap")
+	if err := os.MkdirAll(repoSkill, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repoSkill, "SKILL.md"), []byte("---\nname: repo-bootstrap\n---\nfrom-repo\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sharedDir := filepath.Join(home, ".agents", "skills")
+	if err := os.MkdirAll(sharedDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sharedLink := filepath.Join(sharedDir, "repo-bootstrap")
+	if err := os.Symlink(repoSkill, sharedLink); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+
+	sk := skillNamed(t, env, "repo-bootstrap")[0]
+	p, err := SkillLinkPlan(sk, "claude", env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, st := range p.Steps {
+		if len(st.Argv) > 0 && (st.Argv[0] == "rm" || st.Argv[0] == "mv") {
+			t.Fatalf("external repo skill link plan must not run rm/mv: %+v", p.Steps)
+		}
+	}
+	runPlan(t, p, env)
+
+	// External repo directory stays a real directory and existing ~/.agents/skills symlink stays intact.
+	if info, err := os.Lstat(repoSkill); err != nil || info.Mode()&linkMode != 0 {
+		t.Fatalf("external repo skill changed: info=%v err=%v", info, err)
+	}
+	if info, err := os.Lstat(sharedLink); err != nil || info.Mode()&linkMode == 0 {
+		t.Fatalf("shared symlink was replaced: info=%v err=%v", info, err)
+	}
+	claudeLink := filepath.Join(home, ".claude", "skills", "repo-bootstrap")
+	if !sameSkillPath(claudeLink, repoSkill) {
+		t.Fatalf("claude link does not point to external repo skill")
+	}
+
+	// SkillLinkAllPlan on external skill also creates only symlinks without rm/mv.
+	sk = skillNamed(t, env, "repo-bootstrap")[0]
+	allPlan, err := SkillLinkAllPlan(sk, []string{"antigravity"}, env, title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, st := range allPlan.Steps {
+		if len(st.Argv) > 0 && (st.Argv[0] == "rm" || st.Argv[0] == "mv") {
+			t.Fatalf("external repo SkillLinkAllPlan must not run rm/mv: %+v", allPlan.Steps)
+		}
+	}
+	runPlan(t, allPlan, env)
+	if info, err := os.Lstat(repoSkill); err != nil || info.Mode()&linkMode != 0 {
+		t.Fatalf("external repo skill changed after link-all: info=%v err=%v", info, err)
+	}
+}

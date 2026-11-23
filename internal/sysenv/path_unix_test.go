@@ -154,3 +154,28 @@ func TestPathSourceManagerHooks(t *testing.T) {
 		t.Errorf("custom MISE_DATA_DIR shims: %+v", s)
 	}
 }
+
+func TestPathSourceHearthBlock(t *testing.T) {
+	root := t.TempDir()
+	file := filepath.Join(root, ".zshrc")
+	body := strings.Join([]string{
+		`export PATH="$HOME/user-bin:$PATH"`,
+		`# >>> hearth >>>`,
+		`export PATH="$HOME/hearth-bin:$PATH"`,
+		`# <<< hearth <<<`,
+		`export PATH="$HOME/after-bin:$PATH"`,
+	}, "\n") + "\n"
+	if err := os.WriteFile(file, []byte(body), 0600); err != nil {
+		t.Fatal(err)
+	}
+	got := sourceFiles(Env{"HOME=" + root}, []string{file})
+	if s := got[filepath.Join(root, "user-bin")]; len(s) != 1 || s[0].Hearth {
+		t.Errorf("user-bin should not be marked Hearth: %+v", s)
+	}
+	if s := got[filepath.Join(root, "hearth-bin")]; len(s) != 1 || !s[0].Hearth {
+		t.Errorf("hearth-bin should be marked Hearth: %+v", s)
+	}
+	if s := got[filepath.Join(root, "after-bin")]; len(s) != 1 || s[0].Hearth {
+		t.Errorf("after-bin should not be marked Hearth: %+v", s)
+	}
+}

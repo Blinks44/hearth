@@ -368,9 +368,12 @@ type App struct {
 	kubeLink            kubeLinkDialog
 	kubeApply           *kubeApplyDialog
 	forwards            []*portForward
+	portsTab            int    // the Ports page's quick filter: all, projects, network, docker
 	portsFilter         string // the Ports table's filter
 	portsRefreshing     bool
 	portsRefreshSeq     int
+	portsBusy           bool   // a Docker container stop plan is being built on Ports
+	portsErr            string // last Docker container stop error on Ports
 	instructionsQuery   string // the Instructions page's filter
 	instructionsChosen  string // the project shown on the Instructions page
 	usageTab            int    // the Usage page's period, by usagePeriods
@@ -379,6 +382,7 @@ type App struct {
 	usageAgentLabel     string
 	usageProject        string // the Usage page's project filter, "" for all
 	usageProjectLabel   string
+	usageModel          string // the Usage page's model filter, "" for all
 	mobileTab           int    // the mobile page's tab: all, then a group each
 	mobileFilter        string // the mobile table's filter
 	editorsTab          int    // the editors page's tab: all, extensions, commands
@@ -398,25 +402,28 @@ type App struct {
 	// updateChoice is what the user checked or unchecked on the Updates
 	// page, by updateRow.key; the others are as Hearth offers them.
 	updateChoice       map[string]bool
-	databaseTab        int     // the tab of the databases page shown
-	databaseFilter     string  // the databases table's filter
-	databaseErr        string  // last terminal launch error on the Databases page
-	databaseBusy       bool    // a Docker database start/stop plan is being built
-	dockerTab          int     // the tab of the Docker page shown
-	dockerFilter       string  // the Docker contexts table's filter
-	bunTab             int     // the tab of the Bun page shown
-	goTab              int     // the tab of the Go page shown
-	phpTab             int     // the tab of the PHP page shown
-	pythonTab          int     // the tab of the Python page shown
-	dotnetTab          int     // the tab of the .NET page shown
-	rubyTab            int     // the tab of the Ruby page shown
-	javaTab            int     // the tab of the Java page shown
-	rustTab            int     // the tab of the Rust page shown
-	rustToolchainInput string  // custom toolchain name or version to install via rustup
-	rustTargetInput    string  // custom target triple to add via rustup target add
-	projectsTab        int     // all projects, or the ones needing attention
-	projectFilter      string  // the projects page's filter
-	adding             *adding // the folder the add dialog shows; nil when closed
+	databaseTab        int             // the tab of the databases page shown
+	databaseFilter     string          // the databases table's filter
+	databaseErr        string          // last terminal launch error on the Databases page
+	databaseBusy       bool            // a Docker database start/stop plan is being built
+	dockerTab          int             // the tab of the Docker page shown
+	dockerFilter       string          // the Docker contexts table's filter
+	bunTab             int             // the tab of the Bun page shown
+	goTab              int             // the tab of the Go page shown
+	phpTab             int             // the tab of the PHP page shown
+	pythonTab          int             // the tab of the Python page shown
+	dotnetTab          int             // the tab of the .NET page shown
+	rubyTab            int             // the tab of the Ruby page shown
+	javaTab            int             // the tab of the Java page shown
+	rustTab            int             // the tab of the Rust page shown
+	rustToolchain      string          // selected rustup toolchain for Targets/Components
+	rustToolchainLabel string          // ui.Select label binding for rustToolchain
+	rustToolchainInput string          // custom toolchain name or version to install via rustup
+	rustTargetInput    string          // custom target triple to add via rustup target add
+	editorsExpanded    map[string]bool // expanded extension/superseded lists on Editors page
+	projectsTab        int             // all projects, or the ones needing attention
+	projectFilter      string          // the projects page's filter
+	adding             *adding         // the folder the add dialog shows; nil when closed
 	addOpen            bool
 	licensesOpen       bool // the licenses dialog from Settings
 
@@ -429,10 +436,10 @@ type App struct {
 	skillScope, mcpScope   int
 	skillQuery, mcpQuery   string
 	skillChosen, mcpChosen string
-	skillFolder            skillFolder    // what was read of the skill shown
-	mcpCheck               mcpCheck       // the last check of an MCP server
-	mcpCheckDecl           map[string]int // chosen declaration index per MCP item key
-	mcpForm                *mcpFormState  // open add/edit MCP server dialog; nil when none
+	skillFolder            skillFolder         // what was read of the skill shown
+	mcpChecks              map[string]mcpCheck // last check of each MCP server declaration
+	mcpCheckDecl           map[string]int      // chosen declaration index per MCP item key
+	mcpForm                *mcpFormState       // open add/edit MCP server dialog; nil when none
 	markdown               markdown.Options
 }
 
@@ -746,19 +753,8 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				a.item(c, installNav, nil)
 				missing := a.languages(c)
 				for _, s := range sections {
-					var shown []page
-					for _, p := range s.pages {
-						if a.missing(p) && !within(a.router.Path(), p.path) {
-							missing = append(missing, p)
-						} else {
-							shown = append(shown, p)
-						}
-					}
-					if len(shown) == 0 {
-						continue
-					}
 					sectionTitle(c, s.title())
-					for _, p := range shown {
+					for _, p := range s.pages {
 						end := a.pageEnd(c, p)
 						if a.missing(p) {
 							end = notInstalled(c)
@@ -967,8 +963,8 @@ func notInstalled(c *ui.Context) func() {
 }
 
 // missing reports that the last scan found nothing a tool page p shows,
-// which then waits under "Not found". Pages that always have something
-// to show, and every page before a scan, are never missing.
+// so the sidebar marks it with "+" instead of a count. Pages that always
+// have something to show, and every page before a scan, are never missing.
 func (a *App) missing(p page) bool {
 	if a.Snapshot == nil {
 		return false
@@ -1011,8 +1007,7 @@ func (a *App) dockerAnswers() bool {
 }
 
 // notFound is the "Not found" item at the end of the sections: it opens
-// the languages and tools the scan did not find, pages kept by the order
-// of their sections.
+// the languages the scan did not find.
 func (a *App) notFound(c *ui.Context, rest []page) {
 	if len(rest) == 0 {
 		return

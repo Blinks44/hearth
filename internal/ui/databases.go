@@ -22,7 +22,10 @@ import (
 
 func (a *App) databases(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.databaseInstallMenu(c) }})
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.refreshScanButton(c, "databases-refresh")
+			a.databaseInstallMenu(c)
+		}})
 		st, ok := a.Snapshot.Tool("databases")
 		if !ok || st.Databases == nil {
 			a.toolEmpty(c, "databases", p.title())
@@ -35,6 +38,17 @@ func (a *App) databases(c *ui.Context, p page) {
 			if is.Kind == issues.DatabasePortConflict {
 				conflicts = append(conflicts, is)
 			}
+		}
+		servicesCount, containersCount, projectsCount := 0, 0, 0
+		for _, db := range servers {
+			if db.Source == "docker" {
+				containersCount++
+			} else if db.Service != "" {
+				servicesCount++
+			}
+		}
+		for _, pr := range a.Projects {
+			projectsCount += len(pr.Databases)
 		}
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
@@ -101,14 +115,23 @@ func (a *App) databases(c *ui.Context, p page) {
 				if dockerSt, ok := a.Snapshot.Tool("docker"); ok && dockerSt.Docker != nil && dockerSt.Docker.DatabaseErr {
 					warningRow(c, locales.DatabaseContainersFailed())
 				}
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					segments(c, "database-tabs", &a.databaseTab, []segment{{locales.TabAll(), strconv.Itoa(len(servers))}, {locales.DatabaseServices(), ""}, {locales.ProjectsTitle(), ""}, {locales.DatabaseContainers(), ""}})
+				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
+					segments(c, "database-tabs", &a.databaseTab, []segment{
+						{locales.TabAll(), strconv.Itoa(len(servers))},
+						{locales.DatabaseServices(), strconv.Itoa(servicesCount)},
+						{locales.ProjectsTitle(), strconv.Itoa(projectsCount)},
+						{locales.DatabaseContainers(), strconv.Itoa(containersCount)},
+					})
 					ui.Box(c).Grow(1)
 					ui.SearchField(c.Key("database-filter"), &a.databaseFilter).Bind(&a.filterField).Placeholder(locales.DatabaseFilter()).Height(controlHeight).Width(200)
 				})
 				columns(c, 12, func() {
 					if a.databaseTab == 2 {
-						a.databaseProjects(c)
+						a.databaseProjects(c, true)
 					} else {
 						a.databaseTable(c, servers, d.Clients, d.Listeners)
 					}
@@ -156,7 +179,7 @@ func (a *App) databases(c *ui.Context, p page) {
 						}
 					})
 					if a.databaseTab != 2 {
-						a.databaseProjects(c)
+						a.databaseProjects(c, false)
 					}
 				})
 			})
@@ -253,7 +276,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 			url, password := databaseURL(db, user, port)
 			client, hasClient := databaseClientFor(db, clients)
 			var clientCmd []string
-			if hasClient && a.OpenDBClient != nil {
+			if hasClient && a.OpenDBClient != nil && db.Status == "running" {
 				clientCmd = databaseClientCommand(db, client, port, user)
 			}
 			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
@@ -376,17 +399,30 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 	})
 }
 
-func (a *App) databaseProjects(c *ui.Context) {
+func (a *App) databaseProjects(c *ui.Context, applyFilter bool) {
 	listCard(c, locales.DatabaseProjects(), "compose · .env", func() {
-		shown := 0
+		filter := ""
+		if applyFilter {
+			filter = strings.ToLower(strings.TrimSpace(a.databaseFilter))
+		}
+		total, shown := 0, 0
 		for _, p := range a.Projects {
 			for _, ref := range p.Databases {
+				total++
+				haystack := strings.ToLower(filepath.Base(p.Dir) + " " + ref.File + " " + ref.Kind + " " + ref.Service + " " + strings.Join(ref.Ports, " "))
+				if filter != "" && !strings.Contains(haystack, filter) {
+					continue
+				}
 				shown++
 				listRow(c, filepath.Base(p.Dir), false, ref.File+" · "+ref.Kind+" · "+strings.Join(ref.Ports, ", "), func() { ui.Button(c, locales.Details()).OnClick(func() { a.router.Push(projectPath(p.Dir)) }) })
 			}
 		}
 		if shown == 0 {
-			cardNote(c, locales.DatabaseNoProjects())
+			if total > 0 && filter != "" {
+				cardNote(c, locales.NothingMatches())
+			} else {
+				cardNote(c, locales.DatabaseNoProjects())
+			}
 		}
 	})
 }

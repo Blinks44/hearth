@@ -29,11 +29,16 @@ func readSkills(env sysenv.Env, project string) []inventory.Skill {
 	return ai.Skills(env)
 }
 
-// canonicalSkill moves an existing skill into common storage. Existing links
+// canonicalSkill moves a managed skill into common storage. Existing links
 // through its old folder keep working because that folder becomes a link.
+// External folders outside Hearth's known skills directories (for example, a
+// user's own git repository symlinked into an agent folder) stay in place.
 func canonicalSkill(sk inventory.Skill, env sysenv.Env) (string, []Step, error) {
 	if sk.Synced {
 		return "", nil, errors.New(locales.SkillNothingToMerge())
+	}
+	if !isManagedSkillDir(sk.Dir, ai.SkillRoots(env, sk.Project)) {
+		return sk.Dir, nil, nil
 	}
 	dest := filepath.Join(ai.SharedSkillsDir(env, sk.Project), filepath.Base(sk.Dir))
 	if dest == sk.Dir {
@@ -115,8 +120,11 @@ func SkillLinkPlan(sk inventory.Skill, id string, env sysenv.Env, names func(str
 	}
 	// The other readers of the folder get it too, but for those that
 	// have it by another path already.
-	_, commonReaders := ai.SkillsDir("codex", env, sk.Project)
-	readers = slices.Concat(readers, commonReaders)
+	sharedDir := ai.SharedSkillsDir(env, sk.Project)
+	if dir == sharedDir || filepath.Dir(canonical) == sharedDir {
+		_, commonReaders := ai.SkillsDir("codex", env, sk.Project)
+		readers = slices.Concat(readers, commonReaders)
+	}
 	var others []string
 	for _, r := range readers {
 		if r != id && !slices.Contains(others, names(r)) && !slices.ContainsFunc(sk.Paths, func(sp inventory.SkillPath) bool { return slices.Contains(sp.Agents, r) }) {
@@ -257,6 +265,205 @@ func SkillMergePlan(groups [][]inventory.Skill, backups string, env sysenv.Env, 
 			}
 		}
 		return locales.SkillCheckMerged(len(merged)), nil
+	}
+	return p, nil
+}
+
+// SkillLinkAllPlan connects sk to all eligible agents in ids in a single plan:
+// promotes sk into common storage once if needed and creates symlinks in every
+// unique agent directory that does not already see sk.
+func SkillLinkAllPlan(sk inventory.Skill, ids []string, env sysenv.Env, names func(string) string) (Plan, error) {
+	if sk.Broken || sk.Synced {
+		return Plan{}, errors.New(locales.SkillNothingToLink())
+	}
+	canonical, steps, err := canonicalSkill(sk, env)
+	if err != nil {
+		return Plan{}, err
+	}
+	var links []string
+	if len(steps) > 0 && !sameSkillPath(sk.Dir, canonical) {
+		links = append(links, sk.Dir+" → "+canonical)
+	}
+	madeDirs := map[string]bool{}
+	seenLinks := map[string]bool{}
+	var targetIDs []string
+	for _, id := range ids {
+		if id == "" || id == "aider" {
+			continue
+		}
+		if slices.ContainsFunc(sk.Paths, func(sp inventory.SkillPath) bool { return slices.Contains(sp.Agents, id) }) {
+			continue
+		}
+		dir, _ := ai.SkillsDir(id, env, sk.Project)
+		if dir == "" {
+			continue
+		}
+		link := filepath.Join(dir, filepath.Base(sk.Dir))
+		if link == canonical {
+			targetIDs = append(targetIDs, id)
+			continue
+		}
+		if seenLinks[link] {
+			targetIDs = append(targetIDs, id)
+			continue
+		}
+		if _, err := os.Lstat(link); err == nil {
+			if sameSkillPath(link, sk.Dir) {
+				targetIDs = append(targetIDs, id)
+				continue
+			}
+			return Plan{}, errors.New(locales.SkillLinkTaken(link))
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return Plan{}, err
+		}
+		if !madeDirs[dir] {
+			if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
+				steps = append(steps, Step{Argv: mkdirCommand(dir)})
+			}
+			madeDirs[dir] = true
+		}
+		steps = append(steps, Step{Argv: linkCommand(canonical, link)})
+		links = append(links, link+" → "+canonical)
+		seenLinks[link] = true
+		targetIDs = append(targetIDs, id)
+	}
+	if len(targetIDs) == 0 || len(steps) == 0 {
+		return Plan{}, errors.New(locales.SkillNothingToLink())
+	}
+	var titles []string
+	for _, id := range targetIDs {
+		t := names(id)
+		if !slices.Contains(titles, t) {
+			titles = append(titles, t)
+		}
+	}
+	p := Plan{
+		Title:   locales.SkillLinkAllTitle(sk.Name),
+		Why:     locales.SkillLinkWhy(),
+		Steps:   steps,
+		Changes: append([]string{canonical}, links...),
+		Notes:   append(skillStorageNotes(sk.Name, canonical, links), Note{Title: locales.AvailableToAgents(), Text: strings.Join(titles, ", ")}),
+	}
+	p.Verify = func(context.Context) (string, error) {
+		for _, s := range readSkills(env, sk.Project) {
+			if !sameSkillPath(s.Dir, canonical) {
+				continue
+			}
+			for _, id := range targetIDs {
+				if !slices.ContainsFunc(s.Paths, func(sp inventory.SkillPath) bool { return slices.Contains(sp.Agents, id) }) {
+					return "", errors.New(locales.SkillCheckNotLinked(sk.Name, names(id)))
+				}
+			}
+			return locales.SkillCheckLinkedAll(sk.Name), nil
+		}
+		return "", errors.New(locales.SkillCheckNotLinked(sk.Name, strings.Join(titles, ", ")))
+	}
+	return p, nil
+}
+
+// SkillMergeKeepPlan resolves diverging copies of a skill by keeping keep as
+// the canonical copy, moving every other peer copy into backups, and replacing
+// each moved peer with a symlink to the kept folder.
+func SkillMergeKeepPlan(keep inventory.Skill, peers []inventory.Skill, backups string, env sysenv.Env, now time.Time) (Plan, error) {
+	if keep.Broken || keep.Synced || keep.Dir == "" {
+		return Plan{}, errors.New(locales.SkillNothingToMerge())
+	}
+	var others []inventory.Skill
+	for _, c := range peers {
+		if c.Broken || c.Synced || c.Project != keep.Project || c.Name != keep.Name {
+			continue
+		}
+		if c.Dir == keep.Dir || sameSkillPath(c.Dir, keep.Dir) {
+			continue
+		}
+		if !slices.ContainsFunc(others, func(x inventory.Skill) bool { return x.Dir == c.Dir }) {
+			others = append(others, c)
+		}
+	}
+	if len(others) == 0 {
+		return Plan{}, errors.New(locales.SkillNothingToMerge())
+	}
+	var steps []Step
+	if _, err := os.Stat(backups); err != nil {
+		steps = append(steps, Step{Argv: mkdirCommand(backups)})
+	}
+	dest := filepath.Join(ai.SharedSkillsDir(env, keep.Project), filepath.Base(keep.Dir))
+	stamp := now.Format("2006-01-02-150405")
+	// If another peer currently occupies the shared destination path, back it up
+	// first so canonical promotion of keep can move into dest cleanly.
+	var backupChanges, links []string
+	var deferred []inventory.Skill
+	backupIdx := 0
+	movePeer := func(c inventory.Skill) {
+		backup := filepath.Join(backups, filepath.Base(c.Dir)+"-"+stamp)
+		if backupIdx > 0 {
+			backup += "-" + strconv.Itoa(backupIdx+1)
+		}
+		backupIdx++
+		steps = append(steps, Step{Argv: moveCommand(c.Dir, backup)}, Step{Argv: linkCommand(dest, c.Dir)})
+		backupChanges = append(backupChanges, c.Dir+" → "+dest)
+		links = append(links, c.Dir+" → "+dest)
+	}
+	managedKeep := isManagedSkillDir(keep.Dir, ai.SkillRoots(env, keep.Project))
+	destOccupiedByPeer := false
+	for _, c := range others {
+		if managedKeep && sameSkillPath(c.Dir, dest) {
+			destOccupiedByPeer = true
+			backup := filepath.Join(backups, filepath.Base(c.Dir)+"-"+stamp)
+			if backupIdx > 0 {
+				backup += "-" + strconv.Itoa(backupIdx+1)
+			}
+			backupIdx++
+			steps = append(steps, Step{Argv: moveCommand(c.Dir, backup)})
+			backupChanges = append(backupChanges, c.Dir+" → "+backup)
+			continue
+		}
+		deferred = append(deferred, c)
+	}
+	if destOccupiedByPeer {
+		if _, err := os.Stat(filepath.Dir(dest)); errors.Is(err, os.ErrNotExist) {
+			steps = append(steps, Step{Argv: mkdirCommand(filepath.Dir(dest))})
+		}
+		steps = append(steps, Step{Argv: moveCommand(keep.Dir, dest)}, Step{Argv: linkCommand(dest, keep.Dir)})
+		links = append(links, keep.Dir+" → "+dest)
+	} else {
+		var promote []Step
+		var err error
+		dest, promote, err = canonicalSkill(keep, env)
+		if err != nil {
+			return Plan{}, err
+		}
+		steps = append(steps, promote...)
+		if len(promote) > 0 {
+			links = append(links, keep.Dir+" → "+dest)
+		}
+	}
+	for _, c := range deferred {
+		movePeer(c)
+	}
+	p := Plan{
+		Title:   locales.SkillMergeKeepTitle(keep.Name),
+		Why:     locales.SkillMergeKeepWhy(keep.Dir, backups),
+		Steps:   steps,
+		Changes: append([]string{dest}, backupChanges...),
+		Notes:   skillStorageNotes(keep.Name, dest, links),
+	}
+	p.Verify = func(context.Context) (string, error) {
+		found := false
+		for _, s := range readSkills(env, keep.Project) {
+			if s.Name != keep.Name {
+				continue
+			}
+			if sameSkillPath(s.Dir, dest) {
+				found = true
+			} else {
+				return "", errors.New(locales.SkillCheckNotMerged(s.Name))
+			}
+		}
+		if !found {
+			return "", errors.New(locales.SkillCheckNotMerged(keep.Name))
+		}
+		return locales.SkillCheckMerged(1), nil
 	}
 	return p, nil
 }
