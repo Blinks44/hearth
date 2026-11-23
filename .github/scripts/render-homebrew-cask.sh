@@ -26,8 +26,7 @@ cask "hearth" do
   version "${version}"
   sha256 "${sha256}"
 
-  url "https://github.com/Blinks44/hearth/releases/download/v#{version}/hearth-#{version}.dmg",
-      verified: "github.com/Blinks44/hearth/"
+  url "https://github.com/Blinks44/hearth/releases/download/v#{version}/hearth-#{version}.dmg"
   name "Hearth"
   desc "Local desktop app for developer tools, versions, PATH, Docker, Kubernetes, and AI agents"
   homepage "https://hearth.moduix.dev"
@@ -37,7 +36,7 @@ cask "hearth" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
 
   app "Hearth.app"
 

@@ -4,14 +4,6 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-rc.2] - 2026-11-23
-
-Second release candidate verifying live Ed25519-signed auto-updates from v1.0.0-rc.1 across macOS, Windows, and Linux while preserving user settings.
-
-## [1.0.0-rc.1] - 2026-11-23
-
-First public release candidate of Hearth v1.0.0 verifying signed cross-platform builds, artifact build provenance attestations, Homebrew tap sync, and Ed25519-signed auto-updates.
-
 ## [1.0.0] - 2026-11-23
 
 First public release of Hearth for macOS (Universal), Windows (x64 & ARM64), and Linux (x64 & ARM64).
