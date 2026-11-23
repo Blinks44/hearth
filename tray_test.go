@@ -124,9 +124,12 @@ func TestBuildTrayMenuItems(t *testing.T) {
 		t.Fatalf("switchedKube = %q, want kind-dev", switchedKube)
 	}
 
+	if byID(items, "updates") != nil {
+		t.Fatal("tray menu should not include a separate tool updates item")
+	}
 	appUpdateItem := byID(items, "app-update")
-	if appUpdateItem == nil || appUpdateItem.Label != locales.AppUpdateCheck() {
-		t.Fatalf("app-update item = %+v, want %q", appUpdateItem, locales.AppUpdateCheck())
+	if appUpdateItem == nil || appUpdateItem.Label != locales.TrayCheckUpdates() {
+		t.Fatalf("app-update item = %+v, want %q", appUpdateItem, locales.TrayCheckUpdates())
 	}
 	appUpdateItem.Click(appUpdateItem, nil)
 	if appUpdateChecks != 1 {

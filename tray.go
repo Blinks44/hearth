@@ -49,7 +49,6 @@ type trayActions struct {
 	stopColima      func()
 	switchDockerCtx func(name string)
 	switchKubeCtx   func(name string)
-	checkUpdates    func()
 	checkAppUpdate  func()
 	openSettings    func()
 	quit            func()
@@ -161,13 +160,6 @@ func (t *trayController) buildMenu() *mygo.Menu {
 		},
 		switchDockerCtx: t.switchDockerContext,
 		switchKubeCtx:   t.switchKubeContext,
-		checkUpdates: func() {
-			t.app.OpenUpdates()
-			if t.app.CheckUpdates != nil {
-				t.app.CheckUpdates()
-			}
-			t.showWindow()
-		},
 		checkAppUpdate: func() {
 			if t.app.CheckAppUpdate != nil {
 				t.app.CheckAppUpdate()
@@ -464,21 +456,12 @@ func buildTrayMenuItems(snap *inventory.Snapshot, containers []docker.Container,
 		})
 	}
 
-	appUpdateLabel := locales.AppUpdateCheck()
+	appUpdateLabel := locales.TrayCheckUpdates()
 	if appUpdateAvailable != "" {
 		appUpdateLabel = locales.AppUpdateAvailable(appUpdateAvailable)
 	}
 	items = append(items,
 		mygo.Separator(),
-		&mygo.MenuItem{
-			ID:    "updates",
-			Label: locales.TrayCheckUpdates(),
-			Click: func(*mygo.MenuItem, *mygo.Window) {
-				if act.checkUpdates != nil {
-					act.checkUpdates()
-				}
-			},
-		},
 		&mygo.MenuItem{
 			ID:    "app-update",
 			Label: appUpdateLabel,
