@@ -38,8 +38,8 @@
   "dockerBrokenPlugin": "Битая ссылка плагина · {plugin}",
   "dockerOpenFolder": "Открыть папку",
   "dockerDefaultSocket": "Сокет Docker по умолчанию",
-  "dockerSocketDifferent": "Сокет по умолчанию отличается от сокета контекста {context}. Укажите контекст явно.",
-  "dockerSocketMissing": "Сокет по умолчанию отсутствует. Укажите контекст {context} явно.",
+  "dockerSocketDifferent": "Инструменты, читающие /var/run/docker.sock напрямую (IDE, Testcontainers), обращаются к другому движку вместо {context}.",
+  "dockerSocketMissing": "/var/run/docker.sock отсутствует. Инструментам, игнорирующим контексты Docker (IDE, Testcontainers), нужна ссылка на {context}.",
   "dockerSocketUnavailable": "Движок на сокете по умолчанию не ответил.",
   "dockerLowMemory": "Мало памяти у VM Colima",
   "dockerLowMemoryDetail": "Контейнеры занимают {used} из {total}, доступных движку.",
@@ -3411,7 +3411,7 @@
   "settingsTrayHintMac": "Быстрый доступ к контейнерам и контекстам. При закрытии окна Hearth остаётся в панели меню.",
   "settingsTrayHintOther": "Быстрый доступ к контейнерам и контекстам. При закрытии окна Hearth остаётся в трее.",
   "settingsDockLabel": "Иконка в Dock",
-  "settingsDockHint": "Отключите, чтобы оставить Hearth только в панели меню.",
+  "settingsDockHint": "Если выключено, иконка в Dock видна только пока окно открыто и скрывается при закрытии в панель меню.",
   "settingsDockRequiresTray": "Сначала включите иконку в панели меню, чтобы скрыть Hearth из Dock.",
   "settingsOpenAtLogin": "Запускать при входе в систему",
   "settingsOpenAtLoginHint": "Автоматически запускает Hearth свёрнутым в фоне при входе в систему.",
@@ -3422,5 +3422,12 @@
   "skillCatalogSkillsShInstalls": "{count} установок",
   "skillCatalogStoredIn": "Файлы",
   "skillCatalogSymlinkLabel": "Ссылка для {agent}",
-  "skillCatalogSharedDirect": "Общая папка · {agent} читает напрямую"
+  "skillCatalogSharedDirect": "Общая папка · {agent} читает напрямую",
+  "dockerSocketLinkButton": "Направить на {context}…",
+  "dockerSocketLinkTitle": "Направить /var/run/docker.sock на {context}",
+  "dockerSocketLinkWhy": "IDE, Testcontainers и скрипты, читающие /var/run/docker.sock напрямую, начнут использовать {context}.",
+  "dockerSocketLinkNoteTitle": "Другие движки Docker",
+  "dockerSocketLinkNoteText": "Другие движки (например, OrbStack или Docker Desktop) перестанут получать запросы по /var/run/docker.sock, пока вы не вернёте ссылку обратно или не перезапустите их.",
+  "dockerSocketLinkVerified": "/var/run/docker.sock теперь указывает на {context}.",
+  "dockerSocketLinkFailed": "/var/run/docker.sock по-прежнему не указывает на {context}."
 }

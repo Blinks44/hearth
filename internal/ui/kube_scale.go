@@ -88,27 +88,11 @@ func (a *App) workloadScale(c *ui.Context, ref ops.KubeResource, replicas int) {
 			ui.Text(c, locales.KubeScaleNow(replicas)).FontSize(12).TextColor(t.TextMuted).Wrap()
 		})
 		ui.Row(c).Gap(9).Shrink(0).AlignItems(ui.Center).Children(func() {
-			ui.Row(c).Height(podActionHeight).Radius(6).Clip().BorderWidth(1).BorderColor(pal.ControlBorder).AlignItems(ui.Center).
-				Children(func() {
-					step := func(key, icon, label string, off bool, to int) {
-						b := ui.ButtonBase(c.Key(key)).Size(28, podActionHeight).Center().Label(label).Tooltip(label).
-							Disabled(disabled || off).OnClick(func() { set(to) })
-						color := t.Text
-						switch {
-						case disabled || off:
-							color = pal.TextFaint
-						case b.Hovered():
-							b.Background(pal.Muted)
-						}
-						b.Children(func() { ui.Icon(c, Icon(icon)).Size(13, 13).TextColor(color) })
-					}
-					step("replicas-less", "minus", locales.KubeScaleLess(), want <= 0, want-1)
-					ui.Row(c).Height(podActionHeight).MinWidth(36).Padding(0, 8).AlignItems(ui.Center).Justify(ui.Center).
-						BorderWidth(0, 1, 0, 1).BorderColor(pal.ControlBorder).Children(func() {
-						ui.Text(c, strconv.Itoa(want)).Font(FontMono).FontSize(12.5).SingleLine()
-					})
-					step("replicas-more", "plus", locales.KubeScaleMore(), want >= ops.KubeMaxReplicas, want+1)
-				})
+			stepper(c, strconv.Itoa(want), 36,
+				"replicas-less", "replicas-more",
+				locales.KubeScaleLess(), locales.KubeScaleMore(),
+				disabled || want <= 0, disabled || want >= ops.KubeMaxReplicas,
+				func() { set(want - 1) }, func() { set(want + 1) })
 			ui.Row(c).Width(previousWidth + 2).Shrink(0).Children(func() {
 				if want != replicas {
 					ui.Text(c, previous).FontSize(11).TextColor(pal.TextFaint).SingleLine()

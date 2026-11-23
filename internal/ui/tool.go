@@ -547,6 +547,35 @@ func toggle(c *ui.Context, key any, on *bool) ui.Element {
 	return sw
 }
 
+// stepper is a bordered numeric control [- | value | +] with centered minus
+// and plus icon buttons, shared between Colima resource limits and Kubernetes
+// replica scaling.
+func stepper(c *ui.Context, value string, valueMinWidth float32, lessKey, moreKey, lessLabel, moreLabel string, lessOff, moreOff bool, onLess, onMore func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c).Height(podActionHeight).Radius(6).Clip().BorderWidth(1).BorderColor(pal.ControlBorder).AlignItems(ui.Center).
+		Children(func() {
+			step := func(key, icon, label string, off bool, click func()) {
+				b := ui.ButtonBase(c.Key(key)).Size(28, podActionHeight).Center().Label(label).Tooltip(label).
+					Disabled(off).OnClick(click)
+				color := t.Text
+				switch {
+				case off:
+					color = pal.TextFaint
+				case b.Hovered():
+					b.Background(pal.Muted)
+				}
+				b.Children(func() { ui.Icon(c, Icon(icon)).Size(13, 13).TextColor(color) })
+			}
+			step(lessKey, "minus", lessLabel, lessOff, onLess)
+			ui.Row(c).Height(podActionHeight).MinWidth(valueMinWidth).Padding(0, 8).AlignItems(ui.Center).Justify(ui.Center).
+				BorderWidth(0, 1, 0, 1).BorderColor(pal.ControlBorder).Children(func() {
+				ui.Text(c, value).Font(FontMono).FontSize(12.5).SingleLine()
+			})
+			step(moreKey, "plus", moreLabel, moreOff, onMore)
+		})
+}
+
 // cardNote is a list card's text in place of rows.
 func cardNote(c *ui.Context, text string) {
 	ui.Text(c, text).FontSize(12).TextColor(c.Theme().TextMuted).Padding(10, 14, 14, 14).

@@ -53,7 +53,11 @@ func fakeAPI(t *testing.T, lists map[string]string, legacy bool) *httptest.Serve
 			return
 		}
 		if code, rest, found := strings.Cut(body, " "); found && strings.HasPrefix(code, "4") {
-			w.WriteHeader(http.StatusForbidden)
+			status := http.StatusForbidden
+			if code == "404" {
+				status = http.StatusNotFound
+			}
+			w.WriteHeader(status)
 			body = rest
 		}
 		_, _ = fmt.Fprint(w, body)
@@ -326,5 +330,29 @@ func TestScaleTargetMatchesStatefulSet(t *testing.T) {
 	}
 	if st.Targets("Deployment", "db") || st.Targets("StatefulSet", "other") {
 		t.Fatal("unexpected target match")
+	}
+}
+
+func TestAPIMetricsFallsBackFromPlainText404(t *testing.T) {
+	lists := shopLists(t)
+	// Kubernetes API servers without metrics.k8s.io/v1 answer with a plain 404
+	// body (no JSON Status reason), so statusLine must normalize 404 to NotFound
+	// for readMetrics to fall back to v1beta1.
+	lists["/apis/metrics.k8s.io/v1/nodes"] = "404 404 page not found"
+	lists["/apis/metrics.k8s.io/v1beta1/nodes"] = `{"items":[{"metadata":{"name":"worker"},"usage":{"cpu":"250m","memory":"1Gi"}}]}`
+	srv := fakeAPI(t, lists, false)
+	env := kubeconfig(t, srv, "{token: secret}")
+	tg := target
+	tg.API = NewAPI()
+	var none run.Fake
+	nodes, err := nodeMetrics(t.Context(), &none, env, tg)
+	if err != nil {
+		t.Fatalf("nodeMetrics failed on plain-text 404 fallback: %v", err)
+	}
+	if got := nodes["worker"]; got == nil || *got != (Resources{CPU: .25, Memory: 1 << 30}) {
+		t.Fatalf("node metrics = %+v", got)
+	}
+	if calls := none.Calls(); len(calls) != 0 {
+		t.Fatalf("kubectl ran unexpectedly: %v", calls)
 	}
 }

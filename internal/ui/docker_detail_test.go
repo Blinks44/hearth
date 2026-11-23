@@ -69,9 +69,12 @@ func TestDockerDetailsAndLogs(t *testing.T) {
 	hasTexts(t, tt, "shop:latest", "linux/arm64", "Shell")
 	tt.SetSize(1000, 680)
 	tt.Advance(time.Second)
-	status, ok := tt.Find("STATUS")
-	if !ok || status.X+status.W > 550 {
-		t.Fatalf("compact list status is outside its pane: %+v", status)
+	if tt.HasText("STATUS") {
+		t.Fatalf("compact list should use icon status instead of STATUS header: %q", tt.Texts())
+	}
+	nameBox, ok := tt.Find(item.Name)
+	if !ok || nameBox.X+nameBox.W > 550 || nameBox.W < 60 {
+		t.Fatalf("compact list name is misaligned or cramped: %+v", nameBox)
 	}
 	click("Env")
 	hasTexts(t, tt, "KEY", "••••••••")

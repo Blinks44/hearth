@@ -71,13 +71,28 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 		case "unavailable":
 			row.detail = locales.DockerSocketUnavailable()
 		}
-		if d.DefaultSocketIssue != "unavailable" || a.dockerAnswers() {
-			row.button = locales.KubeShellCopy()
-			command := run.TerminalCommand([]string{"docker", "--context", d.Selected, "ps"})
-			row.action = func() { c.WriteClipboard(command) }
-		} else if plan, ok := a.engineStartPlan(); ok && !a.op.running() {
-			row.button = plan.Title
-			row.action = func() { a.Propose(plan) }
+		var selectedEndpoint string
+		for _, ctx := range d.Contexts {
+			if ctx.Name == d.Selected {
+				selectedEndpoint = ctx.Endpoint
+				break
+			}
+		}
+		if d.DefaultSocketIssue != "unavailable" && a.canPlanDocker() {
+			if plan, ok := ops.DockerDefaultSocketPlan(d.Selected, selectedEndpoint, a.detect("docker")); ok {
+				row.button = locales.DockerSocketLinkButton(d.Selected)
+				row.action = func() { a.Propose(plan) }
+			}
+		}
+		if row.action == nil {
+			if d.DefaultSocketIssue != "unavailable" || a.dockerAnswers() {
+				row.button = locales.KubeShellCopy()
+				command := run.TerminalCommand([]string{"docker", "--context", d.Selected, "ps"})
+				row.action = func() { c.WriteClipboard(command) }
+			} else if plan, ok := a.engineStartPlan(); ok && !a.op.running() {
+				row.button = plan.Title
+				row.action = func() { a.Propose(plan) }
+			}
 		}
 		rows = append(rows, row)
 	}
@@ -118,37 +133,41 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 			}
 		}
 		for i, row := range rows {
-			if overview {
-				dockerOverviewHealthRow(c.Key(row.key), row, i > 0)
-			} else {
-				listRowWrapped(c.Key(row.key), row.title, row.detail, func() { dockerHealthButton(c, row) })
-			}
+			dockerHealthRowView(c.Key(row.key), row, i > 0 || !overview)
 		}
 	}
 	if overview {
 		overviewPanel(c, locales.DockerAttention(), strconv.Itoa(len(rows)), body)
 	} else {
-		listCard(c, locales.DockerAttention(), "", body)
+		listCard(c, locales.DockerAttention(), strconv.Itoa(len(rows)), body)
 	}
 }
 
-func dockerOverviewHealthRow(c *ui.Context, row dockerHealthRow, divider bool) {
+func dockerHealthRowView(c *ui.Context, row dockerHealthRow, divider bool) {
 	pal := Colors(c.Theme())
-	r := ui.Row(c).Gap(10).Padding(8, 13).AlignItems(ui.Center)
+	box := ui.Column(c).Gap(8).Padding(10, 13)
 	if divider {
-		r.BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+		box.BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
 	}
-	r.Children(func() {
-		icon, color := "triangle-alert", pal.WarningText
-		if row.danger {
-			icon, color = "circle-alert", pal.DangerText
-		}
-		ui.Icon(c, Icon(icon)).Size(15, 15).Shrink(0).TextColor(color)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			ui.Text(c, row.title).FontSize(13).Wrap()
-			ui.Text(c, row.detail).FontSize(11.5).TextColor(c.Theme().TextMuted).Wrap()
+	box.Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
+			icon, color := "triangle-alert", pal.WarningText
+			if row.danger {
+				icon, color = "circle-alert", pal.DangerText
+			}
+			ui.Box(c).Padding(2, 0, 0, 0).Shrink(0).Children(func() {
+				ui.Icon(c, Icon(icon)).Size(15, 15).TextColor(color)
+			})
+			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+				ui.Text(c, row.title).FontSize(13).Wrap()
+				ui.Text(c, row.detail).FontSize(11.5).TextColor(c.Theme().TextMuted).Wrap()
+			})
 		})
-		dockerHealthButton(c, row)
+		if row.action != nil {
+			ui.Row(c).Padding(0, 0, 0, 23).Children(func() {
+				dockerHealthButton(c, row)
+			})
+		}
 	})
 }
 

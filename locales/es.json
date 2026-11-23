@@ -38,8 +38,8 @@
   "dockerBrokenPlugin": "Enlace de complemento roto · {plugin}",
   "dockerOpenFolder": "Abrir carpeta",
   "dockerDefaultSocket": "Socket predeterminado de Docker",
-  "dockerSocketDifferent": "El socket predeterminado difiere del de {context}. Indica el contexto explícitamente.",
-  "dockerSocketMissing": "Falta el socket predeterminado. Indica el contexto {context} explícitamente.",
+  "dockerSocketDifferent": "Las herramientas que leen /var/run/docker.sock directamente (IDE, Testcontainers) siguen usando otro motor en lugar de {context}.",
+  "dockerSocketMissing": "Falta /var/run/docker.sock. Las herramientas que ignoran los contextos de Docker (IDE, Testcontainers) necesitan un enlace a {context}.",
   "dockerSocketUnavailable": "El motor del socket predeterminado no respondió.",
   "dockerLowMemory": "La VM de Colima tiene poca memoria",
   "dockerLowMemoryDetail": "Los contenedores usan {used} de los {total} disponibles para el motor.",
@@ -3371,7 +3371,7 @@
   "settingsTrayHintMac": "Acceso rápido a contenedores y contextos. Al cerrar la ventana, Hearth sigue en la barra de menús.",
   "settingsTrayHintOther": "Acceso rápido a contenedores y contextos. Al cerrar la ventana, Hearth sigue en la bandeja.",
   "settingsDockLabel": "Icono en el Dock",
-  "settingsDockHint": "Desactívalo para mantener Hearth solo en la barra de menús.",
+  "settingsDockHint": "Si está desactivado, el icono del Dock solo se muestra mientras la ventana está abierta y se oculta al cerrarla a la barra de menús.",
   "settingsDockRequiresTray": "Activa primero el icono de la barra de menús para ocultar Hearth del Dock.",
   "settingsOpenAtLogin": "Iniciar al iniciar sesión",
   "settingsOpenAtLoginHint": "Inicia Hearth automáticamente en segundo plano al iniciar sesión.",
@@ -3382,5 +3382,12 @@
   "skillCatalogSkillsShInstalls": "{count} instalaciones",
   "skillCatalogStoredIn": "Archivos",
   "skillCatalogSymlinkLabel": "Enlace para {agent}",
-  "skillCatalogSharedDirect": "Carpeta compartida · leída directamente por {agent}"
+  "skillCatalogSharedDirect": "Carpeta compartida · leída directamente por {agent}",
+  "dockerSocketLinkButton": "Enlazar a {context}…",
+  "dockerSocketLinkTitle": "Apuntar /var/run/docker.sock a {context}",
+  "dockerSocketLinkWhy": "Los IDE, Testcontainers y scripts que leen /var/run/docker.sock directamente usarán {context}.",
+  "dockerSocketLinkNoteTitle": "Otros motores Docker",
+  "dockerSocketLinkNoteText": "Apps como OrbStack o Docker Desktop dejarán de recibir tráfico en /var/run/docker.sock hasta revertir el enlace o reiniciarlas.",
+  "dockerSocketLinkVerified": "/var/run/docker.sock ahora apunta a {context}.",
+  "dockerSocketLinkFailed": "/var/run/docker.sock sigue sin apuntar a {context}."
 }

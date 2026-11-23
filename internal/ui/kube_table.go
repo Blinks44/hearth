@@ -14,7 +14,7 @@ import (
 func workloadTracks(c *ui.Context, compact bool) []ui.Track {
 	switch {
 	case compact:
-		return []ui.Track{ui.Fr(1), ui.Fixed(134)}
+		return []ui.Track{ui.Fr(1), ui.Fixed(22)}
 	case narrow(c):
 		return []ui.Track{ui.Fr(1), ui.Fixed(152), ui.Fixed(52), ui.Fixed(86), ui.Fixed(98), ui.Fixed(50)}
 	default:

@@ -277,7 +277,7 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 		toolNote(c, locales.KubeClusterNoPods())
 		return
 	}
-	metricsNotice(c, cl.MetricsErr)
+	a.metricsNotice(c, cl.MetricsErr)
 	sort := s.sortOf(kindPods)
 	groups := podGroups(shown, *sort)
 	var uid string
@@ -289,9 +289,6 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 	}
 	compact := chosen >= 0
 	columns := workloadTracks(c, compact)
-	if compact && narrow(c) {
-		columns[1] = ui.Fixed(92)
-	}
 	if !compact {
 		// Reserve the actions inside the shared workload grid. The
 		// name and status keep their alignment with Deployments.
@@ -304,12 +301,15 @@ func (a *App) podsView(c *ui.Context, cl *kube.Cluster) {
 	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("pods-panes"), func() {
-		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
+		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {"", ""}}
 		if !compact {
-			headers = append(headers, sortColumn{locales.KubeClusterReady(), "ready"}, sortColumn{locales.KubeClusterRestarts(), "restarts"},
-				sortColumn{"CPU", "cpu"}, sortColumn{locales.KubeMetricsMemory(), "memory"})
+			headers = []sortColumn{
+				{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"},
+				{locales.KubeClusterReady(), "ready"}, {locales.KubeClusterRestarts(), "restarts"},
+				{"CPU", "cpu"}, {locales.KubeMetricsMemory(), "memory"},
+			}
 		}
-		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth)), func() {
+		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth(compact))), func() {
 			if hasKubectl {
 				s.bulk.checkbox(c, "pods-select-all", locales.KubeBulkSelectAll(), ids)
 			}
@@ -378,32 +378,26 @@ func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact 
 					ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-					metadata := g.namespace + " · " + locales.KubePodCount(len(g.pods))
-					if narrow(c) {
-						clipped(c, g.owner.Name).FontSize(13).FontWeight(600)
-						clipped(c, g.owner.Kind+" · "+metadata).FontSize(11).TextColor(pal.TextFaint)
-					} else {
-						ui.Row(c).Gap(6).AlignItems(ui.Center).MinWidth(0).Children(func() {
-							aiTag(c, g.owner.Kind, t.Background, t.TextMuted).Shrink(0).BorderWidth(1).BorderColor(pal.Line)
-							clipped(c, g.owner.Name).FontSize(13).FontWeight(600).MinWidth(0)
-						})
-						if !compact {
-							clipped(c, metadata).FontSize(11).TextColor(pal.TextFaint)
-						}
+					clipped(c, g.owner.Name).FontSize(13).FontWeight(600).Tooltip(g.owner.Name)
+					meta := g.owner.Kind + " · " + locales.KubePodCount(len(g.pods))
+					if !compact {
+						meta = g.owner.Kind + " · " + g.namespace + " · " + locales.KubePodCount(len(g.pods))
 					}
+					clipped(c, meta).FontSize(11).TextColor(pal.TextFaint)
 				})
 			})
+			statusLabel, statusBg, statusFg := locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText
 			switch {
 			case g.trouble > 0:
-				workloadStatus(c, locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText)
+				statusLabel, statusBg, statusFg = locales.KubeGroupNotReady(g.trouble, len(g.pods)), pal.DangerSoft, pal.DangerText
 			case g.owner.Kind == "Job" && !slices.ContainsFunc(g.pods, func(p kube.Pod) bool { return p.Phase != "Succeeded" }):
-				workloadStatus(c, locales.KubeGroupDone(), pal.Muted, t.TextMuted)
-			default:
-				workloadStatus(c, locales.KubeGroupReady(len(g.pods), len(g.pods)), pal.SuccessSoft, pal.SuccessText)
+				statusLabel, statusBg, statusFg = locales.KubeGroupDone(), pal.Muted, t.TextMuted
 			}
 			if compact {
+				a.compactStatus(c, statusLabel, statusBg, statusFg, nil)
 				return
 			}
+			workloadStatus(c, statusLabel, statusBg, statusFg)
 			// The group's totals, faint beside its pods' own values.
 			ready := 0
 			var usage *kube.Resources
@@ -446,7 +440,7 @@ func (a *App) podGroupRows(c *ui.Context, cl *kube.Cluster, g podGroup, compact 
 			podMetricCell(c, usage, limits, false)
 			podMetricCell(c, usage, limits, true)
 		})
-		podRowActions(c.Key(key+"-actions"), g.owner.Name, locales.KubeOwnerLogsAll(), logs, menu)
+		podRowActions(c.Key(key+"-actions"), g.owner.Name, locales.KubeOwnerLogsAll(), compact, logs, menu)
 	})
 	if !open {
 		return
@@ -527,7 +521,7 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 		row.Children(func() {
 			resourceGrid(ui.Box(c), tracks[1:]).Children(func() {
 				ui.Column(c).MinWidth(0).Gap(1).Children(func() {
-					name := clipped(c, p.Name).Font(FontMono).FontSize(12.5)
+					name := clipped(c, p.Name).Font(FontMono).FontSize(12.5).Tooltip(p.Name)
 					if compact {
 						name.TruncateStart()
 					}
@@ -535,10 +529,11 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 						ui.Text(c, p.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					}
 				})
-				a.workloadStatusIssue(c, label, tagBg, tagFg, issue)
 				if compact {
+					a.compactStatus(c, label, tagBg, tagFg, issue)
 					return
 				}
+				a.workloadStatusIssue(c, label, tagBg, tagFg, issue)
 				ui.Text(c, fmt.Sprintf("%d/%d", p.Ready, len(p.Containers))).Font(FontMono).FontSize(12).SingleLine()
 				restarts := ui.Text(c, strconv.Itoa(p.Restarts)).Font(FontMono).FontSize(12).SingleLine()
 				if p.Restarts > 0 && trouble {
@@ -548,7 +543,7 @@ func (a *App) podRow(c *ui.Context, cl *kube.Cluster, p kube.Pod, owned, compact
 				podMetricCell(c, p.Usage, p.Limits, true)
 			})
 		})
-		podRowActions(c.Key("pod-actions-"+p.UID), p.Name, locales.KubeLogsOpen(), logs, menu)
+		podRowActions(c.Key("pod-actions-"+p.UID), p.Name, locales.KubeLogsOpen(), compact, logs, menu)
 	})
 }
 
@@ -565,15 +560,21 @@ func podIssueText(status string, story podStory) (title, body string) {
 	return status, story.title
 }
 
-// podFooter counts what the list shows and opens or closes every group.
-const podRowActionsWidth = 52
+func podRowActionsWidth(compact bool) float32 {
+	if compact {
+		return 24
+	}
+	return 52
+}
 
-func podRowActions(c *ui.Context, name, logLabel string, log func(), menu func(*ui.Menu)) {
-	ui.Row(c).Width(podRowActionsWidth).Shrink(0).AlignSelf(ui.Center).Gap(4).Children(func() {
-		if log != nil {
-			iconButton(c, "scroll-text", logLabel+" · "+name).OnClick(log)
-		} else {
-			ui.Box(c).Width(24).Shrink(0)
+func podRowActions(c *ui.Context, name, logLabel string, compact bool, log func(), menu func(*ui.Menu)) {
+	ui.Row(c).Width(podRowActionsWidth(compact)).Shrink(0).AlignSelf(ui.Center).Gap(4).Children(func() {
+		if !compact {
+			if log != nil {
+				iconButton(c, "scroll-text", logLabel+" · "+name).OnClick(log)
+			} else {
+				ui.Box(c).Width(24).Shrink(0)
+			}
 		}
 		iconButton(c, "ellipsis", locales.MoreActions()+" · "+name).Menu(menu)
 	})

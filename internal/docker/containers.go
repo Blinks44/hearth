@@ -55,9 +55,9 @@ func (c Container) Active() bool {
 }
 
 // ExitedError reports whether a non-zero exit code reflects a failure rather
-// than a normal graceful stop (SIGTERM 143 or SIGINT 130).
+// than a normal stop (SIGTERM 143, SIGINT 130, or non-OOM SIGKILL 137).
 func (c Container) ExitedError() bool {
-	return c.State.ExitCode != 0 && (c.State.OOMKilled || (c.State.ExitCode != 143 && c.State.ExitCode != 130))
+	return c.State.ExitCode != 0 && (c.State.OOMKilled || (c.State.ExitCode != 143 && c.State.ExitCode != 130 && c.State.ExitCode != 137))
 }
 
 func (c Container) Problem() bool {

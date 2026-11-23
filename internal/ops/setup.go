@@ -25,6 +25,9 @@ type Setup struct {
 	// Engine is the package of the Docker engine chosen, as the catalog
 	// names it; "" for the first that installs here.
 	Engine string
+	// Packages overrides the default package for tools that offer multiple
+	// versioned packages (validated against catalog.PackageVersions).
+	Packages map[string]string
 	// GOOS is the system, as runtime.GOOS names it; Managers are its
 	// package managers found.
 	GOOS     string
@@ -137,6 +140,14 @@ func (s Setup) method(e catalog.Entry) (catalog.Method, bool) {
 			continue
 		}
 		if s.Usable(m) {
+			if pkg := s.Packages[e.ID]; pkg != "" {
+				for _, v := range catalog.PackageVersions(e.ID, m.Manager) {
+					if v.Package == pkg {
+						m.Package = pkg
+						break
+					}
+				}
+			}
 			return m, true
 		}
 	}

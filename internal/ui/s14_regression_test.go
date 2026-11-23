@@ -64,20 +64,34 @@ func TestS14DockerPolish(t *testing.T) {
 	}
 	crashed.State.Status = "exited"
 	crashed.State.ExitCode = 137
-	receive([]docker.Container{running, crashed}, nil, nil)
+	crashed.State.OOMKilled = true
+	killed := docker.Container{
+		ID:      strings.Repeat("c", 64),
+		Name:    "shop-worker-1",
+		Image:   "node",
+		Compose: running.Compose,
+	}
+	killed.State.Status = "exited"
+	killed.State.ExitCode = 137
+	receive([]docker.Container{running, crashed, killed}, nil, nil)
 	tt.Advance(time.Second)
 
-	// D1: icon order in container row is [Play/Stop] -> [Logs] -> [Shell] -> [...].
+	// Container row actions keep variable Shell on the left and constant
+	// Start/Stop, Logs, More in fixed right-aligned columns.
 	screenshot(t, tt, "s14-docker-containers-1280")
-	stopBox, okStop := tt.Find(ops.DockerStop.Label() + "…")
-	logsBox, okLogs := tt.Find(locales.KubeLogsOpen())
 	shellBox, okShell := tt.Find(locales.KubeShellAction())
+	stopBox, okStop := tt.Find(ops.DockerStop.Label() + "…")
+	startBox, okStart := tt.Find(ops.DockerStart.Label() + "…")
+	logsBox, okLogs := tt.Find(locales.KubeLogsOpen())
 	moreBox, okMore := tt.Find(locales.MoreActions())
-	if !okStop || !okLogs || !okShell || !okMore {
-		t.Fatalf("missing container row action icons: stop=%v logs=%v shell=%v more=%v", okStop, okLogs, okShell, okMore)
+	if !okShell || !okStop || !okStart || !okLogs || !okMore {
+		t.Fatalf("missing container row action icons: shell=%v stop=%v start=%v logs=%v more=%v", okShell, okStop, okStart, okLogs, okMore)
 	}
-	if !(stopBox.X < logsBox.X && logsBox.X < shellBox.X && shellBox.X < moreBox.X) {
-		t.Errorf("container action icon order wrong: stop=%.0f logs=%.0f shell=%.0f more=%.0f", stopBox.X, logsBox.X, shellBox.X, moreBox.X)
+	if !(shellBox.X < stopBox.X && stopBox.X < logsBox.X && logsBox.X < moreBox.X) {
+		t.Errorf("container action icon order wrong: shell=%.0f stop=%.0f logs=%.0f more=%.0f", shellBox.X, stopBox.X, logsBox.X, moreBox.X)
+	}
+	if stopBox.X != startBox.X {
+		t.Errorf("Start/Stop column drifted across rows: stop=%.0f start=%.0f", stopBox.X, startBox.X)
 	}
 
 	// D5: container detail header has Restart button for a running container.
@@ -89,7 +103,8 @@ func TestS14DockerPolish(t *testing.T) {
 		t.Fatalf("Restart button missing in container detail header: %q", tt.Texts())
 	}
 
-	// D4: switching away from Containers keeps the Containers problem counter.
+	// D4: switching away from Containers keeps the Containers problem counter
+	// (only OOMKilled 137 counts as a problem; plain SIGKILL 137 does not).
 	a.engine.view = dockerOverview
 	tt.Frame()
 	tt.Advance(time.Second)

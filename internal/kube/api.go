@@ -429,6 +429,9 @@ func statusLine(code int, reason, message string) string {
 	if code == http.StatusUnauthorized {
 		return "error: You must be logged in to the server (Unauthorized)"
 	}
+	if reason == "" && code == http.StatusNotFound {
+		reason = "NotFound"
+	}
 	return fmt.Sprintf("Error from server (%s): %s", cmp.Or(reason, http.StatusText(code)), cmp.Or(message, http.StatusText(code)))
 }
 

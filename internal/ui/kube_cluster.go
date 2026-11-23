@@ -87,6 +87,10 @@ type kubeClusterState struct {
 	// watch, to its answer: the reads that follow every few seconds are
 	// quiet.
 	reading bool
+	// metricsNoticeDismissed holds the metrics notice message the user
+	// closed for the current target; it clears once metrics succeed or the
+	// target changes.
+	metricsNoticeDismissed string
 
 	contextOpen, namespaceOpen bool
 	kindsOpen                  bool
@@ -282,6 +286,7 @@ func (a *App) syncCluster() {
 		// Another cluster or namespace: what was read is not its.
 		s.clearHelmDetails()
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
+		s.metricsNoticeDismissed = ""
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
 		s.resourceLink = resourceLink{}
 		s.cache = nil
@@ -1130,9 +1135,10 @@ func (a *App) namespacePopover(c *ui.Context, name string) {
 	})
 }
 
-// kindChips are the cluster's overview, then the kinds pinned in ⌘J, each
-// with how many of them need attention; a kind chosen there that is not
-// pinned shows after them while it is chosen.
+// kindChips are the cluster's overview, then the kinds pinned in ⌘J; a
+// kind chosen there that is not pinned shows after them while it is
+// chosen. Trouble counts live inside each view's filter tabs so switching
+// views never shifts chip widths.
 func (a *App) kindChips(c *ui.Context) {
 	s := &a.cluster
 	options := clusterKindOptions()
@@ -1148,8 +1154,7 @@ func (a *App) kindChips(c *ui.Context) {
 			if i == kindCustom && s.kind == kindCustom && s.custom.name != "" {
 				k.label = s.custom.label
 			}
-			_, trouble, _ := clusterKindCounts(s.data, i)
-			kindChip(c, &s.kind, i, k.icon, k.label, trouble)
+			kindChip(c, &s.kind, i, k.icon, k.label, 0)
 		}
 		t := c.Theme()
 		pal := Colors(t)

@@ -83,7 +83,6 @@ func main() {
 	// The native parts follow it too: the sidebar's material, the window
 	// controls, the menus and the macOS Dock icon policy.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
-	syncDockIcon(a.TrayEnabled, a.ShowInDock)
 	forwardCtx, stopForwards := context.WithCancel(context.Background())
 	dockerCtx, stopDocker := context.WithCancel(context.Background())
 	var forwards, dockerWorkers sync.WaitGroup
@@ -103,13 +102,15 @@ func main() {
 		mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) {
 			quitting = true
 		})
+		startHidden := a.TrayEnabled && mygo.App.WasOpenedAtLogin()
+		syncDockIcon(a.TrayEnabled, a.ShowInDock, !startHidden)
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:     "Hearth",
 			Width:     1280,
 			Height:    820,
 			MinWidth:  1000,
 			MinHeight: 680,
-			Hidden:    a.TrayEnabled && mygo.App.WasOpenedAtLogin(),
+			Hidden:    startHidden,
 			// Opens where the user left it last time.
 			StateKey: "main",
 			// The view draws the title bar: the window controls sit over
@@ -122,10 +123,14 @@ func main() {
 			Vibrancy: mygo.VibrancySidebar,
 			Content:  ui.View(a.View),
 		})
+		showMainWindow := func() {
+			syncDockIcon(a.TrayEnabled, a.ShowInDock, true)
+			win.Show()
+			win.Focus()
+		}
 		mygo.App.OnActivate(func(hasVisibleWindows bool) {
 			if !hasVisibleWindows {
-				win.Show()
-				win.Focus()
+				showMainWindow()
 			}
 		})
 		catalogCtx, stopCatalog := context.WithCancel(context.Background())
@@ -163,8 +168,7 @@ func main() {
 				}
 				err := a.RequestFix(q)
 				if err == nil {
-					win.Show()
-					win.Focus()
+					showMainWindow()
 				}
 				done <- err
 			})
@@ -881,6 +885,7 @@ func main() {
 			if !quitting && a.TrayEnabled {
 				e.PreventDefault()
 				win.Hide()
+				syncDockIcon(a.TrayEnabled, a.ShowInDock, false)
 			}
 		})
 		win.OnClosed(func() {
@@ -921,7 +926,7 @@ func main() {
 				tray.sync(a.TrayEnabled)
 			}
 			prevPolicy := mygo.App.ActivationPolicy()
-			syncDockIcon(a.TrayEnabled, a.ShowInDock)
+			syncDockIcon(a.TrayEnabled, a.ShowInDock, win.IsVisible())
 			if mygo.App.ActivationPolicy() != prevPolicy && win.IsVisible() {
 				win.Show()
 				win.Focus()

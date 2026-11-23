@@ -47,6 +47,13 @@ func TestDockerOverviewProblemsAndLayout(t *testing.T) {
 		if !tt.HasText("38%") || !tt.HasText("75%") || !tt.HasText("16.7 GB") || !tt.HasText(problem.Name) {
 			t.Fatalf("at %dx%d: %q", size[0], size[1], tt.Texts())
 		}
+		if size[0] == 1280 {
+			disk, diskOK := tt.Find(locales.ChangesOpenCleanup())
+			attn, attnOK := tt.Find(locales.DockerAttention())
+			if !diskOK || !attnOK || disk.X >= attn.X {
+				t.Fatalf("expected Disk card in left column and Needs attention in right column: disk=%+v attn=%+v", disk, attn)
+			}
+		}
 		screenshot(t, tt, "docker-overview-"+map[int]string{1280: "wide", 1000: "narrow"}[size[0]])
 	}
 	if err := tt.Click(locales.KubeLogsOpen()); err != nil {

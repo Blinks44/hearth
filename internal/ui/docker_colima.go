@@ -404,17 +404,19 @@ func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventor
 			})
 		}
 		if p.Name == "default" && colima.Brew != "" {
-			title, hint, button, action := locales.ColimaAutostartOff(), "", locales.ColimaEnable(), ops.ColimaEnable
+			title, hint, label, action := locales.ColimaAutostartOff(), "", locales.ColimaEnable(), ops.ColimaEnable
+			on := colima.Autostart == "on"
 			switch colima.Autostart {
 			case "on":
-				title, hint, button, action = locales.ColimaAutostartOn(), locales.ColimaAutostartOnHint(), locales.ColimaDisable(), ops.ColimaDisable
+				title, hint, label, action = locales.ColimaAutostartOn(), locales.ColimaAutostartOnHint(), locales.ColimaDisable(), ops.ColimaDisable
 			case "":
 				title, hint = locales.ColimaAutostartUnknown(), ""
 			}
 			listRow(c, title, false, hint, func() {
 				if colima.Autostart != "" {
-					ui.Button(c.Key("colima-autostart"), button).Disabled(a.BuildPlan == nil).
-						OnClick(func() { a.changeColima(colima, p, action, ops.ColimaLimits{}) })
+					if toggle(c, "colima-autostart", &on).Label(label).Disabled(a.BuildPlan == nil).Changed() {
+						a.changeColima(colima, p, action, ops.ColimaLimits{})
+					}
 				}
 			})
 		}
@@ -501,11 +503,12 @@ func (a *App) colimaResizeDialog(c *ui.Context) {
 func colimaLimit(c *ui.Context, label string, value *float64, lo, hi, step float64) {
 	ui.Row(c).MinHeight(34).AlignItems(ui.Center).Gap(8).Children(func() {
 		ui.Text(c, label).FontSize(13).Grow(1).Wrap()
-		ui.Button(c.Key("decrease"), "−").Size(28, 26).Label(locales.ColimaDecrease(label)).
-			Disabled(*value <= lo).OnClick(func() { *value = max(lo, *value-step) })
-		ui.Text(c, strconv.FormatFloat(*value, 'f', -1, 64)).Font(FontMono).FontSize(12).Width(50).TextAlign(ui.Center)
-		ui.Button(c.Key("increase"), "+").Size(28, 26).Label(locales.ColimaIncrease(label)).
-			Disabled(*value >= hi).OnClick(func() { *value = min(hi, *value+step) })
+		stepper(c, strconv.FormatFloat(*value, 'f', -1, 64), 52,
+			"decrease", "increase",
+			locales.ColimaDecrease(label), locales.ColimaIncrease(label),
+			*value <= lo, *value >= hi,
+			func() { *value = max(lo, *value-step) },
+			func() { *value = min(hi, *value+step) })
 	})
 }
 

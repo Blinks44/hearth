@@ -47,10 +47,10 @@ func (a *App) dockerOverviewView(c *ui.Context, name string, e docker.Engine) {
 	})
 	st, _ := a.Snapshot.Tool("docker")
 	columns(c, 14, func() {
-		a.dockerHealthCard(c, st, name, e.Health, true)
-	}, func() {
 		a.dockerOverviewDisk(c, st.Docker, target, o.Disk, total, bytes)
 		dockerOverviewEvents(c, o.Events)
+	}, func() {
+		a.dockerHealthCard(c, st, name, e.Health, true)
 		if profile, ok := dockerColimaProfile(st.Docker, name); ok {
 			a.colimaCard(c, *st.Docker.Colima, profile)
 		}

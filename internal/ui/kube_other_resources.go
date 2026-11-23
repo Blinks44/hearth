@@ -283,7 +283,7 @@ func (a *App) otherResourcesView(c *ui.Context, cl *kube.Cluster) {
 		headers = []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterAge(), "age"}}
 	}
 	if cl.Resources.Kind == kube.Nodes {
-		metricsNotice(c, cl.MetricsErr)
+		a.metricsNotice(c, cl.MetricsErr)
 		tracks = []ui.Track{ui.Fr(1), ui.Fixed(116)}
 		headers = headers[:2]
 		if uid == "" {

@@ -102,11 +102,47 @@ func TestDockerHealthUI(t *testing.T) {
 		}
 		screenshot(t, tt, fmt.Sprintf("docker-health-overview-%d", width))
 	}
+	if box, ok := tt.Find(locales.KubeClusterOpen()); ok && box.Y+box.H > 680 {
+		tt.Scroll(500, 340, 0, box.Y-340)
+		tt.Advance(time.Second)
+	}
 	if err := tt.Click(locales.KubeClusterOpen()); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
 	if a.engine.view != dockerContainers || a.engine.containers.detail.id != "legacy" {
 		t.Fatal("opening a diagnosis did not select its container")
+	}
+}
+
+func TestDockerDefaultSocketLinkPlan(t *testing.T) {
+	if goos == "windows" {
+		t.Skip("default /var/run/docker.sock symlink plan is Unix-only")
+	}
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = colimaSnapshot()
+	d := a.Snapshot.Tools[0].Docker
+	d.DefaultSocketIssue = "different"
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + home}, nil))
+	}
+	a.router.Push(dockerPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	btn := locales.DockerSocketLinkButton(d.Selected)
+	if !tt.HasText(btn) {
+		t.Fatalf("missing link socket button %q in %q", btn, tt.Texts())
+	}
+	if err := tt.Click(btn); err != nil {
+		t.Fatalf("click %q: %v", btn, err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !a.op.plan.Steps[0].Admin {
+		t.Fatalf("expected pending admin symlink plan, got %+v", a.op)
+	}
+	wantArgv := []string{"ln", "-sfn", home + "/.colima/default/docker.sock", "/var/run/docker.sock"}
+	if !slices.Equal(a.op.plan.Steps[0].Argv, wantArgv) {
+		t.Fatalf("symlink argv = %q, want %q", a.op.plan.Steps[0].Argv, wantArgv)
 	}
 }

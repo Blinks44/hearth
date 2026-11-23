@@ -76,3 +76,45 @@ func TestKubeMetricsLayout(t *testing.T) {
 		})
 	}
 }
+
+func TestKubeMetricsNoticeDismissAndReset(t *testing.T) {
+	a := kubeApp()
+	var watches clusterWatches
+	a.WatchCluster = watches.watch
+	a.openCluster("kind-dev")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	cl := shopCluster()
+	cl.MetricsErr = kube.ErrMetricsUnavailable
+	watches.got[len(watches.got)-1](cl, nil)
+	tt.Frame()
+	if !tt.HasText(locales.KubeMetricsUnavailable()) {
+		t.Fatalf("expected metrics notice: %q", tt.Texts())
+	}
+
+	// Dismiss hides the banner and stays hidden across subsequent reads with the same error.
+	if err := tt.Click(locales.OpClose()); err != nil {
+		t.Fatalf("dismiss metrics notice: %v", err)
+	}
+	tt.Frame()
+	if tt.HasText(locales.KubeMetricsUnavailable()) {
+		t.Fatalf("metrics notice stayed visible after dismiss: %q", tt.Texts())
+	}
+	watches.got[len(watches.got)-1](cl, nil)
+	tt.Frame()
+	if tt.HasText(locales.KubeMetricsUnavailable()) {
+		t.Fatalf("metrics notice reappeared on same error: %q", tt.Texts())
+	}
+
+	// Recovery followed by a later failure shows the banner again.
+	cl.MetricsErr = nil
+	watches.got[len(watches.got)-1](cl, nil)
+	tt.Frame()
+	cl.MetricsErr = kube.ErrMetricsUnavailable
+	watches.got[len(watches.got)-1](cl, nil)
+	tt.Frame()
+	if !tt.HasText(locales.KubeMetricsUnavailable()) {
+		t.Fatalf("metrics notice did not reappear after recovery: %q", tt.Texts())
+	}
+}

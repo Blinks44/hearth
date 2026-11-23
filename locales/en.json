@@ -114,7 +114,7 @@
   },
   "dockerOpenFolder": "Open folder",
   "dockerDefaultSocket": "Default Docker socket",
-  "dockerSocketDifferent": "The default endpoint differs from the socket for {context}. Use the context explicitly.",
+  "dockerSocketDifferent": "Tools that read /var/run/docker.sock directly (IDEs, Testcontainers) still talk to another engine instead of {context}.",
   "@dockerSocketDifferent": {
     "placeholders": {
       "context": {
@@ -122,7 +122,7 @@
       }
     }
   },
-  "dockerSocketMissing": "The default socket is missing. Use context {context} explicitly.",
+  "dockerSocketMissing": "/var/run/docker.sock is missing. Tools that ignore Docker contexts (IDEs, Testcontainers) need a symlink to {context}.",
   "@dockerSocketMissing": {
     "placeholders": {
       "context": {
@@ -16666,7 +16666,7 @@
   "settingsTrayHintMac": "Quick access to containers and contexts. Closing the window keeps Hearth in the menu bar.",
   "settingsTrayHintOther": "Quick access to containers and contexts. Closing the window keeps Hearth in the system tray.",
   "settingsDockLabel": "Show in Dock",
-  "settingsDockHint": "Turn off to keep Hearth in the menu bar only.",
+  "settingsDockHint": "When off, the Dock icon shows only while the window is open and hides when closed to the menu bar.",
   "settingsDockRequiresTray": "Enable the menu bar icon first to hide Hearth from the Dock.",
   "settingsOpenAtLogin": "Start at sign-in",
   "settingsOpenAtLoginHint": "Launch Hearth automatically in the background when you sign in.",
@@ -16695,6 +16695,59 @@
   "@skillCatalogSharedDirect": {
     "placeholders": {
       "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketLinkButton": "Link to {context}…",
+  "@dockerSocketLinkButton": {
+    "description": "Action button to link /var/run/docker.sock to the active Docker context.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketLinkTitle": "Point /var/run/docker.sock to {context}",
+  "@dockerSocketLinkTitle": {
+    "description": "Plan title for symlinking /var/run/docker.sock to the active Docker context.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketLinkWhy": "IDEs, Testcontainers, and scripts that read /var/run/docker.sock directly will use {context}.",
+  "@dockerSocketLinkWhy": {
+    "description": "Plan rationale explaining why IDEs and tools need /var/run/docker.sock linked.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketLinkNoteTitle": "Other Docker engines",
+  "@dockerSocketLinkNoteTitle": {
+    "description": "Note heading about other Docker engines when relinking /var/run/docker.sock."
+  },
+  "dockerSocketLinkNoteText": "Apps like OrbStack or Docker Desktop will not receive /var/run/docker.sock traffic until you switch the symlink back or restart them.",
+  "@dockerSocketLinkNoteText": {
+    "description": "Note explaining other Docker engines stop receiving /var/run/docker.sock traffic."
+  },
+  "dockerSocketLinkVerified": "/var/run/docker.sock now points to {context}.",
+  "@dockerSocketLinkVerified": {
+    "description": "Verification success text after symlinking /var/run/docker.sock.",
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketLinkFailed": "/var/run/docker.sock still does not point to {context}.",
+  "@dockerSocketLinkFailed": {
+    "description": "Verification failure text when /var/run/docker.sock still mismatches.",
+    "placeholders": {
+      "context": {
         "type": "String"
       }
     }

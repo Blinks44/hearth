@@ -599,3 +599,61 @@ func TestKubePodEventsLayout(t *testing.T) {
 		})
 	}
 }
+
+func TestKubeCompactOwnerAlignmentAndStatusIcon(t *testing.T) {
+	a := kubeApp()
+	var watches clusterWatches
+	a.WatchCluster = watches.watch
+	a.openCluster("kind-dev")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	now := time.Now()
+	cl := kube.Cluster{
+		Taken: now,
+		Pods: []kube.Pod{
+			{
+				UID: "p1", Name: "payments-api-feature-branch-7c9d8f-abc12", Namespace: "shop", Phase: "Running",
+				Ready: 1, Owner: kube.Owner{Kind: "Deployment", Name: "payments-api-feature-branch"},
+				Created: now.Add(-time.Hour), Containers: []kube.Container{{Name: "api", Ready: true, State: "running"}},
+			},
+			{
+				UID: "p2", Name: "orders-cache-0", Namespace: "shop", Phase: "Running",
+				Ready: 1, Owner: kube.Owner{Kind: "StatefulSet", Name: "orders-cache"},
+				Created: now.Add(-time.Hour), Containers: []kube.Container{{Name: "redis", Ready: true, State: "running"}},
+			},
+			{
+				UID: "p3", Name: "nightly-sync-xyz99", Namespace: "shop", Phase: "Succeeded",
+				Owner:   kube.Owner{Kind: "Job", Name: "nightly-sync"},
+				Created: now.Add(-time.Hour), Containers: []kube.Container{{Name: "sync", State: "terminated"}},
+			},
+		},
+	}
+	watches.got[len(watches.got)-1](cl, nil)
+	tt.Frame()
+
+	// Owner names start at the same X coordinate regardless of kind length (Deployment vs StatefulSet vs Job).
+	dep, okD := tt.Find("payments-api-feature-branch")
+	sts, okS := tt.Find("orders-cache")
+	job, okJ := tt.Find("nightly-sync")
+	if !okD || !okS || !okJ {
+		t.Fatalf("missing owner names: dep=%v sts=%v job=%v", okD, okS, okJ)
+	}
+	if dep.X != sts.X || dep.X != job.X {
+		t.Fatalf("owner names not aligned on X: Deployment=%.0f StatefulSet=%.0f Job=%.0f", dep.X, sts.X, job.X)
+	}
+
+	// Open details pane (compact split-view): STATUS column header is omitted and long owner name keeps generous width.
+	expandGroups(a, cl)
+	a.cluster.pod = "p1"
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("STATUS") {
+		t.Fatalf("compact split view should hide STATUS header text: %q", tt.Texts())
+	}
+	depCompact, ok := tt.Find("payments-api-feature-branch")
+	if !ok || depCompact.W < 150 {
+		t.Fatalf("compact owner name too cramped: ok=%v rect=%+v", ok, depCompact)
+	}
+	screenshot(t, tt, "kube-pods-compact-1280")
+}

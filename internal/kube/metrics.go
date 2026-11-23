@@ -75,7 +75,7 @@ func readMetrics(ctx context.Context, r run.Runner, env sysenv.Env, t Target, pa
 			return list.Items, nil
 		}
 		var rejected *Error
-		if !errors.As(err, &rejected) || !strings.Contains(rejected.Access.Detail, "Error from server (NotFound)") {
+		if !errors.As(err, &rejected) || (!strings.Contains(rejected.Access.Detail, "Error from server (NotFound)") && !strings.Contains(rejected.Access.Detail, "Error from server (Not Found)")) {
 			return nil, err
 		}
 	}

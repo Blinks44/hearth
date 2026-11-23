@@ -38,8 +38,8 @@
   "dockerBrokenPlugin": "Defekter Plugin-Link · {plugin}",
   "dockerOpenFolder": "Ordner öffnen",
   "dockerDefaultSocket": "Standard-Socket von Docker",
-  "dockerSocketDifferent": "Der Standard-Socket unterscheidet sich von {context}. Gib den Kontext explizit an.",
-  "dockerSocketMissing": "Der Standard-Socket fehlt. Gib den Kontext {context} explizit an.",
+  "dockerSocketDifferent": "Tools, die /var/run/docker.sock direkt lesen (IDEs, Testcontainers), nutzen noch eine andere Engine statt {context}.",
+  "dockerSocketMissing": "/var/run/docker.sock fehlt. Tools ohne Docker-Kontext (IDEs, Testcontainers) brauchen einen Symlink auf {context}.",
   "dockerSocketUnavailable": "Die Engine am Standard-Socket antwortet nicht.",
   "dockerLowMemory": "Colima-VM hat wenig freien Speicher",
   "dockerLowMemoryDetail": "Container belegen {used} von {total}, die der Engine zur Verfügung stehen.",
@@ -3371,7 +3371,7 @@
   "settingsTrayHintMac": "Schnellzugriff auf Container und Kontexte. Beim Schließen bleibt Hearth in der Menüleiste.",
   "settingsTrayHintOther": "Schnellzugriff auf Container und Kontexte. Beim Schließen bleibt Hearth im Infobereich.",
   "settingsDockLabel": "Symbol im Dock",
-  "settingsDockHint": "Deaktivieren, um Hearth nur in der Menüleiste anzuzeigen.",
+  "settingsDockHint": "Wenn aus, erscheint das Dock-Symbol nur bei geöffnetem Fenster und verschwindet beim Schließen in die Menüleiste.",
   "settingsDockRequiresTray": "Aktiviere zuerst das Menüleisten-Symbol, um Hearth aus dem Dock auszublenden.",
   "settingsOpenAtLogin": "Bei der Anmeldung starten",
   "settingsOpenAtLoginHint": "Startet Hearth automatisch im Hintergrund bei der Anmeldung.",
@@ -3382,5 +3382,12 @@
   "skillCatalogSkillsShInstalls": "{count} Installationen",
   "skillCatalogStoredIn": "Dateien",
   "skillCatalogSymlinkLabel": "Link für {agent}",
-  "skillCatalogSharedDirect": "Gemeinsamer Ordner · direkt von {agent} gelesen"
+  "skillCatalogSharedDirect": "Gemeinsamer Ordner · direkt von {agent} gelesen",
+  "dockerSocketLinkButton": "Mit {context} verknüpfen…",
+  "dockerSocketLinkTitle": "/var/run/docker.sock auf {context} zeigen lassen",
+  "dockerSocketLinkWhy": "IDEs, Testcontainers und Skripte, die /var/run/docker.sock direkt lesen, nutzen dann {context}.",
+  "dockerSocketLinkNoteTitle": "Andere Docker-Engines",
+  "dockerSocketLinkNoteText": "Apps wie OrbStack oder Docker Desktop erhalten keinen Traffic auf /var/run/docker.sock, bis der Symlink zurückgesetzt oder die App neu gestartet wird.",
+  "dockerSocketLinkVerified": "/var/run/docker.sock zeigt jetzt auf {context}.",
+  "dockerSocketLinkFailed": "/var/run/docker.sock zeigt noch immer nicht auf {context}."
 }

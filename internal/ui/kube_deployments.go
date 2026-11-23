@@ -139,12 +139,15 @@ func (a *App) deploymentsView(c *ui.Context, cl *kube.Cluster) {
 	_, hasKubectl := cliCopy(a.cliState(), "kubectl")
 	tracks := append([]ui.Track{ui.Fixed(18)}, columns...)
 	workloadPanes(c.Key("deployments-panes"), func() {
-		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"}}
+		headers := []sortColumn{{locales.KubeClusterName(), "name"}, {"", ""}}
 		if !compact {
-			headers = append(headers, sortColumn{locales.KubeClusterReady(), "ready"}, sortColumn{locales.KubeClusterUpdated(), "updated"},
-				sortColumn{locales.KubeImage(), "image"}, sortColumn{locales.KubeClusterAge(), "age"})
+			headers = []sortColumn{
+				{locales.KubeClusterName(), "name"}, {locales.KubeClusterStatus(), "status"},
+				{locales.KubeClusterReady(), "ready"}, {locales.KubeClusterUpdated(), "updated"},
+				{locales.KubeImage(), "image"}, {locales.KubeClusterAge(), "age"},
+			}
 		}
-		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth)), func() {
+		sortHead(c, append(tracks, ui.Fixed(podRowActionsWidth(compact))), func() {
 			if hasKubectl {
 				s.bulk.checkbox(c, "deployments-select-all", locales.KubeBulkSelectAll(), ids)
 			}
@@ -201,21 +204,22 @@ func (a *App) deploymentRow(c *ui.Context, d kube.Deployment, compact bool, trac
 		}
 		row.Children(func() {
 			ui.Column(c).MinWidth(0).Gap(1).Children(func() {
-				clipped(c, d.Name).FontSize(13)
+				clipped(c, d.Name).FontSize(13).Tooltip(d.Name)
 				if !compact {
 					ui.Text(c, d.Namespace).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 				}
 			})
-			workloadStatus(c, label, bg, fg)
 			if compact {
+				a.compactStatus(c, label, bg, fg, nil)
 				return
 			}
+			workloadStatus(c, label, bg, fg)
 			ui.Text(c, fmt.Sprintf("%d/%d", d.Ready, d.Replicas)).Font(FontMono).FontSize(12).SingleLine()
 			ui.Text(c, strconv.Itoa(d.Updated)).Font(FontMono).FontSize(12).SingleLine()
 			clipped(c, imageTag(d.Images)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).Tooltip(strings.Join(d.Images, "\n"))
 			ui.Text(c, age(c, d.Created)).FontSize(12).TextColor(t.TextMuted).SingleLine()
 		})
-		podRowActions(c.Key("deployment-actions-"+d.UID), d.Name, locales.KubeOwnerLogsAll(), logs, menu)
+		podRowActions(c.Key("deployment-actions-"+d.UID), d.Name, locales.KubeOwnerLogsAll(), compact, logs, menu)
 	})
 }
 

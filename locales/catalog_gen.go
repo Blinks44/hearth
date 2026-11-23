@@ -448,25 +448,25 @@ func (msgs Messages) DockerDefaultSocket() string {
 	return Catalog.Format(msgs.locale, "dockerDefaultSocket", nil)
 }
 
-// DockerSocketDifferent says "The default endpoint differs from the socket for {context}. Use the context explicitly."
+// DockerSocketDifferent says "Tools that read /var/run/docker.sock directly (IDEs, Testcontainers) still talk to another engine instead of {context}."
 // in the language the app shows.
 func DockerSocketDifferent(context string) string {
 	return In(i18n.Locale()).DockerSocketDifferent(context)
 }
 
-// DockerSocketDifferent says "The default endpoint differs from the socket for {context}. Use the context explicitly."
+// DockerSocketDifferent says "Tools that read /var/run/docker.sock directly (IDEs, Testcontainers) still talk to another engine instead of {context}."
 // in the language of msgs.
 func (msgs Messages) DockerSocketDifferent(context string) string {
 	return Catalog.Format(msgs.locale, "dockerSocketDifferent", map[string]any{"context": context})
 }
 
-// DockerSocketMissing says "The default socket is missing. Use context {context} explicitly."
+// DockerSocketMissing says "/var/run/docker.sock is missing. Tools that ignore Docker contexts (IDEs, Testcontainers) need a symlink to {context}."
 // in the language the app shows.
 func DockerSocketMissing(context string) string {
 	return In(i18n.Locale()).DockerSocketMissing(context)
 }
 
-// DockerSocketMissing says "The default socket is missing. Use context {context} explicitly."
+// DockerSocketMissing says "/var/run/docker.sock is missing. Tools that ignore Docker contexts (IDEs, Testcontainers) need a symlink to {context}."
 // in the language of msgs.
 func (msgs Messages) DockerSocketMissing(context string) string {
 	return Catalog.Format(msgs.locale, "dockerSocketMissing", map[string]any{"context": context})
@@ -44148,11 +44148,11 @@ func (msgs Messages) SettingsDockLabel() string {
 	return Catalog.Format(msgs.locale, "settingsDockLabel", nil)
 }
 
-// SettingsDockHint says "Turn off to keep Hearth in the menu bar only."
+// SettingsDockHint says "When off, the Dock icon shows only while the window is open and hides when closed to the menu bar."
 // in the language the app shows.
 func SettingsDockHint() string { return In(i18n.Locale()).SettingsDockHint() }
 
-// SettingsDockHint says "Turn off to keep Hearth in the menu bar only."
+// SettingsDockHint says "When off, the Dock icon shows only while the window is open and hides when closed to the menu bar."
 // in the language of msgs.
 func (msgs Messages) SettingsDockHint() string {
 	return Catalog.Format(msgs.locale, "settingsDockHint", nil)
@@ -44274,4 +44274,120 @@ func SkillCatalogSharedDirect(agent string) string {
 // in the language of msgs.
 func (msgs Messages) SkillCatalogSharedDirect(agent string) string {
 	return Catalog.Format(msgs.locale, "skillCatalogSharedDirect", map[string]any{"agent": agent})
+}
+
+// DockerSocketLinkButton says "Link to {context}…"
+// in the language the app shows.
+//
+// Action button to link /var/run/docker.sock to the active Docker context.
+func DockerSocketLinkButton(context string) string {
+	return In(i18n.Locale()).DockerSocketLinkButton(context)
+}
+
+// DockerSocketLinkButton says "Link to {context}…"
+// in the language of msgs.
+//
+// Action button to link /var/run/docker.sock to the active Docker context.
+func (msgs Messages) DockerSocketLinkButton(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkButton", map[string]any{"context": context})
+}
+
+// DockerSocketLinkTitle says "Point /var/run/docker.sock to {context}"
+// in the language the app shows.
+//
+// Plan title for symlinking /var/run/docker.sock to the active Docker
+// context.
+func DockerSocketLinkTitle(context string) string {
+	return In(i18n.Locale()).DockerSocketLinkTitle(context)
+}
+
+// DockerSocketLinkTitle says "Point /var/run/docker.sock to {context}"
+// in the language of msgs.
+//
+// Plan title for symlinking /var/run/docker.sock to the active Docker
+// context.
+func (msgs Messages) DockerSocketLinkTitle(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkTitle", map[string]any{"context": context})
+}
+
+// DockerSocketLinkWhy says "IDEs, Testcontainers, and scripts that read /var/run/docker.sock directly will use {context}."
+// in the language the app shows.
+//
+// Plan rationale explaining why IDEs and tools need /var/run/docker.sock
+// linked.
+func DockerSocketLinkWhy(context string) string {
+	return In(i18n.Locale()).DockerSocketLinkWhy(context)
+}
+
+// DockerSocketLinkWhy says "IDEs, Testcontainers, and scripts that read /var/run/docker.sock directly will use {context}."
+// in the language of msgs.
+//
+// Plan rationale explaining why IDEs and tools need /var/run/docker.sock
+// linked.
+func (msgs Messages) DockerSocketLinkWhy(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkWhy", map[string]any{"context": context})
+}
+
+// DockerSocketLinkNoteTitle says "Other Docker engines"
+// in the language the app shows.
+//
+// Note heading about other Docker engines when relinking
+// /var/run/docker.sock.
+func DockerSocketLinkNoteTitle() string { return In(i18n.Locale()).DockerSocketLinkNoteTitle() }
+
+// DockerSocketLinkNoteTitle says "Other Docker engines"
+// in the language of msgs.
+//
+// Note heading about other Docker engines when relinking
+// /var/run/docker.sock.
+func (msgs Messages) DockerSocketLinkNoteTitle() string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkNoteTitle", nil)
+}
+
+// DockerSocketLinkNoteText says "Apps like OrbStack or Docker Desktop will not receive /var/run/docker.sock traffic until you switch the symlink back …"
+// in the language the app shows.
+//
+// Note explaining other Docker engines stop receiving /var/run/docker.sock
+// traffic.
+func DockerSocketLinkNoteText() string { return In(i18n.Locale()).DockerSocketLinkNoteText() }
+
+// DockerSocketLinkNoteText says "Apps like OrbStack or Docker Desktop will not receive /var/run/docker.sock traffic until you switch the symlink back …"
+// in the language of msgs.
+//
+// Note explaining other Docker engines stop receiving /var/run/docker.sock
+// traffic.
+func (msgs Messages) DockerSocketLinkNoteText() string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkNoteText", nil)
+}
+
+// DockerSocketLinkVerified says "/var/run/docker.sock now points to {context}."
+// in the language the app shows.
+//
+// Verification success text after symlinking /var/run/docker.sock.
+func DockerSocketLinkVerified(context string) string {
+	return In(i18n.Locale()).DockerSocketLinkVerified(context)
+}
+
+// DockerSocketLinkVerified says "/var/run/docker.sock now points to {context}."
+// in the language of msgs.
+//
+// Verification success text after symlinking /var/run/docker.sock.
+func (msgs Messages) DockerSocketLinkVerified(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkVerified", map[string]any{"context": context})
+}
+
+// DockerSocketLinkFailed says "/var/run/docker.sock still does not point to {context}."
+// in the language the app shows.
+//
+// Verification failure text when /var/run/docker.sock still mismatches.
+func DockerSocketLinkFailed(context string) string {
+	return In(i18n.Locale()).DockerSocketLinkFailed(context)
+}
+
+// DockerSocketLinkFailed says "/var/run/docker.sock still does not point to {context}."
+// in the language of msgs.
+//
+// Verification failure text when /var/run/docker.sock still mismatches.
+func (msgs Messages) DockerSocketLinkFailed(context string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketLinkFailed", map[string]any{"context": context})
 }

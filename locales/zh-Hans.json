@@ -38,8 +38,8 @@
   "dockerBrokenPlugin": "插件链接失效 · {plugin}",
   "dockerOpenFolder": "打开文件夹",
   "dockerDefaultSocket": "默认 Docker 套接字",
-  "dockerSocketDifferent": "默认套接字与 {context} 的套接字不同。请显式指定上下文。",
-  "dockerSocketMissing": "默认套接字不存在。请显式指定上下文 {context}。",
+  "dockerSocketDifferent": "直接读取 /var/run/docker.sock 的工具（IDE、Testcontainers）仍连接到其他引擎，而不是 {context}。",
+  "dockerSocketMissing": "缺少 /var/run/docker.sock。不使用 Docker 上下文的工具（IDE、Testcontainers）需要指向 {context} 的符号链接。",
   "dockerSocketUnavailable": "默认套接字上的引擎未响应。",
   "dockerLowMemory": "Colima 虚拟机内存不足",
   "dockerLowMemoryDetail": "仅容器就使用了引擎可用内存中 {used} / {total}。",
@@ -3371,7 +3371,7 @@
   "settingsTrayHintMac": "快速访问容器与上下文。关闭窗口后 Hearth 会继续驻留在菜单栏。",
   "settingsTrayHintOther": "快速访问容器与上下文。关闭窗口后 Hearth 会继续驻留在系统托盘。",
   "settingsDockLabel": "在程序坞中显示",
-  "settingsDockHint": "关闭后 Hearth 将仅显示在菜单栏中。",
+  "settingsDockHint": "关闭后，程序坞图标仅在窗口打开时显示，关闭窗口回到菜单栏后自动隐藏。",
   "settingsDockRequiresTray": "请先开启菜单栏图标，再隐藏程序坞图标。",
   "settingsOpenAtLogin": "登录时自动启动",
   "settingsOpenAtLoginHint": "登录系统时自动在后台启动 Hearth。",
@@ -3382,5 +3382,12 @@
   "skillCatalogSkillsShInstalls": "{count} 次安装",
   "skillCatalogStoredIn": "文件",
   "skillCatalogSymlinkLabel": "{agent} 链接",
-  "skillCatalogSharedDirect": "共享文件夹 · {agent} 直接读取"
+  "skillCatalogSharedDirect": "共享文件夹 · {agent} 直接读取",
+  "dockerSocketLinkButton": "链接到 {context}…",
+  "dockerSocketLinkTitle": "将 /var/run/docker.sock 指向 {context}",
+  "dockerSocketLinkWhy": "直接读取 /var/run/docker.sock 的 IDE、Testcontainers 和脚本将使用 {context}。",
+  "dockerSocketLinkNoteTitle": "其他 Docker 引擎",
+  "dockerSocketLinkNoteText": "在恢复符号链接或重启应用之前，OrbStack 或 Docker Desktop 等应用将不会收到 /var/run/docker.sock 的请求。",
+  "dockerSocketLinkVerified": "/var/run/docker.sock 现已指向 {context}。",
+  "dockerSocketLinkFailed": "/var/run/docker.sock 仍未指向 {context}。"
 }

@@ -38,6 +38,39 @@ func (a *App) workloadStatusIssue(c *ui.Context, label string, bg, fg ui.Color, 
 	})
 }
 
+// compactStatus renders a compact 20×20 status dot or alert badge for narrow
+// split-view lists so names keep the horizontal space a text pill would take.
+// Hovering shows the full status text; problems with details reuse rowIssueBadge.
+func (a *App) compactStatus(c *ui.Context, label string, _, fg ui.Color, issue *rowIssue) {
+	if issue != nil && (issue.title != "" || issue.body != "") {
+		ui.Row(c).AlignItems(ui.Center).Justify(ui.Center).Width(20).Height(20).Children(func() {
+			a.rowIssueBadge(c, issue)
+		})
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	box := ui.Box(c).Size(20, 20).Center().Tooltip(label)
+	switch fg {
+	case pal.DangerText:
+		box.Radius(6).Background(pal.DangerSoft).BorderWidth(1).BorderColor(t.Danger.Alpha(0.28)).Children(func() {
+			ui.Icon(c, Icon("circle-alert")).Size(12, 12).TextColor(pal.DangerText)
+		})
+	case pal.WarningText:
+		box.Radius(6).Background(pal.WarningSoft).BorderWidth(1).BorderColor(t.Warning.Alpha(0.28)).Children(func() {
+			ui.Icon(c, Icon("triangle-alert")).Size(12, 12).TextColor(pal.WarningText)
+		})
+	case pal.SuccessText:
+		box.Children(func() {
+			ui.Box(c).Size(8, 8).Radius(4).Background(t.Success)
+		})
+	default:
+		box.Children(func() {
+			ui.Box(c).Size(8, 8).Radius(4).Background(pal.TextFaint.Alpha(0.45))
+		})
+	}
+}
+
 // rowIssueBadge renders a compact 20×20 icon trigger that reveals issue details
 // in a styled tooltip card on hover and an interactive popover on click.
 func (a *App) rowIssueBadge(c *ui.Context, issue *rowIssue) {

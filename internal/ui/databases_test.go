@@ -361,3 +361,40 @@ func TestDatabaseStoppedNoCLIProjectsFilterAndRefresh(t *testing.T) {
 	tt.Frame()
 	hasTexts(t, tt, locales.NothingMatches())
 }
+
+func TestDatabaseInstallVersionSubmenu(t *testing.T) {
+	previous := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = previous })
+	a := cleanApp(t)
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{
+		Tool:          "brew",
+		Installations: []inventory.Installation{{Tool: "brew", Path: "/opt/homebrew/bin/brew", OnPath: 1}},
+	})
+	tt := openAI(t, a, "/tools/databases")
+	if err := tt.Click(locales.DatabaseInstall()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	screenshot(t, tt, "databases-install-menu-1280")
+	if err := tt.ChooseMenuItem("PostgreSQL", "PostgreSQL 16"); err != nil {
+		t.Fatalf("choose PostgreSQL 16 from submenu: %v (menu=%v)", err, tt.Menu())
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || len(a.op.plan.Steps) == 0 {
+		t.Fatalf("expected install plan for PostgreSQL 16, got %+v", a.op)
+	}
+	if !strings.Contains(a.op.plan.Title, "PostgreSQL 16") {
+		t.Fatalf("plan title = %q, want PostgreSQL 16", a.op.plan.Title)
+	}
+	found := false
+	for _, st := range a.op.plan.Steps {
+		if slices.Contains(st.Argv, "postgresql@16") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("plan steps did not install postgresql@16: %+v", a.op.plan.Steps)
+	}
+}

@@ -12,8 +12,9 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-func metricsNotice(c *ui.Context, err error) {
+func (a *App) metricsNotice(c *ui.Context, err error) {
 	if err == nil {
+		a.cluster.metricsNoticeDismissed = ""
 		return
 	}
 	message := locales.KubeMetricsFailed()
@@ -22,10 +23,16 @@ func metricsNotice(c *ui.Context, err error) {
 	} else if failure, ok := errors.AsType[*kube.Error](err); ok && failure.Access.State == detect.KubeForbidden {
 		message = locales.KubeMetricsForbidden()
 	}
+	if a.cluster.metricsNoticeDismissed == message {
+		return
+	}
 	pal := Colors(c.Theme())
-	ui.Row(c).AlignItems(ui.Center).Gap(8).Padding(9, 12).Radius(8).Background(pal.InfoSoft).Shrink(0).Children(func() {
+	ui.Row(c.Key("kube-metrics-notice")).AlignItems(ui.Center).Gap(8).Padding(7, 8, 7, 12).Radius(8).Background(pal.InfoSoft).Shrink(0).Children(func() {
 		ui.Icon(c, Icon("info")).Size(14, 14).Shrink(0).TextColor(pal.Info)
-		ui.Text(c, message).FontSize(11.5).TextColor(pal.InfoText).Wrap().Tooltip(err.Error())
+		ui.Text(c, message).FontSize(11.5).TextColor(pal.InfoText).Wrap().Grow(1).MinWidth(0).Tooltip(err.Error())
+		iconButton(c.Key("kube-metrics-notice-dismiss"), "x", locales.OpClose()).Shrink(0).OnClick(func() {
+			a.cluster.metricsNoticeDismissed = message
+		})
 	})
 }
 

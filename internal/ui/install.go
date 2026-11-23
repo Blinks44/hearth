@@ -35,9 +35,25 @@ func (a *App) installTool(id string) {
 	a.installToolPlan(id, a.proposeOrSay)
 }
 
+// installToolPackage offers the plan that installs a specific catalog package
+// version for tool id (for example "postgresql@16" with label "16").
+func (a *App) installToolPackage(id, pkg, version string) {
+	a.installToolPackagePlan(id, pkg, version, a.proposeOrSay)
+}
+
 func (a *App) installToolPlan(id string, done func(ops.Plan, error)) {
+	a.installToolPackagePlan(id, "", "", done)
+}
+
+func (a *App) installToolPackagePlan(id, pkg, version string, done func(ops.Plan, error)) {
 	s := a.installSetup(id)
+	if pkg != "" {
+		s.Packages = map[string]string{id: pkg}
+	}
 	title := setupTitle(id)
+	if version != "" {
+		title += " " + version
+	}
 	verify := ops.ToolFound(title, a.detect(id))
 	if e, _ := catalog.Find(id); e.Group == catalog.Agent {
 		verify = ops.AgentFound(title, a.findAgent(id))

@@ -132,18 +132,20 @@ func TestSyncDockIcon(t *testing.T) {
 	t.Cleanup(func() { mygo.App.SetActivationPolicy(mygo.ActivationPolicyRegular) })
 
 	cases := []struct {
-		tray, dock bool
-		want       mygo.ActivationPolicy
+		tray, dock, visible bool
+		want                mygo.ActivationPolicy
 	}{
-		{true, true, mygo.ActivationPolicyRegular},
-		{true, false, mygo.ActivationPolicyAccessory},
-		{false, true, mygo.ActivationPolicyRegular},
-		{false, false, mygo.ActivationPolicyRegular},
+		{true, true, true, mygo.ActivationPolicyRegular},
+		{true, true, false, mygo.ActivationPolicyRegular},
+		{true, false, true, mygo.ActivationPolicyRegular},
+		{true, false, false, mygo.ActivationPolicyAccessory},
+		{false, true, false, mygo.ActivationPolicyRegular},
+		{false, false, false, mygo.ActivationPolicyRegular},
 	}
 	for _, tc := range cases {
-		syncDockIcon(tc.tray, tc.dock)
+		syncDockIcon(tc.tray, tc.dock, tc.visible)
 		if got := mygo.App.ActivationPolicy(); got != tc.want {
-			t.Errorf("syncDockIcon(tray=%v, dock=%v) policy = %q, want %q", tc.tray, tc.dock, got, tc.want)
+			t.Errorf("syncDockIcon(tray=%v, dock=%v, visible=%v) policy = %q, want %q", tc.tray, tc.dock, tc.visible, got, tc.want)
 		}
 	}
 }

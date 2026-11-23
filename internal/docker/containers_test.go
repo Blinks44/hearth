@@ -88,6 +88,8 @@ func TestContainerStoppedHealthAndExitCodes(t *testing.T) {
 		{name: "stopped clean 0 with stale unhealthy", status: "exited", exit: 0, health: unhealthy, wantErr: false, wantProb: false},
 		{name: "stopped SIGTERM 143", status: "exited", exit: 143, wantErr: false, wantProb: false},
 		{name: "stopped SIGINT 130 with stale unhealthy", status: "exited", exit: 130, health: unhealthy, wantErr: false, wantProb: false},
+		{name: "stopped SIGKILL 137 without OOM", status: "exited", exit: 137, wantErr: false, wantProb: false},
+		{name: "stopped SIGKILL 137 with OOMKilled", status: "exited", exit: 137, oom: true, wantErr: true, wantProb: true},
 		{name: "stopped OOMKilled even on 143", status: "exited", exit: 143, oom: true, wantErr: true, wantProb: true},
 		{name: "stopped crash exit 1", status: "exited", exit: 1, wantErr: true, wantProb: true},
 		{name: "running unhealthy", status: "running", exit: 0, health: unhealthy, wantErr: false, wantProb: true},

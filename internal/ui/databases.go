@@ -686,7 +686,8 @@ func (a *App) databaseServer(kind string) (inventory.Database, bool) {
 
 // databaseInstallMenu is the header's button whose menu installs the
 // catalog's database servers that install here: those there show their
-// version, one that clashes with a server there says so.
+// version, one that clashes with a server there says so, and engines
+// with multiple catalog versions offer a version submenu.
 func (a *App) databaseInstallMenu(c *ui.Context) {
 	in := a.setupHere()
 	offers := a.setupOffers(in, catalog.Database)
@@ -694,28 +695,78 @@ func (a *App) databaseInstallMenu(c *ui.Context) {
 		return
 	}
 	ui.PrimaryButton(c.Key("database-install"), locales.DatabaseInstall()).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
+		m.MaxWidth(310)
 		for _, e := range offers {
 			title := setupTitle(e.ID)
-			item := m.Item(title).ID(e.ID)
-			switch db, have := a.databaseServer(catalog.DatabaseKinds[e.ID]); {
-			case have:
-				item.Disabled(true).Trailing(locales.InstalledVersion(db.Version))
-				continue
-			case a.setupConflict(e) != "":
-				item.Disabled(true).Subtitle(locales.SetupConflicts(setupTitle(a.setupConflict(e))))
-				continue
-			}
+			db, have := a.databaseServer(catalog.DatabaseKinds[e.ID])
+			conflict := a.setupConflict(e)
+			var method catalog.Method
+			var usable bool
 			if ms := e.On(goos); len(ms) > 0 {
-				i := slices.IndexFunc(ms, in.Usable)
-				if i < 0 {
-					item.Disabled(true)
-					continue
+				if i := slices.IndexFunc(ms, in.Usable); i >= 0 {
+					method, usable = ms[i], true
 				}
-				item.Subtitle(locales.SetupVia(managerTitle(ms[i])))
 			}
-			if item.Trailing(locales.AgentInstall()).Chosen() {
-				a.installTool(e.ID)
+			var versions []catalog.PackageVersion
+			if !have && conflict == "" && usable {
+				versions = catalog.PackageVersions(e.ID, method.Manager)
 			}
+			var item *ui.MenuItem
+			var subtitle string
+			switch {
+			case have:
+				item = m.Item(title).ID(e.ID).Disabled(true).Trailing(locales.InstalledVersion(db.Version))
+			case conflict != "":
+				subtitle = locales.SetupConflicts(setupTitle(conflict))
+				item = m.Item(title).ID(e.ID).Disabled(true)
+			case !usable:
+				item = m.Item(title).ID(e.ID).Disabled(true)
+			case len(versions) > 1:
+				labels := make([]string, len(versions))
+				for i, v := range versions {
+					labels[i] = v.Version
+				}
+				subtitle = strings.Join(labels, ", ") + " · " + managerTitle(method)
+				item = m.Submenu(title, func(sub *ui.Menu) {
+					for i, v := range versions {
+						vi := sub.Item(title + " " + v.Version).ID(e.ID + ":" + v.Package)
+						if i == 0 {
+							vi.Trailing(locales.TagRecommended())
+						}
+						if vi.Chosen() {
+							a.installToolPackage(e.ID, v.Package, v.Version)
+						}
+					}
+				}).ID(e.ID)
+			default:
+				subtitle = locales.SetupVia(managerTitle(method))
+				item = m.Item(title).ID(e.ID)
+				if item.Chosen() {
+					a.installTool(e.ID)
+				}
+			}
+			iconID := e.ID
+			sub := subtitle
+			item.Content(func(mc ui.MenuItemContent) {
+				t := mc.Context.Theme()
+				pal := Colors(t)
+				ui.Row(mc.Context).Gap(10).AlignItems(ui.Center).Padding(2, 0).Children(func() {
+					tile := ui.Box(mc.Context).Size(26, 26).Radius(7).Center().Shrink(0).
+						Background(t.Background).BorderWidth(1).BorderColor(pal.Line)
+					if mc.Disabled {
+						tile.Opacity(0.5)
+					}
+					tile.Children(func() {
+						iconOrLogo(mc.Context, "brand/"+iconID, 15, t.TextMuted)
+					})
+					ui.Column(mc.Context).Grow(1).MinWidth(0).Gap(1).Children(func() {
+						ui.Text(mc.Context, title).FontSize(13).FontWeight(500).TextColor(mc.Text).SingleLine()
+						if sub != "" {
+							ui.Text(mc.Context, sub).FontSize(11).TextColor(mc.Muted).SingleLine()
+						}
+					})
+				})
+			})
 		}
 	})
 }

@@ -62,7 +62,7 @@ func (a *App) clusterOverview(c *ui.Context, cl *kube.Cluster) {
 			return locales.KubeOverviewGiB(req/(1<<30), total/(1<<30))
 		})
 	})
-	metricsNotice(c, cl.MetricsErr)
+	a.metricsNotice(c, cl.MetricsErr)
 	columns(c, 14, func() { a.overviewAttention(c, cl) }, func() {
 		a.overviewNodes(c, o)
 		a.overviewWarnings(c, o)

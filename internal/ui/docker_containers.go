@@ -314,10 +314,10 @@ func (a *App) dockerContainersView(c *ui.Context) {
 		{"", ""},
 	}
 	if compact {
-		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(112), ui.Fixed(54)}
+		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(22), ui.Fixed(50)}
 		columns = []sortColumn{
 			{locales.KubeClusterName(), "name"},
-			{locales.KubeClusterStatus(), "status"},
+			{"", ""},
 			{"", ""},
 		}
 		detail = func() { a.dockerDetails(c, item) }
@@ -496,37 +496,59 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track, c
 			ui.Column(c).Width(18).Shrink(0).Justify(ui.Center).Children(func() {
 				s.bulk.checkbox(c, "docker-select-group", locales.KubeBulkSelect(g.name), dockerContainerIDs(g.items))
 			})
-			row := ui.ButtonBase(c.Key("toggle")).Grow(1).MinWidth(0).MinHeight(40).Gap(8).AlignItems(ui.Center).Justify(ui.Start).
-				Label(g.name).Disabled(len(g.items) == 0).OnClick(func() { s.setGroup(g.key, !open) })
+			var row ui.Element
+			if compact {
+				row = resourceGrid(ui.ButtonBase(c.Key("toggle")), tracks[1:3]).Grow(1).MinWidth(0).MinHeight(40).Padding(6, 0).
+					Label(g.name).Disabled(len(g.items) == 0).OnClick(func() { s.setGroup(g.key, !open) })
+			} else {
+				row = ui.ButtonBase(c.Key("toggle")).Grow(1).MinWidth(0).MinHeight(40).Gap(8).AlignItems(ui.Center).Justify(ui.Start).
+					Label(g.name).Disabled(len(g.items) == 0).OnClick(func() { s.setGroup(g.key, !open) })
+			}
 			row.ContextMenu(menu)
 			bg := pal.Subtle
 			if row.Hovered() && len(g.items) > 0 {
 				bg = pal.Muted
 			}
 			line.Background(line.AnimateColor("bg", bg, ui.Animation{Duration: 120 * time.Millisecond}))
+			statusLabel, statusBg, statusFg := locales.DockerContainersStopped(), pal.Muted, t.TextMuted
+			switch {
+			case g.problems > 0:
+				statusLabel, statusBg, statusFg = locales.DockerGroupProblems(g.problems), pal.DangerSoft, pal.DangerText
+			case g.running > 0:
+				statusLabel, statusBg, statusFg = locales.DockerGroupRunning(g.running), pal.SuccessSoft, pal.SuccessText
+			}
 			row.Children(func() {
 				turn := float32(0)
 				if open && len(g.items) > 0 {
 					turn = 90
 				}
-				chevron := ui.Box(c).Size(14, 14).Shrink(0).Center()
-				chevron.Rotate(chevron.AnimateTo("turn", turn, ui.Animation{Duration: 160 * time.Millisecond})).Children(func() {
-					ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
-				})
+				chevron := func() {
+					box := ui.Box(c).Size(14, 14).Shrink(0).Center()
+					box.Rotate(box.AnimateTo("turn", turn, ui.Animation{Duration: 160 * time.Millisecond})).Children(func() {
+						ui.Icon(c, Icon("chevron-right")).Size(14, 14).TextColor(pal.TextFaint)
+					})
+				}
+				if compact {
+					ui.Row(c).Gap(8).AlignItems(ui.Center).MinWidth(0).Children(func() {
+						chevron()
+						ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+							clipped(c, g.name).FontSize(13).FontWeight(600).Tooltip(g.name)
+							if g.kind != "" {
+								clipped(c, g.kind).FontSize(11).TextColor(pal.TextFaint)
+							}
+						})
+					})
+					a.compactStatus(c, statusLabel, statusBg, statusFg, nil)
+					return
+				}
+				chevron()
 				if g.kind != "" {
 					aiTag(c, g.kind, t.Background, t.TextMuted).Shrink(0).BorderWidth(1).BorderColor(pal.Line)
 				}
-				clipped(c, g.name).FontSize(13).FontWeight(600).MinWidth(0)
-				switch {
-				case g.problems > 0:
-					aiTag(c, locales.DockerGroupProblems(g.problems), pal.DangerSoft, pal.DangerText).Shrink(0)
-				case g.running > 0:
-					aiTag(c, locales.DockerGroupRunning(g.running), pal.SuccessSoft, pal.SuccessText).Shrink(0)
-				default:
-					aiTag(c, locales.DockerContainersStopped(), pal.Muted, t.TextMuted).Shrink(0)
-				}
+				clipped(c, g.name).FontSize(13).FontWeight(600).MinWidth(0).Tooltip(g.name)
+				aiTag(c, statusLabel, statusBg, statusFg).Shrink(0)
 			})
-			ui.Row(c).AlignItems(ui.Center).Gap(4).Children(func() {
+			ui.Row(c).AlignItems(ui.Center).Gap(2).Children(func() {
 				if g.dir != "" && !narrow(c) && !compact {
 					link := ui.ButtonBase(c.Key("project-link")).Height(24).MaxWidth(205).MinWidth(0).Padding(0, 6).
 						AlignItems(ui.Center).Radius(5).Label(locales.OpenProject()).Tooltip(g.dir).
@@ -542,28 +564,32 @@ func (a *App) dockerGroupRows(c *ui.Context, g dockerGroup, tracks []ui.Track, c
 					if g.compose.Name == "" {
 						iconButton(c.Key("compose-up"), "play", ops.DockerUp.Label()+"…").
 							OnClick(func() { a.planDockerCompose(g.compose, ops.DockerUp) })
+					} else if g.running > 0 {
+						iconButton(c.Key("compose-stop"), "square", ops.DockerStop.Label()+"…").
+							OnClick(func() { a.planDockerCompose(g.compose, ops.DockerStop) })
 					} else {
-						if g.running > 0 {
-							iconButton(c.Key("compose-stop"), "square", ops.DockerStop.Label()+"…").
-								OnClick(func() { a.planDockerCompose(g.compose, ops.DockerStop) })
-						} else {
-							action := ops.DockerStart
-							if g.dir != "" {
-								action = ops.DockerUp
-							}
-							iconButton(c.Key("compose-start"), "play", action.Label()+"…").
-								OnClick(func() { a.planDockerCompose(g.compose, action) })
+						action := ops.DockerStart
+						if g.dir != "" {
+							action = ops.DockerUp
 						}
-						if a.StreamDockerLogs != nil && len(g.items) > 0 {
-							iconButton(c.Key("compose-logs"), "scroll-text", locales.DockerComposeLogs()).
-								OnClick(func() { a.openDockerComposeLogs(g) })
-						}
+						iconButton(c.Key("compose-start"), "play", action.Label()+"…").
+							OnClick(func() { a.planDockerCompose(g.compose, action) })
+					}
+				} else {
+					ui.Box(c).Width(24).Shrink(0)
+				}
+				if !compact {
+					if g.compose.Name != "" && a.StreamDockerLogs != nil && len(g.items) > 0 {
+						iconButton(c.Key("compose-logs"), "scroll-text", locales.DockerComposeLogs()).
+							OnClick(func() { a.openDockerComposeLogs(g) })
+					} else if a.StreamDockerLogs != nil {
+						ui.Box(c).Width(24).Shrink(0)
 					}
 				}
 				if g.compose.Name != "" || g.dir != "" {
 					iconButton(c.Key("group-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 				} else {
-					ui.Box(c).Width(24)
+					ui.Box(c).Width(24).Shrink(0)
 				}
 			})
 		})
@@ -677,7 +703,11 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 	row.Children(func() {
 		resourceGrid(ui.Box(c), tracks).Padding(6, 16).MinHeight(44).Children(func() {
 			s.bulk.checkbox(c, "docker-select-container", locales.KubeBulkSelect(item.Name), []string{item.ID})
-			ui.ButtonBase(c.Key("docker-open-container")).Padding(0, 0, 0, 10).MinWidth(0).MinHeight(32).Gap(10).
+			padLeft := float32(10)
+			if compact {
+				padLeft = 4
+			}
+			ui.ButtonBase(c.Key("docker-open-container")).Padding(0, 0, 0, padLeft).MinWidth(0).MinHeight(32).Gap(10).
 				AlignItems(ui.Center).Justify(ui.Start).Label(item.Name).Tooltip(item.Name).
 				OnClick(func() { s.selectContainer(item.ID) }).Children(func() {
 				dockerTechTile(c, item.Image, 28, &dot)
@@ -688,14 +718,15 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 					}
 				})
 			})
-			a.workloadStatusIssue(c, status, bg, fg, issue)
 			if compact {
+				a.compactStatus(c, status, bg, fg, issue)
 				ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 					a.dockerContainerQuickPower(c, item)
 					iconButton(c.Key("container-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 				})
 				return
 			}
+			a.workloadStatusIssue(c, status, bg, fg, issue)
 			port := dockerPortLabel(item.Ports)
 			if item.ConflictPort() > 0 {
 				port = strconv.Itoa(item.ConflictPort())
@@ -708,18 +739,20 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 			for _, value := range []string{uptime, item.CPU, item.Memory} {
 				clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(11.5).MinWidth(0)
 			}
+			// Variable actions (Shell) sit on the left; always-present actions
+			// (Start/Stop, Logs, More) stay in fixed right-aligned columns.
 			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				if !narrow(c) && a.OpenDockerShell != nil && item.State.Status == "running" {
+					iconButton(c.Key("container-shell"), "terminal", locales.KubeShellAction()).
+						Disabled(s.detail.shellRequest != nil || s.err != nil).
+						OnClick(func() { a.openDockerShell(item) })
+				}
 				a.dockerContainerQuickPower(c, item)
 				if a.StreamDockerLogs != nil {
 					iconButton(c.Key("container-logs"), "scroll-text", locales.KubeLogsOpen()).OnClick(func() {
 						s.selectContainer(item.ID)
 						a.openDockerLogs(item.Name, []docker.LogTarget{{ID: item.ID}}, false)
 					})
-				}
-				if !narrow(c) && a.OpenDockerShell != nil && item.State.Status == "running" {
-					iconButton(c.Key("container-shell"), "terminal", locales.KubeShellAction()).
-						Disabled(s.detail.shellRequest != nil || s.err != nil).
-						OnClick(func() { a.openDockerShell(item) })
 				}
 				iconButton(c.Key("container-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 			})
@@ -736,6 +769,7 @@ func (a *App) dockerContainerQuickPower(c *ui.Context, item docker.Container) {
 		action, icon = ops.DockerStop, "square"
 	}
 	if !action.Applies(item) || !a.canActOnDockerContainers() {
+		ui.Box(c).Width(24).Shrink(0)
 		return
 	}
 	iconButton(c.Key("container-power"), icon, action.Label()+"…").

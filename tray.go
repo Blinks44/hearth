@@ -75,10 +75,11 @@ func newTrayController(win *mygo.Window, a *hearthui.App, env func() sysenv.Env,
 }
 
 // syncDockIcon applies the macOS activation policy for Hearth's Dock icon.
-// It is a no-op on Windows and Linux. The Dock icon is only hidden while the
-// menu bar icon is enabled so the app can never become unreachable.
-func syncDockIcon(trayEnabled, showInDock bool) {
-	if trayEnabled && !showInDock {
+// It is a no-op on Windows and Linux. When ShowInDock is off and the menu bar
+// icon is enabled, the Dock icon stays visible while the window is open (so
+// Cmd+Tab works) and hides once the window is closed to the menu bar.
+func syncDockIcon(trayEnabled, showInDock, windowVisible bool) {
+	if trayEnabled && !showInDock && !windowVisible {
 		mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 		return
 	}
@@ -131,6 +132,7 @@ func (t *trayController) refresh() {
 }
 
 func (t *trayController) showWindow() {
+	syncDockIcon(t.app.TrayEnabled, t.app.ShowInDock, true)
 	t.win.Show()
 	t.win.Focus()
 }

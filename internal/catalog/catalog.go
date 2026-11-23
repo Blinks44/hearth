@@ -480,6 +480,39 @@ var Tools = []Entry{
 // them, of the catalog's databases.
 var DatabaseKinds = map[string]string{"postgresql": "PostgreSQL", "redis": "Redis", "mysql": "MySQL", "mariadb": "MariaDB", "mongodb": "MongoDB"}
 
+// PackageVersion is a selectable versioned package for a catalog entry under a
+// specific package manager (default version first).
+type PackageVersion struct {
+	Version string
+	Package string
+}
+
+// PackageVersions returns the selectable versions for tool id under manager,
+// default first, or nil when only a single package is offered.
+func PackageVersions(id, manager string) []PackageVersion {
+	switch id + ":" + manager {
+	case "postgresql:brew":
+		return []PackageVersion{
+			{Version: "17", Package: "postgresql@17"},
+			{Version: "16", Package: "postgresql@16"},
+			{Version: "15", Package: "postgresql@15"},
+		}
+	case "postgresql:winget":
+		return []PackageVersion{
+			{Version: "17", Package: "PostgreSQL.PostgreSQL.17"},
+			{Version: "16", Package: "PostgreSQL.PostgreSQL.16"},
+			{Version: "15", Package: "PostgreSQL.PostgreSQL.15"},
+		}
+	case "mysql:brew":
+		return []PackageVersion{
+			{Version: "8.4 LTS", Package: "mysql@8.4"},
+			{Version: "8.0", Package: "mysql@8.0"},
+		}
+	default:
+		return nil
+	}
+}
+
 // Find returns the entry of the tool id.
 func Find(id string) (Entry, bool) {
 	i := slices.IndexFunc(Tools, func(e Entry) bool { return e.ID == id })
