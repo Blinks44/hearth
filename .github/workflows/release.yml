@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  prepare:
+    name: Validate version & prepare draft release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check tag matches mygo.json version
+        id: meta
+        run: |
+          version="$(jq -r .version mygo.json)"
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "::error::mygo.json is missing version"
+            exit 1
+          fi
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match mygo.json version v$version"
+            exit 1
+          fi
+          prerelease="false"
+          base="${version%%+*}"
+          if [[ "$base" == *-* ]]; then
+            prerelease="true"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            args=(release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --generate-notes)
+            if [ "$PRERELEASE" = "true" ]; then
+              args+=(--prerelease)
+            fi
+            gh "${args[@]}"
+          fi
+
+  build:
+    needs: prepare
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            platform: "darwin/universal"
+            attest_paths: |
+              build/darwin-universal/*.dmg
+              build/darwin-universal/*.tar.gz
+              build/darwin-universal/install.sh
+          - name: Windows
+            os: ubuntu-latest
+            platform: "windows/amd64,windows/arm64"
+            attest_paths: |
+              build/windows-*/*-setup-*.exe
+              build/windows-*/*.tar.gz
+              build/windows-*/install.ps1
+          - name: Linux
+            os: ubuntu-latest
+            platform: "linux/amd64,linux/arm64"
+            attest_paths: |
+              build/linux-*/*.deb
+              build/linux-*/*.rpm
+              build/linux-*/*.tar.gz
+              build/linux-*/install.sh
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install NSIS for Windows installers
+        if: matrix.name == 'Windows' && runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y nsis
+      - name: Build and upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+        run: go tool mygo build -platform "${{ matrix.platform }}" -upload
+      - name: Attest build provenance
+        # GitHub Artifact Attestations require a public repository on personal accounts.
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: ${{ matrix.attest_paths }}
+
+  finalize:
+    needs: [prepare, build]
+    name: Authoritative SHA256SUMS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recompute SHA256SUMS and SHA256SUMS.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-assets
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir release-assets
+          (
+            cd release-assets
+            shopt -s nullglob
+            files=(*.dmg *.exe *.deb *.rpm *.tar.gz *.delta install.sh install.ps1)
+            if [ "${#files[@]}" -eq 0 ]; then
+              echo "::error::No release assets found for checksum generation"
+              exit 1
+            fi
+            IFS=$'\n' sorted=($(printf '%s\n' "${files[@]}" | LC_ALL=C sort))
+            unset IFS
+            sha256sum "${sorted[@]}" > SHA256SUMS
+            cp SHA256SUMS SHA256SUMS.txt
+          )
+          cat release-assets/SHA256SUMS
+          gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
+            release-assets/SHA256SUMS \
+            release-assets/SHA256SUMS.txt

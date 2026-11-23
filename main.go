@@ -93,6 +93,11 @@ func main() {
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
+		// Prerelease builds (such as 1.0.0-rc.1) track prereleases so they can
+		// update to subsequent RCs and then to the final stable release.
+		if v, _, _ := strings.Cut(a.AppVersion, "+"); strings.Contains(v, "-") {
+			mygo.Updater.SetPrereleases(true)
+		}
 		a.OpenAtLogin = mygo.App.OpenAtLogin()
 		a.OnOpenAtLogin = mygo.App.SetOpenAtLogin
 		a.CheckAppUpdate = updater.CheckForUpdates
