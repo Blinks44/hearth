@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.wrangler/
+.tanstack/
+.vinxi/
+.output/
+src/routeTree.gen.ts
+src/integrations/i18n/paraglide/

@@ -1,0 +1,423 @@
+/* Interactive Hearth Desktop Window (Live Sidebar + Real Retina App Panels)
+   Matches internal/ui/theme.go tokens and 1280x820 (244px sidebar) proportions. */
+
+.hero-app-shell {
+  --ha-sidebar: #f4f2ef;
+  --ha-sidebar-hover: #e8e5e0;
+  --ha-sidebar-chosen: #ffffff;
+  --ha-divider: #e8e5e0;
+  --ha-bg: #ffffff;
+  --ha-border: #e2ded8;
+  --ha-text: #1d1b18;
+  --ha-text-muted: #69655e;
+  --ha-text-faint: #9d988f;
+  --ha-accent: #e5582b;
+  --ha-success: #2e9a5c;
+  --ha-warning: #c98208;
+  --ha-info: #3a73da;
+  --ha-shadow-chosen: 0 1px 2px rgba(42, 30, 16, 0.08);
+  --ha-search-bg: #ffffff;
+
+  display: grid;
+  grid-template-columns: 19.0625% 1fr;
+  width: 100%;
+  aspect-ratio: 1280 / 820;
+  background: var(--ha-bg);
+  color: var(--ha-text);
+  border: 1px solid var(--ha-border);
+  border-radius: 14px;
+  overflow: hidden;
+  text-align: left;
+  box-shadow:
+    0 24px 70px rgba(29, 27, 24, 0.14),
+    0 4px 16px rgba(29, 27, 24, 0.06);
+  font-family: var(--moduix-font-sans, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+.hero-app-shell[data-theme='dark'] {
+  --ha-sidebar: #252320;
+  --ha-sidebar-hover: #2f2c28;
+  --ha-sidebar-chosen: #36332e;
+  --ha-divider: #34312c;
+  --ha-bg: #1c1a18;
+  --ha-border: #34312c;
+  --ha-text: #f2efea;
+  --ha-text-muted: #a8a299;
+  --ha-text-faint: #7d776e;
+  --ha-accent: #e5582b;
+  --ha-success: #3dba72;
+  --ha-warning: #e0a23a;
+  --ha-info: #5b8ef0;
+  --ha-shadow-chosen: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --ha-search-bg: #2c2926;
+
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.52),
+    0 4px 18px rgba(0, 0, 0, 0.34);
+}
+
+/* ---------- Sidebar ---------- */
+
+.ha-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 9px 10px;
+  background: var(--ha-sidebar);
+  border-right: 1px solid var(--ha-divider);
+  user-select: none;
+}
+
+.ha-traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 10px;
+  flex-shrink: 0;
+}
+
+.ha-tl {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.ha-tl-red {
+  background: #ff5f57;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.14);
+}
+
+.ha-tl-yellow {
+  background: #febc2e;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.14);
+}
+
+.ha-tl-green {
+  background: #28c840;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.14);
+}
+
+.ha-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 9px;
+  flex-shrink: 0;
+}
+
+.ha-brand-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.ha-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.18;
+}
+
+.ha-brand-text strong {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ha-text);
+  letter-spacing: -0.01em;
+}
+
+.ha-brand-text span {
+  font-size: 10.5px;
+  color: var(--ha-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 27px;
+  padding: 0 7px;
+  margin-bottom: 8px;
+  background: var(--ha-search-bg);
+  border: 1px solid var(--ha-divider);
+  border-radius: 7px;
+  flex-shrink: 0;
+  cursor: text;
+}
+
+.ha-search-ico {
+  color: var(--ha-text-faint);
+  flex-shrink: 0;
+}
+
+.ha-search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ha-text);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+}
+
+.ha-search-box input::placeholder {
+  color: var(--ha-text-faint);
+}
+
+.ha-search-box kbd {
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--ha-text-faint);
+  flex-shrink: 0;
+}
+
+/* Scrollable nav */
+
+.ha-nav-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ha-divider) transparent;
+}
+
+.ha-nav-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ha-nav-scroll::-webkit-scrollbar-thumb {
+  background: var(--ha-divider);
+  border-radius: 4px;
+}
+
+.ha-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ha-section-label {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--ha-text-faint);
+  padding: 6px 8px 2px;
+  line-height: 1.2;
+}
+
+.ha-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 23.5px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ha-text);
+  font-size: 11.5px;
+  font-weight: 450;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.ha-nav-item:focus {
+  outline: none;
+}
+
+.ha-nav-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ha-accent) 45%, transparent);
+  outline-offset: -2px;
+}
+
+.ha-nav-item:hover {
+  background: var(--ha-sidebar-hover);
+}
+
+.ha-nav-item.is-active {
+  background: var(--ha-sidebar-chosen);
+  font-weight: 560;
+  box-shadow: var(--ha-shadow-chosen);
+}
+
+.ha-nav-ico {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ha-text-muted);
+  flex-shrink: 0;
+}
+
+.ha-nav-item.is-active .ha-nav-ico {
+  color: var(--ha-accent);
+}
+
+.ha-nav-ico img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+}
+
+.ha-nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-nav-end {
+  font-size: 10px;
+  font-family: var(--moduix-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  color: var(--ha-text-faint);
+  flex-shrink: 0;
+}
+
+.ha-nav-end.is-warn {
+  color: var(--ha-warning);
+  font-weight: 600;
+}
+
+.ha-nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ha-nav-dot.is-ok {
+  background: var(--ha-success);
+}
+
+.ha-nav-dot.is-warn {
+  background: var(--ha-warning);
+}
+
+.ha-nav-empty {
+  font-size: 11px;
+  color: var(--ha-text-faint);
+  padding: 12px 8px;
+}
+
+/* Sidebar footer */
+
+.ha-sidebar-footer {
+  flex-shrink: 0;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ha-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ha-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 0 8px;
+  font-size: 10px;
+  color: var(--ha-text-faint);
+}
+
+.ha-status-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.ha-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ha-success);
+  flex-shrink: 0;
+}
+
+.ha-status-dot.is-busy {
+  background: var(--ha-info);
+}
+
+.ha-status-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ha-icon-btn {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ha-text-faint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.ha-icon-btn:focus {
+  outline: none;
+}
+
+.ha-icon-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ha-accent) 45%, transparent);
+  outline-offset: -1px;
+}
+
+.ha-icon-btn:hover {
+  background: var(--ha-sidebar-hover);
+  color: var(--ha-text);
+}
+
+.ha-icon-btn.is-spin svg {
+  animation: ha-spin 620ms linear;
+}
+
+@keyframes ha-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Right Stage (Real Retina Screenshot Panel) ---------- */
+
+.ha-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: var(--ha-bg);
+  overflow: hidden;
+}
+
+.ha-stage-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: top left;
+}
