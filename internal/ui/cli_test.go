@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -112,7 +113,7 @@ func TestCliPage(t *testing.T) {
 		"not found · Azure CLI · not needed by projects",
 		"brew · project payments-infra asks ~> 1.10", "1.9.8",
 		"Where commands go", "aws · staging", "from AWS_PROFILE · eu-central-1",
-		"gcloud · default", "from ~/.config/gcloud · no project chosen",
+		"gcloud · default", "from "+filepath.FromSlash("~/.config/gcloud")+" · no project chosen",
 		"Who the provider sees", "aws: not checked", "gcloud: not checked", "Hearth checks only when you click",
 		"Needed by projects", "payments-infra: Terraform ~> 1.10", "installed 1.9.8 · does not match",
 		"infra-live: OpenTofu >= 1.8", "installed 1.8.5 · matches",

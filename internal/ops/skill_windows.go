@@ -1,6 +1,6 @@
 package ops
 
-import "os"
+import "golang.org/x/sys/windows"
 
 // The commands that change skills folders, as a user would type them in
 // cmd: a junction leads to a skill's folder. Unlike a symlink it needs no
@@ -13,11 +13,13 @@ func linkCommand(target, link string) []string {
 }
 
 // unlinkCommand takes away a junction or a symlink, not what it leads to:
-// rmdir without /s removes a directory symlink or junction, while del /F
-// removes a file symlink (including broken symlinks created to missing paths).
+// rmdir without /s removes a directory symlink or junction (FILE_ATTRIBUTE_DIRECTORY),
+// while del /F removes a file symlink (including broken symlinks to missing paths).
 func unlinkCommand(link string) []string {
-	if info, err := os.Lstat(link); err == nil && !info.IsDir() {
-		return []string{"cmd.exe", "/c", "del", "/F", link}
+	if p, err := windows.UTF16PtrFromString(link); err == nil {
+		if attrs, err := windows.GetFileAttributes(p); err == nil && attrs&windows.FILE_ATTRIBUTE_DIRECTORY == 0 {
+			return []string{"cmd.exe", "/c", "del", "/F", link}
+		}
 	}
 	return []string{"cmd.exe", "/c", "rmdir", link}
 }

@@ -252,7 +252,7 @@ func TestSettingsFoldersCustomAppsAndHiddenIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	picked = "/Applications/CustomEdit.app"
+	picked = filepath.Join(home, "CustomEdit.app")
 	if err := tt.Click(locales.SettingsBrowse() + " " + locales.SettingsEditor()); err != nil {
 		t.Fatal(err)
 	}

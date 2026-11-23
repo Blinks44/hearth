@@ -36,7 +36,7 @@ func TestDockerOverviewProblemsAndLayout(t *testing.T) {
 	e.Overview = docker.Overview{Problems: []docker.Container{problem}, CPURead: true, MemoryRead: true, Cores: 1.5, Memory: 6 << 30,
 		Disk: docker.OverviewDisk{Usage: []inventory.DockerUsage{{Type: "Images", Bytes: 16_700_000_000, Reclaimable: 9_400_000_000}}}}
 	w.got[0](e, nil)
-	for _, size := range [][2]int{{1280, 820}, {1000, 680}} {
+	for _, size := range [][2]int{{1000, 680}, {1280, 820}} {
 		tt.SetSize(size[0], size[1])
 		tt.Advance(time.Second)
 		cpu, cpuOK := tt.Find(locales.DockerOverviewCPU())
