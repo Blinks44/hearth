@@ -476,15 +476,19 @@ html[data-reveal-ready='true'] [data-reveal][data-revealed='true'] {
   box-shadow: var(--hearth-shadow-sm);
   color: var(--hearth-text-mono);
   font-size: 0.82rem;
-  max-width: 100%;
+  max-width: min(100%, 460px);
+  min-width: 0;
 }
 
 .hero-brew-prompt {
   color: var(--hearth-text-muted);
   user-select: none;
+  flex-shrink: 0;
 }
 
 .hero-brew-cmd {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1706,6 +1710,7 @@ html[data-reveal-ready='true'] [data-reveal][data-revealed='true'] {
 .install-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: 1.55rem;
   border-radius: 20px;
   background: var(--hearth-bg-elevated);
@@ -1750,6 +1755,7 @@ html[data-reveal-ready='true'] [data-reveal][data-revealed='true'] {
   align-items: center;
   justify-content: space-between;
   gap: 0.45rem;
+  min-width: 0;
   padding: 0.45rem 0.55rem 0.45rem 0.75rem;
   border-radius: 10px;
   background: var(--hearth-surface-subtle);
@@ -1760,6 +1766,8 @@ html[data-reveal-ready='true'] [data-reveal][data-revealed='true'] {
 }
 
 .install-cmd-text {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2095,6 +2103,7 @@ html[data-reveal-ready='true'] [data-reveal][data-revealed='true'] {
     justify-content: center;
   }
   .hero-brew-box {
+    max-width: 100%;
     justify-content: space-between;
     padding: 0 0.5rem 0 0.75rem;
     font-size: 0.72rem;

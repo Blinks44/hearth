@@ -2,10 +2,9 @@ import { Download } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { CopyButton } from '@/components/CopyButton'
 import { HeroAppWindow } from '@/components/HeroAppWindow'
-import { site } from '@/config/site'
 import * as m from '@/integrations/i18n/paraglide/messages'
 import type { ReleaseAssets } from '@/integrations/releases'
-import type { DetectedPlatform } from '@/lib/os'
+import { type DetectedPlatform, getInstallCommand } from '@/lib/os'
 import type { ColorScheme } from '@/lib/theme'
 
 interface HeroProps {
@@ -35,6 +34,8 @@ export function Hero({ release, platform, theme, onToggleTheme }: HeroProps) {
     }
   })()
 
+  const installCmd = getInstallCommand(platform.os)
+
   return (
     <section id="top" className="hero">
       <div className="container">
@@ -58,9 +59,13 @@ export function Hero({ release, platform, theme, onToggleTheme }: HeroProps) {
           </a>
 
           <div className="hero-brew-box">
-            <span className="hero-brew-prompt mono">$</span>
-            <code className="hero-brew-cmd">{site.brewCommand}</code>
-            <CopyButton text={site.brewCommand} label={m.heroCopyCommand()} />
+            <span className="hero-brew-prompt mono" aria-hidden="true">
+              {installCmd.prompt}
+            </span>
+            <code className="hero-brew-cmd" title={installCmd.command}>
+              {installCmd.command}
+            </code>
+            <CopyButton text={installCmd.command} label={m.heroCopyCommand()} />
           </div>
         </div>
 

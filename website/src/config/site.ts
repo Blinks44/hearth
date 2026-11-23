@@ -14,6 +14,8 @@ export const site = {
   contributing: 'https://github.com/Blinks44/hearth/blob/main/CONTRIBUTING.md',
   license: 'https://github.com/Blinks44/hearth/blob/main/LICENSE',
   brewCommand: 'brew install --cask blinks44/tap/hearth',
+  linuxInstallCommand: 'curl -fsSL https://github.com/Blinks44/hearth/releases/latest/download/install.sh | sh',
+  windowsInstallCommand: 'irm https://github.com/Blinks44/hearth/releases/latest/download/install.ps1 | iex',
   defaultVersion: '1.0.0',
   author: {
     name: 'Sergey V.',

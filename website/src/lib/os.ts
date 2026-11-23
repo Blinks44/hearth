@@ -1,9 +1,16 @@
+import { site } from '@/config/site'
+
 export type PlatformOS = 'macos' | 'windows' | 'linux'
 export type PlatformArch = 'arm64' | 'amd64'
 
 export interface DetectedPlatform {
   os: PlatformOS
   arch: PlatformArch
+}
+
+export interface PlatformInstallCommand {
+  prompt: '$' | '>'
+  command: string
 }
 
 interface NavigatorUAData {
@@ -44,4 +51,23 @@ export function detectPlatform(): DetectedPlatform {
   }
 
   return { os, arch }
+}
+
+export function getInstallCommand(os: PlatformOS): PlatformInstallCommand {
+  if (os === 'windows') {
+    return {
+      prompt: '>',
+      command: site.windowsInstallCommand,
+    }
+  }
+  if (os === 'linux') {
+    return {
+      prompt: '$',
+      command: site.linuxInstallCommand,
+    }
+  }
+  return {
+    prompt: '$',
+    command: site.brewCommand,
+  }
 }

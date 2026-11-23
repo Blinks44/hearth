@@ -11,9 +11,6 @@ interface InstallSectionProps {
 }
 
 export function InstallSection({ release, platform }: InstallSectionProps) {
-  const winCmd = `hearth-setup-${release.version}-amd64.exe`
-  const linuxCmd = `sh install.sh hearth-${release.version}-linux-amd64.tar.gz`
-
   const cards = [
     {
       os: 'macos' as const,
@@ -31,7 +28,7 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
       sub: m.installWinSub(),
       btnLabel: m.installWinBtn(),
       href: platform.arch === 'arm64' ? release.windowsArm64 : release.windowsAmd64,
-      cmd: winCmd,
+      cmd: site.windowsInstallCommand,
       meta: m.installWinMeta(),
       alts: [
         { label: m.installAltX64(), href: release.windowsAmd64 },
@@ -44,7 +41,7 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
       sub: m.installLinuxSub(),
       btnLabel: m.installLinuxBtn(),
       href: platform.arch === 'arm64' ? release.linuxDebArm64 : release.linuxDebAmd64,
-      cmd: linuxCmd,
+      cmd: site.linuxInstallCommand,
       meta: m.installLinuxMeta(),
       alts: [
         { label: `.deb ${m.installAltX64()}`, href: release.linuxDebAmd64 },
@@ -87,7 +84,9 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
                 </a>
 
                 <div className="install-cmd-row">
-                  <code className="install-cmd-text">{card.cmd}</code>
+                  <code className="install-cmd-text" title={card.cmd}>
+                    {card.cmd}
+                  </code>
                   <CopyButton text={card.cmd} />
                 </div>
 
