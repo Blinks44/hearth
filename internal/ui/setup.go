@@ -726,7 +726,7 @@ func setupCategory(e catalog.Entry) installCat {
 func setupToolIcon(id string) string {
 	switch id {
 	case "homebrew":
-		return "lucide/package"
+		return "brand/homebrew"
 	case "mise":
 		return "lucide/layers"
 	case "node":
@@ -749,25 +749,51 @@ func setupToolIcon(id string) string {
 		return "brand/dotnet"
 	case "deno":
 		return "brand/deno"
-	case "zig", "elixir":
-		return "lucide/code-xml"
+	case "zig":
+		return "brand/zig"
+	case "elixir":
+		return "brand/elixir"
 	case "pnpm":
 		return "brand/pnpm"
+	case "yarn":
+		return "brand/yarn"
 	case "git":
 		return "brand/git"
 	case "gh":
-		return "lucide/git-branch"
-	case "yarn", "composer", "uv", "pipx", "bundler", "maven", "gradle":
-		return "lucide/package"
+		return "brand/github"
+	case "composer":
+		return "brand/composer"
+	case "uv":
+		return "brand/uv"
+	case "pipx":
+		return "brand/pipx"
+	case "bundler":
+		return "brand/rubygems"
+	case "maven":
+		return "brand/apachemaven"
+	case "gradle":
+		return "brand/gradle"
 	case "docker":
 		return "brand/docker"
-	case "kubectl", "helm", "kind", "k9s":
+	case "kubectl", "kind", "k9s":
 		return "brand/kubernetes"
-	case "aws", "gcloud", "az":
-		return "lucide/globe"
-	case "terraform", "tofu":
-		return "lucide/layers"
-	case "jq", "ripgrep", "fzf", "fd", "bat", "just", "direnv":
+	case "helm":
+		return "brand/helm"
+	case "aws":
+		return "brand/aws"
+	case "gcloud":
+		return "brand/googlecloud"
+	case "az":
+		return "brand/azure"
+	case "terraform":
+		return "brand/terraform"
+	case "tofu":
+		return "brand/opentofu"
+	case "bat":
+		return "brand/bat"
+	case "just":
+		return "brand/just"
+	case "jq", "ripgrep", "fzf", "fd", "direnv":
 		return "lucide/terminal"
 	case "postgresql":
 		return "brand/postgresql"

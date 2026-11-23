@@ -6,6 +6,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
@@ -129,4 +130,67 @@ func TestOverviewLogos(t *testing.T) {
 		}
 		screenshot(t, tt, name)
 	}
+}
+
+func TestSetupToolIconsRender(t *testing.T) {
+	// Verify every catalog tool icon renders visible pixels on its tile on both themes.
+	for _, dark := range []bool{false, true} {
+		for _, e := range catalog.Tools {
+			view := func(c *ui.Context) {
+				ui.Column(c).Fill().Center().Background(c.Theme().Background).Children(func() {
+					setupToolTile(c, e.ID, 36, false, false)
+				})
+			}
+			tt := ui.NewTester(view, 48, 48)
+			tt.SetDark(dark)
+			img := tt.Image()
+			bgR, bgG, bgB, _ := img.At(24, 10).RGBA() // inside tile near top border
+			diff := 0
+			for y := 14; y < 34; y++ {
+				for x := 14; x < 34; x++ {
+					r, g, b, _ := img.At(x, y).RGBA()
+					if absDiffU32(r, bgR)+absDiffU32(g, bgG)+absDiffU32(b, bgB) > 0x3000 {
+						diff++
+					}
+				}
+			}
+			if diff < 8 {
+				t.Errorf("tool %s (dark=%v, icon=%s): only %d visible pixels inside tile", e.ID, dark, setupToolIcon(e.ID), diff)
+			}
+		}
+
+		// Render a visual contact sheet of all catalog tool tiles when screenshots are enabled.
+		gridView := func(c *ui.Context) {
+			t := c.Theme()
+			ui.Column(c).Fill().Background(t.Background).Padding(16).Gap(8).Children(func() {
+				const cols = 6
+				for i := 0; i < len(catalog.Tools); i += cols {
+					end := min(i+cols, len(catalog.Tools))
+					ui.Row(c).Gap(8).Children(func() {
+						for _, e := range catalog.Tools[i:end] {
+							ui.Row(c).Width(155).Gap(8).AlignItems(ui.Center).Children(func() {
+								setupToolTile(c, e.ID, 28, false, false)
+								ui.Text(c, e.ID).FontSize(12).TextColor(t.Text)
+							})
+						}
+					})
+				}
+			})
+		}
+		tt := ui.NewTester(gridView, 1020, 420)
+		tt.SetDark(dark)
+		tt.Frame()
+		name := "install-logos-light"
+		if dark {
+			name = "install-logos-dark"
+		}
+		screenshot(t, tt, name)
+	}
+}
+
+func absDiffU32(a, b uint32) uint32 {
+	if a > b {
+		return a - b
+	}
+	return b - a
 }

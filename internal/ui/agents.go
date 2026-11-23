@@ -26,13 +26,13 @@ var agentInfos = []agentInfo{
 	{"claude", "Claude Code", "claude"},
 	{"codex", "Codex", "openai"},
 	{"copilot", "Copilot CLI", "githubcopilot"},
-	{"antigravity", "Antigravity CLI", ""},
+	{"antigravity", "Antigravity CLI", "antigravity"},
 	{"gemini", "Gemini CLI", "googlegemini"},
 	{"cursor", "Cursor", "cursor"},
-	{"opencode", "OpenCode", ""},
+	{"opencode", "OpenCode", "opencode"},
 	{"devin", "Devin", ""},
-	{"grok", "Grok Build", ""},
-	{"kimi", "Kimi Code", ""},
+	{"grok", "Grok Build", "grok"},
+	{"kimi", "Kimi Code", "kimi"},
 	{"aider", "Aider", ""},
 }
 
