@@ -5,7 +5,6 @@
   "notFoundDescription": "This page does not exist. Return to the Hearth homepage.",
   "notFoundHeading": "Page not found",
   "notFoundBack": "Back to Hearth",
-
   "navFeatures": "Features",
   "navSafety": "Safety",
   "navMcp": "MCP",
@@ -16,7 +15,6 @@
   "navMenuLabel": "Open navigation menu",
   "navThemeToggle": "Switch color theme",
   "navLanguageLabel": "Change language",
-
   "heroEyebrow": "v{version} · Free & Open Source · MIT License",
   "heroTitleLine1": "One calm home for your",
   "heroTitleLine2": "local dev environment.",
@@ -31,15 +29,12 @@
   "heroMetaMobile": "macOS · Windows · Linux · ~18 MB · No Electron",
   "heroScreenshotAlt": "Hearth Overview screen showing tools, containers, clusters, AI agents, and issues",
   "heroExpandScreenshot": "Inspect full screenshot",
-
   "ecosystemLabel": "Discovers and works with the stack you already use",
-
   "workflowsEyebrow": "Workflows",
   "workflowsTitle": "Six daily workflows. One quiet window.",
   "workflowsSubtitle": "From onboarding a fresh laptop to untangling a broken repo or auditing AI agents.",
   "workflowsViewScreenshot": "View real app screenshot",
   "workflowsRealScreen": "Real Hearth screenshot",
-
   "tabOverviewLabel": "Overview & Issues",
   "tabOverviewPill": "Overview & Issues",
   "tabOverviewTitle": "See your whole machine in one calm glance.",
@@ -60,7 +55,6 @@
   "tabOverviewRecentTitle": "Recent changes",
   "tabOverviewRecent1": "Node.js 22.12.0 installed via mise · Today, 14:12",
   "tabOverviewRecent2": "MCP server hearth connected to Claude Code & Codex · Yesterday",
-
   "tabProjectsLabel": "Project Setup",
   "tabProjectsPill": "Project Setup",
   "tabProjectsTitle": "Clone a repo. See what is missing in two seconds.",
@@ -78,7 +72,6 @@
   "tabProjectsReady": "Ready",
   "tabProjectsPlanSummary": "1 step in plan: mise install node@18.20 + local mise.toml",
   "tabProjectsPlanNote": "Global Node 22.12 stays untouched. No project scripts or npm install will run.",
-
   "tabDockerLabel": "Docker & K8s",
   "tabDockerPill": "Docker & K8s",
   "tabDockerTitle": "Containers and clusters at native dev speed.",
@@ -89,7 +82,6 @@
   "tabDockerManaged": "managed by Hearth",
   "tabDockerRunning": "Running",
   "tabDockerCrash": "CrashLoop",
-
   "tabAiLabel": "AI, Skills & MCP",
   "tabAiPill": "AI, Skills & MCP",
   "tabAiTitle": "Unify AGENTS.md, skills, MCP & local spend.",
@@ -101,7 +93,6 @@
   "tabAiConflict": "Conflict",
   "tabAiSpendLabel": "Local AI spend · Last 7 days",
   "tabAiSpendMeta": "842k tokens · 4 agents · API estimate",
-
   "tabCleanupLabel": "Disk Cleanup",
   "tabCleanupPill": "Disk Cleanup",
   "tabCleanupTitle": "Reclaim gigabytes without breaking projects.",
@@ -122,7 +113,6 @@
   "tabCleanupItem4Title": "AI agent temp caches",
   "tabCleanupItem4Sub": "keeps configs, auth, skills & memory",
   "tabCleanupProtected": "Protected: ~/.ssh, ~/.aws, AI auth/configs, active Claude version & running Docker volumes",
-
   "tabSetupLabel": "New Machine",
   "tabSetupPill": "New Machine",
   "tabSetupTitle": "Onboard a fresh laptop in four calm steps.",
@@ -145,35 +135,28 @@
   "tabSetupStepsReady": "{count} steps ready",
   "tabSetupNextBtn": "Next: review plan",
   "tabSetupPlannedBtn": "Plan verified · Reset",
-
   "bentoEyebrow": "Every corner of your stack",
   "bentoTitle": "Replace half a dozen heavy tools.",
   "bentoSubtitle": "Containers, clusters, local databases, ports, AI configs, runtimes, and disk cleanup — all native and fast.",
-
   "bentoDockerPill": "Docker & Colima",
   "bentoDockerTitle": "Docker without the bloat",
   "bentoDockerDesc": "One-click open-source Colima on macOS or native Docker Engine on Linux. Manage Compose stacks, logs, images, volumes, and VM resources.",
-
   "bentoK8sPill": "Kubernetes",
   "bentoK8sTitle": "Kubernetes at dev speed",
   "bentoK8sDesc": "Fast client-go reads, crash diagnostics, live owner logs, port-forward, Secrets, Helm, and local kind clusters.",
-
   "bentoAiPill": "AI Agents & Spend",
   "bentoAiTitle": "AI agents, skills & local spend",
   "bentoAiDesc": "Unify AGENTS.md across Claude, Codex, Cursor, Copilot & Gemini. Manage MCP, skill catalogs, hooks & local spend.",
-
   "bentoCleanupPill": "Safe Cleanup",
   "bentoCleanupTitle": "Reclaim gigabytes safely",
   "bentoCleanupDesc": "Finds stale node_modules, pnpm stores, Docker caches, Rust/NuGet caches, and safe AI temp caches — never touching auth, configs, or skills.",
   "bentoCleanupSelectedNote": "{selected} GB selected",
-
   "bentoDbPill": "Databases & Ports",
   "bentoDbTitle": "Local databases & ports, no DBngin",
   "bentoDbDesc": "Install and run PostgreSQL, Redis, MySQL, MariaDB & MongoDB locally or in Docker. Toggle autostart, spot port conflicts, and launch CLI.",
   "bentoDbHeader": "Local servers & containers",
   "bentoDbInstallBtn": "+ Install server",
   "bentoDbConflict": "Conflict",
-
   "bentoShellPill": "Runtimes & Shell",
   "bentoShellTitle": "Every version & shell startup",
   "bentoShellDesc": "Trace which -a across Node, Python, Go, Rust, Java & PHP. Profile slow zsh or PowerShell startup and clean PATH duplicates.",
@@ -181,7 +164,6 @@
   "bentoShellSlow": "Slow",
   "bentoShellDuplicate": "Duplicate",
   "bentoShellClean": "Clean",
-
   "safetyEyebrow": "Safety by design",
   "safetyTitle": "Nothing changes silently.",
   "safetySubtitle": "Every scan is strictly read-only. Every mutation goes through an explicit plan with exact commands, file diffs, and automatic backups.",
@@ -203,7 +185,6 @@
   "safetyCancelBtn": "Cancel",
   "safetyApplyBtn": "Comment 1 line & apply",
   "safetyResetBtn": "Reset preview",
-
   "mcpEyebrow": "Built-in MCP server",
   "mcpTitle": "Give your AI agent eyes on your machine.",
   "mcpDesc": "Connect Hearth as a local stdio MCP server in one click. Claude Code, Codex, and Cursor can inspect installed tools, project mismatches, and environment issues — and propose fixes that always require your approval in Hearth.",
@@ -212,7 +193,6 @@
   "mcpRequestedBy": "Requested by Claude Code",
   "mcpPlanHint": "Waiting for human approval · Diff & backup shown before run",
   "mcpReviewBtn": "Review plan",
-
   "metric1Value": "~18 MB",
   "metric1Title": "Native Go binary",
   "metric1Desc": "Built with Go & mygo. Zero Electron, zero Chromium, zero webview.",
@@ -225,7 +205,6 @@
   "metric4Value": "6",
   "metric4Title": "Built-in languages",
   "metric4Desc": "English, Russian, German, Spanish, French & Simplified Chinese.",
-
   "installEyebrow": "Download",
   "installTitle": "Get Hearth v{version}",
   "installSubtitle": "Free, open source, and verified with SHA-256 checksums & GitHub Build Attestations.",
@@ -248,11 +227,9 @@
   "installTrustTitle": "First-launch Gatekeeper & SmartScreen note",
   "installTrustBody": "Hearth is free open-source software without paid Apple/Windows signing certificates. On macOS use System Settings → Privacy & Security → Open Anyway; on Windows click More info → Run anyway.",
   "installTrustLink": "SHA-256 & Attestations",
-
   "ctaTitle": "Make your dev environment feel like home.",
   "ctaDownload": "Download Hearth v{version}",
   "ctaStar": "Star on GitHub",
-
   "footerTagline": "Free, local-first desktop app for developers. Built with Go & mygo. MIT licensed.",
   "footerColProduct": "Product",
   "footerColResources": "Resources",
@@ -272,5 +249,9 @@
   "footerLinkIssues": "Report an Issue",
   "footerLinkContributing": "Contributing",
   "footerLinkLicense": "MIT License",
-  "footerCopyright": "© 2026 Hearth Contributors · MIT License · Powered by Go, mygo, mise, Colima, Lucide & Lobe Icons"
+  "footerCopyright": "© 2026 Hearth Contributors · MIT License · Powered by Go, mygo, mise, Colima, Lucide & Lobe Icons",
+  "suiteEyebrow": "More native macOS tools by Sergey V.",
+  "suiteMonnyDesc": "Native Mac system monitor for CPU, memory, disk, network, Apple silicon sensors, and AI quotas.",
+  "suiteRebindDesc": "Native macOS keyboard, mouse, trackpad, and Logitech HID++ remapping with local profiles.",
+  "suiteExplore": "Explore"
 }

@@ -5,7 +5,6 @@
   "notFoundDescription": "Такой страницы нет. Вернитесь на главную Hearth.",
   "notFoundHeading": "Страница не найдена",
   "notFoundBack": "На главную Hearth",
-
   "navFeatures": "Возможности",
   "navSafety": "Безопасность",
   "navMcp": "MCP",
@@ -16,7 +15,6 @@
   "navMenuLabel": "Открыть меню навигации",
   "navThemeToggle": "Переключить тему",
   "navLanguageLabel": "Сменить язык",
-
   "heroEyebrow": "v{version} · Бесплатно и Open Source · MIT",
   "heroTitleLine1": "Спокойный дом для вашей",
   "heroTitleLine2": "локальной среды разработки.",
@@ -31,15 +29,12 @@
   "heroMetaMobile": "macOS · Windows · Linux · ~18 МБ · Без Electron",
   "heroScreenshotAlt": "Экран Обзора Hearth с инструментами, контейнерами, кластерами, AI-агентами и проблемами",
   "heroExpandScreenshot": "Открыть полный скриншот",
-
   "ecosystemLabel": "Находит и работает со стеком, которым вы уже пользуетесь",
-
   "workflowsEyebrow": "Сценарии",
   "workflowsTitle": "Шесть ежедневных задач. Одно тихое окно.",
   "workflowsSubtitle": "От настройки нового ноутбука до разбора сломанного репозитория и аудита AI-агентов.",
   "workflowsViewScreenshot": "Реальный скриншот приложения",
   "workflowsRealScreen": "Скриншот Hearth",
-
   "tabOverviewLabel": "Обзор и проблемы",
   "tabOverviewPill": "Обзор и проблемы",
   "tabOverviewTitle": "Вся машина перед глазами в одном спокойном окне.",
@@ -60,7 +55,6 @@
   "tabOverviewRecentTitle": "Недавние изменения",
   "tabOverviewRecent1": "Node.js 22.12.0 установлен через mise · Сегодня, 14:12",
   "tabOverviewRecent2": "MCP-сервер hearth подключён к Claude Code и Codex · Вчера",
-
   "tabProjectsLabel": "Настройка проекта",
   "tabProjectsPill": "Настройка проекта",
   "tabProjectsTitle": "Клонируйте репо. Увидьте, чего не хватает, за две секунды.",
@@ -78,7 +72,6 @@
   "tabProjectsReady": "Готово",
   "tabProjectsPlanSummary": "1 шаг в плане: mise install node@18.20 + локальный mise.toml",
   "tabProjectsPlanNote": "Глобальный Node 22.12 не меняется. Скрипты проекта и npm install не запускаются.",
-
   "tabDockerLabel": "Docker и K8s",
   "tabDockerPill": "Docker и K8s",
   "tabDockerTitle": "Контейнеры и кластеры с нативной скоростью.",
@@ -89,7 +82,6 @@
   "tabDockerManaged": "управляется Hearth",
   "tabDockerRunning": "Работает",
   "tabDockerCrash": "CrashLoop",
-
   "tabAiLabel": "AI, скиллы и MCP",
   "tabAiPill": "AI, скиллы и MCP",
   "tabAiTitle": "Единые AGENTS.md, скиллы, MCP и локальный расход.",
@@ -101,7 +93,6 @@
   "tabAiConflict": "Конфликт",
   "tabAiSpendLabel": "Локальный расход AI · За 7 дней",
   "tabAiSpendMeta": "842k токенов · 4 агента · оценка по API",
-
   "tabCleanupLabel": "Очистка диска",
   "tabCleanupPill": "Очистка диска",
   "tabCleanupTitle": "Освобождайте гигабайты, не ломая проекты.",
@@ -122,7 +113,6 @@
   "tabCleanupItem4Title": "Временные кэши AI-агентов",
   "tabCleanupItem4Sub": "конфиги, токены, скиллы и память сохраняются",
   "tabCleanupProtected": "Защищено: ~/.ssh, ~/.aws, конфиги/токены AI, активный Claude и работающие тома Docker",
-
   "tabSetupLabel": "Новая машина",
   "tabSetupPill": "Новая машина",
   "tabSetupTitle": "Настройте свежий ноутбук за четыре спокойных шага.",
@@ -145,35 +135,28 @@
   "tabSetupStepsReady": "Шагов в плане: {count}",
   "tabSetupNextBtn": "Далее: план",
   "tabSetupPlannedBtn": "План проверен · Сброс",
-
   "bentoEyebrow": "Каждый слой вашего стека",
   "bentoTitle": "Замените полдюжины тяжёлых утилит.",
   "bentoSubtitle": "Контейнеры, кластеры, локальные БД, порты, конфиги AI, рантаймы и очистка диска — нативно и быстро.",
-
   "bentoDockerPill": "Docker и Colima",
   "bentoDockerTitle": "Docker без лишнего веса",
   "bentoDockerDesc": "Open-source Colima на macOS в один клик или нативный Docker Engine на Linux. Compose-стеки, логи, образы, тома и ресурсы VM.",
-
   "bentoK8sPill": "Kubernetes",
   "bentoK8sTitle": "Kubernetes на скорости разработки",
   "bentoK8sDesc": "Быстрое чтение через client-go, диагностика падений, живые логи, port-forward, Secrets, Helm и локальные кластеры kind.",
-
   "bentoAiPill": "AI-агенты и расход",
   "bentoAiTitle": "AI-агенты, скиллы и локальный расход",
   "bentoAiDesc": "Общий AGENTS.md для Claude, Codex, Cursor, Copilot и Gemini. Управление MCP, каталоги скиллов, хуки и сводка расхода.",
-
   "bentoCleanupPill": "Безопасная очистка",
   "bentoCleanupTitle": "Освобождайте гигабайты безопасно",
   "bentoCleanupDesc": "Старые node_modules, pnpm store, кэши Docker, Rust/NuGet и временные кэши AI — не касаясь токенов, конфигов и скиллов.",
   "bentoCleanupSelectedNote": "Выбрано {selected} ГБ",
-
   "bentoDbPill": "БД и порты",
   "bentoDbTitle": "Локальные БД и порты без DBngin",
   "bentoDbDesc": "PostgreSQL, Redis, MySQL, MariaDB и MongoDB локально или в Docker. Автозапуск, конфликты портов и запуск CLI.",
   "bentoDbHeader": "Локальные серверы и контейнеры",
   "bentoDbInstallBtn": "+ Установить",
   "bentoDbConflict": "Конфликт",
-
   "bentoShellPill": "Рантаймы и Shell",
   "bentoShellTitle": "Все версии и старт терминала",
   "bentoShellDesc": "Трассировка which -a для Node, Python, Go, Rust, Java и PHP. Профилирование медленного запуска zsh/PowerShell и чистка PATH.",
@@ -181,7 +164,6 @@
   "bentoShellSlow": "Медленно",
   "bentoShellDuplicate": "Дубликат",
   "bentoShellClean": "Чисто",
-
   "safetyEyebrow": "Безопасность по умолчанию",
   "safetyTitle": "Ничего не меняется втихую.",
   "safetySubtitle": "Любое сканирование строго read-only. Любое изменение идёт через явный план с точными командами, diff файлов и автоматическими бэкапами.",
@@ -203,7 +185,6 @@
   "safetyCancelBtn": "Отмена",
   "safetyApplyBtn": "Закомментировать 1 строку",
   "safetyResetBtn": "Сбросить пример",
-
   "mcpEyebrow": "Встроенный MCP-сервер",
   "mcpTitle": "Дайте AI-агенту глаза на вашу машину.",
   "mcpDesc": "Подключите Hearth как локальный stdio MCP-сервер в один клик. Claude Code, Codex и Cursor увидят инструменты, расхождения проектов и проблемы среды — и предложат исправление, которое всегда подтверждаете вы.",
@@ -212,7 +193,6 @@
   "mcpRequestedBy": "Запрос от Claude Code",
   "mcpPlanHint": "Ждёт вашего подтверждения · Diff и бэкап до запуска",
   "mcpReviewBtn": "Открыть план",
-
   "metric1Value": "~18 МБ",
   "metric1Title": "Нативный Go-бинарник",
   "metric1Desc": "Написано на Go и mygo. Без Electron, Chromium и webview.",
@@ -225,7 +205,6 @@
   "metric4Value": "6",
   "metric4Title": "Встроенных языков",
   "metric4Desc": "Английский, русский, немецкий, испанский, французский и китайский.",
-
   "installEyebrow": "Скачать",
   "installTitle": "Установить Hearth v{version}",
   "installSubtitle": "Бесплатно, с открытым исходным кодом, проверено SHA-256 и GitHub Build Attestations.",
@@ -248,11 +227,9 @@
   "installTrustTitle": "Первый запуск: Gatekeeper и SmartScreen",
   "installTrustBody": "Hearth — бесплатное open-source приложение без платных сертификатов Apple/Windows. На macOS откройте Системные настройки → Конфиденциальность и безопасность → Всё равно открыть; на Windows нажмите Подробнее → Выполнить в любом случае.",
   "installTrustLink": "SHA-256 и Attestations",
-
   "ctaTitle": "Пусть среда разработки ощущается как дома.",
   "ctaDownload": "Скачать Hearth v{version}",
   "ctaStar": "Звезда на GitHub",
-
   "footerTagline": "Бесплатное локальное desktop-приложение для разработчиков. Написано на Go и mygo. Лицензия MIT.",
   "footerColProduct": "Продукт",
   "footerColResources": "Ресурсы",
@@ -272,5 +249,9 @@
   "footerLinkIssues": "Сообщить о проблеме",
   "footerLinkContributing": "Как помочь проекту",
   "footerLinkLicense": "Лицензия MIT",
-  "footerCopyright": "© 2026 Участники Hearth · Лицензия MIT · На базе Go, mygo, mise, Colima, Lucide и Lobe Icons"
+  "footerCopyright": "© 2026 Участники Hearth · Лицензия MIT · На базе Go, mygo, mise, Colima, Lucide и Lobe Icons",
+  "suiteEyebrow": "Другие нативные утилиты для Mac от Sergey V.",
+  "suiteMonnyDesc": "Нативный монитор Mac: CPU, память, диск, сеть, датчики Apple silicon и квоты AI.",
+  "suiteRebindDesc": "Переназначение клавиш, мыши, трекпада и Logitech HID++ на macOS с локальными профилями.",
+  "suiteExplore": "Открыть"
 }

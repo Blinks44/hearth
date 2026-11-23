@@ -1879,6 +1879,94 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
   gap: 0.75rem;
 }
 
+.suite-band {
+  margin-top: 3rem;
+  text-align: left;
+}
+
+.suite-eyebrow {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hearth-text-muted);
+}
+
+.suite-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+.suite-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.35rem;
+  border-radius: 16px;
+  background: var(--hearth-bg-elevated);
+  border: 1px solid var(--hearth-border);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.suite-card:hover {
+  border-color: color-mix(in srgb, var(--hearth-accent) 45%, var(--hearth-border));
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(15, 13, 12, 0.08);
+}
+
+.suite-card img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.suite-card-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.suite-card-body strong {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--hearth-text);
+}
+
+.suite-card-body p {
+  margin: 0.22rem 0 0;
+  font-size: 0.83rem;
+  color: var(--hearth-text-secondary);
+  line-height: 1.48;
+}
+
+.suite-card-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 640;
+  color: var(--hearth-accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .suite-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Footer */
 .site-footer {
   border-top: 1px solid var(--hearth-border);
@@ -1933,6 +2021,27 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
   border-top: 1px solid var(--hearth-border);
   font-size: 0.76rem;
   color: var(--hearth-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+}
+
+.footer-suite-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footer-suite-links a {
+  color: var(--hearth-text-secondary);
+  font-weight: 550;
+  transition: color 0.14s ease;
+}
+
+.footer-suite-links a:hover {
+  color: var(--hearth-accent);
 }
 
 /* Lightbox Dialog */

@@ -5,7 +5,6 @@
   "notFoundDescription": "该页面不存在，请返回 Hearth 首页。",
   "notFoundHeading": "页面未找到",
   "notFoundBack": "返回 Hearth",
-
   "navFeatures": "功能",
   "navSafety": "安全",
   "navMcp": "MCP",
@@ -16,7 +15,6 @@
   "navMenuLabel": "打开导航菜单",
   "navThemeToggle": "切换配色主题",
   "navLanguageLabel": "切换语言",
-
   "heroEyebrow": "v{version} · 免费开源 · MIT 协议",
   "heroTitleLine1": "本地开发环境的",
   "heroTitleLine2": "宁静家园。",
@@ -31,15 +29,12 @@
   "heroMetaMobile": "macOS · Windows · Linux · ~18 MB · 无 Electron",
   "heroScreenshotAlt": "Hearth 总览界面，展示工具、容器、集群、AI 代理与问题提示",
   "heroExpandScreenshot": "查看高清大图",
-
   "ecosystemLabel": "自动发现并适配你正在使用的技术栈",
-
   "workflowsEyebrow": "工作流",
   "workflowsTitle": "六个日常工作流，一个安静窗口。",
   "workflowsSubtitle": "从配置全新电脑，到排查项目依赖或审计本地 AI 代理。",
   "workflowsViewScreenshot": "查看真实应用截图",
   "workflowsRealScreen": "Hearth 真实截图",
-
   "tabOverviewLabel": "总览与问题",
   "tabOverviewPill": "总览与问题",
   "tabOverviewTitle": "整台机器状态，一眼尽收眼底。",
@@ -60,7 +55,6 @@
   "tabOverviewRecentTitle": "最近变更",
   "tabOverviewRecent1": "通过 mise 安装 Node.js 22.12.0 · 今天 14:12",
   "tabOverviewRecent2": "已将 hearth MCP 服务器连接至 Claude Code 与 Codex · 昨天",
-
   "tabProjectsLabel": "项目准备",
   "tabProjectsPill": "项目准备",
   "tabProjectsTitle": "克隆仓库，两秒看清缺少什么。",
@@ -78,7 +72,6 @@
   "tabProjectsReady": "就绪",
   "tabProjectsPlanSummary": "计划共 1 步：mise install node@18.20 + 本地 mise.toml",
   "tabProjectsPlanNote": "全局 Node 22.12 保持不变，不会运行项目脚本或 npm install。",
-
   "tabDockerLabel": "Docker 与 K8s",
   "tabDockerPill": "Docker 与 K8s",
   "tabDockerTitle": "原生速度管理容器与集群。",
@@ -89,7 +82,6 @@
   "tabDockerManaged": "由 Hearth 管理",
   "tabDockerRunning": "运行中",
   "tabDockerCrash": "CrashLoop",
-
   "tabAiLabel": "AI、技能与 MCP",
   "tabAiPill": "AI、技能与 MCP",
   "tabAiTitle": "统一管理 AGENTS.md、技能、MCP 与本地开销。",
@@ -101,7 +93,6 @@
   "tabAiConflict": "冲突",
   "tabAiSpendLabel": "本地 AI 开销 · 近 7 天",
   "tabAiSpendMeta": "842k tokens · 4 个代理 · API 估算",
-
   "tabCleanupLabel": "磁盘清理",
   "tabCleanupPill": "磁盘清理",
   "tabCleanupTitle": "安全释放数 GB 空间，不伤项目。",
@@ -122,7 +113,6 @@
   "tabCleanupItem4Title": "AI 代理临时缓存",
   "tabCleanupItem4Sub": "保留配置、认证、技能与记忆",
   "tabCleanupProtected": "受保护：~/.ssh、~/.aws、AI 认证/配置、当前 Claude 版本与运行中的 Docker 卷",
-
   "tabSetupLabel": "新机初始化",
   "tabSetupPill": "新机初始化",
   "tabSetupTitle": "四个从容步骤，配好一台新电脑。",
@@ -145,35 +135,28 @@
   "tabSetupStepsReady": "已就绪 {count} 个步骤",
   "tabSetupNextBtn": "下一步：审阅计划",
   "tabSetupPlannedBtn": "计划已验证 · 重置",
-
   "bentoEyebrow": "覆盖技术栈每个角落",
   "bentoTitle": "替代半打笨重工具。",
   "bentoSubtitle": "容器、集群、本地数据库、端口、AI 配置、运行时与磁盘清理，全部原生高速。",
-
   "bentoDockerPill": "Docker 与 Colima",
   "bentoDockerTitle": "轻装上阵的 Docker",
   "bentoDockerDesc": "macOS 一键开源 Colima，Linux 直连原生 Docker Engine。轻松管理 Compose、日志、镜像、数据卷与 VM 资源。",
-
   "bentoK8sPill": "Kubernetes",
   "bentoK8sTitle": "面向开发速度的 Kubernetes",
   "bentoK8sDesc": "高速 client-go 读取、崩溃诊断、实时日志、端口转发、Secrets、Helm 与本地 kind 集群。",
-
   "bentoAiPill": "AI 代理与开销",
   "bentoAiTitle": "AI 代理、技能与本地开销",
   "bentoAiDesc": "在 Claude、Codex、Cursor、Copilot 与 Gemini 间统一 AGENTS.md，管理 MCP、技能目录、hooks 与花费。",
-
   "bentoCleanupPill": "安全清理",
   "bentoCleanupTitle": "安心回收数 GB 空间",
   "bentoCleanupDesc": "清理过期 node_modules、pnpm 仓库、Docker、Rust/NuGet 与安全 AI 缓存，绝不误删凭证与配置。",
   "bentoCleanupSelectedNote": "已选 {selected} GB",
-
   "bentoDbPill": "数据库与端口",
   "bentoDbTitle": "本地数据库与端口，无需 DBngin",
   "bentoDbDesc": "本地或 Docker 一键启停 PostgreSQL、Redis、MySQL、MariaDB 与 MongoDB，排查端口冲突并直连 CLI。",
   "bentoDbHeader": "本地服务与容器",
   "bentoDbInstallBtn": "+ 安装服务",
   "bentoDbConflict": "冲突",
-
   "bentoShellPill": "运行时与 Shell",
   "bentoShellTitle": "多版本追踪与 Shell 启动分析",
   "bentoShellDesc": "追踪 Node、Python、Go、Rust、Java 与 PHP 的 which -a；定位 zsh/PowerShell 启动耗时并清理重复 PATH。",
@@ -181,7 +164,6 @@
   "bentoShellSlow": "偏慢",
   "bentoShellDuplicate": "重复",
   "bentoShellClean": "整洁",
-
   "safetyEyebrow": "安全源于设计",
   "safetyTitle": "绝不静默修改任何文件。",
   "safetySubtitle": "所有扫描严格只读。每次变更都必须经过明确计划，展示精确命令、文件 diff 并自动备份。",
@@ -203,7 +185,6 @@
   "safetyCancelBtn": "取消",
   "safetyApplyBtn": "注释 1 行并应用",
   "safetyResetBtn": "重置预览",
-
   "mcpEyebrow": "内置 MCP 服务器",
   "mcpTitle": "让你的 AI 代理看懂本机环境。",
   "mcpDesc": "一键将 Hearth 接入为本地 stdio MCP 服务器。Claude Code、Codex 与 Cursor 可查看工具、项目差异与环境问题，并提出修复建议，但始终需要你在 Hearth 内确认执行。",
@@ -212,7 +193,6 @@
   "mcpRequestedBy": "来自 Claude Code 的请求",
   "mcpPlanHint": "等待人工确认 · 执行前展示 diff 与备份",
   "mcpReviewBtn": "审阅计划",
-
   "metric1Value": "~18 MB",
   "metric1Title": "原生 Go 二进制",
   "metric1Desc": "基于 Go 与 mygo 构建，无 Electron、无 Chromium、无 WebView。",
@@ -225,7 +205,6 @@
   "metric4Value": "6",
   "metric4Title": "内置界面语言",
   "metric4Desc": "英语、俄语、德语、西班牙语、法语与简体中文。",
-
   "installEyebrow": "下载",
   "installTitle": "获取 Hearth v{version}",
   "installSubtitle": "免费开源，提供 SHA-256 校验和与 GitHub Build Attestations 验证。",
@@ -248,11 +227,9 @@
   "installTrustTitle": "首次启动 Gatekeeper 与 SmartScreen 说明",
   "installTrustBody": "Hearth 是免费开源软件，未使用付费 Apple/Windows 签名证书。macOS 请在「系统设置 → 隐私与安全性 → 仍要打开」放行；Windows 点击「更多信息 → 仍要运行」。",
   "installTrustLink": "SHA-256 与构建证明",
-
   "ctaTitle": "让本地开发环境如家般舒心。",
   "ctaDownload": "下载 Hearth v{version}",
   "ctaStar": "在 GitHub 点星",
-
   "footerTagline": "面向开发者的免费本地桌面应用。使用 Go 与 mygo 构建，MIT 开源协议。",
   "footerColProduct": "产品",
   "footerColResources": "资源",
@@ -272,5 +249,9 @@
   "footerLinkIssues": "反馈问题",
   "footerLinkContributing": "参与贡献",
   "footerLinkLicense": "MIT 协议",
-  "footerCopyright": "© 2026 Hearth Contributors · MIT 协议 · 基于 Go、mygo、mise、Colima、Lucide 与 Lobe Icons"
+  "footerCopyright": "© 2026 Hearth Contributors · MIT 协议 · 基于 Go、mygo、mise、Colima、Lucide 与 Lobe Icons",
+  "suiteEyebrow": "Sergey V. 开发的更多原生 macOS 工具",
+  "suiteMonnyDesc": "原生 Mac 系统监控工具，覆盖 CPU、内存、磁盘、网络、Apple Silicon 传感器与 AI 额度。",
+  "suiteRebindDesc": "原生 macOS 键盘、鼠标、触控板与罗技 HID++ 按键重映射工具，全本地配置。",
+  "suiteExplore": "了解"
 }

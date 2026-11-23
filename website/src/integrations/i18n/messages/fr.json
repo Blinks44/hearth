@@ -5,7 +5,6 @@
   "notFoundDescription": "Cette page n'existe pas. Retourner à l'accueil de Hearth.",
   "notFoundHeading": "Page introuvable",
   "notFoundBack": "Retour à Hearth",
-
   "navFeatures": "Fonctions",
   "navSafety": "Sécurité",
   "navMcp": "MCP",
@@ -16,7 +15,6 @@
   "navMenuLabel": "Ouvrir le menu de navigation",
   "navThemeToggle": "Changer de thème",
   "navLanguageLabel": "Changer de langue",
-
   "heroEyebrow": "v{version} · Gratuit & Open Source · Licence MIT",
   "heroTitleLine1": "Un foyer serein pour votre",
   "heroTitleLine2": "environnement de dev local.",
@@ -31,15 +29,12 @@
   "heroMetaMobile": "macOS · Windows · Linux · ~18 Mo · Sans Electron",
   "heroScreenshotAlt": "Écran Aperçu de Hearth montrant outils, conteneurs, clusters, agents IA et problèmes",
   "heroExpandScreenshot": "Voir la capture en grand",
-
   "ecosystemLabel": "Détecte et s'intègre à la stack que vous utilisez déjà",
-
   "workflowsEyebrow": "Scénarios",
   "workflowsTitle": "Six usages quotidiens. Une seule fenêtre calme.",
   "workflowsSubtitle": "De la préparation d'un nouveau Mac au dépannage d'un dépôt ou l'audit de vos agents IA.",
   "workflowsViewScreenshot": "Voir la vraie capture de l'app",
   "workflowsRealScreen": "Vraie capture Hearth",
-
   "tabOverviewLabel": "Aperçu & alertes",
   "tabOverviewPill": "Aperçu & alertes",
   "tabOverviewTitle": "Toute votre machine en un seul coup d'œil.",
@@ -60,7 +55,6 @@
   "tabOverviewRecentTitle": "Changements récents",
   "tabOverviewRecent1": "Node.js 22.12.0 installé via mise · Aujourd'hui, 14:12",
   "tabOverviewRecent2": "Serveur MCP hearth connecté à Claude Code & Codex · Hier",
-
   "tabProjectsLabel": "Config projet",
   "tabProjectsPill": "Config projet",
   "tabProjectsTitle": "Clonez un dépôt. Voyez ce qui manque en deux secondes.",
@@ -78,7 +72,6 @@
   "tabProjectsReady": "Prêt",
   "tabProjectsPlanSummary": "1 étape : mise install node@18.20 + mise.toml local",
   "tabProjectsPlanNote": "Node 22.12 global reste intact. Aucun script ni npm install n'est exécuté.",
-
   "tabDockerLabel": "Docker & K8s",
   "tabDockerPill": "Docker & K8s",
   "tabDockerTitle": "Conteneurs et clusters à vitesse native.",
@@ -89,7 +82,6 @@
   "tabDockerManaged": "géré par Hearth",
   "tabDockerRunning": "Actif",
   "tabDockerCrash": "CrashLoop",
-
   "tabAiLabel": "IA, Skills & MCP",
   "tabAiPill": "IA, Skills & MCP",
   "tabAiTitle": "Unifiez AGENTS.md, skills, MCP et dépenses locales.",
@@ -101,7 +93,6 @@
   "tabAiConflict": "Conflit",
   "tabAiSpendLabel": "Dépenses IA locales · 7 derniers jours",
   "tabAiSpendMeta": "842k tokens · 4 agents · estimation API",
-
   "tabCleanupLabel": "Nettoyage",
   "tabCleanupPill": "Nettoyage",
   "tabCleanupTitle": "Libérez des gigaoctets sans casser vos projets.",
@@ -122,7 +113,6 @@
   "tabCleanupItem4Title": "Caches temporaires des agents IA",
   "tabCleanupItem4Sub": "préserve configs, auth, skills et mémoire",
   "tabCleanupProtected": "Protégé : ~/.ssh, ~/.aws, auth/configs IA, Claude actif et volumes Docker en cours",
-
   "tabSetupLabel": "Nouvelle machine",
   "tabSetupPill": "Nouvelle machine",
   "tabSetupTitle": "Configurez un nouvel ordinateur en quatre étapes calmes.",
@@ -145,35 +135,28 @@
   "tabSetupStepsReady": "{count} étapes prêtes",
   "tabSetupNextBtn": "Suivant : voir le plan",
   "tabSetupPlannedBtn": "Plan vérifié · Réinitialiser",
-
   "bentoEyebrow": "Chaque recoin de votre stack",
   "bentoTitle": "Remplacez une demi-douzaine d'outils lourds.",
   "bentoSubtitle": "Conteneurs, clusters, bases locales, ports, configs IA, runtimes et nettoyage — tout est natif et rapide.",
-
   "bentoDockerPill": "Docker & Colima",
   "bentoDockerTitle": "Docker sans lourdeur",
   "bentoDockerDesc": "Colima open source en un clic sur macOS ou Docker Engine natif sur Linux. Stacks Compose, logs, images, volumes et ressources VM.",
-
   "bentoK8sPill": "Kubernetes",
   "bentoK8sTitle": "Kubernetes à vitesse dev",
   "bentoK8sDesc": "Lectures rapides client-go, diagnostics de crash, logs en direct, port-forward, Secrets, Helm et clusters kind locaux.",
-
   "bentoAiPill": "Agents IA & coûts",
   "bentoAiTitle": "Agents IA, skills & dépenses locales",
   "bentoAiDesc": "Unifiez AGENTS.md entre Claude, Codex, Cursor, Copilot & Gemini. Gérez MCP, catalogues de skills, hooks et dépenses.",
-
   "bentoCleanupPill": "Nettoyage sûr",
   "bentoCleanupTitle": "Libérez des gigaoctets sans risque",
   "bentoCleanupDesc": "Détecte anciens node_modules, pnpm store, caches Docker, Rust/NuGet et IA sans jamais toucher aux auth, configs ni skills.",
   "bentoCleanupSelectedNote": "{selected} Go sélectionnés",
-
   "bentoDbPill": "Bases & ports",
   "bentoDbTitle": "Bases locales & ports sans DBngin",
   "bentoDbDesc": "PostgreSQL, Redis, MySQL, MariaDB & MongoDB en local ou Docker. Démarrage auto, conflits de ports et lancement CLI.",
   "bentoDbHeader": "Serveurs locaux & conteneurs",
   "bentoDbInstallBtn": "+ Installer",
   "bentoDbConflict": "Conflit",
-
   "bentoShellPill": "Runtimes & Shell",
   "bentoShellTitle": "Chaque version & démarrage du shell",
   "bentoShellDesc": "Tracez which -a pour Node, Python, Go, Rust, Java & PHP. Profilez un zsh ou PowerShell lent et nettoyez le PATH.",
@@ -181,7 +164,6 @@
   "bentoShellSlow": "Lent",
   "bentoShellDuplicate": "Doublon",
   "bentoShellClean": "Propre",
-
   "safetyEyebrow": "Sûr par conception",
   "safetyTitle": "Rien ne change en silence.",
   "safetySubtitle": "Chaque scan est strictement en lecture seule. Chaque modification passe par un plan explicite avec commandes exactes, diffs et sauvegardes automatiques.",
@@ -203,7 +185,6 @@
   "safetyCancelBtn": "Annuler",
   "safetyApplyBtn": "Commenter 1 ligne & appliquer",
   "safetyResetBtn": "Réinitialiser l'aperçu",
-
   "mcpEyebrow": "Serveur MCP intégré",
   "mcpTitle": "Donnez à votre agent IA une vue sur votre machine.",
   "mcpDesc": "Connectez Hearth comme serveur MCP stdio local en un clic. Claude Code, Codex et Cursor inspectent outils, projets et problèmes — et proposent des correctifs qui nécessitent toujours votre validation.",
@@ -212,7 +193,6 @@
   "mcpRequestedBy": "Demandé par Claude Code",
   "mcpPlanHint": "En attente de validation · Diff & sauvegarde affichés avant exécution",
   "mcpReviewBtn": "Voir le plan",
-
   "metric1Value": "~18 Mo",
   "metric1Title": "Binaire Go natif",
   "metric1Desc": "Construit avec Go & mygo. Zéro Electron, zéro Chromium, zéro webview.",
@@ -225,7 +205,6 @@
   "metric4Value": "6",
   "metric4Title": "Langues intégrées",
   "metric4Desc": "Anglais, russe, allemand, espagnol, français et chinois simplifié.",
-
   "installEyebrow": "Téléchargement",
   "installTitle": "Obtenir Hearth v{version}",
   "installSubtitle": "Gratuit, open source et vérifié par sommes SHA-256 & GitHub Build Attestations.",
@@ -248,11 +227,9 @@
   "installTrustTitle": "Premier lancement : Gatekeeper & SmartScreen",
   "installTrustBody": "Hearth est un logiciel libre sans certificats payants Apple/Windows. Sur macOS : Réglages Système → Confidentialité et sécurité → Ouvrir quand même ; sur Windows : Informations complémentaires → Exécuter quand même.",
   "installTrustLink": "SHA-256 & Attestations",
-
   "ctaTitle": "Faites de votre environnement dev un vrai chez-vous.",
   "ctaDownload": "Télécharger Hearth v{version}",
   "ctaStar": "Étoile sur GitHub",
-
   "footerTagline": "Application desktop locale et gratuite pour développeurs. Faite avec Go & mygo. Licence MIT.",
   "footerColProduct": "Produit",
   "footerColResources": "Ressources",
@@ -272,5 +249,9 @@
   "footerLinkIssues": "Signaler un bug",
   "footerLinkContributing": "Contribuer",
   "footerLinkLicense": "Licence MIT",
-  "footerCopyright": "© 2026 Contributeurs Hearth · Licence MIT · Propulsé par Go, mygo, mise, Colima, Lucide & Lobe Icons"
+  "footerCopyright": "© 2026 Contributeurs Hearth · Licence MIT · Propulsé par Go, mygo, mise, Colima, Lucide & Lobe Icons",
+  "suiteEyebrow": "Autres outils macOS natifs par Sergey V.",
+  "suiteMonnyDesc": "Moniteur système natif pour Mac : CPU, mémoire, disque, réseau, capteurs Apple Silicon et quotas IA.",
+  "suiteRebindDesc": "Remappage natif clavier, souris, trackpad et Logitech HID++ sur macOS avec profils locaux.",
+  "suiteExplore": "Découvrir"
 }
