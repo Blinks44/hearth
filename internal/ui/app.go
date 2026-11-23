@@ -68,6 +68,16 @@ type App struct {
 	Hidden []string
 	// StartHidden keeps the introductory actions dismissed across launches.
 	StartHidden bool
+	// DockerPromoHidden keeps the built-in Hearth Docker card dismissed when another engine is installed.
+	DockerPromoHidden bool
+	// TrayEnabled controls whether Hearth shows a menu bar / tray icon and keeps running in background on window close.
+	TrayEnabled bool
+	// ShowInDock controls whether Hearth shows a macOS Dock icon (only configurable while TrayEnabled is true).
+	ShowInDock bool
+	// OpenAtLogin reflects the OS login-item setting for launching Hearth automatically at sign-in.
+	OpenAtLogin bool
+	// OnOpenAtLogin updates the OS login-item registration off the UI thread or via mygo.App.SetOpenAtLogin.
+	OnOpenAtLogin func(bool) error
 	// KubePinned are the Kubernetes kinds pinned above the cluster's
 	// tables, by their short names; nil pins the default ones.
 	KubePinned []string
@@ -82,7 +92,7 @@ type App struct {
 	// how it went; nil opens files with the system's apps only.
 	OpenInEditor func(app, command, path string, done func(error))
 	// OnSettings saves ThemeMode, VersionLists, Hidden, StartHidden,
-	// KubePinned, Terminal and Editor after the user
+	// DockerPromoHidden, TrayEnabled, ShowInDock, KubePinned, Terminal and Editor after the user
 	// changed them; OnLocale shows and keeps another language.
 	OnSettings func()
 	OnLocale   func(string)
@@ -112,9 +122,10 @@ type App struct {
 	VersionChecks  map[string]bool
 	// Sizes are what the count of disk space found, kept from the last
 	// one until the next ends; nil before the first. Counting reports a
-	// count under way.
-	Sizes    *inventory.Sizes
-	Counting bool
+	// count under way; DockerCounting specifically tracks the Docker df refresh.
+	Sizes          *inventory.Sizes
+	Counting       bool
+	DockerCounting bool
 	// History is what the last checks changed, the newest first.
 	History []history.Entry
 	// NodeVersions is what nodejs.org says of Node's versions; nil until
@@ -206,7 +217,10 @@ type App struct {
 	DiffSkills func(dirA, dirB string, done func([]ai.SkillFileDiff, error))
 	// LoadCatalog downloads on request and publishes through Window.Update.
 	// The returned function cancels a superseded request.
-	LoadCatalog       func(repo skillcatalog.Repository, force bool, done func([]skillcatalog.Skill, map[string]string, error)) func()
+	LoadCatalog func(repo skillcatalog.Repository, force bool, done func([]skillcatalog.Skill, map[string]string, error)) func()
+	// SearchSkillsSh queries the public skills.sh directory in the background
+	// and publishes results through Window.Update.
+	SearchSkillsSh    func(query string, done func([]skillcatalog.SearchResult, error)) func()
 	skillCatalogOpen  bool
 	skillCatalog      *skillCatalogState
 	skillCatalogCache map[string]skillCatalogCached
@@ -446,7 +460,7 @@ type App struct {
 // NewApp returns the app showing the overview.
 func NewApp() *App {
 	return &App{
-		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, Locale: "en", usageTab: 1,
+		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, Locale: "en", usageTab: 1,
 		engine: dockerEngineState{view: dockerContainers},
 	}
 }
@@ -1117,4 +1131,49 @@ func brand(c *ui.Context, machine string) {
 			}
 		})
 	})
+}
+
+// OpenSettings navigates the main window to Settings.
+func (a *App) OpenSettings() { a.router.Push(settings.path) }
+
+// OpenUpdates navigates the main window to Updates.
+func (a *App) OpenUpdates() { a.router.Push(updatesPage) }
+
+// OpenDocker navigates the main window to Docker.
+func (a *App) OpenDocker() { a.router.Push(dockerPage) }
+
+// OpenDockerContainers opens the selected Docker engine directly on the
+// Containers tab, or falls back to the Docker overview when unreachable.
+func (a *App) OpenDockerContainers() {
+	if a.Snapshot != nil {
+		if st, ok := a.Snapshot.Tool("docker"); ok && st.Docker != nil && a.dockerAnswers() && a.dockerOpenable(st.Docker.Selected) {
+			a.engine.view = 1
+			a.router.Push(dockerEnginePath(st.Docker.Selected))
+			return
+		}
+	}
+	a.router.Push(dockerPage)
+}
+
+// TriggerColima opens the Docker page and builds the confirmation plan to start
+// or stop the default Colima profile.
+func (a *App) TriggerColima(start bool) {
+	a.router.Push(dockerPage)
+	if a.Snapshot == nil {
+		return
+	}
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil || st.Docker.Colima == nil {
+		return
+	}
+	for _, p := range st.Docker.Colima.Profiles {
+		if p.Name == "default" && p.Runtime == "docker" {
+			action := ops.ColimaStop
+			if start {
+				action = ops.ColimaStart
+			}
+			a.changeColima(*st.Docker.Colima, p, action, ops.ColimaLimits{})
+			return
+		}
+	}
 }

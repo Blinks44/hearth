@@ -301,3 +301,47 @@ func TestSettingsFoldersCustomAppsAndHiddenIssues(t *testing.T) {
 		t.Fatalf("expected settings saves >= 4, got %d", saves)
 	}
 }
+
+func TestSettingsTrayAndLogin(t *testing.T) {
+	a := NewApp()
+	a.TrayEnabled = true
+	saves := 0
+	a.OnSettings = func() { saves++ }
+	var loginCalls []bool
+	var loginErr error
+	a.OnOpenAtLogin = func(enabled bool) error {
+		loginCalls = append(loginCalls, enabled)
+		return loginErr
+	}
+	a.router.Push(settings.path)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	clickSwitch := func(name string) {
+		t.Helper()
+		info, ok := tt.AccessByRole(ui.RoleSwitch, name)
+		if !ok {
+			t.Fatalf("missing switch %q", name)
+		}
+		tt.ClickAt(info.Bounds.X+info.Bounds.W/2, info.Bounds.Y+info.Bounds.H/2)
+		tt.Frame()
+	}
+
+	if !tt.HasText(locales.SettingsSystemSection()) {
+		t.Fatalf("missing system section: %q", tt.Texts())
+	}
+	clickSwitch(settingsTrayLabel())
+	if a.TrayEnabled || saves != 1 {
+		t.Fatalf("tray toggle: enabled=%v saves=%d", a.TrayEnabled, saves)
+	}
+	clickSwitch(locales.SettingsOpenAtLogin())
+	if !a.OpenAtLogin || !slices.Equal(loginCalls, []bool{true}) {
+		t.Fatalf("open at login: enabled=%v calls=%v", a.OpenAtLogin, loginCalls)
+	}
+	// Error from OS must roll back the switch and show SettingsError.
+	loginErr = os.ErrPermission
+	clickSwitch(locales.SettingsOpenAtLogin())
+	if !a.OpenAtLogin || a.SettingsError == "" {
+		t.Fatalf("expected rollback on error: enabled=%v err=%q", a.OpenAtLogin, a.SettingsError)
+	}
+}

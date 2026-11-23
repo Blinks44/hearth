@@ -41894,11 +41894,11 @@ func (msgs Messages) SkillDiffTooLarge() string {
 	return Catalog.Format(msgs.locale, "skillDiffTooLarge", nil)
 }
 
-// SkillCatalogRepoPlaceholder says "owner/repo or https://github.com/…"
+// SkillCatalogRepoPlaceholder says "GitHub URL, skills.sh/owner/repo, or npx skills add …"
 // in the language the app shows.
 func SkillCatalogRepoPlaceholder() string { return In(i18n.Locale()).SkillCatalogRepoPlaceholder() }
 
-// SkillCatalogRepoPlaceholder says "owner/repo or https://github.com/…"
+// SkillCatalogRepoPlaceholder says "GitHub URL, skills.sh/owner/repo, or npx skills add …"
 // in the language of msgs.
 func (msgs Messages) SkillCatalogRepoPlaceholder() string {
 	return Catalog.Format(msgs.locale, "skillCatalogRepoPlaceholder", nil)
@@ -43720,4 +43720,558 @@ func PathOpenSource() string { return In(i18n.Locale()).PathOpenSource() }
 // in the language of msgs.
 func (msgs Messages) PathOpenSource() string {
 	return Catalog.Format(msgs.locale, "pathOpenSource", nil)
+}
+
+// DockerHearthTitle says "Docker right in Hearth"
+// in the language the app shows.
+func DockerHearthTitle() string { return In(i18n.Locale()).DockerHearthTitle() }
+
+// DockerHearthTitle says "Docker right in Hearth"
+// in the language of msgs.
+func (msgs Messages) DockerHearthTitle() string {
+	return Catalog.Format(msgs.locale, "dockerHearthTitle", nil)
+}
+
+// DockerHearthColimaTag says "Colima · open source & free"
+// in the language the app shows.
+func DockerHearthColimaTag() string { return In(i18n.Locale()).DockerHearthColimaTag() }
+
+// DockerHearthColimaTag says "Colima · open source & free"
+// in the language of msgs.
+func (msgs Messages) DockerHearthColimaTag() string {
+	return Catalog.Format(msgs.locale, "dockerHearthColimaTag", nil)
+}
+
+// DockerHearthColimaShortTag says "Colima · open source"
+// in the language the app shows.
+func DockerHearthColimaShortTag() string { return In(i18n.Locale()).DockerHearthColimaShortTag() }
+
+// DockerHearthColimaShortTag says "Colima · open source"
+// in the language of msgs.
+func (msgs Messages) DockerHearthColimaShortTag() string {
+	return Catalog.Format(msgs.locale, "dockerHearthColimaShortTag", nil)
+}
+
+// DockerHearthEngineTag says "Docker Engine · open source & free"
+// in the language the app shows.
+func DockerHearthEngineTag() string { return In(i18n.Locale()).DockerHearthEngineTag() }
+
+// DockerHearthEngineTag says "Docker Engine · open source & free"
+// in the language of msgs.
+func (msgs Messages) DockerHearthEngineTag() string {
+	return Catalog.Format(msgs.locale, "dockerHearthEngineTag", nil)
+}
+
+// DockerHearthEngineShortTag says "Docker Engine · open source"
+// in the language the app shows.
+func DockerHearthEngineShortTag() string { return In(i18n.Locale()).DockerHearthEngineShortTag() }
+
+// DockerHearthEngineShortTag says "Docker Engine · open source"
+// in the language of msgs.
+func (msgs Messages) DockerHearthEngineShortTag() string {
+	return Catalog.Format(msgs.locale, "dockerHearthEngineShortTag", nil)
+}
+
+// DockerHearthHeroBody says "No separate Docker app needed: manage containers, images, CPU/RAM limits and autostart right here."
+// in the language the app shows.
+func DockerHearthHeroBody() string { return In(i18n.Locale()).DockerHearthHeroBody() }
+
+// DockerHearthHeroBody says "No separate Docker app needed: manage containers, images, CPU/RAM limits and autostart right here."
+// in the language of msgs.
+func (msgs Messages) DockerHearthHeroBody() string {
+	return Catalog.Format(msgs.locale, "dockerHearthHeroBody", nil)
+}
+
+// DockerHearthLinuxHeroBody says "Runs the native Linux Docker daemon without a separate desktop app: manage containers, images and volumes right here."
+// in the language the app shows.
+func DockerHearthLinuxHeroBody() string { return In(i18n.Locale()).DockerHearthLinuxHeroBody() }
+
+// DockerHearthLinuxHeroBody says "Runs the native Linux Docker daemon without a separate desktop app: manage containers, images and volumes right here."
+// in the language of msgs.
+func (msgs Messages) DockerHearthLinuxHeroBody() string {
+	return Catalog.Format(msgs.locale, "dockerHearthLinuxHeroBody", nil)
+}
+
+// DockerHearthBrewHint says "via Homebrew · 1 command"
+// in the language the app shows.
+func DockerHearthBrewHint() string { return In(i18n.Locale()).DockerHearthBrewHint() }
+
+// DockerHearthBrewHint says "via Homebrew · 1 command"
+// in the language of msgs.
+func (msgs Messages) DockerHearthBrewHint() string {
+	return Catalog.Format(msgs.locale, "dockerHearthBrewHint", nil)
+}
+
+// DockerHearthLinuxHint says "native systemd service"
+// in the language the app shows.
+func DockerHearthLinuxHint() string { return In(i18n.Locale()).DockerHearthLinuxHint() }
+
+// DockerHearthLinuxHint says "native systemd service"
+// in the language of msgs.
+func (msgs Messages) DockerHearthLinuxHint() string {
+	return Catalog.Format(msgs.locale, "dockerHearthLinuxHint", nil)
+}
+
+// DockerHearthFeaturePackages says "Colima, Docker CLI, Compose & Buildx"
+// in the language the app shows.
+func DockerHearthFeaturePackages() string { return In(i18n.Locale()).DockerHearthFeaturePackages() }
+
+// DockerHearthFeaturePackages says "Colima, Docker CLI, Compose & Buildx"
+// in the language of msgs.
+func (msgs Messages) DockerHearthFeaturePackages() string {
+	return Catalog.Format(msgs.locale, "dockerHearthFeaturePackages", nil)
+}
+
+// DockerHearthFeatureResources says "CPU, RAM & disk in Hearth"
+// in the language the app shows.
+func DockerHearthFeatureResources() string { return In(i18n.Locale()).DockerHearthFeatureResources() }
+
+// DockerHearthFeatureResources says "CPU, RAM & disk in Hearth"
+// in the language of msgs.
+func (msgs Messages) DockerHearthFeatureResources() string {
+	return Catalog.Format(msgs.locale, "dockerHearthFeatureResources", nil)
+}
+
+// DockerHearthFeatureFree says "No paid licenses"
+// in the language the app shows.
+func DockerHearthFeatureFree() string { return In(i18n.Locale()).DockerHearthFeatureFree() }
+
+// DockerHearthFeatureFree says "No paid licenses"
+// in the language of msgs.
+func (msgs Messages) DockerHearthFeatureFree() string {
+	return Catalog.Format(msgs.locale, "dockerHearthFeatureFree", nil)
+}
+
+// DockerHearthLinuxFeaturePackages says "Docker Engine, CLI, Compose & Buildx"
+// in the language the app shows.
+func DockerHearthLinuxFeaturePackages() string {
+	return In(i18n.Locale()).DockerHearthLinuxFeaturePackages()
+}
+
+// DockerHearthLinuxFeaturePackages says "Docker Engine, CLI, Compose & Buildx"
+// in the language of msgs.
+func (msgs Messages) DockerHearthLinuxFeaturePackages() string {
+	return Catalog.Format(msgs.locale, "dockerHearthLinuxFeaturePackages", nil)
+}
+
+// DockerHearthLinuxFeatureNative says "No VM overhead on Linux"
+// in the language the app shows.
+func DockerHearthLinuxFeatureNative() string {
+	return In(i18n.Locale()).DockerHearthLinuxFeatureNative()
+}
+
+// DockerHearthLinuxFeatureNative says "No VM overhead on Linux"
+// in the language of msgs.
+func (msgs Messages) DockerHearthLinuxFeatureNative() string {
+	return Catalog.Format(msgs.locale, "dockerHearthLinuxFeatureNative", nil)
+}
+
+// DockerHearthOtherEngines says "Other engines"
+// in the language the app shows.
+func DockerHearthOtherEngines() string { return In(i18n.Locale()).DockerHearthOtherEngines() }
+
+// DockerHearthOtherEngines says "Other engines"
+// in the language of msgs.
+func (msgs Messages) DockerHearthOtherEngines() string {
+	return Catalog.Format(msgs.locale, "dockerHearthOtherEngines", nil)
+}
+
+// DockerHearthNeedToKnow says "Good to know"
+// in the language the app shows.
+func DockerHearthNeedToKnow() string { return In(i18n.Locale()).DockerHearthNeedToKnow() }
+
+// DockerHearthNeedToKnow says "Good to know"
+// in the language of msgs.
+func (msgs Messages) DockerHearthNeedToKnow() string {
+	return Catalog.Format(msgs.locale, "dockerHearthNeedToKnow", nil)
+}
+
+// DockerHearthColimaHint says "CPU/RAM & autostart here"
+// in the language the app shows.
+func DockerHearthColimaHint() string { return In(i18n.Locale()).DockerHearthColimaHint() }
+
+// DockerHearthColimaHint says "CPU/RAM & autostart here"
+// in the language of msgs.
+func (msgs Messages) DockerHearthColimaHint() string {
+	return Catalog.Format(msgs.locale, "dockerHearthColimaHint", nil)
+}
+
+// DockerHearthLinuxSwitchHint says "Native service & containers here"
+// in the language the app shows.
+func DockerHearthLinuxSwitchHint() string { return In(i18n.Locale()).DockerHearthLinuxSwitchHint() }
+
+// DockerHearthLinuxSwitchHint says "Native service & containers here"
+// in the language of msgs.
+func (msgs Messages) DockerHearthLinuxSwitchHint() string {
+	return Catalog.Format(msgs.locale, "dockerHearthLinuxSwitchHint", nil)
+}
+
+// DockerHearthDismiss says "Hide suggestion"
+// in the language the app shows.
+func DockerHearthDismiss() string { return In(i18n.Locale()).DockerHearthDismiss() }
+
+// DockerHearthDismiss says "Hide suggestion"
+// in the language of msgs.
+func (msgs Messages) DockerHearthDismiss() string {
+	return Catalog.Format(msgs.locale, "dockerHearthDismiss", nil)
+}
+
+// DockerDiskRefreshing says "updating…"
+// in the language the app shows.
+func DockerDiskRefreshing() string { return In(i18n.Locale()).DockerDiskRefreshing() }
+
+// DockerDiskRefreshing says "updating…"
+// in the language of msgs.
+func (msgs Messages) DockerDiskRefreshing() string {
+	return Catalog.Format(msgs.locale, "dockerDiskRefreshing", nil)
+}
+
+// DockerDiskCounting says "Calculating Docker disk usage…"
+// in the language the app shows.
+func DockerDiskCounting() string { return In(i18n.Locale()).DockerDiskCounting() }
+
+// DockerDiskCounting says "Calculating Docker disk usage…"
+// in the language of msgs.
+func (msgs Messages) DockerDiskCounting() string {
+	return Catalog.Format(msgs.locale, "dockerDiskCounting", nil)
+}
+
+// DockerDiskCachedNote says "showing last measurement"
+// in the language the app shows.
+func DockerDiskCachedNote() string { return In(i18n.Locale()).DockerDiskCachedNote() }
+
+// DockerDiskCachedNote says "showing last measurement"
+// in the language of msgs.
+func (msgs Messages) DockerDiskCachedNote() string {
+	return Catalog.Format(msgs.locale, "dockerDiskCachedNote", nil)
+}
+
+// TrayOpenHearth says "Open Hearth"
+// in the language the app shows.
+func TrayOpenHearth() string { return In(i18n.Locale()).TrayOpenHearth() }
+
+// TrayOpenHearth says "Open Hearth"
+// in the language of msgs.
+func (msgs Messages) TrayOpenHearth() string {
+	return Catalog.Format(msgs.locale, "trayOpenHearth", nil)
+}
+
+// TrayContainers says "Containers"
+// in the language the app shows.
+func TrayContainers() string { return In(i18n.Locale()).TrayContainers() }
+
+// TrayContainers says "Containers"
+// in the language of msgs.
+func (msgs Messages) TrayContainers() string {
+	return Catalog.Format(msgs.locale, "trayContainers", nil)
+}
+
+// TrayContainersRunning says "{count} running"
+// in the language the app shows.
+func TrayContainersRunning(count string) string {
+	return In(i18n.Locale()).TrayContainersRunning(count)
+}
+
+// TrayContainersRunning says "{count} running"
+// in the language of msgs.
+func (msgs Messages) TrayContainersRunning(count string) string {
+	return Catalog.Format(msgs.locale, "trayContainersRunning", map[string]any{"count": count})
+}
+
+// TrayContainersNone says "No running containers"
+// in the language the app shows.
+func TrayContainersNone() string { return In(i18n.Locale()).TrayContainersNone() }
+
+// TrayContainersNone says "No running containers"
+// in the language of msgs.
+func (msgs Messages) TrayContainersNone() string {
+	return Catalog.Format(msgs.locale, "trayContainersNone", nil)
+}
+
+// TrayAllContainers says "All containers…"
+// in the language the app shows.
+func TrayAllContainers() string { return In(i18n.Locale()).TrayAllContainers() }
+
+// TrayAllContainers says "All containers…"
+// in the language of msgs.
+func (msgs Messages) TrayAllContainers() string {
+	return Catalog.Format(msgs.locale, "trayAllContainers", nil)
+}
+
+// TrayColimaRunning says "Colima · running"
+// in the language the app shows.
+func TrayColimaRunning() string { return In(i18n.Locale()).TrayColimaRunning() }
+
+// TrayColimaRunning says "Colima · running"
+// in the language of msgs.
+func (msgs Messages) TrayColimaRunning() string {
+	return Catalog.Format(msgs.locale, "trayColimaRunning", nil)
+}
+
+// TrayColimaStopped says "Colima · stopped"
+// in the language the app shows.
+func TrayColimaStopped() string { return In(i18n.Locale()).TrayColimaStopped() }
+
+// TrayColimaStopped says "Colima · stopped"
+// in the language of msgs.
+func (msgs Messages) TrayColimaStopped() string {
+	return Catalog.Format(msgs.locale, "trayColimaStopped", nil)
+}
+
+// TrayColimaStart says "Start Colima…"
+// in the language the app shows.
+func TrayColimaStart() string { return In(i18n.Locale()).TrayColimaStart() }
+
+// TrayColimaStart says "Start Colima…"
+// in the language of msgs.
+func (msgs Messages) TrayColimaStart() string {
+	return Catalog.Format(msgs.locale, "trayColimaStart", nil)
+}
+
+// TrayColimaStop says "Stop Colima…"
+// in the language the app shows.
+func TrayColimaStop() string { return In(i18n.Locale()).TrayColimaStop() }
+
+// TrayColimaStop says "Stop Colima…"
+// in the language of msgs.
+func (msgs Messages) TrayColimaStop() string {
+	return Catalog.Format(msgs.locale, "trayColimaStop", nil)
+}
+
+// TrayColimaSettings says "Resources & settings…"
+// in the language the app shows.
+func TrayColimaSettings() string { return In(i18n.Locale()).TrayColimaSettings() }
+
+// TrayColimaSettings says "Resources & settings…"
+// in the language of msgs.
+func (msgs Messages) TrayColimaSettings() string {
+	return Catalog.Format(msgs.locale, "trayColimaSettings", nil)
+}
+
+// TrayContexts says "Contexts"
+// in the language the app shows.
+func TrayContexts() string { return In(i18n.Locale()).TrayContexts() }
+
+// TrayContexts says "Contexts"
+// in the language of msgs.
+func (msgs Messages) TrayContexts() string {
+	return Catalog.Format(msgs.locale, "trayContexts", nil)
+}
+
+// TrayCheckUpdates says "Check for updates"
+// in the language the app shows.
+func TrayCheckUpdates() string { return In(i18n.Locale()).TrayCheckUpdates() }
+
+// TrayCheckUpdates says "Check for updates"
+// in the language of msgs.
+func (msgs Messages) TrayCheckUpdates() string {
+	return Catalog.Format(msgs.locale, "trayCheckUpdates", nil)
+}
+
+// TraySettings says "Settings…"
+// in the language the app shows.
+func TraySettings() string { return In(i18n.Locale()).TraySettings() }
+
+// TraySettings says "Settings…"
+// in the language of msgs.
+func (msgs Messages) TraySettings() string {
+	return Catalog.Format(msgs.locale, "traySettings", nil)
+}
+
+// TrayQuit says "Quit"
+// in the language the app shows.
+func TrayQuit() string { return In(i18n.Locale()).TrayQuit() }
+
+// TrayQuit says "Quit"
+// in the language of msgs.
+func (msgs Messages) TrayQuit() string {
+	return Catalog.Format(msgs.locale, "trayQuit", nil)
+}
+
+// SettingsSystemSection says "Background & startup"
+// in the language the app shows.
+func SettingsSystemSection() string { return In(i18n.Locale()).SettingsSystemSection() }
+
+// SettingsSystemSection says "Background & startup"
+// in the language of msgs.
+func (msgs Messages) SettingsSystemSection() string {
+	return Catalog.Format(msgs.locale, "settingsSystemSection", nil)
+}
+
+// SettingsTrayLabelMac says "Menu bar icon"
+// in the language the app shows.
+func SettingsTrayLabelMac() string { return In(i18n.Locale()).SettingsTrayLabelMac() }
+
+// SettingsTrayLabelMac says "Menu bar icon"
+// in the language of msgs.
+func (msgs Messages) SettingsTrayLabelMac() string {
+	return Catalog.Format(msgs.locale, "settingsTrayLabelMac", nil)
+}
+
+// SettingsTrayLabelOther says "System tray icon"
+// in the language the app shows.
+func SettingsTrayLabelOther() string { return In(i18n.Locale()).SettingsTrayLabelOther() }
+
+// SettingsTrayLabelOther says "System tray icon"
+// in the language of msgs.
+func (msgs Messages) SettingsTrayLabelOther() string {
+	return Catalog.Format(msgs.locale, "settingsTrayLabelOther", nil)
+}
+
+// SettingsTrayHintMac says "Quick access to containers and contexts. Closing the window keeps Hearth in the menu bar."
+// in the language the app shows.
+func SettingsTrayHintMac() string { return In(i18n.Locale()).SettingsTrayHintMac() }
+
+// SettingsTrayHintMac says "Quick access to containers and contexts. Closing the window keeps Hearth in the menu bar."
+// in the language of msgs.
+func (msgs Messages) SettingsTrayHintMac() string {
+	return Catalog.Format(msgs.locale, "settingsTrayHintMac", nil)
+}
+
+// SettingsTrayHintOther says "Quick access to containers and contexts. Closing the window keeps Hearth in the system tray."
+// in the language the app shows.
+func SettingsTrayHintOther() string { return In(i18n.Locale()).SettingsTrayHintOther() }
+
+// SettingsTrayHintOther says "Quick access to containers and contexts. Closing the window keeps Hearth in the system tray."
+// in the language of msgs.
+func (msgs Messages) SettingsTrayHintOther() string {
+	return Catalog.Format(msgs.locale, "settingsTrayHintOther", nil)
+}
+
+// SettingsDockLabel says "Show in Dock"
+// in the language the app shows.
+func SettingsDockLabel() string { return In(i18n.Locale()).SettingsDockLabel() }
+
+// SettingsDockLabel says "Show in Dock"
+// in the language of msgs.
+func (msgs Messages) SettingsDockLabel() string {
+	return Catalog.Format(msgs.locale, "settingsDockLabel", nil)
+}
+
+// SettingsDockHint says "Turn off to keep Hearth in the menu bar only."
+// in the language the app shows.
+func SettingsDockHint() string { return In(i18n.Locale()).SettingsDockHint() }
+
+// SettingsDockHint says "Turn off to keep Hearth in the menu bar only."
+// in the language of msgs.
+func (msgs Messages) SettingsDockHint() string {
+	return Catalog.Format(msgs.locale, "settingsDockHint", nil)
+}
+
+// SettingsDockRequiresTray says "Enable the menu bar icon first to hide Hearth from the Dock."
+// in the language the app shows.
+func SettingsDockRequiresTray() string { return In(i18n.Locale()).SettingsDockRequiresTray() }
+
+// SettingsDockRequiresTray says "Enable the menu bar icon first to hide Hearth from the Dock."
+// in the language of msgs.
+func (msgs Messages) SettingsDockRequiresTray() string {
+	return Catalog.Format(msgs.locale, "settingsDockRequiresTray", nil)
+}
+
+// SettingsOpenAtLogin says "Start at sign-in"
+// in the language the app shows.
+func SettingsOpenAtLogin() string { return In(i18n.Locale()).SettingsOpenAtLogin() }
+
+// SettingsOpenAtLogin says "Start at sign-in"
+// in the language of msgs.
+func (msgs Messages) SettingsOpenAtLogin() string {
+	return Catalog.Format(msgs.locale, "settingsOpenAtLogin", nil)
+}
+
+// SettingsOpenAtLoginHint says "Launch Hearth automatically in the background when you sign in."
+// in the language the app shows.
+func SettingsOpenAtLoginHint() string { return In(i18n.Locale()).SettingsOpenAtLoginHint() }
+
+// SettingsOpenAtLoginHint says "Launch Hearth automatically in the background when you sign in."
+// in the language of msgs.
+func (msgs Messages) SettingsOpenAtLoginHint() string {
+	return Catalog.Format(msgs.locale, "settingsOpenAtLoginHint", nil)
+}
+
+// SkillCatalogSkillsShPlaceholder says "Search skills.sh, e.g. grill-me, frontend-design…"
+// in the language the app shows.
+func SkillCatalogSkillsShPlaceholder() string {
+	return In(i18n.Locale()).SkillCatalogSkillsShPlaceholder()
+}
+
+// SkillCatalogSkillsShPlaceholder says "Search skills.sh, e.g. grill-me, frontend-design…"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSkillsShPlaceholder() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSkillsShPlaceholder", nil)
+}
+
+// SkillCatalogSearch says "Search"
+// in the language the app shows.
+func SkillCatalogSearch() string { return In(i18n.Locale()).SkillCatalogSearch() }
+
+// SkillCatalogSearch says "Search"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSearch() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSearch", nil)
+}
+
+// SkillCatalogSkillsShHint says "Search the public skills.sh directory. Clicking a result loads the exact files from its GitHub repository for preview…"
+// in the language the app shows.
+func SkillCatalogSkillsShHint() string { return In(i18n.Locale()).SkillCatalogSkillsShHint() }
+
+// SkillCatalogSkillsShHint says "Search the public skills.sh directory. Clicking a result loads the exact files from its GitHub repository for preview…"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSkillsShHint() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSkillsShHint", nil)
+}
+
+// SkillCatalogSkillsShError says "Could not search skills.sh. Check your connection and try again."
+// in the language the app shows.
+func SkillCatalogSkillsShError() string { return In(i18n.Locale()).SkillCatalogSkillsShError() }
+
+// SkillCatalogSkillsShError says "Could not search skills.sh. Check your connection and try again."
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSkillsShError() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSkillsShError", nil)
+}
+
+// SkillCatalogSkillsShInstalls says "{count} installs"
+// in the language the app shows.
+func SkillCatalogSkillsShInstalls(count string) string {
+	return In(i18n.Locale()).SkillCatalogSkillsShInstalls(count)
+}
+
+// SkillCatalogSkillsShInstalls says "{count} installs"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSkillsShInstalls(count string) string {
+	return Catalog.Format(msgs.locale, "skillCatalogSkillsShInstalls", map[string]any{"count": count})
+}
+
+// SkillCatalogStoredIn says "Files"
+// in the language the app shows.
+func SkillCatalogStoredIn() string { return In(i18n.Locale()).SkillCatalogStoredIn() }
+
+// SkillCatalogStoredIn says "Files"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogStoredIn() string {
+	return Catalog.Format(msgs.locale, "skillCatalogStoredIn", nil)
+}
+
+// SkillCatalogSymlinkLabel says "Link for {agent}"
+// in the language the app shows.
+func SkillCatalogSymlinkLabel(agent string) string {
+	return In(i18n.Locale()).SkillCatalogSymlinkLabel(agent)
+}
+
+// SkillCatalogSymlinkLabel says "Link for {agent}"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSymlinkLabel(agent string) string {
+	return Catalog.Format(msgs.locale, "skillCatalogSymlinkLabel", map[string]any{"agent": agent})
+}
+
+// SkillCatalogSharedDirect says "Shared folder · read directly by {agent}"
+// in the language the app shows.
+func SkillCatalogSharedDirect(agent string) string {
+	return In(i18n.Locale()).SkillCatalogSharedDirect(agent)
+}
+
+// SkillCatalogSharedDirect says "Shared folder · read directly by {agent}"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSharedDirect(agent string) string {
+	return Catalog.Format(msgs.locale, "skillCatalogSharedDirect", map[string]any{"agent": agent})
 }

@@ -28,6 +28,12 @@ type Settings struct {
 	Projects     []Project `json:"projects"`
 	// StartHidden keeps the overview's introductory actions dismissed.
 	StartHidden bool `json:"startHidden,omitempty"`
+	// DockerPromoHidden keeps the built-in Hearth Docker promo card dismissed.
+	DockerPromoHidden bool `json:"dockerPromoHidden,omitempty"`
+	// TrayDisabled hides Hearth's menu bar / system tray icon when true.
+	TrayDisabled bool `json:"trayDisabled,omitempty"`
+	// DockHidden hides Hearth's macOS Dock icon when true (only while TrayDisabled is false).
+	DockHidden bool `json:"dockHidden,omitempty"`
 	// Hidden are the issues worth knowing the user hid, by their keys.
 	Hidden []string `json:"hidden,omitempty"`
 	// KubePinned are the Kubernetes kinds pinned above the cluster's

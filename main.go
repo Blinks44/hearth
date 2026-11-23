@@ -75,24 +75,41 @@ func main() {
 	}
 	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
 	a.StartHidden = list.settings.StartHidden
+	a.DockerPromoHidden = list.settings.DockerPromoHidden
+	a.TrayEnabled = !list.settings.TrayDisabled
+	a.ShowInDock = !list.settings.DockHidden || !a.TrayEnabled
 	a.KubePinned, a.Terminal, a.Editor = list.settings.KubePinned, list.settings.Terminal, list.settings.Editor
 	a.KubeLinks = list.kubeLinks()
 	// The native parts follow it too: the sidebar's material, the window
-	// controls and the menus.
+	// controls, the menus and the macOS Dock icon policy.
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
+	syncDockIcon(a.TrayEnabled, a.ShowInDock)
 	forwardCtx, stopForwards := context.WithCancel(context.Background())
 	dockerCtx, stopDocker := context.WithCancel(context.Background())
 	var forwards, dockerWorkers sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
-		a.OnLocale = mygo.App.SetLocale
+		a.OpenAtLogin = mygo.App.OpenAtLogin()
+		a.OnOpenAtLogin = mygo.App.SetOpenAtLogin
+		var tray *trayController
+		a.OnLocale = func(tag string) {
+			mygo.App.SetLocale(tag)
+			if tray != nil {
+				tray.refresh()
+			}
+		}
+		quitting := false
+		mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) {
+			quitting = true
+		})
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:     "Hearth",
 			Width:     1280,
 			Height:    820,
 			MinWidth:  1000,
 			MinHeight: 680,
+			Hidden:    a.TrayEnabled && mygo.App.WasOpenedAtLogin(),
 			// Opens where the user left it last time.
 			StateKey: "main",
 			// The view draws the title bar: the window controls sit over
@@ -105,6 +122,12 @@ func main() {
 			Vibrancy: mygo.VibrancySidebar,
 			Content:  ui.View(a.View),
 		})
+		mygo.App.OnActivate(func(hasVisibleWindows bool) {
+			if !hasVisibleWindows {
+				win.Show()
+				win.Focus()
+			}
+		})
 		catalogCtx, stopCatalog := context.WithCancel(context.Background())
 		skillCache := &skillcatalog.Cache{}
 		a.LoadCatalog = func(repo skillcatalog.Repository, force bool, done func([]skillcatalog.Skill, map[string]string, error)) func() {
@@ -115,6 +138,18 @@ func main() {
 				skills, err := skillCache.Fetch(ctx, nil, repo, force)
 				dirs := ai.SkillDirectories(env)
 				win.Update(func() { done(skills, dirs, err) })
+			}()
+			return cancel
+		}
+		a.SearchSkillsSh = func(query string, done func([]skillcatalog.SearchResult, error)) func() {
+			ctx, cancel := context.WithTimeout(catalogCtx, 20*time.Second)
+			go func() {
+				defer cancel()
+				results, err := skillcatalog.SearchSkillsSh(ctx, nil, query, 20)
+				if ctx.Err() != nil {
+					return
+				}
+				win.Update(func() { done(results, err) })
 			}()
 			return cancel
 		}
@@ -615,6 +650,11 @@ func main() {
 		if err != nil {
 			log.Print(err)
 		}
+		tray = newTrayController(win, a, scanner.Terminal, func() {
+			quitting = true
+			mygo.App.Quit()
+		})
+		tray.sync(a.TrayEnabled)
 		var fetchPackages func(force bool)
 		// Disk space is counted after each scan, apart from it: a walk of
 		// big caches takes long. Each result replaces the previous count.
@@ -625,7 +665,12 @@ func main() {
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancelSizes = cancel
+			var prevDocker []inventory.DockerUsage
+			if a.Sizes != nil && len(a.Sizes.Docker) > 0 {
+				prevDocker = slices.Clone(a.Sizes.Docker)
+			}
 			a.Counting = true
+			a.DockerCounting = true
 			env := slices.Clone(scanner.Terminal())
 			var installs []string
 			for _, p := range a.Projects {
@@ -636,15 +681,22 @@ func main() {
 			go func() {
 				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(next inventory.Sizes) {
 					win.Update(func() {
-						if ctx.Err() == nil {
-							a.Sizes = &next
+						if ctx.Err() != nil {
+							return
 						}
+						if len(next.Docker) > 0 || next.DockerErr != "" {
+							a.DockerCounting = false
+						} else if a.DockerCounting && len(prevDocker) > 0 {
+							next.Docker = slices.Clone(prevDocker)
+						}
+						a.Sizes = &next
 					})
 				})
 				if err != nil {
 					win.Update(func() {
 						if ctx.Err() == nil {
 							a.Counting = false
+							a.DockerCounting = false
 							log.Print(err)
 						}
 					})
@@ -659,7 +711,7 @@ func main() {
 				}
 				win.Update(func() {
 					if ctx.Err() == nil {
-						a.Sizes, a.Counting = &sizes, false
+						a.Sizes, a.Counting, a.DockerCounting = &sizes, false, false
 					}
 				})
 			}()
@@ -680,6 +732,10 @@ func main() {
 				}
 				a.Snapshot, a.Scanning = &s, false
 				a.ClearCloudAuth()
+				if tray != nil {
+					tray.refresh()
+					tray.refreshContainers()
+				}
 				if fetchPackages != nil {
 					fetchPackages(false)
 				}
@@ -820,8 +876,17 @@ func main() {
 			}()
 		}
 		a.CachePath = lists.Dir
-		win.OnClose(func(*mygo.CloseEvent) { a.ClearSecretClipboard() })
+		win.OnClose(func(e *mygo.CloseEvent) {
+			a.ClearSecretClipboard()
+			if !quitting && a.TrayEnabled {
+				e.PreventDefault()
+				win.Hide()
+			}
+		})
 		win.OnClosed(func() {
+			if tray != nil {
+				tray.destroy()
+			}
 			a.CancelPreparation()
 			a.StopCluster()
 			a.StopDocker()
@@ -842,10 +907,25 @@ func main() {
 		})
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
+			if !a.TrayEnabled {
+				a.ShowInDock = true
+			}
 			list.settings.Theme, list.settings.VersionLists, list.settings.Hidden = a.ThemeMode, a.VersionLists, a.Hidden
 			list.settings.StartHidden = a.StartHidden
+			list.settings.DockerPromoHidden = a.DockerPromoHidden
+			list.settings.TrayDisabled = !a.TrayEnabled
+			list.settings.DockHidden = !a.ShowInDock
 			list.settings.KubePinned, list.settings.Terminal, list.settings.Editor = a.KubePinned, a.Terminal, a.Editor
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
+			if tray != nil {
+				tray.sync(a.TrayEnabled)
+			}
+			prevPolicy := mygo.App.ActivationPolicy()
+			syncDockIcon(a.TrayEnabled, a.ShowInDock)
+			if mygo.App.ActivationPolicy() != prevPolicy && win.IsVisible() {
+				win.Show()
+				win.Focus()
+			}
 			list.save()
 			if onlineChanged {
 				fetchVersions(false)
@@ -944,6 +1024,10 @@ func main() {
 					win.Update(func() {
 						if a.Snapshot == nil {
 							a.Snapshot = &s
+							if tray != nil {
+								tray.refresh()
+								tray.refreshContainers()
+							}
 						}
 					})
 				case !errors.Is(err, os.ErrNotExist):

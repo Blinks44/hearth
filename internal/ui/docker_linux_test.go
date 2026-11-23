@@ -27,7 +27,7 @@ func TestDockerLinuxInstallsNativeEngineWithHomebrew(t *testing.T) {
 	}
 	tt := openDocker(a)
 	title := locales.DockerEngineInstall()
-	hasTexts(t, tt, locales.DockerLinuxChoice(), locales.ColimaRecommended(), title, "Colima")
+	hasTexts(t, tt, locales.DockerHearthTitle(), locales.DockerHearthNeedToKnow(), locales.ColimaRecommended(), title, "Colima")
 	if tt.HasText(locales.ColimaInstall()) || tt.HasText(locales.ColimaMigrate()) {
 		t.Fatalf("offered Colima installation: %v", tt.Texts())
 	}
@@ -68,7 +68,7 @@ func TestDockerLinuxKiriServiceAndSwitchNotes(t *testing.T) {
 	tt := openDocker(a)
 	hasTexts(t, tt,
 		locales.ColimaExternalService(),
-		locales.ColimaOnlyHearth("Kiri"),
+		locales.DockerHearthTitle(),
 		locales.DockerEngineSwitchHint("Kiri"),
 		locales.DockerEngineInstall(),
 	)

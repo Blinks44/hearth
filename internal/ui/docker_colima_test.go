@@ -105,9 +105,9 @@ func TestColimaChoiceAndExternalEngine(t *testing.T) {
 			action := locales.ColimaMigrate()
 			if tc.clean {
 				action = locales.ColimaInstall()
-				hasTexts(t, tt, locales.ColimaChoice(), locales.ColimaRecommended(), locales.ColimaOtherEngineHint())
+				hasTexts(t, tt, locales.DockerHearthTitle(), locales.DockerHearthNeedToKnow(), locales.ColimaRecommended(), locales.ColimaOtherEngineHint())
 			} else {
-				hasTexts(t, tt, locales.ColimaOnlyHearth("OrbStack"), locales.ColimaSwitchHint("OrbStack"), action)
+				hasTexts(t, tt, locales.DockerHearthTitle(), locales.ColimaSwitchHint("OrbStack"), action)
 			}
 			screenshot(t, tt, "docker-colima-"+tc.name)
 			if planned {
@@ -120,5 +120,52 @@ func TestColimaChoiceAndExternalEngine(t *testing.T) {
 				t.Fatal("click did not request an installation plan")
 			}
 		})
+	}
+}
+
+func TestDockerPromoDismiss(t *testing.T) {
+	if goos != "darwin" {
+		t.Skip("Colima promo is a macOS card")
+	}
+	a := NewApp()
+	a.Snapshot = dockerSnapshot()
+	a.BuildPlan = func(_ func(sysenv.Env, ops.Terminal) (ops.Plan, error), _ func(ops.Plan, error)) {}
+	saved := 0
+	a.OnSettings = func() { saved++ }
+	tt := openDocker(a)
+	hasTexts(t, tt, locales.DockerHearthTitle(), locales.ColimaMigrate())
+	if err := tt.Click(locales.DockerHearthDismiss()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !a.DockerPromoHidden || saved != 1 {
+		t.Fatalf("dismiss state: hidden=%v saved=%d, want true, 1", a.DockerPromoHidden, saved)
+	}
+	if tt.HasText(locales.DockerHearthTitle()) {
+		t.Fatalf("promo card still visible after dismiss: %v", tt.Texts())
+	}
+}
+
+func TestDockerDiskRefreshing(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = dockerSnapshot()
+	a.Snapshot.Tools[0].Docker.Contexts[0].Status = "available"
+	a.DockerCounting = true
+	tt := openDocker(a)
+	hasTexts(t, tt, locales.DockerOverviewDisk(), locales.DockerDiskCounting())
+
+	a.Sizes = &inventory.Sizes{
+		Docker: []inventory.DockerUsage{
+			{Type: "Images", Bytes: 2 << 30, Reclaimable: 512 << 20},
+			{Type: "Containers", Bytes: 128 << 20},
+		},
+	}
+	tt.Frame()
+	hasTexts(t, tt, locales.DockerOverviewDisk(), locales.DockerDiskRefreshing(), locales.DockerDiskCachedNote())
+
+	a.DockerCounting = false
+	tt.Frame()
+	if tt.HasText(locales.DockerDiskRefreshing()) {
+		t.Fatalf("refreshing chip remained after DockerCounting finished: %v", tt.Texts())
 	}
 }

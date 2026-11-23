@@ -330,3 +330,77 @@ func TestSkillCatalogInstalledBadgeAndConnectAll(t *testing.T) {
 		t.Fatalf("install-all plan: %+v", a.op)
 	}
 }
+
+func TestSkillCatalogSkillsShAndDestination(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.Home = home
+	var loadedSlugs []string
+	a.LoadCatalog = func(repo skillcatalog.Repository, _ bool, done func([]skillcatalog.Skill, map[string]string, error)) func() {
+		loadedSlugs = append(loadedSlugs, repo.Slug)
+		skills := catalogFixture()
+		if repo.Slug == "mattpocock/skills" {
+			skills = []skillcatalog.Skill{
+				{Name: "alpha", Description: "First skill", Dir: "alpha", Repository: repo.Slug, Commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", Files: []skillcatalog.File{{Path: "SKILL.md", Data: []byte("---\nname: alpha\n---\nAlpha")}}},
+				{Name: "grill-me", Description: "Stress-test your plan", Dir: "grill-me", Repository: repo.Slug, Commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", Files: []skillcatalog.File{{Path: "SKILL.md", Data: []byte("---\nname: grill-me\n---\n# Grill Me")}}},
+			}
+		}
+		done(skills, map[string]string{"claude": home + "/.claude/skills", "codex": home + "/.agents/skills"}, nil)
+		return func() {}
+	}
+	var searched []string
+	a.SearchSkillsSh = func(query string, done func([]skillcatalog.SearchResult, error)) func() {
+		searched = append(searched, query)
+		done([]skillcatalog.SearchResult{
+			{ID: "mattpocock/skills/grill-me", SkillID: "grill-me", Name: "grill-me", Source: "mattpocock/skills", Installs: 41200},
+		}, nil)
+		return func() {}
+	}
+	a.openSkillCatalog(0)
+	tt := openAI(t, a, skillsPage)
+
+	// 1. Default destination for Claude Code explicitly shows canonical files + symlink.
+	hasTexts(t, tt, "Files", "~/.agents/skills/frontend-design", "Link for Claude Code", "~/.claude/skills/frontend-design")
+
+	// 2. Switching to skills.sh tab and searching lists results and opens the GitHub repo with grill-me preselected.
+	if err := tt.Click("skills.sh"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.skillCatalog.isSkillsSh() {
+		t.Fatalf("expected skills.sh tab active, repo=%d", a.skillCatalog.repo)
+	}
+	a.skillCatalog.skillsShQuery = "grill-me"
+	tt.Frame()
+	if err := tt.Click("Search"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(searched) != 1 || searched[0] != "grill-me" {
+		t.Fatalf("searched = %v", searched)
+	}
+	hasTexts(t, tt, "grill-me", "mattpocock/skills", "41.2K installs")
+
+	if err := tt.Click("grill-me mattpocock/skills"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.skillCatalog.chosen != "grill-me" {
+		t.Fatalf("expected grill-me preselected, got %q", a.skillCatalog.chosen)
+	}
+	hasTexts(t, tt, "# Grill Me", "~/.agents/skills/grill-me", "~/.claude/skills/grill-me")
+
+	// 3. Pasting an npx skills add command also loads and preselects the skill.
+	a.skillCatalog.customURL = "npx skills add mattpocock/skills --skill alpha"
+	tt.Frame()
+	if err := tt.Click("Load"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.skillCatalog.chosen != "alpha" {
+		t.Fatalf("expected alpha preselected from npx command, got %q", a.skillCatalog.chosen)
+	}
+	if len(loadedSlugs) < 2 {
+		t.Fatalf("loadedSlugs = %v", loadedSlugs)
+	}
+}

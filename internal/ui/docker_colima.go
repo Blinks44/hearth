@@ -16,6 +16,7 @@ import (
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
+	"github.com/Blinks44/hearth/resources"
 )
 
 func dockerManagementLabel(engine string) string {
@@ -110,6 +111,156 @@ func (a *App) changeColima(colima inventory.ColimaState, profile inventory.Colim
 	}, a.proposeOrSay)
 }
 
+func hearthBadge(c *ui.Context, size float32, radius float32) {
+	logoOnce.Do(func() { logo, _ = ui.DecodeImage(resources.Logo) })
+	ui.Box(c).Size(size, size).Radius(radius).Clip().Shrink(0).
+		Shadow(0, 2, 6, 0, ui.Hex("#C2410C").Alpha(0.22)).Children(func() {
+		ui.Image(c, logo).Size(size, size)
+	})
+}
+
+func (a *App) dockerHearthHeroCard(c *ui.Context, st inventory.ToolState) bool {
+	d := st.Docker
+	if d == nil {
+		return false
+	}
+	cli := inventory.TerminalCopy(st.Installations) >= 0
+
+	var tag, body, ctaLabel, ctaHint string
+	var features []string
+	var onInstall func()
+
+	switch {
+	case a.canInstallColima() && colimaNeedsSetup(d.Colima):
+		tag = locales.DockerHearthColimaTag()
+		body = locales.DockerHearthHeroBody()
+		ctaHint = locales.DockerHearthBrewHint()
+		if cli {
+			ctaLabel = locales.ColimaMigrate()
+		} else {
+			ctaLabel = locales.ColimaInstall()
+		}
+		features = []string{
+			locales.DockerHearthFeaturePackages(),
+			locales.DockerHearthFeatureResources(),
+			locales.DockerHearthFeatureFree(),
+		}
+		onInstall = func() { a.installColima(cli) }
+	case recommendedDockerEngine == "Docker Engine":
+		installed := slices.ContainsFunc(d.Engines, func(e inventory.DockerEngine) bool {
+			return e.Name == "Docker Engine" && e.Path != ""
+		})
+		if installed {
+			return false
+		}
+		plan, ok := a.dockerEngineInstallOrSwitchPlan(st, cli)
+		if !ok {
+			return false
+		}
+		tag = locales.DockerHearthEngineTag()
+		body = locales.DockerHearthLinuxHeroBody()
+		ctaLabel = locales.DockerEngineInstall()
+		ctaHint = locales.DockerHearthLinuxHint()
+		features = []string{
+			locales.DockerHearthLinuxFeaturePackages(),
+			locales.DockerHearthLinuxFeatureNative(),
+			locales.DockerHearthFeatureFree(),
+		}
+		onInstall = func() { a.Propose(plan) }
+	default:
+		return false
+	}
+
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c.Key("docker-hearth-hero")).Radius(12).Clip().
+		LinearGradient(ui.LinearGradient{Angle: 150, Stops: []ui.GradientStop{
+			{Color: pal.HeroFrom, At: 0}, {Color: pal.HeroMid, At: 1},
+		}}).
+		BorderWidth(1).BorderColor(pal.HeroBorder).Children(func() {
+		ui.Row(c).Gap(14).Padding(16, 18, 14, 18).AlignItems(ui.Start).Children(func() {
+			hearthBadge(c, 36, 9)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
+					ui.Text(c, locales.DockerHearthTitle()).FontSize(14.5).FontWeight(700).SingleLine()
+					chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ColimaRecommended())
+				})
+				ui.Text(c, tag).FontSize(11.5).FontWeight(500).TextColor(pal.AccentInk).Wrap()
+				ui.Text(c, body).FontSize(12).TextColor(t.TextMuted).Wrap()
+			})
+			ui.Column(c).Shrink(0).Gap(5).AlignItems(ui.Center).Padding(4, 0, 0, 0).Children(func() {
+				ui.PrimaryButton(c.Key("hearth-docker-install"), ctaLabel).OnClick(onInstall)
+				ui.Text(c, ctaHint).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+			})
+		})
+		ui.Row(c).Gap(16).Padding(10, 18).Wrap().BorderWidth(1, 0, 0, 0).BorderColor(pal.HeroBorder).Children(func() {
+			for i, feat := range features {
+				ui.Row(c.Key("feat-" + strconv.Itoa(i))).Gap(5).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, Icon("check")).Size(12, 12).Shrink(0).TextColor(pal.AccentInk)
+					ui.Text(c, feat).FontSize(11).FontWeight(500).TextColor(t.TextMuted).SingleLine()
+				})
+			}
+		})
+	})
+	return true
+}
+
+func (a *App) dockerHearthSwitchCard(c *ui.Context, st inventory.ToolState, foreignEngine string) {
+	if a.DockerPromoHidden || st.Docker == nil {
+		return
+	}
+	var tag, body, ctaLabel, hint string
+	var onAction func()
+
+	switch {
+	case a.canInstallColima() && colimaNeedsSetup(st.Docker.Colima):
+		tag = locales.DockerHearthColimaShortTag()
+		body = locales.ColimaSwitchHint(foreignEngine)
+		ctaLabel = locales.ColimaMigrate()
+		hint = locales.DockerHearthColimaHint()
+		onAction = func() { a.installColima(true) }
+	case recommendedDockerEngine == "Docker Engine" && foreignEngine != "Docker Engine":
+		plan, ok := a.dockerEngineSwitchPlan(st)
+		if !ok {
+			return
+		}
+		tag = locales.DockerHearthEngineShortTag()
+		body = locales.DockerEngineSwitchHint(foreignEngine)
+		ctaLabel = locales.DockerEngineInstall()
+		hint = locales.DockerHearthLinuxSwitchHint()
+		onAction = func() { a.Propose(plan) }
+	default:
+		return
+	}
+
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Column(c.Key("docker-hearth-switch")).Radius(12).Clip().
+		LinearGradient(ui.LinearGradient{Angle: 150, Stops: []ui.GradientStop{
+			{Color: pal.HeroFrom, At: 0}, {Color: pal.HeroMid, At: 1},
+		}}).
+		BorderWidth(1).BorderColor(pal.HeroBorder).Padding(14).Gap(10).Children(func() {
+		ui.Row(c).Gap(10).AlignItems(ui.Start).Children(func() {
+			hearthBadge(c, 26, 7)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+				clipped(c, locales.DockerHearthTitle()).FontSize(13).FontWeight(700)
+				clipped(c, tag).FontSize(11).FontWeight(500).TextColor(pal.AccentInk)
+			})
+			iconButton(c.Key("docker-promo-dismiss"), "x", locales.DockerHearthDismiss()).OnClick(func() {
+				a.DockerPromoHidden = true
+				if a.OnSettings != nil {
+					a.OnSettings()
+				}
+			})
+		})
+		ui.Text(c, body).FontSize(11.5).TextColor(t.TextMuted).Wrap()
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
+			ui.Button(c.Key("hearth-docker-switch"), ctaLabel).OnClick(onAction)
+			ui.Text(c, hint).FontSize(10.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
+		})
+	})
+}
+
 func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 	d := st.Docker
 	if a.dockerTab == 1 && d.Colima != nil && len(d.Colima.Profiles) > 0 {
@@ -135,6 +286,8 @@ func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 		name := dockerContextEngine(d, k)
 		if name != "" && name != "Colima" {
 			a.dockerExternalCard(c, st, name)
+			a.dockerHearthSwitchCard(c, st, name)
+			a.dockerColimaCompanionCard(c, st)
 			return
 		}
 	}
@@ -163,14 +316,13 @@ func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 		}
 	}
 	if a.canInstallColima() && inventory.TerminalCopy(st.Installations) < 0 {
-		listCard(c, locales.ColimaChoice(), "", func() {
-			listRowWrapped(c, locales.ColimaEverything(), locales.ColimaWizard(), func() {})
+		listCard(c, locales.DockerHearthNeedToKnow(), "", func() {
 			listRowWrapped(c, locales.ColimaPackages(), locales.ColimaPackagesHint(), func() {})
 			listRowWrapped(c, locales.ColimaOtherEngine(), locales.ColimaOtherEngineHint(), func() {})
 		})
 	} else if _, ok := a.nativeDockerInstallPlan(st); ok {
-		listCard(c, locales.DockerLinuxChoice(), "", func() {
-			listRowWrapped(c, locales.ColimaEverything(), locales.DockerLinuxWizard(), func() {})
+		listCard(c, locales.DockerHearthNeedToKnow(), "", func() {
+			listRowWrapped(c, locales.DockerHearthLinuxFeaturePackages(), locales.DockerLinuxWizard(), func() {})
 			listRowWrapped(c, locales.ColimaOtherEngine(), locales.ColimaOtherEngineHint(), func() {})
 		})
 	}
@@ -202,38 +354,34 @@ func (a *App) dockerExternalCard(c *ui.Context, st inventory.ToolState, name str
 			})
 		}
 		listRow(c, locales.ColimaDockerResources(), false, locales.ColimaDockerResourcesHint(), func() {})
-		if a.canInstallColima() && colimaNeedsSetup(st.Docker.Colima) {
-			listRowWrapped(c, locales.ColimaOnlyHearth(name), locales.ColimaSwitchHint(name), func() {
-				ui.Button(c.Key("colima-migrate"), locales.ColimaMigrate()).OnClick(func() { a.installColima(true) })
-			})
-		} else if recommendedDockerEngine == "Docker Engine" && name != "Docker Engine" {
-			if plan, ok := a.dockerEngineSwitchPlan(st); ok {
-				listRowWrapped(c, locales.ColimaOnlyHearth(name), locales.DockerEngineSwitchHint(name), func() {
-					ui.Button(c.Key("docker-engine-switch"), locales.DockerEngineInstall()).OnClick(func() { a.Propose(plan) })
-				})
-			}
-		} else if st.Docker.Colima != nil && !st.Docker.Colima.Unreadable {
-			for _, p := range st.Docker.Colima.Profiles {
-				if p.Name == "default" && p.Runtime == "docker" {
-					listRow(c, "Colima", false, locales.ColimaManaged(), func() {
-						if p.Status == "stopped" {
-							ui.Button(c.Key("external-start-colima"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
-								OnClick(func() { a.changeColima(*st.Docker.Colima, p, ops.ColimaStart, ops.ColimaLimits{}) })
-						}
-						if p.Status == "running" {
-							for _, k := range st.Docker.Contexts {
-								if profile, ok := dockerColimaProfile(st.Docker, k.Name); ok && profile.Name == p.Name && a.dockerOpenable(k.Name) {
-									ui.Button(c.Key("external-view-colima"), locales.KubeClusterOpen()).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
-									break
-								}
+	})
+}
+
+func (a *App) dockerColimaCompanionCard(c *ui.Context, st inventory.ToolState) {
+	if st.Docker == nil || st.Docker.Colima == nil || st.Docker.Colima.Unreadable {
+		return
+	}
+	for _, p := range st.Docker.Colima.Profiles {
+		if p.Name == "default" && p.Runtime == "docker" {
+			listCard(c, "Colima", "", func() {
+				listRow(c, "Colima", false, locales.ColimaManaged(), func() {
+					if p.Status == "stopped" {
+						ui.Button(c.Key("external-start-colima"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+							OnClick(func() { a.changeColima(*st.Docker.Colima, p, ops.ColimaStart, ops.ColimaLimits{}) })
+					}
+					if p.Status == "running" {
+						for _, k := range st.Docker.Contexts {
+							if profile, ok := dockerColimaProfile(st.Docker, k.Name); ok && profile.Name == p.Name && a.dockerOpenable(k.Name) {
+								ui.Button(c.Key("external-view-colima"), locales.KubeClusterOpen()).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
+								break
 							}
 						}
-					})
-					break
-				}
-			}
+					}
+				})
+			})
+			return
 		}
-	})
+	}
 }
 
 func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventory.ColimaProfile) {

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -23,7 +24,9 @@ type skillCatalogCached struct {
 }
 
 type skillCatalogState struct {
-	repo                 int // index into Repositories(), or len(Repositories()) for custom
+	// repo is an index into Repositories(), len(Repositories()) for skills.sh
+	// directory search, or len(Repositories())+1 for a loaded custom repository.
+	repo                 int
 	custom               *skillcatalog.Repository
 	customURL            string
 	urlErr               string
@@ -35,11 +38,25 @@ type skillCatalogState struct {
 	project              string
 	file                 string
 	cancel               func()
+
+	skillsShQuery     string
+	skillsShLastQuery string
+	skillsShLoading   bool
+	skillsShErr       string
+	skillsShResults   []skillcatalog.SearchResult
+	skillsShCancel    func()
+}
+
+func skillsShTabIndex() int { return len(skillcatalog.Repositories()) }
+func customTabIndex() int   { return len(skillcatalog.Repositories()) + 1 }
+
+func (s *skillCatalogState) isSkillsSh() bool {
+	return s.repo == skillsShTabIndex()
 }
 
 func (s *skillCatalogState) activeRepo() skillcatalog.Repository {
 	repos := skillcatalog.Repositories()
-	if s.custom != nil && s.repo == len(repos) {
+	if s.custom != nil && s.repo == customTabIndex() {
 		return *s.custom
 	}
 	if s.repo >= 0 && s.repo < len(repos) {
@@ -68,24 +85,93 @@ func (a *App) defaultCatalogAgent(dirs map[string]string) string {
 }
 
 func (a *App) openSkillCatalog(repo int) {
-	a.openSkillCatalogRepo(repo, nil, false)
+	a.openSkillCatalogRepo(repo, nil, "", false)
+}
+
+func (a *App) openSkillsShTab() {
+	if a.skillCatalog == nil {
+		a.skillCatalog = &skillCatalogState{repo: skillsShTabIndex()}
+		a.skillCatalogOpen = true
+		return
+	}
+	if a.skillCatalog.cancel != nil {
+		a.skillCatalog.cancel()
+		a.skillCatalog.cancel = nil
+	}
+	a.skillCatalog.loading = false
+	a.skillCatalog.repo = skillsShTabIndex()
+	a.skillCatalogOpen = true
+}
+
+func (a *App) runSkillsShSearch() {
+	s := a.skillCatalog
+	if s == nil {
+		return
+	}
+	if s.skillsShCancel != nil {
+		s.skillsShCancel()
+		s.skillsShCancel = nil
+	}
+	q := strings.TrimSpace(s.skillsShQuery)
+	s.skillsShErr = ""
+	if q == "" {
+		s.skillsShLastQuery = ""
+		s.skillsShResults = nil
+		s.skillsShLoading = false
+		return
+	}
+	if a.SearchSkillsSh == nil {
+		s.skillsShLoading = false
+		return
+	}
+	s.skillsShLastQuery = q
+	s.skillsShLoading = true
+	state := s
+	state.skillsShCancel = a.SearchSkillsSh(q, func(results []skillcatalog.SearchResult, err error) {
+		if a.skillCatalog != state {
+			return
+		}
+		state.skillsShLoading = false
+		if err != nil {
+			state.skillsShErr = err.Error()
+			state.skillsShResults = nil
+			return
+		}
+		state.skillsShResults = results
+	})
 }
 
 func (a *App) refreshSkillCatalog() {
 	if a.skillCatalog == nil {
-		a.openSkillCatalogRepo(0, nil, true)
+		a.openSkillCatalogRepo(0, nil, "", true)
 		return
 	}
-	repos := skillcatalog.Repositories()
-	if a.skillCatalog.custom != nil && a.skillCatalog.repo == len(repos) {
+	if a.skillCatalog.isSkillsSh() {
+		a.runSkillsShSearch()
+		return
+	}
+	if a.skillCatalog.custom != nil && a.skillCatalog.repo == customTabIndex() {
 		custom := *a.skillCatalog.custom
-		a.openSkillCatalogRepo(len(repos), &custom, true)
+		a.openSkillCatalogRepo(customTabIndex(), &custom, a.skillCatalog.chosen, true)
 		return
 	}
-	a.openSkillCatalogRepo(a.skillCatalog.repo, nil, true)
+	a.openSkillCatalogRepo(a.skillCatalog.repo, nil, a.skillCatalog.chosen, true)
 }
 
-func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, force bool) {
+func selectSkillByHint(skills []skillcatalog.Skill, want string) string {
+	want = strings.TrimSpace(want)
+	if want == "" {
+		return ""
+	}
+	for _, sk := range skills {
+		if strings.EqualFold(sk.Dir, want) || strings.EqualFold(sk.Name, want) {
+			return sk.Dir
+		}
+	}
+	return ""
+}
+
+func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, wantSkill string, force bool) {
 	if a.skillCatalog != nil && a.skillCatalog.cancel != nil {
 		a.skillCatalog.cancel()
 	}
@@ -94,7 +180,7 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 	repoIdx := repo
 	if custom != nil {
 		target = *custom
-		repoIdx = len(repos)
+		repoIdx = customTabIndex()
 	} else {
 		if repoIdx < 0 || repoIdx >= len(repos) {
 			repoIdx = 0
@@ -106,6 +192,10 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 		state.agent = a.skillCatalog.agent
 		state.project = a.skillCatalog.project
 		state.customURL = a.skillCatalog.customURL
+		state.skillsShQuery = a.skillCatalog.skillsShQuery
+		state.skillsShLastQuery = a.skillCatalog.skillsShLastQuery
+		state.skillsShResults = a.skillCatalog.skillsShResults
+		state.skillsShErr = a.skillCatalog.skillsShErr
 		if custom == nil {
 			state.custom = a.skillCatalog.custom
 		}
@@ -126,6 +216,10 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 			state.loading = false
 			state.skills = cached.skills
 			state.dirs = cached.dirs
+			if chosen := selectSkillByHint(cached.skills, wantSkill); chosen != "" {
+				state.chosen = chosen
+				state.file = ""
+			}
 			a.syncCatalogAgent(state, cached.dirs)
 			return
 		}
@@ -148,6 +242,10 @@ func (a *App) openSkillCatalogRepo(repo int, custom *skillcatalog.Repository, fo
 			a.skillCatalogCache = map[string]skillCatalogCached{}
 		}
 		a.skillCatalogCache[key] = skillCatalogCached{skills: skills, dirs: dirs}
+		if chosen := selectSkillByHint(skills, wantSkill); chosen != "" {
+			state.chosen = chosen
+			state.file = ""
+		}
 		a.syncCatalogAgent(state, dirs)
 	})
 }
@@ -189,12 +287,27 @@ func (a *App) catalogActiveProject(s *skillCatalogState) string {
 	return ""
 }
 
+func formatInstalls(n int) string {
+	switch {
+	case n >= 1_000_000:
+		return fmt.Sprintf("%.1fM", float64(n)/1e6)
+	case n >= 1_000:
+		return fmt.Sprintf("%.1fK", float64(n)/1e3)
+	default:
+		return strconv.Itoa(n)
+	}
+}
+
 func (a *App) skillCatalogView(c *ui.Context, p page) {
 	s := a.skillCatalog
 	t, pal := c.Theme(), Colors(c.Theme())
 	ui.Column(c).Fill().Children(func() {
+		refreshDisabled := s.loading
+		if s.isSkillsSh() {
+			refreshDisabled = s.skillsShLoading || strings.TrimSpace(s.skillsShQuery) == ""
+		}
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			ui.Button(c.Key("catalog-refresh"), locales.SkillCatalogRefresh()).Height(controlHeight).Disabled(s.loading).OnClick(func() { a.refreshSkillCatalog() })
+			ui.Button(c.Key("catalog-refresh"), locales.SkillCatalogRefresh()).Height(controlHeight).Disabled(refreshDisabled).OnClick(func() { a.refreshSkillCatalog() })
 			ui.PrimaryButton(c.Key("catalog-installed"), locales.SkillCatalogInstalled()).Height(controlHeight).OnClick(func() { a.skillCatalogOpen = false })
 		}})
 		ui.Scroll(c).Grow(1).Children(func() {
@@ -214,9 +327,14 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 						}
 						segs = append(segs, segment{r.Name, count})
 					}
+					shCount := ""
+					if s.isSkillsSh() && !s.skillsShLoading && s.skillsShErr == "" && s.skillsShLastQuery != "" {
+						shCount = strconv.Itoa(len(s.skillsShResults))
+					}
+					segs = append(segs, segment{"skills.sh", shCount})
 					if s.custom != nil {
 						count := ""
-						if s.repo == len(repos) && !s.loading && s.err == "" {
+						if s.repo == customTabIndex() && !s.loading && s.err == "" {
 							count = strconv.Itoa(len(s.skills))
 						}
 						segs = append(segs, segment{s.custom.Slug, count})
@@ -226,24 +344,34 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 						if tab == s.repo {
 							return
 						}
-						if s.custom != nil && tab == len(repos) {
+						if tab == skillsShTabIndex() {
+							a.openSkillsShTab()
+							return
+						}
+						if s.custom != nil && tab == customTabIndex() {
 							custom := *s.custom
-							a.openSkillCatalogRepo(len(repos), &custom, false)
+							a.openSkillCatalogRepo(customTabIndex(), &custom, "", false)
 							return
 						}
 						a.openSkillCatalog(tab)
 					})
-					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Height(controlHeight).Width(272)
+					if !s.isSkillsSh() {
+						ui.Box(c).Grow(1).Height(1)
+						ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Height(controlHeight).Width(272)
+					}
 				})
+				if s.isSkillsSh() {
+					a.skillsShView(c, s)
+					return
+				}
 				loadCustom := func() {
-					repo, err := skillcatalog.ParseGitHubURL(s.customURL)
+					repo, wantSkill, err := skillcatalog.ParseSource(s.customURL)
 					if err != nil {
 						s.urlErr = err.Error()
 						return
 					}
 					s.urlErr = ""
-					a.openSkillCatalogRepo(len(repos), &repo, false)
+					a.openSkillCatalogRepo(customTabIndex(), &repo, wantSkill, false)
 				}
 				ui.Column(c).Gap(4).Children(func() {
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -319,6 +447,71 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 				})
 			})
 		})
+	})
+}
+
+func (a *App) skillsShView(c *ui.Context, s *skillCatalogState) {
+	t, pal := c.Theme(), Colors(c.Theme())
+	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+		ui.TextInput(c.Key("catalog-skillssh-query"), &s.skillsShQuery).
+			Placeholder(locales.SkillCatalogSkillsShPlaceholder()).
+			Height(controlHeight).Grow(1).MinWidth(0).
+			OnSubmit(a.runSkillsShSearch)
+		ui.PrimaryButton(c.Key("catalog-skillssh-search"), locales.SkillCatalogSearch()).
+			Height(controlHeight).
+			Disabled(s.skillsShLoading || strings.TrimSpace(s.skillsShQuery) == "").
+			OnClick(a.runSkillsShSearch)
+	})
+	if s.skillsShLoading {
+		cardNote(c, locales.Loading())
+		return
+	}
+	if s.skillsShErr != "" {
+		listFrame(c, func() { cardNote(c, locales.SkillCatalogSkillsShError()); cardNote(c, s.skillsShErr) })
+		return
+	}
+	if s.skillsShLastQuery == "" {
+		ui.Row(c).Gap(10).Padding(14, 16).Radius(12).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+			ui.Icon(c, Icon("sparkles")).Size(16, 16).Shrink(0).TextColor(Accent)
+			ui.Text(c, locales.SkillCatalogSkillsShHint()).FontSize(12.5).TextColor(t.TextMuted).Grow(1).MinWidth(0)
+		})
+		return
+	}
+	listFrame(c, func() {
+		groupTitle(c, "skills.sh", strconv.Itoa(len(s.skillsShResults)))
+		if len(s.skillsShResults) == 0 {
+			cardNote(c, locales.NothingMatches())
+			return
+		}
+		for i, item := range s.skillsShResults {
+			res := item
+			row := ui.ButtonBase(c.Key("skillssh-result:"+strconv.Itoa(i)+":"+res.Source+":"+res.TargetSkill())).
+				Label(res.Name+" "+res.Source).
+				Gap(10).Padding(10, 14, 10, 12).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+			if row.Hovered() {
+				row.Background(pal.Subtle)
+			}
+			row.OnClick(func() {
+				repo := res.Repository()
+				a.openSkillCatalogRepo(customTabIndex(), &repo, res.TargetSkill(), false)
+			}).Children(func() {
+				ui.Box(c).Size(27, 27).Shrink(0).Radius(7).Center().Background(pal.Subtle).Children(func() {
+					ui.Icon(c, Icon("book-open")).Size(15, 15).TextColor(t.TextMuted)
+				})
+				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+					ui.Text(c, res.Name).FontSize(13.5).SingleLine()
+					ui.Text(c, res.Source).Font(FontMono).FontSize(11).TextColor(t.TextMuted).SingleLine()
+				})
+				if res.Installs > 0 {
+					aiTag(c, locales.SkillCatalogSkillsShInstalls(formatInstalls(res.Installs)), pal.Subtle, t.TextMuted)
+				}
+				ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+			})
+		}
+	})
+	ui.Row(c).Gap(10).Padding(12, 14).Radius(12).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+		ui.Icon(c, Icon("sparkles")).Size(16, 16).Shrink(0).TextColor(Accent)
+		ui.Text(c, locales.SkillCatalogSkillsShHint()).FontSize(12).TextColor(t.TextMuted).Grow(1).MinWidth(0)
 	})
 }
 
@@ -414,7 +607,7 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 					}
 				})
 			}
-			ui.Text(c, tilde(filepath.Join(dirs[agent], sk.Dir), a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			a.catalogDestinationNote(c, agent, project, dirs[agent], sk.Dir)
 		})
 		detailSection(c, locales.FilesSection())
 		ui.Scroll(c.Key("catalog-files:" + sk.Dir)).MaxHeight(84).Children(func() {
@@ -449,6 +642,32 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 			}
 			ui.Button(c.Key("catalog-github"), locales.SkillCatalogGitHub()).Height(controlHeight).OnClick(func() { c.OpenURL(sk.URL()) })
 		})
+	})
+}
+
+func (a *App) catalogDestinationNote(c *ui.Context, agent, project, agentDir, skillDir string) {
+	t, pal := c.Theme(), Colors(c.Theme())
+	agentPath := filepath.Join(agentDir, skillDir)
+	destPath := agentPath
+	switch {
+	case project != "":
+		destPath = filepath.Join(project, ".agents", "skills", skillDir)
+	case a.Home != "":
+		destPath = filepath.Join(a.Home, ".agents", "skills", skillDir)
+	}
+	ui.Column(c).Gap(3).Padding(8, 10).Radius(8).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.SkillCatalogStoredIn()).FontSize(11).TextColor(t.TextMuted).Shrink(0)
+			clipped(c, tilde(destPath, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Grow(1).MinWidth(0)
+		})
+		if agentPath != destPath {
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, locales.SkillCatalogSymlinkLabel(agentTitle(agent))).FontSize(11).TextColor(pal.TextFaint).Shrink(0)
+				clipped(c, tilde(agentPath, a.Home)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+			})
+		} else {
+			ui.Text(c, locales.SkillCatalogSharedDirect(agentTitle(agent))).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		}
 	})
 }
 

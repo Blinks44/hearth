@@ -89,6 +89,27 @@ func (a *App) settingsPage(c *ui.Context) {
 							})
 						})
 					})
+					card(c, locales.SettingsSystemSection(), "", nil, func() {
+						settingRow(c, settingsTrayLabel(), settingsTrayHint(), func() {
+							toggle(c, "settings-tray", &a.TrayEnabled).Label(settingsTrayLabel()).OnChange(func() {
+								if !a.TrayEnabled {
+									a.ShowInDock = true
+								}
+								a.savePreferences()
+							})
+						})
+						a.settingsDockRow(c)
+						settingRow(c, locales.SettingsOpenAtLogin(), locales.SettingsOpenAtLoginHint(), func() {
+							toggle(c, "settings-open-at-login", &a.OpenAtLogin).Label(locales.SettingsOpenAtLogin()).
+								Disabled(a.OnOpenAtLogin == nil).OnChange(func() {
+								a.SettingsError = ""
+								if err := a.OnOpenAtLogin(a.OpenAtLogin); err != nil {
+									a.OpenAtLogin = !a.OpenAtLogin
+									a.SettingsError = err.Error()
+								}
+							})
+						})
+					})
 					a.appsCard(c)
 					card(c, locales.SettingsNetwork(), "", nil, func() {
 						settingRow(c, locales.SettingsLists(), locales.SettingsListsHint(), func() {

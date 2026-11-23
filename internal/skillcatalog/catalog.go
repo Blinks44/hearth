@@ -371,23 +371,51 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 			add(root+"\x00"+dir, root, dir, file, e)
 		}
 	default:
+		// Discover every directory containing a SKILL.md so community and
+		// skills.sh repositories using skills/, .agents/skills/, .claude/skills/,
+		// or plugins/*/skills/ layouts all load cleanly.
+		var skillDirs []string
+		seenDir := map[string]bool{}
 		for _, e := range entries {
-			if sub, ok := strings.CutPrefix(e.rel, "skills/"); ok {
-				dir, file, ok := strings.Cut(sub, "/")
-				if ok && file != "" {
-					add("skills\x00"+dir, "skills", dir, file, e)
+			if e.bad || !strings.HasSuffix(e.rel, "/SKILL.md") {
+				continue
+			}
+			d := path.Dir(e.rel)
+			if !seenDir[d] {
+				seenDir[d] = true
+				skillDirs = append(skillDirs, d)
+			}
+		}
+		// Sort shorter paths first so nested fixture SKILL.md files inside a
+		// skill stay part of the outer skill rather than becoming separate skills.
+		slices.SortFunc(skillDirs, func(a, b string) int {
+			if da, db := strings.Count(a, "/"), strings.Count(b, "/"); da != db {
+				return da - db
+			}
+			return strings.Compare(a, b)
+		})
+		var roots []string
+		for _, d := range skillDirs {
+			if slices.ContainsFunc(roots, func(parent string) bool { return strings.HasPrefix(d, parent+"/") }) {
+				continue
+			}
+			roots = append(roots, d)
+		}
+		for _, e := range entries {
+			for _, d := range roots {
+				if file, ok := strings.CutPrefix(e.rel, d+"/"); ok && file != "" {
+					gRoot := path.Dir(d)
+					if gRoot == "." {
+						gRoot = ""
+					}
+					add(d, gRoot, path.Base(d), file, e)
+					break
 				}
-				continue
 			}
-			dir, file, ok := strings.Cut(e.rel, "/")
-			if !ok || file == "" {
-				continue
-			}
-			add("\x00"+dir, "", dir, file, e)
 		}
 	}
 
-	var out []Skill
+	byDir := map[string]Skill{}
 	for _, g := range groups {
 		if g.blocked {
 			continue
@@ -416,6 +444,13 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 		}
 		s.Name, s.Description = meta.Name, meta.Description
 		slices.SortFunc(s.Files, func(a, b File) int { return strings.Compare(a.Path, b.Path) })
+		key := strings.ToLower(s.Dir)
+		if prev, exists := byDir[key]; !exists || preferSkillRoot(s.Root, prev.Root) {
+			byDir[key] = s
+		}
+	}
+	out := make([]Skill, 0, len(byDir))
+	for _, s := range byDir {
 		out = append(out, s)
 	}
 	slices.SortFunc(out, func(a, b Skill) int { return strings.Compare(a.Name, b.Name) })
@@ -423,6 +458,29 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 		return nil, errors.New("repository contains no installable skills")
 	}
 	return out, nil
+}
+
+func skillRootRank(root string) int {
+	switch root {
+	case "skills":
+		return 0
+	case ".agents/skills":
+		return 1
+	case "":
+		return 2
+	case ".claude/skills":
+		return 3
+	default:
+		return 4
+	}
+}
+
+func preferSkillRoot(a, b string) bool {
+	ra, rb := skillRootRank(a), skillRootRank(b)
+	if ra != rb {
+		return ra < rb
+	}
+	return a < b
 }
 
 // Validate checks a preview again before the operation accepts it.

@@ -16000,7 +16000,7 @@
   "skillDiffModified": "modified",
   "skillDiffBinary": "Binary file differs.",
   "skillDiffTooLarge": "File is too large for an inline diff.",
-  "skillCatalogRepoPlaceholder": "owner/repo or https://github.com/…",
+  "skillCatalogRepoPlaceholder": "GitHub URL, skills.sh/owner/repo, or npx skills add …",
   "skillCatalogLoad": "Load",
   "skillCatalogScope": "Scope",
   "skillCatalogScopeUser": "User (all projects)",
@@ -16616,5 +16616,87 @@
       }
     }
   },
-  "pathOpenSource": "Open source file"
+  "pathOpenSource": "Open source file",
+  "dockerHearthTitle": "Docker right in Hearth",
+  "dockerHearthColimaTag": "Colima · open source & free",
+  "dockerHearthColimaShortTag": "Colima · open source",
+  "dockerHearthEngineTag": "Docker Engine · open source & free",
+  "dockerHearthEngineShortTag": "Docker Engine · open source",
+  "dockerHearthHeroBody": "No separate Docker app needed: manage containers, images, CPU/RAM limits and autostart right here.",
+  "dockerHearthLinuxHeroBody": "Runs the native Linux Docker daemon without a separate desktop app: manage containers, images and volumes right here.",
+  "dockerHearthBrewHint": "via Homebrew · 1 command",
+  "dockerHearthLinuxHint": "native systemd service",
+  "dockerHearthFeaturePackages": "Colima, Docker CLI, Compose & Buildx",
+  "dockerHearthFeatureResources": "CPU, RAM & disk in Hearth",
+  "dockerHearthFeatureFree": "No paid licenses",
+  "dockerHearthLinuxFeaturePackages": "Docker Engine, CLI, Compose & Buildx",
+  "dockerHearthLinuxFeatureNative": "No VM overhead on Linux",
+  "dockerHearthOtherEngines": "Other engines",
+  "dockerHearthNeedToKnow": "Good to know",
+  "dockerHearthColimaHint": "CPU/RAM & autostart here",
+  "dockerHearthLinuxSwitchHint": "Native service & containers here",
+  "dockerHearthDismiss": "Hide suggestion",
+  "dockerDiskRefreshing": "updating…",
+  "dockerDiskCounting": "Calculating Docker disk usage…",
+  "dockerDiskCachedNote": "showing last measurement",
+  "trayOpenHearth": "Open Hearth",
+  "trayContainers": "Containers",
+  "trayContainersRunning": "{count} running",
+  "@trayContainersRunning": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "trayContainersNone": "No running containers",
+  "trayAllContainers": "All containers…",
+  "trayColimaRunning": "Colima · running",
+  "trayColimaStopped": "Colima · stopped",
+  "trayColimaStart": "Start Colima…",
+  "trayColimaStop": "Stop Colima…",
+  "trayColimaSettings": "Resources & settings…",
+  "trayContexts": "Contexts",
+  "trayCheckUpdates": "Check for updates",
+  "traySettings": "Settings…",
+  "trayQuit": "Quit",
+  "settingsSystemSection": "Background & startup",
+  "settingsTrayLabelMac": "Menu bar icon",
+  "settingsTrayLabelOther": "System tray icon",
+  "settingsTrayHintMac": "Quick access to containers and contexts. Closing the window keeps Hearth in the menu bar.",
+  "settingsTrayHintOther": "Quick access to containers and contexts. Closing the window keeps Hearth in the system tray.",
+  "settingsDockLabel": "Show in Dock",
+  "settingsDockHint": "Turn off to keep Hearth in the menu bar only.",
+  "settingsDockRequiresTray": "Enable the menu bar icon first to hide Hearth from the Dock.",
+  "settingsOpenAtLogin": "Start at sign-in",
+  "settingsOpenAtLoginHint": "Launch Hearth automatically in the background when you sign in.",
+  "skillCatalogSkillsShPlaceholder": "Search skills.sh, e.g. grill-me, frontend-design…",
+  "skillCatalogSearch": "Search",
+  "skillCatalogSkillsShHint": "Search the public skills.sh directory. Clicking a result loads the exact files from its GitHub repository for preview before installing.",
+  "skillCatalogSkillsShError": "Could not search skills.sh. Check your connection and try again.",
+  "skillCatalogSkillsShInstalls": "{count} installs",
+  "@skillCatalogSkillsShInstalls": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCatalogStoredIn": "Files",
+  "skillCatalogSymlinkLabel": "Link for {agent}",
+  "@skillCatalogSymlinkLabel": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCatalogSharedDirect": "Shared folder · read directly by {agent}",
+  "@skillCatalogSharedDirect": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  }
 }

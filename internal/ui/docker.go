@@ -257,8 +257,16 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 	pal := Colors(c.Theme())
 	engines := st.Docker.Engines
 	cli := inventory.TerminalCopy(st.Installations) >= 0
-	listCard(c, locales.DockerEngineOptions(), dockerPlatform(), func() {
+	heroShown := a.dockerHearthHeroCard(c, st)
+	title := locales.DockerEngineOptions()
+	if heroShown {
+		title = locales.DockerHearthOtherEngines()
+	}
+	listCard(c, title, dockerPlatform(), func() {
 		for _, engine := range engines {
+			if heroShown && engine.Name == recommendedDockerEngine {
+				continue
+			}
 			caption := locales.DockerOpenSource()
 			switch engine.Name {
 			case "OrbStack":
@@ -351,9 +359,15 @@ func (a *App) dockerQuickViewsCard(c *ui.Context, d *inventory.DockerState) {
 
 func (a *App) dockerDiskSummaryCard(c *ui.Context) {
 	if a.Sizes == nil || len(a.Sizes.Docker) == 0 {
+		if a.DockerCounting && a.dockerAnswers() {
+			listCard(c, locales.DockerOverviewDisk(), "", func() {
+				cardNote(c, locales.DockerDiskCounting())
+			})
+		}
 		return
 	}
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	var total, reclaimable int64
 	for _, row := range a.Sizes.Docker {
 		total += row.Bytes
@@ -362,7 +376,14 @@ func (a *App) dockerDiskSummaryCard(c *ui.Context) {
 	if total <= 0 {
 		return
 	}
-	listCard(c, locales.DockerOverviewDisk(), formatBytes(total), func() {
+	listCardHeader(c, locales.DockerOverviewDisk(), func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			if a.DockerCounting {
+				chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.DockerDiskRefreshing())
+			}
+			ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+		})
+	}, func() {
 		for _, row := range a.Sizes.Docker {
 			label := row.Type
 			switch row.Type {
@@ -388,6 +409,9 @@ func (a *App) dockerDiskSummaryCard(c *ui.Context) {
 		}
 		ui.Row(c).Gap(8).Padding(9, 14).AlignItems(ui.Center).Children(func() {
 			caption := locales.DockerOverviewReclaimable(formatBytes(reclaimable))
+			if a.DockerCounting {
+				caption += " · " + locales.DockerDiskCachedNote()
+			}
 			ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
 			ui.Button(c.Key("docker-disk-cleanup"), locales.ChangesOpenCleanup()).Height(24).Shrink(0).OnClick(func() {
 				a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
