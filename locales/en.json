@@ -16821,5 +16821,56 @@
         "type": "String"
       }
     }
+  },
+  "appUpdateCheck": "Check for Hearth updates…",
+  "@appUpdateCheck": {
+    "description": "Menu item to manually check for a new version of Hearth."
+  },
+  "appUpdateCheckButton": "Check…",
+  "@appUpdateCheckButton": {
+    "description": "Compact button label in Settings About card to check for Hearth updates."
+  },
+  "appUpdateInstallButton": "Update…",
+  "@appUpdateInstallButton": {
+    "description": "Compact button label to open the Hearth update window when a new release is available."
+  },
+  "appUpdateAvailable": "Update Hearth to {version}…",
+  "@appUpdateAvailable": {
+    "description": "Menu item when a newer Hearth version is available.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateAvailableShort": "Version {version} available",
+  "@appUpdateAvailableShort": {
+    "description": "Short subtitle under Hearth Version in Settings when a newer release is available.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateBannerTitle": "Hearth {version} is available",
+  "@appUpdateBannerTitle": {
+    "description": "Banner title on the Updates page when a newer Hearth release is available.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateBannerHint": "Download and install the new release without losing your settings.",
+  "@appUpdateBannerHint": {
+    "description": "Banner hint on the Updates page explaining that updating Hearth preserves settings."
+  },
+  "appUpdateAutoCheck": "Check for Hearth updates automatically",
+  "@appUpdateAutoCheck": {
+    "description": "Settings toggle label enabling daily background checks for Hearth updates."
+  },
+  "appUpdateAutoCheckHint": "Checks once a day in the background when a release build can update itself",
+  "@appUpdateAutoCheckHint": {
+    "description": "Settings toggle hint explaining automatic Hearth update checks."
   }
 }

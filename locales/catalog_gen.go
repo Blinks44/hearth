@@ -44593,3 +44593,143 @@ func InstallOpenTool(name string) string { return In(i18n.Locale()).InstallOpenT
 func (msgs Messages) InstallOpenTool(name string) string {
 	return Catalog.Format(msgs.locale, "installOpenTool", map[string]any{"name": name})
 }
+
+// AppUpdateCheck says "Check for Hearth updates…"
+// in the language the app shows.
+//
+// Menu item to manually check for a new version of Hearth.
+func AppUpdateCheck() string { return In(i18n.Locale()).AppUpdateCheck() }
+
+// AppUpdateCheck says "Check for Hearth updates…"
+// in the language of msgs.
+//
+// Menu item to manually check for a new version of Hearth.
+func (msgs Messages) AppUpdateCheck() string {
+	return Catalog.Format(msgs.locale, "appUpdateCheck", nil)
+}
+
+// AppUpdateCheckButton says "Check…"
+// in the language the app shows.
+//
+// Compact button label in Settings About card to check for Hearth updates.
+func AppUpdateCheckButton() string { return In(i18n.Locale()).AppUpdateCheckButton() }
+
+// AppUpdateCheckButton says "Check…"
+// in the language of msgs.
+//
+// Compact button label in Settings About card to check for Hearth updates.
+func (msgs Messages) AppUpdateCheckButton() string {
+	return Catalog.Format(msgs.locale, "appUpdateCheckButton", nil)
+}
+
+// AppUpdateInstallButton says "Update…"
+// in the language the app shows.
+//
+// Compact button label to open the Hearth update window when a new release
+// is available.
+func AppUpdateInstallButton() string { return In(i18n.Locale()).AppUpdateInstallButton() }
+
+// AppUpdateInstallButton says "Update…"
+// in the language of msgs.
+//
+// Compact button label to open the Hearth update window when a new release
+// is available.
+func (msgs Messages) AppUpdateInstallButton() string {
+	return Catalog.Format(msgs.locale, "appUpdateInstallButton", nil)
+}
+
+// AppUpdateAvailable says "Update Hearth to {version}…"
+// in the language the app shows.
+//
+// Menu item when a newer Hearth version is available.
+func AppUpdateAvailable(version string) string { return In(i18n.Locale()).AppUpdateAvailable(version) }
+
+// AppUpdateAvailable says "Update Hearth to {version}…"
+// in the language of msgs.
+//
+// Menu item when a newer Hearth version is available.
+func (msgs Messages) AppUpdateAvailable(version string) string {
+	return Catalog.Format(msgs.locale, "appUpdateAvailable", map[string]any{"version": version})
+}
+
+// AppUpdateAvailableShort says "Version {version} available"
+// in the language the app shows.
+//
+// Short subtitle under Hearth Version in Settings when a newer release is
+// available.
+func AppUpdateAvailableShort(version string) string {
+	return In(i18n.Locale()).AppUpdateAvailableShort(version)
+}
+
+// AppUpdateAvailableShort says "Version {version} available"
+// in the language of msgs.
+//
+// Short subtitle under Hearth Version in Settings when a newer release is
+// available.
+func (msgs Messages) AppUpdateAvailableShort(version string) string {
+	return Catalog.Format(msgs.locale, "appUpdateAvailableShort", map[string]any{"version": version})
+}
+
+// AppUpdateBannerTitle says "Hearth {version} is available"
+// in the language the app shows.
+//
+// Banner title on the Updates page when a newer Hearth release is
+// available.
+func AppUpdateBannerTitle(version string) string {
+	return In(i18n.Locale()).AppUpdateBannerTitle(version)
+}
+
+// AppUpdateBannerTitle says "Hearth {version} is available"
+// in the language of msgs.
+//
+// Banner title on the Updates page when a newer Hearth release is
+// available.
+func (msgs Messages) AppUpdateBannerTitle(version string) string {
+	return Catalog.Format(msgs.locale, "appUpdateBannerTitle", map[string]any{"version": version})
+}
+
+// AppUpdateBannerHint says "Download and install the new release without losing your settings."
+// in the language the app shows.
+//
+// Banner hint on the Updates page explaining that updating Hearth preserves
+// settings.
+func AppUpdateBannerHint() string { return In(i18n.Locale()).AppUpdateBannerHint() }
+
+// AppUpdateBannerHint says "Download and install the new release without losing your settings."
+// in the language of msgs.
+//
+// Banner hint on the Updates page explaining that updating Hearth preserves
+// settings.
+func (msgs Messages) AppUpdateBannerHint() string {
+	return Catalog.Format(msgs.locale, "appUpdateBannerHint", nil)
+}
+
+// AppUpdateAutoCheck says "Check for Hearth updates automatically"
+// in the language the app shows.
+//
+// Settings toggle label enabling daily background checks for Hearth
+// updates.
+func AppUpdateAutoCheck() string { return In(i18n.Locale()).AppUpdateAutoCheck() }
+
+// AppUpdateAutoCheck says "Check for Hearth updates automatically"
+// in the language of msgs.
+//
+// Settings toggle label enabling daily background checks for Hearth
+// updates.
+func (msgs Messages) AppUpdateAutoCheck() string {
+	return Catalog.Format(msgs.locale, "appUpdateAutoCheck", nil)
+}
+
+// AppUpdateAutoCheckHint says "Checks once a day in the background when a release build can update itself"
+// in the language the app shows.
+//
+// Settings toggle hint explaining automatic Hearth update checks.
+func AppUpdateAutoCheckHint() string { return In(i18n.Locale()).AppUpdateAutoCheckHint() }
+
+// AppUpdateAutoCheckHint says "Checks once a day in the background when a release build can update itself"
+// in the language of msgs.
+//
+// Settings toggle hint explaining automatic Hearth update checks.
+func (msgs Messages) AppUpdateAutoCheckHint() string {
+	return Catalog.Format(msgs.locale, "appUpdateAutoCheckHint", nil)
+}

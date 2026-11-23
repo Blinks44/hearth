@@ -139,8 +139,30 @@ func (a *App) settingsPage(c *ui.Context) {
 						if v == "" {
 							v = locales.SettingsDevelopment()
 						}
-						settingRow(c, locales.SettingsVersion(), locales.SettingsFree(), func() { ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(c.Theme().TextMuted) })
-						settingRow(c, locales.SettingsLicenses(), locales.SettingsLicensesHint(), func() {
+						versionHint := locales.SettingsFree()
+						if a.AppUpdateAvailable != "" {
+							versionHint = locales.AppUpdateAvailableShort(a.AppUpdateAvailable)
+						}
+						settingRow(c.Key("settings-version"), locales.SettingsVersion(), versionHint, func() {
+							ui.Row(c).Gap(8).Shrink(0).AlignItems(ui.Center).Children(func() {
+								ui.Text(c, v).Font(FontMono).FontSize(11).TextColor(c.Theme().TextMuted)
+								if a.CheckAppUpdate != nil {
+									if a.AppUpdateAvailable != "" {
+										ui.PrimaryButton(c.Key("check-app-update"), locales.AppUpdateInstallButton()).OnClick(a.CheckAppUpdate)
+									} else {
+										ui.Button(c.Key("check-app-update"), locales.AppUpdateCheckButton()).OnClick(a.CheckAppUpdate)
+									}
+								}
+							})
+						})
+						if a.AppUpdateEnabled && a.OnAppUpdateAutoCheck != nil {
+							settingRow(c.Key("settings-app-auto-update"), locales.AppUpdateAutoCheck(), locales.AppUpdateAutoCheckHint(), func() {
+								toggle(c, "app-auto-update", &a.AppUpdateAutoCheck).Label(locales.AppUpdateAutoCheck()).OnChange(func() {
+									a.OnAppUpdateAutoCheck(a.AppUpdateAutoCheck)
+								})
+							})
+						}
+						settingRow(c.Key("settings-licenses"), locales.SettingsLicenses(), locales.SettingsLicensesHint(), func() {
 							ui.Button(c, locales.SettingsOpen()).OnClick(func() { a.licensesOpen = true })
 						})
 					})

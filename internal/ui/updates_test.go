@@ -496,3 +496,26 @@ func TestUpdatesRowNavigation(t *testing.T) {
 		t.Fatalf("Package row navigated to %q mgr=%q tab=%d filter=%q", a.router.Location(), a.packageManager, a.packageTab, a.packageFilter)
 	}
 }
+
+func TestUpdatesHearthAppBanner(t *testing.T) {
+	a := updatesApp()
+	var clicked int
+	a.CheckAppUpdate = func() { clicked++ }
+	a.router.Push(updatesPage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	if tt.HasText("Hearth 1.1.0 is available") {
+		t.Fatal("app update banner must not show when AppUpdateAvailable is empty")
+	}
+
+	a.AppUpdateAvailable = "1.1.0"
+	tt.Frame()
+	hasTexts(t, tt, "Hearth 1.1.0 is available", "Update…")
+	if err := tt.Click("Update…"); err != nil {
+		t.Fatal(err)
+	}
+	if clicked != 1 {
+		t.Fatalf("clicked = %d, want 1", clicked)
+	}
+}

@@ -263,6 +263,19 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					}
 					stateCard(c, t.Success, locales.ProblemsChecked(), checked, caption)
 				})
+				if a.AppUpdateAvailable != "" && a.CheckAppUpdate != nil {
+					ui.Row(c.Key("hearth-app-update-banner")).Gap(12).Padding(12, 16).Radius(12).
+						Background(pal.AccentSoft).BorderWidth(1).BorderColor(Accent.Alpha(0.28)).AlignItems(ui.Center).Children(func() {
+						ui.Box(c).Size(32, 32).Shrink(0).Radius(8).Background(Accent.Alpha(0.14)).Center().Children(func() {
+							ui.Icon(c, Icon("circle-arrow-up")).Size(18, 18).TextColor(Accent)
+						})
+						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+							ui.Text(c, locales.AppUpdateBannerTitle(a.AppUpdateAvailable)).FontSize(13.5).FontWeight(600).TextColor(t.Text)
+							ui.Text(c, locales.AppUpdateBannerHint()).FontSize(12).TextColor(t.TextMuted)
+						})
+						ui.PrimaryButton(c.Key("hearth-app-update-btn"), locales.AppUpdateInstallButton()).OnClick(a.CheckAppUpdate)
+					})
+				}
 				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
 				if narrow(c) {
 					toolbar.Wrap()

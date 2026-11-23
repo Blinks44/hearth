@@ -52,6 +52,16 @@ type App struct {
 	VersionLists bool
 	// AppVersion is the build's version; "" in a development build.
 	AppVersion string
+	// AppUpdateEnabled reports whether the running build supports self-updates (mygo.Updater.Enabled()).
+	AppUpdateEnabled bool
+	// AppUpdateAvailable is the newer Hearth release version discovered by the updater plugin; "" when none.
+	AppUpdateAvailable string
+	// AppUpdateAutoCheck reflects updater.AutomaticChecks() for the Settings About card.
+	AppUpdateAutoCheck bool
+	// CheckAppUpdate triggers a manual Hearth update check (opens the native update dialog).
+	CheckAppUpdate func()
+	// OnAppUpdateAutoCheck toggles automatic background checks for Hearth releases.
+	OnAppUpdateAutoCheck func(bool)
 	// CachePath is where the version lists are kept.
 	CachePath string
 	// DataDir and LogsDir are Hearth's user data and logs directories shown in Settings.

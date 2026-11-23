@@ -8,6 +8,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func TestTrayFirstPort(t *testing.T) {
@@ -74,9 +75,11 @@ func TestBuildTrayMenuItems(t *testing.T) {
 	}
 
 	var switchedDocker, switchedKube string
-	items := buildTrayMenuItems(snap, containers, false, trayActions{
+	var appUpdateChecks int
+	items := buildTrayMenuItems(snap, containers, false, "", trayActions{
 		switchDockerCtx: func(name string) { switchedDocker = name },
 		switchKubeCtx:   func(name string) { switchedKube = name },
+		checkAppUpdate:  func() { appUpdateChecks++ },
 	})
 
 	byID := func(list []*mygo.MenuItem, id string) *mygo.MenuItem {
@@ -119,6 +122,21 @@ func TestBuildTrayMenuItems(t *testing.T) {
 	kindItem.Click(kindItem, nil)
 	if switchedKube != "kind-dev" {
 		t.Fatalf("switchedKube = %q, want kind-dev", switchedKube)
+	}
+
+	appUpdateItem := byID(items, "app-update")
+	if appUpdateItem == nil || appUpdateItem.Label != locales.AppUpdateCheck() {
+		t.Fatalf("app-update item = %+v, want %q", appUpdateItem, locales.AppUpdateCheck())
+	}
+	appUpdateItem.Click(appUpdateItem, nil)
+	if appUpdateChecks != 1 {
+		t.Fatalf("appUpdateChecks = %d, want 1", appUpdateChecks)
+	}
+
+	itemsWithUpdate := buildTrayMenuItems(snap, containers, false, "1.1.0", trayActions{})
+	appUpdateAvail := byID(itemsWithUpdate, "app-update")
+	if appUpdateAvail == nil || appUpdateAvail.Label != locales.AppUpdateAvailable("1.1.0") {
+		t.Fatalf("app-update item with available version = %+v, want %q", appUpdateAvail, locales.AppUpdateAvailable("1.1.0"))
 	}
 
 	// Verify tray icon bytes are embedded and non-empty.

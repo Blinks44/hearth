@@ -3402,5 +3402,14 @@
   "installQueueRemove": "移除 {name}",
   "installSetTitle": "环境配置集",
   "installSetCaption": "保存当前已安装的工具，或在另一台电脑上导入配置集",
-  "installOpenTool": "打开 {name}"
+  "installOpenTool": "打开 {name}",
+  "appUpdateCheck": "检查 Hearth 更新…",
+  "appUpdateCheckButton": "检查…",
+  "appUpdateInstallButton": "更新…",
+  "appUpdateAvailable": "将 Hearth 更新到 {version}…",
+  "appUpdateAvailableShort": "可用版本 {version}",
+  "appUpdateBannerTitle": "Hearth {version} 现已可用",
+  "appUpdateBannerHint": "下载并安装新版本，不会丢失您的设置。",
+  "appUpdateAutoCheck": "自动检查 Hearth 更新",
+  "appUpdateAutoCheckHint": "当当前发行版支持自动更新时，每天在后台检查一次"
 }

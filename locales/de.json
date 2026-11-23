@@ -3402,5 +3402,14 @@
   "installQueueRemove": "{name} entfernen",
   "installSetTitle": "Computer-Set",
   "installSetCaption": "Installiertes hier sichern oder ein Set auf einem anderen Rechner öffnen",
-  "installOpenTool": "{name} öffnen"
+  "installOpenTool": "{name} öffnen",
+  "appUpdateCheck": "Nach Hearth-Updates suchen…",
+  "appUpdateCheckButton": "Prüfen…",
+  "appUpdateInstallButton": "Aktualisieren…",
+  "appUpdateAvailable": "Hearth auf {version} aktualisieren…",
+  "appUpdateAvailableShort": "Version {version} verfügbar",
+  "appUpdateBannerTitle": "Hearth {version} ist verfügbar",
+  "appUpdateBannerHint": "Lade die neue Version herunter und installiere sie, ohne deine Einstellungen zu verlieren.",
+  "appUpdateAutoCheck": "Automatisch nach Hearth-Updates suchen",
+  "appUpdateAutoCheckHint": "Prüft einmal täglich im Hintergrund, wenn der Release-Build sich selbst aktualisieren kann"
 }

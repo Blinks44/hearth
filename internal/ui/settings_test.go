@@ -345,3 +345,51 @@ func TestSettingsTrayAndLogin(t *testing.T) {
 		t.Fatalf("expected rollback on error: enabled=%v err=%q", a.OpenAtLogin, a.SettingsError)
 	}
 }
+
+func TestSettingsAppUpdate(t *testing.T) {
+	a := NewApp()
+	a.AppVersion = "1.0.0"
+	a.AppUpdateEnabled = true
+	a.AppUpdateAutoCheck = true
+	var checks int
+	var autoCalls []bool
+	a.CheckAppUpdate = func() { checks++ }
+	a.OnAppUpdateAutoCheck = func(on bool) { autoCalls = append(autoCalls, on) }
+	a.router.Push(settings.path)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	if !tt.HasText("1.0.0") || !tt.HasText(locales.AppUpdateCheckButton()) || !tt.HasText(locales.AppUpdateAutoCheck()) {
+		t.Fatalf("missing app update controls: %q", tt.Texts())
+	}
+	if err := tt.Click(locales.AppUpdateCheckButton()); err != nil {
+		t.Fatal(err)
+	}
+	if checks != 1 {
+		t.Fatalf("checks = %d, want 1", checks)
+	}
+
+	info, ok := tt.AccessByRole(ui.RoleSwitch, locales.AppUpdateAutoCheck())
+	if !ok {
+		t.Fatalf("missing auto-check switch")
+	}
+	tt.ClickAt(info.Bounds.X+info.Bounds.W/2, info.Bounds.Y+info.Bounds.H/2)
+	tt.Frame()
+	if a.AppUpdateAutoCheck || !slices.Equal(autoCalls, []bool{false}) {
+		t.Fatalf("auto-check toggle: enabled=%v calls=%v", a.AppUpdateAutoCheck, autoCalls)
+	}
+
+	// When a newer version is available, the button switches to Update… and subtitle names the version.
+	a.AppUpdateAvailable = "1.1.0"
+	tt.Frame()
+	if !tt.HasText(locales.AppUpdateAvailableShort("1.1.0")) || !tt.HasText(locales.AppUpdateInstallButton()) {
+		t.Fatalf("missing available update state: %q", tt.Texts())
+	}
+	if err := tt.Click(locales.AppUpdateInstallButton()); err != nil {
+		t.Fatal(err)
+	}
+	if checks != 2 {
+		t.Fatalf("checks after Update… click = %d, want 2", checks)
+	}
+}

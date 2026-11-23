@@ -3402,5 +3402,14 @@
   "installQueueRemove": "Quitar {name}",
   "installSetTitle": "Conjunto del equipo",
   "installSetCaption": "Guarda lo instalado aquí o abre un conjunto en otro equipo",
-  "installOpenTool": "Abrir {name}"
+  "installOpenTool": "Abrir {name}",
+  "appUpdateCheck": "Buscar actualizaciones de Hearth…",
+  "appUpdateCheckButton": "Comprobar…",
+  "appUpdateInstallButton": "Actualizar…",
+  "appUpdateAvailable": "Actualizar Hearth a {version}…",
+  "appUpdateAvailableShort": "Versión {version} disponible",
+  "appUpdateBannerTitle": "Hearth {version} está disponible",
+  "appUpdateBannerHint": "Descarga e instala la nueva versión sin perder tu configuración.",
+  "appUpdateAutoCheck": "Buscar actualizaciones de Hearth automáticamente",
+  "appUpdateAutoCheckHint": "Comprueba una vez al día en segundo plano cuando la compilación admite actualizaciones"
 }

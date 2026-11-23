@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
+	"github.com/egoist/mygo/plugins/updater/native"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/ai"
@@ -50,6 +52,8 @@ func main() {
 	if self, _ := os.Executable(); len(os.Args) == 2 && self != "" && os.Getenv("SUDO_ASKPASS") == self {
 		os.Exit(askpass(locales.AskpassPrompt()))
 	}
+	// Native UI updater window: needs no webview (no WebKitGTK / WebView2).
+	mygo.Use(native.Plugin)
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)
 	}
@@ -91,9 +95,19 @@ func main() {
 		a.AppVersion = mygo.App.Version()
 		a.OpenAtLogin = mygo.App.OpenAtLogin()
 		a.OnOpenAtLogin = mygo.App.SetOpenAtLogin
+		a.CheckAppUpdate = updater.CheckForUpdates
+		a.OnAppUpdateAutoCheck = updater.SetAutomaticChecks
+		syncUpdater := func() {
+			a.AppUpdateEnabled = mygo.Updater.Enabled()
+			a.AppUpdateAvailable = updater.AvailableVersion()
+			a.AppUpdateAutoCheck = updater.AutomaticChecks()
+		}
+		syncUpdater()
 		var tray *trayController
+		var openSettings func()
 		a.OnLocale = func(tag string) {
 			mygo.App.SetLocale(tag)
+			setAppMenu(openSettings)
 			if tray != nil {
 				tray.refresh()
 			}
@@ -128,6 +142,22 @@ func main() {
 			win.Show()
 			win.Focus()
 		}
+		openSettings = func() {
+			win.Update(func() {
+				a.OpenSettings()
+				showMainWindow()
+			})
+		}
+		setAppMenu(openSettings)
+		offUpdater := updater.OnChange(func() {
+			win.Update(func() {
+				syncUpdater()
+				if tray != nil {
+					tray.refresh()
+				}
+			})
+		})
+		win.OnClosed(offUpdater)
 		mygo.App.OnActivate(func(hasVisibleWindows bool) {
 			if !hasVisibleWindows {
 				showMainWindow()

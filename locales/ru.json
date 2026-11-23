@@ -3442,5 +3442,14 @@
   "installQueueRemove": "Убрать {name}",
   "installSetTitle": "Набор компьютера",
   "installSetCaption": "Сохраните установленное здесь или откройте набор на другом компьютере",
-  "installOpenTool": "Открыть {name}"
+  "installOpenTool": "Открыть {name}",
+  "appUpdateCheck": "Проверить обновления Hearth…",
+  "appUpdateCheckButton": "Проверить…",
+  "appUpdateInstallButton": "Обновить…",
+  "appUpdateAvailable": "Обновить Hearth до {version}…",
+  "appUpdateAvailableShort": "Доступна версия {version}",
+  "appUpdateBannerTitle": "Доступна версия Hearth {version}",
+  "appUpdateBannerHint": "Скачайте и установите новый выпуск без потери настроек.",
+  "appUpdateAutoCheck": "Проверять обновления Hearth автоматически",
+  "appUpdateAutoCheckHint": "Раз в день в фоне, если установленная сборка поддерживает автообновление"
 }
