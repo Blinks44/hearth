@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/catalog"
@@ -151,31 +152,53 @@ func installPageApp(t *testing.T) *App {
 	return a
 }
 
-// Out of the wizard the page is the catalog: what is there with its
-// version and source, nothing chosen until the user says, the rarer
-// tools behind "N more", and a filter.
+// Out of the wizard the page is the categorized catalog: available tools
+// first, installed tools summarized cleanly at the bottom of each category
+// (and expandable or openable), a right-hand selection queue, and category
+// and status filters.
 func TestInstallPage(t *testing.T) {
 	a := installPageApp(t)
+	a.SaveSet = func([]byte, func(string, error)) {}
+	a.OpenSet = func(func(string, []byte, error)) {}
 	tt := newTester(a)
 	screenshot(t, tt, "install-page")
 	hasTexts(t, tt, "Install", "Everything Hearth can install", "All", "Not installed", "Installed",
-		"installed · 24.11.0", "mise · ~/.local/share/mise/installs/node/24.11.0/bin/node", "installed · 4.6.3", "installed · 2026.11.1", "installed · 2.1.322", "installed · 3.29.9", "/Applications/Cursor.app",
-		"4 more", ".NET, Deno, Zig, Elixir", "19 more", "Bundler, Maven, Gradle, kubectl, Helm, kind, AWS CLI, Google Cloud CLI, Azure CLI, Terraform, OpenTofu, jq, ripgrep, fzf, fd, bat, just, direnv, k9s", "installed: 1 of 12",
+		"Languages", "Packages & Git", "Containers & cloud", "Databases", "AI agents", "Terminal & CLI",
+		"Installed (1): Node.js LTS 24.11.0", "Installed (2): Claude Code 2.1.322, Cursor 3.29.9",
+		"installed · 4.6.3", "installed · 2026.11.1",
+		"3 more", "Deno, Zig, Elixir", "installed: 1 of 12",
 		"Temurin 25", "17", "8.4", "latest",
+		"To install", "Computer set",
 		"Switch on what to install. Hearth adds what it needs first, such as mise for languages, and shows the plan before anything changes.")
 	for _, text := range []string{"Let's set up this computer", "required", "Manages Ruby gems"} {
 		if tt.HasText(text) {
 			t.Errorf("%q on the page out of the wizard: %q", text, tt.Texts())
 		}
 	}
+	// Choosing Go highlights it, shows it in the queue card, and enables Next.
 	if err := tt.Click("Install Go"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Clear selection", "Next: plan · 1", "Chosen 1: Go. Hearth installs them with what they need and shows the plan first. It leaves what is installed alone: its updates are on the Updates page.")
+	screenshot(t, tt, "install-page-selected")
+	hasTexts(t, tt, "Clear selection", "Next: plan · 1", "Remove Go",
+		"Chosen 1: Go. Hearth installs them with what they need and shows the plan first. It leaves what is installed alone: its updates are on the Updates page.")
 	if in := a.setupInput(); len(in.Parts()) != 1 || in.Parts()[0].Tool != "go" {
 		t.Errorf("parts %+v", in.Parts())
 	}
+	// Removing from the right-hand queue card clears the tool cleanly.
+	if err := tt.Click("Remove Go"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(a.setupChosenTools()) != 0 {
+		t.Errorf("Remove Go left chosen %v", a.setupChosenTools())
+	}
+	// Choose Go again and walk to Step 2 and back.
+	if err := tt.Click("Install Go"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
 	if err := tt.Click("Next: plan · 1"); err != nil {
 		t.Fatal(err)
 	}
@@ -200,6 +223,23 @@ func TestInstallPage(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "Deno", "Zig", "Elixir")
+	// Expanding the compact installed summary shows full path and tool link.
+	if err := tt.Click("Installed (1): Node.js LTS 24.11.0"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "installed · 24.11.0", "mise · ~/.local/share/mise/installs/node/24.11.0/bin/node", "hide")
+	// Category chip filters down to one category.
+	if err := tt.Click("Terminal & CLI"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "ripgrep", "direnv")
+	if tt.HasText("Install Python") {
+		t.Errorf("category chip left Python visible: %q", tt.Texts())
+	}
+	a.setup.cat = catAll
+	tt.Frame()
 	// On the Not installed tab, items are not collapsed behind "N more".
 	a.setup.filter = 1
 	tt.Frame()
@@ -207,12 +247,21 @@ func TestInstallPage(t *testing.T) {
 	if tt.HasText("show ›") {
 		t.Errorf("filtered tab still collapses behind show ›: %q", tt.Texts())
 	}
-	// The Installed filter leaves what is there alone.
+	// The Installed filter leaves what is there alone and opens a tool page on click.
 	a.setup.filter = 2
 	tt.Frame()
-	if tt.HasText("Install Go") || !tt.HasText("installed · 24.11.0") {
+	screenshot(t, tt, "install-page-installed")
+	if tt.HasText("Install Go") || !tt.HasText("installed · 24.11.0") || !tt.HasText("installed · 2.1.322") || !tt.HasText("/Applications/Cursor.app") {
 		t.Errorf("installed filter: %q", tt.Texts())
 	}
+	if err := tt.Click("Open Node.js LTS"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.router.Path() != "/tools/node" {
+		t.Errorf("Open Node.js LTS navigated to %q, want /tools/node", a.router.Path())
+	}
+	a.router.Push(setupPage)
 	// Empty search renders full-width Nothing matches note.
 	a.setup.filter, a.setup.query = 0, "no-such-tool-xyz"
 	tt.Frame()
@@ -245,7 +294,7 @@ func TestInstallPageSystemCopy(t *testing.T) {
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "ruby", Installations: []inventory.Installation{
 		{Tool: "ruby", Version: "2.6.10", Path: "/usr/bin/ruby", OnPath: 1, Source: inventory.Source{Kind: inventory.KindSystem}}}})
 	tt := newTester(a)
-	hasTexts(t, tt, "The system has its own 2.6.10: Hearth installs one to work with beside it.", "4 more", "Install Ruby")
+	hasTexts(t, tt, "The system has its own 2.6.10: Hearth installs one to work with beside it.", "3 more", "Install Ruby")
 }
 
 // A set saved on one computer and opened on a clean one makes the plan
@@ -354,4 +403,29 @@ func TestInstallSearch(t *testing.T) {
 	a.setup.query = "no-such-tool-xyz"
 	tt.Frame()
 	hasTexts(t, tt, "Nothing matches")
+}
+
+// In Russian and dark mode, category chips, tool icons, selection queue with
+// automatic dependencies, and the Computer set card render cleanly in both
+// wide and narrow windows.
+func TestInstallPageRussianAndDark(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	a := installPageApp(t)
+	a.Locale = "ru"
+	a.SaveSet = func([]byte, func(string, error)) {}
+	a.OpenSet = func(func(string, []byte, error)) {}
+	// Leave mise uninstalled so selecting Python surfaces automatic dependency.
+	a.Snapshot.Tools[0].Managers = nil
+	a.setup.choice = map[string]bool{"python": true, "rust": true}
+	tt := newTester(a)
+	screenshot(t, tt, "install-ru-light-1280")
+	hasTexts(t, tt, "Установка", "Языки", "Пакеты и Git", "Контейнеры и облака", "Базы данных", "AI-агенты", "Терминал и CLI",
+		"К установке", "ПОСТАВИТСЯ АВТОМАТИЧЕСКИ", "mise", "Набор компьютера", "Уже установлено (1): Node.js LTS 24.11.0")
+	tt.SetDark(true)
+	tt.Frame()
+	screenshot(t, tt, "install-ru-dark-1280")
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	screenshot(t, ttNarrow, "install-ru-light-1000")
 }

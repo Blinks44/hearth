@@ -44391,3 +44391,205 @@ func DockerSocketLinkFailed(context string) string {
 func (msgs Messages) DockerSocketLinkFailed(context string) string {
 	return Catalog.Format(msgs.locale, "dockerSocketLinkFailed", map[string]any{"context": context})
 }
+
+// SetupCatLanguages says "Languages"
+// in the language the app shows.
+//
+// Short category filter chip label for programming languages on the Install
+// page.
+func SetupCatLanguages() string { return In(i18n.Locale()).SetupCatLanguages() }
+
+// SetupCatLanguages says "Languages"
+// in the language of msgs.
+//
+// Short category filter chip label for programming languages on the Install
+// page.
+func (msgs Messages) SetupCatLanguages() string {
+	return Catalog.Format(msgs.locale, "setupCatLanguages", nil)
+}
+
+// SetupCatPackages says "Packages & Git"
+// in the language the app shows.
+//
+// Category title and filter chip for Git and language package/build
+// managers on the Install page.
+func SetupCatPackages() string { return In(i18n.Locale()).SetupCatPackages() }
+
+// SetupCatPackages says "Packages & Git"
+// in the language of msgs.
+//
+// Category title and filter chip for Git and language package/build
+// managers on the Install page.
+func (msgs Messages) SetupCatPackages() string {
+	return Catalog.Format(msgs.locale, "setupCatPackages", nil)
+}
+
+// SetupCatInfra says "Containers & cloud"
+// in the language the app shows.
+//
+// Category title and filter chip for Docker, Kubernetes, and cloud CLIs on
+// the Install page.
+func SetupCatInfra() string { return In(i18n.Locale()).SetupCatInfra() }
+
+// SetupCatInfra says "Containers & cloud"
+// in the language of msgs.
+//
+// Category title and filter chip for Docker, Kubernetes, and cloud CLIs on
+// the Install page.
+func (msgs Messages) SetupCatInfra() string {
+	return Catalog.Format(msgs.locale, "setupCatInfra", nil)
+}
+
+// SetupCatTerminal says "Terminal & CLI"
+// in the language the app shows.
+//
+// Category title and filter chip for command-line utilities on the Install
+// page.
+func SetupCatTerminal() string { return In(i18n.Locale()).SetupCatTerminal() }
+
+// SetupCatTerminal says "Terminal & CLI"
+// in the language of msgs.
+//
+// Category title and filter chip for command-line utilities on the Install
+// page.
+func (msgs Messages) SetupCatTerminal() string {
+	return Catalog.Format(msgs.locale, "setupCatTerminal", nil)
+}
+
+// InstallAlreadyHave says "Installed ({count}): {names}"
+// in the language the app shows.
+//
+// Compact summary row at the bottom of a group listing already installed
+// tools.
+func InstallAlreadyHave(count int, names string) string {
+	return In(i18n.Locale()).InstallAlreadyHave(count, names)
+}
+
+// InstallAlreadyHave says "Installed ({count}): {names}"
+// in the language of msgs.
+//
+// Compact summary row at the bottom of a group listing already installed
+// tools.
+func (msgs Messages) InstallAlreadyHave(count int, names string) string {
+	return Catalog.Format(msgs.locale, "installAlreadyHave", map[string]any{"count": count, "names": names})
+}
+
+// InstallHide says "hide"
+// in the language the app shows.
+//
+// Compact toggle link to collapse expanded installed rows in a group.
+func InstallHide() string { return In(i18n.Locale()).InstallHide() }
+
+// InstallHide says "hide"
+// in the language of msgs.
+//
+// Compact toggle link to collapse expanded installed rows in a group.
+func (msgs Messages) InstallHide() string {
+	return Catalog.Format(msgs.locale, "installHide", nil)
+}
+
+// InstallQueueTitle says "To install"
+// in the language the app shows.
+//
+// Title of the right-hand selection summary card on the Install page.
+func InstallQueueTitle() string { return In(i18n.Locale()).InstallQueueTitle() }
+
+// InstallQueueTitle says "To install"
+// in the language of msgs.
+//
+// Title of the right-hand selection summary card on the Install page.
+func (msgs Messages) InstallQueueTitle() string {
+	return Catalog.Format(msgs.locale, "installQueueTitle", nil)
+}
+
+// InstallQueueDeps says "Installs automatically"
+// in the language the app shows.
+//
+// Subheading in the selection card for dependencies pulled in automatically
+// by the plan.
+func InstallQueueDeps() string { return In(i18n.Locale()).InstallQueueDeps() }
+
+// InstallQueueDeps says "Installs automatically"
+// in the language of msgs.
+//
+// Subheading in the selection card for dependencies pulled in automatically
+// by the plan.
+func (msgs Messages) InstallQueueDeps() string {
+	return Catalog.Format(msgs.locale, "installQueueDeps", nil)
+}
+
+// InstallQueueAutoHint says "Installs automatically when needed"
+// in the language the app shows.
+//
+// Short caption for base tools like Homebrew or mise that Hearth installs
+// automatically.
+func InstallQueueAutoHint() string { return In(i18n.Locale()).InstallQueueAutoHint() }
+
+// InstallQueueAutoHint says "Installs automatically when needed"
+// in the language of msgs.
+//
+// Short caption for base tools like Homebrew or mise that Hearth installs
+// automatically.
+func (msgs Messages) InstallQueueAutoHint() string {
+	return Catalog.Format(msgs.locale, "installQueueAutoHint", nil)
+}
+
+// InstallQueueRemove says "Remove {name}"
+// in the language the app shows.
+//
+// Accessible label for removing a chosen tool from the selection card.
+func InstallQueueRemove(name string) string { return In(i18n.Locale()).InstallQueueRemove(name) }
+
+// InstallQueueRemove says "Remove {name}"
+// in the language of msgs.
+//
+// Accessible label for removing a chosen tool from the selection card.
+func (msgs Messages) InstallQueueRemove(name string) string {
+	return Catalog.Format(msgs.locale, "installQueueRemove", map[string]any{"name": name})
+}
+
+// InstallSetTitle says "Computer set"
+// in the language the app shows.
+//
+// Title of the card for saving and loading hearth-set.json on the Install
+// page.
+func InstallSetTitle() string { return In(i18n.Locale()).InstallSetTitle() }
+
+// InstallSetTitle says "Computer set"
+// in the language of msgs.
+//
+// Title of the card for saving and loading hearth-set.json on the Install
+// page.
+func (msgs Messages) InstallSetTitle() string {
+	return Catalog.Format(msgs.locale, "installSetTitle", nil)
+}
+
+// InstallSetCaption says "Save what is installed here or open a set on another machine"
+// in the language the app shows.
+//
+// Caption explaining the computer set export/import card.
+func InstallSetCaption() string { return In(i18n.Locale()).InstallSetCaption() }
+
+// InstallSetCaption says "Save what is installed here or open a set on another machine"
+// in the language of msgs.
+//
+// Caption explaining the computer set export/import card.
+func (msgs Messages) InstallSetCaption() string {
+	return Catalog.Format(msgs.locale, "installSetCaption", nil)
+}
+
+// InstallOpenTool says "Open {name}"
+// in the language the app shows.
+//
+// Accessible label for opening an installed tool's page from the Install
+// catalog.
+func InstallOpenTool(name string) string { return In(i18n.Locale()).InstallOpenTool(name) }
+
+// InstallOpenTool says "Open {name}"
+// in the language of msgs.
+//
+// Accessible label for opening an installed tool's page from the Install
+// catalog.
+func (msgs Messages) InstallOpenTool(name string) string {
+	return Catalog.Format(msgs.locale, "installOpenTool", map[string]any{"name": name})
+}

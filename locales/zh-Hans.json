@@ -3389,5 +3389,18 @@
   "dockerSocketLinkNoteTitle": "其他 Docker 引擎",
   "dockerSocketLinkNoteText": "在恢复符号链接或重启应用之前，OrbStack 或 Docker Desktop 等应用将不会收到 /var/run/docker.sock 的请求。",
   "dockerSocketLinkVerified": "/var/run/docker.sock 现已指向 {context}。",
-  "dockerSocketLinkFailed": "/var/run/docker.sock 仍未指向 {context}。"
+  "dockerSocketLinkFailed": "/var/run/docker.sock 仍未指向 {context}。",
+  "setupCatLanguages": "语言",
+  "setupCatPackages": "包管理与 Git",
+  "setupCatInfra": "容器与云",
+  "setupCatTerminal": "终端与 CLI",
+  "installAlreadyHave": "已安装（{count}）：{names}",
+  "installHide": "收起",
+  "installQueueTitle": "待安装",
+  "installQueueDeps": "将自动安装",
+  "installQueueAutoHint": "需要时将自动安装",
+  "installQueueRemove": "移除 {name}",
+  "installSetTitle": "环境配置集",
+  "installSetCaption": "保存当前已安装的工具，或在另一台电脑上导入配置集",
+  "installOpenTool": "打开 {name}"
 }

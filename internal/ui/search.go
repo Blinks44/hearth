@@ -10,7 +10,6 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
-	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -326,15 +325,25 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 		if ms := entry.On(goos); len(ms) > 0 {
 			detail = locales.InstallTitle() + " · " + managerTitle(ms[0])
 		}
-		add(searchResult{id: "install:" + entry.ID, group: locales.InstallTitle(), title: title, detail: detail, words: entry.ID + " install", icon: "lucide/download", open: func() {
+		add(searchResult{id: "install:" + entry.ID, group: locales.InstallTitle(), title: title, detail: detail, words: entry.ID + " install", icon: setupToolIcon(entry.ID), open: func() {
 			a.setup.wizard = false
 			a.setup.step = 0
 			a.setup.query = ""
 			a.setup.filter = 0
-			if a.setup.more == nil {
-				a.setup.more = map[catalog.Group]bool{}
+			a.setup.cat = catAll
+			cat := setupCategory(entry)
+			if cat != catAll {
+				if a.setup.more == nil {
+					a.setup.more = map[installCat]bool{}
+				}
+				a.setup.more[cat] = true
+				if a.setupHave(entry.ID) {
+					if a.setup.showHave == nil {
+						a.setup.showHave = map[installCat]bool{}
+					}
+					a.setup.showHave[cat] = true
+				}
 			}
-			a.setup.more[entry.Group] = true
 			a.router.Push(setupPage)
 		}})
 	}

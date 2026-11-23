@@ -3429,5 +3429,18 @@
   "dockerSocketLinkNoteTitle": "Другие движки Docker",
   "dockerSocketLinkNoteText": "Другие движки (например, OrbStack или Docker Desktop) перестанут получать запросы по /var/run/docker.sock, пока вы не вернёте ссылку обратно или не перезапустите их.",
   "dockerSocketLinkVerified": "/var/run/docker.sock теперь указывает на {context}.",
-  "dockerSocketLinkFailed": "/var/run/docker.sock по-прежнему не указывает на {context}."
+  "dockerSocketLinkFailed": "/var/run/docker.sock по-прежнему не указывает на {context}.",
+  "setupCatLanguages": "Языки",
+  "setupCatPackages": "Пакеты и Git",
+  "setupCatInfra": "Контейнеры и облака",
+  "setupCatTerminal": "Терминал и CLI",
+  "installAlreadyHave": "Уже установлено ({count}): {names}",
+  "installHide": "скрыть",
+  "installQueueTitle": "К установке",
+  "installQueueDeps": "Поставится автоматически",
+  "installQueueAutoHint": "Ставится автоматически при необходимости",
+  "installQueueRemove": "Убрать {name}",
+  "installSetTitle": "Набор компьютера",
+  "installSetCaption": "Сохраните установленное здесь или откройте набор на другом компьютере",
+  "installOpenTool": "Открыть {name}"
 }

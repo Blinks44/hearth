@@ -3389,5 +3389,18 @@
   "dockerSocketLinkNoteTitle": "Otros motores Docker",
   "dockerSocketLinkNoteText": "Apps como OrbStack o Docker Desktop dejarán de recibir tráfico en /var/run/docker.sock hasta revertir el enlace o reiniciarlas.",
   "dockerSocketLinkVerified": "/var/run/docker.sock ahora apunta a {context}.",
-  "dockerSocketLinkFailed": "/var/run/docker.sock sigue sin apuntar a {context}."
+  "dockerSocketLinkFailed": "/var/run/docker.sock sigue sin apuntar a {context}.",
+  "setupCatLanguages": "Lenguajes",
+  "setupCatPackages": "Paquetes y Git",
+  "setupCatInfra": "Contenedores y nube",
+  "setupCatTerminal": "Terminal y CLI",
+  "installAlreadyHave": "Instalado ({count}): {names}",
+  "installHide": "ocultar",
+  "installQueueTitle": "Para instalar",
+  "installQueueDeps": "Se instala automáticamente",
+  "installQueueAutoHint": "Se instala automáticamente si hace falta",
+  "installQueueRemove": "Quitar {name}",
+  "installSetTitle": "Conjunto del equipo",
+  "installSetCaption": "Guarda lo instalado aquí o abre un conjunto en otro equipo",
+  "installOpenTool": "Abrir {name}"
 }

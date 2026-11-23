@@ -16751,5 +16751,75 @@
         "type": "String"
       }
     }
+  },
+  "setupCatLanguages": "Languages",
+  "@setupCatLanguages": {
+    "description": "Short category filter chip label for programming languages on the Install page."
+  },
+  "setupCatPackages": "Packages & Git",
+  "@setupCatPackages": {
+    "description": "Category title and filter chip for Git and language package/build managers on the Install page."
+  },
+  "setupCatInfra": "Containers & cloud",
+  "@setupCatInfra": {
+    "description": "Category title and filter chip for Docker, Kubernetes, and cloud CLIs on the Install page."
+  },
+  "setupCatTerminal": "Terminal & CLI",
+  "@setupCatTerminal": {
+    "description": "Category title and filter chip for command-line utilities on the Install page."
+  },
+  "installAlreadyHave": "Installed ({count}): {names}",
+  "@installAlreadyHave": {
+    "description": "Compact summary row at the bottom of a group listing already installed tools.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "installHide": "hide",
+  "@installHide": {
+    "description": "Compact toggle link to collapse expanded installed rows in a group."
+  },
+  "installQueueTitle": "To install",
+  "@installQueueTitle": {
+    "description": "Title of the right-hand selection summary card on the Install page."
+  },
+  "installQueueDeps": "Installs automatically",
+  "@installQueueDeps": {
+    "description": "Subheading in the selection card for dependencies pulled in automatically by the plan."
+  },
+  "installQueueAutoHint": "Installs automatically when needed",
+  "@installQueueAutoHint": {
+    "description": "Short caption for base tools like Homebrew or mise that Hearth installs automatically."
+  },
+  "installQueueRemove": "Remove {name}",
+  "@installQueueRemove": {
+    "description": "Accessible label for removing a chosen tool from the selection card.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "installSetTitle": "Computer set",
+  "@installSetTitle": {
+    "description": "Title of the card for saving and loading hearth-set.json on the Install page."
+  },
+  "installSetCaption": "Save what is installed here or open a set on another machine",
+  "@installSetCaption": {
+    "description": "Caption explaining the computer set export/import card."
+  },
+  "installOpenTool": "Open {name}",
+  "@installOpenTool": {
+    "description": "Accessible label for opening an installed tool's page from the Install catalog.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
