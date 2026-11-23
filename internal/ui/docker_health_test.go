@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"slices"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func TestDockerHealthUI(t *testing.T) {
 	a.Home = home
 	a.Snapshot = colimaSnapshot()
 	d := a.Snapshot.Tools[0].Docker
-	d.ConfigDir = home + "/.docker"
+	d.ConfigDir = filepath.Join(t.TempDir(), ".docker")
 	d.CredentialIssues = []inventory.DockerCredentialIssue{{Registry: "ghcr.io", Key: "ghcr.io", Name: "desktop", Replacement: "osxkeychain"}}
 	d.Registries = []inventory.DockerRegistry{{Name: "registry.example:5000"}, {Name: "ghcr.io", MissingHelper: true}}
 	d.BrokenPlugins = []string{"docker-compose"}

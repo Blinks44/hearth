@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -398,7 +399,7 @@ func TestUpdatesCheckNowAndJSAgents(t *testing.T) {
 	// Corepack update is a single step (no duplicate default step) + npm update for Claude Code.
 	if len(a.op.plan.Steps) != 2 ||
 		!slices.Equal(a.op.plan.Steps[0].Argv, []string{"corepack", "install", "-g", "pnpm@9.15.0"}) ||
-		!slices.Equal(a.op.plan.Steps[1].Argv, []string{"npm", "install", "--global", "--prefix", "/Users/me/.npm-global", "@anthropic-ai/claude-code@latest"}) {
+		!slices.Equal(a.op.plan.Steps[1].Argv, []string{"npm", "install", "--global", "--prefix", filepath.FromSlash("/Users/me/.npm-global"), "@anthropic-ai/claude-code@latest"}) {
 		t.Fatalf("steps = %+v", a.op.plan.Steps)
 	}
 }

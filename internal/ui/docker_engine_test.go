@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"runtime"
 	"testing"
 	"time"
 
@@ -197,7 +198,11 @@ func TestDockerEngineDown(t *testing.T) {
 	w.got[0](docker.Engine{}, &docker.Error{Text: "Cannot connect to the Docker daemon. Is the docker daemon running?"})
 	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-engine-down")
-	for _, text := range []string{"orbstack does not answer", "Cannot connect to the Docker daemon. Is the docker daemon running?", "Start OrbStack"} {
+	want := []string{"orbstack does not answer", "Cannot connect to the Docker daemon. Is the docker daemon running?"}
+	if runtime.GOOS == "darwin" {
+		want = append(want, "Start OrbStack")
+	}
+	for _, text := range want {
 		if !tt.HasText(text) {
 			t.Errorf("missing %q: %q", text, tt.Texts())
 		}

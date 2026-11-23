@@ -65,6 +65,9 @@ func TestSetupChoice(t *testing.T) {
 func TestSetupNext(t *testing.T) {
 	a := setupApp(t)
 	goos = runtime.GOOS
+	if goos == "windows" {
+		a.Snapshot.Tools[1].PackageManagers = []inventory.PackageManager{{ID: "winget", Name: "WinGet", Path: "winget"}}
+	}
 	built := 0
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
 		built++

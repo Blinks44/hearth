@@ -441,7 +441,7 @@ func TestProjectFindButtonAndOfferFoundFeedback(t *testing.T) {
 		a := NewApp()
 		a.Home = home
 		a.OfferFound([]string{dev}, nil, now)
-		if a.adding != nil || !strings.Contains(a.notice, "~/dev") {
+		if a.adding != nil || !strings.Contains(a.notice, filepath.FromSlash("~/dev")) {
 			t.Errorf("adding=%v notice=%q", a.adding, a.notice)
 		}
 	})

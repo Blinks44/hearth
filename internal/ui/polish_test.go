@@ -3,6 +3,7 @@ package ui
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -275,6 +276,9 @@ func TestMobileFlutterCardAndDeveloperDir(t *testing.T) {
 }
 
 func TestPathOpenSourceAndRemoveHearthEntry(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix shell rc PATH entry")
+	}
 	dir := t.TempDir()
 	rc := filepath.Join(dir, ".zshrc")
 	hearthDir := filepath.Join(dir, "hearth-bin")

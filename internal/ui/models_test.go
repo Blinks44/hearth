@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -132,16 +133,19 @@ func TestModelsNoOllamaCommand(t *testing.T) {
 }
 
 func TestModelsUnloadAndLMStudioRemove(t *testing.T) {
+	dir := t.TempDir()
+	lmDir := filepath.Join(dir, ".lmstudio", "models")
+	lmModel := filepath.Join(lmDir, "lmstudio-community", "Mistral-Nemo-12B-GGUF")
 	a := NewApp()
-	a.Home = home
+	a.Home = dir
 	tt := ui.NewTester(a.View, 1280, 820)
 	a.Snapshot = &inventory.Snapshot{Taken: tt.Now(), Tools: []inventory.ToolState{
 		{Tool: "models", Models: &inventory.ModelsState{
 			Ollama: &inventory.ModelApp{Path: "/usr/local/bin/ollama", Port: "11434", Models: []inventory.Model{
 				{Name: "qwen2.5-coder:32b", Loaded: true, Size: 19_000_000_000},
 			}},
-			LMStudio: &inventory.ModelApp{Port: "4321", Dir: home + "/.lmstudio/models", Models: []inventory.Model{
-				{Name: "Mistral-Nemo-12B-GGUF", Path: home + "/.lmstudio/models/lmstudio-community/Mistral-Nemo-12B-GGUF", Size: 7_500_000_000},
+			LMStudio: &inventory.ModelApp{Port: "4321", Dir: lmDir, Models: []inventory.Model{
+				{Name: "Mistral-Nemo-12B-GGUF", Path: lmModel, Size: 7_500_000_000},
 			}},
 		}},
 	}}
@@ -180,7 +184,7 @@ func TestModelsUnloadAndLMStudioRemove(t *testing.T) {
 	if a.op == nil || a.op.plan.Title != "Remove Mistral-Nemo-12B-GGUF" {
 		t.Fatalf("lm studio remove plan %+v", a.op)
 	}
-	hasTexts(t, tt, "remove ~/.lmstudio/models/lmstudio-community/Mistral-Nemo-12B-GGUF")
+	hasTexts(t, tt, "remove "+tilde(lmModel, dir))
 }
 
 func TestModelsPolishControls(t *testing.T) {

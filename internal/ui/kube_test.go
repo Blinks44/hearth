@@ -242,6 +242,9 @@ func TestKubeAccessCheck(t *testing.T) {
 // A tool not found installs from the catalog through mise, checked by the
 // CLI detector.
 func TestKubeInstall(t *testing.T) {
+	orig := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = orig })
 	a := kubeApp()
 	env := sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh", "PATH="}
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {

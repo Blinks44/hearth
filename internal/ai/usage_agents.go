@@ -103,7 +103,8 @@ func loadGeminiProjects(path string) map[string]string {
 			continue
 		}
 		// Gemini CLI writes projects as {"/abs/path": "slug"}, handle both directions.
-		if filepath.IsAbs(k) && !filepath.IsAbs(v) {
+		isAbs := func(p string) bool { return filepath.IsAbs(p) || strings.HasPrefix(p, "/") }
+		if isAbs(k) && !isAbs(v) {
 			out[v] = k
 		} else {
 			out[k] = v

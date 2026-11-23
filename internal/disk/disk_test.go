@@ -75,6 +75,7 @@ func TestMeasure(t *testing.T) {
 // The system's copies, an installer's in a shared folder, shims and
 // packages with a recorded size are not counted; a path shared by copies is counted once.
 func TestTargets(t *testing.T) {
+	agentDir := filepath.Join(t.TempDir(), ".claude")
 	snap := &inventory.Snapshot{
 		Tools: []inventory.ToolState{
 			{Tool: "node", Installations: []inventory.Installation{
@@ -91,13 +92,13 @@ func TestTargets(t *testing.T) {
 				{Path: "/var/lib/git", Size: 10},
 			}}}},
 		},
-		Agents: []inventory.Agent{{Dir: "/home/.claude", Installations: []inventory.Installation{{Source: inventory.Source{Kind: inventory.KindPackageManager, Root: "/brew/claude"}}}}},
+		Agents: []inventory.Agent{{Dir: agentDir, Installations: []inventory.Installation{{Source: inventory.Source{Kind: inventory.KindPackageManager, Root: "/brew/claude"}}}}},
 	}
 	snap.Tools = append(snap.Tools, inventory.ToolState{Tool: "editors", Editors: &inventory.EditorsState{Editors: []inventory.Editor{
 		{App: "/Applications/Visual Studio Code.app", Extensions: "/home/.vscode/extensions", Superseded: []string{"/home/.vscode/extensions/go-0.45.0"}},
 	}}})
 	got := Targets(snap, []inventory.Cache{{ID: "npm", Path: "/home/.npm/_cacache"}, {ID: "rustup", Paths: []string{"/home/.rustup/downloads", "/home/.rustup/tmp"}}})
-	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/home/.vscode/extensions", "/home/.vscode/extensions/go-0.45.0", "/brew/claude", "/home/.claude", "/home/.npm/_cacache", "/home/.rustup/downloads", "/home/.rustup/tmp"}
+	want := []string{"/brew/node", "/Applications/OrbStack.app", "/brew/Caskroom/app", "/Applications/App.app", "/home/.vscode/extensions", "/home/.vscode/extensions/go-0.45.0", "/brew/claude", agentDir, "/home/.npm/_cacache", "/home/.rustup/downloads", "/home/.rustup/tmp"}
 	if !slices.Equal(got, want) {
 		t.Fatalf("got %q, want %q", got, want)
 	}

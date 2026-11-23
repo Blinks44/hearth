@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -81,6 +82,9 @@ func TestColimaPluginEdit(t *testing.T) {
 }
 
 func TestColimaInstallPlan(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Colima runs on macOS and Linux")
+	}
 	t.Parallel()
 	brew := inventory.PackageManager{Path: "/opt/brew-launchers/brew", Prefix: "/opt/brew"}
 	env := sysenv.Env{"HOME=" + t.TempDir(), "PATH="}
@@ -127,6 +131,9 @@ func TestColimaInstallPlan(t *testing.T) {
 }
 
 func TestColimaInstallPlanSelectsStandaloneDocker(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Colima runs on macOS and Linux")
+	}
 	for _, tc := range []struct {
 		name       string
 		standalone bool

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -148,17 +149,18 @@ func TestSettingsLanguages(t *testing.T) {
 }
 
 func TestSettingsFoldersCustomAppsAndHiddenIssues(t *testing.T) {
+	dir := t.TempDir()
 	a := NewApp()
-	a.Home = home
-	a.CachePath = home + "/Library/Caches/Hearth/versions"
-	a.DataDir = home + "/Library/Application Support/Hearth"
-	a.LogsDir = home + "/Library/Logs/Hearth"
-	a.SkillBackups = home + "/Library/Application Support/Hearth/skill-backups"
+	a.Home = dir
+	a.CachePath = filepath.Join(dir, "Library", "Caches", "Hearth", "versions")
+	a.DataDir = filepath.Join(dir, "Library", "Application Support", "Hearth")
+	a.LogsDir = filepath.Join(dir, "Library", "Logs", "Hearth")
+	a.SkillBackups = filepath.Join(dir, "Library", "Application Support", "Hearth", "skill-backups")
 	a.Terminals = []string{"Terminal", "Ghostty"}
 	a.Snapshot = &inventory.Snapshot{
 		TerminalPath: []inventory.PathEntry{
 			{Dir: "/opt/homebrew/bin"},
-			{Dir: home + "/gone/bin", Missing: true},
+			{Dir: filepath.Join(dir, "gone", "bin"), Missing: true},
 		},
 		GUIPath: []inventory.PathEntry{{Dir: "/usr/bin"}},
 	}
@@ -237,8 +239,9 @@ func TestSettingsFoldersCustomAppsAndHiddenIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if a.Terminal != home+"/bin/myterm" {
-		t.Fatalf("Terminal = %q, want %q", a.Terminal, home+"/bin/myterm")
+	wantTerm := filepath.Join(dir, "bin", "myterm")
+	if a.Terminal != wantTerm {
+		t.Fatalf("Terminal = %q, want %q", a.Terminal, wantTerm)
 	}
 
 	// 3. Custom editor path via select + Browse… picker; chosenEditor() returns it.

@@ -234,6 +234,8 @@ func TestOverviewAgents(t *testing.T) {
 	tt := openOverview(t, a)
 	hasTexts(t, tt, "AI agents", "Skills and MCP", "Claude Code", "2 skills · 2 MCP", "Codex", "2 skills · 2 MCP",
 		"Found 0 tools and 2 AI agents.")
+	tt.SetSize(1280, 960)
+	tt.Advance(time.Second)
 	if err := tt.Click("Codex"); err != nil {
 		t.Fatal(err)
 	}

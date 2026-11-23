@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -175,6 +176,9 @@ func TestProjectMCPWithTermEnv(t *testing.T) {
 	binDir := t.TempDir()
 	cmdName := "fake-mcp-runner"
 	cmdPath := filepath.Join(binDir, cmdName)
+	if runtime.GOOS == "windows" {
+		cmdPath += ".cmd"
+	}
 	if err := os.WriteFile(cmdPath, []byte("#!/bin/sh\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}

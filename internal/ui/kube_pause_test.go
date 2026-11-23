@@ -60,6 +60,8 @@ func TestKubePause(t *testing.T) {
 		t.Fatalf("rollout switch outside the card at minimum size: %+v", b)
 	}
 	screenshot(t, tt, "kube-pause-minimum")
+	tt.SetSize(1280, 820)
+	tt.Advance(time.Second)
 	clickSwitch(false)
 	hasTexts(t, tt, "Pause the rollout for checkout-api?", "Cancel")
 	click("Cancel")

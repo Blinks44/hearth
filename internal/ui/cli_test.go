@@ -83,6 +83,9 @@ func cliTestApp() *App {
 // sign-in card, and Terraform/OpenTofu project requirements; mise's other tools
 // after them without duplicating opentofu.
 func TestCliPage(t *testing.T) {
+	orig := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = orig })
 	a := cliTestApp()
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
 		p, err := build(sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"}, ops.Terminal(nil))
@@ -157,6 +160,9 @@ func TestCliPage(t *testing.T) {
 }
 
 func TestCliLoginDialogAndSwitchPlans(t *testing.T) {
+	orig := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = orig })
 	a := cliTestApp()
 	var proposed ops.Plan
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {

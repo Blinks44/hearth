@@ -135,7 +135,7 @@ func TestSkillCatalogSelections(t *testing.T) {
 	if a.skillCatalog.agent != "codex" {
 		t.Fatalf("agent selection was lost: %s", a.skillCatalog.agent)
 	}
-	hasTexts(t, tt, "~/.agents/skills/frontend-design")
+	hasTexts(t, tt, filepath.FromSlash("~/.agents/skills/frontend-design"))
 }
 
 func TestSkillCatalogCacheDefaultAgentURLAndProject(t *testing.T) {
@@ -360,7 +360,7 @@ func TestSkillCatalogSkillsShAndDestination(t *testing.T) {
 	tt := openAI(t, a, skillsPage)
 
 	// 1. Default destination for Claude Code explicitly shows canonical files + symlink.
-	hasTexts(t, tt, "Files", "~/.agents/skills/frontend-design", "Link for Claude Code", "~/.claude/skills/frontend-design")
+	hasTexts(t, tt, "Files", filepath.FromSlash("~/.agents/skills/frontend-design"), "Link for Claude Code", filepath.FromSlash("~/.claude/skills/frontend-design"))
 
 	// 2. Switching to skills.sh tab and searching lists results and opens the GitHub repo with grill-me preselected.
 	if err := tt.Click("skills.sh"); err != nil {
@@ -388,7 +388,7 @@ func TestSkillCatalogSkillsShAndDestination(t *testing.T) {
 	if a.skillCatalog.chosen != "grill-me" {
 		t.Fatalf("expected grill-me preselected, got %q", a.skillCatalog.chosen)
 	}
-	hasTexts(t, tt, "# Grill Me", "~/.agents/skills/grill-me", "~/.claude/skills/grill-me")
+	hasTexts(t, tt, "# Grill Me", filepath.FromSlash("~/.agents/skills/grill-me"), filepath.FromSlash("~/.claude/skills/grill-me"))
 
 	// 3. Pasting an npx skills add command also loads and preselects the skill.
 	a.skillCatalog.customURL = "npx skills add mattpocock/skills --skill alpha"

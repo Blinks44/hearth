@@ -300,6 +300,9 @@ func TestInstallPageSystemCopy(t *testing.T) {
 // A set saved on one computer and opened on a clean one makes the plan
 // of the same tools; opened where everything is there, it makes none.
 func TestInstallSet(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("macOS Homebrew and official installer set plan")
+	}
 	a := installPageApp(t)
 	var saved []byte
 	a.SaveSet = func(data []byte, done func(string, error)) {

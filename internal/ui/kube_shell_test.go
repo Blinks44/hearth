@@ -26,7 +26,7 @@ func TestKubeShell(t *testing.T) {
 	click("checkout-api-7d9f8c5b-x2k4p")
 	click(locales.KubeShellAction())
 	hasTexts(t, tt, locales.KubeShellTitle(), locales.KubeShellMissingSh())
-	for _, size := range [][2]int{{1280, 820}, {1000, 680}} {
+	for _, size := range [][2]int{{1000, 680}, {1280, 820}} {
 		tt.SetSize(size[0], size[1])
 		tt.Advance(time.Second)
 		copyButton, copied := tt.Find(locales.KubeShellCopy())

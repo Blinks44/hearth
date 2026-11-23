@@ -191,6 +191,9 @@ func TestS14KubernetesPolish(t *testing.T) {
 // unversioned tools & Terraform capitalization, row click navigates while
 // Install does not, and AI+Files cards stack vertically at 1000x680.
 func TestS14ProjectsPolish(t *testing.T) {
+	orig := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = orig })
 	a := NewApp()
 	a.Home = home
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {

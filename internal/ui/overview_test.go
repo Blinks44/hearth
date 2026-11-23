@@ -762,6 +762,8 @@ func TestOverviewProjectsCompactCard(t *testing.T) {
 		t.Errorf("expected bad-1 (%+v) stacked directly under bad-0 (%+v)", b1, b0)
 	}
 	// Clicking "And 4 more" navigates to /projects.
+	tt.SetSize(1280, 960)
+	tt.Advance(time.Second)
 	if err := tt.Click("And 4 more"); err != nil {
 		t.Fatal(err)
 	}

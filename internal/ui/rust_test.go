@@ -156,6 +156,7 @@ func TestRustManagement(t *testing.T) {
 
 	// Custom target input proposes rustup target add.
 	a.rustTargetInput = "x86_64-unknown-linux-gnu"
+	tt.SetSize(1280, 960)
 	tt.Frame()
 	if err := tt.Click("Add target x86_64-unknown-linux-gnu"); err != nil {
 		t.Fatal(err)

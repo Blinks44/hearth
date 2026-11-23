@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"testing"
 	"time"
@@ -197,7 +198,11 @@ func TestProblemsHideWarningAndSelectiveRestore(t *testing.T) {
 func TestHiddenInfoExcludedFromOverviewAndSidebar(t *testing.T) {
 	a := NewApp()
 	a.Snapshot = calmSnapshot()
-	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true, Sources: []inventory.PathSource{{File: filepath.Join(home, ".zshrc"), Line: 1}}}}
+	srcFile := filepath.Join(home, ".zshrc")
+	if runtime.GOOS == "windows" {
+		srcFile = ops.UserPathName
+	}
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{Dir: filepath.Join(t.TempDir(), "gone"), Missing: true, Sources: []inventory.PathSource{{File: srcFile, Line: 1}}}}
 	a.PlanPath = func([]inventory.PathEntry, []string, func(ops.Plan, error)) {}
 	tt := openProblems(t, a)
 	hasTexts(t, tt, "PATH lists folders that do not exist")
@@ -224,10 +229,14 @@ func TestProblemCountsMatchAcrossOverviewSidebarAndProblems(t *testing.T) {
 	// Non-fixable Info: apps outside terminal do not see Node (InGUI = 0).
 	a.Snapshot.Tools[0].Installations[0].InGUI = 0
 	// Fixable Info: missing PATH directory with a known source file.
+	srcFile := filepath.Join(home, ".zshrc")
+	if runtime.GOOS == "windows" {
+		srcFile = ops.UserPathName
+	}
 	a.Snapshot.TerminalPath = []inventory.PathEntry{{
 		Dir:     filepath.Join(t.TempDir(), "gone"),
 		Missing: true,
-		Sources: []inventory.PathSource{{File: filepath.Join(home, ".zshrc"), Line: 1}},
+		Sources: []inventory.PathSource{{File: srcFile, Line: 1}},
 	}}
 	// Warning: project requires missing Node 18.
 	a.Projects = []projects.Project{testProjects()[1]}

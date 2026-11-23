@@ -187,6 +187,9 @@ func TestIssueFixes(t *testing.T) {
 			if tc.kind == issues.PathMissing && runtime.GOOS == "windows" {
 				t.Skip("Unix paths and startup files")
 			}
+			orig := goos
+			goos = "darwin"
+			t.Cleanup(func() { goos = orig })
 			a := NewApp()
 			a.Home = home
 			tc.setup(a)

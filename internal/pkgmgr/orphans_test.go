@@ -2,6 +2,7 @@ package pkgmgr
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -9,6 +10,9 @@ import (
 )
 
 func TestAPTOrphans(t *testing.T) {
+	bin := t.TempDir()
+	aptPath := filepath.Join(bin, "apt")
+	aptGetPath := filepath.Join(bin, "apt-get")
 	fake := &run.Fake{}
 	fake.Set(run.Result{Stdout: []byte(
 		"Reading package lists...\n" +
@@ -16,11 +20,11 @@ func TestAPTOrphans(t *testing.T) {
 			"  libfoo1 libbar2:arm64\n" +
 			"Remv libfoo1 [1.0-1]\n" +
 			"Remv libbar2:arm64 [2.0-1]\n",
-	)}, nil, "/usr/bin/apt-get", "--simulate", "autoremove")
+	)}, nil, aptGetPath, "--simulate", "autoremove")
 
 	m := inventory.PackageManager{
 		ID:   "apt",
-		Path: "/usr/bin/apt",
+		Path: aptPath,
 		Packages: []inventory.SystemPackage{
 			{Name: "git", Architecture: "arm64"},
 			{Name: "libfoo1", Architecture: "arm64"},

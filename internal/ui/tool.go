@@ -880,7 +880,14 @@ func displayPath(in inventory.Installation, home string) string {
 
 // tilde shortens home at the start of p to ~.
 func tilde(p, home string) string {
-	if home != "" && (p == home || strings.HasPrefix(p, home+"/") || strings.HasPrefix(p, home+`\`)) {
+	if home == "" {
+		return p
+	}
+	if p == home || strings.HasPrefix(p, home+"/") || strings.HasPrefix(p, home+`\`) {
+		return "~" + p[len(home):]
+	}
+	hp, pp := filepath.ToSlash(home), filepath.ToSlash(p)
+	if pp == hp || strings.HasPrefix(pp, hp+"/") {
 		return "~" + p[len(home):]
 	}
 	return p
