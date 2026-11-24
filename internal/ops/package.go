@@ -406,18 +406,25 @@ func windowsArg(a string) string {
 // ran, shows action done to pkgs.
 func checkPackages(action PackageAction, manager string, pkgs []inventory.SystemPackage, after inventory.PackageManager) (string, error) {
 	for _, pkg := range pkgs {
-		i := slices.IndexFunc(after.Packages, func(p inventory.SystemPackage) bool {
-			return strings.EqualFold(p.Name, pkg.Name) && (manager != "flatpak" || p.Scope == pkg.Scope) &&
-				(pkg.Architecture == "" || p.Architecture == pkg.Architecture)
-		})
+		// Check the last matching entry so older uncleaned kegs in the Cellar
+		// do not mask a newly installed version.
+		last := -1
+		for i, p := range after.Packages {
+			if strings.EqualFold(p.Name, pkg.Name) &&
+				(pkg.Kind == "" || p.Kind == "" || p.Kind == pkg.Kind) &&
+				(manager != "flatpak" || p.Scope == pkg.Scope) &&
+				(pkg.Architecture == "" || p.Architecture == pkg.Architecture) {
+				last = i
+			}
+		}
 		switch {
-		case action == PackageInstall && i < 0:
+		case action == PackageInstall && last < 0:
 			return "", errors.New(locales.PkgCheckNotInstalled(pkg.Name, after.Name))
-		case action == PackageUpgrade && i < 0:
+		case action == PackageUpgrade && last < 0:
 			return "", errors.New(locales.PkgCheckGone(pkg.Name, after.Name))
-		case action == PackageUpgrade && after.Packages[i].Version == pkg.Version:
+		case action == PackageUpgrade && after.Packages[last].Version == pkg.Version:
 			return "", errors.New(locales.PkgCheckNotUpgraded(pkg.Name, pkg.Version))
-		case action == PackageUninstall && i >= 0:
+		case action == PackageUninstall && last >= 0:
 			return "", errors.New(locales.PkgCheckNotRemoved(pkg.Name, after.Name))
 		}
 	}

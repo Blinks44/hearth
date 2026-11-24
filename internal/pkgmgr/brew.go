@@ -15,6 +15,7 @@ type brewInfo struct {
 	Formulae []struct {
 		Name      string
 		FullName  string `json:"full_name"`
+		LinkedKeg string `json:"linked_keg"`
 		Installed []struct {
 			Version            string
 			InstalledOnRequest bool `json:"installed_on_request"`
@@ -39,9 +40,10 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	if data, err := probe("--prefix"); err == nil {
 		m.Prefix = strings.TrimSpace(string(data))
 	}
+	var linked map[string]string
 	data, err := probe("info", "--json=v2", "--installed")
 	if err == nil {
-		m.Packages, err = parseBrew(data, m.Prefix)
+		m.Packages, linked, err = parseBrew(data, m.Prefix)
 		m.ReasonsKnown = err == nil
 	}
 	if err != nil {
@@ -49,7 +51,7 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	}
 	data, err = probe("outdated", "--json=v2")
 	if err == nil {
-		err = brewUpdates(m, data)
+		err = brewUpdates(m, data, linked)
 	}
 	if err != nil {
 		m.Warnings = append(m.Warnings, err.Error())
@@ -63,25 +65,29 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	}
 }
 
-func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
+func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[string]string, error) {
 	var info brewInfo
 	if err := json.Unmarshal(data, &info); err != nil {
-		return nil, fmt.Errorf("brew installed: %w", err)
+		return nil, nil, fmt.Errorf("brew installed: %w", err)
 	}
 	if info.Formulae == nil && info.Casks == nil {
-		return nil, fmt.Errorf("brew installed: missing package lists")
+		return nil, nil, fmt.Errorf("brew installed: missing package lists")
 	}
 	var out []inventory.SystemPackage
+	linked := map[string]string{}
 	for _, f := range info.Formulae {
+		// A tap's formula keeps its full name, as brew outdated reports it.
+		name := f.FullName
+		if name == "" {
+			name = f.Name
+		}
+		if f.LinkedKeg != "" {
+			linked[name] = f.LinkedKeg
+		}
 		for _, v := range f.Installed {
 			path := ""
 			if prefix != "" {
 				path = filepath.Join(prefix, "Cellar", f.Name, v.Version)
-			}
-			// A tap's formula keeps its full name, as brew outdated reports it.
-			name := f.FullName
-			if name == "" {
-				name = f.Name
 			}
 			deps := slices.Clone(f.Dependencies)
 			for _, d := range v.RuntimeDependencies {
@@ -98,7 +104,7 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 		if err := json.Unmarshal(c.Installed, &version); err != nil {
 			var versions []string
 			if err := json.Unmarshal(c.Installed, &versions); err != nil {
-				return out, fmt.Errorf("brew cask %s installed: %w", c.Token, err)
+				return out, linked, fmt.Errorf("brew cask %s installed: %w", c.Token, err)
 			}
 			version = strings.Join(versions, ", ")
 		}
@@ -108,7 +114,7 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, error) {
 		}
 		out = append(out, inventory.SystemPackage{Name: c.Token, Version: version, Kind: "cask", Path: path, Artifacts: caskApps(c.Artifacts)})
 	}
-	return out, nil
+	return out, linked, nil
 }
 
 // caskApps are where a cask's apps went, as /Applications/OrbStack.app;
@@ -128,7 +134,7 @@ func caskApps(artifacts []json.RawMessage) []string {
 	return out
 }
 
-func brewUpdates(m *inventory.PackageManager, data []byte) error {
+func brewUpdates(m *inventory.PackageManager, data []byte, linked map[string]string) error {
 	// Both lists name a package by "name": a formula's full name and a
 	// cask's token.
 	type outdated struct {
@@ -151,8 +157,24 @@ func brewUpdates(m *inventory.PackageManager, data []byte) error {
 	for _, c := range info.Casks {
 		updates[[2]string{"cask", c.Name}] = c.Current
 	}
+	// A formula with several uncleaned kegs in the Cellar has one upgrade:
+	// attach it to the linked keg, or to the last installed keg when
+	// unlinked (as for keg-only formulae).
+	target := map[[2]string]int{}
+	matchedLinked := map[[2]string]bool{}
 	for i, p := range m.Packages {
-		m.Packages[i].Available = updates[[2]string{p.Kind, p.Name}]
+		m.Packages[i].Available = ""
+		key := [2]string{p.Kind, p.Name}
+		if updates[key] == "" || matchedLinked[key] {
+			continue
+		}
+		target[key] = i
+		if p.Kind == "formula" && linked[p.Name] != "" && p.Version == linked[p.Name] {
+			matchedLinked[key] = true
+		}
+	}
+	for key, idx := range target {
+		m.Packages[idx].Available = updates[key]
 	}
 	return nil
 }

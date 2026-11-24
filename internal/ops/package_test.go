@@ -186,7 +186,10 @@ func TestPackagePlanVerify(t *testing.T) {
 		ok     bool
 	}{
 		{"updated", PackageUpgrade, []inventory.SystemPackage{{Name: "jq", Version: "1.8.2"}}, true},
+		{"updated with older keg kept", PackageUpgrade, []inventory.SystemPackage{{Name: "jq", Kind: "formula", Version: "1.7.1"}, {Name: "jq", Kind: "formula", Version: "1.8.2"}}, true},
 		{"still old", PackageUpgrade, []inventory.SystemPackage{{Name: "jq", Version: "1.7.1"}}, false},
+		{"still old with older keg kept", PackageUpgrade, []inventory.SystemPackage{{Name: "jq", Kind: "formula", Version: "1.6.0"}, {Name: "jq", Kind: "formula", Version: "1.7.1"}}, false},
+		{"same-name cask does not verify formula", PackageUpgrade, []inventory.SystemPackage{{Name: "jq", Kind: "formula", Version: "1.7.1"}, {Name: "jq", Kind: "cask", Version: "1.8.2"}}, false},
 		{"gone on update", PackageUpgrade, nil, false},
 		{"removed", PackageUninstall, nil, true},
 		{"still there", PackageUninstall, []inventory.SystemPackage{{Name: "jq", Version: "1.7.1"}}, false},

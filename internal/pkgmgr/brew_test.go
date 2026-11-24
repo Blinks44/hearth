@@ -77,3 +77,56 @@ func TestBrew(t *testing.T) {
 		t.Fatalf("%+v", m)
 	}
 }
+
+// A formula with several uncleaned kegs in the Cellar keeps every keg in
+// Packages, but reports a single update on the linked keg (or the last
+// installed keg when unlinked, as for keg-only formulae).
+func TestBrewMultipleKegs(t *testing.T) {
+	t.Parallel()
+	f := &run.Fake{}
+	f.Stdout("/opt/homebrew\n", "brew", "--prefix")
+	f.Stdout(`{
+		"formulae": [
+			{"name":"simdjson","full_name":"simdjson","linked_keg":"5.2.0","installed":[{"version":"5.0.5"},{"version":"5.1.1"},{"version":"5.2.0"}]},
+			{"name":"switched","full_name":"switched","linked_keg":"1.1","installed":[{"version":"1.0"},{"version":"1.1"},{"version":"1.2"}]},
+			{"name":"node@24","full_name":"node@24","linked_keg":null,"installed":[{"version":"24.22.3_1","installed_on_request":true},{"version":"24.22.3_2","installed_on_request":true}]}
+		],
+		"casks": []
+	}`, "brew", "info", "--json=v2", "--installed")
+	f.Stdout(`{
+		"formulae": [
+			{"name":"simdjson","installed_versions":["5.0.5","5.1.1","5.2.0"],"current_version":"5.3.0"},
+			{"name":"switched","installed_versions":["1.0","1.1","1.2"],"current_version":"2.0"},
+			{"name":"node@24","installed_versions":["24.22.3_1","24.22.3_2"],"current_version":"24.22.4"}
+		],
+		"casks": []
+	}`, "brew", "outdated", "--json=v2")
+	f.Stdout("", "brew", "tap")
+	probe := func(args ...string) ([]byte, error) {
+		res, err := f.Run(context.Background(), run.Cmd{Args: append([]string{"brew"}, args...)})
+		return res.Stdout, err
+	}
+	m := inventory.PackageManager{}
+	brew(&m, probe)
+	if len(m.Warnings) != 0 || !m.UpdatesKnown {
+		t.Fatalf("%+v", m)
+	}
+	want := []struct{ name, version, available string }{
+		{"simdjson", "5.0.5", ""},
+		{"simdjson", "5.1.1", ""},
+		{"simdjson", "5.2.0", "5.3.0"},
+		{"switched", "1.0", ""},
+		{"switched", "1.1", "2.0"},
+		{"switched", "1.2", ""},
+		{"node@24", "24.22.3_1", ""},
+		{"node@24", "24.22.3_2", "24.22.4"},
+	}
+	if len(m.Packages) != len(want) {
+		t.Fatalf("got %d packages: %+v", len(m.Packages), m.Packages)
+	}
+	for i, w := range want {
+		if p := m.Packages[i]; p.Name != w.name || p.Version != w.version || p.Available != w.available {
+			t.Errorf("%d: got %s %s (available %q), want %s %s (available %q)", i, p.Name, p.Version, p.Available, w.name, w.version, w.available)
+		}
+	}
+}
