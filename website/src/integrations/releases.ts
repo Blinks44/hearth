@@ -71,8 +71,8 @@ export function parseGitHubRelease(payload: GitHubReleasePayload): ReleaseAssets
     windowsArm64: findAsset((name) => name.endsWith('.exe') && name.includes('arm64')),
     linuxDebAmd64: findAsset((name) => name.endsWith('.deb') && (name.includes('amd64') || name.includes('x86_64'))),
     linuxDebArm64: findAsset((name) => name.endsWith('.deb') && name.includes('arm64')),
-    linuxTarAmd64: findAsset((name) => name.endsWith('.tar.gz') && (name.includes('amd64') || name.includes('x86_64'))),
-    linuxTarArm64: findAsset((name) => name.endsWith('.tar.gz') && name.includes('arm64')),
+    linuxTarAmd64: findAsset((name) => name.includes('linux') && name.endsWith('.tar.gz') && (name.includes('amd64') || name.includes('x86_64'))),
+    linuxTarArm64: findAsset((name) => name.includes('linux') && name.endsWith('.tar.gz') && name.includes('arm64')),
     isFallback: false,
   }
 }

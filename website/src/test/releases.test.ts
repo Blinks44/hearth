@@ -22,6 +22,8 @@ describe('releases loader', () => {
         { name: 'hearth-setup-1.0.0-arm64.exe', browser_download_url: 'https://dl/win-arm64.exe' },
         { name: 'hearth_1.0.0_amd64.deb', browser_download_url: 'https://dl/linux-x64.deb' },
         { name: 'hearth_1.0.0_arm64.deb', browser_download_url: 'https://dl/linux-arm64.deb' },
+        { name: 'hearth-1.0.0-windows-amd64.tar.gz', browser_download_url: 'https://dl/win-x64.tar.gz' },
+        { name: 'hearth-1.0.0-windows-arm64.tar.gz', browser_download_url: 'https://dl/win-arm64.tar.gz' },
         { name: 'hearth-1.0.0-linux-amd64.tar.gz', browser_download_url: 'https://dl/linux-x64.tar.gz' },
         { name: 'hearth-1.0.0-linux-arm64.tar.gz', browser_download_url: 'https://dl/linux-arm64.tar.gz' },
         { name: 'SHA256SUMS.txt', browser_download_url: 'https://dl/SHA256SUMS.txt' },
