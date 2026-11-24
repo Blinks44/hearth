@@ -97,7 +97,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 			if label := tilde(g.ConfigFile, a.Home); label != "" {
 				ui.Text(c, label).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 			}
-			if g.ConfigFile != "" && !g.ConfigMissing && a.Shell != nil {
+			if g.ConfigFile != "" && !g.ConfigMissing && a.canOpenFile() {
 				iconButton(c.Key("open-gitconfig"), "external-link", locales.OpenFile(filepath.Base(g.ConfigFile))).
 					OnClick(func() { a.openFile(c, g.ConfigFile) })
 			}
@@ -138,7 +138,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 	sshAside := func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.GitSSHAside()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-			if a.Home != "" && !g.SSHConfigMissing && a.Shell != nil {
+			if a.Home != "" && !g.SSHConfigMissing && a.canOpenFile() {
 				sshConfig := filepath.Join(a.Home, ".ssh", "config")
 				iconButton(c.Key("open-ssh-config"), "external-link", locales.OpenFile("~/.ssh/config")).
 					OnClick(func() { a.openFile(c, sshConfig) })

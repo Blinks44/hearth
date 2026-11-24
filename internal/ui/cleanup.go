@@ -250,22 +250,22 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						if a.Sizes != nil {
 							size = cleanupAmount(restorable)
 						}
-						listRow(c, locales.CleanupAtOnceRow(), false, locales.CleanupAtOnceCaption(size), func() {})
+						listRowWrapped(c, locales.CleanupAtOnceRow(), locales.CleanupAtOnceCaption(size), func() {})
 						if len(staleProjects) > 0 {
-							listRow(c, locales.CleanupAtOnceProjectsRow(), false, locales.CleanupAtOnceProjectsCaption(cleanupAmount(staleProjects)), func() {})
+							listRowWrapped(c, locales.CleanupAtOnceProjectsRow(), locales.CleanupAtOnceProjectsCaption(cleanupAmount(staleProjects)), func() {})
 						}
 					})
 					listCard(c, locales.CleanupYourChoice(), "", func() {
-						listRow(c, locales.CleanupCopiesRow(), false, locales.CleanupCopiesCaption(), func() {})
-						listRow(c, locales.CleanupDockerRow(), false, locales.CleanupDockerCaption(), func() {})
-						listRow(c, locales.CleanupGroupProjects(), false, locales.CleanupProjectsCaption(), func() {})
-						listRow(c, locales.CleanupModelsRow(), false, locales.CleanupModelsCaption(), func() {})
-						listRow(c, locales.CleanupHistoryRow(), false, locales.ReasonForgotten(), func() {})
+						listRowWrapped(c, locales.CleanupCopiesRow(), locales.CleanupCopiesCaption(), func() {})
+						listRowWrapped(c, locales.CleanupDockerRow(), locales.CleanupDockerCaption(), func() {})
+						listRowWrapped(c, locales.CleanupGroupProjects(), locales.CleanupProjectsCaption(), func() {})
+						listRowWrapped(c, locales.CleanupModelsRow(), locales.CleanupModelsCaption(), func() {})
+						listRowWrapped(c, locales.CleanupHistoryRow(), locales.ReasonForgotten(), func() {})
 					})
 					listCard(c, locales.CleanupNotOffered(), "", func() {
-						listRow(c, locales.CleanupVolumes(), false, locales.CleanupVolumesCaption(), func() {})
-						listRow(c, locales.CleanupSystem(), false, locales.CleanupSystemCaption(), func() {})
-						listRow(c, locales.CleanupProjectVersions(), false, locales.CleanupProjectVersionsCaption(), func() {})
+						listRowWrapped(c, locales.CleanupVolumes(), locales.CleanupVolumesCaption(), func() {})
+						listRowWrapped(c, locales.CleanupSystem(), locales.CleanupSystemCaption(), func() {})
+						listRowWrapped(c, locales.CleanupProjectVersions(), locales.CleanupProjectVersionsCaption(), func() {})
 					})
 				})
 			})
@@ -324,7 +324,14 @@ func (a *App) dockerTarget() ops.DockerTarget {
 	if i < 0 || st.Docker == nil {
 		return ops.DockerTarget{}
 	}
-	return ops.DockerTarget{CLI: st.Installations[i].Path, Context: st.Docker.Selected}
+	endpoint := ""
+	for _, k := range st.Docker.Contexts {
+		if k.Name == st.Docker.Selected {
+			endpoint = k.Endpoint
+			break
+		}
+	}
+	return ops.DockerTarget{CLI: st.Installations[i].Path, Context: st.Docker.Selected, Endpoint: endpoint}
 }
 
 // groupCheckbox is a group's check box: checked when every row shown the
@@ -428,7 +435,7 @@ func (a *App) candidateTitle(cand cleanup.Candidate) string {
 	case cleanup.UnneededPackage:
 		return cand.ID + " · " + cand.Manager
 	case cleanup.BuildCache:
-		return "Build Cache"
+		return locales.DockerImageBuildCache()
 	case cleanup.UnusedImages:
 		return locales.CleanupImages()
 	case cleanup.StoppedContainers:

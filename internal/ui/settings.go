@@ -297,6 +297,7 @@ func staleIssueTitle(key, home string) string {
 	switch kind {
 	case issues.InstructionDiffers,
 		issues.DockerUnavailable, issues.DockerDenied, issues.DockerSignIn,
+		issues.DatabasePortConflict,
 		issues.Duplicate, issues.GUIDiffers,
 		issues.ProjectMissing, issues.ProjectTerminal,
 		issues.Unsupported, issues.PathCurrentDir, issues.PathMissing,

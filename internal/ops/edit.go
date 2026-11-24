@@ -28,7 +28,11 @@ type FileEdit struct {
 	// DropCopy removes the copy of the file once the plan got through, as
 	// one holding a secret the plan takes out of it would keep it.
 	DropCopy bool
-	preview  []DiffLine
+	// Mode sets the permissions for a new file when non-zero (default 0644).
+	// A private mode (no group/other bits) also creates missing parent
+	// directories with 0700.
+	Mode    os.FileMode
+	preview []DiffLine
 }
 
 // Masked is text with e.Hide's values hidden, as the diff shows it.
@@ -209,7 +213,14 @@ func applyEdit(e FileEdit, now time.Time) (backup string, err error) {
 	if string(data) != e.Before || existed == e.New {
 		return "", fmt.Errorf("%s: %w", e.Path, ErrChanged)
 	}
-	mode := os.FileMode(0o644)
+	mode := e.Mode
+	if mode == 0 {
+		mode = 0o644
+	}
+	dirMode := os.FileMode(0o755)
+	if mode&0o077 == 0 {
+		dirMode = 0o700
+	}
 	if existed {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -220,7 +231,7 @@ func applyEdit(e FileEdit, now time.Time) (backup string, err error) {
 		if err := os.WriteFile(backup, data, mode); err != nil {
 			return "", fmt.Errorf("back up %s: %w", e.Path, err)
 		}
-	} else if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	} else if err := os.MkdirAll(filepath.Dir(path), dirMode); err != nil {
 		return "", fmt.Errorf("make the folder of %s: %w", e.Path, err)
 	}
 	if err := writeFile(path, []byte(e.After), mode); err != nil {

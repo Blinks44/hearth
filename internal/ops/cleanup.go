@@ -48,9 +48,9 @@ func CacheCommand(id string) []string { return cacheCommands[id] }
 // remove.
 const cleanupTimeout = 10 * time.Minute
 
-// DockerTarget is the Docker CLI's path and the context whose engine a
-// cleanup prunes.
-type DockerTarget struct{ CLI, Context string }
+// DockerTarget is the Docker CLI's path, context, and optional endpoint whose
+// engine a cleanup prunes.
+type DockerTarget struct{ CLI, Context, Endpoint string }
 
 // CountDocker asks Docker again what pruning would free, for what a
 // cleanup freed.
@@ -219,10 +219,17 @@ func CleanupPlan(cands []cleanup.Candidate, _ []string, s *inventory.Snapshot, e
 			}
 			pnpm = pnpm || c.ID == "pnpm"
 		case cleanup.BuildCache, cleanup.UnusedImages, cleanup.StoppedContainers:
-			if target.CLI == "" || !contextRef.MatchString(target.Context) {
+			if target.CLI == "" || (target.Endpoint == "" && !contextRef.MatchString(target.Context)) {
 				continue
 			}
-			steps = []Step{{Argv: append([]string{target.CLI, "--context", target.Context}, dockerPrune[c.Kind]...)}}
+			if target.Endpoint != "" {
+				steps = []Step{{
+					Argv: append([]string{target.CLI, "--host", target.Endpoint}, dockerPrune[c.Kind]...),
+					Env:  []string{"DOCKER_CONTEXT="},
+				}}
+			} else {
+				steps = []Step{{Argv: append([]string{target.CLI, "--context", target.Context}, dockerPrune[c.Kind]...)}}
+			}
 		case cleanup.ProjectInstalls, cleanup.OldExtensions, cleanup.AgentHistory:
 			for _, path := range c.Paths {
 				steps = append(steps, Step{Remove: path})

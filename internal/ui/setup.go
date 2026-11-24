@@ -485,7 +485,7 @@ func (a *App) setupButtons(c *ui.Context) {
 	s := &a.setup
 	switch {
 	case s.step == 3:
-		if a.Shell != nil && a.JournalPath != "" {
+		if a.canOpenFile() && a.JournalPath != "" {
 			ui.Button(c.Key("setup-journal"), locales.OpOpenJournal()).Height(controlHeight).OnClick(func() { a.openFile(c, a.JournalPath) })
 		}
 		// The wizard ends on the Overview; the page shows the catalog
@@ -1264,11 +1264,15 @@ func (a *App) setupBaseRow(c *ui.Context, in ops.Setup, e catalog.Entry, wizard 
 					clipped(c, caption).FontSize(11).TextColor(pal.TextFaint)
 				}
 			})
+			short, _, trimmed := strings.Cut(version, "-")
 			label := locales.InstalledPlain()
-			if version != "" {
-				label = locales.InstalledVersion(version)
+			if short != "" {
+				label = locales.InstalledVersion(short)
 			}
-			chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, label)
+			tag := chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, label)
+			if trimmed {
+				tag.Tooltip(locales.InstalledVersion(version))
+			}
 			if path != "" {
 				ui.Icon(c, Icon("chevron-right")).Size(13, 13).Shrink(0).TextColor(pal.TextFaint)
 			}

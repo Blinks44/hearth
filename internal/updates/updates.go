@@ -138,10 +138,18 @@ func Find(s *inventory.Snapshot, ps []projects.Project, l Lists, now time.Time) 
 			if !ok || to == "" || installed[in.Source.Manager+"@"+to] || !newer(to, in.Version) || !keeps(ts.Tool, wants, in.Version, to, l.nodeLines()) {
 				continue
 			}
-			out = append(out, Update{Kind: Patch, Tool: ts.Tool, Copy: in, Version: to, LTS: l.lts(to)})
+			lts := ""
+			if ts.Tool == "node" {
+				lts = l.lts(to)
+			}
+			out = append(out, Update{Kind: Patch, Tool: ts.Tool, Copy: in, Version: to, LTS: lts})
 		}
 		if t.newest != "" && newest != nil && !lines[t.line(t.newest)] && newer(t.newest, newest.Original()) {
-			out = append(out, Update{Kind: NewLine, Tool: ts.Tool, Version: t.newest, LTS: l.lts(t.newest)})
+			lts := ""
+			if ts.Tool == "node" {
+				lts = l.lts(t.newest)
+			}
+			out = append(out, Update{Kind: NewLine, Tool: ts.Tool, Version: t.newest, LTS: lts})
 		}
 	}
 	out = append(out, l.agents(s.Agents)...)

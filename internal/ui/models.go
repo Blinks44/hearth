@@ -356,9 +356,9 @@ func (a *App) modelServers(c *ui.Context, apps []modelApp) {
 				if m.name != "Ollama" {
 					return
 				}
-				action, label := ops.ServiceStart, locales.ServiceStart()
+				action, label := ops.ServiceStart, locales.SetupStart()
 				if running {
-					action, label = ops.ServiceStop, locales.ServiceStop()
+					action, label = ops.ServiceStop, locales.PortsStop()
 				}
 				if plan, ok := ops.OllamaServerPlan(action, *m.app, a.detect("databases")); ok {
 					ui.Button(c.Key("ollama-server-toggle"), label).Shrink(0).OnClick(func() { a.Propose(plan) })

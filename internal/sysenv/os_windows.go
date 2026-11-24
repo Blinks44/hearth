@@ -18,3 +18,5 @@ func readOS() (OS, error) {
 	}
 	return OS{Name: "Windows", Version: fmt.Sprintf("%d.%d.%d", v.MajorVersion, v.MinorVersion, v.BuildNumber)}, nil
 }
+
+func totalMemoryBytes() uint64 { return 0 }

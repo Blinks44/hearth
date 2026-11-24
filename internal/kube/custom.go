@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/client-go/util/jsonpath"
@@ -39,8 +40,9 @@ type CustomColumn struct {
 }
 
 type CustomDefinitions struct {
-	Items []CustomDefinition
-	Err   error
+	Items  []CustomDefinition
+	Err    error
+	Access *ListAccess
 }
 
 type CustomCondition struct {
@@ -89,8 +91,73 @@ func (d CustomDefinition) valid() bool {
 		!strings.Contains(d.Names.Plural, ".") && !strings.Contains(version, ".")
 }
 
-// ListCustomDefinitions reads the cluster-wide CRD catalog independently of workloads.
+// ListCustomDefinitions reads the cluster-wide CRD catalog alongside the user's
+// list permissions for the active namespace scope.
 func ListCustomDefinitions(ctx context.Context, r run.Runner, env sysenv.Env, t Target) *CustomDefinitions {
+	result := &CustomDefinitions{}
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		defs := readCustomDefinitions(ctx, r, env, t)
+		result.Items, result.Err = defs.Items, defs.Err
+	})
+	wg.Go(func() {
+		result.Access = readListAccess(ctx, r, env, t)
+	})
+	wg.Wait()
+	return result
+}
+
+// ProbeCustomPresence checks which CRDs have at least one object in t's
+// namespace scope using lightweight limit=1 metadata list requests over the
+// direct API client. Map entries are present only for CRDs whose emptiness
+// could be confirmed; missing keys fail open.
+func ProbeCustomPresence(ctx context.Context, env sysenv.Env, t Target, defs []CustomDefinition) map[string]bool {
+	if t.API == nil || len(defs) == 0 {
+		return nil
+	}
+	probeCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
+	defer cancel()
+
+	workers := min(8, len(defs))
+	jobs := make(chan CustomDefinition)
+	var (
+		mu      sync.Mutex
+		present = make(map[string]bool, len(defs))
+		wg      sync.WaitGroup
+	)
+	for range workers {
+		wg.Go(func() {
+			for def := range jobs {
+				if probeCtx.Err() != nil {
+					return
+				}
+				has, known := t.API.hasCustomObject(probeCtx, env, t, def)
+				if !known {
+					continue
+				}
+				mu.Lock()
+				present[def.Name()] = has
+				mu.Unlock()
+			}
+		})
+	}
+sendLoop:
+	for _, def := range defs {
+		select {
+		case jobs <- def:
+		case <-probeCtx.Done():
+			break sendLoop
+		}
+	}
+	close(jobs)
+	wg.Wait()
+	if len(present) == 0 {
+		return nil
+	}
+	return present
+}
+
+func readCustomDefinitions(ctx context.Context, r run.Runner, env sysenv.Env, t Target) *CustomDefinitions {
 	var list struct {
 		Items []struct{ Spec CustomDefinition }
 	}
@@ -111,7 +178,7 @@ func ListCustomDefinitions(ctx context.Context, r run.Runner, env sysenv.Env, t 
 }
 
 func readCustomCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (Cluster, error) {
-	defs := ListCustomDefinitions(ctx, r, env, t)
+	defs := readCustomDefinitions(ctx, r, env, t)
 	if defs.Err != nil {
 		return Cluster{}, defs.Err
 	}

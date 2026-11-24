@@ -182,7 +182,35 @@ func reads(m inventory.Manager, req Requirement) bool {
 			return false
 		}
 	}
-	return slices.Contains(m.Files, file)
+	if slices.Contains(m.Files, file) {
+		return true
+	}
+	if m.Name == "mise" {
+		return miseIdiomaticFile(req.Tool, file)
+	}
+	return false
+}
+
+func miseIdiomaticFile(tool, file string) bool {
+	switch tool {
+	case "node":
+		return file == ".nvmrc" || file == ".node-version"
+	case "python":
+		return file == ".python-version"
+	case "ruby":
+		return file == ".ruby-version"
+	case "go":
+		return file == ".go-version"
+	case "java":
+		return file == ".java-version" || file == ".sdkmanrc"
+	case "deno":
+		return file == ".dvmrc" || file == ".deno-version"
+	case "terraform":
+		return file == ".terraform-version"
+	case "tofu":
+		return file == ".opentofu-version" || file == ".tofu-version"
+	}
+	return false
 }
 
 // newest is the copy of the newest version that match accepts; nil when
@@ -272,8 +300,11 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 			}, nil
 		}
 	}
-	if tool == "terraform" || tool == "tofu" {
-		want = terraformConstraint(want)
+	switch tool {
+	case "terraform", "tofu", "ruby":
+		want = pessimisticConstraint(want, "~>")
+	case "python":
+		want = pessimisticConstraint(want, "~=")
 	}
 	c, err := semver.NewConstraint(want)
 	if err != nil {
@@ -285,8 +316,9 @@ func matcher(tool, want string, lines map[int]versions.Line) (func(inventory.Ins
 	}, nil
 }
 
-// snapshotTool returns a tool's state from s, synthesizing terraform and tofu
-// from the cli detector and mise installs since they share the CLI page.
+// snapshotTool returns a tool's state from s, synthesizing terraform, tofu,
+// deno and uv from the cli/python/mise detectors when they have no dedicated
+// ToolState entry.
 func snapshotTool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool) {
 	if s == nil {
 		return inventory.ToolState{}, false
@@ -294,9 +326,17 @@ func snapshotTool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool
 	if ts, ok := s.Tool(tool); ok {
 		return ts, true
 	}
-	if tool != "terraform" && tool != "tofu" {
+	switch tool {
+	case "terraform", "tofu", "deno":
+		return snapshotCLITool(s, tool)
+	case "uv":
+		return snapshotUVTool(s)
+	default:
 		return inventory.ToolState{}, false
 	}
+}
+
+func snapshotCLITool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool) {
 	cli, ok := s.Tool("cli")
 	if !ok || cli.Err != "" {
 		return inventory.ToolState{}, false
@@ -309,28 +349,61 @@ func snapshotTool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool
 			}
 		}
 	}
-	if mise, ok := s.Tool("mise"); ok && mise.Err == "" {
-		for _, mt := range mise.MiseTools {
-			if mt.Name != tool && (tool != "tofu" || mt.Name != "opentofu") {
-				continue
+	appendMiseToolInstalls(s, tool, &ts)
+	appendMiseToolManager(s, tool, &ts)
+	return ts, true
+}
+
+func snapshotUVTool(s *inventory.Snapshot) (inventory.ToolState, bool) {
+	py, ok := s.Tool("python")
+	if !ok || py.Err != "" {
+		return inventory.ToolState{}, false
+	}
+	ts := inventory.ToolState{Tool: "uv"}
+	for _, m := range py.Managers {
+		if m.Name == "uv" && m.Version != "" {
+			ts.Installations = append(ts.Installations, inventory.Installation{
+				Tool:    "uv",
+				Version: m.Version,
+				OnPath:  1,
+				Default: true,
+			})
+			break
+		}
+	}
+	appendMiseToolInstalls(s, "uv", &ts)
+	appendMiseToolManager(s, "uv", &ts)
+	return ts, true
+}
+
+func appendMiseToolInstalls(s *inventory.Snapshot, tool string, ts *inventory.ToolState) {
+	mise, ok := s.Tool("mise")
+	if !ok || mise.Err != "" {
+		return
+	}
+	for _, mt := range mise.MiseTools {
+		if mt.Name != tool && (tool != "tofu" || mt.Name != "opentofu") {
+			continue
+		}
+		for _, in := range mt.Installations {
+			in.Tool = tool
+			dup := false
+			for i := range ts.Installations {
+				ex := &ts.Installations[i]
+				if ex.Source.Manager == "mise" && !ex.Source.Shim && ex.Version == in.Version {
+					ex.Default = ex.Default || in.Default
+					dup = true
+					break
+				}
 			}
-			for _, in := range mt.Installations {
-				in.Tool = tool
-				dup := false
-				for i := range ts.Installations {
-					ex := &ts.Installations[i]
-					if ex.Source.Manager == "mise" && !ex.Source.Shim && ex.Version == in.Version {
-						ex.Default = ex.Default || in.Default
-						dup = true
-						break
-					}
-				}
-				if !dup {
-					ts.Installations = append(ts.Installations, in)
-				}
+			if !dup {
+				ts.Installations = append(ts.Installations, in)
 			}
 		}
 	}
+}
+
+func appendMiseToolManager(s *inventory.Snapshot, tool string, ts *inventory.ToolState) {
 	for _, t := range s.Tools {
 		for _, m := range t.Managers {
 			if m.Name != "mise" {
@@ -338,31 +411,33 @@ func snapshotTool(s *inventory.Snapshot, tool string) (inventory.ToolState, bool
 			}
 			mm := m
 			mm.Files = slices.Clone(m.Files)
-			if tool == "terraform" {
+			switch tool {
+			case "terraform":
 				mm.Files = append(mm.Files, ".terraform-version")
-			} else {
+			case "tofu":
 				mm.Files = append(mm.Files, ".opentofu-version", ".tofu-version")
+			case "deno":
+				mm.Files = append(mm.Files, ".dvmrc", ".deno-version")
 			}
 			ts.Managers = append(ts.Managers, mm)
-			return ts, true
+			return
 		}
 	}
-	return ts, true
 }
 
-// terraformConstraint translates HashiCorp/OpenTofu pessimistic constraints
-// (~> 1.10 -> >= 1.10.0, < 2.0.0; ~> 1.10.2 -> >= 1.10.2, < 1.11.0) into
-// semver constraints.
-func terraformConstraint(want string) string {
+// pessimisticConstraint translates pessimistic/compatible operators
+// (~> for Terraform/OpenTofu/Ruby and ~= for Python PEP 440):
+// op 1.10 -> >= 1.10.0, < 2.0.0; op 1.10.2 -> >= 1.10.2, < 1.11.0.
+func pessimisticConstraint(want, op string) string {
 	parts := strings.Split(want, ",")
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
 		p = strings.TrimSpace(p)
-		if !strings.HasPrefix(p, "~>") {
+		if !strings.HasPrefix(p, op) {
 			out = append(out, p)
 			continue
 		}
-		v := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(p[2:]), "v"))
+		v := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(p[len(op):]), "v"))
 		core, _, _ := strings.Cut(v, "-")
 		segs := strings.Split(core, ".")
 		switch len(segs) {

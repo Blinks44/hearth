@@ -367,7 +367,7 @@ func (a *App) liveSummaryTiles(c *ui.Context, found []issues.Issue) []liveTile {
 	}
 
 	// 5. MCP servers summary.
-	if mcps := a.mcpItems(); len(mcps) > 0 {
+	if mcps := a.configuredMCPItems(); len(mcps) > 0 {
 		agents := map[string]bool{}
 		mcpIssues := 0
 		for _, m := range mcps {

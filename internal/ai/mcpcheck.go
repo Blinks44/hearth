@@ -11,6 +11,7 @@ import (
 	"maps"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -199,11 +200,15 @@ func CheckMCP(ctx context.Context, s inventory.MCPServer, term sysenv.Env) (MCPC
 	}
 	expand := func(v string) string { return expandVars(v, term) }
 	var secrets []string
-	for _, v := range def.Env {
-		secrets = append(secrets, expand(v))
+	for k, v := range def.Env {
+		ev := expand(v)
+		if isLikelySecretEnv(k, ev) {
+			secrets = append(secrets, ev)
+		}
 	}
 	for _, v := range def.Headers {
-		secrets = append(secrets, expand(v))
+		ev := expand(v)
+		secrets = append(secrets, ev, stripAuthPrefix(ev))
 	}
 
 	var t mcpsdk.Transport
@@ -222,9 +227,13 @@ func CheckMCP(ctx context.Context, s inventory.MCPServer, term sysenv.Env) (MCPC
 			env = append(env, k+"="+expand(v))
 		}
 		args := []string{program}
+		expandedArgs := make([]string, 0, len(def.Args))
 		for _, a := range def.Args {
-			args = append(args, expand(a))
+			ea := expand(a)
+			args = append(args, ea)
+			expandedArgs = append(expandedArgs, ea)
 		}
+		secrets = append(secrets, argSecrets(expandedArgs)...)
 		dir := s.Project
 		if dir == "" {
 			dir = homeDir(term)
@@ -246,14 +255,16 @@ func CheckMCP(ctx context.Context, s inventory.MCPServer, term sysenv.Env) (MCPC
 		maps.DeleteFunc(headers, func(_, v string) bool { return v == "" })
 		// Values taken from the terminal by name are secrets as well.
 		for _, v := range headers {
-			secrets = append(secrets, v, strings.TrimPrefix(v, "Bearer "))
+			secrets = append(secrets, v, stripAuthPrefix(v))
 		}
+		endpoint := expand(def.URL)
+		secrets = append(secrets, urlSecrets(endpoint)...)
 		status.headers, status.base = headers, http.DefaultTransport
 		client := &http.Client{Transport: &status}
 		if def.Transport == "sse" {
-			t = &mcpsdk.SSEClientTransport{Endpoint: expand(def.URL), HTTPClient: client}
+			t = &mcpsdk.SSEClientTransport{Endpoint: endpoint, HTTPClient: client}
 		} else {
-			t = &mcpsdk.StreamableClientTransport{Endpoint: expand(def.URL), HTTPClient: client, MaxRetries: -1, DisableStandaloneSSE: true}
+			t = &mcpsdk.StreamableClientTransport{Endpoint: endpoint, HTTPClient: client, MaxRetries: -1, DisableStandaloneSSE: true}
 		}
 	}
 
@@ -343,6 +354,104 @@ func failure(ctx context.Context, err error, cmd *exec.Cmd, stderr *tail, status
 		}
 	}
 	return e
+}
+
+func isLikelySecretEnv(k, v string) bool {
+	if len(v) < 4 {
+		return false
+	}
+	if secretName.MatchString(k) || secretValue.MatchString(v) {
+		return true
+	}
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "true", "false", "debug", "info", "warn", "error", "none", "null", "auto", "local":
+		return false
+	}
+	return true
+}
+
+func stripAuthPrefix(v string) string {
+	lower := strings.ToLower(v)
+	for _, prefix := range []string{"bearer ", "basic ", "token "} {
+		if strings.HasPrefix(lower, prefix) {
+			return strings.TrimSpace(v[len(prefix):])
+		}
+	}
+	return ""
+}
+
+func urlSecrets(raw string) []string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	if u.User != nil {
+		if pass, ok := u.User.Password(); ok && pass != "" {
+			out = append(out, pass)
+		}
+		if full := u.User.String(); full != "" {
+			out = append(out, full)
+		}
+	}
+	if u.RawQuery != "" {
+		for kv := range strings.SplitSeq(u.RawQuery, "&") {
+			if _, val, ok := strings.Cut(kv, "="); ok && val != "" {
+				out = append(out, val)
+				if dec, err := url.QueryUnescape(val); err == nil && dec != val {
+					out = append(out, dec)
+				}
+			}
+		}
+	}
+	return out
+}
+
+func argSecrets(args []string) []string {
+	var out []string
+	addAuth := func(v string) {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			return
+		}
+		out = append(out, v)
+		if bare := stripAuthPrefix(v); bare != "" {
+			out = append(out, bare)
+		}
+	}
+	for i, a := range args {
+		prev := ""
+		if i > 0 {
+			prev = args[i-1]
+		}
+		if secretValue.MatchString(a) {
+			out = append(out, a)
+		}
+		if strings.HasPrefix(prev, "-") && !strings.Contains(prev, "=") && secretName.MatchString(prev) && !strings.HasPrefix(a, "-") {
+			addAuth(a)
+		}
+		if k, v, ok := strings.Cut(a, "="); ok && strings.HasPrefix(k, "-") && v != "" {
+			if strings.Contains(v, "://") {
+				out = append(out, urlSecrets(v)...)
+			}
+			if secretName.MatchString(k) {
+				addAuth(v)
+			} else if hk, hv, ok := strings.Cut(v, ":"); ok && secretName.MatchString(hk) {
+				addAuth(hv)
+			}
+			continue
+		}
+		if strings.Contains(a, "://") {
+			out = append(out, urlSecrets(a)...)
+			continue
+		}
+		if k, v, ok := strings.Cut(a, "="); ok && secretName.MatchString(k) && v != "" {
+			addAuth(v)
+		} else if k, v, ok := strings.Cut(a, ":"); ok && secretName.MatchString(k) {
+			addAuth(v)
+		}
+	}
+	return out
 }
 
 // tail keeps the last lines a process writes, up to tailMax bytes.

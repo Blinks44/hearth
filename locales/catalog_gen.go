@@ -1050,13 +1050,13 @@ func (msgs Messages) ColimaProfile(profile string) string {
 	return Catalog.Format(msgs.locale, "colimaProfile", map[string]any{"profile": profile})
 }
 
-// ColimaResourceSummary says "{cpu} CPU · {memory} GiB RAM · {disk} GiB disk"
+// ColimaResourceSummary says "{cpu} CPU · {memory} GiB · {disk} GiB disk"
 // in the language the app shows.
 func ColimaResourceSummary(cpu string, memory string, disk string) string {
 	return In(i18n.Locale()).ColimaResourceSummary(cpu, memory, disk)
 }
 
-// ColimaResourceSummary says "{cpu} CPU · {memory} GiB RAM · {disk} GiB disk"
+// ColimaResourceSummary says "{cpu} CPU · {memory} GiB · {disk} GiB disk"
 // in the language of msgs.
 func (msgs Messages) ColimaResourceSummary(cpu string, memory string, disk string) string {
 	return Catalog.Format(msgs.locale, "colimaResourceSummary", map[string]any{"cpu": cpu, "memory": memory, "disk": disk})
@@ -5428,14 +5428,54 @@ func (msgs Messages) KubePauseTitle(name string) string {
 	return Catalog.Format(msgs.locale, "kubePauseTitle", map[string]any{"name": name})
 }
 
-// KubePauseHint says "Template changes wait until the rollout resumes."
+// KubePauseHint says "Pod template changes start a rollout right away."
 // in the language the app shows.
 func KubePauseHint() string { return In(i18n.Locale()).KubePauseHint() }
 
-// KubePauseHint says "Template changes wait until the rollout resumes."
+// KubePauseHint says "Pod template changes start a rollout right away."
 // in the language of msgs.
 func (msgs Messages) KubePauseHint() string {
 	return Catalog.Format(msgs.locale, "kubePauseHint", nil)
+}
+
+// KubeRolloutActive says "Rollout active"
+// in the language the app shows.
+func KubeRolloutActive() string { return In(i18n.Locale()).KubeRolloutActive() }
+
+// KubeRolloutActive says "Rollout active"
+// in the language of msgs.
+func (msgs Messages) KubeRolloutActive() string {
+	return Catalog.Format(msgs.locale, "kubeRolloutActive", nil)
+}
+
+// KubeRolloutPaused says "Rollout paused"
+// in the language the app shows.
+func KubeRolloutPaused() string { return In(i18n.Locale()).KubeRolloutPaused() }
+
+// KubeRolloutPaused says "Rollout paused"
+// in the language of msgs.
+func (msgs Messages) KubeRolloutPaused() string {
+	return Catalog.Format(msgs.locale, "kubeRolloutPaused", nil)
+}
+
+// KubeRolloutPauseButton says "Pause"
+// in the language the app shows.
+func KubeRolloutPauseButton() string { return In(i18n.Locale()).KubeRolloutPauseButton() }
+
+// KubeRolloutPauseButton says "Pause"
+// in the language of msgs.
+func (msgs Messages) KubeRolloutPauseButton() string {
+	return Catalog.Format(msgs.locale, "kubeRolloutPauseButton", nil)
+}
+
+// KubeRolloutResumeButton says "Resume"
+// in the language the app shows.
+func KubeRolloutResumeButton() string { return In(i18n.Locale()).KubeRolloutResumeButton() }
+
+// KubeRolloutResumeButton says "Resume"
+// in the language of msgs.
+func (msgs Messages) KubeRolloutResumeButton() string {
+	return Catalog.Format(msgs.locale, "kubeRolloutResumeButton", nil)
 }
 
 // KubePausePreview says "Kubernetes pauses the rollout and keeps the current pods running. Changes to the pod template will take effect after …"
@@ -12458,11 +12498,11 @@ func (msgs Messages) DatabaseContainers() string {
 	return Catalog.Format(msgs.locale, "DatabaseContainers", nil)
 }
 
-// DatabaseReadOnly says "Services start and stop through their manager, after showing what will change. Containers are run by docker compose i…"
+// DatabaseReadOnly says "Services and Docker containers start and stop through their manager, after showing what will change."
 // in the language the app shows.
 func DatabaseReadOnly() string { return In(i18n.Locale()).DatabaseReadOnly() }
 
-// DatabaseReadOnly says "Services start and stop through their manager, after showing what will change. Containers are run by docker compose i…"
+// DatabaseReadOnly says "Services and Docker containers start and stop through their manager, after showing what will change."
 // in the language of msgs.
 func (msgs Messages) DatabaseReadOnly() string {
 	return Catalog.Format(msgs.locale, "DatabaseReadOnly", nil)
@@ -20596,13 +20636,13 @@ func (msgs Messages) DockerCheckNotSelected(name string) string {
 	return Catalog.Format(msgs.locale, "dockerCheckNotSelected", map[string]any{"name": name})
 }
 
-// DockerUseContext says "Use this context"
+// DockerUseContext says "Use this context…"
 // in the language the app shows.
 //
 // Menu item of a Docker context: switch to it.
 func DockerUseContext() string { return In(i18n.Locale()).DockerUseContext() }
 
-// DockerUseContext says "Use this context"
+// DockerUseContext says "Use this context…"
 // in the language of msgs.
 //
 // Menu item of a Docker context: switch to it.
@@ -20796,13 +20836,13 @@ func (msgs Messages) ServiceCheckNotStopped(name string) string {
 	return Catalog.Format(msgs.locale, "serviceCheckNotStopped", map[string]any{"name": name})
 }
 
-// ServiceStart says "Start service"
+// ServiceStart says "Start service…"
 // in the language the app shows.
 //
 // Menu item of a database service.
 func ServiceStart() string { return In(i18n.Locale()).ServiceStart() }
 
-// ServiceStart says "Start service"
+// ServiceStart says "Start service…"
 // in the language of msgs.
 //
 // Menu item of a database service.
@@ -33448,6 +33488,186 @@ func (msgs Messages) KubeCronYearly() string {
 	return Catalog.Format(msgs.locale, "kubeCronYearly", nil)
 }
 
+// KubeCronEveryMinute says "Every minute"
+// in the language the app shows.
+func KubeCronEveryMinute() string { return In(i18n.Locale()).KubeCronEveryMinute() }
+
+// KubeCronEveryMinute says "Every minute"
+// in the language of msgs.
+func (msgs Messages) KubeCronEveryMinute() string {
+	return Catalog.Format(msgs.locale, "kubeCronEveryMinute", nil)
+}
+
+// KubeCronMinutesOfHour says "Every {count} min of the hour"
+// in the language the app shows.
+//
+// CronJob schedule with a minute step that does not divide 60.
+func KubeCronMinutesOfHour(count int) string { return In(i18n.Locale()).KubeCronMinutesOfHour(count) }
+
+// KubeCronMinutesOfHour says "Every {count} min of the hour"
+// in the language of msgs.
+//
+// CronJob schedule with a minute step that does not divide 60.
+func (msgs Messages) KubeCronMinutesOfHour(count int) string {
+	return Catalog.Format(msgs.locale, "kubeCronMinutesOfHour", map[string]any{"count": count})
+}
+
+// KubeCronHourlyAt says "Every hour at :{minute}"
+// in the language the app shows.
+//
+// CronJob schedule running once every hour at a specific minute.
+func KubeCronHourlyAt(minute string) string { return In(i18n.Locale()).KubeCronHourlyAt(minute) }
+
+// KubeCronHourlyAt says "Every hour at :{minute}"
+// in the language of msgs.
+//
+// CronJob schedule running once every hour at a specific minute.
+func (msgs Messages) KubeCronHourlyAt(minute string) string {
+	return Catalog.Format(msgs.locale, "kubeCronHourlyAt", map[string]any{"minute": minute})
+}
+
+// KubeCronHoursAt says "Every {count} h at :{minute}"
+// in the language the app shows.
+//
+// CronJob schedule running every N hours at a specific minute.
+func KubeCronHoursAt(count int, minute string) string {
+	return In(i18n.Locale()).KubeCronHoursAt(count, minute)
+}
+
+// KubeCronHoursAt says "Every {count} h at :{minute}"
+// in the language of msgs.
+//
+// CronJob schedule running every N hours at a specific minute.
+func (msgs Messages) KubeCronHoursAt(count int, minute string) string {
+	return Catalog.Format(msgs.locale, "kubeCronHoursAt", map[string]any{"count": count, "minute": minute})
+}
+
+// KubeCronWeekdays says "Weekdays at {at}"
+// in the language the app shows.
+//
+// CronJob schedule running Monday through Friday.
+func KubeCronWeekdays(at string) string { return In(i18n.Locale()).KubeCronWeekdays(at) }
+
+// KubeCronWeekdays says "Weekdays at {at}"
+// in the language of msgs.
+//
+// CronJob schedule running Monday through Friday.
+func (msgs Messages) KubeCronWeekdays(at string) string {
+	return Catalog.Format(msgs.locale, "kubeCronWeekdays", map[string]any{"at": at})
+}
+
+// KubeCronMonthlyOn says "Day {day} of each month at {at}"
+// in the language the app shows.
+//
+// CronJob schedule running on a specific day of each month.
+func KubeCronMonthlyOn(day int, at string) string {
+	return In(i18n.Locale()).KubeCronMonthlyOn(day, at)
+}
+
+// KubeCronMonthlyOn says "Day {day} of each month at {at}"
+// in the language of msgs.
+//
+// CronJob schedule running on a specific day of each month.
+func (msgs Messages) KubeCronMonthlyOn(day int, at string) string {
+	return Catalog.Format(msgs.locale, "kubeCronMonthlyOn", map[string]any{"day": day, "at": at})
+}
+
+// KubeCronYearlyOn says "{month, select, 1 {Jan} 2 {Feb} 3 {Mar} 4 {Apr} 5 {May} 6 {Jun} 7 {Jul} 8 {Aug} 9 {Sep} 10 {Oct} 11 {Nov} 12 {Dec} ot…"
+// in the language the app shows.
+//
+// CronJob schedule running once a year on a specific month and day.
+func KubeCronYearlyOn(month string, day int, at string) string {
+	return In(i18n.Locale()).KubeCronYearlyOn(month, day, at)
+}
+
+// KubeCronYearlyOn says "{month, select, 1 {Jan} 2 {Feb} 3 {Mar} 4 {Apr} 5 {May} 6 {Jun} 7 {Jul} 8 {Aug} 9 {Sep} 10 {Oct} 11 {Nov} 12 {Dec} ot…"
+// in the language of msgs.
+//
+// CronJob schedule running once a year on a specific month and day.
+func (msgs Messages) KubeCronYearlyOn(month string, day int, at string) string {
+	return Catalog.Format(msgs.locale, "kubeCronYearlyOn", map[string]any{"month": month, "day": day, "at": at})
+}
+
+// KubeJobActive says "Active"
+// in the language the app shows.
+func KubeJobActive() string { return In(i18n.Locale()).KubeJobActive() }
+
+// KubeJobActive says "Active"
+// in the language of msgs.
+func (msgs Messages) KubeJobActive() string {
+	return Catalog.Format(msgs.locale, "kubeJobActive", nil)
+}
+
+// KubeJobStarted says "Started"
+// in the language the app shows.
+func KubeJobStarted() string { return In(i18n.Locale()).KubeJobStarted() }
+
+// KubeJobStarted says "Started"
+// in the language of msgs.
+func (msgs Messages) KubeJobStarted() string {
+	return Catalog.Format(msgs.locale, "kubeJobStarted", nil)
+}
+
+// KubeJobDuration says "Duration"
+// in the language the app shows.
+func KubeJobDuration() string { return In(i18n.Locale()).KubeJobDuration() }
+
+// KubeJobDuration says "Duration"
+// in the language of msgs.
+func (msgs Messages) KubeJobDuration() string {
+	return Catalog.Format(msgs.locale, "kubeJobDuration", nil)
+}
+
+// KubeJobParallelism says "Parallelism"
+// in the language the app shows.
+func KubeJobParallelism() string { return In(i18n.Locale()).KubeJobParallelism() }
+
+// KubeJobParallelism says "Parallelism"
+// in the language of msgs.
+func (msgs Messages) KubeJobParallelism() string {
+	return Catalog.Format(msgs.locale, "kubeJobParallelism", nil)
+}
+
+// KubeJobBackoffLimit says "Backoff limit"
+// in the language the app shows.
+func KubeJobBackoffLimit() string { return In(i18n.Locale()).KubeJobBackoffLimit() }
+
+// KubeJobBackoffLimit says "Backoff limit"
+// in the language of msgs.
+func (msgs Messages) KubeJobBackoffLimit() string {
+	return Catalog.Format(msgs.locale, "kubeJobBackoffLimit", nil)
+}
+
+// KubeCronTimeZone says "Time zone"
+// in the language the app shows.
+func KubeCronTimeZone() string { return In(i18n.Locale()).KubeCronTimeZone() }
+
+// KubeCronTimeZone says "Time zone"
+// in the language of msgs.
+func (msgs Messages) KubeCronTimeZone() string {
+	return Catalog.Format(msgs.locale, "kubeCronTimeZone", nil)
+}
+
+// KubeCronConcurrency says "Concurrency"
+// in the language the app shows.
+func KubeCronConcurrency() string { return In(i18n.Locale()).KubeCronConcurrency() }
+
+// KubeCronConcurrency says "Concurrency"
+// in the language of msgs.
+func (msgs Messages) KubeCronConcurrency() string {
+	return Catalog.Format(msgs.locale, "kubeCronConcurrency", nil)
+}
+
+// KubeCronLastSchedule says "Last schedule"
+// in the language the app shows.
+func KubeCronLastSchedule() string { return In(i18n.Locale()).KubeCronLastSchedule() }
+
+// KubeCronLastSchedule says "Last schedule"
+// in the language of msgs.
+func (msgs Messages) KubeCronLastSchedule() string {
+	return Catalog.Format(msgs.locale, "kubeCronLastSchedule", nil)
+}
+
 // KubeKindsAll says "All resources"
 // in the language the app shows.
 //
@@ -44732,4 +44952,898 @@ func AppUpdateAutoCheckHint() string { return In(i18n.Locale()).AppUpdateAutoChe
 // Settings toggle hint explaining automatic Hearth update checks.
 func (msgs Messages) AppUpdateAutoCheckHint() string {
 	return Catalog.Format(msgs.locale, "appUpdateAutoCheckHint", nil)
+}
+
+// KubeNoConfigFile says "no kubeconfig file found"
+// in the language the app shows.
+//
+// Kubernetes contexts card caption when no kubeconfig file exists.
+func KubeNoConfigFile() string { return In(i18n.Locale()).KubeNoConfigFile() }
+
+// KubeNoConfigFile says "no kubeconfig file found"
+// in the language of msgs.
+//
+// Kubernetes contexts card caption when no kubeconfig file exists.
+func (msgs Messages) KubeNoConfigFile() string {
+	return Catalog.Format(msgs.locale, "kubeNoConfigFile", nil)
+}
+
+// KubeEmptyMissingTitle says "{file} does not exist"
+// in the language the app shows.
+//
+// Kubernetes empty state title when the default kubeconfig file is missing.
+func KubeEmptyMissingTitle(file string) string { return In(i18n.Locale()).KubeEmptyMissingTitle(file) }
+
+// KubeEmptyMissingTitle says "{file} does not exist"
+// in the language of msgs.
+//
+// Kubernetes empty state title when the default kubeconfig file is missing.
+func (msgs Messages) KubeEmptyMissingTitle(file string) string {
+	return Catalog.Format(msgs.locale, "kubeEmptyMissingTitle", map[string]any{"file": file})
+}
+
+// KubeEmptyMissingManyTitle says "Kubeconfig files not found"
+// in the language the app shows.
+//
+// Kubernetes empty state title when all configured KUBECONFIG files are
+// missing.
+func KubeEmptyMissingManyTitle() string { return In(i18n.Locale()).KubeEmptyMissingManyTitle() }
+
+// KubeEmptyMissingManyTitle says "Kubeconfig files not found"
+// in the language of msgs.
+//
+// Kubernetes empty state title when all configured KUBECONFIG files are
+// missing.
+func (msgs Messages) KubeEmptyMissingManyTitle() string {
+	return Catalog.Format(msgs.locale, "kubeEmptyMissingManyTitle", nil)
+}
+
+// KubeEmptyMissingLead says "kubectl looks here for cluster connections. Create a starter file, paste an existing kubeconfig YAML, or start a loca…"
+// in the language the app shows.
+//
+// Kubernetes empty state description when kubeconfig file does not exist.
+func KubeEmptyMissingLead() string { return In(i18n.Locale()).KubeEmptyMissingLead() }
+
+// KubeEmptyMissingLead says "kubectl looks here for cluster connections. Create a starter file, paste an existing kubeconfig YAML, or start a loca…"
+// in the language of msgs.
+//
+// Kubernetes empty state description when kubeconfig file does not exist.
+func (msgs Messages) KubeEmptyMissingLead() string {
+	return Catalog.Format(msgs.locale, "kubeEmptyMissingLead", nil)
+}
+
+// KubeEmptyInvalidTitle says "Kubeconfig cannot be read"
+// in the language the app shows.
+//
+// Kubernetes empty state title when kubeconfig YAML is invalid.
+func KubeEmptyInvalidTitle() string { return In(i18n.Locale()).KubeEmptyInvalidTitle() }
+
+// KubeEmptyInvalidTitle says "Kubeconfig cannot be read"
+// in the language of msgs.
+//
+// Kubernetes empty state title when kubeconfig YAML is invalid.
+func (msgs Messages) KubeEmptyInvalidTitle() string {
+	return Catalog.Format(msgs.locale, "kubeEmptyInvalidTitle", nil)
+}
+
+// KubeEmptyInvalidLead says "{file} is not valid YAML, so kubectl cannot load contexts from it. Open it in an editor to fix the syntax."
+// in the language the app shows.
+//
+// Kubernetes empty state description when kubeconfig file has invalid YAML.
+func KubeEmptyInvalidLead(file string) string { return In(i18n.Locale()).KubeEmptyInvalidLead(file) }
+
+// KubeEmptyInvalidLead says "{file} is not valid YAML, so kubectl cannot load contexts from it. Open it in an editor to fix the syntax."
+// in the language of msgs.
+//
+// Kubernetes empty state description when kubeconfig file has invalid YAML.
+func (msgs Messages) KubeEmptyInvalidLead(file string) string {
+	return Catalog.Format(msgs.locale, "kubeEmptyInvalidLead", map[string]any{"file": file})
+}
+
+// KubeEmptyNoContextsLead says "{file} exists, but has no contexts yet. Open it in an editor to add a cluster, or create a local kind cluster."
+// in the language the app shows.
+//
+// Kubernetes empty state description when kubeconfig exists but defines no
+// contexts.
+func KubeEmptyNoContextsLead(file string) string {
+	return In(i18n.Locale()).KubeEmptyNoContextsLead(file)
+}
+
+// KubeEmptyNoContextsLead says "{file} exists, but has no contexts yet. Open it in an editor to add a cluster, or create a local kind cluster."
+// in the language of msgs.
+//
+// Kubernetes empty state description when kubeconfig exists but defines no
+// contexts.
+func (msgs Messages) KubeEmptyNoContextsLead(file string) string {
+	return Catalog.Format(msgs.locale, "kubeEmptyNoContextsLead", map[string]any{"file": file})
+}
+
+// KubeEmptyCloudHint says "Or pull a kubeconfig from your cloud CLI:"
+// in the language the app shows.
+//
+// Kubernetes empty state hint introducing cloud CLI commands.
+func KubeEmptyCloudHint() string { return In(i18n.Locale()).KubeEmptyCloudHint() }
+
+// KubeEmptyCloudHint says "Or pull a kubeconfig from your cloud CLI:"
+// in the language of msgs.
+//
+// Kubernetes empty state hint introducing cloud CLI commands.
+func (msgs Messages) KubeEmptyCloudHint() string {
+	return Catalog.Format(msgs.locale, "kubeEmptyCloudHint", nil)
+}
+
+// KubeCreateFileButton says "Create {file}…"
+// in the language the app shows.
+//
+// Button to create a missing kubeconfig file.
+func KubeCreateFileButton(file string) string { return In(i18n.Locale()).KubeCreateFileButton(file) }
+
+// KubeCreateFileButton says "Create {file}…"
+// in the language of msgs.
+//
+// Button to create a missing kubeconfig file.
+func (msgs Messages) KubeCreateFileButton(file string) string {
+	return Catalog.Format(msgs.locale, "kubeCreateFileButton", map[string]any{"file": file})
+}
+
+// KubeCreateButton says "Create…"
+// in the language the app shows.
+//
+// Short button to create a missing kubeconfig file.
+func KubeCreateButton() string { return In(i18n.Locale()).KubeCreateButton() }
+
+// KubeCreateButton says "Create…"
+// in the language of msgs.
+//
+// Short button to create a missing kubeconfig file.
+func (msgs Messages) KubeCreateButton() string {
+	return Catalog.Format(msgs.locale, "kubeCreateButton", nil)
+}
+
+// KubeconfigMissingDefault says "{file} does not exist"
+// in the language the app shows.
+//
+// Caption in kubectl terminal card when the default kubeconfig file is
+// missing.
+func KubeconfigMissingDefault(file string) string {
+	return In(i18n.Locale()).KubeconfigMissingDefault(file)
+}
+
+// KubeconfigMissingDefault says "{file} does not exist"
+// in the language of msgs.
+//
+// Caption in kubectl terminal card when the default kubeconfig file is
+// missing.
+func (msgs Messages) KubeconfigMissingDefault(file string) string {
+	return Catalog.Format(msgs.locale, "kubeconfigMissingDefault", map[string]any{"file": file})
+}
+
+// KubeFileInvalidBadge says "invalid"
+// in the language the app shows.
+//
+// Badge shown on a kubeconfig file row that failed YAML parsing.
+func KubeFileInvalidBadge() string { return In(i18n.Locale()).KubeFileInvalidBadge() }
+
+// KubeFileInvalidBadge says "invalid"
+// in the language of msgs.
+//
+// Badge shown on a kubeconfig file row that failed YAML parsing.
+func (msgs Messages) KubeFileInvalidBadge() string {
+	return Catalog.Format(msgs.locale, "kubeFileInvalidBadge", nil)
+}
+
+// KubeCurrentMissing says "context not found in kubeconfig"
+// in the language the app shows.
+//
+// State card caption when kubectl current-context does not match any
+// defined context.
+func KubeCurrentMissing() string { return In(i18n.Locale()).KubeCurrentMissing() }
+
+// KubeCurrentMissing says "context not found in kubeconfig"
+// in the language of msgs.
+//
+// State card caption when kubectl current-context does not match any
+// defined context.
+func (msgs Messages) KubeCurrentMissing() string {
+	return Catalog.Format(msgs.locale, "kubeCurrentMissing", nil)
+}
+
+// KubeCurrentMissingIn says "missing in kubeconfig · set in {file}"
+// in the language the app shows.
+//
+// Terminal card caption when current-context points to a context not
+// defined in kubeconfig.
+func KubeCurrentMissingIn(file string) string { return In(i18n.Locale()).KubeCurrentMissingIn(file) }
+
+// KubeCurrentMissingIn says "missing in kubeconfig · set in {file}"
+// in the language of msgs.
+//
+// Terminal card caption when current-context points to a context not
+// defined in kubeconfig.
+func (msgs Messages) KubeCurrentMissingIn(file string) string {
+	return Catalog.Format(msgs.locale, "kubeCurrentMissingIn", map[string]any{"file": file})
+}
+
+// KubeCurrentMissingBadge says "missing"
+// in the language the app shows.
+//
+// Warning badge when kubectl current-context is not defined in kubeconfig.
+func KubeCurrentMissingBadge() string { return In(i18n.Locale()).KubeCurrentMissingBadge() }
+
+// KubeCurrentMissingBadge says "missing"
+// in the language of msgs.
+//
+// Warning badge when kubectl current-context is not defined in kubeconfig.
+func (msgs Messages) KubeCurrentMissingBadge() string {
+	return Catalog.Format(msgs.locale, "kubeCurrentMissingBadge", nil)
+}
+
+// KubeConfigDialogTitle says "Create kubeconfig"
+// in the language the app shows.
+//
+// Dialog title for creating a new kubeconfig file.
+func KubeConfigDialogTitle() string { return In(i18n.Locale()).KubeConfigDialogTitle() }
+
+// KubeConfigDialogTitle says "Create kubeconfig"
+// in the language of msgs.
+//
+// Dialog title for creating a new kubeconfig file.
+func (msgs Messages) KubeConfigDialogTitle() string {
+	return Catalog.Format(msgs.locale, "kubeConfigDialogTitle", nil)
+}
+
+// KubeConfigDialogLead says "Creates a new file with private 0600 permissions through a confirmed plan."
+// in the language the app shows.
+//
+// Dialog subtitle explaining how Hearth creates a kubeconfig file.
+func KubeConfigDialogLead() string { return In(i18n.Locale()).KubeConfigDialogLead() }
+
+// KubeConfigDialogLead says "Creates a new file with private 0600 permissions through a confirmed plan."
+// in the language of msgs.
+//
+// Dialog subtitle explaining how Hearth creates a kubeconfig file.
+func (msgs Messages) KubeConfigDialogLead() string {
+	return Catalog.Format(msgs.locale, "kubeConfigDialogLead", nil)
+}
+
+// KubeConfigModeTemplate says "Starter template"
+// in the language the app shows.
+//
+// Mode tab for creating a kubeconfig from a starter template.
+func KubeConfigModeTemplate() string { return In(i18n.Locale()).KubeConfigModeTemplate() }
+
+// KubeConfigModeTemplate says "Starter template"
+// in the language of msgs.
+//
+// Mode tab for creating a kubeconfig from a starter template.
+func (msgs Messages) KubeConfigModeTemplate() string {
+	return Catalog.Format(msgs.locale, "kubeConfigModeTemplate", nil)
+}
+
+// KubeConfigModePaste says "Paste YAML"
+// in the language the app shows.
+//
+// Mode tab for creating a kubeconfig from pasted YAML.
+func KubeConfigModePaste() string { return In(i18n.Locale()).KubeConfigModePaste() }
+
+// KubeConfigModePaste says "Paste YAML"
+// in the language of msgs.
+//
+// Mode tab for creating a kubeconfig from pasted YAML.
+func (msgs Messages) KubeConfigModePaste() string {
+	return Catalog.Format(msgs.locale, "kubeConfigModePaste", nil)
+}
+
+// KubeConfigPastePlaceholder says "Paste kubeconfig YAML here…"
+// in the language the app shows.
+//
+// Placeholder text for kubeconfig YAML input area.
+func KubeConfigPastePlaceholder() string { return In(i18n.Locale()).KubeConfigPastePlaceholder() }
+
+// KubeConfigPastePlaceholder says "Paste kubeconfig YAML here…"
+// in the language of msgs.
+//
+// Placeholder text for kubeconfig YAML input area.
+func (msgs Messages) KubeConfigPastePlaceholder() string {
+	return Catalog.Format(msgs.locale, "kubeConfigPastePlaceholder", nil)
+}
+
+// KubeConfigTemplateHint says "Valid empty kubeconfig · 0600 permissions · can be opened in editor right after"
+// in the language the app shows.
+//
+// Validation hint for an empty starter kubeconfig.
+func KubeConfigTemplateHint() string { return In(i18n.Locale()).KubeConfigTemplateHint() }
+
+// KubeConfigTemplateHint says "Valid empty kubeconfig · 0600 permissions · can be opened in editor right after"
+// in the language of msgs.
+//
+// Validation hint for an empty starter kubeconfig.
+func (msgs Messages) KubeConfigTemplateHint() string {
+	return Catalog.Format(msgs.locale, "kubeConfigTemplateHint", nil)
+}
+
+// KubeConfigParsedSummary says "{count, plural, one {# context} other {# contexts}} ({names}) · secrets are masked in the plan preview"
+// in the language the app shows.
+//
+// Validation summary when pasted kubeconfig YAML defines contexts.
+func KubeConfigParsedSummary(count int, names string) string {
+	return In(i18n.Locale()).KubeConfigParsedSummary(count, names)
+}
+
+// KubeConfigParsedSummary says "{count, plural, one {# context} other {# contexts}} ({names}) · secrets are masked in the plan preview"
+// in the language of msgs.
+//
+// Validation summary when pasted kubeconfig YAML defines contexts.
+func (msgs Messages) KubeConfigParsedSummary(count int, names string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigParsedSummary", map[string]any{"count": count, "names": names})
+}
+
+// KubeConfigParsedNoContexts says "Valid kubeconfig YAML with 0 contexts · secrets are masked in the plan preview"
+// in the language the app shows.
+//
+// Validation summary when pasted kubeconfig YAML is valid but has no
+// contexts.
+func KubeConfigParsedNoContexts() string { return In(i18n.Locale()).KubeConfigParsedNoContexts() }
+
+// KubeConfigParsedNoContexts says "Valid kubeconfig YAML with 0 contexts · secrets are masked in the plan preview"
+// in the language of msgs.
+//
+// Validation summary when pasted kubeconfig YAML is valid but has no
+// contexts.
+func (msgs Messages) KubeConfigParsedNoContexts() string {
+	return Catalog.Format(msgs.locale, "kubeConfigParsedNoContexts", nil)
+}
+
+// KubeConfigInvalidEmpty says "Paste or enter kubeconfig YAML."
+// in the language the app shows.
+//
+// Validation error when kubeconfig YAML text is empty.
+func KubeConfigInvalidEmpty() string { return In(i18n.Locale()).KubeConfigInvalidEmpty() }
+
+// KubeConfigInvalidEmpty says "Paste or enter kubeconfig YAML."
+// in the language of msgs.
+//
+// Validation error when kubeconfig YAML text is empty.
+func (msgs Messages) KubeConfigInvalidEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeConfigInvalidEmpty", nil)
+}
+
+// KubeConfigInvalidLimit says "Kubeconfig YAML is too large (limit 256 KB)."
+// in the language the app shows.
+//
+// Validation error when kubeconfig YAML exceeds size limit.
+func KubeConfigInvalidLimit() string { return In(i18n.Locale()).KubeConfigInvalidLimit() }
+
+// KubeConfigInvalidLimit says "Kubeconfig YAML is too large (limit 256 KB)."
+// in the language of msgs.
+//
+// Validation error when kubeconfig YAML exceeds size limit.
+func (msgs Messages) KubeConfigInvalidLimit() string {
+	return Catalog.Format(msgs.locale, "kubeConfigInvalidLimit", nil)
+}
+
+// KubeConfigInvalidYAML says "Not valid kubeconfig YAML: {err}"
+// in the language the app shows.
+//
+// Validation error when kubeconfig YAML fails to parse.
+func KubeConfigInvalidYAML(err string) string { return In(i18n.Locale()).KubeConfigInvalidYAML(err) }
+
+// KubeConfigInvalidYAML says "Not valid kubeconfig YAML: {err}"
+// in the language of msgs.
+//
+// Validation error when kubeconfig YAML fails to parse.
+func (msgs Messages) KubeConfigInvalidYAML(err string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigInvalidYAML", map[string]any{"err": err})
+}
+
+// KubeConfigInvalidKind says "Expected kind: Config (or omitted), got {kind}."
+// in the language the app shows.
+//
+// Validation error when YAML kind is not Config.
+func KubeConfigInvalidKind(kind string) string { return In(i18n.Locale()).KubeConfigInvalidKind(kind) }
+
+// KubeConfigInvalidKind says "Expected kind: Config (or omitted), got {kind}."
+// in the language of msgs.
+//
+// Validation error when YAML kind is not Config.
+func (msgs Messages) KubeConfigInvalidKind(kind string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigInvalidKind", map[string]any{"kind": kind})
+}
+
+// KubeConfigAlreadyExists says "{file} already exists."
+// in the language the app shows.
+//
+// Error when attempting to create a kubeconfig file that already exists.
+func KubeConfigAlreadyExists(file string) string {
+	return In(i18n.Locale()).KubeConfigAlreadyExists(file)
+}
+
+// KubeConfigAlreadyExists says "{file} already exists."
+// in the language of msgs.
+//
+// Error when attempting to create a kubeconfig file that already exists.
+func (msgs Messages) KubeConfigAlreadyExists(file string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigAlreadyExists", map[string]any{"file": file})
+}
+
+// KubeConfigCreateTitle says "Create {file}"
+// in the language the app shows.
+//
+// Operation plan title for creating a kubeconfig file.
+func KubeConfigCreateTitle(file string) string { return In(i18n.Locale()).KubeConfigCreateTitle(file) }
+
+// KubeConfigCreateTitle says "Create {file}"
+// in the language of msgs.
+//
+// Operation plan title for creating a kubeconfig file.
+func (msgs Messages) KubeConfigCreateTitle(file string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigCreateTitle", map[string]any{"file": file})
+}
+
+// KubeConfigCreateWhy says "Writes a kubeconfig file with 0600 permissions. Hearth does not contact any cluster."
+// in the language the app shows.
+//
+// Operation plan rationale for creating a kubeconfig file.
+func KubeConfigCreateWhy() string { return In(i18n.Locale()).KubeConfigCreateWhy() }
+
+// KubeConfigCreateWhy says "Writes a kubeconfig file with 0600 permissions. Hearth does not contact any cluster."
+// in the language of msgs.
+//
+// Operation plan rationale for creating a kubeconfig file.
+func (msgs Messages) KubeConfigCreateWhy() string {
+	return Catalog.Format(msgs.locale, "kubeConfigCreateWhy", nil)
+}
+
+// KubeConfigCreateAction says "Create file"
+// in the language the app shows.
+//
+// Confirm button label for creating a kubeconfig file.
+func KubeConfigCreateAction() string { return In(i18n.Locale()).KubeConfigCreateAction() }
+
+// KubeConfigCreateAction says "Create file"
+// in the language of msgs.
+//
+// Confirm button label for creating a kubeconfig file.
+func (msgs Messages) KubeConfigCreateAction() string {
+	return Catalog.Format(msgs.locale, "kubeConfigCreateAction", nil)
+}
+
+// KubeConfigCreateChange says "Created {file} (permissions 0600)"
+// in the language the app shows.
+//
+// Operation change summary line when a kubeconfig file is created.
+func KubeConfigCreateChange(file string) string {
+	return In(i18n.Locale()).KubeConfigCreateChange(file)
+}
+
+// KubeConfigCreateChange says "Created {file} (permissions 0600)"
+// in the language of msgs.
+//
+// Operation change summary line when a kubeconfig file is created.
+func (msgs Messages) KubeConfigCreateChange(file string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigCreateChange", map[string]any{"file": file})
+}
+
+// KubeConfigCreateContexts says "{count, plural, one {# context ready for kubectl} other {# contexts ready for kubectl}}"
+// in the language the app shows.
+//
+// Operation change summary line listing how many contexts the new
+// kubeconfig defines.
+func KubeConfigCreateContexts(count int) string {
+	return In(i18n.Locale()).KubeConfigCreateContexts(count)
+}
+
+// KubeConfigCreateContexts says "{count, plural, one {# context ready for kubectl} other {# contexts ready for kubectl}}"
+// in the language of msgs.
+//
+// Operation change summary line listing how many contexts the new
+// kubeconfig defines.
+func (msgs Messages) KubeConfigCreateContexts(count int) string {
+	return Catalog.Format(msgs.locale, "kubeConfigCreateContexts", map[string]any{"count": count})
+}
+
+// KubeConfigSecretsMaskedNote says "Secrets stay private"
+// in the language the app shows.
+//
+// Operation note title explaining that kubeconfig secrets are redacted in
+// preview.
+func KubeConfigSecretsMaskedNote() string { return In(i18n.Locale()).KubeConfigSecretsMaskedNote() }
+
+// KubeConfigSecretsMaskedNote says "Secrets stay private"
+// in the language of msgs.
+//
+// Operation note title explaining that kubeconfig secrets are redacted in
+// preview.
+func (msgs Messages) KubeConfigSecretsMaskedNote() string {
+	return Catalog.Format(msgs.locale, "kubeConfigSecretsMaskedNote", nil)
+}
+
+// KubeConfigSecretsMaskedText says "Tokens, passwords, and private keys are masked in this preview and never written to the operation journal."
+// in the language the app shows.
+//
+// Operation note text explaining kubeconfig secret redaction.
+func KubeConfigSecretsMaskedText() string { return In(i18n.Locale()).KubeConfigSecretsMaskedText() }
+
+// KubeConfigSecretsMaskedText says "Tokens, passwords, and private keys are masked in this preview and never written to the operation journal."
+// in the language of msgs.
+//
+// Operation note text explaining kubeconfig secret redaction.
+func (msgs Messages) KubeConfigSecretsMaskedText() string {
+	return Catalog.Format(msgs.locale, "kubeConfigSecretsMaskedText", nil)
+}
+
+// KubeConfigVerified says "{file} is readable as kubeconfig"
+// in the language the app shows.
+//
+// Verification message after creating a kubeconfig file.
+func KubeConfigVerified(file string) string { return In(i18n.Locale()).KubeConfigVerified(file) }
+
+// KubeConfigVerified says "{file} is readable as kubeconfig"
+// in the language of msgs.
+//
+// Verification message after creating a kubeconfig file.
+func (msgs Messages) KubeConfigVerified(file string) string {
+	return Catalog.Format(msgs.locale, "kubeConfigVerified", map[string]any{"file": file})
+}
+
+// KubeDeleteContext says "Delete context…"
+// in the language the app shows.
+//
+// Context menu item to delete a Kubernetes context from kubeconfig.
+func KubeDeleteContext() string { return In(i18n.Locale()).KubeDeleteContext() }
+
+// KubeDeleteContext says "Delete context…"
+// in the language of msgs.
+//
+// Context menu item to delete a Kubernetes context from kubeconfig.
+func (msgs Messages) KubeDeleteContext() string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContext", nil)
+}
+
+// KubeDeleteContextTitle says "Delete Kubernetes context {name}"
+// in the language the app shows.
+//
+// Operation plan title for deleting a Kubernetes context.
+func KubeDeleteContextTitle(name string) string {
+	return In(i18n.Locale()).KubeDeleteContextTitle(name)
+}
+
+// KubeDeleteContextTitle says "Delete Kubernetes context {name}"
+// in the language of msgs.
+//
+// Operation plan title for deleting a Kubernetes context.
+func (msgs Messages) KubeDeleteContextTitle(name string) string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextTitle", map[string]any{"name": name})
+}
+
+// KubeDeleteContextWhy says "Removes the context entry from kubeconfig using kubectl. Cluster and user entries stay in the file, and the cluster i…"
+// in the language the app shows.
+//
+// Operation plan rationale for deleting a kubeconfig context.
+func KubeDeleteContextWhy() string { return In(i18n.Locale()).KubeDeleteContextWhy() }
+
+// KubeDeleteContextWhy says "Removes the context entry from kubeconfig using kubectl. Cluster and user entries stay in the file, and the cluster i…"
+// in the language of msgs.
+//
+// Operation plan rationale for deleting a kubeconfig context.
+func (msgs Messages) KubeDeleteContextWhy() string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextWhy", nil)
+}
+
+// KubeDeleteContextAction says "Delete context"
+// in the language the app shows.
+//
+// Confirm button label for deleting a kubeconfig context.
+func KubeDeleteContextAction() string { return In(i18n.Locale()).KubeDeleteContextAction() }
+
+// KubeDeleteContextAction says "Delete context"
+// in the language of msgs.
+//
+// Confirm button label for deleting a kubeconfig context.
+func (msgs Messages) KubeDeleteContextAction() string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextAction", nil)
+}
+
+// KubeDeleteContextChange says "Removed context {name} from {file}"
+// in the language the app shows.
+//
+// Operation change summary for removing a kubeconfig context.
+func KubeDeleteContextChange(name string, file string) string {
+	return In(i18n.Locale()).KubeDeleteContextChange(name, file)
+}
+
+// KubeDeleteContextChange says "Removed context {name} from {file}"
+// in the language of msgs.
+//
+// Operation change summary for removing a kubeconfig context.
+func (msgs Messages) KubeDeleteContextChange(name string, file string) string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextChange", map[string]any{"name": name, "file": file})
+}
+
+// KubeDeleteContextUnset says "Clear kubectl current-context"
+// in the language the app shows.
+//
+// Operation step note and change summary for clearing current-context after
+// deleting the active context.
+func KubeDeleteContextUnset() string { return In(i18n.Locale()).KubeDeleteContextUnset() }
+
+// KubeDeleteContextUnset says "Clear kubectl current-context"
+// in the language of msgs.
+//
+// Operation step note and change summary for clearing current-context after
+// deleting the active context.
+func (msgs Messages) KubeDeleteContextUnset() string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextUnset", nil)
+}
+
+// KubeDeleteContextCurrentNote says "Active kubectl context"
+// in the language the app shows.
+//
+// Operation note title when deleting the active kubectl context.
+func KubeDeleteContextCurrentNote() string { return In(i18n.Locale()).KubeDeleteContextCurrentNote() }
+
+// KubeDeleteContextCurrentNote says "Active kubectl context"
+// in the language of msgs.
+//
+// Operation note title when deleting the active kubectl context.
+func (msgs Messages) KubeDeleteContextCurrentNote() string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextCurrentNote", nil)
+}
+
+// KubeDeleteContextCurrentText says "{name} is kubectl's current-context. Hearth will clear current-context after deleting it."
+// in the language the app shows.
+//
+// Operation note text explaining that current-context will be cleared.
+func KubeDeleteContextCurrentText(name string) string {
+	return In(i18n.Locale()).KubeDeleteContextCurrentText(name)
+}
+
+// KubeDeleteContextCurrentText says "{name} is kubectl's current-context. Hearth will clear current-context after deleting it."
+// in the language of msgs.
+//
+// Operation note text explaining that current-context will be cleared.
+func (msgs Messages) KubeDeleteContextCurrentText(name string) string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextCurrentText", map[string]any{"name": name})
+}
+
+// KubeDeleteContextStillThere says "kubectl still lists context {name}."
+// in the language the app shows.
+//
+// Verification error when deleted context still appears in kubectl.
+func KubeDeleteContextStillThere(name string) string {
+	return In(i18n.Locale()).KubeDeleteContextStillThere(name)
+}
+
+// KubeDeleteContextStillThere says "kubectl still lists context {name}."
+// in the language of msgs.
+//
+// Verification error when deleted context still appears in kubectl.
+func (msgs Messages) KubeDeleteContextStillThere(name string) string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextStillThere", map[string]any{"name": name})
+}
+
+// KubeDeleteContextDeleted says "Context {name} removed"
+// in the language the app shows.
+//
+// Verification message when a kubeconfig context was deleted.
+func KubeDeleteContextDeleted(name string) string {
+	return In(i18n.Locale()).KubeDeleteContextDeleted(name)
+}
+
+// KubeDeleteContextDeleted says "Context {name} removed"
+// in the language of msgs.
+//
+// Verification message when a kubeconfig context was deleted.
+func (msgs Messages) KubeDeleteContextDeleted(name string) string {
+	return Catalog.Format(msgs.locale, "kubeDeleteContextDeleted", map[string]any{"name": name})
+}
+
+// KubeServicesSessionAffinity says "Session affinity"
+// in the language the app shows.
+//
+// Fact label for a Kubernetes Service's sessionAffinity.
+func KubeServicesSessionAffinity() string { return In(i18n.Locale()).KubeServicesSessionAffinity() }
+
+// KubeServicesSessionAffinity says "Session affinity"
+// in the language of msgs.
+//
+// Fact label for a Kubernetes Service's sessionAffinity.
+func (msgs Messages) KubeServicesSessionAffinity() string {
+	return Catalog.Format(msgs.locale, "kubeServicesSessionAffinity", nil)
+}
+
+// KubeServicesExternalIPs says "External IPs"
+// in the language the app shows.
+//
+// Fact label for a Kubernetes Service's externalIPs.
+func KubeServicesExternalIPs() string { return In(i18n.Locale()).KubeServicesExternalIPs() }
+
+// KubeServicesExternalIPs says "External IPs"
+// in the language of msgs.
+//
+// Fact label for a Kubernetes Service's externalIPs.
+func (msgs Messages) KubeServicesExternalIPs() string {
+	return Catalog.Format(msgs.locale, "kubeServicesExternalIPs", nil)
+}
+
+// KubeServicesTrafficPolicy says "Traffic policy"
+// in the language the app shows.
+//
+// Fact label for a Kubernetes Service's traffic policy.
+func KubeServicesTrafficPolicy() string { return In(i18n.Locale()).KubeServicesTrafficPolicy() }
+
+// KubeServicesTrafficPolicy says "Traffic policy"
+// in the language of msgs.
+//
+// Fact label for a Kubernetes Service's traffic policy.
+func (msgs Messages) KubeServicesTrafficPolicy() string {
+	return Catalog.Format(msgs.locale, "kubeServicesTrafficPolicy", nil)
+}
+
+// KubeResourceNotReady says "Not ready"
+// in the language the app shows.
+//
+// Fact label for not-ready Endpoint addresses.
+func KubeResourceNotReady() string { return In(i18n.Locale()).KubeResourceNotReady() }
+
+// KubeResourceNotReady says "Not ready"
+// in the language of msgs.
+//
+// Fact label for not-ready Endpoint addresses.
+func (msgs Messages) KubeResourceNotReady() string {
+	return Catalog.Format(msgs.locale, "kubeResourceNotReady", nil)
+}
+
+// KubeKindHiddenNoAccess says "{count} hidden (no access)"
+// in the language the app shows.
+//
+// Caption in the Kubernetes resource picker showing how many resource kinds
+// were hidden due to missing list permission.
+func KubeKindHiddenNoAccess(count int) string { return In(i18n.Locale()).KubeKindHiddenNoAccess(count) }
+
+// KubeKindHiddenNoAccess says "{count} hidden (no access)"
+// in the language of msgs.
+//
+// Caption in the Kubernetes resource picker showing how many resource kinds
+// were hidden due to missing list permission.
+func (msgs Messages) KubeKindHiddenNoAccess(count int) string {
+	return Catalog.Format(msgs.locale, "kubeKindHiddenNoAccess", map[string]any{"count": count})
+}
+
+// KubeKindShowHidden says "Show all"
+// in the language the app shows.
+//
+// Action in the Kubernetes resource picker to temporarily show kinds
+// without list permission.
+func KubeKindShowHidden() string { return In(i18n.Locale()).KubeKindShowHidden() }
+
+// KubeKindShowHidden says "Show all"
+// in the language of msgs.
+//
+// Action in the Kubernetes resource picker to temporarily show kinds
+// without list permission.
+func (msgs Messages) KubeKindShowHidden() string {
+	return Catalog.Format(msgs.locale, "kubeKindShowHidden", nil)
+}
+
+// KubeKindHideNoAccess says "Hide inaccessible"
+// in the language the app shows.
+//
+// Action in the Kubernetes resource picker to hide kinds without list
+// permission again.
+func KubeKindHideNoAccess() string { return In(i18n.Locale()).KubeKindHideNoAccess() }
+
+// KubeKindHideNoAccess says "Hide inaccessible"
+// in the language of msgs.
+//
+// Action in the Kubernetes resource picker to hide kinds without list
+// permission again.
+func (msgs Messages) KubeKindHideNoAccess() string {
+	return Catalog.Format(msgs.locale, "kubeKindHideNoAccess", nil)
+}
+
+// KubeKindNonEmptyOnly says "Non-empty only"
+// in the language the app shows.
+//
+// Toggle label in the Kubernetes resource picker and custom resources list
+// to hide CRDs with zero objects in the active namespace scope.
+func KubeKindNonEmptyOnly() string { return In(i18n.Locale()).KubeKindNonEmptyOnly() }
+
+// KubeKindNonEmptyOnly says "Non-empty only"
+// in the language of msgs.
+//
+// Toggle label in the Kubernetes resource picker and custom resources list
+// to hide CRDs with zero objects in the active namespace scope.
+func (msgs Messages) KubeKindNonEmptyOnly() string {
+	return Catalog.Format(msgs.locale, "kubeKindNonEmptyOnly", nil)
+}
+
+// KubeKindHiddenEmpty says "{count} empty hidden"
+// in the language the app shows.
+//
+// Caption showing how many empty custom resource definitions are hidden in
+// the active namespace scope.
+func KubeKindHiddenEmpty(count int) string { return In(i18n.Locale()).KubeKindHiddenEmpty(count) }
+
+// KubeKindHiddenEmpty says "{count} empty hidden"
+// in the language of msgs.
+//
+// Caption showing how many empty custom resource definitions are hidden in
+// the active namespace scope.
+func (msgs Messages) KubeKindHiddenEmpty(count int) string {
+	return Catalog.Format(msgs.locale, "kubeKindHiddenEmpty", map[string]any{"count": count})
+}
+
+// PathShellUnsupported says "Hearth updates PATH automatically for zsh, bash, and fish (current shell: {shell})."
+// in the language the app shows.
+//
+// Error when the user tries to modify PATH from a shell Hearth does not
+// edit automatically.
+func PathShellUnsupported(shell string) string { return In(i18n.Locale()).PathShellUnsupported(shell) }
+
+// PathShellUnsupported says "Hearth updates PATH automatically for zsh, bash, and fish (current shell: {shell})."
+// in the language of msgs.
+//
+// Error when the user tries to modify PATH from a shell Hearth does not
+// edit automatically.
+func (msgs Messages) PathShellUnsupported(shell string) string {
+	return Catalog.Format(msgs.locale, "pathShellUnsupported", map[string]any{"shell": shell})
+}
+
+// KubeServiceExternal says "external: {policy}"
+// in the language the app shows.
+//
+// External traffic policy label in Kubernetes Service details.
+func KubeServiceExternal(policy string) string { return In(i18n.Locale()).KubeServiceExternal(policy) }
+
+// KubeServiceExternal says "external: {policy}"
+// in the language of msgs.
+//
+// External traffic policy label in Kubernetes Service details.
+func (msgs Messages) KubeServiceExternal(policy string) string {
+	return Catalog.Format(msgs.locale, "kubeServiceExternal", map[string]any{"policy": policy})
+}
+
+// KubeServiceInternal says "internal: {policy}"
+// in the language the app shows.
+//
+// Internal traffic policy label in Kubernetes Service details.
+func KubeServiceInternal(policy string) string { return In(i18n.Locale()).KubeServiceInternal(policy) }
+
+// KubeServiceInternal says "internal: {policy}"
+// in the language of msgs.
+//
+// Internal traffic policy label in Kubernetes Service details.
+func (msgs Messages) KubeServiceInternal(policy string) string {
+	return Catalog.Format(msgs.locale, "kubeServiceInternal", map[string]any{"policy": policy})
+}
+
+// KubeCustomAllEmpty says "All custom resources are empty in the selected namespace."
+// in the language the app shows.
+//
+// Empty state caption in the Custom Resources table when all accessible
+// CRDs have zero objects and the Non-empty only filter is active.
+func KubeCustomAllEmpty() string { return In(i18n.Locale()).KubeCustomAllEmpty() }
+
+// KubeCustomAllEmpty says "All custom resources are empty in the selected namespace."
+// in the language of msgs.
+//
+// Empty state caption in the Custom Resources table when all accessible
+// CRDs have zero objects and the Non-empty only filter is active.
+func (msgs Messages) KubeCustomAllEmpty() string {
+	return Catalog.Format(msgs.locale, "kubeCustomAllEmpty", nil)
+}
+
+// KubeYamlMappingExpected says "expected a YAML mapping"
+// in the language the app shows.
+//
+// Validation detail shown when a pasted kubeconfig is not a YAML mapping.
+func KubeYamlMappingExpected() string { return In(i18n.Locale()).KubeYamlMappingExpected() }
+
+// KubeYamlMappingExpected says "expected a YAML mapping"
+// in the language of msgs.
+//
+// Validation detail shown when a pasted kubeconfig is not a YAML mapping.
+func (msgs Messages) KubeYamlMappingExpected() string {
+	return Catalog.Format(msgs.locale, "kubeYamlMappingExpected", nil)
 }

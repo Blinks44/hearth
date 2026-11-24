@@ -19,21 +19,25 @@ import (
 // copies among them; mise's other tools go to its list.
 var ownPage = []string{"node", "bun", "npm", "pnpm", "yarn", "corepack", "go", "python", "php", "composer", "rust", "java", "ruby", "dotnet", "docker", "git"}
 
-// MiseTools lists the tools mise installed that have no page of their
-// own, by its installs/ directory: mise is not run, as it may evaluate
-// the user's config or go online. A version's folder on the terminal's or
-// the apps' PATH puts it there, as mise activate does; with mise's shims,
-// the default version is the one that runs.
-func MiseTools(_ context.Context, _ run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
+// MiseTools records mise itself when installed and lists the tools mise
+// installed that have no page of their own, by its installs/ directory:
+// mise is only invoked for --version when its path does not carry it, never
+// to evaluate user config or go online. A version's folder on the
+// terminal's or the apps' PATH puts it there, as mise activate does; with
+// mise's shims, the default version is the one that runs.
+func MiseTools(ctx context.Context, r run.Runner, term, gui sysenv.Env) (inventory.ToolState, error) {
 	st := inventory.ToolState{Tool: "mise"}
 	d := sources.ManagerDirs(term)
+	if m := miseManager(ctx, r, term, gui, d); m.Version != "" {
+		st.Managers = []inventory.Manager{m}
+	}
 	if d.Mise == "" {
 		return st, nil
 	}
 	installs := filepath.Join(d.Mise, "installs")
 	tools, err := os.ReadDir(installs)
 	if err != nil {
-		return st, nil // no mise, or nothing installed
+		return st, nil // no mise installs yet
 	}
 	shims := filepath.Join(d.Mise, "shims")
 	termShims, guiShims := onPath(term, shims), onPath(gui, shims)

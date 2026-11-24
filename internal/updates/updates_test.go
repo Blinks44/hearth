@@ -408,3 +408,28 @@ func TestFindSkipsFailedTools(t *testing.T) {
 		t.Errorf("Find(nil) = %+v, want none", got)
 	}
 }
+
+func TestFindNoNodeLTSOnNonNodeTools(t *testing.T) {
+	l := lists(t)
+	l.Java = &versions.Java{Lines: []versions.Cycle{
+		{Cycle: "24", Latest: "24.0.2+12"},
+		{Cycle: "22", Latest: "22.0.5+9"},
+	}}
+	s := &inventory.Snapshot{
+		Tools: []inventory.ToolState{{
+			Tool: "java",
+			Installations: []inventory.Installation{
+				copyOf("java", "22.0.1", inventory.KindVersionManager, "mise"),
+			},
+		}},
+	}
+	got := Find(s, nil, l, now)
+	if len(got) == 0 {
+		t.Fatal("expected java updates")
+	}
+	for _, u := range got {
+		if u.LTS != "" {
+			t.Errorf("java update %+v got Node LTS codename %q", u, u.LTS)
+		}
+	}
+}

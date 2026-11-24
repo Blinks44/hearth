@@ -110,9 +110,10 @@ func (a *App) paths(c *ui.Context, p page) {
 									continue
 								}
 								seen[src.File] = true
-								listRow(c, tilde(src.File, a.Home), false, "", func() {
-									if src.Line > 0 && a.Shell != nil {
-										iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, src.File) })
+								file := src.File
+								listRow(c, tilde(file, a.Home), false, "", func() {
+									if src.Line > 0 && a.canOpenFile() {
+										iconButton(c.Key("path-origin:"+file), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, file) })
 									}
 								})
 							}
@@ -217,7 +218,7 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 						break
 					}
 				}
-				if sourceFile != "" && a.Shell != nil {
+				if sourceFile != "" && a.canOpenFile() {
 					sf := sourceFile
 					iconButton(c.Key("path-open-src:"+strconv.Itoa(i)), "external-link", locales.PathOpenSource()).OnClick(func() { a.openFile(c, sf) })
 				}

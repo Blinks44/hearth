@@ -230,6 +230,38 @@ func TestColimaResizePlan(t *testing.T) {
 	}
 }
 
+func TestColimaManagedResizeAndFirstStart(t *testing.T) {
+	t.Parallel()
+	const colima, brew = "/brew/bin/colima", "/brew/bin/brew"
+	var r run.Fake
+	observed := inventory.ColimaState{Path: colima, Brew: brew, Autostart: "on"}
+
+	running := inventory.ColimaProfile{Name: "default", Status: "running", Runtime: "docker", CPU: 2, Memory: 2 * docker.ColimaGiB, Disk: 60 * docker.ColimaGiB}
+	plan, err := ColimaPlan(&r, nil, observed, running, ColimaResize, ColimaLimits{CPU: 4, Memory: 4, Disk: 80})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Steps) != 5 ||
+		!slices.Equal(plan.Steps[0].Argv, []string{brew, "services", "stop", "colima"}) ||
+		!slices.Equal(plan.Steps[1].Argv, []string{colima, "stop", "--profile", "default"}) ||
+		!slices.Equal(plan.Steps[2].Argv, []string{colima, "start", "--profile", "default", "--activate=false", "--cpu", "4", "--memory", "4", "--disk", "80"}) ||
+		!slices.Equal(plan.Steps[3].Argv, []string{colima, "stop", "--profile", "default"}) ||
+		!slices.Equal(plan.Steps[4].Argv, []string{brew, "services", "start", "colima"}) {
+		t.Fatalf("managed resize steps = %+v", plan.Steps)
+	}
+
+	first := inventory.ColimaProfile{Name: "default"}
+	startPlan, err := ColimaPlan(&r, nil, observed, first, ColimaStart, ColimaLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(startPlan.Steps) != 3 || !slices.Contains(startPlan.Steps[0].Argv, "--ssh-config=false") ||
+		!slices.Equal(startPlan.Steps[1].Argv, []string{colima, "stop", "--profile", "default"}) ||
+		!slices.Equal(startPlan.Steps[2].Argv, []string{brew, "services", "start", "colima"}) {
+		t.Fatalf("managed first start steps = %+v", startPlan.Steps)
+	}
+}
+
 func TestSetupPrefersNativeDockerOnLinuxWithHomebrew(t *testing.T) {
 	t.Parallel()
 	setup := Setup{

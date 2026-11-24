@@ -1,6 +1,9 @@
 package sysenv
 
-import "runtime"
+import (
+	"runtime"
+	"sync"
+)
 
 // OS describes the operating system Hearth runs on.
 type OS struct {
@@ -18,3 +21,6 @@ func ReadOS() (OS, error) {
 	o.Arch = runtime.GOARCH
 	return o, err
 }
+
+// TotalMemoryBytes returns total physical RAM in bytes, or 0 if unavailable.
+var TotalMemoryBytes = sync.OnceValue(totalMemoryBytes)

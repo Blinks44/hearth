@@ -45,7 +45,10 @@ func storyOf(p kube.Pod, events []kube.Event, now time.Time) (s podStory, ok boo
 	if p.Phase == "Failed" && p.Message != "" {
 		return podStory{title: locales.KubeWhyPodFailed(p.Reason), detail: p.Message}, true
 	}
-	for _, ct := range p.Containers {
+	allContainers := make([]kube.Container, 0, len(p.InitContainers)+len(p.Containers))
+	allContainers = append(allContainers, p.InitContainers...)
+	allContainers = append(allContainers, p.Containers...)
+	for _, ct := range allContainers {
 		if ct.State != "waiting" {
 			continue
 		}
@@ -56,10 +59,10 @@ func storyOf(p kube.Pod, events []kube.Event, now time.Time) (s podStory, ok boo
 			return pullStory(ct), true
 		}
 	}
-	for _, ct := range p.Containers {
+	for _, ct := range allContainers {
 		// Between its tries, a container that keeps failing shows the
 		// run that just ended.
-		if ct.State == "terminated" && ct.Ended != nil && ct.Reason != "Completed" && ct.Restarts > 0 && p.Phase == "Running" {
+		if ct.State == "terminated" && ct.Ended != nil && ct.Reason != "Completed" && ct.Restarts > 0 && (p.Phase == "Running" || p.Phase == "Pending") {
 			ct.Last = ct.Ended
 			s := crashStory(p, ct, now)
 			s.ended = true
@@ -86,7 +89,7 @@ func storyOf(p kube.Pod, events []kube.Event, now time.Time) (s podStory, ok boo
 			break
 		}
 	}
-	for _, ct := range p.Containers {
+	for _, ct := range allContainers {
 		reason := ct.Reason
 		if reason == "" || reason == "Completed" {
 			continue

@@ -30,6 +30,7 @@ func TestMiseManager(t *testing.T) {
 		activated bool
 	}{
 		{"activated", `eval "$(mise activate zsh)"` + "\n", true},
+		{"shims only does not count as activated", `eval "$(mise activate zsh --shims)"` + "\n", false},
 		{"commented out", `# eval "$(mise activate zsh)"` + "\n", false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

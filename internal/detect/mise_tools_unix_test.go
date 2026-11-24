@@ -15,6 +15,8 @@ import (
 // folders aside; the global config picks the default, a version's folder
 // on PATH is in it, and with the shims the default runs.
 func TestMiseTools(t *testing.T) {
+	defer func(p []string) { miseSystemPrefixes = p }(miseSystemPrefixes)
+	miseSystemPrefixes = nil
 	dir := root(t)
 	data := filepath.Join(dir, "mise")
 	for _, v := range []string{"node/22.12.0", "zig/0.13.0", "zig/0.12.0", "deno/2.1.4", "npm-prettier/3.4.2"} {
@@ -66,8 +68,31 @@ func TestMiseTools(t *testing.T) {
 	if root := st.MiseTools[2].Installations[0].Source.Root; root != filepath.Join(data, "installs", "zig", "0.13.0") {
 		t.Errorf("root %q", root)
 	}
-	// Without mise's directory there is nothing to list.
-	if st, err := MiseTools(t.Context(), &run.Fake{}, sysenv.Env{"HOME=" + dir}, nil); err != nil || len(st.MiseTools) != 0 {
+	// Without mise's directory or binary there is nothing to list.
+	if st, err := MiseTools(t.Context(), &run.Fake{}, sysenv.Env{"HOME=" + dir}, nil); err != nil || len(st.MiseTools) != 0 || len(st.Managers) != 0 {
 		t.Errorf("without mise: %+v, %v", st, err)
+	}
+	// With mise installed on PATH and activated, it is recorded even before
+	// any tools are installed under installs/.
+	binDir := filepath.Join(dir, "bin")
+	miseBin := filepath.Join(binDir, "mise")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(miseBin, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var fake run.Fake
+	fake.Stdout("2026.11.12 macos-arm64 (2026-11-20)\n", miseBin, "--version")
+	emptyHome := t.TempDir()
+	st, err = MiseTools(t.Context(), &fake, sysenv.Env{"HOME=" + emptyHome, "PATH=" + binDir, "MISE_SHELL=zsh"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(st.MiseTools) != 0 {
+		t.Errorf("unexpected tools: %+v", st.MiseTools)
+	}
+	if len(st.Managers) != 1 || st.Managers[0].Name != "mise" || st.Managers[0].Version != "2026.11.12" || !st.Managers[0].Activated {
+		t.Fatalf("managers = %+v, want activated mise 2026.11.12", st.Managers)
 	}
 }

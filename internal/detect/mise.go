@@ -28,15 +28,16 @@ func miseManager(ctx context.Context, r run.Runner, term, gui sysenv.Env, d sour
 	}
 	// mise activate exports MISE_SHELL in the terminal's environment; the
 	// startup files are read too, for an activation that sets it later.
-	m.Activated = term.Get("MISE_SHELL") != "" || startupRuns(term, d.Home, "mise activate")
+	// --shims alone does not count as interactive shell activation.
+	m.Activated = term.Get("MISE_SHELL") != "" || startupActivatesMise(term, d.Home)
 	m.SwitchOnCD = m.Activated || m.Shims
 	if path := miseConfig(d, term); path != "" {
 		if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
 			m.ConfigPath = path
 		}
 	}
-	if paths := sysenv.LookPathAll("mise", term); len(paths) > 0 {
-		m.Version = miseVersion(ctx, r, term, paths[0])
+	if path := findMiseBinary(term, d.Home); path != "" {
+		m.Version = miseVersion(ctx, r, term, path)
 	}
 	return m
 }
@@ -76,8 +77,22 @@ func miseVersion(ctx context.Context, r run.Runner, env sysenv.Env, path string)
 // onPath reports whether dir is on env's PATH.
 func onPath(env sysenv.Env, dir string) bool {
 	for _, p := range filepath.SplitList(env.Get("PATH")) {
-		if filepath.Clean(p) == filepath.Clean(dir) {
+		if sysenv.SamePath(p, dir) {
 			return true
+		}
+	}
+	return false
+}
+
+// startupActivatesMise reports whether a shell startup file in home runs
+// interactive mise activate (excluding --shims-only lines and comments).
+func startupActivatesMise(env sysenv.Env, home string) bool {
+	for _, text := range shellStartup(env, home) {
+		for line := range strings.Lines(text) {
+			code, _, _ := strings.Cut(line, "#")
+			if strings.Contains(code, "mise activate") && !strings.Contains(code, "--shims") {
+				return true
+			}
 		}
 	}
 	return false

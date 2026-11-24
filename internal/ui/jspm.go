@@ -326,7 +326,7 @@ func (a *App) jsProjects(c *ui.Context) {
 }
 
 func (a *App) jsUpdates(c *ui.Context) {
-	listCard(c, locales.Available(), "", func() {
+	listCard(c, locales.AvailableTitle(), "", func() {
 		if a.JSVersions == nil {
 			text := locales.VersionsLoading()
 			if a.JSVersionsErr != "" {

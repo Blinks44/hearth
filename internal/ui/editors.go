@@ -207,7 +207,11 @@ func (a *App) editorsView(c *ui.Context, p page) {
 				columns(c, 12, func() {
 					switch {
 					case a.Snapshot == nil:
-						toolNote(c, locales.CleanupWaiting())
+						if a.Scanning {
+							toolNote(c, locales.Checking())
+						} else {
+							toolNote(c, locales.NotChecked())
+						}
 					case len(eds) == 0:
 						toolNote(c, locales.EditorsNone())
 					default:
@@ -306,7 +310,7 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 					list := slices.Clone(r.installed)
 					ui.Column(c.Key("ext-list:"+e.ID)).Gap(6).Padding(8, 16, 10, 28).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 						ui.Row(c).AlignItems(ui.Center).Gap(8).Children(func() {
-							ui.Text(c, locales.EditorsExtensions(len(list))).FontSize(11).TextColor(pal.TextFaint).Grow(1)
+							ui.Text(c, r.name).FontSize(11).TextColor(pal.TextFaint).Grow(1)
 							ui.Button(c.Key("copy-ext:"+e.ID), locales.EditorsCopyList()).Height(26).FontSize(11.5).Shrink(0).OnClick(func() {
 								c.WriteClipboard(strings.Join(list, "\n"))
 								c.Toast(locales.EditorsListCopied())
@@ -332,7 +336,7 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 			shown += len(rows)
 		}
 		if shown == 0 {
-			cardNote(c, locales.CleanupNone())
+			cardNote(c, locales.NothingMatches())
 		}
 	})
 }

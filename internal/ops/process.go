@@ -3,6 +3,7 @@ package ops
 import (
 	"context"
 	"errors"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,13 +14,14 @@ import (
 )
 
 // ProcessPlan returns the plan that stops the process listening at l. ok
-// is false for a process Hearth does not stop: another user's, or one of
-// the system's own programs.
+// is false for a process Hearth does not stop: Hearth itself, another
+// user's, or one of the system's own programs.
 func ProcessPlan(l inventory.DatabaseListener, detect Detect) (p Plan, ok bool) {
 	if !l.Own || l.Path == "" || SystemProgram(l.Path) {
 		return Plan{}, false
 	}
-	if _, err := strconv.ParseUint(l.PID, 10, 32); err != nil {
+	pid, err := strconv.ParseUint(l.PID, 10, 32)
+	if err != nil || pid == uint64(os.Getpid()) {
 		return Plan{}, false
 	}
 	name := l.Process

@@ -173,3 +173,32 @@ env_vars = ["HOME_DIR"]
 		t.Errorf("got %+v", def)
 	}
 }
+
+func TestSecretRedactorURLAndArgs(t *testing.T) {
+	secrets := append(urlSecrets("https://user:url-pass@example.test/mcp?api_key=query-secret-123&mode=fast"),
+		argSecrets([]string{
+			"--token=arg-secret-456",
+			"--api-key", "arg-secret-789",
+			"https://bot:arg-pass@host.test/x",
+			"--dsn=postgres://dbuser:flag-dsn-pass@db.local/app",
+			"--url=https://api.test/mcp?token=flag-query-secret",
+			"Authorization: Bearer bare-header-tok",
+			"--header=Authorization: Bearer flag-header-tok",
+		})...)
+	if isLikelySecretEnv("DEBUG", "false") {
+		t.Fatal("DEBUG=false should not be treated as a secret")
+	}
+	if !isLikelySecretEnv("API_KEY", "env-secret-000") {
+		t.Fatal("API_KEY should be treated as a secret")
+	}
+	secrets = append(secrets, "env-secret-000", stripAuthPrefix("bearer header-secret-999"))
+	got := failure(t.Context(), errors.New("false url-pass query-secret-123 arg-secret-456 arg-secret-789 arg-pass flag-dsn-pass flag-query-secret bare-header-tok flag-header-tok env-secret-000 header-secret-999"), nil, &tail{}, 0, secrets).Detail
+	for _, leaked := range []string{"url-pass", "query-secret-123", "arg-secret-456", "arg-secret-789", "arg-pass", "flag-dsn-pass", "flag-query-secret", "bare-header-tok", "flag-header-tok", "env-secret-000", "header-secret-999"} {
+		if strings.Contains(got, leaked) {
+			t.Errorf("secret %q leaked in %q", leaked, got)
+		}
+	}
+	if !strings.HasPrefix(got, "false ") {
+		t.Errorf("benign env value was redacted: %q", got)
+	}
+}

@@ -164,15 +164,17 @@ func (a *App) overviewAttention(c *ui.Context, cl *kube.Cluster) {
 	if batch := cl.Batch; batch != nil {
 		for _, j := range batch.Jobs {
 			if j.State == kube.JobFailed && (j.CronJob == "" || batch.CronJobsErr != nil) {
-				problems = append(problems, overviewProblem{"job-" + j.UID, "Job · " + j.Name, j.Namespace + " · " + jobFailure(j), false, func() {
-					s.kind, s.jobFilter, s.query = kindJobs, batchAll, j.Namespace+"/"+j.Name
+				job := j
+				problems = append(problems, overviewProblem{"job-" + job.UID, "Job · " + job.Name, job.Namespace + " · " + jobFailure(job), false, func() {
+					a.openResourceLink(resourceLink{kind: kindJobs, namespace: job.Namespace, name: job.Name, uid: job.UID})
 				}})
 			}
 		}
 		for _, j := range batch.CronJobs {
 			if lastCronFailed(j) {
-				problems = append(problems, overviewProblem{"cronjob-" + j.UID, "CronJob · " + j.Name, j.Namespace + " · " + jobFailure(j.Runs[0]), false, func() {
-					s.kind, s.cronJobFilter, s.query = kindCronJobs, batchAll, j.Namespace+"/"+j.Name
+				cj := j
+				problems = append(problems, overviewProblem{"cronjob-" + cj.UID, "CronJob · " + cj.Name, cj.Namespace + " · " + jobFailure(cj.Runs[0]), false, func() {
+					a.openResourceLink(resourceLink{kind: kindCronJobs, namespace: cj.Namespace, name: cj.Name, uid: cj.UID})
 				}})
 			}
 		}

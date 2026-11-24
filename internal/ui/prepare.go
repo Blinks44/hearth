@@ -983,11 +983,11 @@ func (a *App) projectPreparationButtons(c *ui.Context, op *operation) {
 			c.Toast(locales.OpLogCopied())
 		})
 	}
-	if a.Shell != nil {
+	if a.canOpenFile() {
 		ui.Button(c.Key("prepare-folder"), locales.PrepareOpenFolder()).Height(controlHeight).OnClick(func() { a.openFile(c, dir) })
 	}
 	if outcome == outcomeReady {
-		if active != nil && active.Project.Readme != "" && a.Shell != nil {
+		if active != nil && active.Project.Readme != "" && a.canOpenFile() {
 			readme := active.Project.Readme
 			ui.Button(c.Key("prepare-readme"), locales.PrepareOpenReadme(readme)).Height(controlHeight).OnClick(func() { a.openFile(c, filepath.Join(dir, readme)) })
 		}

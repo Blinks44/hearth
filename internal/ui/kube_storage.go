@@ -27,8 +27,14 @@ func (a *App) openResourceLink(link resourceLink) {
 	if link.kind == kindDeployments {
 		s.deployment, s.deploymentFilter, s.tab = "", 0, 0
 	}
+	if link.kind == kindJobs {
+		s.job, s.jobFilter, s.tab = "", batchAll, 0
+	}
+	if link.kind == kindCronJobs {
+		s.cronJob, s.cronJobFilter, s.tab = "", batchAll, 0
+	}
 	if link.kind == kindServices {
-		s.service, s.serviceFilter = "", 0
+		s.service, s.serviceFilter, s.tab = "", 0, 0
 	}
 	if link.kind == kindSecrets {
 		s.secret.reset()
@@ -71,6 +77,24 @@ func (s *kubeClusterState) followResourceLink(cl kube.Cluster) {
 		for _, deployment := range cl.Deployments {
 			if matches(deployment.Namespace, deployment.Name, deployment.UID) {
 				s.deployment, s.tab, s.revealWorkload = deployment.UID, 0, deployment.UID
+				s.resourceLink = resourceLink{}
+				return
+			}
+		}
+	}
+	if link.kind == kindJobs && cl.Batch != nil {
+		for _, job := range cl.Batch.Jobs {
+			if matches(job.Namespace, job.Name, job.UID) {
+				s.job, s.tab, s.revealWorkload = job.UID, 0, job.UID
+				s.resourceLink = resourceLink{}
+				return
+			}
+		}
+	}
+	if link.kind == kindCronJobs && cl.Batch != nil {
+		for _, cj := range cl.Batch.CronJobs {
+			if matches(cj.Namespace, cj.Name, cj.UID) {
+				s.cronJob, s.tab, s.revealWorkload = cj.UID, 0, cj.UID
 				s.resourceLink = resourceLink{}
 				return
 			}
@@ -270,6 +294,8 @@ func (a *App) resourceLinkRow(c *ui.Context, name, description, button string, l
 				}
 			})
 		}
-		kubeActionButton(c, "arrow-right", button, podActionHeight).Tooltip(name).OnClick(func() { a.openResourceLink(link) })
+		if button != "" {
+			kubeActionButton(c, "arrow-right", button, podActionHeight).Tooltip(name).OnClick(func() { a.openResourceLink(link) })
+		}
 	})
 }

@@ -85,6 +85,11 @@ func TestCleanupPlan(t *testing.T) {
 	if err == nil {
 		t.Errorf("plan %+v without anything to remove", p)
 	}
+	// When an endpoint is known, prune pins --host and clears DOCKER_CONTEXT.
+	p, err = CleanupPlan(cands[4:5], titles[4:5], nil, env, DockerTarget{CLI: "/usr/local/bin/docker", Context: "colima", Endpoint: "unix:///tmp/colima.sock"}, nil)
+	if err != nil || len(p.Steps) != 1 || Command(p.Steps[0].Argv) != "/usr/local/bin/docker --host unix:///tmp/colima.sock builder prune --force" || !slices.Contains(p.Steps[0].Env, "DOCKER_CONTEXT=") {
+		t.Fatalf("pinned endpoint cleanup = %+v, err = %v", p.Steps, err)
+	}
 }
 
 // The check says what was freed: a folder gone frees all it took, one

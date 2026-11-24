@@ -142,6 +142,14 @@ func detect(ctx context.Context, r run.Runner, term, gui sysenv.Env, home string
 		}
 	}
 	for _, f := range a.files {
+		if a.id == "claude" && f.path == "~/.claude.json" {
+			if p := claudeStatePath(term); p != "" {
+				if _, err := os.Stat(p); err == nil {
+					found.Files = append(found.Files, inventory.AgentFile{Path: p, Kind: f.kind})
+				}
+			}
+			continue
+		}
 		add(f.path, f.kind)
 	}
 	if a.id == "antigravity" {

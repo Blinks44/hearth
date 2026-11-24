@@ -271,16 +271,21 @@ func (a *App) deploymentDetail(c *ui.Context, cl *kube.Cluster, d kube.Deploymen
 				count = strconv.Itoa(len(events))
 			}
 			tabs := []segment{{locales.KubeTabOverview(), ""}, {"Pods", strconv.Itoa(len(pods))}, {locales.KubeTabEvents(), count}}
+			hasYAML := false
 			if f := s.resources[ref]; f != nil && (f.editor != nil || s.tab == 3) {
 				tabs = append(tabs, segment{locales.KubeResourceYaml(), ""})
+				hasYAML = true
 			}
+			clampDetailTab(&s.tab, 3, hasYAML)
 			segments(c, "deployment-tab", &s.tab, tabs)
 		})
 	}, func() {
 		switch s.tab {
 		case 3:
-			a.resourceEditor(c, s.resources[ref])
-			return
+			if s.resources[ref] != nil {
+				a.resourceEditor(c, s.resources[ref])
+				return
+			}
 		case 1:
 			for _, p := range pods {
 				a.ownedPodRow(c, p)

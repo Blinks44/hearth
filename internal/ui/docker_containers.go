@@ -937,6 +937,9 @@ func (a *App) dockerGroupMenu(m *ui.Menu, g dockerGroup) {
 	var actions []ops.DockerAction
 	if g.compose.Name != "" {
 		for _, action := range dockerComposeActions {
+			if g.dir != "" && action == ops.DockerRemove {
+				continue
+			}
 			if slices.ContainsFunc(g.all, action.Applies) {
 				actions = append(actions, action)
 			}

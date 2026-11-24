@@ -97,7 +97,10 @@ type kubeClusterState struct {
 	kindQuery                  string
 	kindSelected               int
 	kindScroll                 bool
+	kindShowAll                bool
+	kindShowEmpty              bool
 	jobFilter, cronJobFilter   int
+	job, cronJob               string
 	serviceFilter              int
 	service                    string
 	helmFilter                 int
@@ -288,6 +291,7 @@ func (a *App) syncCluster() {
 		s.target, s.data, s.err, s.failedAt = target, nil, nil, time.Time{}
 		s.metricsNoticeDismissed = ""
 		s.logs, s.forward, s.revealWorkload = nil, nil, ""
+		s.job, s.cronJob = "", ""
 		s.resourceLink = resourceLink{}
 		s.cache = nil
 	}
@@ -384,6 +388,22 @@ func (a *App) detailRef() kube.Ref {
 	}
 	if item := s.otherResource(); item != nil {
 		return kube.Ref{Namespace: item.Namespace, UID: item.UID}
+	}
+	if s.kind == kindJobs && s.data.Batch != nil {
+		for _, j := range s.data.Batch.Jobs {
+			if j.UID == s.job {
+				return kube.Ref{Namespace: j.Namespace, UID: j.UID}
+			}
+		}
+		return kube.Ref{}
+	}
+	if s.kind == kindCronJobs && s.data.Batch != nil {
+		for _, cj := range s.data.Batch.CronJobs {
+			if cj.UID == s.cronJob {
+				return kube.Ref{Namespace: cj.Namespace, UID: cj.UID}
+			}
+		}
+		return kube.Ref{}
 	}
 	if s.kind == kindServices {
 		for _, service := range s.data.Services {
@@ -509,7 +529,7 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 			return
 		}
 		resourceKind := otherResourceKind(s.kind)
-		split := s.kind == kindPods || s.kind == kindDeployments || s.kind == kindServices || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies || s.kind == kindAccess
+		split := s.kind == kindPods || s.kind == kindDeployments || isBatchKind(s.kind) || s.kind == kindServices || s.kind == kindHelm || s.kind == kindSecrets || resourceKind != "" || s.kind == kindCustom || s.kind == kindPolicies || s.kind == kindAccess
 		var viewport ui.Element
 		if split {
 			viewport = ui.Column(c.Key("cluster-workloads"))
@@ -571,9 +591,9 @@ func (a *App) kubeClusterView(c *ui.Context, name string) {
 					case kindPods:
 						a.podsView(c, s.data)
 					case kindJobs:
-						a.jobsView(c, s.data.Batch)
+						a.jobsView(c, s.data)
 					case kindCronJobs:
-						a.cronJobsView(c, s.data.Batch)
+						a.cronJobsView(c, s.data)
 					case kindServices:
 						a.servicesView(c, s.data)
 					case kindSecrets:
@@ -764,6 +784,7 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		refresh := ui.ButtonBase(c.Key(locales.KubeClusterRefresh())).Size(24, 24).Radius(6).Center().
 			Label(locales.KubeClusterRefresh()).Tooltip(locales.KubeClusterRefresh()).OnClick(func() {
 			s.refresh++
+			s.custom.catalog.invalidatePresence()
 			if s.kind == kindCustom {
 				a.loadCustomDefinitions(name)
 			}
@@ -1144,7 +1165,7 @@ func (a *App) kindChips(c *ui.Context) {
 	options := clusterKindOptions()
 	ui.Row(c).Gap(6).Wrap().Children(func() {
 		k := options[kindOverview]
-		kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0)
+		kindChip(c, &s.kind, kindOverview, k.icon, k.label, 0, func() { s.tab = 0 })
 		pinned := a.pinnedKinds()
 		if !slices.Contains(pinned, s.kind) && s.kind != kindOverview {
 			pinned = append(pinned, s.kind)
@@ -1154,7 +1175,7 @@ func (a *App) kindChips(c *ui.Context) {
 			if i == kindCustom && s.kind == kindCustom && s.custom.name != "" {
 				k.label = s.custom.label
 			}
-			kindChip(c, &s.kind, i, k.icon, k.label, 0)
+			kindChip(c, &s.kind, i, k.icon, k.label, 0, func() { s.tab = 0 })
 		}
 		t := c.Theme()
 		pal := Colors(t)
@@ -1213,7 +1234,21 @@ func (a *App) togglePin(kind int) {
 	a.savePreferences()
 }
 
-func kindChip(c *ui.Context, kind *int, value int, icon, label string, trouble int) {
+// clampDetailTab keeps a shared detail tab index within the current view's
+// valid range so switching between kinds with different tab counts or closing
+// an unsaved YAML editor can never render a blank detail pane.
+func clampDetailTab(tab *int, yamlTab int, hasYAML bool) int {
+	maxTab := yamlTab - 1
+	if hasYAML {
+		maxTab = yamlTab
+	}
+	if *tab < 0 || *tab > maxTab {
+		*tab = 0
+	}
+	return *tab
+}
+
+func kindChip(c *ui.Context, kind *int, value int, icon, label string, trouble int, onChange func()) {
 	t := c.Theme()
 	pal := Colors(t)
 	chosen := *kind == value
@@ -1227,7 +1262,14 @@ func kindChip(c *ui.Context, kind *int, value int, icon, label string, trouble i
 	case b.Hovered():
 		b.Background(pal.Muted)
 	}
-	b.OnClick(func() { *kind = value }).Children(func() {
+	b.OnClick(func() {
+		if *kind != value {
+			*kind = value
+			if onChange != nil {
+				onChange()
+			}
+		}
+	}).Children(func() {
 		ui.Icon(c, Icon(icon)).Size(14, 14).TextColor(fg)
 		ui.Text(c, label).FontSize(12.5).FontWeight(500).TextColor(fg)
 		if trouble > 0 {

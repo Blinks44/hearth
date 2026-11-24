@@ -11,14 +11,25 @@ import (
 )
 
 func TestHookMise(t *testing.T) {
+	const brewPath = `export PATH="/opt/homebrew/bin:$PATH"`
 	tests := []struct {
-		name, shell string
-		files       map[string]string // existing files, by name under home
-		want        map[string]string // what each edited file becomes
+		name, shell, path string
+		files             map[string]string // existing files, by name under home
+		want              map[string]string // what each edited file becomes
 	}{
 		{
-			name:  "zsh: activate in .zshrc, shims in .zprofile",
+			name:  "zsh: activate in .zshrc, shims in .zprofile, PATH added when missing",
 			shell: "/bin/zsh",
+			files: map[string]string{".zshrc": "alias ll='ls -l'\n"},
+			want: map[string]string{
+				".zshrc":    "alias ll='ls -l'\n\n" + BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate zsh)\"\n" + BlockEnd + "\n",
+				".zprofile": BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate zsh --shims)\"\n" + BlockEnd + "\n",
+			},
+		},
+		{
+			name:  "zsh: no extra PATH line when mise dir is already on PATH",
+			shell: "/bin/zsh",
+			path:  "/opt/homebrew/bin:/usr/bin",
 			files: map[string]string{".zshrc": "alias ll='ls -l'\n"},
 			want: map[string]string{
 				".zshrc":    "alias ll='ls -l'\n\n" + BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate zsh)\"\n" + BlockEnd + "\n",
@@ -29,23 +40,34 @@ func TestHookMise(t *testing.T) {
 			name:  "bash: activate in .bashrc, shims in .profile",
 			shell: "/bin/bash",
 			want: map[string]string{
-				".bashrc":  BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
-				".profile": BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash --shims)\"\n" + BlockEnd + "\n",
+				".bashrc":  BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
+				".profile": BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate bash --shims)\"\n" + BlockEnd + "\n",
 			},
 		},
 		{
-			name:  "bash: .profile, which the desktop reads, though there is .bash_profile",
+			name:  "bash: .profile, which the desktop reads, though there is .bash_profile sourcing it",
 			shell: "/usr/bin/bash",
 			files: map[string]string{".bash_profile": ". ~/.profile\n"},
 			want: map[string]string{
-				".bashrc":  BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
-				".profile": BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash --shims)\"\n" + BlockEnd + "\n",
+				".bashrc":  BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
+				".profile": BlockStart + "\n" + brewPath + "\neval \"$(/opt/homebrew/bin/mise activate bash --shims)\"\n" + BlockEnd + "\n",
+			},
+		},
+		{
+			name:  "bash: .bash_profile not sourcing .bashrc or .profile also gets activation",
+			shell: "/usr/bin/bash",
+			path:  "/opt/homebrew/bin:/usr/bin",
+			files: map[string]string{".bash_profile": "export FOO=1\n"},
+			want: map[string]string{
+				".bashrc":       BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
+				".profile":      BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash --shims)\"\n" + BlockEnd + "\n",
+				".bash_profile": "export FOO=1\n\n" + BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate bash)\"\n" + BlockEnd + "\n",
 			},
 		},
 		{
 			name:  "fish",
 			shell: "/usr/bin/fish",
-			want:  map[string]string{".config/fish/config.fish": BlockStart + "\n/opt/homebrew/bin/mise activate fish | source\n" + BlockEnd + "\n"},
+			want:  map[string]string{".config/fish/config.fish": BlockStart + "\nfish_add_path /opt/homebrew/bin\n/opt/homebrew/bin/mise activate fish | source\n" + BlockEnd + "\n"},
 		},
 		{
 			name:  "activated already by the user",
@@ -53,8 +75,18 @@ func TestHookMise(t *testing.T) {
 			files: map[string]string{".zshrc": "eval \"$(mise activate zsh)\"\n"},
 		},
 		{
+			name:  "shims already present are not duplicated",
+			shell: "/bin/zsh",
+			path:  "/opt/homebrew/bin:/usr/bin",
+			files: map[string]string{".zprofile": "eval \"$(mise activate zsh --shims)\"\n"},
+			want: map[string]string{
+				".zshrc": BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate zsh)\"\n" + BlockEnd + "\n",
+			},
+		},
+		{
 			name:  "a comment does not activate",
 			shell: "/bin/zsh",
+			path:  "/opt/homebrew/bin:/usr/bin",
 			files: map[string]string{".zshrc": "# eval \"$(mise activate zsh)\"\n", ".zprofile": ""},
 			want: map[string]string{
 				".zshrc":    "# eval \"$(mise activate zsh)\"\n\n" + BlockStart + "\neval \"$(/opt/homebrew/bin/mise activate zsh)\"\n" + BlockEnd + "\n",
@@ -70,7 +102,11 @@ func TestHookMise(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			steps, err := hookMise(sysenv.Env{"HOME=" + home, "SHELL=" + tt.shell}, "/opt/homebrew/bin/mise")
+			env := sysenv.Env{"HOME=" + home, "SHELL=" + tt.shell}
+			if tt.path != "" {
+				env = append(env, "PATH="+tt.path)
+			}
+			steps, err := hookMise(env, "/opt/homebrew/bin/mise")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -92,7 +128,7 @@ func TestHookMise(t *testing.T) {
 	// mise's installer puts it under the home folder, written as $HOME.
 	home := t.TempDir()
 	steps, _ := hookMise(sysenv.Env{"HOME=" + home, "SHELL=/bin/zsh"}, filepath.Join(home, ".local/bin/mise"))
-	if want := BlockStart + "\neval \"$($HOME/.local/bin/mise activate zsh)\"\n" + BlockEnd + "\n"; steps[0].Edit.After != want {
+	if want := BlockStart + "\nexport PATH=\"$HOME/.local/bin:$PATH\"\neval \"$($HOME/.local/bin/mise activate zsh)\"\n" + BlockEnd + "\n"; steps[0].Edit.After != want {
 		t.Errorf("got %q, want %q", steps[0].Edit.After, want)
 	}
 }
@@ -110,6 +146,11 @@ func TestFindMise(t *testing.T) {
 	write(t, installed)
 	if got := findMise(env); got != installed {
 		t.Errorf("Homebrew's: %q", got)
+	}
+	cargo := filepath.Join(home, ".cargo", "bin", "mise")
+	write(t, cargo)
+	if got := findMise(env); got != cargo {
+		t.Errorf("Cargo's: %q", got)
 	}
 	onPath := filepath.Join(bin, "mise")
 	write(t, onPath)

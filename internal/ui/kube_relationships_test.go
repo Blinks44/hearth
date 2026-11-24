@@ -75,6 +75,16 @@ func TestFollowResourceLink(t *testing.T) {
 				{Namespace: "tools", Name: "app", UID: "other"},
 				{Namespace: "shop", Name: "app", UID: "expected"},
 			}}}},
+		{"job namespace", resourceLink{kind: kindJobs, namespace: "shop", name: "sync-1"},
+			kube.Cluster{Batch: &kube.Batch{Jobs: []kube.Job{
+				{Namespace: "tools", Name: "sync-1", UID: "other"},
+				{Namespace: "shop", Name: "sync-1", UID: "expected"},
+			}}}},
+		{"cronjob namespace", resourceLink{kind: kindCronJobs, namespace: "shop", name: "sync"},
+			kube.Cluster{Batch: &kube.Batch{CronJobs: []kube.CronJob{
+				{Namespace: "tools", Name: "sync", UID: "other"},
+				{Namespace: "shop", Name: "sync", UID: "expected"},
+			}}}},
 		{"pod replacement", resourceLink{kind: kindPods, namespace: "shop", name: "app", uid: "original"},
 			kube.Cluster{Pods: []kube.Pod{{Namespace: "shop", Name: "app", UID: "recreated"}}}},
 	} {

@@ -271,6 +271,7 @@ type App struct {
 	OpenDockerLogin       func([]string, func(error))
 	ListNamespaces        func(t kube.Target, done func([]string, error)) (stop func())
 	ListCustomDefinitions func(kube.Target, func(*kube.CustomDefinitions)) (stop func())
+	ProbeCustomPresence   func(kube.Target, []kube.CustomDefinition, func(map[string]bool)) (stop func())
 	// ReadSecretValue reads one selected key and delivers its bytes through Window.Update.
 	ReadSecretValue  func(kube.Target, kube.Secret, string, func([]byte, error)) (stop func())
 	ReadHelmHistory  func(kube.HelmTarget, func([]kube.HelmRevision, error)) (stop func())
@@ -390,6 +391,7 @@ type App struct {
 	issuePopoverOn      bool
 	kind                kindCreateDialog
 	kubeLink            kubeLinkDialog
+	kubeConfig          kubeConfigDialog
 	kubeApply           *kubeApplyDialog
 	forwards            []*portForward
 	portsTab            int    // the Ports page's quick filter: all, projects, network, docker
@@ -676,6 +678,15 @@ func (a *App) Scan() {
 	}
 }
 
+// RestartScan starts a fresh scan even when one is already in flight, so
+// changes like tray context switches are never overwritten by a stale scan.
+func (a *App) RestartScan() {
+	if a.OnScan != nil {
+		a.Scanning = true
+		a.OnScan()
+	}
+}
+
 // stub is a page still to be built: its header and "Coming soon".
 func (a *App) stub(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
@@ -815,7 +826,7 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 	case instructionsPage:
 		n = len(a.Projects)
 	case mcpPage:
-		n = len(a.mcpItems())
+		n = len(a.configuredMCPItems())
 	case "/tools/docker", "/tools/databases":
 		for _, is := range a.issues(c) {
 			if issuePage(is) == p.path {
@@ -1185,5 +1196,8 @@ func (a *App) TriggerColima(start bool) {
 			a.changeColima(*st.Docker.Colima, p, action, ops.ColimaLimits{})
 			return
 		}
+	}
+	if start && len(st.Docker.Colima.Profiles) == 0 && st.Docker.Colima.Path != "" && !st.Docker.Colima.Unreadable {
+		a.changeColima(*st.Docker.Colima, inventory.ColimaProfile{Name: "default"}, ops.ColimaStart, ops.ColimaLimits{})
 	}
 }

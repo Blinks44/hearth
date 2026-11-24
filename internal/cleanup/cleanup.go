@@ -470,7 +470,7 @@ func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
 			continue
 		}
 		for _, m := range app.app.Models {
-			if m.Size < minModel || m.Loaded || len(inventory.ModelMentions(servers, m)) > 0 {
+			if m.Frees < minModel || m.Loaded || len(inventory.ModelMentions(servers, m)) > 0 {
 				continue
 			}
 			out = append(out, Candidate{Kind: Model, ID: m.Name, Manager: app.name, Paths: []string{m.Path}, Changed: m.Downloaded,

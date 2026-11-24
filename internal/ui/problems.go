@@ -84,7 +84,7 @@ func (a *App) problemsView(c *ui.Context, p page) {
 						{locales.TabAll(), strconv.Itoa(len(items))},
 						{locales.SectionTools(), count(areaTools)},
 						{"PATH", count(areaPath)},
-						{"AI", count(areaAI)},
+						{locales.SectionAI(), count(areaAI)},
 						{locales.ProjectsTitle(), count(areaProjects)},
 					})
 					ui.Box(c).Grow(1).Height(1)

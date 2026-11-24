@@ -44,9 +44,9 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 					return ops.DockerCredentialPlan(env, d.ConfigDir, issue)
 				}, a.proposeOrSay)
 			}
-		} else if a.Shell != nil {
+		} else if a.canOpenFile() {
 			path := filepath.Join(d.ConfigDir, "config.json")
-			row.button = locales.OpOpenFile()
+			row.button = locales.OpenInEditor()
 			row.action = func() { a.openFile(c, path) }
 		}
 		rows = append(rows, row)
@@ -63,7 +63,7 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 		}
 		rows = append(rows, row)
 	}
-	if d.DefaultSocketIssue != "" {
+	if d.DefaultSocketIssue != "" && context == d.Selected {
 		row := dockerHealthRow{key: "socket", title: locales.DockerDefaultSocket(), detail: locales.DockerSocketDifferent(d.Selected)}
 		switch d.DefaultSocketIssue {
 		case "missing":
@@ -88,9 +88,12 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 			if d.DefaultSocketIssue != "unavailable" || a.dockerAnswers() {
 				row.button = locales.KubeShellCopy()
 				command := run.TerminalCommand([]string{"docker", "--context", d.Selected, "ps"})
-				row.action = func() { c.WriteClipboard(command) }
+				row.action = func() {
+					c.WriteClipboard(command)
+					c.Toast(locales.PrepareCopied())
+				}
 			} else if plan, ok := a.engineStartPlan(); ok && !a.op.running() {
-				row.button = plan.Title
+				row.button = plan.Title + "…"
 				row.action = func() { a.Propose(plan) }
 			}
 		}

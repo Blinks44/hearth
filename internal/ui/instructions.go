@@ -195,7 +195,7 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() {
 						listFrame(c, func() {
 							ui.Row(c).Padding(6, 10).Children(func() {
-								ui.SearchField(c.Key("instructions-search"), &a.instructionsQuery).Placeholder(locales.InstructionsSearch()).Grow(1)
+								ui.SearchField(c.Key("instructions-search"), &a.instructionsQuery).Bind(&a.filterField).Placeholder(locales.InstructionsSearch()).Grow(1)
 							})
 							if query != "" && len(shownGlobal) == 0 && len(shownProjects) == 0 {
 								cardNote(c, locales.NothingMatches())
@@ -215,6 +215,8 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 									e := ui.ButtonBase(c.Key("instructions:agent:"+ag.ID)).Padding(9, 14).Gap(10).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(title)
 									if selected {
 										e.Background(pal.ActiveRow)
+									} else if e.Hovered() {
+										e.Background(pal.Subtle)
 									}
 									e.Children(func() {
 										ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
@@ -242,6 +244,8 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 								e := ui.ButtonBase(c.Key("instructions:"+pr.Dir)).Padding(9, 14).Gap(10).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(filepath.Base(pr.Dir))
 								if selected {
 									e.Background(pal.ActiveRow)
+								} else if e.Hovered() {
+									e.Background(pal.Subtle)
 								}
 								e.Children(func() {
 									ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
@@ -313,7 +317,7 @@ func (a *App) instructionDetail(c *ui.Context, p projects.Project) {
 			}
 			fullPath := filepath.Join(p.Dir, filepath.FromSlash(f.name))
 			listRow(c, f.name, true, tilde(fullPath, a.Home), func() {
-				if a.Shell != nil && iconButton(c.Key("open:"+f.name), "external-link", f.name).Clicked() {
+				if a.canOpenFile() && iconButton(c.Key("inst-open:"+fullPath), "external-link", locales.OpenInEditor()).Clicked() {
 					a.openFile(c, fullPath)
 				}
 			})

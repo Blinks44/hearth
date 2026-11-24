@@ -20,21 +20,21 @@ func (a *App) deploymentPause(c *ui.Context, ref ops.KubeResource, paused bool) 
 		}
 		return
 	}
-	note, color := locales.KubePauseHint(), t.TextMuted
+	title, note, color := locales.KubeRolloutActive(), locales.KubePauseHint(), t.TextMuted
+	button := locales.KubeRolloutPauseButton()
 	if paused {
-		note, color = locales.KubePausedNote(), pal.WarningText
+		title, note, color = locales.KubeRolloutPaused(), locales.KubePausedNote(), pal.WarningText
+		button = locales.KubeRolloutResumeButton()
 	}
 	f := a.cluster.resources[ref]
-	label := locales.KubePauseAction()
 	detailSection(c, locales.KubeResourceRollout())
 	ui.Row(c.Key("deployment-rollout")).Gap(10).AlignItems(ui.Center).Margin(0, 16, 6, 16).Padding(10, 12).
 		Radius(10).BorderWidth(1).BorderColor(pal.Line).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			ui.Text(c, label).FontSize(13).FontWeight(500)
+			ui.Text(c, title).FontSize(13).FontWeight(500)
 			ui.Text(c, note).FontSize(12).TextColor(color).Wrap()
 		})
-		on := paused
-		toggle(c, "deployment-pause", &on).Size(32, 18).Shrink(0).Label(label).
+		ui.Button(c.Key("deployment-pause"), button+"…").Height(controlHeight).Shrink(0).
 			Disabled((f != nil && f.busy) || a.op.running()).
 			OnClick(func() { a.planDeploymentPause(a.resourceForm(ref), !paused) })
 	})

@@ -27,6 +27,9 @@ type MiseSetup struct {
 	Base int
 	// Mise is the program, where it is or will be once Steps ran.
 	Mise string
+	// envPath is the terminal's PATH when SetUpMise ran, used by WithMise to
+	// expose Mise's directory to child processes (e.g. npm -> mise reshim).
+	envPath string
 }
 
 // MisePlan returns the plan that sets up mise, checked in a new terminal;
@@ -61,9 +64,22 @@ func MisePlan(env sysenv.Env, terminal Terminal) (Plan, error) {
 func WithMise(p Plan, s MiseSetup) Plan {
 	steps := make([]Step, 0, len(s.Steps)+len(p.Steps))
 	steps = append(steps, s.Steps...)
+	miseDir := ""
+	if s.Mise != "" {
+		if d := filepath.Dir(s.Mise); d != "" && d != "." {
+			miseDir = d
+		}
+	}
+	basePath := s.envPath
+	if basePath == "" {
+		basePath = sysenv.Env(p.Env).Get("PATH")
+	}
 	for _, step := range p.Steps {
-		if len(step.Argv) > 0 && step.Argv[0] == "mise" {
+		if len(step.Argv) > 0 && step.Argv[0] == "mise" && s.Mise != "" {
 			step.Argv = append([]string{s.Mise}, step.Argv[1:]...)
+			if miseDir != "" && basePath != "" {
+				step.Env = append(slices.Clone(step.Env), "PATH="+miseDir+string(filepath.ListSeparator)+basePath)
+			}
 		}
 		steps = append(steps, step)
 	}

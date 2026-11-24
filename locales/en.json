@@ -242,7 +242,7 @@
       }
     }
   },
-  "colimaResourceSummary": "{cpu} CPU · {memory} GiB RAM · {disk} GiB disk",
+  "colimaResourceSummary": "{cpu} CPU · {memory} GiB · {disk} GiB disk",
   "@colimaResourceSummary": {
     "placeholders": {
       "cpu": {
@@ -1501,7 +1501,11 @@
       }
     }
   },
-  "kubePauseHint": "Template changes wait until the rollout resumes.",
+  "kubePauseHint": "Pod template changes start a rollout right away.",
+  "kubeRolloutActive": "Rollout active",
+  "kubeRolloutPaused": "Rollout paused",
+  "kubeRolloutPauseButton": "Pause",
+  "kubeRolloutResumeButton": "Resume",
   "kubePausePreview": "Kubernetes pauses the rollout and keeps the current pods running. Changes to the pod template will take effect after you resume.",
   "kubeResumeAction": "Resume rollout",
   "kubeResumeTitle": "Resume the rollout for {name}?",
@@ -3998,7 +4002,7 @@
   "DatabasePorts": "TCP ports",
   "DatabaseServices": "Services",
   "DatabaseContainers": "Containers",
-  "DatabaseReadOnly": "Services start and stop through their manager, after showing what will change. Containers are run by docker compose in their project.",
+  "DatabaseReadOnly": "Services and Docker containers start and stop through their manager, after showing what will change.",
   "DatabaseListeners": "Database port listeners",
   "DatabaseObserved": "observed · read only",
   "DatabaseNoListeners": "No listeners observed on database ports.",
@@ -7238,7 +7242,7 @@
       }
     }
   },
-  "dockerUseContext": "Use this context",
+  "dockerUseContext": "Use this context…",
   "@dockerUseContext": {
     "description": "Menu item of a Docker context: switch to it."
   },
@@ -7348,7 +7352,7 @@
       }
     }
   },
-  "serviceStart": "Start service",
+  "serviceStart": "Start service…",
   "@serviceStart": {
     "description": "Menu item of a database service."
   },
@@ -12552,6 +12556,81 @@
   "@kubeCronYearly": {
     "description": "Kubernetes workload view or resource picker."
   },
+  "kubeCronEveryMinute": "Every minute",
+  "kubeCronMinutesOfHour": "Every {count} min of the hour",
+  "@kubeCronMinutesOfHour": {
+    "description": "CronJob schedule with a minute step that does not divide 60.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kubeCronHourlyAt": "Every hour at :{minute}",
+  "@kubeCronHourlyAt": {
+    "description": "CronJob schedule running once every hour at a specific minute.",
+    "placeholders": {
+      "minute": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronHoursAt": "Every {count} h at :{minute}",
+  "@kubeCronHoursAt": {
+    "description": "CronJob schedule running every N hours at a specific minute.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "minute": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronWeekdays": "Weekdays at {at}",
+  "@kubeCronWeekdays": {
+    "description": "CronJob schedule running Monday through Friday.",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronMonthlyOn": "Day {day} of each month at {at}",
+  "@kubeCronMonthlyOn": {
+    "description": "CronJob schedule running on a specific day of each month.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeCronYearlyOn": "{month, select, 1 {Jan} 2 {Feb} 3 {Mar} 4 {Apr} 5 {May} 6 {Jun} 7 {Jul} 8 {Aug} 9 {Sep} 10 {Oct} 11 {Nov} 12 {Dec} other {Yearly}} {day} at {at}",
+  "@kubeCronYearlyOn": {
+    "description": "CronJob schedule running once a year on a specific month and day.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      },
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "kubeJobActive": "Active",
+  "kubeJobStarted": "Started",
+  "kubeJobDuration": "Duration",
+  "kubeJobParallelism": "Parallelism",
+  "kubeJobBackoffLimit": "Backoff limit",
+  "kubeCronTimeZone": "Time zone",
+  "kubeCronConcurrency": "Concurrency",
+  "kubeCronLastSchedule": "Last schedule",
   "kubeKindsAll": "All resources",
   "@kubeKindsAll": {
     "description": "Kubernetes workload view or resource picker."
@@ -16872,5 +16951,397 @@
   "appUpdateAutoCheckHint": "Checks once a day in the background when a release build can update itself",
   "@appUpdateAutoCheckHint": {
     "description": "Settings toggle hint explaining automatic Hearth update checks."
+  },
+  "kubeNoConfigFile": "no kubeconfig file found",
+  "@kubeNoConfigFile": {
+    "description": "Kubernetes contexts card caption when no kubeconfig file exists."
+  },
+  "kubeEmptyMissingTitle": "{file} does not exist",
+  "@kubeEmptyMissingTitle": {
+    "description": "Kubernetes empty state title when the default kubeconfig file is missing.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeEmptyMissingManyTitle": "Kubeconfig files not found",
+  "@kubeEmptyMissingManyTitle": {
+    "description": "Kubernetes empty state title when all configured KUBECONFIG files are missing."
+  },
+  "kubeEmptyMissingLead": "kubectl looks here for cluster connections. Create a starter file, paste an existing kubeconfig YAML, or start a local kind cluster.",
+  "@kubeEmptyMissingLead": {
+    "description": "Kubernetes empty state description when kubeconfig file does not exist."
+  },
+  "kubeEmptyInvalidTitle": "Kubeconfig cannot be read",
+  "@kubeEmptyInvalidTitle": {
+    "description": "Kubernetes empty state title when kubeconfig YAML is invalid."
+  },
+  "kubeEmptyInvalidLead": "{file} is not valid YAML, so kubectl cannot load contexts from it. Open it in an editor to fix the syntax.",
+  "@kubeEmptyInvalidLead": {
+    "description": "Kubernetes empty state description when kubeconfig file has invalid YAML.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeEmptyNoContextsLead": "{file} exists, but has no contexts yet. Open it in an editor to add a cluster, or create a local kind cluster.",
+  "@kubeEmptyNoContextsLead": {
+    "description": "Kubernetes empty state description when kubeconfig exists but defines no contexts.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeEmptyCloudHint": "Or pull a kubeconfig from your cloud CLI:",
+  "@kubeEmptyCloudHint": {
+    "description": "Kubernetes empty state hint introducing cloud CLI commands."
+  },
+  "kubeCreateFileButton": "Create {file}…",
+  "@kubeCreateFileButton": {
+    "description": "Button to create a missing kubeconfig file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeCreateButton": "Create…",
+  "@kubeCreateButton": {
+    "description": "Short button to create a missing kubeconfig file."
+  },
+  "kubeconfigMissingDefault": "{file} does not exist",
+  "@kubeconfigMissingDefault": {
+    "description": "Caption in kubectl terminal card when the default kubeconfig file is missing.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeFileInvalidBadge": "invalid",
+  "@kubeFileInvalidBadge": {
+    "description": "Badge shown on a kubeconfig file row that failed YAML parsing."
+  },
+  "kubeCurrentMissing": "context not found in kubeconfig",
+  "@kubeCurrentMissing": {
+    "description": "State card caption when kubectl current-context does not match any defined context."
+  },
+  "kubeCurrentMissingIn": "missing in kubeconfig · set in {file}",
+  "@kubeCurrentMissingIn": {
+    "description": "Terminal card caption when current-context points to a context not defined in kubeconfig.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeCurrentMissingBadge": "missing",
+  "@kubeCurrentMissingBadge": {
+    "description": "Warning badge when kubectl current-context is not defined in kubeconfig."
+  },
+  "kubeConfigDialogTitle": "Create kubeconfig",
+  "@kubeConfigDialogTitle": {
+    "description": "Dialog title for creating a new kubeconfig file."
+  },
+  "kubeConfigDialogLead": "Creates a new file with private 0600 permissions through a confirmed plan.",
+  "@kubeConfigDialogLead": {
+    "description": "Dialog subtitle explaining how Hearth creates a kubeconfig file."
+  },
+  "kubeConfigModeTemplate": "Starter template",
+  "@kubeConfigModeTemplate": {
+    "description": "Mode tab for creating a kubeconfig from a starter template."
+  },
+  "kubeConfigModePaste": "Paste YAML",
+  "@kubeConfigModePaste": {
+    "description": "Mode tab for creating a kubeconfig from pasted YAML."
+  },
+  "kubeConfigPastePlaceholder": "Paste kubeconfig YAML here…",
+  "@kubeConfigPastePlaceholder": {
+    "description": "Placeholder text for kubeconfig YAML input area."
+  },
+  "kubeConfigTemplateHint": "Valid empty kubeconfig · 0600 permissions · can be opened in editor right after",
+  "@kubeConfigTemplateHint": {
+    "description": "Validation hint for an empty starter kubeconfig."
+  },
+  "kubeConfigParsedSummary": "{count, plural, one {# context} other {# contexts}} ({names}) · secrets are masked in the plan preview",
+  "@kubeConfigParsedSummary": {
+    "description": "Validation summary when pasted kubeconfig YAML defines contexts.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "names": {
+        "type": "String",
+        "example": "staging, prod"
+      }
+    }
+  },
+  "kubeConfigParsedNoContexts": "Valid kubeconfig YAML with 0 contexts · secrets are masked in the plan preview",
+  "@kubeConfigParsedNoContexts": {
+    "description": "Validation summary when pasted kubeconfig YAML is valid but has no contexts."
+  },
+  "kubeConfigInvalidEmpty": "Paste or enter kubeconfig YAML.",
+  "@kubeConfigInvalidEmpty": {
+    "description": "Validation error when kubeconfig YAML text is empty."
+  },
+  "kubeConfigInvalidLimit": "Kubeconfig YAML is too large (limit 256 KB).",
+  "@kubeConfigInvalidLimit": {
+    "description": "Validation error when kubeconfig YAML exceeds size limit."
+  },
+  "kubeConfigInvalidYAML": "Not valid kubeconfig YAML: {err}",
+  "@kubeConfigInvalidYAML": {
+    "description": "Validation error when kubeconfig YAML fails to parse.",
+    "placeholders": {
+      "err": {
+        "type": "String",
+        "example": "yaml: line 2: did not find expected key"
+      }
+    }
+  },
+  "kubeConfigInvalidKind": "Expected kind: Config (or omitted), got {kind}.",
+  "@kubeConfigInvalidKind": {
+    "description": "Validation error when YAML kind is not Config.",
+    "placeholders": {
+      "kind": {
+        "type": "String",
+        "example": "Deployment"
+      }
+    }
+  },
+  "kubeConfigAlreadyExists": "{file} already exists.",
+  "@kubeConfigAlreadyExists": {
+    "description": "Error when attempting to create a kubeconfig file that already exists.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeConfigCreateTitle": "Create {file}",
+  "@kubeConfigCreateTitle": {
+    "description": "Operation plan title for creating a kubeconfig file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeConfigCreateWhy": "Writes a kubeconfig file with 0600 permissions. Hearth does not contact any cluster.",
+  "@kubeConfigCreateWhy": {
+    "description": "Operation plan rationale for creating a kubeconfig file."
+  },
+  "kubeConfigCreateAction": "Create file",
+  "@kubeConfigCreateAction": {
+    "description": "Confirm button label for creating a kubeconfig file."
+  },
+  "kubeConfigCreateChange": "Created {file} (permissions 0600)",
+  "@kubeConfigCreateChange": {
+    "description": "Operation change summary line when a kubeconfig file is created.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeConfigCreateContexts": "{count, plural, one {# context ready for kubectl} other {# contexts ready for kubectl}}",
+  "@kubeConfigCreateContexts": {
+    "description": "Operation change summary line listing how many contexts the new kubeconfig defines.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "kubeConfigSecretsMaskedNote": "Secrets stay private",
+  "@kubeConfigSecretsMaskedNote": {
+    "description": "Operation note title explaining that kubeconfig secrets are redacted in preview."
+  },
+  "kubeConfigSecretsMaskedText": "Tokens, passwords, and private keys are masked in this preview and never written to the operation journal.",
+  "@kubeConfigSecretsMaskedText": {
+    "description": "Operation note text explaining kubeconfig secret redaction."
+  },
+  "kubeConfigVerified": "{file} is readable as kubeconfig",
+  "@kubeConfigVerified": {
+    "description": "Verification message after creating a kubeconfig file.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeDeleteContext": "Delete context…",
+  "@kubeDeleteContext": {
+    "description": "Context menu item to delete a Kubernetes context from kubeconfig."
+  },
+  "kubeDeleteContextTitle": "Delete Kubernetes context {name}",
+  "@kubeDeleteContextTitle": {
+    "description": "Operation plan title for deleting a Kubernetes context.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "staging"
+      }
+    }
+  },
+  "kubeDeleteContextWhy": "Removes the context entry from kubeconfig using kubectl. Cluster and user entries stay in the file, and the cluster itself is not touched.",
+  "@kubeDeleteContextWhy": {
+    "description": "Operation plan rationale for deleting a kubeconfig context."
+  },
+  "kubeDeleteContextAction": "Delete context",
+  "@kubeDeleteContextAction": {
+    "description": "Confirm button label for deleting a kubeconfig context."
+  },
+  "kubeDeleteContextChange": "Removed context {name} from {file}",
+  "@kubeDeleteContextChange": {
+    "description": "Operation change summary for removing a kubeconfig context.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "staging"
+      },
+      "file": {
+        "type": "String",
+        "example": "~/.kube/config"
+      }
+    }
+  },
+  "kubeDeleteContextUnset": "Clear kubectl current-context",
+  "@kubeDeleteContextUnset": {
+    "description": "Operation step note and change summary for clearing current-context after deleting the active context."
+  },
+  "kubeDeleteContextCurrentNote": "Active kubectl context",
+  "@kubeDeleteContextCurrentNote": {
+    "description": "Operation note title when deleting the active kubectl context."
+  },
+  "kubeDeleteContextCurrentText": "{name} is kubectl's current-context. Hearth will clear current-context after deleting it.",
+  "@kubeDeleteContextCurrentText": {
+    "description": "Operation note text explaining that current-context will be cleared.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "staging"
+      }
+    }
+  },
+  "kubeDeleteContextStillThere": "kubectl still lists context {name}.",
+  "@kubeDeleteContextStillThere": {
+    "description": "Verification error when deleted context still appears in kubectl.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "staging"
+      }
+    }
+  },
+  "kubeDeleteContextDeleted": "Context {name} removed",
+  "@kubeDeleteContextDeleted": {
+    "description": "Verification message when a kubeconfig context was deleted.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "staging"
+      }
+    }
+  },
+  "kubeServicesSessionAffinity": "Session affinity",
+  "@kubeServicesSessionAffinity": {
+    "description": "Fact label for a Kubernetes Service's sessionAffinity."
+  },
+  "kubeServicesExternalIPs": "External IPs",
+  "@kubeServicesExternalIPs": {
+    "description": "Fact label for a Kubernetes Service's externalIPs."
+  },
+  "kubeServicesTrafficPolicy": "Traffic policy",
+  "@kubeServicesTrafficPolicy": {
+    "description": "Fact label for a Kubernetes Service's traffic policy."
+  },
+  "kubeResourceNotReady": "Not ready",
+  "@kubeResourceNotReady": {
+    "description": "Fact label for not-ready Endpoint addresses."
+  },
+  "kubeKindHiddenNoAccess": "{count} hidden (no access)",
+  "@kubeKindHiddenNoAccess": {
+    "description": "Caption in the Kubernetes resource picker showing how many resource kinds were hidden due to missing list permission.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "kubeKindShowHidden": "Show all",
+  "@kubeKindShowHidden": {
+    "description": "Action in the Kubernetes resource picker to temporarily show kinds without list permission."
+  },
+  "kubeKindHideNoAccess": "Hide inaccessible",
+  "@kubeKindHideNoAccess": {
+    "description": "Action in the Kubernetes resource picker to hide kinds without list permission again."
+  },
+  "kubeKindNonEmptyOnly": "Non-empty only",
+  "@kubeKindNonEmptyOnly": {
+    "description": "Toggle label in the Kubernetes resource picker and custom resources list to hide CRDs with zero objects in the active namespace scope."
+  },
+  "kubeKindHiddenEmpty": "{count} empty hidden",
+  "@kubeKindHiddenEmpty": {
+    "description": "Caption showing how many empty custom resource definitions are hidden in the active namespace scope.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "pathShellUnsupported": "Hearth updates PATH automatically for zsh, bash, and fish (current shell: {shell}).",
+  "@pathShellUnsupported": {
+    "description": "Error when the user tries to modify PATH from a shell Hearth does not edit automatically.",
+    "placeholders": {
+      "shell": {
+        "type": "String",
+        "example": "tcsh"
+      }
+    }
+  },
+  "kubeServiceExternal": "external: {policy}",
+  "@kubeServiceExternal": {
+    "description": "External traffic policy label in Kubernetes Service details.",
+    "placeholders": {
+      "policy": {
+        "type": "String",
+        "example": "Cluster"
+      }
+    }
+  },
+  "kubeServiceInternal": "internal: {policy}",
+  "@kubeServiceInternal": {
+    "description": "Internal traffic policy label in Kubernetes Service details.",
+    "placeholders": {
+      "policy": {
+        "type": "String",
+        "example": "Local"
+      }
+    }
+  },
+  "kubeCustomAllEmpty": "All custom resources are empty in the selected namespace.",
+  "@kubeCustomAllEmpty": {
+    "description": "Empty state caption in the Custom Resources table when all accessible CRDs have zero objects and the Non-empty only filter is active."
+  },
+  "kubeYamlMappingExpected": "expected a YAML mapping",
+  "@kubeYamlMappingExpected": {
+    "description": "Validation detail shown when a pasted kubeconfig is not a YAML mapping."
   }
 }

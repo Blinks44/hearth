@@ -3,8 +3,10 @@ package kube
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
@@ -14,7 +16,16 @@ import (
 // without a selector has no pod counts.
 type Service struct {
 	Namespace, Name, UID  string
+	Created               time.Time
 	Type, ClusterIP       string
+	ExternalName          string
+	ExternalIPs           []string
+	LoadBalancer          []string
+	SessionAffinity       string
+	ExternalTrafficPolicy string
+	InternalTrafficPolicy string
+	Selector              map[string]string
+	Labels                map[string]string
 	External, HasSelector bool
 	Ports                 []ServicePort
 	Pods, Ready           int
@@ -25,7 +36,8 @@ type Service struct {
 
 // ServicePort is a Service's port and the number or name it maps to in a pod.
 type ServicePort struct {
-	Port             int
+	Name             string
+	Port, NodePort   int
 	Protocol, Target string
 }
 
@@ -37,19 +49,45 @@ func (p ServicePort) String() string {
 	return port + "/" + p.Protocol
 }
 
+// DetailString includes the port name and NodePort when present.
+func (p ServicePort) DetailString() string {
+	text := p.String()
+	if p.Name != "" {
+		text = p.Name + ": " + text
+	}
+	if p.NodePort > 0 {
+		text += " (NodePort " + strconv.Itoa(p.NodePort) + ")"
+	}
+	return text
+}
+
 type service struct {
 	meta
 	Spec struct {
-		Type        string            `json:"type"`
-		ClusterIP   string            `json:"clusterIP"`
-		ExternalIPs []string          `json:"externalIPs"`
-		Selector    map[string]string `json:"selector"`
-		Ports       []struct {
+		Type                  string            `json:"type"`
+		ClusterIP             string            `json:"clusterIP"`
+		ExternalName          string            `json:"externalName"`
+		ExternalIPs           []string          `json:"externalIPs"`
+		SessionAffinity       string            `json:"sessionAffinity"`
+		ExternalTrafficPolicy string            `json:"externalTrafficPolicy"`
+		InternalTrafficPolicy string            `json:"internalTrafficPolicy"`
+		Selector              map[string]string `json:"selector"`
+		Ports                 []struct {
+			Name       string          `json:"name"`
 			Port       int             `json:"port"`
+			NodePort   int             `json:"nodePort"`
 			Protocol   string          `json:"protocol"`
 			TargetPort json.RawMessage `json:"targetPort"`
 		} `json:"ports"`
 	} `json:"spec"`
+	Status struct {
+		LoadBalancer struct {
+			Ingress []struct {
+				IP       string `json:"ip"`
+				Hostname string `json:"hostname"`
+			} `json:"ingress"`
+		} `json:"loadBalancer"`
+	} `json:"status"`
 }
 
 func (s service) hasSelector() bool { return s.Spec.Type != "ExternalName" && len(s.Spec.Selector) > 0 }
@@ -77,15 +115,36 @@ func readServices(ctx context.Context, r run.Runner, env sysenv.Env, t Target, s
 		}
 		podsKnown := podsErr == nil
 		for _, it := range list.Items {
+			var lb []string
+			for _, ing := range it.Status.LoadBalancer.Ingress {
+				lb = append(lb, ing.IP, ing.Hostname)
+			}
+			lb = slices.DeleteFunc(lb, func(addr string) bool { return addr == "" })
 			s := Service{
 				Namespace: it.Metadata.Namespace, Name: it.Metadata.Name, UID: it.Metadata.UID,
-				Type: it.Spec.Type, ClusterIP: it.Spec.ClusterIP,
-				External:    it.Spec.Type != "ClusterIP" || len(it.Spec.ExternalIPs) > 0,
-				HasSelector: it.hasSelector(),
-				PodsKnown:   it.hasSelector() && podsKnown,
+				Created:               it.Metadata.CreationTimestamp,
+				Type:                  it.Spec.Type,
+				ClusterIP:             it.Spec.ClusterIP,
+				ExternalName:          it.Spec.ExternalName,
+				ExternalIPs:           it.Spec.ExternalIPs,
+				LoadBalancer:          lb,
+				SessionAffinity:       it.Spec.SessionAffinity,
+				ExternalTrafficPolicy: it.Spec.ExternalTrafficPolicy,
+				InternalTrafficPolicy: it.Spec.InternalTrafficPolicy,
+				Selector:              it.Spec.Selector,
+				Labels:                it.Metadata.Labels,
+				External:              it.Spec.Type != "ClusterIP" || len(it.Spec.ExternalIPs) > 0,
+				HasSelector:           it.hasSelector(),
+				PodsKnown:             it.hasSelector() && podsKnown,
 			}
 			for _, port := range it.Spec.Ports {
-				s.Ports = append(s.Ports, ServicePort{Port: port.Port, Protocol: port.Protocol, Target: serviceTargetPort(port.TargetPort)})
+				s.Ports = append(s.Ports, ServicePort{
+					Name:     port.Name,
+					Port:     port.Port,
+					NodePort: port.NodePort,
+					Protocol: port.Protocol,
+					Target:   serviceTargetPort(port.TargetPort),
+				})
 			}
 			selected := s.UID == t.Events.UID && s.Namespace == t.Events.Namespace && t.Events.UID != ""
 			if selected && s.HasSelector {

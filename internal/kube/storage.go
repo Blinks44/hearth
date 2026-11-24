@@ -98,7 +98,7 @@ func (v podVolume) claimName(podName string) string {
 	if v.PersistentVolumeClaim.ClaimName != "" {
 		return v.PersistentVolumeClaim.ClaimName
 	}
-	if v.Ephemeral != nil && v.Ephemeral.VolumeClaimTemplate != nil {
+	if podName != "" && v.Ephemeral != nil && v.Ephemeral.VolumeClaimTemplate != nil {
 		return podName + "-" + v.Name
 	}
 	return ""

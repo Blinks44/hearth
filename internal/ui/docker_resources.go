@@ -196,7 +196,7 @@ func (a *App) dockerResourcesView(c *ui.Context) {
 	})
 	tracks := []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(200), ui.Fixed(70), ui.Fixed(86), ui.Fixed(54)}
 	if narrow(c) {
-		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(110), ui.Fixed(116), ui.Fixed(64), ui.Fixed(54), ui.Fixed(54)}
+		tracks = []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(132), ui.Fixed(94), ui.Fixed(64), ui.Fixed(54), ui.Fixed(54)}
 	}
 	summary := strconv.Itoa(len(items))
 	if kind == docker.VolumeResource && allSizes && len(items) > 0 {

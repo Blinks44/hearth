@@ -151,10 +151,11 @@ func (a *App) phpConfig(c *ui.Context, in inventory.Installation) {
 			cardNote(c, locales.PhpNoIni())
 		}
 		for _, path := range cfg.Files {
-			listRow(c, filepath.Base(path), false, tilde(path, a.Home), func() {
-				if a.Shell != nil || a.OpenInEditor != nil {
-					iconButton(c, "external-link", locales.PhpOpenIni()).OnClick(func() {
-						a.openFile(c, path)
+			file := path
+			listRow(c, filepath.Base(file), false, tilde(file, a.Home), func() {
+				if a.canOpenFile() {
+					iconButton(c.Key("php-open:"+file), "external-link", locales.PhpOpenIni()).OnClick(func() {
+						a.openFile(c, file)
 					})
 				}
 			})

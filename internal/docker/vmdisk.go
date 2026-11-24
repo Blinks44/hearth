@@ -63,11 +63,19 @@ func podmanDisk(ctx context.Context, r run.Runner, env sysenv.Env, endpoint stri
 		return ""
 	}
 	names, err := r.Run(ctx, run.Cmd{Args: []string{paths[0], "machine", "list", "--format", "{{.Name}}"}, Env: env})
-	if err != nil || names.ExitCode != 0 || names.Truncated || len(strings.Fields(string(names.Stdout))) == 0 {
+	fields := strings.Fields(string(names.Stdout))
+	if err != nil || names.ExitCode != 0 || names.Truncated || len(fields) == 0 {
 		return ""
 	}
 	args := []string{paths[0], "machine", "inspect", "--format", "{{json .}}", "--"}
-	args = append(args, strings.Fields(string(names.Stdout))...)
+	for _, field := range fields {
+		if name := strings.TrimSuffix(field, "*"); name != "" {
+			args = append(args, name)
+		}
+	}
+	if len(args) == 6 {
+		return ""
+	}
 	type machinePath struct{ Path string }
 	machines, err := readRows[struct {
 		ImagePath      machinePath

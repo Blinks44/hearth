@@ -509,6 +509,18 @@ func main() {
 			}()
 			return cancel
 		}
+		a.ProbeCustomPresence = func(t kube.Target, defs []kube.CustomDefinition, done func(map[string]bool)) func() {
+			env := scanner.Terminal()
+			t.API = api
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				present := kube.ProbeCustomPresence(ctx, env, t, defs)
+				if ctx.Err() == nil {
+					win.Update(func() { done(present) })
+				}
+			}()
+			return cancel
+		}
 		a.ReadHelmHistory = func(t kube.HelmTarget, done func([]kube.HelmRevision, error)) func() {
 			env := scanner.Terminal()
 			ctx, cancel := context.WithCancel(context.Background())
@@ -990,6 +1002,7 @@ func main() {
 				cancelVersions()
 			}
 			stopCatalog()
+			catalogCtx, stopCatalog = context.WithCancel(context.Background())
 			go func() {
 				err := errors.Join(lists.Clear(), skillCache.Clear(), ai.ClearUsageCache(usageCache))
 				win.Update(func() {
@@ -1010,6 +1023,7 @@ func main() {
 					a.RubyVersions = nil
 					a.JavaVersions = nil
 					a.AgentVersions = nil
+					a.MiseOutdated = nil
 					a.NodeVersionsErr = ""
 					a.JSVersionsErr = ""
 					a.BunLatestErr = ""
@@ -1021,6 +1035,7 @@ func main() {
 					a.RubyVersionsErr = ""
 					a.JavaVersionsErr = ""
 					a.AgentVersionsErr = ""
+					a.MiseOutdatedErr = ""
 					a.SettingsError = ""
 					a.SettingsNotice = locales.SettingsCleared()
 					fetchVersions(false)

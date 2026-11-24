@@ -113,9 +113,13 @@ func (a *App) startOperation() {
 		op.state = s
 		if op.plan.KubeBulk && s.Phase.Over() {
 			a.cluster.refresh++
+			a.cluster.custom.catalog.invalidatePresence()
 		}
 		if s.Phase == ops.Succeeded && op.after != nil {
 			op.after()
+			if a.router.Path() == kubeClusterPage {
+				a.cluster.custom.catalog.invalidatePresence()
+			}
 		}
 		if s.Phase.Over() && op.plan.DockerAction != "" {
 			a.engine.refresh++
@@ -400,6 +404,23 @@ func stepEdit(step ops.Step) (e ops.FileEdit, setting, ok bool) {
 	return ops.FileEdit{}, false, false
 }
 
+// operationOpenableFile returns the edited or created file path when a plan
+// writes a single non-setting file, or "" otherwise.
+func operationOpenableFile(steps []ops.Step) string {
+	path := ""
+	for _, step := range steps {
+		e, setting, ok := stepEdit(step)
+		if !ok || setting || e.Path == "" {
+			continue
+		}
+		if path != "" && path != e.Path {
+			return ""
+		}
+		path = e.Path
+	}
+	return path
+}
+
 // editDiff is a file a plan edits: its path, a button that opens it, and
 // the lines that change, numbered, removed in red and added in green.
 func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
@@ -413,7 +434,7 @@ func (a *App) editDiff(c *ui.Context, e ops.FileEdit, setting bool) {
 			ui.Icon(c, Icon("folder-open")).Size(14, 14).TextColor(t.TextMuted)
 			clipped(c, path).FontSize(12.5)
 		})
-		if a.Shell != nil && !e.New && !setting {
+		if a.canOpenFile() && !e.New && !setting {
 			ui.Button(c.Key("open:"+e.Path), locales.OpOpenFile()).OnClick(func() { a.openFile(c, e.Path) })
 		}
 	})
@@ -746,7 +767,7 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		return
 	}
 	openJournal := func() {
-		if a.Shell != nil && a.JournalPath != "" {
+		if a.canOpenFile() && a.JournalPath != "" {
 			a.openFile(c, a.JournalPath)
 		}
 	}
@@ -772,7 +793,10 @@ func (a *App) operationButtons(c *ui.Context, op *operation) {
 		ui.Button(c.Key("op-stop"), locales.OpStop()).Height(controlHeight).TextColor(c.Theme().Danger).
 			Disabled(op.state.Phase.Over()).OnClick(func() { op.stop() })
 	case op.state.Phase == ops.Succeeded:
-		if a.JournalPath != "" && a.Shell != nil {
+		if path := operationOpenableFile(op.plan.Steps); path != "" && a.canOpenFile() {
+			ui.Button(c.Key("op-open-file"), locales.OpenInEditor()).Height(controlHeight).OnClick(func() { a.openFile(c, path) })
+		}
+		if a.JournalPath != "" && a.canOpenFile() {
 			ui.Button(c.Key("op-journal"), locales.OpOpenJournal()).Height(controlHeight).OnClick(openJournal)
 		}
 		ui.PrimaryButton(c.Key("op-done"), locales.OpDone()).Height(controlHeight).OnClick(hide)

@@ -235,10 +235,12 @@ func TestAddDialog(t *testing.T) {
 	tt.Frame()
 	hasTexts(t, tt, "Add project", "~/work/moduix", "packageManager", "10.4.1",
 		"apps/web", "own .nvmrc: Node 20", "apps/docs", "same versions as the root", "Add 2 projects")
-	// The switch ends the row, where the button ends the footer.
-	row, _ := tt.Find("apps/docs")
-	add, _ := tt.Find("Add 2 projects")
-	tt.ClickAt(add.X+add.W-10, row.Y+row.H)
+	// Check the unchecked nested project and add all three.
+	box, ok := tt.AccessByRole(ui.RoleCheckBox, "apps/docs")
+	if !ok {
+		t.Fatal("missing apps/docs checkbox")
+	}
+	tt.ClickAt(box.Bounds.X+box.Bounds.W/2, box.Bounds.Y+box.Bounds.H/2)
 	tt.Frame()
 	if err := tt.Click("Add 3 projects"); err != nil {
 		t.Fatal(err)

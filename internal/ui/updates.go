@@ -259,9 +259,10 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					}
 					checking := a.updatesChecking()
 					if checking {
-						caption = locales.Checking()
+						stateCardBusy(c, locales.ProblemsChecked(), checked, locales.Checking())
+					} else {
+						stateCard(c, t.Success, locales.ProblemsChecked(), checked, caption)
 					}
-					stateCard(c, t.Success, locales.ProblemsChecked(), checked, caption)
 				})
 				if a.AppUpdateAvailable != "" && a.CheckAppUpdate != nil {
 					ui.Row(c.Key("hearth-app-update-banner")).Gap(12).Padding(12, 16).Radius(12).
@@ -336,17 +337,17 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					})
 				}, func() {
 					listCard(c, locales.CleanupAtOnce(), "", func() {
-						listRow(c, locales.UpdatesAtOnceRow(), false, locales.UpdatesAtOnceCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesAtOnceRow(), locales.UpdatesAtOnceCaption(), func() {})
 					})
 					listCard(c, locales.CleanupYourChoice(), "", func() {
-						listRow(c, locales.UpdatesLinesRow(), false, locales.UpdatesLineCaption(), func() {})
-						listRow(c, locales.UpdatesAppsRow(), false, locales.UpdatesAppsCaption(), func() {})
-						listRow(c, locales.UpdatesDepsRow(), false, locales.UpdatesDepsCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesLinesRow(), locales.UpdatesLineCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesAppsRow(), locales.UpdatesAppsCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesDepsRow(), locales.UpdatesDepsCaption(), func() {})
 					})
 					listCard(c, locales.CleanupNotOffered(), "", func() {
-						listRow(c, locales.UpdatesPinnedRow(), false, locales.UpdatesPinnedCaption(), func() {})
-						listRow(c, locales.UpdatesSystemRow(), false, locales.UpdatesSystemCaption(), func() {})
-						listRow(c, locales.UpdatesManualRow(), false, locales.UpdatesManualCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesPinnedRow(), locales.UpdatesPinnedCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesSystemRow(), locales.UpdatesSystemCaption(), func() {})
+						listRowWrapped(c, locales.UpdatesManualRow(), locales.UpdatesManualCaption(), func() {})
 					})
 				})
 			})

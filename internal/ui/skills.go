@@ -310,7 +310,8 @@ func (a *App) skillAgentControl(c *ui.Context, sk inventory.Skill, id string, vi
 		return
 	}
 	on, path := true, via.Path
-	toggle(c, "connected:"+id, &on).Label(locales.SkillConnectedTo(agentTitle(id))).OnChange(func() {
+	label := locales.SkillConnectedTo(agentTitle(id))
+	toggle(c, "connected:"+id, &on).Label(label).Tooltip(label).Disabled(a.op.running()).OnChange(func() {
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 			return ops.SkillUnlinkPlan(sk, path, env, agentTitle)
 		}, a.proposeOrSay)
@@ -413,15 +414,19 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill, all []inventory.Ski
 		a.skillFiles(c, sk)
 		canRemoveBroken := sk.Broken && a.BuildPlan != nil
 		canRemove := !sk.Broken && !sk.Synced && a.BuildPlan != nil
-		hasOpen := a.Shell != nil && !sk.Broken
+		canOpen := a.canOpenFile() && !sk.Broken
+		canReveal := a.Shell != nil && !sk.Broken
+		hasOpen := canOpen || canReveal
 		if hasOpen || canRemove || canRemoveBroken {
 			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Wrap().Children(func() {
-				if hasOpen {
+				if canOpen {
 					ui.Button(c.Key("skill-open"), "").Label(locales.OpenInEditor()).Tooltip(locales.OpenInEditor()).Shrink(0).
 						OnClick(func() { a.openFile(c, filepath.Join(sk.Dir, "SKILL.md")) }).Children(func() {
 						ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
 						ui.Text(c, locales.OpenShort()).SingleLine()
 					})
+				}
+				if canReveal {
 					ui.Button(c.Key("skill-reveal"), "").Label(showInFolder()).Tooltip(showInFolder()).Shrink(0).
 						OnClick(func() { a.Shell.ShowItemInFolder(sk.Dir) }).Children(func() {
 						ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)

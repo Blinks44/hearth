@@ -225,7 +225,7 @@ func (t *trayController) switchDockerContext(to string) {
 		return
 	}
 	st, ok := t.app.Snapshot.Tool("docker")
-	if !ok || st.Docker == nil || st.Docker.Selected == to {
+	if !ok || st.Docker == nil || st.Docker.Override != "" || st.Docker.Selected == to {
 		return
 	}
 	active := inventory.TerminalCopy(st.Installations)
@@ -282,9 +282,7 @@ func (t *trayController) runQuickSwitch(argv []string) {
 		}
 		t.win.Update(func() {
 			t.switching = false
-			if t.app.OnScan != nil {
-				t.app.OnScan()
-			}
+			t.app.RestartScan()
 			t.refresh()
 		})
 	}()
@@ -412,7 +410,7 @@ func buildTrayMenuItems(snap *inventory.Snapshot, containers []docker.Container,
 				Label:    name,
 				Type:     mygo.MenuItemRadio,
 				Checked:  name == dockerState.Selected,
-				Disabled: switching,
+				Disabled: switching || dockerState.Override != "",
 				Click: func(*mygo.MenuItem, *mygo.Window) {
 					if act.switchDockerCtx != nil {
 						act.switchDockerCtx(name)

@@ -203,15 +203,15 @@ func (a *App) dockerDetailActions(c *ui.Context, item docker.Container) {
 			action, icon = ops.DockerStop, "square"
 		}
 		if action.Applies(item) {
-			kubeActionButton(c.Key("docker-detail-action"), icon, action.Label(), 28).
+			kubeActionButton(c.Key("docker-detail-action"), icon, action.Label()+"…", 28).
 				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, action) })
 		}
 		if ops.DockerPause.Applies(item) {
-			kubeActionButton(c.Key("docker-detail-pause"), "pause", ops.DockerPause.Label(), 28).
+			kubeActionButton(c.Key("docker-detail-pause"), "pause", ops.DockerPause.Label()+"…", 28).
 				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerPause) })
 		}
 		if ops.DockerRestart.Applies(item) {
-			kubeActionButton(c.Key("docker-detail-restart"), "refresh-cw", ops.DockerRestart.Label(), 28).
+			kubeActionButton(c.Key("docker-detail-restart"), "refresh-cw", ops.DockerRestart.Label()+"…", 28).
 				Disabled(!a.canActOnDockerContainers()).OnClick(func() { a.planDockerContainers([]docker.Container{item}, ops.DockerRestart) })
 		}
 		kubeActionButton(c.Key("docker-detail-shell"), "terminal", locales.KubeShellAction(), 28).
@@ -337,7 +337,7 @@ func (a *App) dockerDetailFactsCard(c *ui.Context, item docker.Container, d *doc
 				}
 				if r.copyVal != "" {
 					val := r.copyVal
-					iconButton(c.Key("copy"), "copy", locales.KubeCopyName()).OnClick(func() { copyName(c, val) })
+					iconButton(c.Key("copy"), "copy", locales.KubeLogsCopy()).OnClick(func() { copyName(c, val) })
 				}
 			})
 		}
@@ -412,7 +412,7 @@ func dockerNetworksCard(c *ui.Context, networks map[string]string) {
 				clipped(c, name).Font(FontMono).FontSize(12).Grow(1).MinWidth(0).Tooltip(name)
 				if ip != "" {
 					aiTag(c, ip, pal.Muted, pal.MonoText).Font(FontMono).Shrink(0)
-					iconButton(c.Key("copy-ip"), "copy", locales.KubeCopyName()).OnClick(func() { copyName(c, ip) })
+					iconButton(c.Key("copy-ip"), "copy", locales.KubeLogsCopy()).OnClick(func() { copyName(c, ip) })
 				}
 			})
 		}

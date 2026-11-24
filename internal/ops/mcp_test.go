@@ -402,3 +402,58 @@ func TestMCPAddAndEditPlan(t *testing.T) {
 		t.Errorf("codex stdio edit dropped env_vars:\n%s", pCodexStdio.Steps[0].Edit.After)
 	}
 }
+
+func TestMCPEditPreservesUnknownFields(t *testing.T) {
+	home, env := mcpHome(t)
+
+	// Cursor JSON with custom fields like timeout and autoApprove.
+	cursorCfg := filepath.Join(home, ".cursor", "mcp.json")
+	if err := os.MkdirAll(filepath.Dir(cursorCfg), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cursorCfg, []byte(`{
+  "mcpServers": {
+    "demo": {
+      "command": "npx",
+      "args": ["-y", "demo@1"],
+      "timeout": 30000,
+      "autoApprove": ["read"]
+    }
+  }
+}
+`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	pCursor, err := MCPEditPlan(server(t, env, "cursor", "demo"), ai.MCPDef{
+		Transport: "stdio",
+		Command:   "npx",
+		Args:      []string{"-y", "demo@2"},
+	}, env, title)
+	if err != nil {
+		t.Fatalf("cursor edit: %v", err)
+	}
+	afterJSON := pCursor.Steps[0].Edit.After
+	for _, keep := range []string{`"timeout": 30000`, `"autoApprove"`, `"read"`, `"demo@2"`} {
+		if !strings.Contains(afterJSON, keep) {
+			t.Errorf("cursor edit dropped %s:\n%s", keep, afterJSON)
+		}
+	}
+
+	// Codex TOML with custom startup_timeout_sec field.
+	codexCfg := filepath.Join(home, ".codex", "config.toml")
+	if err := os.WriteFile(codexCfg, []byte("[mcp_servers.custom]\ncommand = \"npx\"\nargs = [\"-y\", \"v1\"]\nstartup_timeout_sec = 45\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	pCodex, err := MCPEditPlan(server(t, env, "codex", "custom"), ai.MCPDef{
+		Transport: "stdio",
+		Command:   "npx",
+		Args:      []string{"-y", "v2"},
+	}, env, title)
+	if err != nil {
+		t.Fatalf("codex edit: %v", err)
+	}
+	afterTOML := pCodex.Steps[0].Edit.After
+	if !strings.Contains(afterTOML, "startup_timeout_sec = 45") || !strings.Contains(afterTOML, `"v2"`) {
+		t.Errorf("codex edit dropped startup_timeout_sec:\n%s", afterTOML)
+	}
+}

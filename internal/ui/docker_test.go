@@ -100,7 +100,7 @@ func TestDockerOperations(t *testing.T) {
 	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{Tool: "packages", PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}})
 	tt := openDocker(a)
 	screenshot(t, tt, "docker-actions")
-	if err := tt.Click("Start Podman"); err != nil {
+	if err := tt.Click("Start Podman…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -114,7 +114,7 @@ func TestDockerOperations(t *testing.T) {
 	if err := tt.Click("More"); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.ChooseMenuItem("Use this context"); err != nil {
+	if err := tt.ChooseMenuItem("Use this context…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -167,7 +167,7 @@ func TestDockerKiri(t *testing.T) {
 	d.Selected = "kiri"
 	d.Contexts = append(d.Contexts, inventory.DockerContext{Name: "kiri", Endpoint: "unix://" + home + "/.kiri/run/docker.sock", Engine: "Kiri", Status: "unavailable", Local: true})
 	tt = openDocker(a)
-	if err := tt.Click("Start Kiri"); err != nil {
+	if err := tt.Click("Start Kiri…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

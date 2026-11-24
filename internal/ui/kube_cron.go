@@ -16,26 +16,25 @@ const cronActionsWidth = 32 + 24 + 28 + 2*4
 
 func (a *App) cronJobActions(c *ui.Context, job kube.CronJob, width float32) {
 	ref := a.resourceRef("CronJob", job.Namespace, job.Name, job.UID)
-	ui.Row(c).Width(width).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-		if a.BuildPlan == nil || ref.UID == "" || ref.Kubectl == "" {
-			return
-		}
-		f := a.cluster.resources[ref]
-		busy := (f != nil && f.busy) || a.op.running()
-		enabled := !job.Suspended
-		label := locales.KubeCronPauseAction()
-		if job.Suspended {
-			label = locales.KubeCronResumeAction()
-		}
-		toggle(c, "cron-enabled", &enabled).Size(32, 18).Shrink(0).
-			Label(locales.KubeCronEnabled(job.Name)).Tooltip(label).Disabled(busy).
-			OnClick(func() {
-				a.planCronAction(ref, func(ctx context.Context, r run.Runner, env sysenv.Env, ref ops.KubeResource) (ops.Plan, error) {
-					return ops.PlanKubeCronSuspend(ctx, r, env, ref, !job.Suspended)
+	ui.Row(c).Width(width).Shrink(0).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+		if a.BuildPlan != nil && ref.UID != "" && ref.Kubectl != "" {
+			f := a.cluster.resources[ref]
+			busy := (f != nil && f.busy) || a.op.running()
+			enabled := !job.Suspended
+			label := locales.KubeCronPauseAction()
+			if job.Suspended {
+				label = locales.KubeCronResumeAction()
+			}
+			toggle(c, "cron-enabled", &enabled).Size(32, 18).Shrink(0).
+				Label(locales.KubeCronEnabled(job.Name)).Tooltip(label).Disabled(busy).
+				OnChange(func() {
+					a.planCronAction(ref, func(ctx context.Context, r run.Runner, env sysenv.Env, ref ops.KubeResource) (ops.Plan, error) {
+						return ops.PlanKubeCronSuspend(ctx, r, env, ref, !job.Suspended)
+					})
 				})
-			})
-		iconButton(c.Key("cron-run"), "play", locales.KubeCronRunAction()).Disabled(busy).
-			OnClick(func() { a.planCronAction(ref, ops.PlanKubeCronRun) })
+			iconButton(c.Key("cron-run"), "play", locales.KubeCronRunAction()).Disabled(busy).
+				OnClick(func() { a.planCronAction(ref, ops.PlanKubeCronRun) })
+		}
 		a.batchResourceMenu(c, ref)
 	})
 }

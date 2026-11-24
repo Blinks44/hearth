@@ -66,10 +66,13 @@ func (v podVolume) apiAccess() bool {
 }
 
 func (p pod) references() []Relationship {
-	m := p.Metadata
+	return podSpecReferences(p.Metadata.Namespace, p.Metadata.Name, p.Spec)
+}
+
+func podSpecReferences(namespace, podName string, spec podSpec) []Relationship {
 	d := Relationships{}
 	add := func(kind, name, detail string) {
-		d.add(Relationship{Kind: kind, Namespace: m.Namespace, Name: name, Detail: detail})
+		d.add(Relationship{Kind: kind, Namespace: namespace, Name: name, Detail: detail})
 	}
 	addNames := func(detail string, cm, secret *objectName) {
 		if cm != nil {
@@ -79,7 +82,7 @@ func (p pod) references() []Relationship {
 			add("Secret", secret.Name, detail)
 		}
 	}
-	for _, volume := range p.Spec.Volumes {
+	for _, volume := range spec.Volumes {
 		if volume.apiAccess() {
 			continue
 		}
@@ -88,13 +91,13 @@ func (p pod) references() []Relationship {
 				addNames(volume.Name, src.ConfigMap, src.Secret)
 			}
 		}
-		add("PersistentVolumeClaim", volume.claimName(m.Name), volume.Name)
+		add("PersistentVolumeClaim", volume.claimName(podName), volume.Name)
 		addNames(volume.Name, volume.ConfigMap, nil)
 		if volume.Secret != nil {
 			add("Secret", volume.Secret.SecretName, volume.Name)
 		}
 	}
-	for _, container := range slices.Concat(p.Spec.Containers, p.Spec.InitContainers, p.Spec.EphemeralContainers) {
+	for _, container := range slices.Concat(spec.Containers, spec.InitContainers, spec.EphemeralContainers) {
 		for _, env := range container.Env {
 			addNames(env.Name, env.ValueFrom.ConfigMapKeyRef.object(), env.ValueFrom.SecretKeyRef.object())
 		}
@@ -102,10 +105,10 @@ func (p pod) references() []Relationship {
 			addNames(container.Name, from.ConfigMapRef, from.SecretRef)
 		}
 	}
-	for _, secret := range p.Spec.ImagePullSecrets {
+	for _, secret := range spec.ImagePullSecrets {
 		add("Secret", secret.Name, "")
 	}
-	add("ServiceAccount", p.Spec.ServiceAccountName, "")
+	add("ServiceAccount", spec.ServiceAccountName, "")
 	return d.Links
 }
 
@@ -169,17 +172,69 @@ func (c *Cluster) readRelationships(ctx context.Context, r run.Runner, env sysen
 	d := &Relationships{Object: t.Events}
 	ns := d.Object.Namespace
 	switch {
-	case t.Resource == Ingresses || t.Resource == StatefulSets:
+	case t.Batch && c.Batch != nil:
+		for _, job := range c.Batch.Jobs {
+			if job.UID != d.Object.UID || job.Namespace != ns {
+				continue
+			}
+			if job.CronJob != "" {
+				d.add(Relationship{Kind: "CronJob", Namespace: ns, Name: job.CronJob, UID: job.CronJobUID, Inbound: true})
+			}
+			var pods struct{ Items []pod }
+			if err := get(ctx, r, env, t, []string{"pods", "--namespace=" + ns}, &pods); err != nil {
+				d.Errors = append(d.Errors, err)
+			}
+			var refs []Relationship
+			for _, p := range pods.Items {
+				m := p.Metadata
+				if m.Namespace != ns || p.controllerUID() != job.UID {
+					continue
+				}
+				d.add(Relationship{Kind: "Pod", Namespace: m.Namespace, Name: m.Name, UID: m.UID, Detail: p.Status.Phase})
+				refs = append(refs, p.references()...)
+			}
+			for _, ref := range refs {
+				d.add(ref)
+			}
+			for _, ref := range job.templateRefs {
+				d.add(ref)
+			}
+			c.Relationships = d
+			return
+		}
+		for _, cj := range c.Batch.CronJobs {
+			if cj.UID != d.Object.UID || cj.Namespace != ns {
+				continue
+			}
+			for _, run := range cj.Runs {
+				d.add(Relationship{Kind: "Job", Namespace: run.Namespace, Name: run.Name, UID: run.UID})
+			}
+			for _, ref := range cj.templateRefs {
+				d.add(ref)
+			}
+			c.Relationships = d
+			return
+		}
+	case t.Resource == Ingresses || t.Resource == StatefulSets || t.Resource == DaemonSets || t.Resource == ReplicaSets || t.Resource == Endpoints:
 		for _, obj := range c.Resources.Items {
 			if obj.UID != d.Object.UID || obj.Namespace != ns {
 				continue
 			}
-			if obj.Kind == Ingresses {
+			switch obj.Kind {
+			case Ingresses:
 				for _, route := range obj.Routes {
 					d.add(Relationship{Kind: "Service", Namespace: ns, Name: route.Service})
 				}
-			} else {
-				d.readStatefulSet(ctx, r, env, t, obj)
+				for _, secret := range obj.TLSSecrets {
+					d.add(Relationship{Kind: "Secret", Namespace: ns, Name: secret, Detail: "TLS"})
+				}
+			case Endpoints:
+				d.add(Relationship{Kind: "Service", Namespace: ns, Name: obj.Name, Inbound: true})
+				for _, pod := range obj.endpointPods {
+					d.add(pod)
+				}
+			default:
+				d.readWorkloadController(ctx, r, env, t, obj)
 			}
 			c.Relationships = d
 			return
@@ -224,8 +279,13 @@ func (c *Cluster) readRelationships(ctx context.Context, r run.Runner, env sysen
 	}
 }
 
-func (d *Relationships) readStatefulSet(ctx context.Context, r run.Runner, env sysenv.Env, t Target, obj Resource) {
-	d.add(Relationship{Kind: "Service", Namespace: obj.Namespace, Name: obj.Service, Inbound: true})
+func (d *Relationships) readWorkloadController(ctx context.Context, r run.Runner, env sysenv.Env, t Target, obj Resource) {
+	if obj.Owner.Kind != "" {
+		d.add(Relationship{Kind: obj.Owner.Kind, Namespace: obj.Namespace, Name: obj.Owner.Name, Inbound: true})
+	}
+	if obj.Service != "" {
+		d.add(Relationship{Kind: "Service", Namespace: obj.Namespace, Name: obj.Service, Inbound: true})
+	}
 	var pods struct{ Items []pod }
 	if err := get(ctx, r, env, t, []string{"pods", "--namespace=" + obj.Namespace}, &pods); err != nil {
 		d.Errors = append(d.Errors, err)

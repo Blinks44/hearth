@@ -144,3 +144,72 @@ func TestReadDeploymentBudgets(t *testing.T) {
 		t.Errorf("forbidden events hid HPA or PDB: %+v", cl.Relationships)
 	}
 }
+
+func TestReadOtherResourceRelationships(t *testing.T) {
+	var runner run.Fake
+	add := func(data, kind string, args ...string) {
+		argv := append([]string{"kubectl", "--context=kind-dev", "get", kind, "--namespace=shop"}, args...)
+		runner.Stdout(data, append(argv, "--output=json", "--request-timeout=15s")...)
+	}
+
+	// ReplicaSet -> Deployment owner + Pod + ConfigMap
+	add(`{"items":[{"metadata":{"name":"web-abc","namespace":"shop","uid":"rs1","labels":{"app":"web"},
+		"ownerReferences":[{"kind":"Deployment","name":"web","controller":true}]},
+		"spec":{"replicas":1,"selector":{"matchLabels":{"app":"web"}},"template":{"metadata":{"labels":{"app":"web"}}}}}]}`, string(ReplicaSets))
+	add(`{"items":[{"metadata":{"name":"web-abc-1","namespace":"shop","uid":"p1","labels":{"app":"web"},
+		"ownerReferences":[{"kind":"ReplicaSet","name":"web-abc","uid":"rs1","controller":true}]},
+		"spec":{"volumes":[{"name":"cfg","configMap":{"name":"app-cfg"}}]},"status":{"phase":"Running"}}]}`, "pods")
+	add(`{"items":[]}`, string(DisruptionBudgets))
+	add(`{"items":[]}`, "events", "--field-selector=involvedObject.uid=rs1")
+	cl, err := Read(t.Context(), &runner, nil, Target{Kubectl: "kubectl", Context: "kind-dev", Namespaces: []string{"shop"}, Resource: ReplicaSets, Events: Ref{Namespace: "shop", UID: "rs1"}})
+	if err != nil || cl.Relationships == nil {
+		t.Fatalf("ReplicaSet Read = %+v, %v", cl, err)
+	}
+	wantRS := []Relationship{
+		{Kind: "Deployment", Namespace: "shop", Name: "web", Inbound: true},
+		{Kind: "Pod", Namespace: "shop", Name: "web-abc-1", UID: "p1", Detail: "Running"},
+		{Kind: "ConfigMap", Namespace: "shop", Name: "app-cfg", Detail: "cfg"},
+	}
+	if !slices.Equal(cl.Relationships.Links, wantRS) {
+		t.Errorf("ReplicaSet links = %+v, want %+v", cl.Relationships.Links, wantRS)
+	}
+
+	// Ingress -> Service + TLS Secret
+	add(`{"items":[{"metadata":{"name":"shop-ing","namespace":"shop","uid":"ing1"},
+		"spec":{"tls":[{"hosts":["shop.example"],"secretName":"shop-tls"}],
+		        "rules":[{"host":"shop.example","http":{"paths":[{"path":"/","backend":{"service":{"name":"web","port":{"number":80}}}}]}}]}}]}`, string(Ingresses))
+	add(`{"items":[]}`, "events", "--field-selector=involvedObject.uid=ing1")
+	cl, err = Read(t.Context(), &runner, nil, Target{Kubectl: "kubectl", Context: "kind-dev", Namespaces: []string{"shop"}, Resource: Ingresses, Events: Ref{Namespace: "shop", UID: "ing1"}})
+	if err != nil || cl.Relationships == nil {
+		t.Fatalf("Ingress Read = %+v, %v", cl, err)
+	}
+	wantIng := []Relationship{
+		{Kind: "Service", Namespace: "shop", Name: "web"},
+		{Kind: "Secret", Namespace: "shop", Name: "shop-tls", Detail: "TLS"},
+	}
+	if !slices.Equal(cl.Relationships.Links, wantIng) {
+		t.Errorf("Ingress links = %+v, want %+v", cl.Relationships.Links, wantIng)
+	}
+
+	// Endpoints -> Service + ready/not-ready Pods
+	add(`{"items":[{"metadata":{"name":"web","namespace":"shop","uid":"ep1"},
+		"subsets":[{"addresses":[{"ip":"10.0.0.1","targetRef":{"kind":"Pod","name":"web-1","uid":"p1"}}],
+		            "notReadyAddresses":[{"ip":"10.0.0.2","targetRef":{"kind":"Pod","name":"web-2","uid":"p2"}}],
+		            "ports":[{"name":"http","port":80,"protocol":"TCP"}]}]}]}`, string(Endpoints))
+	add(`{"items":[]}`, "events", "--field-selector=involvedObject.uid=ep1")
+	cl, err = Read(t.Context(), &runner, nil, Target{Kubectl: "kubectl", Context: "kind-dev", Namespaces: []string{"shop"}, Resource: Endpoints, Events: Ref{Namespace: "shop", UID: "ep1"}})
+	if err != nil || cl.Relationships == nil || len(cl.Resources.Items) != 1 {
+		t.Fatalf("Endpoints Read = %+v, %v", cl, err)
+	}
+	if !slices.Equal(cl.Resources.Items[0].NotReadyAddresses, []string{"10.0.0.2"}) {
+		t.Errorf("NotReadyAddresses = %v", cl.Resources.Items[0].NotReadyAddresses)
+	}
+	wantEP := []Relationship{
+		{Kind: "Service", Namespace: "shop", Name: "web", Inbound: true},
+		{Kind: "Pod", Namespace: "shop", Name: "web-1", UID: "p1", Detail: "10.0.0.1"},
+		{Kind: "Pod", Namespace: "shop", Name: "web-2", UID: "p2", Detail: "10.0.0.2"},
+	}
+	if !slices.Equal(cl.Relationships.Links, wantEP) {
+		t.Errorf("Endpoints links = %+v, want %+v", cl.Relationships.Links, wantEP)
+	}
+}

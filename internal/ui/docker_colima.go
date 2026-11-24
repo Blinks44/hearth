@@ -296,6 +296,10 @@ func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 			listCard(c, "Colima", "", func() { cardNote(c, locales.ColimaUnavailable()) })
 			return
 		}
+		if len(colima.Profiles) == 0 && colima.Path != "" {
+			a.colimaCard(c, *colima, inventory.ColimaProfile{Name: "default"})
+			return
+		}
 		if colimaNeedsSetup(colima) && a.canInstallColima() {
 			listCard(c, "Colima", "", func() {
 				listRowWrapped(c, locales.ColimaUnavailable(), locales.ColimaPackagesHint(), func() {
@@ -309,10 +313,6 @@ func (a *App) dockerManagement(c *ui.Context, st inventory.ToolState) {
 				a.colimaCard(c, *colima, p)
 				return
 			}
-		}
-		if len(colima.Profiles) == 0 {
-			a.colimaCard(c, *colima, inventory.ColimaProfile{Name: "default"})
-			return
 		}
 	}
 	if a.canInstallColima() && inventory.TerminalCopy(st.Installations) < 0 {
@@ -364,15 +364,16 @@ func (a *App) dockerColimaCompanionCard(c *ui.Context, st inventory.ToolState) {
 	for _, p := range st.Docker.Colima.Profiles {
 		if p.Name == "default" && p.Runtime == "docker" {
 			listCard(c, "Colima", "", func() {
-				listRow(c, "Colima", false, locales.ColimaManaged(), func() {
+				status := colimaProfileStatus(p.Status)
+				listRow(c, status, false, locales.ColimaManaged(), func() {
 					if p.Status == "stopped" {
-						ui.Button(c.Key("external-start-colima"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+						ui.Button(c.Key("external-start-colima"), locales.SetupStart()).Shrink(0).Disabled(a.BuildPlan == nil).
 							OnClick(func() { a.changeColima(*st.Docker.Colima, p, ops.ColimaStart, ops.ColimaLimits{}) })
 					}
 					if p.Status == "running" {
 						for _, k := range st.Docker.Contexts {
 							if profile, ok := dockerColimaProfile(st.Docker, k.Name); ok && profile.Name == p.Name && a.dockerOpenable(k.Name) {
-								ui.Button(c.Key("external-view-colima"), locales.KubeClusterOpen()).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
+								ui.Button(c.Key("external-view-colima"), locales.KubeClusterOpen()).Shrink(0).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
 								break
 							}
 						}
@@ -381,6 +382,19 @@ func (a *App) dockerColimaCompanionCard(c *ui.Context, st inventory.ToolState) {
 			})
 			return
 		}
+	}
+}
+
+func colimaProfileStatus(status string) string {
+	switch status {
+	case "":
+		return locales.ColimaNotStarted()
+	case "stopped":
+		return locales.ColimaStopped()
+	case "running":
+		return locales.ColimaRunning()
+	default:
+		return locales.ColimaUnavailable()
 	}
 }
 
@@ -396,10 +410,11 @@ func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventor
 			}
 		}
 		caption := strings.Join(details, " · ")
-		if p.CPU > 0 && p.Memory > 0 && p.Disk > 0 {
+		hasResources := p.CPU > 0 && p.Memory > 0 && p.Disk > 0
+		if hasResources {
 			listRow(c, locales.ColimaResourceSummary(strconv.Itoa(p.CPU), colimaGiB(p.Memory), colimaGiB(p.Disk)), false, caption, func() {
 				disabled := a.BuildPlan == nil || (p.Status != "running" && p.Status != "stopped")
-				ui.Button(c.Key("colima-resources"), locales.ColimaEdit()).Disabled(disabled).
+				ui.Button(c.Key("colima-resources"), locales.ColimaEdit()).Shrink(0).Disabled(disabled).
 					OnClick(func() { a.colimaResize = newColimaResize(colima, p) })
 			})
 		}
@@ -414,28 +429,23 @@ func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventor
 			}
 			listRow(c, title, false, hint, func() {
 				if colima.Autostart != "" {
-					if toggle(c, "colima-autostart", &on).Label(label).Disabled(a.BuildPlan == nil).Changed() {
+					if toggle(c, "colima-autostart", &on).Label(label).Tooltip(label).Disabled(a.BuildPlan == nil || a.op.running()).Changed() {
 						a.changeColima(colima, p, action, ops.ColimaLimits{})
 					}
 				}
 			})
 		}
-		status := locales.ColimaUnavailable()
-		switch p.Status {
-		case "":
-			status = locales.ColimaNotStarted()
-		case "stopped":
-			status = locales.ColimaStopped()
-		case "running":
-			status = locales.ColimaRunning()
+		statusCaption := ""
+		if !hasResources {
+			statusCaption = caption
 		}
-		listRow(c, status, false, caption, func() {
+		listRow(c, colimaProfileStatus(p.Status), false, statusCaption, func() {
 			switch p.Status {
 			case "", "stopped":
-				ui.Button(c.Key("colima-card-start"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+				ui.Button(c.Key("colima-card-start"), locales.SetupStart()).Shrink(0).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(colima, p, ops.ColimaStart, ops.ColimaLimits{}) })
 			case "running":
-				ui.Button(c.Key("colima-card-stop"), locales.ColimaStop()).Disabled(a.BuildPlan == nil).
+				ui.Button(c.Key("colima-card-stop"), locales.PortsStop()).Shrink(0).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(colima, p, ops.ColimaStop, ops.ColimaLimits{}) })
 			}
 		})
@@ -475,10 +485,17 @@ func (a *App) colimaResizeDialog(c *ui.Context) {
 		memory := float64(d.profile.Memory) / float64(docker.ColimaGiB)
 		var plan ops.Plan
 		var err error
+		maxMemory := float64(1024)
+		if total := sysenv.TotalMemoryBytes(); total > 0 {
+			hostGiB := math.Floor(float64(total)/float64(docker.ColimaGiB)*2) / 2
+			if hostGiB >= 1 {
+				maxMemory = min(maxMemory, hostGiB)
+			}
+		}
 		ui.Scroll(c).MaxHeight(440).Children(func() {
 			ui.Column(c).Padding(0, 20, 12, 20).Gap(6).Children(func() {
 				colimaLimit(c.Key("colima-cpu"), locales.DockerCpus(), &d.cpu, 1, float64(max(runtime.NumCPU(), d.profile.CPU)), 1)
-				colimaLimit(c.Key("colima-memory"), locales.ColimaMemoryGiB(), &d.memory, min(1, memory), max(1024, memory), 0.5)
+				colimaLimit(c.Key("colima-memory"), locales.ColimaMemoryGiB(), &d.memory, min(1, memory), max(maxMemory, memory), 0.5)
 				colimaLimit(c.Key("colima-disk"), locales.ColimaDiskGiB(), &d.disk, minDisk, max(minDisk, 16384), 1)
 			})
 			limits := ops.ColimaLimits{CPU: int(d.cpu), Memory: d.memory, Disk: int64(d.disk)}
@@ -490,7 +507,11 @@ func (a *App) colimaResizeDialog(c *ui.Context) {
 		ui.Row(c).Gap(8).Padding(12, 20).Justify(ui.End).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 			ui.Button(c.Key("colima-cancel"), locales.Cancel()).Height(controlHeight).OnClick(func() { d.open = false })
 			unchanged := int(d.cpu) == d.profile.CPU && d.memory == memory && d.disk == minDisk
-			ui.PrimaryButton(c.Key("colima-apply"), locales.ColimaRestart()).Height(controlHeight).
+			applyLabel := locales.ColimaRestart()
+			if d.profile.Status == "stopped" {
+				applyLabel = locales.ColimaStart()
+			}
+			ui.PrimaryButton(c.Key("colima-apply"), applyLabel).Height(controlHeight).
 				Disabled(err != nil || unchanged || a.BuildPlan == nil || a.RunPlan == nil || a.op.running()).
 				OnClick(func() {
 					d.open = false

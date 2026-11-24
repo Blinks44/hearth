@@ -42,14 +42,14 @@ func Skills(env sysenv.Env) []inventory.Skill {
 			roots = addRoot(roots, resolve(s, d, home), a.id)
 		}
 	}
-	return synced(readSkills(roots, ""), dir(agents[0].dir, env, home), home)
+	return synced(readSkills(roots, ""), dir(agents[0].dir, env, home), claudeStatePath(env))
 }
 
 // synced marks the skills Claude syncs from claude.ai, kept as
 // claude/skills/synced/<organization>_<…>/<name>, and drops those of an
 // organization the user is not signed in to now: Claude reads only the
 // current one's, the others are what an earlier sign-in left.
-func synced(skills []inventory.Skill, claude, home string) []inventory.Skill {
+func synced(skills []inventory.Skill, claude, stateFile string) []inventory.Skill {
 	if claude == "" {
 		return skills
 	}
@@ -57,7 +57,7 @@ func synced(skills []inventory.Skill, claude, home string) []inventory.Skill {
 	if real, err := sysenv.RealPath(strings.TrimSuffix(root, string(filepath.Separator))); err == nil {
 		root = real + string(filepath.Separator)
 	}
-	org := organization(filepath.Join(home, ".claude.json"))
+	org := organization(stateFile)
 	out := skills[:0]
 	for _, s := range skills {
 		if rest, ok := strings.CutPrefix(s.Dir, root); ok {

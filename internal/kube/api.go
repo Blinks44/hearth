@@ -119,6 +119,106 @@ func (a *API) get(ctx context.Context, env sysenv.Env, t Target, args []string, 
 	return nil
 }
 
+// selfSubjectRules queries authorization.k8s.io/v1 SelfSubjectRulesReview directly.
+func (a *API) selfSubjectRules(ctx context.Context, env sysenv.Env, t Target, namespace string, v any) error {
+	c, err := a.conn(env, t.Context)
+	if err != nil {
+		return errUseKubectl
+	}
+	ns := cmp.Or(namespace, c.namespace, "default")
+	body, err := json.Marshal(struct {
+		APIVersion string `json:"apiVersion"`
+		Kind       string `json:"kind"`
+		Spec       struct {
+			Namespace string `json:"namespace"`
+		} `json:"spec"`
+	}{
+		APIVersion: "authorization.k8s.io/v1",
+		Kind:       "SelfSubjectRulesReview",
+		Spec: struct {
+			Namespace string `json:"namespace"`
+		}{Namespace: ns},
+	})
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	type result struct {
+		data []byte
+		err  error
+	}
+	done := make(chan result, 1)
+	go func() {
+		data, err := c.post(ctx, "/apis/authorization.k8s.io/v1/selfsubjectrulesreviews", body)
+		done <- result{data, err}
+	}()
+	var res result
+	select {
+	case res = <-done:
+	case <-ctx.Done():
+		return &Error{Access: detect.KubeFailure(ctx.Err().Error())}
+	}
+	defer clear(res.data)
+	if res.err != nil {
+		if t.Kubectl != "" && strings.Contains(res.err.Error(), "getting credentials") {
+			return errUseKubectl
+		}
+		return res.err
+	}
+	if err := json.Unmarshal(res.data, v); err != nil {
+		return fmt.Errorf("selfsubjectrulesreviews: %w", err)
+	}
+	return nil
+}
+
+const metadataListAccept = "application/json;as=PartialObjectMetadataList;v=v1;g=meta.k8s.io"
+
+// hasCustomObject reports whether at least one object of def exists in the
+// target's namespace scope, using a limit=1 PartialObjectMetadataList request.
+// It returns known=false on any error so callers can fail open.
+func (a *API) hasCustomObject(ctx context.Context, env sysenv.Env, t Target, def CustomDefinition) (has, known bool) {
+	version := def.Version().Name
+	if version == "" {
+		return false, false
+	}
+	c, err := a.conn(env, t.Context)
+	if err != nil {
+		return false, false
+	}
+	var paths []string
+	base := "/apis/" + def.Group + "/" + version
+	if !def.Namespaced() || len(t.Namespaces) == 0 {
+		paths = []string{base + "/" + def.Names.Plural}
+	} else {
+		paths = make([]string, 0, len(t.Namespaces))
+		for _, ns := range t.Namespaces {
+			paths = append(paths, base+"/namespaces/"+url.PathEscape(ns)+"/"+def.Names.Plural)
+		}
+	}
+	query := url.Values{"limit": {"1"}}
+	for _, p := range paths {
+		reqCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		data, err := c.fetch(reqCtx, p, query, metadataListAccept)
+		cancel()
+		if err != nil {
+			return false, false
+		}
+		var list struct {
+			Items []json.RawMessage `json:"items"`
+		}
+		err = json.Unmarshal(data, &list)
+		clear(data)
+		if err != nil {
+			return false, false
+		}
+		if len(list.Items) > 0 {
+			return true, true
+		}
+	}
+	return false, true
+}
+
 // getRequest is a kubectl get the API reads.
 type getRequest struct {
 	raw       string   // a path read as it is
@@ -390,14 +490,30 @@ func (c *conn) path(k apiKind, req getRequest) string {
 
 // fetch GETs a path of the API server, as JSON unless accept says else.
 func (c *conn) fetch(ctx context.Context, path string, query url.Values, accept string) ([]byte, error) {
+	return c.do(ctx, http.MethodGet, path, query, accept, nil)
+}
+
+// post POSTs a JSON payload to a path of the API server.
+func (c *conn) post(ctx context.Context, path string, body []byte) ([]byte, error) {
+	return c.do(ctx, http.MethodPost, path, nil, "application/json", body)
+}
+
+func (c *conn) do(ctx context.Context, method, path string, query url.Values, accept string, body []byte) ([]byte, error) {
 	u := *c.base
 	u.Path = strings.TrimSuffix(u.Path, "/") + path
 	u.RawQuery = query.Encode()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	var payload io.Reader
+	if body != nil {
+		payload = bytes.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), payload)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Accept", cmp.Or(accept, "application/json"))
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err

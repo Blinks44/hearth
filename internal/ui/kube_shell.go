@@ -22,10 +22,11 @@ func (a *App) shellButton(c *ui.Context, pod kube.Pod, preferred string) {
 	}
 	button := kubeActionButton(c.Key("pod-shell"), "terminal", locales.KubeShellAction(), podActionHeight)
 	button.OnClick(func() {
-		if preferred == "" {
-			preferred = pod.Containers[0].Name
+		chosen := pod.Containers[0].Name
+		if preferred != "" && slices.ContainsFunc(pod.Containers, func(ct kube.Container) bool { return ct.Name == preferred }) {
+			chosen = preferred
 		}
-		a.cluster.shell = &shellForm{uid: pod.UID, container: preferred, open: true}
+		a.cluster.shell = &shellForm{uid: pod.UID, container: chosen, open: true}
 	})
 	form := a.cluster.shell
 	if form == nil || form.uid != pod.UID {
@@ -51,7 +52,11 @@ func (a *App) shellPopover(c *ui.Context, pod kube.Pod, form *shellForm) {
 	for _, ct := range pod.Containers {
 		names = append(names, ct.Name)
 	}
-	index := max(0, slices.Index(names, form.container))
+	index := slices.Index(names, form.container)
+	if index < 0 {
+		index = 0
+		form.container = names[0]
+	}
 	container := pod.Containers[index]
 	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 		label := locales.KubeShellContainer()

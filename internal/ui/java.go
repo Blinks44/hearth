@@ -114,7 +114,9 @@ func (a *App) javaPath(c *ui.Context, st inventory.ToolState, active int) {
 			cardNote(c, locales.JavaHomeUnset())
 			return
 		}
-		listRow(c, tilde(home, a.Home), true, "", func() {})
+		listRow(c, tilde(home, a.Home), true, "", func() {
+			a.pathActions(c, "java-home", home)
+		})
 		if in := st.Installations; active >= 0 && in[active].Java != nil && in[active].Java.Home != a.javaHome() {
 			ui.Column(c).Padding(0, 10, 10, 10).Children(func() { warningRow(c, locales.JavaHomeMismatch()) })
 		}

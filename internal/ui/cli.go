@@ -426,7 +426,7 @@ func (a *App) cliInstallMenu(c *ui.Context, cli inventory.CliState) {
 	if !hasOffer {
 		return
 	}
-	ui.PrimaryButton(c.Key("cli-install"), locales.CliInstallMenu()).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
+	ui.PrimaryButton(c.Key("cli-install"), locales.CliInstallMenu()).Height(controlHeight).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
 		for _, id := range ids {
 			e, ok := catalog.Find(id)
 			if !ok {
@@ -450,6 +450,16 @@ func (a *App) cliInstallMenu(c *ui.Context, cli inventory.CliState) {
 			}
 		}
 	})
+}
+
+func cliConfigOpenable(cmd string, cc *inventory.CliContext) string {
+	if cc == nil || cc.File == "" || cc.Issue == "config_missing" || cc.Issue == "active_config_missing" {
+		return ""
+	}
+	if cmd == "aws" && cc.NameSource != "file" && len(cc.Choices) == 0 && cc.Issue != "config_invalid" {
+		return ""
+	}
+	return cc.File
 }
 
 // cliTargetCard renders the "Where commands go" card for AWS, gcloud, and Azure.
@@ -487,6 +497,7 @@ func (a *App) cliTargetCard(c *ui.Context, cli inventory.CliState) {
 			}
 			canSwitch := a.BuildPlan != nil && (r.cmd == "aws" || r.found)
 			cmd, cc := r.cmd, r.cc
+			cfgFile := cliConfigOpenable(cmd, cc)
 			ui.Row(c.Key("target:"+cmd)).Gap(8).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
@@ -495,6 +506,11 @@ func (a *App) cliTargetCard(c *ui.Context, cli inventory.CliState) {
 						clipped(c, caption).FontSize(11.5).TextColor(captionColor)
 					}
 				})
+				if cfgFile != "" && a.canOpenFile() {
+					iconButton(c.Key("open-config:"+cmd), "external-link", locales.OpenInEditor()).OnClick(func() {
+						a.openFile(c, cfgFile)
+					})
+				}
 				if canSwitch {
 					ui.Button(c.Key("switch:"+cmd), chooseLabel).Shrink(0).OnClick(func() {
 						a.openCloudSwitch(cmd, cc)
@@ -622,10 +638,8 @@ func (a *App) cliWhoCard(c *ui.Context, cli inventory.CliState) {
 			switch {
 			case entry.checking:
 				title = cmd + ": " + locales.CliWhoChecking()
-				caption = locales.CliWhoNotCheckedCaption()
 			case !entry.checked:
 				title = cmd + ": " + locales.CliWhoNotChecked()
-				caption = locales.CliWhoNotCheckedCaption()
 			case entry.res.State == detect.CloudAuthVerified:
 				title = cmd + ": " + cmp.Or(entry.res.Identity, locales.CliWhoBadgeVerified())
 				if entry.res.Account != "" {
@@ -657,7 +671,9 @@ func (a *App) cliWhoCard(c *ui.Context, cli inventory.CliState) {
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 					clipped(c, title).FontSize(13).FontWeight(500).TextColor(titleColor)
-					clipped(c, caption).FontSize(11.5).TextColor(captionColor)
+					if caption != "" {
+						clipped(c, caption).FontSize(11.5).TextColor(captionColor)
+					}
 				})
 				switch {
 				case entry.checking:
@@ -677,7 +693,7 @@ func (a *App) cliWhoCard(c *ui.Context, cli inventory.CliState) {
 		}
 
 		// Footer row: check all installed cloud CLIs on demand.
-		btnLabel := locales.CliWhoCheck()
+		btnLabel := locales.KubeCheckAll()
 		if anyChecked {
 			btnLabel = locales.CliWhoCheckAgain()
 		}
@@ -843,7 +859,7 @@ func (a *App) cliTable(c *ui.Context, cli inventory.CliState, tools []inventory.
 			shown += len(rows)
 		}
 		if shown == 0 {
-			cardNote(c, locales.CleanupNone())
+			cardNote(c, locales.NothingMatches())
 		}
 	})
 }

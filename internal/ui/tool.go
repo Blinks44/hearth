@@ -395,15 +395,15 @@ func (a *App) managerCard(c *ui.Context, st inventory.ToolState, rows []int, act
 			// Hooked in for the apps alone, mise still does not switch
 			// versions in the terminal.
 			if m.Name == "mise" && !m.Activated && !m.Shims && a.BuildPlan != nil {
-				listRow(c, locales.MiseHook(), false, locales.MiseNotHooked(), func() {
-					ui.Button(c.Key("mise-setup:"+st.Tool), locales.MiseSetUp()).OnClick(a.setUpMise)
+				listRowWrapped(c, locales.MiseHook(), locales.MiseNotHooked(), func() {
+					ui.Button(c.Key("mise-setup:"+st.Tool), locales.MiseSetUp()).Shrink(0).OnClick(a.setUpMise)
 				})
 			}
 			if m.ConfigPath != "" {
 				cfgPath := m.ConfigPath
 				listRow(c, locales.ManagerGlobalConfig(), false, tilde(cfgPath, a.Home), func() {
 					ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() {
-						if a.Shell != nil {
+						if a.canOpenFile() {
 							iconButton(c.Key("mgr-open:"+m.Name), "external-link", locales.OpenFile(filepath.Base(cfgPath))).
 								OnClick(func() { a.openFile(c, cfgPath) })
 						}
@@ -813,8 +813,8 @@ func sourceBadge(c *ui.Context, s inventory.Source) {
 }
 
 // chip is a status: a dot and a text on a soft background.
-func chip(c *ui.Context, dot, bg, text ui.Color, label string) {
-	ui.Row(c).Gap(5).Padding(2, 6).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
+func chip(c *ui.Context, dot, bg, text ui.Color, label string) ui.Element {
+	return ui.Row(c).Gap(5).Padding(2, 6).Radius(6).AlignItems(ui.Center).Background(bg).Children(func() {
 		ui.Box(c).Size(5, 5).Radius(2.5).Background(dot)
 		ui.Text(c, label).FontSize(11).TextColor(text).SingleLine()
 	})

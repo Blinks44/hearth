@@ -59,6 +59,42 @@ func kubeContextCount(cli inventory.CliState) int {
 	return n
 }
 
+// kubeExistingFiles counts kubeconfig files that exist on disk.
+func kubeExistingFiles(cli inventory.CliState) int {
+	n := 0
+	for _, f := range cli.KubeFiles {
+		if !f.Missing {
+			n++
+		}
+	}
+	return n
+}
+
+// kubeFileExists reports whether path appears in cli.KubeFiles as an existing
+// file on disk.
+func kubeFileExists(cli inventory.CliState, path string) bool {
+	for _, f := range cli.KubeFiles {
+		if f.Path == path {
+			return !f.Missing
+		}
+	}
+	return false
+}
+
+// kubeCurrentBroken reports that kubectl's current-context is set, but no
+// kubeconfig file defines a context with that name.
+func kubeCurrentBroken(cli inventory.CliState, current *inventory.KubeContext) bool {
+	if current == nil {
+		return false
+	}
+	for _, k := range cli.KubeContexts {
+		if k.Name == current.Name && !k.Shadowed {
+			return false
+		}
+	}
+	return true
+}
+
 // namespaceOf is the namespace a context selects, default when it names none.
 func namespaceOf(k inventory.KubeContext) string {
 	if k.Namespace == "" {
@@ -70,6 +106,11 @@ func namespaceOf(k inventory.KubeContext) string {
 func (a *App) kubeView(c *ui.Context, p page) {
 	cli := a.cliState()
 	current := kubeCurrent(cli)
+	existingFiles := kubeExistingFiles(cli)
+	filesCount := len(cli.KubeFiles)
+	if !cli.KubeconfigSet && existingFiles == 0 {
+		filesCount = 0
+	}
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			if a.Snapshot == nil {
@@ -84,6 +125,7 @@ func (a *App) kubeView(c *ui.Context, p page) {
 			ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
 		}})
 		a.kubeNamespaceDialog(c)
+		a.kubeConfigCreateDialog(c)
 		a.kindDialog(c)
 		a.kubeLinkView(c)
 		t := c.Theme()
@@ -97,16 +139,23 @@ func (a *App) kubeView(c *ui.Context, p page) {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
 						lead := p.subtitle()
-						if len(cli.KubeFiles) > 0 {
-							lead = locales.KubeLead(len(cli.KubeFiles))
+						if filesCount > 0 {
+							lead = locales.KubeLead(filesCount)
 						}
 						ui.Text(c, lead).FontSize(12).TextColor(t.TextMuted)
 					})
 				}, func() {
-					stateCard(c, pal.TextFaint, locales.KubeContextsCard(), strconv.Itoa(kubeContextCount(cli)), locales.KubeFromFiles(len(cli.KubeFiles)))
-					if current != nil {
+					contextsCaption := locales.KubeFromFiles(filesCount)
+					if existingFiles == 0 && !cli.KubeconfigSet {
+						contextsCaption = locales.KubeNoConfigFile()
+					}
+					stateCard(c, pal.TextFaint, locales.KubeContextsCard(), strconv.Itoa(kubeContextCount(cli)), contextsCaption)
+					switch {
+					case kubeCurrentBroken(cli, current):
+						stateCard(c, t.Warning, locales.KubeKubectlNow(), current.Name, locales.KubeCurrentMissing())
+					case current != nil:
 						stateCard(c, t.Success, locales.KubeKubectlNow(), current.Name, locales.KubeNamespace(namespaceOf(*current)))
-					} else {
+					default:
 						stateCard(c, pal.TextFaint, locales.KubeKubectlNow(), "–", locales.KubeNoCurrent())
 					}
 					var versions []string
@@ -130,7 +179,7 @@ func (a *App) kubeView(c *ui.Context, p page) {
 						{locales.KubeContextsCard(), strconv.Itoa(kubeContextCount(cli))},
 						{locales.KubeToolsTab(), strconv.Itoa(cliFound(cli, kubeCommands))},
 						{locales.KubeProjectsTab(), strconv.Itoa(a.kubeProjectsCount())},
-						{locales.KubeFilesTab(), strconv.Itoa(len(cli.KubeFiles))},
+						{locales.KubeFilesTab(), strconv.Itoa(filesCount)},
 					})
 					ui.Box(c).Grow(1).Height(1)
 					if in, ok := cliCopy(cli, "kubectl"); ok && a.kubeTab == 0 && a.CheckKube != nil && kubeContextCount(cli) > 0 {
@@ -204,18 +253,31 @@ func (a *App) kubeContextTable(c *ui.Context, cli inventory.CliState, current *i
 			if len(rows) == 0 {
 				continue
 			}
-			cliGroupHead(c, tilde(f.Path, a.Home), len(rows))
+			a.kubeFileGroupHead(c, f, len(rows))
 			for _, k := range rows {
 				a.kubeContextRow(c.Key("kube:"+k.File+":"+k.Name), cli, k, current)
 			}
 			shown += len(rows)
 		}
 		if shown == 0 {
-			text := locales.KubeNoContexts()
 			if len(cli.KubeContexts) > 0 {
-				text = locales.CleanupNone()
+				cardNote(c, locales.CleanupNone())
+			} else {
+				a.kubeEmptyState(c, cli)
 			}
-			cardNote(c, text)
+		}
+	})
+}
+
+func (a *App) kubeFileGroupHead(c *ui.Context, f inventory.KubeFile, n int) {
+	pal := Colors(c.Theme())
+	ui.Row(c.Key("kube-group:"+f.Path)).Gap(8).Padding(6, 12, 6, 16).AlignItems(ui.Center).Background(pal.Subtle).
+		BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		ui.Text(c, strings.ToUpper(tilde(f.Path, a.Home))).Grow(1).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
+		ui.Text(c, strconv.Itoa(n)).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint)
+		if a.canOpenFile() && !f.Missing {
+			path := f.Path
+			iconButton(c.Key("open-group:"+path), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
 		}
 	})
 }
@@ -264,8 +326,16 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 			c.WriteClipboard(k.Name)
 			c.Toast(locales.KubeNameCopied(k.Name))
 		}
-		if a.Shell != nil && m.Item(locales.KubeOpenKubeconfig(filepath.Base(k.File))).Chosen() {
+		if a.canOpenFile() && m.Item(locales.KubeOpenKubeconfig(filepath.Base(k.File))).Chosen() {
 			a.openFile(c, k.File)
+		}
+		if plans {
+			m.Separator()
+			if m.Item(locales.KubeDeleteContext()).Chosen() {
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+					return ops.KubeContextDeletePlan(in.Path, k.Name, from, tilde(k.File, a.Home), a.kubeProjectsOf(k.Name), env, run.Exec{})
+				}, a.proposeOrSay)
+			}
 		}
 	}
 	row := ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
@@ -436,10 +506,12 @@ func (a *App) kubeFiles(c *ui.Context, cli inventory.CliState) {
 			}
 			shown++
 			var parts []string
+			aboutColor := pal.TextFaint
 			switch {
 			case f.Missing:
 				parts = append(parts, locales.KubeFileMissing())
 			case f.Invalid:
+				aboutColor = pal.WarningText
 				parts = append(parts, locales.KubeFileInvalid())
 			default:
 				n := 0
@@ -453,9 +525,19 @@ func (a *App) kubeFiles(c *ui.Context, cli inventory.CliState) {
 					parts = append(parts, locales.KubeFileCurrent(cc.Name))
 				}
 			}
-			cliTableRow(c.Key("kube-file:"+f.Path), tilde(f.Path, a.Home), strings.Join(parts, " · "), strconv.Itoa(i+1), func() {
-				if a.Shell != nil && !f.Missing {
-					iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, f.Path) })
+			path := f.Path
+			cliTableRowColored(c.Key("kube-file:"+path), tilde(path, a.Home), strings.Join(parts, " · "), aboutColor, strconv.Itoa(i+1), func() {
+				if f.Missing {
+					if a.BuildPlan != nil {
+						ui.Button(c.Key("kube-file-create:"+path), locales.KubeCreateButton()).Shrink(0).OnClick(func() { a.openKubeConfigCreate(path) })
+					}
+					return
+				}
+				if f.Invalid {
+					aiTag(c, locales.KubeFileInvalidBadge(), pal.WarningSoft, pal.WarningText)
+				}
+				if a.canOpenFile() {
+					iconButton(c.Key("kube-file-open:"+path), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
 				}
 			})
 		}
@@ -468,11 +550,35 @@ func (a *App) kubeFiles(c *ui.Context, cli inventory.CliState) {
 // kubeTerminalCard says what kubectl in a terminal uses: the context and
 // namespace, the files, the tools.
 func (a *App) kubeTerminalCard(c *ui.Context, cli inventory.CliState, current *inventory.KubeContext) {
+	pal := Colors(c.Theme())
+	singleFile := ""
+	if len(cli.KubeFiles) == 1 && !cli.KubeFiles[0].Missing {
+		singleFile = cli.KubeFiles[0].Path
+	}
 	listCard(c, locales.KubeTerminal(), "", func() {
 		if current != nil {
 			// The file that sets current-context, which need not define it.
 			cc := cliContext(cli, "kubectl")
-			listRow(c, current.Name+" · "+namespaceOf(*current), false, locales.KubeCurrentFrom(tilde(cc.File, a.Home)), func() {})
+			broken := kubeCurrentBroken(cli, current)
+			showOpen := cc != nil && cc.File != "" && kubeFileExists(cli, cc.File) && a.canOpenFile() && cc.File != singleFile
+			if broken {
+				listRow(c, current.Name, false, locales.KubeCurrentMissingIn(tilde(cc.File, a.Home)), func() {
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+						aiTag(c, locales.KubeCurrentMissingBadge(), pal.WarningSoft, pal.WarningText)
+						if showOpen {
+							path := cc.File
+							iconButton(c.Key("kube-term-open-cur"), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
+						}
+					})
+				})
+			} else {
+				listRow(c, current.Name+" · "+namespaceOf(*current), false, locales.KubeCurrentFrom(tilde(cc.File, a.Home)), func() {
+					if showOpen {
+						path := cc.File
+						iconButton(c.Key("kube-term-open-cur"), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
+					}
+				})
+			}
 		} else {
 			listRow(c, locales.KubeNoCurrent(), false, "", func() {})
 		}
@@ -483,9 +589,39 @@ func (a *App) kubeTerminalCard(c *ui.Context, cli inventory.CliState, current *i
 		switch {
 		case len(files) == 0:
 		case cli.KubeconfigSet:
-			listRow(c, locales.KubeconfigSet(len(files)), false, strings.Join(files, ", "), func() {})
+			listRow(c, locales.KubeconfigSet(len(files)), false, strings.Join(files, ", "), func() {
+				switch {
+				case len(cli.KubeFiles) == 1 && cli.KubeFiles[0].Missing:
+					if a.BuildPlan != nil {
+						path := cli.KubeFiles[0].Path
+						ui.Button(c.Key("kube-term-create"), locales.KubeCreateButton()).Shrink(0).OnClick(func() { a.openKubeConfigCreate(path) })
+					}
+				case len(cli.KubeFiles) == 1:
+					if a.canOpenFile() {
+						path := cli.KubeFiles[0].Path
+						iconButton(c.Key("kube-term-open-file"), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
+					}
+				default:
+					ui.Button(c.Key("kube-term-files"), locales.KubeFilesTab()).Shrink(0).OnClick(func() { a.kubeTab = 3 })
+				}
+			})
 		default:
-			listRow(c, locales.KubeconfigUnset(), false, locales.KubeconfigOnly(strings.Join(files, ", ")), func() {})
+			f := cli.KubeFiles[0]
+			if f.Missing {
+				listRow(c, locales.KubeconfigUnset(), false, locales.KubeconfigMissingDefault(tilde(f.Path, a.Home)), func() {
+					if a.BuildPlan != nil {
+						path := f.Path
+						ui.Button(c.Key("kube-term-create"), locales.KubeCreateButton()).Shrink(0).OnClick(func() { a.openKubeConfigCreate(path) })
+					}
+				})
+			} else {
+				listRow(c, locales.KubeconfigUnset(), false, locales.KubeconfigOnly(strings.Join(files, ", ")), func() {
+					if a.canOpenFile() {
+						path := f.Path
+						iconButton(c.Key("kube-term-open-file"), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
+					}
+				})
+			}
 		}
 		var versions, sources []string
 		for _, cmd := range kubeCommands {

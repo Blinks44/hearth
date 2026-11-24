@@ -490,6 +490,9 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 			}
 			ui.Text(c, strings.Join(meta, " · ")).
 				FontSize(12).TextColor(t.TextMuted).Wrap()
+			if item.Owner.Kind != "" {
+				a.ownerChip(c, item.Namespace, item.Owner)
+			}
 			count := ""
 			if read && cl.Resources.EventsErr == nil {
 				count = strconv.Itoa(len(events))
@@ -591,6 +594,17 @@ func (a *App) otherResourceDetail(c *ui.Context, cl *kube.Cluster, item kube.Res
 	})
 }
 
+func formatLabels(labels map[string]string) string {
+	if len(labels) == 0 {
+		return ""
+	}
+	pairs := make([]string, 0, len(labels))
+	for _, key := range slices.Sorted(maps.Keys(labels)) {
+		pairs = append(pairs, key+"="+labels[key])
+	}
+	return strings.Join(pairs, ", ")
+}
+
 func resourceOverview(c *ui.Context, item kube.Resource) {
 	var facts [][2]string
 	add := func(label, value string) {
@@ -598,16 +612,7 @@ func resourceOverview(c *ui.Context, item kube.Resource) {
 			facts = append(facts, [2]string{label, value})
 		}
 	}
-	if item.Owner.Kind != "" {
-		add(locales.KubeResourceOwner(), item.Owner.Kind+" "+item.Owner.Name)
-	}
-	if len(item.Selector) > 0 {
-		var labels []string
-		for _, key := range slices.Sorted(maps.Keys(item.Selector)) {
-			labels = append(labels, key+"="+item.Selector[key])
-		}
-		add(locales.KubeResourceSelector(), strings.Join(labels, ", "))
-	}
+	add(locales.KubeResourceSelector(), formatLabels(item.Selector))
 	switch item.Kind {
 	case kube.StatefulSets, kube.DaemonSets, kube.ReplicaSets:
 		add(locales.KubeReplicas(), fmt.Sprintf("%d/%d", item.Ready, item.Desired))
@@ -624,9 +629,10 @@ func resourceOverview(c *ui.Context, item kube.Resource) {
 		add("TLS", strings.Join(item.TLSSecrets, ", "))
 	case kube.Endpoints:
 		add(locales.KubeResourceAddresses(), strings.Join(item.Addresses, ", "))
+		add(locales.KubeResourceNotReady(), strings.Join(item.NotReadyAddresses, ", "))
 		var ports []string
 		for _, p := range item.Ports {
-			ports = append(ports, p.String())
+			ports = append(ports, p.DetailString())
 		}
 		add(locales.KubeResourcePorts(), strings.Join(ports, ", "))
 	case kube.NetworkPolicies:
@@ -641,6 +647,7 @@ func resourceOverview(c *ui.Context, item kube.Resource) {
 			add(locales.KubeResourceImmutable(), "true")
 		}
 	}
+	add(locales.KubeLabels(), formatLabels(item.Labels))
 	detailSection(c, locales.KubeFacts())
 	factRows(c, facts)
 	if len(item.Routes) > 0 {

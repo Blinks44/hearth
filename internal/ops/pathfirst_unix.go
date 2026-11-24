@@ -43,7 +43,7 @@ func PathFirstPlan(entries []inventory.PathEntry, dir string, env sysenv.Env, te
 	case "fish":
 		line = `set -gx PATH "` + named + `" $PATH`
 	default:
-		return Plan{}, errors.New(locales.MiseShellUnsupported(shell))
+		return Plan{}, errors.New(locales.PathShellUnsupported(shell))
 	}
 	step, err := firstLineStep(file, line, true)
 	if err != nil {

@@ -40,11 +40,16 @@ func PinPlan(p projects.Project, t PinTarget) (plan Plan, ok bool) {
 	if key != "" {
 		shown += " · " + key
 	}
+	path := filepath.Join(p.Dir, file)
+	steps := []Step{{Edit: &FileEdit{Path: path, Before: before, After: after, New: !existed}}}
+	if !existed && (file == "mise.toml" || file == ".mise.toml") {
+		steps = append(steps, Step{Argv: []string{"mise", "trust", path}})
+	}
 	plan = Plan{
 		Title:   locales.PinTitle(t.Title, t.Version, filepath.Base(p.Dir)),
 		Why:     locales.PinWhy(shown),
 		Action:  locales.PinAction(t.Version),
-		Steps:   []Step{{Edit: &FileEdit{Path: filepath.Join(p.Dir, file), Before: before, After: after, New: !existed}}},
+		Steps:   steps,
 		Changes: []string{locales.PinChange(shown, t.Title, t.Version)},
 	}
 	if !existed {

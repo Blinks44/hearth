@@ -45,7 +45,7 @@ func readOverview(ctx context.Context, r run.Runner, env sysenv.Env, target Targ
 	var health inventory.DockerHealth
 	var reads sync.WaitGroup
 	reads.Go(func() {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 		items, err := ReadContainers(ctx, r, env, target)
 		o.ContainersErr = err
@@ -65,7 +65,7 @@ func readOverview(ctx context.Context, r run.Runner, env sysenv.Env, target Targ
 	})
 	if readDetails {
 		reads.Go(func() {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 			defer cancel()
 			o.Disk.Usage, o.Disk.Err = ReadUsage(ctx, r, env, target)
 		})

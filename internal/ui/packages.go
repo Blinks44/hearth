@@ -150,7 +150,7 @@ func (a *App) packages(c *ui.Context, p page) {
 					}
 					listCard(c, locales.PkgStatus(), statusAside, func() {
 						listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
-							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(m.Path); c.Toast(locales.PathCopied()) })
+							a.pathActions(c, "pkg-mgr-path", m.Path)
 						})
 						if updates > 1 && choosable(m) {
 							ui.Box(c).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
@@ -167,11 +167,12 @@ func (a *App) packages(c *ui.Context, p page) {
 				}, func() {
 					listCard(c, locales.PkgOtherManagers(), "", func() {
 						for _, other := range st.PackageManagers {
-							listRow(c, other.Name, false, tilde(other.Path, a.Home), func() {
-								if other.Path == m.Path {
+							path := other.Path
+							listRow(c, other.Name, false, tilde(path, a.Home), func() {
+								if path == m.Path {
 									ui.Text(c, locales.PkgSelected()).FontSize(10.5).TextColor(pal.TextFaint)
 								} else {
-									ui.Button(c, locales.Details()).OnClick(func() { a.packageManager = other.Path })
+									ui.Button(c.Key("pkg-mgr:"+path), locales.Details()).Shrink(0).OnClick(func() { a.packageManager = path })
 								}
 							})
 						}
@@ -199,7 +200,9 @@ func (a *App) packages(c *ui.Context, p page) {
 								status, _ := databaseStatus(c, server.Status)
 								listRow(c, server.Service, false, status, func() {})
 							}
-							ui.Button(c, locales.DatabasesTitle()).OnClick(func() { a.router.Push("/tools/databases") })
+							ui.Row(c).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+								ui.Button(c.Key("pkg-databases"), locales.DatabasesTitle()).OnClick(func() { a.router.Push("/tools/databases") })
+							})
 						})
 					}
 				})

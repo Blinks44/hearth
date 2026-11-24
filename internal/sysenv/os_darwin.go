@@ -13,3 +13,11 @@ func readOS() (OS, error) {
 	}
 	return OS{Name: "macOS", Version: v}, nil
 }
+
+func totalMemoryBytes() uint64 {
+	v, err := unix.SysctlUint64("hw.memsize")
+	if err != nil {
+		return 0
+	}
+	return v
+}

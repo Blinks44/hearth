@@ -126,10 +126,68 @@ func (a *App) toggleClusterKinds() {
 	s := &a.cluster
 	s.kindsOpen = !s.kindsOpen
 	if s.kindsOpen {
-		s.kindQuery, s.kindSelected = "", 0
+		s.kindQuery, s.kindSelected, s.kindShowAll = "", 0, false
 		s.contextOpen, s.namespaceOpen = false, false
 		a.loadCustomDefinitions(a.router.Query("context"))
 	}
+}
+
+func clusterKindAllowed(access *kube.ListAccess, kind int) bool {
+	if access == nil {
+		return true
+	}
+	switch kind {
+	case kindOverview, kindAccess:
+		return true
+	case kindPods:
+		return access.CanList("", "pods")
+	case kindDeployments:
+		return access.CanList("apps", "deployments")
+	case kindStatefulSets:
+		return access.CanList("apps", "statefulsets")
+	case kindDaemonSets:
+		return access.CanList("apps", "daemonsets")
+	case kindReplicaSets:
+		return access.CanList("apps", "replicasets")
+	case kindJobs:
+		return access.CanList("batch", "jobs")
+	case kindCronJobs:
+		return access.CanList("batch", "cronjobs")
+	case kindServices:
+		return access.CanList("", "services")
+	case kindIngresses:
+		return access.CanList("networking.k8s.io", "ingresses")
+	case kindEndpoints:
+		return access.CanList("", "endpoints")
+	case kindNetworkPolicies:
+		return access.CanList("networking.k8s.io", "networkpolicies")
+	case kindSecrets:
+		return access.CanList("", "secrets")
+	case kindConfigMaps:
+		return access.CanList("", "configmaps")
+	case kindHelm:
+		return access.CanList("", "secrets") || access.CanList("", "configmaps")
+	case kindPVCs:
+		return access.CanList("", "persistentvolumeclaims")
+	case kindPVs:
+		return access.CanList("", "persistentvolumes")
+	case kindStorageClasses:
+		return access.CanList("storage.k8s.io", "storageclasses")
+	case kindNodes:
+		return access.CanList("", "nodes")
+	case kindNamespaces:
+		return access.CanList("", "namespaces")
+	case kindServiceAccounts:
+		return access.CanList("", "serviceaccounts")
+	case kindPolicies:
+		return access.CanList("autoscaling", "horizontalpodautoscalers") ||
+			access.CanList("policy", "poddisruptionbudgets") ||
+			access.CanList("", "resourcequotas") ||
+			access.CanList("", "limitranges")
+	case kindCustom:
+		return access.CanList("apiextensions.k8s.io", "customresourcedefinitions")
+	}
+	return true
 }
 
 func (a *App) clusterKindPicker(c *ui.Context) {
@@ -138,6 +196,21 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 	pal := Colors(t)
 	options := clusterKindOptions()
 	query := strings.ToLower(strings.TrimSpace(s.kindQuery))
+	var access *kube.ListAccess
+	if catalog := s.custom.catalog; catalog != nil && catalog.result != nil {
+		access = catalog.result.Access
+	}
+	hasAccessibleCRD := true
+	if catalog := s.custom.catalog; catalog != nil && catalog.result != nil && catalog.result.Err == nil && access != nil && len(catalog.result.Items) > 0 {
+		hasAccessibleCRD = false
+		for i := range catalog.result.Items {
+			d := &catalog.result.Items[i]
+			if access.CanList(d.Group, d.Names.Plural) {
+				hasAccessibleCRD = true
+				break
+			}
+		}
+	}
 	type entry struct {
 		id    int
 		kind  clusterKind
@@ -160,9 +233,17 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 			}
 		}
 	}
+	hidden := 0
 	for _, i := range []int{kindOverview, kindPods, kindDeployments, kindStatefulSets, kindDaemonSets, kindReplicaSets,
 		kindJobs, kindCronJobs, kindServices, kindIngresses, kindEndpoints, kindNetworkPolicies, kindSecrets, kindConfigMaps, kindHelm,
 		kindPVCs, kindPVs, kindStorageClasses, kindNodes, kindNamespaces, kindPolicies, kindServiceAccounts, kindAccess, kindCustom} {
+		allowed := clusterKindAllowed(access, i) && (i != kindCustom || hasAccessibleCRD)
+		if !allowed {
+			hidden++
+			if !s.kindShowAll {
+				continue
+			}
+		}
 		group := ""
 		switch i {
 		case kindPVCs, kindPVs, kindStorageClasses:
@@ -179,9 +260,19 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 			add(entry{id: i, kind: options[i], group: group})
 		}
 	}
+	hiddenEmpty := 0
 	if catalog := s.custom.catalog; catalog != nil && catalog.result != nil {
 		for i := range catalog.result.Items {
 			d := &catalog.result.Items[i]
+			if access != nil && !access.CanList(d.Group, d.Names.Plural) {
+				hidden++
+				if !s.kindShowAll {
+					continue
+				}
+			} else if !s.kindShowEmpty && query == "" && catalog.isEmpty(d.Name()) {
+				hiddenEmpty++
+				continue
+			}
 			alias := d.Names.Singular
 			if len(d.Names.ShortNames) > 0 {
 				alias = d.Names.ShortNames[0]
@@ -230,6 +321,9 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 				choose(results[selected])
 			}
 		})
+		if catalog := s.custom.catalog; catalog != nil && catalog.result != nil && len(catalog.result.Items) > 0 && (a.ProbeCustomPresence != nil || catalog.presence != nil) {
+			a.nonEmptyCRDToggleRow(c, "kind-non-empty", catalog, hiddenEmpty)
+		}
 		c.OnShortcut(0, ui.KeyDown, func() { move(1) })
 		c.OnShortcut(0, ui.KeyUp, func() { move(-1) })
 		if len(results) == 0 {
@@ -292,8 +386,25 @@ func (a *App) clusterKindPicker(c *ui.Context) {
 				})
 			}
 		})
-		if catalog := s.custom.catalog; catalog != nil && (catalog.result == nil || catalog.result.Err != nil) {
+		if catalog := s.custom.catalog; catalog != nil && (catalog.result == nil || (catalog.result.Err != nil && (access == nil || s.kindShowAll))) {
 			a.customCatalogNotice(c)
+		}
+		if hidden > 0 {
+			ui.Row(c).AlignItems(ui.Center).Gap(8).Padding(6, 10, 4, 10).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, locales.KubeKindHiddenNoAccess(hidden)).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+				toggleLabel := locales.KubeKindShowHidden()
+				if s.kindShowAll {
+					toggleLabel = locales.KubeKindHideNoAccess()
+				}
+				b := ui.ButtonBase(c.Key("kind-toggle-hidden")).Padding(2, 6).Radius(5).Label(toggleLabel).
+					OnClick(func() { s.kindShowAll = !s.kindShowAll; s.kindSelected = 0 })
+				if b.Hovered() {
+					b.Background(pal.Muted)
+				}
+				b.Children(func() {
+					ui.Text(c, toggleLabel).FontSize(11).FontWeight(500).TextColor(t.TextMuted)
+				})
+			})
 		}
 		ui.Row(c).Gap(14).Padding(8, 10, 4, 10).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 			for _, hint := range []string{locales.KubeKindHintMove(), locales.KubeKindHintOpen(), locales.KubeKindHintPin()} {

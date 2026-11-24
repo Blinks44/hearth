@@ -39,33 +39,47 @@ func linkTo(r kube.Relationship) resourceLink {
 		link.kind = kindDaemonSets
 	case "ReplicaSet":
 		link.kind = kindReplicaSets
+	case "Job":
+		link.kind = kindJobs
+	case "CronJob":
+		link.kind = kindCronJobs
+	case "Node":
+		link.kind = kindNodes
 	}
 	return link
 }
 
-// ownerChip names the workload a pod belongs to, as a button that opens
+func knownResourceLink(r kube.Relationship) bool {
+	return r.Kind == "Pod" || linkTo(r).kind != kindPods
+}
+
+// ownerChip names the workload a pod or job belongs to, as a button that opens
 // it: its kind, faint, then its name.
 func (a *App) ownerChip(c *ui.Context, namespace string, owner kube.Owner) {
 	t := c.Theme()
 	pal := Colors(t)
 	open := func() {
-		if d := slices.IndexFunc(a.cluster.data.Deployments, func(d kube.Deployment) bool {
-			return owner.Kind == "Deployment" && d.Namespace == namespace && d.Name == owner.Name
-		}); d >= 0 {
-			s := &a.cluster
-			s.kind, s.deployment, s.tab, s.query, s.deploymentFilter = kindDeployments, s.data.Deployments[d].UID, 0, "", deploymentsAll
-			s.revealWorkload = s.deployment
-			return
-		}
-		if owner.Kind == "Job" {
-			// Jobs have no details: their list shows the one.
-			a.openResourceLink(resourceLink{kind: kindJobs})
-			a.cluster.query = owner.Name
-			return
+		s := &a.cluster
+		if s.data != nil {
+			if d := slices.IndexFunc(s.data.Deployments, func(d kube.Deployment) bool {
+				return owner.Kind == "Deployment" && d.Namespace == namespace && d.Name == owner.Name
+			}); d >= 0 {
+				s.kind, s.deployment, s.tab, s.query, s.deploymentFilter = kindDeployments, s.data.Deployments[d].UID, 0, "", deploymentsAll
+				s.revealWorkload = s.deployment
+				return
+			}
+			if owner.Kind == "CronJob" && s.data.Batch != nil {
+				if i := slices.IndexFunc(s.data.Batch.CronJobs, func(cj kube.CronJob) bool {
+					return cj.Namespace == namespace && cj.Name == owner.Name
+				}); i >= 0 {
+					a.openCronJob(s.data.Batch.CronJobs[i])
+					return
+				}
+			}
 		}
 		a.openResourceLink(linkTo(kube.Relationship{Kind: owner.Kind, Namespace: namespace, Name: owner.Name}))
 	}
-	known := owner.Kind == "Job" || linkTo(kube.Relationship{Kind: owner.Kind}).kind != kindPods
+	known := knownResourceLink(kube.Relationship{Kind: owner.Kind})
 	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, locales.KubeOwnerLabel()).FontSize(12).TextColor(t.TextMuted).Shrink(0)
 		b := ui.ButtonBase(c.Key("pod-owner")).Height(25).Padding(0, 10, 0, 9).Radius(13).Gap(6).AlignItems(ui.Center).MinWidth(0).
@@ -122,9 +136,12 @@ func (a *App) resourceRelationships(c *ui.Context, links []kube.Relationship, er
 			case "PersistentVolumeClaim":
 				kind = "PVC"
 			}
-			button := locales.KubeClusterOpen()
-			if rel.Kind == "PersistentVolumeClaim" {
-				button = locales.KubeStorageOpenClaim()
+			button := ""
+			if knownResourceLink(rel) {
+				button = locales.KubeClusterOpen()
+				if rel.Kind == "PersistentVolumeClaim" {
+					button = locales.KubeStorageOpenClaim()
+				}
 			}
 			a.resourceLinkRow(c.Key("related-"+rel.Kind+"/"+rel.Namespace+"/"+rel.Name),
 				kind+" "+rel.Name, rel.Detail, button, linkTo(rel))

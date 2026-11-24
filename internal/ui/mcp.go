@@ -91,6 +91,17 @@ func (a *App) mcpItems() []mcpItem {
 	return items
 }
 
+func (a *App) configuredMCPItems() []mcpItem {
+	all := a.mcpItems()
+	out := make([]mcpItem, 0, len(all))
+	for _, m := range all {
+		if !m.builtin {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
 // mcpSelectedDecl returns the declaration index currently chosen for checking m.
 func (a *App) mcpSelectedDecl(m mcpItem) int {
 	idx := 0
@@ -174,12 +185,19 @@ func (a *App) mcpPageView(c *ui.Context, p page) {
 				found = append(found, is)
 			}
 		}
-		inProjects := 0
+		configured, inProjects, conflicts := 0, 0, 0
 		for _, m := range all {
+			if !m.builtin {
+				configured++
+				if m.conflict() {
+					conflicts++
+				}
+			}
 			if m.project != "" {
 				inProjects++
 			}
 		}
+		problemCount := len(found) + conflicts
 		q := strings.ToLower(strings.TrimSpace(a.mcpQuery))
 		var shown []mcpItem
 		for _, m := range all {
@@ -202,14 +220,17 @@ func (a *App) mcpPageView(c *ui.Context, p page) {
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				aiIntro(c, "plug", locales.McpTitle(), locales.McpText(), []aiStat{
-					{strconv.Itoa(len(all)), locales.StatServers(len(all))},
+					{strconv.Itoa(configured), locales.StatServers(configured)},
 					{strconv.Itoa(inProjects), locales.StatProjects()},
-					{strconv.Itoa(len(found)), locales.StatProblems(len(found))},
+					{strconv.Itoa(problemCount), locales.StatProblems(problemCount)},
 				})
 				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 					a.agentFilter(c, "mcp-agent", &a.mcpAgent, func(id string) int {
 						n := 0
 						for _, m := range all {
+							if m.builtin {
+								continue
+							}
 							if id == "" || slices.Contains(m.agents(), id) {
 								n++
 							}
@@ -474,16 +495,21 @@ func (a *App) mcpDetail(c *ui.Context, m mcpItem) {
 				a.mcpAgentControl(c, m, id, i)
 			})
 		}
-		if a.Shell != nil && !m.builtin {
+		if !m.builtin && (a.canOpenFile() || a.Shell != nil) {
+			openLabel := locales.OpenFile(filepath.Base(first.File))
 			ui.Row(c).Gap(8).Padding(12, 16, 14, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Wrap().Children(func() {
-				ui.Button(c.Key("mcp-open"), "").Shrink(0).OnClick(func() { a.openFile(c, first.File) }).Children(func() {
-					ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
-					ui.Text(c, locales.OpenFile(filepath.Base(first.File))).SingleLine()
-				})
-				ui.Button(c.Key("mcp-reveal"), "").Shrink(0).OnClick(func() { a.Shell.ShowItemInFolder(first.File) }).Children(func() {
-					ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
-					ui.Text(c, showInFolder()).SingleLine()
-				})
+				if a.canOpenFile() {
+					ui.Button(c.Key("mcp-open"), "").Label(openLabel).Tooltip(openLabel).Shrink(0).OnClick(func() { a.openFile(c, first.File) }).Children(func() {
+						ui.Icon(c, Icon("external-link")).Size(13, 13).TextColor(t.TextMuted)
+						ui.Text(c, locales.OpenShort()).SingleLine()
+					})
+				}
+				if a.Shell != nil {
+					ui.Button(c.Key("mcp-reveal"), "").Label(showInFolder()).Tooltip(showInFolder()).Shrink(0).OnClick(func() { a.Shell.ShowItemInFolder(first.File) }).Children(func() {
+						ui.Icon(c, Icon("folder-open")).Size(13, 13).TextColor(t.TextMuted)
+						ui.Text(c, showInFolderShort()).SingleLine()
+					})
+				}
 			})
 		}
 	})
@@ -546,13 +572,15 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 	s := m.decls[i]
 	if plans && ops.MCPToggles(s) {
 		on := !s.Disabled
-		toggle(c, "mcp-on:"+id, &on).Label(locales.McpOnFor(agentTitle(id))).OnChange(func() {
+		label := locales.McpOnFor(agentTitle(id))
+		toggle(c, "mcp-on:"+id, &on).Label(label).Tooltip(label).Disabled(a.op.running()).OnChange(func() {
 			propose(func(env sysenv.Env) (ops.Plan, error) { return ops.MCPEnablePlan(s, on, env, agentTitle) })
 		})
 	}
 	removable := plans && ops.MCPRemovable(s)
 	editable := plans && ops.MCPEditable(s)
-	if a.Shell == nil && !removable && !editable {
+	canFile := a.canOpenFile() || a.Shell != nil
+	if !canFile && !removable && !editable {
 		return
 	}
 	ui.Row(c.Key("mcp-menu:" + id)).Shrink(0).Children(func() {
@@ -562,19 +590,19 @@ func (a *App) mcpAgentControl(c *ui.Context, m mcpItem, id string, i int) {
 					a.openEditMCPForm(s)
 				}
 			}
-			if a.Shell != nil {
+			if canFile {
 				if editable {
 					menu.Separator()
 				}
-				if menu.Item(locales.OpenFile(filepath.Base(s.File))).Chosen() {
+				if a.canOpenFile() && menu.Item(locales.OpenFile(filepath.Base(s.File))).Chosen() {
 					a.openFile(c, s.File)
 				}
-				if menu.Item(showInFolder()).Chosen() {
+				if a.Shell != nil && menu.Item(showInFolder()).Chosen() {
 					a.Shell.ShowItemInFolder(s.File)
 				}
 			}
 			if removable {
-				if a.Shell != nil || editable {
+				if canFile || editable {
 					menu.Separator()
 				}
 				if menu.Item(locales.McpRemove(agentTitle(id))).Chosen() {
@@ -902,7 +930,7 @@ func (a *App) mcpFormDialog(c *ui.Context) {
 				ui.Column(c).Gap(12).Padding(20, 20, 16, 20).Children(func() {
 					ui.Text(c, title).FontSize(18).FontWeight(600)
 					if f.loading {
-						ui.Text(c, locales.OpVerifying()).FontSize(12).TextColor(t.TextMuted)
+						ui.Text(c, locales.Loading()).FontSize(12).TextColor(t.TextMuted)
 						return
 					}
 					if f.edit {

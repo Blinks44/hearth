@@ -210,6 +210,23 @@ func TestPortsBindIPAndWarningPreservation(t *testing.T) {
 	if ct, ok := a.portContainerFor(rows[1]); ok {
 		t.Fatalf("127.0.0.2 non-docker listener should not match api, got %+v", ct)
 	}
+	nativeListener := inventory.DatabaseListener{Port: "8080", Address: "127.0.0.1", Process: "postgres", PID: "250"}
+	if ct, ok := a.portContainerFor(portRow{DatabaseListener: nativeListener, Addresses: []string{"127.0.0.1"}}); ok {
+		t.Fatalf("native postgres on 127.0.0.1 should not match Docker container, got %+v", ct)
+	}
+	colimaSSHListener := inventory.DatabaseListener{Port: "8080", Address: "127.0.0.1", Process: "ssh", PID: "260", Path: "/usr/local/bin/ssh", Own: true}
+	colimaSSH := portRow{DatabaseListener: colimaSSHListener, Addresses: []string{"127.0.0.1"}}
+	if ct, ok := a.portContainerFor(colimaSSH); !ok || ct.Name != "api" {
+		t.Fatalf("Colima ssh on container port should match api, got %+v, %v", ct, ok)
+	}
+	userSSHListener := inventory.DatabaseListener{Port: "9090", Address: "127.0.0.1", Process: "ssh", PID: "261", Path: "/usr/local/bin/ssh", Own: true}
+	userSSH := portRow{DatabaseListener: userSSHListener, Addresses: []string{"127.0.0.1"}}
+	if a.isPortDocker(userSSH) {
+		t.Fatalf("standalone user ssh tunnel should not be classified as Docker")
+	}
+	if _, _, stoppable := a.portAbout(userSSH); !stoppable {
+		t.Fatalf("standalone user ssh tunnel should remain stoppable")
+	}
 
 	a.applyPortsRefresh(detect.PortsSnapshot{
 		Listeners: []inventory.DatabaseListener{{Port: "9000", Address: "127.0.0.1", Process: "vite", PID: "300"}},
@@ -220,6 +237,10 @@ func TestPortsBindIPAndWarningPreservation(t *testing.T) {
 	}
 	if slices.Contains(st.Databases.Warnings, "lsof") {
 		t.Fatalf("stale listener warning remained after clean refresh: %v", st.Databases.Warnings)
+	}
+	dst, _ := a.Snapshot.Tool("docker")
+	if len(dst.Docker.PortContainers) != 0 || !dst.Docker.PortContainersFresh {
+		t.Fatalf("stale Docker port containers were not cleared when HasDocker=false: %+v", dst.Docker)
 	}
 }
 

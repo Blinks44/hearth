@@ -47,3 +47,37 @@ func TestReadServices(t *testing.T) {
 		})
 	}
 }
+
+func TestReadServiceDetailsAndEvents(t *testing.T) {
+	const services = `{"items":[
+		{"metadata":{"name":"web","namespace":"shop","uid":"svc1","creationTimestamp":"2026-05-01T10:00:00Z","labels":{"tier":"frontend"}},
+		 "spec":{"type":"LoadBalancer","clusterIP":"10.96.1.2","externalIPs":["203.0.113.5"],"sessionAffinity":"ClientIP",
+		         "externalTrafficPolicy":"Local","internalTrafficPolicy":"Cluster","selector":{"app":"web"},
+		         "ports":[{"name":"https","port":443,"nodePort":30443,"protocol":"TCP","targetPort":8443}]},
+		 "status":{"loadBalancer":{"ingress":[{"ip":"198.51.100.10"},{"hostname":"lb.example"}]}}}
+	]}`
+	var runner run.Fake
+	runner.Stdout(services, "kubectl", "--context=kind-dev", "get", "services", "--namespace=shop", "--output=json", "--request-timeout=15s")
+	runner.Stdout(`{"items":[]}`, "kubectl", "--context=kind-dev", "get", "pods", "--namespace=shop", "--output=json", "--request-timeout=15s")
+	runner.Stdout(`{"items":[]}`, "kubectl", "--context=kind-dev", "get", "endpoints", "--namespace=shop", "--field-selector=metadata.name=web", "--output=json", "--request-timeout=15s")
+	runner.Stdout(`{"items":[{"type":"Normal","reason":"EnsuredLoadBalancer","message":"Ensured load balancer"}]}`,
+		"kubectl", "--context=kind-dev", "get", "events", "--namespace=shop", "--field-selector=involvedObject.uid=svc1", "--output=json", "--request-timeout=15s")
+
+	cl, err := Read(t.Context(), &runner, nil, Target{
+		Kubectl: "kubectl", Context: "kind-dev", Namespaces: []string{"shop"}, Services: true,
+		Events: Ref{Namespace: "shop", UID: "svc1"},
+	})
+	if err != nil || len(cl.Services) != 1 {
+		t.Fatalf("Read = %+v, %v", cl, err)
+	}
+	svc := cl.Services[0]
+	if svc.Created.IsZero() || svc.SessionAffinity != "ClientIP" || svc.ExternalTrafficPolicy != "Local" ||
+		svc.Selector["app"] != "web" || svc.Labels["tier"] != "frontend" ||
+		len(svc.LoadBalancer) != 2 || len(svc.ExternalIPs) != 1 ||
+		svc.Ports[0].DetailString() != "https: 443 → 8443/TCP (NodePort 30443)" {
+		t.Fatalf("unexpected service details: %+v", svc)
+	}
+	if cl.EventsErr != nil || len(cl.Events) != 1 || cl.Events[0].Reason != "EnsuredLoadBalancer" {
+		t.Fatalf("events = %+v, err = %v", cl.Events, cl.EventsErr)
+	}
+}

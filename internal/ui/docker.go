@@ -20,17 +20,17 @@ func (a *App) docker(c *ui.Context, p page) {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			st, _ := a.Snapshot.Tool("docker")
 			if st.Docker != nil && inventory.TerminalCopy(st.Installations) < 0 && a.canInstallColima() {
-				ui.PrimaryButton(c.Key("colima-install"), locales.ColimaInstall()).OnClick(func() { a.installColima(false) })
+				ui.PrimaryButton(c.Key("colima-install"), locales.ColimaInstall()).Height(controlHeight).OnClick(func() { a.installColima(false) })
 			} else if plan, ok := a.nativeDockerInstallPlan(st); ok {
-				ui.PrimaryButton(c.Key("docker-install"), locales.DockerEngineInstall()).OnClick(func() { a.Propose(plan) })
+				ui.PrimaryButton(c.Key("docker-install"), locales.DockerEngineInstall()).Height(controlHeight).OnClick(func() { a.Propose(plan) })
 			} else if profile, ok := dockerSelectedColima(st.Docker); ok && profile.Status == "stopped" {
-				ui.PrimaryButton(c.Key("colima-start"), locales.ColimaStart()).Disabled(a.BuildPlan == nil).
+				ui.PrimaryButton(c.Key("colima-start"), locales.TrayColimaStart()).Height(controlHeight).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
 			} else if plan, ok := a.engineStartPlan(); ok {
-				ui.PrimaryButton(c.Key("engine-start"), plan.Title).OnClick(func() { a.Propose(plan) })
+				ui.PrimaryButton(c.Key("engine-start"), plan.Title+"…").Height(controlHeight).OnClick(func() { a.Propose(plan) })
 			} else if a.dockerAnswers() && a.dockerOpenable(st.Docker.Selected) {
 				name := st.Docker.Selected
-				ui.PrimaryButton(c.Key("engine-open"), locales.DockerOpenContext(name)).OnClick(func() { a.router.Push(dockerEnginePath(name)) })
+				ui.PrimaryButton(c.Key("engine-open"), locales.DockerOpenContext(name)).Height(controlHeight).OnClick(func() { a.router.Push(dockerEnginePath(name)) })
 			}
 		}})
 		st, checked := a.Snapshot.Tool("docker")
@@ -68,7 +68,11 @@ func (a *App) docker(c *ui.Context, p page) {
 				if d.Err != "" {
 					warningRow(c, locales.DockerConfigError())
 				}
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
+				if narrow(c) {
+					toolbar.Wrap()
+				}
+				toolbar.Children(func() {
 					segments(c, "docker-tabs", &a.dockerTab, []segment{
 						{locales.DockerContexts(), strconv.Itoa(len(d.Contexts))},
 						{locales.DockerEngines(), strconv.Itoa(len(d.Engines))},
@@ -78,7 +82,7 @@ func (a *App) docker(c *ui.Context, p page) {
 					})
 					ui.Box(c).Grow(1)
 					if a.dockerTab == 0 {
-						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Height(controlHeight).Width(200)
+						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Height(controlHeight).Width(200).MinWidth(140).Shrink(1)
 					}
 				})
 				columns(c, 12, func() {

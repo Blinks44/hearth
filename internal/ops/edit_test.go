@@ -319,3 +319,23 @@ func checkFile(t *testing.T, path, want string, mode os.FileMode) {
 		t.Errorf("%s has mode %v, want %v", filepath.Base(path), info.Mode().Perm(), mode)
 	}
 }
+
+func TestApplyEditPrivateMode(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), ".kube")
+	cfg := filepath.Join(dir, "config")
+	p := Plan{Title: "Create kubeconfig", Steps: []Step{{Edit: &FileEdit{Path: cfg, After: "apiVersion: v1\n", New: true, Mode: 0o600}}}}
+	got := Execute(t.Context(), &run.Fake{}, p, &strings.Builder{}, func(State) {})
+	if got.Phase != Succeeded {
+		t.Fatalf("phase %d, err %q", got.Phase, got.Err)
+	}
+	checkFile(t, cfg, "apiVersion: v1\n", 0o600)
+	if runtimeExe == "" {
+		info, err := os.Stat(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.Mode().Perm() != 0o700 {
+			t.Errorf(".kube dir mode = %v, want 0700", info.Mode().Perm())
+		}
+	}
+}

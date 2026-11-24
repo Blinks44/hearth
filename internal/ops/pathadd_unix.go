@@ -48,7 +48,7 @@ func PathAddPlan(entries []inventory.PathEntry, raw string, env sysenv.Env, term
 	case "fish":
 		line = `set -gx PATH "` + named + `" $PATH`
 	default:
-		return Plan{}, errors.New(locales.SecretShellUnsupported(shell))
+		return Plan{}, errors.New(locales.PathShellUnsupported(shell))
 	}
 	step, err := firstLineStep(file, line, true)
 	if err != nil {

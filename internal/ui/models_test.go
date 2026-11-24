@@ -9,6 +9,7 @@ import (
 
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // The page shows Ollama's and LM Studio's models with their size, the one
@@ -233,7 +234,7 @@ func TestModelsPolishControls(t *testing.T) {
 	if _, ok := tt.Find("Copy model name"); !ok {
 		t.Fatal("missing Copy model name button")
 	}
-	if err := tt.Click("Start service"); err != nil {
+	if err := tt.Click(locales.SetupStart()); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

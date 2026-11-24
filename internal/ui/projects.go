@@ -116,7 +116,7 @@ func (a *App) addButton(c *ui.Context) {
 	if a.ChooseFolder == nil {
 		return
 	}
-	ui.PrimaryButton(c, "").Height(controlHeight).OnClick(a.ChooseFolder).Children(func() {
+	ui.PrimaryButton(c, "").Label(locales.AddFolder()).Height(controlHeight).OnClick(a.ChooseFolder).Children(func() {
 		ui.Icon(c, Icon("plus")).Size(14, 14).TextColor(ui.Hex("#FFFFFF"))
 		ui.Text(c, locales.AddFolder()).TextColor(ui.Hex("#FFFFFF")).SingleLine()
 	})
@@ -127,7 +127,7 @@ func (a *App) findProjectsButton(c *ui.Context) {
 	if a.FindProjects == nil {
 		return
 	}
-	ui.Button(c.Key("find-projects"), "").Height(controlHeight).OnClick(a.FindProjects).Children(func() {
+	ui.Button(c.Key("find-projects"), "").Label(locales.FindProjects()).Height(controlHeight).OnClick(a.FindProjects).Children(func() {
 		ui.Icon(c, Icon("search")).Size(14, 14).TextColor(c.Theme().TextMuted)
 		ui.Text(c, locales.FindProjects()).SingleLine()
 	})
@@ -358,12 +358,12 @@ func (a *App) project(c *ui.Context, dir string) {
 				a.projectDatabasesCard(c, p)
 				a.projectKubeCard(c, p)
 				if narrow(c) {
-					aiCard(c, p)
-					filesCard(c, p)
+					a.aiCard(c, p)
+					a.filesCard(c, p)
 				} else {
 					ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { aiCard(c, p) })
-						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { filesCard(c, p) })
+						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.aiCard(c, p) })
+						ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.filesCard(c, p) })
 					})
 				}
 			})
@@ -548,7 +548,20 @@ func (a *App) pinItems(m *ui.Menu, dir string) {
 		}
 		added = true
 		if m.Item(locales.PinMenu(t.Title, t.Version)).Chosen() {
-			a.Propose(plan)
+			if a.BuildPlan != nil && slices.ContainsFunc(plan.Steps, func(s ops.Step) bool {
+				return len(s.Argv) > 0 && s.Argv[0] == "mise"
+			}) {
+				base := plan
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+					mise, err := ops.SetUpMise(env)
+					if err != nil {
+						return ops.Plan{}, err
+					}
+					return ops.WithMise(base, mise), nil
+				}, a.proposeOrSay)
+			} else {
+				a.Propose(plan)
+			}
 		}
 	}
 	if added {
@@ -713,7 +726,7 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 			for i, h := range []string{locales.ColumnTool(), locales.ColumnNeeded(), locales.ColumnInstalled(), locales.ColumnRunsHere()} {
 				ui.Text(c, h).FontSize(11.5).TextColor(pal.TextFaint).Grow(columnGrow[i]).Basis(0).MinWidth(0).SingleLine()
 			}
-			ui.Box(c).Width(110).Shrink(0)
+			ui.Box(c).Width(124).Shrink(0)
 		})
 		for _, st := range statuses {
 			dest := projectToolPath(st.Tool)
@@ -749,7 +762,7 @@ func (a *App) requirementTable(c *ui.Context, statuses []projects.Status) {
 					run, runCaption = copyVersion(*st.Terminal), sourceName(st.Terminal.Source)
 				}
 				cell(c, columnGrow[3], run, runCaption, pal.TextFaint)
-				ui.Row(c).Width(110).Shrink(0).Justify(ui.End).Children(func() {
+				ui.Row(c).Width(124).Shrink(0).Justify(ui.End).Children(func() {
 					label, runInstall, install := a.projectInstallAction(st, a.proposeOrSay)
 					switch {
 					case install:
@@ -827,27 +840,55 @@ func installedVersions(st projects.Status) []string {
 
 // aiCard lists the project's AI settings: instructions, settings, skills,
 // MCP servers.
-func aiCard(c *ui.Context, p projects.Project) {
+func (a *App) aiCard(c *ui.Context, p projects.Project) {
 	listCard(c, locales.ProjectAI(), "", func() {
 		if len(p.AI) == 0 {
 			cardNote(c, locales.NoAISettings())
 		}
 		for _, f := range p.AI {
-			listRow(c, f, false, aiFileCaption(f), func() {})
+			name := f
+			full := filepath.Join(p.Dir, filepath.FromSlash(name))
+			listRow(c, name, false, aiFileCaption(name), func() {
+				if p.Dir == "" {
+					return
+				}
+				switch name {
+				case ".claude", ".agents", ".agent", "_agents", "_agent", ".cursor":
+					if a.Shell != nil {
+						iconButton(c.Key("ai-open:"+name), "folder-open", showInFolder()).OnClick(func() {
+							if err := a.Shell.OpenPath(full); err != nil {
+								c.Toast(locales.OpenFailed(tilde(full, a.Home), err.Error()))
+							}
+						})
+					}
+				default:
+					if a.canOpenFile() {
+						iconButton(c.Key("ai-open:"+name), "external-link", locales.OpenInEditor()).OnClick(func() {
+							a.openFile(c, full)
+						})
+					}
+				}
+			})
 		}
 	})
 }
 
 // filesCard lists the project files the versions come from, and the ones
 // that could not be read.
-func filesCard(c *ui.Context, p projects.Project) {
+func (a *App) filesCard(c *ui.Context, p projects.Project) {
 	pal := Colors(c.Theme())
 	listCard(c, locales.ProjectFiles(), locales.WhereVersionsFrom(), func() {
 		if len(p.Files) == 0 && len(p.Errs) == 0 {
 			cardNote(c, locales.NoProjectFiles())
 		}
 		for _, f := range p.Files {
-			fileRow(c, p, f)
+			file := f
+			var open func()
+			if p.Dir != "" && a.canOpenFile() {
+				full := filepath.Join(p.Dir, filepath.FromSlash(file))
+				open = func() { a.openFile(c, full) }
+			}
+			fileRow(c, p, file, open)
 		}
 		for _, err := range p.Errs {
 			ui.Text(c, err.Error()).FontSize(12).TextColor(pal.WarningText).Padding(9, 14).
@@ -903,7 +944,7 @@ func (a *App) addDialog(c *ui.Context) {
 					cardNote(c, locales.NothingFound())
 				}
 				for _, f := range add.root.Files {
-					fileRow(c, add.root, f)
+					fileRow(c, add.root, f, nil)
 				}
 				if len(add.root.AI) > 0 {
 					listRow(c, strings.Join(add.root.AI, " · "), false, locales.ProjectAI(), func() {})
@@ -924,7 +965,7 @@ func (a *App) addDialog(c *ui.Context) {
 						caption = locales.OwnVersion(v[0].File, toolTitle(v[0].Tool)+" "+v[0].Want)
 					}
 					listRow(c, filepath.ToSlash(rel), false, caption, func() {
-						toggle(c, "nested:"+p.Dir, &add.on[i]).Label(filepath.ToSlash(rel))
+						ui.Checkbox(c.Key("nested:"+p.Dir), &add.on[i], "").Label(filepath.ToSlash(rel))
 					})
 				}
 			})
@@ -967,7 +1008,7 @@ func (a *App) addDialog(c *ui.Context) {
 }
 
 // foundRows are the projects Hearth found by itself, by folder, each with
-// a switch; the ones long unchanged say so.
+// a checkbox; the ones long unchanged say so.
 func (a *App) foundRows(c *ui.Context, add *adding) {
 	for _, folder := range add.folders {
 		var rows []int
@@ -988,7 +1029,7 @@ func (a *App) foundRows(c *ui.Context, add *adding) {
 				caption = locales.ProjectUnchanged()
 			}
 			listRow(c, filepath.ToSlash(rel), false, caption, func() {
-				toggle(c, "found:"+p.Dir, &add.on[i]).Label(filepath.ToSlash(rel))
+				ui.Checkbox(c.Key("found:"+p.Dir), &add.on[i], "").Label(filepath.ToSlash(rel))
 			})
 		}
 	}
@@ -1002,7 +1043,7 @@ func dialogSection(c *ui.Context, title string) {
 
 // fileRow is a project file: its name, the fields versions come from, and
 // on the right what it asks, as "node 22 · pnpm 10.4.1".
-func fileRow(c *ui.Context, p projects.Project, file string) {
+func fileRow(c *ui.Context, p projects.Project, file string, open func()) {
 	var keys, wants []string
 	for _, r := range p.Requirements {
 		if r.File != file {
@@ -1019,7 +1060,14 @@ func fileRow(c *ui.Context, p projects.Project, file string) {
 		}
 	}
 	listRow(c, file, false, strings.Join(keys, " · "), func() {
-		ui.Text(c, strings.Join(wants, " · ")).Font(FontMono).FontSize(11.5).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+			if len(wants) > 0 {
+				ui.Text(c, strings.Join(wants, " · ")).Font(FontMono).FontSize(11.5).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+			}
+			if open != nil {
+				iconButton(c.Key("file-open:"+file), "external-link", locales.OpenInEditor()).OnClick(open)
+			}
+		})
 	})
 }
 

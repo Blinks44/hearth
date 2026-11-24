@@ -344,16 +344,39 @@ func readCluster(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (C
 		return Cluster{Secrets: secrets, Taken: time.Now()}, err
 	}
 	if t.Services {
-		services, err := readServices(ctx, r, env, t, scopes)
-		return Cluster{Services: services, Taken: time.Now()}, err
+		var services []Service
+		var err error
+		var wg sync.WaitGroup
+		wg.Go(func() { services, err = readServices(ctx, r, env, t, scopes) })
+		if t.Events.UID != "" {
+			wg.Go(func() {
+				c.Events, c.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
+				c.EventsOf = t.Events
+			})
+		}
+		wg.Wait()
+		if err != nil {
+			return Cluster{}, err
+		}
+		c.Services, c.Taken = services, time.Now()
+		return c, nil
 	}
 	if t.Batch {
-		c.Batch = readBatch(ctx, r, env, t, scopes)
 		if !t.Overview {
 			// Batch views can be used with rights only to Jobs and CronJobs.
+			var wg sync.WaitGroup
+			wg.Go(func() { c.Batch = readBatch(ctx, r, env, t, scopes) })
+			if t.Events.UID != "" {
+				wg.Go(func() {
+					c.Events, c.EventsErr = readEvents(ctx, r, env, t, []string{"events", "--namespace=" + t.Events.Namespace, "--field-selector=involvedObject.uid=" + t.Events.UID})
+					c.EventsOf = t.Events
+				})
+			}
+			wg.Wait()
 			c.Taken = time.Now()
 			return c, nil
 		}
+		c.Batch = readBatch(ctx, r, env, t, scopes)
 	}
 	// The lists, the pods' metrics, the object's events and the log's
 	// last line do not wait for one another: each is a call of kubectl,
@@ -702,16 +725,31 @@ type podContainer struct {
 	} `json:"ports"`
 }
 
+type podSpec struct {
+	NodeName           string `json:"nodeName"`
+	ServiceAccountName string `json:"serviceAccountName"`
+	podResourceSpec
+	Volumes             []podVolume `json:"volumes"`
+	EphemeralContainers []podContainer
+	ImagePullSecrets    []objectName
+}
+
+func (s podSpec) images() []string {
+	if len(s.Containers) == 0 {
+		return nil
+	}
+	images := make([]string, 0, len(s.Containers))
+	for _, c := range s.Containers {
+		if c.Image != "" {
+			images = append(images, c.Image)
+		}
+	}
+	return images
+}
+
 type pod struct {
 	meta
-	Spec struct {
-		NodeName           string `json:"nodeName"`
-		ServiceAccountName string `json:"serviceAccountName"`
-		podResourceSpec
-		Volumes             []podVolume `json:"volumes"`
-		EphemeralContainers []podContainer
-		ImagePullSecrets    []objectName
-	} `json:"spec"`
+	Spec   podSpec `json:"spec"`
 	Status struct {
 		Phase                 string            `json:"phase"`
 		Reason                string            `json:"reason"`
@@ -863,6 +901,20 @@ func (p pod) pod(owner Owner) Pod {
 			if (port.Protocol == "TCP" || port.Protocol == "") && !slices.Contains(out.TCPPorts, port.Number) {
 				out.TCPPorts = append(out.TCPPorts, port.Number)
 			}
+		}
+	}
+	for _, ct := range out.InitContainers {
+		out.Restarts += ct.Restarts
+		if out.Reason != "" {
+			continue
+		}
+		switch {
+		case ct.State == "waiting" && ct.Reason != "" && ct.Reason != "PodInitializing" && ct.Reason != "ContainerCreating":
+			out.Reason = "Init:" + ct.Reason
+		case ct.State == "terminated" && ct.Reason != "" && ct.Reason != "Completed":
+			out.Reason = "Init:" + ct.Reason
+		case ct.State == "terminated" && ct.Ended != nil && ct.Ended.ExitCode != 0:
+			out.Reason = fmt.Sprintf("Init:ExitCode:%d", ct.Ended.ExitCode)
 		}
 	}
 	for _, ct := range out.Containers {

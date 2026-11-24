@@ -104,13 +104,9 @@ func kubeActionButton(c *ui.Context, icon, label string, height float32) ui.Elem
 	})
 }
 
-func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, ports []forwardPort) {
+func (a *App) forwardButton(c *ui.Context, uid, kind, namespace, name string, ports []forwardPort, height float32) {
 	if _, ok := cliCopy(a.cliState(), "kubectl"); !ok || a.CheckForwardPort == nil || a.RunForward == nil {
 		return
-	}
-	height := float32(24)
-	if kind == "pod" {
-		height = podActionHeight
 	}
 	b := kubeActionButton(c.Key("forward-"+uid), "cable", locales.KubeForwardOpen(), height)
 	b.OnClick(func() { a.openForward(uid, kind, namespace, name, ports) })
@@ -159,11 +155,26 @@ func (a *App) forwardPopover(c *ui.Context, d *forwardForm, ports []forwardPort)
 		labels := make([]string, 0, len(ports))
 		for _, p := range ports {
 			labels = append(labels, p.label)
-			if p.label == d.portLabel {
-				remote = p.number
+		}
+		prev := d.portLabel
+		var prevLocal string
+		for _, p := range ports {
+			if p.label == prev {
+				prevLocal = strconv.Itoa(p.preferredLocal)
+				break
 			}
 		}
 		ui.Select(c.Key("forward-remote-select"), &d.portLabel, labels).Label(label).Width(145).Height(podActionHeight).FontSize(12)
+		for _, p := range ports {
+			if p.label == d.portLabel {
+				remote = p.number
+				if d.portLabel != prev && (d.local == "" || d.local == prevLocal) {
+					d.local = strconv.Itoa(p.preferredLocal)
+					a.probeForwardPort(d)
+				}
+				break
+			}
+		}
 	})
 	local := parseForwardPort(d.local)
 	blocked := local != 0 && a.forwardBusy(local)

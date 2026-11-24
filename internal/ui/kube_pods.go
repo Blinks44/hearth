@@ -649,12 +649,18 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				a.ownerChip(c, p.Namespace, p.Owner)
 			}
 		})
-		if ref.Kubectl != "" && ((a.StreamLogs != nil || a.OpenKubeShell != nil) && len(p.Containers) > 0 || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil) {
+		hasContainers := len(p.Containers) > 0 || len(p.InitContainers) > 0
+		if ref.Kubectl != "" && ((a.StreamLogs != nil && hasContainers) || (a.OpenKubeShell != nil && len(p.Containers) > 0) || a.RunForward != nil && p.Phase == "Running" || a.BuildPlan != nil) {
 			ui.Row(c).Gap(8).Wrap().Padding(0, 16, 12, 16).Children(func() {
-				if a.StreamLogs != nil && len(p.Containers) > 0 {
-					container := p.Containers[0].Name
-					if story.crashed != "" {
+				if a.StreamLogs != nil && hasContainers {
+					container := ""
+					switch {
+					case story.crashed != "":
 						container = story.crashed
+					case len(p.Containers) > 0:
+						container = p.Containers[0].Name
+					default:
+						container = p.InitContainers[0].Name
 					}
 					kubeActionButton(c.Key("pod-logs"), "scroll-text", locales.KubeLogsOpen(), podActionHeight).
 						OnClick(func() { a.openLogs(p, container, false) })
@@ -664,7 +670,7 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 					for _, port := range p.TCPPorts {
 						ports = append(ports, forwardPort{port, port, strconv.Itoa(port) + "/TCP"})
 					}
-					a.forwardButton(c, p.UID, "pod", p.Namespace, p.Name, ports)
+					a.forwardButton(c, p.UID, "pod", p.Namespace, p.Name, ports, podActionHeight)
 				}
 				a.shellButton(c, p, story.crashed)
 				a.resourceActions(c, ref, 2)
@@ -676,13 +682,16 @@ func (a *App) podDetail(c *ui.Context, cl *kube.Cluster, p kube.Pod) {
 				count = strconv.Itoa(len(events))
 			}
 			tabs := []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}}
+			hasYAML := false
 			if f := s.resources[ref]; f != nil && (f.editor != nil || s.tab == 2) {
 				tabs = append(tabs, segment{locales.KubeResourceYaml(), ""})
+				hasYAML = true
 			}
+			clampDetailTab(&s.tab, 2, hasYAML)
 			segments(c, "pod-tab", &s.tab, tabs)
 		})
 	}, func() {
-		if s.tab == 2 {
+		if s.tab == 2 && s.resources[ref] != nil {
 			a.resourceEditor(c, s.resources[ref])
 			return
 		}

@@ -3,6 +3,8 @@ package docker
 import (
 	"cmp"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -36,7 +38,7 @@ func (i Image) Name() string {
 }
 
 func (i Image) Dangling() bool {
-	return len(i.RepoTags) == 0 && len(i.RepoDigests) == 0 && len(i.Users) == 0
+	return len(i.RepoTags) == 0 && len(i.Users) == 0
 }
 
 func canonicalArch(arch string) string {
@@ -75,11 +77,24 @@ func InspectImages(ctx context.Context, r run.Runner, env sysenv.Env, t Target, 
 		}
 		cmd := t.Command(env, "image", "inspect", "--format", inspectImage, "--")
 		cmd.Args = append(cmd.Args, batch...)
-		rows, err := readRows[Image](ctx, r, cmd)
+		res, err := r.Run(ctx, cmd)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("docker image inspect: %w", err)
 		}
-		for _, row := range rows {
+		if res.Truncated {
+			return nil, errors.New("docker image inspect: output too large")
+		}
+		if res.ExitCode != 0 && !isMissingDockerObject(string(res.Stderr), "image") {
+			return nil, fmt.Errorf("docker image inspect: %s", strings.TrimSpace(string(res.Stderr)))
+		}
+		for line := range strings.Lines(string(res.Stdout)) {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			var row Image
+			if err := json.Unmarshal([]byte(line), &row); err != nil {
+				return nil, fmt.Errorf("docker image inspect: %w", err)
+			}
 			slices.Sort(row.RepoTags)
 			slices.Sort(row.RepoDigests)
 			images = append(images, row)

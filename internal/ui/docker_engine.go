@@ -230,7 +230,7 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 							count = s.problemCount
 						}
 					}
-					kindChip(c, &s.view, i, v.icon, v.label, count)
+					kindChip(c, &s.view, i, v.icon, v.label, count, nil)
 				}
 			})
 			_, problem := a.engineTarget(name)
@@ -245,7 +245,17 @@ func (a *App) dockerEngineView(c *ui.Context, name string) {
 				tableSkeleton(c, locales.DockerEngineReading(name))
 			default:
 				if s.err != nil {
-					ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(11.5).TextColor(pal.WarningText).Wrap()
+					ui.Row(c).Gap(10).Padding(10, 14).Radius(10).AlignItems(ui.Center).Background(pal.WarningSoft).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+						ui.Icon(c, Icon("triangle-alert")).Size(15, 15).Shrink(0).TextColor(c.Theme().Warning)
+						ui.Text(c, locales.KubeClusterStale(s.err.Error())).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0).Wrap()
+						st, _ := a.Snapshot.Tool("docker")
+						if profile, ok := dockerColimaProfile(st.Docker, name); ok && (profile.Status == "stopped" || profile.Status == "") {
+							ui.Button(c.Key("engine-stale-start-colima"), locales.TrayColimaStart()).Height(controlHeight).Shrink(0).Disabled(a.BuildPlan == nil).
+								OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
+						} else if plan, ok := a.engineStartPlan(); ok && st.Docker != nil && st.Docker.Selected == name {
+							ui.Button(c.Key("engine-stale-start"), plan.Title+"…").Height(controlHeight).Shrink(0).OnClick(func() { a.Propose(plan) })
+						}
+					})
 				}
 				switch s.view {
 				case dockerOverview:
@@ -439,10 +449,10 @@ func (a *App) dockerEngineDown(c *ui.Context, name string, err error) {
 		ui.Row(c).Gap(8).Padding(4, 0, 0, 0).Children(func() {
 			st, _ := a.Snapshot.Tool("docker")
 			if profile, ok := dockerColimaProfile(st.Docker, name); ok && profile.Status == "stopped" {
-				ui.PrimaryButton(c.Key("engine-start-colima"), locales.ColimaStart()).Height(controlHeight).Disabled(a.BuildPlan == nil).
+				ui.PrimaryButton(c.Key("engine-start-colima"), locales.TrayColimaStart()).Height(controlHeight).Disabled(a.BuildPlan == nil).
 					OnClick(func() { a.changeColima(*st.Docker.Colima, profile, ops.ColimaStart, ops.ColimaLimits{}) })
 			} else if plan, ok := a.engineStartPlan(); ok && st.Docker != nil && st.Docker.Selected == name {
-				ui.PrimaryButton(c.Key("engine-start"), plan.Title).Height(controlHeight).OnClick(func() { a.Propose(plan) })
+				ui.PrimaryButton(c.Key("engine-start"), plan.Title+"…").Height(controlHeight).OnClick(func() { a.Propose(plan) })
 			}
 			ui.Button(c.Key("engine-contexts"), locales.KubeClusterAllContexts()).Height(controlHeight).OnClick(func() { a.router.Push(dockerPage) })
 		})

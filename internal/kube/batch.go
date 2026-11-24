@@ -37,28 +37,46 @@ type Job struct {
 	State                JobState
 	Reason, Message      string
 	Completed, Want      int
+	Active, Failed       int
+	Parallelism          int
+	BackoffLimit         *int
+	Images               []string
 	Created, Started     time.Time
+	CompletedAt          time.Time
+	templateRefs         []Relationship
 }
 
 // CronJob is a schedule and the recent Jobs it still owns, newest first.
 type CronJob struct {
 	Namespace, Name, UID string
 	Schedule, TimeZone   string
+	ConcurrencyPolicy    string
 	Suspended            bool
 	Active               int
+	Images               []string
+	Created              time.Time
+	LastSchedule         time.Time
 	Runs                 []Job
+	templateRefs         []Relationship
 }
 
 type batchJob struct {
 	meta
 	Spec struct {
-		Completions *int `json:"completions"`
+		Completions  *int `json:"completions"`
+		Parallelism  *int `json:"parallelism"`
+		BackoffLimit *int `json:"backoffLimit"`
+		Template     struct {
+			Spec podSpec `json:"spec"`
+		} `json:"template"`
 	} `json:"spec"`
 	Status struct {
-		Active     int       `json:"active"`
-		Succeeded  int       `json:"succeeded"`
-		StartTime  time.Time `json:"startTime"`
-		Conditions []struct {
+		Active         int       `json:"active"`
+		Succeeded      int       `json:"succeeded"`
+		Failed         int       `json:"failed"`
+		StartTime      time.Time `json:"startTime"`
+		CompletionTime time.Time `json:"completionTime"`
+		Conditions     []struct {
 			Type, Status, Reason, Message string
 		} `json:"conditions"`
 	} `json:"status"`
@@ -66,10 +84,26 @@ type batchJob struct {
 
 func (j batchJob) value() Job {
 	m := j.Metadata
-	job := Job{Namespace: m.Namespace, Name: m.Name, UID: m.UID, Created: m.CreationTimestamp, Started: j.Status.StartTime,
-		Completed: j.Status.Succeeded, Want: 1}
+	job := Job{
+		Namespace:    m.Namespace,
+		Name:         m.Name,
+		UID:          m.UID,
+		Created:      m.CreationTimestamp,
+		Started:      j.Status.StartTime,
+		CompletedAt:  j.Status.CompletionTime,
+		Completed:    j.Status.Succeeded,
+		Want:         1,
+		Active:       j.Status.Active,
+		Failed:       j.Status.Failed,
+		BackoffLimit: j.Spec.BackoffLimit,
+		Images:       j.Spec.Template.Spec.images(),
+		templateRefs: podSpecReferences(m.Namespace, "", j.Spec.Template.Spec),
+	}
 	if j.Spec.Completions != nil {
 		job.Want = *j.Spec.Completions
+	}
+	if j.Spec.Parallelism != nil {
+		job.Parallelism = *j.Spec.Parallelism
 	}
 	for _, o := range m.OwnerReferences {
 		if o.Controller && o.Kind == "CronJob" {
@@ -101,12 +135,21 @@ func (j batchJob) value() Job {
 type cronJob struct {
 	meta
 	Spec struct {
-		Schedule string `json:"schedule"`
-		TimeZone string `json:"timeZone"`
-		Suspend  bool   `json:"suspend"`
+		Schedule          string `json:"schedule"`
+		TimeZone          string `json:"timeZone"`
+		ConcurrencyPolicy string `json:"concurrencyPolicy"`
+		Suspend           bool   `json:"suspend"`
+		JobTemplate       struct {
+			Spec struct {
+				Template struct {
+					Spec podSpec `json:"spec"`
+				} `json:"template"`
+			} `json:"spec"`
+		} `json:"jobTemplate"`
 	} `json:"spec"`
 	Status struct {
-		Active []struct{} `json:"active"`
+		Active           []struct{} `json:"active"`
+		LastScheduleTime time.Time  `json:"lastScheduleTime"`
 	} `json:"status"`
 }
 
@@ -138,8 +181,21 @@ func readBatch(ctx context.Context, r run.Runner, env sysenv.Env, t Target, scop
 			}
 			for _, j := range list.Items {
 				m := j.Metadata
-				b.CronJobs = append(b.CronJobs, CronJob{Namespace: m.Namespace, Name: m.Name, UID: m.UID, Schedule: j.Spec.Schedule,
-					TimeZone: j.Spec.TimeZone, Suspended: j.Spec.Suspend, Active: len(j.Status.Active)})
+				spec := j.Spec.JobTemplate.Spec.Template.Spec
+				b.CronJobs = append(b.CronJobs, CronJob{
+					Namespace:         m.Namespace,
+					Name:              m.Name,
+					UID:               m.UID,
+					Schedule:          j.Spec.Schedule,
+					TimeZone:          j.Spec.TimeZone,
+					ConcurrencyPolicy: j.Spec.ConcurrencyPolicy,
+					Suspended:         j.Spec.Suspend,
+					Active:            len(j.Status.Active),
+					Images:            spec.images(),
+					Created:           m.CreationTimestamp,
+					LastSchedule:      j.Status.LastScheduleTime,
+					templateRefs:      podSpecReferences(m.Namespace, "", spec),
+				})
 			}
 		}
 	})

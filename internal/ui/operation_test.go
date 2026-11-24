@@ -398,3 +398,38 @@ func TestOperationResultTerminalRestartAndNotVerified(t *testing.T) {
 	tt.Advance(time.Second)
 	hasTexts(t, tt, "The commands finished, but the verification check did not confirm the result.", "terminal still reports Node.js 20.11.0")
 }
+
+// A completed single-file creation plan exposes Open in editor right from the
+// done screen.
+func TestOperationOpenCreatedFile(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Editor = "code"
+	var opened []string
+	a.OpenInEditor = func(_, _, path string, done func(error)) {
+		opened = append(opened, path)
+		if done != nil {
+			done(nil)
+		}
+	}
+	var update func(ops.State)
+	a.RunPlan = func(_ ops.Plan, u func(ops.State)) func() { update = u; return func() {} }
+	cfg := home + "/.kube/config"
+	plan := ops.Plan{
+		Title: "Create ~/.kube/config",
+		Steps: []ops.Step{{Edit: &ops.FileEdit{Path: cfg, After: ops.KubeConfigTemplate(), New: true, Mode: 0o600}}},
+	}
+	tt := ui.NewTester(a.View, 1280, 820)
+	a.Propose(plan)
+	tt.Frame()
+	a.startOperation()
+	update(ops.State{Phase: ops.Succeeded, Steps: []ops.StepStatus{ops.Done}, Verified: "~/.kube/config is readable as kubeconfig"})
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Open in editor"); err != nil {
+		t.Fatalf("Open in editor missing: %v (%q)", err, tt.Texts())
+	}
+	if len(opened) != 1 || opened[0] != cfg {
+		t.Fatalf("opened = %q, want [%q]", opened, cfg)
+	}
+}

@@ -140,7 +140,7 @@ func TestDockerPauseAndUnpauseUI(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-pause-1280")
-	if err := tt.Click(locales.DockerContainerPause()); err != nil {
+	if err := tt.Click(locales.DockerContainerPause() + "…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -158,7 +158,7 @@ func TestDockerPauseAndUnpauseUI(t *testing.T) {
 	}
 	tt.Advance(time.Second)
 	screenshot(t, tt, "docker-unpause-1280")
-	if err := tt.Click(locales.DockerContainerUnpause()); err != nil {
+	if err := tt.Click(locales.DockerContainerUnpause() + "…"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

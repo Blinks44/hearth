@@ -35,7 +35,22 @@ type portRow struct {
 
 // dockerProcesses forward ports to containers: Docker Desktop's, OrbStack's,
 // Colima's, Podman's and WSL's.
-var dockerProcesses = []string{"com.docker.backend", "com.docker.vpnkit", "vpnkit-bridge", "docker-proxy", "OrbStack Helper", "OrbStack", "limactl", "gvproxy", "wslrelay"}
+var dockerProcesses = []string{
+	"com.docker.backend", "com.docker.vpnkit", "vpnkit-bridge", "docker-proxy",
+	"OrbStack Helper", "OrbStack", "limactl", "gvproxy", "wslrelay",
+	"vfkit", "krunkit", "colima", "rootlesskit", "slirp4netns", "pasta", "podman",
+}
+
+func isDockerProcess(name string) bool {
+	return slices.Contains(dockerProcesses, name) || strings.HasPrefix(name, "qemu-system")
+}
+
+// nonHTTPPorts are common database, broker, and SSH ports that should not
+// offer a prominent "Open in browser" quick action button.
+var nonHTTPPorts = map[string]bool{
+	"22": true, "1433": true, "3306": true, "5432": true, "5672": true,
+	"6379": true, "9092": true, "27017": true,
+}
 
 // serverProcesses are the programs of the database servers, by kind.
 var serverProcesses = map[string]string{"postgres": "PostgreSQL", "mysqld": "MySQL", "mariadbd": "MariaDB", "redis-server": "Redis", "mongod": "MongoDB", "sqlservr": "SQL Server"}
@@ -163,10 +178,12 @@ func (a *App) portContainerFor(r portRow) (inventory.DockerPortContainer, bool) 
 }
 
 func containerMatchesPort(ct inventory.DockerPortContainer, r portRow) bool {
+	if r.Process != "" && !isDockerProcess(r.Process) && r.Process != "ssh" {
+		return false
+	}
 	if len(ct.Bindings) == 0 {
 		return slices.Contains(ct.Ports, r.Port)
 	}
-	isDockerProc := r.Process == "" || slices.Contains(dockerProcesses, r.Process)
 	addrs := r.Addresses
 	if len(addrs) == 0 && r.Address != "" {
 		addrs = []string{r.Address}
@@ -179,9 +196,7 @@ func containerMatchesPort(ct inventory.DockerPortContainer, r portRow) bool {
 			return true
 		}
 		if bindingMatchesAddresses(b.HostIP, addrs) {
-			if isDockerProc || !isWildcardIP(b.HostIP) {
-				return true
-			}
+			return true
 		}
 	}
 	return false
@@ -209,7 +224,7 @@ func (a *App) portAbout(r portRow) (about string, plan ops.Plan, ok bool) {
 	if ct, found := a.portContainerFor(r); found {
 		return locales.PortsContainer(ct.Name), ops.Plan{}, false
 	}
-	if slices.Contains(dockerProcesses, r.Process) {
+	if isDockerProcess(r.Process) {
 		return locales.PortsDocker(), ops.Plan{}, false
 	}
 	if db, found := a.portService(r); found {
@@ -274,9 +289,13 @@ func (a *App) applyPortsRefresh(res detect.PortsSnapshot) {
 			next.Tools[i].Databases = &db
 			updatedDB = true
 		case "docker":
-			if res.HasDocker && next.Tools[i].Docker != nil && (res.DockerSelected == "" || res.DockerSelected == next.Tools[i].Docker.Selected) {
+			if next.Tools[i].Docker != nil && (res.DockerSelected == "" || res.DockerSelected == next.Tools[i].Docker.Selected) {
 				d := *next.Tools[i].Docker
-				d.PortContainers = slices.Clone(res.Containers)
+				if res.HasDocker {
+					d.PortContainers = slices.Clone(res.Containers)
+				} else {
+					d.PortContainers = nil
+				}
 				d.PortContainersFresh = true
 				next.Tools[i].Docker = &d
 			}
@@ -327,7 +346,7 @@ func (a *App) isPortDocker(r portRow) bool {
 	if _, ok := a.portContainerFor(r); ok {
 		return true
 	}
-	return slices.Contains(dockerProcesses, r.Process)
+	return isDockerProcess(r.Process)
 }
 
 func (a *App) planDockerPortStop(target docker.Target, ct inventory.DockerPortContainer) {
@@ -431,10 +450,11 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 	pal := Colors(c.Theme())
 	filter := strings.ToLower(strings.TrimSpace(a.portsFilter))
 	addrWidth := float32(108)
-	actionsWidth := float32(132)
-	if narrow(c) {
+	actionsWidth := float32(154)
+	isNarrow := narrow(c)
+	if isNarrow {
 		addrWidth = 88
-		actionsWidth = 116
+		actionsWidth = 104
 	}
 	target, hasDockerTarget := a.selectedDockerTarget()
 	shown := 0
@@ -458,7 +478,7 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 					continue
 				}
 			case 3:
-				if !hasContainer && !slices.Contains(dockerProcesses, r.Process) {
+				if !hasContainer && !isDockerProcess(r.Process) {
 					continue
 				}
 			}
@@ -472,7 +492,11 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 			shown++
 			port := r.Port
 			hostAddr := "localhost:" + port
-			httpURL := "http://" + hostAddr
+			scheme := "http://"
+			if port == "443" || port == "8443" {
+				scheme = "https://"
+			}
+			httpURL := scheme + hostAddr
 			ui.Row(c.Key("port:"+r.Port+":"+r.PID)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 				ui.Text(c, r.Port).Font(FontMono).FontSize(13).Width(56).Shrink(0).SingleLine()
 				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
@@ -495,15 +519,17 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 						c.WriteClipboard(hostAddr)
 						c.Toast(locales.PortsAddressCopied(port))
 					})
-					iconButton(c.Key("port-open"), "external-link", locales.PortsOpenBrowser()).OnClick(func() {
-						c.OpenURL(httpURL)
-					})
+					if !isNarrow && !nonHTTPPorts[port] {
+						iconButton(c.Key("port-open"), "external-link", locales.PortsOpenBrowser()).OnClick(func() {
+							c.OpenURL(httpURL)
+						})
+					}
 					if canDocker {
 						iconButton(c.Key("port-docker"), "container", locales.OpenInDocker()).OnClick(func() {
 							a.openDockerContainer(ct.ID, ct.Name)
 						})
 					}
-					if r.Project != "" {
+					if !isNarrow && r.Project != "" {
 						iconButton(c.Key("port-project"), "folder-open", locales.OpenProject()).OnClick(func() {
 							a.router.Push(projectPath(r.Project))
 						})
@@ -546,7 +572,7 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 		case len(rows) == 0:
 			cardNote(c, locales.PortsNone())
 		case shown == 0:
-			cardNote(c, locales.CleanupNone())
+			cardNote(c, locales.NothingMatches())
 		}
 	})
 }

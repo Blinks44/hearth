@@ -357,7 +357,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 					})
 					if !s.isSkillsSh() {
 						ui.Box(c).Grow(1).Height(1)
-						ui.SearchField(c.Key("catalog-search"), &s.query).Placeholder(locales.SearchByName()).Height(controlHeight).Width(272)
+						ui.SearchField(c.Key("catalog-search"), &s.query).Bind(&a.filterField).Placeholder(locales.SearchByName()).Height(controlHeight).Width(272)
 					}
 				})
 				if s.isSkillsSh() {
@@ -387,7 +387,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 					}
 				})
 				if s.loading {
-					cardNote(c, locales.Loading())
+					listFrame(c, func() { cardNote(c, locales.Loading()) })
 					return
 				}
 				if s.err != "" {
@@ -463,7 +463,7 @@ func (a *App) skillsShView(c *ui.Context, s *skillCatalogState) {
 			OnClick(a.runSkillsShSearch)
 	})
 	if s.skillsShLoading {
-		cardNote(c, locales.Loading())
+		listFrame(c, func() { cardNote(c, locales.Loading()) })
 		return
 	}
 	if s.skillsShErr != "" {

@@ -379,7 +379,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 			head(locales.ColumnAgent()).Grow(1).MinWidth(0)
 			head(locales.ColumnVersion()).Width(110).Shrink(0)
 			head(locales.ColumnInstall()).Width(90).Shrink(0)
-			head("Skills").Width(56).Shrink(0)
+			head(locales.SkillsTitle()).Width(56).Shrink(0)
 			head("MCP").Width(46).Shrink(0)
 			head(locales.ColumnInstructions()).Width(instructions).Shrink(0)
 			ui.Box(c).Width(14).Shrink(0)
@@ -425,7 +425,7 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 							Padding(2, 7).Radius(5).BorderWidth(1).BorderColor(pal.ControlBorder).SingleLine()
 					}
 				})
-				count := func(n int) {
+				count := func(n int, width float32) {
 					color, text := t.Text, strconv.Itoa(n)
 					if n == 0 {
 						color = pal.TextFaint
@@ -433,10 +433,10 @@ func (a *App) agentTable(c *ui.Context, found []inventory.Agent) {
 					if ag.ID == "aider" { // it has neither skills nor MCP
 						text = "—"
 					}
-					ui.Text(c, text).FontSize(12.5).TextColor(color).Width(56).Shrink(0).SingleLine()
+					ui.Text(c, text).FontSize(12.5).TextColor(color).Width(width).Shrink(0).SingleLine()
 				}
-				count(skills)
-				count(servers)
+				count(skills, 56)
+				count(servers, 46)
 				ui.Row(c).Width(instructions).Shrink(0).Gap(6).Wrap().Children(func() {
 					shown := 0
 					for _, f := range ag.Files {
@@ -635,23 +635,37 @@ func (a *App) agentFilesCard(c *ui.Context, ag inventory.Agent) {
 		}
 		for _, f := range ag.Files {
 			listRow(c, tilde(f.Path, a.Home), false, fileKind(f.Kind), func() {
-				if a.Shell == nil {
+				path := f.Path
+				if f.Kind == inventory.FileSkills {
+					if a.Shell == nil {
+						return
+					}
+					ui.Row(c.Key("file:" + path)).Shrink(0).Children(func() {
+						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(path) })
+					})
 					return
 				}
-				path := f.Path
+				if !a.canOpenFile() {
+					return
+				}
 				ui.Row(c.Key("file:" + path)).Shrink(0).Children(func() {
-					if f.Kind == inventory.FileSkills {
-						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(path) })
-					} else {
-						iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
-					}
+					iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
 				})
 			})
 		}
 	})
 }
 
-// openFile opens path in its app, telling in a toast when it cannot.
+// canOpenFile reports whether Hearth can open a file in an editor or the
+// system app.
+func (a *App) canOpenFile() bool {
+	if a.Shell != nil {
+		return true
+	}
+	_, ok := a.chosenEditor()
+	return a.OpenInEditor != nil && ok
+}
+
 // openFile opens path in the editor chosen in Settings, or with the
 // system's app when none is chosen or it is gone.
 func (a *App) openFile(c *ui.Context, path string) {
@@ -765,7 +779,7 @@ func (a *App) agentSkillsCard(c *ui.Context, id string) {
 			skills = append(skills, sk)
 		}
 	}
-	listCard(c, "Skills", strconv.Itoa(len(skills)), func() {
+	listCard(c, locales.SkillsTitle(), strconv.Itoa(len(skills)), func() {
 		if len(skills) == 0 {
 			cardNote(c, locales.NoSkillsFor())
 		}

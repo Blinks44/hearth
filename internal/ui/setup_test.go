@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -404,4 +405,34 @@ func TestSetupTargetVersionTags(t *testing.T) {
 	a.router.Push(setupPage)
 	tt := newTester(a)
 	hasTexts(t, tt, "1.26.2", "3.13.4", "1.87.0")
+}
+
+func TestSetupBaseHomebrewChipAndEmptyMise(t *testing.T) {
+	a := setupApp(t)
+	a.setup.wizard = false
+	a.Snapshot.Tools = []inventory.ToolState{
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{
+			{ID: "brew", Name: "Homebrew", Version: "Homebrew 7.0.16-12-g738cf5a", Path: "/opt/homebrew/bin/brew"},
+		}},
+		{Tool: "mise", Managers: []inventory.Manager{
+			{Name: "mise", Version: "2026.11.12", Activated: true, SwitchOnCD: true},
+		}},
+	}
+	a.router.Push(setupPage)
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Homebrew", "установлен · 7.0.16", "mise", "установлен · 2026.11.12")
+	brewText, ok := tt.Find("Homebrew")
+	brewChip, chipOK := tt.Find("установлен · 7.0.16")
+	if !ok || !chipOK || brewText.W < 60 || brewText.X+brewText.W > brewChip.X {
+		t.Fatalf("Homebrew title squeezed by version chip: title=%+v, chip=%+v", brewText, brewChip)
+	}
+	if _, ok := a.miseManager(); !ok {
+		t.Fatal("miseManager() = false for installed mise without tools")
+	}
+	if got := a.installManager(inventory.ToolState{Tool: "python"}); got != "mise" {
+		t.Fatalf("installManager(python) = %q, want mise", got)
+	}
 }

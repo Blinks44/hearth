@@ -83,7 +83,12 @@ func startupEdits(env sysenv.Env, posix, fish string) ([]Step, error) {
 	case "zsh":
 		files = append(files, filepath.Join(filepath.Dir(files[0]), ".zprofile"))
 	case "bash":
-		files = append(files, filepath.Join(env.Get("HOME"), ".profile"))
+		home := env.Get("HOME")
+		profile := filepath.Join(home, ".profile")
+		files = append(files, profile)
+		if login := bashLogin(home); login != "" && login != profile && !bashLoginSourcesRC(home, login) && !fileMentions(login, ".profile") {
+			files = append(files, login)
+		}
 	case "fish":
 		line = fish
 	default:

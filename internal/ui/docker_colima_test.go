@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/docker"
@@ -167,5 +168,59 @@ func TestDockerDiskRefreshing(t *testing.T) {
 	tt.Frame()
 	if tt.HasText(locales.DockerDiskRefreshing()) {
 		t.Fatalf("refreshing chip remained after DockerCounting finished: %v", tt.Texts())
+	}
+}
+
+func TestColimaCardRussianNarrow(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = colimaSnapshot()
+	d := a.Snapshot.Tools[0].Docker
+	p := inventory.ColimaProfile{
+		Name: "default", Status: "running", Runtime: "docker", Driver: "VZ", Mount: "virtiofs",
+		Socket: "unix://" + home + "/.colima/default/docker.sock",
+		CPU:    2, Memory: 2 * docker.ColimaGiB, Disk: 100 * docker.ColimaGiB,
+	}
+	d.Colima = &inventory.ColimaState{
+		Path: "/opt/homebrew/bin/colima", Brew: "/opt/homebrew/bin/brew",
+		Profiles: []inventory.ColimaProfile{p}, Autostart: "off",
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		plan, err := build(nil, nil)
+		done(plan, err)
+	}
+	a.router.Push(dockerPage)
+
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+
+	hasTexts(t, tt,
+		locales.ColimaResourceSummary("2", "2", "100"),
+		locales.ColimaAutostartOff(),
+		locales.ColimaRunning(),
+		locales.PortsStop(),
+	)
+	if tt.HasText(locales.ColimaStop()) {
+		t.Fatalf("unexpected verbose Colima stop button in card: %v", tt.Texts())
+	}
+	captionCount := 0
+	wantCaption := locales.ColimaProfile("default") + " · VZ · virtiofs"
+	for _, txt := range tt.Texts() {
+		if txt == wantCaption {
+			captionCount++
+		}
+	}
+	if captionCount != 1 {
+		t.Fatalf("caption %q rendered %d times, want 1", wantCaption, captionCount)
+	}
+	stopBtn, ok := tt.AccessByRole(ui.RoleButton, locales.PortsStop())
+	if !ok {
+		t.Fatalf("missing %q button", locales.PortsStop())
+	}
+	if stopBtn.Bounds.X+stopBtn.Bounds.W > 1000-20 {
+		t.Fatalf("stop button clips right edge: %+v", stopBtn.Bounds)
 	}
 }

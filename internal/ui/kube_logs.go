@@ -86,6 +86,11 @@ func (a *App) logPod() (kube.Pod, kube.Container, bool) {
 				return p, ct, true
 			}
 		}
+		for _, ct := range p.InitContainers {
+			if ct.Name == s.logs.container {
+				return p, ct, true
+			}
+		}
 	}
 	return kube.Pod{}, kube.Container{}, false
 }
@@ -300,6 +305,9 @@ func (a *App) logsView(c *ui.Context) {
 			if owner {
 				containers = l.ownerContainers()
 			} else {
+				for _, ct := range p.InitContainers {
+					containers = append(containers, ct.Name)
+				}
 				for _, ct := range p.Containers {
 					containers = append(containers, ct.Name)
 				}

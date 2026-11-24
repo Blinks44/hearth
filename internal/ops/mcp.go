@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -149,6 +150,100 @@ func tomlDef(name string, def ai.MCPDef) (string, error) {
 
 func tomlDefWithDisabled(name string, def ai.MCPDef, disabled bool) (string, error) {
 	server := map[string]any{}
+	if def.Command != "" {
+		server["command"] = def.Command
+	}
+	if len(def.Args) > 0 {
+		server["args"] = def.Args
+	}
+	if len(def.Env) > 0 {
+		server["env"] = def.Env
+	}
+	if len(def.EnvVars) > 0 {
+		server["env_vars"] = def.EnvVars
+	}
+	if def.URL != "" {
+		server["url"] = def.URL
+	}
+	if len(def.Headers) > 0 {
+		server["http_headers"] = def.Headers
+	}
+	if len(def.EnvHeaders) > 0 {
+		server["env_http_headers"] = def.EnvHeaders
+	}
+	if def.BearerVar != "" {
+		server["bearer_token_env_var"] = def.BearerVar
+	}
+	if disabled {
+		server["enabled"] = false
+	}
+	var b strings.Builder
+	enc := toml.NewEncoder(&b)
+	enc.Indent = ""
+	if err := enc.Encode(map[string]any{"mcp_servers": map[string]any{name: server}}); err != nil {
+		return "", err
+	}
+	return strings.TrimPrefix(b.String(), "[mcp_servers]\n"), nil
+}
+
+var managedJSONKeys = []string{
+	"type", "command", "args", "env", "environment",
+	"url", "httpUrl", "serverUrl", "headers", "disabled", "enabled",
+}
+
+func readJSONObjectAt(doc string, section, name string) (json.RawMessage, bool) {
+	var root map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(doc), &root); err != nil {
+		return nil, false
+	}
+	secRaw, ok := root[section]
+	if !ok {
+		return nil, false
+	}
+	var sec map[string]json.RawMessage
+	if err := json.Unmarshal(secRaw, &sec); err != nil {
+		return nil, false
+	}
+	entry, ok := sec[name]
+	return entry, ok
+}
+
+func mergeJSONObject(existing, updated json.RawMessage, dropKeys []string) json.RawMessage {
+	var base map[string]json.RawMessage
+	if err := json.Unmarshal(existing, &base); err != nil || base == nil {
+		return updated
+	}
+	var next map[string]json.RawMessage
+	if err := json.Unmarshal(updated, &next); err != nil || next == nil {
+		return updated
+	}
+	for _, k := range dropKeys {
+		delete(base, k)
+	}
+	maps.Copy(base, next)
+	out, err := json.Marshal(base)
+	if err != nil {
+		return updated
+	}
+	return out
+}
+
+func mergeTOMLServer(doc, name string, def ai.MCPDef, disabled bool) (string, error) {
+	var parsed struct {
+		MCPServers map[string]map[string]any `toml:"mcp_servers"`
+	}
+	server := map[string]any{}
+	if _, err := toml.Decode(doc, &parsed); err == nil {
+		if existing, ok := parsed.MCPServers[name]; ok {
+			maps.Copy(server, existing)
+		}
+	}
+	for _, k := range []string{
+		"command", "args", "env", "env_vars",
+		"url", "http_headers", "env_http_headers", "bearer_token_env_var", "enabled",
+	} {
+		delete(server, k)
+	}
 	if def.Command != "" {
 		server["command"] = def.Command
 	}
@@ -633,7 +728,7 @@ func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names fun
 		if err != nil {
 			return Plan{}, err
 		}
-		raw := object("type", def.Transport, "command", def.Command, "args", def.Args, "env", def.Env, "url", def.URL, "headers", def.Headers)
+		raw := mergeJSONObject(json.RawMessage(original), object("type", def.Transport, "command", def.Command, "args", def.Args, "env", def.Env, "url", def.URL, "headers", def.Headers), managedJSONKeys)
 		after := string(raw)
 		masked := FileEdit{Hide: hide}.Masked
 		remove := []string{"claude", "mcp", "remove", "--scope", "user", s.Name}
@@ -659,7 +754,7 @@ func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names fun
 				def.BearerVar = oldDef.BearerVar
 			}
 		}
-		table, err := tomlDefWithDisabled(s.Name, def, s.Disabled)
+		table, err := mergeTOMLServer(text, s.Name, def, s.Disabled)
 		if err != nil {
 			return Plan{}, err
 		}
@@ -677,7 +772,11 @@ func MCPEditPlan(s inventory.MCPServer, def ai.MCPDef, env sysenv.Env, names fun
 		if format == mcpOpenCode {
 			key = "mcp"
 		}
-		after, err := JSONSet(before, []string{key, s.Name}, jsonDefWithDisabled(def, s.Agent, format, s.Disabled))
+		nextRaw := jsonDefWithDisabled(def, s.Agent, format, s.Disabled)
+		if existing, ok := readJSONObjectAt(before, key, s.Name); ok {
+			nextRaw = mergeJSONObject(existing, nextRaw, managedJSONKeys)
+		}
+		after, err := JSONSet(before, []string{key, s.Name}, nextRaw)
 		if err != nil {
 			return Plan{}, fmt.Errorf("%s: %w", s.File, err)
 		}

@@ -73,3 +73,32 @@ func TestDockerImageInspectWithoutCreated(t *testing.T) {
 		}
 	}
 }
+
+func TestImageDanglingWithDigestAndPartialInspect(t *testing.T) {
+	kept := "sha256:" + strings.Repeat("a", 64)
+	gone := "sha256:" + strings.Repeat("b", 64)
+	img := Image{ID: kept, RepoDigests: []string{"nginx@sha256:1234"}}
+	if !img.Dangling() {
+		t.Fatalf("untagged image with RepoDigests should be dangling: %+v", img)
+	}
+	var r run.Fake
+	r.Set(run.Result{
+		Stdout:   []byte(`{"ID":"` + kept + `","RepoDigests":["nginx@sha256:1234"]}` + "\n"),
+		Stderr:   []byte("Error response from daemon: No such image: " + gone + "\n"),
+		ExitCode: 1,
+	}, nil, colima.Command(nil, "image", "inspect", "--format", inspectImage, "--", kept, gone).Args...)
+	items, err := InspectImages(t.Context(), &r, nil, colima, []string{kept, gone})
+	if err != nil || len(items) != 1 || items[0].ID != kept {
+		t.Fatalf("partial inspect = %+v, err = %v", items, err)
+	}
+	if !isMissingDockerObject("Error response from daemon: get vol1: no such volume", "volume") {
+		t.Fatal("expected lowercase no such volume to match")
+	}
+	if !isMissingDockerObject("Error response from daemon: network net1 not found", "network") {
+		t.Fatal("expected network not found to match")
+	}
+	r.Set(run.Result{Truncated: true}, nil, colima.Command(nil, "image", "inspect", "--format", inspectImage, "--", kept).Args...)
+	if _, err := InspectImages(t.Context(), &r, nil, colima, []string{kept}); err == nil || !strings.Contains(err.Error(), "output too large") {
+		t.Fatalf("expected output too large error on truncated inspect, got %v", err)
+	}
+}

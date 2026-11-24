@@ -2,8 +2,10 @@ package ops
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -36,7 +38,8 @@ func TestProcessPlan(t *testing.T) {
 		{Port: "5432", Process: "postgres", PID: "812", Path: "/opt/pg/bin/postgres"}, // another user's
 		{Port: "5000", Process: "ControlCenter", PID: "90", Path: system, Own: true},  // the system's
 		{Port: "6379"}, // not known whose
-		{Port: "3000", Process: "node", PID: "1; rm -rf ~", Path: "/opt/node/bin/node", Own: true}, // not a PID
+		{Port: "3000", Process: "node", PID: "1; rm -rf ~", Path: "/opt/node/bin/node", Own: true},                             // not a PID
+		{Port: "49154", Process: "Hearth", PID: strconv.Itoa(os.Getpid()), Path: "/Applications/Hearth.app/Hearth", Own: true}, // Hearth itself
 	} {
 		if _, ok := ProcessPlan(l, nil); ok {
 			t.Errorf("plan for %+v", l)

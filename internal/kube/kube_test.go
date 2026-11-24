@@ -2,6 +2,7 @@ package kube
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"reflect"
@@ -294,5 +295,51 @@ func TestWatchStops(t *testing.T) {
 	}
 	if reads != 1 {
 		t.Errorf("reads = %d, want 1", reads)
+	}
+}
+
+func TestPodInitContainerFailureAndEndpointsDedup(t *testing.T) {
+	t.Parallel()
+	var raw pod
+	podJSON := `{
+		"metadata": {"namespace": "shop", "name": "migrate-1", "uid": "pod-init-1"},
+		"spec": {
+			"initContainers": [{"name": "db-migrate", "image": "migrate:1"}],
+			"containers": [{"name": "api", "image": "api:1"}]
+		},
+		"status": {
+			"phase": "Pending",
+			"initContainerStatuses": [{
+				"name": "db-migrate",
+				"restartCount": 3,
+				"state": {"waiting": {"reason": "CrashLoopBackOff", "message": "back-off 5m0s restarting failed container"}}
+			}]
+		}
+	}`
+	if err := json.Unmarshal([]byte(podJSON), &raw); err != nil {
+		t.Fatal(err)
+	}
+	p := raw.pod(Owner{})
+	if p.Reason != "Init:CrashLoopBackOff" {
+		t.Fatalf("pod reason = %q, want Init:CrashLoopBackOff", p.Reason)
+	}
+	if p.Restarts != 3 {
+		t.Fatalf("pod restarts = %d, want 3", p.Restarts)
+	}
+
+	var f run.Fake
+	f.Stdout(`{"items": [{
+		"metadata": {"namespace": "shop", "name": "api", "uid": "ep-1"},
+		"subsets": [
+			{"ports": [{"name": "http", "port": 8080, "protocol": "TCP"}]},
+			{"ports": [{"name": "http", "port": 8080, "protocol": "TCP"}, {"name": "metrics", "port": 9090, "protocol": "TCP"}]}
+		]
+	}]}`, "kubectl", "--context=kind-dev", "get", "endpoints", "--namespace=shop", "--output=json", "--request-timeout=15s")
+	items, err := ReadResources(t.Context(), &f, nil, target, Endpoints)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 1 || len(items[0].Ports) != 2 {
+		t.Fatalf("endpoints items = %+v, want 1 item with 2 deduplicated ports", items)
 	}
 }

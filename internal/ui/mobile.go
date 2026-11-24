@@ -331,7 +331,11 @@ func (a *App) mobileView(c *ui.Context, p page) {
 				columns(c, 12, func() {
 					switch {
 					case a.Snapshot == nil:
-						toolNote(c, locales.CleanupWaiting())
+						if a.Scanning {
+							toolNote(c, locales.Checking())
+						} else {
+							toolNote(c, locales.NotChecked())
+						}
 					case len(groups) == 0:
 						toolNote(c, locales.MobileNone())
 					default:
@@ -412,7 +416,7 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 			shown += len(rows)
 		}
 		if shown == 0 {
-			cardNote(c, locales.CleanupNone())
+			cardNote(c, locales.NothingMatches())
 		}
 	})
 }

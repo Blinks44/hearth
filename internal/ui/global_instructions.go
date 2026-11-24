@@ -115,7 +115,7 @@ func (a *App) globalInstructionsCard(c *ui.Context, agentID string, in *inventor
 					color = t.TextMuted
 				}
 				ui.Text(c, status).FontSize(11.5).TextColor(color).SingleLine()
-				if row.f.Exists && a.Shell != nil {
+				if row.f.Exists && a.canOpenFile() {
 					path := row.f.Path
 					iconButton(c, "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, path) })
 				} else {
@@ -200,7 +200,7 @@ func (a *App) globalInstructionsDialog(c *ui.Context) {
 			ui.Text(c, locales.GlobalInstructionsTitle()).FontSize(18).FontWeight(600)
 			switch {
 			case p.loading:
-				ui.Text(c, locales.OpVerifying()).FontSize(12)
+				ui.Text(c, locales.Loading()).FontSize(12)
 			case p.err != "":
 				ui.Text(c, p.err).FontSize(12)
 			case p.create:
@@ -214,7 +214,11 @@ func (a *App) globalInstructionsDialog(c *ui.Context) {
 				})
 			}
 			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
-				ui.Button(c, locales.Cancel()).OnClick(func() { p.open = false })
+				dismiss := locales.Cancel()
+				if !p.create {
+					dismiss = locales.SettingsClose()
+				}
+				ui.Button(c, dismiss).OnClick(func() { p.open = false })
 				if p.create {
 					ui.PrimaryButton(c, locales.GlobalInstructionsPlan()).Disabled(p.loading || p.err != "" || strings.TrimSpace(p.text) == "").OnClick(func() { p.open = false; a.globalInstructionPlan(p.agent, "create", p.text) })
 				}
@@ -419,7 +423,7 @@ func (a *App) sharedInstructionsDialog(c *ui.Context) {
 		ui.Column(c).Padding(20).Gap(12).Children(func() {
 			ui.Text(c, locales.SharedInstructionsDialogTitle()).FontSize(18).FontWeight(600)
 			if s.loading {
-				ui.Text(c, locales.OpVerifying()).FontSize(12).TextColor(t.TextMuted)
+				ui.Text(c, locales.Loading()).FontSize(12).TextColor(t.TextMuted)
 			} else if s.err != "" {
 				ui.Text(c, s.err).FontSize(12).TextColor(pal.DangerText)
 			} else {
@@ -582,10 +586,10 @@ func (a *App) globalInstructionMarkdownCard(c *ui.Context, agentID string, in *i
 			}
 		})
 	}
-	listCard(c, locales.InstructionsPreview(), tilde(path, a.Home), func() {
+	listCard(c, filepath.Base(path), tilde(path, a.Home), func() {
 		switch {
 		case entry.loading:
-			cardNote(c, locales.OpVerifying())
+			cardNote(c, locales.Loading())
 		case entry.err != "":
 			cardNote(c, entry.err)
 		default:

@@ -32,7 +32,7 @@ func (a *App) installManager(st inventory.ToolState) string {
 			return m.Name
 		}
 	}
-	if _, ok := a.toolState("mise"); ok {
+	if _, ok := a.miseManager(); ok {
 		return "mise"
 	}
 	return ""
@@ -96,15 +96,23 @@ func (a *App) installVersion(tool, version string) {
 		label = "Temurin " + version
 	}
 	p, ok := a.versionPlan(ops.VersionInstall, tool, cmp.Or(manager, "mise"), version, label, "")
+	needsMiseHook := manager == ""
+	if manager == "mise" {
+		if m, found := a.miseManager(); !found || (!m.Activated && !m.Shims) {
+			needsMiseHook = true
+		}
+	}
 	switch {
 	case !ok:
-	case manager != "":
+	case !needsMiseHook:
 		a.Propose(p)
 	case a.BuildPlan != nil:
 		a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 			s, err := ops.SetUpMise(env)
 			return ops.WithMise(p, s), err
 		}, a.proposeOrSay)
+	default:
+		a.Propose(p)
 	}
 }
 

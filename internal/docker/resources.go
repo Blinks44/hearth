@@ -3,6 +3,7 @@ package docker
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"slices"
@@ -59,6 +60,11 @@ type resourceRow struct {
 	Endpoints map[string]struct{ Name string }
 }
 
+func isMissingDockerObject(stderr, kind string) bool {
+	lower := strings.ToLower(stderr)
+	return strings.Contains(lower, "no such "+kind) || strings.Contains(lower, "not found")
+}
+
 // InspectResources reads only the selected IDs and includes stopped containers.
 func InspectResources(ctx context.Context, r run.Runner, env sysenv.Env, target Target, kind ResourceKind, ids []string) ([]Resource, error) {
 	if len(ids) == 0 {
@@ -77,11 +83,26 @@ func InspectResources(ctx context.Context, r run.Runner, env sysenv.Env, target 
 		}
 		cmd := target.Command(env, string(kind), "inspect", "--format", format, "--")
 		cmd.Args = append(cmd.Args, batch...)
-		items, err := readRows[resourceRow](ctx, r, cmd)
+		res, err := r.Run(ctx, cmd)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("docker %s inspect: %w", kind, err)
 		}
-		rows = append(rows, items...)
+		if res.Truncated {
+			return nil, fmt.Errorf("docker %s inspect: output too large", kind)
+		}
+		if res.ExitCode != 0 && !isMissingDockerObject(string(res.Stderr), string(kind)) {
+			return nil, fmt.Errorf("docker %s inspect: %s", kind, strings.TrimSpace(string(res.Stderr)))
+		}
+		for line := range strings.Lines(string(res.Stdout)) {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			var item resourceRow
+			if err := json.Unmarshal([]byte(line), &item); err != nil {
+				return nil, fmt.Errorf("docker %s inspect: %w", kind, err)
+			}
+			rows = append(rows, item)
+		}
 	}
 	containers, err := ReadContainers(ctx, r, env, target)
 	if err != nil {

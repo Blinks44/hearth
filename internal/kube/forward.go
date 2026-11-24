@@ -45,7 +45,7 @@ func ResolveForwardPod(ctx context.Context, r run.Runner, env sysenv.Env, t Targ
 	var target string
 	found := false
 	for _, p := range s.Spec.Ports {
-		if p.Port == port && p.Protocol == "TCP" {
+		if p.Port == port && (p.Protocol == "" || p.Protocol == "TCP") {
 			target, found = serviceTargetPort(p.TargetPort), true
 			break
 		}

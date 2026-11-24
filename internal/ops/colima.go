@@ -263,8 +263,10 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 			p.Steps[0].Argv = append(p.Steps[0].Argv, "--ssh-config=false")
 			p.Steps[0].Argv = append(p.Steps[0].Argv, colimaFirstStart()...)
 			p.Notes = append(p.Notes, Note{Title: locales.DockerContext(), Text: locales.ColimaChooseContext()})
-		}
-		if managed {
+			if managed {
+				p.Steps = append(p.Steps, stop, service("start"))
+			}
+		} else if managed {
 			p.Steps = []Step{service("restart")}
 		}
 		wantRunning = true
@@ -296,13 +298,20 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 			limits.Disk > 1<<32 || limits.Disk < 1+(profile.Disk-1)/docker.ColimaGiB {
 			return Plan{}, errors.New(locales.ColimaInvalidLimits())
 		}
-		p.Title, p.Why, p.Action = locales.ColimaResources(), locales.ColimaResizeWhy(profile.Name), locales.ColimaRestart()
+		actionLabel := locales.ColimaRestart()
+		if profile.Status == "stopped" {
+			actionLabel = locales.ColimaStart()
+		}
+		p.Title, p.Why, p.Action = locales.ColimaResources(), locales.ColimaResizeWhy(profile.Name), actionLabel
 		p.Notes = []Note{{Title: locales.ColimaDiskGrowth(), Text: locales.ColimaDiskGrowthHint()}}
 		if managed {
 			startService := service("start")
 			stopService := service("stop")
 			stopService.Undo = &startService
 			p.Steps = append(p.Steps, stopService)
+			if profile.Status == "running" {
+				p.Steps = append(p.Steps, stop)
+			}
 		} else if profile.Status == "running" {
 			stop.Undo = &start
 			p.Steps = append(p.Steps, stop)
@@ -310,7 +319,7 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 		p.Steps = append(p.Steps, cmd("start", "--activate=false", "--cpu", strconv.Itoa(limits.CPU),
 			"--memory", strconv.FormatFloat(limits.Memory, 'f', -1, 64), "--disk", strconv.FormatInt(limits.Disk, 10)))
 		if managed {
-			p.Steps = append(p.Steps, service("start"))
+			p.Steps = append(p.Steps, stop, service("start"))
 			p.Notes = append(p.Notes, Note{Title: locales.ColimaAutostartOn(), Text: locales.ColimaRestoreAutostart()})
 		}
 		wantRunning = true

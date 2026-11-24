@@ -260,7 +260,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			ui.Text(c, locales.DatabaseServer()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
-			ui.Text(c, locales.ColumnSource()).Width(56).FontSize(11.5).TextColor(pal.TextFaint)
+			ui.Text(c, locales.ColumnSource()).Width(76).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 			ui.Text(c, locales.DatabaseAddress()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
 		shown := 0
@@ -288,7 +288,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					clipped(c, title).Font(FontMono).FontSize(12)
 					clipped(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint)
 				})
-				ui.Text(c, databaseSource(db.Source)).Width(56).FontSize(10.5).TextColor(pal.MonoText)
+				ui.Text(c, databaseSource(db.Source)).Width(76).Shrink(0).FontSize(10.5).TextColor(pal.MonoText).SingleLine()
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 					address := cmp.Or(url, tilde(db.Path, a.Home))
 					if db.Source == "docker" && address == "" {
@@ -694,7 +694,7 @@ func (a *App) databaseInstallMenu(c *ui.Context) {
 	if a.BuildPlan == nil || len(offers) == 0 {
 		return
 	}
-	ui.PrimaryButton(c.Key("database-install"), locales.DatabaseInstall()).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
+	ui.PrimaryButton(c.Key("database-install"), locales.DatabaseInstall()).Height(controlHeight).Shrink(0).PopoverMenuButton(func(m *ui.Menu) {
 		m.MaxWidth(310)
 		for _, e := range offers {
 			title := setupTitle(e.ID)
@@ -783,7 +783,8 @@ func (a *App) autostartSwitch(c *ui.Context, db inventory.Database) {
 		return
 	}
 	on := db.Autostart == "on"
-	if toggle(c, "autostart:"+db.Service, &on).Label(locales.DatabaseAutostartFor(db.Service)).Changed() {
+	label := locales.DatabaseAutostartFor(db.Service)
+	if toggle(c, "autostart:"+db.Service, &on).Label(label).Tooltip(label).Disabled(a.op.running()).Changed() {
 		a.Propose(plan)
 	}
 }

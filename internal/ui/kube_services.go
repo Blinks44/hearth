@@ -96,66 +96,151 @@ func (a *App) servicesView(c *ui.Context, cl *kube.Cluster) {
 		tracks = []ui.Track{ui.Fr(1.4), ui.Fr(1)}
 		headers = []sortColumn{{locales.KubeClusterName(), "name"}, {locales.KubeServicesPods(), "pods"}}
 	}
+	dataTracks := tracks
+	if !compact {
+		dataTracks = tracks[:len(tracks)-1]
+	}
 	workloadPanes(c.Key("service-panes"), func() {
 		sortHead(c, tracks, nil, sort, headers...)
 	}, func() {
 		for _, service := range shown {
-			row := resourceGrid(ui.Box(c.Key(service.UID)), tracks).Padding(8, 16).
-				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
-			switch {
-			case service.UID == selected.UID:
-				row.Background(pal.ActiveRow)
-			case serviceNeedsAttention(service):
-				row.Background(pal.DangerSoft.Alpha(0.4))
-			}
-			row.Children(func() {
-				button := ui.ButtonBase(c.Key("select-service")).MinWidth(0).Justify(ui.Start).AlignItems(ui.Start).Label(service.Namespace + "/" + service.Name).
+			line := workloadSelectionRow(c.Key(service.UID), pal.Line)
+			line.Children(func() {
+				row := resourceGrid(ui.ButtonBase(c.Key("select-service")), dataTracks).
+					Padding(8, 0).MinHeight(44).Grow(1).MinWidth(0).Label(service.Namespace + "/" + service.Name).
 					OnClick(func() { s.toggleWorkload(&s.service, service.UID) })
-				button.Children(func() {
+				switch {
+				case service.UID == selected.UID:
+					line.Background(pal.ActiveRow)
+				case row.Hovered():
+					line.Background(pal.Subtle)
+				case serviceNeedsAttention(service):
+					line.Background(pal.DangerSoft.Alpha(0.4))
+				}
+				a.resourceContextMenu(c, row, a.resourceRef("Service", service.Namespace, service.Name, service.UID), nil)
+				s.revealWorkloadRow(row, service.UID)
+				row.Children(func() {
 					ui.Column(c).MinWidth(0).Gap(1).Children(func() {
-						clipped(c, service.Name).FontSize(13).FontWeight(500)
+						clipped(c, service.Name).FontSize(13).FontWeight(500).Tooltip(service.Name)
 						clipped(c, service.Namespace).FontSize(10.5).TextColor(pal.TextFaint)
 					})
+					if !compact {
+						workloadStatus(c, service.Type, pal.Muted, t.TextMuted)
+						clipped(c, cmp.Or(service.ClusterIP, "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
+						clipped(c, cmp.Or(servicePortLabels(service), "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
+					}
+					text, color := serviceReadyLabel(service), t.TextMuted
+					if serviceNeedsAttention(service) {
+						color = pal.WarningText
+					}
+					clipped(c, text).FontSize(12).TextColor(color)
 				})
 				if !compact {
-					workloadStatus(c, service.Type, pal.Muted, t.TextMuted)
-					clipped(c, cmp.Or(service.ClusterIP, "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
-					clipped(c, cmp.Or(servicePortLabels(service), "—")).Font(FontMono).FontSize(12).TextColor(t.TextMuted)
-				}
-				text, color := serviceReadyLabel(service), t.TextMuted
-				if serviceNeedsAttention(service) {
-					color = pal.WarningText
-				}
-				clipped(c, text).FontSize(12).TextColor(color)
-				if !compact {
-					a.serviceActions(c, service)
+					ui.Row(c).Width(150).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+						a.serviceActions(c, service)
+					})
 				}
 			})
-			a.resourceContextMenu(c, row, a.resourceRef("Service", service.Namespace, service.Name, service.UID), nil)
-			s.revealWorkloadRow(row, service.UID)
 		}
 	}, selected.UID, func() {
-		detailFrame(c, 0, false, func() {
-			ui.Column(c).Padding(16).Gap(8).Children(func() {
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-					ui.Icon(c, Icon("network")).Size(16, 16).Shrink(0)
-					clipped(c, selected.Name).FontSize(15).FontWeight(600).Grow(1).MinWidth(0)
-					iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.toggleWorkload(&s.service, selected.UID) })
-				})
-				ui.Text(c, strings.Join([]string{"Service", selected.Namespace, selected.Type}, " · ")).
-					FontSize(12).TextColor(t.TextMuted).Wrap()
-				a.serviceActions(c, selected)
+		a.serviceDetail(c, cl, selected)
+	})
+}
+
+func (a *App) serviceDetail(c *ui.Context, cl *kube.Cluster, selected kube.Service) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	events, read := clusterEvents(cl, selected.UID)
+	ref := a.resourceRef("Service", selected.Namespace, selected.Name, selected.UID)
+	detailFrame(c, s.tab, s.tab == 2, func() {
+		ui.Column(c).Padding(16, 16, 14, 16).Gap(6).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, Icon("network")).Size(18, 18).Shrink(0).TextColor(t.TextMuted)
+				clipped(c, selected.Name).FontSize(16).FontWeight(500).Shrink(1).MinWidth(0)
+				if selected.Type != "" {
+					aiTag(c, selected.Type, pal.Muted, t.TextMuted).Shrink(0)
+				}
+				ui.Box(c).Grow(1)
+				iconButton(c, "x", locales.KubeCloseDetails()).OnClick(func() { s.toggleWorkload(&s.service, selected.UID) })
 			})
-		}, func() {
-			detailSection(c, locales.KubeFacts())
-			factRows(c, [][2]string{
-				{"Cluster IP", selected.ClusterIP},
-				{locales.PortsTitle(), servicePortLabels(selected)},
-				{locales.KubeServicesPods(), serviceReadyLabel(selected)},
-			})
-			d := relationshipsFor(cl, selected.Namespace, selected.UID)
-			a.resourceRelationships(c, d.Links, d.Errors)
+			meta := []string{"Service", selected.Namespace}
+			if !selected.Created.IsZero() {
+				meta = append(meta, locales.KubeCreatedAgo(age(c, selected.Created)))
+			}
+			ui.Text(c, strings.Join(meta, " · ")).FontSize(12).TextColor(t.TextMuted).Wrap()
 		})
+		ports := serviceForwardPorts(selected)
+		hasForward := len(ports) > 0
+		hasManage := ref.Kubectl != "" && a.BuildPlan != nil
+		if hasForward || hasManage {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Padding(0, 16, 12, 16).Children(func() {
+				if hasForward {
+					a.forwardButton(c, selected.UID, "service", selected.Namespace, selected.Name, ports, podActionHeight)
+				}
+				if hasManage {
+					a.resourceActions(c, ref, 2)
+				}
+			})
+		}
+		ui.Row(c).Padding(0, 16, 12, 16).Children(func() {
+			count := ""
+			if read && cl.EventsErr == nil {
+				count = strconv.Itoa(len(events))
+			}
+			tabs := []segment{{locales.KubeTabOverview(), ""}, {locales.KubeTabEvents(), count}}
+			hasYAML := false
+			if f := s.resources[ref]; f != nil && (f.editor != nil || s.tab == 2) {
+				tabs = append(tabs, segment{locales.KubeResourceYaml(), ""})
+				hasYAML = true
+			}
+			clampDetailTab(&s.tab, 2, hasYAML)
+			segments(c, "service-tab", &s.tab, tabs)
+		})
+	}, func() {
+		switch s.tab {
+		case 2:
+			if s.resources[ref] != nil {
+				a.resourceEditor(c, s.resources[ref])
+				return
+			}
+		case 1:
+			workloadEventList(c, events, read, cl.EventsErr, 0)
+			return
+		}
+		detailSection(c, locales.KubeFacts())
+		var facts [][2]string
+		add := func(label, value string) {
+			if value != "" {
+				facts = append(facts, [2]string{label, value})
+			}
+		}
+		add(locales.KubeServicesType(), selected.Type)
+		add("Cluster IP", selected.ClusterIP)
+		if selected.Namespace != "" && selected.Name != "" {
+			add("DNS", selected.Name+"."+selected.Namespace+".svc.cluster.local")
+		}
+		add("ExternalName", selected.ExternalName)
+		add("LoadBalancer", strings.Join(selected.LoadBalancer, ", "))
+		add(locales.KubeServicesExternalIPs(), strings.Join(selected.ExternalIPs, ", "))
+		add(locales.PortsTitle(), serviceDetailPortLabels(selected))
+		if selected.PodsKnown {
+			add(locales.KubeServicesPods(), serviceReadyLabel(selected))
+		}
+		add(locales.KubeServicesSessionAffinity(), selected.SessionAffinity)
+		var traffic []string
+		if selected.ExternalTrafficPolicy != "" {
+			traffic = append(traffic, locales.KubeServiceExternal(selected.ExternalTrafficPolicy))
+		}
+		if selected.InternalTrafficPolicy != "" {
+			traffic = append(traffic, locales.KubeServiceInternal(selected.InternalTrafficPolicy))
+		}
+		add(locales.KubeServicesTrafficPolicy(), strings.Join(traffic, " · "))
+		add(locales.KubeResourceSelector(), formatLabels(selected.Selector))
+		add(locales.KubeLabels(), formatLabels(selected.Labels))
+		factRows(c, facts)
+		d := relationshipsFor(cl, selected.Namespace, selected.UID)
+		a.resourceRelationships(c, d.Links, d.Errors)
 	})
 }
 
@@ -189,18 +274,31 @@ func servicePortLabels(service kube.Service) string {
 	return strings.Join(labels, ", ")
 }
 
+func serviceDetailPortLabels(service kube.Service) string {
+	labels := make([]string, 0, len(service.Ports))
+	for _, port := range service.Ports {
+		labels = append(labels, port.DetailString())
+	}
+	return strings.Join(labels, ", ")
+}
+
+func serviceForwardPorts(service kube.Service) []forwardPort {
+	if !service.HasSelector {
+		return nil
+	}
+	var ports []forwardPort
+	for _, port := range service.Ports {
+		if port.Protocol == "" || port.Protocol == "TCP" {
+			ports = append(ports, forwardPort{port.Port, cmp.Or(parseForwardPort(port.Target), port.Port), port.String()})
+		}
+	}
+	return ports
+}
+
 func (a *App) serviceActions(c *ui.Context, service kube.Service) {
 	ui.Row(c).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
-		if service.HasSelector {
-			var ports []forwardPort
-			for _, port := range service.Ports {
-				if port.Protocol == "TCP" {
-					ports = append(ports, forwardPort{port.Port, cmp.Or(parseForwardPort(port.Target), port.Port), port.String()})
-				}
-			}
-			if len(ports) > 0 {
-				a.forwardButton(c, service.UID, "service", service.Namespace, service.Name, ports)
-			}
+		if ports := serviceForwardPorts(service); len(ports) > 0 {
+			a.forwardButton(c, service.UID, "service", service.Namespace, service.Name, ports, 24)
 		}
 		a.resourceMenu(c, a.resourceRef("Service", service.Namespace, service.Name, service.UID))
 	})

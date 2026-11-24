@@ -19,15 +19,49 @@ type customResourceView struct {
 }
 
 type customCatalog struct {
-	result *kube.CustomDefinitions
-	taken  time.Time
-	stop   func()
+	scope     string
+	result    *kube.CustomDefinitions
+	presence  map[string]bool
+	probing   bool
+	taken     time.Time
+	stop      func()
+	probeStop func()
+}
+
+func (c *customCatalog) stopAll() {
+	if c == nil {
+		return
+	}
+	if c.stop != nil {
+		c.stop()
+	}
+	if c.probeStop != nil {
+		c.probeStop()
+	}
+}
+
+func (c *customCatalog) invalidatePresence() {
+	if c == nil {
+		return
+	}
+	if c.probeStop != nil {
+		c.probeStop()
+		c.probeStop = nil
+	}
+	c.probing = false
+	c.presence = nil
+}
+
+func (c *customCatalog) isEmpty(name string) bool {
+	if c == nil || c.presence == nil {
+		return false
+	}
+	has, known := c.presence[name]
+	return known && !has
 }
 
 func (v *customResourceView) reset(context string) {
-	if v.catalog != nil && v.catalog.stop != nil {
-		v.catalog.stop()
-	}
+	v.catalog.stopAll()
 	*v = customResourceView{context: context}
 }
 
@@ -38,6 +72,10 @@ func (v *customResourceView) list(cl *kube.Cluster) *kube.ResourceList {
 	return nil
 }
 
+func (a *App) customCatalogScope(name string) string {
+	return strings.Join(a.clusterNamespaces(name), ",") + "|" + a.accessNamespace(name)
+}
+
 func (a *App) syncCustomDefinitions() {
 	s := &a.cluster
 	if a.router.Path() != kubeClusterPage {
@@ -46,7 +84,7 @@ func (a *App) syncCustomDefinitions() {
 		}
 		return
 	}
-	if s.kind == kindCustom && s.custom.name == "" && s.custom.catalog == nil {
+	if s.kind == kindCustom && s.custom.name == "" && (s.custom.catalog == nil || s.custom.catalog.scope != a.customCatalogScope(s.custom.context)) {
 		a.loadCustomDefinitions(s.custom.context)
 	}
 }
@@ -56,18 +94,60 @@ func (a *App) loadCustomDefinitions(name string) {
 		return
 	}
 	in, _ := cliCopy(a.cliState(), "kubectl")
+	ns := a.clusterNamespaces(name)
+	accessNS := a.accessNamespace(name)
+	scope := strings.Join(ns, ",") + "|" + accessNS
 	v := &a.cluster.custom
-	request := &customCatalog{}
+	request := &customCatalog{scope: scope}
 	if v.catalog != nil {
-		request.result, request.taken = v.catalog.result, v.catalog.taken
-		if v.catalog.stop != nil {
-			v.catalog.stop()
+		if v.catalog.scope == scope {
+			request.result, request.taken, request.presence = v.catalog.result, v.catalog.taken, v.catalog.presence
 		}
+		v.catalog.stopAll()
 	}
 	v.catalog = request
-	request.stop = a.ListCustomDefinitions(kube.Target{Kubectl: in.Path, Context: name}, func(result *kube.CustomDefinitions) {
+	target := kube.Target{Kubectl: in.Path, Context: name, Namespaces: ns, AccessNamespace: accessNS}
+	request.stop = a.ListCustomDefinitions(target, func(result *kube.CustomDefinitions) {
 		if a.router.Path() == kubeClusterPage && a.router.Query("context") == name && v.catalog == request {
 			request.result, request.taken = result, time.Now()
+			if !a.cluster.kindShowEmpty && request.presence == nil && !request.probing {
+				a.startCustomPresenceProbe(name, request)
+			}
+		}
+	})
+}
+
+func (a *App) ensureCustomPresence(name string) {
+	catalog := a.cluster.custom.catalog
+	if catalog == nil || catalog.result == nil || catalog.presence != nil || catalog.probing {
+		return
+	}
+	a.startCustomPresenceProbe(name, catalog)
+}
+
+func (a *App) startCustomPresenceProbe(name string, catalog *customCatalog) {
+	if name == "" || a.ProbeCustomPresence == nil || catalog == nil || catalog.result == nil || catalog.result.Err != nil {
+		return
+	}
+	access := catalog.result.Access
+	defs := make([]kube.CustomDefinition, 0, len(catalog.result.Items))
+	for _, d := range catalog.result.Items {
+		if access == nil || access.CanList(d.Group, d.Names.Plural) {
+			defs = append(defs, d)
+		}
+	}
+	if len(defs) == 0 {
+		return
+	}
+	if catalog.probeStop != nil {
+		catalog.probeStop()
+	}
+	catalog.probing = true
+	target := kube.Target{Context: name, Namespaces: a.clusterNamespaces(name), AccessNamespace: a.accessNamespace(name)}
+	catalog.probeStop = a.ProbeCustomPresence(target, defs, func(presence map[string]bool) {
+		if a.router.Path() == kubeClusterPage && a.router.Query("context") == name && a.cluster.custom.catalog == catalog {
+			catalog.probing = false
+			catalog.presence = presence
 		}
 	})
 }
@@ -81,6 +161,9 @@ func (a *App) selectClusterKind(id int, def *kube.CustomDefinition) {
 	if name != s.custom.name {
 		s.other.reset()
 		s.err = nil
+	}
+	if id != s.kind {
+		s.tab = 0
 	}
 	s.custom.name, s.custom.label = name, label
 	s.kind, s.logs, s.kindsOpen = id, nil, false
@@ -100,19 +183,98 @@ func (a *App) customCatalogNotice(c *ui.Context) {
 	}
 }
 
+func (a *App) nonEmptyCRDToggleRow(c *ui.Context, key string, catalog *customCatalog, hiddenEmpty int) {
+	s := &a.cluster
+	t := c.Theme()
+	pal := Colors(t)
+	nonEmpty := !s.kindShowEmpty
+	apply := func(next bool) {
+		s.kindShowEmpty = !next
+		s.kindSelected = 0
+		if next {
+			a.ensureCustomPresence(a.router.Query("context"))
+		}
+	}
+	ui.Row(c).AlignItems(ui.Center).Gap(8).Padding(2, 10, 4, 10).Children(func() {
+		ui.ButtonBase(c.Key(key + "-label")).AlignItems(ui.Center).Gap(8).Grow(1).MinWidth(0).
+			Label(locales.KubeKindNonEmptyOnly()).OnClick(func() { apply(!nonEmpty) }).Children(func() {
+			ui.Text(c, locales.KubeKindNonEmptyOnly()).FontSize(12).TextColor(t.TextMuted).SingleLine()
+			if catalog.probing {
+				ui.Spinner(c).Size(12, 12)
+			} else if hiddenEmpty > 0 {
+				ui.Text(c, locales.KubeKindHiddenEmpty(hiddenEmpty)).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
+		toggle(c, key, &nonEmpty).Size(32, 18).Shrink(0).Label(locales.KubeKindNonEmptyOnly()).OnChange(func() {
+			apply(nonEmpty)
+		})
+	})
+}
+
 func (a *App) customDefinitionsView(c *ui.Context) {
 	s := &a.cluster
-	if s.custom.catalog == nil || s.custom.catalog.result == nil || s.custom.catalog.result.Err != nil {
+	catalog := s.custom.catalog
+	if catalog == nil || catalog.result == nil || catalog.result.Err != nil {
 		a.customCatalogNotice(c)
 		return
 	}
-	defs := s.custom.catalog.result.Items
+	access := catalog.result.Access
+	var defs []kube.CustomDefinition
+	hiddenEmpty := 0
+	hiddenNoAccess := 0
+	for _, d := range catalog.result.Items {
+		if access != nil && !access.CanList(d.Group, d.Names.Plural) {
+			hiddenNoAccess++
+			if !s.kindShowAll {
+				continue
+			}
+		} else if !s.kindShowEmpty && catalog.isEmpty(d.Name()) {
+			hiddenEmpty++
+			continue
+		}
+		defs = append(defs, d)
+	}
+	showToggle := len(catalog.result.Items) > 0 && (a.ProbeCustomPresence != nil || catalog.presence != nil)
+	renderHiddenBar := func() {
+		if hiddenNoAccess == 0 {
+			return
+		}
+		t := c.Theme()
+		pal := Colors(t)
+		ui.Row(c).AlignItems(ui.Center).Gap(8).Padding(2, 10, 4, 10).Children(func() {
+			ui.Text(c, locales.KubeKindHiddenNoAccess(hiddenNoAccess)).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
+			toggleLabel := locales.KubeKindShowHidden()
+			if s.kindShowAll {
+				toggleLabel = locales.KubeKindHideNoAccess()
+			}
+			b := ui.ButtonBase(c.Key("crd-table-toggle-hidden")).Padding(2, 6).Radius(5).Label(toggleLabel).
+				OnClick(func() { s.kindShowAll = !s.kindShowAll })
+			if b.Hovered() {
+				b.Background(pal.Muted)
+			}
+			b.Children(func() {
+				ui.Text(c, toggleLabel).FontSize(11).FontWeight(500).TextColor(t.TextMuted)
+			})
+		})
+	}
 	if len(defs) == 0 {
-		toolNote(c, locales.KubeResourcesEmptyCluster())
+		if showToggle {
+			a.nonEmptyCRDToggleRow(c, "crd-table-non-empty", catalog, hiddenEmpty)
+		}
+		renderHiddenBar()
+		if hiddenEmpty > 0 {
+			toolNote(c, locales.KubeCustomAllEmpty())
+		} else {
+			toolNote(c, locales.KubeResourcesEmptyCluster())
+		}
 		return
 	}
 	pal := Colors(c.Theme())
 	tracks := []ui.Track{ui.Fr(2), ui.Fr(2), ui.Fr(1), ui.Fr(1)}
+	if showToggle {
+		a.nonEmptyCRDToggleRow(c, "crd-table-non-empty", catalog, hiddenEmpty)
+	}
+	renderHiddenBar()
 	workloadPanes(c, func() {
 		resourceHead(c, tracks, locales.KubeClusterName(), locales.KubeCustomGroup(), locales.KubeCustomVersions(), locales.KubeCustomScope())
 	}, func() {

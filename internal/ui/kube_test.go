@@ -2,10 +2,12 @@ package ui
 
 import (
 	"context"
+	"path/filepath"
 	"slices"
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/detect"
@@ -99,7 +101,7 @@ func TestKubePlans(t *testing.T) {
 	if err := tt.Click(locales.MoreActions()); err != nil {
 		t.Fatal(err)
 	}
-	if menu := tt.Menu(); !slices.Equal(menu, []string{"Use in kubectl…", "Change namespace…", "-", "Copy context name"}) {
+	if menu := tt.Menu(); !slices.Equal(menu, []string{"Use in kubectl…", "Change namespace…", "-", "Copy context name", "-", "Delete context…"}) {
 		t.Fatalf("menu %q", menu)
 	}
 	if err := tt.ChooseMenuItem("Use in kubectl…"); err != nil {
@@ -109,6 +111,21 @@ func TestKubePlans(t *testing.T) {
 	hasTexts(t, tt, "Use Kubernetes context kind-dev", "/opt/homebrew/bin/kubectl config use-context -- kind-dev")
 	if a.op == nil || a.op.started || a.op.plan.Env[0] != env[0] {
 		t.Fatalf("unexpected operation: %+v", a.op)
+	}
+
+	a.op = nil
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click(locales.MoreActions()); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Delete context…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Delete Kubernetes context kind-dev", "/opt/homebrew/bin/kubectl config delete-context -- kind-dev")
+	if a.op == nil || a.op.started {
+		t.Fatalf("unexpected delete operation: %+v", a.op)
 	}
 
 	a.op = nil
@@ -353,5 +370,177 @@ func TestKindClusters(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.op != nil {
 		t.Fatal("proposed a cluster without an engine")
+	}
+}
+
+// Missing, invalid, and empty kubeconfig files show clear states and actions;
+// creating ~/.kube/config supports starter templates and pasted YAML with
+// secret masking.
+func TestKubeEmptyAndCreate(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, ".kube", "config")
+	a := NewApp()
+	a.Home = dir
+	a.Editor = "code"
+	var opened []string
+	a.OpenInEditor = func(_, _, path string, done func(error)) {
+		opened = append(opened, path)
+		if done != nil {
+			done(nil)
+		}
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(nil, nil))
+	}
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "cli", Cli: &inventory.CliState{
+		Tools: []inventory.Installation{
+			{Tool: "kubectl", Version: "1.33.9", Path: "/usr/local/bin/kubectl", OnPath: 1},
+			{Tool: "aws", Version: "2.22.1", Path: "/opt/homebrew/bin/aws", OnPath: 1},
+		},
+		KubeFiles:     []inventory.KubeFile{{Path: cfg, Missing: true}},
+		KubeconfigSet: false,
+	}}}}
+	a.router.Push(kubePage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt,
+		"~/.kube/config does not exist",
+		"no kubeconfig file found",
+		"Create ~/.kube/config…",
+		"Create…",
+		"aws eks update-kubeconfig --name <cluster>",
+	)
+	if tt.HasText("Contexts from 1 kubeconfig file, kubectl, Helm and kind") || tt.HasText("from 1 file") {
+		t.Fatalf("missing default file counted as existing: %q", tt.Texts())
+	}
+
+	// Files tab also offers Create… for the missing file.
+	a.kubeTab = 3
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "~/.kube/config", "no such file", "Create…")
+
+	// Back to Contexts tab: open the create dialog and propose starter template.
+	a.kubeTab = 0
+	tt.Frame()
+	tt.Advance(time.Second)
+	if err := tt.Click("Create ~/.kube/config…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Create kubeconfig", "Starter template", "Paste YAML", "Valid empty kubeconfig · 0600 permissions · can be opened in editor right after")
+	if err := tt.Click("Next"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Create ~/.kube/config", "Create file")
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || a.op.plan.Steps[0].Edit == nil || a.op.plan.Steps[0].Edit.Mode != 0o600 {
+		t.Fatalf("unexpected create plan: %+v", a.op)
+	}
+
+	// Paste YAML mode: invalid YAML disables Next; valid YAML with secret masks preview.
+	a.op = nil
+	a.openKubeConfigCreate(cfg)
+	a.kubeConfig.mode = 1
+	a.kubeConfig.pasted = "kind: Deployment\n"
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Expected kind: Config (or omitted), got Deployment.")
+	a.kubeConfig.pasted = "apiVersion: v1\nkind: Config\ncontexts:\n  - name: staging\n    context: {cluster: eks, user: dev}\nusers:\n  - name: dev\n    user:\n      token: secret-paste-token\n"
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "1 context (staging) · secrets are masked in the plan preview")
+	if err := tt.Click("Next"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Secrets stay private")
+	if tt.HasText("secret-paste-token") {
+		t.Fatal("operation dialog exposed pasted kubeconfig token")
+	}
+
+	// Invalid kubeconfig state offers Open in editor (via OpenInEditor without Shell).
+	a.op = nil
+	a.Snapshot.Tools[0].Cli.KubeFiles = []inventory.KubeFile{{Path: cfg, Invalid: true}}
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "Kubeconfig cannot be read", "Open in editor")
+	if err := tt.Click("Open in editor"); err != nil {
+		t.Fatal(err)
+	}
+	if len(opened) == 0 || opened[len(opened)-1] != cfg {
+		t.Fatalf("opened = %q, want %q", opened, cfg)
+	}
+
+	// Valid kubeconfig with 0 contexts offers Open in editor.
+	a.Snapshot.Tools[0].Cli.KubeFiles = []inventory.KubeFile{{Path: cfg}}
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "kubeconfig has no contexts", "Open in editor")
+
+	// Narrow window (1000x680) and Russian locale render cleanly.
+	i18n.SetLocaleFunc(func() string { return "ru" })
+	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	a.Snapshot.Tools[0].Cli.KubeFiles = []inventory.KubeFile{{Path: cfg, Missing: true}}
+	narrowTT := ui.NewTester(a.View, 1000, 680)
+	narrowTT.Advance(time.Second)
+	hasTexts(t, narrowTT, "~/.kube/config не найден", "файл kubeconfig не найден", "Создать ~/.kube/config…")
+}
+
+// Single-file terminal card, group headers, multi-file KUBECONFIG, and broken
+// current-context expose editor links and warnings cleanly.
+func TestKubeOpenInEditorAndBrokenCurrent(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Editor = "code"
+	var opened []string
+	a.OpenInEditor = func(_, _, path string, done func(error)) {
+		opened = append(opened, path)
+		if done != nil {
+			done(nil)
+		}
+	}
+	cfg := home + "/.kube/config"
+	a.Snapshot = &inventory.Snapshot{Taken: time.Now(), Tools: []inventory.ToolState{{Tool: "cli", Cli: &inventory.CliState{
+		Tools:    []inventory.Installation{{Tool: "kubectl", Version: "1.33.9", Path: "/usr/local/bin/kubectl", OnPath: 1}},
+		Contexts: []inventory.CliContext{{Tool: "kubectl", Name: "staging-n3", File: cfg}},
+		KubeContexts: []inventory.KubeContext{
+			{Name: "staging-n3", Cluster: "c1", Namespace: "digital", File: cfg},
+		},
+		KubeFiles:     []inventory.KubeFile{{Path: cfg}},
+		KubeconfigSet: false,
+	}}}}
+	a.router.Push(kubePage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "kubectl in the terminal", "staging-n3 · digital", "KUBECONFIG not set", "only ~/.kube/config is read")
+	if err := tt.Click(locales.OpenInEditor()); err != nil {
+		t.Fatalf("Open in editor button missing: %v", err)
+	}
+	if len(opened) != 1 || opened[0] != cfg {
+		t.Fatalf("opened = %q, want [%q]", opened, cfg)
+	}
+
+	// Broken current-context (not defined in any kubeconfig file) is flagged.
+	a.Snapshot.Tools[0].Cli.Contexts[0].Name = "deleted-ctx"
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "deleted-ctx", "context not found in kubeconfig", "missing in kubeconfig · set in ~/.kube/config", "missing")
+
+	// Multi-file KUBECONFIG shows Files button in kubectl in the terminal card.
+	prod := home + "/.kube/prod.yaml"
+	a.Snapshot.Tools[0].Cli.KubeFiles = []inventory.KubeFile{{Path: cfg}, {Path: prod}}
+	a.Snapshot.Tools[0].Cli.KubeconfigSet = true
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "KUBECONFIG: 2 files")
+	if err := tt.Click(locales.KubeFilesTab()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.kubeTab != 3 {
+		t.Fatalf("kubeTab = %d, want 3", a.kubeTab)
 	}
 }

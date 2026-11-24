@@ -121,12 +121,12 @@ func (a *App) startupRow(c *ui.Context, s *inventory.ShellStartup, i int, l inve
 		if culprit == sysenv.CulpritNvm && a.BuildPlan != nil {
 			ui.Button(c.Key("startup-nvm:"+strconv.Itoa(i)), locales.MoveToMise()).OnClick(func() { a.nvmMove(l) })
 		}
-		if a.Shell != nil {
+		if a.canOpenFile() || a.Shell != nil {
 			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
-				if m.Item(locales.OpenInEditor()).Chosen() {
+				if a.canOpenFile() && m.Item(locales.OpenInEditor()).Chosen() {
 					a.openFile(c, l.File)
 				}
-				if m.Item(showInFolder()).Chosen() {
+				if a.Shell != nil && m.Item(showInFolder()).Chosen() {
 					a.Shell.ShowItemInFolder(l.File)
 				}
 			})
@@ -204,11 +204,23 @@ func (a *App) startupSide(c *ui.Context, s *inventory.ShellStartup) {
 	}
 	listCard(c, locales.StartupFiles(), locales.StartupFilesOrder(), func() {
 		for _, f := range s.Files {
+			file := f.File
+			openBtn := func() {
+				if a.canOpenFile() {
+					iconButton(c.Key("startup-file:"+file), "external-link", locales.OpenInEditor()).OnClick(func() { a.openFile(c, file) })
+				}
+			}
 			// Windows' profiles have no time: each is listed.
 			if s.Bare > 0 {
-				listRow(c, tilde(f.File, a.Home), false, "", func() {})
+				listRow(c, tilde(file, a.Home), false, "", openBtn)
 			} else if f.Took >= shownFile {
-				listRow(c, tilde(f.File, a.Home), false, "", value(seconds(f.Took)))
+				took := f.Took
+				listRow(c, tilde(file, a.Home), false, "", func() {
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+						ui.Text(c, seconds(took)).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+						openBtn()
+					})
+				})
 			}
 		}
 	})

@@ -231,136 +231,143 @@ func (a *App) cloudSwitchView(c *ui.Context) {
 		}
 
 		ui.Column(c).Children(func() {
-			ui.Column(c).Gap(10).Padding(20, 20, 16, 20).Children(func() {
-				ui.Column(c).Gap(4).Children(func() {
-					ui.Text(c, title).FontSize(18).FontWeight(600)
-					ui.Text(c, lead).FontSize(12).TextColor(t.TextMuted).Wrap()
-				})
+			ui.Scroll(c).MaxHeight(420).Children(func() {
+				ui.Column(c).Gap(10).Padding(20, 20, 16, 20).Children(func() {
+					ui.Column(c).Gap(4).Children(func() {
+						ui.Text(c, title).FontSize(18).FontWeight(600)
+						ui.Text(c, lead).FontSize(12).TextColor(t.TextMuted).Wrap()
+					})
 
-				switch d.tool {
-				case "aws":
-					if len(d.choices) > 0 {
-						ui.Text(c, locales.CloudAwsProfileLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
-						ui.Row(c).Gap(6).Wrap().Children(func() {
-							for _, ch := range d.choices {
-								choice := ch
-								active := d.selectedName == choice.Name
-								btn := ui.Button(c.Key("aws-choice:"+choice.Name), choice.Name).Height(28)
-								if active {
-									btn.Background(pal.AccentSoft).BorderColor(Accent).TextColor(pal.AccentInk)
-								}
-								btn.OnClick(func() {
-									d.selectedName = choice.Name
-									d.region = choice.Region
-								})
-							}
-						})
-					}
-					prof := ui.TextInput(c.Key("aws-profile-input"), &d.selectedName).Label(locales.CloudAwsProfileLabel()).Placeholder("default")
-					if prof.Submitted() {
-						apply()
-					}
-					reg := ui.TextInput(c.Key("aws-region-input"), &d.region).Label(locales.CloudAwsRegionLabel()).Placeholder("eu-central-1")
-					if reg.Submitted() {
-						apply()
-					}
-
-				case "gcloud":
-					if len(d.choices) > 0 {
-						ui.Text(c, locales.CloudGcloudConfigLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
-						ui.Row(c).Gap(6).Wrap().Children(func() {
-							for _, ch := range d.choices {
-								choice := ch
-								active := d.selectedName == choice.Name
-								btn := ui.Button(c.Key("gcloud-choice:"+choice.Name), choice.Name).Height(28)
-								if active {
-									btn.Background(pal.AccentSoft).BorderColor(Accent).TextColor(pal.AccentInk)
-								}
-								btn.OnClick(func() {
-									d.selectedName = choice.Name
-									d.project = choice.Project
-								})
-							}
-						})
-					}
-					proj := ui.TextInput(c.Key("gcloud-project-input"), &d.project).Label(locales.CloudGcloudProjectLabel()).Placeholder("my-gcp-project")
-					if proj.Submitted() {
-						apply()
-					}
-					if a.ListGcloudProjects != nil && found {
-						ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-							ui.Button(c.Key("gcloud-load-projects"), locales.CloudGcloudLoadProjects()).
-								Disabled(d.loadingProj).OnClick(func() {
-								d.loadingProj = true
-								d.projErr = ""
-								d.seq++
-								seq := d.seq
-								a.ListGcloudProjects(in.Path, func(list []string, err error) {
-									if d.seq != seq {
-										return
-									}
-									d.loadingProj = false
-									if err != nil {
-										d.projErr = err.Error()
-										return
-									}
-									d.remoteProjects = list
-								})
-							})
-							if d.loadingProj {
-								ui.Text(c, locales.CliWhoChecking()).FontSize(11.5).TextColor(pal.TextFaint)
-							}
-						})
-						if d.projErr != "" {
-							ui.Text(c, d.projErr).FontSize(11.5).TextColor(pal.WarningText).Wrap()
-						}
-						if len(d.remoteProjects) > 0 {
+					switch d.tool {
+					case "aws":
+						if len(d.choices) > 0 {
+							ui.Text(c, locales.CloudAwsProfileLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
 							ui.Row(c).Gap(6).Wrap().Children(func() {
-								for _, pid := range d.remoteProjects {
-									id := pid
-									active := d.project == id
-									btn := ui.Button(c.Key("gcloud-proj:"+id), id).Height(26)
+								for _, ch := range d.choices {
+									choice := ch
+									active := d.selectedName == choice.Name
+									btn := ui.Button(c.Key("aws-choice:"+choice.Name), choice.Name).Height(28)
 									if active {
 										btn.Background(pal.AccentSoft).BorderColor(Accent).TextColor(pal.AccentInk)
 									}
-									btn.OnClick(func() { d.project = id })
+									btn.OnClick(func() {
+										d.selectedName = choice.Name
+										d.region = choice.Region
+									})
+								}
+							})
+						}
+						prof := ui.TextInput(c.Key("aws-profile-input"), &d.selectedName).Label(locales.CloudAwsProfileLabel()).Placeholder("default")
+						if prof.Submitted() {
+							apply()
+						}
+						reg := ui.TextInput(c.Key("aws-region-input"), &d.region).Label(locales.CloudAwsRegionLabel()).Placeholder("eu-central-1")
+						if reg.Submitted() {
+							apply()
+						}
+
+					case "gcloud":
+						if len(d.choices) > 0 {
+							ui.Text(c, locales.CloudGcloudConfigLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
+							ui.Row(c).Gap(6).Wrap().Children(func() {
+								for _, ch := range d.choices {
+									choice := ch
+									active := d.selectedName == choice.Name
+									btn := ui.Button(c.Key("gcloud-choice:"+choice.Name), choice.Name).Height(28)
+									if active {
+										btn.Background(pal.AccentSoft).BorderColor(Accent).TextColor(pal.AccentInk)
+									}
+									btn.OnClick(func() {
+										d.selectedName = choice.Name
+										d.project = choice.Project
+									})
+								}
+							})
+						}
+						proj := ui.TextInput(c.Key("gcloud-project-input"), &d.project).Label(locales.CloudGcloudProjectLabel()).Placeholder("my-gcp-project")
+						if proj.Submitted() {
+							apply()
+						}
+						if a.ListGcloudProjects != nil && found {
+							ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+								ui.Button(c.Key("gcloud-load-projects"), locales.CloudGcloudLoadProjects()).
+									Disabled(d.loadingProj).OnClick(func() {
+									d.loadingProj = true
+									d.projErr = ""
+									d.seq++
+									seq := d.seq
+									a.ListGcloudProjects(in.Path, func(list []string, err error) {
+										if d.seq != seq {
+											return
+										}
+										d.loadingProj = false
+										if err != nil {
+											d.projErr = err.Error()
+											return
+										}
+										d.remoteProjects = list
+									})
+								})
+								if d.loadingProj {
+									ui.Text(c, locales.CliWhoChecking()).FontSize(11.5).TextColor(pal.TextFaint)
+								}
+							})
+							if d.projErr != "" {
+								ui.Text(c, d.projErr).FontSize(11.5).TextColor(pal.WarningText).Wrap()
+							}
+							if len(d.remoteProjects) > 0 {
+								ui.Row(c).Gap(6).Wrap().Children(func() {
+									for _, pid := range d.remoteProjects {
+										id := pid
+										active := d.project == id
+										btn := ui.Button(c.Key("gcloud-proj:"+id), id).Height(26)
+										if active {
+											btn.Background(pal.AccentSoft).BorderColor(Accent).TextColor(pal.AccentInk)
+										}
+										btn.OnClick(func() { d.project = id })
+									}
+								})
+							}
+						}
+
+					case "az":
+						ui.Text(c, locales.CloudAzSubLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
+						if len(d.choices) == 0 {
+							ui.Text(c, locales.CloudNoChoices()).FontSize(12).TextColor(pal.TextFaint).Wrap()
+						} else {
+							ui.Column(c).Radius(10).Clip().BorderWidth(1).BorderColor(pal.Line).Children(func() {
+								for i, ch := range d.choices {
+									choice := ch
+									active := (d.selectedSubID != "" && d.selectedSubID == choice.ID) || (d.selectedSubID == "" && d.selectedSub == choice.Name)
+									label := cmp.Or(choice.Name, choice.ID)
+									row := ui.ButtonBase(c.Key("az-sub:"+strconv.Itoa(i))).Label(label).
+										Gap(8).Padding(8, 12).AlignItems(ui.Center).
+										BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
+									switch {
+									case active:
+										row.Background(pal.ActiveRow)
+									case row.Hovered():
+										row.Background(pal.Subtle)
+									}
+									row.OnClick(func() {
+										d.selectedSubID = choice.ID
+										d.selectedSub = choice.Name
+									}).Children(func() {
+										ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+											clipped(c, label).FontSize(13).FontWeight(500)
+											if choice.ID != "" {
+												clipped(c, detect.MaskID(choice.ID)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+											}
+										})
+										if active {
+											ui.Icon(c, Icon("check")).Size(14, 14).TextColor(Accent)
+										}
+									})
 								}
 							})
 						}
 					}
-
-				case "az":
-					ui.Text(c, locales.CloudAzSubLabel()).FontSize(11.5).FontWeight(500).TextColor(t.TextMuted)
-					if len(d.choices) == 0 {
-						ui.Text(c, locales.CloudNoChoices()).FontSize(12).TextColor(pal.TextFaint).Wrap()
-					} else {
-						ui.Column(c).Radius(10).Clip().BorderWidth(1).BorderColor(pal.Line).Children(func() {
-							for i, ch := range d.choices {
-								choice := ch
-								active := (d.selectedSubID != "" && d.selectedSubID == choice.ID) || (d.selectedSubID == "" && d.selectedSub == choice.Name)
-								row := ui.Row(c.Key("az-sub:"+strconv.Itoa(i))).Gap(8).Padding(8, 12).AlignItems(ui.Center).
-									BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Cursor(ui.CursorPointer)
-								if active {
-									row.Background(pal.ActiveRow)
-								}
-								row.OnClick(func() {
-									d.selectedSubID = choice.ID
-									d.selectedSub = choice.Name
-								}).Children(func() {
-									ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-										clipped(c, cmp.Or(choice.Name, choice.ID)).FontSize(13).FontWeight(500)
-										if choice.ID != "" {
-											clipped(c, detect.MaskID(choice.ID)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
-										}
-									})
-									if active {
-										ui.Icon(c, Icon("check")).Size(14, 14).TextColor(Accent)
-									}
-								})
-							}
-						})
-					}
-				}
+				})
 			})
 
 			ui.Row(c).Gap(8).Padding(12, 20).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {

@@ -342,7 +342,11 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 					p, ok := VersionPlan(VersionInstall, target, detect)
 					if ok {
 						if manager == "corepack" {
-							p.Steps = []Step{{Argv: []string{"corepack", "prepare", st.Tool + "@" + selection.Version}, Env: []string{"COREPACK_DEFAULT_TO_LATEST=0"}}}
+							argv := []string{"corepack", "prepare", st.Tool + "@" + selection.Version}
+							if nodeVer := localMise["node"]; nodeVer != "" {
+								argv = append([]string{"mise", "exec", "node@" + nodeVer, "--"}, argv...)
+							}
+							p.Steps = []Step{{Argv: argv, Env: []string{"COREPACK_DEFAULT_TO_LATEST=0"}}}
 						}
 						plans = append(plans, p)
 						item.Kind = ProjectInstall
@@ -428,7 +432,11 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 			for _, tool := range keys {
 				fmt.Fprintf(&text, "%s = %q\n", tool, localMise[tool])
 			}
-			plans = append(plans, Plan{Steps: []Step{{Edit: &FileEdit{Path: filepath.Join(in.Project.Dir, "mise.toml"), After: text.String(), New: true}}}})
+			misePath := filepath.Join(in.Project.Dir, "mise.toml")
+			plans = append(plans, Plan{Steps: []Step{
+				{Edit: &FileEdit{Path: misePath, After: text.String(), New: true}},
+				{Argv: []string{"mise", "trust", misePath}},
+			}})
 		}
 	}
 	for i := range out.Items {

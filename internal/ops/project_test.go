@@ -193,7 +193,9 @@ func TestProjectMiseLocalJavaSelectionMatchesInstalledDistribution(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Plan.Steps) != 2 || !slices.Contains(got.Plan.Steps[0].Argv, "java@temurin-21.0.5") || got.Plan.Steps[1].Edit == nil || !strings.Contains(got.Plan.Steps[1].Edit.After, `java = "temurin-21.0.5"`) {
+	if len(got.Plan.Steps) != 3 || !slices.Contains(got.Plan.Steps[0].Argv, "java@temurin-21.0.5") ||
+		got.Plan.Steps[1].Edit == nil || !strings.Contains(got.Plan.Steps[1].Edit.After, `java = "temurin-21.0.5"`) ||
+		!slices.Equal(got.Plan.Steps[2].Argv[:2], []string{"mise", "trust"}) {
 		t.Fatalf("selection differs from installation: %+v", got.Plan.Steps)
 	}
 }
@@ -342,5 +344,36 @@ func TestAssessProjectSingleJSFileNoConflict(t *testing.T) {
 	}
 	if got.Items[0].Kind != ProjectInstall && got.Items[0].Kind != ProjectManual {
 		t.Fatalf("unexpected kind for missing pnpm: %+v", got.Items[0])
+	}
+}
+
+func TestPrepareProjectCorepackWithMiseNode(t *testing.T) {
+	in, env := projectFixture(t)
+	in.Project.Requirements = []projects.Requirement{
+		{Tool: "node", Want: "20", File: ".nvmrc"},
+		{Tool: "pnpm", Want: "10.6.0", File: "package.json", Key: "packageManager"},
+	}
+	in.Releases = map[string][]string{"node": {"20.20.0"}}
+	in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{
+			Tool:     "node",
+			Managers: []inventory.Manager{{Name: "mise", Activated: true, SwitchOnCD: true}},
+		},
+		{
+			Tool:          "corepack",
+			Installations: []inventory.Installation{{Tool: "corepack", Version: "0.32.0", Path: "/opt/homebrew/bin/corepack", OnPath: 1}},
+		},
+		{
+			Tool:     "pnpm",
+			Managers: []inventory.Manager{{Name: "corepack", SwitchOnCD: true}},
+		},
+	}}
+	got, err := PrepareProject(in, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"mise", "exec", "node@20.20.0", "--", "corepack", "prepare", "pnpm@10.6.0"}
+	if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool { return slices.Equal(s.Argv, want) }) {
+		t.Fatalf("expected step %q, got %+v", want, got.Plan.Steps)
 	}
 }

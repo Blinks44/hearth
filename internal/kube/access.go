@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -151,4 +152,121 @@ func parseAccessRules(output string) ([]AccessRule, error) {
 		}
 	}
 	return rules, nil
+}
+
+// ListAccess reports which resource kinds the current identity may list in the
+// active namespace scope. A nil *ListAccess means rules could not be evaluated
+// completely and callers must fail open (show all resources).
+type ListAccess struct {
+	rules []RBACRule
+}
+
+// NewListAccess builds a ListAccess from structured RBAC rules.
+func NewListAccess(rules []RBACRule) *ListAccess {
+	return &ListAccess{rules: rules}
+}
+
+// CanList reports whether the identity has "list" permission on (group, resource).
+// A nil receiver fails open and returns true.
+func (a *ListAccess) CanList(group, resource string) bool {
+	if a == nil {
+		return true
+	}
+	for _, r := range a.rules {
+		if len(r.ResourceNames) > 0 {
+			continue
+		}
+		if ruleMatches(r.Verbs, "list") && ruleMatches(r.APIGroups, group) && ruleMatches(r.Resources, resource) {
+			return true
+		}
+	}
+	return false
+}
+
+func ruleMatches(list []string, target string) bool {
+	for _, item := range list {
+		if item == "*" || item == target {
+			return true
+		}
+	}
+	return false
+}
+
+// readListAccess evaluates the current user's resource list permissions across
+// the target's selected namespaces. Returns nil (fail-open) if any review fails
+// or reports incomplete rules.
+func readListAccess(ctx context.Context, r run.Runner, env sysenv.Env, t Target) *ListAccess {
+	namespaces := t.Namespaces
+	if len(namespaces) == 0 {
+		namespaces = []string{t.AccessNamespace}
+		if namespaces[0] == "" {
+			namespaces[0] = "default"
+		}
+	}
+	var all []RBACRule
+	for _, ns := range namespaces {
+		rules, incomplete, err := readNamespaceListRules(ctx, r, env, t, ns)
+		if err != nil || incomplete {
+			return nil
+		}
+		all = append(all, rules...)
+	}
+	// In All namespaces mode we probed a single fallback namespace (e.g.
+	// "default"). Users with namespace-scoped RoleBindings often have zero
+	// list rules in "default" even though they have access elsewhere; fail
+	// open instead of hiding the entire resource picker.
+	if len(t.Namespaces) == 0 && !slices.ContainsFunc(all, func(rule RBACRule) bool {
+		return ruleMatches(rule.Verbs, "list")
+	}) {
+		return nil
+	}
+	return &ListAccess{rules: all}
+}
+
+func readNamespaceListRules(ctx context.Context, r run.Runner, env sysenv.Env, t Target, namespace string) ([]RBACRule, bool, error) {
+	if t.API != nil {
+		var review struct {
+			Status struct {
+				ResourceRules   []RBACRule `json:"resourceRules"`
+				Incomplete      bool       `json:"incomplete"`
+				EvaluationError string     `json:"evaluationError"`
+			} `json:"status"`
+		}
+		err := t.API.selfSubjectRules(ctx, env, t, namespace, &review)
+		if err == nil {
+			incomplete := review.Status.Incomplete || strings.TrimSpace(review.Status.EvaluationError) != ""
+			return review.Status.ResourceRules, incomplete, nil
+		}
+		if !errors.Is(err, errUseKubectl) {
+			return nil, false, err
+		}
+	}
+	if t.Kubectl == "" || r == nil {
+		return nil, false, fmt.Errorf("kubectl is required for auth checks")
+	}
+	t.AccessNamespace = namespace
+	out, err := accessCommand(ctx, r, env, t, "can-i", "--list")
+	if err != nil {
+		return nil, false, err
+	}
+	if strings.Contains(strings.ToLower(string(out.Stderr)), "incomplete") {
+		return nil, true, nil
+	}
+	parsed, err := parseAccessRules(string(out.Stdout))
+	if err != nil {
+		return nil, false, err
+	}
+	rules := make([]RBACRule, 0, len(parsed))
+	for _, p := range parsed {
+		if p.Resource == "" || strings.TrimSpace(p.Names) != "" || strings.Contains(p.Resource, "/") {
+			continue
+		}
+		res, group, _ := strings.Cut(p.Resource, ".")
+		rules = append(rules, RBACRule{
+			APIGroups: []string{group},
+			Resources: []string{res},
+			Verbs:     strings.Fields(p.Verbs),
+		})
+	}
+	return rules, false, nil
 }

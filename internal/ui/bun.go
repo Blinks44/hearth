@@ -123,7 +123,7 @@ func (a *App) bunAvailable(c *ui.Context, st inventory.ToolState, rows []int, ac
 	if latest != nil && !latest.Fetched.IsZero() {
 		asOf = locales.VersionsAsOf(latest.Fetched)
 	}
-	listCard(c, locales.Available(), a.availableAside(st, asOf), func() {
+	listCard(c, locales.AvailableTitle(), a.availableAside(st, asOf), func() {
 		if latest == nil {
 			text := locales.VersionsLoading()
 			if a.BunLatestErr != "" {
@@ -164,7 +164,7 @@ func (a *App) bunInstall(c *ui.Context, in inventory.Installation) {
 		return func() {
 			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, s).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-				if openPath != "" && a.Shell != nil {
+				if openPath != "" && a.canOpenFile() {
 					iconButton(c.Key("open:"+key), "external-link", locales.OpenFile(filepath.Base(openPath))).
 						OnClick(func() { a.openFile(c, openPath) })
 				}

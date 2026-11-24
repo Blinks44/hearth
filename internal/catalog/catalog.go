@@ -215,7 +215,7 @@ var Tools = []Entry{
 	// line, PHP.PHP.8.4: the line follows the name.
 	{ID: "php", Group: Language, Methods: []Method{
 		{Manager: "brew", Package: "php", Kind: "formula"},
-		{Manager: "winget", Package: "PHP.PHP"},
+		{Manager: "winget", Package: "PHP.PHP.8.4"},
 		{Manager: "apt", Package: "php-cli"},
 		{Manager: "dnf", Package: "php-cli"},
 		{Manager: "pacman", Package: "php"},

@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"errors"
@@ -11,7 +12,11 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
+	"go.yaml.in/yaml/v3"
+
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
@@ -230,4 +235,271 @@ func kindClusters(ctx context.Context, r run.Runner, kind string, env sysenv.Env
 		return nil, fmt.Errorf("kind get clusters: %s", strings.TrimSpace(string(res.Stderr)))
 	}
 	return strings.Fields(string(res.Stdout)), nil
+}
+
+// maxKubeConfigBytes bounds pasted kubeconfig YAML so validation and plan
+// previews stay fast while easily accommodating multi-cluster configs.
+const maxKubeConfigBytes = 256 * 1024
+
+// KubeConfigTemplate returns a minimal valid kubeconfig starter file.
+func KubeConfigTemplate() string {
+	return "apiVersion: v1\n" +
+		"kind: Config\n" +
+		"# Add clusters, users, and contexts below, or paste a kubeconfig from your provider.\n" +
+		"current-context: \"\"\n" +
+		"clusters: []\n" +
+		"contexts: []\n" +
+		"users: []\n"
+}
+
+// KubeConfigSummary describes what a validated kubeconfig YAML defines,
+// without retaining credentials.
+type KubeConfigSummary struct {
+	Contexts       []string
+	CurrentContext string
+	HasSecrets     bool
+}
+
+// ParseKubeConfigYAML validates text as kubeconfig YAML and summarizes its
+// contexts without keeping credential values.
+func ParseKubeConfigYAML(text string) (KubeConfigSummary, error) {
+	summary, _, _, err := parseKubeConfigYAML(text)
+	return summary, err
+}
+
+func parseKubeConfigYAML(text string) (KubeConfigSummary, string, string, error) {
+	normalized := strings.ReplaceAll(text, "\r\n", "\n")
+	if strings.TrimSpace(normalized) == "" {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidEmpty())
+	}
+	if len(normalized) > maxKubeConfigBytes || !utf8.ValidString(normalized) {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidLimit())
+	}
+	if !strings.HasSuffix(normalized, "\n") {
+		normalized += "\n"
+	}
+	var doc yaml.Node
+	if err := yaml.Unmarshal([]byte(normalized), &doc); err != nil {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidYAML(err.Error()))
+	}
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) != 1 || doc.Content[0].Kind != yaml.MappingNode {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidYAML(locales.KubeYamlMappingExpected()))
+	}
+	var cfg struct {
+		Kind     string `yaml:"kind"`
+		Current  string `yaml:"current-context"`
+		Contexts []struct {
+			Name string `yaml:"name"`
+		} `yaml:"contexts"`
+	}
+	if err := doc.Decode(&cfg); err != nil {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidYAML(err.Error()))
+	}
+	if cfg.Kind != "" && cfg.Kind != "Config" {
+		return KubeConfigSummary{}, "", "", errors.New(locales.KubeConfigInvalidKind(cfg.Kind))
+	}
+	var contexts []string
+	for _, c := range cfg.Contexts {
+		if c.Name != "" && !slices.Contains(contexts, c.Name) {
+			contexts = append(contexts, c.Name)
+		}
+	}
+	hasSecrets := redactKubeConfigNode(doc.Content[0], false, false)
+	masked := normalized
+	if hasSecrets {
+		var buf bytes.Buffer
+		enc := yaml.NewEncoder(&buf)
+		enc.SetIndent(2)
+		if err := enc.Encode(doc.Content[0]); err != nil {
+			return KubeConfigSummary{}, "", "", fmt.Errorf("encode redacted kubeconfig preview: %w", err)
+		}
+		_ = enc.Close()
+		masked = buf.String()
+	}
+	return KubeConfigSummary{Contexts: contexts, CurrentContext: cfg.Current, HasSecrets: hasSecrets}, normalized, masked, nil
+}
+
+// redactKubeConfigNode masks credential values in a kubeconfig YAML AST so
+// secrets never appear in plan previews.
+func redactKubeConfigNode(node *yaml.Node, inExecEnv, inAuthConfig bool) bool {
+	if node == nil {
+		return false
+	}
+	redacted := false
+	switch node.Kind {
+	case yaml.MappingNode:
+		for i := 0; i+1 < len(node.Content); i += 2 {
+			key := strings.ToLower(strings.TrimSpace(node.Content[i].Value))
+			val := node.Content[i+1]
+			if kubeConfigSecretKey(key, inExecEnv, inAuthConfig) {
+				if val.Kind == yaml.AliasNode {
+					if val.Alias != nil && val.Alias.Kind == yaml.ScalarNode && strings.TrimSpace(val.Alias.Value) != "" {
+						val.Alias.Value = inventory.Hidden
+						val.Alias.Style = 0
+						val.Alias.Tag = "!!str"
+					}
+					val.Kind = yaml.ScalarNode
+					val.Alias = nil
+					val.Value = inventory.Hidden
+					val.Style = 0
+					val.Tag = "!!str"
+					redacted = true
+				} else if val.Kind == yaml.ScalarNode && strings.TrimSpace(val.Value) != "" {
+					val.Value = inventory.Hidden
+					val.Style = 0
+					val.Tag = "!!str"
+					redacted = true
+				}
+				continue
+			}
+			nextExecEnv := inExecEnv || key == "env"
+			nextAuthConfig := inAuthConfig || key == "auth-provider" || (key == "config" && inAuthConfig)
+			if redactKubeConfigNode(val, nextExecEnv, nextAuthConfig) {
+				redacted = true
+			}
+		}
+	case yaml.SequenceNode:
+		for _, item := range node.Content {
+			if redactKubeConfigNode(item, inExecEnv, inAuthConfig) {
+				redacted = true
+			}
+		}
+	}
+	return redacted
+}
+
+func kubeConfigSecretKey(key string, inExecEnv, inAuthConfig bool) bool {
+	switch key {
+	case "token", "password", "client-key-data", "client-secret", "id-token", "refresh-token", "access-token":
+		return true
+	case "value":
+		return inExecEnv
+	}
+	if inAuthConfig {
+		for _, word := range []string{"token", "secret", "password", "key"} {
+			if strings.Contains(key, word) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// maxKubePreviewLines caps the number of diff lines shown in the operation
+// preview dialog when creating a large kubeconfig file.
+const maxKubePreviewLines = 120
+
+// KubeConfigCreatePlan creates a new kubeconfig file with private 0600
+// permissions (and 0700 parent directory if missing). Credentials are redacted
+// in the plan preview and never logged to the operation journal.
+func KubeConfigCreatePlan(path, displayPath, text string) (Plan, error) {
+	if path == "" || !filepath.IsAbs(path) {
+		return Plan{}, errors.New(locales.KubeConfigInvalidEmpty())
+	}
+	label := cmp.Or(displayPath, path)
+	if _, err := os.Stat(path); err == nil {
+		return Plan{}, errors.New(locales.KubeConfigAlreadyExists(label))
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return Plan{}, fmt.Errorf("stat %s: %w", path, err)
+	}
+	summary, normalized, masked, err := parseKubeConfigYAML(text)
+	if err != nil {
+		return Plan{}, err
+	}
+	preview := Diff("", masked)
+	if len(preview) > maxKubePreviewLines {
+		more := len(preview) - maxKubePreviewLines
+		preview = append(preview[:maxKubePreviewLines], DiffLine{
+			Added: true,
+			Line:  maxKubePreviewLines + 1,
+			Text:  fmt.Sprintf("… (+%d lines)", more),
+		})
+	}
+	changes := []string{locales.KubeConfigCreateChange(label)}
+	if len(summary.Contexts) > 0 {
+		changes = append(changes, locales.KubeConfigCreateContexts(len(summary.Contexts)))
+	}
+	var notes []Note
+	if summary.HasSecrets {
+		notes = append(notes, Note{Title: locales.KubeConfigSecretsMaskedNote(), Text: locales.KubeConfigSecretsMaskedText()})
+	}
+	p := Plan{
+		Title:   locales.KubeConfigCreateTitle(label),
+		Why:     locales.KubeConfigCreateWhy(),
+		Action:  locales.KubeConfigCreateAction(),
+		Steps:   []Step{{Edit: &FileEdit{Path: path, After: normalized, New: true, Mode: 0o600, preview: preview}}},
+		Notes:   notes,
+		Changes: changes,
+	}
+	p.Verify = func(context.Context) (string, error) {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return "", fmt.Errorf("read %s: %w", path, err)
+		}
+		if _, err := ParseKubeConfigYAML(string(data)); err != nil {
+			return "", err
+		}
+		return locales.KubeConfigVerified(label), nil
+	}
+	return p, nil
+}
+
+// KubeContextDeletePlan removes a named context from kubeconfig through
+// kubectl. Cluster and user entries remain untouched, and no cluster is
+// contacted. When name is kubectl's active context, a second step clears
+// current-context so kubectl does not stay pointed at a removed context.
+func KubeContextDeletePlan(cli, name, current, file string, projects []string, env sysenv.Env, r run.Runner) (Plan, error) {
+	if cli == "" || name == "" || strings.ContainsAny(name, "\x00\r\n") {
+		return Plan{}, errors.New(locales.KubeContextInvalid())
+	}
+	steps := []Step{{Argv: []string{cli, "config", "delete-context", "--", name}, Timeout: time.Minute}}
+	changes := []string{locales.KubeDeleteContextChange(name, file)}
+	var notes []Note
+	unsetCurrent := current == name
+	if unsetCurrent {
+		steps = append(steps, Step{Argv: []string{cli, "config", "unset", "current-context"}, Timeout: time.Minute, Note: locales.KubeDeleteContextUnset()})
+		notes = append(notes, Note{Title: locales.KubeDeleteContextCurrentNote(), Text: locales.KubeDeleteContextCurrentText(name)})
+		changes = append(changes, locales.KubeDeleteContextUnset())
+	}
+	if len(projects) > 0 {
+		notes = append(notes, Note{Title: locales.KindLinkedNote(strings.Join(projects, ", ")), Text: locales.KindLinkedNoteText()})
+	}
+	p := Plan{
+		Title:   locales.KubeDeleteContextTitle(name),
+		Why:     locales.KubeDeleteContextWhy(),
+		Action:  locales.KubeDeleteContextAction(),
+		Env:     append([]string{}, env...),
+		Steps:   steps,
+		Notes:   notes,
+		Changes: changes,
+	}
+	p.Verify = func(ctx context.Context) (string, error) {
+		res, err := r.Run(ctx, run.Cmd{Args: []string{cli, "config", "get-contexts", "-o", "name"}, Env: env, Timeout: time.Minute})
+		if err != nil {
+			return "", fmt.Errorf("list kubectl contexts: %w", err)
+		}
+		if res.Truncated {
+			return "", errors.New("list kubectl contexts: output too large")
+		}
+		if res.ExitCode != 0 {
+			msg := strings.TrimSpace(string(res.Stderr))
+			if msg == "" {
+				msg = fmt.Sprintf("exit %d", res.ExitCode)
+			}
+			return "", fmt.Errorf("list kubectl contexts: %s", msg)
+		}
+		for line := range strings.SplitSeq(string(res.Stdout), "\n") {
+			if strings.TrimSpace(line) == name {
+				return "", errors.New(locales.KubeDeleteContextStillThere(name))
+			}
+		}
+		if unsetCurrent {
+			cur, err := r.Run(ctx, run.Cmd{Args: []string{cli, "config", "current-context"}, Env: env, Timeout: time.Minute})
+			if err == nil && cur.ExitCode == 0 && strings.TrimSpace(string(cur.Stdout)) == name {
+				return "", errors.New(locales.KubeDeleteContextStillThere(name))
+			}
+		}
+		return locales.KubeDeleteContextDeleted(name), nil
+	}
+	return p, nil
 }

@@ -116,33 +116,36 @@ func (c *Cluster) readListEvents(ctx context.Context, r run.Runner, env sysenv.E
 // Resource holds metadata and the facts shown for its kind. ConfigMap list
 // entries keep key names, and the selected object's YAML provides its values.
 type Resource struct {
-	Kind                        ResourceKind
-	Namespace, Name, UID        string
-	Created                     time.Time
-	Deleting                    bool
-	Owner                       Owner
-	Desired, Ready, Updated     int
-	Service, Strategy, PodOrder string
-	Images                      []string
-	Selector                    map[string]string
-	podLabels                   map[string]string
-	IngressClass                string
-	Addresses, TLSSecrets       []string
-	Routes                      []IngressRoute
-	Ports                       []ServicePort
-	PolicyTypes                 []string
-	IngressRules, EgressRules   int
-	Keys                        []string
-	Immutable                   bool
-	Storage                     Storage
-	Node                        *Node
-	NamespaceInfo               *NamespaceInfo
-	Custom                      *CustomObject
-	Autoscaler                  *Autoscaler
-	Budget                      *DisruptionBudget
-	Quota                       *ResourceQuota
-	Limits                      []LimitRangeItem
-	RBAC                        *RBACDetails
+	Kind                         ResourceKind
+	Namespace, Name, UID         string
+	Created                      time.Time
+	Deleting                     bool
+	Owner                        Owner
+	Labels                       map[string]string
+	Desired, Ready, Updated      int
+	Service, Strategy, PodOrder  string
+	Images                       []string
+	Selector                     map[string]string
+	podLabels                    map[string]string
+	IngressClass                 string
+	Addresses, NotReadyAddresses []string
+	TLSSecrets                   []string
+	Routes                       []IngressRoute
+	Ports                        []ServicePort
+	endpointPods                 []Relationship
+	PolicyTypes                  []string
+	IngressRules, EgressRules    int
+	Keys                         []string
+	Immutable                    bool
+	Storage                      Storage
+	Node                         *Node
+	NamespaceInfo                *NamespaceInfo
+	Custom                       *CustomObject
+	Autoscaler                   *Autoscaler
+	Budget                       *DisruptionBudget
+	Quota                        *ResourceQuota
+	Limits                       []LimitRangeItem
+	RBAC                         *RBACDetails
 }
 
 // IngressRoute identifies the host and path routed to a backend Service.
@@ -218,8 +221,12 @@ type resourceObject struct {
 		}
 	}
 	Subsets []struct {
-		Addresses, NotReadyAddresses []struct{ IP string }
-		Ports                        []struct {
+		Addresses, NotReadyAddresses []struct {
+			IP        string
+			TargetRef struct{ Kind, Namespace, Name, UID string }
+		}
+		Ports []struct {
+			Name     string
 			Port     int
 			Protocol string
 		}
@@ -274,7 +281,7 @@ func ReadResources(ctx context.Context, r run.Runner, env sysenv.Env, t Target, 
 func (o resourceObject) resource(kind ResourceKind) Resource {
 	m := o.Metadata
 	r := Resource{Kind: kind, Namespace: m.Namespace, Name: m.Name, UID: m.UID, Created: m.CreationTimestamp,
-		Deleting: !m.DeletionTimestamp.IsZero(), Owner: o.controller()}
+		Deleting: !m.DeletionTimestamp.IsZero(), Owner: o.controller(), Labels: m.Labels}
 	switch kind {
 	case Roles, ClusterRoles, RoleBindings, ClusterRoleBindings:
 		r.RBAC = &o.RBACDetails
@@ -301,9 +308,29 @@ func (o resourceObject) resource(kind ResourceKind) Resource {
 			r.Desired += len(subset.Addresses) + len(subset.NotReadyAddresses)
 			for _, addr := range subset.Addresses {
 				r.Addresses = append(r.Addresses, addr.IP)
+				if addr.TargetRef.Kind == "Pod" && addr.TargetRef.Name != "" {
+					ns := addr.TargetRef.Namespace
+					if ns == "" {
+						ns = m.Namespace
+					}
+					r.endpointPods = append(r.endpointPods, Relationship{Kind: "Pod", Namespace: ns, Name: addr.TargetRef.Name, UID: addr.TargetRef.UID, Detail: addr.IP})
+				}
+			}
+			for _, addr := range subset.NotReadyAddresses {
+				r.NotReadyAddresses = append(r.NotReadyAddresses, addr.IP)
+				if addr.TargetRef.Kind == "Pod" && addr.TargetRef.Name != "" {
+					ns := addr.TargetRef.Namespace
+					if ns == "" {
+						ns = m.Namespace
+					}
+					r.endpointPods = append(r.endpointPods, Relationship{Kind: "Pod", Namespace: ns, Name: addr.TargetRef.Name, UID: addr.TargetRef.UID, Detail: addr.IP})
+				}
 			}
 			for _, port := range subset.Ports {
-				r.Ports = append(r.Ports, ServicePort{Port: port.Port, Protocol: port.Protocol})
+				sp := ServicePort{Name: port.Name, Port: port.Port, Protocol: port.Protocol}
+				if !slices.Contains(r.Ports, sp) {
+					r.Ports = append(r.Ports, sp)
+				}
 			}
 		}
 	case NetworkPolicies:
