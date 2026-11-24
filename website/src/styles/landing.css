@@ -262,13 +262,19 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
 
 /* Navbar */
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 40;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   background: color-mix(in srgb, var(--hearth-bg) 86%, transparent);
   border-bottom: 1px solid var(--hearth-border);
+}
+
+.navbar + main {
+  padding-top: 68px;
 }
 
 .navbar-inner {
@@ -2153,14 +2159,14 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
   .workflow-card,
   .safety-card,
   .mcp-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 1.75rem;
   }
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .install-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2174,7 +2180,7 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
     display: inline-flex;
   }
   .bento-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .footer-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2195,9 +2201,11 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
 }
 
 @media (max-width: 640px) {
-  html,
-  body {
+  body:not([data-scroll-lock]) {
     overflow-x: clip;
+  }
+  .navbar + main {
+    padding-top: 60px;
   }
   .navbar-inner {
     height: 60px;
@@ -2260,6 +2268,14 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .workflow-tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+  .workflow-tab-trigger {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .workflow-card,
   .safety-card,
