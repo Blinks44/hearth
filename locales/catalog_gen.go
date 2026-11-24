@@ -356,6 +356,28 @@ func (msgs Messages) DockerHelperFix() string {
 	return Catalog.Format(msgs.locale, "dockerHelperFix", nil)
 }
 
+// DockerHelperInstall says "Install…"
+// in the language the app shows.
+func DockerHelperInstall() string { return In(i18n.Locale()).DockerHelperInstall() }
+
+// DockerHelperInstall says "Install…"
+// in the language of msgs.
+func (msgs Messages) DockerHelperInstall() string {
+	return Catalog.Format(msgs.locale, "dockerHelperInstall", nil)
+}
+
+// DockerHelperInstallWhy says "Install {helper} through {manager} so Docker can use the configured credential store."
+// in the language the app shows.
+func DockerHelperInstallWhy(helper string, manager string) string {
+	return In(i18n.Locale()).DockerHelperInstallWhy(helper, manager)
+}
+
+// DockerHelperInstallWhy says "Install {helper} through {manager} so Docker can use the configured credential store."
+// in the language of msgs.
+func (msgs Messages) DockerHelperInstallWhy(helper string, manager string) string {
+	return Catalog.Format(msgs.locale, "dockerHelperInstallWhy", map[string]any{"helper": helper, "manager": manager})
+}
+
 // DockerHelperChanged says "Docker's configuration or available credential helpers changed. Scan again and review the result."
 // in the language the app shows.
 func DockerHelperChanged() string { return In(i18n.Locale()).DockerHelperChanged() }
@@ -426,6 +448,148 @@ func DockerBrokenPlugin(plugin string) string { return In(i18n.Locale()).DockerB
 // in the language of msgs.
 func (msgs Messages) DockerBrokenPlugin(plugin string) string {
 	return Catalog.Format(msgs.locale, "dockerBrokenPlugin", map[string]any{"plugin": plugin})
+}
+
+// DockerBrokenPluginRemove says "Remove link…"
+// in the language the app shows.
+func DockerBrokenPluginRemove() string { return In(i18n.Locale()).DockerBrokenPluginRemove() }
+
+// DockerBrokenPluginRemove says "Remove link…"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginRemove() string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginRemove", nil)
+}
+
+// DockerBrokenPluginRemoveTitle says "Remove broken plugin link {plugin}"
+// in the language the app shows.
+func DockerBrokenPluginRemoveTitle(plugin string) string {
+	return In(i18n.Locale()).DockerBrokenPluginRemoveTitle(plugin)
+}
+
+// DockerBrokenPluginRemoveTitle says "Remove broken plugin link {plugin}"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginRemoveTitle(plugin string) string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginRemoveTitle", map[string]any{"plugin": plugin})
+}
+
+// DockerBrokenPluginRemoveWhy says "Removes the broken symlink in cli-plugins. Plugins installed elsewhere are not touched."
+// in the language the app shows.
+func DockerBrokenPluginRemoveWhy() string { return In(i18n.Locale()).DockerBrokenPluginRemoveWhy() }
+
+// DockerBrokenPluginRemoveWhy says "Removes the broken symlink in cli-plugins. Plugins installed elsewhere are not touched."
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginRemoveWhy", nil)
+}
+
+// DockerBrokenPluginRemoveAction says "Remove link"
+// in the language the app shows.
+func DockerBrokenPluginRemoveAction() string {
+	return In(i18n.Locale()).DockerBrokenPluginRemoveAction()
+}
+
+// DockerBrokenPluginRemoveAction says "Remove link"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginRemoveAction() string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginRemoveAction", nil)
+}
+
+// DockerBrokenPluginChanged says "The plugin link is no longer a broken symlink. Scan again and review the result."
+// in the language the app shows.
+func DockerBrokenPluginChanged() string { return In(i18n.Locale()).DockerBrokenPluginChanged() }
+
+// DockerBrokenPluginChanged says "The plugin link is no longer a broken symlink. Scan again and review the result."
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginChanged() string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginChanged", nil)
+}
+
+// DockerBrokenPluginRemoved says "Broken plugin link {plugin} removed"
+// in the language the app shows.
+func DockerBrokenPluginRemoved(plugin string) string {
+	return In(i18n.Locale()).DockerBrokenPluginRemoved(plugin)
+}
+
+// DockerBrokenPluginRemoved says "Broken plugin link {plugin} removed"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginRemoved(plugin string) string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginRemoved", map[string]any{"plugin": plugin})
+}
+
+// DockerBrokenPluginStillThere says "Broken plugin link {plugin} is still present"
+// in the language the app shows.
+func DockerBrokenPluginStillThere(plugin string) string {
+	return In(i18n.Locale()).DockerBrokenPluginStillThere(plugin)
+}
+
+// DockerBrokenPluginStillThere says "Broken plugin link {plugin} is still present"
+// in the language of msgs.
+func (msgs Messages) DockerBrokenPluginStillThere(plugin string) string {
+	return Catalog.Format(msgs.locale, "dockerBrokenPluginStillThere", map[string]any{"plugin": plugin})
+}
+
+// DockerContextRemove says "Remove context…"
+// in the language the app shows.
+func DockerContextRemove() string { return In(i18n.Locale()).DockerContextRemove() }
+
+// DockerContextRemove says "Remove context…"
+// in the language of msgs.
+func (msgs Messages) DockerContextRemove() string {
+	return Catalog.Format(msgs.locale, "dockerContextRemove", nil)
+}
+
+// DockerContextRemoveTitle says "Remove Docker context {name}"
+// in the language the app shows.
+func DockerContextRemoveTitle(name string) string {
+	return In(i18n.Locale()).DockerContextRemoveTitle(name)
+}
+
+// DockerContextRemoveTitle says "Remove Docker context {name}"
+// in the language of msgs.
+func (msgs Messages) DockerContextRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "dockerContextRemoveTitle", map[string]any{"name": name})
+}
+
+// DockerContextRemoveWhy says "docker context rm: removes the saved Docker CLI context without deleting engines or containers."
+// in the language the app shows.
+func DockerContextRemoveWhy() string { return In(i18n.Locale()).DockerContextRemoveWhy() }
+
+// DockerContextRemoveWhy says "docker context rm: removes the saved Docker CLI context without deleting engines or containers."
+// in the language of msgs.
+func (msgs Messages) DockerContextRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "dockerContextRemoveWhy", nil)
+}
+
+// DockerContextRemoveAction says "Remove context"
+// in the language the app shows.
+func DockerContextRemoveAction() string { return In(i18n.Locale()).DockerContextRemoveAction() }
+
+// DockerContextRemoveAction says "Remove context"
+// in the language of msgs.
+func (msgs Messages) DockerContextRemoveAction() string {
+	return Catalog.Format(msgs.locale, "dockerContextRemoveAction", nil)
+}
+
+// DockerContextRemoved says "Context {name} removed"
+// in the language the app shows.
+func DockerContextRemoved(name string) string { return In(i18n.Locale()).DockerContextRemoved(name) }
+
+// DockerContextRemoved says "Context {name} removed"
+// in the language of msgs.
+func (msgs Messages) DockerContextRemoved(name string) string {
+	return Catalog.Format(msgs.locale, "dockerContextRemoved", map[string]any{"name": name})
+}
+
+// DockerContextStillThere says "Context {name} is still present"
+// in the language the app shows.
+func DockerContextStillThere(name string) string {
+	return In(i18n.Locale()).DockerContextStillThere(name)
+}
+
+// DockerContextStillThere says "Context {name} is still present"
+// in the language of msgs.
+func (msgs Messages) DockerContextStillThere(name string) string {
+	return Catalog.Format(msgs.locale, "dockerContextStillThere", map[string]any{"name": name})
 }
 
 // DockerOpenFolder says "Open folder"

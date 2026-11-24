@@ -33,6 +33,7 @@ Non-negotiable product rules backed by automated tests. Every change must preser
 - Normal container stops (`SIGTERM` 143, `SIGINT` 130, `SIGKILL` 137 without `OOMKilled`) and stale `unhealthy` states on stopped containers are not flagged as crashes - test: `internal/docker/containers_test.go`
 - Image, volume, and network removals verify targets before running, block removal when attached even to stopped containers, and protect `bridge`/`host`/`none` networks - test: `internal/ops/docker_images_test.go`, `internal/ops/docker_resources_test.go`
 - Colima install plans preserve existing Docker settings with backup, install standalone Docker CLI if needed, and on Linux Hearth prefers native distro Docker Engine - test: `internal/ops/colima_test.go`
+- Removing a Docker context blocks the active and built-in `default` contexts; removing a broken plugin link verifies in `Before` that the target is still a dangling symlink inside `cli-plugins` - test: `internal/ops/docker_test.go`, `internal/ops/docker_plugins_test.go`, `internal/ui/docker_test.go`, `internal/ui/docker_health_test.go`
 - Database connection strings never contain passwords; MySQL and MariaDB are never offered side-by-side; toggling autostart does not start or stop a running service - test: `internal/ui/databases_test.go`, `internal/ops/service_test.go`
 
 ## Kubernetes

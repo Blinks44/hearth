@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func dockerSnapshot() *inventory.Snapshot {
@@ -137,6 +138,38 @@ func TestDockerOperations(t *testing.T) {
 		t.Fatalf("plan %+v", a.op)
 	}
 	screenshot(t, tt, "docker-install")
+}
+
+func TestDockerContextRemoveUI(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = dockerSnapshot()
+	d := a.Snapshot.Tools[0].Docker
+	d.Selected = "colima"
+	d.Contexts = []inventory.DockerContext{
+		{Name: "colima", Endpoint: "unix://" + home + "/.colima/default/docker.sock", Engine: "Colima", Status: "available", Local: true},
+		{Name: "default", Endpoint: "unix:///var/run/docker.sock", Local: true},
+		{Name: "orbstack", Endpoint: "unix://" + home + "/.orbstack/run/docker.sock", Engine: "OrbStack", Local: true},
+	}
+	tt := openDocker(a)
+
+	// Open the third context row's "More" menu (orbstack) via context menu on its text.
+	if _, ok := a.contextRemovePlan("colima"); ok {
+		t.Fatal("active context must not be removable")
+	}
+	if _, ok := a.contextRemovePlan("default"); ok {
+		t.Fatal("default context must not be removable")
+	}
+	if err := tt.RightClick("orbstack"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem(locales.DockerContextRemove()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	want := []string{"/opt/homebrew/bin/docker", "context", "rm", "orbstack"}
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Argv, want) {
+		t.Fatalf("plan = %+v, want %q", a.op, want)
+	}
 }
 
 // Kiri is in no system manager: its row opens the maker's page, and an

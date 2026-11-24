@@ -119,6 +119,40 @@ func TestContextPlan(t *testing.T) {
 	}
 }
 
+func TestContextRemovePlan(t *testing.T) {
+	contexts := func(names ...string) Detect {
+		return func(context.Context) (inventory.ToolState, error) {
+			var list []inventory.DockerContext
+			for _, name := range names {
+				list = append(list, inventory.DockerContext{Name: name})
+			}
+			return inventory.ToolState{Docker: &inventory.DockerState{Contexts: list}}, nil
+		}
+	}
+	p, ok := ContextRemovePlan("/opt/homebrew/bin/docker", "orbstack", contexts("colima", "default"))
+	if !ok {
+		t.Fatal("no plan")
+	}
+	if want := []string{"/opt/homebrew/bin/docker", "context", "rm", "orbstack"}; len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, want) {
+		t.Errorf("steps = %+v, want %q", p.Steps, want)
+	}
+	if _, err := p.Verify(context.Background()); err != nil {
+		t.Errorf("Verify: %v", err)
+	}
+	p, _ = ContextRemovePlan("/opt/homebrew/bin/docker", "orbstack", contexts("colima", "orbstack"))
+	if _, err := p.Verify(context.Background()); err == nil {
+		t.Error("Verify passed while context was still present")
+	}
+	for _, name := range []string{"", "default", "-f", "a b"} {
+		if _, ok := ContextRemovePlan("/opt/homebrew/bin/docker", name, nil); ok {
+			t.Errorf("plan accepted forbidden context %q", name)
+		}
+	}
+	if _, ok := ContextRemovePlan("", "orbstack", nil); ok {
+		t.Error("plan without a CLI")
+	}
+}
+
 func TestEngineSwitchPlan(t *testing.T) {
 	apt := inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}
 	p, ok := EngineSwitchPlan("Docker Engine", apt, true, nil)

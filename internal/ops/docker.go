@@ -164,6 +164,40 @@ func ContextPlan(cli, from, to string, detect Detect) (p Plan, ok bool) {
 	return p, true
 }
 
+// ContextRemovePlan returns the plan that deletes an inactive Docker CLI
+// context through cli. ok is false for the built-in default context or an
+// invalid context name.
+func ContextRemovePlan(cli, name string, detect Detect) (p Plan, ok bool) {
+	if cli == "" || name == "default" || !contextRef.MatchString(name) {
+		return Plan{}, false
+	}
+	p = Plan{
+		Title:   locales.DockerContextRemoveTitle(name),
+		Why:     locales.DockerContextRemoveWhy(),
+		Action:  locales.DockerContextRemoveAction(),
+		Steps:   []Step{{Argv: []string{cli, "context", "rm", name}, Timeout: time.Minute}},
+		Changes: []string{"docker context: − " + name},
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			st, err := detect(ctx)
+			if err != nil {
+				return "", err
+			}
+			if st.Docker == nil {
+				return "", errors.New(locales.DockerContextStillThere(name))
+			}
+			for _, c := range st.Docker.Contexts {
+				if c.Name == name {
+					return "", errors.New(locales.DockerContextStillThere(name))
+				}
+			}
+			return locales.DockerContextRemoved(name), nil
+		}
+	}
+	return p, true
+}
+
 // selectedContext is st's context name when it is the one selected.
 func selectedContext(st inventory.ToolState, name string) (inventory.DockerContext, bool) {
 	if st.Docker == nil || st.Docker.Selected != name {

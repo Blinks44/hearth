@@ -18,6 +18,8 @@ type dockerHealthRow struct {
 	key, title, detail string
 	action             func()
 	button             string
+	secondaryAction    func()
+	secondaryButton    string
 	danger             bool
 }
 
@@ -44,6 +46,14 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 					return ops.DockerCredentialPlan(env, d.ConfigDir, issue)
 				}, a.proposeOrSay)
 			}
+		} else if plan, ok := a.credentialHelperInstallPlan(issue.Name); ok && !a.op.running() {
+			row.button = locales.DockerHelperInstall()
+			row.action = func() { a.Propose(plan) }
+			if a.canOpenFile() {
+				path := filepath.Join(d.ConfigDir, "config.json")
+				row.secondaryButton = locales.OpenInEditor()
+				row.secondaryAction = func() { a.openFile(c, path) }
+			}
 		} else if a.canOpenFile() {
 			path := filepath.Join(d.ConfigDir, "config.json")
 			row.button = locales.OpenInEditor()
@@ -53,13 +63,25 @@ func (a *App) dockerHealthCard(c *ui.Context, st inventory.ToolState, context st
 	}
 	for _, file := range d.BrokenPlugins {
 		row := dockerHealthRow{key: "plugin:" + file, title: locales.DockerBrokenPlugin(file), detail: tilde(d.PluginDir, a.Home)}
-		if a.Shell != nil {
-			row.button = locales.DockerOpenFolder()
-			row.action = func() {
-				if err := a.Shell.OpenPath(d.PluginDir); err != nil {
-					c.Toast(locales.OpenFailed(tilde(d.PluginDir, a.Home), err.Error()))
-				}
+		openFolder := func() {
+			if err := a.Shell.OpenPath(d.PluginDir); err != nil {
+				c.Toast(locales.OpenFailed(tilde(d.PluginDir, a.Home), err.Error()))
 			}
+		}
+		if a.canPlanDocker() && filepath.IsAbs(d.PluginDir) {
+			row.button = locales.DockerBrokenPluginRemove()
+			row.action = func() {
+				a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+					return ops.DockerRemoveBrokenPluginPlan(env, d.PluginDir, file, a.detect("docker"))
+				}, a.proposeOrSay)
+			}
+			if a.Shell != nil {
+				row.secondaryButton = locales.DockerOpenFolder()
+				row.secondaryAction = openFolder
+			}
+		} else if a.Shell != nil {
+			row.button = locales.DockerOpenFolder()
+			row.action = openFolder
 		}
 		rows = append(rows, row)
 	}
@@ -166,9 +188,12 @@ func dockerHealthRowView(c *ui.Context, row dockerHealthRow, divider bool) {
 				ui.Text(c, row.detail).FontSize(11.5).TextColor(c.Theme().TextMuted).Wrap()
 			})
 		})
-		if row.action != nil {
-			ui.Row(c).Padding(0, 0, 0, 23).Children(func() {
+		if row.action != nil || row.secondaryAction != nil {
+			ui.Row(c).Padding(0, 0, 0, 23).Gap(8).Wrap().Children(func() {
 				dockerHealthButton(c, row)
+				if row.secondaryAction != nil {
+					ui.Button(c.Key("secondary"), row.secondaryButton).Height(24).Shrink(0).OnClick(row.secondaryAction)
+				}
 			})
 		}
 	})

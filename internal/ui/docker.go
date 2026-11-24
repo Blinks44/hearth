@@ -207,6 +207,7 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 	pal := Colors(c.Theme())
 	selected := k.Name == d.Selected
 	plan, canUse := a.contextPlan(k.Name)
+	removePlan, canRemove := a.contextRemovePlan(k.Name)
 	menu := func(m *ui.Menu) {
 		if canUse && m.Item(locales.DockerUseContext()).Chosen() {
 			a.Propose(plan)
@@ -214,6 +215,14 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 		if k.Local && m.Item(locales.CopyPath()).Chosen() {
 			c.WriteClipboard(k.Endpoint)
 			c.Toast(locales.PathCopied())
+		}
+		if canRemove {
+			if canUse || k.Local {
+				m.Separator()
+			}
+			if m.Item(locales.DockerContextRemove()).Chosen() {
+				a.Propose(removePlan)
+			}
 		}
 	}
 	row := ui.Row(c).Gap(10).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).ContextMenu(menu)
@@ -251,7 +260,7 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 		if a.dockerOpenable(k.Name) {
 			ui.Button(c.Key("open"), locales.KubeClusterOpen()).OnClick(func() { a.router.Push(dockerEnginePath(k.Name)) })
 		}
-		if canUse || k.Local {
+		if canUse || k.Local || canRemove {
 			iconButton(c, "ellipsis", locales.MoreActions()).Menu(menu)
 		}
 	})
@@ -507,6 +516,35 @@ func (a *App) contextPlan(name string) (ops.Plan, bool) {
 		return ops.Plan{}, false
 	}
 	return ops.ContextPlan(st.Installations[active].Path, st.Docker.Selected, name, a.detect("docker"))
+}
+
+// contextRemovePlan is the plan that removes an inactive non-default Docker
+// CLI context through the terminal's CLI.
+func (a *App) contextRemovePlan(name string) (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("docker")
+	if !ok || st.Docker == nil || name == "default" || name == st.Docker.Selected {
+		return ops.Plan{}, false
+	}
+	active := inventory.TerminalCopy(st.Installations)
+	if active < 0 || st.Installations[active].Source.Shim {
+		return ops.Plan{}, false
+	}
+	return ops.ContextRemovePlan(st.Installations[active].Path, name, a.detect("docker"))
+}
+
+// credentialHelperInstallPlan returns a package manager installation plan for
+// a missing Docker credential helper when a supported package manager is found.
+func (a *App) credentialHelperInstallPlan(helper string) (ops.Plan, bool) {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok {
+		return ops.Plan{}, false
+	}
+	for _, m := range st.PackageManagers {
+		if p, ok := ops.DockerCredentialHelperInstallPlan(helper, m, a.reread(m)); ok {
+			return p, true
+		}
+	}
+	return ops.Plan{}, false
 }
 
 // engineInstallPlan is the plan that installs engine through the first

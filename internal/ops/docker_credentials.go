@@ -98,3 +98,19 @@ func dockerJSONValue(text, key string, fold bool) (start, end int, found bool) {
 	}
 	return start, end, found
 }
+
+// DockerCredentialHelperInstallPlan returns a package manager installation
+// plan for a missing Docker credential helper when Hearth knows the owning
+// package. Currently supports osxkeychain via Homebrew's docker-credential-helper.
+func DockerCredentialHelperInstallPlan(helper string, m inventory.PackageManager, reread Reread) (Plan, bool) {
+	if helper != "osxkeychain" || m.ID != "brew" {
+		return Plan{}, false
+	}
+	pkg := inventory.SystemPackage{Name: "docker-credential-helper", Kind: "formula"}
+	p, ok := PackagePlan(PackageInstall, m, []inventory.SystemPackage{pkg}, reread)
+	if !ok {
+		return Plan{}, false
+	}
+	p.Why = locales.DockerHelperInstallWhy("docker-credential-"+helper, m.Name)
+	return p, true
+}

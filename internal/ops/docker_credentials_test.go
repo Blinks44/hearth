@@ -83,3 +83,33 @@ func TestDockerCredentialPlan(t *testing.T) {
 		})
 	}
 }
+
+func TestDockerCredentialHelperInstallPlan(t *testing.T) {
+	t.Parallel()
+	brew := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
+	apt := inventory.PackageManager{ID: "apt", Name: "APT", Path: "/usr/bin/apt"}
+	p, ok := DockerCredentialHelperInstallPlan("osxkeychain", brew, nil)
+	if !ok {
+		t.Fatal("expected Homebrew install plan for osxkeychain")
+	}
+	want := []string{"/opt/homebrew/bin/brew", "install", "--formula", "docker-credential-helper"}
+	if len(p.Steps) != 1 || strings.Join(p.Steps[0].Argv, " ") != strings.Join(want, " ") {
+		t.Fatalf("steps = %+v, want %q", p.Steps, want)
+	}
+	if !strings.Contains(p.Why, "docker-credential-osxkeychain") {
+		t.Errorf("Why = %q, want mention of docker-credential-osxkeychain", p.Why)
+	}
+	for _, tc := range []struct {
+		helper string
+		m      inventory.PackageManager
+	}{
+		{"desktop", brew},
+		{"pass", brew},
+		{"", brew},
+		{"osxkeychain", apt},
+	} {
+		if _, ok := DockerCredentialHelperInstallPlan(tc.helper, tc.m, nil); ok {
+			t.Errorf("unexpected plan for helper %q on %q", tc.helper, tc.m.ID)
+		}
+	}
+}

@@ -147,3 +147,66 @@ func TestDockerDefaultSocketLinkPlan(t *testing.T) {
 		t.Fatalf("symlink argv = %q, want %q", a.op.plan.Steps[0].Argv, wantArgv)
 	}
 }
+
+func TestDockerHealthCleanupActions(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = colimaSnapshot()
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{
+		Tool:            "packages",
+		PackageManagers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}},
+	})
+	d := a.Snapshot.Tools[0].Docker
+	d.ConfigDir = filepath.Join(t.TempDir(), ".docker")
+	d.PluginDir = filepath.Join(d.ConfigDir, "cli-plugins")
+	d.CredentialIssues = []inventory.DockerCredentialIssue{{Name: "osxkeychain"}}
+	d.BrokenPlugins = []string{"docker-compose"}
+	a.Shell = &fakeShell{}
+	var removePluginBuilt bool
+	a.BuildPlan = func(_ func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		removePluginBuilt = true
+		done(ops.Plan{
+			Title: locales.DockerBrokenPluginRemoveTitle("docker-compose"),
+			Steps: []ops.Step{{Remove: filepath.Join(d.PluginDir, "docker-compose")}},
+		}, nil)
+	}
+	a.router.Push(dockerPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	for _, size := range [][2]int{{1000, 680}, {1280, 820}} {
+		tt.SetSize(size[0], size[1])
+		tt.Advance(time.Second)
+		for _, want := range []string{
+			locales.DockerHelperInstall(),
+			locales.OpenInEditor(),
+			locales.DockerBrokenPluginRemove(),
+			locales.DockerOpenFolder(),
+		} {
+			if !tt.HasText(want) {
+				t.Fatalf("at %v missing %q in %v", size, want, tt.Texts())
+			}
+		}
+	}
+
+	if err := tt.Click(locales.DockerHelperInstall()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	wantInstall := []string{"/opt/homebrew/bin/brew", "install", "--formula", "docker-credential-helper"}
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Argv, wantInstall) {
+		t.Fatalf("install plan = %+v, want %q", a.op, wantInstall)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+
+	if err := tt.Click(locales.DockerBrokenPluginRemove()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !removePluginBuilt || a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || a.op.plan.Steps[0].Remove != filepath.Join(d.PluginDir, "docker-compose") {
+		t.Fatalf("remove plugin plan = %+v (built=%v)", a.op, removePluginBuilt)
+	}
+}
