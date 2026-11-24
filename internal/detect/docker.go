@@ -94,6 +94,7 @@ func detectDocker(ctx context.Context, r run.Runner, term, gui sysenv.Env, engin
 		}
 		d.Colima = colima
 	}
+	d.Service = detectDockerService(ctx, r, term, engines)
 	st := inventory.ToolState{Tool: "docker", Installations: f.ins, Docker: d}
 	for i := range st.Installations {
 		in := &st.Installations[i]

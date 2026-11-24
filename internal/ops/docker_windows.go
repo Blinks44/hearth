@@ -1,6 +1,10 @@
 package ops
 
-import "time"
+import (
+	"time"
+
+	"github.com/Blinks44/hearth/internal/inventory"
+)
 
 // startScript starts the program in HEARTH_PROGRAM and does not wait for
 // it: a desktop app keeps running. The script is fixed: the path comes in
@@ -22,4 +26,8 @@ func engineStart(e Engine) []Step {
 		return []Step{{Argv: []string{e.Path, "machine", "start"}}}
 	}
 	return nil
+}
+
+func dockerServiceStep(DockerServiceAction, inventory.DockerServiceState) (Step, bool) {
+	return Step{}, false
 }

@@ -1,11 +1,13 @@
 package detect
 
 import (
+	"context"
 	"path/filepath"
 	"slices"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
@@ -54,5 +56,62 @@ func TestDockerJoined(t *testing.T) {
 		if got := dockerJoined(user); got != want {
 			t.Errorf("dockerJoined(%q) = %v", user, got)
 		}
+	}
+}
+
+func TestDetectDockerServiceLinux(t *testing.T) {
+	home := root(t)
+	bin := filepath.Join(home, "bin")
+	systemctl := fakeExe(t, filepath.Join(bin, "systemctl"))
+	env := sysenv.Env{"PATH=" + bin}
+	engines := []inventory.DockerEngine{{Name: "Docker Engine", Path: "/usr/bin/dockerd"}}
+
+	tests := []struct {
+		name   string
+		stdout string
+		want   *inventory.DockerServiceState
+	}{
+		{
+			name: "active and enabled with socket",
+			stdout: "Id=docker.service\nLoadState=loaded\nActiveState=active\nUnitFileState=enabled\n\n" +
+				"Id=docker.socket\nLoadState=loaded\nActiveState=active\nUnitFileState=enabled\n",
+			want: &inventory.DockerServiceState{Unit: "docker.service", SocketUnit: "docker.socket", Status: "running", Autostart: "on"},
+		},
+		{
+			name: "stopped and disabled with socket",
+			stdout: "Id=docker.service\nLoadState=loaded\nActiveState=inactive\nUnitFileState=disabled\n\n" +
+				"Id=docker.socket\nLoadState=loaded\nActiveState=inactive\nUnitFileState=disabled\n",
+			want: &inventory.DockerServiceState{Unit: "docker.service", SocketUnit: "docker.socket", Status: "stopped", Autostart: "off"},
+		},
+		{
+			name: "socket still enabled keeps autostart on",
+			stdout: "Id=docker.service\nLoadState=loaded\nActiveState=inactive\nUnitFileState=disabled\n\n" +
+				"Id=docker.socket\nLoadState=loaded\nActiveState=active\nUnitFileState=enabled\n",
+			want: &inventory.DockerServiceState{Unit: "docker.service", SocketUnit: "docker.socket", Status: "stopped", Autostart: "on"},
+		},
+		{
+			name: "service without socket",
+			stdout: "Id=docker.service\nLoadState=loaded\nActiveState=failed\nUnitFileState=disabled\n\n" +
+				"Id=docker.socket\nLoadState=not-found\nActiveState=inactive\nUnitFileState=\n",
+			want: &inventory.DockerServiceState{Unit: "docker.service", Status: "error", Autostart: "off"},
+		},
+		{
+			name:   "unit not installed",
+			stdout: "Id=docker.service\nLoadState=not-found\nActiveState=inactive\nUnitFileState=\n",
+			want:   nil,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &run.Fake{}
+			r.Stdout(tc.stdout, systemctl, "show", "--property=Id,LoadState,ActiveState,UnitFileState", "docker.service", "docker.socket")
+			got := detectDockerService(context.Background(), r, env, engines)
+			if (got == nil) != (tc.want == nil) || (got != nil && *got != *tc.want) {
+				t.Fatalf("got = %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+	if got := detectDockerService(context.Background(), &run.Fake{}, env, []inventory.DockerEngine{{Name: "Docker Engine"}}); got != nil {
+		t.Fatalf("without dockerd: got %+v, want nil", got)
 	}
 }

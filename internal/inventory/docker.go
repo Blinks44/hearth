@@ -16,7 +16,8 @@ type DockerState struct {
 	Err                string
 	Engines            []DockerEngine
 	Plugins            []Package
-	Colima             *ColimaState `json:",omitempty"`
+	Colima             *ColimaState        `json:",omitempty"`
+	Service            *DockerServiceState `json:",omitempty"`
 	// Databases are the database containers of the selected engine, once
 	// it answered; DatabaseErr reports that they could not all be listed.
 	Databases   []Database
@@ -94,4 +95,12 @@ type DockerHealth struct {
 
 type DockerEmulatedContainer struct {
 	ID, Name, ImageArch, EngineArch string
+}
+
+// DockerServiceState describes a native Linux Docker Engine systemd service.
+type DockerServiceState struct {
+	Unit       string // e.g. "docker.service"
+	SocketUnit string `json:",omitempty"` // e.g. "docker.socket" when present
+	Status     string // "running", "stopped", "error", or ""
+	Autostart  string // "on", "off", or ""
 }

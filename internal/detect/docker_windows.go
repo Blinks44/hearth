@@ -1,9 +1,11 @@
 package detect
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
@@ -42,3 +44,7 @@ func dockerLocations(env sysenv.Env, home string) ([]inventory.DockerEngine, []s
 
 // dockerJoined: the docker group is Linux's.
 func dockerJoined(string) bool { return false }
+
+func detectDockerService(context.Context, run.Runner, sysenv.Env, []inventory.DockerEngine) *inventory.DockerServiceState {
+	return nil
+}

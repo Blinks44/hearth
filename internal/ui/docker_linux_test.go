@@ -88,3 +88,67 @@ func TestDockerLinuxKiriServiceAndSwitchNotes(t *testing.T) {
 		}
 	}
 }
+
+func TestDockerLinuxServiceCard(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "docker",
+		Installations: []inventory.Installation{
+			{Tool: "docker", Version: "28.0.1", Path: "/usr/bin/docker", OnPath: 1},
+		},
+		Docker: &inventory.DockerState{
+			Selected: "default",
+			Contexts: []inventory.DockerContext{{Name: "default", Endpoint: "unix:///var/run/docker.sock", Local: true, Status: "available"}},
+			Engines:  []inventory.DockerEngine{{Name: "Docker Engine", Path: "/usr/bin/dockerd"}},
+			Service: &inventory.DockerServiceState{
+				Unit:       "docker.service",
+				SocketUnit: "docker.socket",
+				Status:     "running",
+				Autostart:  "on",
+			},
+		},
+	}}}
+	tt := openDocker(a)
+	hasTexts(t, tt,
+		"Docker Engine",
+		"docker.service",
+		locales.ColimaAutostartOn(),
+		locales.DockerServiceAutostartOnHint(),
+		locales.DockerServiceRunning(),
+		locales.PortsStop(),
+	)
+
+	if err := tt.Click(locales.ColimaDisable()); err != nil {
+		t.Fatal(err)
+	}
+	wantDisable := []string{"systemctl", "disable", "docker.service", "docker.socket"}
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Argv, wantDisable) {
+		t.Fatalf("disable plan = %+v, want %q", a.op, wantDisable)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tt.Click(locales.PortsStop()); err != nil {
+		t.Fatal(err)
+	}
+	wantStop := []string{"systemctl", "stop", "docker.socket", "docker.service"}
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Argv, wantStop) {
+		t.Fatalf("stop plan = %+v, want %q", a.op, wantStop)
+	}
+	if err := tt.Click(locales.Cancel()); err != nil {
+		t.Fatal(err)
+	}
+
+	a.Snapshot.Tools[0].Docker.Service.Status = "stopped"
+	a.Snapshot.Tools[0].Docker.Service.Autostart = "off"
+	tt = openDocker(a)
+	hasTexts(t, tt, locales.ColimaAutostartOff(), locales.DockerServiceStopped(), locales.SetupStart())
+	if err := tt.Click(locales.SetupStart()); err != nil {
+		t.Fatal(err)
+	}
+	wantStart := []string{"systemctl", "start", "docker.service"}
+	if a.op == nil || a.op.started || len(a.op.plan.Steps) != 1 || !slices.Equal(a.op.plan.Steps[0].Argv, wantStart) {
+		t.Fatalf("start plan = %+v, want %q", a.op, wantStart)
+	}
+}

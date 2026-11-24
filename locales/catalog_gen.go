@@ -972,6 +972,46 @@ func (msgs Messages) ColimaAutostartOnHint() string {
 	return Catalog.Format(msgs.locale, "colimaAutostartOnHint", nil)
 }
 
+// DockerServiceAutostartOnHint says "systemd starts Docker Engine at boot."
+// in the language the app shows.
+func DockerServiceAutostartOnHint() string { return In(i18n.Locale()).DockerServiceAutostartOnHint() }
+
+// DockerServiceAutostartOnHint says "systemd starts Docker Engine at boot."
+// in the language of msgs.
+func (msgs Messages) DockerServiceAutostartOnHint() string {
+	return Catalog.Format(msgs.locale, "dockerServiceAutostartOnHint", nil)
+}
+
+// DockerServiceRunning says "Docker Engine is running"
+// in the language the app shows.
+func DockerServiceRunning() string { return In(i18n.Locale()).DockerServiceRunning() }
+
+// DockerServiceRunning says "Docker Engine is running"
+// in the language of msgs.
+func (msgs Messages) DockerServiceRunning() string {
+	return Catalog.Format(msgs.locale, "dockerServiceRunning", nil)
+}
+
+// DockerServiceStopped says "Docker Engine is stopped"
+// in the language the app shows.
+func DockerServiceStopped() string { return In(i18n.Locale()).DockerServiceStopped() }
+
+// DockerServiceStopped says "Docker Engine is stopped"
+// in the language of msgs.
+func (msgs Messages) DockerServiceStopped() string {
+	return Catalog.Format(msgs.locale, "dockerServiceStopped", nil)
+}
+
+// DockerServiceError says "Docker Engine service failed"
+// in the language the app shows.
+func DockerServiceError() string { return In(i18n.Locale()).DockerServiceError() }
+
+// DockerServiceError says "Docker Engine service failed"
+// in the language of msgs.
+func (msgs Messages) DockerServiceError() string {
+	return Catalog.Format(msgs.locale, "dockerServiceError", nil)
+}
+
 // ColimaRestoreAutostart says "Homebrew temporarily stops the service and re-enables autostart after the new limits are applied."
 // in the language the app shows.
 func ColimaRestoreAutostart() string { return In(i18n.Locale()).ColimaRestoreAutostart() }
