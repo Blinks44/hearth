@@ -90,7 +90,8 @@ export function WorkflowShowcase({
     ai: true,
   })
   const [setupPlanned, setSetupPlanned] = useState(false)
-  const [lightboxTab, setLightboxTab] = useState<WorkflowTabId | null>(null)
+  const [lightboxTab, setLightboxTab] = useState<WorkflowTabId>('projects')
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const totalGb = CLEANUP_GROUPS.reduce((sum, g) => sum + g.gb, 0)
   const selectedGb = CLEANUP_GROUPS.reduce(
@@ -651,12 +652,8 @@ export function WorkflowShowcase({
     }
   }
 
-  const lightboxShot = lightboxTab
-    ? `/screenshots/${SCREENSHOT_BY_TAB[lightboxTab]}-${theme}.webp`
-    : null
-  const lightboxTitle = lightboxTab
-    ? tabs.find((t) => t.id === lightboxTab)?.label ?? ''
-    : ''
+  const lightboxShot = `/screenshots/${SCREENSHOT_BY_TAB[lightboxTab]}-${theme}.webp`
+  const lightboxTitle = tabs.find((t) => t.id === lightboxTab)?.label ?? ''
 
   return (
     <section id="features" className="workflows-section" data-reveal>
@@ -699,7 +696,10 @@ export function WorkflowShowcase({
                   <button
                     type="button"
                     className="workflow-screen-link"
-                    onClick={() => setLightboxTab(tab.id)}
+                    onClick={() => {
+                      setLightboxTab(tab.id)
+                      setLightboxOpen(true)
+                    }}
                   >
                     <ImageIcon size={14} aria-hidden="true" />
                     <span>{m.workflowsViewScreenshot()}</span>
@@ -713,16 +713,16 @@ export function WorkflowShowcase({
         </Tabs>
       </div>
 
-      <Dialog open={lightboxTab !== null} onOpenChange={(details) => { if (!details.open) setLightboxTab(null) }}>
+      <Dialog open={lightboxOpen} onOpenChange={(details) => setLightboxOpen(details.open)}>
         <DialogBackdrop className="lightbox-backdrop" />
         <DialogPositioner className="lightbox-positioner">
           <DialogContent className="lightbox-content">
             <DialogHeader className="lightbox-header">
-              <DialogTitle>{m.workflowsRealScreen()} — {lightboxTitle}</DialogTitle>
+              <DialogTitle>{m.workflowsRealScreen()} · {lightboxTitle}</DialogTitle>
               <DialogCloseIcon />
             </DialogHeader>
             <DialogBody className="lightbox-body">
-              {lightboxShot ? <img src={lightboxShot} alt={lightboxTitle} /> : null}
+              <img src={lightboxShot} alt={lightboxTitle} />
             </DialogBody>
           </DialogContent>
         </DialogPositioner>

@@ -75,4 +75,4 @@ pnpm --dir website check
 
 ## Translations
 
-UI strings live in `locales/` with `en.json` as the source of truth. Contributions improving `de.json`, `es.json`, `fr.json`, `ru.json`, `zh-Hans.json`, or adding new locales are very welcome — run `go tool mygo i18n check` to verify key parity and placeholder formatting.
+UI strings live in `locales/` with `en.json` as the source of truth. Contributions improving `de.json`, `es.json`, `fr.json`, `ru.json`, `zh-Hans.json`, or adding new locales are very welcome. Run `go tool mygo i18n check` to verify key parity and placeholder formatting.

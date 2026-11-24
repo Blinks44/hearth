@@ -1,7 +1,7 @@
 {
-  "metaTitle": "Hearth — 本地开发环境的宁静家园",
+  "metaTitle": "Hearth · 本地开发环境的一站式控制台",
   "metaDescription": "在一个原生 Go 应用中总览所有编程语言、本地数据库、Docker、Kubernetes 集群与 AI 代理。修改任何文件前都提供清晰计划与 diff。",
-  "notFoundTitle": "页面未找到 — Hearth",
+  "notFoundTitle": "页面未找到 · Hearth",
   "notFoundDescription": "该页面不存在，请返回 Hearth 首页。",
   "notFoundHeading": "页面未找到",
   "notFoundBack": "返回 Hearth",

@@ -27,13 +27,13 @@ export function pageHead(locale: Locale, notFound = false) {
       { property: 'og:image', content: ogImage },
       { property: 'og:image:width', content: '1200' },
       { property: 'og:image:height', content: '630' },
-      { property: 'og:image:alt', content: 'Hearth — One calm home for your local dev environment' },
+      { property: 'og:image:alt', content: 'Hearth · One calm home for your local dev environment' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:creator', content: site.author.xHandle },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: ogImage },
-      { name: 'twitter:image:alt', content: 'Hearth — One calm home for your local dev environment' },
+      { name: 'twitter:image:alt', content: 'Hearth · One calm home for your local dev environment' },
     ],
     links: notFound
       ? []

@@ -6,12 +6,12 @@
 
 <p align="center">
   <strong>One calm home for your local dev environment.</strong><br />
-  Inspect runtimes, projects, Docker, Kubernetes, local databases, AI agents, MCP servers, and disk usage — and fix anything with a clear plan and diff before a single file changes.
+  Inspect runtimes, projects, Docker, Kubernetes, local databases, AI agents, MCP servers, and disk usage, and fix anything with a clear plan and diff before a single file changes.
 </p>
 
 <p align="center">
   <a href="https://github.com/Blinks44/hearth/actions/workflows/check.yml"><img src="https://github.com/Blinks44/hearth/actions/workflows/check.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/Blinks44/hearth/releases"><img src="https://img.shields.io/github/v/release/Blinks44/hearth?include_prereleases&color=E5582B" alt="Release" /></a>
+  <a href="https://github.com/Blinks44/hearth/releases"><img src="https://img.shields.io/github/v/release/Blinks44/hearth?color=E5582B" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <a href="https://hearth.moduix.dev"><img src="https://img.shields.io/badge/website-hearth.moduix.dev-1D1B18" alt="Website" /></a>
 </p>
@@ -37,11 +37,11 @@
 
 ## Why Hearth?
 
-Modern local setups sprawl across `mise`, `fnm`, `nvm`, `uv`, `pyenv`, `rustup`, Homebrew, WinGet, Docker engines, `kubeconfig` contexts, local database services, and half a dozen AI coding agents. When something breaks — a project picks up the wrong Node version, port `5432` is already taken, your shell takes 2 seconds to open, or an MCP server leaks a plaintext token — finding *why* means piecing together a dozen CLI commands.
+Modern local setups sprawl across `mise`, `fnm`, `nvm`, `uv`, `pyenv`, `rustup`, Homebrew, WinGet, Docker engines, `kubeconfig` contexts, local database services, and half a dozen AI coding agents. When something breaks (a project picks up the wrong Node version, port `5432` is already taken, your shell takes 2 seconds to open, or an MCP server leaks a plaintext token), finding *why* means piecing together a dozen CLI commands.
 
 Hearth brings all of it into one native desktop app:
 
-- **Native & lightweight:** ~18 MB single binary built in Go with [mygo](https://mygo.egoist.dev) — no Electron, no WebView, no background daemon hogging RAM.
+- **Native & lightweight:** ~18 MB single binary built in Go with [mygo](https://mygo.egoist.dev): no Electron, no WebView, and no background daemon hogging RAM.
 - **Read-only by default:** Scanning never changes your machine. Every install, upgrade, fix, or cleanup shows the exact commands, file diffs, and consequences before you confirm.
 - **Respects your existing setup:** Detects your current managers (`mise`, `fnm`, `nvm`, `volta`, `uv`, `pyenv`, `rbenv`, `rustup`, `brew`, `winget`, `scoop`, `apt`, `dnf`, `pacman`, etc.) and works through them. Shell rc edits stay inside `# >>> hearth >>>` markers with automatic backups.
 - **100% local, zero telemetry:** No account, no analytics, no data uploaded anywhere.
@@ -108,7 +108,7 @@ Or configure any MCP client manually:
 ```
 
 - **Read-only tools:** `get_tools`, `get_projects`, `get_issues`, `get_agents` (reads the cached snapshot by default; pass `refresh: true` for a fresh scan). Environment variable values, MCP commands/args/URLs, instruction/hook bodies, and raw detector errors are strictly excluded.
-- **Human-in-the-loop fixes:** `propose_fix(issue_id)` asks the open Hearth window to prepare the standard fix plan for an issue returned by `get_issues`. Hearth shows the full plan, diff, and an "Requested by AI agent" badge — nothing runs until you click confirm.
+- **Human-in-the-loop fixes:** `propose_fix(issue_id)` asks the open Hearth window to prepare the standard fix plan for an issue returned by `get_issues`. Hearth shows the full plan, diff, and a "Requested by AI agent" badge; nothing runs until you click confirm.
 
 ---
 
@@ -195,8 +195,15 @@ Third-party fonts, icons, and Go modules bundled in releases keep their respecti
 
 Hearth builds on great open-source tools and libraries:
 
-- [mygo](https://mygo.egoist.dev) — native cross-platform Go UI framework
+- [mygo](https://mygo.egoist.dev): native cross-platform Go UI framework
 - [Go](https://go.dev) and the Go ecosystem (`modelcontextprotocol/go-sdk`, `k8s.io/client-go`, `BurntSushi/toml`, `Masterminds/semver`, `go.yaml.in/yaml`, `modernc.org/sqlite`)
-- [Colima](https://github.com/abiosoft/colima) and [mise](https://mise.jdx.dev) — open-source foundations for local containers and version management
-- [Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) — embedded UI and monospace typefaces (SIL OFL 1.1)
-- [Lucide](https://lucide.dev), [Simple Icons](https://simpleicons.org), and [theSVG](https://thesvg.org) — UI icons and tool logos
+- [Colima](https://github.com/abiosoft/colima) and [mise](https://mise.jdx.dev): open-source foundations for local containers and version management
+- [Inter](https://rsms.me/inter/) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/): embedded UI and monospace typefaces (SIL OFL 1.1)
+- [Lucide](https://lucide.dev), [Simple Icons](https://simpleicons.org), and [theSVG](https://thesvg.org): UI icons and tool logos
+
+---
+
+## Also by Sergey V.
+
+- [**Monny**](https://monny.moduix.dev): Native macOS menu bar system monitor, battery charge limit, port finder, and AI quota tracker.
+- [**Rebind**](https://rebind.moduix.dev): Native macOS input remapper for keyboards, multi-button and Logitech HID++ mice, smooth scrolling, and trackpad gestures.
