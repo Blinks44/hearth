@@ -44,10 +44,31 @@ jobs:
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.meta.outputs.version }}
           PRERELEASE: ${{ steps.meta.outputs.prerelease }}
         run: |
           if ! gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            args=(release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --generate-notes)
+            notes=""
+            if [ -f CHANGELOG.md ]; then
+              notes="$(awk -v ver="$VERSION" '
+                /^## / {
+                  if (found) exit
+                  if (index($0, "## [" ver "]") == 1 || index($0, "## " ver " ") == 1 || $0 == "## " ver) { found = 1; next }
+                }
+                found { lines[++n] = $0 }
+                END {
+                  s = 1; while (s <= n && lines[s] ~ /^[[:space:]]*$/) s++
+                  e = n; while (e >= s && lines[e] ~ /^[[:space:]]*$/) e--
+                  for (i = s; i <= e; i++) print lines[i]
+                }
+              ' CHANGELOG.md)"
+            fi
+            args=(release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME")
+            if [ -n "$notes" ]; then
+              args+=(--notes "$notes")
+            else
+              args+=(--generate-notes)
+            fi
             if [ "$PRERELEASE" = "true" ]; then
               args+=(--prerelease)
             fi

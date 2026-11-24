@@ -4,6 +4,12 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-11-25
+
+### Fixed
+
+- **Aligned row action icons across tables:** Action buttons (Copy, Show in folder, Open source, and the `...` menu) now stay in consistent right-aligned columns in PATH, Packages, Ports, Databases, and Models instead of shifting horizontally when a row has no menu or path.
+
 ## [1.0.0] - 2026-11-24
 
 First public release of Hearth for macOS (Universal), Windows (x64 & ARM64), and Linux (x64 & ARM64).
