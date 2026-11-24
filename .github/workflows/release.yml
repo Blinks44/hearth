@@ -114,11 +114,30 @@ jobs:
       - name: Install NSIS for Windows installers
         if: matrix.name == 'Windows' && runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y nsis
-      - name: Build and upload release assets
+      - name: Build release assets
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
-        run: go tool mygo build -platform "${{ matrix.platform }}" -upload
+        run: |
+          if [ -z "${MYGO_UPDATER_PRIVATE_KEY:-}" ]; then
+            echo "::error::MYGO_UPDATER_PRIVATE_KEY secret is required to sign updates"
+            exit 1
+          fi
+          go tool mygo build -platform "${{ matrix.platform }}"
+          mkdir -p dist
+          shopt -s nullglob
+          for f in build/*/*.dmg build/*/*-setup-*.exe build/*/*.deb build/*/*.rpm build/*/*.tar.gz build/*/*.delta build/*/update-*.json build/*/install.sh build/*/install.ps1; do
+            cp "$f" dist/
+          done
+          ls -la dist
+      - name: Stage release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.name }}
+          path: dist/
+          retention-days: 1
+          if-no-files-found: error
       - name: Attest build provenance
         # GitHub Artifact Attestations require a public repository on personal accounts.
         if: ${{ !github.event.repository.private }}
@@ -128,29 +147,46 @@ jobs:
 
   finalize:
     needs: [prepare, build]
-    name: Authoritative SHA256SUMS
+    name: Upload assets & SHA256SUMS
     runs-on: ubuntu-latest
     steps:
-      - name: Recompute SHA256SUMS and SHA256SUMS.txt
+      - name: Download staged release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: downloaded
+      - name: Compute SHA256SUMS and upload release assets
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p release-assets
-          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir release-assets
+          shopt -s nullglob
+          for f in downloaded/release-*/*; do
+            cp "$f" release-assets/
+          done
           (
             cd release-assets
             shopt -s nullglob
             files=(*.dmg *.exe *.deb *.rpm *.tar.gz *.delta install.sh install.ps1)
+            manifests=(update-*.json)
             if [ "${#files[@]}" -eq 0 ]; then
-              echo "::error::No release assets found for checksum generation"
+              echo "::error::No release assets found"
+              exit 1
+            fi
+            if [ "${#manifests[@]}" -eq 0 ]; then
+              echo "::error::No update manifests found"
               exit 1
             fi
             IFS=$'\n' sorted=($(printf '%s\n' "${files[@]}" | LC_ALL=C sort))
             unset IFS
             sha256sum "${sorted[@]}" > SHA256SUMS
             cp SHA256SUMS SHA256SUMS.txt
+            cat SHA256SUMS
+            # Upload payloads and checksums first, then manifests last so
+            # manifests never reference missing files.
+            gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
+              "${sorted[@]}" SHA256SUMS SHA256SUMS.txt
+            gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
+              "${manifests[@]}"
           )
-          cat release-assets/SHA256SUMS
-          gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber \
-            release-assets/SHA256SUMS \
-            release-assets/SHA256SUMS.txt
