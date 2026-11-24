@@ -4,6 +4,17 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-11-25
+
+### Added
+
+- **Linux Docker Engine service controls:** Manage native `docker.service` on Linux from the Docker page with confirmed `systemd` plans (`pkexec`), including a boot autostart toggle (`systemctl enable/disable` without changing the running state) and Start/Stop controls (stopping `docker.socket` alongside `docker.service` so socket activation does not immediately restart it).
+- **Confirmed Docker cleanup actions:** Remove inactive non-`default` Docker contexts (`docker context rm`), delete dangling CLI plugin symlinks in `~/.docker/cli-plugins`, and install `docker-credential-helper` through Homebrew on macOS when `docker-credential-osxkeychain` is missing.
+
+### Fixed
+
+- **Homebrew multi-keg update detection and verification:** Attach formula updates to the linked keg (or the latest installed keg for keg-only formulae) and check upgrades against the latest matching Cellar entry so older uncleaned kegs do not mask newly upgraded versions.
+
 ## [1.0.1] - 2026-11-25
 
 ### Fixed
