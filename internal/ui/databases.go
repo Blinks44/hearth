@@ -263,6 +263,25 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 			ui.Text(c, locales.ColumnSource()).Width(76).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 			ui.Text(c, locales.DatabaseAddress()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
+		hasCopy, hasFolder, hasMenu := false, false, false
+		for _, db := range servers {
+			port := databasePort(db, listeners)
+			url, _ := databaseURL(db, user, port)
+			if url != "" || db.Path != "" {
+				hasCopy = true
+			}
+			if db.Path != "" && a.Shell != nil {
+				hasFolder = true
+			}
+			_, canService := a.servicePlan(db)
+			_, _, _, canDockerPower := a.dockerDatabaseAction(db)
+			canDockerOpen := db.Source == "docker" && a.canOpenDockerContainer() && (db.ContainerID != "" || db.Name != "")
+			client, hasClient := databaseClientFor(db, clients)
+			hasClientCmd := hasClient && a.OpenDBClient != nil && db.Status == "running" && len(databaseClientCommand(db, client, port, user)) > 0
+			if canService || canDockerPower || canDockerOpen || hasClientCmd || (db.Path != "" && db.Source != "docker") {
+				hasMenu = true
+			}
+		}
 		shown := 0
 		for i, db := range servers {
 			if a.databaseTab == 1 && (db.Service == "" || db.Source == "docker") || a.databaseTab == 3 && db.Source != "docker" {
@@ -349,46 +368,59 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 							a.openDockerContainer(db.ContainerID, db.Name)
 						})
 					}
-					if url != "" {
-						iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
-					} else if db.Path != "" {
-						iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(db.Path); c.Toast(locales.PathCopied()) })
+					if hasCopy {
+						switch {
+						case url != "":
+							iconButton(c, "copy", locales.DatabaseCopyURL()).OnClick(func() { c.WriteClipboard(url); c.Toast(locales.DatabaseURLCopied()) })
+						case db.Path != "":
+							iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(db.Path); c.Toast(locales.PathCopied()) })
+						default:
+							iconSpacer(c)
+						}
 					}
-					if db.Path != "" && a.Shell != nil {
-						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
+					if hasFolder {
+						if db.Path != "" {
+							iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(db.Path) })
+						} else {
+							iconSpacer(c)
+						}
 					}
-					hasMenu := canService || canDockerPower || canDockerOpen || len(clientCmd) > 0 || (db.Path != "" && db.Source != "docker")
+					rowHasMenu := canService || canDockerPower || canDockerOpen || len(clientCmd) > 0 || (db.Path != "" && db.Source != "docker")
 					if hasMenu {
-						iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-							if canService {
-								label := locales.ServiceStart()
-								if db.Status == "running" {
-									label = locales.ServiceStop()
+						if rowHasMenu {
+							iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+								if canService {
+									label := locales.ServiceStart()
+									if db.Status == "running" {
+										label = locales.ServiceStop()
+									}
+									if menu.Item(label).Chosen() {
+										a.Propose(plan)
+									}
 								}
-								if menu.Item(label).Chosen() {
-									a.Propose(plan)
+								if canDockerPower {
+									label := locales.DatabaseStartContainer()
+									if dockerAction == ops.DockerStop {
+										label = locales.DatabaseStopContainer()
+									}
+									if menu.Item(label).Chosen() {
+										a.planDockerDatabase(dockerTarget, dockerCt, dockerAction)
+									}
 								}
-							}
-							if canDockerPower {
-								label := locales.DatabaseStartContainer()
-								if dockerAction == ops.DockerStop {
-									label = locales.DatabaseStopContainer()
+								if len(clientCmd) > 0 && menu.Item(locales.DatabaseOpenClient(client.Tool)).Chosen() {
+									a.launchDBClient(clientCmd)
 								}
-								if menu.Item(label).Chosen() {
-									a.planDockerDatabase(dockerTarget, dockerCt, dockerAction)
+								if canDockerOpen && menu.Item(locales.OpenInDocker()).Chosen() {
+									a.openDockerContainer(db.ContainerID, db.Name)
 								}
-							}
-							if len(clientCmd) > 0 && menu.Item(locales.DatabaseOpenClient(client.Tool)).Chosen() {
-								a.launchDBClient(clientCmd)
-							}
-							if canDockerOpen && menu.Item(locales.OpenInDocker()).Chosen() {
-								a.openDockerContainer(db.ContainerID, db.Name)
-							}
-							if db.Path != "" && menu.Item(locales.CopyPath()).Chosen() {
-								c.WriteClipboard(db.Path)
-								c.Toast(locales.PathCopied())
-							}
-						})
+								if db.Path != "" && menu.Item(locales.CopyPath()).Chosen() {
+									c.WriteClipboard(db.Path)
+									c.Toast(locales.PathCopied())
+								}
+							})
+						} else {
+							iconSpacer(c)
+						}
 					}
 				})
 			})

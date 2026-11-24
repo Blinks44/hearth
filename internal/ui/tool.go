@@ -785,13 +785,19 @@ func (a *App) pathActions(c *ui.Context, key, path string) {
 // iconButton is a small button showing a Lucide icon, named by label.
 func iconButton(c *ui.Context, icon, label string) ui.Element {
 	t := c.Theme()
-	b := ui.ButtonBase(c.Key(label)).Size(24, 24).Radius(6).Center().Label(label).Tooltip(label)
+	b := ui.ButtonBase(c.Key(label)).Size(24, 24).Shrink(0).Radius(6).Center().Label(label).Tooltip(label)
 	if b.Hovered() {
 		b.Background(Colors(t).Muted)
 	}
 	return b.Children(func() {
 		ui.Icon(c, Icon(icon)).Size(14, 14).TextColor(t.TextMuted)
 	})
+}
+
+// iconSpacer reserves one 24x24 iconButton slot so persistent row actions
+// stay aligned across rows when an optional action or menu is absent.
+func iconSpacer(c *ui.Context) {
+	ui.Box(c).Size(24, 24).Shrink(0)
 }
 
 // copyPath is the path a version's copy action copies: what the table

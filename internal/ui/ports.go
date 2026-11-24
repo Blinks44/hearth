@@ -514,11 +514,9 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 						chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
 					}
 				})
+				// Contextual actions sit on the left; always-present Copy and
+				// More actions stay in fixed right-aligned columns.
 				ui.Row(c).Width(actionsWidth).Gap(2).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
-					iconButton(c.Key("port-copy"), "copy", locales.PortsCopyAddress(port)).OnClick(func() {
-						c.WriteClipboard(hostAddr)
-						c.Toast(locales.PortsAddressCopied(port))
-					})
 					if !isNarrow && !nonHTTPPorts[port] {
 						iconButton(c.Key("port-open"), "external-link", locales.PortsOpenBrowser()).OnClick(func() {
 							c.OpenURL(httpURL)
@@ -544,6 +542,10 @@ func (a *App) portsTable(c *ui.Context, rows []portRow) {
 							a.Propose(plan)
 						})
 					}
+					iconButton(c.Key("port-copy"), "copy", locales.PortsCopyAddress(port)).OnClick(func() {
+						c.WriteClipboard(hostAddr)
+						c.Toast(locales.PortsAddressCopied(port))
+					})
 					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
 						if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
 							c.WriteClipboard(hostAddr)

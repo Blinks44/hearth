@@ -281,6 +281,8 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 			a.packageLimitKey = limitKey
 			a.packageLimit = maxPackageRows
 		}
+		hasPath := slices.ContainsFunc(m.Packages, func(pkg inventory.SystemPackage) bool { return pkg.Path != "" })
+		hasMenu := slices.ContainsFunc(m.Packages, func(pkg inventory.SystemPackage) bool { return a.packageCan(m, pkg) })
 		shown, total := 0, 0
 		for _, i := range order {
 			pkg := m.Packages[i]
@@ -347,14 +349,29 @@ func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
 						ui.Text(c, tool).FontSize(10.5).TextColor(pal.TextFaint)
 					}
 				})
-				if pkg.Path != "" {
-					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(pkg.Path); c.Toast(locales.PathCopied()) })
-					if a.Shell != nil {
-						iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(pkg.Path) })
-					}
-				}
-				if a.packageCan(m, pkg) {
-					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
+				if hasPath || hasMenu {
+					ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+						if hasPath {
+							if pkg.Path != "" {
+								iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(pkg.Path); c.Toast(locales.PathCopied()) })
+								if a.Shell != nil {
+									iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(pkg.Path) })
+								}
+							} else {
+								iconSpacer(c)
+								if a.Shell != nil {
+									iconSpacer(c)
+								}
+							}
+						}
+						if hasMenu {
+							if a.packageCan(m, pkg) {
+								iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
+							} else {
+								iconSpacer(c)
+							}
+						}
+					})
 				}
 			})
 		}

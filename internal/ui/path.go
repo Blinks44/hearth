@@ -145,6 +145,19 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 			ui.Text(c, locales.EnvPathSource()).Width(120).FontSize(11.5)
 			ui.Text(c, locales.EnvPathDirectory()).Grow(1).FontSize(11.5)
 		})
+		hasOpenSrc := a.canOpenFile() && slices.ContainsFunc(entries, func(e inventory.PathEntry) bool { return pathSourceFile(e) != "" })
+		hasMenu := false
+		if a.pathTab == 0 && a.BuildPlan != nil {
+			for i, entry := range entries {
+				fixable := a.fixable(entries, i)
+				removable := !fixable && ops.PathRemovable(entry, a.Home)
+				firstable := ops.PathFirstable(entries, i, a.Home)
+				if firstable || (removable && !entry.Missing) {
+					hasMenu = true
+					break
+				}
+			}
+		}
 		shown := 0
 		for i, entry := range entries {
 			if !strings.Contains(strings.ToLower(entry.Dir), strings.ToLower(a.pathFilter)) {
@@ -211,35 +224,48 @@ func (a *App) pathTable(c *ui.Context, entries, other []inventory.PathEntry) {
 					dir := entry.Dir
 					ui.Button(c.Key("path-remove:"+strconv.Itoa(i)), locales.PathRemove()).Label(locales.PathRemoveNamed(tilde(dir, a.Home))).OnClick(func() { a.removePath(dir) })
 				}
-				var sourceFile string
-				for _, src := range entry.Sources {
-					if src.Line > 0 && src.File != "" {
-						sourceFile = src.File
-						break
+				sourceFile := pathSourceFile(entry)
+				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if hasOpenSrc {
+						if sourceFile != "" {
+							sf := sourceFile
+							iconButton(c.Key("path-open-src:"+strconv.Itoa(i)), "external-link", locales.PathOpenSource()).OnClick(func() { a.openFile(c, sf) })
+						} else {
+							iconSpacer(c)
+						}
 					}
-				}
-				if sourceFile != "" && a.canOpenFile() {
-					sf := sourceFile
-					iconButton(c.Key("path-open-src:"+strconv.Itoa(i)), "external-link", locales.PathOpenSource()).OnClick(func() { a.openFile(c, sf) })
-				}
-				if firstable || (removable && !entry.Missing) {
-					dir := entry.Dir
-					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
-						if firstable && m.Item(locales.PathFirst()).Chosen() {
-							a.putFirst(dir)
+					iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(entry.Dir); c.Toast(locales.PathCopied()) })
+					if hasMenu {
+						if firstable || (removable && !entry.Missing) {
+							dir := entry.Dir
+							iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+								if firstable && m.Item(locales.PathFirst()).Chosen() {
+									a.putFirst(dir)
+								}
+								if removable && !entry.Missing && m.Item(locales.PathRemove()).Chosen() {
+									a.removePath(dir)
+								}
+							})
+						} else {
+							iconSpacer(c)
 						}
-						if removable && !entry.Missing && m.Item(locales.PathRemove()).Chosen() {
-							a.removePath(dir)
-						}
-					})
-				}
-				iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(entry.Dir); c.Toast(locales.PathCopied()) })
+					}
+				})
 			})
 		}
 		if shown == 0 {
 			cardNote(c, locales.EnvPathNoMatches())
 		}
 	})
+}
+
+func pathSourceFile(entry inventory.PathEntry) string {
+	for _, src := range entry.Sources {
+		if src.Line > 0 && src.File != "" {
+			return src.File
+		}
+	}
+	return ""
 }
 
 func (a *App) removePath(dir string) {

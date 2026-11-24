@@ -159,12 +159,23 @@ func (a *App) modelsView(c *ui.Context, p page) {
 						return
 					}
 					filter := strings.ToLower(a.modelsFilter)
+					reserveMenu := false
+					for i, m := range apps {
+						if a.modelsTab > 0 && a.modelsTab-1 != i {
+							continue
+						}
+						if m.name == "Ollama" && m.app.Path != "" ||
+							m.name == "LM Studio" && slices.ContainsFunc(m.app.Models, func(md inventory.Model) bool { return md.Path != "" }) {
+							reserveMenu = true
+							break
+						}
+					}
 					ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 						for i, m := range apps {
 							if a.modelsTab > 0 && a.modelsTab-1 != i {
 								continue
 							}
-							a.modelGroup(c, m, filter, servers)
+							a.modelGroup(c, m, filter, servers, reserveMenu)
 						}
 					})
 				}, func() {
@@ -249,7 +260,7 @@ func (a *App) modelsHeader(c *ui.Context, apps []modelApp) {
 
 // modelGroup is an app's models under a row of its name, version and
 // source, and the space they take.
-func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inventory.MCPServer) {
+func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inventory.MCPServer, reserveMenu bool) {
 	pal := Colors(c.Theme())
 	var total int64
 	for _, md := range m.app.Models {
@@ -294,10 +305,6 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 			})
 			ui.Text(c, formatBytes(md.Size)).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
 			name := md.Name
-			iconButton(c, "copy", locales.ModelsCopyName()).OnClick(func() {
-				c.WriteClipboard(name)
-				c.Toast(locales.ModelsNameCopied())
-			})
 			askedBy := func() []string {
 				var out []string
 				for _, s := range inventory.ModelMentions(servers, md) {
@@ -305,24 +312,34 @@ func (a *App) modelGroup(c *ui.Context, m modelApp, filter string, servers []inv
 				}
 				return out
 			}
-			switch {
-			case m.name == "Ollama" && m.app.Path != "":
-				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-					if md.Loaded && menu.Item(locales.ModelsUnloadEllipsis()).Chosen() {
-						a.Propose(ops.OllamaStopPlan(md, a.detect("models")))
-					}
-					if menu.Item(locales.RemoveEllipsis()).Chosen() {
-						a.Propose(ops.OllamaRemovePlan(md, askedBy(), a.detect("models")))
-					}
+			ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+				iconButton(c, "copy", locales.ModelsCopyName()).OnClick(func() {
+					c.WriteClipboard(name)
+					c.Toast(locales.ModelsNameCopied())
 				})
-			case m.name == "LM Studio" && md.Path != "":
-				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-					if menu.Item(locales.RemoveEllipsis()).Chosen() {
-						plan, err := ops.LMStudioRemovePlan(m.app.Dir, md, askedBy(), a.detect("models"))
-						a.proposeOrSay(plan, err)
+				if reserveMenu {
+					switch {
+					case m.name == "Ollama" && m.app.Path != "":
+						iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+							if md.Loaded && menu.Item(locales.ModelsUnloadEllipsis()).Chosen() {
+								a.Propose(ops.OllamaStopPlan(md, a.detect("models")))
+							}
+							if menu.Item(locales.RemoveEllipsis()).Chosen() {
+								a.Propose(ops.OllamaRemovePlan(md, askedBy(), a.detect("models")))
+							}
+						})
+					case m.name == "LM Studio" && md.Path != "":
+						iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
+							if menu.Item(locales.RemoveEllipsis()).Chosen() {
+								plan, err := ops.LMStudioRemovePlan(m.app.Dir, md, askedBy(), a.detect("models"))
+								a.proposeOrSay(plan, err)
+							}
+						})
+					default:
+						iconSpacer(c)
 					}
-				})
-			}
+				}
+			})
 		})
 	}
 	if shown == 0 && m.app.Err == "" {
