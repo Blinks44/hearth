@@ -120,7 +120,13 @@ func matchDockerBrand(name string) string {
 		return "bun"
 	case has("deno"):
 		return "deno"
-	case has("kubectl", "kube", "kubernetes", "k3s", "etcd"):
+	case has("k3s", "k3d"):
+		return "k3s"
+	case has("rancher"):
+		return "rancher"
+	case has("podman"):
+		return "podman"
+	case has("kubectl", "kube", "kubernetes", "etcd"):
 		return "kubernetes"
 	case has("docker", "dind", "buildkit"):
 		return "docker"
@@ -130,6 +136,14 @@ func matchDockerBrand(name string) string {
 		return "ubuntu"
 	case has("debian"):
 		return "debian"
+	case has("fedora"):
+		return "fedora"
+	case has("arch", "archlinux"):
+		return "archlinux"
+	case has("opensuse", "suse"):
+		return "opensuse"
+	case has("nix", "nixos"):
+		return "nixos"
 	default:
 		return ""
 	}

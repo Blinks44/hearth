@@ -296,7 +296,16 @@ func (a *App) dockerEngineHeader(c *ui.Context, name string) {
 		} else {
 			headerBackButton(c, locales.BackToDocker(), func() { a.router.Push(dockerPage) })
 		}
-		anchor := pathButton(c, "engine-context", "brand/docker", name, 0)
+		ctxIcon := "brand/docker"
+		if st, _ := a.Snapshot.Tool("docker"); st.Docker != nil {
+			for _, ctx := range st.Docker.Contexts {
+				if ctx.Name == name {
+					ctxIcon = dockerContextIcon(st.Docker, ctx)
+					break
+				}
+			}
+		}
+		anchor := pathButton(c, "engine-context", ctxIcon, name, 0)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen
 			s.viewsOpen = false
@@ -386,6 +395,7 @@ func (a *App) dockerContextPopover(c *ui.Context, name string) {
 						a.router.Replace(dockerEnginePath(k.Name))
 					}
 				}).Children(func() {
+					entityTile(c, dockerContextIcon(st.Docker, k), 28)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 							clipped(c, k.Name).FontSize(13).FontWeight(500)

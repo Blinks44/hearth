@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -188,9 +190,127 @@ func TestSetupToolIconsRender(t *testing.T) {
 	}
 }
 
+func TestEntityBrandIconsRender(t *testing.T) {
+	keys := []string{
+		dockerEngineIcon("Docker Desktop"),
+		dockerEngineIcon("Colima"),
+		dockerEngineIcon("OrbStack"),
+		dockerEngineIcon("Podman"),
+		dockerEngineIcon("Rancher Desktop"),
+		dockerEngineIcon("Kiri"),
+		pkgManagerIcon("brew"),
+		pkgManagerIcon("apt"),
+		pkgManagerIcon("dnf"),
+		pkgManagerIcon("pacman"),
+		pkgManagerIcon("zypper"),
+		pkgManagerIcon("apk"),
+		pkgManagerIcon("snap"),
+		pkgManagerIcon("flatpak"),
+		pkgManagerIcon("nix"),
+		pkgManagerIcon("port"),
+		pkgManagerIcon("winget"),
+		pkgManagerIcon("choco"),
+		pkgManagerIcon("scoop"),
+		kubeContextIcon(inventory.KubeContext{Name: "k3d-dev", Cluster: "k3d-dev"}),
+		kubeContextIcon(inventory.KubeContext{Name: "prod-eu", Cluster: "prod-eu"}),
+	}
+	for _, dark := range []bool{false, true} {
+		for _, key := range keys {
+			view := func(c *ui.Context) {
+				ui.Column(c).Fill().Center().Background(c.Theme().Background).Children(func() {
+					entityTile(c, key, 28)
+				})
+			}
+			tt := ui.NewTester(view, 40, 40)
+			tt.SetDark(dark)
+			img := tt.Image()
+			bgR, bgG, bgB, _ := img.At(20, 8).RGBA()
+			diff := 0
+			for y := 11; y < 29; y++ {
+				for x := 11; x < 29; x++ {
+					r, g, b, _ := img.At(x, y).RGBA()
+					if absDiffU32(r, bgR)+absDiffU32(g, bgG)+absDiffU32(b, bgB) > 0x2000 {
+						diff++
+					}
+				}
+			}
+			if diff < 8 {
+				t.Errorf("entity icon %s (dark=%v): only %d visible pixels inside tile", key, dark, diff)
+			}
+		}
+
+		// Contact sheet when UI screenshots are enabled.
+		gridView := func(c *ui.Context) {
+			th := c.Theme()
+			ui.Column(c).Fill().Background(th.Background).Padding(16).Gap(8).Children(func() {
+				const cols = 4
+				for i := 0; i < len(keys); i += cols {
+					end := min(i+cols, len(keys))
+					ui.Row(c).Gap(10).Children(func() {
+						for _, key := range keys[i:end] {
+							ui.Row(c).Width(175).Gap(8).AlignItems(ui.Center).Children(func() {
+								entityTile(c, key, 28)
+								ui.Text(c, key).FontSize(12).TextColor(th.Text)
+							})
+						}
+					})
+				}
+			})
+		}
+		tt := ui.NewTester(gridView, 780, 260)
+		tt.SetDark(dark)
+		tt.Frame()
+		name := "entity-logos-light"
+		if dark {
+			name = "entity-logos-dark"
+		}
+		screenshot(t, tt, name)
+	}
+}
+
 func absDiffU32(a, b uint32) uint32 {
 	if a > b {
 		return a - b
 	}
 	return b - a
+}
+
+func TestAllIconLiteralsExist(t *testing.T) {
+	m, err := icons()
+	if err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	reIcon := regexp.MustCompile(`\bIcon\("([^"]+)"\)`)
+	reBtn := regexp.MustCompile(`\biconButton\([^,]+,\s*"([a-z0-9-]+)"`)
+	reKey := regexp.MustCompile(`"((?:lucide|brand)/[a-z0-9-]+)"`)
+	for _, e := range entries {
+		name := e.Name()
+		if !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		data, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		src := string(data)
+		for _, match := range reIcon.FindAllStringSubmatch(src, -1) {
+			if m["lucide/"+match[1]] == nil {
+				t.Errorf("%s: unknown Icon(%q)", name, match[1])
+			}
+		}
+		for _, match := range reBtn.FindAllStringSubmatch(src, -1) {
+			if m["lucide/"+match[1]] == nil {
+				t.Errorf("%s: unknown iconButton icon %q", name, match[1])
+			}
+		}
+		for _, match := range reKey.FindAllStringSubmatch(src, -1) {
+			if m[match[1]] == nil {
+				t.Errorf("%s: unknown icon key %q", name, match[1])
+			}
+		}
+	}
 }

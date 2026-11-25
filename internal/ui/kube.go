@@ -291,19 +291,22 @@ func kubeContextIcon(k inventory.KubeContext) string {
 		return "brand/googlecloud"
 	case strings.Contains(hay, "aks") || strings.Contains(hay, "azure") || strings.Contains(hay, "kubelogin"):
 		return "brand/azure"
-	case strings.Contains(hay, "docker-desktop") || strings.Contains(hay, "colima") || strings.Contains(hay, "orbstack"):
+	case strings.Contains(hay, "colima"):
+		return "brand/colima"
+	case strings.Contains(hay, "rancher-desktop") || strings.Contains(hay, "rancher"):
+		return "brand/rancher"
+	case strings.Contains(hay, "k3s") || strings.Contains(hay, "k3d-"):
+		return "brand/k3s"
+	case strings.Contains(hay, "docker-desktop") || strings.Contains(hay, "orbstack"):
 		return "brand/docker"
 	case strings.Contains(hay, "kind-") ||
 		strings.Contains(hay, "minikube") ||
-		strings.Contains(hay, "k3d-") ||
-		strings.Contains(hay, "k3s") ||
-		strings.Contains(hay, "rancher-desktop") ||
 		strings.Contains(hay, "microk8s") ||
 		strings.Contains(hay, "localhost") ||
 		strings.Contains(hay, "127.0.0.1"):
 		return "lucide/container"
 	default:
-		return "lucide/globe"
+		return "brand/kubernetes"
 	}
 }
 

@@ -230,6 +230,7 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 		row.Background(pal.AccentSoft.Alpha(0.4))
 	}
 	row.Children(func() {
+		entityTile(c, dockerContextIcon(d, k), 28)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, k.Name).Font(FontMono).FontSize(13)
 			caption := dockerContextCaption(k, a.Home)
@@ -266,18 +267,30 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 	})
 }
 
+func dockerContextIcon(d *inventory.DockerState, k inventory.DockerContext) string {
+	if !k.Local {
+		return "lucide/globe"
+	}
+	if engine := dockerContextEngine(d, k); engine != "" {
+		return dockerEngineIcon(engine)
+	}
+	return "brand/docker"
+}
+
 func dockerEngineIcon(name string) string {
 	switch name {
 	case "Docker Desktop", "Docker Engine":
 		return "brand/docker"
+	case "Colima":
+		return "brand/colima"
 	case "OrbStack":
 		return "lucide/layers"
 	case "Podman", "Podman Desktop":
-		return "lucide/box"
+		return "brand/podman"
 	case "Rancher Desktop":
-		return "lucide/boxes"
+		return "brand/rancher"
 	case "Kiri":
-		return "lucide/cpu"
+		return "brand/kiri"
 	default:
 		return "lucide/container"
 	}

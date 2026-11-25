@@ -572,11 +572,20 @@ func TestPackageInstallSearchView(t *testing.T) {
 }
 
 func TestKubeContextIconKindCluster(t *testing.T) {
-	if got := kubeContextIcon(inventory.KubeContext{Name: "limited", Cluster: "kind-s10"}); got != "lucide/container" {
-		t.Fatalf("kubeContextIcon(limited / kind-s10) = %q, want lucide/container", got)
+	cases := []struct {
+		ctx  inventory.KubeContext
+		want string
+	}{
+		{inventory.KubeContext{Name: "limited", Cluster: "kind-s10"}, "lucide/container"},
+		{inventory.KubeContext{Name: "colima", Cluster: "colima"}, "brand/colima"},
+		{inventory.KubeContext{Name: "rancher-desktop", Cluster: "rancher-desktop"}, "brand/rancher"},
+		{inventory.KubeContext{Name: "k3d-dev", Cluster: "k3d-dev"}, "brand/k3s"},
+		{inventory.KubeContext{Name: "prod-eu", Cluster: "prod-eu"}, "brand/kubernetes"},
 	}
-	if got := kubeContextIcon(inventory.KubeContext{Name: "prod-eu", Cluster: "prod-eu"}); got != "lucide/globe" {
-		t.Fatalf("kubeContextIcon(prod-eu) = %q, want lucide/globe", got)
+	for _, tc := range cases {
+		if got := kubeContextIcon(tc.ctx); got != tc.want {
+			t.Errorf("kubeContextIcon(%+v) = %q, want %q", tc.ctx, got, tc.want)
+		}
 	}
 }
 

@@ -730,7 +730,11 @@ func (a *App) clusterHeader(c *ui.Context, name string) {
 		} else {
 			headerBackButton(c, locales.BackToKubernetes(), func() { a.router.Push(kubePage) })
 		}
-		anchor := pathButton(c, "cluster-context", "brand/kubernetes", name, contextWidth)
+		ctxIcon := "brand/kubernetes"
+		if k := a.kubeContext(name); k != nil {
+			ctxIcon = kubeContextIcon(*k)
+		}
+		anchor := pathButton(c, "cluster-context", ctxIcon, name, contextWidth)
 		if anchor.Clicked() {
 			s.contextOpen = !s.contextOpen
 		}
@@ -1031,6 +1035,7 @@ func (a *App) contextPopover(c *ui.Context, name string) {
 						a.router.Replace(kubeClusterPath(k.Name))
 					}
 				}).Children(func() {
+					entityTile(c, kubeContextIcon(k), 28)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 							clipped(c, k.Name).FontSize(13).FontWeight(500)

@@ -98,18 +98,28 @@ func pkgManagerIcon(id string) string {
 		return "brand/homebrew"
 	case "apt":
 		return "brand/debian"
-	case "snap":
-		return "brand/ubuntu"
+	case "dnf":
+		return "brand/fedora"
+	case "pacman":
+		return "brand/archlinux"
+	case "zypper":
+		return "brand/opensuse"
 	case "apk":
 		return "brand/alpinelinux"
+	case "snap":
+		return "brand/snapcraft"
 	case "flatpak":
-		return "lucide/layers"
+		return "brand/flatpak"
+	case "nix":
+		return "brand/nixos"
+	case "port":
+		return "brand/macports"
+	case "winget":
+		return "brand/windows"
+	case "choco":
+		return "brand/chocolatey"
 	case "scoop":
 		return "lucide/terminal"
-	case "choco":
-		return "lucide/box"
-	case "nix":
-		return "lucide/sparkles"
 	default:
 		return "lucide/package"
 	}

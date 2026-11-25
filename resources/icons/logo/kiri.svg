@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Kiri</title>
+  <g transform="translate(2.6 0) skewX(-10)">
+    <rect x="5" y="2" width="26" height="28" rx="7" fill="#C79A12"/>
+    <path d="M12 2h12a7 7 0 0 1 7 7H5a7 7 0 0 1 7-7z" fill="#E8C04A"/>
+    <ellipse cx="18.6" cy="15" rx="2.4" ry="2.9" fill="#0F1419"/>
+    <ellipse cx="25.4" cy="15" rx="2.4" ry="2.9" fill="#0F1419"/>
+  </g>
+</svg>
