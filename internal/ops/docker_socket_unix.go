@@ -7,7 +7,6 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/Blinks44/hearth/locales"
 )
@@ -29,19 +28,18 @@ func DockerDefaultSocketPlan(contextName, endpoint string, detect Detect) (Plan,
 	if socketPath == dockerDefaultSocket {
 		return Plan{}, false
 	}
+	step, extraChanges, extraNotes := dockerDefaultSocketStep(socketPath)
+	changes := append([]string{dockerDefaultSocket + " → " + socketPath}, extraChanges...)
+	notes := append([]Note{
+		AdminNote(),
+		{Title: locales.DockerSocketLinkNoteTitle(), Text: locales.DockerSocketLinkNoteText()},
+	}, extraNotes...)
 	p := Plan{
-		Title: locales.DockerSocketLinkTitle(contextName),
-		Why:   locales.DockerSocketLinkWhy(contextName),
-		Steps: []Step{{
-			Argv:    []string{"ln", "-sfn", socketPath, dockerDefaultSocket},
-			Admin:   true,
-			Timeout: 30 * time.Second,
-		}},
-		Changes: []string{dockerDefaultSocket + " → " + socketPath},
-		Notes: []Note{
-			AdminNote(),
-			{Title: locales.DockerSocketLinkNoteTitle(), Text: locales.DockerSocketLinkNoteText()},
-		},
+		Title:   locales.DockerSocketLinkTitle(contextName),
+		Why:     locales.DockerSocketLinkWhy(contextName),
+		Steps:   []Step{step},
+		Changes: changes,
+		Notes:   notes,
 	}
 	if detect != nil {
 		p.Verify = func(ctx context.Context) (string, error) {

@@ -143,8 +143,8 @@ func TestDockerDefaultSocketLinkPlan(t *testing.T) {
 		t.Fatalf("expected pending admin symlink plan, got %+v", a.op)
 	}
 	wantArgv := []string{"ln", "-sfn", home + "/.colima/default/docker.sock", "/var/run/docker.sock"}
-	if !slices.Equal(a.op.plan.Steps[0].Argv, wantArgv) {
-		t.Fatalf("symlink argv = %q, want %q", a.op.plan.Steps[0].Argv, wantArgv)
+	if !slices.Equal(a.op.plan.Steps[0].Shown(), wantArgv) {
+		t.Fatalf("symlink command = %q, want %q", a.op.plan.Steps[0].Shown(), wantArgv)
 	}
 }
 

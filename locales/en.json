@@ -16902,6 +16902,28 @@
       }
     }
   },
+  "dockerSocketDaemonStep": "and restore at startup via LaunchDaemon",
+  "@dockerSocketDaemonStep": {
+    "description": "Short step note appended to the ln -sfn command on macOS when installing the startup LaunchDaemon."
+  },
+  "dockerSocketDaemonChange": "{path} (restores /var/run/docker.sock at startup)",
+  "@dockerSocketDaemonChange": {
+    "description": "Change summary line for the macOS LaunchDaemon plist that recreates /var/run/docker.sock on boot.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "dockerSocketDaemonNoteText": "macOS clears /var/run on every restart, so Hearth installs {label} to recreate the symlink at startup. The notice names ln; you can review or turn it off in System Settings › General › Login Items & Extensions.",
+  "@dockerSocketDaemonNoteText": {
+    "description": "Note explaining the macOS LaunchDaemon background item notice for /var/run/docker.sock.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "setupCatLanguages": "Languages",
   "@setupCatLanguages": {
     "description": "Short category filter chip label for programming languages on the Install page."

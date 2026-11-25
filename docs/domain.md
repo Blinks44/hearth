@@ -35,6 +35,7 @@ Non-negotiable product rules backed by automated tests. Every change must preser
 - Colima install plans preserve existing Docker settings with backup, install standalone Docker CLI if needed, and on Linux Hearth prefers native distro Docker Engine - test: `internal/ops/colima_test.go`
 - Linux native Docker Engine service controls stop `docker.socket` alongside `docker.service` so socket activation does not restart it, and toggling autostart never passes `--now` - test: `internal/detect/docker_linux_test.go`, `internal/ops/docker_linux_test.go`, `internal/ui/docker_linux_test.go`
 - Removing a Docker context blocks the active and built-in `default` contexts; removing a broken plugin link verifies in `Before` that the target is still a dangling symlink inside `cli-plugins` - test: `internal/ops/docker_test.go`, `internal/ops/docker_plugins_test.go`, `internal/ui/docker_test.go`, `internal/ui/docker_health_test.go`
+- Linking `/var/run/docker.sock` on macOS installs a one-shot `LaunchDaemon` (`dev.hearth.docker-socket`) in the same elevated step so macOS restores the symlink after `/private/var/run` is cleared on reboot - test: `internal/ops/docker_socket_darwin_test.go`, `internal/ops/docker_socket_unix_test.go`
 - Database connection strings never contain passwords; MySQL and MariaDB are never offered side-by-side; toggling autostart does not start or stop a running service - test: `internal/ui/databases_test.go`, `internal/ops/service_test.go`
 
 ## Kubernetes

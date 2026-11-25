@@ -44816,6 +44816,58 @@ func (msgs Messages) DockerSocketLinkFailed(context string) string {
 	return Catalog.Format(msgs.locale, "dockerSocketLinkFailed", map[string]any{"context": context})
 }
 
+// DockerSocketDaemonStep says "and restore at startup via LaunchDaemon"
+// in the language the app shows.
+//
+// Short step note appended to the ln -sfn command on macOS when installing
+// the startup LaunchDaemon.
+func DockerSocketDaemonStep() string { return In(i18n.Locale()).DockerSocketDaemonStep() }
+
+// DockerSocketDaemonStep says "and restore at startup via LaunchDaemon"
+// in the language of msgs.
+//
+// Short step note appended to the ln -sfn command on macOS when installing
+// the startup LaunchDaemon.
+func (msgs Messages) DockerSocketDaemonStep() string {
+	return Catalog.Format(msgs.locale, "dockerSocketDaemonStep", nil)
+}
+
+// DockerSocketDaemonChange says "{path} (restores /var/run/docker.sock at startup)"
+// in the language the app shows.
+//
+// Change summary line for the macOS LaunchDaemon plist that recreates
+// /var/run/docker.sock on boot.
+func DockerSocketDaemonChange(path string) string {
+	return In(i18n.Locale()).DockerSocketDaemonChange(path)
+}
+
+// DockerSocketDaemonChange says "{path} (restores /var/run/docker.sock at startup)"
+// in the language of msgs.
+//
+// Change summary line for the macOS LaunchDaemon plist that recreates
+// /var/run/docker.sock on boot.
+func (msgs Messages) DockerSocketDaemonChange(path string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketDaemonChange", map[string]any{"path": path})
+}
+
+// DockerSocketDaemonNoteText says "macOS clears /var/run on every restart, so Hearth installs {label} to recreate the symlink at startup. The notice nam…"
+// in the language the app shows.
+//
+// Note explaining the macOS LaunchDaemon background item notice for
+// /var/run/docker.sock.
+func DockerSocketDaemonNoteText(label string) string {
+	return In(i18n.Locale()).DockerSocketDaemonNoteText(label)
+}
+
+// DockerSocketDaemonNoteText says "macOS clears /var/run on every restart, so Hearth installs {label} to recreate the symlink at startup. The notice nam…"
+// in the language of msgs.
+//
+// Note explaining the macOS LaunchDaemon background item notice for
+// /var/run/docker.sock.
+func (msgs Messages) DockerSocketDaemonNoteText(label string) string {
+	return Catalog.Format(msgs.locale, "dockerSocketDaemonNoteText", map[string]any{"label": label})
+}
+
 // SetupCatLanguages says "Languages"
 // in the language the app shows.
 //

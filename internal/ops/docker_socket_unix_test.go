@@ -17,7 +17,7 @@ func TestDockerDefaultSocketPlan(t *testing.T) {
 	if !ok {
 		t.Fatal("expected valid Docker default socket plan")
 	}
-	if len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Argv, []string{"ln", "-sfn", "/Users/dev/.colima/default/docker.sock", "/var/run/docker.sock"}) {
+	if len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Shown(), []string{"ln", "-sfn", "/Users/dev/.colima/default/docker.sock", "/var/run/docker.sock"}) {
 		t.Fatalf("unexpected steps: %+v", p.Steps)
 	}
 	if p.Verify == nil {
