@@ -1,19 +1,19 @@
-import { ArrowRight, Download } from 'lucide-react'
-import { CopyButton } from '@/components/CopyButton'
-import { site } from '@/config/site'
-import * as m from '@/integrations/i18n/paraglide/messages'
-import type { ReleaseAssets } from '@/integrations/releases'
-import type { DetectedPlatform } from '@/lib/os'
+import { ArrowRight, Download } from "lucide-react";
+import { CopyButton } from "@/components/CopyButton";
+import { site } from "@/config/site";
+import * as m from "@/integrations/i18n/paraglide/messages";
+import type { ReleaseAssets } from "@/integrations/releases";
+import type { DetectedPlatform } from "@/lib/os";
 
 interface InstallSectionProps {
-  release: ReleaseAssets
-  platform: DetectedPlatform
+  release: ReleaseAssets;
+  platform: DetectedPlatform;
 }
 
 export function InstallSection({ release, platform }: InstallSectionProps) {
   const cards = [
     {
-      os: 'macos' as const,
+      os: "macos" as const,
       title: m.installMacTitle(),
       sub: m.installMacSub(),
       btnLabel: m.installMacBtn(),
@@ -23,11 +23,11 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
       alts: [] as Array<{ label: string; href: string }>,
     },
     {
-      os: 'windows' as const,
+      os: "windows" as const,
       title: m.installWinTitle(),
       sub: m.installWinSub(),
       btnLabel: m.installWinBtn(),
-      href: platform.arch === 'arm64' ? release.windowsArm64 : release.windowsAmd64,
+      href: platform.arch === "arm64" ? release.windowsArm64 : release.windowsAmd64,
       cmd: site.windowsInstallCommand,
       meta: m.installWinMeta(),
       alts: [
@@ -36,11 +36,11 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
       ],
     },
     {
-      os: 'linux' as const,
+      os: "linux" as const,
       title: m.installLinuxTitle(),
       sub: m.installLinuxSub(),
       btnLabel: m.installLinuxBtn(),
-      href: platform.arch === 'arm64' ? release.linuxDebArm64 : release.linuxDebAmd64,
+      href: platform.arch === "arm64" ? release.linuxDebArm64 : release.linuxDebAmd64,
       cmd: site.linuxInstallCommand,
       meta: m.installLinuxMeta(),
       alts: [
@@ -49,7 +49,7 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
         { label: `${m.installAltTar()} ${m.installAltX64()}`, href: release.linuxTarAmd64 },
       ],
     },
-  ]
+  ];
 
   return (
     <section id="install" className="install-section" data-reveal>
@@ -62,13 +62,16 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
 
         <div className="install-grid">
           {cards.map((card) => {
-            const detected = platform.os === card.os
+            const detected = platform.os === card.os;
             return (
               <article key={card.os} className="install-card" data-detected={detected}>
                 <div className="install-card-head">
                   <h3>{card.title}</h3>
                   {detected ? (
-                    <span className="pill pill-accent" style={{ textTransform: 'none', letterSpacing: 0 }}>
+                    <span
+                      className="pill pill-accent"
+                      style={{ textTransform: "none", letterSpacing: 0 }}
+                    >
                       {m.installDetected()}
                     </span>
                   ) : null}
@@ -77,7 +80,7 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
 
                 <a
                   href={card.href}
-                  className={`${detected ? 'btn-hearth-primary' : 'btn-hearth-dark'} install-cta-btn`}
+                  className={`${detected ? "btn-hearth-primary" : "btn-hearth-dark"} install-cta-btn`}
                 >
                   <Download size={16} aria-hidden="true" />
                   <span>{card.btnLabel}</span>
@@ -102,7 +105,7 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
 
                 <div className="install-card-meta">{card.meta}</div>
               </article>
-            )
+            );
           })}
         </div>
 
@@ -124,5 +127,5 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
         </div>
       </div>
     </section>
-  )
+  );
 }

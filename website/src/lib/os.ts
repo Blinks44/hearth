@@ -1,73 +1,70 @@
-import { site } from '@/config/site'
+import { site } from "@/config/site";
 
-export type PlatformOS = 'macos' | 'windows' | 'linux'
-export type PlatformArch = 'arm64' | 'amd64'
+export type PlatformOS = "macos" | "windows" | "linux";
+export type PlatformArch = "arm64" | "amd64";
 
 export interface DetectedPlatform {
-  os: PlatformOS
-  arch: PlatformArch
+  os: PlatformOS;
+  arch: PlatformArch;
 }
 
 export interface PlatformInstallCommand {
-  prompt: '$' | '>'
-  command: string
+  prompt: "$" | ">";
+  command: string;
 }
 
 interface NavigatorUAData {
-  platform?: string
-  architecture?: string
+  platform?: string;
+  architecture?: string;
 }
 
 export function detectPlatform(): DetectedPlatform {
-  if (typeof navigator === 'undefined') {
-    return { os: 'macos', arch: 'arm64' }
+  if (typeof navigator === "undefined") {
+    return { os: "macos", arch: "arm64" };
   }
 
-  const nav = navigator as Navigator & { userAgentData?: NavigatorUAData }
-  const ua = (nav.userAgent || '').toLowerCase()
-  const platform = (nav.userAgentData?.platform || nav.platform || '').toLowerCase()
-  const archHint = (nav.userAgentData?.architecture || '').toLowerCase()
+  const nav = navigator as Navigator & { userAgentData?: NavigatorUAData };
+  const ua = (nav.userAgent || "").toLowerCase();
+  const platform = (nav.userAgentData?.platform || nav.platform || "").toLowerCase();
+  const archHint = (nav.userAgentData?.architecture || "").toLowerCase();
 
-  let os: PlatformOS = 'macos'
-  if (platform.includes('win') || ua.includes('windows')) {
-    os = 'windows'
-  } else if (
-    (platform.includes('linux') || ua.includes('linux')) &&
-    !ua.includes('android')
-  ) {
-    os = 'linux'
+  let os: PlatformOS = "macos";
+  if (platform.includes("win") || ua.includes("windows")) {
+    os = "windows";
+  } else if ((platform.includes("linux") || ua.includes("linux")) && !ua.includes("android")) {
+    os = "linux";
   } else {
-    os = 'macos'
+    os = "macos";
   }
 
-  let arch: PlatformArch = 'amd64'
+  let arch: PlatformArch = "amd64";
   if (
-    archHint.includes('arm') ||
-    ua.includes('arm64') ||
-    ua.includes('aarch64') ||
-    os === 'macos'
+    archHint.includes("arm") ||
+    ua.includes("arm64") ||
+    ua.includes("aarch64") ||
+    os === "macos"
   ) {
-    arch = 'arm64'
+    arch = "arm64";
   }
 
-  return { os, arch }
+  return { os, arch };
 }
 
 export function getInstallCommand(os: PlatformOS): PlatformInstallCommand {
-  if (os === 'windows') {
+  if (os === "windows") {
     return {
-      prompt: '>',
+      prompt: ">",
       command: site.windowsInstallCommand,
-    }
+    };
   }
-  if (os === 'linux') {
+  if (os === "linux") {
     return {
-      prompt: '$',
+      prompt: "$",
       command: site.linuxInstallCommand,
-    }
+    };
   }
   return {
-    prompt: '$',
+    prompt: "$",
     command: site.brewCommand,
-  }
+  };
 }

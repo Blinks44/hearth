@@ -1,21 +1,21 @@
-import { Check } from 'lucide-react'
-import { useState } from 'react'
-import { BrandLogo } from '@/components/BrandLogo'
-import * as m from '@/integrations/i18n/paraglide/messages'
-import type { ColorScheme } from '@/lib/theme'
+import { Check } from "lucide-react";
+import { useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
+import * as m from "@/integrations/i18n/paraglide/messages";
+import type { ColorScheme } from "@/lib/theme";
 
 interface BentoGridProps {
-  theme: ColorScheme
+  theme: ColorScheme;
 }
 
 const BENTO_CLEANUP = [
-  { id: 'nm', gb: 11.2 },
-  { id: 'pnpm', gb: 6.4 },
-  { id: 'docker', gb: 4.8 },
-  { id: 'ai', gb: 2.2 },
-] as const
+  { id: "nm", gb: 11.2 },
+  { id: "pnpm", gb: 6.4 },
+  { id: "docker", gb: 4.8 },
+  { id: "ai", gb: 2.2 },
+] as const;
 
-const BENTO_BARS = [28, 44, 58, 42, 74, 92, 66]
+const BENTO_BARS = [28, 44, 58, 42, 74, 92, 66];
 
 export function BentoGrid({ theme }: BentoGridProps) {
   const [checked, setChecked] = useState<Record<string, boolean>>({
@@ -23,16 +23,13 @@ export function BentoGrid({ theme }: BentoGridProps) {
     pnpm: true,
     docker: true,
     ai: false,
-  })
+  });
 
-  const selectedGb = BENTO_CLEANUP.reduce(
-    (sum, item) => sum + (checked[item.id] ? item.gb : 0),
-    0,
-  )
+  const selectedGb = BENTO_CLEANUP.reduce((sum, item) => sum + (checked[item.id] ? item.gb : 0), 0);
 
   const toggle = (id: string) => {
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
+    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <section className="bento-section" data-reveal>
@@ -52,19 +49,27 @@ export function BentoGrid({ theme }: BentoGridProps) {
             <h3>{m.bentoDockerTitle()}</h3>
             <p>{m.bentoDockerDesc()}</p>
             <div className="bento-widget">
-              <div className="preview-row" style={{ fontSize: '0.73rem', padding: '0 0.25rem' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
+              <div className="preview-row" style={{ fontSize: "0.73rem", padding: "0 0.25rem" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
                   <strong className="mono">colima</strong>
-                  <span className="pill pill-success" style={{ textTransform: 'none', letterSpacing: 0 }}>
+                  <span
+                    className="pill pill-success"
+                    style={{ textTransform: "none", letterSpacing: 0 }}
+                  >
                     {m.tabDockerManaged()}
                   </span>
                 </div>
                 <span className="widget-row-meta">RAM · 1.4 / 4.0 GB</span>
               </div>
               {[
-                { logo: 'postgresql', name: 'shop-postgres', img: 'postgres:16-alpine', port: ':5432' },
-                { logo: 'redis', name: 'shop-redis', img: 'redis:7-alpine', port: ':6379' },
-                { logo: 'nginx', name: 'shop-gateway', img: 'nginx:1.27', port: ':8080' },
+                {
+                  logo: "postgresql",
+                  name: "shop-postgres",
+                  img: "postgres:16-alpine",
+                  port: ":5432",
+                },
+                { logo: "redis", name: "shop-redis", img: "redis:7-alpine", port: ":6379" },
+                { logo: "nginx", name: "shop-gateway", img: "nginx:1.27", port: ":8080" },
               ].map((row) => (
                 <div key={row.name} className="widget-row widget-row-4col">
                   <span className="tool-cell">
@@ -90,17 +95,19 @@ export function BentoGrid({ theme }: BentoGridProps) {
             <h3>{m.bentoK8sTitle()}</h3>
             <p>{m.bentoK8sDesc()}</p>
             <div className="bento-widget">
-              <div className="preview-row" style={{ fontSize: '0.73rem', padding: '0 0.25rem' }}>
-                <span className="mono" style={{ fontWeight: 600 }}>kind-dev / default / Pods</span>
+              <div className="preview-row" style={{ fontSize: "0.73rem", padding: "0 0.25rem" }}>
+                <span className="mono" style={{ fontWeight: 600 }}>
+                  kind-dev / default / Pods
+                </span>
                 <kbd
                   className="mono"
                   style={{
-                    fontSize: '0.68rem',
-                    padding: '0.1rem 0.35rem',
-                    borderRadius: '4px',
-                    background: 'var(--hearth-bg-elevated)',
-                    border: '1px solid var(--hearth-border)',
-                    color: 'var(--hearth-text-muted)',
+                    fontSize: "0.68rem",
+                    padding: "0.1rem 0.35rem",
+                    borderRadius: "4px",
+                    background: "var(--hearth-bg-elevated)",
+                    border: "1px solid var(--hearth-border)",
+                    color: "var(--hearth-text-muted)",
                   }}
                 >
                   ⌘J
@@ -116,7 +123,7 @@ export function BentoGrid({ theme }: BentoGridProps) {
               </div>
               <div className="widget-row widget-row-3col">
                 <span className="mono widget-row-primary">worker-4b4a1-9q7p</span>
-                <span className="widget-row-meta" style={{ color: 'var(--hearth-danger)' }}>
+                <span className="widget-row-meta" style={{ color: "var(--hearth-danger)" }}>
                   0/1 · OOMKilled
                 </span>
                 <span className="status-chip status-danger widget-row-status">
@@ -150,27 +157,37 @@ export function BentoGrid({ theme }: BentoGridProps) {
                   <BrandLogo name="cursor" alt="Cursor" theme={theme} hasDark size={18} />
                   <BrandLogo name="githubcopilot" alt="Copilot" theme={theme} hasDark size={18} />
                 </div>
-                <span className="status-chip status-running mono" style={{ fontSize: '0.68rem' }}>
+                <span className="status-chip status-running mono" style={{ fontSize: "0.68rem" }}>
                   ✓ ~/.agents/AGENTS.md linked
                 </span>
               </div>
-              <div className="spend-card" style={{ padding: '0.75rem 0.85rem' }}>
+              <div className="spend-card" style={{ padding: "0.75rem 0.85rem" }}>
                 <div>
-                  <div style={{ fontSize: '0.64rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hearth-text-muted)' }}>
+                  <div
+                    style={{
+                      fontSize: "0.64rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--hearth-text-muted)",
+                    }}
+                  >
                     {m.tabAiSpendLabel()}
                   </div>
-                  <div className="spend-amount" style={{ fontSize: '1.15rem' }}>$28.40</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--hearth-text-muted)' }}>
+                  <div className="spend-amount" style={{ fontSize: "1.15rem" }}>
+                    $28.40
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--hearth-text-muted)" }}>
                     842k tokens · 4 agents
                   </div>
                 </div>
-                <div className="spend-bars" style={{ height: '38px' }} aria-hidden="true">
+                <div className="spend-bars" style={{ height: "38px" }} aria-hidden="true">
                   {BENTO_BARS.map((h, i) => (
                     <div
                       key={i}
                       className="spend-bar"
                       data-peak={i === 5}
-                      style={{ width: '11px', height: `${h}%` }}
+                      style={{ width: "11px", height: `${h}%` }}
                     />
                   ))}
                 </div>
@@ -182,7 +199,10 @@ export function BentoGrid({ theme }: BentoGridProps) {
           <article className="bento-card">
             <div className="preview-row">
               <span className="pill pill-success">{m.bentoCleanupPill()}</span>
-              <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--hearth-accent)' }}>
+              <span
+                className="mono"
+                style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--hearth-accent)" }}
+              >
                 {m.bentoCleanupSelectedNote({ selected: selectedGb.toFixed(1) })}
               </span>
             </div>
@@ -190,12 +210,27 @@ export function BentoGrid({ theme }: BentoGridProps) {
             <p>{m.bentoCleanupDesc()}</p>
             <div className="bento-widget">
               {[
-                { id: 'nm', title: m.tabCleanupItem1Title(), sub: m.tabCleanupItem1Sub(), gb: 11.2 },
-                { id: 'pnpm', title: m.tabCleanupItem2Title(), sub: m.tabCleanupItem2Sub(), gb: 6.4 },
-                { id: 'docker', title: m.tabCleanupItem3Title(), sub: m.tabCleanupItem3Sub(), gb: 4.8 },
-                { id: 'ai', title: m.tabCleanupItem4Title(), sub: m.tabCleanupItem4Sub(), gb: 2.2 },
+                {
+                  id: "nm",
+                  title: m.tabCleanupItem1Title(),
+                  sub: m.tabCleanupItem1Sub(),
+                  gb: 11.2,
+                },
+                {
+                  id: "pnpm",
+                  title: m.tabCleanupItem2Title(),
+                  sub: m.tabCleanupItem2Sub(),
+                  gb: 6.4,
+                },
+                {
+                  id: "docker",
+                  title: m.tabCleanupItem3Title(),
+                  sub: m.tabCleanupItem3Sub(),
+                  gb: 4.8,
+                },
+                { id: "ai", title: m.tabCleanupItem4Title(), sub: m.tabCleanupItem4Sub(), gb: 2.2 },
               ].map((item) => {
-                const isChecked = Boolean(checked[item.id])
+                const isChecked = Boolean(checked[item.id]);
                 return (
                   <div
                     key={item.id}
@@ -205,9 +240,9 @@ export function BentoGrid({ theme }: BentoGridProps) {
                     className="cleanup-row cleanup-row-bento"
                     onClick={() => toggle(item.id)}
                     onKeyDown={(e) => {
-                      if (e.key === ' ' || e.key === 'Enter') {
-                        e.preventDefault()
-                        toggle(item.id)
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        toggle(item.id);
                       }
                     }}
                   >
@@ -215,16 +250,16 @@ export function BentoGrid({ theme }: BentoGridProps) {
                       <span className="cleanup-checkbox-box" data-checked={isChecked}>
                         {isChecked ? <Check size={11} strokeWidth={3} aria-hidden="true" /> : null}
                       </span>
-                      <span className="cleanup-row-title" style={{ fontSize: '0.76rem' }}>
+                      <span className="cleanup-row-title" style={{ fontSize: "0.76rem" }}>
                         {item.title}
                       </span>
                     </div>
                     <span className="cleanup-bento-sub">{item.sub}</span>
-                    <span className="cleanup-row-size" style={{ fontSize: '0.75rem' }}>
+                    <span className="cleanup-row-size" style={{ fontSize: "0.75rem" }}>
                       {item.gb.toFixed(1)} GB
                     </span>
                   </div>
-                )
+                );
               })}
             </div>
           </article>
@@ -237,19 +272,27 @@ export function BentoGrid({ theme }: BentoGridProps) {
             <h3>{m.bentoDbTitle()}</h3>
             <p>{m.bentoDbDesc()}</p>
             <div className="bento-widget">
-              <div className="preview-row" style={{ padding: '0 0.2rem' }}>
-                <span style={{ fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--hearth-text-muted)' }}>
+              <div className="preview-row" style={{ padding: "0 0.2rem" }}>
+                <span
+                  style={{
+                    fontSize: "0.66rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.07em",
+                    textTransform: "uppercase",
+                    color: "var(--hearth-text-muted)",
+                  }}
+                >
                   {m.bentoDbHeader()}
                 </span>
                 <span
                   style={{
-                    fontSize: '0.7rem',
+                    fontSize: "0.7rem",
                     fontWeight: 600,
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '6px',
-                    background: 'var(--hearth-bg-elevated)',
-                    border: '1px solid var(--hearth-border)',
-                    color: 'var(--hearth-text-secondary)',
+                    padding: "0.2rem 0.5rem",
+                    borderRadius: "6px",
+                    background: "var(--hearth-bg-elevated)",
+                    border: "1px solid var(--hearth-border)",
+                    color: "var(--hearth-text-secondary)",
                   }}
                 >
                   {m.bentoDbInstallBtn()}
@@ -299,11 +342,19 @@ export function BentoGrid({ theme }: BentoGridProps) {
             <h3>{m.bentoShellTitle()}</h3>
             <p>{m.bentoShellDesc()}</p>
             <div className="bento-widget">
-              <div className="preview-row" style={{ padding: '0 0.2rem' }}>
-                <span style={{ fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--hearth-text-muted)' }}>
+              <div className="preview-row" style={{ padding: "0 0.2rem" }}>
+                <span
+                  style={{
+                    fontSize: "0.66rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.07em",
+                    textTransform: "uppercase",
+                    color: "var(--hearth-text-muted)",
+                  }}
+                >
                   {m.bentoShellHeader()}
                 </span>
-                <span className="status-chip status-running mono" style={{ fontSize: '0.68rem' }}>
+                <span className="status-chip status-running mono" style={{ fontSize: "0.68rem" }}>
                   1.4s → 0.2s
                 </span>
               </div>
@@ -336,5 +387,5 @@ export function BentoGrid({ theme }: BentoGridProps) {
         </div>
       </div>
     </section>
-  )
+  );
 }

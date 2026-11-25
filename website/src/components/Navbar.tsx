@@ -19,6 +19,7 @@ import {
   MenuRadioItemGroup,
   MenuTrigger,
 } from "@moduix/react/menu";
+import { Link } from "@tanstack/react-router";
 import { Check, ChevronDown, Globe, Menu as MenuIcon, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { type Locale, localeLabels, locales } from "@/config/locales";
@@ -40,16 +41,25 @@ interface NavbarProps {
   onToggleTheme: () => void;
 }
 
+type NavItem =
+  | {
+      key: string;
+      to: "/" | "/alternatives/docker-desktop/" | "/guides/dev-environment-setup/";
+      hash?: string;
+      label: string;
+    }
+  | { key: string; href: string; label: string; external: true };
+
 export function Navbar({ theme, onToggleTheme }: NavbarProps) {
   const currentLocale = getLocale() as Locale;
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const navItems = [
-    { href: "#features", label: m.navFeatures() },
-    { href: "#safety", label: m.navSafety() },
-    { href: "#mcp", label: m.navMcp() },
-    { href: "#install", label: m.navInstall() },
-    { href: site.docs, label: m.navDocs(), external: true },
+  const navItems: NavItem[] = [
+    { key: "features", to: "/", hash: "features", label: m.navFeatures() },
+    { key: "alternatives", to: "/alternatives/docker-desktop/", label: m.navAlternatives() },
+    { key: "guides", to: "/guides/dev-environment-setup/", label: m.navGuides() },
+    { key: "safety", to: "/", hash: "safety", label: m.navSafety() },
+    { key: "docs", href: site.docs, label: m.navDocs(), external: true },
   ];
 
   const onSelectLocale = (next: string) => {
@@ -61,22 +71,29 @@ export function Navbar({ theme, onToggleTheme }: NavbarProps) {
   return (
     <header className="navbar">
       <div className="container navbar-inner">
-        <a href="#top" className="brand-link">
+        <Link to="/" className="brand-link">
           <img src="/app-icon.png" alt="Hearth" width={28} height={28} className="brand-icon" />
           <span>{site.name}</span>
-        </a>
+        </Link>
 
         <nav className="nav-links" aria-label="Primary">
-          {navItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="nav-link"
-              {...(item.external ? { target: "_blank", rel: "noreferrer" } : {})}
-            >
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) =>
+            "external" in item ? (
+              <a
+                key={item.key}
+                href={item.href}
+                className="nav-link"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.key} to={item.to} hash={item.hash} className="nav-link">
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="nav-actions">
@@ -138,9 +155,9 @@ export function Navbar({ theme, onToggleTheme }: NavbarProps) {
             )}
           </button>
 
-          <a href="#install" className="btn-hearth-dark nav-download-btn">
+          <Link to="/" hash="install" className="btn-hearth-dark nav-download-btn">
             {m.navDownload()}
-          </a>
+          </Link>
 
           <Drawer open={drawerOpen} onOpenChange={(details) => setDrawerOpen(details.open)}>
             <DrawerTrigger
@@ -158,17 +175,30 @@ export function Navbar({ theme, onToggleTheme }: NavbarProps) {
                 </DrawerHeader>
                 <DrawerBody>
                   <div className="drawer-nav-list">
-                    {navItems.map((item) => (
-                      <a
-                        key={item.href}
-                        href={item.href}
-                        className="drawer-nav-link"
-                        onClick={() => setDrawerOpen(false)}
-                        {...(item.external ? { target: "_blank", rel: "noreferrer" } : {})}
-                      >
-                        {item.label}
-                      </a>
-                    ))}
+                    {navItems.map((item) =>
+                      "external" in item ? (
+                        <a
+                          key={item.key}
+                          href={item.href}
+                          className="drawer-nav-link"
+                          onClick={() => setDrawerOpen(false)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={item.key}
+                          to={item.to}
+                          hash={item.hash}
+                          className="drawer-nav-link"
+                          onClick={() => setDrawerOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ),
+                    )}
                     <a
                       href={site.repository}
                       target="_blank"

@@ -31,11 +31,11 @@
   box-shadow:
     0 24px 70px rgba(29, 27, 24, 0.14),
     0 4px 16px rgba(29, 27, 24, 0.06);
-  font-family: var(--moduix-font-sans, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  font-family: var(--moduix-font-sans, "Inter", -apple-system, BlinkMacSystemFont, sans-serif);
   -webkit-font-smoothing: antialiased;
 }
 
-.hero-app-shell[data-theme='dark'] {
+.hero-app-shell[data-theme="dark"] {
   --ha-sidebar: #252320;
   --ha-sidebar-hover: #2f2c28;
   --ha-sidebar-chosen: #36332e;
@@ -232,7 +232,10 @@
   cursor: pointer;
   text-align: left;
   flex-shrink: 0;
-  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .ha-nav-item:focus {
@@ -285,7 +288,7 @@
 
 .ha-nav-end {
   font-size: 10px;
-  font-family: var(--moduix-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-family: var(--moduix-font-mono, "JetBrains Mono", ui-monospace, monospace);
   color: var(--ha-text-faint);
   flex-shrink: 0;
 }
@@ -374,7 +377,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .ha-icon-btn:focus {

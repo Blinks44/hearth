@@ -1,16 +1,16 @@
-import { Check, RotateCcw, ShieldCheck } from 'lucide-react'
-import { useState } from 'react'
-import * as m from '@/integrations/i18n/paraglide/messages'
+import { Check, RotateCcw, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import * as m from "@/integrations/i18n/paraglide/messages";
 
 export function SafetySection() {
-  const [applied, setApplied] = useState(false)
+  const [applied, setApplied] = useState(false);
 
   const rules = [
     { title: m.safetyRule1Title(), desc: m.safetyRule1Desc() },
     { title: m.safetyRule2Title(), desc: m.safetyRule2Desc() },
     { title: m.safetyRule3Title(), desc: m.safetyRule3Desc() },
     { title: m.safetyRule4Title(), desc: m.safetyRule4Desc() },
-  ]
+  ];
 
   return (
     <section id="safety" className="safety-section" data-reveal>
@@ -42,7 +42,10 @@ export function SafetySection() {
                 <h3>{m.safetyDialogTitle()}</h3>
                 <p>{m.safetyDialogSub()}</p>
               </div>
-              <span className="pill pill-success" style={{ textTransform: 'none', letterSpacing: 0 }}>
+              <span
+                className="pill pill-success"
+                style={{ textTransform: "none", letterSpacing: 0 }}
+              >
                 <ShieldCheck size={13} aria-hidden="true" />
                 {applied ? m.safetyVerifiedPill() : m.safetyBackupPill()}
               </span>
@@ -56,7 +59,7 @@ export function SafetySection() {
               <div className="diff-lines">
                 <div className="diff-line diff-ctx">
                   <span className="diff-ln">41</span>
-                  <span>  export EDITOR=&quot;code --wait&quot;</span>
+                  <span> export EDITOR=&quot;code --wait&quot;</span>
                 </div>
                 {!applied ? (
                   <>
@@ -89,7 +92,7 @@ export function SafetySection() {
                   <>
                     <div className="diff-line diff-ctx">
                       <span className="diff-ln">42</span>
-                      <span>  # export PATH=&quot;/opt/homebrew/opt/node@18/bin:$PATH&quot;</span>
+                      <span> # export PATH=&quot;/opt/homebrew/opt/node@18/bin:$PATH&quot;</span>
                     </div>
                     <div className="diff-line diff-ctx">
                       <span className="diff-ln">43</span>
@@ -97,15 +100,15 @@ export function SafetySection() {
                     </div>
                     <div className="diff-line diff-add">
                       <span className="diff-ln">44</span>
-                      <span>  # &gt;&gt;&gt; hearth &gt;&gt;&gt;</span>
+                      <span> # &gt;&gt;&gt; hearth &gt;&gt;&gt;</span>
                     </div>
                     <div className="diff-line diff-add">
                       <span className="diff-ln">45</span>
-                      <span>  eval &quot;$(mise activate zsh)&quot;</span>
+                      <span> eval &quot;$(mise activate zsh)&quot;</span>
                     </div>
                     <div className="diff-line diff-add">
                       <span className="diff-ln">46</span>
-                      <span>  # &lt;&lt;&lt; hearth &lt;&lt;&lt;</span>
+                      <span> # &lt;&lt;&lt; hearth &lt;&lt;&lt;</span>
                     </div>
                   </>
                 )}
@@ -150,5 +153,5 @@ export function SafetySection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

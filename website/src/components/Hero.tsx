@@ -1,40 +1,40 @@
-import { Download } from 'lucide-react'
-import { BrandLogo } from '@/components/BrandLogo'
-import { CopyButton } from '@/components/CopyButton'
-import { HeroAppWindow } from '@/components/HeroAppWindow'
-import * as m from '@/integrations/i18n/paraglide/messages'
-import type { ReleaseAssets } from '@/integrations/releases'
-import { type DetectedPlatform, getInstallCommand } from '@/lib/os'
-import type { ColorScheme } from '@/lib/theme'
+import { Download } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
+import { CopyButton } from "@/components/CopyButton";
+import { HeroAppWindow } from "@/components/HeroAppWindow";
+import * as m from "@/integrations/i18n/paraglide/messages";
+import type { ReleaseAssets } from "@/integrations/releases";
+import { type DetectedPlatform, getInstallCommand } from "@/lib/os";
+import type { ColorScheme } from "@/lib/theme";
 
 interface HeroProps {
-  release: ReleaseAssets
-  platform: DetectedPlatform
-  theme: ColorScheme
-  onToggleTheme: () => void
+  release: ReleaseAssets;
+  platform: DetectedPlatform;
+  theme: ColorScheme;
+  onToggleTheme: () => void;
 }
 
 export function Hero({ release, platform, theme, onToggleTheme }: HeroProps) {
   const primaryCta = (() => {
-    if (platform.os === 'windows') {
+    if (platform.os === "windows") {
       return {
         label: m.heroDownloadWin(),
-        href: platform.arch === 'arm64' ? release.windowsArm64 : release.windowsAmd64,
-      }
+        href: platform.arch === "arm64" ? release.windowsArm64 : release.windowsAmd64,
+      };
     }
-    if (platform.os === 'linux') {
+    if (platform.os === "linux") {
       return {
         label: m.heroDownloadLinux(),
-        href: platform.arch === 'arm64' ? release.linuxDebArm64 : release.linuxDebAmd64,
-      }
+        href: platform.arch === "arm64" ? release.linuxDebArm64 : release.linuxDebAmd64,
+      };
     }
     return {
       label: m.heroDownloadMac(),
       href: release.macosDmg,
-    }
-  })()
+    };
+  })();
 
-  const installCmd = getInstallCommand(platform.os)
+  const installCmd = getInstallCommand(platform.os);
 
   return (
     <section id="top" className="hero">
@@ -124,5 +124,5 @@ export function Hero({ release, platform, theme, onToggleTheme }: HeroProps) {
         </div>
       </div>
     </section>
-  )
+  );
 }

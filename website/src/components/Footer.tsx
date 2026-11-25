@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { WorkflowTabId } from "@/components/WorkflowShowcase";
 import { site } from "@/config/site";
 import * as m from "@/integrations/i18n/paraglide/messages";
@@ -14,7 +15,7 @@ export function Footer({ release, onSelectWorkflow }: FooterProps) {
       <div className="container">
         <div className="footer-grid">
           <div>
-            <a href="#top" className="brand-link">
+            <Link to="/" className="brand-link">
               <img
                 src="/app-icon.png"
                 alt="Hearth"
@@ -24,7 +25,7 @@ export function Footer({ release, onSelectWorkflow }: FooterProps) {
                 loading="lazy"
               />
               <span>{site.name}</span>
-            </a>
+            </Link>
             <p className="footer-tagline">{m.footerTagline()}</p>
           </div>
 
@@ -32,29 +33,50 @@ export function Footer({ release, onSelectWorkflow }: FooterProps) {
             <h4>{m.footerColProduct()}</h4>
             <ul>
               <li>
-                <a href="#features" onClick={() => onSelectWorkflow?.("overview")}>
+                <Link to="/" hash="features" onClick={() => onSelectWorkflow?.("overview")}>
                   {m.footerLinkOverview()}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#features" onClick={() => onSelectWorkflow?.("projects")}>
+                <Link to="/" hash="features" onClick={() => onSelectWorkflow?.("projects")}>
                   {m.footerLinkProjects()}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#features" onClick={() => onSelectWorkflow?.("docker")}>
+                <Link to="/" hash="features" onClick={() => onSelectWorkflow?.("docker")}>
                   {m.footerLinkDocker()}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#features" onClick={() => onSelectWorkflow?.("ai")}>
+                <Link to="/" hash="features" onClick={() => onSelectWorkflow?.("ai")}>
                   {m.footerLinkAi()}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#features" onClick={() => onSelectWorkflow?.("cleanup")}>
+                <Link to="/" hash="features" onClick={() => onSelectWorkflow?.("cleanup")}>
                   {m.footerLinkCleanup()}
-                </a>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h4>{m.footerColGuides()}</h4>
+            <ul>
+              <li>
+                <Link to="/alternatives/docker-desktop/">{m.footerLinkDockerAlt()}</Link>
+              </li>
+              <li>
+                <Link to="/alternatives/lens-freelens/">{m.footerLinkLensAlt()}</Link>
+              </li>
+              <li>
+                <Link to="/alternatives/dbngin/">{m.footerLinkDbnginAlt()}</Link>
+              </li>
+              <li>
+                <Link to="/guides/dev-environment-setup/">{m.footerLinkSetupGuide()}</Link>
+              </li>
+              <li>
+                <Link to="/guides/ai-agents-mcp/">{m.footerLinkAiGuide()}</Link>
               </li>
             </ul>
           </div>
@@ -63,7 +85,9 @@ export function Footer({ release, onSelectWorkflow }: FooterProps) {
             <h4>{m.footerColResources()}</h4>
             <ul>
               <li>
-                <a href="#install">{m.footerLinkInstall()}</a>
+                <Link to="/" hash="install">
+                  {m.footerLinkInstall()}
+                </Link>
               </li>
               <li>
                 <a href={site.security} target="_blank" rel="noreferrer">

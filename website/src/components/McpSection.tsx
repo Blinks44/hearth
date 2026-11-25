@@ -1,5 +1,5 @@
-import { CopyButton } from '@/components/CopyButton'
-import * as m from '@/integrations/i18n/paraglide/messages'
+import { CopyButton } from "@/components/CopyButton";
+import * as m from "@/integrations/i18n/paraglide/messages";
 
 const MCP_SNIPPET = `{
   "mcpServers": {
@@ -8,15 +8,15 @@ const MCP_SNIPPET = `{
       "args": ["mcp"]
     }
   }
-}`
+}`;
 
 const TOOLS = [
-  { name: 'get_tools', accent: false },
-  { name: 'get_projects', accent: false },
-  { name: 'get_issues', accent: false },
-  { name: 'get_agents', accent: false },
-  { name: 'propose_fix', accent: true },
-] as const
+  { name: "get_tools", accent: false },
+  { name: "get_projects", accent: false },
+  { name: "get_issues", accent: false },
+  { name: "get_agents", accent: false },
+  { name: "propose_fix", accent: true },
+] as const;
 
 export function McpSection() {
   return (
@@ -32,7 +32,7 @@ export function McpSection() {
               {TOOLS.map((tool) => (
                 <span
                   key={tool.name}
-                  className={tool.accent ? 'mcp-chip mcp-chip-accent' : 'mcp-chip'}
+                  className={tool.accent ? "mcp-chip mcp-chip-accent" : "mcp-chip"}
                 >
                   {tool.name}
                 </span>
@@ -77,5 +77,5 @@ export function McpSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

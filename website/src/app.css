@@ -1,5 +1,6 @@
-@import '@moduix/react/reset.css';
-@import '@moduix/react/style.css';
-@import './styles/tokens.css';
-@import './styles/landing.css';
-@import './styles/hero-app.css';
+@import "@moduix/react/reset.css";
+@import "@moduix/react/style.css";
+@import "./styles/tokens.css";
+@import "./styles/landing.css";
+@import "./styles/hero-app.css";
+@import "./styles/seo.css";

@@ -1981,8 +1981,8 @@ html[data-reveal-ready="true"] [data-reveal][data-revealed="true"] {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 1fr));
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1.35fr) repeat(4, minmax(0, 1fr));
+  gap: 1.75rem;
 }
 
 .footer-tagline {
