@@ -201,15 +201,19 @@ func TestPackageNameTooltip(t *testing.T) {
 	a.router.Push(packagesManagerPath("/opt/homebrew/bin/brew"))
 	tt := ui.NewTester(a.View, 1000, 680)
 	tt.Advance(time.Second)
-	at, ok := tt.Find(long)
+	verAt, ok := tt.Find("1.0")
 	if !ok {
-		t.Fatalf("no %s: %q", long, tt.Texts())
+		t.Fatalf("no version label: %q", tt.Texts())
 	}
 	before := countText(tt, long)
 	if before < 1 {
 		t.Fatalf("%d copies of the name before resting on it", before)
 	}
-	tt.Move(at.X+40, at.Y+at.H/2)
+	// tt.Find(long) returns the outer row ButtonBase (whose Label is pkg.Name)
+	// rather than the clipped name text sitting above the version line. Hovering
+	// directly above the version line lands on the name text regardless of OS
+	// font line-height differences.
+	tt.Move(verAt.X+40, verAt.Y-8)
 	tt.Advance(time.Second)
 	if n := countText(tt, long); n != before+1 {
 		t.Errorf("%d copies of the name after resting on it, want %d (cell plus tooltip)", n, before+1)
