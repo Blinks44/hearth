@@ -545,10 +545,7 @@ func (a *App) updateRowAction(r updateRow) func() {
 	if r.m.Path != "" {
 		mgrPath, pkgName := r.m.Path, r.pkg.Name
 		return func() {
-			a.packageManager = mgrPath
-			a.packageTab = 0
-			a.packageFilter = pkgName
-			a.router.Push("/system/packages")
+			a.openPackageSearch(mgrPath, pkgName)
 		}
 	}
 	return nil

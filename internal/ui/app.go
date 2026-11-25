@@ -21,6 +21,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/kube"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/pkgmgr"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
@@ -336,36 +337,42 @@ type App struct {
 	// package operation's check, and drops m's kept online answer; it
 	// runs on the operation's goroutine.
 	RereadPackages func(ctx context.Context, m inventory.PackageManager) (inventory.PackageManager, error)
+	// SearchPackages runs an explicit user-triggered catalog search against m
+	// in the background and delivers results to done via Window.Update;
+	// returns a cancel function.
+	SearchPackages func(m inventory.PackageManager, query, kind string, done func([]pkgmgr.SearchResult, error)) func()
 
-	preparing       *preparing
-	op              *operation // the operation shown or running; nil when none
-	setup           setupState // where the new computer wizard is
-	search          searchState
-	filterField     ui.Handle // the filter of the page shown, which / focuses
-	router          *ui.Router
-	notFoundOpen    bool                // the languages and tools not found show in the sidebar
-	nodeTab         int                 // the tab of the Node.js page shown
-	jspmTab         int                 // the tab of the package managers page shown
-	jspmFilter      string              // the package managers table's filter
-	pathTab         int                 // the tab of the PATH page shown
-	pathFilter      string              // the PATH table's filter
-	pathFixErr      string              // why the PATH problems asked to fix have no plan
-	pathFixSnap     *inventory.Snapshot // snapshot pathFixErr belongs to
-	pathFixAllNone  bool                // fixing all PATH problems already returned ErrNoFix
-	pathAddOpen     bool                // the dialog to add a directory to PATH is open
-	pathAddInput    string              // the directory typed in the PATH add dialog
-	pathAddErr      string              // why the entered directory cannot be added
-	planErr         string              // why a plan asked for could not be made, until a toast says it
-	notice          string              // what a toast says next, as a set saved
-	packageTab      int                 // the tab of the system package managers page shown
-	packageManager  string              // the path of the package manager shown
-	packageFilter   string              // the package table's filter
-	packageSort     int                 // the package table's order: sortByName, sortByDependents or sortBySize
-	packageLimit    int                 // max rows shown in the package table before "Show more"
-	packageLimitKey string              // resets packageLimit when manager/tab/sort/filter changes
-	// packageChosen are the updates checked to run, by manager path and
-	// packageKey.
+	preparing         *preparing
+	op                *operation // the operation shown or running; nil when none
+	setup             setupState // where the new computer wizard is
+	search            searchState
+	filterField       ui.Handle // the filter of the page shown, which / focuses
+	router            *ui.Router
+	notFoundOpen      bool                // the languages and tools not found show in the sidebar
+	nodeTab           int                 // the tab of the Node.js page shown
+	jspmTab           int                 // the tab of the package managers page shown
+	jspmFilter        string              // the package managers table's filter
+	pathTab           int                 // the tab of the PATH page shown
+	pathFilter        string              // the PATH table's filter
+	pathFixErr        string              // why the PATH problems asked to fix have no plan
+	pathFixSnap       *inventory.Snapshot // snapshot pathFixErr belongs to
+	pathFixAllNone    bool                // fixing all PATH problems already returned ErrNoFix
+	pathAddOpen       bool                // the dialog to add a directory to PATH is open
+	pathAddInput      string              // the directory typed in the PATH add dialog
+	pathAddErr        string              // why the entered directory cannot be added
+	planErr           string              // why a plan asked for could not be made, until a toast says it
+	notice            string              // what a toast says next, as a set saved
+	packageLandingTab int                 // the tab of the Package Managers landing page shown
+	packageTab        int                 // the sub-filter tab in the Packages view
+	packageManager    string              // the path of the package manager last opened
+	packageFilter     string              // the package table's filter
+	packageSort       int                 // the package table's order: sortByName, sortByDependents or sortBySize
+	packageLimit      int                 // max rows shown in the package table before "Show more"
+	packageLimitKey   string              // resets packageLimit when manager/tab/sort/filter changes
+	// packageChosen are the packages checked for bulk actions, by manager path
+	// and packageKey.
 	packageChosen       map[string]bool
+	pkg                 packageManagerState
 	terminalCustomOpen  bool   // whether the custom terminal path input is expanded in Settings
 	terminalCustomInput string // custom terminal path being edited in Settings
 	editorCustomOpen    bool   // whether the custom editor path input is expanded in Settings
@@ -474,6 +481,7 @@ func NewApp() *App {
 	return &App{
 		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, Locale: "en", usageTab: 1,
 		engine: dockerEngineState{view: dockerContainers},
+		pkg:    packageManagerState{view: pkgViewPackages},
 	}
 }
 
@@ -482,6 +490,7 @@ func (a *App) View(c *ui.Context) {
 	c.SetTheme(Theme(c.Theme()))
 	a.syncCluster()
 	a.syncDocker()
+	a.syncPackages()
 	a.syncDockerDetail(c)
 	a.syncDockerLogs()
 	a.syncHelmContent()
@@ -505,6 +514,19 @@ func (a *App) View(c *ui.Context) {
 			c.OnShortcut(0, ui.KeyEscape, a.engine.containers.closeLogs)
 		case a.engine.containers.detail.id != "" && (a.op == nil || !a.op.open):
 			c.OnShortcut(0, ui.KeyEscape, a.engine.containers.closeDetail)
+		}
+	}
+	if a.router.Path() == packagesManagerPage {
+		c.OnShortcut(ui.Cmd, ui.KeyJ, a.togglePackageViews)
+		switch {
+		case a.pkg.viewsOpen:
+			c.OnShortcut(0, ui.KeyEscape, func() { a.pkg.viewsOpen = false })
+		case a.pkg.managerOpen:
+			c.OnShortcut(0, ui.KeyEscape, func() { a.pkg.managerOpen = false })
+		case a.pkg.detailKey != "" && (a.op == nil || !a.op.open):
+			c.OnShortcut(0, ui.KeyEscape, func() { a.pkg.detailKey = "" })
+		case len(a.packageChosen) > 0 && (a.op == nil || !a.op.open):
+			c.OnShortcut(0, ui.KeyEscape, func() { a.packageChosen = nil })
 		}
 	}
 	if a.router.Path() == kubeClusterPage {
@@ -557,6 +579,16 @@ func (a *App) View(c *ui.Context) {
 				name := r.Query("context")
 				r.Title(name)
 				a.dockerEngineView(c, name)
+				return
+			}
+			if r.Match(packagesManagerPage) {
+				path := r.Query("path")
+				title := locales.PackageManagersTitle()
+				if m, ok := a.packageManagerByPath(path); ok && m.Name != "" {
+					title = m.Name
+				}
+				r.Title(title)
+				a.packagesManagerView(c, path)
 				return
 			}
 			if r.Match(changesPage.path) {

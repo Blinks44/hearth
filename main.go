@@ -822,6 +822,19 @@ func main() {
 			}
 			return pkgmgr.Reread(ctx, run.Exec{}, env, m)
 		}
+		a.SearchPackages = func(m inventory.PackageManager, query, kind string, done func([]pkgmgr.SearchResult, error)) func() {
+			ctx, cancel := context.WithTimeout(catalogCtx, 35*time.Second)
+			env := scanner.Terminal()
+			go func() {
+				defer cancel()
+				results, err := pkgmgr.Search(ctx, run.Exec{}, env, m, query, kind)
+				if errors.Is(ctx.Err(), context.Canceled) {
+					return
+				}
+				win.Update(func() { done(results, err) })
+			}()
+			return cancel
+		}
 		var cancelVersions context.CancelFunc
 		var cancelPackages context.CancelFunc
 		fetchPackages = func(force bool) {

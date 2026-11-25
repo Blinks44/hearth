@@ -282,6 +282,31 @@ func (a *App) kubeFileGroupHead(c *ui.Context, f inventory.KubeFile, n int) {
 	})
 }
 
+func kubeContextIcon(k inventory.KubeContext) string {
+	hay := strings.ToLower(k.Name + " " + k.Cluster + " " + k.Auth)
+	switch {
+	case strings.Contains(hay, "arn:aws") || strings.Contains(hay, "eks") || strings.Contains(hay, "aws"):
+		return "brand/aws"
+	case strings.Contains(hay, "gke_") || strings.Contains(hay, "gke") || strings.Contains(hay, "gcloud") || strings.Contains(hay, "gcp"):
+		return "brand/googlecloud"
+	case strings.Contains(hay, "aks") || strings.Contains(hay, "azure") || strings.Contains(hay, "kubelogin"):
+		return "brand/azure"
+	case strings.Contains(hay, "docker-desktop") || strings.Contains(hay, "colima") || strings.Contains(hay, "orbstack"):
+		return "brand/docker"
+	case strings.Contains(hay, "kind-") ||
+		strings.Contains(hay, "minikube") ||
+		strings.Contains(hay, "k3d-") ||
+		strings.Contains(hay, "k3s") ||
+		strings.Contains(hay, "rancher-desktop") ||
+		strings.Contains(hay, "microk8s") ||
+		strings.Contains(hay, "localhost") ||
+		strings.Contains(hay, "127.0.0.1"):
+		return "lucide/container"
+	default:
+		return "lucide/globe"
+	}
+}
+
 // kubeContextRow is a context: its cluster, namespace and sign-in program,
 // whether kubectl uses it, what its last check found, and the check and
 // the plans to use it or change its namespace.
@@ -343,6 +368,7 @@ func (a *App) kubeContextRow(c *ui.Context, cli inventory.CliState, k inventory.
 		row.ContextMenu(menu)
 	}
 	row.Children(func() {
+		entityTile(c, kubeContextIcon(k), 28)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			clipped(c, k.Name).FontSize(13)
 			clipped(c, strings.Join(parts, " · ")).FontSize(10.5).TextColor(pal.TextFaint)

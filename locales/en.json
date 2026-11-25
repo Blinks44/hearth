@@ -17436,5 +17436,300 @@
   "kubeYamlMappingExpected": "expected a YAML mapping",
   "@kubeYamlMappingExpected": {
     "description": "Validation detail shown when a pasted kubeconfig is not a YAML mapping."
+  },
+  "pkgInstallMany": "Install {count} packages",
+  "@pkgInstallMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgUninstallMany": "Remove {count} packages",
+  "@pkgUninstallMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgAutoremoveTitle": "Remove unused dependencies",
+  "pkgAutoremoveWhy": "Remove {count, plural, one {# unused dependency} other {# unused dependencies}} through {manager}. Packages you installed remain untouched.",
+  "@pkgAutoremoveWhy": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgAutoremoveVerified": "Removed unused dependencies through {manager}.",
+  "@pkgAutoremoveVerified": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgAutoremoveRemaining": "{count, plural, one {# unused dependency still remains} other {# unused dependencies still remain}} in {manager}.",
+  "@pkgAutoremoveRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgManagerInstallTitle": "Install {name}",
+  "@pkgManagerInstallTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgManagerInstallWhy": "Install {name} using its official installer so Hearth and your terminal can manage packages through it.",
+  "@pkgManagerInstallWhy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgManagerInstallScoopStep": "Download and run Scoop's official user installer",
+  "pkgManagerInstallChange": "+ {name} ({platform})",
+  "@pkgManagerInstallChange": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgHeroSubtitle": "System package managers, updates, dependencies and safe installs",
+  "pkgOpenManager": "Open {name}",
+  "@pkgOpenManager": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgTabManagers": "Managers",
+  "pkgTabAvailable": "Available",
+  "pkgTabServices": "Services",
+  "pkgManagersDetected": "Detected managers",
+  "pkgManagersSections": "Manager sections",
+  "pkgAvailableTitle": "Available package managers",
+  "pkgAvailableFor": "for {platform}",
+  "@pkgAvailableFor": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgAvailableDescBrew": "Open source · Formulae and casks for CLI tools and apps",
+  "pkgAvailableDescNix": "Open source · Reproducible declarative packages and environments",
+  "pkgAvailableDescPort": "Open source · Classic macOS source and binary package system",
+  "pkgAvailableDescWinget": "Microsoft · Official Windows package manager (App Installer)",
+  "pkgAvailableDescScoop": "Open source · User-level CLI installer, no admin required",
+  "pkgAvailableDescChoco": "Free for personal use; check business license · System-wide Windows packages",
+  "pkgAvailableDescFlatpak": "Open source · Sandboxed Linux desktop applications",
+  "pkgAvailableSite": "Website",
+  "pkgAvailableTerms": "{name} · License terms",
+  "@pkgAvailableTerms": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgAvailableNote": "Hearth installs package managers only through official installers and always shows the plan before running.",
+  "pkgAvailableNoneFound": "No package managers detected yet. Install one from the Available tab or scan again.",
+  "pkgMaintenance": "Maintenance",
+  "pkgMaintenanceRefresh": "Refresh package index",
+  "pkgMaintenanceRefreshCaption": "Refresh local catalog metadata without upgrading installed packages",
+  "pkgMaintenanceCleanup": "Package download caches",
+  "pkgMaintenanceCleanupCaption": "Inspect and reclaim cached downloads on the Cleanup page",
+  "pkgMaintenanceDatabases": "Managed database services",
+  "pkgMaintenanceDatabasesCaption": "Start, stop and inspect local databases",
+  "pkgHowTitle": "How Hearth works with packages",
+  "pkgHowScan": "Read-only discovery",
+  "pkgHowScanCaption": "Scans read local manager databases and never modify packages automatically.",
+  "pkgHowPlan": "Explicit plans and confirmation",
+  "pkgHowPlanCaption": "Every install, upgrade, removal and autoremove runs only after you review the exact commands.",
+  "pkgHowSearch": "On-demand catalog search",
+  "pkgHowSearchCaption": "Catalog searches run only when you click Search or press Enter, never while typing.",
+  "pkgManagedBadge": "Managed by Hearth",
+  "pkgDiskCard": "Disk",
+  "pkgDiskPackagesCaption": "Installed packages",
+  "pkgDiskNoSize": "Size not counted yet",
+  "pkgOpenCleanup": "Open in Cleanup",
+  "pkgBackToAll": "Back to Package Managers",
+  "pkgAllManagers": "All managers",
+  "pkgPickNote": "Switching the manager here changes only what Hearth shows.",
+  "pkgViews": "Sections",
+  "pkgViewOverview": "Overview",
+  "pkgViewPackages": "Packages",
+  "pkgViewUpdates": "Updates",
+  "pkgViewDependencies": "Dependencies",
+  "pkgViewInstall": "Install",
+  "pkgUnusedDeps": "Unused deps",
+  "pkgUnusedDepsNone": "No unused dependencies",
+  "pkgUnusedDepsCount": "{count, plural, one {# package nothing needs} other {# packages nothing needs}}",
+  "@pkgUnusedDepsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgAutoremoveAction": "Autoremove…",
+  "pkgNoAttention": "Everything looks healthy: no pending updates or unused dependencies.",
+  "pkgAttentionUpdates": "{count, plural, one {# package update available} other {# package updates available}}",
+  "@pkgAttentionUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgAttentionUpdatesCaption": "Review and choose which packages to upgrade.",
+  "pkgAttentionUnused": "{count, plural, one {# unused dependency} other {# unused dependencies}}",
+  "@pkgAttentionUnused": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgAttentionUnusedCaption": "Installed as dependencies, no longer needed by any package.",
+  "pkgReviewUpdates": "Review",
+  "pkgKindFormulae": "Formulae",
+  "pkgKindCasks": "Casks",
+  "pkgBulkSelected": "{count, plural, one {# package selected} other {# packages selected}}",
+  "@pkgBulkSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgBulkUpgrade": "Upgrade {count}…",
+  "@pkgBulkUpgrade": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgBulkRemove": "Remove {count}…",
+  "@pkgBulkRemove": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgDetailClose": "Close details",
+  "pkgDetailOverview": "Overview",
+  "pkgDetailDeps": "Dependencies",
+  "pkgDetailUsedBy": "Used by",
+  "pkgDetailDescription": "Description",
+  "pkgDetailMetadata": "Details",
+  "pkgDetailTap": "Tap",
+  "pkgDetailLicense": "License",
+  "pkgDetailHomepage": "Website",
+  "pkgDetailKegOnly": "Keg-only (not symlinked into PATH)",
+  "pkgDetailPath": "Location",
+  "pkgDetailArtifacts": "Installed apps",
+  "pkgDetailRelatedTools": "Used by Hearth tools",
+  "pkgDetailNoDeps": "This package has no recorded dependencies.",
+  "pkgDetailNoDependents": "No other installed packages depend on this package.",
+  "pkgDetailUpgrade": "Upgrade to {version}…",
+  "@pkgDetailUpgrade": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgDetailOpenFolder": "Open folder",
+  "pkgDetailNotRemovable": "Installed as a dependency. Use Autoremove when nothing needs it.",
+  "pkgDepsFilterAll": "All dependencies",
+  "pkgDepsFilterUnused": "Unused",
+  "pkgDepsUnusedBanner": "{count, plural, one {# dependency is no longer needed by any installed package.} other {# dependencies are no longer needed by any installed package.}}",
+  "@pkgDepsUnusedBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgDepsNone": "No dependencies recorded for this manager.",
+  "pkgDepsNoUnused": "All installed dependencies are currently needed by other packages.",
+  "pkgSearchPlaceholder": "Search {manager} catalog (e.g. ripgrep, jq, ffmpeg)…",
+  "@pkgSearchPlaceholder": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgSearchButton": "Search",
+  "pkgSearchSearching": "Searching {manager}…",
+  "@pkgSearchSearching": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgSearchIdle": "Type a package name and press Search or Enter. Hearth never queries catalogs while you type.",
+  "pkgSearchEmpty": "No packages matched \"{query}\".",
+  "@pkgSearchEmpty": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgSearchUnsupported": "Catalog search is not available for {manager}.",
+  "@pkgSearchUnsupported": {
+    "placeholders": {
+      "manager": {
+        "type": "String"
+      }
+    }
+  },
+  "pkgSearchInstalled": "installed",
+  "pkgSearchInstall": "Install…",
+  "pkgSearchFooter": "Pressing Install opens a plan with the exact command. Nothing runs until you confirm.",
+  "pkgSearchColDesc": "Description",
+  "pkgSearchColVer": "Version",
+  "pkgFreshnessLocal": "Local scan",
+  "pkgUpdatesUpToDate": "All packages are up to date.",
+  "pkgUpdatesChip": "{count, plural, one {# update} other {# updates}}",
+  "@pkgUpdatesChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pkgCountPlural": "{count, plural, one {# package} other {# packages}}",
+  "@pkgCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

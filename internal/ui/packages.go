@@ -3,396 +3,532 @@ package ui
 import (
 	"cmp"
 	"context"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/pkgmgr"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
+const (
+	packagesPage        = "/system/packages"
+	packagesManagerPage = packagesPage + "/manager"
+	maxPackageRows      = 300
+)
+
+// packagesManagerPath is the drill-down page for the package manager at path.
+func packagesManagerPath(path string) string {
+	return packagesManagerPage + "?path=" + url.QueryEscape(path)
+}
+
+// packagesEntryPath returns the sidebar destination for Package Managers:
+// directly into the active/first detected manager when present, otherwise the
+// landing page.
+func (a *App) packagesEntryPath() string {
+	if m, ok := a.activePackageManager(); ok {
+		return packagesManagerPath(m.Path)
+	}
+	return packagesPage
+}
+
+// openPackageSearch jumps directly to mgrPath's Packages tab filtered to pkgName.
+func (a *App) openPackageSearch(mgrPath, pkgName string) {
+	a.packageManager = mgrPath
+	a.packageTab = 0
+	a.packageFilter = pkgName
+	a.pkg.view = pkgViewPackages
+	a.pkg.detailKey = ""
+	if mgrPath != "" {
+		a.router.Push(packagesManagerPath(mgrPath))
+		return
+	}
+	a.router.Push(packagesPage)
+}
+
+// packageManagersWithUpdates returns detected package managers with cached
+// online update overlays applied.
+func (a *App) packageManagersWithUpdates() []inventory.PackageManager {
+	st, ok := a.Snapshot.Tool("packages")
+	if !ok || len(st.PackageManagers) == 0 {
+		return nil
+	}
+	out := make([]inventory.PackageManager, len(st.PackageManagers))
+	for i, m := range st.PackageManagers {
+		if checked, has := a.PackageUpdates[m.Path]; has {
+			m = checked
+		}
+		out[i] = m
+	}
+	return out
+}
+
+func (a *App) packageManagerByPath(path string) (inventory.PackageManager, bool) {
+	for _, m := range a.packageManagersWithUpdates() {
+		if m.Path == path {
+			return m, true
+		}
+	}
+	return inventory.PackageManager{}, false
+}
+
+func (a *App) activePackageManager() (inventory.PackageManager, bool) {
+	managers := a.packageManagersWithUpdates()
+	if len(managers) == 0 {
+		return inventory.PackageManager{}, false
+	}
+	for _, m := range managers {
+		if m.Path == a.packageManager {
+			return m, true
+		}
+	}
+	return managers[0], true
+}
+
+func pkgManagerIcon(id string) string {
+	switch id {
+	case "brew":
+		return "brand/homebrew"
+	case "apt":
+		return "brand/debian"
+	case "snap":
+		return "brand/ubuntu"
+	case "apk":
+		return "brand/alpinelinux"
+	case "flatpak":
+		return "lucide/layers"
+	case "scoop":
+		return "lucide/terminal"
+	case "choco":
+		return "lucide/box"
+	case "nix":
+		return "lucide/sparkles"
+	default:
+		return "lucide/package"
+	}
+}
+
+func pkgAvailableDescription(id string) string {
+	switch id {
+	case "brew":
+		return locales.PkgAvailableDescBrew()
+	case "nix":
+		return locales.PkgAvailableDescNix()
+	case "port":
+		return locales.PkgAvailableDescPort()
+	case "winget":
+		return locales.PkgAvailableDescWinget()
+	case "scoop":
+		return locales.PkgAvailableDescScoop()
+	case "choco":
+		return locales.PkgAvailableDescChoco()
+	case "flatpak":
+		return locales.PkgAvailableDescFlatpak()
+	default:
+		return ""
+	}
+}
+
+func packageUpdateCount(m inventory.PackageManager) int {
+	n := 0
+	for _, pkg := range m.Packages {
+		if pkg.Available != "" {
+			n++
+		}
+	}
+	return n
+}
+
+func packageDiskUsage(m inventory.PackageManager, sizes *inventory.Sizes) (inventory.Usage, bool) {
+	if sizes == nil {
+		return inventory.Usage{}, false
+	}
+	var total inventory.Usage
+	found := false
+	for _, pkg := range m.Packages {
+		if u, ok := sizes.Size(pkg); ok {
+			total.Bytes += u.Bytes
+			total.Partial = total.Partial || u.Partial
+			found = true
+		}
+	}
+	return total, found
+}
+
+// packages renders the /system/packages landing page: summary KPIs, detected
+// managers, available managers for this OS, maintenance links, and quick jumps.
 func (a *App) packages(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
-		st, ok := a.Snapshot.Tool("packages")
-		if !ok || len(st.PackageManagers) == 0 {
-			a.header(c, p.title(), p.subtitle())
+		managers := a.packageManagersWithUpdates()
+		active, hasActive := a.activePackageManager()
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if hasActive {
+				a.refreshIndexButton(c, active)
+				target := active
+				ui.PrimaryButton(c.Key("pkg-open-active"), locales.PkgOpenManager(target.Name)).Height(controlHeight).OnClick(func() {
+					a.packageManager = target.Path
+					a.router.Push(packagesManagerPath(target.Path))
+				})
+			}
+		}})
+		if a.Snapshot == nil {
 			a.toolEmpty(c, "packages", p.title())
 			return
 		}
-		selected := 0
-		for i, m := range st.PackageManagers {
-			if m.Path == a.packageManager {
-				selected = i
-			}
+		available := pkgmgr.AvailableManagers()
+		var allServices []inventory.Database
+		for _, m := range managers {
+			allServices = append(allServices, packageServices(a.Snapshot, m.ID)...)
 		}
-		m := st.PackageManagers[selected]
-		if checked, ok := a.PackageUpdates[m.Path]; ok {
-			m = checked
-		}
-		updateNote := locales.PkgCached()
-		if a.PackageChecks[m.Path] {
-			updateNote = locales.Checking()
-		} else if !m.UpdatesFetched.IsZero() {
-			updateNote = locales.VersionsAsOf(m.UpdatesFetched)
-		}
-		// A list some sources did not answer for counts at least what it
-		// holds; an update count not checked differs from none.
-		partial := m.Unlisted && !m.UpdatesFetched.IsZero()
-		installedCount, countNote := strconv.Itoa(len(m.Packages)), locales.PkgCountNote()
-		if m.Unlisted {
-			installedCount = atLeast(len(m.Packages))
-		}
-		if partial {
-			countNote = locales.PkgPartialNote()
-		}
-		updates := 0
-		for _, pkg := range m.Packages {
-			if pkg.Available != "" {
-				updates++
-			}
-		}
-		updateCount := "—"
-		if m.UpdatesKnown {
-			updateCount = strconv.Itoa(updates)
-		} else if partial {
-			updateCount = atLeast(updates)
-		}
-		maxTab := 1
-		if m.ReasonsKnown {
-			maxTab = 3
-		}
-		a.packageTab = min(a.packageTab, maxTab)
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			a.refreshIndexButton(c, m)
-			a.upgradeButton(c, m)
-		}})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				pal := Colors(c.Theme())
-				headRow(c, func() {
-					ui.Box(c).Size(48, 48).Radius(12).Background(pal.SuccessSoft).Center().Children(func() { ui.Icon(c, Icon("package")).Size(24, 24).TextColor(pal.MonoText) })
-					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-						ui.Text(c, m.Name).FontSize(22).FontWeight(600)
-						path := m.Prefix
-						if path == "" {
-							path = m.Path
-						}
-						clipped(c, tilde(path, a.Home)).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted)
-					})
-				}, func() {
-					version := m.Version
-					if version == "" { // Scoop is a PowerShell script Hearth does not run
-						version = locales.UnknownVersion()
-					}
-					stateCard(c, c.Theme().Success, m.Name, version, "")
-					stateCard(c, pal.TextFaint, locales.PkgInstalled(), installedCount, countNote)
-					updateDot := pal.TextFaint
-					switch {
-					case updates > 0:
-						updateDot = c.Theme().Warning
-					case m.UpdatesKnown:
-						updateDot = c.Theme().Success
-					}
-					stateCard(c, updateDot, locales.PkgUpdateSummary(), updateCount, updateNote)
-				})
-				// A narrow window puts the order and the filter under the tabs.
-				toolbar := ui.Row(c).Gap(12).AlignItems(ui.Center)
-				if narrow(c) {
-					toolbar.Wrap()
+				a.packagesLandingHeader(c, p, managers)
+				segs := []segment{
+					{locales.PkgTabManagers(), strconv.Itoa(len(managers))},
+					{locales.PkgTabAvailable(), strconv.Itoa(len(available))},
 				}
-				toolbar.Children(func() {
-					segs := []segment{{locales.PkgInstalled(), installedCount}, {locales.PkgUpdates(), updateCount}}
-					if m.ReasonsKnown {
-						asked := 0
-						for _, pkg := range m.Packages {
-							if !pkg.Dependency {
-								asked++
-							}
-						}
-						segs = []segment{{locales.TabAll(), installedCount}, {locales.PkgAsked(), strconv.Itoa(asked)},
-							{locales.PkgDependencies(), strconv.Itoa(len(m.Packages) - asked)}, {locales.PkgUpdates(), updateCount}}
-					}
-					a.packageTab = min(a.packageTab, len(segs)-1)
-					segments(c, "package-tabs", &a.packageTab, segs)
-					ui.Box(c).Grow(1).Height(1)
-					if sorts := packageSorts(m, a.Sizes); len(sorts) > 1 {
-						labels := make([]string, len(sorts))
-						for i, sort := range sorts {
-							labels[i] = sortLabel(sort)
-						}
-						value := labels[max(slices.Index(sorts, a.packageSort), 0)]
-						ui.Select(c.Key("package-sort"), &value, labels).Label(locales.PkgSort()).Height(controlHeight).Width(170).OnChange(func() {
-							a.packageSort = sorts[slices.Index(labels, value)]
-						})
-					}
-					ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
+				servicesIdx := -1
+				if len(allServices) > 0 {
+					servicesIdx = len(segs)
+					segs = append(segs, segment{locales.PkgTabServices(), strconv.Itoa(len(allServices))})
+				}
+				pathIdx := len(segs)
+				segs = append(segs, segment{"PATH", ""})
+				a.packageLandingTab = min(a.packageLandingTab, len(segs)-1)
+				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+					segments(c, "pkg-landing-tabs", &a.packageLandingTab, segs)
 				})
 				columns(c, 12, func() {
-					if m.Unlisted && !partial {
-						toolNote(c, locales.PkgWingetLocal())
-					} else if !m.UpdatesKnown && !partial {
-						toolNote(c, packageUpdatesNote(m.ID, a.VersionLists))
-					}
-					if m.UpdateError != "" {
-						warningRow(c, locales.PkgProbeFailed()+" "+m.UpdateError)
-					}
-					for _, warning := range m.Warnings {
-						warningRow(c, locales.PkgProbeFailed()+" "+warning)
-					}
-					a.packageTable(c, m)
-					statusAside := ""
-					if !ops.PackageManaged(m.ID) {
-						toolNote(c, locales.PkgReadOnly())
-						statusAside = locales.PkgReadOnlyLabel()
-					}
-					listCard(c, locales.PkgStatus(), statusAside, func() {
-						listRow(c, m.Name, false, tilde(m.Path, a.Home), func() {
-							a.pathActions(c, "pkg-mgr-path", m.Path)
-						})
-						if updates > 1 && choosable(m) {
-							ui.Box(c).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-								warningWith(c, locales.PkgUpgradeAllWarning(updates), func() {
-									ui.Button(c.Key("package-choose"), locales.PkgChoose()).Shrink(0).OnClick(func() { a.packageTab = updatesTabIndex(m) })
-								})
-							})
+					switch a.packageLandingTab {
+					case 0:
+						a.packagesDetectedCard(c, managers)
+						if hasActive {
+							a.packagesQuickViewsCard(c, active)
 						}
-						cardNote(c, locales.PkgCachedNote())
-						if !m.UpdatesFetched.IsZero() {
-							cardNote(c, locales.VersionsAsOf(m.UpdatesFetched))
-						}
-					})
+					case 1:
+						a.packagesAvailableCard(c, managers, available)
+					case servicesIdx:
+						a.packagesServicesCard(c, allServices)
+					case pathIdx:
+						a.packagesPathCard(c, managers)
+					}
 				}, func() {
-					listCard(c, locales.PkgOtherManagers(), "", func() {
-						for _, other := range st.PackageManagers {
-							path := other.Path
-							listRow(c, other.Name, false, tilde(path, a.Home), func() {
-								if path == m.Path {
-									ui.Text(c, locales.PkgSelected()).FontSize(10.5).TextColor(pal.TextFaint)
-								} else {
-									ui.Button(c.Key("pkg-mgr:"+path), locales.Details()).Shrink(0).OnClick(func() { a.packageManager = path })
-								}
-							})
-						}
+					a.packagesLandingAttentionCard(c, managers)
+					a.packagesMaintenanceCard(c, active, hasActive, len(allServices) > 0)
+					listCard(c, locales.PkgHowTitle(), "", func() {
+						listRowWrapped(c, locales.PkgHowScan(), locales.PkgHowScanCaption(), func() {})
+						listRowWrapped(c, locales.PkgHowPlan(), locales.PkgHowPlanCaption(), func() {})
+						listRowWrapped(c, locales.PkgHowSearch(), locales.PkgHowSearchCaption(), func() {})
 					})
-					if len(m.Settings) > 0 {
-						listCard(c, locales.PkgSettings(), m.Name, func() {
-							for _, setting := range m.Settings {
-								cardNote(c, setting)
-							}
-						})
-					}
-					if m.ID == "brew" {
-						listCard(c, "Taps", "brew tap", func() {
-							for _, tap := range m.Taps {
-								listRow(c, tap, false, "", func() {})
-							}
-							if len(m.Taps) == 0 {
-								cardNote(c, locales.PkgNoTaps())
-							}
-						})
-					}
-					if services := packageServices(a.Snapshot, m.ID); len(services) > 0 {
-						listCard(c, locales.DatabaseServices(), "", func() {
-							for _, server := range services {
-								status, _ := databaseStatus(c, server.Status)
-								listRow(c, server.Service, false, status, func() {})
-							}
-							ui.Row(c).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-								ui.Button(c.Key("pkg-databases"), locales.DatabasesTitle()).OnClick(func() { a.router.Push("/tools/databases") })
-							})
-						})
-					}
 				})
 			})
 		})
 	})
 }
 
-func (a *App) packageTable(c *ui.Context, m inventory.PackageManager) {
+func (a *App) packagesLandingHeader(c *ui.Context, p page, managers []inventory.PackageManager) {
 	pal := Colors(c.Theme())
-	filter := strings.ToLower(a.packageFilter)
-	updatesTab, askedTab, depsTab := a.packageTab == updatesTabIndex(m), false, false
-	if m.ReasonsKnown {
-		askedTab, depsTab = a.packageTab == 1, a.packageTab == 2
-	}
-	var visibleUpdates []string
-	if updatesTab && choosable(m) {
-		for _, pkg := range m.Packages {
-			if pkg.Available != "" && strings.Contains(strings.ToLower(pkg.Name), filter) {
-				visibleUpdates = append(visibleUpdates, m.Path+"\x00"+packageKey(pkg))
-			}
+	totalPkgs, totalUpdates := 0, 0
+	anyUnlisted, anyUpdatesKnown, anyPartial, anyChecking := false, false, false, false
+	var disk inventory.Usage
+	hasDisk := false
+	for _, m := range managers {
+		totalPkgs += len(m.Packages)
+		totalUpdates += packageUpdateCount(m)
+		if m.Unlisted {
+			anyUnlisted = true
+		}
+		if m.UpdatesKnown {
+			anyUpdatesKnown = true
+		}
+		if m.Unlisted && !m.UpdatesFetched.IsZero() {
+			anyPartial = true
+		}
+		if a.PackageChecks[m.Path] {
+			anyChecking = true
+		}
+		if u, ok := packageDiskUsage(m, a.Sizes); ok {
+			disk.Bytes += u.Bytes
+			disk.Partial = disk.Partial || u.Partial
+			hasDisk = true
 		}
 	}
-	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(12).Padding(8, 16).AlignItems(ui.Center).Background(pal.Subtle).Children(func() {
-			ui.Row(c).Width(nameWidth(c)).Gap(10).AlignItems(ui.Center).Children(func() {
-				if len(visibleUpdates) > 0 {
-					allSelected := true
-					for _, key := range visibleUpdates {
-						if !a.packageChosen[key] {
-							allSelected = false
-							break
-						}
-					}
-					if ui.Checkbox(c.Key("select-all"), &allSelected, "").Label(locales.PkgSelectAll()).Changed() {
-						if a.packageChosen == nil {
-							a.packageChosen = map[string]bool{}
-						}
-						for _, key := range visibleUpdates {
-							if allSelected {
-								a.packageChosen[key] = true
-							} else {
-								delete(a.packageChosen, key)
-							}
-						}
-					}
-				}
-				ui.Text(c, locales.PkgPackage()).FontSize(11.5).TextColor(pal.TextFaint)
-			})
-			ui.Text(c, locales.PkgKind()).Width(64).FontSize(11.5).TextColor(pal.TextFaint)
-			usage := locales.PkgPathUsage()
-			if m.ReasonsKnown {
-				usage = locales.PkgSizeUsage()
-			}
-			ui.Text(c, usage).FontSize(11.5).TextColor(pal.TextFaint)
+	installedVal := strconv.Itoa(totalPkgs)
+	if anyUnlisted {
+		installedVal = atLeast(totalPkgs)
+	}
+	updatesVal := "—"
+	if anyUpdatesKnown {
+		updatesVal = strconv.Itoa(totalUpdates)
+	} else if anyPartial {
+		updatesVal = atLeast(totalUpdates)
+	}
+	updateDot := pal.TextFaint
+	switch {
+	case totalUpdates > 0:
+		updateDot = c.Theme().Warning
+	case anyUpdatesKnown:
+		updateDot = c.Theme().Success
+	}
+	updateCaption := locales.PkgCached()
+	if anyChecking {
+		updateCaption = locales.Checking()
+	}
+	diskVal, diskCaption := "—", locales.PkgDiskNoSize()
+	if hasDisk {
+		diskVal, diskCaption = formatUsage(disk), locales.PkgDiskPackagesCaption()
+	}
+	headRow(c, func() {
+		ui.Box(c).Size(48, 48).Radius(12).Background(pal.SuccessSoft).Center().Children(func() {
+			ui.Icon(c, Icon("package")).Size(24, 24).TextColor(pal.MonoText)
 		})
-		dependents := packageDependents(m)
-		order := make([]int, len(m.Packages))
-		for i := range order {
-			order[i] = i
+		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			ui.Text(c, p.title()).FontSize(22).FontWeight(600)
+			ui.Text(c, locales.PkgHeroSubtitle()).FontSize(12).TextColor(c.Theme().TextMuted).Wrap()
+		})
+	}, func() {
+		dot := pal.TextFaint
+		if len(managers) > 0 {
+			dot = c.Theme().Success
 		}
-		switch sorts := packageSorts(m, a.Sizes); {
-		case a.packageSort == sortByDependents && slices.Contains(sorts, sortByDependents):
-			slices.SortStableFunc(order, func(x, y int) int {
-				return cmp.Compare(len(dependents[m.Packages[y].Name]), len(dependents[m.Packages[x].Name]))
-			})
-		case a.packageSort == sortBySize && slices.Contains(sorts, sortBySize):
-			slices.SortStableFunc(order, func(x, y int) int {
-				sx, _ := a.Sizes.Size(m.Packages[x])
-				sy, _ := a.Sizes.Size(m.Packages[y])
-				return cmp.Compare(sy.Bytes, sx.Bytes)
-			})
+		stateCard(c, dot, locales.PkgInstalled(), installedVal, locales.PkgCountNote())
+		stateCard(c, updateDot, locales.PkgUpdateSummary(), updatesVal, updateCaption)
+		stateCard(c, pal.TextFaint, locales.PkgDiskCard(), diskVal, diskCaption)
+	})
+}
+
+func (a *App) packagesDetectedCard(c *ui.Context, managers []inventory.PackageManager) {
+	pal := Colors(c.Theme())
+	listCard(c, locales.PkgManagersDetected(), strconv.Itoa(len(managers)), func() {
+		if len(managers) == 0 {
+			cardNote(c, locales.PkgAvailableNoneFound())
+			return
 		}
-		limitKey := m.Path + "\x00" + strconv.Itoa(a.packageTab) + "\x00" + strconv.Itoa(a.packageSort) + "\x00" + filter
-		if a.packageLimitKey != limitKey || a.packageLimit < maxPackageRows {
-			a.packageLimitKey = limitKey
-			a.packageLimit = maxPackageRows
-		}
-		hasPath := slices.ContainsFunc(m.Packages, func(pkg inventory.SystemPackage) bool { return pkg.Path != "" })
-		hasMenu := slices.ContainsFunc(m.Packages, func(pkg inventory.SystemPackage) bool { return a.packageCan(m, pkg) })
-		shown, total := 0, 0
-		for _, i := range order {
-			pkg := m.Packages[i]
-			if updatesTab && pkg.Available == "" || askedTab && pkg.Dependency || depsTab && !pkg.Dependency ||
-				!strings.Contains(strings.ToLower(pkg.Name), filter) {
-				continue
+		for _, m := range managers {
+			mgr := m
+			updates := packageUpdateCount(mgr)
+			var parts []string
+			if mgr.Version != "" {
+				parts = append(parts, mgr.Version)
 			}
-			total++
-			// A system's packages run to thousands; render in chunks and let
-			// the user expand with "Show more".
-			if shown == a.packageLimit {
-				continue
+			loc := cmp.Or(mgr.Prefix, mgr.Path)
+			if loc != "" {
+				parts = append(parts, tilde(loc, a.Home))
 			}
-			shown++
-			ui.Row(c.Key(strconv.Itoa(i))).Gap(12).Padding(12, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				// The check box goes in the name's column, so the
-				// columns stay under their heads.
-				ui.Row(c).Width(nameWidth(c)).Gap(10).AlignItems(ui.Center).Children(func() {
-					if updatesTab && choosable(m) {
-						key := m.Path + "\x00" + packageKey(pkg)
-						on := a.packageChosen[key]
-						if ui.Checkbox(c.Key("check"), &on, "").Label(pkg.Name).Changed() {
-							if a.packageChosen == nil {
-								a.packageChosen = map[string]bool{}
-							}
-							a.packageChosen[key] = on
-						}
-					}
-					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-						clipped(c, pkg.Name).Font(FontMono).FontSize(12)
-						clipped(c, pkg.Version).FontSize(10.5).TextColor(pal.TextFaint)
-					})
-				})
-				ui.Text(c, pkg.Kind).Width(64).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
-				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-					if pkg.Reference != "" {
-						clipped(c, pkg.Scope+" · "+pkg.Reference).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
-					}
-					var usage []string
-					usageTip := ""
-					if size, ok := a.Sizes.Size(pkg); ok {
-						usage = append(usage, formatUsage(size))
-					}
-					if m.ReasonsKnown {
-						reason, tip := packageReason(m, pkg, dependents[pkg.Name])
-						usage = append(usage, reason)
-						usageTip = tip
-					}
-					if len(usage) > 0 {
-						u := ui.Text(c, strings.Join(usage, " · ")).FontSize(10.5).TextColor(pal.TextFaint)
-						if usageTip != "" {
-							u.Tooltip(usageTip)
-						}
-					}
-					// Who asked for it takes the path's place; the buttons
-					// still copy and show it.
-					if pkg.Path != "" && !m.ReasonsKnown {
-						clipped(c, tilde(pkg.Path, a.Home)).Font(FontMono).FontSize(10.5).TextColor(pal.MonoText)
-					}
-					if pkg.Available != "" {
-						ui.Row(c).Children(func() { chip(c, c.Theme().Accent, pal.Muted, pal.MonoText, locales.PkgAvailable()+" "+pkg.Available) })
-					}
-					for _, tool := range packageTools(a.Snapshot, m.ID, pkg) {
-						ui.Text(c, tool).FontSize(10.5).TextColor(pal.TextFaint)
-					}
-				})
-				if hasPath || hasMenu {
-					ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
-						if hasPath {
-							if pkg.Path != "" {
-								iconButton(c, "copy", locales.CopyPath()).OnClick(func() { c.WriteClipboard(pkg.Path); c.Toast(locales.PathCopied()) })
-								if a.Shell != nil {
-									iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(pkg.Path) })
-								}
-							} else {
-								iconSpacer(c)
-								if a.Shell != nil {
-									iconSpacer(c)
-								}
-							}
-						}
-						if hasMenu {
-							if a.packageCan(m, pkg) {
-								iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
-							} else {
-								iconSpacer(c)
-							}
-						}
-					})
+			if mgr.Unlisted {
+				parts = append(parts, atLeast(len(mgr.Packages))+" "+locales.PkgCountNote())
+			} else {
+				parts = append(parts, locales.PkgCountPlural(len(mgr.Packages)))
+			}
+			listRowWithTile(c.Key("mgr:"+mgr.Path), pkgManagerIcon(mgr.ID), mgr.Name, false, strings.Join(parts, " · "), func() {
+				if updates > 0 {
+					chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.PkgUpdatesChip(updates))
 				}
-			})
-		}
-		if shown == 0 {
-			cardNote(c, locales.PkgNone())
-		} else if shown < total {
-			more := min(maxPackageRows, total-shown)
-			ui.Row(c.Key("packages-more-row")).Gap(12).Padding(10, 16).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Text(c, locales.PkgShownMore(shown, total)).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
-				ui.Button(c.Key("packages-more"), locales.PkgShowMore(more)).Height(controlHeight).OnClick(func() {
-					a.packageLimit += maxPackageRows
+				if ops.PackageManaged(mgr.ID) {
+					aiTag(c, locales.PkgManagedBadge(), pal.InfoSoft, pal.InfoText)
+				} else {
+					aiTag(c, locales.PkgReadOnlyLabel(), pal.Muted, c.Theme().TextMuted)
+				}
+				ui.Button(c.Key("open:"+mgr.Path), locales.KubeClusterOpen()).Shrink(0).OnClick(func() {
+					a.packageManager = mgr.Path
+					a.router.Push(packagesManagerPath(mgr.Path))
 				})
 			})
 		}
 	})
 }
 
-const maxPackageRows = 300
+func (a *App) packagesQuickViewsCard(c *ui.Context, m inventory.PackageManager) {
+	t := c.Theme()
+	pal := Colors(t)
+	listCard(c, locales.PkgManagersSections(), m.Name, func() {
+		ui.Row(c).Gap(8).Padding(12, 14).Wrap().Children(func() {
+			for i, v := range packageViews() {
+				view := i
+				tile := ui.ButtonBase(c.Key("pkg-quick-"+strconv.Itoa(view))).Padding(8, 12).
+					Radius(9).BorderWidth(1).BorderColor(pal.Line).Gap(7).AlignItems(ui.Center).
+					Label(v.label).Transition(colorFade).OnClick(func() {
+					a.packageManager = m.Path
+					a.pkg.view = view
+					a.router.Push(packagesManagerPath(m.Path))
+				})
+				if tile.Hovered() {
+					tile.Background(pal.Subtle).BorderColor(pal.ControlBorder)
+				} else {
+					tile.Background(t.Background)
+				}
+				tile.Children(func() {
+					ui.Icon(c, Icon(v.icon)).Size(15, 15).Shrink(0).TextColor(t.TextMuted)
+					clipped(c, v.label).FontSize(12.5).FontWeight(500).MinWidth(0)
+				})
+			}
+		})
+	})
+}
 
-// packageServices are the database servers that run as the manager's
-// services.
+func (a *App) packagesAvailableCard(c *ui.Context, detected []inventory.PackageManager, available []pkgmgr.AvailableManager) {
+	pal := Colors(c.Theme())
+	listCard(c, locales.PkgAvailableTitle(), locales.PkgAvailableFor(pkgmgr.PlatformLabel()), func() {
+		for _, avail := range available {
+			item := avail
+			var installed *inventory.PackageManager
+			for i := range detected {
+				if detected[i].ID == item.ID {
+					installed = &detected[i]
+					break
+				}
+			}
+			listRowWithTile(c.Key("avail:"+item.ID), pkgManagerIcon(item.ID), item.Name, false, pkgAvailableDescription(item.ID), func() {
+				if item.Recommended {
+					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.ColimaRecommended())
+				}
+				if installed != nil {
+					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.DockerInstalled())
+					mgrPath := installed.Path
+					ui.Button(c.Key("avail-open:"+item.ID), locales.KubeClusterOpen()).Shrink(0).OnClick(func() {
+						a.packageManager = mgrPath
+						a.router.Push(packagesManagerPath(mgrPath))
+					})
+					return
+				}
+				ui.Text(c, locales.DockerNotInstalled()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+				if item.Installable && a.BuildPlan != nil {
+					iconButton(c.Key("avail-install:"+item.ID), "download", locales.PkgSearchInstall()).OnClick(func() {
+						a.installPackageManager(item.ID, detected)
+					})
+				} else if item.WebsiteURL != "" {
+					iconButton(c.Key("avail-site:"+item.ID), "external-link", locales.PkgAvailableSite()).OnClick(func() {
+						c.OpenURL(item.WebsiteURL)
+					})
+				}
+			})
+		}
+		var terms []pkgmgr.AvailableManager
+		for _, item := range available {
+			if item.TermsURL != "" {
+				terms = append(terms, item)
+			}
+		}
+		if len(terms) > 0 {
+			ui.Row(c).Gap(10).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				for _, item := range terms {
+					ui.Link(c, locales.PkgAvailableTerms(item.Name), item.TermsURL).FontSize(11)
+				}
+			})
+		}
+	})
+	toolNote(c, locales.PkgAvailableNote())
+}
+
+func (a *App) installPackageManager(id string, detected []inventory.PackageManager) {
+	if a.BuildPlan == nil {
+		return
+	}
+	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+		p, ok := ops.PackageManagerInstallPlan(id, detected, env)
+		if !ok {
+			return ops.Plan{}, ops.ErrNoFix
+		}
+		return p, nil
+	}, a.proposeOrSay)
+}
+
+func (a *App) packagesServicesCard(c *ui.Context, services []inventory.Database) {
+	listCard(c, locales.DatabaseServices(), strconv.Itoa(len(services)), func() {
+		for _, server := range services {
+			status, _ := databaseStatus(c, server.Status)
+			listRow(c.Key("svc:"+server.Service), server.Service, false, status, func() {})
+		}
+		navListRow(c, "pkg-databases-tab", locales.DatabasesTitle(), locales.PkgMaintenanceDatabasesCaption(), locales.DatabasesTitle(), func() {
+			a.router.Push("/tools/databases")
+		})
+	})
+}
+
+func (a *App) packagesPathCard(c *ui.Context, managers []inventory.PackageManager) {
+	listCard(c, locales.PkgManagersDetected(), "PATH", func() {
+		if len(managers) == 0 {
+			cardNote(c, locales.PkgAvailableNoneFound())
+			return
+		}
+		for _, m := range managers {
+			mgr := m
+			listRowWithTile(c.Key("path:"+mgr.Path), pkgManagerIcon(mgr.ID), mgr.Name, false, tilde(mgr.Path, a.Home), func() {
+				a.pathActions(c, "pkg-path-"+mgr.ID, mgr.Path)
+			})
+		}
+	})
+}
+
+func (a *App) packagesLandingAttentionCard(c *ui.Context, managers []inventory.PackageManager) {
+	listCard(c, locales.AttentionTitle(), "", func() {
+		any := false
+		for _, m := range managers {
+			mgr := m
+			if updates := packageUpdateCount(mgr); updates > 0 {
+				any = true
+				navListRow(c, "attn-upd:"+mgr.Path, mgr.Name+" · "+locales.PkgAttentionUpdates(updates), locales.PkgAttentionUpdatesCaption(), locales.PkgReviewUpdates(), func() {
+					a.packageManager = mgr.Path
+					a.pkg.view = pkgViewUpdates
+					a.router.Push(packagesManagerPath(mgr.Path))
+				})
+			}
+			if orphans := pkgmgr.UnusedDependencies(mgr); len(orphans) > 0 {
+				any = true
+				if plan, ok := ops.PackageAutoremovePlan(mgr, orphans, a.reread(mgr)); ok {
+					listRow(c.Key("attn-dep:"+mgr.Path), mgr.Name+" · "+locales.PkgAttentionUnused(len(orphans)), false, locales.PkgAttentionUnusedCaption(), func() {
+						ui.Button(c.Key("attn-auto:"+mgr.Path), locales.PkgAutoremoveAction()).Shrink(0).OnClick(func() { a.Propose(plan) })
+					})
+				} else {
+					navListRow(c, "attn-dep:"+mgr.Path, mgr.Name+" · "+locales.PkgAttentionUnused(len(orphans)), locales.PkgAttentionUnusedCaption(), locales.PkgReviewUpdates(), func() {
+						a.packageManager = mgr.Path
+						a.pkg.view = pkgViewDependencies
+						a.pkg.depsFilter = 1
+						a.router.Push(packagesManagerPath(mgr.Path))
+					})
+				}
+			}
+		}
+		if !any {
+			cardNote(c, locales.PkgNoAttention())
+		}
+	})
+}
+
+func (a *App) packagesMaintenanceCard(c *ui.Context, active inventory.PackageManager, hasActive, hasServices bool) {
+	listCard(c, locales.PkgMaintenance(), "", func() {
+		if hasActive {
+			if p, ok := ops.PackageRefreshPlan(active, a.reread(active)); ok {
+				listRow(c.Key("maint-refresh"), locales.PkgMaintenanceRefresh(), false, locales.PkgMaintenanceRefreshCaption(), func() {
+					iconButton(c.Key("maint-refresh-btn"), "refresh-cw", locales.PkgRefresh()).OnClick(func() { a.Propose(p) })
+				})
+			}
+		}
+		navListRow(c, "maint-cleanup", locales.PkgMaintenanceCleanup(), locales.PkgMaintenanceCleanupCaption(), locales.PkgOpenCleanup(), func() {
+			if idx := slices.Index(cleanupGroups, cleanup.Caches); idx >= 0 {
+				a.cleanupTab = idx + 1
+			} else {
+				a.cleanupTab = 0
+			}
+			a.cleanupFilter = ""
+			a.router.Push(cleanupPage)
+		})
+		if hasServices {
+			navListRow(c, "maint-db", locales.PkgMaintenanceDatabases(), locales.PkgMaintenanceDatabasesCaption(), locales.DatabasesTitle(), func() {
+				a.router.Push("/tools/databases")
+			})
+		}
+	})
+}
+
+// packageServices are the database servers that run as the manager's services.
 func packageServices(snap *inventory.Snapshot, manager string) []inventory.Database {
 	db, ok := snap.Tool("databases")
 	if !ok || db.Databases == nil {
@@ -491,7 +627,7 @@ func packageReason(m inventory.PackageManager, pkg inventory.SystemPackage, depe
 		}
 		shown := strings.Join(dependents[:maxShown], ", ")
 		return locales.PkgNeededByMore(shown, len(dependents)-maxShown), full
-	case m.ID == "brew": // brew lists every dependency, so none is none
+	case pkg.Orphan || m.ID == "brew": // brew lists every dependency, so none is none
 		return locales.PkgNotNeeded(), ""
 	}
 	return locales.PkgDependency(), ""
@@ -545,14 +681,6 @@ func formatUsage(u inventory.Usage) string {
 	return s
 }
 
-// updatesTabIndex is the index of m's Updates tab.
-func updatesTabIndex(m inventory.PackageManager) int {
-	if m.ReasonsKnown {
-		return 3
-	}
-	return 1
-}
-
 // packageKey tells a package from the others of its manager.
 func packageKey(pkg inventory.SystemPackage) string {
 	return pkg.Name + "\x00" + pkg.Kind + "\x00" + pkg.Architecture + "\x00" + pkg.Scope
@@ -603,8 +731,7 @@ func upgradable(m inventory.PackageManager) []inventory.SystemPackage {
 }
 
 // removable reports that Hearth offers to remove pkg: not a package
-// another pulled in, which others may need where the manager does not
-// say.
+// another pulled in, which others may need where the manager does not say.
 func removable(pkg inventory.SystemPackage) bool {
 	return !pkg.Dependency
 }
@@ -642,35 +769,5 @@ func (a *App) refreshIndexButton(c *ui.Context, m inventory.PackageManager) {
 	if !ok {
 		return
 	}
-	ui.Button(c.Key("package-refresh"), locales.PkgRefresh()).OnClick(func() { a.Propose(p) })
-}
-
-// upgradeButton is the header's button that updates the packages checked
-// in m's Updates tab, or for pacman the whole system; none when m has no
-// updates.
-func (a *App) upgradeButton(c *ui.Context, m inventory.PackageManager) {
-	all := upgradable(m)
-	if len(all) == 0 {
-		return
-	}
-	if m.ID == "pacman" {
-		if p, ok := a.packagePlan(ops.PackageUpgrade, m, all); ok {
-			ui.PrimaryButton(c.Key("package-upgrade"), locales.PkgUpgradeSystem()).OnClick(func() { a.Propose(p) })
-		}
-		return
-	}
-	if !choosable(m) || a.packageTab != updatesTabIndex(m) {
-		return
-	}
-	var chosen []inventory.SystemPackage
-	for _, pkg := range all {
-		if a.packageChosen[m.Path+"\x00"+packageKey(pkg)] {
-			chosen = append(chosen, pkg)
-		}
-	}
-	ui.PrimaryButton(c.Key("package-upgrade"), locales.PkgUpgradeChosen()).Disabled(len(chosen) == 0).OnClick(func() {
-		if p, ok := a.packagePlan(ops.PackageUpgrade, m, chosen); ok {
-			a.proposeThen(func() { a.packageChosen = nil })(p, nil)
-		}
-	})
+	ui.Button(c.Key("package-refresh"), locales.PkgRefresh()).Height(controlHeight).OnClick(func() { a.Propose(p) })
 }

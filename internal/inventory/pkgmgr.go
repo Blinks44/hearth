@@ -20,6 +20,13 @@ type SystemPackage struct {
 	// Size is the space it takes in bytes, where the manager records it;
 	// 0 when it does not, and Hearth counts Path and Artifacts.
 	Size int64 `json:",omitempty"`
+	// Optional metadata populated when the manager's local probe already
+	// provides it (for example Homebrew's brew info --json=v2 --installed).
+	Description string `json:",omitempty"`
+	Homepage    string `json:",omitempty"`
+	License     string `json:",omitempty"`
+	Tap         string `json:",omitempty"`
+	KegOnly     bool   `json:",omitempty"`
 }
 
 // PackageManager is a discovered manager and the results of its read probes.

@@ -46103,3 +46103,1129 @@ func KubeYamlMappingExpected() string { return In(i18n.Locale()).KubeYamlMapping
 func (msgs Messages) KubeYamlMappingExpected() string {
 	return Catalog.Format(msgs.locale, "kubeYamlMappingExpected", nil)
 }
+
+// PkgInstallMany says "Install {count} packages"
+// in the language the app shows.
+func PkgInstallMany(count int) string { return In(i18n.Locale()).PkgInstallMany(count) }
+
+// PkgInstallMany says "Install {count} packages"
+// in the language of msgs.
+func (msgs Messages) PkgInstallMany(count int) string {
+	return Catalog.Format(msgs.locale, "pkgInstallMany", map[string]any{"count": count})
+}
+
+// PkgUninstallMany says "Remove {count} packages"
+// in the language the app shows.
+func PkgUninstallMany(count int) string { return In(i18n.Locale()).PkgUninstallMany(count) }
+
+// PkgUninstallMany says "Remove {count} packages"
+// in the language of msgs.
+func (msgs Messages) PkgUninstallMany(count int) string {
+	return Catalog.Format(msgs.locale, "pkgUninstallMany", map[string]any{"count": count})
+}
+
+// PkgAutoremoveTitle says "Remove unused dependencies"
+// in the language the app shows.
+func PkgAutoremoveTitle() string { return In(i18n.Locale()).PkgAutoremoveTitle() }
+
+// PkgAutoremoveTitle says "Remove unused dependencies"
+// in the language of msgs.
+func (msgs Messages) PkgAutoremoveTitle() string {
+	return Catalog.Format(msgs.locale, "pkgAutoremoveTitle", nil)
+}
+
+// PkgAutoremoveWhy says "Remove {count, plural, one {# unused dependency} other {# unused dependencies}} through {manager}. Packages you insta…"
+// in the language the app shows.
+func PkgAutoremoveWhy(count int, manager string) string {
+	return In(i18n.Locale()).PkgAutoremoveWhy(count, manager)
+}
+
+// PkgAutoremoveWhy says "Remove {count, plural, one {# unused dependency} other {# unused dependencies}} through {manager}. Packages you insta…"
+// in the language of msgs.
+func (msgs Messages) PkgAutoremoveWhy(count int, manager string) string {
+	return Catalog.Format(msgs.locale, "pkgAutoremoveWhy", map[string]any{"count": count, "manager": manager})
+}
+
+// PkgAutoremoveVerified says "Removed unused dependencies through {manager}."
+// in the language the app shows.
+func PkgAutoremoveVerified(manager string) string {
+	return In(i18n.Locale()).PkgAutoremoveVerified(manager)
+}
+
+// PkgAutoremoveVerified says "Removed unused dependencies through {manager}."
+// in the language of msgs.
+func (msgs Messages) PkgAutoremoveVerified(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgAutoremoveVerified", map[string]any{"manager": manager})
+}
+
+// PkgAutoremoveRemaining says "{count, plural, one {# unused dependency still remains} other {# unused dependencies still remain}} in {manager}."
+// in the language the app shows.
+func PkgAutoremoveRemaining(count int, manager string) string {
+	return In(i18n.Locale()).PkgAutoremoveRemaining(count, manager)
+}
+
+// PkgAutoremoveRemaining says "{count, plural, one {# unused dependency still remains} other {# unused dependencies still remain}} in {manager}."
+// in the language of msgs.
+func (msgs Messages) PkgAutoremoveRemaining(count int, manager string) string {
+	return Catalog.Format(msgs.locale, "pkgAutoremoveRemaining", map[string]any{"count": count, "manager": manager})
+}
+
+// PkgManagerInstallTitle says "Install {name}"
+// in the language the app shows.
+func PkgManagerInstallTitle(name string) string {
+	return In(i18n.Locale()).PkgManagerInstallTitle(name)
+}
+
+// PkgManagerInstallTitle says "Install {name}"
+// in the language of msgs.
+func (msgs Messages) PkgManagerInstallTitle(name string) string {
+	return Catalog.Format(msgs.locale, "pkgManagerInstallTitle", map[string]any{"name": name})
+}
+
+// PkgManagerInstallWhy says "Install {name} using its official installer so Hearth and your terminal can manage packages through it."
+// in the language the app shows.
+func PkgManagerInstallWhy(name string) string { return In(i18n.Locale()).PkgManagerInstallWhy(name) }
+
+// PkgManagerInstallWhy says "Install {name} using its official installer so Hearth and your terminal can manage packages through it."
+// in the language of msgs.
+func (msgs Messages) PkgManagerInstallWhy(name string) string {
+	return Catalog.Format(msgs.locale, "pkgManagerInstallWhy", map[string]any{"name": name})
+}
+
+// PkgManagerInstallScoopStep says "Download and run Scoop's official user installer"
+// in the language the app shows.
+func PkgManagerInstallScoopStep() string { return In(i18n.Locale()).PkgManagerInstallScoopStep() }
+
+// PkgManagerInstallScoopStep says "Download and run Scoop's official user installer"
+// in the language of msgs.
+func (msgs Messages) PkgManagerInstallScoopStep() string {
+	return Catalog.Format(msgs.locale, "pkgManagerInstallScoopStep", nil)
+}
+
+// PkgManagerInstallChange says "+ {name} ({platform})"
+// in the language the app shows.
+func PkgManagerInstallChange(name string, platform string) string {
+	return In(i18n.Locale()).PkgManagerInstallChange(name, platform)
+}
+
+// PkgManagerInstallChange says "+ {name} ({platform})"
+// in the language of msgs.
+func (msgs Messages) PkgManagerInstallChange(name string, platform string) string {
+	return Catalog.Format(msgs.locale, "pkgManagerInstallChange", map[string]any{"name": name, "platform": platform})
+}
+
+// PkgHeroSubtitle says "System package managers, updates, dependencies and safe installs"
+// in the language the app shows.
+func PkgHeroSubtitle() string { return In(i18n.Locale()).PkgHeroSubtitle() }
+
+// PkgHeroSubtitle says "System package managers, updates, dependencies and safe installs"
+// in the language of msgs.
+func (msgs Messages) PkgHeroSubtitle() string {
+	return Catalog.Format(msgs.locale, "pkgHeroSubtitle", nil)
+}
+
+// PkgOpenManager says "Open {name}"
+// in the language the app shows.
+func PkgOpenManager(name string) string { return In(i18n.Locale()).PkgOpenManager(name) }
+
+// PkgOpenManager says "Open {name}"
+// in the language of msgs.
+func (msgs Messages) PkgOpenManager(name string) string {
+	return Catalog.Format(msgs.locale, "pkgOpenManager", map[string]any{"name": name})
+}
+
+// PkgTabManagers says "Managers"
+// in the language the app shows.
+func PkgTabManagers() string { return In(i18n.Locale()).PkgTabManagers() }
+
+// PkgTabManagers says "Managers"
+// in the language of msgs.
+func (msgs Messages) PkgTabManagers() string {
+	return Catalog.Format(msgs.locale, "pkgTabManagers", nil)
+}
+
+// PkgTabAvailable says "Available"
+// in the language the app shows.
+func PkgTabAvailable() string { return In(i18n.Locale()).PkgTabAvailable() }
+
+// PkgTabAvailable says "Available"
+// in the language of msgs.
+func (msgs Messages) PkgTabAvailable() string {
+	return Catalog.Format(msgs.locale, "pkgTabAvailable", nil)
+}
+
+// PkgTabServices says "Services"
+// in the language the app shows.
+func PkgTabServices() string { return In(i18n.Locale()).PkgTabServices() }
+
+// PkgTabServices says "Services"
+// in the language of msgs.
+func (msgs Messages) PkgTabServices() string {
+	return Catalog.Format(msgs.locale, "pkgTabServices", nil)
+}
+
+// PkgManagersDetected says "Detected managers"
+// in the language the app shows.
+func PkgManagersDetected() string { return In(i18n.Locale()).PkgManagersDetected() }
+
+// PkgManagersDetected says "Detected managers"
+// in the language of msgs.
+func (msgs Messages) PkgManagersDetected() string {
+	return Catalog.Format(msgs.locale, "pkgManagersDetected", nil)
+}
+
+// PkgManagersSections says "Manager sections"
+// in the language the app shows.
+func PkgManagersSections() string { return In(i18n.Locale()).PkgManagersSections() }
+
+// PkgManagersSections says "Manager sections"
+// in the language of msgs.
+func (msgs Messages) PkgManagersSections() string {
+	return Catalog.Format(msgs.locale, "pkgManagersSections", nil)
+}
+
+// PkgAvailableTitle says "Available package managers"
+// in the language the app shows.
+func PkgAvailableTitle() string { return In(i18n.Locale()).PkgAvailableTitle() }
+
+// PkgAvailableTitle says "Available package managers"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableTitle() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableTitle", nil)
+}
+
+// PkgAvailableFor says "for {platform}"
+// in the language the app shows.
+func PkgAvailableFor(platform string) string { return In(i18n.Locale()).PkgAvailableFor(platform) }
+
+// PkgAvailableFor says "for {platform}"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableFor(platform string) string {
+	return Catalog.Format(msgs.locale, "pkgAvailableFor", map[string]any{"platform": platform})
+}
+
+// PkgAvailableDescBrew says "Open source · Formulae and casks for CLI tools and apps"
+// in the language the app shows.
+func PkgAvailableDescBrew() string { return In(i18n.Locale()).PkgAvailableDescBrew() }
+
+// PkgAvailableDescBrew says "Open source · Formulae and casks for CLI tools and apps"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescBrew() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescBrew", nil)
+}
+
+// PkgAvailableDescNix says "Open source · Reproducible declarative packages and environments"
+// in the language the app shows.
+func PkgAvailableDescNix() string { return In(i18n.Locale()).PkgAvailableDescNix() }
+
+// PkgAvailableDescNix says "Open source · Reproducible declarative packages and environments"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescNix() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescNix", nil)
+}
+
+// PkgAvailableDescPort says "Open source · Classic macOS source and binary package system"
+// in the language the app shows.
+func PkgAvailableDescPort() string { return In(i18n.Locale()).PkgAvailableDescPort() }
+
+// PkgAvailableDescPort says "Open source · Classic macOS source and binary package system"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescPort() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescPort", nil)
+}
+
+// PkgAvailableDescWinget says "Microsoft · Official Windows package manager (App Installer)"
+// in the language the app shows.
+func PkgAvailableDescWinget() string { return In(i18n.Locale()).PkgAvailableDescWinget() }
+
+// PkgAvailableDescWinget says "Microsoft · Official Windows package manager (App Installer)"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescWinget() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescWinget", nil)
+}
+
+// PkgAvailableDescScoop says "Open source · User-level CLI installer, no admin required"
+// in the language the app shows.
+func PkgAvailableDescScoop() string { return In(i18n.Locale()).PkgAvailableDescScoop() }
+
+// PkgAvailableDescScoop says "Open source · User-level CLI installer, no admin required"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescScoop() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescScoop", nil)
+}
+
+// PkgAvailableDescChoco says "Free for personal use; check business license · System-wide Windows packages"
+// in the language the app shows.
+func PkgAvailableDescChoco() string { return In(i18n.Locale()).PkgAvailableDescChoco() }
+
+// PkgAvailableDescChoco says "Free for personal use; check business license · System-wide Windows packages"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescChoco() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescChoco", nil)
+}
+
+// PkgAvailableDescFlatpak says "Open source · Sandboxed Linux desktop applications"
+// in the language the app shows.
+func PkgAvailableDescFlatpak() string { return In(i18n.Locale()).PkgAvailableDescFlatpak() }
+
+// PkgAvailableDescFlatpak says "Open source · Sandboxed Linux desktop applications"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableDescFlatpak() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableDescFlatpak", nil)
+}
+
+// PkgAvailableSite says "Website"
+// in the language the app shows.
+func PkgAvailableSite() string { return In(i18n.Locale()).PkgAvailableSite() }
+
+// PkgAvailableSite says "Website"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableSite() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableSite", nil)
+}
+
+// PkgAvailableTerms says "{name} · License terms"
+// in the language the app shows.
+func PkgAvailableTerms(name string) string { return In(i18n.Locale()).PkgAvailableTerms(name) }
+
+// PkgAvailableTerms says "{name} · License terms"
+// in the language of msgs.
+func (msgs Messages) PkgAvailableTerms(name string) string {
+	return Catalog.Format(msgs.locale, "pkgAvailableTerms", map[string]any{"name": name})
+}
+
+// PkgAvailableNote says "Hearth installs package managers only through official installers and always shows the plan before running."
+// in the language the app shows.
+func PkgAvailableNote() string { return In(i18n.Locale()).PkgAvailableNote() }
+
+// PkgAvailableNote says "Hearth installs package managers only through official installers and always shows the plan before running."
+// in the language of msgs.
+func (msgs Messages) PkgAvailableNote() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableNote", nil)
+}
+
+// PkgAvailableNoneFound says "No package managers detected yet. Install one from the Available tab or scan again."
+// in the language the app shows.
+func PkgAvailableNoneFound() string { return In(i18n.Locale()).PkgAvailableNoneFound() }
+
+// PkgAvailableNoneFound says "No package managers detected yet. Install one from the Available tab or scan again."
+// in the language of msgs.
+func (msgs Messages) PkgAvailableNoneFound() string {
+	return Catalog.Format(msgs.locale, "pkgAvailableNoneFound", nil)
+}
+
+// PkgMaintenance says "Maintenance"
+// in the language the app shows.
+func PkgMaintenance() string { return In(i18n.Locale()).PkgMaintenance() }
+
+// PkgMaintenance says "Maintenance"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenance() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenance", nil)
+}
+
+// PkgMaintenanceRefresh says "Refresh package index"
+// in the language the app shows.
+func PkgMaintenanceRefresh() string { return In(i18n.Locale()).PkgMaintenanceRefresh() }
+
+// PkgMaintenanceRefresh says "Refresh package index"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceRefresh() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceRefresh", nil)
+}
+
+// PkgMaintenanceRefreshCaption says "Refresh local catalog metadata without upgrading installed packages"
+// in the language the app shows.
+func PkgMaintenanceRefreshCaption() string { return In(i18n.Locale()).PkgMaintenanceRefreshCaption() }
+
+// PkgMaintenanceRefreshCaption says "Refresh local catalog metadata without upgrading installed packages"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceRefreshCaption() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceRefreshCaption", nil)
+}
+
+// PkgMaintenanceCleanup says "Package download caches"
+// in the language the app shows.
+func PkgMaintenanceCleanup() string { return In(i18n.Locale()).PkgMaintenanceCleanup() }
+
+// PkgMaintenanceCleanup says "Package download caches"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceCleanup() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceCleanup", nil)
+}
+
+// PkgMaintenanceCleanupCaption says "Inspect and reclaim cached downloads on the Cleanup page"
+// in the language the app shows.
+func PkgMaintenanceCleanupCaption() string { return In(i18n.Locale()).PkgMaintenanceCleanupCaption() }
+
+// PkgMaintenanceCleanupCaption says "Inspect and reclaim cached downloads on the Cleanup page"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceCleanupCaption() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceCleanupCaption", nil)
+}
+
+// PkgMaintenanceDatabases says "Managed database services"
+// in the language the app shows.
+func PkgMaintenanceDatabases() string { return In(i18n.Locale()).PkgMaintenanceDatabases() }
+
+// PkgMaintenanceDatabases says "Managed database services"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceDatabases() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceDatabases", nil)
+}
+
+// PkgMaintenanceDatabasesCaption says "Start, stop and inspect local databases"
+// in the language the app shows.
+func PkgMaintenanceDatabasesCaption() string {
+	return In(i18n.Locale()).PkgMaintenanceDatabasesCaption()
+}
+
+// PkgMaintenanceDatabasesCaption says "Start, stop and inspect local databases"
+// in the language of msgs.
+func (msgs Messages) PkgMaintenanceDatabasesCaption() string {
+	return Catalog.Format(msgs.locale, "pkgMaintenanceDatabasesCaption", nil)
+}
+
+// PkgHowTitle says "How Hearth works with packages"
+// in the language the app shows.
+func PkgHowTitle() string { return In(i18n.Locale()).PkgHowTitle() }
+
+// PkgHowTitle says "How Hearth works with packages"
+// in the language of msgs.
+func (msgs Messages) PkgHowTitle() string {
+	return Catalog.Format(msgs.locale, "pkgHowTitle", nil)
+}
+
+// PkgHowScan says "Read-only discovery"
+// in the language the app shows.
+func PkgHowScan() string { return In(i18n.Locale()).PkgHowScan() }
+
+// PkgHowScan says "Read-only discovery"
+// in the language of msgs.
+func (msgs Messages) PkgHowScan() string {
+	return Catalog.Format(msgs.locale, "pkgHowScan", nil)
+}
+
+// PkgHowScanCaption says "Scans read local manager databases and never modify packages automatically."
+// in the language the app shows.
+func PkgHowScanCaption() string { return In(i18n.Locale()).PkgHowScanCaption() }
+
+// PkgHowScanCaption says "Scans read local manager databases and never modify packages automatically."
+// in the language of msgs.
+func (msgs Messages) PkgHowScanCaption() string {
+	return Catalog.Format(msgs.locale, "pkgHowScanCaption", nil)
+}
+
+// PkgHowPlan says "Explicit plans and confirmation"
+// in the language the app shows.
+func PkgHowPlan() string { return In(i18n.Locale()).PkgHowPlan() }
+
+// PkgHowPlan says "Explicit plans and confirmation"
+// in the language of msgs.
+func (msgs Messages) PkgHowPlan() string {
+	return Catalog.Format(msgs.locale, "pkgHowPlan", nil)
+}
+
+// PkgHowPlanCaption says "Every install, upgrade, removal and autoremove runs only after you review the exact commands."
+// in the language the app shows.
+func PkgHowPlanCaption() string { return In(i18n.Locale()).PkgHowPlanCaption() }
+
+// PkgHowPlanCaption says "Every install, upgrade, removal and autoremove runs only after you review the exact commands."
+// in the language of msgs.
+func (msgs Messages) PkgHowPlanCaption() string {
+	return Catalog.Format(msgs.locale, "pkgHowPlanCaption", nil)
+}
+
+// PkgHowSearch says "On-demand catalog search"
+// in the language the app shows.
+func PkgHowSearch() string { return In(i18n.Locale()).PkgHowSearch() }
+
+// PkgHowSearch says "On-demand catalog search"
+// in the language of msgs.
+func (msgs Messages) PkgHowSearch() string {
+	return Catalog.Format(msgs.locale, "pkgHowSearch", nil)
+}
+
+// PkgHowSearchCaption says "Catalog searches run only when you click Search or press Enter, never while typing."
+// in the language the app shows.
+func PkgHowSearchCaption() string { return In(i18n.Locale()).PkgHowSearchCaption() }
+
+// PkgHowSearchCaption says "Catalog searches run only when you click Search or press Enter, never while typing."
+// in the language of msgs.
+func (msgs Messages) PkgHowSearchCaption() string {
+	return Catalog.Format(msgs.locale, "pkgHowSearchCaption", nil)
+}
+
+// PkgManagedBadge says "Managed by Hearth"
+// in the language the app shows.
+func PkgManagedBadge() string { return In(i18n.Locale()).PkgManagedBadge() }
+
+// PkgManagedBadge says "Managed by Hearth"
+// in the language of msgs.
+func (msgs Messages) PkgManagedBadge() string {
+	return Catalog.Format(msgs.locale, "pkgManagedBadge", nil)
+}
+
+// PkgDiskCard says "Disk"
+// in the language the app shows.
+func PkgDiskCard() string { return In(i18n.Locale()).PkgDiskCard() }
+
+// PkgDiskCard says "Disk"
+// in the language of msgs.
+func (msgs Messages) PkgDiskCard() string {
+	return Catalog.Format(msgs.locale, "pkgDiskCard", nil)
+}
+
+// PkgDiskPackagesCaption says "Installed packages"
+// in the language the app shows.
+func PkgDiskPackagesCaption() string { return In(i18n.Locale()).PkgDiskPackagesCaption() }
+
+// PkgDiskPackagesCaption says "Installed packages"
+// in the language of msgs.
+func (msgs Messages) PkgDiskPackagesCaption() string {
+	return Catalog.Format(msgs.locale, "pkgDiskPackagesCaption", nil)
+}
+
+// PkgDiskNoSize says "Size not counted yet"
+// in the language the app shows.
+func PkgDiskNoSize() string { return In(i18n.Locale()).PkgDiskNoSize() }
+
+// PkgDiskNoSize says "Size not counted yet"
+// in the language of msgs.
+func (msgs Messages) PkgDiskNoSize() string {
+	return Catalog.Format(msgs.locale, "pkgDiskNoSize", nil)
+}
+
+// PkgOpenCleanup says "Open in Cleanup"
+// in the language the app shows.
+func PkgOpenCleanup() string { return In(i18n.Locale()).PkgOpenCleanup() }
+
+// PkgOpenCleanup says "Open in Cleanup"
+// in the language of msgs.
+func (msgs Messages) PkgOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "pkgOpenCleanup", nil)
+}
+
+// PkgBackToAll says "Back to Package Managers"
+// in the language the app shows.
+func PkgBackToAll() string { return In(i18n.Locale()).PkgBackToAll() }
+
+// PkgBackToAll says "Back to Package Managers"
+// in the language of msgs.
+func (msgs Messages) PkgBackToAll() string {
+	return Catalog.Format(msgs.locale, "pkgBackToAll", nil)
+}
+
+// PkgAllManagers says "All managers"
+// in the language the app shows.
+func PkgAllManagers() string { return In(i18n.Locale()).PkgAllManagers() }
+
+// PkgAllManagers says "All managers"
+// in the language of msgs.
+func (msgs Messages) PkgAllManagers() string {
+	return Catalog.Format(msgs.locale, "pkgAllManagers", nil)
+}
+
+// PkgPickNote says "Switching the manager here changes only what Hearth shows."
+// in the language the app shows.
+func PkgPickNote() string { return In(i18n.Locale()).PkgPickNote() }
+
+// PkgPickNote says "Switching the manager here changes only what Hearth shows."
+// in the language of msgs.
+func (msgs Messages) PkgPickNote() string {
+	return Catalog.Format(msgs.locale, "pkgPickNote", nil)
+}
+
+// PkgViews says "Sections"
+// in the language the app shows.
+func PkgViews() string { return In(i18n.Locale()).PkgViews() }
+
+// PkgViews says "Sections"
+// in the language of msgs.
+func (msgs Messages) PkgViews() string {
+	return Catalog.Format(msgs.locale, "pkgViews", nil)
+}
+
+// PkgViewOverview says "Overview"
+// in the language the app shows.
+func PkgViewOverview() string { return In(i18n.Locale()).PkgViewOverview() }
+
+// PkgViewOverview says "Overview"
+// in the language of msgs.
+func (msgs Messages) PkgViewOverview() string {
+	return Catalog.Format(msgs.locale, "pkgViewOverview", nil)
+}
+
+// PkgViewPackages says "Packages"
+// in the language the app shows.
+func PkgViewPackages() string { return In(i18n.Locale()).PkgViewPackages() }
+
+// PkgViewPackages says "Packages"
+// in the language of msgs.
+func (msgs Messages) PkgViewPackages() string {
+	return Catalog.Format(msgs.locale, "pkgViewPackages", nil)
+}
+
+// PkgViewUpdates says "Updates"
+// in the language the app shows.
+func PkgViewUpdates() string { return In(i18n.Locale()).PkgViewUpdates() }
+
+// PkgViewUpdates says "Updates"
+// in the language of msgs.
+func (msgs Messages) PkgViewUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgViewUpdates", nil)
+}
+
+// PkgViewDependencies says "Dependencies"
+// in the language the app shows.
+func PkgViewDependencies() string { return In(i18n.Locale()).PkgViewDependencies() }
+
+// PkgViewDependencies says "Dependencies"
+// in the language of msgs.
+func (msgs Messages) PkgViewDependencies() string {
+	return Catalog.Format(msgs.locale, "pkgViewDependencies", nil)
+}
+
+// PkgViewInstall says "Install"
+// in the language the app shows.
+func PkgViewInstall() string { return In(i18n.Locale()).PkgViewInstall() }
+
+// PkgViewInstall says "Install"
+// in the language of msgs.
+func (msgs Messages) PkgViewInstall() string {
+	return Catalog.Format(msgs.locale, "pkgViewInstall", nil)
+}
+
+// PkgUnusedDeps says "Unused deps"
+// in the language the app shows.
+func PkgUnusedDeps() string { return In(i18n.Locale()).PkgUnusedDeps() }
+
+// PkgUnusedDeps says "Unused deps"
+// in the language of msgs.
+func (msgs Messages) PkgUnusedDeps() string {
+	return Catalog.Format(msgs.locale, "pkgUnusedDeps", nil)
+}
+
+// PkgUnusedDepsNone says "No unused dependencies"
+// in the language the app shows.
+func PkgUnusedDepsNone() string { return In(i18n.Locale()).PkgUnusedDepsNone() }
+
+// PkgUnusedDepsNone says "No unused dependencies"
+// in the language of msgs.
+func (msgs Messages) PkgUnusedDepsNone() string {
+	return Catalog.Format(msgs.locale, "pkgUnusedDepsNone", nil)
+}
+
+// PkgUnusedDepsCount says "{count, plural, one {# package nothing needs} other {# packages nothing needs}}"
+// in the language the app shows.
+func PkgUnusedDepsCount(count int) string { return In(i18n.Locale()).PkgUnusedDepsCount(count) }
+
+// PkgUnusedDepsCount says "{count, plural, one {# package nothing needs} other {# packages nothing needs}}"
+// in the language of msgs.
+func (msgs Messages) PkgUnusedDepsCount(count int) string {
+	return Catalog.Format(msgs.locale, "pkgUnusedDepsCount", map[string]any{"count": count})
+}
+
+// PkgAutoremoveAction says "Autoremove…"
+// in the language the app shows.
+func PkgAutoremoveAction() string { return In(i18n.Locale()).PkgAutoremoveAction() }
+
+// PkgAutoremoveAction says "Autoremove…"
+// in the language of msgs.
+func (msgs Messages) PkgAutoremoveAction() string {
+	return Catalog.Format(msgs.locale, "pkgAutoremoveAction", nil)
+}
+
+// PkgNoAttention says "Everything looks healthy: no pending updates or unused dependencies."
+// in the language the app shows.
+func PkgNoAttention() string { return In(i18n.Locale()).PkgNoAttention() }
+
+// PkgNoAttention says "Everything looks healthy: no pending updates or unused dependencies."
+// in the language of msgs.
+func (msgs Messages) PkgNoAttention() string {
+	return Catalog.Format(msgs.locale, "pkgNoAttention", nil)
+}
+
+// PkgAttentionUpdates says "{count, plural, one {# package update available} other {# package updates available}}"
+// in the language the app shows.
+func PkgAttentionUpdates(count int) string { return In(i18n.Locale()).PkgAttentionUpdates(count) }
+
+// PkgAttentionUpdates says "{count, plural, one {# package update available} other {# package updates available}}"
+// in the language of msgs.
+func (msgs Messages) PkgAttentionUpdates(count int) string {
+	return Catalog.Format(msgs.locale, "pkgAttentionUpdates", map[string]any{"count": count})
+}
+
+// PkgAttentionUpdatesCaption says "Review and choose which packages to upgrade."
+// in the language the app shows.
+func PkgAttentionUpdatesCaption() string { return In(i18n.Locale()).PkgAttentionUpdatesCaption() }
+
+// PkgAttentionUpdatesCaption says "Review and choose which packages to upgrade."
+// in the language of msgs.
+func (msgs Messages) PkgAttentionUpdatesCaption() string {
+	return Catalog.Format(msgs.locale, "pkgAttentionUpdatesCaption", nil)
+}
+
+// PkgAttentionUnused says "{count, plural, one {# unused dependency} other {# unused dependencies}}"
+// in the language the app shows.
+func PkgAttentionUnused(count int) string { return In(i18n.Locale()).PkgAttentionUnused(count) }
+
+// PkgAttentionUnused says "{count, plural, one {# unused dependency} other {# unused dependencies}}"
+// in the language of msgs.
+func (msgs Messages) PkgAttentionUnused(count int) string {
+	return Catalog.Format(msgs.locale, "pkgAttentionUnused", map[string]any{"count": count})
+}
+
+// PkgAttentionUnusedCaption says "Installed as dependencies, no longer needed by any package."
+// in the language the app shows.
+func PkgAttentionUnusedCaption() string { return In(i18n.Locale()).PkgAttentionUnusedCaption() }
+
+// PkgAttentionUnusedCaption says "Installed as dependencies, no longer needed by any package."
+// in the language of msgs.
+func (msgs Messages) PkgAttentionUnusedCaption() string {
+	return Catalog.Format(msgs.locale, "pkgAttentionUnusedCaption", nil)
+}
+
+// PkgReviewUpdates says "Review"
+// in the language the app shows.
+func PkgReviewUpdates() string { return In(i18n.Locale()).PkgReviewUpdates() }
+
+// PkgReviewUpdates says "Review"
+// in the language of msgs.
+func (msgs Messages) PkgReviewUpdates() string {
+	return Catalog.Format(msgs.locale, "pkgReviewUpdates", nil)
+}
+
+// PkgKindFormulae says "Formulae"
+// in the language the app shows.
+func PkgKindFormulae() string { return In(i18n.Locale()).PkgKindFormulae() }
+
+// PkgKindFormulae says "Formulae"
+// in the language of msgs.
+func (msgs Messages) PkgKindFormulae() string {
+	return Catalog.Format(msgs.locale, "pkgKindFormulae", nil)
+}
+
+// PkgKindCasks says "Casks"
+// in the language the app shows.
+func PkgKindCasks() string { return In(i18n.Locale()).PkgKindCasks() }
+
+// PkgKindCasks says "Casks"
+// in the language of msgs.
+func (msgs Messages) PkgKindCasks() string {
+	return Catalog.Format(msgs.locale, "pkgKindCasks", nil)
+}
+
+// PkgBulkSelected says "{count, plural, one {# package selected} other {# packages selected}}"
+// in the language the app shows.
+func PkgBulkSelected(count int) string { return In(i18n.Locale()).PkgBulkSelected(count) }
+
+// PkgBulkSelected says "{count, plural, one {# package selected} other {# packages selected}}"
+// in the language of msgs.
+func (msgs Messages) PkgBulkSelected(count int) string {
+	return Catalog.Format(msgs.locale, "pkgBulkSelected", map[string]any{"count": count})
+}
+
+// PkgBulkUpgrade says "Upgrade {count}…"
+// in the language the app shows.
+func PkgBulkUpgrade(count int) string { return In(i18n.Locale()).PkgBulkUpgrade(count) }
+
+// PkgBulkUpgrade says "Upgrade {count}…"
+// in the language of msgs.
+func (msgs Messages) PkgBulkUpgrade(count int) string {
+	return Catalog.Format(msgs.locale, "pkgBulkUpgrade", map[string]any{"count": count})
+}
+
+// PkgBulkRemove says "Remove {count}…"
+// in the language the app shows.
+func PkgBulkRemove(count int) string { return In(i18n.Locale()).PkgBulkRemove(count) }
+
+// PkgBulkRemove says "Remove {count}…"
+// in the language of msgs.
+func (msgs Messages) PkgBulkRemove(count int) string {
+	return Catalog.Format(msgs.locale, "pkgBulkRemove", map[string]any{"count": count})
+}
+
+// PkgDetailClose says "Close details"
+// in the language the app shows.
+func PkgDetailClose() string { return In(i18n.Locale()).PkgDetailClose() }
+
+// PkgDetailClose says "Close details"
+// in the language of msgs.
+func (msgs Messages) PkgDetailClose() string {
+	return Catalog.Format(msgs.locale, "pkgDetailClose", nil)
+}
+
+// PkgDetailOverview says "Overview"
+// in the language the app shows.
+func PkgDetailOverview() string { return In(i18n.Locale()).PkgDetailOverview() }
+
+// PkgDetailOverview says "Overview"
+// in the language of msgs.
+func (msgs Messages) PkgDetailOverview() string {
+	return Catalog.Format(msgs.locale, "pkgDetailOverview", nil)
+}
+
+// PkgDetailDeps says "Dependencies"
+// in the language the app shows.
+func PkgDetailDeps() string { return In(i18n.Locale()).PkgDetailDeps() }
+
+// PkgDetailDeps says "Dependencies"
+// in the language of msgs.
+func (msgs Messages) PkgDetailDeps() string {
+	return Catalog.Format(msgs.locale, "pkgDetailDeps", nil)
+}
+
+// PkgDetailUsedBy says "Used by"
+// in the language the app shows.
+func PkgDetailUsedBy() string { return In(i18n.Locale()).PkgDetailUsedBy() }
+
+// PkgDetailUsedBy says "Used by"
+// in the language of msgs.
+func (msgs Messages) PkgDetailUsedBy() string {
+	return Catalog.Format(msgs.locale, "pkgDetailUsedBy", nil)
+}
+
+// PkgDetailDescription says "Description"
+// in the language the app shows.
+func PkgDetailDescription() string { return In(i18n.Locale()).PkgDetailDescription() }
+
+// PkgDetailDescription says "Description"
+// in the language of msgs.
+func (msgs Messages) PkgDetailDescription() string {
+	return Catalog.Format(msgs.locale, "pkgDetailDescription", nil)
+}
+
+// PkgDetailMetadata says "Details"
+// in the language the app shows.
+func PkgDetailMetadata() string { return In(i18n.Locale()).PkgDetailMetadata() }
+
+// PkgDetailMetadata says "Details"
+// in the language of msgs.
+func (msgs Messages) PkgDetailMetadata() string {
+	return Catalog.Format(msgs.locale, "pkgDetailMetadata", nil)
+}
+
+// PkgDetailTap says "Tap"
+// in the language the app shows.
+func PkgDetailTap() string { return In(i18n.Locale()).PkgDetailTap() }
+
+// PkgDetailTap says "Tap"
+// in the language of msgs.
+func (msgs Messages) PkgDetailTap() string {
+	return Catalog.Format(msgs.locale, "pkgDetailTap", nil)
+}
+
+// PkgDetailLicense says "License"
+// in the language the app shows.
+func PkgDetailLicense() string { return In(i18n.Locale()).PkgDetailLicense() }
+
+// PkgDetailLicense says "License"
+// in the language of msgs.
+func (msgs Messages) PkgDetailLicense() string {
+	return Catalog.Format(msgs.locale, "pkgDetailLicense", nil)
+}
+
+// PkgDetailHomepage says "Website"
+// in the language the app shows.
+func PkgDetailHomepage() string { return In(i18n.Locale()).PkgDetailHomepage() }
+
+// PkgDetailHomepage says "Website"
+// in the language of msgs.
+func (msgs Messages) PkgDetailHomepage() string {
+	return Catalog.Format(msgs.locale, "pkgDetailHomepage", nil)
+}
+
+// PkgDetailKegOnly says "Keg-only (not symlinked into PATH)"
+// in the language the app shows.
+func PkgDetailKegOnly() string { return In(i18n.Locale()).PkgDetailKegOnly() }
+
+// PkgDetailKegOnly says "Keg-only (not symlinked into PATH)"
+// in the language of msgs.
+func (msgs Messages) PkgDetailKegOnly() string {
+	return Catalog.Format(msgs.locale, "pkgDetailKegOnly", nil)
+}
+
+// PkgDetailPath says "Location"
+// in the language the app shows.
+func PkgDetailPath() string { return In(i18n.Locale()).PkgDetailPath() }
+
+// PkgDetailPath says "Location"
+// in the language of msgs.
+func (msgs Messages) PkgDetailPath() string {
+	return Catalog.Format(msgs.locale, "pkgDetailPath", nil)
+}
+
+// PkgDetailArtifacts says "Installed apps"
+// in the language the app shows.
+func PkgDetailArtifacts() string { return In(i18n.Locale()).PkgDetailArtifacts() }
+
+// PkgDetailArtifacts says "Installed apps"
+// in the language of msgs.
+func (msgs Messages) PkgDetailArtifacts() string {
+	return Catalog.Format(msgs.locale, "pkgDetailArtifacts", nil)
+}
+
+// PkgDetailRelatedTools says "Used by Hearth tools"
+// in the language the app shows.
+func PkgDetailRelatedTools() string { return In(i18n.Locale()).PkgDetailRelatedTools() }
+
+// PkgDetailRelatedTools says "Used by Hearth tools"
+// in the language of msgs.
+func (msgs Messages) PkgDetailRelatedTools() string {
+	return Catalog.Format(msgs.locale, "pkgDetailRelatedTools", nil)
+}
+
+// PkgDetailNoDeps says "This package has no recorded dependencies."
+// in the language the app shows.
+func PkgDetailNoDeps() string { return In(i18n.Locale()).PkgDetailNoDeps() }
+
+// PkgDetailNoDeps says "This package has no recorded dependencies."
+// in the language of msgs.
+func (msgs Messages) PkgDetailNoDeps() string {
+	return Catalog.Format(msgs.locale, "pkgDetailNoDeps", nil)
+}
+
+// PkgDetailNoDependents says "No other installed packages depend on this package."
+// in the language the app shows.
+func PkgDetailNoDependents() string { return In(i18n.Locale()).PkgDetailNoDependents() }
+
+// PkgDetailNoDependents says "No other installed packages depend on this package."
+// in the language of msgs.
+func (msgs Messages) PkgDetailNoDependents() string {
+	return Catalog.Format(msgs.locale, "pkgDetailNoDependents", nil)
+}
+
+// PkgDetailUpgrade says "Upgrade to {version}…"
+// in the language the app shows.
+func PkgDetailUpgrade(version string) string { return In(i18n.Locale()).PkgDetailUpgrade(version) }
+
+// PkgDetailUpgrade says "Upgrade to {version}…"
+// in the language of msgs.
+func (msgs Messages) PkgDetailUpgrade(version string) string {
+	return Catalog.Format(msgs.locale, "pkgDetailUpgrade", map[string]any{"version": version})
+}
+
+// PkgDetailOpenFolder says "Open folder"
+// in the language the app shows.
+func PkgDetailOpenFolder() string { return In(i18n.Locale()).PkgDetailOpenFolder() }
+
+// PkgDetailOpenFolder says "Open folder"
+// in the language of msgs.
+func (msgs Messages) PkgDetailOpenFolder() string {
+	return Catalog.Format(msgs.locale, "pkgDetailOpenFolder", nil)
+}
+
+// PkgDetailNotRemovable says "Installed as a dependency. Use Autoremove when nothing needs it."
+// in the language the app shows.
+func PkgDetailNotRemovable() string { return In(i18n.Locale()).PkgDetailNotRemovable() }
+
+// PkgDetailNotRemovable says "Installed as a dependency. Use Autoremove when nothing needs it."
+// in the language of msgs.
+func (msgs Messages) PkgDetailNotRemovable() string {
+	return Catalog.Format(msgs.locale, "pkgDetailNotRemovable", nil)
+}
+
+// PkgDepsFilterAll says "All dependencies"
+// in the language the app shows.
+func PkgDepsFilterAll() string { return In(i18n.Locale()).PkgDepsFilterAll() }
+
+// PkgDepsFilterAll says "All dependencies"
+// in the language of msgs.
+func (msgs Messages) PkgDepsFilterAll() string {
+	return Catalog.Format(msgs.locale, "pkgDepsFilterAll", nil)
+}
+
+// PkgDepsFilterUnused says "Unused"
+// in the language the app shows.
+func PkgDepsFilterUnused() string { return In(i18n.Locale()).PkgDepsFilterUnused() }
+
+// PkgDepsFilterUnused says "Unused"
+// in the language of msgs.
+func (msgs Messages) PkgDepsFilterUnused() string {
+	return Catalog.Format(msgs.locale, "pkgDepsFilterUnused", nil)
+}
+
+// PkgDepsUnusedBanner says "{count, plural, one {# dependency is no longer needed by any installed package.} other {# dependencies are no longer …"
+// in the language the app shows.
+func PkgDepsUnusedBanner(count int) string { return In(i18n.Locale()).PkgDepsUnusedBanner(count) }
+
+// PkgDepsUnusedBanner says "{count, plural, one {# dependency is no longer needed by any installed package.} other {# dependencies are no longer …"
+// in the language of msgs.
+func (msgs Messages) PkgDepsUnusedBanner(count int) string {
+	return Catalog.Format(msgs.locale, "pkgDepsUnusedBanner", map[string]any{"count": count})
+}
+
+// PkgDepsNone says "No dependencies recorded for this manager."
+// in the language the app shows.
+func PkgDepsNone() string { return In(i18n.Locale()).PkgDepsNone() }
+
+// PkgDepsNone says "No dependencies recorded for this manager."
+// in the language of msgs.
+func (msgs Messages) PkgDepsNone() string {
+	return Catalog.Format(msgs.locale, "pkgDepsNone", nil)
+}
+
+// PkgDepsNoUnused says "All installed dependencies are currently needed by other packages."
+// in the language the app shows.
+func PkgDepsNoUnused() string { return In(i18n.Locale()).PkgDepsNoUnused() }
+
+// PkgDepsNoUnused says "All installed dependencies are currently needed by other packages."
+// in the language of msgs.
+func (msgs Messages) PkgDepsNoUnused() string {
+	return Catalog.Format(msgs.locale, "pkgDepsNoUnused", nil)
+}
+
+// PkgSearchPlaceholder says "Search {manager} catalog (e.g. ripgrep, jq, ffmpeg)…"
+// in the language the app shows.
+func PkgSearchPlaceholder(manager string) string {
+	return In(i18n.Locale()).PkgSearchPlaceholder(manager)
+}
+
+// PkgSearchPlaceholder says "Search {manager} catalog (e.g. ripgrep, jq, ffmpeg)…"
+// in the language of msgs.
+func (msgs Messages) PkgSearchPlaceholder(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgSearchPlaceholder", map[string]any{"manager": manager})
+}
+
+// PkgSearchButton says "Search"
+// in the language the app shows.
+func PkgSearchButton() string { return In(i18n.Locale()).PkgSearchButton() }
+
+// PkgSearchButton says "Search"
+// in the language of msgs.
+func (msgs Messages) PkgSearchButton() string {
+	return Catalog.Format(msgs.locale, "pkgSearchButton", nil)
+}
+
+// PkgSearchSearching says "Searching {manager}…"
+// in the language the app shows.
+func PkgSearchSearching(manager string) string { return In(i18n.Locale()).PkgSearchSearching(manager) }
+
+// PkgSearchSearching says "Searching {manager}…"
+// in the language of msgs.
+func (msgs Messages) PkgSearchSearching(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgSearchSearching", map[string]any{"manager": manager})
+}
+
+// PkgSearchIdle says "Type a package name and press Search or Enter. Hearth never queries catalogs while you type."
+// in the language the app shows.
+func PkgSearchIdle() string { return In(i18n.Locale()).PkgSearchIdle() }
+
+// PkgSearchIdle says "Type a package name and press Search or Enter. Hearth never queries catalogs while you type."
+// in the language of msgs.
+func (msgs Messages) PkgSearchIdle() string {
+	return Catalog.Format(msgs.locale, "pkgSearchIdle", nil)
+}
+
+// PkgSearchEmpty says "No packages matched \"{query}\"."
+// in the language the app shows.
+func PkgSearchEmpty(query string) string { return In(i18n.Locale()).PkgSearchEmpty(query) }
+
+// PkgSearchEmpty says "No packages matched \"{query}\"."
+// in the language of msgs.
+func (msgs Messages) PkgSearchEmpty(query string) string {
+	return Catalog.Format(msgs.locale, "pkgSearchEmpty", map[string]any{"query": query})
+}
+
+// PkgSearchUnsupported says "Catalog search is not available for {manager}."
+// in the language the app shows.
+func PkgSearchUnsupported(manager string) string {
+	return In(i18n.Locale()).PkgSearchUnsupported(manager)
+}
+
+// PkgSearchUnsupported says "Catalog search is not available for {manager}."
+// in the language of msgs.
+func (msgs Messages) PkgSearchUnsupported(manager string) string {
+	return Catalog.Format(msgs.locale, "pkgSearchUnsupported", map[string]any{"manager": manager})
+}
+
+// PkgSearchInstalled says "installed"
+// in the language the app shows.
+func PkgSearchInstalled() string { return In(i18n.Locale()).PkgSearchInstalled() }
+
+// PkgSearchInstalled says "installed"
+// in the language of msgs.
+func (msgs Messages) PkgSearchInstalled() string {
+	return Catalog.Format(msgs.locale, "pkgSearchInstalled", nil)
+}
+
+// PkgSearchInstall says "Install…"
+// in the language the app shows.
+func PkgSearchInstall() string { return In(i18n.Locale()).PkgSearchInstall() }
+
+// PkgSearchInstall says "Install…"
+// in the language of msgs.
+func (msgs Messages) PkgSearchInstall() string {
+	return Catalog.Format(msgs.locale, "pkgSearchInstall", nil)
+}
+
+// PkgSearchFooter says "Pressing Install opens a plan with the exact command. Nothing runs until you confirm."
+// in the language the app shows.
+func PkgSearchFooter() string { return In(i18n.Locale()).PkgSearchFooter() }
+
+// PkgSearchFooter says "Pressing Install opens a plan with the exact command. Nothing runs until you confirm."
+// in the language of msgs.
+func (msgs Messages) PkgSearchFooter() string {
+	return Catalog.Format(msgs.locale, "pkgSearchFooter", nil)
+}
+
+// PkgSearchColDesc says "Description"
+// in the language the app shows.
+func PkgSearchColDesc() string { return In(i18n.Locale()).PkgSearchColDesc() }
+
+// PkgSearchColDesc says "Description"
+// in the language of msgs.
+func (msgs Messages) PkgSearchColDesc() string {
+	return Catalog.Format(msgs.locale, "pkgSearchColDesc", nil)
+}
+
+// PkgSearchColVer says "Version"
+// in the language the app shows.
+func PkgSearchColVer() string { return In(i18n.Locale()).PkgSearchColVer() }
+
+// PkgSearchColVer says "Version"
+// in the language of msgs.
+func (msgs Messages) PkgSearchColVer() string {
+	return Catalog.Format(msgs.locale, "pkgSearchColVer", nil)
+}
+
+// PkgFreshnessLocal says "Local scan"
+// in the language the app shows.
+func PkgFreshnessLocal() string { return In(i18n.Locale()).PkgFreshnessLocal() }
+
+// PkgFreshnessLocal says "Local scan"
+// in the language of msgs.
+func (msgs Messages) PkgFreshnessLocal() string {
+	return Catalog.Format(msgs.locale, "pkgFreshnessLocal", nil)
+}
+
+// PkgUpdatesUpToDate says "All packages are up to date."
+// in the language the app shows.
+func PkgUpdatesUpToDate() string { return In(i18n.Locale()).PkgUpdatesUpToDate() }
+
+// PkgUpdatesUpToDate says "All packages are up to date."
+// in the language of msgs.
+func (msgs Messages) PkgUpdatesUpToDate() string {
+	return Catalog.Format(msgs.locale, "pkgUpdatesUpToDate", nil)
+}
+
+// PkgUpdatesChip says "{count, plural, one {# update} other {# updates}}"
+// in the language the app shows.
+func PkgUpdatesChip(count int) string { return In(i18n.Locale()).PkgUpdatesChip(count) }
+
+// PkgUpdatesChip says "{count, plural, one {# update} other {# updates}}"
+// in the language of msgs.
+func (msgs Messages) PkgUpdatesChip(count int) string {
+	return Catalog.Format(msgs.locale, "pkgUpdatesChip", map[string]any{"count": count})
+}
+
+// PkgCountPlural says "{count, plural, one {# package} other {# packages}}"
+// in the language the app shows.
+func PkgCountPlural(count int) string { return In(i18n.Locale()).PkgCountPlural(count) }
+
+// PkgCountPlural says "{count, plural, one {# package} other {# packages}}"
+// in the language of msgs.
+func (msgs Messages) PkgCountPlural(count int) string {
+	return Catalog.Format(msgs.locale, "pkgCountPlural", map[string]any{"count": count})
+}

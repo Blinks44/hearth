@@ -189,19 +189,19 @@ func (a *App) changeAction(ch history.Change) func() {
 		}
 	case history.Packages:
 		return func() {
+			filter := ""
+			if len(ch.Names) == 1 {
+				filter = ch.Names[0]
+			}
 			for _, m := range a.packageManagers() {
 				if m.ID == ch.Name || m.Name == ch.Manager {
-					a.packageManager = m.Path
-					break
+					a.openPackageSearch(m.Path, filter)
+					return
 				}
 			}
 			a.packageTab = 0
-			if len(ch.Names) == 1 {
-				a.packageFilter = ch.Names[0]
-			} else {
-				a.packageFilter = ""
-			}
-			a.router.Push("/system/packages")
+			a.packageFilter = filter
+			a.router.Push(packagesPage)
 		}
 	case history.PathEntry:
 		return func() {

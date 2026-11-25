@@ -485,7 +485,7 @@ func TestUpdatesRowNavigation(t *testing.T) {
 		t.Fatalf("Agent row navigated to %q, want %q", a.router.Location(), agentPath("claude"))
 	}
 
-	// Clicking git package row navigates to /system/packages filtered to brew + git.
+	// Clicking git package row navigates to brew manager view filtered to git.
 	a.router.Push(updatesPage)
 	tt.Frame()
 	tt.Advance(time.Second)
@@ -493,8 +493,9 @@ func TestUpdatesRowNavigation(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	if a.router.Location() != "/system/packages" || a.packageManager != "/opt/homebrew/bin/brew" || a.packageTab != 0 || a.packageFilter != "git" {
-		t.Fatalf("Package row navigated to %q mgr=%q tab=%d filter=%q", a.router.Location(), a.packageManager, a.packageTab, a.packageFilter)
+	want := packagesManagerPath("/opt/homebrew/bin/brew")
+	if a.router.Location() != want || a.packageManager != "/opt/homebrew/bin/brew" || a.pkg.view != pkgViewPackages || a.packageFilter != "git" {
+		t.Fatalf("Package row navigated to %q mgr=%q view=%d filter=%q, want %q", a.router.Location(), a.packageManager, a.pkg.view, a.packageFilter, want)
 	}
 }
 

@@ -15,6 +15,11 @@ type brewInfo struct {
 	Formulae []struct {
 		Name      string
 		FullName  string `json:"full_name"`
+		Tap       string `json:"tap"`
+		Desc      string `json:"desc"`
+		Homepage  string `json:"homepage"`
+		License   string `json:"license"`
+		KegOnly   bool   `json:"keg_only"`
 		LinkedKeg string `json:"linked_keg"`
 		Installed []struct {
 			Version            string
@@ -30,6 +35,9 @@ type brewInfo struct {
 	}
 	Casks []struct {
 		Token     string
+		Tap       string `json:"tap"`
+		Desc      string `json:"desc"`
+		Homepage  string `json:"homepage"`
 		Installed json.RawMessage
 		// Artifacts are of many shapes; an app's names where it went.
 		Artifacts []json.RawMessage
@@ -95,8 +103,19 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[strin
 					deps = append(deps, d.FullName)
 				}
 			}
-			out = append(out, inventory.SystemPackage{Name: name, Version: v.Version, Kind: "formula", Path: path, Dependencies: deps,
-				Dependency: !v.InstalledOnRequest})
+			out = append(out, inventory.SystemPackage{
+				Name:         name,
+				Version:      v.Version,
+				Kind:         "formula",
+				Path:         path,
+				Dependencies: deps,
+				Dependency:   !v.InstalledOnRequest,
+				Description:  f.Desc,
+				Homepage:     f.Homepage,
+				License:      f.License,
+				Tap:          f.Tap,
+				KegOnly:      f.KegOnly,
+			})
 		}
 	}
 	for _, c := range info.Casks {
@@ -112,7 +131,16 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[strin
 		if prefix != "" {
 			path = filepath.Join(prefix, "Caskroom", c.Token)
 		}
-		out = append(out, inventory.SystemPackage{Name: c.Token, Version: version, Kind: "cask", Path: path, Artifacts: caskApps(c.Artifacts)})
+		out = append(out, inventory.SystemPackage{
+			Name:        c.Token,
+			Version:     version,
+			Kind:        "cask",
+			Path:        path,
+			Artifacts:   caskApps(c.Artifacts),
+			Description: c.Desc,
+			Homepage:    c.Homepage,
+			Tap:         c.Tap,
+		})
 	}
 	return out, linked, nil
 }

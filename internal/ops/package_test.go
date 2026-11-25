@@ -88,6 +88,8 @@ func TestPackagePlanCommands(t *testing.T) {
 		{"flatpak uninstall system", "flatpak", "/usr/bin/flatpak", PackageUninstall, []inventory.SystemPackage{flatSystem}, []step{{[]string{
 			"/usr/bin/flatpak", "uninstall", "-y", "--noninteractive", "--system", "app/org.gimp.GIMP/x86_64/stable"}, false}}},
 		{"flatpak install needs a remote", "flatpak", "/usr/bin/flatpak", PackageInstall, []inventory.SystemPackage{flat}, nil},
+		{"flatpak install with remote", "flatpak", "/usr/bin/flatpak", PackageInstall, []inventory.SystemPackage{{Name: "org.gimp.GIMP", Reference: "org.gimp.GIMP", Scope: "user", Origin: "flathub"}}, []step{{[]string{
+			"/usr/bin/flatpak", "install", "-y", "--noninteractive", "--user", "flathub", "org.gimp.GIMP"}, false}}},
 		{"nix", "nix", "/nix/var/nix/profiles/default/bin/nix-env", PackageUpgrade, []inventory.SystemPackage{pkg}, nil},
 		{"no packages", "brew", "/opt/homebrew/bin/brew", PackageUpgrade, nil, nil},
 		{"a name that is not one", "brew", "/opt/homebrew/bin/brew", PackageUninstall, []inventory.SystemPackage{{Name: "jq; rm -rf ~"}}, nil},
@@ -305,4 +307,100 @@ func TestPackageRefreshPlan(t *testing.T) {
 			t.Fatalf("Verify = (%q, %v), want (%q, nil)", got, err, locales.PkgRefreshChange("Flatpak"))
 		}
 	})
+}
+
+func TestPackageAutoremovePlan(t *testing.T) {
+	orphans := []inventory.SystemPackage{
+		{Name: "brotli", Version: "1.1.0", Dependency: true},
+		{Name: "oniguruma", Version: "6.9.9", Dependency: true},
+	}
+	tests := []struct {
+		id    string
+		path  string
+		argv  []string
+		admin bool
+		ok    bool
+	}{
+		{"brew", "/opt/homebrew/bin/brew", []string{"/opt/homebrew/bin/brew", "autoremove"}, false, true},
+		{"apt", "/usr/bin/apt", []string{"/usr/bin/apt-get", "-oDPkg::Lock::Timeout=600", "autoremove", "-y"}, true, true},
+		{"dnf", "/usr/bin/dnf", []string{"/usr/bin/dnf", "autoremove", "-y"}, true, true},
+		{"pacman", "/usr/bin/pacman", []string{"/usr/bin/pacman", "-Rns", "--noconfirm", "brotli", "oniguruma"}, true, true},
+		{"winget", "winget", nil, false, false},
+		{"nix", "/nix/bin/nix", nil, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.id, func(t *testing.T) {
+			m := inventory.PackageManager{ID: tt.id, Name: tt.id, Path: tt.path}
+			p, ok := PackageAutoremovePlan(m, orphans, nil)
+			if ok != tt.ok {
+				t.Fatalf("ok = %v, want %v", ok, tt.ok)
+			}
+			if !ok {
+				return
+			}
+			if len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, tt.argv) || p.Steps[0].Admin != tt.admin {
+				t.Errorf("steps = %+v, want argv=%v admin=%v", p.Steps, tt.argv, tt.admin)
+			}
+			if len(p.Changes) != len(orphans) {
+				t.Errorf("changes = %d, want %d", len(p.Changes), len(orphans))
+			}
+		})
+	}
+	t.Run("empty orphans returns false", func(t *testing.T) {
+		m := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
+		if _, ok := PackageAutoremovePlan(m, nil, nil); ok {
+			t.Fatal("expected false for empty orphans")
+		}
+	})
+	t.Run("pacman rejects manager itself", func(t *testing.T) {
+		m := inventory.PackageManager{ID: "pacman", Name: "Pacman", Path: "/usr/bin/pacman"}
+		if _, ok := PackageAutoremovePlan(m, []inventory.SystemPackage{{Name: "pacman"}}, nil); ok {
+			t.Fatal("pacman autoremove must refuse removing pacman")
+		}
+	})
+}
+
+func TestPackageUninstallManyTitle(t *testing.T) {
+	m := inventory.PackageManager{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}
+	pkgs := []inventory.SystemPackage{
+		{Name: "jq", Version: "1.7.1", Kind: "formula"},
+		{Name: "gh", Version: "2.60.0", Kind: "formula"},
+	}
+	p, ok := PackagePlan(PackageUninstall, m, pkgs, nil)
+	if !ok {
+		t.Fatal("expected uninstall plan")
+	}
+	if p.Title != locales.PkgUninstallMany(2) {
+		t.Fatalf("title = %q, want %q", p.Title, locales.PkgUninstallMany(2))
+	}
+}
+
+func TestFlatpakDefaultScopeInstallVerify(t *testing.T) {
+	m := inventory.PackageManager{ID: "flatpak", Name: "Flatpak", Path: "/usr/bin/flatpak"}
+	pkg := inventory.SystemPackage{
+		Name:      "org.gimp.GIMP",
+		Reference: "org.gimp.GIMP",
+		Kind:      "app",
+		Origin:    "flathub",
+	}
+	p, ok := PackagePlan(PackageInstall, m, []inventory.SystemPackage{pkg}, func(context.Context) (inventory.PackageManager, error) {
+		return inventory.PackageManager{
+			ID:   "flatpak",
+			Name: "Flatpak",
+			Packages: []inventory.SystemPackage{{
+				Name:      "org.gimp.GIMP",
+				Version:   "2.10",
+				Kind:      "app",
+				Scope:     "system",
+				Reference: "app/org.gimp.GIMP/x86_64/stable",
+				Origin:    "flathub",
+			}},
+		}, nil
+	})
+	if !ok {
+		t.Fatal("expected flatpak install plan")
+	}
+	if _, err := p.Verify(context.Background()); err != nil {
+		t.Fatalf("Verify failed for default->system scope: %v", err)
+	}
 }

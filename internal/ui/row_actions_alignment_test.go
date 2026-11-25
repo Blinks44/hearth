@@ -80,7 +80,7 @@ func TestRowActionsAlignment(t *testing.T) {
 				{Name: "virtual-tool", Version: "1.0.0", Kind: "formula"},
 			}},
 		}}}}
-		a.router.Push("/system/packages")
+		a.router.Push(packagesManagerPath("/opt/homebrew/bin/brew"))
 		tt := ui.NewTester(a.View, sizes[0][0], sizes[0][1])
 		for _, sz := range sizes {
 			tt.SetSize(sz[0], sz[1])

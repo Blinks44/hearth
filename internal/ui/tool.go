@@ -497,20 +497,38 @@ func listCardHeader(c *ui.Context, title string, aside func(), rows func()) {
 	})
 }
 
+// entityTile renders a subtle bordered square tile containing a colored brand
+// logo ("brand/<slug>") or a Lucide icon ("lucide/<name>").
+func entityTile(c *ui.Context, iconKey string, size float32) {
+	pal := Colors(c.Theme())
+	ui.Box(c).Size(size, size).Shrink(0).Radius(size / 4).Center().Background(pal.Subtle).
+		BorderWidth(1).BorderColor(pal.Line).Children(func() {
+		iconOrLogo(c, iconKey, size*0.57, c.Theme().TextMuted)
+	})
+}
+
 // listRow is a row of a list card: a name, mono for a version, with a
 // caption under it, and what end builds on the right.
 func listRow(c *ui.Context, name string, mono bool, caption string, end func()) {
-	drawListRow(c, name, mono, caption, false, end)
+	drawListRow(c, "", name, mono, caption, false, end)
+}
+
+// listRowWithTile is listRow with a 28x28 icon/logo tile on the left.
+func listRowWithTile(c *ui.Context, iconKey, name string, mono bool, caption string, end func()) {
+	drawListRow(c, iconKey, name, mono, caption, false, end)
 }
 
 func listRowWrapped(c *ui.Context, name, caption string, end func()) {
-	drawListRow(c, name, false, caption, true, end)
+	drawListRow(c, "", name, false, caption, true, end)
 }
 
-func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap bool, end func()) {
+func drawListRow(c *ui.Context, iconKey, name string, mono bool, caption string, wrap bool, end func()) {
 	pal := Colors(c.Theme())
-	ui.Row(c).Gap(8).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
+	ui.Row(c).Gap(10).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+		if iconKey != "" {
+			entityTile(c, iconKey, 28)
+		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			n := ui.Text(c, name).FontSize(13)
 			if wrap {
@@ -534,6 +552,40 @@ func drawListRow(c *ui.Context, name string, mono bool, caption string, wrap boo
 			}
 		})
 		end()
+	})
+}
+
+// navListRow is a full-width clickable card row that navigates elsewhere, with
+// subtle row hover feedback and a trailing chevron instead of a wide button.
+// actionLabel sets both the accessible name and tooltip when non-empty.
+func navListRow(c *ui.Context, key any, name, caption, actionLabel string, onClick func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	label := actionLabel
+	if label == "" {
+		label = name
+	}
+	b := ui.ButtonBase(c.Key(key)).Row().Gap(10).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(label).Transition(colorFade).OnClick(onClick)
+	if actionLabel != "" {
+		b.Tooltip(actionLabel)
+	}
+	chevColor := pal.TextFaint
+	if b.Hovered() {
+		b.Background(pal.Subtle)
+		chevColor = t.Text
+	}
+	b.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+			n := ui.Text(c, name).FontSize(13).SingleLine()
+			if name != "" {
+				n.Tooltip(name)
+			}
+			if caption != "" {
+				ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Tooltip(caption)
+			}
+		})
+		ui.Icon(c, Icon("chevron-right")).Size(14, 14).Shrink(0).TextColor(chevColor)
 	})
 }
 

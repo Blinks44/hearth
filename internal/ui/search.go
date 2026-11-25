@@ -310,10 +310,7 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 					detail += " → " + pkg.Available
 				}
 				add(searchResult{id: "pkg:" + mgrPath + ":" + packageKey(pkg), group: locales.PackageManagersTitle(), title: pkgName, detail: detail, words: mgr.ID + " " + pkg.Kind, icon: "lucide/package", open: func() {
-					a.packageManager = mgrPath
-					a.packageTab = 0
-					a.packageFilter = pkgName
-					a.router.Push("/system/packages")
+					a.openPackageSearch(mgrPath, pkgName)
 				}})
 			}
 		}

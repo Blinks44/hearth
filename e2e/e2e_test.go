@@ -89,7 +89,7 @@ esac
 		{"/tools/node", "v" + fakeVersion, ""},
 		{"/tools/docker", "CLI, contexts and container engines", "Back to Docker"},
 		{"/tools/databases", "Database servers and containers", ""},
-		{"/system/packages", "Package manager status", ""},
+		{"/system/packages", "Back to Package Managers", "System package managers"},
 		{"/system/path", "Where terminals and apps look for commands", ""},
 		{"/settings", "Local app · no account or Hearth telemetry", ""},
 		{"/overview", "Needs attention", ""},

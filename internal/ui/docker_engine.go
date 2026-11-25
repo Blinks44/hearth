@@ -110,6 +110,9 @@ func (a *App) entryPath(path string) string {
 	if path == kubePage {
 		return a.kubeEntryPath()
 	}
+	if path == packagesPage {
+		return a.packagesEntryPath()
+	}
 	if path != dockerPage || !a.dockerAnswers() {
 		return path
 	}

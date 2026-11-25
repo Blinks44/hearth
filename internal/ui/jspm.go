@@ -173,6 +173,7 @@ func (a *App) jsTable(c *ui.Context) {
 					row.Background(pal.ActiveRow)
 				}
 				row.Children(func() {
+					entityTile(c, "brand/"+id, 28)
 					ui.Column(c).Width(132).Shrink(0).Gap(3).Children(func() {
 						ui.Text(c, text).Font(FontMono).FontSize(12).SingleLine()
 						if in.Source.Shim {
@@ -214,7 +215,7 @@ func (a *App) jsTable(c *ui.Context) {
 		}
 		for _, id := range []string{"pnpm", "yarn"} {
 			if a.canInstallTool(id) {
-				listRow(c, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolButton(c, id) })
+				listRowWithTile(c.Key("missing:"+id), "brand/"+id, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolButton(c, id) })
 			}
 		}
 	})

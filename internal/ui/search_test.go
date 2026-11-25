@@ -239,9 +239,9 @@ func TestSearchExtendedIndex(t *testing.T) {
 				t.Errorf("pathTab=%d pathFilter=%q", a.pathTab, a.pathFilter)
 			}
 		}},
-		{name: "system package", query: "ripgrep", wantID: "pkg:/opt/homebrew/bin/brew:ripgrep", wantPath: "/system/packages", check: func(t *testing.T, a *App) {
-			if a.packageManager != "/opt/homebrew/bin/brew" || a.packageFilter != "ripgrep" {
-				t.Errorf("packageManager=%q packageFilter=%q", a.packageManager, a.packageFilter)
+		{name: "system package", query: "ripgrep", wantID: "pkg:/opt/homebrew/bin/brew:ripgrep", wantPath: packagesManagerPage, check: func(t *testing.T, a *App) {
+			if a.packageManager != "/opt/homebrew/bin/brew" || a.packageFilter != "ripgrep" || a.router.Query("path") != "/opt/homebrew/bin/brew" {
+				t.Errorf("packageManager=%q packageFilter=%q query=%q", a.packageManager, a.packageFilter, a.router.Query("path"))
 			}
 		}},
 		{name: "install catalog", query: "python install", wantID: "install:python", wantPath: setupPage, check: func(t *testing.T, a *App) {

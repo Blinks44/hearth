@@ -85,6 +85,9 @@ func PackagePlan(action PackageAction, m inventory.PackageManager, pkgs []invent
 	switch action {
 	case PackageInstall:
 		p.Title, p.Why = locales.PkgInstallTitle(name), locales.PkgInstallWhy(m.Name)
+		if len(pkgs) > 1 {
+			p.Title = locales.PkgInstallMany(len(pkgs))
+		}
 	case PackageUpgrade:
 		p.Title, p.Why = locales.PkgUpgradeTitle(name), locales.PkgUpgradeWhy(m.Name)
 		if len(pkgs) > 1 {
@@ -92,6 +95,9 @@ func PackagePlan(action PackageAction, m inventory.PackageManager, pkgs []invent
 		}
 	case PackageUninstall:
 		p.Title, p.Why = locales.PkgUninstallTitle(name), locales.PkgUninstallWhy(m.Name)
+		if len(pkgs) > 1 {
+			p.Title = locales.PkgUninstallMany(len(pkgs))
+		}
 	}
 	for _, pkg := range pkgs {
 		switch action {
@@ -110,6 +116,90 @@ func PackagePlan(action PackageAction, m inventory.PackageManager, pkgs []invent
 				return "", err
 			}
 			return checkPackages(action, m.ID, pkgs, after)
+		}
+	}
+	return p, true
+}
+
+// CanAutoremove reports whether Hearth supports safe removal of unused
+// dependencies through manager id.
+func CanAutoremove(id string) bool {
+	return slices.Contains([]string{"brew", "apt", "dnf", "pacman"}, id)
+}
+
+// PackageAutoremovePlan returns the plan that removes unused dependencies
+// through m; ok is false when m does not support autoremove or orphans is empty.
+func PackageAutoremovePlan(m inventory.PackageManager, orphans []inventory.SystemPackage, reread Reread) (Plan, bool) {
+	if !CanAutoremove(m.ID) || len(orphans) == 0 || m.Path == "" {
+		return Plan{}, false
+	}
+	sibling := func(name string) string {
+		if path.IsAbs(m.Path) {
+			return path.Join(path.Dir(m.Path), name)
+		}
+		return name
+	}
+	var steps []Step
+	switch m.ID {
+	case "brew":
+		steps = []Step{{Argv: []string{m.Path, "autoremove"}}}
+	case "apt":
+		aptGet := sibling("apt-get")
+		steps = []Step{{
+			Argv:  []string{aptGet, "-oDPkg::Lock::Timeout=600", "autoremove", "-y"},
+			Runs:  []string{aptGet, "autoremove", "-y"},
+			Admin: true,
+		}}
+	case "dnf":
+		steps = []Step{{Argv: []string{m.Path, "autoremove", "-y"}, Admin: true}}
+	case "pacman":
+		names := make([]string, 0, len(orphans))
+		for _, pkg := range orphans {
+			ref := packageRef(m.ID, pkg)
+			if !packageName.MatchString(ref) || slices.Contains(managerPackages[m.ID], strings.ToLower(pkg.Name)) {
+				return Plan{}, false
+			}
+			names = append(names, ref)
+		}
+		steps = []Step{{Argv: append([]string{m.Path, "-Rns", "--noconfirm"}, names...), Admin: true}}
+	}
+	if len(steps) == 0 {
+		return Plan{}, false
+	}
+	mgrName := cmp.Or(m.Name, m.ID)
+	p := Plan{
+		Title: locales.PkgAutoremoveTitle(),
+		Why:   locales.PkgAutoremoveWhy(len(orphans), mgrName),
+		Steps: steps,
+	}
+	if slices.ContainsFunc(steps, func(s Step) bool { return s.Admin }) {
+		p.Notes = append(p.Notes, AdminNote())
+	}
+	for _, pkg := range orphans {
+		line := "− " + pkg.Name
+		if pkg.Version != "" {
+			line += " " + pkg.Version
+		}
+		p.Changes = append(p.Changes, line+" · "+mgrName)
+	}
+	if reread != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			after, err := reread(ctx)
+			if err != nil {
+				return "", err
+			}
+			remaining := 0
+			for _, pkg := range orphans {
+				if slices.ContainsFunc(after.Packages, func(cur inventory.SystemPackage) bool {
+					return strings.EqualFold(cur.Name, pkg.Name)
+				}) {
+					remaining++
+				}
+			}
+			if remaining > 0 {
+				return "", errors.New(locales.PkgAutoremoveRemaining(remaining, mgrName))
+			}
+			return locales.PkgAutoremoveVerified(mgrName), nil
 		}
 	}
 	return p, true
@@ -331,11 +421,16 @@ func packageSteps(action PackageAction, m inventory.PackageManager, pkgs []inven
 	case "snap":
 		return admin(m.Path, [...]string{"install", "refresh", "remove"}[action])
 	case "flatpak":
-		if action == PackageInstall {
-			return nil, nil // which remote is the user's choice
-		}
 		var steps []Step
 		for _, pkg := range pkgs {
+			if action == PackageInstall {
+				if pkg.Origin == "" || !packageName.MatchString(pkg.Origin) {
+					return nil, nil // which remote is the user's choice
+				}
+				argv := []string{m.Path, "install", "-y", "--noninteractive", flatpakInstallation(pkg.Scope), pkg.Origin, packageRef(m.ID, pkg)}
+				steps = append(steps, Step{Argv: argv})
+				continue
+			}
 			// Flatpak asks polkit itself for a system installation.
 			argv := []string{m.Path, [...]string{"", "update", "uninstall"}[action], "-y", "--noninteractive", flatpakInstallation(pkg.Scope)}
 			steps = append(steps, Step{Argv: append(argv, packageRef(m.ID, pkg))})
@@ -412,7 +507,7 @@ func checkPackages(action PackageAction, manager string, pkgs []inventory.System
 		for i, p := range after.Packages {
 			if strings.EqualFold(p.Name, pkg.Name) &&
 				(pkg.Kind == "" || p.Kind == "" || p.Kind == pkg.Kind) &&
-				(manager != "flatpak" || p.Scope == pkg.Scope) &&
+				(manager != "flatpak" || flatpakInstallation(p.Scope) == flatpakInstallation(pkg.Scope)) &&
 				(pkg.Architecture == "" || p.Architecture == pkg.Architecture) {
 				last = i
 			}
