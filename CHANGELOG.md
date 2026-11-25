@@ -4,6 +4,23 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-11-25
+
+### Added
+
+- **Redesigned Package Managers workspace:** Two-level Docker/Kubernetes-style layout with direct entry into the active manager, breadcrumb manager/view switchers (`Cmd+J` / `Ctrl+J`), Overview, Packages, Updates, Dependencies (with safe confirmed autoremove), and Install views, split-view package inspector with metadata and dependency/dependent navigation, full-row hover/click selection, and a floating bulk action bar.
+- **Explicit package catalog search:** On-demand search (`Search` / Enter, never on every keystroke) across Homebrew (name + description search with `brew desc` enrichment), APT, DNF, Pacman, Zypper, APK, Flatpak, Snap, WinGet, Scoop, and Chocolatey with exact/prefix prioritization, installed-state matching, and confirmed install plans.
+- **Per-OS Available package managers catalog:** Curated safe package managers per OS (macOS: Homebrew, Nix, MacPorts; Windows: WinGet, Scoop, Chocolatey; Linux: Flatpak, Homebrew, Nix) with official install plans where supported.
+- **Entity icon tiles across lists:** Added `28x28` brand/category icon tiles across Package Managers, Kubernetes contexts, Docker engines, and npm/pnpm/Yarn rows.
+
+### Changed
+
+- **Unified UI control hierarchy:** Replaced verbose status buttons with green toggles for binary running/active states (Colima, Linux Docker Engine, Ollama, Kubernetes Deployment rollout pause/resume), compact `24x24` icon buttons for universal actions (refresh index, edit Colima resources, open folder, external links, clear cache, download), and full-row clickable navigation rows with right chevrons for cross-section jumps (`Open in Cleanup`, `Databases`, `Details`, `Review`, `Licenses`).
+
+### Fixed
+
+- **macOS Docker socket persistence across reboots:** Persist the `/var/run/docker.sock` symlink created for Colima via a `/Library/LaunchDaemons/dev.hearth.docker-socket.plist` LaunchDaemon so Testcontainers and Docker SDK clients keep working after a macOS restart.
+
 ## [1.0.2] - 2026-11-25
 
 ### Added
