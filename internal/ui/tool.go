@@ -507,6 +507,77 @@ func entityTile(c *ui.Context, iconKey string, size float32) {
 	})
 }
 
+// detailFactRow is one key-value row in an inspector's details card.
+type detailFactRow struct {
+	key     string
+	label   string
+	value   string
+	plain   bool // prose value instead of monospace
+	tooltip string
+	chip    bool
+	chipBg  ui.Color
+	chipFg  ui.Color
+	end     func()
+}
+
+// detailFactsCard draws a bordered key-value card with standard inspector side
+// margins: muted label on the left, prominent selectable value in the middle,
+// and optional icon actions on the right.
+func detailFactsCard(c *ui.Context, rows []detailFactRow) {
+	detailFactsCardStyled(c, rows, true)
+}
+
+// detailFactsCardInline is detailFactsCard for containers that already carry
+// horizontal padding.
+func detailFactsCardInline(c *ui.Context, rows []detailFactRow) {
+	detailFactsCardStyled(c, rows, false)
+}
+
+func detailFactsCardStyled(c *ui.Context, rows []detailFactRow, withMargin bool) {
+	if len(rows) == 0 {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	box := ui.Column(c).Radius(9).Clip().BorderWidth(1).BorderColor(pal.Line)
+	if withMargin {
+		box.Margin(0, 16, 6, 16)
+	}
+	box.Children(func() {
+		for i, r := range rows {
+			k := r.key
+			if k == "" {
+				k = "fact-" + strconv.Itoa(i)
+			}
+			row := ui.Row(c.Key(k)).Padding(7, 12).Gap(10).AlignItems(ui.Center)
+			if i < len(rows)-1 {
+				row.BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
+			}
+			row.Children(func() {
+				ui.Text(c, r.label).Width(116).Shrink(0).FontSize(12).TextColor(t.TextMuted).Wrap()
+				if r.chip {
+					ui.Row(c).Grow(1).MinWidth(0).Children(func() {
+						aiTag(c, r.value, r.chipBg, r.chipFg)
+					})
+				} else {
+					val := ui.Text(c, r.value).Grow(1).MinWidth(0).Wrap().Selectable()
+					if r.plain {
+						val.FontSize(12)
+					} else {
+						val.Font(FontMono).FontSize(11.5)
+					}
+					if r.tooltip != "" {
+						val.Tooltip(r.tooltip)
+					}
+				}
+				if r.end != nil {
+					r.end()
+				}
+			})
+		}
+	})
+}
+
 // listRow is a row of a list card: a name, mono for a version, with a
 // caption under it, and what end builds on the right.
 func listRow(c *ui.Context, name string, mono bool, caption string, end func()) {

@@ -250,15 +250,7 @@ func accessDetailHeader(c *ui.Context, title, subtitle string, close, actions fu
 }
 
 func accessFacts(c *ui.Context, facts [][2]string) {
-	for _, fact := range facts {
-		if fact[1] == "" {
-			continue
-		}
-		ui.Row(c).Gap(9).Padding(4, 16).Children(func() {
-			clipped(c, fact[0]).FontSize(12).Width(112).Shrink(0).TextColor(c.Theme().TextMuted)
-			ui.Text(c, fact[1]).Font(FontMono).FontSize(12).Wrap().Selectable().Grow(1).MinWidth(0)
-		})
-	}
+	factRows(c, facts)
 }
 
 func (a *App) accessReadError(c *ui.Context, title string, err error) {
@@ -371,6 +363,7 @@ func (a *App) accessObjectDetail(c *ui.Context, review *kube.AccessReview, item 
 	detailFrame(c, 0, false, func() {
 		accessDetailHeader(c, item.Name, accessKindName(item.Kind)+" · "+scope, v.resetSelection, nil)
 	}, func() {
+		detailSection(c, locales.KubeTabOverview())
 		accessFacts(c, [][2]string{{locales.KubeClusterAge(), otherResourceAge(c, item)}})
 		if item.RBAC == nil {
 			return
@@ -384,13 +377,15 @@ func (a *App) accessObjectDetail(c *ui.Context, review *kube.AccessReview, item 
 				storageReadNote(c, ref.Name)
 			}
 			detailSection(c, locales.KubeAccessSubjects())
+			var subjects [][2]string
 			for _, subject := range item.RBAC.Subjects {
 				name := subject.Name
 				if subject.Namespace != "" {
 					name = subject.Namespace + "/" + name
 				}
-				accessFacts(c, [][2]string{{subject.Kind, name}})
+				subjects = append(subjects, [2]string{subject.Kind, name})
 			}
+			accessFacts(c, subjects)
 			return
 		}
 		if len(item.RBAC.Rules) == 0 {

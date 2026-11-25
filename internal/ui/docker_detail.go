@@ -283,65 +283,36 @@ func dockerDetailMetricTile(c *ui.Context, label, value string) {
 }
 
 func (a *App) dockerDetailFactsCard(c *ui.Context, item docker.Container, d *docker.ContainerDetail) {
-	t := c.Theme()
-	pal := Colors(t)
 	command := strings.TrimSpace(strings.Join(append([]string{d.Path}, d.Args...), " "))
-	type factRow struct {
-		label, display, copyVal, tooltip string
-		chip                             bool
-		chipBg, chipFg                   ui.Color
+	copyEnd := func(val string) func() {
+		return func() {
+			iconButton(c.Key("copy"), "copy", locales.KubeLogsCopy()).OnClick(func() { copyName(c, val) })
+		}
 	}
-	var rows []factRow
+	var rows []detailFactRow
 	if d.Image != "" {
-		rows = append(rows, factRow{label: locales.DockerImage(), display: d.Image, copyVal: d.Image, tooltip: d.Image})
+		rows = append(rows, detailFactRow{label: locales.DockerImage(), value: d.Image, tooltip: d.Image, end: copyEnd(d.Image)})
 	}
 	if d.ImageID != "" {
-		rows = append(rows, factRow{label: locales.DockerImageID(), display: shortDockerHash(d.ImageID), copyVal: d.ImageID, tooltip: d.ImageID})
+		rows = append(rows, detailFactRow{label: locales.DockerImageID(), value: shortDockerHash(d.ImageID), tooltip: d.ImageID, end: copyEnd(d.ImageID)})
 	}
 	for _, digest := range d.Digests {
-		rows = append(rows, factRow{label: locales.DockerImageDigest(), display: shortDockerHash(digest), copyVal: digest, tooltip: digest})
+		rows = append(rows, detailFactRow{label: locales.DockerImageDigest(), value: shortDockerHash(digest), tooltip: digest, end: copyEnd(digest)})
 	}
 	if command != "" {
-		rows = append(rows, factRow{label: locales.DockerCommand(), display: command, copyVal: command, tooltip: command})
+		rows = append(rows, detailFactRow{label: locales.DockerCommand(), value: command, tooltip: command, end: copyEnd(command)})
 	}
 	if d.Platform != "" {
-		rows = append(rows, factRow{label: locales.DockerPlatform(), display: d.Platform})
+		rows = append(rows, detailFactRow{label: locales.DockerPlatform(), value: d.Platform})
 	}
 	if d.RestartPolicy != "" {
-		rows = append(rows, factRow{label: locales.DockerRestartPolicy(), display: d.RestartPolicy})
+		rows = append(rows, detailFactRow{label: locales.DockerRestartPolicy(), value: d.RestartPolicy})
 	}
 	if item.State.Health != nil && item.Active() {
 		hl, hbg, hfg := dockerHealthBadge(c, item.State.Health.Status)
-		rows = append(rows, factRow{label: locales.DockerHealth(), display: hl, chip: true, chipBg: hbg, chipFg: hfg})
+		rows = append(rows, detailFactRow{label: locales.DockerHealth(), value: hl, chip: true, chipBg: hbg, chipFg: hfg})
 	}
-	if len(rows) == 0 {
-		return
-	}
-	ui.Column(c).Margin(0, 16, 6, 16).Radius(9).Clip().BorderWidth(1).BorderColor(pal.Line).Children(func() {
-		for i, r := range rows {
-			row := ui.Row(c.Key(fmt.Sprintf("fact-%d", i))).Padding(7, 12).Gap(10).AlignItems(ui.Center)
-			if i < len(rows)-1 {
-				row.BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
-			}
-			row.Children(func() {
-				ui.Text(c, r.label).Width(116).Shrink(0).FontSize(12).TextColor(t.TextMuted).Wrap()
-				if r.chip {
-					ui.Row(c).Grow(1).MinWidth(0).Children(func() {
-						aiTag(c, r.display, r.chipBg, r.chipFg)
-					})
-				} else {
-					val := ui.Text(c, r.display).Grow(1).MinWidth(0).Font(FontMono).FontSize(11.5).Wrap().Selectable()
-					if r.tooltip != "" {
-						val.Tooltip(r.tooltip)
-					}
-				}
-				if r.copyVal != "" {
-					val := r.copyVal
-					iconButton(c.Key("copy"), "copy", locales.KubeLogsCopy()).OnClick(func() { copyName(c, val) })
-				}
-			})
-		}
-	})
+	detailFactsCard(c, rows)
 }
 
 func shortDockerHash(s string) string {

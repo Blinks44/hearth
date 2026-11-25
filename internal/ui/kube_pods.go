@@ -863,16 +863,14 @@ func containerRow(c *ui.Context, ct kube.Container) {
 // factRows are a resource's facts, a name and a value each, skipping
 // those without a value.
 func factRows(c *ui.Context, facts [][2]string) {
-	t := c.Theme()
+	rows := make([]detailFactRow, 0, len(facts))
 	for _, f := range facts {
 		if f[1] == "" {
 			continue
 		}
-		ui.Row(c).Gap(12).Padding(3, 16).Children(func() {
-			ui.Text(c, f[0]).FontSize(12.5).TextColor(t.TextMuted).Width(130).Shrink(0).SingleLine()
-			clipped(c, f[1]).Font(FontMono).FontSize(12).Grow(1).MinWidth(0).Selectable()
-		})
+		rows = append(rows, detailFactRow{label: f[0], value: f[1], tooltip: f[1]})
 	}
+	detailFactsCard(c, rows)
 }
 
 func workloadEventList(c *ui.Context, events []kube.Event, read bool, err error, limit int) {

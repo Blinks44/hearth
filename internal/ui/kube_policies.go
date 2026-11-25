@@ -166,6 +166,7 @@ func (a *App) policyOverview(c *ui.Context, item kube.Resource, lists []kube.Res
 	default:
 		for _, limit := range item.Limits {
 			detailSection(c, limit.Type)
+			var facts [][2]string
 			for _, group := range []struct {
 				name   string
 				values map[string]string
@@ -174,12 +175,11 @@ func (a *App) policyOverview(c *ui.Context, item kube.Resource, lists []kube.Res
 				{"default", limit.Default}, {"defaultRequest", limit.DefaultRequest},
 				{"maxLimitRequestRatio", limit.MaxLimitRequestRatio},
 			} {
-				var facts [][2]string
 				for _, key := range slices.Sorted(maps.Keys(group.values)) {
 					facts = append(facts, [2]string{group.name + " · " + key, group.values[key]})
 				}
-				factRows(c, facts)
 			}
+			factRows(c, facts)
 		}
 	}
 }
@@ -282,9 +282,11 @@ func autoscalerMetricsView(c *ui.Context, metrics []kube.AutoscalerMetric) {
 		return
 	}
 	detailSection(c, locales.KubeAutoscalerCurrentOfTarget())
+	var facts [][2]string
 	for _, metric := range metrics {
-		factRows(c, [][2]string{{metric.Name + " · " + metric.Source, metricSummary(metric)}})
+		facts = append(facts, [2]string{metric.Name + " · " + metric.Source, metricSummary(metric)})
 	}
+	factRows(c, facts)
 }
 
 func policyConditions(c *ui.Context, conditions []kube.CustomCondition) {

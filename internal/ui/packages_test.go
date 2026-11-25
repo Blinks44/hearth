@@ -426,20 +426,26 @@ func TestPackageDetailSplitView(t *testing.T) {
 	a := NewApp()
 	a.Home = home
 	a.Shell = &fakeShell{}
-	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "packages", PackageManagers: []inventory.PackageManager{
-		{
-			ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", UpdatesKnown: true, ReasonsKnown: true,
-			Packages: []inventory.SystemPackage{
-				{
-					Name: "gh", Version: "2.60.0", Available: "2.63.0", Kind: "formula",
-					Path: "/opt/homebrew/Cellar/gh/2.60.0", Description: "GitHub command-line tool",
-					Homepage: "https://cli.github.com/", License: "MIT", Tap: "homebrew/core",
-					Dependencies: []string{"oniguruma"},
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{
+			{
+				ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", UpdatesKnown: true, ReasonsKnown: true,
+				Packages: []inventory.SystemPackage{
+					{
+						Name: "gh", Version: "2.60.0", Available: "2.63.0", Kind: "formula",
+						Path: "/opt/homebrew/Cellar/gh/2.60.0", Description: "GitHub command-line tool",
+						Homepage: "https://cli.github.com/", License: "MIT", Tap: "homebrew/core",
+						Dependencies: []string{"oniguruma"},
+						Artifacts:    []string{"/opt/homebrew/bin/gh"},
+					},
+					{Name: "oniguruma", Version: "6.9.9", Kind: "formula", Dependency: true},
 				},
-				{Name: "oniguruma", Version: "6.9.9", Kind: "formula", Dependency: true},
 			},
-		},
-	}}}}
+		}},
+		{Tool: "gh", Installations: []inventory.Installation{
+			{RealPath: "/opt/homebrew/Cellar/gh/2.60.0/bin/gh", Source: inventory.Source{Manager: "brew"}},
+		}},
+	}}
 	a.router.Push(packagesManagerPath("/opt/homebrew/bin/brew"))
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
@@ -453,7 +459,7 @@ func TestPackageDetailSplitView(t *testing.T) {
 		t.Fatalf("detailKey = %q after clicking row usage cell, want %q", a.pkg.detailKey, want)
 	}
 	screenshot(t, tt, "packages-detail")
-	hasTexts(t, tt, "GitHub command-line tool", "homebrew/core", "MIT", "Upgrade to 2.63.0…", "Open folder", "Website")
+	hasTexts(t, tt, "GitHub command-line tool", "homebrew/core", "MIT", "Upgrade to 2.63.0…", "Open folder", "Website", "INSTALLED APPS", "/opt/homebrew/bin/gh", "USED BY HEARTH TOOLS")
 
 	// Switch to Dependencies tab inside detail panel and jump to oniguruma.
 	a.pkg.detailTab = 1

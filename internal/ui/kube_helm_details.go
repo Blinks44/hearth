@@ -240,9 +240,11 @@ func (a *App) helmOverviewView(c *ui.Context, d *helmDetails, previous int, bloc
 			}
 		})
 	}
-	nodeFact(c, locales.KubeHelmChart(), current.Chart)
-	nodeFact(c, locales.KubeHelmAppVersion(), cmp.Or(current.AppVersion, "—"))
-	nodeFact(c, locales.KubeHelmUpdated(), helmUpdated(current.Updated))
+	detailFactsCardInline(c, []detailFactRow{
+		{label: locales.KubeHelmChart(), value: current.Chart},
+		{label: locales.KubeHelmAppVersion(), value: cmp.Or(current.AppVersion, "—")},
+		{label: locales.KubeHelmUpdated(), value: helmUpdated(current.Updated), plain: true},
+	})
 }
 
 func (a *App) helmRevisions(c *ui.Context, d *helmDetails, rows []kube.HelmRevision, blocked bool) {

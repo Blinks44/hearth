@@ -53,6 +53,10 @@ func TestKubeAccessReviewNavigation(t *testing.T) {
 			}
 			click("pods/log")
 			hasTexts(t, tt, "pods/log", "kubectl auth can-i --list")
+			if btn, ok := tt.Find("Open"); ok && btn.Y+btn.H > 660 {
+				tt.Scroll(btn.X+btn.W/2, 440, 0, btn.Y-440)
+				tt.Frame()
+			}
 			click("Open")
 			if v := a.cluster.access; v.tab != accessBindingsTab || v.selected != accessObjectKey(binding) {
 				t.Fatalf("binding selection = %+v", v)

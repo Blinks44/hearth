@@ -95,69 +95,95 @@ func (a *App) packageDetailView(c *ui.Context, m inventory.PackageManager, pkg i
 
 func (a *App) packageDetailOverview(c *ui.Context, m inventory.PackageManager, pkg inventory.SystemPackage, dependents []string) {
 	pal := Colors(c.Theme())
-	ui.Column(c).Gap(12).Padding(12, 16).Children(func() {
-		if pkg.Description != "" {
-			ui.Column(c).Gap(4).Children(func() {
-				ui.Text(c, locales.PkgDetailDescription()).FontSize(11).FontWeight(500).TextColor(pal.TextFaint)
-				ui.Text(c, pkg.Description).FontSize(12.5).Wrap()
-			})
-		}
-		if pkg.Dependency {
+	if pkg.Description != "" {
+		detailSection(c, locales.PkgDetailDescription())
+		ui.Text(c, pkg.Description).FontSize(12.5).Wrap().Selectable().Padding(2, 16, 10, 16)
+	}
+	if pkg.Dependency {
+		ui.Column(c).Padding(4, 16, 8, 16).Children(func() {
 			toolNote(c, locales.PkgDetailNotRemovable())
-		}
-		size, hasSize := a.Sizes.Size(pkg)
-		hasMeta := hasSize || m.ReasonsKnown || pkg.Tap != "" || pkg.License != "" || pkg.KegOnly || pkg.Reference != "" || pkg.Path != "" || pkg.Homepage != ""
-		if hasMeta {
-			listCard(c, locales.PkgDetailMetadata(), "", func() {
-				if hasSize {
-					listRow(c.Key("meta-size"), locales.PkgDiskCard(), false, formatUsage(size), func() {})
+		})
+	}
+	var rows []detailFactRow
+	if size, hasSize := a.Sizes.Size(pkg); hasSize {
+		rows = append(rows, detailFactRow{key: "meta-size", label: locales.PkgDiskCard(), value: formatUsage(size)})
+	}
+	if m.ReasonsKnown {
+		reason, _ := packageReason(m, pkg, dependents)
+		rows = append(rows, detailFactRow{key: "meta-reason", label: locales.PkgStatus(), value: reason, plain: true})
+	}
+	if pkg.Tap != "" {
+		tap := pkg.Tap
+		rows = append(rows, detailFactRow{key: "meta-tap", label: locales.PkgDetailTap(), value: tap, tooltip: tap})
+	}
+	if pkg.License != "" {
+		rows = append(rows, detailFactRow{key: "meta-license", label: locales.PkgDetailLicense(), value: pkg.License})
+	}
+	if pkg.KegOnly {
+		rows = append(rows, detailFactRow{key: "meta-keg", label: "Keg-only", value: locales.PkgDetailKegOnly(), plain: true})
+	}
+	if pkg.Reference != "" {
+		ref := strings.TrimSpace(pkg.Scope + " " + pkg.Reference)
+		rows = append(rows, detailFactRow{key: "meta-ref", label: "Ref", value: ref, tooltip: ref})
+	}
+	if pkg.Path != "" {
+		p := pkg.Path
+		rows = append(rows, detailFactRow{
+			key:     "meta-path",
+			label:   locales.PkgDetailPath(),
+			value:   tilde(p, a.Home),
+			tooltip: p,
+			end:     func() { a.pathActions(c, "pkg-detail-path", p) },
+		})
+	}
+	if pkg.Homepage != "" {
+		home := pkg.Homepage
+		rows = append(rows, detailFactRow{
+			key:     "meta-homepage",
+			label:   locales.PkgDetailHomepage(),
+			value:   home,
+			tooltip: home,
+			end: func() {
+				iconButton(c.Key("meta-open-home"), "external-link", locales.PkgDetailHomepage()).OnClick(func() { c.OpenURL(home) })
+			},
+		})
+	}
+	if len(rows) > 0 {
+		detailSection(c, locales.PkgDetailMetadata())
+		detailFactsCard(c, rows)
+	}
+	if len(pkg.Artifacts) > 0 {
+		detailSection(c, locales.PkgDetailArtifacts())
+		ui.Column(c).Margin(0, 16, 6, 16).Radius(9).Clip().BorderWidth(1).BorderColor(pal.Line).Children(func() {
+			for i, art := range pkg.Artifacts {
+				artPath := art
+				row := ui.Row(c.Key("art-"+strconv.Itoa(i))).Padding(7, 12).Gap(10).AlignItems(ui.Center)
+				if i < len(pkg.Artifacts)-1 {
+					row.BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
 				}
-				if m.ReasonsKnown {
-					reason, _ := packageReason(m, pkg, dependents)
-					listRow(c.Key("meta-reason"), locales.PkgStatus(), false, reason, func() {})
+				row.Children(func() {
+					ui.Icon(c, Icon("file-text")).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+					ui.Text(c, tilde(artPath, a.Home)).Font(FontMono).FontSize(11.5).Grow(1).MinWidth(0).Wrap().Selectable().Tooltip(artPath)
+					a.pathActions(c, "pkg-art-"+strconv.Itoa(i), artPath)
+				})
+			}
+		})
+	}
+	if tools := packageTools(a.Snapshot, m.ID, pkg); len(tools) > 0 {
+		detailSection(c, locales.PkgDetailRelatedTools())
+		ui.Column(c).Margin(0, 16, 6, 16).Radius(9).Clip().BorderWidth(1).BorderColor(pal.Line).Children(func() {
+			for i, tool := range tools {
+				row := ui.Row(c.Key("tool-"+strconv.Itoa(i))).Padding(7, 12).Gap(10).AlignItems(ui.Center)
+				if i < len(tools)-1 {
+					row.BorderWidth(0, 0, 1, 0).BorderColor(pal.Line)
 				}
-				if pkg.Tap != "" {
-					listRow(c.Key("meta-tap"), locales.PkgDetailTap(), false, pkg.Tap, func() {})
-				}
-				if pkg.License != "" {
-					listRow(c.Key("meta-license"), locales.PkgDetailLicense(), false, pkg.License, func() {})
-				}
-				if pkg.KegOnly {
-					listRow(c.Key("meta-keg"), "Keg-only", false, locales.PkgDetailKegOnly(), func() {})
-				}
-				if pkg.Reference != "" {
-					listRow(c.Key("meta-ref"), "Ref", false, strings.TrimSpace(pkg.Scope+" "+pkg.Reference), func() {})
-				}
-				if pkg.Path != "" {
-					listRow(c.Key("meta-path"), locales.PkgDetailPath(), false, tilde(pkg.Path, a.Home), func() {
-						a.pathActions(c, "pkg-detail-path", pkg.Path)
-					})
-				}
-				if pkg.Homepage != "" {
-					listRow(c.Key("meta-homepage"), locales.PkgDetailHomepage(), false, pkg.Homepage, func() {
-						iconButton(c.Key("meta-open-home"), "external-link", locales.PkgDetailHomepage()).OnClick(func() { c.OpenURL(pkg.Homepage) })
-					})
-				}
-			})
-		}
-		if len(pkg.Artifacts) > 0 {
-			listCard(c, locales.PkgDetailArtifacts(), strconv.Itoa(len(pkg.Artifacts)), func() {
-				for i, art := range pkg.Artifacts {
-					artPath := art
-					listRow(c.Key("art-"+strconv.Itoa(i)), tilde(artPath, a.Home), true, "", func() {
-						a.pathActions(c, "pkg-art-"+strconv.Itoa(i), artPath)
-					})
-				}
-			})
-		}
-		if tools := packageTools(a.Snapshot, m.ID, pkg); len(tools) > 0 {
-			listCard(c, locales.PkgDetailRelatedTools(), strconv.Itoa(len(tools)), func() {
-				for _, tool := range tools {
-					listRow(c.Key("tool-"+tool), tool, false, "", func() {})
-				}
-			})
-		}
-	})
+				row.Children(func() {
+					ui.Icon(c, Icon("terminal")).Size(14, 14).Shrink(0).TextColor(pal.TextFaint)
+					ui.Text(c, tool).FontSize(12).Grow(1).MinWidth(0).Wrap()
+				})
+			}
+		})
+	}
 }
 
 func (a *App) packageDetailRelationList(c *ui.Context, m inventory.PackageManager, names []string, empty string) {

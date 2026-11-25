@@ -225,11 +225,11 @@ func (a *App) storageOverview(c *ui.Context, item kube.Resource, claims *kube.Cl
 	if s.Expandable {
 		facts = append(facts, [2]string{locales.KubeStorageExpansion(), locales.KubeStorageAllowed()})
 	}
-	factRows(c, facts)
 	if item.Kind == kube.PersistentVolumes && s.ClaimName != "" {
 		// The claim can be in a namespace outside the user's current filter.
-		factRows(c, [][2]string{{locales.KubeStorageClaims(), s.ClaimNamespace + "/" + s.ClaimName}})
+		facts = append(facts, [2]string{locales.KubeStorageClaims(), s.ClaimNamespace + "/" + s.ClaimName})
 	}
+	factRows(c, facts)
 	if item.Kind != kube.PersistentVolumeClaims || claims == nil {
 		return
 	}
