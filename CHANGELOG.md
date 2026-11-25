@@ -4,6 +4,20 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-11-25
+
+### Added
+
+- **Expanded brand icons & context tiles:** Added official brand/logo SVG icons (including dark-theme variants) for container engines (`Colima`, `Podman`, `Rancher Desktop`, `Kiri`), package managers (`Nix`, `Flatpak`, `Snap`, `DNF`, `Pacman`, `Zypper`, `Chocolatey`, `MacPorts`, `WinGet`), and `k3s`, plus `28x28` entity icon tiles in Docker context rows/popovers and Kubernetes context popovers.
+
+### Changed
+
+- **Unified inspector detail cards:** Standardized detail and metadata cards across Docker, Package Managers (metadata, installed apps, related tools), Kubernetes resources (workloads, storage, policies, RBAC access), and Helm Overview onto one bordered key-value card layout with muted labels, selectable values, and inline icon actions.
+
+### Fixed
+
+- **UI icon & tooltip test stability:** Added static verification that all UI icon literals exist in `resources/icons/` and fixed `TestPackageNameTooltip` hover coordinates on Linux.
+
 ## [1.0.3] - 2026-11-25
 
 ### Added
