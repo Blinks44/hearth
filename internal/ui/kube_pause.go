@@ -34,9 +34,12 @@ func (a *App) deploymentPause(c *ui.Context, ref ops.KubeResource, paused bool) 
 			ui.Text(c, title).FontSize(13).FontWeight(500)
 			ui.Text(c, note).FontSize(12).TextColor(color).Wrap()
 		})
-		ui.Button(c.Key("deployment-pause"), button+"…").Height(controlHeight).Shrink(0).
-			Disabled((f != nil && f.busy) || a.op.running()).
-			OnClick(func() { a.planDeploymentPause(a.resourceForm(ref), !paused) })
+		active := !paused
+		label := button + "…"
+		if toggle(c, "deployment-pause", &active).Label(label).Tooltip(label).
+			Disabled((f != nil && f.busy) || a.op.running()).Changed() {
+			a.planDeploymentPause(a.resourceForm(ref), !paused)
+		}
 	})
 }
 

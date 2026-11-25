@@ -266,6 +266,23 @@ func (a *App) dockerContextRow(c *ui.Context, d *inventory.DockerState, k invent
 	})
 }
 
+func dockerEngineIcon(name string) string {
+	switch name {
+	case "Docker Desktop", "Docker Engine":
+		return "brand/docker"
+	case "OrbStack":
+		return "lucide/layers"
+	case "Podman", "Podman Desktop":
+		return "lucide/box"
+	case "Rancher Desktop":
+		return "lucide/boxes"
+	case "Kiri":
+		return "lucide/cpu"
+	default:
+		return "lucide/container"
+	}
+}
+
 func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 	pal := Colors(c.Theme())
 	engines := st.Docker.Engines
@@ -292,7 +309,7 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 			if label := dockerManagementLabel(engine.Name); label != "" {
 				caption += " · " + label
 			}
-			listRow(c.Key("engine:"+engine.Name), engine.Name, false, caption, func() {
+			listRowWithTile(c.Key("engine:"+engine.Name), dockerEngineIcon(engine.Name), engine.Name, false, caption, func() {
 				if engine.Name == recommendedDockerEngine {
 					chip(c, c.Theme().Success, pal.SuccessSoft, pal.SuccessText, locales.ColimaRecommended())
 				}
@@ -409,7 +426,7 @@ func (a *App) dockerDiskSummaryCard(c *ui.Context) {
 			case "Build Cache":
 				label = locales.DockerImageBuildCache()
 			}
-			ui.Column(c.Key("disk-"+row.Type)).Gap(5).Padding(8, 14).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+			ui.Column(c.Key("disk-"+row.Type)).Gap(5).Padding(8, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 					ui.Text(c, label).Grow(1).MinWidth(0).FontSize(12).SingleLine()
 					ui.Text(c, formatBytes(row.Bytes)).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
@@ -420,17 +437,14 @@ func (a *App) dockerDiskSummaryCard(c *ui.Context) {
 				requestBar(c, float64(row.Bytes)/float64(total), pal.InfoText)
 			})
 		}
-		ui.Row(c).Gap(8).Padding(9, 14).AlignItems(ui.Center).Children(func() {
-			caption := locales.DockerOverviewReclaimable(formatBytes(reclaimable))
-			if a.DockerCounting {
-				caption += " · " + locales.DockerDiskCachedNote()
-			}
-			ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
-			ui.Button(c.Key("docker-disk-cleanup"), locales.ChangesOpenCleanup()).Height(24).Shrink(0).OnClick(func() {
-				a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
-				a.cleanupFilter = ""
-				a.router.Push(cleanupPage)
-			})
+		caption := locales.DockerOverviewReclaimable(formatBytes(reclaimable))
+		if a.DockerCounting {
+			caption += " · " + locales.DockerDiskCachedNote()
+		}
+		navListRow(c, "docker-disk-cleanup", locales.ChangesOpenCleanup(), caption, locales.ChangesOpenCleanup(), func() {
+			a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
+			a.cleanupFilter = ""
+			a.router.Push(cleanupPage)
 		})
 	})
 }
@@ -457,8 +471,9 @@ func (a *App) dockerProjectList(c *ui.Context) {
 		rows := a.dockerProjects()
 		for _, i := range rows {
 			p := a.Projects[i]
-			listRow(c, tilde(p.Dir, a.Home), false, "", func() {
-				ui.Button(c, locales.Details()).OnClick(func() { a.router.Push(projectPath(p.Dir)) })
+			dir := p.Dir
+			navListRow(c, "docker-proj:"+dir, tilde(dir, a.Home), "", locales.Details(), func() {
+				a.router.Push(projectPath(dir))
 			})
 		}
 		if len(rows) == 0 {

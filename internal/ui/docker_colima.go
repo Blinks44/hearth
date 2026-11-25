@@ -422,7 +422,7 @@ func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventor
 		if hasResources {
 			listRow(c, locales.ColimaResourceSummary(strconv.Itoa(p.CPU), colimaGiB(p.Memory), colimaGiB(p.Disk)), false, caption, func() {
 				disabled := a.BuildPlan == nil || (p.Status != "running" && p.Status != "stopped")
-				ui.Button(c.Key("colima-resources"), locales.ColimaEdit()).Shrink(0).Disabled(disabled).
+				iconButton(c.Key("colima-resources"), "sliders-horizontal", locales.ColimaEdit()).Disabled(disabled).
 					OnClick(func() { a.colimaResize = newColimaResize(colima, p) })
 			})
 		}
@@ -448,13 +448,19 @@ func (a *App) colimaCard(c *ui.Context, colima inventory.ColimaState, p inventor
 			statusCaption = caption
 		}
 		listRow(c, colimaProfileStatus(p.Status), false, statusCaption, func() {
+			var label string
+			var action ops.ColimaAction
+			running := p.Status == "running"
 			switch p.Status {
 			case "", "stopped":
-				ui.Button(c.Key("colima-card-start"), locales.SetupStart()).Shrink(0).Disabled(a.BuildPlan == nil).
-					OnClick(func() { a.changeColima(colima, p, ops.ColimaStart, ops.ColimaLimits{}) })
+				label, action = locales.SetupStart(), ops.ColimaStart
 			case "running":
-				ui.Button(c.Key("colima-card-stop"), locales.PortsStop()).Shrink(0).Disabled(a.BuildPlan == nil).
-					OnClick(func() { a.changeColima(colima, p, ops.ColimaStop, ops.ColimaLimits{}) })
+				label, action = locales.PortsStop(), ops.ColimaStop
+			default:
+				return
+			}
+			if toggle(c, "colima-running", &running).Label(label).Tooltip(label).Disabled(a.BuildPlan == nil || a.op.running()).Changed() {
+				a.changeColima(colima, p, action, ops.ColimaLimits{})
 			}
 		})
 	})
@@ -493,16 +499,20 @@ func (a *App) dockerServiceCard(c *ui.Context, svc inventory.DockerServiceState)
 			}
 		})
 		listRow(c, dockerServiceStatus(svc.Status), false, "", func() {
+			var label string
+			var action ops.DockerServiceAction
+			running := svc.Status == "running"
 			switch svc.Status {
 			case "stopped", "error":
-				if plan, ok := ops.DockerServicePlan(ops.DockerServiceStart, svc, a.detect("docker")); ok {
-					ui.Button(c.Key("docker-service-start"), locales.SetupStart()).Shrink(0).Disabled(a.op.running()).
-						OnClick(func() { a.Propose(plan) })
-				}
+				label, action = locales.SetupStart(), ops.DockerServiceStart
 			case "running":
-				if plan, ok := ops.DockerServicePlan(ops.DockerServiceStop, svc, a.detect("docker")); ok {
-					ui.Button(c.Key("docker-service-stop"), locales.PortsStop()).Shrink(0).Disabled(a.op.running()).
-						OnClick(func() { a.Propose(plan) })
+				label, action = locales.PortsStop(), ops.DockerServiceStop
+			default:
+				return
+			}
+			if plan, ok := ops.DockerServicePlan(action, svc, a.detect("docker")); ok {
+				if toggle(c, "docker-service-running", &running).Label(label).Tooltip(label).Disabled(a.op.running()).Changed() {
+					a.Propose(plan)
 				}
 			}
 		})

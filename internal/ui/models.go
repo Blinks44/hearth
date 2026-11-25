@@ -378,7 +378,10 @@ func (a *App) modelServers(c *ui.Context, apps []modelApp) {
 					action, label = ops.ServiceStop, locales.PortsStop()
 				}
 				if plan, ok := ops.OllamaServerPlan(action, *m.app, a.detect("databases")); ok {
-					ui.Button(c.Key("ollama-server-toggle"), label).Shrink(0).OnClick(func() { a.Propose(plan) })
+					on := running
+					if toggle(c, "ollama-server-toggle", &on).Label(label).Tooltip(label).Disabled(a.op.running()).Changed() {
+						a.Propose(plan)
+					}
 				}
 			})
 		}
@@ -401,7 +404,6 @@ func (a *App) modelServers(c *ui.Context, apps []modelApp) {
 // modelLinks are the MCP servers that ask for a model, and the way to
 // Cleanup for the rest.
 func (a *App) modelLinks(c *ui.Context, apps []modelApp, servers []inventory.MCPServer) {
-	t := c.Theme()
 	listCard(c, locales.ModelsLinks(), "", func() {
 		for _, m := range apps {
 			for _, md := range m.app.Models {
@@ -411,17 +413,9 @@ func (a *App) modelLinks(c *ui.Context, apps []modelApp, servers []inventory.MCP
 			}
 		}
 		listRow(c, locales.ModelsRest(), false, locales.ModelsRestCaption(), func() {})
-		b := ui.ButtonBase(c.Key("models-cleanup")).Column().AlignItems(ui.Start).Gap(1).Padding(9, 12, 9, 14).BorderWidth(1, 0, 0, 0).BorderColor(Colors(t).Line).
-			Label(locales.ModelsOpenCleanup()).OnClick(func() {
+		navListRow(c, "models-cleanup", locales.ModelsOpenCleanup(), locales.ModelsOpenCleanupCaption(), locales.ModelsOpenCleanup(), func() {
 			a.cleanupTab = slices.Index(cleanupGroups, cleanup.Models) + 1
 			a.router.Push(cleanupPage)
-		})
-		if b.Hovered() {
-			b.Background(Colors(t).Subtle)
-		}
-		b.Children(func() {
-			ui.Text(c, locales.ModelsOpenCleanup()).FontSize(13).TextColor(Accent).SingleLine()
-			ui.Text(c, locales.ModelsOpenCleanupCaption()).FontSize(11.5).TextColor(Colors(t).TextFaint).SingleLine()
 		})
 	})
 }

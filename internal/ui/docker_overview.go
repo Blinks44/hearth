@@ -181,13 +181,10 @@ func (a *App) dockerOverviewDisk(c *ui.Context, d *inventory.DockerState, target
 			for _, u := range disk.Usage {
 				reclaimable += u.Reclaimable
 			}
-			ui.Row(c).Gap(8).Padding(9, 13).AlignItems(ui.Center).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Text(c, locales.DockerOverviewReclaimable(formatBytes(reclaimable))).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).Wrap()
-				ui.Button(c.Key("docker-overview-cleanup"), locales.ChangesOpenCleanup()).Height(24).Shrink(0).OnClick(func() {
-					a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
-					a.cleanupFilter = ""
-					a.router.Push(cleanupPage)
-				})
+			navListRow(c, "docker-overview-cleanup", locales.ChangesOpenCleanup(), locales.DockerOverviewReclaimable(formatBytes(reclaimable)), locales.ChangesOpenCleanup(), func() {
+				a.cleanupTab = slices.Index(cleanupGroups, cleanup.Docker) + 1
+				a.cleanupFilter = ""
+				a.router.Push(cleanupPage)
 			})
 		}
 		switch target.Provider {

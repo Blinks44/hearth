@@ -135,7 +135,7 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 				default:
 					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ChipNotReady())
 				}
-				ui.Button(c.Key("tool-proj-open:"+dir), locales.Details()).Height(controlHeight).OnClick(func() {
+				iconButton(c.Key("tool-proj-open:"+dir), "chevron-right", locales.Details()).OnClick(func() {
 					a.router.Push(projectPath(dir))
 				})
 			})

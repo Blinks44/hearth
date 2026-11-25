@@ -201,7 +201,6 @@ func TestColimaCardRussianNarrow(t *testing.T) {
 		locales.ColimaResourceSummary("2", "2", "100"),
 		locales.ColimaAutostartOff(),
 		locales.ColimaRunning(),
-		locales.PortsStop(),
 	)
 	if tt.HasText(locales.ColimaStop()) {
 		t.Fatalf("unexpected verbose Colima stop button in card: %v", tt.Texts())
@@ -216,11 +215,18 @@ func TestColimaCardRussianNarrow(t *testing.T) {
 	if captionCount != 1 {
 		t.Fatalf("caption %q rendered %d times, want 1", wantCaption, captionCount)
 	}
-	stopBtn, ok := tt.AccessByRole(ui.RoleButton, locales.PortsStop())
+	editBtn, ok := tt.AccessByRole(ui.RoleButton, locales.ColimaEdit())
 	if !ok {
-		t.Fatalf("missing %q button", locales.PortsStop())
+		t.Fatalf("missing %q icon button", locales.ColimaEdit())
 	}
-	if stopBtn.Bounds.X+stopBtn.Bounds.W > 1000-20 {
-		t.Fatalf("stop button clips right edge: %+v", stopBtn.Bounds)
+	if editBtn.Bounds.W > 32 || editBtn.Bounds.X+editBtn.Bounds.W > 1000-20 {
+		t.Fatalf("edit icon button unexpected bounds: %+v", editBtn.Bounds)
+	}
+	stopSw, ok := tt.AccessByRole(ui.RoleSwitch, locales.PortsStop())
+	if !ok {
+		t.Fatalf("missing %q switch", locales.PortsStop())
+	}
+	if stopSw.Bounds.X+stopSw.Bounds.W > 1000-20 {
+		t.Fatalf("stop switch clips right edge: %+v", stopSw.Bounds)
 	}
 }

@@ -126,8 +126,9 @@ func (a *App) settingsPage(c *ui.Context) {
 							settingRow(c, locales.SettingsProjectHint(), "", nil)
 						}
 						for _, p := range a.Projects {
-							settingRow(c.Key(p.Dir), filepath.Base(p.Dir), tilde(p.Dir, a.Home), func() {
-								ui.Button(c, locales.RemoveFromList()).Disabled(a.RemoveProject == nil).OnClick(func() { a.RemoveProject(p.Dir) })
+							dir := p.Dir
+							settingRow(c.Key(dir), filepath.Base(dir), tilde(dir, a.Home), func() {
+								iconButton(c.Key("remove"), "trash-2", locales.RemoveFromList()).Disabled(a.RemoveProject == nil).OnClick(func() { a.RemoveProject(dir) })
 							})
 						}
 					})
@@ -150,7 +151,7 @@ func (a *App) settingsPage(c *ui.Context) {
 									if a.AppUpdateAvailable != "" {
 										ui.PrimaryButton(c.Key("check-app-update"), locales.AppUpdateInstallButton()).OnClick(a.CheckAppUpdate)
 									} else {
-										ui.Button(c.Key("check-app-update"), locales.AppUpdateCheckButton()).OnClick(a.CheckAppUpdate)
+										iconButton(c.Key("check-app-update"), "refresh-cw", locales.AppUpdateCheckButton()).OnClick(a.CheckAppUpdate)
 									}
 								}
 							})
@@ -162,8 +163,8 @@ func (a *App) settingsPage(c *ui.Context) {
 								})
 							})
 						}
-						settingRow(c.Key("settings-licenses"), locales.SettingsLicenses(), locales.SettingsLicensesHint(), func() {
-							ui.Button(c, locales.SettingsOpen()).OnClick(func() { a.licensesOpen = true })
+						navListRow(c, "settings-licenses", locales.SettingsLicenses(), locales.SettingsLicensesHint(), locales.SettingsOpen(), func() {
+							a.licensesOpen = true
 						})
 					})
 				})
@@ -205,29 +206,29 @@ func (a *App) dataCard(c *ui.Context) {
 	canOpen := a.canOpenFolder()
 	card(c, locales.SettingsData(), "", nil, func() {
 		settingRow(c.Key("settings-cache"), locales.SettingsCache(), tilde(a.CachePath, a.Home), func() {
-			ui.Row(c).Gap(6).Shrink(0).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Gap(2).Shrink(0).AlignItems(ui.Center).Children(func() {
 				if a.CachePath != "" && canOpen {
-					ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsCache()).
+					iconButton(c.Key("open"), "folder-open", locales.SettingsOpen()+" "+locales.SettingsCache()).
 						OnClick(func() { a.openSettingsFolder(c, a.CachePath) })
 				}
-				ui.Button(c.Key("clear"), locales.SettingsClear()).Disabled(a.ClearCache == nil || a.CacheBusy).OnClick(a.ClearCache)
+				iconButton(c.Key("clear"), "trash-2", locales.SettingsClear()).Disabled(a.ClearCache == nil || a.CacheBusy).OnClick(a.ClearCache)
 			})
 		})
 		if a.DataDir != "" {
 			settingRow(c.Key("settings-data-dir"), locales.SettingsDataDir(), tilde(a.DataDir, a.Home), func() {
-				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsDataDir()).
+				iconButton(c.Key("open"), "folder-open", locales.SettingsOpen()+" "+locales.SettingsDataDir()).
 					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.DataDir) })
 			})
 		}
 		if a.LogsDir != "" {
 			settingRow(c.Key("settings-logs-dir"), locales.SettingsLogsDir(), tilde(a.LogsDir, a.Home), func() {
-				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsLogsDir()).
+				iconButton(c.Key("open"), "folder-open", locales.SettingsOpen()+" "+locales.SettingsLogsDir()).
 					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.LogsDir) })
 			})
 		}
 		if a.SkillBackups != "" {
 			settingRow(c.Key("settings-backups-dir"), locales.SettingsBackupsDir(), locales.SettingsBackupsHint(tilde(a.SkillBackups, a.Home)), func() {
-				ui.Button(c.Key("open"), locales.SettingsOpen()).Label(locales.SettingsOpen() + " " + locales.SettingsBackupsDir()).
+				iconButton(c.Key("open"), "folder-open", locales.SettingsOpen()+" "+locales.SettingsBackupsDir()).
 					Disabled(!canOpen).OnClick(func() { a.openSettingsFolder(c, a.SkillBackups) })
 			})
 		}

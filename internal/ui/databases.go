@@ -446,7 +446,10 @@ func (a *App) databaseProjects(c *ui.Context, applyFilter bool) {
 					continue
 				}
 				shown++
-				listRow(c, filepath.Base(p.Dir), false, ref.File+" · "+ref.Kind+" · "+strings.Join(ref.Ports, ", "), func() { ui.Button(c, locales.Details()).OnClick(func() { a.router.Push(projectPath(p.Dir)) }) })
+				dir := p.Dir
+				navListRow(c, "db-proj:"+dir+":"+ref.File+":"+ref.Kind, filepath.Base(dir), ref.File+" · "+ref.Kind+" · "+strings.Join(ref.Ports, ", "), locales.Details(), func() {
+					a.router.Push(projectPath(dir))
+				})
 			}
 		}
 		if shown == 0 {
