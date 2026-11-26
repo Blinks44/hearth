@@ -193,6 +193,102 @@ func SkillInstallAllPlanFor(sk skillcatalog.Skill, ids []string, project string,
 	return p, nil
 }
 
+// SkillCreatePlan creates a new local skill folder with a starter SKILL.md in
+// common storage (user or project scope) and links it to any agent whose skills
+// directory differs from common storage.
+func SkillCreatePlan(name, description, project string, ids []string, env sysenv.Env, names func(string) string) (Plan, error) {
+	dir := strings.ToLower(strings.TrimSpace(name))
+	dir = strings.NewReplacer(" ", "-", "_", "-").Replace(dir)
+	if dir == "" || strings.Contains(dir, "/") || strings.Contains(dir, "\\") || !skillcatalog.ValidPath(dir) {
+		return Plan{}, errors.New(locales.SkillCreateInvalidName())
+	}
+	desc := strings.TrimSpace(description)
+	if desc == "" {
+		desc = "Describe when agents should use " + dir + "."
+	}
+	var sb strings.Builder
+	sb.WriteString("---\nname: ")
+	sb.WriteString(dir)
+	sb.WriteString("\ndescription: ")
+	sb.WriteString(strings.ReplaceAll(desc, "\n", " "))
+	sb.WriteString("\n---\n\n# ")
+	sb.WriteString(dir)
+	sb.WriteString("\n\n")
+	sb.WriteString(desc)
+	sb.WriteString("\n")
+	sk := skillcatalog.Skill{
+		Name:        dir,
+		Description: desc,
+		Dir:         dir,
+		Files:       []skillcatalog.File{{Path: "SKILL.md", Data: []byte(sb.String())}},
+	}
+	if err := sk.Validate(); err != nil {
+		return Plan{}, errors.New(locales.SkillCreateInvalidName())
+	}
+	dest := filepath.Join(ai.SharedSkillsDir(env, project), sk.Dir)
+	if !filepath.IsAbs(dest) {
+		return Plan{}, errors.New(locales.SkillCatalogNoAgent())
+	}
+	if _, err := os.Lstat(dest); !errors.Is(err, os.ErrNotExist) {
+		return Plan{}, errors.New(locales.SkillLinkTaken(dest))
+	}
+	var links []string
+	var linkNotes []string
+	var titles []string
+	for _, id := range ids {
+		if id == "" || id == "aider" {
+			continue
+		}
+		agentDir, _ := ai.SkillsDir(id, env, project)
+		if agentDir == "" || !filepath.IsAbs(agentDir) {
+			continue
+		}
+		if t := names(id); !slices.Contains(titles, t) {
+			titles = append(titles, t)
+		}
+		link := filepath.Join(agentDir, sk.Dir)
+		if link == dest || slices.Contains(links, link) {
+			continue
+		}
+		if _, err := os.Lstat(link); !errors.Is(err, os.ErrNotExist) {
+			return Plan{}, errors.New(locales.SkillLinkTaken(link))
+		}
+		links = append(links, link)
+		linkNotes = append(linkNotes, link+" → "+dest)
+	}
+	p := Plan{
+		Title:   locales.SkillCreatePlanTitle(sk.Name),
+		Why:     locales.SkillCreateWhy(),
+		Action:  locales.SkillCreateButton(),
+		Steps:   []Step{{Skill: &SkillInstall{Path: dest, Skill: sk, Links: links}}},
+		Changes: append([]string{dest}, linkNotes...),
+	}
+	p.Notes = append(skillStorageNotes(sk.Name, dest, linkNotes), Note{Title: locales.FilesSection(), Text: "SKILL.md"})
+	if len(titles) > 0 {
+		p.Notes = append(p.Notes, Note{Title: locales.AvailableToAgents(), Text: strings.Join(titles, ", ")})
+	}
+	p.Verify = func(ctx context.Context) (string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		root, err := os.OpenRoot(dest)
+		if err != nil {
+			return "", fmt.Errorf("open created skill: %w", err)
+		}
+		defer func() { _ = root.Close() }()
+		if err = checkSkillFiles(root, sk.Files); err != nil {
+			return "", err
+		}
+		for _, link := range links {
+			if !sameSkillPath(link, dest) {
+				return "", errors.New(locales.SkillCheckNotLinked(sk.Name, link))
+			}
+		}
+		return locales.SkillCheckLinkedAll(sk.Name), nil
+	}
+	return p, nil
+}
+
 func checkSkillFiles(root *os.Root, files []skillcatalog.File) error {
 	for _, f := range files {
 		data, err := root.ReadFile(filepath.FromSlash(f.Path))

@@ -41,11 +41,17 @@ func (a *App) packagesEntryPath() string {
 
 // openPackageSearch jumps directly to mgrPath's Packages tab filtered to pkgName.
 func (a *App) openPackageSearch(mgrPath, pkgName string) {
+	a.cancelPackageSearch()
 	a.packageManager = mgrPath
 	a.packageTab = 0
 	a.packageFilter = pkgName
+	a.packageChosen = nil
+	a.pkg.activePath = mgrPath
 	a.pkg.view = pkgViewPackages
 	a.pkg.detailKey = ""
+	a.pkg.detailTab = 0
+	a.pkg.updatesFilter = ""
+	a.pkg.depsFilterQuery = ""
 	if mgrPath != "" {
 		a.router.Push(packagesManagerPath(mgrPath))
 		return

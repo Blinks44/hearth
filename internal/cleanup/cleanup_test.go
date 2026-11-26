@@ -315,3 +315,64 @@ func TestHistory30DaysAndAntigravity(t *testing.T) {
 		t.Fatalf("antigravity history = %+v", got)
 	}
 }
+
+func TestFindWithOptions(t *testing.T) {
+	sizes := &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			"/cache/npm":                            {Bytes: 20_000_000},
+			"/cache/pip":                            {Bytes: 120_000_000},
+			filepath.Join("/p/45d", "node_modules"): {Bytes: 80_000_000},
+		},
+		Installs: []inventory.ProjectInstall{
+			{Project: "/p/45d", Name: "node_modules", Changed: now.Add(-45 * 24 * time.Hour)},
+		},
+		Caches: []inventory.Cache{
+			{ID: "npm", Path: "/cache/npm"},
+			{ID: "pip", Path: "/cache/pip"},
+		},
+	}
+	s := &inventory.Snapshot{}
+	ps := []projects.Project{{Dir: "/known/45d", Installs: []string{".venv"}, Changed: now.Add(-45 * 24 * time.Hour)}}
+	sizes.Paths[filepath.Join("/known/45d", ".venv")] = inventory.Usage{Bytes: 90_000_000}
+
+	// Default options (180d stale, 1 MB min): both caches appear, 45d home install is unselected, 45d known project is skipped.
+	def := FindWithOptions(s, sizes, ps, nil, now, Options{})
+	find := func(cands []Candidate, id, proj string) (Candidate, bool) {
+		for _, c := range cands {
+			if c.ID == id && c.Project == proj {
+				return c, true
+			}
+		}
+		return Candidate{}, false
+	}
+	if _, ok := find(def, "npm", ""); !ok {
+		t.Fatal("default options should include 20 MB npm cache")
+	}
+	if _, ok := find(def, "pip", ""); !ok {
+		t.Fatal("default options should include 120 MB pip cache")
+	}
+	if c, ok := find(def, "node_modules", "/p/45d"); !ok || c.Selected {
+		t.Fatalf("default 45d home install = (%+v, %v), want present & unselected", c, ok)
+	}
+	if _, ok := find(def, ".venv", "/known/45d"); ok {
+		t.Fatal("default options should not include 45d known project")
+	}
+
+	// Custom options (30d stale, 50 MB min): 45d projects are stale/selected, 20 MB npm cache is filtered out.
+	custom := FindWithOptions(s, sizes, ps, nil, now, Options{
+		StaleAfter: 30 * 24 * time.Hour,
+		MinFrees:   50_000_000,
+	})
+	if _, ok := find(custom, "npm", ""); ok {
+		t.Fatal("50 MB min should filter out 20 MB npm cache")
+	}
+	if _, ok := find(custom, "pip", ""); !ok {
+		t.Fatal("50 MB min should keep 120 MB pip cache")
+	}
+	if c, ok := find(custom, "node_modules", "/p/45d"); !ok || !c.Selected {
+		t.Fatalf("30d custom 45d home install = (%+v, %v), want present & selected", c, ok)
+	}
+	if c, ok := find(custom, ".venv", "/known/45d"); !ok || !c.Selected {
+		t.Fatalf("30d custom 45d known project = (%+v, %v), want present & selected", c, ok)
+	}
+}

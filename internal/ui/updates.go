@@ -247,9 +247,15 @@ func (a *App) updatesView(c *ui.Context, p page) {
 						ui.Text(c, locales.UpdatesLead()).FontSize(12).TextColor(t.TextMuted)
 					})
 				}, func() {
+					checking := a.updatesChecking()
+					appUpdate := 0
+					if a.AppUpdateAvailable != "" {
+						appUpdate = 1
+					}
+					totalFound := nv + np + appUpdate
 					found, selected := "—", "—"
-					if a.Snapshot != nil {
-						found, selected = strconv.Itoa(nv+np), strconv.Itoa(len(chosen))
+					if a.Snapshot != nil && (!checking || totalFound > 0) {
+						found, selected = strconv.Itoa(totalFound), strconv.Itoa(len(chosen))
 					}
 					stateCard(c, pal.TextFaint, locales.CleanupFound(), found, locales.UpdatesFoundCaption(nv, np))
 					stateCard(c, Accent, locales.CleanupSelected(), selected, locales.UpdatesSelectedCaption())
@@ -257,7 +263,6 @@ func (a *App) updatesView(c *ui.Context, p page) {
 					if when := a.updatesChecked(); !when.IsZero() {
 						checked = ago(c, when)
 					}
-					checking := a.updatesChecking()
 					if checking {
 						stateCardBusy(c, locales.ProblemsChecked(), checked, locales.Checking())
 					} else {
@@ -664,29 +669,39 @@ func (a *App) updateButton(c *ui.Context, chosen []updateRow) {
 	})
 }
 
-// updateCount is how many versions and packages can be updated, as last
-// checked; "—" before any is known.
+// updateCount is how many versions, packages, and app updates are available;
+// "—" before any is known or while checking with none found yet.
 func (a *App) updateCount(c *ui.Context) string {
 	known := false
 	for _, m := range a.managersChecked() {
 		known = known || m.UpdatesKnown
 	}
 	nv, np := updateCounts(a.updateGroups(c))
-	if !known && nv+np == 0 {
+	appUpdate := 0
+	if a.AppUpdateAvailable != "" {
+		appUpdate = 1
+	}
+	total := nv + np + appUpdate
+	if (!known || a.updatesChecking()) && total == 0 {
 		return "—"
 	}
-	return strconv.Itoa(nv + np)
+	return strconv.Itoa(total)
 }
 
 // updatesEnd is the Updates item's end in the sidebar: how many there
 // are.
 func (a *App) updatesEnd(c *ui.Context) func() {
 	nv, np := updateCounts(a.updateGroups(c))
-	if nv+np == 0 {
+	appUpdate := 0
+	if a.AppUpdateAvailable != "" {
+		appUpdate = 1
+	}
+	total := nv + np + appUpdate
+	if total == 0 {
 		return nil
 	}
 	return func() {
-		ui.Text(c, strconv.Itoa(nv+np)).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+		ui.Text(c, strconv.Itoa(total)).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
 	}
 }
 

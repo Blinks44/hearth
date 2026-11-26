@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,11 +171,29 @@ func TestSkillsPage(t *testing.T) {
 	shell := &fakeShell{}
 	a.Shell = shell
 	tt := openAI(t, a, skillsPage)
-	// The project's skills come first; the copies and the broken link are
-	// tagged, and a hint tells of the copies.
-	hasTexts(t, tt, "PROJECT · APP", ".agents/skills", "deploy", "USER", "pdf", "2 copies", "broken link",
+	// Global (USER) skills come first (expanded) with scope explanation, then projects (collapsed by default).
+	hasTexts(t, tt, "USER", "Global skills (~/.agents/skills)", "PROJECT · APP", ".agents/skills", "pdf", "2 copies", "broken link",
 		"1 skill is copied to several folders. One folder can stay, and the others become symlinks to it.",
-		"AVAILABLE TO AGENTS", "SKILL.md", "5 KB", "references/", "3 files", "---\nname: deploy\n---", "Steps of deploy")
+		"AVAILABLE TO AGENTS")
+	if tt.HasText("deploy") {
+		t.Errorf("project group should be collapsed by default when browsing All")
+	}
+	userRect, okU := tt.Find("USER")
+	projRect, okP := tt.Find("PROJECT · APP")
+	if !okU || !okP || userRect.Y >= projRect.Y {
+		t.Errorf("USER (Y=%v) should appear above PROJECT · APP (Y=%v)", userRect.Y, projRect.Y)
+	}
+
+	// Expanding PROJECT · APP reveals deploy; selecting it loads files, shows Native badge for Codex, and opens in editor.
+	if err := tt.Click("Project · app"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("deploy"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "native", "SKILL.md", "5 KB", "references/", "3 files", "---\nname: deploy\n---", "Steps of deploy")
 	if want := []string{home + "/dev/app/.agents/skills/deploy"}; !reflect.DeepEqual(loads, want) {
 		t.Errorf("loaded %q, want %q", loads, want)
 	}
@@ -206,6 +225,113 @@ func TestSkillsPage(t *testing.T) {
 	a.skillScope, a.skillQuery = 0, "nothing like it"
 	tt.Frame()
 	hasTexts(t, tt, "Nothing matches")
+}
+
+func TestSkillsRedesignAndBugfixes(t *testing.T) {
+	dir := t.TempDir()
+	workAPI := filepath.Join(dir, "work", "api")
+	persAPI := filepath.Join(dir, "personal", "api")
+	sharedSkillDir := filepath.Join(dir, "shared-skills", "review")
+
+	// 1. projectDisplayNames disambiguates duplicate folder names.
+	names := projectDisplayNames([]string{workAPI, persAPI}, dir)
+	if !reflect.DeepEqual(names, []string{"work/api", "personal/api"}) {
+		t.Fatalf("projectDisplayNames = %q, want [work/api personal/api]", names)
+	}
+
+	// 2. skillKey does not collide when user and project symlink to the same folder.
+	userSkill := inventory.Skill{Name: "review", Dir: sharedSkillDir, Paths: []inventory.SkillPath{{Path: filepath.Join(dir, ".agents/skills/review"), Link: true, Agents: []string{"codex"}}}}
+	syncedSkill := inventory.Skill{
+		Name:   "built-in-browser",
+		Synced: true,
+		Dir:    filepath.Join(dir, ".claude/skills/synced/dca3a35b-475f-4594-aed2-019c9265788d_3fb/built-in-browser"),
+		Paths: []inventory.SkillPath{{
+			Path:   filepath.Join(dir, ".claude/skills/synced/dca3a35b-475f-4594-aed2-019c9265788d_3fb/built-in-browser"),
+			Agents: []string{"claude"},
+		}},
+	}
+	projSkill := inventory.Skill{Name: "review", Dir: sharedSkillDir, Project: workAPI, Paths: []inventory.SkillPath{{Path: filepath.Join(workAPI, ".agents/skills/review"), Link: true, Agents: []string{"codex"}}}}
+	if skillKey(userSkill) == skillKey(projSkill) {
+		t.Fatal("skillKey collided between user and project scopes")
+	}
+
+	// 3. Collapsible User & default-collapsed project groups, synced root normalization, scope-synced agent counts, and Create skill dialog.
+	a := NewApp()
+	a.Home = dir
+	a.Snapshot = aiSnapshot()
+	a.Snapshot.Skills = []inventory.Skill{userSkill, syncedSkill}
+	a.Projects = []projects.Project{
+		{Dir: workAPI, Skills: []inventory.Skill{projSkill}},
+		{Dir: persAPI, Skills: []inventory.Skill{
+			{Name: "ship", Dir: filepath.Join(persAPI, ".agents/skills/ship"), Project: persAPI,
+				Paths: []inventory.SkillPath{{Path: filepath.Join(persAPI, ".agents/skills/ship"), Agents: []string{"claude"}}}},
+		}},
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		done(build(sysenv.Env{"HOME=" + dir, "USERPROFILE=" + dir}, nil))
+	}
+	tt := openAI(t, a, skillsPage)
+	a.Home = dir
+	tt.Frame()
+	hasTexts(t, tt, "USER", "~/.claude/skills/synced · ~/.agents/skills", "PROJECT · WORK/API", "PROJECT · PERSONAL/API", "Create skill")
+	if tt.HasText("ship") {
+		t.Errorf("project group should be collapsed by default: %q", tt.Texts())
+	}
+	if r := a.roots(skillGroup{skills: []inventory.Skill{syncedSkill, userSkill}}); strings.Contains(r, "dca3a35b") {
+		t.Errorf("Claude synced org UUID leaked into group roots: %q", r)
+	}
+
+	// Expanding personal/api reveals "ship"; clicking again collapses it.
+	if err := tt.Click("Project · personal/api"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasTexts(t, tt, "ship")
+	if err := tt.Click("Project · personal/api"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("ship") {
+		t.Errorf("re-collapsed project still rendered skill 'ship': %q", tt.Texts())
+	}
+
+	// User group can also be collapsed and expanded (selected skill remains in the detail pane,
+	// while other skills and the group hint hide from the list).
+	if err := tt.Click("USER"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("review") || tt.HasText("Global skills (~/.agents/skills)") {
+		t.Errorf("collapsed USER group still rendered list items: %q", tt.Texts())
+	}
+	if err := tt.Click("USER"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasTexts(t, tt, "review")
+
+	// Scope=User updates agentFilter count to 2 (only user skills, not projects).
+	a.skillScope = 1
+	tt.Frame()
+	if !tt.HasText("2") || tt.HasText("PROJECT · WORK/API") {
+		t.Errorf("user scope filter failed: %q", tt.Texts())
+	}
+
+	// Create skill modal proposes a valid plan.
+	if err := tt.Click("Create skill"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	a.skillCreate.name = "code-review"
+	a.skillCreate.description = "Review pull requests"
+	tt.Frame()
+	if err := tt.Click("Next: plan…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil || a.op.plan.Steps[0].Skill == nil || a.op.plan.Steps[0].Skill.Skill.Dir != "code-review" {
+		t.Fatalf("unexpected create skill plan: %+v", a.op)
+	}
 }
 
 // Servers show once per name and scope, a conflict and a missing command

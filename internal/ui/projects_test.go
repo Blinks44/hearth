@@ -12,8 +12,13 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/skillcatalog"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // testProjects are a project fnm switches to an installed Node by .nvmrc,
@@ -680,5 +685,225 @@ func TestProjectListNarrowToolsVisible(t *testing.T) {
 	}
 	if tag.W < 40 {
 		t.Errorf("node 22 tag collapsed at 1000px width: W=%v", tag.W)
+	}
+}
+
+func TestProjectFileRowLayoutAndDeduplication(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = nodeSnapshot()
+	dir := home + "/work/moduix"
+	a.Projects = []projects.Project{{
+		Dir:   dir,
+		Files: []string{"package.json", "pnpm-lock.yaml"},
+		AI:    []string{".github/copilot-instructions.md"},
+		Requirements: []projects.Requirement{
+			{Tool: "node", Want: ">=24", File: "package.json", Key: "engines.node"},
+			{Tool: "pnpm", Want: ">=12.14.0", File: "package.json", Key: "engines.pnpm"},
+			{Tool: "pnpm", Want: "12.14.0", File: "package.json", Key: "packageManager"},
+			{Tool: "node", Want: "^24.0.0", File: "package.json", Key: "devEngines.runtime"},
+			{Tool: "pnpm", Want: "12.14.0", File: "package.json", Key: "devEngines.packageManager"},
+			{Tool: "pnpm", File: "pnpm-lock.yaml"},
+		},
+	}}
+	a.router.Push(projectPath(dir))
+	tt := ui.NewTester(a.View, 1000, 680)
+	tt.Advance(time.Second)
+
+	hasTexts(t, tt, "package.json", "node >=24 · ^24.0.0", "pnpm >=12.14.0 · 12.14.0", "Copilot CLI")
+	// package.json must keep full readable width and never collapse to "p...".
+	pkg, ok := tt.Find("package.json")
+	if !ok {
+		t.Fatalf("package.json not found in %q", tt.Texts())
+	}
+	if pkg.W < 70 {
+		t.Errorf("package.json collapsed: W=%v", pkg.W)
+	}
+	if got := projectAgents(a.Projects[0]); !slices.Contains(got, "copilot") {
+		t.Errorf("projectAgents = %q, want copilot", got)
+	}
+}
+
+func TestProblemBannerCountAndEmptyChecks(t *testing.T) {
+	// EngineDown with no checks must not panic.
+	banner := problemBanner([]projects.Status{{Tool: "docker", Checked: true, EngineDown: true}})
+	if !strings.Contains(banner, "Docker") {
+		t.Errorf("engine down banner = %q", banner)
+	}
+	// Multiple unmet statuses report additional problem count.
+	multi := problemBanner([]projects.Status{
+		{Tool: "node", Checked: true, Checks: []projects.Check{{Tool: "node", Want: "18", File: ".nvmrc"}}},
+		{Tool: "python", Checked: true, Checks: []projects.Check{{Tool: "python", Want: "3.12", File: ".python-version"}}},
+	})
+	if !strings.Contains(multi, "And 1 more") {
+		t.Errorf("multi-problem banner = %q, want additional count", multi)
+	}
+}
+
+func TestToolProjectCheckPartsDeduplicates(t *testing.T) {
+	pst := projects.Status{
+		Tool:    "pnpm",
+		Checked: true,
+		Checks: []projects.Check{
+			{File: "package.json", Want: ">=12.14.0"},
+			{File: "package.json", Want: "12.14.0"},
+			{File: "package.json", Want: "12.14.0"},
+			{File: "pnpm-lock.yaml"},
+		},
+	}
+	got := toolProjectCheckParts(pst)
+	want := []string{"package.json · >=12.14.0, 12.14.0", "pnpm-lock.yaml"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestProjectDetailTabsGitDiskAIAndQuickActions(t *testing.T) {
+	dir := "/Users/alice/code/moduix"
+	var openedEditor, openedTerminal string
+	a := NewApp()
+	a.Home = "/Users/alice"
+	a.Snapshot = &inventory.Snapshot{
+		Agents: []inventory.Agent{
+			{ID: "claude", Installations: []inventory.Installation{{Path: "/usr/local/bin/claude"}}},
+			{ID: "codex", Installations: []inventory.Installation{{Path: "/usr/local/bin/codex"}}},
+		},
+		Tools: []inventory.ToolState{
+			{
+				Tool: "databases",
+				Databases: &inventory.DatabaseState{
+					Servers: []inventory.Database{
+						{Kind: "PostgreSQL", Status: "stopped", Source: "brew", Service: "postgresql@16"},
+						{Kind: "Redis", Status: "stopped", Source: "brew", Service: "redis"},
+					},
+					Listeners: []inventory.DatabaseListener{
+						{Port: "5432", PID: "99", Process: "other-proc", Address: "127.0.0.1"},
+					},
+				},
+			},
+		},
+	}
+	a.Sizes = &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			filepath.Join(dir, "node_modules"): {Bytes: 420 * 1024 * 1024},
+		},
+	}
+	a.EditorApps = []run.App{{Name: "VS Code", Path: "/Applications/Visual Studio Code.app"}}
+	a.Editor = "VS Code"
+	a.OpenInEditor = func(_, _, path string, done func(error)) {
+		openedEditor = path
+		done(nil)
+	}
+	a.OpenTerminalInDir = func(d string, done func(error)) {
+		openedTerminal = d
+		done(nil)
+	}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		p, err := build(nil, nil)
+		done(p, err)
+	}
+	a.LoadCatalog = func(skillcatalog.Repository, bool, func([]skillcatalog.Skill, map[string]string, error)) func() {
+		return func() {}
+	}
+	a.Projects = []projects.Project{{
+		Dir:      dir,
+		Readme:   "README.md",
+		Installs: []string{"node_modules"},
+		Files:    []string{"package.json"},
+		AI:       []string{"AGENTS.md", ".agents"},
+		Git: &projects.GitInfo{
+			Branch:       "feat/ui",
+			Dirty:        true,
+			Modified:     3,
+			Remote:       "github.com/acme/moduix",
+			RemoteURL:    "https://github.com/acme/moduix",
+			LastCommit:   "feat: tabs",
+			LastCommitAt: time.Now().Add(-2 * time.Hour),
+		},
+		Databases: []projects.DatabaseReference{
+			{Kind: "PostgreSQL", Service: "db", File: "compose.yaml", Ports: []string{"5432"}},
+			{Kind: "Redis", Service: "cache", File: "compose.yaml", Ports: []string{"6379"}},
+		},
+		Skills: []inventory.Skill{{
+			Name:        "docs-workflow",
+			Description: "Keep docs in sync",
+			Project:     dir,
+			Dir:         filepath.Join(dir, ".agents", "skills", "docs-workflow"),
+			Paths: []inventory.SkillPath{{
+				Path:   filepath.Join(dir, ".agents", "skills", "docs-workflow"),
+				Agents: []string{"codex"},
+			}},
+		}},
+		MCP: []inventory.MCPServer{{
+			Name:      "github",
+			Agent:     "claude",
+			Transport: "stdio",
+			Command:   "gh-mcp",
+			Missing:   true,
+		}},
+		Instructions: projects.Instructions{
+			Agents: projects.InstructionFile{Path: filepath.Join(dir, "AGENTS.md"), Exists: true, Text: "# Rules"},
+		},
+		Rules: []inventory.AgentRule{{Agent: "claude", Kind: inventory.RuleAllow, Rule: "Bash(pnpm test)", File: filepath.Join(dir, ".claude/settings.json")}},
+		Hooks: []inventory.AgentHook{{Agent: "claude", Event: "PreToolUse", Command: "check.sh", File: filepath.Join(dir, ".claude/settings.json")}},
+	}}
+	a.router.Push(projectPath(dir))
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Overview shows Git strip, Disk space card, compact AI agent count, quick actions, DB Start button, and port conflict link.
+	// Prepare button is hidden when the project has no unmet requirements.
+	hasTexts(t, tt, "feat/ui", "3 changes", "github.com/acme/moduix", "2 agents", "Disk space", "440 MB", locales.ServiceStart(), locales.ProjectDatabaseViewPort("5432"))
+	if tt.HasText(locales.PrepareButton()) {
+		t.Errorf("Prepare button should be hidden in header when project is ready")
+	}
+
+	// Quick actions: Terminal and README work with project directory.
+	if err := tt.Click(locales.ProjectOpenTerminal()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if openedTerminal != dir {
+		t.Errorf("openedTerminal = %q, want %q", openedTerminal, dir)
+	}
+	if err := tt.Click(locales.ProjectOpenReadme("README.md")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if openedEditor != filepath.Join(dir, "README.md") {
+		t.Errorf("openedEditor = %q, want README path", openedEditor)
+	}
+
+	// Switch to AI tab via Manage AI: shows project skills, native badge, MCP, instructions, standalone agent permissions & hooks card, and Install skill opens catalog for this project.
+	if err := tt.Click(locales.ProjectAiManage()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "docs-workflow", locales.TagNative(), "github", locales.CommandMissing(), "Agent permissions", "Open in Agents", "Claude Code", ".claude/settings.json · 1 allowed", "Claude Code · Hooks", ".claude/settings.json · 1 hook")
+
+	if err := tt.Click(locales.ProjectSkillsInstall()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if !a.skillCatalogOpen || a.skillCatalog == nil || a.skillCatalog.project != dir {
+		t.Fatalf("Install skill did not preselect project %q: open=%v state=%+v", dir, a.skillCatalogOpen, a.skillCatalog)
+	}
+	a.skillCatalogOpen = false
+
+	// Narrow window (1000x680) renders compact header buttons and port link navigates to /system/ports?filter=5432.
+	a.projectTab = 0
+	a.router.Push(projectPath(dir))
+	narrowTT := ui.NewTester(a.View, 1000, 680)
+	narrowTT.Advance(time.Second)
+	hasTexts(t, narrowTT, "feat/ui", locales.ProjectDatabaseViewPort("5432"))
+	if err := narrowTT.Click(locales.ProjectDatabaseViewPort("5432")); err != nil {
+		t.Fatal(err)
+	}
+	narrowTT.Advance(time.Second)
+	if got := a.router.Location(); got != portsPathWithFilter("5432") {
+		t.Errorf("current route = %q, want %q", got, portsPathWithFilter("5432"))
+	}
+	if a.portsFilterQuery != "5432" {
+		t.Errorf("portsFilterQuery = %q, want 5432", a.portsFilterQuery)
 	}
 }

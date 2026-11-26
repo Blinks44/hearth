@@ -88,7 +88,13 @@ func (a *App) packagesListView(c *ui.Context, m inventory.PackageManager, update
 				a.packageSort = sorts[slices.Index(labels, value)]
 			})
 		}
-		ui.SearchField(c.Key("package-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
+		filterPtr := &a.packageFilter
+		filterKey := "package-filter"
+		if updatesOnly {
+			filterPtr = &a.pkg.updatesFilter
+			filterKey = "package-updates-filter"
+		}
+		ui.SearchField(c.Key(filterKey), filterPtr).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
 	})
 
 	if m.Unlisted && !partial {
@@ -114,11 +120,15 @@ func (a *App) packagesListView(c *ui.Context, m inventory.PackageManager, update
 	} else {
 		matchFn = func(inventory.SystemPackage) bool { return true }
 	}
+	activeFilter := a.packageFilter
+	if updatesOnly {
+		activeFilter = a.pkg.updatesFilter
+	}
 	emptyMsg := locales.PkgNone()
-	if updatesOnly && updates == 0 && m.UpdatesKnown && strings.TrimSpace(a.packageFilter) == "" {
+	if updatesOnly && updates == 0 && m.UpdatesKnown && strings.TrimSpace(activeFilter) == "" {
 		emptyMsg = locales.PkgUpdatesUpToDate()
 	}
-	a.packagesTablePane(c, m, matchFn, updatesOnly, emptyMsg, "list")
+	a.packagesTablePane(c, m, matchFn, updatesOnly, emptyMsg, "list", activeFilter)
 }
 
 // packagesDepsView renders the Dependencies view (All dependencies / Unused)
@@ -163,7 +173,7 @@ func (a *App) packagesDepsView(c *ui.Context, m inventory.PackageManager, orphan
 				a.packageSort = sorts[slices.Index(labels, value)]
 			})
 		}
-		ui.SearchField(c.Key("package-deps-filter"), &a.packageFilter).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
+		ui.SearchField(c.Key("package-deps-filter"), &a.pkg.depsFilterQuery).Bind(&a.filterField).Placeholder(locales.PkgFilter()).Height(controlHeight).Width(200)
 	})
 
 	if len(orphans) > 0 {
@@ -180,14 +190,14 @@ func (a *App) packagesDepsView(c *ui.Context, m inventory.PackageManager, orphan
 	if a.pkg.depsFilter == 1 {
 		emptyMsg = locales.PkgDepsNoUnused()
 	}
-	a.packagesTablePane(c, m, matchFn, false, emptyMsg, "deps")
+	a.packagesTablePane(c, m, matchFn, false, emptyMsg, "deps", a.pkg.depsFilterQuery)
 }
 
 // packagesTablePane draws the shared filterable/sortable table inside
 // workloadPanes, plus the detail inspector and floating bulk action bar.
-func (a *App) packagesTablePane(c *ui.Context, m inventory.PackageManager, match func(inventory.SystemPackage) bool, updatesOnly bool, emptyMsg, scopeKey string) {
+func (a *App) packagesTablePane(c *ui.Context, m inventory.PackageManager, match func(inventory.SystemPackage) bool, updatesOnly bool, emptyMsg, scopeKey, filterQuery string) {
 	pal := Colors(c.Theme())
-	filter := strings.ToLower(strings.TrimSpace(a.packageFilter))
+	filter := strings.ToLower(strings.TrimSpace(filterQuery))
 	dependents := packageDependents(m)
 	managed := ops.PackageManaged(m.ID)
 

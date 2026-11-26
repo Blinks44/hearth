@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -394,5 +395,93 @@ func TestSettingsAppUpdate(t *testing.T) {
 	}
 	if checks != 2 {
 		t.Fatalf("checks after Update… click = %d, want 2", checks)
+	}
+}
+
+func TestSettingsCleanupThresholdsClearStaleAndResetBanners(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = calmSnapshot()
+	a.Snapshot.MCP = []inventory.MCPServer{
+		{Name: "broken", Agent: "claude", Transport: "stdio", Command: "missing-bin", Missing: true},
+	}
+	a.StartHidden = true
+	a.DockerPromoHidden = true
+	a.Hidden = []string{
+		string(issues.MCPMissing),
+		string(issues.SkillCopies),
+		"stale-old-key",
+	}
+	saved := 0
+	a.OnSettings = func() { saved++ }
+	a.router.Push("/settings")
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Group key fallback title for inactive skill-copies and Clear stale (2) button appear.
+	hasTexts(t, tt,
+		locales.SettingsCleanup(),
+		locales.SettingsHiddenGroupSkillCopies(),
+		locales.SettingsHiddenClearStale(2),
+		locales.SettingsResetBanners(),
+	)
+
+	// Clear stale removes inactive keys while keeping active group-hidden mcp-missing.
+	if err := tt.Click(locales.SettingsHiddenClearStale(2)); err != nil {
+		t.Fatalf("click Clear stale: %v", err)
+	}
+	tt.Frame()
+	if !slices.Equal(a.Hidden, []string{string(issues.MCPMissing)}) {
+		t.Fatalf("Hidden after Clear stale = %q, want [%s]", a.Hidden, issues.MCPMissing)
+	}
+
+	// Reset dismissed banners restores StartHidden and DockerPromoHidden.
+	if err := tt.Click(locales.SettingsResetBannersAction()); err != nil {
+		t.Fatalf("click Show again: %v", err)
+	}
+	tt.Frame()
+	if a.StartHidden || a.DockerPromoHidden {
+		t.Fatalf("banners not reset: StartHidden=%v DockerPromoHidden=%v", a.StartHidden, a.DockerPromoHidden)
+	}
+
+	// Cleanup settings: stale days, min size, and excluded $HOME folder add & remove.
+	if err := tt.Click(locales.SettingsCleanupDays(180)); err != nil {
+		t.Fatalf("open stale select: %v", err)
+	}
+	if err := tt.Click(locales.SettingsCleanupDays(30)); err != nil {
+		t.Fatalf("choose 30 days: %v", err)
+	}
+	tt.Frame()
+	if a.CleanupStaleDays != 30 {
+		t.Fatalf("CleanupStaleDays = %d, want 30", a.CleanupStaleDays)
+	}
+
+	if err := tt.Click(formatBytes(1_000_000)); err != nil {
+		t.Fatalf("open min size select: %v", err)
+	}
+	if err := tt.Click(formatBytes(50_000_000)); err != nil {
+		t.Fatalf("choose 50 MB: %v", err)
+	}
+	tt.Frame()
+	if a.CleanupMinMB != 50 {
+		t.Fatalf("CleanupMinMB = %d, want 50", a.CleanupMinMB)
+	}
+
+	a.cleanupExcludeInput = "~/archive"
+	tt.Frame()
+	if err := tt.Click(locales.SettingsCleanupExcludeAdd()); err != nil {
+		t.Fatalf("click Add exclude: %v", err)
+	}
+	tt.Frame()
+	wantExclude := filepath.Join(home, "archive")
+	if !slices.Equal(a.CleanupExclude, []string{wantExclude}) {
+		t.Fatalf("CleanupExclude = %q, want [%s]", a.CleanupExclude, wantExclude)
+	}
+	if err := tt.Click(locales.RemoveFromList() + " ~/archive"); err != nil {
+		t.Fatalf("remove exclude: %v", err)
+	}
+	tt.Frame()
+	if len(a.CleanupExclude) != 0 || saved < 5 {
+		t.Fatalf("CleanupExclude=%q saved=%d", a.CleanupExclude, saved)
 	}
 }

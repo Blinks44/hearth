@@ -43,6 +43,15 @@ type Settings struct {
 	// their names; "" uses the system's.
 	Terminal string `json:"terminal,omitempty"`
 	Editor   string `json:"editor,omitempty"`
+	// CleanupStaleDays overrides projects.StaleAfter (in days) for stale
+	// project installs and agent history when > 0.
+	CleanupStaleDays int `json:"cleanupStaleDays,omitempty"`
+	// CleanupMinMB overrides the minimum cache/artifact size (in MB) offered
+	// by Cleanup when > 0.
+	CleanupMinMB int `json:"cleanupMinMB,omitempty"`
+	// CleanupExclude are extra folders under $HOME (or absolute paths) skipped
+	// when walking for project dependency folders.
+	CleanupExclude []string `json:"cleanupExclude,omitempty"`
 }
 
 // Project is a folder the user added to Hearth.

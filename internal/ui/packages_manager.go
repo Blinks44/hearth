@@ -34,13 +34,15 @@ func packageViews() []packageView {
 }
 
 type packageManagerState struct {
-	view        int
-	managerOpen bool
-	viewsOpen   bool
-	detailKey   string
-	detailTab   int
-	depsFilter  int // 0 = all dependencies, 1 = unused
-	activePath  string
+	view            int
+	managerOpen     bool
+	viewsOpen       bool
+	detailKey       string
+	detailTab       int
+	depsFilter      int // 0 = all dependencies, 1 = unused
+	updatesFilter   string
+	depsFilterQuery string
+	activePath      string
 
 	// Stage 2 explicit catalog search state.
 	searchQuery     string
@@ -81,6 +83,8 @@ func (a *App) syncPackages() {
 		a.pkg.activePath = cur
 		a.pkg.detailKey = ""
 		a.pkg.detailTab = 0
+		a.pkg.updatesFilter = ""
+		a.pkg.depsFilterQuery = ""
 		a.pkg.searchQuery = ""
 		a.pkg.searchKind = 0
 		a.pkg.searchErr = ""
@@ -88,6 +92,7 @@ func (a *App) syncPackages() {
 		a.pkg.searchLastQuery = ""
 		a.pkg.searchLastKind = ""
 		a.pkg.searchLastPath = ""
+		a.packageFilter = ""
 		a.packageChosen = nil
 		if cur != "" {
 			a.packageManager = cur

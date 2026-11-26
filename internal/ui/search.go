@@ -236,7 +236,7 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 			continue
 		}
 		add(searchResult{id: "skill:" + skillKey(sk), group: locales.SkillsTitle(), title: sk.Name, detail: sk.Description, words: sk.Project, icon: "lucide/puzzle", open: func() {
-			a.skillAgent, a.skillQuery, a.skillScope = "", "", 0
+			a.skillAgent, a.skillQuery, a.skillScope, a.skillProject = "", "", 0, ""
 			a.skillChosen = skillKey(sk)
 			a.loadSkill(sk)
 			a.router.Push(skillsPage)

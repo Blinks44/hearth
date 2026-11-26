@@ -626,7 +626,7 @@ func TestOverviewLiveSummary(t *testing.T) {
 		}
 	}
 
-	t.Run("all five tiles render and navigate", func(t *testing.T) {
+	t.Run("all six tiles render and navigate", func(t *testing.T) {
 		a := NewApp()
 		a.StartHidden = true
 		a.Snapshot = liveSnap()
@@ -635,14 +635,16 @@ func TestOverviewLiveSummary(t *testing.T) {
 			"Right now",
 			"4 running", "OrbStack · 7 total",
 			"staging-eu", "default · 2 contexts",
-			"Databases & ports", "2 DB · 3 ports", "PostgreSQL, Redis",
+			"Databases", "2 running", "PostgreSQL, Redis",
+			"Ports", "3 ports", "TCP ports",
 			"AI today", "144.0K tokens",
 			"3 servers", "2 agents · 1 issue",
 		)
 		for _, tc := range []struct{ click, want string }{
 			{"4 running", dockerPage},
 			{"staging-eu", kubePage},
-			{"2 DB · 3 ports", "/tools/databases"},
+			{"2 running", "/tools/databases"},
+			{"3 ports", portsPage},
 			{"AI today", usagePage},
 			{"3 servers", mcpPage},
 		} {
@@ -878,15 +880,52 @@ func TestLiveSummaryBalancedRows(t *testing.T) {
 		{3, false, []int{3}},
 		{4, false, []int{4}},
 		{5, false, []int{5}},
+		{6, false, []int{3, 3}},
 		{1, true, []int{1}},
 		{2, true, []int{2}},
 		{3, true, []int{3}},
 		{4, true, []int{2, 2}},
 		{5, true, []int{3, 2}},
+		{6, true, []int{2, 2, 2}},
 	} {
 		got := rowLens(liveSummaryRows(makeTiles(tc.n), tc.narrow))
 		if !slices.Equal(got, tc.want) {
 			t.Errorf("liveSummaryRows(n=%d, narrow=%t) = %v, want %v", tc.n, tc.narrow, got, tc.want)
 		}
+	}
+}
+
+func TestOverviewHideAndHiddenIssuesConsistency(t *testing.T) {
+	a := NewApp()
+	a.StartHidden = true
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{
+			{Tool: "node", Installations: []inventory.Installation{{Tool: "node", Version: "22.12.0", Path: "/usr/local/bin/node", OnPath: 1, InGUI: 1}}},
+		},
+		MCP: []inventory.MCPServer{
+			{Name: "broken", Agent: "claude", Transport: "stdio", Command: "missing-bin", Missing: true},
+		},
+	}
+	tt := openOverview(t, a)
+	hasTexts(t, tt, "MCP: missing-bin not found", "1 agent · 1 issue", "Hide")
+
+	// Hiding directly from Overview removes the issue from Attention, Live Summary, and sidebar.
+	if err := tt.Click("Hide"); err != nil {
+		t.Fatalf("click Hide on Overview: %v", err)
+	}
+	tt.Advance(time.Second)
+	if len(a.Hidden) != 1 {
+		t.Fatalf("Hidden = %q, want 1 entry", a.Hidden)
+	}
+	if tt.HasText("MCP: missing-bin not found") || tt.HasText("1 agent · 1 issue") {
+		t.Fatalf("hidden issue still reflected on Overview: %q", tt.Texts())
+	}
+	hasTexts(t, tt, "Everything is in order", "No issues found")
+
+	// Group-level key ("mcp-missing") hides even a single MCPMissing issue consistently.
+	a.Hidden = []string{string(issues.MCPMissing)}
+	tt.Frame()
+	if tt.HasText("MCP: missing-bin not found") || tt.HasText("1 agent · 1 issue") {
+		t.Fatalf("group-hidden key did not suppress single MCP issue: %q", tt.Texts())
 	}
 }

@@ -88,6 +88,14 @@ func (a *App) openSkillCatalog(repo int) {
 	a.openSkillCatalogRepo(repo, nil, "", false)
 }
 
+func (a *App) openSkillCatalogForProject(project string) {
+	a.openSkillCatalogRepo(0, nil, "", false)
+	if a.skillCatalog != nil {
+		a.skillCatalog.project = project
+	}
+	a.router.Push(skillsPage)
+}
+
 func (a *App) openSkillsShTab() {
 	if a.skillCatalog == nil {
 		a.skillCatalog = &skillCatalogState{repo: skillsShTabIndex()}
@@ -540,9 +548,14 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 			scopeLabels = make([]string, 0, len(a.Projects)+1)
 			scopes = append(scopes, "")
 			scopeLabels = append(scopeLabels, locales.SkillCatalogScopeUser())
-			for _, pr := range a.Projects {
-				scopes = append(scopes, pr.Dir)
-				scopeLabels = append(scopeLabels, filepath.Base(pr.Dir))
+			dirs := make([]string, len(a.Projects))
+			for i, pr := range a.Projects {
+				dirs[i] = pr.Dir
+			}
+			names := projectDisplayNames(dirs, a.Home)
+			for i, dir := range dirs {
+				scopes = append(scopes, dir)
+				scopeLabels = append(scopeLabels, names[i])
 			}
 			if si := slices.Index(scopes, project); si >= 0 {
 				scopeLabel = scopeLabels[si]
@@ -589,15 +602,21 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 			agentLabel := agentTitle(agent)
 			if len(scopes) > 0 {
 				ui.Row(c).Gap(8).Children(func() {
-					ui.Select(c.Key("catalog-agent"), &agentLabel, labels).Label(locales.SkillCatalogFor()).Grow(1).MinWidth(0).OnChange(func() {
-						if i := slices.Index(labels, agentLabel); i >= 0 {
-							s.agent = ids[i]
-						}
+					ui.Column(c).Gap(3).Grow(1).Basis(0).MinWidth(0).Children(func() {
+						ui.Text(c, locales.SkillCatalogAgent()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+						ui.Select(c.Key("catalog-agent"), &agentLabel, labels).Label(locales.SkillCatalogFor()).FillWidth().OnChange(func() {
+							if i := slices.Index(labels, agentLabel); i >= 0 {
+								s.agent = ids[i]
+							}
+						})
 					})
-					ui.Select(c.Key("catalog-scope"), &scopeLabel, scopeLabels).Label(locales.SkillCatalogScope()).Grow(1).MinWidth(0).OnChange(func() {
-						if i := slices.Index(scopeLabels, scopeLabel); i >= 0 {
-							s.project = scopes[i]
-						}
+					ui.Column(c).Gap(3).Grow(1).Basis(0).MinWidth(0).Children(func() {
+						ui.Text(c, locales.SkillCatalogTarget()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+						ui.Select(c.Key("catalog-scope"), &scopeLabel, scopeLabels).Label(locales.SkillCatalogScope()).FillWidth().OnChange(func() {
+							if i := slices.Index(scopeLabels, scopeLabel); i >= 0 {
+								s.project = scopes[i]
+							}
+						})
 					})
 				})
 			} else {

@@ -23,13 +23,17 @@ func (a *App) packagesInstallView(c *ui.Context, m inventory.PackageManager) {
 		return
 	}
 
-	kindArg := ""
-	if m.ID == "brew" {
-		switch s.searchKind {
+	kindArgFor := func(kind int) string {
+		if m.ID != "brew" {
+			return ""
+		}
+		switch kind {
 		case 1:
-			kindArg = "formula"
+			return "formula"
 		case 2:
-			kindArg = "cask"
+			return "cask"
+		default:
+			return ""
 		}
 	}
 
@@ -38,6 +42,7 @@ func (a *App) packagesInstallView(c *ui.Context, m inventory.PackageManager) {
 		if q == "" || a.SearchPackages == nil {
 			return
 		}
+		kindArg := kindArgFor(s.searchKind)
 		a.cancelPackageSearch()
 		seq := s.searchSeq
 		s.searchLoading = true
@@ -72,11 +77,15 @@ func (a *App) packagesInstallView(c *ui.Context, m inventory.PackageManager) {
 			Height(controlHeight).Grow(1).MinWidth(180).
 			OnSubmit(runSearch)
 		if m.ID == "brew" {
+			prevKind := s.searchKind
 			segments(c, "pkg-catalog-kind", &s.searchKind, []segment{
 				{locales.TabAll(), ""},
 				{locales.PkgKindFormulae(), ""},
 				{locales.PkgKindCasks(), ""},
 			})
+			if s.searchKind != prevKind && strings.TrimSpace(s.searchQuery) != "" {
+				runSearch()
+			}
 		}
 		ui.PrimaryButton(c.Key("pkg-catalog-search"), locales.PkgSearchButton()).
 			Height(controlHeight).

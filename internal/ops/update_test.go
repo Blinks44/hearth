@@ -40,6 +40,43 @@ func TestUpdatePlan(t *testing.T) {
 	}
 }
 
+func TestBulkFixPlan(t *testing.T) {
+	if _, ok := BulkFixPlan(nil); ok {
+		t.Fatal("empty BulkFixPlan returned ok")
+	}
+	var order []string
+	p1 := Plan{
+		Title:           "Fix PATH",
+		Steps:           []Step{{Argv: []string{"echo", "path"}}},
+		Changes:         []string{"PATH cleaned"},
+		RestartTerminal: true,
+		Notes:           []Note{{Title: "Backup"}},
+		Before:          func(context.Context) error { order = append(order, "b1"); return nil },
+		Verify:          func(context.Context) (string, error) { return "path ok", nil },
+	}
+	p2 := Plan{
+		Title:   "Merge skills",
+		Steps:   []Step{{Argv: []string{"echo", "s1"}}, {Argv: []string{"echo", "s2"}}},
+		Changes: []string{"Skills merged"},
+		Notes:   []Note{{Title: "Backup"}, {Title: "Links"}},
+		Before:  func(context.Context) error { order = append(order, "b2"); return nil },
+		Verify:  func(context.Context) (string, error) { return "skills ok", nil },
+	}
+	got, ok := BulkFixPlan([]Plan{p1, p2})
+	if !ok {
+		t.Fatal("BulkFixPlan returned !ok")
+	}
+	if !got.RestartTerminal || len(got.Steps) != 3 || !slices.Equal(got.Parts, []int{0, 1}) || len(got.Notes) != 2 {
+		t.Fatalf("unexpected BulkFixPlan: %+v", got)
+	}
+	if err := got.Before(context.Background()); err != nil || !slices.Equal(order, []string{"b1", "b2"}) {
+		t.Fatalf("Before order=%v err=%v", order, err)
+	}
+	if said, err := got.Verify(context.Background()); err != nil || said != "path ok; skills ok" {
+		t.Fatalf("Verify said=%q err=%v", said, err)
+	}
+}
+
 // A fix replaces the copy through its version manager: the new version
 // goes in, becomes the default when the old one was, and the old one goes;
 // rustup and mise's own tools update in place.

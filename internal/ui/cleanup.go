@@ -63,7 +63,14 @@ func (a *App) candidates(c *ui.Context) []cleanup.Candidate {
 	if a.NodeVersions != nil {
 		lines = a.NodeVersions.Lines
 	}
-	return cleanup.Find(a.Snapshot, a.Sizes, a.Projects, lines, c.Now())
+	var opts cleanup.Options
+	if a.CleanupStaleDays > 0 {
+		opts.StaleAfter = time.Duration(a.CleanupStaleDays) * 24 * time.Hour
+	}
+	if a.CleanupMinMB > 0 {
+		opts.MinFrees = int64(a.CleanupMinMB) * 1_000_000
+	}
+	return cleanup.FindWithOptions(a.Snapshot, a.Sizes, a.Projects, lines, c.Now(), opts)
 }
 
 // candidateKey tells a candidate apart across scans, for the user's

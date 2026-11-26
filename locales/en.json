@@ -17731,5 +17731,175 @@
         "type": "int"
       }
     }
-  }
+  },
+  "skillsScopeExplain": "Global skills (~/.agents/skills) apply to every project; project skills live inside the repository.",
+  "skillsAllProjects": "All projects",
+  "tagNative": "native",
+  "skillNativeHint": "This agent reads this skills folder directly, so no symlink is needed.",
+  "skillCreateButton": "Create skill",
+  "skillCreateTitle": "Create skill",
+  "skillCreateNote": "Creates a new SKILL.md folder in common storage and links it to your installed agents.",
+  "skillCreateName": "Skill name",
+  "skillCreateNamePlaceholder": "e.g. code-review",
+  "skillCreateDesc": "Description",
+  "skillCreateDescPlaceholder": "When agents should use this skill",
+  "skillCreatePlanTitle": "Create skill {name}",
+  "@skillCreatePlanTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skillCreateWhy": "Creates a new skill folder with SKILL.md and makes it available to your installed agents.",
+  "skillCreateInvalidName": "Enter a skill folder name using letters, numbers, dots, or hyphens.",
+  "projectActionEditor": "Editor",
+  "projectActionTerminal": "Terminal",
+  "projectOpenTerminal": "Open in terminal",
+  "projectOpenReadme": "Open {file}",
+  "@projectOpenReadme": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "projectTabOverview": "Overview",
+  "projectTabServices": "Services",
+  "projectTabFiles": "Files",
+  "projectServicesEmpty": "No Docker Compose, database, or Kubernetes configuration found in this project.",
+  "projectGitClean": "Clean",
+  "projectGitModified": "{count, plural, one {# change} other {# changes}}",
+  "@projectGitModified": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectGitDetached": "detached",
+  "projectGitOpenRemote": "Open remote in browser",
+  "projectDiskTitle": "Disk space",
+  "projectDiskSubtitle": "reinstallable dependencies",
+  "projectDiskOpenCleanup": "Cleanup",
+  "projectSkillsInstall": "Install skill",
+  "projectSkillsEmpty": "No project skills yet. Install from the catalog or create one in .agents/skills.",
+  "projectSkillsOpenAll": "Open in Skills",
+  "projectMcpOpenAll": "Open in MCP",
+  "projectMcpEmpty": "No project MCP servers configured.",
+  "projectInstructionsOpen": "Open in Instructions",
+  "projectAgentsOpen": "Open in Agents",
+  "projectHooksCount": "{count, plural, one {# hook} other {# hooks}}",
+  "@projectHooksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectDatabaseViewPort": "Port :{port}",
+  "@projectDatabaseViewPort": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "projectAiManage": "Manage AI",
+  "problemsSeverityAll": "All severities",
+  "problemsSeverityImportant": "Important only",
+  "problemsSeverityInfo": "For information",
+  "problemsBulkFix": "Fix all ({count})",
+  "@problemsBulkFix": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "problemsBulkPlanTitle": "{count, plural, one {Fix # issue} other {Fix # issues}}",
+  "@problemsBulkPlanTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "problemsBulkPlanWhy": "Applies all selected automatic fixes in order.",
+  "settingsHiddenClearStale": "Clear stale ({count})",
+  "@settingsHiddenClearStale": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsHiddenGroupSkillCopies": "Duplicate skill copies (all)",
+  "settingsHiddenGroupSkillDiffers": "Diverging skill copies (all)",
+  "settingsHiddenGroupMcpMissing": "Missing MCP commands (all)",
+  "settingsResetBanners": "Dismissed tips & banners",
+  "settingsResetBannersHint": "Show the Overview quick-start cards and promo tips again",
+  "settingsResetBannersAction": "Show again",
+  "settingsResetBannersDone": "Dismissed tips restored",
+  "settingsCleanup": "Cleanup",
+  "settingsCleanupStale": "Inactive projects",
+  "settingsCleanupStaleHint": "Offer dependency folders after this many days unchanged",
+  "settingsCleanupDays": "{count, plural, one {# day} other {# days}}",
+  "@settingsCleanupDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsCleanupMinSize": "Minimum size",
+  "settingsCleanupMinSizeHint": "Skip caches and artifacts smaller than this",
+  "settingsCleanupExclude": "Excluded $HOME folders",
+  "settingsCleanupExcludeHint": "Skip these folders when scanning for project dependencies",
+  "settingsCleanupExcludePlaceholder": "~/Archive or folder name",
+  "settingsCleanupExcludeAdd": "Add",
+  "settingsCleanupExcludePick": "Choose folder to exclude",
+  "projectAgentsCount": "{count, plural, one {# agent} other {# agents}}",
+  "@projectAgentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRulesTitle": "Agent permissions",
+  "projectRulesAllow": "{count} allowed",
+  "@projectRulesAllow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRulesAsk": "{count} ask",
+  "@projectRulesAsk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRulesDeny": "{count} denied",
+  "@projectRulesDeny": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRulesCount": "{count, plural, one {# rule} other {# rules}}",
+  "@projectRulesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "skillCatalogAgent": "Agent",
+  "skillCatalogTarget": "Project / user"
 }

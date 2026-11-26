@@ -37,12 +37,6 @@ func (a *App) settingsPage(c *ui.Context) {
 						ui.Text(c, locales.SettingsLocal()).FontSize(12.5).TextColor(c.Theme().TextMuted)
 					})
 				})
-				if a.SettingsNotice != "" {
-					ui.Text(c, a.SettingsNotice).FontSize(12).TextColor(c.Theme().Success)
-				}
-				if a.SettingsError != "" {
-					ui.Text(c, a.SettingsError).TextColor(c.Theme().Danger)
-				}
 				columns(c, 12, func() {
 					card(c, locales.SettingsGeneral(), "", nil, func() {
 						hint := locales.SettingsLanguageHint()
@@ -63,6 +57,7 @@ func (a *App) settingsPage(c *ui.Context) {
 									}
 								}
 								a.SettingsNotice = "" // says it in the language it was shown in
+								a.shownSettingsNotice = ""
 								if a.OnLocale != nil {
 									a.OnLocale(a.Locale)
 								}
@@ -88,6 +83,16 @@ func (a *App) settingsPage(c *ui.Context) {
 								a.savePreferences()
 							})
 						})
+						if a.StartHidden || a.DockerPromoHidden {
+							settingRow(c.Key("settings-reset-banners-row"), locales.SettingsResetBanners(), locales.SettingsResetBannersHint(), func() {
+								ui.Button(c.Key("settings-reset-banners"), locales.SettingsResetBannersAction()).Height(controlHeight).OnClick(func() {
+									a.StartHidden = false
+									a.DockerPromoHidden = false
+									a.savePreferences()
+									a.notice = locales.SettingsResetBannersDone()
+								})
+							})
+						}
 					})
 					card(c, locales.SettingsSystemSection(), "", nil, func() {
 						settingRow(c, settingsTrayLabel(), settingsTrayHint(), func() {
@@ -103,6 +108,7 @@ func (a *App) settingsPage(c *ui.Context) {
 							toggle(c, "settings-open-at-login", &a.OpenAtLogin).Label(locales.SettingsOpenAtLogin()).
 								Disabled(a.OnOpenAtLogin == nil).OnChange(func() {
 								a.SettingsError = ""
+								a.shownSettingsError = ""
 								if err := a.OnOpenAtLogin(a.OpenAtLogin); err != nil {
 									a.OpenAtLogin = !a.OpenAtLogin
 									a.SettingsError = err.Error()
@@ -134,6 +140,7 @@ func (a *App) settingsPage(c *ui.Context) {
 					})
 				}, func() {
 					a.dataCard(c)
+					a.cleanupSettingsCard(c)
 					a.hiddenIssuesCard(c)
 					card(c, locales.SettingsAbout(), "", nil, func() {
 						v := a.AppVersion
@@ -183,6 +190,7 @@ func (a *App) openSettingsFolder(c *ui.Context, path string) {
 		return
 	}
 	a.SettingsError = ""
+	a.shownSettingsError = ""
 	if a.OpenFolder != nil {
 		a.OpenFolder(path, func(err error) {
 			switch {
@@ -235,17 +243,158 @@ func (a *App) dataCard(c *ui.Context) {
 	})
 }
 
+var (
+	cleanupStaleDayChoices = []int{30, 60, 90, 180}
+	cleanupMinMBChoices    = []int{1, 10, 50, 100}
+)
+
+func (a *App) cleanupSettingsCard(c *ui.Context) {
+	card(c, locales.SettingsCleanup(), "", nil, func() {
+		staleDays := a.CleanupStaleDays
+		if staleDays <= 0 {
+			staleDays = 180
+		}
+		staleLabels := make([]string, len(cleanupStaleDayChoices))
+		staleValue := locales.SettingsCleanupDays(staleDays)
+		for i, d := range cleanupStaleDayChoices {
+			staleLabels[i] = locales.SettingsCleanupDays(d)
+			if d == staleDays {
+				staleValue = staleLabels[i]
+			}
+		}
+		if !slices.Contains(staleLabels, staleValue) {
+			staleLabels = append(staleLabels, staleValue)
+		}
+		settingRow(c.Key("settings-cleanup-stale-row"), locales.SettingsCleanupStale(), locales.SettingsCleanupStaleHint(), func() {
+			ui.Select(c.Key("settings-cleanup-stale"), &staleValue, staleLabels).Label(locales.SettingsCleanupStale()).Width(116).OnChange(func() {
+				if idx := slices.Index(staleLabels, staleValue); idx >= 0 && idx < len(cleanupStaleDayChoices) {
+					a.CleanupStaleDays = cleanupStaleDayChoices[idx]
+					a.savePreferences()
+				}
+			})
+		})
+
+		minMB := a.CleanupMinMB
+		if minMB <= 0 {
+			minMB = 1
+		}
+		minLabels := make([]string, len(cleanupMinMBChoices))
+		minValue := formatBytes(int64(minMB) * 1_000_000)
+		for i, mb := range cleanupMinMBChoices {
+			minLabels[i] = formatBytes(int64(mb) * 1_000_000)
+			if mb == minMB {
+				minValue = minLabels[i]
+			}
+		}
+		if !slices.Contains(minLabels, minValue) {
+			minLabels = append(minLabels, minValue)
+		}
+		settingRow(c.Key("settings-cleanup-min-row"), locales.SettingsCleanupMinSize(), locales.SettingsCleanupMinSizeHint(), func() {
+			ui.Select(c.Key("settings-cleanup-min"), &minValue, minLabels).Label(locales.SettingsCleanupMinSize()).Width(116).OnChange(func() {
+				if idx := slices.Index(minLabels, minValue); idx >= 0 && idx < len(cleanupMinMBChoices) {
+					a.CleanupMinMB = cleanupMinMBChoices[idx]
+					a.savePreferences()
+				}
+			})
+		})
+
+		settingRow(c.Key("settings-cleanup-exclude-head"), locales.SettingsCleanupExclude(), locales.SettingsCleanupExcludeHint(), nil)
+		addExclude := func(raw string) {
+			trimmed := strings.TrimSpace(raw)
+			if trimmed == "" {
+				return
+			}
+			expanded := expandHomePath(trimmed, a.Home)
+			if slices.Contains(a.CleanupExclude, expanded) {
+				a.cleanupExcludeInput = ""
+				return
+			}
+			a.CleanupExclude = append(slices.Clone(a.CleanupExclude), expanded)
+			a.cleanupExcludeInput = ""
+			a.savePreferences()
+		}
+		for _, dir := range a.CleanupExclude {
+			entry := dir
+			ui.Row(c.Key("settings-cleanup-exclude:"+entry)).Padding(4, 14).Gap(8).AlignItems(ui.Center).Children(func() {
+				clipped(c, tilde(entry, a.Home)).Grow(1).MinWidth(0).Font(FontMono).FontSize(11.5).TextColor(c.Theme().TextMuted)
+				iconButton(c.Key("remove"), "trash-2", locales.RemoveFromList()+" "+tilde(entry, a.Home)).OnClick(func() {
+					a.CleanupExclude = slices.DeleteFunc(slices.Clone(a.CleanupExclude), func(v string) bool { return v == entry })
+					a.savePreferences()
+				})
+			})
+		}
+		ui.Row(c.Key("settings-cleanup-exclude-input-row")).Padding(6, 14, 12, 14).Gap(6).AlignItems(ui.Center).Children(func() {
+			in := ui.TextInput(c.Key("input"), &a.cleanupExcludeInput).Grow(1).MinWidth(0).
+				Placeholder(locales.SettingsCleanupExcludePlaceholder()).Label(locales.SettingsCleanupExclude())
+			if in.Submitted() {
+				addExclude(a.cleanupExcludeInput)
+			}
+			if a.PickPath != nil {
+				iconButton(c.Key("browse"), "folder-open", locales.SettingsCleanupExcludePick()).OnClick(func() {
+					a.PickPath(locales.SettingsCleanupExcludePick(), true, func(path string, err error) {
+						if err != nil {
+							a.SettingsError = err.Error()
+							return
+						}
+						if path != "" {
+							addExclude(path)
+						}
+					})
+				})
+			}
+			ui.Button(c.Key("add"), locales.SettingsCleanupExcludeAdd()).Height(controlHeight).
+				Disabled(strings.TrimSpace(a.cleanupExcludeInput) == "").OnClick(func() {
+				addExclude(a.cleanupExcludeInput)
+			})
+		})
+	})
+}
+
 func (a *App) hiddenIssuesCard(c *ui.Context) {
 	count := ""
 	if len(a.Hidden) > 0 {
 		count = strconv.Itoa(len(a.Hidden))
 	}
+	byKey := map[string]attentionItem{}
+	if a.Snapshot != nil && len(a.Hidden) > 0 {
+		_, hiddenItems := a.visibleIssues(a.issues(c))
+		for _, it := range hiddenItems {
+			byKey[it.key] = it
+			if it.hiddenKey != "" {
+				byKey[it.hiddenKey] = it
+			}
+		}
+	}
+	staleCount := 0
+	if a.Snapshot != nil {
+		for _, key := range a.Hidden {
+			if _, ok := byKey[key]; !ok {
+				staleCount++
+			}
+		}
+	}
 	var end func()
 	if len(a.Hidden) > 0 {
 		end = func() {
-			ui.Button(c.Key("settings-hidden-restore-all"), locales.ProblemsRestoreAll()).OnClick(func() {
-				a.problemsShowHidden = false
-				a.setHidden(nil)
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				if a.Snapshot != nil && staleCount > 0 {
+					ui.Button(c.Key("settings-hidden-clear-stale"), locales.SettingsHiddenClearStale(staleCount)).OnClick(func() {
+						var kept []string
+						for _, key := range a.Hidden {
+							if _, ok := byKey[key]; ok {
+								kept = append(kept, key)
+							}
+						}
+						if len(kept) == 0 {
+							a.problemsShowHidden = false
+						}
+						a.setHidden(kept)
+					})
+				}
+				ui.Button(c.Key("settings-hidden-restore-all"), locales.ProblemsRestoreAll()).OnClick(func() {
+					a.problemsShowHidden = false
+					a.setHidden(nil)
+				})
 			})
 		}
 	}
@@ -253,13 +402,6 @@ func (a *App) hiddenIssuesCard(c *ui.Context) {
 		if len(a.Hidden) == 0 {
 			settingRow(c, locales.SettingsNoHiddenIssues(), "", nil)
 			return
-		}
-		byKey := map[string]attentionItem{}
-		if a.Snapshot != nil {
-			_, hiddenItems := a.visibleIssues(a.issues(c))
-			for _, it := range hiddenItems {
-				byKey[it.key] = it
-			}
 		}
 		for _, key := range a.Hidden {
 			title, hint := staleIssueTitle(key, a.Home), locales.SettingsHiddenInactive()
@@ -274,10 +416,18 @@ func (a *App) hiddenIssuesCard(c *ui.Context) {
 	})
 }
 
-// staleIssueTitle turns a structured issueKey ("kind:tool:project:...") into a
-// readable fallback label when the issue is no longer active; plain keys are
-// returned as-is.
+// staleIssueTitle turns a structured issueKey ("kind:tool:project:...") or
+// grouped kind key into a readable fallback label when the issue is no longer
+// active; plain keys are returned as-is.
 func staleIssueTitle(key, home string) string {
+	switch issues.Kind(key) {
+	case issues.SkillCopies:
+		return locales.SettingsHiddenGroupSkillCopies()
+	case issues.SkillDiffers:
+		return locales.SettingsHiddenGroupSkillDiffers()
+	case issues.MCPMissing:
+		return locales.SettingsHiddenGroupMcpMissing()
+	}
 	raw := strings.Split(key, ":")
 	if len(raw) < 3 {
 		return key
@@ -476,11 +626,13 @@ func (a *App) customAppPathRow(c *ui.Context, key, targetLabel string, input *st
 			return
 		}
 		if !validCustomApp(trimmed) {
+			a.shownSettingsError = ""
 			a.SettingsError = locales.SettingsCustomAppInvalid()
 			return
 		}
 		*input = trimmed
 		a.SettingsError = ""
+		a.shownSettingsError = ""
 		onSave(trimmed)
 	}
 	ui.Row(c.Key(key)).Padding(0, 14, 12, 14).Gap(8).AlignItems(ui.Center).Children(func() {

@@ -12,6 +12,7 @@ import (
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/report"
 	"github.com/Blinks44/hearth/locales"
@@ -28,12 +29,13 @@ const (
 // the projects, and what needs attention.
 func (a *App) overviewPage(c *ui.Context, p page) {
 	found := a.issues(c)
+	visibleRaw := a.visibleRawIssues(found)
 	visible, _ := a.visibleIssues(found)
 	items := needAttention(visible)
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			ui.Button(c.Key("copy-report"), "").Label(locales.CopyReport()).Tooltip(locales.CopyReportHint()).OnClick(func() {
-				c.WriteClipboard(a.report(found))
+				c.WriteClipboard(a.report(visibleRaw))
 				c.Toast(locales.ReportCopied())
 			}).Children(func() {
 				ui.Icon(c, Icon("copy")).Size(13, 13).TextColor(c.Theme().TextMuted)
@@ -47,13 +49,13 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 					a.startActions(c)
 				}
 				if !a.firstScan() && !a.bareComputer() {
-					a.liveSummary(c, found)
+					a.liveSummary(c, visibleRaw)
 				}
 				// A narrow window has one column: what needs attention
 				// right under the summary, then tools, projects, and agents.
 				if narrow(c) {
 					a.attention(c, items)
-					a.toolCards(c, found)
+					a.toolCards(c, visibleRaw)
 					a.overviewProjects(c)
 					a.overviewAgents(c)
 					return
@@ -63,7 +65,7 @@ func (a *App) overviewPage(c *ui.Context, p page) {
 				// AI Agents form a uniform stack of cards in the side column.
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(18).Children(func() {
-						a.toolCards(c, found)
+						a.toolCards(c, visibleRaw)
 					})
 					ui.Column(c).Width(342).Shrink(0).Padding(34, 0, 0, 0).Gap(18).Children(func() {
 						a.attention(c, items)
@@ -293,10 +295,11 @@ func (a *App) liveSummaryTiles(c *ui.Context, found []issues.Issue) []liveTile {
 		out = append(out, tile)
 	}
 
-	// 3. Active databases and listening ports.
+	// 3. Active databases and listening ports (each opens its own page).
 	servers := inventory.DatabaseServers(a.Snapshot)
 	ports := a.portRows()
-	if len(servers) > 0 || len(ports) > 0 {
+	hasConflict := slices.ContainsFunc(found, func(is issues.Issue) bool { return is.Kind == issues.DatabasePortConflict })
+	if len(servers) > 0 {
 		runningDB := 0
 		var kinds []string
 		for _, db := range servers {
@@ -307,45 +310,43 @@ func (a *App) liveSummaryTiles(c *ui.Context, found []issues.Issue) []liveTile {
 				}
 			}
 		}
-		hasConflict := slices.ContainsFunc(found, func(is issues.Issue) bool { return is.Kind == issues.DatabasePortConflict })
-		if len(servers) > 0 {
-			tile := liveTile{
-				key: "live-db", title: locales.LiveDatabasesAndPorts(), dot: pal.TextFaint, captionColor: pal.TextFaint,
-				open: func() { a.router.Push("/tools/databases") },
-			}
-			if hasConflict {
-				tile.dot = t.Warning
-			} else if runningDB > 0 {
-				tile.dot = t.Success
-			}
-			if len(ports) > 0 {
-				tile.value = locales.LiveDbAndPorts(runningDB, len(ports))
-			} else {
-				tile.value = locales.LiveDockerRunning(runningDB)
-			}
-			if len(kinds) > 0 {
-				tile.caption = strings.Join(kinds, ", ")
-			} else {
-				tile.caption = locales.LiveServersCount(len(servers))
-			}
-			out = append(out, tile)
-		} else {
-			inProjects := 0
-			for _, r := range ports {
-				if r.Project != "" {
-					inProjects++
-				}
-			}
-			caption := locales.PortsListeningCaption()
-			if inProjects > 0 {
-				caption = locales.LivePortsInProjects(inProjects)
-			}
-			out = append(out, liveTile{
-				key: "live-ports", title: locales.PortsTitle(), value: locales.LivePortsListening(len(ports)),
-				caption: caption, dot: pal.Info, captionColor: pal.TextFaint,
-				open: func() { a.router.Push(portsPage) },
-			})
+		tile := liveTile{
+			key: "live-db", title: locales.DatabasesTitle(), dot: pal.TextFaint, captionColor: pal.TextFaint,
+			value: locales.LiveDockerRunning(runningDB),
+			open:  func() { a.router.Push("/tools/databases") },
 		}
+		if hasConflict {
+			tile.dot = t.Warning
+		} else if runningDB > 0 {
+			tile.dot = t.Success
+		}
+		if len(kinds) > 0 {
+			tile.caption = strings.Join(kinds, ", ")
+		} else {
+			tile.caption = locales.LiveServersCount(len(servers))
+		}
+		out = append(out, tile)
+	}
+	if len(ports) > 0 {
+		inProjects := 0
+		for _, r := range ports {
+			if r.Project != "" {
+				inProjects++
+			}
+		}
+		caption := locales.PortsListeningCaption()
+		if inProjects > 0 {
+			caption = locales.LivePortsInProjects(inProjects)
+		}
+		dot := pal.Info
+		if hasConflict {
+			dot = t.Warning
+		}
+		out = append(out, liveTile{
+			key: "live-ports", title: locales.PortsTitle(), value: locales.LivePortsListening(len(ports)),
+			caption: caption, dot: dot, captionColor: pal.TextFaint,
+			open: func() { a.router.Push(portsPage) },
+		})
 	}
 
 	// 4. Today's AI usage spend.
@@ -533,15 +534,30 @@ func (a *App) hero(c *ui.Context, found []attentionItem) {
 				problems = strconv.Itoa(len(found))
 				if len(found) > 0 {
 					dot = t.Warning
+				} else {
+					dot = t.Success
 				}
 			}
 			stat(c, "stat-issues", dot, problems, locales.HeroProblems(), locales.HeroProblemsCaption(), func() { a.router.Push(problemsPage) })
-			stat(c, "stat-updates", pal.Info, a.updateCount(c), locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() { a.router.Push(updatesPage) })
-			free, caption := "—", locales.CleanupCounting()
-			if a.Sizes != nil {
-				free, caption = cleanupAmount(a.candidates(c)), locales.StatFreeCaption()
+			updatesVal := a.updateCount(c)
+			updatesDot := pal.TextFaint
+			if updatesVal == "0" {
+				updatesDot = t.Success
+			} else if updatesVal != "—" {
+				updatesDot = pal.Info
 			}
-			stat(c, "stat-free", Accent, free, locales.StatFree(), caption, func() { a.router.Push(cleanupPage) })
+			stat(c, "stat-updates", updatesDot, updatesVal, locales.HeroUpdates(), locales.HeroUpdatesCaption(), func() { a.router.Push(updatesPage) })
+			free, caption, freeDot := "—", locales.CleanupCounting(), pal.TextFaint
+			if a.Sizes != nil {
+				cands := a.candidates(c)
+				free, caption = cleanupAmount(cands), locales.StatFreeCaption()
+				if freeable(cands) == 0 {
+					freeDot = t.Success
+				} else {
+					freeDot = Accent
+				}
+			}
+			stat(c, "stat-free", freeDot, free, locales.StatFree(), caption, func() { a.router.Push(cleanupPage) })
 		})
 	})
 }
@@ -669,12 +685,7 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 		shown = ts.Installations[active]
 	}
 	name, path := a.toolCardTarget(ts.Tool)
-	e := ui.ButtonBase(c.Key("tool:" + ts.Tool)).Column().AlignItems(ui.Stretch).Gap(12).Padding(14).Radius(12).
-		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Label(name).Transition(cardEnter)
-	if e.Hovered() {
-		e.Background(pal.Subtle)
-	}
-	e.Children(func() {
+	content := func() {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			toolLogo(c, ts.Tool, 28)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
@@ -701,8 +712,19 @@ func (a *App) toolCard(c *ui.Context, ts inventory.ToolState, found []issues.Iss
 				}
 			}
 		})
-	})
-	if e.Clicked() && path != "" {
+	}
+	if path == "" {
+		ui.Column(c.Key("tool:" + ts.Tool)).AlignItems(ui.Stretch).Gap(12).Padding(14).Radius(12).
+			Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(content)
+		return
+	}
+	e := ui.ButtonBase(c.Key("tool:" + ts.Tool)).Column().AlignItems(ui.Stretch).Gap(12).Padding(14).Radius(12).
+		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Label(name).Transition(cardEnter)
+	if e.Hovered() {
+		e.Background(pal.Subtle)
+	}
+	e.Children(content)
+	if e.Clicked() {
 		a.router.Push(path)
 	}
 }
@@ -1073,7 +1095,7 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 			ui.Text(c, it.title).FontSize(13.5).FontWeight(500)
 			// The page tells the rest; the card stays short.
 			ui.Text(c, it.explain).FontSize(11.5).TextColor(t.TextMuted).MaxLines(2).Tooltip(it.explain)
-			ui.Row(c).Gap(6).Padding(5, 0, 0, 0).Children(func() {
+			ui.Row(c).Gap(6).Padding(5, 0, 0, 0).Wrap().Children(func() {
 				if it.fix != nil {
 					// Dark, as in the design.
 					ui.Button(c.Key("fix:"+it.key), "").Height(24).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
@@ -1081,6 +1103,10 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 						ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
 					})
 				}
+				ui.Button(c.Key("hide:"+it.key), "").Height(24).Padding(0, 10).
+					Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).OnClick(func() { a.hideIssue(it.key) }).Children(func() {
+					ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
+				})
 				ui.Button(c.Key("details:"+it.key), "").Height(24).Padding(0, 10).
 					Label(locales.Details()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
 					ui.Text(c, locales.Details()).FontSize(12).SingleLine()
@@ -1094,9 +1120,12 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 // kind that only add up, as skills copied to several folders.
 type attentionItem struct {
 	title, explain, page, key string
+	kind                      issues.Kind
 	severity                  issues.Severity
-	area                      int    // the Issues page's tab it shows under: areaTools, …
-	fix                       func() // proposes the plan that fixes it; nil for none
+	area                      int                         // the Issues page's tab it shows under: areaTools, …
+	fix                       func()                      // proposes the plan that fixes it; nil for none
+	fixPlan                   func(func(ops.Plan, error)) // builds the fix plan for bulk fix; nil for none
+	hiddenKey                 string                      // matching entry in App.Hidden when hidden
 }
 
 // issueKey uniquely identifies is among the scan's issues for hiding
@@ -1134,11 +1163,39 @@ func issueKey(is issues.Issue) string {
 // several: each is the same advice about another skill or server.
 var grouped = []issues.Kind{issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing}
 
+// hiddenMatchKey returns the entry in a.Hidden that hides an issue of kind and
+// key, matching both exact issue keys and grouped kind keys (e.g. "mcp-missing").
+func (a *App) hiddenMatchKey(kind issues.Kind, key string) string {
+	if slices.Contains(a.Hidden, key) {
+		return key
+	}
+	if slices.Contains(grouped, kind) && slices.Contains(a.Hidden, string(kind)) {
+		return string(kind)
+	}
+	return ""
+}
+
+// visibleRawIssues returns the raw issues not hidden by a.Hidden (including
+// group-level hidden keys like "mcp-missing" and "skill-copies").
+func (a *App) visibleRawIssues(found []issues.Issue) []issues.Issue {
+	if len(a.Hidden) == 0 || len(found) == 0 {
+		return found
+	}
+	out := make([]issues.Issue, 0, len(found))
+	for _, is := range found {
+		if a.hiddenMatchKey(is.Kind, issueKey(is)) == "" {
+			out = append(out, is)
+		}
+	}
+	return out
+}
+
 // visibleIssues splits the attention items into visible and hidden ones,
-// matching keys the user chose to hide (both warnings and info items).
+// matching keys the user chose to hide (both individual and group keys).
 func (a *App) visibleIssues(found []issues.Issue) (visible, hidden []attentionItem) {
 	for _, it := range a.attentionItems(found) {
-		if slices.Contains(a.Hidden, it.key) {
+		if match := a.hiddenMatchKey(it.kind, it.key); match != "" {
+			it.hiddenKey = match
 			hidden = append(hidden, it)
 		} else {
 			visible = append(visible, it)
@@ -1177,7 +1234,20 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		group := byKind[is.Kind]
 		if len(group) < 2 {
 			title, explain := issueText(is, a.Home)
-			out = append(out, attentionItem{title, explain, issuePage(is), issueKey(is), is.Severity, issueArea(is), a.issueFix(is, found)})
+			fix := a.issueFix(is, found)
+			var fixPlan func(func(ops.Plan, error))
+			if fix != nil {
+				issue := is
+				fixPlan = func(done func(ops.Plan, error)) {
+					if fn := a.issueFixPlan(issue, found, done); fn != nil {
+						fn()
+					}
+				}
+			}
+			out = append(out, attentionItem{
+				title: title, explain: explain, page: issuePage(is), key: issueKey(is),
+				kind: is.Kind, severity: is.Severity, area: issueArea(is), fix: fix, fixPlan: fixPlan,
+			})
 			continue
 		}
 		if done[is.Kind] {
@@ -1204,7 +1274,20 @@ func (a *App) attentionItems(found []issues.Issue) []attentionItem {
 		case issues.MCPMissing:
 			title = locales.GroupMCPMissing(len(group))
 		}
-		out = append(out, attentionItem{title, strings.Join(names, ", "), issuePage(is), string(is.Kind), severity, issueArea(is), a.issueFix(is, found)})
+		fix := a.issueFix(is, found)
+		var fixPlan func(func(ops.Plan, error))
+		if fix != nil {
+			issue := is
+			fixPlan = func(done func(ops.Plan, error)) {
+				if fn := a.issueFixPlan(issue, found, done); fn != nil {
+					fn()
+				}
+			}
+		}
+		out = append(out, attentionItem{
+			title: title, explain: strings.Join(names, ", "), page: issuePage(is), key: string(is.Kind),
+			kind: is.Kind, severity: severity, area: issueArea(is), fix: fix, fixPlan: fixPlan,
+		})
 	}
 	return out
 }

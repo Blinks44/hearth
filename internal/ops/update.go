@@ -17,15 +17,29 @@ import (
 // as it is.
 // ok is false when there are none.
 func UpdatePlan(plans []Plan) (p Plan, ok bool) {
+	return mergePlans(plans, locales.UpdatesPlanTitle, locales.UpdatesPlanWhy())
+}
+
+// BulkFixPlan joins multiple issue-fix plans into a single confirmed plan that
+// runs them in order and verifies each; a single plan stays as it is.
+func BulkFixPlan(plans []Plan) (p Plan, ok bool) {
+	return mergePlans(plans, locales.ProblemsBulkPlanTitle, locales.ProblemsBulkPlanWhy())
+}
+
+func mergePlans(plans []Plan, title func(int) string, why string) (p Plan, ok bool) {
 	switch len(plans) {
 	case 0:
 		return Plan{}, false
 	case 1:
 		return plans[0], true
 	}
-	p.Why = locales.UpdatesPlanWhy()
+	p.Why = why
+	var befores []func(context.Context) error
 	var checks []func(context.Context) (string, error)
 	for _, one := range plans {
+		if len(one.Steps) > 0 {
+			p.Parts = append(p.Parts, len(p.Steps))
+		}
 		p.Steps = append(p.Steps, one.Steps...)
 		p.Changes = append(p.Changes, one.Changes...)
 		p.RestartTerminal = p.RestartTerminal || one.RestartTerminal
@@ -34,11 +48,28 @@ func UpdatePlan(plans []Plan) (p Plan, ok bool) {
 				p.Notes = append(p.Notes, n)
 			}
 		}
+		if one.Before != nil {
+			befores = append(befores, one.Before)
+		}
 		if one.Verify != nil {
 			checks = append(checks, one.Verify)
 		}
 	}
-	p.Title = locales.UpdatesPlanTitle(len(p.Changes))
+	count := len(p.Changes)
+	if count == 0 {
+		count = len(plans)
+	}
+	p.Title = title(count)
+	if len(befores) > 0 {
+		p.Before = func(ctx context.Context) error {
+			for _, before := range befores {
+				if err := before(ctx); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}
 	if len(checks) > 0 {
 		p.Verify = func(ctx context.Context) (string, error) {
 			var said []string

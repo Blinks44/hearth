@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"errors"
 	"slices"
 	"testing"
@@ -790,5 +791,61 @@ func TestPackagesInstallWinGetKindAgnosticMatch(t *testing.T) {
 	tt.Advance(time.Second)
 	if a.pkg.view != pkgViewPackages || a.pkg.detailKey == "" {
 		t.Fatalf("clicking installed search row did not open package detail: view=%d detailKey=%q", a.pkg.view, a.pkg.detailKey)
+	}
+}
+
+func TestPackagesSeparateFiltersAndBrewKindAutoSearch(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "packages",
+		PackageManagers: []inventory.PackageManager{{
+			ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew", UpdatesKnown: true, ReasonsKnown: true,
+			Packages: []inventory.SystemPackage{
+				{Name: "ripgrep", Version: "14.1.0", Available: "14.1.1", Kind: "formula"},
+				{Name: "jq", Version: "1.7.0", Available: "1.8.0", Kind: "formula"},
+				{Name: "oniguruma", Version: "6.9.9", Kind: "formula", Dependency: true},
+			},
+		}},
+	}}}
+	var searches []string
+	a.SearchPackages = func(_ inventory.PackageManager, q, kind string, done func([]pkgmgr.SearchResult, error)) func() {
+		searches = append(searches, q+":"+kind)
+		done([]pkgmgr.SearchResult{{Name: "ripgrep", Kind: cmp.Or(kind, "formula")}}, nil)
+		return func() {}
+	}
+	a.pkg.view = pkgViewPackages
+	a.router.Push(packagesManagerPath("/opt/homebrew/bin/brew"))
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Filtering Packages does not carry over to Updates or Dependencies.
+	a.packageFilter = "ripgrep"
+	tt.Frame()
+	if tt.HasText("jq") {
+		t.Fatalf("Packages filter failed to hide jq: %q", tt.Texts())
+	}
+	a.pkg.view = pkgViewUpdates
+	tt.Frame()
+	hasTexts(t, tt, "ripgrep", "jq")
+	a.pkg.updatesFilter = "jq"
+	tt.Frame()
+	if tt.HasText("ripgrep") {
+		t.Fatalf("Updates filter failed to hide ripgrep: %q", tt.Texts())
+	}
+	a.pkg.view = pkgViewDependencies
+	tt.Frame()
+	hasTexts(t, tt, "oniguruma")
+
+	// Switching Homebrew All / Formulae / Casks auto re-runs search when query is non-empty.
+	a.pkg.view = pkgViewInstall
+	a.pkg.searchQuery = "rip"
+	tt.Frame()
+	if err := tt.Click(locales.PkgKindCasks()); err != nil {
+		t.Fatalf("click Casks segment: %v", err)
+	}
+	tt.Frame()
+	if !slices.Equal(searches, []string{"rip:cask"}) {
+		t.Fatalf("searches after clicking Casks = %q, want [rip:cask]", searches)
 	}
 }

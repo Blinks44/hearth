@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"slices"
 	"strconv"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/issues"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -36,6 +38,55 @@ func issueArea(is issues.Issue) int {
 	return areaTools
 }
 
+func (a *App) problemMatchesFilters(it attentionItem, filter string) bool {
+	if a.problemsTab != 0 && it.area != a.problemsTab {
+		return false
+	}
+	switch a.problemsSeverity {
+	case 1:
+		if !isActionableIssue(it) {
+			return false
+		}
+	case 2:
+		if isActionableIssue(it) {
+			return false
+		}
+	}
+	return strings.Contains(strings.ToLower(it.title+" "+it.explain), filter)
+}
+
+func (a *App) runBulkFix(fixable []attentionItem) {
+	if len(fixable) == 0 {
+		return
+	}
+	pending := len(fixable)
+	var plans []ops.Plan
+	var firstErr error
+	for _, it := range fixable {
+		build := it.fixPlan
+		build(func(p ops.Plan, err error) {
+			pending--
+			if err != nil {
+				if firstErr == nil {
+					firstErr = err
+				}
+			} else if len(p.Steps) > 0 {
+				plans = append(plans, p)
+			}
+			if pending > 0 {
+				return
+			}
+			if combined, ok := ops.BulkFixPlan(plans); ok {
+				a.Propose(combined)
+				return
+			}
+			if firstErr != nil {
+				a.planErr = firstErr.Error()
+			}
+		})
+	}
+}
+
 // problemsView is every issue of the last scan: warnings, then what is
 // only worth knowing, each with its whole explanation, a fix when an
 // operation makes one, and the page it lives on.
@@ -44,7 +95,26 @@ func (a *App) problemsView(c *ui.Context, p page) {
 		t := c.Theme()
 		pal := Colors(t)
 		items, hidden := a.visibleIssues(a.issues(c))
-		a.header(c, p.title(), p.subtitle())
+		filter := strings.ToLower(a.problemsFilter)
+		var fixable []attentionItem
+		if !a.firstScan() {
+			for _, it := range items {
+				if it.fixPlan != nil && a.problemMatchesFilters(it, filter) {
+					fixable = append(fixable, it)
+				}
+			}
+		}
+		var after func()
+		if len(fixable) >= 2 {
+			batch := fixable
+			after = func() {
+				ui.PrimaryButton(c.Key("problems-bulk-fix"), locales.ProblemsBulkFix(len(batch))).
+					Height(controlHeight).
+					Disabled(a.op.running()).
+					OnClick(func() { a.runBulkFix(batch) })
+			}
+		}
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: after})
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				importantCount := len(needAttention(items))
@@ -87,6 +157,20 @@ func (a *App) problemsView(c *ui.Context, p page) {
 						{locales.SectionAI(), count(areaAI)},
 						{locales.ProjectsTitle(), count(areaProjects)},
 					})
+					sevLabels := []string{
+						locales.ProblemsSeverityAll(),
+						locales.ProblemsSeverityImportant(),
+						locales.ProblemsSeverityInfo(),
+					}
+					if a.problemsSeverity < 0 || a.problemsSeverity >= len(sevLabels) {
+						a.problemsSeverity = 0
+					}
+					sevValue := sevLabels[a.problemsSeverity]
+					ui.Select(c.Key("problems-severity"), &sevValue, sevLabels).Height(controlHeight).Width(172).OnChange(func() {
+						if idx := slices.Index(sevLabels, sevValue); idx >= 0 {
+							a.problemsSeverity = idx
+						}
+					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("problems-filter"), &a.problemsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
@@ -104,14 +188,12 @@ func (a *App) problemsView(c *ui.Context, p page) {
 					toolNote(c, locales.NoIssues()+". "+locales.NoIssuesText())
 					return
 				}
-				filter := strings.ToLower(a.problemsFilter)
 				ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 					shown := 0
 					for _, actionable := range []bool{true, false} {
 						var rows []attentionItem
 						for _, it := range items {
-							if isActionableIssue(it) == actionable && (a.problemsTab == 0 || it.area == a.problemsTab) &&
-								strings.Contains(strings.ToLower(it.title+" "+it.explain), filter) {
+							if isActionableIssue(it) == actionable && a.problemMatchesFilters(it, filter) {
 								rows = append(rows, it)
 							}
 						}
@@ -204,9 +286,10 @@ func (a *App) hiddenProblemRow(c *ui.Context, it attentionItem) {
 	if it.severity == issues.Info {
 		icon = "info"
 	}
+	restoreKey := cmp.Or(it.hiddenKey, it.key)
 	actions := func() {
 		ui.Row(c).Gap(6).Shrink(0).Wrap().Children(func() {
-			ui.Button(c.Key("restore"), locales.ProblemsRestore()).Height(controlHeight).OnClick(func() { a.unhideIssue(it.key) })
+			ui.Button(c.Key("restore"), locales.ProblemsRestore()).Height(controlHeight).OnClick(func() { a.unhideIssue(restoreKey) })
 			ui.Button(c.Key("open"), locales.IssueOpen()).Height(controlHeight).OnClick(func() { a.router.Push(it.page) })
 		})
 	}

@@ -32,10 +32,20 @@ func powershellQuote(s string) string {
 	return "'" + strings.NewReplacer("'", "''", "‘", "‘‘", "’", "’’", "‚", "‚‚", "‛", "‛‛").Replace(s) + "'"
 }
 
+// DefaultShellArgs returns nil on Windows so OpenTerminalInDir opens an
+// interactive PowerShell session directly.
+func DefaultShellArgs(_ []string) []string { return nil }
+
 // OpenTerminal opens a visible PowerShell console through the chosen terminal
 // executable or the system's default terminal host. PowerShell owns the
 // interactive child and stays open so the user can read errors from kubectl.
-func OpenTerminal(ctx context.Context, _ Runner, app string, argv, env []string, _, _, _ string, overrides ...string) error {
+func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string, path, kubeconfig, closeHint string, overrides ...string) error {
+	return OpenTerminalInDir(ctx, r, app, "", argv, env, path, kubeconfig, closeHint, overrides...)
+}
+
+// OpenTerminalInDir opens a visible PowerShell console starting in dir when dir
+// is non-empty.
+func OpenTerminalInDir(ctx context.Context, _ Runner, app, dir string, argv, env []string, _, _, _ string, overrides ...string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("open terminal: %w", err)
 	}
@@ -44,10 +54,17 @@ func OpenTerminal(ctx context.Context, _ Runner, app string, argv, env []string,
 		return fmt.Errorf("locate PowerShell: %w", err)
 	}
 	program := filepath.Join(system, "WindowsPowerShell", "v1.0", "powershell.exe")
-	cmd, newConsole := windowsTerminalCmd(app, program, argv)
+	cmd, newConsole := windowsTerminalCmd(app, program, dir, argv)
 	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine(cmd))
 	if err != nil {
 		return fmt.Errorf("encode PowerShell command: %w", err)
+	}
+	var currentDir *uint16
+	if dir != "" {
+		currentDir, err = windows.UTF16PtrFromString(dir)
+		if err != nil {
+			return fmt.Errorf("encode working directory: %w", err)
+		}
 	}
 	// Leave standard handles unset so Windows wires them to the new console.
 	// os/exec supplies redirected handles even for a new console.
@@ -57,7 +74,7 @@ func OpenTerminal(ctx context.Context, _ Runner, app string, argv, env []string,
 	if newConsole {
 		flags |= windows.CREATE_NEW_CONSOLE
 	}
-	if err := windows.CreateProcess(nil, line, nil, nil, false, flags, terminalEnvironment(append(slices.Clone(env), overrides...)), nil, &info, &process); err != nil {
+	if err := windows.CreateProcess(nil, line, nil, nil, false, flags, terminalEnvironment(append(slices.Clone(env), overrides...)), currentDir, &info, &process); err != nil {
 		return fmt.Errorf("open terminal: %w", err)
 	}
 	_ = windows.CloseHandle(process.Thread)
@@ -65,8 +82,8 @@ func OpenTerminal(ctx context.Context, _ Runner, app string, argv, env []string,
 	return nil
 }
 
-func windowsTerminalCmd(app, powershell string, argv []string) ([]string, bool) {
-	psArgs := append([]string{powershell}, terminalArgs(argv)...)
+func windowsTerminalCmd(app, powershell, dir string, argv []string) ([]string, bool) {
+	psArgs := append([]string{powershell}, terminalArgsInDir(dir, argv)...)
 	trimmed := strings.TrimSpace(app)
 	if trimmed == "" {
 		return psArgs, true
@@ -80,7 +97,7 @@ func windowsTerminalCmd(app, powershell string, argv []string) ([]string, bool) 
 	case "alacritty", "ghostty":
 		return append([]string{trimmed, "-e"}, psArgs...), false
 	case "pwsh", "powershell":
-		return append([]string{trimmed}, terminalArgs(argv)...), true
+		return append([]string{trimmed}, terminalArgsInDir(dir, argv)...), true
 	default:
 		return append([]string{trimmed}, psArgs...), false
 	}
@@ -112,14 +129,31 @@ func terminalEnvironment(env []string) *uint16 {
 }
 
 func terminalArgs(argv []string) []string {
-	// ProcessStartInfo preserves native argv even in Windows PowerShell 5,
-	// whose invocation operator can change arguments that contain quotes.
-	args := make([]string, 0, len(argv)-1)
-	for _, arg := range argv[1:] {
-		args = append(args, syscall.EscapeArg(arg))
+	return terminalArgsInDir("", argv)
+}
+
+func terminalArgsInDir(dir string, argv []string) []string {
+	var script string
+	if len(argv) == 0 {
+		if dir != "" {
+			script = "Set-Location -LiteralPath " + powershellQuote(dir)
+		}
+	} else {
+		// ProcessStartInfo preserves native argv even in Windows PowerShell 5,
+		// whose invocation operator can change arguments that contain quotes.
+		args := make([]string, 0, len(argv)-1)
+		for _, arg := range argv[1:] {
+			args = append(args, syscall.EscapeArg(arg))
+		}
+		script = "$p = [Diagnostics.ProcessStartInfo]::new(" + powershellQuote(argv[0]) + ", " + powershellQuote(strings.Join(args, " ")) + ")\n"
+		if dir != "" {
+			script += "$p.WorkingDirectory = " + powershellQuote(dir) + "\n"
+		}
+		script += "$p.UseShellExecute = $false\n[Diagnostics.Process]::Start($p).WaitForExit()"
 	}
-	script := "$p = [Diagnostics.ProcessStartInfo]::new(" + powershellQuote(argv[0]) + ", " + powershellQuote(strings.Join(args, " ")) + ")\n" +
-		"$p.UseShellExecute = $false\n[Diagnostics.Process]::Start($p).WaitForExit()"
+	if script == "" {
+		return []string{"-NoLogo", "-NoExit"}
+	}
 	var data []byte
 	for _, unit := range utf16.Encode([]rune(script)) {
 		data = binary.LittleEndian.AppendUint16(data, unit)

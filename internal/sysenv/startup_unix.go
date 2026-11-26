@@ -30,7 +30,7 @@ func startup(ctx context.Context, r run.Runner, gui Env, marker string) *invento
 		return nil
 	}
 	s := &inventory.ShellStartup{Shell: filepath.Base(sh), Took: res.Duration}
-	if s.Took < traceFrom {
+	if s.Took < StartupTraceFrom {
 		return s
 	}
 	var args []string

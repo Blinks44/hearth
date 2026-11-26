@@ -50,7 +50,7 @@ func TestTerminalScript(t *testing.T) {
 		t.Fatal(err)
 	}
 	args := []string{"/bin/sh", "-c", `printf '%s\n' "$KUBECONFIG" "$1"; exit 19`, "sh", `x'; printf altered; #'`}
-	if err := writeTerminalScript(f, args, "/usr/bin:/bin", "config with spaces", "Press Enter"); err != nil {
+	if err := writeTerminalScript(f, "", args, "/usr/bin:/bin", "config with spaces", "Press Enter"); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.CommandContext(t.Context(), "/bin/sh", f.Name())
@@ -62,5 +62,24 @@ func TestTerminalScript(t *testing.T) {
 	}
 	if _, err := os.Stat(f.Name()); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("temporary script remains: %v", err)
+	}
+}
+
+func TestTerminalScriptInDir(t *testing.T) {
+	workDir := t.TempDir()
+	f, err := os.CreateTemp(t.TempDir(), "terminal-dir-*.command")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeTerminalScript(f, workDir, []string{"/bin/pwd"}, "/usr/bin:/bin", "", ""); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.CommandContext(t.Context(), "/bin/sh", f.Name())
+	got, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("script failed: %v (%q)", err, got)
+	}
+	if !strings.HasSuffix(strings.TrimSpace(string(got)), strings.TrimPrefix(workDir, "/private")) {
+		t.Fatalf("pwd = %q, want suffix %q", strings.TrimSpace(string(got)), workDir)
 	}
 }

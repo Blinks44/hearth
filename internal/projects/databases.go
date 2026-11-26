@@ -26,10 +26,16 @@ type DatabaseReference struct {
 
 func readDatabases(p *Project) {
 	for _, file := range []string{"compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"} {
-		data, err := os.ReadFile(filepath.Join(p.Dir, file))
-		if os.IsNotExist(err) {
+		full := filepath.Join(p.Dir, file)
+		info, err := os.Stat(full)
+		if os.IsNotExist(err) || (err == nil && info.IsDir()) {
 			continue
 		}
+		if err != nil {
+			p.Errs = append(p.Errs, fmt.Errorf("read %s: %w", file, err))
+			continue
+		}
+		data, err := os.ReadFile(full)
 		if err != nil {
 			p.Errs = append(p.Errs, fmt.Errorf("read %s: %w", file, err))
 			continue
@@ -44,16 +50,24 @@ func readDatabases(p *Project) {
 			p.Databases = append(p.Databases, ref)
 		}
 	}
-	data, err := os.ReadFile(filepath.Join(p.Dir, ".env"))
-	if os.IsNotExist(err) {
+	envPath := filepath.Join(p.Dir, ".env")
+	info, err := os.Stat(envPath)
+	if os.IsNotExist(err) || (err == nil && info.IsDir()) {
 		return
 	}
 	if err != nil {
 		p.Errs = append(p.Errs, fmt.Errorf("read .env: %w", err))
 		return
 	}
-	p.Files = append(p.Files, ".env")
-	p.Databases = append(p.Databases, envDatabases(string(data))...)
+	data, err := os.ReadFile(envPath)
+	if err != nil {
+		p.Errs = append(p.Errs, fmt.Errorf("read .env: %w", err))
+		return
+	}
+	if refs := envDatabases(string(data)); len(refs) > 0 {
+		p.Files = append(p.Files, ".env")
+		p.Databases = append(p.Databases, refs...)
+	}
 }
 
 func composeDatabases(data []byte) ([]DatabaseReference, error) {

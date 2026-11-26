@@ -80,6 +80,9 @@ func main() {
 	a.ThemeMode, a.VersionLists, a.Hidden = list.settings.Theme, list.settings.VersionLists, list.settings.Hidden
 	a.StartHidden = list.settings.StartHidden
 	a.DockerPromoHidden = list.settings.DockerPromoHidden
+	a.CleanupStaleDays = list.settings.CleanupStaleDays
+	a.CleanupMinMB = list.settings.CleanupMinMB
+	a.CleanupExclude = slices.Clone(list.settings.CleanupExclude)
 	a.TrayEnabled = !list.settings.TrayDisabled
 	a.ShowInDock = !list.settings.DockHidden || !a.TrayEnabled
 	a.KubePinned, a.Terminal, a.Editor = list.settings.KubePinned, list.settings.Terminal, list.settings.Editor
@@ -478,13 +481,17 @@ func main() {
 		}
 		a.OpenTerminal = func(done func(error)) {
 			env := scanner.Terminal()
-			shell := env.Get("SHELL")
-			if shell == "" {
-				shell = "/bin/sh"
-			}
 			terminal := a.Terminal
 			go func() {
-				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, []string{shell, "-l"}, env, env.Get("PATH"), env.Get("KUBECONFIG"), "")
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, run.DefaultShellArgs(env), env, env.Get("PATH"), env.Get("KUBECONFIG"), "")
+				win.Update(func() { done(err) })
+			}()
+		}
+		a.OpenTerminalInDir = func(dir string, done func(error)) {
+			env := scanner.Terminal()
+			terminal := a.Terminal
+			go func() {
+				err := run.OpenTerminalInDir(context.Background(), run.Exec{}, terminal, dir, run.DefaultShellArgs(env), env, env.Get("PATH"), env.Get("KUBECONFIG"), "")
 				win.Update(func() { done(err) })
 			}()
 		}
@@ -729,8 +736,9 @@ func main() {
 					installs = append(installs, filepath.Join(p.Dir, name))
 				}
 			}
+			exclude := slices.Clone(a.CleanupExclude)
 			go func() {
-				sizes, err := disk.Count(ctx, run.Exec{}, env, s, installs, func(next inventory.Sizes) {
+				sizes, err := disk.CountWithExclude(ctx, run.Exec{}, env, s, installs, exclude, func(next inventory.Sizes) {
 					win.Update(func() {
 						if ctx.Err() != nil {
 							return
@@ -972,12 +980,16 @@ func main() {
 		})
 		a.OnSettings = func() {
 			onlineChanged := list.settings.VersionLists != a.VersionLists
+			excludeChanged := !slices.Equal(list.settings.CleanupExclude, a.CleanupExclude)
 			if !a.TrayEnabled {
 				a.ShowInDock = true
 			}
 			list.settings.Theme, list.settings.VersionLists, list.settings.Hidden = a.ThemeMode, a.VersionLists, a.Hidden
 			list.settings.StartHidden = a.StartHidden
 			list.settings.DockerPromoHidden = a.DockerPromoHidden
+			list.settings.CleanupStaleDays = a.CleanupStaleDays
+			list.settings.CleanupMinMB = a.CleanupMinMB
+			list.settings.CleanupExclude = slices.Clone(a.CleanupExclude)
 			list.settings.TrayDisabled = !a.TrayEnabled
 			list.settings.DockHidden = !a.ShowInDock
 			list.settings.KubePinned, list.settings.Terminal, list.settings.Editor = a.KubePinned, a.Terminal, a.Editor
@@ -995,6 +1007,9 @@ func main() {
 			if onlineChanged {
 				fetchVersions(false)
 				fetchPackages(false)
+			}
+			if excludeChanged && a.Snapshot != nil {
+				countSizes(a.Snapshot)
 			}
 		}
 		a.ClearCache = func() {

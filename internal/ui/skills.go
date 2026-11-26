@@ -34,17 +34,66 @@ type skillGroup struct {
 	skills  []inventory.Skill
 }
 
-// skillKey tells a skill apart: its folder, which stays when a link to
-// it comes or goes; for a broken link, the link.
+// skillKey tells a skill apart across scopes: its project ("" for user) plus
+// its folder, which stays when a link comes or goes; for a broken link, the link.
 func skillKey(sk inventory.Skill) string {
-	if sk.Broken {
-		return sk.Paths[0].Path
+	path := sk.Dir
+	if sk.Broken && len(sk.Paths) > 0 {
+		path = sk.Paths[0].Path
 	}
-	return sk.Dir
+	return sk.Project + "\x00" + path
+}
+
+// projectDisplayNames returns readable unique labels for project directories,
+// using the folder basename when unique and disambiguating collisions with
+// parent path segments (for example "work/api" vs "personal/api").
+func projectDisplayNames(dirs []string, home string) []string {
+	out := make([]string, len(dirs))
+	counts := map[string]int{}
+	for i, dir := range dirs {
+		out[i] = filepath.Base(dir)
+		counts[out[i]]++
+	}
+	for i, dir := range dirs {
+		if counts[out[i]] <= 1 {
+			continue
+		}
+		parent := filepath.Base(filepath.Dir(dir))
+		if parent != "" && parent != "." && parent != string(filepath.Separator) {
+			out[i] = parent + "/" + out[i]
+		} else {
+			out[i] = tilde(dir, home)
+		}
+	}
+	// If two projects share even parent/base, fall back to tilde paths for them.
+	counts2 := map[string]int{}
+	for _, name := range out {
+		counts2[name]++
+	}
+	for i, dir := range dirs {
+		if counts2[out[i]] > 1 {
+			out[i] = tilde(dir, home)
+		}
+	}
+	return out
+}
+
+// activeSkillProject returns a.skillProject when it is still a tracked project
+// and the current scope includes projects, else "".
+func (a *App) activeSkillProject() string {
+	if a.skillScope == 1 || a.skillProject == "" {
+		return ""
+	}
+	for _, p := range a.Projects {
+		if p.Dir == a.skillProject {
+			return a.skillProject
+		}
+	}
+	return ""
 }
 
 // skillsPage lists the skills of the user and of the projects, filtered by
-// agent, scope and text, with the chosen one's details beside them.
+// agent, scope, project, and text, with the chosen one's details beside them.
 func (a *App) skillsPage(c *ui.Context, p page) {
 	if a.skillCatalogOpen {
 		a.skillCatalogView(c, p)
@@ -52,7 +101,15 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 	}
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
-			ui.PrimaryButton(c.Key("skill-catalog"), locales.SkillCatalogTitle()).OnClick(func() { a.openSkillCatalog(0) })
+			if a.BuildPlan != nil {
+				ui.Button(c.Key("skill-create"), "").Height(controlHeight).Label(locales.SkillCreateButton()).OnClick(func() {
+					a.openSkillCreate(a.activeSkillProject())
+				}).Children(func() {
+					ui.Icon(c, Icon("plus")).Size(13, 13).TextColor(c.Theme().TextMuted)
+					ui.Text(c, locales.SkillCreateButton()).SingleLine()
+				})
+			}
+			ui.PrimaryButton(c.Key("skill-catalog"), locales.SkillCatalogTitle()).Height(controlHeight).OnClick(func() { a.openSkillCatalog(0) })
 		}})
 		all := a.allSkills()
 		if len(all) == 0 {
@@ -71,6 +128,7 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 				inProjects++
 			}
 		}
+		activeProject := a.activeSkillProject()
 		groups := a.skillGroups()
 		var shown []inventory.Skill
 		for _, g := range groups {
@@ -80,33 +138,84 @@ func (a *App) skillsPage(c *ui.Context, p page) {
 		if chosen < 0 && len(shown) > 0 {
 			chosen = 0
 		}
-		ui.Scroll(c).Grow(1).Children(func() {
-			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
-				aiIntro(c, "puzzle", locales.SkillsTitle(), locales.SkillsText(), []aiStat{
-					{strconv.Itoa(len(all)), locales.StatTotal()},
-					{strconv.Itoa(inProjects), locales.StatProjects()},
-					{strconv.Itoa(withCopies), locales.StatWithCopies()},
-				})
-				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-					a.agentFilter(c, "skill-agent", &a.skillAgent, func(id string) int {
-						n := 0
-						for _, sk := range all {
-							if id == "" || slices.Contains(skillAgents(sk), id) {
-								n++
-							}
+		filters := func() {
+			aiIntro(c, "puzzle", locales.SkillsTitle(), locales.SkillsText(), []aiStat{
+				{strconv.Itoa(len(all)), locales.StatTotal()},
+				{strconv.Itoa(inProjects), locales.StatProjects()},
+				{strconv.Itoa(withCopies), locales.StatWithCopies()},
+			})
+			bar := ui.Row(c).Gap(10).AlignItems(ui.Center)
+			if narrow(c) {
+				bar.Wrap()
+			}
+			bar.Children(func() {
+				a.agentFilter(c, "skill-agent", &a.skillAgent, func(id string) int {
+					n := 0
+					for _, sk := range all {
+						if !inScope(a.skillScope, sk.Project) {
+							continue
 						}
-						return n
-					})
-					scopeSegments(c, "skill-scope", &a.skillScope)
+						if activeProject != "" && sk.Project != activeProject {
+							continue
+						}
+						if id == "" || slices.Contains(skillAgents(sk), id) {
+							n++
+						}
+					}
+					return n
 				})
-				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
+				if len(a.Projects) > 0 && a.skillScope != 1 {
+					dirs := make([]string, len(a.Projects))
+					for i, pr := range a.Projects {
+						dirs[i] = pr.Dir
+					}
+					names := projectDisplayNames(dirs, a.Home)
+					options := append([]string{locales.SkillsAllProjects()}, names...)
+					selected := options[0]
+					if idx := slices.Index(dirs, activeProject); idx >= 0 {
+						selected = options[idx+1]
+					}
+					ui.Select(c.Key("skill-project-filter"), &selected, options).Height(controlHeight).Width(170).OnChange(func() {
+						if idx := slices.Index(options, selected); idx > 0 {
+							a.skillProject = dirs[idx-1]
+						} else {
+							a.skillProject = ""
+						}
+					})
+				}
+				scopeSegments(c, "skill-scope", &a.skillScope)
+			})
+		}
+		if narrow(c) {
+			ui.Scroll(c).Grow(1).Children(func() {
+				ui.Column(c).Gap(16).Padding(22, 28, 24, 28).Children(func() {
+					filters()
+					a.skillList(c, groups, copies, differs, shown, chosen)
+					if withCopies > 0 {
+						a.copiesHint(c, withCopies)
+					}
+					if chosen >= 0 {
+						a.skillDetail(c, shown[chosen], all)
+					}
+				})
+			})
+			return
+		}
+		// Sticky split view: intro and filters stay fixed while the left list
+		// and right detail pane scroll independently.
+		ui.Column(c).Grow(1).MinHeight(0).Gap(16).Padding(22, 28, 0, 28).Children(func() {
+			filters()
+			ui.Row(c).Grow(1).MinHeight(0).Gap(18).AlignItems(ui.Stretch).Children(func() {
+				ui.Scroll(c.Key("skills-list-scroll")).Grow(1).Basis(0).MinWidth(0).Children(func() {
+					ui.Column(c).Gap(14).Padding(0, 0, 24, 0).Children(func() {
 						a.skillList(c, groups, copies, differs, shown, chosen)
 						if withCopies > 0 {
 							a.copiesHint(c, withCopies)
 						}
 					})
-					detailColumn(c).Children(func() {
+				})
+				ui.Scroll(c.Key("skills-detail-scroll")).Width(420).Shrink(0).Children(func() {
+					ui.Column(c).Padding(0, 0, 24, 0).Children(func() {
 						if chosen >= 0 {
 							a.skillDetail(c, shown[chosen], all)
 						}
@@ -138,12 +247,14 @@ func skillCopies(skills []inventory.Skill) (map[string]int, map[string]bool) {
 	return n, differs
 }
 
-// skillGroups are the skills shown, the projects' first in their order,
-// then the user's.
+// skillGroups are the skills shown: global/user skills first, then each
+// project's skills in their order.
 func (a *App) skillGroups() []skillGroup {
+	activeProject := a.activeSkillProject()
 	q := strings.ToLower(strings.TrimSpace(a.skillQuery))
 	keep := func(sk inventory.Skill) bool {
 		return inScope(a.skillScope, sk.Project) &&
+			(activeProject == "" || sk.Project == activeProject) &&
 			(a.skillAgent == "" || slices.Contains(skillAgents(sk), a.skillAgent)) &&
 			(q == "" || strings.Contains(strings.ToLower(sk.Name+" "+sk.Description), q))
 	}
@@ -160,19 +271,57 @@ func (a *App) skillGroups() []skillGroup {
 			groups = append(groups, g)
 		}
 	}
-	for _, p := range a.Projects {
-		add(p.Dir, p.Skills)
-	}
 	if a.Snapshot != nil {
 		add("", a.Snapshot.Skills)
+	}
+	for _, p := range a.Projects {
+		add(p.Dir, p.Skills)
 	}
 	return groups
 }
 
-// skillList is the search field and the skills by scope.
+// skillGroupExpanded reports whether the skill group for dir ("" for User) is
+// expanded. User defaults to open; project groups default to collapsed unless
+// explicitly opened, filtered to that project, searching, or the sole group.
+func (a *App) skillGroupExpanded(dir string, groups []skillGroup) bool {
+	if strings.TrimSpace(a.skillQuery) != "" {
+		return true
+	}
+	if dir != "" && a.activeSkillProject() == dir {
+		return true
+	}
+	if open, ok := a.skillGroupOpen[dir]; ok {
+		return open
+	}
+	if dir == "" {
+		return true
+	}
+	return len(groups) == 1
+}
+
+func (a *App) toggleSkillGroup(dir string, currentlyOpen bool) {
+	if a.skillGroupOpen == nil {
+		a.skillGroupOpen = map[string]bool{}
+	}
+	a.skillGroupOpen[dir] = !currentlyOpen
+}
+
+// skillList is the search field and the skills grouped by scope (global first,
+// then collapsible project groups).
 func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]int, differs map[string]bool, shown []inventory.Skill, chosen int) {
 	t := c.Theme()
 	pal := Colors(t)
+	projectDirs := make([]string, 0, len(a.Projects))
+	for _, p := range a.Projects {
+		projectDirs = append(projectDirs, p.Dir)
+	}
+	projectLabels := projectDisplayNames(projectDirs, a.Home)
+	labelForProject := func(dir string) string {
+		if idx := slices.Index(projectDirs, dir); idx >= 0 {
+			return locales.ScopeProjectOf(projectLabels[idx])
+		}
+		return scopeName(dir)
+	}
 	listFrame(c, func() {
 		ui.Row(c).Padding(6, 10).Children(func() {
 			ui.SearchField(c.Key("skill-search"), &a.skillQuery).Bind(&a.filterField).Placeholder(locales.SearchByName()).Grow(1)
@@ -181,7 +330,59 @@ func (a *App) skillList(c *ui.Context, groups []skillGroup, copies map[string]in
 			cardNote(c, locales.NothingMatches())
 		}
 		for _, g := range groups {
-			groupTitle(c, scopeName(g.project), a.roots(g))
+			dir := g.project
+			expanded := a.skillGroupExpanded(dir, groups)
+			chev := "chevron-down"
+			if !expanded {
+				chev = "chevron-right"
+			}
+			roots := a.roots(g)
+			if dir == "" {
+				ui.Column(c.Key("skill-group:user")).Gap(3).Padding(8, 14).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+					toggleBtn := ui.ButtonBase(c.Key("skill-group-toggle:user")).Row().FillWidth().Gap(6).
+						Justify(ui.Start).AlignItems(ui.Center).
+						Label(scopeName("")).OnClick(func() {
+						a.toggleSkillGroup("", expanded)
+					})
+					toggleBtn.Children(func() {
+						ui.Icon(c, Icon(chev)).Size(13, 13).Shrink(0).TextColor(pal.TextFaint)
+						ui.Text(c, strings.ToUpper(scopeName(""))).FontSize(11).FontWeight(500).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+						ui.Text(c, strconv.Itoa(len(g.skills))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+						ui.Box(c).Grow(1).MinWidth(8).Height(1)
+						if roots != "" {
+							clipped(c, roots).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1).MinWidth(0)
+						}
+					})
+					if expanded {
+						ui.Text(c, locales.SkillsScopeExplain()).FontSize(11).TextColor(t.TextMuted)
+					}
+				})
+			} else {
+				row := ui.Row(c.Key("skill-group:"+dir)).Gap(8).Padding(7, 10, 7, 14).AlignItems(ui.Center).
+					Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+				row.Children(func() {
+					toggleBtn := ui.ButtonBase(c.Key("skill-group-toggle:" + dir)).Row().Grow(1).MinWidth(0).Gap(6).
+						Justify(ui.Start).AlignItems(ui.Center).
+						Label(labelForProject(dir)).OnClick(func() {
+						a.toggleSkillGroup(dir, expanded)
+					})
+					toggleBtn.Children(func() {
+						ui.Icon(c, Icon(chev)).Size(13, 13).Shrink(0).TextColor(pal.TextFaint)
+						ui.Text(c, strings.ToUpper(labelForProject(dir))).FontSize(11).FontWeight(500).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+						ui.Text(c, strconv.Itoa(len(g.skills))).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).Shrink(0).SingleLine()
+						ui.Box(c).Grow(1).MinWidth(8).Height(1)
+						if roots != "" {
+							clipped(c, roots).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1).MinWidth(0)
+						}
+					})
+					iconButton(c.Key("skill-group-open:"+dir), "folder-git-2", locales.OpenProject()).OnClick(func() {
+						a.router.Push(projectPath(dir))
+					})
+				})
+			}
+			if !expanded {
+				continue
+			}
 			for _, sk := range g.skills {
 				key := skillKey(sk)
 				e := ui.ButtonBase(c.Key("skill:"+key)).Gap(10).Padding(9, 14, 9, 12).AlignItems(ui.Center).
@@ -238,14 +439,22 @@ func (a *App) shownAgents(ids []string) []string {
 }
 
 // roots are the skills directories of a group's skills, as "~/.claude/skills
-// · ~/.agents/skills", relative to the project for a project's.
+// · ~/.agents/skills", relative to the project for a project's. Claude synced
+// skills collapse their per-organization UUID subfolder to ".../skills/synced".
 func (a *App) roots(g skillGroup) string {
 	var out []string
 	for _, sk := range g.skills {
 		for _, p := range sk.Paths {
-			root := tilde(filepath.Dir(p.Path), a.Home)
+			dir := filepath.Dir(p.Path)
+			if sk.Synced {
+				parent := filepath.Dir(dir)
+				if filepath.Base(parent) == "synced" {
+					dir = parent
+				}
+			}
+			root := tilde(dir, a.Home)
 			if g.project != "" {
-				if rel, err := filepath.Rel(g.project, filepath.Dir(p.Path)); err == nil {
+				if rel, err := filepath.Rel(g.project, dir); err == nil {
 					root = filepath.ToSlash(rel)
 				}
 			}
@@ -404,8 +613,14 @@ func (a *App) skillDetail(c *ui.Context, sk inventory.Skill, all []inventory.Ski
 					}
 					ui.Text(c, caption).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 				})
-				if via != nil && via.Link {
-					aiTag(c, locales.TagSymlink(), pal.Info.Alpha(0.12), pal.Info)
+				if via != nil {
+					if via.Link {
+						aiTag(c, locales.TagSymlink(), pal.Info.Alpha(0.12), pal.Info)
+					} else {
+						ui.Box(c).Shrink(0).Padding(2, 7).Radius(5).Background(pal.SuccessSoft).Tooltip(locales.SkillNativeHint()).Children(func() {
+							ui.Text(c, locales.TagNative()).FontSize(10.5).FontWeight(500).TextColor(pal.SuccessText).SingleLine()
+						})
+					}
 				}
 				a.skillAgentControl(c, sk, id, via)
 			})
@@ -718,4 +933,99 @@ func (a *App) skillDiffDialog(c *ui.Context) {
 			})
 		})
 	})
+}
+
+type skillCreateState struct {
+	open        bool
+	name        string
+	description string
+	project     string
+	err         string
+}
+
+func (a *App) openSkillCreate(project string) {
+	a.skillCreate = &skillCreateState{
+		open:    true,
+		project: project,
+	}
+}
+
+func (a *App) skillCreateDialog(c *ui.Context) {
+	st := a.skillCreate
+	if st == nil || !st.open {
+		return
+	}
+	t := c.Theme()
+	pal := Colors(t)
+	submit := func() {
+		name := strings.TrimSpace(st.name)
+		if name == "" {
+			st.err = locales.SkillCreateInvalidName()
+			return
+		}
+		st.err = ""
+		desc, project := st.description, st.project
+		ids := a.foundIDs()
+		st.open = false
+		if a.BuildPlan != nil {
+			a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+				return ops.SkillCreatePlan(name, desc, project, ids, env, agentTitle)
+			}, a.proposeOrSay)
+		}
+	}
+	dialogBase(c.Key("skill-create-dialog"), &st.open, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
+		panel.Width(480).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		ui.Column(c).Padding(20).Gap(14).Children(func() {
+			ui.Column(c).Gap(4).Children(func() {
+				ui.Text(c, locales.SkillCreateTitle()).FontSize(18).FontWeight(600)
+				ui.Text(c, locales.SkillCreateNote()).FontSize(12).TextColor(t.TextMuted)
+			})
+			ui.Column(c).Gap(4).Children(func() {
+				ui.Text(c, locales.SkillCreateName()).FontSize(12).FontWeight(500)
+				ui.TextInput(c.Key("skill-create-name"), &st.name).
+					Placeholder(locales.SkillCreateNamePlaceholder()).
+					Height(controlHeight).FillWidth().OnSubmit(submit)
+			})
+			ui.Column(c).Gap(4).Children(func() {
+				ui.Text(c, locales.SkillCreateDesc()).FontSize(12).FontWeight(500)
+				ui.TextInput(c.Key("skill-create-desc"), &st.description).
+					Placeholder(locales.SkillCreateDescPlaceholder()).
+					Height(controlHeight).FillWidth().OnSubmit(submit)
+			})
+			if len(a.Projects) > 0 {
+				dirs := make([]string, len(a.Projects))
+				for i, pr := range a.Projects {
+					dirs[i] = pr.Dir
+				}
+				names := projectDisplayNames(dirs, a.Home)
+				scopes := append([]string{""}, dirs...)
+				labels := append([]string{locales.SkillCatalogScopeUser()}, names...)
+				selected := labels[0]
+				if idx := slices.Index(scopes, st.project); idx >= 0 {
+					selected = labels[idx]
+				}
+				ui.Column(c).Gap(4).Children(func() {
+					ui.Text(c, locales.SkillCatalogScope()).FontSize(12).FontWeight(500)
+					ui.Select(c.Key("skill-create-scope"), &selected, labels).Height(controlHeight).FillWidth().OnChange(func() {
+						if idx := slices.Index(labels, selected); idx >= 0 {
+							st.project = scopes[idx]
+						}
+					})
+				})
+			}
+			if st.err != "" {
+				ui.Text(c, st.err).FontSize(12).TextColor(pal.WarningText)
+			}
+			ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
+				ui.Button(c, locales.Cancel()).Height(controlHeight).OnClick(func() { st.open = false })
+				ui.PrimaryButton(c.Key("skill-create-submit"), locales.SkillCatalogPlan()).Height(controlHeight).
+					Disabled(strings.TrimSpace(st.name) == "").OnClick(submit)
+			})
+		})
+	})
+	if !st.open {
+		a.skillCreate = nil
+	}
 }

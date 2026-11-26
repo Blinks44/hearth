@@ -80,6 +80,9 @@ type Project struct {
 	// Readme is the project's setup documentation file in Dir, when present
 	// (such as README.md), shown only as a file link for the user to open.
 	Readme string
+	// Git holds read-only repository status (branch, dirty count, remote,
+	// last commit) when Dir is inside a Git repository.
+	Git *GitInfo
 	// Texts are the version files Hearth may write, by name, as Read
 	// found them: an edit starts from them.
 	Texts map[string]string
@@ -88,7 +91,12 @@ type Project struct {
 }
 
 // VersionFiles are the files that pin versions Hearth may write.
-var VersionFiles = []string{".nvmrc", ".node-version", ".tool-versions", "mise.toml", ".mise.toml", "package.json"}
+var VersionFiles = []string{
+	".nvmrc", ".node-version", ".tool-versions", "mise.toml", ".mise.toml", "package.json",
+	".python-version", ".ruby-version", ".go-version", ".java-version", ".sdkmanrc",
+	"rust-toolchain.toml", "rust-toolchain", ".php-version", ".bun-version", "global.json",
+	".terraform-version", ".opentofu-version", ".tofu-version",
+}
 
 // installDirs are the dependency folders tools put back from a project's
 // files: npm and the others' node_modules, a Python virtual environment.
@@ -216,6 +224,7 @@ func ReadWithEnv(dir string, env sysenv.Env) Project {
 		}
 	}
 	p.Readme = findReadme(dir)
+	p.Git = readGitInfo(dir, env)
 	p.Changed = changed(p)
 	p.Skills = ai.ProjectSkills(dir)
 	mcp, errs := ai.ProjectMCP(dir, env)
@@ -273,6 +282,19 @@ func firstLine(tool string) func([]byte) ([]Requirement, error) {
 // packageTools are the tools package.json's engines and volta may name.
 var packageTools = []string{"node", "npm", "pnpm", "yarn", "bun"}
 
+// packageTool normalizes a JS runtime or package manager name in package.json
+// and rejects empty or unrecognized entries.
+func packageTool(name string) (string, bool) {
+	name = strings.ToLower(strings.TrimSpace(name))
+	if name == "nodejs" {
+		name = "node"
+	}
+	if name == "deno" || slices.Contains(packageTools, name) {
+		return name, true
+	}
+	return "", false
+}
+
 func readPackageJSON(data []byte) ([]Requirement, error) {
 	var pkg struct {
 		Engines        map[string]any `json:"engines"`
@@ -300,7 +322,9 @@ func readPackageJSON(data []byte) ([]Requirement, error) {
 	// "pnpm@9.12.0+sha512.abc": the version, without the hash.
 	if name, version, ok := strings.Cut(pkg.PackageManager, "@"); ok {
 		version, _, _ = strings.Cut(version, "+")
-		reqs = append(reqs, Requirement{Tool: name, Want: version, Key: "packageManager"})
+		if tool, ok := packageTool(name); ok {
+			reqs = append(reqs, Requirement{Tool: tool, Want: strings.TrimSpace(version), Key: "packageManager"})
+		}
 	}
 	for _, field := range []struct {
 		key string
@@ -311,7 +335,9 @@ func readPackageJSON(data []byte) ([]Requirement, error) {
 			return nil, fmt.Errorf("%s: %w", field.key, err)
 		}
 		for _, e := range engines {
-			reqs = append(reqs, Requirement{Tool: e.Name, Want: e.Version, Key: field.key})
+			if tool, ok := packageTool(e.Name); ok {
+				reqs = append(reqs, Requirement{Tool: tool, Want: strings.TrimSpace(e.Version), Key: field.key})
+			}
 		}
 	}
 	return reqs, nil

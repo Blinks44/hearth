@@ -78,3 +78,29 @@ func TestEnvDatabases(t *testing.T) {
 		}
 	}
 }
+
+func TestReadDatabasesIgnoresEmptyEnvAndDirs(t *testing.T) {
+	t.Run("env without db urls not in Files", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, ".env"), []byte("APP_ENV=dev\nAPI_URL=https://example.com\n"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		p := Read(dir)
+		if len(p.Errs) != 0 || len(p.Databases) != 0 || len(p.Files) != 0 {
+			t.Fatalf("got files=%q dbs=%+v errs=%v", p.Files, p.Databases, p.Errs)
+		}
+	})
+	t.Run("directory named .env or compose.yaml skipped", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.Mkdir(filepath.Join(dir, ".env"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Mkdir(filepath.Join(dir, "compose.yaml"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		p := Read(dir)
+		if len(p.Errs) != 0 || len(p.Databases) != 0 || len(p.Files) != 0 {
+			t.Fatalf("got files=%q dbs=%+v errs=%v", p.Files, p.Databases, p.Errs)
+		}
+	})
+}

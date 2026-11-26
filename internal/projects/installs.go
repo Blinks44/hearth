@@ -83,9 +83,27 @@ var deviceOf = device
 // does not follow symlinks.
 // When ctx ends it stops, with what it found so far and the error.
 func Installs(ctx context.Context, home string) ([]inventory.ProjectInstall, error) {
+	return InstallsWithExclude(ctx, home, nil)
+}
+
+// InstallsWithExclude is Installs with extra directories under home (or
+// absolute paths) skipped in addition to homeSkipped.
+func InstallsWithExclude(ctx context.Context, home string, extraExclude []string) ([]inventory.ProjectInstall, error) {
 	skip := map[string]bool{}
 	for _, name := range homeSkipped {
 		skip[filepath.Join(home, name)] = true
+	}
+	for _, raw := range extraExclude {
+		p := strings.TrimSpace(raw)
+		if p == "" {
+			continue
+		}
+		if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, `~\`) {
+			p = filepath.Join(home, p[2:])
+		} else if !filepath.IsAbs(p) {
+			p = filepath.Join(home, p)
+		}
+		skip[filepath.Clean(p)] = true
 	}
 	var homeDev uint64
 	homeKnown := false

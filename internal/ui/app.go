@@ -109,6 +109,11 @@ type App struct {
 	OnLocale   func(string)
 	// ClearCache removes the kept version lists.
 	ClearCache func()
+	// CleanupStaleDays, CleanupMinMB, and CleanupExclude configure Cleanup
+	// thresholds and extra skipped $HOME folders saved in Settings.
+	CleanupStaleDays int
+	CleanupMinMB     int
+	CleanupExclude   []string
 	// SettingsError says why settings could not be saved or the cache
 	// cleared; SettingsNotice confirms the cache was cleared.
 	SettingsError  string
@@ -292,6 +297,8 @@ type App struct {
 	// OpenTerminal opens the chosen terminal with the user's shell and
 	// kubectl's environment, as for signing in to a cluster.
 	OpenTerminal func(done func(error))
+	// OpenTerminalInDir opens the chosen terminal in a project directory.
+	OpenTerminalInDir func(dir string, done func(error))
 
 	CheckForwardPort func(port int, done func(int, error))
 	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
@@ -403,10 +410,13 @@ type App struct {
 	forwards            []*portForward
 	portsTab            int    // the Ports page's quick filter: all, projects, network, docker
 	portsFilter         string // the Ports table's filter
+	portsFilterQuery    string // last ?filter= query applied to Ports
 	portsRefreshing     bool
 	portsRefreshSeq     int
 	portsBusy           bool   // a Docker container stop plan is being built on Ports
 	portsErr            string // last Docker container stop error on Ports
+	projectTab          int    // the project detail page's tab: overview, services, ai, files
+	projectTabDir       string // project dir the current projectTab belongs to
 	instructionsQuery   string // the Instructions page's filter
 	instructionsChosen  string // the project shown on the Instructions page
 	usageTab            int    // the Usage page's period, by usagePeriods
@@ -423,8 +433,12 @@ type App struct {
 	changesTab          int    // the What changed page's tab: all, added, updated, removed
 	changesFilter       string // the What changed table's filter
 	problemsTab         int    // the Issues page's tab: all, then an area each
+	problemsSeverity    int    // the Issues page's severity filter: 0 all, 1 important, 2 info
 	problemsFilter      string // the Issues table's filter
 	problemsShowHidden  bool   // whether the hidden issues list is expanded on the Issues page
+	cleanupExcludeInput string // new $HOME exclusion path being typed in Settings
+	shownSettingsNotice string // last SettingsNotice emitted as a toast
+	shownSettingsError  string // last SettingsError emitted as a toast
 	cleanupTab          int    // the Cleanup page's tab: all, then a group each
 	cleanupFilter       string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
@@ -467,6 +481,9 @@ type App struct {
 	// scope, as scopeSegments; the search; and the key of the one shown.
 	skillAgent, mcpAgent   string
 	skillScope, mcpScope   int
+	skillProject           string
+	skillGroupOpen         map[string]bool
+	skillCreate            *skillCreateState
 	skillQuery, mcpQuery   string
 	skillChosen, mcpChosen string
 	skillFolder            skillFolder         // what was read of the skill shown
@@ -552,6 +569,18 @@ func (a *App) View(c *ui.Context) {
 		c.Toast(a.notice)
 		a.notice = ""
 	}
+	if a.SettingsError == "" {
+		a.shownSettingsError = ""
+	} else if a.SettingsError != a.shownSettingsError {
+		c.AddToast(ui.Toast{Title: a.SettingsError, Type: "error", Timeout: 10 * time.Second, Action: locales.OpClose(), OnAction: func() {}})
+		a.shownSettingsError = a.SettingsError
+	}
+	if a.SettingsNotice == "" {
+		a.shownSettingsNotice = ""
+	} else if a.SettingsNotice != a.shownSettingsNotice {
+		c.Toast(a.SettingsNotice)
+		a.shownSettingsNotice = a.SettingsNotice
+	}
 	t := c.Theme()
 	// Vibrancy shows wherever the view draws no background: under the
 	// sidebar, which then draws none.
@@ -627,6 +656,13 @@ func (a *App) View(c *ui.Context) {
 					case kubePage:
 						a.kubeView(c, p)
 					case portsPage:
+						if q := r.Query("filter"); q != a.portsFilterQuery {
+							a.portsFilterQuery = q
+							if q != "" {
+								a.portsTab = 0
+								a.portsFilter = q
+							}
+						}
 						a.portsView(c, p)
 					case instructionsPage:
 						a.instructionsView(c, p)
@@ -694,6 +730,7 @@ func (a *App) View(c *ui.Context) {
 	a.projectInstructionsCreateDialog(c)
 	a.mcpFormDialog(c)
 	a.skillDiffDialog(c)
+	a.skillCreateDialog(c)
 }
 
 // ClearSkillCatalogCache drops the in-memory skill catalog cache.
@@ -860,7 +897,7 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 	case mcpPage:
 		n = len(a.configuredMCPItems())
 	case "/tools/docker", "/tools/databases":
-		for _, is := range a.issues(c) {
+		for _, is := range a.visibleRawIssues(a.issues(c)) {
 			if issuePage(is) == p.path {
 				return func() { ui.Box(c).Size(6, 6).Radius(3).Background(c.Theme().Warning) }
 			}
@@ -896,10 +933,10 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 	}
 }
 
-// issueCount shows how many issues the PATH has; nil for none.
+// issueCount shows how many visible issues the PATH has; nil for none.
 func (a *App) issueCount(c *ui.Context) func() {
 	n := 0
-	for _, is := range a.issues(c) {
+	for _, is := range a.visibleRawIssues(a.issues(c)) {
 		if issuePage(is) == pathPage {
 			n++
 		}

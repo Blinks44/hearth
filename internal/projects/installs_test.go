@@ -175,3 +175,26 @@ func TestInstallsEcosystems(t *testing.T) {
 		t.Errorf("loose Installs = %q, want [.venv]", looseProj.Installs)
 	}
 }
+
+func TestInstallsWithExclude(t *testing.T) {
+	home := t.TempDir()
+	for _, rel := range []string{"work/keep/package.json", "archive/skip/package.json"} {
+		p := filepath.Join(home, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("{}"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.MkdirAll(filepath.Join(filepath.Dir(p), "node_modules"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := InstallsWithExclude(context.Background(), home, []string{filepath.Join(home, "archive")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || filepath.Base(got[0].Project) != "keep" {
+		t.Fatalf("InstallsWithExclude = %+v, want only keep", got)
+	}
+}

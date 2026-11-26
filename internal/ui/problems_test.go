@@ -11,8 +11,10 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func openProblems(t *testing.T, a *App) *ui.Tester {
@@ -271,5 +273,87 @@ func TestProblemCountsMatchAcrossOverviewSidebarAndProblems(t *testing.T) {
 	}
 	if texts := tt.Texts(); slices.Index(texts, "For information") < 0 || texts[slices.Index(texts, "For information")+1] != "1" {
 		t.Fatalf("Problems For information card != 1: %q", texts)
+	}
+}
+
+func TestProblemsSeverityFilterBulkFixAndGroupRestore(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	// Non-fixable Info issue.
+	a.Snapshot.Tools[0].Installations[0].InGUI = 0
+	// Two fixable issues: missing PATH dir + Docker engine unavailable.
+	srcFile := filepath.Join(home, ".zshrc")
+	if runtime.GOOS == "windows" {
+		srcFile = ops.UserPathName
+	}
+	a.Snapshot.TerminalPath = []inventory.PathEntry{{
+		Dir:     filepath.Join(t.TempDir(), "gone"),
+		Missing: true,
+		Sources: []inventory.PathSource{{File: srcFile, Line: 1}},
+	}}
+	a.Snapshot.Tools = append(a.Snapshot.Tools, inventory.ToolState{
+		Tool: "docker",
+		Installations: []inventory.Installation{{
+			Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1, InGUI: 1,
+		}},
+		Docker: &inventory.DockerState{
+			Selected: "orbstack",
+			Contexts: []inventory.DockerContext{{Name: "orbstack", Engine: "OrbStack", Endpoint: "unix:///tmp/orbstack.sock", Local: true, Status: "unavailable"}},
+			Engines:  []inventory.DockerEngine{{Name: "OrbStack", Path: "/Applications/OrbStack.app"}},
+		},
+	})
+	// Two missing MCP commands -> grouped under "mcp-missing".
+	a.Snapshot.MCP = []inventory.MCPServer{
+		{Name: "a", Agent: "claude", Transport: "stdio", Command: "bin-a", Missing: true},
+		{Name: "b", Agent: "codex", Transport: "stdio", Command: "bin-b", Missing: true},
+	}
+	a.PlanPath = func(_ []inventory.PathEntry, _ []string, done func(ops.Plan, error)) {
+		done(ops.Plan{
+			Title:   "Clean PATH",
+			Steps:   []ops.Step{{Argv: []string{"echo", "path"}}},
+			Changes: []string{"Removed stale PATH entry"},
+		}, nil)
+	}
+	tt := openProblems(t, a)
+
+	// Bulk Fix button appears for the 2 fixable issues and proposes a merged plan.
+	if err := tt.Click(locales.ProblemsBulkFix(2)); err != nil {
+		t.Fatalf("click Bulk Fix: %v (texts=%q)", err, tt.Texts())
+	}
+	tt.Frame()
+	if a.op == nil || len(a.op.plan.Steps) < 2 {
+		t.Fatalf("expected merged bulk fix plan with >= 2 steps, got %+v", a.op)
+	}
+	a.op = nil
+	tt.Frame()
+
+	// Severity filter: Info hides Important issues, Important hides Info issues.
+	a.problemsSeverity = 2
+	tt.Frame()
+	hasTexts(t, tt, "Apps outside the terminal do not see Node")
+	if tt.HasText("PATH lists folders that do not exist") {
+		t.Fatalf("Info severity filter still shows Important issue: %q", tt.Texts())
+	}
+	a.problemsSeverity = 1
+	tt.Frame()
+	hasTexts(t, tt, "PATH lists folders that do not exist")
+	if tt.HasText("Apps outside the terminal do not see Node") {
+		t.Fatalf("Important severity filter still shows Info issue: %q", tt.Texts())
+	}
+	a.problemsSeverity = 0
+	tt.Frame()
+
+	// Group-hidden key ("mcp-missing") hides even when only 1 MCP issue remains, and Restore removes "mcp-missing".
+	a.Hidden = []string{string(issues.MCPMissing)}
+	a.Snapshot.MCP = a.Snapshot.MCP[:1]
+	a.problemsShowHidden = true
+	tt.Frame()
+	hasTexts(t, tt, "HIDDEN", "MCP: bin-a not found")
+	if err := tt.Click(locales.ProblemsRestore()); err != nil {
+		t.Fatalf("click Restore on group-hidden issue: %v", err)
+	}
+	tt.Frame()
+	if len(a.Hidden) != 0 {
+		t.Fatalf("group-hidden key was not removed on Restore: Hidden=%q", a.Hidden)
 	}
 }

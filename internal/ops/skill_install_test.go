@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Blinks44/hearth/internal/ai"
@@ -213,5 +214,30 @@ func TestSkillInstallAllPlanFor(t *testing.T) {
 		if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
 			t.Errorf("rollback left %s: %v", path, err)
 		}
+	}
+}
+
+func TestSkillCreatePlan(t *testing.T) {
+	home := t.TempDir()
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home}
+	if _, err := SkillCreatePlan("../bad", "", "", []string{"claude"}, env, func(id string) string { return id }); err == nil {
+		t.Fatal("expected error for invalid skill name")
+	}
+	p, err := SkillCreatePlan("Code Review", "Review PRs cleanly", "", []string{"claude", "codex"}, env, func(id string) string { return id })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st := Execute(t.Context(), nil, p, io.Discard, func(State) {}); st.Phase != Succeeded {
+		t.Fatalf("create failed: %+v", st)
+	}
+	data, err := os.ReadFile(filepath.Join(home, ".agents", "skills", "code-review", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "name: code-review") || !strings.Contains(string(data), "Review PRs cleanly") {
+		t.Errorf("unexpected SKILL.md:\n%s", data)
+	}
+	if _, err := os.Lstat(filepath.Join(home, ".claude", "skills", "code-review")); err != nil {
+		t.Errorf("missing claude symlink: %v", err)
 	}
 }

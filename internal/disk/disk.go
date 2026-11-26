@@ -86,6 +86,12 @@ func Measure(ctx context.Context, root string) (inventory.Usage, error) {
 // last, so a home-directory walk never delays cleanup results. Cancellation
 // prevents further progress and returns the partial result.
 func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs []string, progress func(inventory.Sizes)) (inventory.Sizes, error) {
+	return CountWithExclude(ctx, r, env, snap, installs, nil, progress)
+}
+
+// CountWithExclude is Count with extra directories skipped when scanning home
+// for project dependency folders.
+func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs, exclude []string, progress func(inventory.Sizes)) (inventory.Sizes, error) {
 	var mu, progressMu sync.Mutex
 	s := inventory.Sizes{Paths: map[string]inventory.Usage{}, Caches: activeCaches(ctx, r, env, snap)}
 	cloneLocked := func() inventory.Sizes {
@@ -169,7 +175,7 @@ func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Sn
 	}
 	home := sources.ManagerDirs(env).Home
 	if home != "" {
-		foundInstalls, err := projects.Installs(ctx, home)
+		foundInstalls, err := projects.InstallsWithExclude(ctx, home, exclude)
 		if err != nil {
 			dockerWG.Wait()
 			mu.Lock()

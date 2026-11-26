@@ -13,13 +13,13 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 )
 
-// The start of the terminal's shell Hearth traces to find the lines that
-// take the time, and how many of those it keeps.
+// StartupTraceFrom is the shell startup duration from which Hearth traces
+// startup files line by line to attribute slow startup time.
 const (
-	traceFrom     = 500 * time.Millisecond
-	minLine       = 10 * time.Millisecond
-	maxLines      = 8
-	maxTraceBytes = 16 << 20
+	StartupTraceFrom = 500 * time.Millisecond
+	minLine          = 10 * time.Millisecond
+	maxLines         = 8
+	maxTraceBytes    = 16 << 20
 )
 
 // Culprit is a known cause of a slow shell start, as "nvm"; "" for none.

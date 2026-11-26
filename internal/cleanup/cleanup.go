@@ -164,15 +164,45 @@ const minFrees = 1_000_000
 // an embedding model, is not worth downloading again.
 const minModel = 1_000_000_000
 
+// Options configures Cleanup thresholds; zero fields keep the defaults.
+type Options struct {
+	// StaleAfter overrides projects.StaleAfter for stale project dependencies.
+	StaleAfter time.Duration
+	// HistoryAfter overrides HistoryAfter for agent session history.
+	HistoryAfter time.Duration
+	// MinFrees overrides the minimum reclaimable bytes for caches, Docker data,
+	// history, and measured project installs when greater than the default.
+	MinFrees int64
+}
+
+func (o Options) withDefaults() Options {
+	if o.StaleAfter <= 0 {
+		o.StaleAfter = projects.StaleAfter
+	}
+	if o.HistoryAfter <= 0 {
+		o.HistoryAfter = HistoryAfter
+	}
+	if o.MinFrees <= 0 {
+		o.MinFrees = minFrees
+	}
+	return o
+}
+
 // Find returns the candidates in s, sizes and the projects ps, by group
 // and then the biggest first. Volumes, the system's copies and what
 // projects ask for are never candidates. lines are Node's release lines,
 // nil when not known, which projects' "lts/*" needs; now is the time a
 // project's age is judged at.
 func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, lines map[int]versions.Line, now time.Time) []Candidate {
+	return FindWithOptions(s, sizes, ps, lines, now, Options{})
+}
+
+// FindWithOptions is Find with custom age and size thresholds.
+func FindWithOptions(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, lines map[int]versions.Line, now time.Time, opts Options) []Candidate {
 	if s == nil {
 		return nil
 	}
+	opts = opts.withDefaults()
 	var out []Candidate
 	usage := func(paths ...string) (inventory.Usage, bool) {
 		var total inventory.Usage
@@ -194,7 +224,7 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 		for _, c := range sizes.Caches {
 			paths := c.AllPaths()
 			u, ok := usage(paths...)
-			if ok && u.Bytes-u.Shared >= minFrees {
+			if ok && u.Bytes-u.Shared >= opts.MinFrees {
 				reasons := []Reason{Restorable}
 				if c.OptIn {
 					reasons = []Reason{AbandonedWorktrees}
@@ -205,13 +235,13 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 				})
 			}
 		}
-		out = append(out, docker(sizes.Docker)...)
+		out = append(out, docker(sizes.Docker, opts.MinFrees)...)
 	}
 	out = append(out, copies(s, ps, lines, usage)...)
 	out = append(out, models(s, ps)...)
 	out = append(out, oldExtensions(s, usage)...)
-	out = append(out, installs(sizes, ps, usage, now)...)
-	out = append(out, history(s.Sessions, now)...)
+	out = append(out, installs(sizes, ps, usage, now, opts)...)
+	out = append(out, history(s.Sessions, now, opts)...)
 	slices.SortStableFunc(out, func(a, b Candidate) int {
 		return cmp.Or(cmp.Compare(a.Kind.Group(), b.Kind.Group()), cmp.Compare(b.Frees(), a.Frees()))
 	})
@@ -221,24 +251,27 @@ func Find(s *inventory.Snapshot, sizes *inventory.Sizes, ps []projects.Project, 
 // installs offers projects' folders of dependencies: those of the known
 // projects not changed for long, and every node_modules found under home,
 // chosen at once only when its project has not changed for long.
-func installs(sizes *inventory.Sizes, ps []projects.Project, usage func(...string) (inventory.Usage, bool), now time.Time) []Candidate {
+func installs(sizes *inventory.Sizes, ps []projects.Project, usage func(...string) (inventory.Usage, bool), now time.Time, opts Options) []Candidate {
 	var out []Candidate
 	add := func(project, name string, changed time.Time) {
 		path := filepath.Join(project, name)
 		if slices.ContainsFunc(out, func(c Candidate) bool { return c.Paths[0] == path }) {
 			return
 		}
-		stale := !changed.IsZero() && now.Sub(changed) >= projects.StaleAfter
+		u, ok := usage(path)
+		if ok && opts.MinFrees > minFrees && u.Bytes-u.Shared < opts.MinFrees {
+			return
+		}
+		stale := !changed.IsZero() && now.Sub(changed) >= opts.StaleAfter
 		reasons := []Reason{Reinstalled}
 		if stale {
 			reasons = []Reason{Unchanged, Reinstalled}
 		}
-		u, ok := usage(path)
 		out = append(out, Candidate{Kind: ProjectInstalls, ID: name, Paths: []string{path}, Project: project, Changed: changed,
 			Usage: u, Known: ok, Selected: stale, Reasons: reasons})
 	}
 	for _, p := range ps {
-		if p.Changed.IsZero() || now.Sub(p.Changed) < projects.StaleAfter {
+		if p.Changed.IsZero() || now.Sub(p.Changed) < opts.StaleAfter {
 			continue
 		}
 		for _, name := range p.Installs {
@@ -255,7 +288,7 @@ func installs(sizes *inventory.Sizes, ps []projects.Project, usage func(...strin
 
 // docker offers what pruning frees: the build cache, images without
 // containers, stopped containers. Volumes hold data, so never.
-func docker(rows []inventory.DockerUsage) []Candidate {
+func docker(rows []inventory.DockerUsage, minBytes int64) []Candidate {
 	var out []Candidate
 	for _, r := range rows {
 		c := Candidate{Count: r.Count - r.Active, Usage: inventory.Usage{Bytes: r.Reclaimable}, Known: true}
@@ -275,7 +308,7 @@ func docker(rows []inventory.DockerUsage) []Candidate {
 		if c.Kind != BuildCache && c.Count <= 0 {
 			continue
 		}
-		if r.Reclaimable >= minFrees {
+		if r.Reclaimable >= minBytes {
 			out = append(out, c)
 		}
 	}
@@ -485,12 +518,12 @@ func models(s *inventory.Snapshot, ps []projects.Project) []Candidate {
 const HistoryAfter = 30 * 24 * time.Hour
 
 // history offers the sessions of each agent not written to for
-// HistoryAfter, never chosen at once: the user may want to resume one.
-func history(sessions []inventory.AgentSession, now time.Time) []Candidate {
+// opts.HistoryAfter, never chosen at once: the user may want to resume one.
+func history(sessions []inventory.AgentSession, now time.Time, opts Options) []Candidate {
 	var out []Candidate
 	at := map[string]int{}
 	for _, s := range sessions {
-		if len(s.Files) == 0 || now.Sub(s.Modified) < HistoryAfter {
+		if len(s.Files) == 0 || now.Sub(s.Modified) < opts.HistoryAfter {
 			continue
 		}
 		i, ok := at[s.Agent]
@@ -504,7 +537,7 @@ func history(sessions []inventory.AgentSession, now time.Time) []Candidate {
 		c.Count++
 		c.Usage.Bytes += s.Size
 	}
-	return slices.DeleteFunc(out, func(c Candidate) bool { return c.Usage.Bytes < minFrees })
+	return slices.DeleteFunc(out, func(c Candidate) bool { return c.Usage.Bytes < opts.MinFrees })
 }
 
 // oldExtensions are the folders of extensions' older versions, an

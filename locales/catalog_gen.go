@@ -47229,3 +47229,733 @@ func PkgCountPlural(count int) string { return In(i18n.Locale()).PkgCountPlural(
 func (msgs Messages) PkgCountPlural(count int) string {
 	return Catalog.Format(msgs.locale, "pkgCountPlural", map[string]any{"count": count})
 }
+
+// SkillsScopeExplain says "Global skills (~/.agents/skills) apply to every project; project skills live inside the repository."
+// in the language the app shows.
+func SkillsScopeExplain() string { return In(i18n.Locale()).SkillsScopeExplain() }
+
+// SkillsScopeExplain says "Global skills (~/.agents/skills) apply to every project; project skills live inside the repository."
+// in the language of msgs.
+func (msgs Messages) SkillsScopeExplain() string {
+	return Catalog.Format(msgs.locale, "skillsScopeExplain", nil)
+}
+
+// SkillsAllProjects says "All projects"
+// in the language the app shows.
+func SkillsAllProjects() string { return In(i18n.Locale()).SkillsAllProjects() }
+
+// SkillsAllProjects says "All projects"
+// in the language of msgs.
+func (msgs Messages) SkillsAllProjects() string {
+	return Catalog.Format(msgs.locale, "skillsAllProjects", nil)
+}
+
+// TagNative says "native"
+// in the language the app shows.
+func TagNative() string { return In(i18n.Locale()).TagNative() }
+
+// TagNative says "native"
+// in the language of msgs.
+func (msgs Messages) TagNative() string {
+	return Catalog.Format(msgs.locale, "tagNative", nil)
+}
+
+// SkillNativeHint says "This agent reads this skills folder directly, so no symlink is needed."
+// in the language the app shows.
+func SkillNativeHint() string { return In(i18n.Locale()).SkillNativeHint() }
+
+// SkillNativeHint says "This agent reads this skills folder directly, so no symlink is needed."
+// in the language of msgs.
+func (msgs Messages) SkillNativeHint() string {
+	return Catalog.Format(msgs.locale, "skillNativeHint", nil)
+}
+
+// SkillCreateButton says "Create skill"
+// in the language the app shows.
+func SkillCreateButton() string { return In(i18n.Locale()).SkillCreateButton() }
+
+// SkillCreateButton says "Create skill"
+// in the language of msgs.
+func (msgs Messages) SkillCreateButton() string {
+	return Catalog.Format(msgs.locale, "skillCreateButton", nil)
+}
+
+// SkillCreateTitle says "Create skill"
+// in the language the app shows.
+func SkillCreateTitle() string { return In(i18n.Locale()).SkillCreateTitle() }
+
+// SkillCreateTitle says "Create skill"
+// in the language of msgs.
+func (msgs Messages) SkillCreateTitle() string {
+	return Catalog.Format(msgs.locale, "skillCreateTitle", nil)
+}
+
+// SkillCreateNote says "Creates a new SKILL.md folder in common storage and links it to your installed agents."
+// in the language the app shows.
+func SkillCreateNote() string { return In(i18n.Locale()).SkillCreateNote() }
+
+// SkillCreateNote says "Creates a new SKILL.md folder in common storage and links it to your installed agents."
+// in the language of msgs.
+func (msgs Messages) SkillCreateNote() string {
+	return Catalog.Format(msgs.locale, "skillCreateNote", nil)
+}
+
+// SkillCreateName says "Skill name"
+// in the language the app shows.
+func SkillCreateName() string { return In(i18n.Locale()).SkillCreateName() }
+
+// SkillCreateName says "Skill name"
+// in the language of msgs.
+func (msgs Messages) SkillCreateName() string {
+	return Catalog.Format(msgs.locale, "skillCreateName", nil)
+}
+
+// SkillCreateNamePlaceholder says "e.g. code-review"
+// in the language the app shows.
+func SkillCreateNamePlaceholder() string { return In(i18n.Locale()).SkillCreateNamePlaceholder() }
+
+// SkillCreateNamePlaceholder says "e.g. code-review"
+// in the language of msgs.
+func (msgs Messages) SkillCreateNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "skillCreateNamePlaceholder", nil)
+}
+
+// SkillCreateDesc says "Description"
+// in the language the app shows.
+func SkillCreateDesc() string { return In(i18n.Locale()).SkillCreateDesc() }
+
+// SkillCreateDesc says "Description"
+// in the language of msgs.
+func (msgs Messages) SkillCreateDesc() string {
+	return Catalog.Format(msgs.locale, "skillCreateDesc", nil)
+}
+
+// SkillCreateDescPlaceholder says "When agents should use this skill"
+// in the language the app shows.
+func SkillCreateDescPlaceholder() string { return In(i18n.Locale()).SkillCreateDescPlaceholder() }
+
+// SkillCreateDescPlaceholder says "When agents should use this skill"
+// in the language of msgs.
+func (msgs Messages) SkillCreateDescPlaceholder() string {
+	return Catalog.Format(msgs.locale, "skillCreateDescPlaceholder", nil)
+}
+
+// SkillCreatePlanTitle says "Create skill {name}"
+// in the language the app shows.
+func SkillCreatePlanTitle(name string) string { return In(i18n.Locale()).SkillCreatePlanTitle(name) }
+
+// SkillCreatePlanTitle says "Create skill {name}"
+// in the language of msgs.
+func (msgs Messages) SkillCreatePlanTitle(name string) string {
+	return Catalog.Format(msgs.locale, "skillCreatePlanTitle", map[string]any{"name": name})
+}
+
+// SkillCreateWhy says "Creates a new skill folder with SKILL.md and makes it available to your installed agents."
+// in the language the app shows.
+func SkillCreateWhy() string { return In(i18n.Locale()).SkillCreateWhy() }
+
+// SkillCreateWhy says "Creates a new skill folder with SKILL.md and makes it available to your installed agents."
+// in the language of msgs.
+func (msgs Messages) SkillCreateWhy() string {
+	return Catalog.Format(msgs.locale, "skillCreateWhy", nil)
+}
+
+// SkillCreateInvalidName says "Enter a skill folder name using letters, numbers, dots, or hyphens."
+// in the language the app shows.
+func SkillCreateInvalidName() string { return In(i18n.Locale()).SkillCreateInvalidName() }
+
+// SkillCreateInvalidName says "Enter a skill folder name using letters, numbers, dots, or hyphens."
+// in the language of msgs.
+func (msgs Messages) SkillCreateInvalidName() string {
+	return Catalog.Format(msgs.locale, "skillCreateInvalidName", nil)
+}
+
+// ProjectActionEditor says "Editor"
+// in the language the app shows.
+func ProjectActionEditor() string { return In(i18n.Locale()).ProjectActionEditor() }
+
+// ProjectActionEditor says "Editor"
+// in the language of msgs.
+func (msgs Messages) ProjectActionEditor() string {
+	return Catalog.Format(msgs.locale, "projectActionEditor", nil)
+}
+
+// ProjectActionTerminal says "Terminal"
+// in the language the app shows.
+func ProjectActionTerminal() string { return In(i18n.Locale()).ProjectActionTerminal() }
+
+// ProjectActionTerminal says "Terminal"
+// in the language of msgs.
+func (msgs Messages) ProjectActionTerminal() string {
+	return Catalog.Format(msgs.locale, "projectActionTerminal", nil)
+}
+
+// ProjectOpenTerminal says "Open in terminal"
+// in the language the app shows.
+func ProjectOpenTerminal() string { return In(i18n.Locale()).ProjectOpenTerminal() }
+
+// ProjectOpenTerminal says "Open in terminal"
+// in the language of msgs.
+func (msgs Messages) ProjectOpenTerminal() string {
+	return Catalog.Format(msgs.locale, "projectOpenTerminal", nil)
+}
+
+// ProjectOpenReadme says "Open {file}"
+// in the language the app shows.
+func ProjectOpenReadme(file string) string { return In(i18n.Locale()).ProjectOpenReadme(file) }
+
+// ProjectOpenReadme says "Open {file}"
+// in the language of msgs.
+func (msgs Messages) ProjectOpenReadme(file string) string {
+	return Catalog.Format(msgs.locale, "projectOpenReadme", map[string]any{"file": file})
+}
+
+// ProjectTabOverview says "Overview"
+// in the language the app shows.
+func ProjectTabOverview() string { return In(i18n.Locale()).ProjectTabOverview() }
+
+// ProjectTabOverview says "Overview"
+// in the language of msgs.
+func (msgs Messages) ProjectTabOverview() string {
+	return Catalog.Format(msgs.locale, "projectTabOverview", nil)
+}
+
+// ProjectTabServices says "Services"
+// in the language the app shows.
+func ProjectTabServices() string { return In(i18n.Locale()).ProjectTabServices() }
+
+// ProjectTabServices says "Services"
+// in the language of msgs.
+func (msgs Messages) ProjectTabServices() string {
+	return Catalog.Format(msgs.locale, "projectTabServices", nil)
+}
+
+// ProjectTabFiles says "Files"
+// in the language the app shows.
+func ProjectTabFiles() string { return In(i18n.Locale()).ProjectTabFiles() }
+
+// ProjectTabFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) ProjectTabFiles() string {
+	return Catalog.Format(msgs.locale, "projectTabFiles", nil)
+}
+
+// ProjectServicesEmpty says "No Docker Compose, database, or Kubernetes configuration found in this project."
+// in the language the app shows.
+func ProjectServicesEmpty() string { return In(i18n.Locale()).ProjectServicesEmpty() }
+
+// ProjectServicesEmpty says "No Docker Compose, database, or Kubernetes configuration found in this project."
+// in the language of msgs.
+func (msgs Messages) ProjectServicesEmpty() string {
+	return Catalog.Format(msgs.locale, "projectServicesEmpty", nil)
+}
+
+// ProjectGitClean says "Clean"
+// in the language the app shows.
+func ProjectGitClean() string { return In(i18n.Locale()).ProjectGitClean() }
+
+// ProjectGitClean says "Clean"
+// in the language of msgs.
+func (msgs Messages) ProjectGitClean() string {
+	return Catalog.Format(msgs.locale, "projectGitClean", nil)
+}
+
+// ProjectGitModified says "{count, plural, one {# change} other {# changes}}"
+// in the language the app shows.
+func ProjectGitModified(count int) string { return In(i18n.Locale()).ProjectGitModified(count) }
+
+// ProjectGitModified says "{count, plural, one {# change} other {# changes}}"
+// in the language of msgs.
+func (msgs Messages) ProjectGitModified(count int) string {
+	return Catalog.Format(msgs.locale, "projectGitModified", map[string]any{"count": count})
+}
+
+// ProjectGitDetached says "detached"
+// in the language the app shows.
+func ProjectGitDetached() string { return In(i18n.Locale()).ProjectGitDetached() }
+
+// ProjectGitDetached says "detached"
+// in the language of msgs.
+func (msgs Messages) ProjectGitDetached() string {
+	return Catalog.Format(msgs.locale, "projectGitDetached", nil)
+}
+
+// ProjectGitOpenRemote says "Open remote in browser"
+// in the language the app shows.
+func ProjectGitOpenRemote() string { return In(i18n.Locale()).ProjectGitOpenRemote() }
+
+// ProjectGitOpenRemote says "Open remote in browser"
+// in the language of msgs.
+func (msgs Messages) ProjectGitOpenRemote() string {
+	return Catalog.Format(msgs.locale, "projectGitOpenRemote", nil)
+}
+
+// ProjectDiskTitle says "Disk space"
+// in the language the app shows.
+func ProjectDiskTitle() string { return In(i18n.Locale()).ProjectDiskTitle() }
+
+// ProjectDiskTitle says "Disk space"
+// in the language of msgs.
+func (msgs Messages) ProjectDiskTitle() string {
+	return Catalog.Format(msgs.locale, "projectDiskTitle", nil)
+}
+
+// ProjectDiskSubtitle says "reinstallable dependencies"
+// in the language the app shows.
+func ProjectDiskSubtitle() string { return In(i18n.Locale()).ProjectDiskSubtitle() }
+
+// ProjectDiskSubtitle says "reinstallable dependencies"
+// in the language of msgs.
+func (msgs Messages) ProjectDiskSubtitle() string {
+	return Catalog.Format(msgs.locale, "projectDiskSubtitle", nil)
+}
+
+// ProjectDiskOpenCleanup says "Cleanup"
+// in the language the app shows.
+func ProjectDiskOpenCleanup() string { return In(i18n.Locale()).ProjectDiskOpenCleanup() }
+
+// ProjectDiskOpenCleanup says "Cleanup"
+// in the language of msgs.
+func (msgs Messages) ProjectDiskOpenCleanup() string {
+	return Catalog.Format(msgs.locale, "projectDiskOpenCleanup", nil)
+}
+
+// ProjectSkillsInstall says "Install skill"
+// in the language the app shows.
+func ProjectSkillsInstall() string { return In(i18n.Locale()).ProjectSkillsInstall() }
+
+// ProjectSkillsInstall says "Install skill"
+// in the language of msgs.
+func (msgs Messages) ProjectSkillsInstall() string {
+	return Catalog.Format(msgs.locale, "projectSkillsInstall", nil)
+}
+
+// ProjectSkillsEmpty says "No project skills yet. Install from the catalog or create one in .agents/skills."
+// in the language the app shows.
+func ProjectSkillsEmpty() string { return In(i18n.Locale()).ProjectSkillsEmpty() }
+
+// ProjectSkillsEmpty says "No project skills yet. Install from the catalog or create one in .agents/skills."
+// in the language of msgs.
+func (msgs Messages) ProjectSkillsEmpty() string {
+	return Catalog.Format(msgs.locale, "projectSkillsEmpty", nil)
+}
+
+// ProjectSkillsOpenAll says "Open in Skills"
+// in the language the app shows.
+func ProjectSkillsOpenAll() string { return In(i18n.Locale()).ProjectSkillsOpenAll() }
+
+// ProjectSkillsOpenAll says "Open in Skills"
+// in the language of msgs.
+func (msgs Messages) ProjectSkillsOpenAll() string {
+	return Catalog.Format(msgs.locale, "projectSkillsOpenAll", nil)
+}
+
+// ProjectMcpOpenAll says "Open in MCP"
+// in the language the app shows.
+func ProjectMcpOpenAll() string { return In(i18n.Locale()).ProjectMcpOpenAll() }
+
+// ProjectMcpOpenAll says "Open in MCP"
+// in the language of msgs.
+func (msgs Messages) ProjectMcpOpenAll() string {
+	return Catalog.Format(msgs.locale, "projectMcpOpenAll", nil)
+}
+
+// ProjectMcpEmpty says "No project MCP servers configured."
+// in the language the app shows.
+func ProjectMcpEmpty() string { return In(i18n.Locale()).ProjectMcpEmpty() }
+
+// ProjectMcpEmpty says "No project MCP servers configured."
+// in the language of msgs.
+func (msgs Messages) ProjectMcpEmpty() string {
+	return Catalog.Format(msgs.locale, "projectMcpEmpty", nil)
+}
+
+// ProjectInstructionsOpen says "Open in Instructions"
+// in the language the app shows.
+func ProjectInstructionsOpen() string { return In(i18n.Locale()).ProjectInstructionsOpen() }
+
+// ProjectInstructionsOpen says "Open in Instructions"
+// in the language of msgs.
+func (msgs Messages) ProjectInstructionsOpen() string {
+	return Catalog.Format(msgs.locale, "projectInstructionsOpen", nil)
+}
+
+// ProjectAgentsOpen says "Open in Agents"
+// in the language the app shows.
+func ProjectAgentsOpen() string { return In(i18n.Locale()).ProjectAgentsOpen() }
+
+// ProjectAgentsOpen says "Open in Agents"
+// in the language of msgs.
+func (msgs Messages) ProjectAgentsOpen() string {
+	return Catalog.Format(msgs.locale, "projectAgentsOpen", nil)
+}
+
+// ProjectHooksCount says "{count, plural, one {# hook} other {# hooks}}"
+// in the language the app shows.
+func ProjectHooksCount(count int) string { return In(i18n.Locale()).ProjectHooksCount(count) }
+
+// ProjectHooksCount says "{count, plural, one {# hook} other {# hooks}}"
+// in the language of msgs.
+func (msgs Messages) ProjectHooksCount(count int) string {
+	return Catalog.Format(msgs.locale, "projectHooksCount", map[string]any{"count": count})
+}
+
+// ProjectDatabaseViewPort says "Port :{port}"
+// in the language the app shows.
+func ProjectDatabaseViewPort(port string) string {
+	return In(i18n.Locale()).ProjectDatabaseViewPort(port)
+}
+
+// ProjectDatabaseViewPort says "Port :{port}"
+// in the language of msgs.
+func (msgs Messages) ProjectDatabaseViewPort(port string) string {
+	return Catalog.Format(msgs.locale, "projectDatabaseViewPort", map[string]any{"port": port})
+}
+
+// ProjectAiManage says "Manage AI"
+// in the language the app shows.
+func ProjectAiManage() string { return In(i18n.Locale()).ProjectAiManage() }
+
+// ProjectAiManage says "Manage AI"
+// in the language of msgs.
+func (msgs Messages) ProjectAiManage() string {
+	return Catalog.Format(msgs.locale, "projectAiManage", nil)
+}
+
+// ProblemsSeverityAll says "All severities"
+// in the language the app shows.
+func ProblemsSeverityAll() string { return In(i18n.Locale()).ProblemsSeverityAll() }
+
+// ProblemsSeverityAll says "All severities"
+// in the language of msgs.
+func (msgs Messages) ProblemsSeverityAll() string {
+	return Catalog.Format(msgs.locale, "problemsSeverityAll", nil)
+}
+
+// ProblemsSeverityImportant says "Important only"
+// in the language the app shows.
+func ProblemsSeverityImportant() string { return In(i18n.Locale()).ProblemsSeverityImportant() }
+
+// ProblemsSeverityImportant says "Important only"
+// in the language of msgs.
+func (msgs Messages) ProblemsSeverityImportant() string {
+	return Catalog.Format(msgs.locale, "problemsSeverityImportant", nil)
+}
+
+// ProblemsSeverityInfo says "For information"
+// in the language the app shows.
+func ProblemsSeverityInfo() string { return In(i18n.Locale()).ProblemsSeverityInfo() }
+
+// ProblemsSeverityInfo says "For information"
+// in the language of msgs.
+func (msgs Messages) ProblemsSeverityInfo() string {
+	return Catalog.Format(msgs.locale, "problemsSeverityInfo", nil)
+}
+
+// ProblemsBulkFix says "Fix all ({count})"
+// in the language the app shows.
+func ProblemsBulkFix(count int) string { return In(i18n.Locale()).ProblemsBulkFix(count) }
+
+// ProblemsBulkFix says "Fix all ({count})"
+// in the language of msgs.
+func (msgs Messages) ProblemsBulkFix(count int) string {
+	return Catalog.Format(msgs.locale, "problemsBulkFix", map[string]any{"count": count})
+}
+
+// ProblemsBulkPlanTitle says "{count, plural, one {Fix # issue} other {Fix # issues}}"
+// in the language the app shows.
+func ProblemsBulkPlanTitle(count int) string { return In(i18n.Locale()).ProblemsBulkPlanTitle(count) }
+
+// ProblemsBulkPlanTitle says "{count, plural, one {Fix # issue} other {Fix # issues}}"
+// in the language of msgs.
+func (msgs Messages) ProblemsBulkPlanTitle(count int) string {
+	return Catalog.Format(msgs.locale, "problemsBulkPlanTitle", map[string]any{"count": count})
+}
+
+// ProblemsBulkPlanWhy says "Applies all selected automatic fixes in order."
+// in the language the app shows.
+func ProblemsBulkPlanWhy() string { return In(i18n.Locale()).ProblemsBulkPlanWhy() }
+
+// ProblemsBulkPlanWhy says "Applies all selected automatic fixes in order."
+// in the language of msgs.
+func (msgs Messages) ProblemsBulkPlanWhy() string {
+	return Catalog.Format(msgs.locale, "problemsBulkPlanWhy", nil)
+}
+
+// SettingsHiddenClearStale says "Clear stale ({count})"
+// in the language the app shows.
+func SettingsHiddenClearStale(count int) string {
+	return In(i18n.Locale()).SettingsHiddenClearStale(count)
+}
+
+// SettingsHiddenClearStale says "Clear stale ({count})"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenClearStale(count int) string {
+	return Catalog.Format(msgs.locale, "settingsHiddenClearStale", map[string]any{"count": count})
+}
+
+// SettingsHiddenGroupSkillCopies says "Duplicate skill copies (all)"
+// in the language the app shows.
+func SettingsHiddenGroupSkillCopies() string {
+	return In(i18n.Locale()).SettingsHiddenGroupSkillCopies()
+}
+
+// SettingsHiddenGroupSkillCopies says "Duplicate skill copies (all)"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenGroupSkillCopies() string {
+	return Catalog.Format(msgs.locale, "settingsHiddenGroupSkillCopies", nil)
+}
+
+// SettingsHiddenGroupSkillDiffers says "Diverging skill copies (all)"
+// in the language the app shows.
+func SettingsHiddenGroupSkillDiffers() string {
+	return In(i18n.Locale()).SettingsHiddenGroupSkillDiffers()
+}
+
+// SettingsHiddenGroupSkillDiffers says "Diverging skill copies (all)"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenGroupSkillDiffers() string {
+	return Catalog.Format(msgs.locale, "settingsHiddenGroupSkillDiffers", nil)
+}
+
+// SettingsHiddenGroupMcpMissing says "Missing MCP commands (all)"
+// in the language the app shows.
+func SettingsHiddenGroupMcpMissing() string { return In(i18n.Locale()).SettingsHiddenGroupMcpMissing() }
+
+// SettingsHiddenGroupMcpMissing says "Missing MCP commands (all)"
+// in the language of msgs.
+func (msgs Messages) SettingsHiddenGroupMcpMissing() string {
+	return Catalog.Format(msgs.locale, "settingsHiddenGroupMcpMissing", nil)
+}
+
+// SettingsResetBanners says "Dismissed tips & banners"
+// in the language the app shows.
+func SettingsResetBanners() string { return In(i18n.Locale()).SettingsResetBanners() }
+
+// SettingsResetBanners says "Dismissed tips & banners"
+// in the language of msgs.
+func (msgs Messages) SettingsResetBanners() string {
+	return Catalog.Format(msgs.locale, "settingsResetBanners", nil)
+}
+
+// SettingsResetBannersHint says "Show the Overview quick-start cards and promo tips again"
+// in the language the app shows.
+func SettingsResetBannersHint() string { return In(i18n.Locale()).SettingsResetBannersHint() }
+
+// SettingsResetBannersHint says "Show the Overview quick-start cards and promo tips again"
+// in the language of msgs.
+func (msgs Messages) SettingsResetBannersHint() string {
+	return Catalog.Format(msgs.locale, "settingsResetBannersHint", nil)
+}
+
+// SettingsResetBannersAction says "Show again"
+// in the language the app shows.
+func SettingsResetBannersAction() string { return In(i18n.Locale()).SettingsResetBannersAction() }
+
+// SettingsResetBannersAction says "Show again"
+// in the language of msgs.
+func (msgs Messages) SettingsResetBannersAction() string {
+	return Catalog.Format(msgs.locale, "settingsResetBannersAction", nil)
+}
+
+// SettingsResetBannersDone says "Dismissed tips restored"
+// in the language the app shows.
+func SettingsResetBannersDone() string { return In(i18n.Locale()).SettingsResetBannersDone() }
+
+// SettingsResetBannersDone says "Dismissed tips restored"
+// in the language of msgs.
+func (msgs Messages) SettingsResetBannersDone() string {
+	return Catalog.Format(msgs.locale, "settingsResetBannersDone", nil)
+}
+
+// SettingsCleanup says "Cleanup"
+// in the language the app shows.
+func SettingsCleanup() string { return In(i18n.Locale()).SettingsCleanup() }
+
+// SettingsCleanup says "Cleanup"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanup() string {
+	return Catalog.Format(msgs.locale, "settingsCleanup", nil)
+}
+
+// SettingsCleanupStale says "Inactive projects"
+// in the language the app shows.
+func SettingsCleanupStale() string { return In(i18n.Locale()).SettingsCleanupStale() }
+
+// SettingsCleanupStale says "Inactive projects"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupStale() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupStale", nil)
+}
+
+// SettingsCleanupStaleHint says "Offer dependency folders after this many days unchanged"
+// in the language the app shows.
+func SettingsCleanupStaleHint() string { return In(i18n.Locale()).SettingsCleanupStaleHint() }
+
+// SettingsCleanupStaleHint says "Offer dependency folders after this many days unchanged"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupStaleHint() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupStaleHint", nil)
+}
+
+// SettingsCleanupDays says "{count, plural, one {# day} other {# days}}"
+// in the language the app shows.
+func SettingsCleanupDays(count int) string { return In(i18n.Locale()).SettingsCleanupDays(count) }
+
+// SettingsCleanupDays says "{count, plural, one {# day} other {# days}}"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupDays(count int) string {
+	return Catalog.Format(msgs.locale, "settingsCleanupDays", map[string]any{"count": count})
+}
+
+// SettingsCleanupMinSize says "Minimum size"
+// in the language the app shows.
+func SettingsCleanupMinSize() string { return In(i18n.Locale()).SettingsCleanupMinSize() }
+
+// SettingsCleanupMinSize says "Minimum size"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupMinSize() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupMinSize", nil)
+}
+
+// SettingsCleanupMinSizeHint says "Skip caches and artifacts smaller than this"
+// in the language the app shows.
+func SettingsCleanupMinSizeHint() string { return In(i18n.Locale()).SettingsCleanupMinSizeHint() }
+
+// SettingsCleanupMinSizeHint says "Skip caches and artifacts smaller than this"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupMinSizeHint() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupMinSizeHint", nil)
+}
+
+// SettingsCleanupExclude says "Excluded $HOME folders"
+// in the language the app shows.
+func SettingsCleanupExclude() string { return In(i18n.Locale()).SettingsCleanupExclude() }
+
+// SettingsCleanupExclude says "Excluded $HOME folders"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupExclude() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupExclude", nil)
+}
+
+// SettingsCleanupExcludeHint says "Skip these folders when scanning for project dependencies"
+// in the language the app shows.
+func SettingsCleanupExcludeHint() string { return In(i18n.Locale()).SettingsCleanupExcludeHint() }
+
+// SettingsCleanupExcludeHint says "Skip these folders when scanning for project dependencies"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupExcludeHint() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupExcludeHint", nil)
+}
+
+// SettingsCleanupExcludePlaceholder says "~/Archive or folder name"
+// in the language the app shows.
+func SettingsCleanupExcludePlaceholder() string {
+	return In(i18n.Locale()).SettingsCleanupExcludePlaceholder()
+}
+
+// SettingsCleanupExcludePlaceholder says "~/Archive or folder name"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupExcludePlaceholder() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupExcludePlaceholder", nil)
+}
+
+// SettingsCleanupExcludeAdd says "Add"
+// in the language the app shows.
+func SettingsCleanupExcludeAdd() string { return In(i18n.Locale()).SettingsCleanupExcludeAdd() }
+
+// SettingsCleanupExcludeAdd says "Add"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupExcludeAdd() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupExcludeAdd", nil)
+}
+
+// SettingsCleanupExcludePick says "Choose folder to exclude"
+// in the language the app shows.
+func SettingsCleanupExcludePick() string { return In(i18n.Locale()).SettingsCleanupExcludePick() }
+
+// SettingsCleanupExcludePick says "Choose folder to exclude"
+// in the language of msgs.
+func (msgs Messages) SettingsCleanupExcludePick() string {
+	return Catalog.Format(msgs.locale, "settingsCleanupExcludePick", nil)
+}
+
+// ProjectAgentsCount says "{count, plural, one {# agent} other {# agents}}"
+// in the language the app shows.
+func ProjectAgentsCount(count int) string { return In(i18n.Locale()).ProjectAgentsCount(count) }
+
+// ProjectAgentsCount says "{count, plural, one {# agent} other {# agents}}"
+// in the language of msgs.
+func (msgs Messages) ProjectAgentsCount(count int) string {
+	return Catalog.Format(msgs.locale, "projectAgentsCount", map[string]any{"count": count})
+}
+
+// ProjectRulesTitle says "Agent permissions"
+// in the language the app shows.
+func ProjectRulesTitle() string { return In(i18n.Locale()).ProjectRulesTitle() }
+
+// ProjectRulesTitle says "Agent permissions"
+// in the language of msgs.
+func (msgs Messages) ProjectRulesTitle() string {
+	return Catalog.Format(msgs.locale, "projectRulesTitle", nil)
+}
+
+// ProjectRulesAllow says "{count} allowed"
+// in the language the app shows.
+func ProjectRulesAllow(count int) string { return In(i18n.Locale()).ProjectRulesAllow(count) }
+
+// ProjectRulesAllow says "{count} allowed"
+// in the language of msgs.
+func (msgs Messages) ProjectRulesAllow(count int) string {
+	return Catalog.Format(msgs.locale, "projectRulesAllow", map[string]any{"count": count})
+}
+
+// ProjectRulesAsk says "{count} ask"
+// in the language the app shows.
+func ProjectRulesAsk(count int) string { return In(i18n.Locale()).ProjectRulesAsk(count) }
+
+// ProjectRulesAsk says "{count} ask"
+// in the language of msgs.
+func (msgs Messages) ProjectRulesAsk(count int) string {
+	return Catalog.Format(msgs.locale, "projectRulesAsk", map[string]any{"count": count})
+}
+
+// ProjectRulesDeny says "{count} denied"
+// in the language the app shows.
+func ProjectRulesDeny(count int) string { return In(i18n.Locale()).ProjectRulesDeny(count) }
+
+// ProjectRulesDeny says "{count} denied"
+// in the language of msgs.
+func (msgs Messages) ProjectRulesDeny(count int) string {
+	return Catalog.Format(msgs.locale, "projectRulesDeny", map[string]any{"count": count})
+}
+
+// ProjectRulesCount says "{count, plural, one {# rule} other {# rules}}"
+// in the language the app shows.
+func ProjectRulesCount(count int) string { return In(i18n.Locale()).ProjectRulesCount(count) }
+
+// ProjectRulesCount says "{count, plural, one {# rule} other {# rules}}"
+// in the language of msgs.
+func (msgs Messages) ProjectRulesCount(count int) string {
+	return Catalog.Format(msgs.locale, "projectRulesCount", map[string]any{"count": count})
+}
+
+// SkillCatalogAgent says "Agent"
+// in the language the app shows.
+func SkillCatalogAgent() string { return In(i18n.Locale()).SkillCatalogAgent() }
+
+// SkillCatalogAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogAgent() string {
+	return Catalog.Format(msgs.locale, "skillCatalogAgent", nil)
+}
+
+// SkillCatalogTarget says "Project / user"
+// in the language the app shows.
+func SkillCatalogTarget() string { return In(i18n.Locale()).SkillCatalogTarget() }
+
+// SkillCatalogTarget says "Project / user"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogTarget() string {
+	return Catalog.Format(msgs.locale, "skillCatalogTarget", nil)
+}

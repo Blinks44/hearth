@@ -8,17 +8,18 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/issues"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
 
 // The times the startup tab judges a shell start and its lines by: a
-// start up to fastStart goes unnoticed, one from slowStart is traced line
-// by line, and a line from slowLine takes most of what a start may.
+// start up to fastStart goes unnoticed, one from sysenv.StartupTraceFrom
+// is traced line by line, one from issues.SlowStartupFrom is a warning,
+// and a line from slowLine takes most of what a start may.
 const (
 	fastStart = 300 * time.Millisecond
-	slowStart = 500 * time.Millisecond
 	slowLine  = 300 * time.Millisecond
 	// shownFile is the least time a traced startup file takes to be
 	// listed: a system's has a score of them.
@@ -36,7 +37,7 @@ func seconds(d time.Duration) string {
 
 // startupCard is the header's card of the shell's start.
 func startupCard(c *ui.Context, s *inventory.ShellStartup) {
-	if s.Took >= slowStart {
+	if s.Took >= issues.SlowStartupFrom {
 		stateCard(c, c.Theme().Warning, locales.StartupLabel(), seconds(s.Took), locales.StartupSlow(s.Shell))
 		return
 	}
@@ -83,7 +84,7 @@ func (a *App) startupLines(c *ui.Context, s *inventory.ShellStartup) {
 // startupNote says why the tab has no lines.
 func startupNote(s *inventory.ShellStartup) string {
 	switch {
-	case s.Took < slowStart:
+	case s.Took < sysenv.StartupTraceFrom:
 		return locales.StartupFast()
 	case s.Shell == "powershell" || s.Shell == "pwsh":
 		return locales.StartupProfileNoLines()
@@ -195,7 +196,7 @@ func (a *App) startupSide(c *ui.Context, s *inventory.ShellStartup) {
 			listRow(c, locales.StartupBare(), false, locales.StartupBareCaption(), value(seconds(s.Bare)))
 		} else {
 			listRow(c, locales.StartupWhole(), false, locales.StartupWholeCaption(s.Shell), value(seconds(s.Took)))
-			listRow(c, locales.StartupByLine(), false, locales.StartupByLineCaption(seconds(slowStart)), value("zsh, bash"))
+			listRow(c, locales.StartupByLine(), false, locales.StartupByLineCaption(seconds(sysenv.StartupTraceFrom)), value("zsh, bash"))
 		}
 		listRow(c, locales.StartupTarget(), false, locales.StartupTargetCaption(seconds(fastStart)), value(seconds(fastStart)))
 	})

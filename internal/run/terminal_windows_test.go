@@ -29,3 +29,23 @@ func TestTerminalArgs(t *testing.T) {
 		t.Errorf("script %q does not contain %q", script, want)
 	}
 }
+
+func TestTerminalArgsInDir(t *testing.T) {
+	args := terminalArgsInDir(`C:\Users\dev\my app`, nil)
+	if len(args) != 5 {
+		t.Fatalf("PowerShell args = %q", args)
+	}
+	data, err := base64.StdEncoding.DecodeString(args[4])
+	if err != nil {
+		t.Fatal(err)
+	}
+	units := make([]uint16, len(data)/2)
+	for i := range units {
+		units[i] = binary.LittleEndian.Uint16(data[2*i:])
+	}
+	script := string(utf16.Decode(units))
+	want := `Set-Location -LiteralPath 'C:\Users\dev\my app'`
+	if script != want {
+		t.Errorf("script = %q, want %q", script, want)
+	}
+}

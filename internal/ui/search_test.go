@@ -126,7 +126,7 @@ func TestSearchDetails(t *testing.T) {
 			if !within(a.router.Path(), tc.path) {
 				t.Fatal(a.router.Path())
 			}
-			if tc.name == "skill" && a.skillChosen != "/skills/component-workflow" {
+			if tc.name == "skill" && a.skillChosen != "\x00/skills/component-workflow" {
 				t.Fatal(a.skillChosen)
 			}
 			if tc.name == "MCP" && a.mcpChosen != "\x00docs-server" {

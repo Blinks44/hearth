@@ -139,3 +139,29 @@ func TestFind(t *testing.T) {
 		t.Errorf("apps/docs versions %+v, want none", v)
 	}
 }
+
+func TestReadPackageJSONValidation(t *testing.T) {
+	data := []byte(`{
+		"packageManager": "  PNPM @ 12.14.0+sha512.xyz ",
+		"devEngines": {
+			"runtime": [
+				{"name": " nodejs ", "version": " ^24.0.0 "},
+				{"name": "   ", "version": "1.0.0"},
+				{"name": "vscode", "version": "^1.90"}
+			],
+			"packageManager": {"name": "yarn", "version": " 4.5.0 "}
+		}
+	}`)
+	got, err := readPackageJSON(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Requirement{
+		{Tool: "pnpm", Want: "12.14.0", Key: "packageManager"},
+		{Tool: "node", Want: "^24.0.0", Key: "devEngines.runtime"},
+		{Tool: "yarn", Want: "4.5.0", Key: "devEngines.packageManager"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}

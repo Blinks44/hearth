@@ -15,6 +15,7 @@ import (
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/updates"
 	"github.com/Blinks44/hearth/internal/versions"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // updatesApp is a computer with the design's kinds of updates: Go from
@@ -519,5 +520,34 @@ func TestUpdatesHearthAppBanner(t *testing.T) {
 	}
 	if clicked != 1 {
 		t.Fatalf("clicked = %d, want 1", clicked)
+	}
+}
+
+func TestUpdatesCheckingPlaceholderAndAppUpdateCount(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = calmSnapshot()
+	a.VersionLists = true
+	a.MiseChecking = true
+	a.router.Push(updatesPage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	// While checking with 0 updates found, Found must show "—" rather than "0".
+	texts := tt.Texts()
+	if idx := slices.Index(texts, locales.CleanupFound()); idx < 0 || texts[idx+1] != "—" {
+		t.Fatalf("Found during checking = %q, want —", texts)
+	}
+
+	// When AppUpdateAvailable is set, Found and the sidebar Updates badge include it.
+	a.MiseChecking = false
+	a.AppUpdateAvailable = "1.2.0"
+	a.CheckAppUpdate = func() {}
+	tt.Frame()
+	texts = tt.Texts()
+	if idx := slices.Index(texts, locales.CleanupFound()); idx < 0 || texts[idx+1] != "1" {
+		t.Fatalf("Found with app update = %q, want 1", texts)
+	}
+	if idx := slices.Index(texts, locales.UpdatesTitle()); idx < 0 || texts[idx+1] != "1" {
+		t.Fatalf("sidebar Updates badge with app update = %q, want 1", texts)
 	}
 }

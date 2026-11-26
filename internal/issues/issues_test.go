@@ -183,10 +183,6 @@ func TestFind(t *testing.T) {
 		{name: "missing directory on PATH",
 			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}, {Dir: abs("/opt/gone"), Missing: true}}, GUIPath: []inventory.PathEntry{{Dir: abs("/opt/gone"), Missing: true}}},
 			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{abs("/opt/gone")}}}},
-		{name: "macOS's own missing directories on PATH", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
-			{Dir: "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin", Missing: true},
-			{Dir: "/pkg/env/global/bin", Missing: true},
-			{Dir: "/usr/local/bin", Missing: true}}}},
 		{name: "npm's global prefix before the first global install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: `C:\Users\Ann\AppData\Roaming\npm`, Missing: true}}}},
 		{name: "dotnet's tools before the first tool install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{

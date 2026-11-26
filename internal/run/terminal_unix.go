@@ -28,10 +28,27 @@ func terminalQuote(arg string) string {
 	return "'" + strings.ReplaceAll(arg, "'", `'\''`) + "'"
 }
 
+// DefaultShellArgs returns the interactive login shell command for opening a
+// terminal session on Unix.
+func DefaultShellArgs(env []string) []string {
+	for _, entry := range env {
+		if k, v, ok := strings.Cut(entry, "="); ok && k == "SHELL" && v != "" {
+			return []string{v, "-l"}
+		}
+	}
+	return []string{"/bin/sh", "-l"}
+}
+
 // OpenTerminal hands a one-shot script to the terminal app of that name,
 // the desktop's for "". The script removes itself before starting the
 // command and keeps stderr visible on failure.
 func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string, path, kubeconfig, closeHint string, overrides ...string) error {
+	return OpenTerminalInDir(ctx, r, app, "", argv, env, path, kubeconfig, closeHint, overrides...)
+}
+
+// OpenTerminalInDir opens a terminal running argv, starting in dir when dir is
+// non-empty.
+func OpenTerminalInDir(ctx context.Context, r Runner, app, dir string, argv, env []string, path, kubeconfig, closeHint string, overrides ...string) error {
 	f, err := os.CreateTemp("", "hearth-*.command")
 	if err != nil {
 		return fmt.Errorf("create terminal script: %w", err)
@@ -46,7 +63,7 @@ func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string,
 		args := append([]string{"/usr/bin/env"}, overrides...)
 		argv = append(args, argv...)
 	}
-	err = writeTerminalScript(f, argv, path, kubeconfig, closeHint)
+	err = writeTerminalScript(f, dir, argv, path, kubeconfig, closeHint)
 	if err != nil {
 		return err
 	}
@@ -71,13 +88,17 @@ func OpenTerminal(ctx context.Context, r Runner, app string, argv, env []string,
 	return nil
 }
 
-func writeTerminalScript(f *os.File, argv []string, path, kubeconfig, closeHint string) error {
+func writeTerminalScript(f *os.File, dir string, argv []string, path, kubeconfig, closeHint string) error {
 	defer func() { _ = f.Close() }()
 	if err := f.Chmod(0o700); err != nil {
 		return fmt.Errorf("chmod terminal script: %w", err)
 	}
-	_, err := fmt.Fprintf(f, "#!/bin/sh\n/bin/rm -f -- \"$0\"\nexport PATH=%s KUBECONFIG=%s\n%s\nstatus=$?\nif [ \"$status\" -ne 0 ]; then\n  printf '%%s\\n' %s\n  read -r answer\nfi\nexit \"$status\"\n",
-		terminalQuote(path), terminalQuote(kubeconfig), TerminalCommand(argv), terminalQuote(closeHint))
+	cdLine := ""
+	if dir != "" {
+		cdLine = fmt.Sprintf("cd -- %s || exit $?\n", terminalQuote(dir))
+	}
+	_, err := fmt.Fprintf(f, "#!/bin/sh\n/bin/rm -f -- \"$0\"\nexport PATH=%s KUBECONFIG=%s\n%s%s\nstatus=$?\nif [ \"$status\" -ne 0 ]; then\n  printf '%%s\\n' %s\n  read -r answer\nfi\nexit \"$status\"\n",
+		terminalQuote(path), terminalQuote(kubeconfig), cdLine, TerminalCommand(argv), terminalQuote(closeHint))
 	if err != nil {
 		return fmt.Errorf("write terminal script: %w", err)
 	}

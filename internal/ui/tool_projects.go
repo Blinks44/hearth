@@ -2,6 +2,7 @@ package ui
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -105,16 +106,7 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 			dir := p.Dir
 			var parts []string
 			parts = append(parts, tilde(dir, a.Home))
-			for _, ch := range pst.Checks {
-				s := ch.File
-				if ch.Want != "" {
-					s += " · " + ch.Want
-				}
-				if pst.Checked && ch.Err != "" {
-					s += " · " + ch.Err
-				}
-				parts = append(parts, s)
-			}
+			parts = append(parts, toolProjectCheckParts(pst)...)
 			run := "—"
 			if pst.Terminal != nil {
 				run = toolProjectVersion(tool, *pst.Terminal)
@@ -179,4 +171,40 @@ func toolProjectFilesAside(tool string) string {
 		return "global.json · *.csproj"
 	}
 	return ""
+}
+
+// toolProjectCheckParts formats a project's checks for one tool grouped by
+// file with duplicate requirements removed.
+func toolProjectCheckParts(pst projects.Status) []string {
+	type fileGroup struct {
+		file  string
+		wants []string
+		errs  []string
+	}
+	var groups []fileGroup
+	for _, ch := range pst.Checks {
+		idx := slices.IndexFunc(groups, func(g fileGroup) bool { return g.file == ch.File })
+		if idx < 0 {
+			groups = append(groups, fileGroup{file: ch.File})
+			idx = len(groups) - 1
+		}
+		if want := strings.TrimSpace(ch.Want); want != "" && !slices.Contains(groups[idx].wants, want) {
+			groups[idx].wants = append(groups[idx].wants, want)
+		}
+		if pst.Checked && ch.Err != "" && !slices.Contains(groups[idx].errs, ch.Err) {
+			groups[idx].errs = append(groups[idx].errs, ch.Err)
+		}
+	}
+	out := make([]string, 0, len(groups))
+	for _, g := range groups {
+		s := g.file
+		if len(g.wants) > 0 {
+			s += " · " + strings.Join(g.wants, ", ")
+		}
+		if len(g.errs) > 0 {
+			s += " · " + strings.Join(g.errs, ", ")
+		}
+		out = append(out, s)
+	}
+	return out
 }

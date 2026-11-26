@@ -16,8 +16,9 @@ func TestSettingsRoundTrip(t *testing.T) {
 	}
 	want := Settings{
 		Format: settingsFormat, Theme: "dark", VersionLists: false,
-		StartHidden: true,
-		Projects:    []Project{{Path: "/Users/me/code/shop", Kube: &KubeLink{Context: "kind-shop", Namespace: "shop"}}, {Path: "/Users/me/code/admin"}},
+		StartHidden: true, CleanupStaleDays: 60, CleanupMinMB: 50,
+		CleanupExclude: []string{"/Users/me/archive"},
+		Projects:       []Project{{Path: "/Users/me/code/shop", Kube: &KubeLink{Context: "kind-shop", Namespace: "shop"}}, {Path: "/Users/me/code/admin"}},
 	}
 	for range 2 { // the second save replaces the first
 		if err := SaveSettings(dir, want); err != nil {

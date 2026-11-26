@@ -150,6 +150,8 @@ func drawStateCard(c *ui.Context, dot ui.Color, busy bool, label, value, caption
 	e := ui.Column(c.Key("state-card:"+label)).Transition(stateCardMotion).MinWidth(128).Gap(3).Padding(10, 14)
 	if narrow(c) {
 		e.Grow(1).Basis(0)
+	} else {
+		e.MaxWidth(240)
 	}
 	e.Radius(10).Background(bg).
 		BorderWidth(1).BorderColor(border).Children(func() {
@@ -165,12 +167,12 @@ func drawStateCard(c *ui.Context, dot ui.Color, busy bool, label, value, caption
 			}
 			ui.Text(c, label).FontSize(11.5).TextColor(labelColor).SingleLine()
 		})
-		ui.Text(c, value).Font(FontMono).FontSize(14).SingleLine().ContentTransition(ui.ContentTransition{Numeric: true})
+		clipped(c, value).Font(FontMono).FontSize(14).ContentTransition(ui.ContentTransition{Numeric: true})
 		captionColor := pal.TextFaint
 		if busy {
 			captionColor = pal.InfoText
 		}
-		ui.Text(c, caption).FontSize(10.5).TextColor(captionColor).SingleLine()
+		clipped(c, caption).FontSize(10.5).TextColor(captionColor)
 	})
 }
 
