@@ -115,7 +115,7 @@ func ColimaInstallPlan(manager inventory.PackageManager, migrate bool, env sysen
 	}
 	pathEnv := strings.Join(append(pathDirs, termDirs...), string(filepath.ListSeparator))
 	checkEnv := append(slices.Clone(env), "PATH="+pathEnv)
-	p.Steps = append(p.Steps, Step{Argv: args, Env: checkEnv[len(env):]})
+	p.Steps = append(p.Steps, Step{Argv: args, Env: checkEnv[len(env):], Disclaim: true})
 	p.Verify = func(ctx context.Context) (string, error) {
 		profile := inventory.ColimaProfile{Name: "default"}
 		if err := docker.ReadColimaStatus(ctx, r, checkEnv, path, &profile); err != nil {
@@ -242,7 +242,10 @@ func ColimaPlan(r run.Runner, env sysenv.Env, colima inventory.ColimaState, prof
 		return Plan{}, errors.New(locales.ColimaUnavailable())
 	}
 	cmd := func(action string, flags ...string) Step {
-		return Step{Argv: append([]string{colima.Path, action, "--profile", profile.Name}, flags...)}
+		return Step{
+			Argv:     append([]string{colima.Path, action, "--profile", profile.Name}, flags...),
+			Disclaim: action == "start",
+		}
 	}
 	start, stop := cmd("start", "--activate=false"), cmd("stop")
 	p := Plan{Env: slices.Clone(env), Isolated: true}

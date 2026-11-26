@@ -45,6 +45,10 @@ type Step struct {
 	// Admin runs it as the administrator, asking the user through the
 	// system's own dialog each time: never a silent sudo.
 	Admin bool
+	// Disclaim, on macOS, disclaims process responsibility when starting a
+	// persistent background VM or daemon (such as Colima or Podman) so its
+	// memory footprint is not attributed to Hearth in Activity Monitor.
+	Disclaim bool
 	// Edit, in place of Argv, changes a file of the user's after a copy
 	// of it, which comes back if the plan does not get through: a later
 	// step fails or is stopped, or the check does not pass.
@@ -444,11 +448,8 @@ func Execute(ctx context.Context, r run.Runner, p Plan, journal io.Writer, updat
 		if step.UndoAlways {
 			undoStep()
 		}
-		stepDir := commandDir
-		if step.Dir != "" {
-			stepDir = step.Dir
-		}
-		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: stepDir, Timeout: timeout, Output: e})
+		stepDir := stepRunDir(step.Dir, commandDir, step.Disclaim)
+		res, err := r.Run(ctx, run.Cmd{Args: argv, Env: env, Dir: stepDir, Timeout: timeout, Output: e, Disclaim: step.Disclaim})
 		e.mu.Lock()
 		e.flushLine()
 		refused := ""
@@ -558,6 +559,24 @@ func fullPath(argv []string, env []string) []string {
 	return append([]string{found[0]}, argv[1:]...)
 }
 
+// stepRunDir resolves the working directory for a step. Disclaimed steps fall
+// back to the user's home directory when no directory is specified so they do
+// not inherit a TCC-protected working directory (such as Desktop) on macOS.
+func stepRunDir(stepDir, fallback string, disclaim bool) string {
+	if stepDir != "" {
+		return stepDir
+	}
+	if fallback != "" {
+		return fallback
+	}
+	if disclaim {
+		if home, err := os.UserHomeDir(); err == nil {
+			return home
+		}
+	}
+	return ""
+}
+
 // runUndo runs u, a step's Undo, with the step's environment and folder,
 // even after the plan was stopped: what the step did must come back.
 func runUndo(ctx context.Context, r run.Runner, u Step, env []string, dir string) error {
@@ -566,9 +585,10 @@ func runUndo(ctx context.Context, r run.Runner, u Step, env []string, dir string
 		timeout = DefaultTimeout
 	}
 	env = slices.Concat(env, u.Env)
+	undoDir := stepRunDir(u.Dir, dir, u.Disclaim)
 	ctx = context.WithoutCancel(ctx)
 	for range undoTries {
-		res, err := r.Run(ctx, run.Cmd{Args: fullPath(u.Argv, env), Env: env, Dir: dir, Timeout: timeout})
+		res, err := r.Run(ctx, run.Cmd{Args: fullPath(u.Argv, env), Env: env, Dir: undoDir, Timeout: timeout, Disclaim: u.Disclaim})
 		if err == nil && res.ExitCode != 0 {
 			err = fmt.Errorf("%s: exit code %d", Command(u.Shown()), res.ExitCode)
 		}

@@ -316,3 +316,68 @@ func TestColimaTrimPlan(t *testing.T) {
 		t.Fatal("trim accepted after the disk disappeared")
 	}
 }
+
+func TestColimaPlanDisclaim(t *testing.T) {
+	t.Parallel()
+	const cli = "/brew/bin/colima"
+	const brew = "/brew/bin/brew"
+	var r run.Fake
+	state := inventory.ColimaState{Path: cli, Brew: brew, Autostart: "off"}
+
+	stopped := inventory.ColimaProfile{Name: "default", Status: "stopped", Runtime: "docker", Disk: 60 * 1 << 30}
+	startPlan, err := ColimaPlan(&r, nil, state, stopped, ColimaStart, ColimaLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(startPlan.Steps) != 1 || !startPlan.Steps[0].Disclaim {
+		t.Fatalf("ColimaStart Disclaim = %v, want true", startPlan.Steps[0].Disclaim)
+	}
+
+	running := inventory.ColimaProfile{Name: "default", Status: "running", Runtime: "docker", Disk: 60 * 1 << 30}
+	stopPlan, err := ColimaPlan(&r, nil, state, running, ColimaStop, ColimaLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stopPlan.Steps) != 1 || stopPlan.Steps[0].Disclaim {
+		t.Fatalf("ColimaStop Disclaim = %v, want false", stopPlan.Steps[0].Disclaim)
+	}
+
+	resizePlan, err := ColimaPlan(&r, nil, state, running, ColimaResize, ColimaLimits{CPU: 4, Memory: 6, Disk: 60})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resizePlan.Steps) != 2 || resizePlan.Steps[0].Disclaim || resizePlan.Steps[0].Undo == nil || !resizePlan.Steps[0].Undo.Disclaim || !resizePlan.Steps[1].Disclaim {
+		t.Fatalf("ColimaResize steps Disclaim mismatch: %+v", resizePlan.Steps)
+	}
+
+	enablePlan, err := ColimaPlan(&r, nil, state, running, ColimaEnable, ColimaLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enablePlan.Steps) != 1 || enablePlan.Steps[0].Disclaim {
+		t.Fatalf("ColimaEnable (brew services) Disclaim = %v, want false", enablePlan.Steps[0].Disclaim)
+	}
+}
+
+func TestExecuteDisclaimForwarding(t *testing.T) {
+	t.Parallel()
+	var r run.Fake
+	r.Stdout("ok\n", "/opt/homebrew/bin/colima", "start")
+	p := Plan{
+		Steps: []Step{{Argv: []string{"/opt/homebrew/bin/colima", "start"}, Disclaim: true}},
+	}
+	st := Execute(t.Context(), &r, p, &strings.Builder{}, func(State) {})
+	if st.Phase != Succeeded {
+		t.Fatalf("phase = %v, err = %q", st.Phase, st.Err)
+	}
+	calls := r.Calls()
+	if len(calls) != 1 {
+		t.Fatalf("calls = %d, want 1", len(calls))
+	}
+	if !calls[0].Disclaim {
+		t.Errorf("Disclaim was not forwarded to runner")
+	}
+	if home, err := os.UserHomeDir(); err == nil && calls[0].Dir != home {
+		t.Errorf("Dir = %q, want home dir %q", calls[0].Dir, home)
+	}
+}

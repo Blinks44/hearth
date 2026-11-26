@@ -13,9 +13,9 @@ func engineStart(e Engine) []Step {
 	case "OrbStack", "Docker Desktop", "Rancher Desktop", "Kiri":
 		return []Step{{Argv: []string{"/usr/bin/open", "-a", e.Path}, Timeout: time.Minute}}
 	case "Colima":
-		return []Step{{Argv: []string{e.Path, "start"}}}
+		return []Step{{Argv: []string{e.Path, "start"}, Disclaim: true}}
 	case "Podman":
-		return []Step{{Argv: []string{e.Path, "machine", "start"}}}
+		return []Step{{Argv: []string{e.Path, "machine", "start"}, Disclaim: true}}
 	}
 	return nil
 }

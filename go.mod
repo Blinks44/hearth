@@ -7,6 +7,7 @@ tool github.com/egoist/mygo/cmd/mygo
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/Masterminds/semver/v3 v3.5.0
+	github.com/ebitengine/purego v0.11.1
 	github.com/egoist/mygo v0.10.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	go.yaml.in/yaml/v3 v3.0.4
@@ -23,7 +24,6 @@ require (
 	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/ebitengine/purego v0.11.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-text/typesetting v0.3.5 // indirect

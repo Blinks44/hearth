@@ -42,6 +42,12 @@ type Cmd struct {
 	// Output, when set, also gets stdout and stderr as the command writes
 	// them, all of it, from two goroutines at once.
 	Output io.Writer
+	// Disclaim, on macOS, disclaims process responsibility for the spawned
+	// command so persistent background VMs or daemons it starts (such as
+	// Colima or Podman) are not attributed to Hearth in Activity Monitor.
+	// Leave false for ordinary short-lived commands: disclaiming also stops
+	// the child from inheriting Hearth's macOS folder (TCC) permissions.
+	Disclaim bool
 }
 
 // Result is what a command that ran left. A non-zero ExitCode is a result,
@@ -79,6 +85,12 @@ func (Exec) Run(ctx context.Context, c Cmd) (Result, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	if c.Disclaim {
+		if res, ok, err := runPlatform(ctx, c, limit); ok {
+			return res, err
+		}
+	}
 
 	cmd := exec.CommandContext(ctx, c.Args[0], c.Args[1:]...)
 	cmd.Env = c.Env
