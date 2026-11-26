@@ -297,9 +297,9 @@ func TestProblemsSeverityFilterBulkFixAndGroupRestore(t *testing.T) {
 			Tool: "docker", Version: "28.0.1", Path: "/usr/local/bin/docker", OnPath: 1, InGUI: 1,
 		}},
 		Docker: &inventory.DockerState{
-			Selected: "orbstack",
-			Contexts: []inventory.DockerContext{{Name: "orbstack", Engine: "OrbStack", Endpoint: "unix:///tmp/orbstack.sock", Local: true, Status: "unavailable"}},
-			Engines:  []inventory.DockerEngine{{Name: "OrbStack", Path: "/Applications/OrbStack.app"}},
+			Selected: "desktop-linux",
+			Contexts: []inventory.DockerContext{{Name: "desktop-linux", Engine: "Docker Desktop", Endpoint: "unix:///tmp/docker.sock", Local: true, Status: "unavailable"}},
+			Engines:  []inventory.DockerEngine{{Name: "Docker Desktop", Path: "/Applications/Docker.app"}},
 		},
 	})
 	// Two missing MCP commands -> grouped under "mcp-missing".

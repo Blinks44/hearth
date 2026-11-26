@@ -33,9 +33,14 @@ func TestPathPage(t *testing.T) {
 	screenshot(t, tt, "path")
 	// These Unix paths are not absolute on Windows, and so problems there.
 	if runtime.GOOS != "windows" {
-		// Only ~/gone/bin counts: macOS lists /usr/local/bin before anything is there.
-		if got := pathProblemCount(a.Snapshot.TerminalPath, a.Snapshot.GUIPath); got != 2 {
-			t.Fatalf("problems %d, want the repeat and ~/gone/bin", got)
+		// On macOS only ~/gone/bin counts: macOS lists /usr/local/bin before anything is there.
+		// On Linux /usr/local/bin is not suppressed as an OS-default entry.
+		want := 3
+		if runtime.GOOS == "darwin" {
+			want = 2
+		}
+		if got := pathProblemCount(a.Snapshot.TerminalPath, a.Snapshot.GUIPath); got != want {
+			t.Fatalf("problems %d, want %d", got, want)
 		}
 		// path_helper adds /etc/paths.d's entry again after brew shellenv put it first.
 		brew := inventory.PathEntry{Dir: "/opt/homebrew/bin", Sources: []inventory.PathSource{{File: "/etc/paths.d/homebrew", Line: 1}}}
