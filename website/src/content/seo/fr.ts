@@ -8,12 +8,12 @@ export const frSeoContent: SeoContentBundle = {
       crumbLabel: "Docker Desktop",
       metaTitle: "Alternative gratuite à Docker Desktop (Colima & Go) · Hearth",
       metaDescription:
-        "Remplacez Docker Desktop par Colima open source sur macOS ou Docker Engine natif sur Linux dans Hearth, une app Go native de ~18 Mo sans Electron.",
+        "Remplacez Docker Desktop par Colima open source sur macOS ou Docker Engine natif sur Linux dans Hearth, une app Go native légère sans Electron.",
       heroTitle: "Une alternative native et gratuite à Docker Desktop sans Electron.",
       heroSubtitle:
-        "Utilisez Colima open source sur macOS ou Docker Engine natif sur Linux. Inspectez piles Compose, conteneurs, images, volumes et logs en direct dans une app Go de ~18 Mo.",
+        "Utilisez Colima open source sur macOS ou Docker Engine natif sur Linux. Inspectez piles Compose, conteneurs, images, volumes et logs en direct dans une app Go native sans Electron.",
       metrics: [
-        { value: "~18 Mo binaire", label: "Go natif & UI mygo · démarrage <80 ms · zéro Electron" },
+        { value: "~20 Mo téléch.", label: "Go natif & UI mygo · démarrage <80 ms · zéro Electron" },
         { value: "MIT Gratuit", label: "Sans licences payantes, sans compte, zéro télémétrie" },
         {
           value: "Colima + Linux",
@@ -30,7 +30,7 @@ export const frSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Empreinte & vitesse",
-          hearth: "Binaire Go natif de ~18 Mo (mygo), démarrage <80 ms",
+          hearth: "Binaire Go natif unique (mygo), ~20 Mo à télécharger",
           other: "Interface Electron, souvent 1 Go+ de RAM au repos",
         },
         {
@@ -60,7 +60,7 @@ export const frSeoContent: SeoContentBundle = {
         points: [
           "Vous voulez une alternative MIT gratuite sans limites de postes commerciaux",
           "Vous voulez Colima sur macOS ou Docker Engine natif sur Linux avec une UI rapide",
-          "Vous voulez Conteneurs, Kubernetes, BDD locales & agents IA dans une app de ~18 Mo",
+          "Vous voulez Conteneurs, Kubernetes, BDD locales & agents IA dans une app Go native",
         ],
       },
       keepOther: {
@@ -76,7 +76,7 @@ export const frSeoContent: SeoContentBundle = {
         {
           step: "Étape 01",
           title: "Installez Hearth (sans changements silencieux)",
-          desc: "Téléchargez le binaire natif ~18 Mo via DMG, Homebrew ou .deb. Le premier scan est 100 % en lecture seule.",
+          desc: "Téléchargez Hearth (~20 Mo ; ~28 Mo DMG universel) via DMG, Homebrew ou .deb. Le premier scan est 100 % en lecture seule.",
         },
         {
           step: "Étape 02",
@@ -96,10 +96,10 @@ export const frSeoContent: SeoContentBundle = {
       crumbLabel: "Lens & Freelens",
       metaTitle: "Alternative native rapide à Lens, Freelens & Headlamp · Hearth",
       metaDescription:
-        "Inspectez pods Kubernetes, logs, diagnostics de crash, port-forwards, Secrets, Helm et clusters kind dans une UI Go client-go de ~18 Mo sans Electron.",
+        "Inspectez pods Kubernetes, logs, diagnostics de crash, port-forwards, Secrets, Helm et clusters kind dans une UI Go client-go native sans Electron.",
       heroTitle: "Une interface Kubernetes native rapide, sans lourdeur Electron.",
       heroSubtitle:
-        "Basée directement sur Go client-go. Inspectez pods, causes de crash, logs en direct, port-forwards, Helm, Secrets et clusters kind locaux dans ~18 Mo au lieu d’une fenêtre Electron de 1 Go.",
+        "Basée directement sur Go client-go. Inspectez pods, causes de crash, logs en direct, port-forwards, Helm, Secrets et clusters kind locaux dans une app Go native au lieu d’une lourde fenêtre Electron.",
       metrics: [
         { value: "client-go natif", label: "Lit kubeconfig directement avec démarrage <80 ms" },
         { value: "Zéro connexion", label: "Pas de Lens ID, pas de cloud, pas de télémétrie · MIT" },
@@ -110,7 +110,7 @@ export const frSeoContent: SeoContentBundle = {
       rows: [
         {
           criterion: "Moteur & mémoire",
-          hearth: "Binaire Go natif de ~18 Mo (mygo), mémoire minimale au repos",
+          hearth: "Binaire Go natif unique (mygo), zéro Electron",
           other: "App Electron / Chromium (Lens, Freelens) ou interface web",
         },
         {

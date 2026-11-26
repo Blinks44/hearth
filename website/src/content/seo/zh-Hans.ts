@@ -8,12 +8,12 @@ export const zhHansSeoContent: SeoContentBundle = {
       crumbLabel: "Docker Desktop",
       metaTitle: "免费原生 Docker Desktop 替代方案（Colima 与 Go）· Hearth",
       metaDescription:
-        "使用 Hearth 在 macOS 上一键管理开源 Colima，或在 Linux 上直连原生 Docker Engine。约 18 MB 原生 Go 应用，MIT 开源，零 Electron 臃肿。",
+        "使用 Hearth 在 macOS 上一键管理开源 Colima，或在 Linux 上直连原生 Docker Engine。轻量原生 Go 应用，MIT 开源，零 Electron 臃肿。",
       heroTitle: "免费、原生的 Docker Desktop 替代方案，彻底告别 Electron。",
       heroSubtitle:
-        "在 macOS 上运行开源 Colima，或在 Linux 上直连原生 Docker Engine。在一个约 18 MB 的原生 Go 应用中管理 Compose 栈、容器、镜像、卷与实时日志。",
+        "在 macOS 上运行开源 Colima，或在 Linux 上直连原生 Docker Engine。在一个原生 Go 应用中管理 Compose 栈、容器、镜像、卷与实时日志。",
       metrics: [
-        { value: "~18 MB 单文件", label: "原生 Go 与 mygo 界面 · <80 ms 冷启动 · 零 Electron" },
+        { value: "~20 MB 安装包", label: "原生 Go 与 mygo 界面 · <80 ms 冷启动 · 零 Electron" },
         { value: "MIT 免费开源", label: "无商业席位限制，无需登录账号，零遥测" },
         {
           value: "Colima + Linux",
@@ -30,7 +30,7 @@ export const zhHansSeoContent: SeoContentBundle = {
         },
         {
           criterion: "体积与启动速度",
-          hearth: "约 18 MB 原生 Go 应用（mygo），冷启动 <80 ms",
+          hearth: "单一原生 Go 二进制（mygo），约 20 MB 下载包",
           other: "Electron 桌面界面，空载内存常超过 1 GB",
         },
         {
@@ -60,7 +60,7 @@ export const zhHansSeoContent: SeoContentBundle = {
         points: [
           "需要免费且无商业席位限制的 MIT 开源替代方案",
           "希望在 macOS 上使用 Colima 或在 Linux 上直连原生 Docker Engine 并拥有极速界面",
-          "希望用约 18 MB 的单一应用统一管理容器、Kubernetes、本地数据库与 AI 代理",
+          "希望用单一原生 Go 应用统一管理容器、Kubernetes、本地数据库与 AI 代理",
         ],
       },
       keepOther: {
@@ -76,7 +76,7 @@ export const zhHansSeoContent: SeoContentBundle = {
         {
           step: "步骤 01",
           title: "安装 Hearth（零后台修改）",
-          desc: "通过 DMG、Homebrew 或 .deb 下载约 18 MB 原生应用。首次扫描完全只读，不会改动现有容器。",
+          desc: "通过 DMG、Homebrew 或 .deb 下载 Hearth（约 20 MB；macOS Universal DMG 约 28 MB）。首次扫描完全只读，不会改动现有容器。",
         },
         {
           step: "步骤 02",
@@ -96,10 +96,10 @@ export const zhHansSeoContent: SeoContentBundle = {
       crumbLabel: "Lens 与 Freelens",
       metaTitle: "高速原生 Lens、Freelens 与 Headlamp 替代方案 · Hearth",
       metaDescription:
-        "基于原生 Go client-go 查看 Kubernetes Pod、崩溃诊断、实时日志、端口转发、Secrets、Helm 与 kind 集群，仅约 18 MB，告别 Electron 卡顿。",
+        "基于原生 Go client-go 查看 Kubernetes Pod、崩溃诊断、实时日志、端口转发、Secrets、Helm 与 kind 集群，原生轻量，告别 Electron 卡顿。",
       heroTitle: "高速原生 Kubernetes 界面，彻底告别 Electron 卡顿。",
       heroSubtitle:
-        "直接构建于 Go client-go 之上。在一个约 18 MB 的原生应用中查看 Pod、崩溃原因、实时日志、端口转发、Helm、Secrets 与本地 kind 集群，无需开启 1 GB 内存的 Electron 窗口。",
+        "直接构建于 Go client-go 之上。在一个原生 Go 应用中查看 Pod、崩溃原因、实时日志、端口转发、Helm、Secrets 与本地 kind 集群，无需开启 1 GB 内存的 Electron 窗口。",
       metrics: [
         { value: "原生 client-go", label: "直接读取 kubeconfig，冷启动 <80 ms" },
         { value: "免登录", label: "无需 Lens ID、无云同步、无遥测，MIT 开源" },
@@ -110,7 +110,7 @@ export const zhHansSeoContent: SeoContentBundle = {
       rows: [
         {
           criterion: "运行架构与内存",
-          hearth: "约 18 MB 原生 Go 应用（mygo），常驻内存极低",
+          hearth: "单一原生 Go 二进制（mygo），零 Electron",
           other: "Electron / Chromium 应用（Lens、Freelens）或浏览器界面",
         },
         {

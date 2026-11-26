@@ -8,13 +8,13 @@ export const enSeoContent: SeoContentBundle = {
       crumbLabel: "Docker Desktop",
       metaTitle: "Free Docker Desktop Alternative (Colima & Native Go) · Hearth",
       metaDescription:
-        "Replace Docker Desktop with open-source Colima on macOS or native Docker Engine on Linux inside Hearth, a ~18 MB MIT native Go app with zero Electron bloat.",
+        "Replace Docker Desktop with open-source Colima on macOS or native Docker Engine on Linux inside Hearth, a lightweight MIT native Go app with zero Electron bloat.",
       heroTitle: "A free, native Docker Desktop alternative without Electron.",
       heroSubtitle:
-        "Run open-source Colima on macOS or native Docker Engine on Linux. Inspect Compose stacks, containers, images, volumes, and live logs in one ~18 MB native Go app with zero Electron bloat.",
+        "Run open-source Colima on macOS or native Docker Engine on Linux. Inspect Compose stacks, containers, images, volumes, and live logs in one native Go app with zero Electron bloat.",
       metrics: [
         {
-          value: "~18 MB binary",
+          value: "~20 MB download",
           label: "Native Go & mygo UI · <80 ms cold start · zero Electron",
         },
         {
@@ -36,7 +36,7 @@ export const enSeoContent: SeoContentBundle = {
         },
         {
           criterion: "UI footprint & speed",
-          hearth: "~18 MB native Go binary (mygo), <80 ms cold start",
+          hearth: "Single native Go binary (mygo), ~20 MB download",
           other: "Electron desktop UI, often 1 GB+ idle memory",
         },
         {
@@ -66,7 +66,7 @@ export const enSeoContent: SeoContentBundle = {
         points: [
           "You want a free MIT alternative without commercial seat limits",
           "You want Colima on macOS or native Docker Engine on Linux with a fast UI",
-          "You want Containers, Kubernetes, local DBs & AI agents in one ~18 MB app",
+          "You want Containers, Kubernetes, local DBs & AI agents in one native Go app",
         ],
       },
       keepOther: {
@@ -82,7 +82,7 @@ export const enSeoContent: SeoContentBundle = {
         {
           step: "Step 01",
           title: "Install Hearth (zero background changes)",
-          desc: "Download the ~18 MB native binary via DMG, Homebrew, or .deb. First scan is 100% read-only and never touches your containers.",
+          desc: "Download Hearth (~20 MB download; ~28 MB universal DMG) via DMG, Homebrew, or .deb. First scan is 100% read-only and never touches your containers.",
         },
         {
           step: "Step 02",
@@ -102,10 +102,10 @@ export const enSeoContent: SeoContentBundle = {
       crumbLabel: "Lens & Freelens",
       metaTitle: "Fast Native Lens, Freelens & Headlamp Alternative · Hearth",
       metaDescription:
-        "Inspect Kubernetes pods, logs, crash diagnostics, port-forwards, Secrets, Helm releases, and kind clusters in a ~18 MB native Go client-go UI with zero Electron.",
+        "Inspect Kubernetes pods, logs, crash diagnostics, port-forwards, Secrets, Helm releases, and kind clusters in a native Go client-go UI with zero Electron.",
       heroTitle: "A fast native Kubernetes UI without Electron lag.",
       heroSubtitle:
-        "Built directly on Go client-go. Inspect pods, crash causes, live owner logs, port-forwards, Helm releases, Secrets, and local kind clusters in one ~18 MB native app instead of a 1 GB Electron window.",
+        "Built directly on Go client-go. Inspect pods, crash causes, live owner logs, port-forwards, Helm releases, Secrets, and local kind clusters in one native Go app instead of a heavy Electron window.",
       metrics: [
         {
           value: "Direct client-go",
@@ -125,7 +125,7 @@ export const enSeoContent: SeoContentBundle = {
       rows: [
         {
           criterion: "Runtime & memory",
-          hearth: "~18 MB native Go binary (mygo), tiny idle RAM",
+          hearth: "Single native Go binary (mygo), zero Electron",
           other: "Electron / Chromium desktop app (Lens, Freelens) or browser UI",
         },
         {

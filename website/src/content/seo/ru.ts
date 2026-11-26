@@ -8,13 +8,13 @@ export const ruSeoContent: SeoContentBundle = {
       crumbLabel: "Docker Desktop",
       metaTitle: "Бесплатная альтернатива Docker Desktop (Colima и Go) · Hearth",
       metaDescription:
-        "Замените Docker Desktop на открытый Colima на macOS или нативный Docker Engine на Linux в Hearth - нативном Go-приложении на ~18 МБ без Electron.",
+        "Замените Docker Desktop на открытый Colima на macOS или нативный Docker Engine на Linux в Hearth - легком нативном Go-приложении без Electron.",
       heroTitle: "Бесплатная нативная альтернатива Docker Desktop без Electron.",
       heroSubtitle:
-        "Запускайте открытый Colima на macOS или нативный Docker Engine на Linux. Управляйте Compose-стеками, контейнерами, образами, томами и логами в одном приложении на ~18 МБ без Electron.",
+        "Запускайте открытый Colima на macOS или нативный Docker Engine на Linux. Управляйте Compose-стеками, контейнерами, образами, томами и логами в одном нативном Go-приложении без Electron.",
       metrics: [
         {
-          value: "~18 МБ бинарник",
+          value: "~20 МБ загрузка",
           label: "Нативный Go и mygo UI · старт <80 мс · без Electron",
         },
         {
@@ -36,7 +36,7 @@ export const ruSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Размер и скорость UI",
-          hearth: "~18 МБ нативный Go-бинарник (mygo), холодный старт <80 мс",
+          hearth: "Единый нативный Go-бинарник (mygo), ~20 МБ загрузка",
           other: "Electron UI, часто 1 ГБ+ памяти в простое",
         },
         {
@@ -66,7 +66,7 @@ export const ruSeoContent: SeoContentBundle = {
         points: [
           "Нужна бесплатная MIT-альтернатива без корпоративных ограничений по местам",
           "Хотите Colima на macOS или нативный Docker Engine на Linux с быстрым интерфейсом",
-          "Хотите контейнеры, Kubernetes, локальные БД и AI-агентов в одном приложении на ~18 МБ",
+          "Хотите контейнеры, Kubernetes, локальные БД и AI-агентов в одном нативном Go-приложении",
         ],
       },
       keepOther: {
@@ -82,7 +82,7 @@ export const ruSeoContent: SeoContentBundle = {
         {
           step: "Шаг 01",
           title: "Установите Hearth (без фоновых правок)",
-          desc: "Скачайте нативный бинарник ~18 МБ через DMG, Homebrew или .deb. Первое сканирование полностью read-only и не трогает контейнеры.",
+          desc: "Скачайте Hearth (~20 МБ загрузка; ~28 МБ universal DMG) через DMG, Homebrew или .deb. Первое сканирование полностью read-only и не трогает контейнеры.",
         },
         {
           step: "Шаг 02",
@@ -102,10 +102,10 @@ export const ruSeoContent: SeoContentBundle = {
       crumbLabel: "Lens и Freelens",
       metaTitle: "Быстрая нативная альтернатива Lens, Freelens и Headlamp · Hearth",
       metaDescription:
-        "Поды Kubernetes, логи, диагностика крэшей, port-forward, Secrets, Helm и локальные кластеры kind в нативном Go-приложении на ~18 МБ без Electron.",
+        "Поды Kubernetes, логи, диагностика крэшей, port-forward, Secrets, Helm и локальные кластеры kind в нативном Go-приложении без Electron.",
       heroTitle: "Быстрый нативный Kubernetes UI без тормозов Electron.",
       heroSubtitle:
-        "Написан напрямую поверх Go client-go. Смотрите поды, причины падений, живые логи, port-forward, релизы Helm, Secrets и локальные кластеры kind в одном приложении на ~18 МБ вместо гигабайтного окна Electron.",
+        "Написан напрямую поверх Go client-go. Смотрите поды, причины падений, живые логи, port-forward, релизы Helm, Secrets и локальные кластеры kind в одном нативном Go-приложении вместо тяжелого окна Electron.",
       metrics: [
         {
           value: "Нативный client-go",
@@ -125,7 +125,7 @@ export const ruSeoContent: SeoContentBundle = {
       rows: [
         {
           criterion: "Движок и память",
-          hearth: "~18 МБ нативный Go-бинарник (mygo), минимальный расход RAM",
+          hearth: "Единый нативный Go-бинарник (mygo), без Electron",
           other: "Electron / Chromium приложение (Lens, Freelens) или браузерный UI",
         },
         {

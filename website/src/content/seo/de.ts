@@ -8,13 +8,13 @@ export const deSeoContent: SeoContentBundle = {
       crumbLabel: "Docker Desktop",
       metaTitle: "Kostenlose Docker-Desktop-Alternative (Colima & Go) · Hearth",
       metaDescription:
-        "Ersetze Docker Desktop durch Open-Source-Colima unter macOS oder native Docker Engine unter Linux in Hearth, einer ~18 MB nativen Go-App ohne Electron.",
+        "Ersetze Docker Desktop durch Open-Source-Colima unter macOS oder native Docker Engine unter Linux in Hearth, einer schlanken nativen Go-App ohne Electron.",
       heroTitle: "Eine kostenlose, native Docker-Desktop-Alternative ohne Electron.",
       heroSubtitle:
-        "Nutze Open-Source-Colima unter macOS oder native Docker Engine unter Linux. Verwalte Compose-Stacks, Container, Images, Volumes und Live-Logs in einer ~18 MB nativen Go-App.",
+        "Nutze Open-Source-Colima unter macOS oder native Docker Engine unter Linux. Verwalte Compose-Stacks, Container, Images, Volumes und Live-Logs in einer nativen Go-App ohne Electron.",
       metrics: [
         {
-          value: "~18 MB Binary",
+          value: "~20 MB Download",
           label: "Natives Go & mygo UI · <80 ms Kaltstart · kein Electron",
         },
         {
@@ -36,7 +36,7 @@ export const deSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Speicher & Tempo",
-          hearth: "~18 MB native Go-Binärdatei (mygo), <80 ms Kaltstart",
+          hearth: "Einzelne native Go-Binärdatei (mygo), ~20 MB Download",
           other: "Electron-Oberfläche, oft 1 GB+ RAM im Leerlauf",
         },
         {
@@ -66,7 +66,7 @@ export const deSeoContent: SeoContentBundle = {
         points: [
           "Du eine kostenlose MIT-Alternative ohne Sitzplatzlimits möchtest",
           "Du Colima auf macOS oder native Docker Engine auf Linux mit schneller UI willst",
-          "Du Container, Kubernetes, lokale DBs & KI-Agenten in einer ~18-MB-App bündeln willst",
+          "Du Container, Kubernetes, lokale DBs & KI-Agenten in einer nativen Go-App bündeln willst",
         ],
       },
       keepOther: {
@@ -82,7 +82,7 @@ export const deSeoContent: SeoContentBundle = {
         {
           step: "Schritt 01",
           title: "Hearth installieren (ohne Hintergrundänderungen)",
-          desc: "Lade das ~18 MB native Binary per DMG, Homebrew oder .deb. Der erste Scan ist strikt read-only.",
+          desc: "Lade Hearth (~20 MB Download; ~28 MB Universal-DMG) per DMG, Homebrew oder .deb. Der erste Scan ist strikt read-only.",
         },
         {
           step: "Schritt 02",
@@ -102,10 +102,10 @@ export const deSeoContent: SeoContentBundle = {
       crumbLabel: "Lens & Freelens",
       metaTitle: "Schnelle native Lens-, Freelens- & Headlamp-Alternative · Hearth",
       metaDescription:
-        "Untersuche Kubernetes-Pods, Logs, Crash-Diagnosen, Port-Forwards, Secrets, Helm und kind-Cluster in einer ~18 MB nativen Go-UI ohne Electron.",
+        "Untersuche Kubernetes-Pods, Logs, Crash-Diagnosen, Port-Forwards, Secrets, Helm und kind-Cluster in einer nativen Go-UI ohne Electron.",
       heroTitle: "Eine schnelle native Kubernetes-UI ohne Electron-Trägheit.",
       heroSubtitle:
-        "Direkt auf Go client-go aufgebaut. Prüfe Pods, Absturzursachen, Live-Logs, Port-Forwards, Helm-Releases, Secrets und lokale kind-Cluster in einer ~18 MB nativen App.",
+        "Direkt auf Go client-go aufgebaut. Prüfe Pods, Absturzursachen, Live-Logs, Port-Forwards, Helm-Releases, Secrets und lokale kind-Cluster in einer nativen Go-App ohne Electron.",
       metrics: [
         { value: "Direktes client-go", label: "Liest kubeconfig nativ mit <80 ms Kaltstart" },
         { value: "Kein Login", label: "Keine Lens ID, kein Cloud-Sync, keine Telemetrie, MIT" },
@@ -119,7 +119,7 @@ export const deSeoContent: SeoContentBundle = {
       rows: [
         {
           criterion: "Runtime & Speicher",
-          hearth: "~18 MB native Go-Binärdatei (mygo), minimaler RAM-Bedarf",
+          hearth: "Einzelne native Go-Binärdatei (mygo), kein Electron",
           other: "Electron-/Chromium-App (Lens, Freelens) oder Browser-UI",
         },
         {

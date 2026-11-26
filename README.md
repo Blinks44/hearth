@@ -41,7 +41,7 @@ Modern local setups sprawl across `mise`, `fnm`, `nvm`, `uv`, `pyenv`, `rustup`,
 
 Hearth brings all of it into one native desktop app:
 
-- **Native & lightweight:** ~18 MB single binary built in Go with [mygo](https://mygo.egoist.dev): no Electron, no WebView, and no background daemon hogging RAM.
+- **Native & lightweight:** Single native Go binary built with [mygo](https://mygo.egoist.dev) (~20 MB download; ~28 MB macOS Universal DMG): no Electron, no WebView, and no background daemon hogging RAM.
 - **Read-only by default:** Scanning never changes your machine. Every install, upgrade, fix, or cleanup shows the exact commands, file diffs, and consequences before you confirm.
 - **Respects your existing setup:** Detects your current managers (`mise`, `fnm`, `nvm`, `volta`, `uv`, `pyenv`, `rbenv`, `rustup`, `brew`, `winget`, `scoop`, `apt`, `dnf`, `pacman`, etc.) and works through them. Shell rc edits stay inside `# >>> hearth >>>` markers with automatic backups.
 - **100% local, zero telemetry:** No account, no analytics, no data uploaded anywhere.
