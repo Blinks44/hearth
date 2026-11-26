@@ -48,9 +48,12 @@ type Service struct {
 	// Env returns the terminal environment used when re-reading projects.
 	Env func() sysenv.Env
 
-	mu      sync.Mutex
-	watches map[string]context.CancelFunc // by kind and path
-	wg      sync.WaitGroup
+	mu             sync.Mutex
+	closed         bool
+	watches        map[string]context.CancelFunc // by kind and path
+	startupPaths   []string
+	startupTargets map[string][]string // watched dir -> full startup file paths
+	wg             sync.WaitGroup
 }
 
 // Projects watches the project folders dirs, not the folders in them, and
@@ -72,56 +75,102 @@ func (s *Service) Projects(dirs []string) {
 // StartupFiles watches the shells' startup files at paths, and stops
 // watching the others. Watching their directory also catches files created
 // after Hearth starts and files replaced by an editor's atomic save.
+// Paths sharing the same existing parent directory share a single watcher.
 func (s *Service) StartupFiles(paths []string) {
-	s.set("shell:", paths, func(ctx context.Context, p string) {
-		for ctx.Err() == nil {
-			dir := filepath.Dir(p)
-			for {
-				if info, err := os.Stat(dir); err == nil && info.IsDir() {
-					break
-				}
-				parent := filepath.Dir(dir)
-				if parent == dir {
-					return
-				}
-				dir = parent
-			}
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return
+	}
+	s.startupPaths = slices.Clone(paths)
+	s.mu.Unlock()
+	s.syncStartupFiles()
+}
+
+func (s *Service) syncStartupFiles() {
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return
+	}
+	paths := slices.Clone(s.startupPaths)
+	s.mu.Unlock()
+
+	targets := make(map[string][]string)
+	for _, p := range paths {
+		dir := existingWatchDir(p)
+		if dir == "" {
+			continue
+		}
+		if !slices.Contains(targets[dir], p) {
+			targets[dir] = append(targets[dir], p)
+		}
+	}
+	dirs := make([]string, 0, len(targets))
+	for dir := range targets {
+		dirs = append(dirs, dir)
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed || !slices.Equal(s.startupPaths, paths) {
+		return
+	}
+	s.startupTargets = targets
+	s.setLocked("shell:", dirs, s.watchStartupDir)
+}
+
+func (s *Service) watchStartupDir(ctx context.Context, dir string) {
+	s.run(ctx, dir, func(events []mygo.FileEvent) {
+		s.mu.Lock()
+		targets := slices.Clone(s.startupTargets[dir])
+		s.mu.Unlock()
+
+		matched := false
+		resync := false
+		for _, p := range targets {
 			rel, err := filepath.Rel(dir, p)
 			if err != nil {
 				s.report(err)
-				return
+				continue
 			}
 			rel = filepath.ToSlash(rel)
-			w, err := s.Start(ctx, dir)
-			if err != nil {
-				s.report(err)
-				return
-			}
-			restart := false
-			for !restart && ctx.Err() == nil {
-				events, nextErr := w.Next(ctx)
-				for _, e := range events {
-					matches := func(path string) bool {
-						return path == "." || path == rel || path != "" && strings.HasPrefix(rel, path+"/")
+			for _, e := range events {
+				if matchesStartupRel(e.Path, rel) || matchesStartupRel(e.OldPath, rel) {
+					matched = true
+					// A missing parent may now exist: follow the closer directory.
+					if dir != filepath.Dir(p) && existingWatchDir(p) != dir {
+						resync = true
 					}
-					if ctx.Err() == nil && (matches(e.Path) || matches(e.OldPath)) {
-						s.Shell()
-						// A missing parent may now exist: follow the closer directory.
-						restart = dir != filepath.Dir(p)
-						break
-					}
-				}
-				if nextErr != nil {
-					_ = w.Close()
-					if ctx.Err() == nil {
-						s.report(nextErr)
-					}
-					return
+					break
 				}
 			}
-			_ = w.Close()
+		}
+		if matched && ctx.Err() == nil {
+			s.Shell()
+		}
+		if resync {
+			s.syncStartupFiles()
 		}
 	})
+}
+
+func existingWatchDir(p string) string {
+	dir := filepath.Dir(p)
+	for {
+		if info, err := os.Stat(dir); err == nil && info.IsDir() {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
+}
+
+func matchesStartupRel(eventPath, rel string) bool {
+	return eventPath == "." || eventPath == rel || eventPath != "" && strings.HasPrefix(rel, eventPath+"/")
 }
 
 // How long docker events stays quiet before Containers is called, so that
@@ -208,10 +257,13 @@ func dockerEngine(snap *inventory.Snapshot) (exe, endpoint string) {
 // Close stops every watch and waits for them.
 func (s *Service) Close() {
 	s.mu.Lock()
+	s.closed = true
 	for _, cancel := range s.watches {
 		cancel()
 	}
 	s.watches = nil
+	s.startupPaths = nil
+	s.startupTargets = nil
 	s.mu.Unlock()
 	s.wg.Wait()
 }
@@ -221,6 +273,13 @@ func (s *Service) Close() {
 func (s *Service) set(kind string, paths []string, start func(ctx context.Context, path string)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.closed {
+		return
+	}
+	s.setLocked(kind, paths, start)
+}
+
+func (s *Service) setLocked(kind string, paths []string, start func(ctx context.Context, path string)) {
 	if s.watches == nil {
 		s.watches = map[string]context.CancelFunc{}
 	}

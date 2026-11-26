@@ -203,6 +203,16 @@ func codexSessions(root string, loc *time.Location) []inventory.AgentSession {
 	return out
 }
 
+// eachLineBufSize is the pooled bufio.Reader size for scanning JSONL
+// transcripts. Keeping it at 1 MiB lets large tool-output lines stay on the
+// zero-allocation ReadSlice fast path while pooling avoids allocating a fresh
+// 1 MiB buffer per file.
+const eachLineBufSize = 1 << 20
+
+var lineReaderPool = sync.Pool{
+	New: func() any { return bufio.NewReaderSize(nil, eachLineBufSize) },
+}
+
 // read parses the transcript at path, or takes what it gave before while
 // the file stays the same.
 func read(path string, info fs.FileInfo, parse func(io.Reader) (transcript, error)) (transcript, error) {
@@ -221,6 +231,9 @@ func read(path string, info fs.FileInfo, parse func(io.Reader) (transcript, erro
 	if err != nil {
 		return transcript{}, err
 	}
+	// Aggregate per-turn rows by (day, model) before caching so neither RAM
+	// nor usage-cache.json keeps thousands of redundant entries per file.
+	t.usage = merge(t.usage)
 	transcripts.Lock()
 	transcripts.files[path] = cached{size: info.Size(), mod: info.ModTime(), t: t}
 	transcripts.dirty = true
@@ -231,7 +244,12 @@ func read(path string, info fs.FileInfo, parse func(io.Reader) (transcript, erro
 // eachLine calls fn with each line of r, however long; the line is valid
 // only during the call.
 func eachLine(r io.Reader, fn func(line []byte)) error {
-	br := bufio.NewReaderSize(r, 1<<20)
+	br := lineReaderPool.Get().(*bufio.Reader)
+	br.Reset(r)
+	defer func() {
+		br.Reset(nil)
+		lineReaderPool.Put(br)
+	}()
 	var long []byte
 	for {
 		chunk, err := br.ReadSlice('\n')
@@ -246,7 +264,13 @@ func eachLine(r io.Reader, fn func(line []byte)) error {
 		if len(chunk) > 0 {
 			fn(chunk)
 		}
-		long = long[:0]
+		if cap(long) > eachLineBufSize*4 {
+			// Drop unusually large line buffers promptly instead of holding
+			// multi-megabyte backing arrays for the rest of the file.
+			long = nil
+		} else {
+			long = long[:0]
+		}
 		if errors.Is(err, io.EOF) {
 			return nil
 		}

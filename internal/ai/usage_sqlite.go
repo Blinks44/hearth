@@ -33,26 +33,35 @@ func sqliteFileURI(path string) string {
 // the database is a cleanly closed WAL database without a -shm file.
 func openSQLiteRO(path string) (*sql.DB, error) {
 	uri := sqliteFileURI(path)
-	db, err := sql.Open("sqlite", uri+"?mode=ro&_pragma=busy_timeout(1000)&_pragma=query_only(1)")
+	db, err := sql.Open("sqlite", uri+"?mode=ro&_pragma=busy_timeout(1000)&_pragma=query_only(1)&_pragma=cache_size(-512)")
 	if err == nil {
+		db.SetMaxOpenConns(1)
+		db.SetMaxIdleConns(1)
 		err = probeSQLiteRO(db)
 		if err == nil {
 			return db, nil
 		}
-		_ = db.Close()
+		closeSQLite(db)
 	}
 	if wfi, werr := os.Stat(path + "-wal"); werr == nil && wfi.Size() > 0 {
 		return nil, err
 	}
-	db, err = sql.Open("sqlite", uri+"?mode=ro&immutable=1")
+	db, err = sql.Open("sqlite", uri+"?mode=ro&immutable=1&_pragma=cache_size(-512)")
 	if err != nil {
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	if err := probeSQLiteRO(db); err != nil {
-		_ = db.Close()
+		closeSQLite(db)
 		return nil, err
 	}
 	return db, nil
+}
+
+func closeSQLite(db *sql.DB) {
+	_, _ = db.Exec("PRAGMA shrink_memory")
+	_ = db.Close()
 }
 
 func probeSQLiteRO(db *sql.DB) error {
@@ -193,7 +202,7 @@ func parseOpenCodeDB(path string, loc *time.Location) ([]inventory.AgentSession,
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = db.Close() }()
+	defer closeSQLite(db)
 
 	sessCols := tableColumns(db, "session")
 	msgCols := tableColumns(db, "message")
@@ -421,7 +430,7 @@ func parseDevinDB(path string, loc *time.Location) ([]inventory.AgentSession, er
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = db.Close() }()
+	defer closeSQLite(db)
 
 	sessCols := tableColumns(db, "sessions")
 	nodeCols := tableColumns(db, "message_nodes")
@@ -644,7 +653,7 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = db.Close() }()
+	defer closeSQLite(db)
 
 	tRows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table'")
 	if err != nil {
@@ -750,84 +759,102 @@ func parseAntigravityDB(path string, loc *time.Location) ([]inventory.AgentSessi
 	}}, nil
 }
 
-// protoField is a single decoded protobuf wire field.
-type protoField struct {
-	num      uint64
-	wireType uint8
-	varint   uint64
-	bytes    []byte
-}
-
-// decodeProtoFields decodes a protobuf wire message without a schema.
-func decodeProtoFields(data []byte) []protoField {
-	var out []protoField
+// walkProtoFields iterates protobuf wire fields in data without allocating a
+// slice. Iteration stops early when fn returns false.
+func walkProtoFields(data []byte, fn func(num uint64, wireType uint8, varint uint64, b []byte) bool) {
 	for len(data) > 0 {
 		tag, n := binary.Uvarint(data)
 		if n <= 0 {
-			break
+			return
 		}
 		data = data[n:]
 		num := tag >> 3
 		wt := uint8(tag & 7)
 		if num == 0 {
-			break
+			return
 		}
 		switch wt {
 		case 0: // varint
 			v, m := binary.Uvarint(data)
 			if m <= 0 {
-				return out
+				return
 			}
 			data = data[m:]
-			out = append(out, protoField{num: num, wireType: wt, varint: v})
+			if !fn(num, wt, v, nil) {
+				return
+			}
 		case 1: // 64-bit
 			if len(data) < 8 {
-				return out
+				return
 			}
-			out = append(out, protoField{num: num, wireType: wt, bytes: data[:8]})
+			b := data[:8]
 			data = data[8:]
+			if !fn(num, wt, 0, b) {
+				return
+			}
 		case 2: // length-delimited
 			l, m := binary.Uvarint(data)
 			if m <= 0 || l > uint64(len(data)-m) {
-				return out
+				return
 			}
 			data = data[m:]
-			out = append(out, protoField{num: num, wireType: wt, bytes: data[:l]})
+			b := data[:l]
 			data = data[l:]
+			if !fn(num, wt, 0, b) {
+				return
+			}
 		case 5: // 32-bit
 			if len(data) < 4 {
-				return out
+				return
 			}
-			out = append(out, protoField{num: num, wireType: wt, bytes: data[:4]})
+			b := data[:4]
 			data = data[4:]
+			if !fn(num, wt, 0, b) {
+				return
+			}
 		default:
-			return out
+			return
 		}
 	}
-	return out
 }
 
 func decodeAntigravityWorkspace(blob []byte) string {
-	fields := decodeProtoFields(blob)
-	for _, wantNum := range []uint64{7, 1} {
-		for _, f := range fields {
-			if f.num != wantNum || f.wireType != 2 || len(f.bytes) == 0 {
-				continue
-			}
-			if p := extractPathString(f.bytes); p != "" {
-				return p
-			}
-			// Sometimes the field wraps a submessage whose field 1 or 2 is the path/URI.
-			for _, sub := range decodeProtoFields(f.bytes) {
-				if sub.wireType == 2 {
-					if p := extractPathString(sub.bytes); p != "" {
-						return p
-					}
+	var path7, path1 string
+	extract := func(b []byte) string {
+		if p := extractPathString(b); p != "" {
+			return p
+		}
+		// Sometimes the field wraps a submessage whose field 1 or 2 is the path/URI.
+		var subPath string
+		walkProtoFields(b, func(_ uint64, wt uint8, _ uint64, sb []byte) bool {
+			if wt == 2 {
+				if p := extractPathString(sb); p != "" {
+					subPath = p
+					return false
 				}
 			}
-		}
+			return true
+		})
+		return subPath
 	}
-	return ""
+	walkProtoFields(blob, func(num uint64, wt uint8, _ uint64, b []byte) bool {
+		if wt != 2 || len(b) == 0 {
+			return true
+		}
+		if num == 7 && path7 == "" {
+			if p := extract(b); p != "" {
+				path7 = p
+				return false
+			}
+		} else if num == 1 && path1 == "" {
+			path1 = extract(b)
+		}
+		return true
+	})
+	if path7 != "" {
+		return path7
+	}
+	return path1
 }
 
 func extractPathString(b []byte) string {
@@ -853,41 +880,43 @@ func extractPathString(b []byte) string {
 
 func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Location) (inventory.TokenUsage, string, bool) {
 	var chatModelBytes []byte
-	for _, f := range decodeProtoFields(blob) {
-		if f.num == 1 && f.wireType == 2 {
-			chatModelBytes = f.bytes
-			break
+	walkProtoFields(blob, func(num uint64, wt uint8, _ uint64, b []byte) bool {
+		if num == 1 && wt == 2 {
+			chatModelBytes = b
+			return false
 		}
-	}
+		return true
+	})
 	if len(chatModelBytes) == 0 {
 		return inventory.TokenUsage{}, "", false
 	}
 
 	var usageBytes, timeWrapBytes []byte
 	var model19, model21, model22 string
-	for _, f := range decodeProtoFields(chatModelBytes) {
-		if f.wireType != 2 {
-			continue
+	walkProtoFields(chatModelBytes, func(num uint64, wt uint8, _ uint64, b []byte) bool {
+		if wt != 2 {
+			return true
 		}
-		switch f.num {
+		switch num {
 		case 4:
-			usageBytes = f.bytes
+			usageBytes = b
 		case 9:
-			timeWrapBytes = f.bytes
+			timeWrapBytes = b
 		case 19:
-			if utf8.Valid(f.bytes) {
-				model19 = strings.TrimSpace(string(f.bytes))
+			if utf8.Valid(b) {
+				model19 = strings.TrimSpace(string(b))
 			}
 		case 21:
-			if utf8.Valid(f.bytes) {
-				model21 = strings.TrimSpace(string(f.bytes))
+			if utf8.Valid(b) {
+				model21 = strings.TrimSpace(string(b))
 			}
 		case 22:
-			if utf8.Valid(f.bytes) {
-				model22 = strings.TrimSpace(string(f.bytes))
+			if utf8.Valid(b) {
+				model22 = strings.TrimSpace(string(b))
 			}
 		}
-	}
+		return true
+	})
 	if len(usageBytes) == 0 {
 		return inventory.TokenUsage{}, "", false
 	}
@@ -905,20 +934,21 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 
 	var in, out, cw, cr int64
 	var respID string
-	for _, f := range decodeProtoFields(usageBytes) {
+	walkProtoFields(usageBytes, func(num uint64, wt uint8, varint uint64, b []byte) bool {
 		switch {
-		case f.num == 2 && f.wireType == 0 && f.varint <= math.MaxInt64:
-			in = int64(f.varint)
-		case f.num == 3 && f.wireType == 0 && f.varint <= math.MaxInt64:
-			out = int64(f.varint)
-		case f.num == 4 && f.wireType == 0 && f.varint <= math.MaxInt64:
-			cw = int64(f.varint)
-		case f.num == 5 && f.wireType == 0 && f.varint <= math.MaxInt64:
-			cr = int64(f.varint)
-		case f.num == 11 && f.wireType == 2 && utf8.Valid(f.bytes):
-			respID = strings.TrimSpace(string(f.bytes))
+		case num == 2 && wt == 0 && varint <= math.MaxInt64:
+			in = int64(varint)
+		case num == 3 && wt == 0 && varint <= math.MaxInt64:
+			out = int64(varint)
+		case num == 4 && wt == 0 && varint <= math.MaxInt64:
+			cw = int64(varint)
+		case num == 5 && wt == 0 && varint <= math.MaxInt64:
+			cr = int64(varint)
+		case num == 11 && wt == 2 && utf8.Valid(b):
+			respID = strings.TrimSpace(string(b))
 		}
-	}
+		return true
+	})
 	if in == 0 && out == 0 && cw == 0 && cr == 0 {
 		return inventory.TokenUsage{}, "", false
 	}
@@ -938,23 +968,31 @@ func decodeAntigravityGenMetadata(blob []byte, fallbackDay string, loc *time.Loc
 }
 
 func decodeAntigravityDay(timeWrap []byte, loc *time.Location) string {
-	for _, f := range decodeProtoFields(timeWrap) {
-		if f.num != 4 {
-			continue
+	var day string
+	walkProtoFields(timeWrap, func(num uint64, wt uint8, varint uint64, b []byte) bool {
+		if num != 4 {
+			return true
 		}
-		if f.wireType == 0 && f.varint > 0 {
-			return unixTime(float64(f.varint)).In(loc).Format(time.DateOnly)
+		if wt == 0 && varint > 0 {
+			day = unixTime(float64(varint)).In(loc).Format(time.DateOnly)
+			return false
 		}
-		if f.wireType == 2 {
+		if wt == 2 {
 			// google.protobuf.Timestamp: field 1 is seconds.
-			for _, tf := range decodeProtoFields(f.bytes) {
-				if tf.num == 1 && tf.wireType == 0 && tf.varint > 0 {
-					return unixTime(float64(tf.varint)).In(loc).Format(time.DateOnly)
+			walkProtoFields(b, func(tnum uint64, twt uint8, tvarint uint64, _ []byte) bool {
+				if tnum == 1 && twt == 0 && tvarint > 0 {
+					day = unixTime(float64(tvarint)).In(loc).Format(time.DateOnly)
+					return false
 				}
+				return true
+			})
+			if day != "" {
+				return false
 			}
 		}
-	}
-	return ""
+		return true
+	})
+	return day
 }
 
 // candidateDirs resolves a list of env/home directory patterns and returns

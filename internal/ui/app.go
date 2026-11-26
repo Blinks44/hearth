@@ -426,6 +426,7 @@ type App struct {
 	usageProject        string // the Usage page's project filter, "" for all
 	usageProjectLabel   string
 	usageModel          string // the Usage page's model filter, "" for all
+	usageCache          []usageSummaryCacheEntry
 	mobileTab           int    // the mobile page's tab: all, then a group each
 	mobileFilter        string // the mobile table's filter
 	editorsTab          int    // the editors page's tab: all, extensions, commands
@@ -516,6 +517,9 @@ func (a *App) View(c *ui.Context) {
 	a.syncSecrets(c)
 	a.syncLogs()
 	a.syncForwardForm()
+	if len(a.usageCache) > 0 && a.usageCache[0].key.snapshot != a.Snapshot {
+		a.usageCache = nil
+	}
 	c.OnShortcut(ui.Cmd, ui.KeyK, a.toggleSearch)
 	c.OnShortcut(ui.Cmd, ui.KeyR, a.Scan)
 	c.OnShortcut(ui.Cmd, ui.KeyComma, func() { a.router.Push(settings.path) })

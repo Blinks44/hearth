@@ -127,6 +127,53 @@ type usageSummary struct {
 	availableModels   []string
 }
 
+type usageSummaryKey struct {
+	snapshot      *inventory.Snapshot
+	sessions      int
+	home          string
+	year          int
+	month         time.Month
+	day           int
+	loc           *time.Location
+	minute        int64
+	days          int
+	agentFilter   string
+	projectFilter string
+	modelFilter   string
+	byTokens      bool
+}
+
+type usageSummaryCacheEntry struct {
+	key         usageSummaryKey
+	projectDirs []string
+	summary     usageSummary
+}
+
+const maxUsageSummaryCache = 8
+
+func (a *App) sameProjectDirs(dirs []string) bool {
+	if len(dirs) != len(a.Projects) {
+		return false
+	}
+	for i, d := range dirs {
+		if a.Projects[i].Dir != d {
+			return false
+		}
+	}
+	return true
+}
+
+func (a *App) snapshotProjectDirs() []string {
+	if len(a.Projects) == 0 {
+		return nil
+	}
+	dirs := make([]string, len(a.Projects))
+	for i, p := range a.Projects {
+		dirs[i] = p.Dir
+	}
+	return dirs
+}
+
 // usageSummary sums the sessions' usage of the last days to now, all of
 // it for 0 days, without agent or project filters.
 func (a *App) usageSummary(now time.Time, days int) usageSummary {
@@ -141,11 +188,54 @@ func (a *App) usageSummaryFiltered(now time.Time, days int, agentFilter, project
 
 // usageSummaryFor sums usage with optional agent, project, and model filters.
 func (a *App) usageSummaryFor(now time.Time, days int, agentFilter, projectFilter, modelFilter string, byTokens bool) usageSummary {
-	var s usageSummary
 	var sessions []inventory.AgentSession
 	if a.Snapshot != nil {
 		sessions = a.Snapshot.Sessions
 	}
+	if len(a.usageCache) > 0 && a.usageCache[0].key.snapshot != a.Snapshot {
+		a.usageCache = nil
+	}
+	y, m, d := now.Date()
+	key := usageSummaryKey{
+		snapshot:      a.Snapshot,
+		sessions:      len(sessions),
+		home:          a.Home,
+		year:          y,
+		month:         m,
+		day:           d,
+		loc:           now.Location(),
+		minute:        now.Truncate(time.Minute).Unix(),
+		days:          days,
+		agentFilter:   agentFilter,
+		projectFilter: projectFilter,
+		modelFilter:   modelFilter,
+		byTokens:      byTokens,
+	}
+	for i := range a.usageCache {
+		if a.usageCache[i].key == key && a.sameProjectDirs(a.usageCache[i].projectDirs) {
+			return a.usageCache[i].summary
+		}
+	}
+	s := a.computeUsageSummary(now, sessions, days, agentFilter, projectFilter, modelFilter, byTokens)
+	if len(a.usageCache) >= maxUsageSummaryCache {
+		copy(a.usageCache, a.usageCache[1:])
+		a.usageCache[len(a.usageCache)-1] = usageSummaryCacheEntry{
+			key:         key,
+			projectDirs: a.snapshotProjectDirs(),
+			summary:     s,
+		}
+	} else {
+		a.usageCache = append(a.usageCache, usageSummaryCacheEntry{
+			key:         key,
+			projectDirs: a.snapshotProjectDirs(),
+			summary:     s,
+		})
+	}
+	return s
+}
+
+func (a *App) computeUsageSummary(now time.Time, sessions []inventory.AgentSession, days int, agentFilter, projectFilter, modelFilter string, byTokens bool) usageSummary {
+	var s usageSummary
 	today := now.Format(time.DateOnly)
 	from := ""
 	if days > 0 {

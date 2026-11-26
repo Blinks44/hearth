@@ -257,3 +257,68 @@ func TestStartupFileCreatedAfterLaunch(t *testing.T) {
 		t.Fatal("renamed profile was not noticed")
 	}
 }
+
+func TestStartupFilesShareDirectoryWatcher(t *testing.T) {
+	home := t.TempDir()
+	kubeDir := filepath.Join(home, ".kube")
+	if err := os.Mkdir(kubeDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files := []string{
+		filepath.Join(home, ".zshrc"),
+		filepath.Join(home, ".zprofile"),
+		filepath.Join(home, ".zshenv"),
+		filepath.Join(home, ".bashrc"),
+		filepath.Join(home, ".bash_profile"),
+		filepath.Join(home, ".profile"),
+		filepath.Join(kubeDir, "config"),
+	}
+	f := &fakeStart{}
+	scans := make(chan struct{}, 4)
+	s := &Service{Start: f.start, Shell: func() { scans <- struct{}{} }}
+	defer s.Close()
+
+	s.StartupFiles(files)
+	homeW, _ := f.watcher(t, home)
+	kubeW, _ := f.watcher(t, kubeDir)
+
+	// Unrelated file in $HOME does not trigger a scan.
+	homeW.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: ".DS_Store"}}
+	select {
+	case <-scans:
+		t.Fatal("unrelated file triggered a scan")
+	default:
+	}
+
+	// Any watched dotfile in $HOME triggers a scan via the single shared watcher.
+	homeW.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: ".bashrc"}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("no scan after .bashrc changed")
+	}
+
+	// File in a separate directory uses its own watcher.
+	kubeW.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: "config"}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("no scan after kube config changed")
+	}
+
+	// Updating targets in the same directory reuses the existing watcher.
+	s.StartupFiles(append(files, filepath.Join(home, ".zlogin")))
+	homeW.events <- []mygo.FileEvent{{Op: mygo.FileWrite, Path: ".zlogin"}}
+	select {
+	case <-scans:
+	case <-time.After(2 * time.Second):
+		t.Fatal("no scan after added .zlogin changed")
+	}
+
+	f.mu.Lock()
+	starts := f.starts
+	f.mu.Unlock()
+	if starts != 2 {
+		t.Errorf("started %d watchers, want 2 ($HOME and $HOME/.kube)", starts)
+	}
+}

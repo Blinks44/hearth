@@ -74,10 +74,14 @@ func LoadUsageCache(path string) error {
 	defer transcripts.Unlock()
 	for p, c := range f.Files {
 		if _, exists := transcripts.files[p]; !exists {
+			usage := merge(c.Usage)
+			if len(usage) < len(c.Usage) {
+				transcripts.dirty = true
+			}
 			transcripts.files[p] = cached{
 				size: c.Size,
 				mod:  time.Unix(0, c.Mod),
-				t:    transcript{id: c.ID, dir: c.Dir, usage: c.Usage},
+				t:    transcript{id: c.ID, dir: c.Dir, usage: usage},
 			}
 		}
 	}

@@ -59,7 +59,7 @@ func (a *App) projectHeaderActions(c *ui.Context, p projects.Project) {
 
 func (a *App) projectServicesCount(p projects.Project) int {
 	n := len(p.Databases)
-	if _, ok := composeProject(p); ok {
+	if _, ok := composeProject(p); ok && a.canPlanDocker() && a.dockerAnswers() {
 		n++
 	}
 	if _, linked := a.KubeLinks[p.Dir]; linked || len(p.Kube) > 0 {

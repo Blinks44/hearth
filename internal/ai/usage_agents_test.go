@@ -3,6 +3,7 @@ package ai
 import (
 	"database/sql"
 	"encoding/binary"
+	"encoding/json"
 	"math"
 	"os"
 	"path/filepath"
@@ -502,6 +503,71 @@ func TestUsageDiskCacheRoundTrip(t *testing.T) {
 	}
 	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
 		t.Errorf("cache file still exists after ClearUsageCache: %v", err)
+	}
+}
+
+func TestUsageCacheCompactsUnmergedEntries(t *testing.T) {
+	home := t.TempDir()
+	cachePath := filepath.Join(t.TempDir(), "usage-cache.json")
+	if err := ClearUsageCache(cachePath); err != nil {
+		t.Fatal(err)
+	}
+	copyFixture(t, home, "codex.jsonl", ".codex/sessions/rollout-compact.jsonl")
+	filePath := filepath.Join(home, ".codex", "sessions", "rollout-compact.jsonl")
+	fi, err := os.Stat(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. Fresh parse stores already-merged usage in transcripts.files (2 day/model rows, not 3 raw turns).
+	_ = Sessions(sysenv.Env{"HOME=" + home})
+	transcripts.Lock()
+	gotCached := transcripts.files[filePath]
+	transcripts.Unlock()
+	if len(gotCached.t.usage) != 2 {
+		t.Fatalf("cached usage rows after parse = %d, want 2 merged rows: %+v", len(gotCached.t.usage), gotCached.t.usage)
+	}
+
+	// 2. Loading a legacy cache with unmerged duplicate day/model rows compacts on load and marks dirty.
+	legacy := usageCacheFile{
+		Version: usageCacheVersion,
+		Files: map[string]cachedFileJSON{
+			filePath: {
+				Size: fi.Size(),
+				Mod:  fi.ModTime().UnixNano(),
+				ID:   "01a14e51",
+				Dir:  "/Users/user/dev/ui",
+				Usage: []inventory.TokenUsage{
+					{Day: "2026-11-01", Model: "gpt-6.1-sol", Input: 500, Output: 50},
+					{Day: "2026-11-01", Model: "gpt-6.1-sol", Input: 700, Output: 70},
+					{Day: "2026-11-01", Model: "gpt-6.1-sol", Input: 300, Output: 30},
+				},
+			},
+		},
+	}
+	raw, err := json.Marshal(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cachePath, raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := ClearUsageCache(""); err != nil {
+		t.Fatal(err)
+	}
+	if err := LoadUsageCache(cachePath); err != nil {
+		t.Fatal(err)
+	}
+	transcripts.Lock()
+	compacted := transcripts.files[filePath]
+	dirty := transcripts.dirty
+	transcripts.Unlock()
+	if !dirty {
+		t.Error("expected LoadUsageCache to mark dirty after compacting legacy unmerged rows")
+	}
+	want := []inventory.TokenUsage{{Day: "2026-11-01", Model: "gpt-6.1-sol", Input: 1500, Output: 150}}
+	if !reflect.DeepEqual(compacted.t.usage, want) {
+		t.Errorf("compacted usage = %+v, want %+v", compacted.t.usage, want)
 	}
 }
 

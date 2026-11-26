@@ -9,9 +9,11 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -43,6 +45,20 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
+var releasingMemory atomic.Bool
+
+// releaseMemory returns unused Go heap pages to the OS after heavy
+// background passes without blocking the UI thread.
+func releaseMemory() {
+	if !releasingMemory.CompareAndSwap(false, true) {
+		return
+	}
+	go func() {
+		defer releasingMemory.Store(false)
+		debug.FreeOSMemory()
+	}()
+}
+
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "mcp" {
 		os.Exit(serveMCP(os.Args[2:], os.Stderr))
@@ -51,6 +67,11 @@ func main() {
 	// its prompt as the one argument.
 	if self, _ := os.Executable(); len(os.Args) == 2 && self != "" && os.Getenv("SUDO_ASKPASS") == self {
 		os.Exit(askpass(locales.AskpassPrompt()))
+	}
+	// Hearth sits idle in the tray most of the time; a tighter GC target keeps
+	// its steady-state Go heap closer to live data unless the caller overrides GOGC.
+	if os.Getenv("GOGC") == "" {
+		debug.SetGCPercent(50)
 	}
 	// Native UI updater window: needs no webview (no WebKitGTK / WebView2).
 	mygo.Use(native.Plugin)
@@ -773,6 +794,7 @@ func main() {
 						a.Sizes, a.Counting, a.DockerCounting = &sizes, false, false
 					}
 				})
+				releaseMemory()
 			}()
 		}
 		scanned := func(s inventory.Snapshot) {
@@ -810,7 +832,10 @@ func main() {
 					if err := store.SaveSnapshot(cache, s); err != nil {
 						log.Print(err)
 					}
+					releaseMemory()
 				}()
+			} else {
+				releaseMemory()
 			}
 		}
 		// The version lists, kept a day, come again with every scan.

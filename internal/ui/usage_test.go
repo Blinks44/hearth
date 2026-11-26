@@ -221,3 +221,39 @@ func TestUsageBreakdownClickFiltersAndStoreDir(t *testing.T) {
 		t.Fatalf("usageModel after clear = %q, want empty", a.usageModel)
 	}
 }
+
+func TestUsageSummaryCache(t *testing.T) {
+	now := time.Date(2026, 11, 14, 12, 0, 15, 0, time.Local)
+	a := usageApp(now)
+
+	first := a.usageSummary(now, 30)
+	if len(a.usageCache) != 1 {
+		t.Fatalf("cache len = %d, want 1", len(a.usageCache))
+	}
+
+	// Same minute and inputs should hit cache with zero allocations.
+	allocs := testing.AllocsPerRun(20, func() {
+		_ = a.usageSummary(now.Add(10*time.Second), 30)
+	})
+	if allocs != 0 {
+		t.Errorf("cache hit allocs = %v, want 0", allocs)
+	}
+	if len(a.usageCache) != 1 {
+		t.Fatalf("cache len after hit = %d, want 1", len(a.usageCache))
+	}
+
+	// Changing projects invalidates lookup and recomputes project attribution.
+	a.Projects = append(a.Projects, projects.Project{Dir: "/tmp/old"})
+	afterProject := a.usageSummary(now, 30)
+	if afterProject.total.cost != first.total.cost || len(a.usageCache) != 2 {
+		t.Fatalf("after project change: cost=%v len=%d", afterProject.total.cost, len(a.usageCache))
+	}
+
+	// Replacing Snapshot clears prior snapshot entries so old snapshots are not retained.
+	nextSnap := &inventory.Snapshot{}
+	a.Snapshot = nextSnap
+	empty := a.usageSummary(now, 30)
+	if empty.sessions != 0 || len(a.usageCache) != 1 || a.usageCache[0].key.snapshot != nextSnap {
+		t.Fatalf("after snapshot swap: sessions=%d cache=%d", empty.sessions, len(a.usageCache))
+	}
+}
