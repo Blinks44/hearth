@@ -4,6 +4,26 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-11-26
+
+### Added
+
+- **Redesigned Project detail view:** Added tabbed layout (`Overview`, `Services`, `AI`, `Files`), quick header buttons (`Editor`, `Terminal`, `README`), a read-only Git summary strip (branch, modified count, remote link, last commit), reinstallable dependency sizing with a jump to Cleanup, and dedicated project AI cards (skills with per-agent toggles, MCP servers, instructions, permissions, and hooks).
+- **Create local skills & project filtering:** Create new `SKILL.md` skills directly from Hearth into shared storage and link them to installed agents, filter skills by project, and distinguish native agent skill folders from symlinks.
+- **Bulk issue fixes & severity filtering:** Filter Issues by severity (`All`, `Important only`, `For information`) and apply multiple automatic fixes together in one confirmed plan (`Fix all`).
+- **Cleanup settings & reset controls:** Configure inactive project age, minimum cache size, and excluded `$HOME` folders in Settings, clear stale hidden issues, and restore dismissed Overview tips.
+- **Broader version pinning:** Added confirmed version-pinning support for `.sdkmanrc`, `global.json`, `.tool-versions`, and additional runtime version files.
+
+### Changed
+
+- **Lower memory usage & faster startup:** Reduced idle RAM usage and scan memory spikes by compacting AI usage caches in memory and on disk, pooling scan buffers, caching usage summaries between frames, sharing one file watcher per startup folder, and returning unused memory to the OS after background scans.
+- **Clearer Overview & Updates status:** Split Databases and Ports into separate Overview summary tiles, included Hearth app updates in the Updates badge and counter, and grouped repeated project requirement checks per file.
+
+### Fixed
+
+- **macOS memory attribution for Colima & Podman VMs:** Starting a Colima or Podman VM from Hearth now disclaims macOS process responsibility so Activity Monitor and memory tools attribute the VM's RAM to the VM itself instead of Hearth.
+- **Shell startup timing threshold:** Aligned the Startup tab warning threshold with the Issues page so fast shells are no longer flagged inconsistently.
+
 ## [1.0.4] - 2026-11-25
 
 ### Added
