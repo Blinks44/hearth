@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/cleanup"
@@ -40,6 +41,18 @@ func (a *App) docker(c *ui.Context, p page) {
 		}
 		d := st.Docker
 		active := inventory.TerminalCopy(st.Installations)
+		if a.RefreshDocker != nil && active >= 0 {
+			for _, ctx := range d.Contexts {
+				if ctx.Name == d.Selected && ctx.Local && !ctx.Denied && ctx.Status == "unavailable" {
+					now := time.Now()
+					if a.dockerLastCheck.IsZero() || now.Sub(a.dockerLastCheck) >= 5*time.Second {
+						a.dockerLastCheck = now
+						a.RefreshDocker()
+					}
+					break
+				}
+			}
+		}
 		if !a.dockerTabsReady {
 			a.dockerTabsReady = true
 			if active < 0 {

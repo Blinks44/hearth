@@ -114,6 +114,8 @@ type App struct {
 	CleanupStaleDays int
 	CleanupMinMB     int
 	CleanupExclude   []string
+	// SkillRepos are saved custom/corporate skill catalog repositories.
+	SkillRepos []store.SkillRepo
 	// SettingsError says why settings could not be saved or the cache
 	// cleared; SettingsNotice confirms the cache was cleared.
 	SettingsError  string
@@ -267,6 +269,7 @@ type App struct {
 	// read to got on the UI thread, until stop is called; nil hides the
 	// engine view.
 	WatchDocker           func(t docker.Target, overview bool, got func(docker.Engine, error)) (stop func())
+	RefreshDocker         func()
 	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
 	WatchDockerResources  func(docker.Target, docker.ResourceKind, func([]docker.Resource, error, error)) (stop func())
 	WatchDockerImages     func(t docker.Target, got func([]docker.Image, error)) (stop func())
@@ -441,12 +444,17 @@ type App struct {
 	shownSettingsNotice string // last SettingsNotice emitted as a toast
 	shownSettingsError  string // last SettingsError emitted as a toast
 	cleanupTab          int    // the Cleanup page's tab: all, then a group each
+	cleanupAge          int    // age filter: 0 any, 1 >30d, 2 >90d, 3 >180d
+	cleanupSort         int    // sort order: 0 largest first, 1 oldest first
 	cleanupFilter       string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice map[string]bool
-	updatesTab    int    // the Updates page's tab: all, versions, packages
-	updatesFilter string // the Updates table's filter
+	// cleanupProjectOpen records explicit expand/collapse state for project
+	// buckets on the Cleanup page, keyed by project root directory.
+	cleanupProjectOpen map[string]bool
+	updatesTab         int    // the Updates page's tab: all, versions, packages
+	updatesFilter      string // the Updates table's filter
 	// updateChoice is what the user checked or unchecked on the Updates
 	// page, by updateRow.key; the others are as Hearth offers them.
 	updateChoice       map[string]bool
@@ -473,9 +481,11 @@ type App struct {
 	projectFilter      string          // the projects page's filter
 	adding             *adding         // the folder the add dialog shows; nil when closed
 	addOpen            bool
-	licensesOpen       bool // the licenses dialog from Settings
+	cloneForm          *cloneProjectState // open Clone from Git dialog; nil when closed
+	licensesOpen       bool               // the licenses dialog from Settings
 
 	dockerTabsReady bool
+	dockerLastCheck time.Time
 	colimaResize    colimaResizeForm
 
 	// The skills and MCP pages: the agent filtered by, "" for all; the
@@ -725,6 +735,7 @@ func (a *App) View(c *ui.Context) {
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
 	a.addDialog(c)
+	a.cloneDialog(c)
 	a.searchDialog(c)
 	a.preparationView(c)
 	a.colimaResizeDialog(c)

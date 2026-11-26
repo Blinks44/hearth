@@ -242,10 +242,26 @@ func installedVersion(version string) (*semver.Version, error) {
 	return semver.NewVersion(version)
 }
 
+// isMinimumVersionReq reports whether req's manifest defines a minimum required
+// version (as go.mod's go/toolchain directives and Cargo.toml's rust-version
+// MSRV do) rather than an exact toolchain pin.
+func isMinimumVersionReq(req Requirement) bool {
+	switch req.File {
+	case "go.mod":
+		return req.Key == "go" || req.Key == "toolchain"
+	case "Cargo.toml":
+		return req.Key == "package.rust-version"
+	default:
+		return false
+	}
+}
+
 // requirementMatcher turns one project requirement into an installation check.
 // An exact packageManager pin (such as pnpm@9.15.0) accepts the pinned version
 // and newer releases in the same major so minor/patch updates do not cause a
 // false warning, while a different major or a conflicting engines range still fails.
+// Minimum-version manifests (go.mod go/toolchain and Cargo.toml rust-version)
+// accept the declared version and any newer release.
 func requirementMatcher(tool string, req Requirement, lines map[int]versions.Line) (func(inventory.Installation) bool, error) {
 	if req.Key == "packageManager" {
 		want := strings.TrimSpace(req.Want)
@@ -256,6 +272,23 @@ func requirementMatcher(tool string, req Requirement, lines map[int]versions.Lin
 					iv, err := installedVersion(in.Version)
 					return err == nil && c.Check(iv)
 				}, nil
+			}
+		}
+	}
+	if isMinimumVersionReq(req) {
+		want := strings.TrimSpace(req.Want)
+		if req.File == "go.mod" && req.Key == "toolchain" && strings.EqualFold(want, "local") {
+			return func(inventory.Installation) bool { return true }, nil
+		}
+		if want != "" && !strings.ContainsAny(want, "<>=~^*|, ") {
+			if v, err := semver.NewVersion(want); err == nil {
+				c, err := semver.NewConstraint(">= " + v.String())
+				if err == nil {
+					return func(in inventory.Installation) bool {
+						iv, err := installedVersion(in.Version)
+						return err == nil && c.Check(iv)
+					}, nil
+				}
 			}
 		}
 	}

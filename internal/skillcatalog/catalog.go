@@ -22,15 +22,114 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-// Repository is a supported public source. Requests never carry credentials.
+// Repository is a skill repository source. Public GitHub repositories fetch a
+// commit-pinned archive without credentials; GitLab, SSH, and private/self-hosted
+// repositories clone over git using the user's own SSH keys or credential helper
+// with GIT_TERMINAL_PROMPT=0 (Hearth never stores tokens or passwords).
 // Root is the folder that holds one directory per skill (empty inspects root
 // and skills/). Ref optionally pins a branch, tag, or commit; empty uses main
 // for built-in repositories or the repository's default branch.
-type Repository struct{ Name, Slug, Root, Ref string }
+type Repository struct {
+	Name, Slug, Root, Ref string
+	// Host is the repository host (empty implies github.com for legacy GitHub repos).
+	Host string
+	// CloneURL, when non-empty, loads the repository via local git rather than
+	// the public GitHub archive API.
+	CloneURL string
+	// WebURL is the optional HTTPS web root used to build browser links.
+	WebURL string
+	// Provider is "github", "gitlab", or "git" (empty implies "github").
+	Provider string
+}
+
+// IsGit reports whether the repository should be fetched with local git.
+func (r Repository) IsGit() bool { return r.CloneURL != "" }
 
 // Key uniquely identifies a repository source for caching.
 func (r Repository) Key() string {
+	if r.CloneURL != "" {
+		return r.CloneURL + "@" + r.Ref + ":" + r.Root
+	}
 	return r.Slug + "@" + r.Ref + ":" + r.Root
+}
+
+// SourceLabel returns a short provider/host badge for UI headers.
+func (r Repository) SourceLabel() string {
+	switch r.Provider {
+	case "", "github":
+		return "GitHub"
+	case "gitlab":
+		if r.Host != "" && r.Host != "gitlab.com" {
+			return r.Host
+		}
+		return "GitLab"
+	default:
+		if r.Host != "" {
+			return r.Host
+		}
+		return "Git"
+	}
+}
+
+// CanonicalURL returns a user-facing URL string that ParseSource can parse back
+// into the same repository, suitable for saving in user settings.
+func (r Repository) CanonicalURL() string {
+	if r.CloneURL != "" {
+		if r.Ref == "" && r.Root == "" {
+			return r.CloneURL
+		}
+		if r.WebURL != "" {
+			ref := r.Ref
+			if ref == "" {
+				ref = "HEAD"
+			}
+			sep := "/tree/"
+			if r.Provider == "gitlab" {
+				sep = "/-/tree/"
+			}
+			u := strings.TrimRight(r.WebURL, "/") + sep + ref
+			if r.Root != "" {
+				u += "/" + r.Root
+			}
+			return u
+		}
+		return r.CloneURL
+	}
+	u := "https://github.com/" + r.Slug
+	if r.Ref != "" {
+		u += "/tree/" + r.Ref
+		if r.Root != "" {
+			u += "/" + r.Root
+		}
+	}
+	return u
+}
+
+func (r Repository) treeBase(commit string) string {
+	if commit == "" {
+		return ""
+	}
+	switch r.Provider {
+	case "", "github":
+		base := r.WebURL
+		if base == "" && r.Slug != "" {
+			base = "https://github.com/" + r.Slug
+		}
+		if base == "" {
+			return ""
+		}
+		return strings.TrimRight(base, "/") + "/tree/" + commit
+	case "gitlab":
+		if r.WebURL == "" {
+			return ""
+		}
+		return strings.TrimRight(r.WebURL, "/") + "/-/tree/" + commit
+	default:
+		if r.WebURL == "" {
+			return ""
+		}
+		return strings.TrimRight(r.WebURL, "/")
+	}
 }
 
 // Repositories returns the sources offered in the catalog. OpenAI keeps its
@@ -137,12 +236,22 @@ type File struct {
 // Skill holds the exact files shown in the preview and later installed.
 type Skill struct {
 	Name, Description, Dir, Repository, Root, Commit string
+	WebBase                                          string `json:"webBase,omitempty"`
 	Files                                            []File
 }
 
-// URL links to this immutable version of the skill.
+// URL links to this immutable version of the skill, or "" when no web URL is known.
 func (s Skill) URL() string {
-	base := "https://github.com/" + s.Repository + "/tree/" + s.Commit
+	base := s.WebBase
+	if base == "" {
+		if !validSlug(s.Repository) || s.Commit == "" {
+			return ""
+		}
+		base = "https://github.com/" + s.Repository + "/tree/" + s.Commit
+	}
+	if !strings.Contains(base, "/tree/") {
+		return base
+	}
 	switch s.Root {
 	case ".":
 		return base
@@ -267,6 +376,12 @@ type archiveGroup struct {
 	blocked bool
 }
 
+type rawEntry struct {
+	rel string
+	f   File
+	bad bool
+}
+
 func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([]Skill, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
@@ -276,11 +391,6 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 	limited := &io.LimitedReader{R: gz, N: maxExpanded + 1}
 	tr := tar.NewReader(limited)
 
-	type rawEntry struct {
-		rel string
-		f   File
-		bad bool
-	}
 	var entries []rawEntry
 	total, count := int64(0), 0
 	prefix := ""
@@ -328,7 +438,10 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 		}
 		entries = append(entries, rawEntry{rel: inside, f: File{Path: inside, Data: body, Executable: h.Mode&0111 != 0}})
 	}
+	return buildSkills(entries, repo, root, commit, "")
+}
 
+func buildSkills(entries []rawEntry, repo, root, commit, webBase string) ([]Skill, error) {
 	hasRootSkill := slices.ContainsFunc(entries, func(e rawEntry) bool { return !e.bad && e.rel == "SKILL.md" })
 	groups := map[string]*archiveGroup{}
 	add := func(key, gRoot, gDir, filePath string, e rawEntry) {
@@ -357,7 +470,7 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 				gRoot = ""
 			}
 		} else {
-			_, gDir, _ = strings.Cut(repo, "/")
+			gDir = strings.TrimSuffix(path.Base(strings.TrimRight(repo, "/")), ".git")
 		}
 		for _, e := range entries {
 			add(gDir, gRoot, gDir, e.rel, e)
@@ -428,7 +541,7 @@ func readArchive(ctx context.Context, data []byte, repo, root, commit string) ([
 			}
 			seen[key] = true
 		}
-		s := Skill{Dir: g.dir, Repository: repo, Root: g.root, Commit: commit, Files: g.files}
+		s := Skill{Dir: g.dir, Repository: repo, Root: g.root, Commit: commit, WebBase: webBase, Files: g.files}
 		text := strings.ReplaceAll(strings.TrimPrefix(s.Text(), "\ufeff"), "\r\n", "\n")
 		rest, ok := strings.CutPrefix(text, "---\n")
 		front, _, closed := strings.Cut(rest, "\n---")

@@ -104,6 +104,7 @@ func main() {
 	a.CleanupStaleDays = list.settings.CleanupStaleDays
 	a.CleanupMinMB = list.settings.CleanupMinMB
 	a.CleanupExclude = slices.Clone(list.settings.CleanupExclude)
+	a.SkillRepos = slices.Clone(list.settings.SkillRepos)
 	a.TrayEnabled = !list.settings.TrayDisabled
 	a.ShowInDock = !list.settings.DockHidden || !a.TrayEnabled
 	a.KubePinned, a.Terminal, a.Editor = list.settings.KubePinned, list.settings.Terminal, list.settings.Editor
@@ -199,7 +200,7 @@ func main() {
 			env := scanner.Terminal()
 			go func() {
 				defer cancel()
-				skills, err := skillCache.Fetch(ctx, nil, repo, force)
+				skills, err := skillCache.FetchWith(ctx, nil, run.Exec{}, env, repo, force)
 				dirs := ai.SkillDirectories(env)
 				win.Update(func() { done(skills, dirs, err) })
 			}()
@@ -697,6 +698,19 @@ func main() {
 			}()
 			return cancel
 		}
+		refreshDocker := func() {
+			scanner.Refresh([]string{"docker", "databases"}, func(states []inventory.ToolState) {
+				win.Update(func() {
+					if a.Snapshot == nil {
+						return
+					}
+					s := scan.Replace(*a.Snapshot, states)
+					a.Snapshot = &s
+					list.watch.Docker(&s, scanner.Terminal())
+				})
+			})
+		}
+		a.RefreshDocker = refreshDocker
 		// Project files and the shells' startup files are followed: a
 		// change reads that project again, or scans again. A change of the
 		// Docker engine's containers checks Docker and the databases again.
@@ -704,23 +718,12 @@ func main() {
 			Start: func(ctx context.Context, path string) (watch.Watcher, error) {
 				return mygo.WatchFiles(ctx, path, mygo.FileWatchOptions{Debounce: 300 * time.Millisecond})
 			},
-			Project: func(p projects.Project) { win.Update(func() { list.update(p) }) },
-			Shell:   func() { win.Update(a.Scan) },
-			Lines:   run.Lines,
-			Containers: func() {
-				scanner.Refresh([]string{"docker", "databases"}, func(states []inventory.ToolState) {
-					win.Update(func() {
-						if a.Snapshot == nil {
-							return
-						}
-						s := scan.Replace(*a.Snapshot, states)
-						a.Snapshot = &s
-						list.watch.Docker(&s, scanner.Terminal())
-					})
-				})
-			},
-			Err: func(err error) { log.Print(err) },
-			Env: scanner.Terminal,
+			Project:    func(p projects.Project) { win.Update(func() { list.update(p) }) },
+			Shell:      func() { win.Update(a.Scan) },
+			Lines:      run.Lines,
+			Containers: refreshDocker,
+			Err:        func(err error) { log.Print(err) },
+			Env:        scanner.Terminal,
 		}
 		list.env = scanner.Terminal
 		list.watch.StartupFiles(append(detect.StartupFiles(sysenv.GUI(), a.Home), detect.KubeConfigFiles(scanner.Terminal(), a.Home)...))
@@ -752,14 +755,19 @@ func main() {
 			a.DockerCounting = true
 			env := slices.Clone(scanner.Terminal())
 			var installs []string
+			projectDirs := make([]string, 0, len(a.Projects))
 			for _, p := range a.Projects {
+				projectDirs = append(projectDirs, p.Dir)
 				for _, name := range p.Installs {
 					installs = append(installs, filepath.Join(p.Dir, name))
 				}
 			}
 			exclude := slices.Clone(a.CleanupExclude)
 			go func() {
-				sizes, err := disk.CountWithExclude(ctx, run.Exec{}, env, s, installs, exclude, func(next inventory.Sizes) {
+				sizes, err := disk.CountWithOptions(ctx, run.Exec{}, env, s, installs, disk.CountOptions{
+					Exclude:  exclude,
+					Projects: projectDirs,
+				}, func(next inventory.Sizes) {
 					win.Update(func() {
 						if ctx.Err() != nil {
 							return
@@ -1015,6 +1023,7 @@ func main() {
 			list.settings.CleanupStaleDays = a.CleanupStaleDays
 			list.settings.CleanupMinMB = a.CleanupMinMB
 			list.settings.CleanupExclude = slices.Clone(a.CleanupExclude)
+			list.settings.SkillRepos = slices.Clone(a.SkillRepos)
 			list.settings.TrayDisabled = !a.TrayEnabled
 			list.settings.DockHidden = !a.ShowInDock
 			list.settings.KubePinned, list.settings.Terminal, list.settings.Editor = a.KubePinned, a.Terminal, a.Editor

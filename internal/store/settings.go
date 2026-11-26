@@ -52,6 +52,15 @@ type Settings struct {
 	// CleanupExclude are extra folders under $HOME (or absolute paths) skipped
 	// when walking for project dependency folders.
 	CleanupExclude []string `json:"cleanupExclude,omitempty"`
+	// SkillRepos are user-saved custom or corporate Git skill repositories shown
+	// alongside the built-in catalog sources.
+	SkillRepos []SkillRepo `json:"skillRepos,omitempty"`
+}
+
+// SkillRepo is a saved custom or corporate Git skill repository URL.
+type SkillRepo struct {
+	Name string `json:"name,omitempty"`
+	URL  string `json:"url"`
 }
 
 // Project is a folder the user added to Hearth.

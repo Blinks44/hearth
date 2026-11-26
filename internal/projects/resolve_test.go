@@ -332,3 +332,100 @@ func TestResolvePackageManagerCompatibility(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveMinimumVersionManifests(t *testing.T) {
+	tests := []struct {
+		name      string
+		tool      string
+		installed string
+		req       Requirement
+		wantMet   bool
+	}{
+		{
+			name: "go.mod go directive satisfied by newer patch",
+			tool: "go", installed: "1.27.4",
+			req:     Requirement{Tool: "go", Want: "1.27.3", File: "go.mod", Key: "go"},
+			wantMet: true,
+		},
+		{
+			name: "go.mod go directive satisfied by newer minor",
+			tool: "go", installed: "1.28.0",
+			req:     Requirement{Tool: "go", Want: "1.27.3", File: "go.mod", Key: "go"},
+			wantMet: true,
+		},
+		{
+			name: "go.mod go directive unmet by older patch",
+			tool: "go", installed: "1.27.2",
+			req:     Requirement{Tool: "go", Want: "1.27.3", File: "go.mod", Key: "go"},
+			wantMet: false,
+		},
+		{
+			name: "go.mod two-part go directive satisfied by newer minor",
+			tool: "go", installed: "1.24.1",
+			req:     Requirement{Tool: "go", Want: "1.23", File: "go.mod", Key: "go"},
+			wantMet: true,
+		},
+		{
+			name: "go.mod toolchain directive satisfied by newer Go",
+			tool: "go", installed: "1.27.4",
+			req:     Requirement{Tool: "go", Want: "1.27.3", File: "go.mod", Key: "toolchain"},
+			wantMet: true,
+		},
+		{
+			name: "go.mod toolchain local accepts any local Go",
+			tool: "go", installed: "1.27.4",
+			req:     Requirement{Tool: "go", Want: "local", File: "go.mod", Key: "toolchain"},
+			wantMet: true,
+		},
+		{
+			name: ".go-version stays exact pin",
+			tool: "go", installed: "1.27.4",
+			req:     Requirement{Tool: "go", Want: "1.27.3", File: ".go-version"},
+			wantMet: false,
+		},
+		{
+			name: "Cargo.toml rust-version MSRV satisfied by newer Rust",
+			tool: "rust", installed: "1.99.1",
+			req:     Requirement{Tool: "rust", Want: "1.80", File: "Cargo.toml", Key: "package.rust-version"},
+			wantMet: true,
+		},
+		{
+			name: "Cargo.toml rust-version MSRV unmet by older Rust",
+			tool: "rust", installed: "1.79.0",
+			req:     Requirement{Tool: "rust", Want: "1.80", File: "Cargo.toml", Key: "package.rust-version"},
+			wantMet: false,
+		},
+		{
+			name: "rust-toolchain.toml stays exact pin",
+			tool: "rust", installed: "1.99.1",
+			req:     Requirement{Tool: "rust", Want: "1.80.0", File: "rust-toolchain.toml", Key: "toolchain.channel"},
+			wantMet: false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := &inventory.Snapshot{Tools: []inventory.ToolState{{
+				Tool: tc.tool,
+				Installations: []inventory.Installation{{
+					Tool:    tc.tool,
+					Version: tc.installed,
+					OnPath:  1,
+					Path:    "/opt/homebrew/bin/" + tc.tool,
+					Source:  inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"},
+				}},
+			}}}
+			got := Resolve(Project{Requirements: []Requirement{tc.req}}, s, nil)
+			if len(got) != 1 || len(got[0].Checks) != 1 {
+				t.Fatalf("unexpected resolve result: %+v", got)
+			}
+			ch := got[0].Checks[0]
+			if ch.Err != "" {
+				t.Fatalf("unexpected check error: %s", ch.Err)
+			}
+			if ch.Met != tc.wantMet {
+				t.Errorf("Met = %v, want %v (file=%s key=%s want=%s installed=%s)",
+					ch.Met, tc.wantMet, tc.req.File, tc.req.Key, tc.req.Want, tc.installed)
+			}
+		})
+	}
+}

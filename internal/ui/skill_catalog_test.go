@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 func catalogFixture() []skillcatalog.Skill {
@@ -402,5 +404,60 @@ func TestSkillCatalogSkillsShAndDestination(t *testing.T) {
 	}
 	if len(loadedSlugs) < 2 {
 		t.Fatalf("loadedSlugs = %v", loadedSlugs)
+	}
+}
+
+func TestSkillCatalogGitLabAndSavedSources(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = aiSnapshot()
+	a.Home = home
+	saves := 0
+	a.OnSettings = func() { saves++ }
+	var loaded []skillcatalog.Repository
+	a.LoadCatalog = func(repo skillcatalog.Repository, _ bool, done func([]skillcatalog.Skill, map[string]string, error)) func() {
+		loaded = append(loaded, repo)
+		skills := []skillcatalog.Skill{{
+			Name:        "corp-deploy",
+			Description: "Internal deployment checklist",
+			Dir:         "corp-deploy",
+			Repository:  repo.Host + "/" + repo.Slug,
+			Root:        "skills",
+			Commit:      strings.Repeat("b", 40),
+			WebBase:     "https://gitlab.company.internal/team/sub/skills/-/tree/" + strings.Repeat("b", 40),
+			Files:       []skillcatalog.File{{Path: "SKILL.md", Data: []byte("---\nname: corp-deploy\ndescription: Internal\n---\n# Deploy")}},
+		}}
+		done(skills, map[string]string{"claude": home + "/.claude/skills"}, nil)
+		return func() {}
+	}
+
+	a.openSkillCatalog(0)
+	tt := openAI(t, a, skillsPage)
+
+	a.skillCatalog.customURL = "https://gitlab.company.internal/team/sub/skills"
+	tt.Frame()
+	if err := tt.Click(locales.SkillCatalogLoad()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(loaded) < 2 || loaded[len(loaded)-1].Provider != "gitlab" || !loaded[len(loaded)-1].IsGit() {
+		t.Fatalf("expected gitlab git repo load, got %+v", loaded)
+	}
+	hasTexts(t, tt, "gitlab.company.internal", "corp-deploy", locales.SkillCatalogOpenRepo(), locales.SkillCatalogSaveSource())
+
+	if err := tt.Click(locales.SkillCatalogSaveSource()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(a.SkillRepos) != 1 || saves != 1 {
+		t.Fatalf("expected 1 saved skill repo and 1 settings save, got repos=%+v saves=%d", a.SkillRepos, saves)
+	}
+	hasTexts(t, tt, locales.SkillCatalogSavedLabel(), locales.SkillCatalogSavedSource(), "gitlab.company.internal/team/sub/skills")
+
+	if err := tt.Click(locales.SkillCatalogRemoveSource()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(a.SkillRepos) != 0 || saves != 2 {
+		t.Fatalf("expected saved skill repo removed, got repos=%+v saves=%d", a.SkillRepos, saves)
 	}
 }

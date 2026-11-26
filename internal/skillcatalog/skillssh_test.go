@@ -75,7 +75,15 @@ func TestParseSource(t *testing.T) {
 		{"npx skills add mattpocock/skills --skill ../escape", Repository{}, "", false},
 		{"https://skills.sh/only-owner", Repository{}, "", false},
 		{"https://skills.sh/owner/repo/a/b", Repository{}, "", false},
-		{"https://gitlab.com/owner/repo", Repository{}, "", false},
+		{"https://gitlab.com/owner/repo", Repository{
+			Name:     "owner/repo",
+			Slug:     "owner/repo",
+			Host:     "gitlab.com",
+			CloneURL: "https://gitlab.com/owner/repo.git",
+			WebURL:   "https://gitlab.com/owner/repo",
+			Provider: "gitlab",
+		}, "", true},
+		{"file:///tmp/repo", Repository{}, "", false},
 	} {
 		t.Run(tc.in, func(t *testing.T) {
 			repo, skill, err := ParseSource(tc.in)

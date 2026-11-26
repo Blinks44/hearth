@@ -95,6 +95,7 @@ func (a *App) projectList(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				a.cloneProjectButton(c)
 				a.findProjectsButton(c)
 				a.addButton(c)
 			})
@@ -141,6 +142,7 @@ func (a *App) projectsEmpty(c *ui.Context) {
 		ui.Text(c, locales.NoProjectsYet()).TextColor(c.Theme().TextMuted).TextAlign(ui.Center)
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			a.addButton(c)
+			a.cloneProjectButton(c)
 			a.findProjectsButton(c)
 		})
 	})

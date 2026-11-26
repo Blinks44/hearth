@@ -10916,7 +10916,7 @@
   "@skillCatalogTitle": {
     "description": "Skill repository catalog and installation."
   },
-  "skillCatalogText": "Skills from public repositories.\nRead the instructions and files before installing.",
+  "skillCatalogText": "Skills from GitHub, GitLab, and Git repositories.\nRead the instructions and files before installing.",
   "@skillCatalogText": {
     "description": "Skill repository catalog and installation."
   },
@@ -16150,7 +16150,7 @@
   "skillDiffModified": "modified",
   "skillDiffBinary": "Binary file differs.",
   "skillDiffTooLarge": "File is too large for an inline diff.",
-  "skillCatalogRepoPlaceholder": "GitHub URL, skills.sh/owner/repo, or npx skills add …",
+  "skillCatalogRepoPlaceholder": "GitHub, GitLab, SSH URL, skills.sh/owner/repo, or npx skills add …",
   "skillCatalogLoad": "Load",
   "skillCatalogScope": "Scope",
   "skillCatalogScopeUser": "User (all projects)",
@@ -17901,5 +17901,110 @@
     }
   },
   "skillCatalogAgent": "Agent",
-  "skillCatalogTarget": "Project / user"
+  "skillCatalogTarget": "Project / user",
+  "gitCloneButton": "Clone from Git…",
+  "gitCloneTitle": "Clone from Git",
+  "gitCloneNote": "Clone a repository, add it to Projects, and check what versions it needs.",
+  "gitCloneUrlLabel": "Repository URL",
+  "gitCloneUrlPlaceholder": "git@github.com:org/repo.git or https://...",
+  "gitCloneParentLabel": "Parent folder",
+  "gitCloneFolderLabel": "Folder name",
+  "gitCloneDestination": "Will clone into {path}",
+  "@gitCloneDestination": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneNoGitTitle": "Git is not installed",
+  "gitCloneNoGitText": "Hearth will install Git first, then clone this repository into the chosen folder.",
+  "gitCloneNoGitUnavailable": "Git is not installed and no supported package manager was found to install it automatically.",
+  "gitCloneAction": "Clone…",
+  "gitCloneInstallAction": "Install Git and clone…",
+  "gitCloneConfirm": "Clone",
+  "gitCloneInstallConfirm": "Install Git and clone",
+  "gitClonePlanTitle": "Clone {name}",
+  "@gitClonePlanTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneInstallPlanTitle": "Install Git and clone {name}",
+  "@gitCloneInstallPlanTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gitClonePlanWhy": "Clones {url} into {path} without prompting for credentials.",
+  "@gitClonePlanWhy": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneInstallPlanWhy": "Installs Git first, then clones {url} into {path}.",
+  "@gitCloneInstallPlanWhy": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneDone": "Cloned {name}",
+  "@gitCloneDone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneErrURL": "Enter a valid Git URL (SSH or HTTPS).",
+  "gitCloneErrFolder": "Enter a valid folder name without slashes.",
+  "gitCloneErrParent": "Choose an existing parent folder.",
+  "gitCloneErrExists": "Folder already exists: {path}",
+  "@gitCloneErrExists": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "gitCloneErrMissingGitDir": "Cloning finished, but the .git folder was not found.",
+  "gitClonePickParent": "Choose parent folder",
+  "skillCatalogOpenRepo": "Open repository",
+  "skillCatalogSaveSource": "Save source",
+  "skillCatalogSavedSource": "Saved",
+  "skillCatalogRemoveSource": "Remove saved source",
+  "skillCatalogSavedLabel": "Saved sources",
+  "cleanupAgeAll": "Any age",
+  "cleanupAge30": ">30d",
+  "cleanupAge90": ">90d",
+  "cleanupAge180": ">180d",
+  "cleanupSortLargest": "Largest",
+  "cleanupSortOldest": "Oldest",
+  "cleanupRoleDeps": "Dependencies",
+  "cleanupRoleBuild": "Build",
+  "cleanupBreakdownOther": "Other",
+  "cleanupLastActive": "active {date, date, ::yMMMd}",
+  "@cleanupLastActive": {
+    "description": "Last modification date shown on project artifact rows in Cleanup.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "example": "2026-10-15"
+      }
+    }
+  }
 }

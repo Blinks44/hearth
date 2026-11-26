@@ -907,3 +907,123 @@ func TestProjectDetailTabsGitDiskAIAndQuickActions(t *testing.T) {
 		t.Errorf("portsFilterQuery = %q, want 5432", a.portsFilterQuery)
 	}
 }
+
+func TestProjectsCloneDialog(t *testing.T) {
+	parent := t.TempDir()
+	a := NewApp()
+	a.Home = parent
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{{
+			Tool: "git",
+			Installations: []inventory.Installation{{
+				Tool:    "git",
+				Version: "2.49.0",
+				Path:    "/opt/homebrew/bin/git",
+				OnPath:  1,
+			}},
+		}},
+	}
+	var added []string
+	a.AddProjects = func(dirs []string) { added = append(added, dirs...) }
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
+		p, err := build(sysenv.Env{"HOME=" + parent, "PATH=/opt/homebrew/bin:/usr/bin"}, nil)
+		done(p, err)
+	}
+	a.RunPlan = func(_ ops.Plan, update func(ops.State)) func() {
+		update(ops.State{Phase: ops.Succeeded, Steps: []ops.StepStatus{ops.Done}, Verified: "Cloned moduix"})
+		return func() {}
+	}
+	a.router.Push(projectsPage.path)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	if err := tt.Click(locales.GitCloneButton()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, locales.GitCloneTitle(), locales.GitCloneUrlLabel())
+
+	// Typing URL auto-populates folder name and destination preview.
+	a.cloneForm.repoURL = "git@github.com:acme/moduix.git"
+	tt.Advance(time.Second)
+	if a.cloneForm.folder != "moduix" {
+		t.Fatalf("auto folder = %q, want moduix", a.cloneForm.folder)
+	}
+	hasTexts(t, tt, locales.GitCloneDestination("~/moduix"))
+
+	if err := tt.Click(locales.GitCloneAction()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if a.op == nil {
+		t.Fatal("expected clone operation plan dialog to open")
+	}
+	wantTarget := filepath.Join(parent, "moduix")
+	if len(a.op.plan.Steps) != 1 || a.op.plan.Steps[0].Argv[0] != "/opt/homebrew/bin/git" {
+		t.Fatalf("unexpected clone plan steps: %+v", a.op.plan.Steps)
+	}
+
+	// Confirm the plan: project is added and router navigates to it.
+	if err := tt.Click(locales.GitCloneConfirm()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	if len(added) != 1 || added[0] != wantTarget {
+		t.Fatalf("added projects = %v, want [%s]", added, wantTarget)
+	}
+	if got := a.router.Location(); got != projectPath(wantTarget) {
+		t.Fatalf("route after clone = %q, want %q", got, projectPath(wantTarget))
+	}
+
+	// Close the completed operation dialog, switch to macOS stub Git, and verify
+	// that stub Git is treated as missing and builds a composite install+clone plan.
+	if err := tt.Click(locales.OpDone()); err != nil {
+		t.Fatal(err)
+	}
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{
+			{
+				Tool: "git",
+				Installations: []inventory.Installation{{
+					Tool:   "git",
+					Path:   "/usr/bin/git",
+					OnPath: 1,
+					Stub:   true,
+				}},
+			},
+			{
+				Tool: "packages",
+				PackageManagers: []inventory.PackageManager{{
+					ID:   "brew",
+					Name: "Homebrew",
+					Path: "/opt/homebrew/bin/brew",
+				}},
+			},
+		},
+	}
+	if path, ok := a.realGitPath(); ok {
+		t.Fatalf("realGitPath() = (%q, true) for macOS stub, want false", path)
+	}
+	a.router.Push(projectsPage.path)
+	tt.Frame()
+	if err := tt.Click(locales.GitCloneButton()); err != nil {
+		t.Fatal(err)
+	}
+	a.cloneForm.repoURL = "https://github.com/acme/demo.git"
+	tt.Frame()
+	hasTexts(t, tt, locales.GitCloneNoGitTitle(), locales.GitCloneInstallAction())
+	if err := tt.Click(locales.GitCloneInstallAction()); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.op == nil {
+		t.Fatal("expected composite install+clone plan to open")
+	}
+	if len(a.op.plan.Steps) < 2 {
+		t.Fatalf("composite plan steps = %d, want >= 2 (install git + clone)", len(a.op.plan.Steps))
+	}
+	last := a.op.plan.Steps[len(a.op.plan.Steps)-1]
+	if len(last.Argv) < 2 || last.Argv[0] != "git" || last.Argv[1] != "clone" {
+		t.Fatalf("last step = %v, want git clone", last.Argv)
+	}
+}

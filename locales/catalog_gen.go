@@ -29302,13 +29302,13 @@ func (msgs Messages) SkillCatalogTitle() string {
 	return Catalog.Format(msgs.locale, "skillCatalogTitle", nil)
 }
 
-// SkillCatalogText says "Skills from public repositories.\nRead the instructions and files before installing."
+// SkillCatalogText says "Skills from GitHub, GitLab, and Git repositories.\nRead the instructions and files before installing."
 // in the language the app shows.
 //
 // Skill repository catalog and installation.
 func SkillCatalogText() string { return In(i18n.Locale()).SkillCatalogText() }
 
-// SkillCatalogText says "Skills from public repositories.\nRead the instructions and files before installing."
+// SkillCatalogText says "Skills from GitHub, GitLab, and Git repositories.\nRead the instructions and files before installing."
 // in the language of msgs.
 //
 // Skill repository catalog and installation.
@@ -42318,11 +42318,11 @@ func (msgs Messages) SkillDiffTooLarge() string {
 	return Catalog.Format(msgs.locale, "skillDiffTooLarge", nil)
 }
 
-// SkillCatalogRepoPlaceholder says "GitHub URL, skills.sh/owner/repo, or npx skills add …"
+// SkillCatalogRepoPlaceholder says "GitHub, GitLab, SSH URL, skills.sh/owner/repo, or npx skills add …"
 // in the language the app shows.
 func SkillCatalogRepoPlaceholder() string { return In(i18n.Locale()).SkillCatalogRepoPlaceholder() }
 
-// SkillCatalogRepoPlaceholder says "GitHub URL, skills.sh/owner/repo, or npx skills add …"
+// SkillCatalogRepoPlaceholder says "GitHub, GitLab, SSH URL, skills.sh/owner/repo, or npx skills add …"
 // in the language of msgs.
 func (msgs Messages) SkillCatalogRepoPlaceholder() string {
 	return Catalog.Format(msgs.locale, "skillCatalogRepoPlaceholder", nil)
@@ -47958,4 +47958,424 @@ func SkillCatalogTarget() string { return In(i18n.Locale()).SkillCatalogTarget()
 // in the language of msgs.
 func (msgs Messages) SkillCatalogTarget() string {
 	return Catalog.Format(msgs.locale, "skillCatalogTarget", nil)
+}
+
+// GitCloneButton says "Clone from Git…"
+// in the language the app shows.
+func GitCloneButton() string { return In(i18n.Locale()).GitCloneButton() }
+
+// GitCloneButton says "Clone from Git…"
+// in the language of msgs.
+func (msgs Messages) GitCloneButton() string {
+	return Catalog.Format(msgs.locale, "gitCloneButton", nil)
+}
+
+// GitCloneTitle says "Clone from Git"
+// in the language the app shows.
+func GitCloneTitle() string { return In(i18n.Locale()).GitCloneTitle() }
+
+// GitCloneTitle says "Clone from Git"
+// in the language of msgs.
+func (msgs Messages) GitCloneTitle() string {
+	return Catalog.Format(msgs.locale, "gitCloneTitle", nil)
+}
+
+// GitCloneNote says "Clone a repository, add it to Projects, and check what versions it needs."
+// in the language the app shows.
+func GitCloneNote() string { return In(i18n.Locale()).GitCloneNote() }
+
+// GitCloneNote says "Clone a repository, add it to Projects, and check what versions it needs."
+// in the language of msgs.
+func (msgs Messages) GitCloneNote() string {
+	return Catalog.Format(msgs.locale, "gitCloneNote", nil)
+}
+
+// GitCloneUrlLabel says "Repository URL"
+// in the language the app shows.
+func GitCloneUrlLabel() string { return In(i18n.Locale()).GitCloneUrlLabel() }
+
+// GitCloneUrlLabel says "Repository URL"
+// in the language of msgs.
+func (msgs Messages) GitCloneUrlLabel() string {
+	return Catalog.Format(msgs.locale, "gitCloneUrlLabel", nil)
+}
+
+// GitCloneUrlPlaceholder says "git@github.com:org/repo.git or https://..."
+// in the language the app shows.
+func GitCloneUrlPlaceholder() string { return In(i18n.Locale()).GitCloneUrlPlaceholder() }
+
+// GitCloneUrlPlaceholder says "git@github.com:org/repo.git or https://..."
+// in the language of msgs.
+func (msgs Messages) GitCloneUrlPlaceholder() string {
+	return Catalog.Format(msgs.locale, "gitCloneUrlPlaceholder", nil)
+}
+
+// GitCloneParentLabel says "Parent folder"
+// in the language the app shows.
+func GitCloneParentLabel() string { return In(i18n.Locale()).GitCloneParentLabel() }
+
+// GitCloneParentLabel says "Parent folder"
+// in the language of msgs.
+func (msgs Messages) GitCloneParentLabel() string {
+	return Catalog.Format(msgs.locale, "gitCloneParentLabel", nil)
+}
+
+// GitCloneFolderLabel says "Folder name"
+// in the language the app shows.
+func GitCloneFolderLabel() string { return In(i18n.Locale()).GitCloneFolderLabel() }
+
+// GitCloneFolderLabel says "Folder name"
+// in the language of msgs.
+func (msgs Messages) GitCloneFolderLabel() string {
+	return Catalog.Format(msgs.locale, "gitCloneFolderLabel", nil)
+}
+
+// GitCloneDestination says "Will clone into {path}"
+// in the language the app shows.
+func GitCloneDestination(path string) string { return In(i18n.Locale()).GitCloneDestination(path) }
+
+// GitCloneDestination says "Will clone into {path}"
+// in the language of msgs.
+func (msgs Messages) GitCloneDestination(path string) string {
+	return Catalog.Format(msgs.locale, "gitCloneDestination", map[string]any{"path": path})
+}
+
+// GitCloneNoGitTitle says "Git is not installed"
+// in the language the app shows.
+func GitCloneNoGitTitle() string { return In(i18n.Locale()).GitCloneNoGitTitle() }
+
+// GitCloneNoGitTitle says "Git is not installed"
+// in the language of msgs.
+func (msgs Messages) GitCloneNoGitTitle() string {
+	return Catalog.Format(msgs.locale, "gitCloneNoGitTitle", nil)
+}
+
+// GitCloneNoGitText says "Hearth will install Git first, then clone this repository into the chosen folder."
+// in the language the app shows.
+func GitCloneNoGitText() string { return In(i18n.Locale()).GitCloneNoGitText() }
+
+// GitCloneNoGitText says "Hearth will install Git first, then clone this repository into the chosen folder."
+// in the language of msgs.
+func (msgs Messages) GitCloneNoGitText() string {
+	return Catalog.Format(msgs.locale, "gitCloneNoGitText", nil)
+}
+
+// GitCloneNoGitUnavailable says "Git is not installed and no supported package manager was found to install it automatically."
+// in the language the app shows.
+func GitCloneNoGitUnavailable() string { return In(i18n.Locale()).GitCloneNoGitUnavailable() }
+
+// GitCloneNoGitUnavailable says "Git is not installed and no supported package manager was found to install it automatically."
+// in the language of msgs.
+func (msgs Messages) GitCloneNoGitUnavailable() string {
+	return Catalog.Format(msgs.locale, "gitCloneNoGitUnavailable", nil)
+}
+
+// GitCloneAction says "Clone…"
+// in the language the app shows.
+func GitCloneAction() string { return In(i18n.Locale()).GitCloneAction() }
+
+// GitCloneAction says "Clone…"
+// in the language of msgs.
+func (msgs Messages) GitCloneAction() string {
+	return Catalog.Format(msgs.locale, "gitCloneAction", nil)
+}
+
+// GitCloneInstallAction says "Install Git and clone…"
+// in the language the app shows.
+func GitCloneInstallAction() string { return In(i18n.Locale()).GitCloneInstallAction() }
+
+// GitCloneInstallAction says "Install Git and clone…"
+// in the language of msgs.
+func (msgs Messages) GitCloneInstallAction() string {
+	return Catalog.Format(msgs.locale, "gitCloneInstallAction", nil)
+}
+
+// GitCloneConfirm says "Clone"
+// in the language the app shows.
+func GitCloneConfirm() string { return In(i18n.Locale()).GitCloneConfirm() }
+
+// GitCloneConfirm says "Clone"
+// in the language of msgs.
+func (msgs Messages) GitCloneConfirm() string {
+	return Catalog.Format(msgs.locale, "gitCloneConfirm", nil)
+}
+
+// GitCloneInstallConfirm says "Install Git and clone"
+// in the language the app shows.
+func GitCloneInstallConfirm() string { return In(i18n.Locale()).GitCloneInstallConfirm() }
+
+// GitCloneInstallConfirm says "Install Git and clone"
+// in the language of msgs.
+func (msgs Messages) GitCloneInstallConfirm() string {
+	return Catalog.Format(msgs.locale, "gitCloneInstallConfirm", nil)
+}
+
+// GitClonePlanTitle says "Clone {name}"
+// in the language the app shows.
+func GitClonePlanTitle(name string) string { return In(i18n.Locale()).GitClonePlanTitle(name) }
+
+// GitClonePlanTitle says "Clone {name}"
+// in the language of msgs.
+func (msgs Messages) GitClonePlanTitle(name string) string {
+	return Catalog.Format(msgs.locale, "gitClonePlanTitle", map[string]any{"name": name})
+}
+
+// GitCloneInstallPlanTitle says "Install Git and clone {name}"
+// in the language the app shows.
+func GitCloneInstallPlanTitle(name string) string {
+	return In(i18n.Locale()).GitCloneInstallPlanTitle(name)
+}
+
+// GitCloneInstallPlanTitle says "Install Git and clone {name}"
+// in the language of msgs.
+func (msgs Messages) GitCloneInstallPlanTitle(name string) string {
+	return Catalog.Format(msgs.locale, "gitCloneInstallPlanTitle", map[string]any{"name": name})
+}
+
+// GitClonePlanWhy says "Clones {url} into {path} without prompting for credentials."
+// in the language the app shows.
+func GitClonePlanWhy(url string, path string) string {
+	return In(i18n.Locale()).GitClonePlanWhy(url, path)
+}
+
+// GitClonePlanWhy says "Clones {url} into {path} without prompting for credentials."
+// in the language of msgs.
+func (msgs Messages) GitClonePlanWhy(url string, path string) string {
+	return Catalog.Format(msgs.locale, "gitClonePlanWhy", map[string]any{"url": url, "path": path})
+}
+
+// GitCloneInstallPlanWhy says "Installs Git first, then clones {url} into {path}."
+// in the language the app shows.
+func GitCloneInstallPlanWhy(url string, path string) string {
+	return In(i18n.Locale()).GitCloneInstallPlanWhy(url, path)
+}
+
+// GitCloneInstallPlanWhy says "Installs Git first, then clones {url} into {path}."
+// in the language of msgs.
+func (msgs Messages) GitCloneInstallPlanWhy(url string, path string) string {
+	return Catalog.Format(msgs.locale, "gitCloneInstallPlanWhy", map[string]any{"url": url, "path": path})
+}
+
+// GitCloneDone says "Cloned {name}"
+// in the language the app shows.
+func GitCloneDone(name string) string { return In(i18n.Locale()).GitCloneDone(name) }
+
+// GitCloneDone says "Cloned {name}"
+// in the language of msgs.
+func (msgs Messages) GitCloneDone(name string) string {
+	return Catalog.Format(msgs.locale, "gitCloneDone", map[string]any{"name": name})
+}
+
+// GitCloneErrURL says "Enter a valid Git URL (SSH or HTTPS)."
+// in the language the app shows.
+func GitCloneErrURL() string { return In(i18n.Locale()).GitCloneErrURL() }
+
+// GitCloneErrURL says "Enter a valid Git URL (SSH or HTTPS)."
+// in the language of msgs.
+func (msgs Messages) GitCloneErrURL() string {
+	return Catalog.Format(msgs.locale, "gitCloneErrURL", nil)
+}
+
+// GitCloneErrFolder says "Enter a valid folder name without slashes."
+// in the language the app shows.
+func GitCloneErrFolder() string { return In(i18n.Locale()).GitCloneErrFolder() }
+
+// GitCloneErrFolder says "Enter a valid folder name without slashes."
+// in the language of msgs.
+func (msgs Messages) GitCloneErrFolder() string {
+	return Catalog.Format(msgs.locale, "gitCloneErrFolder", nil)
+}
+
+// GitCloneErrParent says "Choose an existing parent folder."
+// in the language the app shows.
+func GitCloneErrParent() string { return In(i18n.Locale()).GitCloneErrParent() }
+
+// GitCloneErrParent says "Choose an existing parent folder."
+// in the language of msgs.
+func (msgs Messages) GitCloneErrParent() string {
+	return Catalog.Format(msgs.locale, "gitCloneErrParent", nil)
+}
+
+// GitCloneErrExists says "Folder already exists: {path}"
+// in the language the app shows.
+func GitCloneErrExists(path string) string { return In(i18n.Locale()).GitCloneErrExists(path) }
+
+// GitCloneErrExists says "Folder already exists: {path}"
+// in the language of msgs.
+func (msgs Messages) GitCloneErrExists(path string) string {
+	return Catalog.Format(msgs.locale, "gitCloneErrExists", map[string]any{"path": path})
+}
+
+// GitCloneErrMissingGitDir says "Cloning finished, but the .git folder was not found."
+// in the language the app shows.
+func GitCloneErrMissingGitDir() string { return In(i18n.Locale()).GitCloneErrMissingGitDir() }
+
+// GitCloneErrMissingGitDir says "Cloning finished, but the .git folder was not found."
+// in the language of msgs.
+func (msgs Messages) GitCloneErrMissingGitDir() string {
+	return Catalog.Format(msgs.locale, "gitCloneErrMissingGitDir", nil)
+}
+
+// GitClonePickParent says "Choose parent folder"
+// in the language the app shows.
+func GitClonePickParent() string { return In(i18n.Locale()).GitClonePickParent() }
+
+// GitClonePickParent says "Choose parent folder"
+// in the language of msgs.
+func (msgs Messages) GitClonePickParent() string {
+	return Catalog.Format(msgs.locale, "gitClonePickParent", nil)
+}
+
+// SkillCatalogOpenRepo says "Open repository"
+// in the language the app shows.
+func SkillCatalogOpenRepo() string { return In(i18n.Locale()).SkillCatalogOpenRepo() }
+
+// SkillCatalogOpenRepo says "Open repository"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogOpenRepo() string {
+	return Catalog.Format(msgs.locale, "skillCatalogOpenRepo", nil)
+}
+
+// SkillCatalogSaveSource says "Save source"
+// in the language the app shows.
+func SkillCatalogSaveSource() string { return In(i18n.Locale()).SkillCatalogSaveSource() }
+
+// SkillCatalogSaveSource says "Save source"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSaveSource() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSaveSource", nil)
+}
+
+// SkillCatalogSavedSource says "Saved"
+// in the language the app shows.
+func SkillCatalogSavedSource() string { return In(i18n.Locale()).SkillCatalogSavedSource() }
+
+// SkillCatalogSavedSource says "Saved"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSavedSource() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSavedSource", nil)
+}
+
+// SkillCatalogRemoveSource says "Remove saved source"
+// in the language the app shows.
+func SkillCatalogRemoveSource() string { return In(i18n.Locale()).SkillCatalogRemoveSource() }
+
+// SkillCatalogRemoveSource says "Remove saved source"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogRemoveSource() string {
+	return Catalog.Format(msgs.locale, "skillCatalogRemoveSource", nil)
+}
+
+// SkillCatalogSavedLabel says "Saved sources"
+// in the language the app shows.
+func SkillCatalogSavedLabel() string { return In(i18n.Locale()).SkillCatalogSavedLabel() }
+
+// SkillCatalogSavedLabel says "Saved sources"
+// in the language of msgs.
+func (msgs Messages) SkillCatalogSavedLabel() string {
+	return Catalog.Format(msgs.locale, "skillCatalogSavedLabel", nil)
+}
+
+// CleanupAgeAll says "Any age"
+// in the language the app shows.
+func CleanupAgeAll() string { return In(i18n.Locale()).CleanupAgeAll() }
+
+// CleanupAgeAll says "Any age"
+// in the language of msgs.
+func (msgs Messages) CleanupAgeAll() string {
+	return Catalog.Format(msgs.locale, "cleanupAgeAll", nil)
+}
+
+// CleanupAge30 says ">30d"
+// in the language the app shows.
+func CleanupAge30() string { return In(i18n.Locale()).CleanupAge30() }
+
+// CleanupAge30 says ">30d"
+// in the language of msgs.
+func (msgs Messages) CleanupAge30() string {
+	return Catalog.Format(msgs.locale, "cleanupAge30", nil)
+}
+
+// CleanupAge90 says ">90d"
+// in the language the app shows.
+func CleanupAge90() string { return In(i18n.Locale()).CleanupAge90() }
+
+// CleanupAge90 says ">90d"
+// in the language of msgs.
+func (msgs Messages) CleanupAge90() string {
+	return Catalog.Format(msgs.locale, "cleanupAge90", nil)
+}
+
+// CleanupAge180 says ">180d"
+// in the language the app shows.
+func CleanupAge180() string { return In(i18n.Locale()).CleanupAge180() }
+
+// CleanupAge180 says ">180d"
+// in the language of msgs.
+func (msgs Messages) CleanupAge180() string {
+	return Catalog.Format(msgs.locale, "cleanupAge180", nil)
+}
+
+// CleanupSortLargest says "Largest"
+// in the language the app shows.
+func CleanupSortLargest() string { return In(i18n.Locale()).CleanupSortLargest() }
+
+// CleanupSortLargest says "Largest"
+// in the language of msgs.
+func (msgs Messages) CleanupSortLargest() string {
+	return Catalog.Format(msgs.locale, "cleanupSortLargest", nil)
+}
+
+// CleanupSortOldest says "Oldest"
+// in the language the app shows.
+func CleanupSortOldest() string { return In(i18n.Locale()).CleanupSortOldest() }
+
+// CleanupSortOldest says "Oldest"
+// in the language of msgs.
+func (msgs Messages) CleanupSortOldest() string {
+	return Catalog.Format(msgs.locale, "cleanupSortOldest", nil)
+}
+
+// CleanupRoleDeps says "Dependencies"
+// in the language the app shows.
+func CleanupRoleDeps() string { return In(i18n.Locale()).CleanupRoleDeps() }
+
+// CleanupRoleDeps says "Dependencies"
+// in the language of msgs.
+func (msgs Messages) CleanupRoleDeps() string {
+	return Catalog.Format(msgs.locale, "cleanupRoleDeps", nil)
+}
+
+// CleanupRoleBuild says "Build"
+// in the language the app shows.
+func CleanupRoleBuild() string { return In(i18n.Locale()).CleanupRoleBuild() }
+
+// CleanupRoleBuild says "Build"
+// in the language of msgs.
+func (msgs Messages) CleanupRoleBuild() string {
+	return Catalog.Format(msgs.locale, "cleanupRoleBuild", nil)
+}
+
+// CleanupBreakdownOther says "Other"
+// in the language the app shows.
+func CleanupBreakdownOther() string { return In(i18n.Locale()).CleanupBreakdownOther() }
+
+// CleanupBreakdownOther says "Other"
+// in the language of msgs.
+func (msgs Messages) CleanupBreakdownOther() string {
+	return Catalog.Format(msgs.locale, "cleanupBreakdownOther", nil)
+}
+
+// CleanupLastActive says "active {date, date, ::yMMMd}"
+// in the language the app shows.
+//
+// Last modification date shown on project artifact rows in Cleanup.
+func CleanupLastActive(date time.Time) string { return In(i18n.Locale()).CleanupLastActive(date) }
+
+// CleanupLastActive says "active {date, date, ::yMMMd}"
+// in the language of msgs.
+//
+// Last modification date shown on project artifact rows in Cleanup.
+func (msgs Messages) CleanupLastActive(date time.Time) string {
+	return Catalog.Format(msgs.locale, "cleanupLastActive", map[string]any{"date": date})
 }
