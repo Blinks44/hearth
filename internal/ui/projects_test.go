@@ -1002,11 +1002,8 @@ func TestProjectsCloneDialog(t *testing.T) {
 		t.Fatalf("route after clone = %q, want %q", got, projectPath(wantTarget))
 	}
 
-	// Close the completed operation dialog, switch to macOS stub Git, and verify
+	// Close the completed operation dialog, switch to stub Git, and verify
 	// that stub Git is treated as missing and builds a composite install+clone plan.
-	origGOOS := goos
-	goos = "darwin"
-	t.Cleanup(func() { goos = origGOOS })
 	if err := tt.Click(locales.OpDone()); err != nil {
 		t.Fatal(err)
 	}
@@ -1023,11 +1020,11 @@ func TestProjectsCloneDialog(t *testing.T) {
 			},
 			{
 				Tool: "packages",
-				PackageManagers: []inventory.PackageManager{{
-					ID:   "brew",
-					Name: "Homebrew",
-					Path: "/opt/homebrew/bin/brew",
-				}},
+				PackageManagers: []inventory.PackageManager{
+					{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"},
+					{ID: "apt", Name: "APT", Path: "/usr/bin/apt-get"},
+					{ID: "winget", Name: "WinGet", Path: `C:\Windows\System32\winget.exe`},
+				},
 			},
 		},
 	}
