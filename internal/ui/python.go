@@ -43,7 +43,7 @@ func (a *App) python(c *ui.Context, p page) {
 						a.pythonAvailable(c, st, rows, active)
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
-							globalsCard(c, locales.PythonTools(), locales.NoPythonTools(), ins[active].Packages, "uv tool · pipx")
+							a.managedGlobalsCard(c, "python", locales.PythonTools(), locales.NoPythonTools(), ins[active].Packages, "uv tool · pipx")
 						}
 					})
 				case 1:
@@ -114,6 +114,7 @@ func (a *App) pythonAvailable(c *ui.Context, st inventory.ToolState, rows []int,
 				text = locales.VersionsFailed(a.PythonVersionsErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "3.13.1")
 			return
 		}
 		now := c.Now()
@@ -130,6 +131,7 @@ func (a *App) pythonAvailable(c *ui.Context, st inventory.ToolState, rows []int,
 				a.installButton(c, st, l.Latest, l.Latest)
 			})
 		}
+		a.customVersionRow(c, st, "3.13.1")
 	})
 }
 

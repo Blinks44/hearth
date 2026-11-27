@@ -113,6 +113,7 @@ var (
 			{instructionsPage, "lucide/file-text", locales.InstructionsTitle, locales.InstructionsSubtitle},
 			{modelsPage, "lucide/brain", locales.ModelsTitle, locales.ModelsSubtitle},
 			{usagePage, "lucide/chart-column", locales.UsageTitle, locales.UsageSubtitle},
+			{quotasPage, "lucide/gauge", locales.QuotasTitle, locales.QuotasSubtitle},
 		}},
 		{locales.SectionSystem, []page{
 			{pathPage, "lucide/terminal", locales.PathTitle, locales.SectionSystem},

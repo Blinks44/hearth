@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -131,7 +132,7 @@ func (t *trayController) destroy() {
 }
 
 func (t *trayController) refresh() {
-	if !t.app.PortsRefreshing() {
+	if !t.app.PortsRefreshing() && !t.app.QuotasRefreshing {
 		t.manualRefresh = false
 	}
 	if t.tray == nil {
@@ -283,7 +284,14 @@ func (t *trayController) refreshAllLive(manual bool) {
 	}
 	t.refreshContainers()
 	t.app.RefreshPortsNow()
-	if manual && !t.app.PortsRefreshing() {
+	if t.app.RefreshQuotas != nil {
+		if manual {
+			t.app.RefreshQuotas(true)
+		} else if t.app.Quotas == nil || time.Since(t.app.Quotas.CheckedAt) >= aiquota.ActivePollInterval {
+			t.app.RefreshQuotas(false)
+		}
+	}
+	if manual && !t.app.PortsRefreshing() && !t.app.QuotasRefreshing {
 		t.manualRefresh = false
 	}
 	t.invalidatePopover()
@@ -319,6 +327,7 @@ func (t *trayController) popoverActions() hearthui.TrayPopoverActions {
 	}
 	return hearthui.TrayPopoverActions{
 		Containers:         t.containers,
+		Quotas:             t.app.Quotas,
 		HasColima:          hasColima,
 		ColimaRunning:      colimaRunning,
 		DockerContext:      dockerCtx,
@@ -328,7 +337,7 @@ func (t *trayController) popoverActions() hearthui.TrayPopoverActions {
 		KubeContexts:       kubeContexts,
 		Switching:          t.switching,
 		AppUpdateAvailable: t.app.AppUpdateAvailable,
-		Refreshing:         t.manualRefresh && t.app.PortsRefreshing(),
+		Refreshing:         t.manualRefresh && (t.app.PortsRefreshing() || t.app.QuotasRefreshing),
 		OnRefresh: func() {
 			t.refreshAllLive(true)
 		},
@@ -350,6 +359,11 @@ func (t *trayController) popoverActions() hearthui.TrayPopoverActions {
 		OnOpenPorts: func() {
 			t.hidePopover()
 			t.app.OpenPorts()
+			t.showWindow()
+		},
+		OnOpenQuotas: func() {
+			t.hidePopover()
+			t.app.OpenQuotas()
 			t.showWindow()
 		},
 		OnOpenDocker: func() {

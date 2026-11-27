@@ -37,6 +37,8 @@ func TestPathStartup(t *testing.T) {
 	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {
 		built = append(built, ops.Plan{Title: "built"})
 	}
+	remeasured := 0
+	a.MeasureStartup = func() { remeasured++ }
 
 	a.router.Push(pathPage)
 	tt := ui.NewTester(a.View, 1280, 820)
@@ -46,8 +48,14 @@ func TestPathStartup(t *testing.T) {
 	tt.Frame()
 	tt.Advance(time.Second)
 	screenshot(t, tt, "path-startup")
-	hasTexts(t, tt, "0.92 s", "65% of the start", "line 12", "slow", locales.CulpritNvm(), locales.CulpritCompinit(),
-		"0.15 s", "The rest, in 3 files", locales.StartupHow(), "1.42 s", "~/.zprofile")
+	hasTexts(t, tt, "0.92 s", "65% of the start", "0.71 s", "line 12", "slow", locales.CulpritNvm(), locales.CulpritCompinit(),
+		"0.15 s", "The rest, in 3 files", locales.StartupHow(), "1.42 s", "~/.zprofile", locales.StartupRemeasure())
+	if err := tt.Click(locales.StartupRemeasure()); err != nil {
+		t.Fatal(err)
+	}
+	if remeasured != 1 {
+		t.Fatalf("Re-measure clicked %d times", remeasured)
+	}
 	if err := tt.Click(locales.MoveToMise()); err != nil {
 		t.Fatal(err)
 	}

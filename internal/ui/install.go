@@ -117,7 +117,12 @@ func (a *App) installToolButton(c *ui.Context, id string) {
 func (a *App) installPrimary(c *ui.Context, id string) {
 	if id != "" && a.canInstallTool(id) {
 		ui.Row(c).Padding(6, 0, 0, 0).Children(func() {
-			ui.PrimaryButton(c.Key("install:"+id), locales.InstallNamed(setupTitle(id))).OnClick(func() { a.installTool(id) })
+			ui.PrimaryButton(c.Key("install:"+id), "").Height(controlHeight).OnClick(func() { a.installTool(id) }).Children(func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, Icon("plus")).Size(14, 14)
+					ui.Text(c, locales.InstallNamed(setupTitle(id)))
+				})
+			})
 		})
 	}
 }

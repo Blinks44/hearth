@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
@@ -22,7 +23,9 @@ import (
 // State is private to the server; only explicitly selected fields reach clients.
 type State struct {
 	Snapshot                    inventory.Snapshot
+	Sizes                       *inventory.Sizes
 	Projects                    []projects.Project
+	Quotas                      *aiquota.Snapshot
 	Cached, TerminalUnavailable bool
 }
 
@@ -74,6 +77,30 @@ func (r *Reader) Get(ctx context.Context, refresh bool) (State, error) {
 	}
 	if err := ctx.Err(); err != nil {
 		return State{}, err
+	}
+	if sz, szErr := store.LoadSizes(r.CacheDir); szErr == nil && !sz.Taken.IsZero() {
+		st.Sizes = &sz
+	}
+	if !refresh {
+		if q, qErr := aiquota.LoadCache(r.SettingsDir); qErr == nil && !q.CheckedAt.IsZero() {
+			st.Quotas = &q
+		}
+	}
+	if st.Quotas == nil && refresh {
+		home, _ := os.UserHomeDir()
+		installed := make(map[aiquota.ProviderID]bool, len(st.Snapshot.Agents))
+		for _, ag := range st.Snapshot.Agents {
+			if ag.Found() {
+				installed[aiquota.ProviderID(ag.ID)] = true
+			}
+		}
+		q := aiquota.FetchAll(ctx, aiquota.FetchEnv{
+			Home:      home,
+			Env:       sysenv.GUI(),
+			Runner:    run.Exec{},
+			Installed: installed,
+		})
+		st.Quotas = &q
 	}
 	st.Projects, err = readProjects(r.SettingsDir, sysenv.GUI())
 	if err != nil {

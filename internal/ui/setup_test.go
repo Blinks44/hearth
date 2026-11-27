@@ -436,3 +436,24 @@ func TestSetupBaseHomebrewChipAndEmptyMise(t *testing.T) {
 		t.Fatalf("installManager(python) = %q, want mise", got)
 	}
 }
+
+func TestSetupVersionSelection(t *testing.T) {
+	a := setupApp(t)
+	a.setup.wizard = false
+	a.Snapshot.Tools = []inventory.ToolState{
+		{Tool: "packages", PackageManagers: []inventory.PackageManager{
+			{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"},
+		}},
+		{Tool: "mise", Managers: []inventory.Manager{{Name: "mise", Version: "2026.1.0", Activated: true}}},
+	}
+	a.setup.choice = map[string]bool{"node": true, "postgresql": true}
+	a.setup.versions = map[string]string{"node": "20"}
+	a.setup.packages = map[string]string{"postgresql": "postgresql@16"}
+	a.router.Push(setupPage)
+	tt := newTester(a)
+	hasTexts(t, tt, "Node.js LTS", "20", "PostgreSQL", "16")
+	in := a.setupInput()
+	if in.Versions["node"] != "20" || in.Packages["postgresql"] != "postgresql@16" {
+		t.Fatalf("setupInput() versions=%v packages=%v", in.Versions, in.Packages)
+	}
+}

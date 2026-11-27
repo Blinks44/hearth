@@ -110,3 +110,24 @@ func TestContainerStoppedHealthAndExitCodes(t *testing.T) {
 		})
 	}
 }
+
+func TestFirstPublishedURL(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		raw      string
+		wantURL  string
+		wantPort string
+	}{
+		{"", "", ""},
+		{"80/tcp", "", ""},
+		{"0.0.0.0:8080->80/tcp", "http://127.0.0.1:8080", "8080"},
+		{"[::]:3000->3000/tcp", "http://127.0.0.1:3000", "3000"},
+		{"127.0.0.1:5353->53/udp, 127.0.0.1:8443->443/tcp", "http://127.0.0.1:8443", "8443"},
+		{"192.168.1.5:9000->9000/tcp", "http://192.168.1.5:9000", "9000"},
+	} {
+		gotURL, gotPort := FirstPublishedURL(tc.raw)
+		if gotURL != tc.wantURL || gotPort != tc.wantPort {
+			t.Errorf("FirstPublishedURL(%q) = (%q, %q), want (%q, %q)", tc.raw, gotURL, gotPort, tc.wantURL, tc.wantPort)
+		}
+	}
+}

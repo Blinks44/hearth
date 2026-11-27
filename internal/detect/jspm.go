@@ -246,6 +246,7 @@ func pnpmGlobalPackages(env sysenv.Env) []inventory.Package {
 	byName := map[string]inventory.Package{}
 	for _, m := range manifests {
 		for _, p := range manifestPackages(filepath.Dir(m)) {
+			p.Manager = "pnpm"
 			byName[p.Name] = p
 		}
 	}
@@ -267,7 +268,11 @@ func yarnGlobalPackages(env sysenv.Env) []inventory.Package {
 	if dir == "" {
 		return nil
 	}
-	return manifestPackages(dir)
+	pkgs := manifestPackages(dir)
+	for i := range pkgs {
+		pkgs[i].Manager = "yarn"
+	}
+	return pkgs
 }
 
 // corepackHome is Corepack's cache folder, chosen as Corepack does.

@@ -119,7 +119,7 @@ func dockerResourceStatus(kind docker.ResourceKind, item docker.Resource) int {
 }
 
 func matchesDockerResource(item docker.Resource, query string) bool {
-	return strings.Contains(strings.ToLower(item.Name+" "+item.Project+" "+strings.Join(item.Subnets, " ")), query) ||
+	return strings.Contains(strings.ToLower(item.Name+" "+item.Project+" "+item.Driver+" "+strings.Join(item.Subnets, " ")), query) ||
 		slices.ContainsFunc(item.Users, func(user docker.ResourceUser) bool {
 			return strings.Contains(strings.ToLower(user.Name+" "+user.Project), query)
 		})
@@ -366,7 +366,7 @@ func (a *App) dockerResourceRow(c *ui.Context, kind docker.ResourceKind, slot *d
 				}
 			})
 			workloadStatus(c, status, bg, fg)
-			clipped(c, names).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(names)
+			a.dockerResourceUsedByCell(c, a.engine.resources.target.Context, item.Project, item.Users, names)
 			clipped(c, metric).FontSize(11.5).Tooltip(metric)
 			created, date := "—", ""
 			if !item.Created.IsZero() {
@@ -389,6 +389,39 @@ func (a *App) dockerResourceRow(c *ui.Context, kind docker.ResourceKind, slot *d
 			ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(0, 16, 7, 44).Children(func() {
 				ui.Icon(c, Icon("info")).Size(12, 12).Shrink(0).TextColor(pal.TextFaint)
 				ui.Text(c, hint).FontSize(11).TextColor(pal.TextFaint).Wrap().Grow(1).MinWidth(0)
+			})
+		}
+	})
+}
+
+func (a *App) dockerResourceUsedByCell(c *ui.Context, contextName, itemProject string, users []docker.ResourceUser, tooltip string) {
+	pal := Colors(c.Theme())
+	if len(users) == 0 {
+		clipped(c, "—").Font(FontMono).FontSize(11.5).MinWidth(0)
+		return
+	}
+	if contextName == "" {
+		clipped(c, tooltip).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(tooltip)
+		return
+	}
+	ui.Row(c).Gap(4).AlignItems(ui.Center).MinWidth(0).Clip().Tooltip(tooltip).Children(func() {
+		for i, u := range users {
+			user := u
+			if i > 0 {
+				ui.Text(c, ",").Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+			label := user.Name
+			if user.Project != "" && user.Project != itemProject {
+				label += " · " + user.Project
+			}
+			link := ui.ButtonBase(c.Key("res-user-"+strconv.Itoa(i)+"-"+user.Name)).Radius(4).Padding(1, 3).
+				Label(label).Tooltip(label).
+				OnClick(func() { a.requestDockerContainer(contextName, user.ID, user.Name, true, false) })
+			if link.Hovered() {
+				link.Background(pal.Subtle)
+			}
+			link.Children(func() {
+				clipped(c, label).Font(FontMono).FontSize(11.5).TextColor(pal.AccentInk)
 			})
 		}
 	})
@@ -423,9 +456,10 @@ func (a *App) planDockerResourcesRemoval(items []docker.Resource) {
 	}
 	s := &a.engine.resources
 	target, kind, revision, view := s.target, s.kind, s.revision, a.engine.view
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	s.planning = true
 	a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.PlanDockerResourcesRemoval(context.Background(), run.Exec{}, target, env, kind, items)
+		return ops.PlanDockerResourcesRemoval(context.Background(), runner, target, env, kind, items)
 	}, func(p ops.Plan, err error) {
 		if revision != s.revision {
 			return

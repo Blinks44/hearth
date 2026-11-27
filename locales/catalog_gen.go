@@ -20952,6 +20952,20 @@ func (msgs Messages) ServiceStopTitle(name string) string {
 	return Catalog.Format(msgs.locale, "serviceStopTitle", map[string]any{"name": name})
 }
 
+// ServiceRestartTitle says "Restart {name}"
+// in the language the app shows.
+//
+// Title of the plan that restarts a database service.
+func ServiceRestartTitle(name string) string { return In(i18n.Locale()).ServiceRestartTitle(name) }
+
+// ServiceRestartTitle says "Restart {name}"
+// in the language of msgs.
+//
+// Title of the plan that restarts a database service.
+func (msgs Messages) ServiceRestartTitle(name string) string {
+	return Catalog.Format(msgs.locale, "serviceRestartTitle", map[string]any{"name": name})
+}
+
 // ServiceStartChange says "Service {name} is running"
 // in the language the app shows.
 //
@@ -20978,6 +20992,34 @@ func ServiceStopChange(name string) string { return In(i18n.Locale()).ServiceSto
 // What is different after a service stopped.
 func (msgs Messages) ServiceStopChange(name string) string {
 	return Catalog.Format(msgs.locale, "serviceStopChange", map[string]any{"name": name})
+}
+
+// ServiceRestartChange says "Service {name} is restarted"
+// in the language the app shows.
+//
+// What is different after a service restarted.
+func ServiceRestartChange(name string) string { return In(i18n.Locale()).ServiceRestartChange(name) }
+
+// ServiceRestartChange says "Service {name} is restarted"
+// in the language of msgs.
+//
+// What is different after a service restarted.
+func (msgs Messages) ServiceRestartChange(name string) string {
+	return Catalog.Format(msgs.locale, "serviceRestartChange", map[string]any{"name": name})
+}
+
+// ServiceRestart says "Restart…"
+// in the language the app shows.
+//
+// Button that proposes restarting a local database service.
+func ServiceRestart() string { return In(i18n.Locale()).ServiceRestart() }
+
+// ServiceRestart says "Restart…"
+// in the language of msgs.
+//
+// Button that proposes restarting a local database service.
+func (msgs Messages) ServiceRestart() string {
+	return Catalog.Format(msgs.locale, "serviceRestart", nil)
 }
 
 // ServiceCheckRunning says "{name} is running"
@@ -29592,6 +29634,26 @@ func McpProposalOrigin() string { return In(i18n.Locale()).McpProposalOrigin() }
 // in the language of msgs.
 func (msgs Messages) McpProposalOrigin() string {
 	return Catalog.Format(msgs.locale, "mcpProposalOrigin", nil)
+}
+
+// McpProposalNotifyTitle says "AI agent proposed an action"
+// in the language the app shows.
+func McpProposalNotifyTitle() string { return In(i18n.Locale()).McpProposalNotifyTitle() }
+
+// McpProposalNotifyTitle says "AI agent proposed an action"
+// in the language of msgs.
+func (msgs Messages) McpProposalNotifyTitle() string {
+	return Catalog.Format(msgs.locale, "mcpProposalNotifyTitle", nil)
+}
+
+// McpProposalNotifyBody says "Open Hearth to review and confirm or dismiss the plan."
+// in the language the app shows.
+func McpProposalNotifyBody() string { return In(i18n.Locale()).McpProposalNotifyBody() }
+
+// McpProposalNotifyBody says "Open Hearth to review and confirm or dismiss the plan."
+// in the language of msgs.
+func (msgs Messages) McpProposalNotifyBody() string {
+	return Catalog.Format(msgs.locale, "mcpProposalNotifyBody", nil)
 }
 
 // GlobalInstructionsTitle says "Global instructions"
@@ -49768,4 +49830,1806 @@ func PortsStatDev(count int) string { return In(i18n.Locale()).PortsStatDev(coun
 // servers.
 func (msgs Messages) PortsStatDev(count int) string {
 	return Catalog.Format(msgs.locale, "portsStatDev", map[string]any{"count": count})
+}
+
+// KubeForwardReconnect says "Reconnect"
+// in the language the app shows.
+//
+// Icon button that starts an ended Kubernetes port-forward again.
+func KubeForwardReconnect() string { return In(i18n.Locale()).KubeForwardReconnect() }
+
+// KubeForwardReconnect says "Reconnect"
+// in the language of msgs.
+//
+// Icon button that starts an ended Kubernetes port-forward again.
+func (msgs Messages) KubeForwardReconnect() string {
+	return Catalog.Format(msgs.locale, "kubeForwardReconnect", nil)
+}
+
+// KubeOpenCluster says "Open cluster"
+// in the language the app shows.
+//
+// Button that opens the linked Kubernetes cluster view.
+func KubeOpenCluster() string { return In(i18n.Locale()).KubeOpenCluster() }
+
+// KubeOpenCluster says "Open cluster"
+// in the language of msgs.
+//
+// Button that opens the linked Kubernetes cluster view.
+func (msgs Messages) KubeOpenCluster() string {
+	return Catalog.Format(msgs.locale, "kubeOpenCluster", nil)
+}
+
+// CliGroupUtils says "Utilities"
+// in the language the app shows.
+//
+// Group header on CLI & clouds for common command-line utilities.
+func CliGroupUtils() string { return In(i18n.Locale()).CliGroupUtils() }
+
+// CliGroupUtils says "Utilities"
+// in the language of msgs.
+//
+// Group header on CLI & clouds for common command-line utilities.
+func (msgs Messages) CliGroupUtils() string {
+	return Catalog.Format(msgs.locale, "cliGroupUtils", nil)
+}
+
+// CustomVersionPlaceholder says "Version, e.g. {example}"
+// in the language the app shows.
+//
+// Placeholder in the custom version text field on language pages.
+func CustomVersionPlaceholder(example string) string {
+	return In(i18n.Locale()).CustomVersionPlaceholder(example)
+}
+
+// CustomVersionPlaceholder says "Version, e.g. {example}"
+// in the language of msgs.
+//
+// Placeholder in the custom version text field on language pages.
+func (msgs Messages) CustomVersionPlaceholder(example string) string {
+	return Catalog.Format(msgs.locale, "customVersionPlaceholder", map[string]any{"example": example})
+}
+
+// GlobalPkgUpdateTitle says "Update {name}"
+// in the language the app shows.
+//
+// Plan title when updating a globally installed package.
+func GlobalPkgUpdateTitle(name string) string { return In(i18n.Locale()).GlobalPkgUpdateTitle(name) }
+
+// GlobalPkgUpdateTitle says "Update {name}"
+// in the language of msgs.
+//
+// Plan title when updating a globally installed package.
+func (msgs Messages) GlobalPkgUpdateTitle(name string) string {
+	return Catalog.Format(msgs.locale, "globalPkgUpdateTitle", map[string]any{"name": name})
+}
+
+// GlobalPkgUpdateChange says "{name} is updated via {manager}"
+// in the language the app shows.
+//
+// Plan change line for updating a globally installed package.
+func GlobalPkgUpdateChange(name string, manager string) string {
+	return In(i18n.Locale()).GlobalPkgUpdateChange(name, manager)
+}
+
+// GlobalPkgUpdateChange says "{name} is updated via {manager}"
+// in the language of msgs.
+//
+// Plan change line for updating a globally installed package.
+func (msgs Messages) GlobalPkgUpdateChange(name string, manager string) string {
+	return Catalog.Format(msgs.locale, "globalPkgUpdateChange", map[string]any{"name": name, "manager": manager})
+}
+
+// GlobalPkgUninstallTitle says "Remove {name}"
+// in the language the app shows.
+//
+// Plan title when uninstalling a globally installed package.
+func GlobalPkgUninstallTitle(name string) string {
+	return In(i18n.Locale()).GlobalPkgUninstallTitle(name)
+}
+
+// GlobalPkgUninstallTitle says "Remove {name}"
+// in the language of msgs.
+//
+// Plan title when uninstalling a globally installed package.
+func (msgs Messages) GlobalPkgUninstallTitle(name string) string {
+	return Catalog.Format(msgs.locale, "globalPkgUninstallTitle", map[string]any{"name": name})
+}
+
+// GlobalPkgUninstallChange says "{name} is removed from {manager}"
+// in the language the app shows.
+//
+// Plan change line for removing a globally installed package.
+func GlobalPkgUninstallChange(name string, manager string) string {
+	return In(i18n.Locale()).GlobalPkgUninstallChange(name, manager)
+}
+
+// GlobalPkgUninstallChange says "{name} is removed from {manager}"
+// in the language of msgs.
+//
+// Plan change line for removing a globally installed package.
+func (msgs Messages) GlobalPkgUninstallChange(name string, manager string) string {
+	return Catalog.Format(msgs.locale, "globalPkgUninstallChange", map[string]any{"name": name, "manager": manager})
+}
+
+// GlobalPkgUpdateAction says "Update…"
+// in the language the app shows.
+//
+// Menu item that proposes updating a globally installed package.
+func GlobalPkgUpdateAction() string { return In(i18n.Locale()).GlobalPkgUpdateAction() }
+
+// GlobalPkgUpdateAction says "Update…"
+// in the language of msgs.
+//
+// Menu item that proposes updating a globally installed package.
+func (msgs Messages) GlobalPkgUpdateAction() string {
+	return Catalog.Format(msgs.locale, "globalPkgUpdateAction", nil)
+}
+
+// GitCredFixTitle says "Switch Git credential helper to {helper}"
+// in the language the app shows.
+//
+// Plan title when replacing git credential.helper=store.
+func GitCredFixTitle(helper string) string { return In(i18n.Locale()).GitCredFixTitle(helper) }
+
+// GitCredFixTitle says "Switch Git credential helper to {helper}"
+// in the language of msgs.
+//
+// Plan title when replacing git credential.helper=store.
+func (msgs Messages) GitCredFixTitle(helper string) string {
+	return Catalog.Format(msgs.locale, "gitCredFixTitle", map[string]any{"helper": helper})
+}
+
+// GitCredFixWhy says "The store helper saves Git passwords in plain text on disk."
+// in the language the app shows.
+//
+// Plan explanation for replacing git credential.helper=store.
+func GitCredFixWhy() string { return In(i18n.Locale()).GitCredFixWhy() }
+
+// GitCredFixWhy says "The store helper saves Git passwords in plain text on disk."
+// in the language of msgs.
+//
+// Plan explanation for replacing git credential.helper=store.
+func (msgs Messages) GitCredFixWhy() string {
+	return Catalog.Format(msgs.locale, "gitCredFixWhy", nil)
+}
+
+// GitCredFixChange says "Git uses {helper} instead of store"
+// in the language the app shows.
+//
+// Plan change line when replacing git credential.helper=store.
+func GitCredFixChange(helper string) string { return In(i18n.Locale()).GitCredFixChange(helper) }
+
+// GitCredFixChange says "Git uses {helper} instead of store"
+// in the language of msgs.
+//
+// Plan change line when replacing git credential.helper=store.
+func (msgs Messages) GitCredFixChange(helper string) string {
+	return Catalog.Format(msgs.locale, "gitCredFixChange", map[string]any{"helper": helper})
+}
+
+// GitCredFixNoteTitle says "Existing ~/.git-credentials file"
+// in the language the app shows.
+//
+// Warning note title in the credential helper fix plan.
+func GitCredFixNoteTitle() string { return In(i18n.Locale()).GitCredFixNoteTitle() }
+
+// GitCredFixNoteTitle says "Existing ~/.git-credentials file"
+// in the language of msgs.
+//
+// Warning note title in the credential helper fix plan.
+func (msgs Messages) GitCredFixNoteTitle() string {
+	return Catalog.Format(msgs.locale, "gitCredFixNoteTitle", nil)
+}
+
+// GitCredFixNoteBody says "Hearth does not delete ~/.git-credentials automatically. Remove it after confirming sign-in works with the new helper."
+// in the language the app shows.
+//
+// Warning note body in the credential helper fix plan.
+func GitCredFixNoteBody() string { return In(i18n.Locale()).GitCredFixNoteBody() }
+
+// GitCredFixNoteBody says "Hearth does not delete ~/.git-credentials automatically. Remove it after confirming sign-in works with the new helper."
+// in the language of msgs.
+//
+// Warning note body in the credential helper fix plan.
+func (msgs Messages) GitCredFixNoteBody() string {
+	return Catalog.Format(msgs.locale, "gitCredFixNoteBody", nil)
+}
+
+// GitCredFixButton says "Switch helper…"
+// in the language the app shows.
+//
+// Button on the Git page that proposes replacing credential.helper=store.
+func GitCredFixButton() string { return In(i18n.Locale()).GitCredFixButton() }
+
+// GitCredFixButton says "Switch helper…"
+// in the language of msgs.
+//
+// Button on the Git page that proposes replacing credential.helper=store.
+func (msgs Messages) GitCredFixButton() string {
+	return Catalog.Format(msgs.locale, "gitCredFixButton", nil)
+}
+
+// GitHubSignIn says "Sign in…"
+// in the language the app shows.
+//
+// Button on the Git page that launches gh auth login in a terminal.
+func GitHubSignIn() string { return In(i18n.Locale()).GitHubSignIn() }
+
+// GitHubSignIn says "Sign in…"
+// in the language of msgs.
+//
+// Button on the Git page that launches gh auth login in a terminal.
+func (msgs Messages) GitHubSignIn() string {
+	return Catalog.Format(msgs.locale, "gitHubSignIn", nil)
+}
+
+// GitSSHAdd says "Add to agent"
+// in the language the app shows.
+//
+// Button on the Git page that runs ssh-add for an SSH key in a terminal.
+func GitSSHAdd() string { return In(i18n.Locale()).GitSSHAdd() }
+
+// GitSSHAdd says "Add to agent"
+// in the language of msgs.
+//
+// Button on the Git page that runs ssh-add for an SSH key in a terminal.
+func (msgs Messages) GitSSHAdd() string {
+	return Catalog.Format(msgs.locale, "gitSSHAdd", nil)
+}
+
+// EditorsFilterPlaceholder says "Filter editors and extensions…"
+// in the language the app shows.
+//
+// Placeholder in the search field on the Editors page.
+func EditorsFilterPlaceholder() string { return In(i18n.Locale()).EditorsFilterPlaceholder() }
+
+// EditorsFilterPlaceholder says "Filter editors and extensions…"
+// in the language of msgs.
+//
+// Placeholder in the search field on the Editors page.
+func (msgs Messages) EditorsFilterPlaceholder() string {
+	return Catalog.Format(msgs.locale, "editorsFilterPlaceholder", nil)
+}
+
+// MobileXcodeUse says "Use…"
+// in the language the app shows.
+//
+// Button on an unselected Xcode row to switch xcode-select.
+func MobileXcodeUse() string { return In(i18n.Locale()).MobileXcodeUse() }
+
+// MobileXcodeUse says "Use…"
+// in the language of msgs.
+//
+// Button on an unselected Xcode row to switch xcode-select.
+func (msgs Messages) MobileXcodeUse() string {
+	return Catalog.Format(msgs.locale, "mobileXcodeUse", nil)
+}
+
+// MobileXcodeSwitchTitle says "Switch Xcode to {version}"
+// in the language the app shows.
+//
+// Plan title for switching the active Xcode via xcode-select.
+func MobileXcodeSwitchTitle(version string) string {
+	return In(i18n.Locale()).MobileXcodeSwitchTitle(version)
+}
+
+// MobileXcodeSwitchTitle says "Switch Xcode to {version}"
+// in the language of msgs.
+//
+// Plan title for switching the active Xcode via xcode-select.
+func (msgs Messages) MobileXcodeSwitchTitle(version string) string {
+	return Catalog.Format(msgs.locale, "mobileXcodeSwitchTitle", map[string]any{"version": version})
+}
+
+// MobileXcodeSwitchChange says "xcode-select points to {path}"
+// in the language the app shows.
+//
+// Plan change line for switching the active Xcode.
+func MobileXcodeSwitchChange(path string) string {
+	return In(i18n.Locale()).MobileXcodeSwitchChange(path)
+}
+
+// MobileXcodeSwitchChange says "xcode-select points to {path}"
+// in the language of msgs.
+//
+// Plan change line for switching the active Xcode.
+func (msgs Messages) MobileXcodeSwitchChange(path string) string {
+	return Catalog.Format(msgs.locale, "mobileXcodeSwitchChange", map[string]any{"path": path})
+}
+
+// EnvVarSetTitle says "Set {name}"
+// in the language the app shows.
+//
+// Plan title for setting an environment variable such as ANDROID_HOME or
+// JAVA_HOME.
+func EnvVarSetTitle(name string) string { return In(i18n.Locale()).EnvVarSetTitle(name) }
+
+// EnvVarSetTitle says "Set {name}"
+// in the language of msgs.
+//
+// Plan title for setting an environment variable such as ANDROID_HOME or
+// JAVA_HOME.
+func (msgs Messages) EnvVarSetTitle(name string) string {
+	return Catalog.Format(msgs.locale, "envVarSetTitle", map[string]any{"name": name})
+}
+
+// EnvVarSetChange says "{name} is set to {value}"
+// in the language the app shows.
+//
+// Plan change line for setting an environment variable.
+func EnvVarSetChange(name string, value string) string {
+	return In(i18n.Locale()).EnvVarSetChange(name, value)
+}
+
+// EnvVarSetChange says "{name} is set to {value}"
+// in the language of msgs.
+//
+// Plan change line for setting an environment variable.
+func (msgs Messages) EnvVarSetChange(name string, value string) string {
+	return Catalog.Format(msgs.locale, "envVarSetChange", map[string]any{"name": name, "value": value})
+}
+
+// EnvVarSetButton says "Set…"
+// in the language the app shows.
+//
+// Button to propose setting an unset environment variable.
+func EnvVarSetButton() string { return In(i18n.Locale()).EnvVarSetButton() }
+
+// EnvVarSetButton says "Set…"
+// in the language of msgs.
+//
+// Button to propose setting an unset environment variable.
+func (msgs Messages) EnvVarSetButton() string {
+	return Catalog.Format(msgs.locale, "envVarSetButton", nil)
+}
+
+// EnvVarFixButton says "Fix…"
+// in the language the app shows.
+//
+// Button to propose fixing a mismatched environment variable.
+func EnvVarFixButton() string { return In(i18n.Locale()).EnvVarFixButton() }
+
+// EnvVarFixButton says "Fix…"
+// in the language of msgs.
+//
+// Button to propose fixing a mismatched environment variable.
+func (msgs Messages) EnvVarFixButton() string {
+	return Catalog.Format(msgs.locale, "envVarFixButton", nil)
+}
+
+// IssuePathDuplicateTitle says "PATH lists the same folder more than once"
+// in the language the app shows.
+//
+// Issue title: one or more PATH directories are repeated.
+func IssuePathDuplicateTitle() string { return In(i18n.Locale()).IssuePathDuplicateTitle() }
+
+// IssuePathDuplicateTitle says "PATH lists the same folder more than once"
+// in the language of msgs.
+//
+// Issue title: one or more PATH directories are repeated.
+func (msgs Messages) IssuePathDuplicateTitle() string {
+	return Catalog.Format(msgs.locale, "issuePathDuplicateTitle", nil)
+}
+
+// IssuePathDuplicateExplain says "{dirs}: repeated in PATH. Nothing breaks, but removing duplicates keeps your shell startup files tidy."
+// in the language the app shows.
+//
+// Issue explanation for repeated PATH entries.
+func IssuePathDuplicateExplain(dirs string) string {
+	return In(i18n.Locale()).IssuePathDuplicateExplain(dirs)
+}
+
+// IssuePathDuplicateExplain says "{dirs}: repeated in PATH. Nothing breaks, but removing duplicates keeps your shell startup files tidy."
+// in the language of msgs.
+//
+// Issue explanation for repeated PATH entries.
+func (msgs Messages) IssuePathDuplicateExplain(dirs string) string {
+	return Catalog.Format(msgs.locale, "issuePathDuplicateExplain", map[string]any{"dirs": dirs})
+}
+
+// StartupRemeasure says "Re-measure"
+// in the language the app shows.
+//
+// Startup tab button to re-measure shell startup time.
+func StartupRemeasure() string { return In(i18n.Locale()).StartupRemeasure() }
+
+// StartupRemeasure says "Re-measure"
+// in the language of msgs.
+//
+// Startup tab button to re-measure shell startup time.
+func (msgs Messages) StartupRemeasure() string {
+	return Catalog.Format(msgs.locale, "startupRemeasure", nil)
+}
+
+// SetupVersionLabel says "Version"
+// in the language the app shows.
+//
+// Accessible label for the version selector on the Install page.
+func SetupVersionLabel() string { return In(i18n.Locale()).SetupVersionLabel() }
+
+// SetupVersionLabel says "Version"
+// in the language of msgs.
+//
+// Accessible label for the version selector on the Install page.
+func (msgs Messages) SetupVersionLabel() string {
+	return Catalog.Format(msgs.locale, "setupVersionLabel", nil)
+}
+
+// DockerContainerRestartingLabel says "Restarting"
+// in the language the app shows.
+//
+// Status label for a Docker container currently restarting, without a
+// count.
+func DockerContainerRestartingLabel() string {
+	return In(i18n.Locale()).DockerContainerRestartingLabel()
+}
+
+// DockerContainerRestartingLabel says "Restarting"
+// in the language of msgs.
+//
+// Status label for a Docker container currently restarting, without a
+// count.
+func (msgs Messages) DockerContainerRestartingLabel() string {
+	return Catalog.Format(msgs.locale, "dockerContainerRestartingLabel", nil)
+}
+
+// QuotasTitle says "Quotas & limits"
+// in the language the app shows.
+//
+// Sidebar item and header of the AI quotas page.
+func QuotasTitle() string { return In(i18n.Locale()).QuotasTitle() }
+
+// QuotasTitle says "Quotas & limits"
+// in the language of msgs.
+//
+// Sidebar item and header of the AI quotas page.
+func (msgs Messages) QuotasTitle() string {
+	return Catalog.Format(msgs.locale, "quotasTitle", nil)
+}
+
+// QuotasSubtitle says "AI agent subscription limits"
+// in the language the app shows.
+//
+// Subtitle of the AI quotas page.
+func QuotasSubtitle() string { return In(i18n.Locale()).QuotasSubtitle() }
+
+// QuotasSubtitle says "AI agent subscription limits"
+// in the language of msgs.
+//
+// Subtitle of the AI quotas page.
+func (msgs Messages) QuotasSubtitle() string {
+	return Catalog.Format(msgs.locale, "quotasSubtitle", nil)
+}
+
+// QuotasLeadSubtitle says "Rate-limit windows and subscription burn rate"
+// in the language the app shows.
+//
+// Lead subtitle under the AI quotas page heading.
+func QuotasLeadSubtitle() string { return In(i18n.Locale()).QuotasLeadSubtitle() }
+
+// QuotasLeadSubtitle says "Rate-limit windows and subscription burn rate"
+// in the language of msgs.
+//
+// Lead subtitle under the AI quotas page heading.
+func (msgs Messages) QuotasLeadSubtitle() string {
+	return Catalog.Format(msgs.locale, "quotasLeadSubtitle", nil)
+}
+
+// QuotasRefresh says "Refresh"
+// in the language the app shows.
+//
+// Button to refresh AI quotas.
+func QuotasRefresh() string { return In(i18n.Locale()).QuotasRefresh() }
+
+// QuotasRefresh says "Refresh"
+// in the language of msgs.
+//
+// Button to refresh AI quotas.
+func (msgs Messages) QuotasRefresh() string {
+	return Catalog.Format(msgs.locale, "quotasRefresh", nil)
+}
+
+// QuotasUpdatedJustNow says "updated just now"
+// in the language the app shows.
+//
+// Relative timestamp when quotas updated <1m ago.
+func QuotasUpdatedJustNow() string { return In(i18n.Locale()).QuotasUpdatedJustNow() }
+
+// QuotasUpdatedJustNow says "updated just now"
+// in the language of msgs.
+//
+// Relative timestamp when quotas updated <1m ago.
+func (msgs Messages) QuotasUpdatedJustNow() string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedJustNow", nil)
+}
+
+// QuotasUpdatedMinAgo says "updated {minutes} min ago"
+// in the language the app shows.
+//
+// Relative timestamp when quotas updated minutes ago.
+func QuotasUpdatedMinAgo(minutes int) string { return In(i18n.Locale()).QuotasUpdatedMinAgo(minutes) }
+
+// QuotasUpdatedMinAgo says "updated {minutes} min ago"
+// in the language of msgs.
+//
+// Relative timestamp when quotas updated minutes ago.
+func (msgs Messages) QuotasUpdatedMinAgo(minutes int) string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedMinAgo", map[string]any{"minutes": minutes})
+}
+
+// QuotasUpdatedHoursAgo says "updated {hours} h ago"
+// in the language the app shows.
+//
+// Relative timestamp when quotas updated hours ago.
+func QuotasUpdatedHoursAgo(hours int) string { return In(i18n.Locale()).QuotasUpdatedHoursAgo(hours) }
+
+// QuotasUpdatedHoursAgo says "updated {hours} h ago"
+// in the language of msgs.
+//
+// Relative timestamp when quotas updated hours ago.
+func (msgs Messages) QuotasUpdatedHoursAgo(hours int) string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedHoursAgo", map[string]any{"hours": hours})
+}
+
+// QuotasUpdatedShortJustNow says "upd. just now"
+// in the language the app shows.
+//
+// Compact updated timestamp inside provider cards.
+func QuotasUpdatedShortJustNow() string { return In(i18n.Locale()).QuotasUpdatedShortJustNow() }
+
+// QuotasUpdatedShortJustNow says "upd. just now"
+// in the language of msgs.
+//
+// Compact updated timestamp inside provider cards.
+func (msgs Messages) QuotasUpdatedShortJustNow() string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedShortJustNow", nil)
+}
+
+// QuotasUpdatedShortMinAgo says "upd. {minutes} min ago"
+// in the language the app shows.
+//
+// Compact updated minutes timestamp inside provider cards.
+func QuotasUpdatedShortMinAgo(minutes int) string {
+	return In(i18n.Locale()).QuotasUpdatedShortMinAgo(minutes)
+}
+
+// QuotasUpdatedShortMinAgo says "upd. {minutes} min ago"
+// in the language of msgs.
+//
+// Compact updated minutes timestamp inside provider cards.
+func (msgs Messages) QuotasUpdatedShortMinAgo(minutes int) string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedShortMinAgo", map[string]any{"minutes": minutes})
+}
+
+// QuotasUpdatedShortHoursAgo says "upd. {hours} h ago"
+// in the language the app shows.
+//
+// Compact updated hours timestamp inside provider cards.
+func QuotasUpdatedShortHoursAgo(hours int) string {
+	return In(i18n.Locale()).QuotasUpdatedShortHoursAgo(hours)
+}
+
+// QuotasUpdatedShortHoursAgo says "upd. {hours} h ago"
+// in the language of msgs.
+//
+// Compact updated hours timestamp inside provider cards.
+func (msgs Messages) QuotasUpdatedShortHoursAgo(hours int) string {
+	return Catalog.Format(msgs.locale, "quotasUpdatedShortHoursAgo", map[string]any{"hours": hours})
+}
+
+// QuotasStaleBadge says "stale"
+// in the language the app shows.
+//
+// Badge shown when provider quota data is stale.
+func QuotasStaleBadge() string { return In(i18n.Locale()).QuotasStaleBadge() }
+
+// QuotasStaleBadge says "stale"
+// in the language of msgs.
+//
+// Badge shown when provider quota data is stale.
+func (msgs Messages) QuotasStaleBadge() string {
+	return Catalog.Format(msgs.locale, "quotasStaleBadge", nil)
+}
+
+// QuotasStatConnected says "Connected"
+// in the language the app shows.
+//
+// Stat card label: connected quota providers.
+func QuotasStatConnected() string { return In(i18n.Locale()).QuotasStatConnected() }
+
+// QuotasStatConnected says "Connected"
+// in the language of msgs.
+//
+// Stat card label: connected quota providers.
+func (msgs Messages) QuotasStatConnected() string {
+	return Catalog.Format(msgs.locale, "quotasStatConnected", nil)
+}
+
+// QuotasStatOfFound says "of {count} found"
+// in the language the app shows.
+//
+// Stat card subtitle: total detected providers.
+func QuotasStatOfFound(count int) string { return In(i18n.Locale()).QuotasStatOfFound(count) }
+
+// QuotasStatOfFound says "of {count} found"
+// in the language of msgs.
+//
+// Stat card subtitle: total detected providers.
+func (msgs Messages) QuotasStatOfFound(count int) string {
+	return Catalog.Format(msgs.locale, "quotasStatOfFound", map[string]any{"count": count})
+}
+
+// QuotasStatInTray says "In tray"
+// in the language the app shows.
+//
+// Stat card label: providers visible in tray popover.
+func QuotasStatInTray() string { return In(i18n.Locale()).QuotasStatInTray() }
+
+// QuotasStatInTray says "In tray"
+// in the language of msgs.
+//
+// Stat card label: providers visible in tray popover.
+func (msgs Messages) QuotasStatInTray() string {
+	return Catalog.Format(msgs.locale, "quotasStatInTray", nil)
+}
+
+// QuotasStatInTrayValue says "{shown} of {total}"
+// in the language the app shows.
+//
+// Stat card value: shown of total providers.
+func QuotasStatInTrayValue(shown int, total int) string {
+	return In(i18n.Locale()).QuotasStatInTrayValue(shown, total)
+}
+
+// QuotasStatInTrayValue says "{shown} of {total}"
+// in the language of msgs.
+//
+// Stat card value: shown of total providers.
+func (msgs Messages) QuotasStatInTrayValue(shown int, total int) string {
+	return Catalog.Format(msgs.locale, "quotasStatInTrayValue", map[string]any{"shown": shown, "total": total})
+}
+
+// QuotasStatVisibleInPopover says "visible in popover"
+// in the language the app shows.
+//
+// Stat card subtitle for tray visibility.
+func QuotasStatVisibleInPopover() string { return In(i18n.Locale()).QuotasStatVisibleInPopover() }
+
+// QuotasStatVisibleInPopover says "visible in popover"
+// in the language of msgs.
+//
+// Stat card subtitle for tray visibility.
+func (msgs Messages) QuotasStatVisibleInPopover() string {
+	return Catalog.Format(msgs.locale, "quotasStatVisibleInPopover", nil)
+}
+
+// QuotasStatNextReset says "Next reset"
+// in the language the app shows.
+//
+// Stat card label: earliest upcoming window reset.
+func QuotasStatNextReset() string { return In(i18n.Locale()).QuotasStatNextReset() }
+
+// QuotasStatNextReset says "Next reset"
+// in the language of msgs.
+//
+// Stat card label: earliest upcoming window reset.
+func (msgs Messages) QuotasStatNextReset() string {
+	return Catalog.Format(msgs.locale, "quotasStatNextReset", nil)
+}
+
+// QuotasStatNoReset says "No resets"
+// in the language the app shows.
+//
+// Stat card subtitle when no resets are scheduled.
+func QuotasStatNoReset() string { return In(i18n.Locale()).QuotasStatNoReset() }
+
+// QuotasStatNoReset says "No resets"
+// in the language of msgs.
+//
+// Stat card subtitle when no resets are scheduled.
+func (msgs Messages) QuotasStatNoReset() string {
+	return Catalog.Format(msgs.locale, "quotasStatNoReset", nil)
+}
+
+// QuotasStatRunningLow says "Running low"
+// in the language the app shows.
+//
+// Stat card label: providers with <10% quota left.
+func QuotasStatRunningLow() string { return In(i18n.Locale()).QuotasStatRunningLow() }
+
+// QuotasStatRunningLow says "Running low"
+// in the language of msgs.
+//
+// Stat card label: providers with <10% quota left.
+func (msgs Messages) QuotasStatRunningLow() string {
+	return Catalog.Format(msgs.locale, "quotasStatRunningLow", nil)
+}
+
+// QuotasStatRunningLowSub says "less than 10% left"
+// in the language the app shows.
+//
+// Stat card subtitle for running low count.
+func QuotasStatRunningLowSub() string { return In(i18n.Locale()).QuotasStatRunningLowSub() }
+
+// QuotasStatRunningLowSub says "less than 10% left"
+// in the language of msgs.
+//
+// Stat card subtitle for running low count.
+func (msgs Messages) QuotasStatRunningLowSub() string {
+	return Catalog.Format(msgs.locale, "quotasStatRunningLowSub", nil)
+}
+
+// QuotasStatAllHealthy says "all healthy"
+// in the language the app shows.
+//
+// Stat card subtitle when zero providers are running low.
+func QuotasStatAllHealthy() string { return In(i18n.Locale()).QuotasStatAllHealthy() }
+
+// QuotasStatAllHealthy says "all healthy"
+// in the language of msgs.
+//
+// Stat card subtitle when zero providers are running low.
+func (msgs Messages) QuotasStatAllHealthy() string {
+	return Catalog.Format(msgs.locale, "quotasStatAllHealthy", nil)
+}
+
+// QuotasFilterAll says "All"
+// in the language the app shows.
+//
+// Filter tab showing all connected providers.
+func QuotasFilterAll() string { return In(i18n.Locale()).QuotasFilterAll() }
+
+// QuotasFilterAll says "All"
+// in the language of msgs.
+//
+// Filter tab showing all connected providers.
+func (msgs Messages) QuotasFilterAll() string {
+	return Catalog.Format(msgs.locale, "quotasFilterAll", nil)
+}
+
+// QuotasFilterInTray says "In tray"
+// in the language the app shows.
+//
+// Filter tab showing providers enabled in tray.
+func QuotasFilterInTray() string { return In(i18n.Locale()).QuotasFilterInTray() }
+
+// QuotasFilterInTray says "In tray"
+// in the language of msgs.
+//
+// Filter tab showing providers enabled in tray.
+func (msgs Messages) QuotasFilterInTray() string {
+	return Catalog.Format(msgs.locale, "quotasFilterInTray", nil)
+}
+
+// QuotasFilterLow says "Running low"
+// in the language the app shows.
+//
+// Filter tab showing providers with <10% left.
+func QuotasFilterLow() string { return In(i18n.Locale()).QuotasFilterLow() }
+
+// QuotasFilterLow says "Running low"
+// in the language of msgs.
+//
+// Filter tab showing providers with <10% left.
+func (msgs Messages) QuotasFilterLow() string {
+	return Catalog.Format(msgs.locale, "quotasFilterLow", nil)
+}
+
+// QuotasSortCustom says "Custom order"
+// in the language the app shows.
+//
+// Sort option: user custom provider order.
+func QuotasSortCustom() string { return In(i18n.Locale()).QuotasSortCustom() }
+
+// QuotasSortCustom says "Custom order"
+// in the language of msgs.
+//
+// Sort option: user custom provider order.
+func (msgs Messages) QuotasSortCustom() string {
+	return Catalog.Format(msgs.locale, "quotasSortCustom", nil)
+}
+
+// QuotasSortLeastLeft says "Least remaining"
+// in the language the app shows.
+//
+// Sort option: lowest remaining percentage first.
+func QuotasSortLeastLeft() string { return In(i18n.Locale()).QuotasSortLeastLeft() }
+
+// QuotasSortLeastLeft says "Least remaining"
+// in the language of msgs.
+//
+// Sort option: lowest remaining percentage first.
+func (msgs Messages) QuotasSortLeastLeft() string {
+	return Catalog.Format(msgs.locale, "quotasSortLeastLeft", nil)
+}
+
+// QuotasSortNextReset says "Soonest reset"
+// in the language the app shows.
+//
+// Sort option: earliest reset time first.
+func QuotasSortNextReset() string { return In(i18n.Locale()).QuotasSortNextReset() }
+
+// QuotasSortNextReset says "Soonest reset"
+// in the language of msgs.
+//
+// Sort option: earliest reset time first.
+func (msgs Messages) QuotasSortNextReset() string {
+	return Catalog.Format(msgs.locale, "quotasSortNextReset", nil)
+}
+
+// QuotasPaceLegend says "Vertical mark on the bar shows expected remaining quota at this point in the window (burn pace)."
+// in the language the app shows.
+//
+// Caption explaining the vertical pacing mark on quota progress bars.
+func QuotasPaceLegend() string { return In(i18n.Locale()).QuotasPaceLegend() }
+
+// QuotasPaceLegend says "Vertical mark on the bar shows expected remaining quota at this point in the window (burn pace)."
+// in the language of msgs.
+//
+// Caption explaining the vertical pacing mark on quota progress bars.
+func (msgs Messages) QuotasPaceLegend() string {
+	return Catalog.Format(msgs.locale, "quotasPaceLegend", nil)
+}
+
+// QuotasBadgeInTray says "In tray"
+// in the language the app shows.
+//
+// Pill badge on a provider card when shown in tray popover.
+func QuotasBadgeInTray() string { return In(i18n.Locale()).QuotasBadgeInTray() }
+
+// QuotasBadgeInTray says "In tray"
+// in the language of msgs.
+//
+// Pill badge on a provider card when shown in tray popover.
+func (msgs Messages) QuotasBadgeInTray() string {
+	return Catalog.Format(msgs.locale, "quotasBadgeInTray", nil)
+}
+
+// QuotasBadgeHidden says "Hidden"
+// in the language the app shows.
+//
+// Pill badge on a provider card when hidden from tray popover.
+func QuotasBadgeHidden() string { return In(i18n.Locale()).QuotasBadgeHidden() }
+
+// QuotasBadgeHidden says "Hidden"
+// in the language of msgs.
+//
+// Pill badge on a provider card when hidden from tray popover.
+func (msgs Messages) QuotasBadgeHidden() string {
+	return Catalog.Format(msgs.locale, "quotasBadgeHidden", nil)
+}
+
+// QuotasToggleTrayTooltip says "Show or hide this provider in the tray popover"
+// in the language the app shows.
+//
+// Tooltip on provider tray visibility pill.
+func QuotasToggleTrayTooltip() string { return In(i18n.Locale()).QuotasToggleTrayTooltip() }
+
+// QuotasToggleTrayTooltip says "Show or hide this provider in the tray popover"
+// in the language of msgs.
+//
+// Tooltip on provider tray visibility pill.
+func (msgs Messages) QuotasToggleTrayTooltip() string {
+	return Catalog.Format(msgs.locale, "quotasToggleTrayTooltip", nil)
+}
+
+// QuotasWindowSession says "Session · 5 h"
+// in the language the app shows.
+//
+// Quota window label for 5-hour session.
+func QuotasWindowSession() string { return In(i18n.Locale()).QuotasWindowSession() }
+
+// QuotasWindowSession says "Session · 5 h"
+// in the language of msgs.
+//
+// Quota window label for 5-hour session.
+func (msgs Messages) QuotasWindowSession() string {
+	return Catalog.Format(msgs.locale, "quotasWindowSession", nil)
+}
+
+// QuotasWindowDaily says "Daily · 24 h"
+// in the language the app shows.
+//
+// Quota window label for daily limit.
+func QuotasWindowDaily() string { return In(i18n.Locale()).QuotasWindowDaily() }
+
+// QuotasWindowDaily says "Daily · 24 h"
+// in the language of msgs.
+//
+// Quota window label for daily limit.
+func (msgs Messages) QuotasWindowDaily() string {
+	return Catalog.Format(msgs.locale, "quotasWindowDaily", nil)
+}
+
+// QuotasWindowWeekly says "Weekly · all models"
+// in the language the app shows.
+//
+// Quota window label for weekly limit.
+func QuotasWindowWeekly() string { return In(i18n.Locale()).QuotasWindowWeekly() }
+
+// QuotasWindowWeekly says "Weekly · all models"
+// in the language of msgs.
+//
+// Quota window label for weekly limit.
+func (msgs Messages) QuotasWindowWeekly() string {
+	return Catalog.Format(msgs.locale, "quotasWindowWeekly", nil)
+}
+
+// QuotasWindowWeeklyModel says "Weekly · {model}"
+// in the language the app shows.
+//
+// Quota window label for model-specific weekly limit.
+func QuotasWindowWeeklyModel(model string) string {
+	return In(i18n.Locale()).QuotasWindowWeeklyModel(model)
+}
+
+// QuotasWindowWeeklyModel says "Weekly · {model}"
+// in the language of msgs.
+//
+// Quota window label for model-specific weekly limit.
+func (msgs Messages) QuotasWindowWeeklyModel(model string) string {
+	return Catalog.Format(msgs.locale, "quotasWindowWeeklyModel", map[string]any{"model": model})
+}
+
+// QuotasWindowMonthly says "Monthly budget"
+// in the language the app shows.
+//
+// Quota window label for monthly budget.
+func QuotasWindowMonthly() string { return In(i18n.Locale()).QuotasWindowMonthly() }
+
+// QuotasWindowMonthly says "Monthly budget"
+// in the language of msgs.
+//
+// Quota window label for monthly budget.
+func (msgs Messages) QuotasWindowMonthly() string {
+	return Catalog.Format(msgs.locale, "quotasWindowMonthly", nil)
+}
+
+// QuotasWindowCredits says "Credits"
+// in the language the app shows.
+//
+// Quota window label for credits.
+func QuotasWindowCredits() string { return In(i18n.Locale()).QuotasWindowCredits() }
+
+// QuotasWindowCredits says "Credits"
+// in the language of msgs.
+//
+// Quota window label for credits.
+func (msgs Messages) QuotasWindowCredits() string {
+	return Catalog.Format(msgs.locale, "quotasWindowCredits", nil)
+}
+
+// QuotasWindowShort5h says "5h"
+// in the language the app shows.
+//
+// Short window label in tray popover.
+func QuotasWindowShort5h() string { return In(i18n.Locale()).QuotasWindowShort5h() }
+
+// QuotasWindowShort5h says "5h"
+// in the language of msgs.
+//
+// Short window label in tray popover.
+func (msgs Messages) QuotasWindowShort5h() string {
+	return Catalog.Format(msgs.locale, "quotasWindowShort5h", nil)
+}
+
+// QuotasWindowShortDaily says "24h"
+// in the language the app shows.
+//
+// Short daily window label in tray popover.
+func QuotasWindowShortDaily() string { return In(i18n.Locale()).QuotasWindowShortDaily() }
+
+// QuotasWindowShortDaily says "24h"
+// in the language of msgs.
+//
+// Short daily window label in tray popover.
+func (msgs Messages) QuotasWindowShortDaily() string {
+	return Catalog.Format(msgs.locale, "quotasWindowShortDaily", nil)
+}
+
+// QuotasWindowShortWeek says "Week"
+// in the language the app shows.
+//
+// Short weekly window label in tray popover.
+func QuotasWindowShortWeek() string { return In(i18n.Locale()).QuotasWindowShortWeek() }
+
+// QuotasWindowShortWeek says "Week"
+// in the language of msgs.
+//
+// Short weekly window label in tray popover.
+func (msgs Messages) QuotasWindowShortWeek() string {
+	return Catalog.Format(msgs.locale, "quotasWindowShortWeek", nil)
+}
+
+// QuotasWindowShortMonth says "Month"
+// in the language the app shows.
+//
+// Short monthly window label in tray popover.
+func QuotasWindowShortMonth() string { return In(i18n.Locale()).QuotasWindowShortMonth() }
+
+// QuotasWindowShortMonth says "Month"
+// in the language of msgs.
+//
+// Short monthly window label in tray popover.
+func (msgs Messages) QuotasWindowShortMonth() string {
+	return Catalog.Format(msgs.locale, "quotasWindowShortMonth", nil)
+}
+
+// QuotasResetIn says "Resets in {duration}"
+// in the language the app shows.
+//
+// Countdown to quota window reset.
+func QuotasResetIn(duration string) string { return In(i18n.Locale()).QuotasResetIn(duration) }
+
+// QuotasResetIn says "Resets in {duration}"
+// in the language of msgs.
+//
+// Countdown to quota window reset.
+func (msgs Messages) QuotasResetIn(duration string) string {
+	return Catalog.Format(msgs.locale, "quotasResetIn", map[string]any{"duration": duration})
+}
+
+// QuotasResetDone says "Window reset"
+// in the language the app shows.
+//
+// Status when a quota window has already reset.
+func QuotasResetDone() string { return In(i18n.Locale()).QuotasResetDone() }
+
+// QuotasResetDone says "Window reset"
+// in the language of msgs.
+//
+// Status when a quota window has already reset.
+func (msgs Messages) QuotasResetDone() string {
+	return Catalog.Format(msgs.locale, "quotasResetDone", nil)
+}
+
+// QuotasPaceSpare says "ahead of pace"
+// in the language the app shows.
+//
+// Pacing label when usage is well below linear pace.
+func QuotasPaceSpare() string { return In(i18n.Locale()).QuotasPaceSpare() }
+
+// QuotasPaceSpare says "ahead of pace"
+// in the language of msgs.
+//
+// Pacing label when usage is well below linear pace.
+func (msgs Messages) QuotasPaceSpare() string {
+	return Catalog.Format(msgs.locale, "quotasPaceSpare", nil)
+}
+
+// QuotasPaceNormal says "on pace"
+// in the language the app shows.
+//
+// Pacing label when usage matches linear pace.
+func QuotasPaceNormal() string { return In(i18n.Locale()).QuotasPaceNormal() }
+
+// QuotasPaceNormal says "on pace"
+// in the language of msgs.
+//
+// Pacing label when usage matches linear pace.
+func (msgs Messages) QuotasPaceNormal() string {
+	return Catalog.Format(msgs.locale, "quotasPaceNormal", nil)
+}
+
+// QuotasPaceFast says "faster than pace"
+// in the language the app shows.
+//
+// Pacing label when usage is ahead of linear pace.
+func QuotasPaceFast() string { return In(i18n.Locale()).QuotasPaceFast() }
+
+// QuotasPaceFast says "faster than pace"
+// in the language of msgs.
+//
+// Pacing label when usage is ahead of linear pace.
+func (msgs Messages) QuotasPaceFast() string {
+	return Catalog.Format(msgs.locale, "quotasPaceFast", nil)
+}
+
+// QuotasPaceLow says "running low"
+// in the language the app shows.
+//
+// Pacing label when less than 10% quota remains.
+func QuotasPaceLow() string { return In(i18n.Locale()).QuotasPaceLow() }
+
+// QuotasPaceLow says "running low"
+// in the language of msgs.
+//
+// Pacing label when less than 10% quota remains.
+func (msgs Messages) QuotasPaceLow() string {
+	return Catalog.Format(msgs.locale, "quotasPaceLow", nil)
+}
+
+// QuotasPaceExhausted says "exhausted"
+// in the language the app shows.
+//
+// Pacing label when quota is exhausted.
+func QuotasPaceExhausted() string { return In(i18n.Locale()).QuotasPaceExhausted() }
+
+// QuotasPaceExhausted says "exhausted"
+// in the language of msgs.
+//
+// Pacing label when quota is exhausted.
+func (msgs Messages) QuotasPaceExhausted() string {
+	return Catalog.Format(msgs.locale, "quotasPaceExhausted", nil)
+}
+
+// QuotasRunsOutAtPace says "At current pace lasts"
+// in the language the app shows.
+//
+// Footer projection label inside provider card.
+func QuotasRunsOutAtPace() string { return In(i18n.Locale()).QuotasRunsOutAtPace() }
+
+// QuotasRunsOutAtPace says "At current pace lasts"
+// in the language of msgs.
+//
+// Footer projection label inside provider card.
+func (msgs Messages) QuotasRunsOutAtPace() string {
+	return Catalog.Format(msgs.locale, "quotasRunsOutAtPace", nil)
+}
+
+// QuotasExtraUsage says "Extra usage"
+// in the language the app shows.
+//
+// Extra pay-as-you-go usage footer label.
+func QuotasExtraUsage() string { return In(i18n.Locale()).QuotasExtraUsage() }
+
+// QuotasExtraUsage says "Extra usage"
+// in the language of msgs.
+//
+// Extra pay-as-you-go usage footer label.
+func (msgs Messages) QuotasExtraUsage() string {
+	return Catalog.Format(msgs.locale, "quotasExtraUsage", nil)
+}
+
+// QuotasCreditsUnlimited says "Unlimited"
+// in the language the app shows.
+//
+// Label for unlimited credits.
+func QuotasCreditsUnlimited() string { return In(i18n.Locale()).QuotasCreditsUnlimited() }
+
+// QuotasCreditsUnlimited says "Unlimited"
+// in the language of msgs.
+//
+// Label for unlimited credits.
+func (msgs Messages) QuotasCreditsUnlimited() string {
+	return Catalog.Format(msgs.locale, "quotasCreditsUnlimited", nil)
+}
+
+// QuotasReviewsCount says "{count} reviews"
+// in the language the app shows.
+//
+// CodeRabbit reviews counter.
+func QuotasReviewsCount(count int) string { return In(i18n.Locale()).QuotasReviewsCount(count) }
+
+// QuotasReviewsCount says "{count} reviews"
+// in the language of msgs.
+//
+// CodeRabbit reviews counter.
+func (msgs Messages) QuotasReviewsCount(count int) string {
+	return Catalog.Format(msgs.locale, "quotasReviewsCount", map[string]any{"count": count})
+}
+
+// QuotasRightTrayTitle says "In tray panel"
+// in the language the app shows.
+//
+// Right sidebar card title for configuring tray quota providers.
+func QuotasRightTrayTitle() string { return In(i18n.Locale()).QuotasRightTrayTitle() }
+
+// QuotasRightTrayTitle says "In tray panel"
+// in the language of msgs.
+//
+// Right sidebar card title for configuring tray quota providers.
+func (msgs Messages) QuotasRightTrayTitle() string {
+	return Catalog.Format(msgs.locale, "quotasRightTrayTitle", nil)
+}
+
+// QuotasRightTraySectionsTitle says "Section order & notifications"
+// in the language the app shows.
+//
+// Link row title to Settings from quotas right sidebar.
+func QuotasRightTraySectionsTitle() string { return In(i18n.Locale()).QuotasRightTraySectionsTitle() }
+
+// QuotasRightTraySectionsTitle says "Section order & notifications"
+// in the language of msgs.
+//
+// Link row title to Settings from quotas right sidebar.
+func (msgs Messages) QuotasRightTraySectionsTitle() string {
+	return Catalog.Format(msgs.locale, "quotasRightTraySectionsTitle", nil)
+}
+
+// QuotasRightUpcomingTitle says "Upcoming resets"
+// in the language the app shows.
+//
+// Right sidebar card title for upcoming window resets.
+func QuotasRightUpcomingTitle() string { return In(i18n.Locale()).QuotasRightUpcomingTitle() }
+
+// QuotasRightUpcomingTitle says "Upcoming resets"
+// in the language of msgs.
+//
+// Right sidebar card title for upcoming window resets.
+func (msgs Messages) QuotasRightUpcomingTitle() string {
+	return Catalog.Format(msgs.locale, "quotasRightUpcomingTitle", nil)
+}
+
+// QuotasRightUpcomingSub says "by time"
+// in the language the app shows.
+//
+// Right sidebar card subtitle for upcoming resets.
+func QuotasRightUpcomingSub() string { return In(i18n.Locale()).QuotasRightUpcomingSub() }
+
+// QuotasRightUpcomingSub says "by time"
+// in the language of msgs.
+//
+// Right sidebar card subtitle for upcoming resets.
+func (msgs Messages) QuotasRightUpcomingSub() string {
+	return Catalog.Format(msgs.locale, "quotasRightUpcomingSub", nil)
+}
+
+// QuotasRightUpcomingEmpty says "No scheduled resets"
+// in the language the app shows.
+//
+// Empty state for upcoming resets list.
+func QuotasRightUpcomingEmpty() string { return In(i18n.Locale()).QuotasRightUpcomingEmpty() }
+
+// QuotasRightUpcomingEmpty says "No scheduled resets"
+// in the language of msgs.
+//
+// Empty state for upcoming resets list.
+func (msgs Messages) QuotasRightUpcomingEmpty() string {
+	return Catalog.Format(msgs.locale, "quotasRightUpcomingEmpty", nil)
+}
+
+// QuotasRightInactiveTitle says "Without active quota"
+// in the language the app shows.
+//
+// Right sidebar card title for detected providers without active quotas.
+func QuotasRightInactiveTitle() string { return In(i18n.Locale()).QuotasRightInactiveTitle() }
+
+// QuotasRightInactiveTitle says "Without active quota"
+// in the language of msgs.
+//
+// Right sidebar card title for detected providers without active quotas.
+func (msgs Messages) QuotasRightInactiveTitle() string {
+	return Catalog.Format(msgs.locale, "quotasRightInactiveTitle", nil)
+}
+
+// QuotasStatusSignedOut says "not signed in locally"
+// in the language the app shows.
+//
+// Inactive provider reason: signed out.
+func QuotasStatusSignedOut() string { return In(i18n.Locale()).QuotasStatusSignedOut() }
+
+// QuotasStatusSignedOut says "not signed in locally"
+// in the language of msgs.
+//
+// Inactive provider reason: signed out.
+func (msgs Messages) QuotasStatusSignedOut() string {
+	return Catalog.Format(msgs.locale, "quotasStatusSignedOut", nil)
+}
+
+// QuotasStatusAPIKey says "using API key · no subscription limit"
+// in the language the app shows.
+//
+// Inactive provider reason: API key mode.
+func QuotasStatusAPIKey() string { return In(i18n.Locale()).QuotasStatusAPIKey() }
+
+// QuotasStatusAPIKey says "using API key · no subscription limit"
+// in the language of msgs.
+//
+// Inactive provider reason: API key mode.
+func (msgs Messages) QuotasStatusAPIKey() string {
+	return Catalog.Format(msgs.locale, "quotasStatusAPIKey", nil)
+}
+
+// QuotasStatusExpired says "session expired · sign in again"
+// in the language the app shows.
+//
+// Inactive provider reason: expired session.
+func QuotasStatusExpired() string { return In(i18n.Locale()).QuotasStatusExpired() }
+
+// QuotasStatusExpired says "session expired · sign in again"
+// in the language of msgs.
+//
+// Inactive provider reason: expired session.
+func (msgs Messages) QuotasStatusExpired() string {
+	return Catalog.Format(msgs.locale, "quotasStatusExpired", nil)
+}
+
+// QuotasStatusNoData says "no quota data found"
+// in the language the app shows.
+//
+// Inactive provider reason: no quota data.
+func QuotasStatusNoData() string { return In(i18n.Locale()).QuotasStatusNoData() }
+
+// QuotasStatusNoData says "no quota data found"
+// in the language of msgs.
+//
+// Inactive provider reason: no quota data.
+func (msgs Messages) QuotasStatusNoData() string {
+	return Catalog.Format(msgs.locale, "quotasStatusNoData", nil)
+}
+
+// QuotasStatusUnavailable says "temporarily unavailable"
+// in the language the app shows.
+//
+// Inactive provider reason: network or rate limit.
+func QuotasStatusUnavailable() string { return In(i18n.Locale()).QuotasStatusUnavailable() }
+
+// QuotasStatusUnavailable says "temporarily unavailable"
+// in the language of msgs.
+//
+// Inactive provider reason: network or rate limit.
+func (msgs Messages) QuotasStatusUnavailable() string {
+	return Catalog.Format(msgs.locale, "quotasStatusUnavailable", nil)
+}
+
+// QuotasEmptyTitle says "No active AI subscriptions detected"
+// in the language the app shows.
+//
+// Empty state heading on the AI quotas page.
+func QuotasEmptyTitle() string { return In(i18n.Locale()).QuotasEmptyTitle() }
+
+// QuotasEmptyTitle says "No active AI subscriptions detected"
+// in the language of msgs.
+//
+// Empty state heading on the AI quotas page.
+func (msgs Messages) QuotasEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "quotasEmptyTitle", nil)
+}
+
+// QuotasEmptyBody says "Hearth checks local profiles of Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, JetBrains AI and…"
+// in the language the app shows.
+//
+// Empty state body on the AI quotas page.
+func QuotasEmptyBody() string { return In(i18n.Locale()).QuotasEmptyBody() }
+
+// QuotasEmptyBody says "Hearth checks local profiles of Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, JetBrains AI and…"
+// in the language of msgs.
+//
+// Empty state body on the AI quotas page.
+func (msgs Messages) QuotasEmptyBody() string {
+	return Catalog.Format(msgs.locale, "quotasEmptyBody", nil)
+}
+
+// QuotasFilterEmptyTitle says "No providers match this filter"
+// in the language the app shows.
+//
+// Empty state when filter yields no providers.
+func QuotasFilterEmptyTitle() string { return In(i18n.Locale()).QuotasFilterEmptyTitle() }
+
+// QuotasFilterEmptyTitle says "No providers match this filter"
+// in the language of msgs.
+//
+// Empty state when filter yields no providers.
+func (msgs Messages) QuotasFilterEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "quotasFilterEmptyTitle", nil)
+}
+
+// QuotasMoveUp says "Move up"
+// in the language the app shows.
+//
+// Accessible label for moving an item up in order.
+func QuotasMoveUp() string { return In(i18n.Locale()).QuotasMoveUp() }
+
+// QuotasMoveUp says "Move up"
+// in the language of msgs.
+//
+// Accessible label for moving an item up in order.
+func (msgs Messages) QuotasMoveUp() string {
+	return Catalog.Format(msgs.locale, "quotasMoveUp", nil)
+}
+
+// QuotasMoveDown says "Move down"
+// in the language the app shows.
+//
+// Accessible label for moving an item down in order.
+func QuotasMoveDown() string { return In(i18n.Locale()).QuotasMoveDown() }
+
+// QuotasMoveDown says "Move down"
+// in the language of msgs.
+//
+// Accessible label for moving an item down in order.
+func (msgs Messages) QuotasMoveDown() string {
+	return Catalog.Format(msgs.locale, "quotasMoveDown", nil)
+}
+
+// QuotasGroupWindowsMeta says "{windows} windows · {groups} groups"
+// in the language the app shows.
+//
+// Subtitle in tray popover for multi-group quota providers.
+func QuotasGroupWindowsMeta(windows int, groups int) string {
+	return In(i18n.Locale()).QuotasGroupWindowsMeta(windows, groups)
+}
+
+// QuotasGroupWindowsMeta says "{windows} windows · {groups} groups"
+// in the language of msgs.
+//
+// Subtitle in tray popover for multi-group quota providers.
+func (msgs Messages) QuotasGroupWindowsMeta(windows int, groups int) string {
+	return Catalog.Format(msgs.locale, "quotasGroupWindowsMeta", map[string]any{"windows": windows, "groups": groups})
+}
+
+// TrayPopoverQuotasHeader says "AI quotas"
+// in the language the app shows.
+//
+// Section title in tray popover for AI quotas.
+func TrayPopoverQuotasHeader() string { return In(i18n.Locale()).TrayPopoverQuotasHeader() }
+
+// TrayPopoverQuotasHeader says "AI quotas"
+// in the language of msgs.
+//
+// Section title in tray popover for AI quotas.
+func (msgs Messages) TrayPopoverQuotasHeader() string {
+	return Catalog.Format(msgs.locale, "trayPopoverQuotasHeader", nil)
+}
+
+// TrayPopoverAllQuotas says "All quotas →"
+// in the language the app shows.
+//
+// Link in tray popover header opening the AI quotas page.
+func TrayPopoverAllQuotas() string { return In(i18n.Locale()).TrayPopoverAllQuotas() }
+
+// TrayPopoverAllQuotas says "All quotas →"
+// in the language of msgs.
+//
+// Link in tray popover header opening the AI quotas page.
+func (msgs Messages) TrayPopoverAllQuotas() string {
+	return Catalog.Format(msgs.locale, "trayPopoverAllQuotas", nil)
+}
+
+// TrayPopoverQuotasEmpty says "No active AI quotas in tray"
+// in the language the app shows.
+//
+// Empty line inside AI quotas popover section.
+func TrayPopoverQuotasEmpty() string { return In(i18n.Locale()).TrayPopoverQuotasEmpty() }
+
+// TrayPopoverQuotasEmpty says "No active AI quotas in tray"
+// in the language of msgs.
+//
+// Empty line inside AI quotas popover section.
+func (msgs Messages) TrayPopoverQuotasEmpty() string {
+	return Catalog.Format(msgs.locale, "trayPopoverQuotasEmpty", nil)
+}
+
+// SettingsTrayPanelTitle says "Tray panel"
+// in the language the app shows.
+//
+// Settings card title for tray icon, popover sections, and quota alerts.
+func SettingsTrayPanelTitle() string { return In(i18n.Locale()).SettingsTrayPanelTitle() }
+
+// SettingsTrayPanelTitle says "Tray panel"
+// in the language of msgs.
+//
+// Settings card title for tray icon, popover sections, and quota alerts.
+func (msgs Messages) SettingsTrayPanelTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTrayPanelTitle", nil)
+}
+
+// SettingsTraySectionsTitle says "Popover sections & order"
+// in the language the app shows.
+//
+// Settings row title for tray popover section configuration.
+func SettingsTraySectionsTitle() string { return In(i18n.Locale()).SettingsTraySectionsTitle() }
+
+// SettingsTraySectionsTitle says "Popover sections & order"
+// in the language of msgs.
+//
+// Settings row title for tray popover section configuration.
+func (msgs Messages) SettingsTraySectionsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionsTitle", nil)
+}
+
+// SettingsTraySectionsHint says "Hide unused sections or change their order"
+// in the language the app shows.
+//
+// Settings row hint for tray popover section configuration.
+func SettingsTraySectionsHint() string { return In(i18n.Locale()).SettingsTraySectionsHint() }
+
+// SettingsTraySectionsHint says "Hide unused sections or change their order"
+// in the language of msgs.
+//
+// Settings row hint for tray popover section configuration.
+func (msgs Messages) SettingsTraySectionsHint() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionsHint", nil)
+}
+
+// SettingsTraySectionServices says "Running services"
+// in the language the app shows.
+//
+// Tray section name: running services.
+func SettingsTraySectionServices() string { return In(i18n.Locale()).SettingsTraySectionServices() }
+
+// SettingsTraySectionServices says "Running services"
+// in the language of msgs.
+//
+// Tray section name: running services.
+func (msgs Messages) SettingsTraySectionServices() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionServices", nil)
+}
+
+// SettingsTraySectionQuotas says "AI quotas"
+// in the language the app shows.
+//
+// Tray section name: AI quotas.
+func SettingsTraySectionQuotas() string { return In(i18n.Locale()).SettingsTraySectionQuotas() }
+
+// SettingsTraySectionQuotas says "AI quotas"
+// in the language of msgs.
+//
+// Tray section name: AI quotas.
+func (msgs Messages) SettingsTraySectionQuotas() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionQuotas", nil)
+}
+
+// SettingsTraySectionContexts says "Docker & K8s contexts"
+// in the language the app shows.
+//
+// Tray section name: Docker and Kubernetes contexts.
+func SettingsTraySectionContexts() string { return In(i18n.Locale()).SettingsTraySectionContexts() }
+
+// SettingsTraySectionContexts says "Docker & K8s contexts"
+// in the language of msgs.
+//
+// Tray section name: Docker and Kubernetes contexts.
+func (msgs Messages) SettingsTraySectionContexts() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionContexts", nil)
+}
+
+// SettingsTraySectionShortServices says "Services"
+// in the language the app shows.
+//
+// Short tray section label for summary breadcrumb.
+func SettingsTraySectionShortServices() string {
+	return In(i18n.Locale()).SettingsTraySectionShortServices()
+}
+
+// SettingsTraySectionShortServices says "Services"
+// in the language of msgs.
+//
+// Short tray section label for summary breadcrumb.
+func (msgs Messages) SettingsTraySectionShortServices() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionShortServices", nil)
+}
+
+// SettingsTraySectionShortQuotas says "Quotas"
+// in the language the app shows.
+//
+// Short tray section label for summary breadcrumb.
+func SettingsTraySectionShortQuotas() string {
+	return In(i18n.Locale()).SettingsTraySectionShortQuotas()
+}
+
+// SettingsTraySectionShortQuotas says "Quotas"
+// in the language of msgs.
+//
+// Short tray section label for summary breadcrumb.
+func (msgs Messages) SettingsTraySectionShortQuotas() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionShortQuotas", nil)
+}
+
+// SettingsTraySectionShortContexts says "Contexts"
+// in the language the app shows.
+//
+// Short tray section label for summary breadcrumb.
+func SettingsTraySectionShortContexts() string {
+	return In(i18n.Locale()).SettingsTraySectionShortContexts()
+}
+
+// SettingsTraySectionShortContexts says "Contexts"
+// in the language of msgs.
+//
+// Short tray section label for summary breadcrumb.
+func (msgs Messages) SettingsTraySectionShortContexts() string {
+	return Catalog.Format(msgs.locale, "settingsTraySectionShortContexts", nil)
+}
+
+// SettingsTrayProvidersTitle says "Choose AI quota providers"
+// in the language the app shows.
+//
+// Settings row title linking to /ai/quotas.
+func SettingsTrayProvidersTitle() string { return In(i18n.Locale()).SettingsTrayProvidersTitle() }
+
+// SettingsTrayProvidersTitle says "Choose AI quota providers"
+// in the language of msgs.
+//
+// Settings row title linking to /ai/quotas.
+func (msgs Messages) SettingsTrayProvidersTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTrayProvidersTitle", nil)
+}
+
+// SettingsTrayProvidersSummary says "In tray: {shown}"
+// in the language the app shows.
+//
+// Summary of quota providers shown in tray.
+func SettingsTrayProvidersSummary(shown string) string {
+	return In(i18n.Locale()).SettingsTrayProvidersSummary(shown)
+}
+
+// SettingsTrayProvidersSummary says "In tray: {shown}"
+// in the language of msgs.
+//
+// Summary of quota providers shown in tray.
+func (msgs Messages) SettingsTrayProvidersSummary(shown string) string {
+	return Catalog.Format(msgs.locale, "settingsTrayProvidersSummary", map[string]any{"shown": shown})
+}
+
+// SettingsTrayProvidersSummaryHidden says "In tray: {shown} · hidden: {hidden}"
+// in the language the app shows.
+//
+// Summary of quota providers shown and hidden in tray.
+func SettingsTrayProvidersSummaryHidden(shown string, hidden string) string {
+	return In(i18n.Locale()).SettingsTrayProvidersSummaryHidden(shown, hidden)
+}
+
+// SettingsTrayProvidersSummaryHidden says "In tray: {shown} · hidden: {hidden}"
+// in the language of msgs.
+//
+// Summary of quota providers shown and hidden in tray.
+func (msgs Messages) SettingsTrayProvidersSummaryHidden(shown string, hidden string) string {
+	return Catalog.Format(msgs.locale, "settingsTrayProvidersSummaryHidden", map[string]any{"shown": shown, "hidden": hidden})
+}
+
+// SettingsTrayProvidersNone says "No connected providers yet"
+// in the language the app shows.
+//
+// Hint when no quota providers are connected yet.
+func SettingsTrayProvidersNone() string { return In(i18n.Locale()).SettingsTrayProvidersNone() }
+
+// SettingsTrayProvidersNone says "No connected providers yet"
+// in the language of msgs.
+//
+// Hint when no quota providers are connected yet.
+func (msgs Messages) SettingsTrayProvidersNone() string {
+	return Catalog.Format(msgs.locale, "settingsTrayProvidersNone", nil)
+}
+
+// SettingsQuotaNotifyTitle says "Notify when quota < 10% left"
+// in the language the app shows.
+//
+// Settings toggle label for low AI quota OS notifications.
+func SettingsQuotaNotifyTitle() string { return In(i18n.Locale()).SettingsQuotaNotifyTitle() }
+
+// SettingsQuotaNotifyTitle says "Notify when quota < 10% left"
+// in the language of msgs.
+//
+// Settings toggle label for low AI quota OS notifications.
+func (msgs Messages) SettingsQuotaNotifyTitle() string {
+	return Catalog.Format(msgs.locale, "settingsQuotaNotifyTitle", nil)
+}
+
+// SettingsQuotaNotifyHint says "System notification before a subscription window runs out"
+// in the language the app shows.
+//
+// Settings toggle hint for low AI quota OS notifications.
+func SettingsQuotaNotifyHint() string { return In(i18n.Locale()).SettingsQuotaNotifyHint() }
+
+// SettingsQuotaNotifyHint says "System notification before a subscription window runs out"
+// in the language of msgs.
+//
+// Settings toggle hint for low AI quota OS notifications.
+func (msgs Messages) SettingsQuotaNotifyHint() string {
+	return Catalog.Format(msgs.locale, "settingsQuotaNotifyHint", nil)
+}
+
+// QuotaNotifyLowTitle says "{provider}: quota running low"
+// in the language the app shows.
+//
+// OS notification title when an AI quota window drops below 10%.
+func QuotaNotifyLowTitle(provider string) string {
+	return In(i18n.Locale()).QuotaNotifyLowTitle(provider)
+}
+
+// QuotaNotifyLowTitle says "{provider}: quota running low"
+// in the language of msgs.
+//
+// OS notification title when an AI quota window drops below 10%.
+func (msgs Messages) QuotaNotifyLowTitle(provider string) string {
+	return Catalog.Format(msgs.locale, "quotaNotifyLowTitle", map[string]any{"provider": provider})
+}
+
+// QuotaNotifyLowBody says "{window}: {left}% left"
+// in the language the app shows.
+//
+// OS notification body when an AI quota window drops below 10%.
+func QuotaNotifyLowBody(window string, left int) string {
+	return In(i18n.Locale()).QuotaNotifyLowBody(window, left)
+}
+
+// QuotaNotifyLowBody says "{window}: {left}% left"
+// in the language of msgs.
+//
+// OS notification body when an AI quota window drops below 10%.
+func (msgs Messages) QuotaNotifyLowBody(window string, left int) string {
+	return Catalog.Format(msgs.locale, "quotaNotifyLowBody", map[string]any{"window": window, "left": left})
+}
+
+// QuotaNotifyResetTitle says "{provider}: quota reset"
+// in the language the app shows.
+//
+// OS notification title when a previously low AI quota window resets.
+func QuotaNotifyResetTitle(provider string) string {
+	return In(i18n.Locale()).QuotaNotifyResetTitle(provider)
+}
+
+// QuotaNotifyResetTitle says "{provider}: quota reset"
+// in the language of msgs.
+//
+// OS notification title when a previously low AI quota window resets.
+func (msgs Messages) QuotaNotifyResetTitle(provider string) string {
+	return Catalog.Format(msgs.locale, "quotaNotifyResetTitle", map[string]any{"provider": provider})
+}
+
+// QuotaNotifyResetBody says "{window} is available again."
+// in the language the app shows.
+//
+// OS notification body when a previously low AI quota window resets.
+func QuotaNotifyResetBody(window string) string {
+	return In(i18n.Locale()).QuotaNotifyResetBody(window)
+}
+
+// QuotaNotifyResetBody says "{window} is available again."
+// in the language of msgs.
+//
+// OS notification body when a previously low AI quota window resets.
+func (msgs Messages) QuotaNotifyResetBody(window string) string {
+	return Catalog.Format(msgs.locale, "quotaNotifyResetBody", map[string]any{"window": window})
+}
+
+// QuotasDurDays says "{days}d"
+// in the language the app shows.
+//
+// Compact days duration for quota resets.
+func QuotasDurDays(days int) string { return In(i18n.Locale()).QuotasDurDays(days) }
+
+// QuotasDurDays says "{days}d"
+// in the language of msgs.
+//
+// Compact days duration for quota resets.
+func (msgs Messages) QuotasDurDays(days int) string {
+	return Catalog.Format(msgs.locale, "quotasDurDays", map[string]any{"days": days})
+}
+
+// QuotasDurHoursMin says "{hours}h {minutes}m"
+// in the language the app shows.
+//
+// Compact hours and minutes duration for quota resets.
+func QuotasDurHoursMin(hours int, minutes int) string {
+	return In(i18n.Locale()).QuotasDurHoursMin(hours, minutes)
+}
+
+// QuotasDurHoursMin says "{hours}h {minutes}m"
+// in the language of msgs.
+//
+// Compact hours and minutes duration for quota resets.
+func (msgs Messages) QuotasDurHoursMin(hours int, minutes int) string {
+	return Catalog.Format(msgs.locale, "quotasDurHoursMin", map[string]any{"hours": hours, "minutes": minutes})
+}
+
+// QuotasDurHours says "{hours}h"
+// in the language the app shows.
+//
+// Compact hours duration for quota resets.
+func QuotasDurHours(hours int) string { return In(i18n.Locale()).QuotasDurHours(hours) }
+
+// QuotasDurHours says "{hours}h"
+// in the language of msgs.
+//
+// Compact hours duration for quota resets.
+func (msgs Messages) QuotasDurHours(hours int) string {
+	return Catalog.Format(msgs.locale, "quotasDurHours", map[string]any{"hours": hours})
+}
+
+// QuotasDurMin says "{minutes}m"
+// in the language the app shows.
+//
+// Compact minutes duration for quota resets.
+func QuotasDurMin(minutes int) string { return In(i18n.Locale()).QuotasDurMin(minutes) }
+
+// QuotasDurMin says "{minutes}m"
+// in the language of msgs.
+//
+// Compact minutes duration for quota resets.
+func (msgs Messages) QuotasDurMin(minutes int) string {
+	return Catalog.Format(msgs.locale, "quotasDurMin", map[string]any{"minutes": minutes})
 }

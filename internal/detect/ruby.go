@@ -157,7 +157,7 @@ func rubyGems(path string, env sysenv.Env) []inventory.Package {
 					continue
 				}
 				seen[m[0]] = true
-				pkgs = append(pkgs, inventory.Package{Name: m[1], Version: m[2]})
+				pkgs = append(pkgs, inventory.Package{Name: m[1], Version: m[2], Manager: "gem"})
 			}
 		}
 	}

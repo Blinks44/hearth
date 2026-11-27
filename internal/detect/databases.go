@@ -214,17 +214,21 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 			continue
 		}
 		ports, bindings := publishedTCPBindings(row.Ports)
+		portContainer := inventory.DockerPortContainer{
+			ID:           row.ID,
+			Name:         row.Name,
+			Image:        row.Image,
+			Status:       row.State,
+			ComposeDir:   row.Project,
+			ComposeFiles: row.ConfigFiles,
+			Ports:        ports,
+			Bindings:     bindings,
+		}
 		if row.State == "running" && len(ports) > 0 {
-			d.PortContainers = append(d.PortContainers, inventory.DockerPortContainer{
-				ID:           row.ID,
-				Name:         row.Name,
-				Image:        row.Image,
-				Status:       row.State,
-				ComposeDir:   row.Project,
-				ComposeFiles: row.ConfigFiles,
-				Ports:        ports,
-				Bindings:     bindings,
-			})
+			d.PortContainers = append(d.PortContainers, portContainer)
+		}
+		if row.Project != "" {
+			d.ComposeContainers = append(d.ComposeContainers, portContainer)
 		}
 		if row.Kind != "" {
 			kindNode(d, row.Kind, row.Role, row.Image, row.State == "running")

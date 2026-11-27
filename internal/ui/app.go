@@ -14,6 +14,7 @@ import (
 	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/docker"
@@ -85,6 +86,21 @@ type App struct {
 	TrayEnabled bool
 	// ShowInDock controls whether Hearth shows a macOS Dock icon (only configurable while TrayEnabled is true).
 	ShowInDock bool
+	// TraySections and TrayHiddenSections control the order and visibility of
+	// sections inside the tray popover ("services", "quotas", "contexts").
+	TraySections       []string
+	TrayHiddenSections []string
+	// QuotaOrder and QuotaTrayHidden control provider ordering and tray visibility.
+	QuotaOrder      []string
+	QuotaTrayHidden []string
+	// QuotaNotifyLow controls OS notifications when an active quota window drops below 10%.
+	QuotaNotifyLow bool
+	// Quotas holds the latest AI subscription quota snapshot published by the host monitor.
+	Quotas *aiquota.Snapshot
+	// QuotasRefreshing is true while a quota refresh pass is in flight.
+	QuotasRefreshing bool
+	// RefreshQuotas triggers an asynchronous quota refresh on the host monitor.
+	RefreshQuotas func(force bool)
 	// OpenAtLogin reflects the OS login-item setting for launching Hearth automatically at sign-in.
 	OpenAtLogin bool
 	// OnOpenAtLogin updates the OS login-item registration off the UI thread or via mygo.App.SetOpenAtLogin.
@@ -206,6 +222,9 @@ type App struct {
 	// RefreshPorts re-reads active TCP listeners and port-publishing Docker
 	// containers without running a full system scan.
 	RefreshPorts func(done func(detect.PortsSnapshot))
+	// MeasureStartup re-measures shell startup timing without a full scan.
+	MeasureStartup   func()
+	StartupMeasuring bool
 	// OpenDBClient opens the user's terminal running a database CLI command.
 	OpenDBClient func(argv []string, done func(error))
 	// Projects are the folders the user added, as last read.
@@ -261,6 +280,10 @@ type App struct {
 	// OpenCloudLogin opens a terminal running a cloud CLI command (such as
 	// aws configure sso) when interactive setup is needed.
 	OpenCloudLogin func(argv []string, done func(error))
+	// OpenGitHubLogin opens a terminal running gh auth login.
+	OpenGitHubLogin func(done func(error))
+	// OpenSSHAdd opens a terminal running ssh-add for an SSH key inside ~/.ssh.
+	OpenSSHAdd func(keyPath string, done func(error))
 	// WatchCluster reads the target's cluster now and again, giving each
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
@@ -479,28 +502,29 @@ type App struct {
 	// updateChoice is what the user checked or unchecked on the Updates
 	// page, by updateRow.key; the others are as Hearth offers them.
 	updateChoice       map[string]bool
-	databaseTab        int             // the tab of the databases page shown
-	databaseFilter     string          // the databases table's filter
-	databaseErr        string          // last terminal launch error on the Databases page
-	databaseBusy       bool            // a Docker database start/stop plan is being built
-	dockerTab          int             // the tab of the Docker page shown
-	dockerFilter       string          // the Docker contexts table's filter
-	bunTab             int             // the tab of the Bun page shown
-	goTab              int             // the tab of the Go page shown
-	phpTab             int             // the tab of the PHP page shown
-	pythonTab          int             // the tab of the Python page shown
-	dotnetTab          int             // the tab of the .NET page shown
-	rubyTab            int             // the tab of the Ruby page shown
-	javaTab            int             // the tab of the Java page shown
-	rustTab            int             // the tab of the Rust page shown
-	rustToolchain      string          // selected rustup toolchain for Targets/Components
-	rustToolchainLabel string          // ui.Select label binding for rustToolchain
-	rustToolchainInput string          // custom toolchain name or version to install via rustup
-	rustTargetInput    string          // custom target triple to add via rustup target add
-	editorsExpanded    map[string]bool // expanded extension/superseded lists on Editors page
-	projectsTab        int             // all projects, or the ones needing attention
-	projectFilter      string          // the projects page's filter
-	adding             *adding         // the folder the add dialog shows; nil when closed
+	databaseTab        int                // the tab of the databases page shown
+	databaseFilter     string             // the databases table's filter
+	databaseErr        string             // last terminal launch error on the Databases page
+	databaseBusy       bool               // a Docker database start/stop plan is being built
+	dockerTab          int                // the tab of the Docker page shown
+	dockerFilter       string             // the Docker contexts table's filter
+	bunTab             int                // the tab of the Bun page shown
+	goTab              int                // the tab of the Go page shown
+	phpTab             int                // the tab of the PHP page shown
+	pythonTab          int                // the tab of the Python page shown
+	dotnetTab          int                // the tab of the .NET page shown
+	rubyTab            int                // the tab of the Ruby page shown
+	javaTab            int                // the tab of the Java page shown
+	rustTab            int                // the tab of the Rust page shown
+	rustToolchain      string             // selected rustup toolchain for Targets/Components
+	rustToolchainLabel string             // ui.Select label binding for rustToolchain
+	rustToolchainInput string             // custom toolchain name or version to install via rustup
+	rustTargetInput    string             // custom target triple to add via rustup target add
+	versionInput       map[string]*string // custom version spec input per language page
+	editorsExpanded    map[string]bool    // expanded extension/superseded lists on Editors page
+	projectsTab        int                // all projects, or the ones needing attention
+	projectFilter      string             // the projects page's filter
+	adding             *adding            // the folder the add dialog shows; nil when closed
 	addOpen            bool
 	cloneForm          *cloneProjectState // open Clone from Git dialog; nil when closed
 	licensesOpen       bool               // the licenses dialog from Settings
@@ -522,13 +546,16 @@ type App struct {
 	mcpChecks              map[string]mcpCheck // last check of each MCP server declaration
 	mcpCheckDecl           map[string]int      // chosen declaration index per MCP item key
 	mcpForm                *mcpFormState       // open add/edit MCP server dialog; nil when none
+	quotasTab              int                 // 0 all, 1 in tray, 2 running low
+	quotasSort             int                 // 0 custom, 1 least remaining, 2 soonest reset
+	quotasSortLabel        string              // ui.Select label binding for quotasSort
 	markdown               markdown.Options
 }
 
 // NewApp returns the app showing the overview.
 func NewApp() *App {
 	return &App{
-		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, Locale: "en", usageTab: 1,
+		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, QuotaNotifyLow: true, Locale: "en", usageTab: 1,
 		engine: dockerEngineState{view: dockerContainers},
 		pkg:    packageManagerState{view: pkgViewPackages},
 	}
@@ -703,6 +730,8 @@ func (a *App) View(c *ui.Context) {
 						a.instructionsView(c, p)
 					case usagePage:
 						a.usageView(c, p)
+					case quotasPage:
+						a.quotasView(c, p)
 					case mobilePage:
 						a.mobileView(c, p)
 					case editorsPage:
@@ -932,6 +961,18 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = len(a.Projects)
 	case mcpPage:
 		n = len(a.configuredMCPItems())
+	case quotasPage:
+		if a.Quotas != nil {
+			if low := a.Quotas.LowCount(c.Now()); low > 0 {
+				return func() {
+					pal := Colors(c.Theme())
+					ui.Box(c).Padding(1, 6).Radius(999).Background(pal.DangerSoft).Children(func() {
+						ui.Text(c, strconv.Itoa(low)).FontSize(10.5).FontWeight(600).TextColor(pal.DangerText).SingleLine()
+					})
+				}
+			}
+			n = a.Quotas.ConnectedCount()
+		}
 	case "/tools/docker", "/tools/databases":
 		for _, is := range a.visibleRawIssues(a.issues(c)) {
 			if issuePage(is) == p.path {
@@ -1234,6 +1275,9 @@ func (a *App) item(c *ui.Context, p page, end func()) {
 	})
 	if e.Clicked() && !chosen {
 		a.router.Push(a.entryPath(p.path))
+		if p.path == quotasPage {
+			a.maybeRefreshQuotasOnOpen()
+		}
 	}
 }
 
@@ -1344,6 +1388,24 @@ func (a *App) OpenProjectScriptLogs(dir, source, name string) {
 
 // OpenKube navigates the main window to the Kubernetes page.
 func (a *App) OpenKube() { a.router.Push(kubePage) }
+
+// OpenQuotas navigates the main window to the AI Quotas & limits page.
+func (a *App) OpenQuotas() {
+	a.router.Push(quotasPage)
+	a.maybeRefreshQuotasOnOpen()
+}
+
+func (a *App) maybeRefreshQuotasOnOpen() {
+	if a.RefreshQuotas == nil || a.QuotasRefreshing {
+		return
+	}
+	if a.Quotas == nil || a.Quotas.CheckedAt.IsZero() || time.Since(a.Quotas.CheckedAt) >= aiquota.ActivePollInterval {
+		a.RefreshQuotas(false)
+	}
+}
+
+// ViewingQuotas reports whether the AI Quotas & limits page is currently open.
+func (a *App) ViewingQuotas() bool { return a.router != nil && a.router.Path() == quotasPage }
 
 // NeedsLivePoll reports whether the currently visible page benefits from
 // lightweight background polling (ports, dev servers, or AI agent radar).

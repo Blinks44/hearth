@@ -32,7 +32,7 @@ func TestReadDockerImages(t *testing.T) {
 	legacy, dangling := items[0], items[1]
 	if legacy.Name() != "ghcr.io/demo/legacy:2.3" || legacy.Size != 123456 || legacy.Created.IsZero() ||
 		!legacy.Emulated("aarch64") || legacy.Emulated("x86_64") || len(legacy.Users) != 1 ||
-		legacy.Users[0] != (ImageUser{Name: "legacy"}) || legacy.Dangling() {
+		legacy.Users[0] != (ImageUser{ID: container, Name: "legacy"}) || legacy.Dangling() {
 		t.Fatalf("legacy image = %+v", legacy)
 	}
 	if dangling.Name() != untagged || !dangling.Dangling() || dangling.Emulated("aarch64") {

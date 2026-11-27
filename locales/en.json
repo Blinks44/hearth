@@ -7363,6 +7363,16 @@
       }
     }
   },
+  "serviceRestartTitle": "Restart {name}",
+  "@serviceRestartTitle": {
+    "description": "Title of the plan that restarts a database service.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
   "serviceStartChange": "Service {name} is running",
   "@serviceStartChange": {
     "description": "What is different after a service started.",
@@ -7382,6 +7392,20 @@
         "example": "postgresql@17"
       }
     }
+  },
+  "serviceRestartChange": "Service {name} is restarted",
+  "@serviceRestartChange": {
+    "description": "What is different after a service restarted.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "postgresql@17"
+      }
+    }
+  },
+  "serviceRestart": "Restart…",
+  "@serviceRestart": {
+    "description": "Button that proposes restarting a local database service."
   },
   "serviceCheckRunning": "{name} is running",
   "@serviceCheckRunning": {
@@ -11010,6 +11034,8 @@
     "description": "Built-in read-only Hearth MCP server."
   },
   "mcpProposalOrigin": "Requested by an AI agent through MCP. Review this plan; only your confirmation here can start it.",
+  "mcpProposalNotifyTitle": "AI agent proposed an action",
+  "mcpProposalNotifyBody": "Open Hearth to review and confirm or dismiss the plan.",
   "globalInstructionsTitle": "Global instructions",
   "@globalInstructionsTitle": {
     "description": "Codex global instruction files, preview and confirmed installation plan."
@@ -18441,6 +18467,704 @@
       "count": {
         "type": "int",
         "example": "3"
+      }
+    }
+  },
+  "kubeForwardReconnect": "Reconnect",
+  "@kubeForwardReconnect": {
+    "description": "Icon button that starts an ended Kubernetes port-forward again."
+  },
+  "kubeOpenCluster": "Open cluster",
+  "@kubeOpenCluster": {
+    "description": "Button that opens the linked Kubernetes cluster view."
+  },
+  "cliGroupUtils": "Utilities",
+  "@cliGroupUtils": {
+    "description": "Group header on CLI & clouds for common command-line utilities."
+  },
+  "customVersionPlaceholder": "Version, e.g. {example}",
+  "@customVersionPlaceholder": {
+    "description": "Placeholder in the custom version text field on language pages.",
+    "placeholders": {
+      "example": {
+        "type": "String",
+        "example": "22.14.0"
+      }
+    }
+  },
+  "globalPkgUpdateTitle": "Update {name}",
+  "@globalPkgUpdateTitle": {
+    "description": "Plan title when updating a globally installed package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "typescript"
+      }
+    }
+  },
+  "globalPkgUpdateChange": "{name} is updated via {manager}",
+  "@globalPkgUpdateChange": {
+    "description": "Plan change line for updating a globally installed package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "typescript"
+      },
+      "manager": {
+        "type": "String",
+        "example": "npm"
+      }
+    }
+  },
+  "globalPkgUninstallTitle": "Remove {name}",
+  "@globalPkgUninstallTitle": {
+    "description": "Plan title when uninstalling a globally installed package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "typescript"
+      }
+    }
+  },
+  "globalPkgUninstallChange": "{name} is removed from {manager}",
+  "@globalPkgUninstallChange": {
+    "description": "Plan change line for removing a globally installed package.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "typescript"
+      },
+      "manager": {
+        "type": "String",
+        "example": "npm"
+      }
+    }
+  },
+  "globalPkgUpdateAction": "Update…",
+  "@globalPkgUpdateAction": {
+    "description": "Menu item that proposes updating a globally installed package."
+  },
+  "gitCredFixTitle": "Switch Git credential helper to {helper}",
+  "@gitCredFixTitle": {
+    "description": "Plan title when replacing git credential.helper=store.",
+    "placeholders": {
+      "helper": {
+        "type": "String",
+        "example": "osxkeychain"
+      }
+    }
+  },
+  "gitCredFixWhy": "The store helper saves Git passwords in plain text on disk.",
+  "@gitCredFixWhy": {
+    "description": "Plan explanation for replacing git credential.helper=store."
+  },
+  "gitCredFixChange": "Git uses {helper} instead of store",
+  "@gitCredFixChange": {
+    "description": "Plan change line when replacing git credential.helper=store.",
+    "placeholders": {
+      "helper": {
+        "type": "String",
+        "example": "osxkeychain"
+      }
+    }
+  },
+  "gitCredFixNoteTitle": "Existing ~/.git-credentials file",
+  "@gitCredFixNoteTitle": {
+    "description": "Warning note title in the credential helper fix plan."
+  },
+  "gitCredFixNoteBody": "Hearth does not delete ~/.git-credentials automatically. Remove it after confirming sign-in works with the new helper.",
+  "@gitCredFixNoteBody": {
+    "description": "Warning note body in the credential helper fix plan."
+  },
+  "gitCredFixButton": "Switch helper…",
+  "@gitCredFixButton": {
+    "description": "Button on the Git page that proposes replacing credential.helper=store."
+  },
+  "gitHubSignIn": "Sign in…",
+  "@gitHubSignIn": {
+    "description": "Button on the Git page that launches gh auth login in a terminal."
+  },
+  "gitSSHAdd": "Add to agent",
+  "@gitSSHAdd": {
+    "description": "Button on the Git page that runs ssh-add for an SSH key in a terminal."
+  },
+  "editorsFilterPlaceholder": "Filter editors and extensions…",
+  "@editorsFilterPlaceholder": {
+    "description": "Placeholder in the search field on the Editors page."
+  },
+  "mobileXcodeUse": "Use…",
+  "@mobileXcodeUse": {
+    "description": "Button on an unselected Xcode row to switch xcode-select."
+  },
+  "mobileXcodeSwitchTitle": "Switch Xcode to {version}",
+  "@mobileXcodeSwitchTitle": {
+    "description": "Plan title for switching the active Xcode via xcode-select.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "16.2"
+      }
+    }
+  },
+  "mobileXcodeSwitchChange": "xcode-select points to {path}",
+  "@mobileXcodeSwitchChange": {
+    "description": "Plan change line for switching the active Xcode.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "/Applications/Xcode.app/Contents/Developer"
+      }
+    }
+  },
+  "envVarSetTitle": "Set {name}",
+  "@envVarSetTitle": {
+    "description": "Plan title for setting an environment variable such as ANDROID_HOME or JAVA_HOME.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "ANDROID_HOME"
+      }
+    }
+  },
+  "envVarSetChange": "{name} is set to {value}",
+  "@envVarSetChange": {
+    "description": "Plan change line for setting an environment variable.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "ANDROID_HOME"
+      },
+      "value": {
+        "type": "String",
+        "example": "~/Library/Android/sdk"
+      }
+    }
+  },
+  "envVarSetButton": "Set…",
+  "@envVarSetButton": {
+    "description": "Button to propose setting an unset environment variable."
+  },
+  "envVarFixButton": "Fix…",
+  "@envVarFixButton": {
+    "description": "Button to propose fixing a mismatched environment variable."
+  },
+  "issuePathDuplicateTitle": "PATH lists the same folder more than once",
+  "@issuePathDuplicateTitle": {
+    "description": "Issue title: one or more PATH directories are repeated."
+  },
+  "issuePathDuplicateExplain": "{dirs}: repeated in PATH. Nothing breaks, but removing duplicates keeps your shell startup files tidy.",
+  "@issuePathDuplicateExplain": {
+    "description": "Issue explanation for repeated PATH entries.",
+    "placeholders": {
+      "dirs": {
+        "type": "String"
+      }
+    }
+  },
+  "startupRemeasure": "Re-measure",
+  "@startupRemeasure": {
+    "description": "Startup tab button to re-measure shell startup time."
+  },
+  "setupVersionLabel": "Version",
+  "@setupVersionLabel": {
+    "description": "Accessible label for the version selector on the Install page."
+  },
+  "dockerContainerRestartingLabel": "Restarting",
+  "@dockerContainerRestartingLabel": {
+    "description": "Status label for a Docker container currently restarting, without a count."
+  },
+  "quotasTitle": "Quotas & limits",
+  "@quotasTitle": {
+    "description": "Sidebar item and header of the AI quotas page."
+  },
+  "quotasSubtitle": "AI agent subscription limits",
+  "@quotasSubtitle": {
+    "description": "Subtitle of the AI quotas page."
+  },
+  "quotasLeadSubtitle": "Rate-limit windows and subscription burn rate",
+  "@quotasLeadSubtitle": {
+    "description": "Lead subtitle under the AI quotas page heading."
+  },
+  "quotasRefresh": "Refresh",
+  "@quotasRefresh": {
+    "description": "Button to refresh AI quotas."
+  },
+  "quotasUpdatedJustNow": "updated just now",
+  "@quotasUpdatedJustNow": {
+    "description": "Relative timestamp when quotas updated <1m ago."
+  },
+  "quotasUpdatedMinAgo": "updated {minutes} min ago",
+  "@quotasUpdatedMinAgo": {
+    "description": "Relative timestamp when quotas updated minutes ago.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasUpdatedHoursAgo": "updated {hours} h ago",
+  "@quotasUpdatedHoursAgo": {
+    "description": "Relative timestamp when quotas updated hours ago.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasUpdatedShortJustNow": "upd. just now",
+  "@quotasUpdatedShortJustNow": {
+    "description": "Compact updated timestamp inside provider cards."
+  },
+  "quotasUpdatedShortMinAgo": "upd. {minutes} min ago",
+  "@quotasUpdatedShortMinAgo": {
+    "description": "Compact updated minutes timestamp inside provider cards.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasUpdatedShortHoursAgo": "upd. {hours} h ago",
+  "@quotasUpdatedShortHoursAgo": {
+    "description": "Compact updated hours timestamp inside provider cards.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasStaleBadge": "stale",
+  "@quotasStaleBadge": {
+    "description": "Badge shown when provider quota data is stale."
+  },
+  "quotasStatConnected": "Connected",
+  "@quotasStatConnected": {
+    "description": "Stat card label: connected quota providers."
+  },
+  "quotasStatOfFound": "of {count} found",
+  "@quotasStatOfFound": {
+    "description": "Stat card subtitle: total detected providers.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasStatInTray": "In tray",
+  "@quotasStatInTray": {
+    "description": "Stat card label: providers visible in tray popover."
+  },
+  "quotasStatInTrayValue": "{shown} of {total}",
+  "@quotasStatInTrayValue": {
+    "description": "Stat card value: shown of total providers.",
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasStatVisibleInPopover": "visible in popover",
+  "@quotasStatVisibleInPopover": {
+    "description": "Stat card subtitle for tray visibility."
+  },
+  "quotasStatNextReset": "Next reset",
+  "@quotasStatNextReset": {
+    "description": "Stat card label: earliest upcoming window reset."
+  },
+  "quotasStatNoReset": "No resets",
+  "@quotasStatNoReset": {
+    "description": "Stat card subtitle when no resets are scheduled."
+  },
+  "quotasStatRunningLow": "Running low",
+  "@quotasStatRunningLow": {
+    "description": "Stat card label: providers with <10% quota left."
+  },
+  "quotasStatRunningLowSub": "less than 10% left",
+  "@quotasStatRunningLowSub": {
+    "description": "Stat card subtitle for running low count."
+  },
+  "quotasStatAllHealthy": "all healthy",
+  "@quotasStatAllHealthy": {
+    "description": "Stat card subtitle when zero providers are running low."
+  },
+  "quotasFilterAll": "All",
+  "@quotasFilterAll": {
+    "description": "Filter tab showing all connected providers."
+  },
+  "quotasFilterInTray": "In tray",
+  "@quotasFilterInTray": {
+    "description": "Filter tab showing providers enabled in tray."
+  },
+  "quotasFilterLow": "Running low",
+  "@quotasFilterLow": {
+    "description": "Filter tab showing providers with <10% left."
+  },
+  "quotasSortCustom": "Custom order",
+  "@quotasSortCustom": {
+    "description": "Sort option: user custom provider order."
+  },
+  "quotasSortLeastLeft": "Least remaining",
+  "@quotasSortLeastLeft": {
+    "description": "Sort option: lowest remaining percentage first."
+  },
+  "quotasSortNextReset": "Soonest reset",
+  "@quotasSortNextReset": {
+    "description": "Sort option: earliest reset time first."
+  },
+  "quotasPaceLegend": "Vertical mark on the bar shows expected remaining quota at this point in the window (burn pace).",
+  "@quotasPaceLegend": {
+    "description": "Caption explaining the vertical pacing mark on quota progress bars."
+  },
+  "quotasBadgeInTray": "In tray",
+  "@quotasBadgeInTray": {
+    "description": "Pill badge on a provider card when shown in tray popover."
+  },
+  "quotasBadgeHidden": "Hidden",
+  "@quotasBadgeHidden": {
+    "description": "Pill badge on a provider card when hidden from tray popover."
+  },
+  "quotasToggleTrayTooltip": "Show or hide this provider in the tray popover",
+  "@quotasToggleTrayTooltip": {
+    "description": "Tooltip on provider tray visibility pill."
+  },
+  "quotasWindowSession": "Session · 5 h",
+  "@quotasWindowSession": {
+    "description": "Quota window label for 5-hour session."
+  },
+  "quotasWindowDaily": "Daily · 24 h",
+  "@quotasWindowDaily": {
+    "description": "Quota window label for daily limit."
+  },
+  "quotasWindowWeekly": "Weekly · all models",
+  "@quotasWindowWeekly": {
+    "description": "Quota window label for weekly limit."
+  },
+  "quotasWindowWeeklyModel": "Weekly · {model}",
+  "@quotasWindowWeeklyModel": {
+    "description": "Quota window label for model-specific weekly limit.",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "quotasWindowMonthly": "Monthly budget",
+  "@quotasWindowMonthly": {
+    "description": "Quota window label for monthly budget."
+  },
+  "quotasWindowCredits": "Credits",
+  "@quotasWindowCredits": {
+    "description": "Quota window label for credits."
+  },
+  "quotasWindowShort5h": "5h",
+  "@quotasWindowShort5h": {
+    "description": "Short window label in tray popover."
+  },
+  "quotasWindowShortDaily": "24h",
+  "@quotasWindowShortDaily": {
+    "description": "Short daily window label in tray popover."
+  },
+  "quotasWindowShortWeek": "Week",
+  "@quotasWindowShortWeek": {
+    "description": "Short weekly window label in tray popover."
+  },
+  "quotasWindowShortMonth": "Month",
+  "@quotasWindowShortMonth": {
+    "description": "Short monthly window label in tray popover."
+  },
+  "quotasResetIn": "Resets in {duration}",
+  "@quotasResetIn": {
+    "description": "Countdown to quota window reset.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "quotasResetDone": "Window reset",
+  "@quotasResetDone": {
+    "description": "Status when a quota window has already reset."
+  },
+  "quotasPaceSpare": "ahead of pace",
+  "@quotasPaceSpare": {
+    "description": "Pacing label when usage is well below linear pace."
+  },
+  "quotasPaceNormal": "on pace",
+  "@quotasPaceNormal": {
+    "description": "Pacing label when usage matches linear pace."
+  },
+  "quotasPaceFast": "faster than pace",
+  "@quotasPaceFast": {
+    "description": "Pacing label when usage is ahead of linear pace."
+  },
+  "quotasPaceLow": "running low",
+  "@quotasPaceLow": {
+    "description": "Pacing label when less than 10% quota remains."
+  },
+  "quotasPaceExhausted": "exhausted",
+  "@quotasPaceExhausted": {
+    "description": "Pacing label when quota is exhausted."
+  },
+  "quotasRunsOutAtPace": "At current pace lasts",
+  "@quotasRunsOutAtPace": {
+    "description": "Footer projection label inside provider card."
+  },
+  "quotasExtraUsage": "Extra usage",
+  "@quotasExtraUsage": {
+    "description": "Extra pay-as-you-go usage footer label."
+  },
+  "quotasCreditsUnlimited": "Unlimited",
+  "@quotasCreditsUnlimited": {
+    "description": "Label for unlimited credits."
+  },
+  "quotasReviewsCount": "{count} reviews",
+  "@quotasReviewsCount": {
+    "description": "CodeRabbit reviews counter.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasRightTrayTitle": "In tray panel",
+  "@quotasRightTrayTitle": {
+    "description": "Right sidebar card title for configuring tray quota providers."
+  },
+  "quotasRightTraySectionsTitle": "Section order & notifications",
+  "@quotasRightTraySectionsTitle": {
+    "description": "Link row title to Settings from quotas right sidebar."
+  },
+  "quotasRightUpcomingTitle": "Upcoming resets",
+  "@quotasRightUpcomingTitle": {
+    "description": "Right sidebar card title for upcoming window resets."
+  },
+  "quotasRightUpcomingSub": "by time",
+  "@quotasRightUpcomingSub": {
+    "description": "Right sidebar card subtitle for upcoming resets."
+  },
+  "quotasRightUpcomingEmpty": "No scheduled resets",
+  "@quotasRightUpcomingEmpty": {
+    "description": "Empty state for upcoming resets list."
+  },
+  "quotasRightInactiveTitle": "Without active quota",
+  "@quotasRightInactiveTitle": {
+    "description": "Right sidebar card title for detected providers without active quotas."
+  },
+  "quotasStatusSignedOut": "not signed in locally",
+  "@quotasStatusSignedOut": {
+    "description": "Inactive provider reason: signed out."
+  },
+  "quotasStatusAPIKey": "using API key · no subscription limit",
+  "@quotasStatusAPIKey": {
+    "description": "Inactive provider reason: API key mode."
+  },
+  "quotasStatusExpired": "session expired · sign in again",
+  "@quotasStatusExpired": {
+    "description": "Inactive provider reason: expired session."
+  },
+  "quotasStatusNoData": "no quota data found",
+  "@quotasStatusNoData": {
+    "description": "Inactive provider reason: no quota data."
+  },
+  "quotasStatusUnavailable": "temporarily unavailable",
+  "@quotasStatusUnavailable": {
+    "description": "Inactive provider reason: network or rate limit."
+  },
+  "quotasEmptyTitle": "No active AI subscriptions detected",
+  "@quotasEmptyTitle": {
+    "description": "Empty state heading on the AI quotas page."
+  },
+  "quotasEmptyBody": "Hearth checks local profiles of Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, JetBrains AI and other agents read-only.",
+  "@quotasEmptyBody": {
+    "description": "Empty state body on the AI quotas page."
+  },
+  "quotasFilterEmptyTitle": "No providers match this filter",
+  "@quotasFilterEmptyTitle": {
+    "description": "Empty state when filter yields no providers."
+  },
+  "quotasMoveUp": "Move up",
+  "@quotasMoveUp": {
+    "description": "Accessible label for moving an item up in order."
+  },
+  "quotasMoveDown": "Move down",
+  "@quotasMoveDown": {
+    "description": "Accessible label for moving an item down in order."
+  },
+  "quotasGroupWindowsMeta": "{windows} windows · {groups} groups",
+  "@quotasGroupWindowsMeta": {
+    "description": "Subtitle in tray popover for multi-group quota providers.",
+    "placeholders": {
+      "windows": {
+        "type": "int"
+      },
+      "groups": {
+        "type": "int"
+      }
+    }
+  },
+  "trayPopoverQuotasHeader": "AI quotas",
+  "@trayPopoverQuotasHeader": {
+    "description": "Section title in tray popover for AI quotas."
+  },
+  "trayPopoverAllQuotas": "All quotas →",
+  "@trayPopoverAllQuotas": {
+    "description": "Link in tray popover header opening the AI quotas page."
+  },
+  "trayPopoverQuotasEmpty": "No active AI quotas in tray",
+  "@trayPopoverQuotasEmpty": {
+    "description": "Empty line inside AI quotas popover section."
+  },
+  "settingsTrayPanelTitle": "Tray panel",
+  "@settingsTrayPanelTitle": {
+    "description": "Settings card title for tray icon, popover sections, and quota alerts."
+  },
+  "settingsTraySectionsTitle": "Popover sections & order",
+  "@settingsTraySectionsTitle": {
+    "description": "Settings row title for tray popover section configuration."
+  },
+  "settingsTraySectionsHint": "Hide unused sections or change their order",
+  "@settingsTraySectionsHint": {
+    "description": "Settings row hint for tray popover section configuration."
+  },
+  "settingsTraySectionServices": "Running services",
+  "@settingsTraySectionServices": {
+    "description": "Tray section name: running services."
+  },
+  "settingsTraySectionQuotas": "AI quotas",
+  "@settingsTraySectionQuotas": {
+    "description": "Tray section name: AI quotas."
+  },
+  "settingsTraySectionContexts": "Docker & K8s contexts",
+  "@settingsTraySectionContexts": {
+    "description": "Tray section name: Docker and Kubernetes contexts."
+  },
+  "settingsTraySectionShortServices": "Services",
+  "@settingsTraySectionShortServices": {
+    "description": "Short tray section label for summary breadcrumb."
+  },
+  "settingsTraySectionShortQuotas": "Quotas",
+  "@settingsTraySectionShortQuotas": {
+    "description": "Short tray section label for summary breadcrumb."
+  },
+  "settingsTraySectionShortContexts": "Contexts",
+  "@settingsTraySectionShortContexts": {
+    "description": "Short tray section label for summary breadcrumb."
+  },
+  "settingsTrayProvidersTitle": "Choose AI quota providers",
+  "@settingsTrayProvidersTitle": {
+    "description": "Settings row title linking to /ai/quotas."
+  },
+  "settingsTrayProvidersSummary": "In tray: {shown}",
+  "@settingsTrayProvidersSummary": {
+    "description": "Summary of quota providers shown in tray.",
+    "placeholders": {
+      "shown": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTrayProvidersSummaryHidden": "In tray: {shown} · hidden: {hidden}",
+  "@settingsTrayProvidersSummaryHidden": {
+    "description": "Summary of quota providers shown and hidden in tray.",
+    "placeholders": {
+      "shown": {
+        "type": "String"
+      },
+      "hidden": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTrayProvidersNone": "No connected providers yet",
+  "@settingsTrayProvidersNone": {
+    "description": "Hint when no quota providers are connected yet."
+  },
+  "settingsQuotaNotifyTitle": "Notify when quota < 10% left",
+  "@settingsQuotaNotifyTitle": {
+    "description": "Settings toggle label for low AI quota OS notifications."
+  },
+  "settingsQuotaNotifyHint": "System notification before a subscription window runs out",
+  "@settingsQuotaNotifyHint": {
+    "description": "Settings toggle hint for low AI quota OS notifications."
+  },
+  "quotaNotifyLowTitle": "{provider}: quota running low",
+  "@quotaNotifyLowTitle": {
+    "description": "OS notification title when an AI quota window drops below 10%.",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "quotaNotifyLowBody": "{window}: {left}% left",
+  "@quotaNotifyLowBody": {
+    "description": "OS notification body when an AI quota window drops below 10%.",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaNotifyResetTitle": "{provider}: quota reset",
+  "@quotaNotifyResetTitle": {
+    "description": "OS notification title when a previously low AI quota window resets.",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "quotaNotifyResetBody": "{window} is available again.",
+  "@quotaNotifyResetBody": {
+    "description": "OS notification body when a previously low AI quota window resets.",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
+  "quotasDurDays": "{days}d",
+  "@quotasDurDays": {
+    "description": "Compact days duration for quota resets.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasDurHoursMin": "{hours}h {minutes}m",
+  "@quotasDurHoursMin": {
+    "description": "Compact hours and minutes duration for quota resets.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasDurHours": "{hours}h",
+  "@quotasDurHours": {
+    "description": "Compact hours duration for quota resets.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "quotasDurMin": "{minutes}m",
+  "@quotasDurMin": {
+    "description": "Compact minutes duration for quota resets.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
       }
     }
   }

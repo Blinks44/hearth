@@ -20,13 +20,16 @@ import (
 // packages.
 func (a *App) php(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
+		st, ok := a.toolState("php")
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			if !ok {
+				return
+			}
 			newest := a.PHPVersions.Newest(c.Now())
-			if plan, ok := a.phpInstall("", newest); ok {
+			if plan, can := a.phpInstall("", newest); can {
 				installVersionButton(c, "php", newest, plan.Title, false, func() { a.Propose(plan) })
 			}
 		}})
-		st, ok := a.toolState("php")
 		if !ok {
 			a.toolEmpty(c, "php", "PHP")
 			return
@@ -176,7 +179,7 @@ func (a *App) composerCard(c *ui.Context) {
 		return
 	}
 	in := st.Installations[active]
-	globalsCard(c, "Composer · "+in.Version, locales.PhpNoComposerPackages(), in.Packages, "composer global")
+	a.managedGlobalsCard(c, "composer", "Composer · "+in.Version, locales.PhpNoComposerPackages(), in.Packages, "composer global")
 }
 
 // phpManagers are the package managers PHP installs with, the first

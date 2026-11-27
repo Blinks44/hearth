@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 // GoReleasesURL lists the newest release of each supported Go line.
@@ -18,6 +20,29 @@ type Go struct {
 	Releases []string
 	// Fetched is when the list was last got from the server.
 	Fetched time.Time
+}
+
+// Ended reports whether version belongs to an older Go minor line than the
+// oldest supported release in g.
+func (g *Go) Ended(version string) bool {
+	if g == nil || len(g.Releases) == 0 || version == "" {
+		return false
+	}
+	v := semver.MajorMinor("v" + strings.TrimPrefix(version, "go"))
+	if v == "" {
+		return false
+	}
+	oldest := ""
+	for _, r := range g.Releases {
+		mm := semver.MajorMinor("v" + strings.TrimPrefix(r, "go"))
+		if mm == "" {
+			continue
+		}
+		if oldest == "" || semver.Compare(mm, oldest) < 0 {
+			oldest = mm
+		}
+	}
+	return oldest != "" && semver.Compare(v, oldest) < 0
 }
 
 // FetchGo gets Go's supported releases through c.

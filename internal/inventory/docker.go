@@ -26,6 +26,9 @@ type DockerState struct {
 	// publish at least one host TCP port, read from the same list as Databases.
 	PortContainers      []DockerPortContainer `json:",omitempty"`
 	PortContainersFresh bool                  `json:"-"`
+	// ComposeContainers are all Compose-labeled containers of the selected
+	// engine (running, stopped, exited, etc.), read from the same list.
+	ComposeContainers []DockerPortContainer `json:",omitempty"`
 	// KindClusters are the kind clusters whose nodes are the selected
 	// engine's containers, read from the same list as Databases.
 	KindClusters []KindCluster `json:",omitempty"`

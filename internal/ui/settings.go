@@ -174,11 +174,94 @@ func (a *App) settingsPage(c *ui.Context) {
 							a.licensesOpen = true
 						})
 					})
+					a.trayPanelSettingsCard(c)
 				})
 			})
 		})
 	})
 	a.licensesDialog(c)
+}
+
+func (a *App) trayPanelSettingsCard(c *ui.Context) {
+	pal := Colors(c.Theme())
+	card(c.Key("settings-tray-panel"), locales.SettingsTrayPanelTitle(), "", nil, func() {
+		ui.Column(c.Key("settings-tray-sections")).Padding(10, 14, 12, 14).Gap(8).
+			BorderWidth(1, 0, 0, 0).BorderColor(pal.Divider).Children(func() {
+			ui.Column(c).Gap(1).Children(func() {
+				ui.Text(c, locales.SettingsTraySectionsTitle()).FontSize(13)
+				ui.Text(c, locales.SettingsTraySectionsHint()).FontSize(11).TextColor(pal.TextFaint)
+			})
+			order := a.traySectionOrder()
+			ui.Column(c).Radius(10).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+				for i, id := range order {
+					secID := id
+					idx := i
+					vis := !a.isTraySectionHidden(secID)
+					label := traySectionDisplayName(secID)
+					row := ui.Row(c.Key("tray-sec-"+secID)).MinHeight(40).Padding(4, 10).Gap(8).AlignItems(ui.Center)
+					if i > 0 {
+						row.BorderWidth(1, 0, 0, 0).BorderColor(pal.Divider)
+					}
+					row.Children(func() {
+						ui.Text(c, strconv.Itoa(idx+1)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Width(14)
+						ui.Text(c, label).FontSize(12.5).FontWeight(500).Grow(1).MinWidth(0).SingleLine()
+						iconButton(c.Key("up-"+secID), "chevron-up", locales.QuotasMoveUp()+" "+label).
+							Disabled(idx == 0).OnClick(func() { a.moveTraySection(secID, -1) })
+						iconButton(c.Key("down-"+secID), "chevron-down", locales.QuotasMoveDown()+" "+label).
+							Disabled(idx == len(order)-1).OnClick(func() { a.moveTraySection(secID, 1) })
+						toggle(c, "tray-sec-sw-"+secID, &vis).Label(label).OnChange(func() {
+							a.setTraySectionVisible(secID, vis)
+						})
+					})
+				}
+			})
+		})
+		navListRow(c, "settings-tray-providers", locales.SettingsTrayProvidersTitle(), a.settingsTrayProvidersSummary(), locales.QuotasTitle(), func() {
+			a.router.Push(quotasPage)
+		})
+		settingRow(c.Key("settings-quota-notify-row"), locales.SettingsQuotaNotifyTitle(), locales.SettingsQuotaNotifyHint(), func() {
+			toggle(c, "settings-quota-notify", &a.QuotaNotifyLow).Label(locales.SettingsQuotaNotifyTitle()).OnChange(a.savePreferences)
+		})
+	})
+}
+
+func traySectionDisplayName(id string) string {
+	switch id {
+	case traySectionServices:
+		return locales.SettingsTraySectionServices()
+	case traySectionQuotas:
+		return locales.SettingsTraySectionQuotas()
+	case traySectionContexts:
+		return locales.SettingsTraySectionContexts()
+	default:
+		return id
+	}
+}
+
+func (a *App) settingsTrayProvidersSummary() string {
+	if a.Quotas == nil {
+		return locales.SettingsTrayProvidersNone()
+	}
+	ordered := a.Quotas.Ordered(a.QuotaOrder)
+	if len(ordered) == 0 {
+		return locales.SettingsTrayProvidersNone()
+	}
+	var shown, hidden []string
+	for _, p := range ordered {
+		if a.isQuotaTrayHidden(p.Provider) {
+			hidden = append(hidden, p.Name)
+		} else {
+			shown = append(shown, p.Name)
+		}
+	}
+	shownText := "—"
+	if len(shown) > 0 {
+		shownText = strings.Join(shown, ", ")
+	}
+	if len(hidden) == 0 {
+		return locales.SettingsTrayProvidersSummary(shownText)
+	}
+	return locales.SettingsTrayProvidersSummaryHidden(shownText, strings.Join(hidden, ", "))
 }
 
 func (a *App) canOpenFolder() bool {
@@ -451,7 +534,7 @@ func staleIssueTitle(key, home string) string {
 		issues.DatabasePortConflict,
 		issues.Duplicate, issues.GUIDiffers,
 		issues.ProjectMissing, issues.ProjectTerminal,
-		issues.Unsupported, issues.PathCurrentDir, issues.PathMissing,
+		issues.Unsupported, issues.PathCurrentDir, issues.PathMissing, issues.PathDuplicate,
 		issues.SkillCopies, issues.SkillDiffers, issues.MCPMissing, issues.PlainSecret, issues.SettingsSecret, issues.AgentUnasked,
 		issues.StubOnPath, issues.ExtraVersion, issues.SlowStartup:
 	default:

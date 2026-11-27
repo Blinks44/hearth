@@ -257,10 +257,14 @@ func (a *App) planDockerDatabase(target docker.Target, ct docker.Container, acti
 func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients []inventory.Installation, listeners []inventory.DatabaseListener) {
 	pal := Colors(c.Theme())
 	user := filepath.Base(a.Home)
+	hasProjectCol := !narrow(c) && slices.ContainsFunc(servers, func(db inventory.Database) bool { return db.Project != "" })
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
 			ui.Text(c, locales.DatabaseServer()).Width(nameWidth(c)).FontSize(11.5).TextColor(pal.TextFaint)
 			ui.Text(c, locales.ColumnSource()).Width(76).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			if hasProjectCol {
+				ui.Text(c, locales.ColumnProject()).Width(132).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
 			ui.Text(c, locales.DatabaseAddress()).FontSize(11.5).TextColor(pal.TextFaint)
 		})
 		hasCopy, hasFolder, hasMenu := false, false, false
@@ -274,20 +278,25 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 				hasFolder = true
 			}
 			_, canService := a.servicePlan(db)
+			_, canRestart := a.restartServicePlan(db)
 			_, _, _, canDockerPower := a.dockerDatabaseAction(db)
 			canDockerOpen := db.Source == "docker" && a.canOpenDockerContainer() && (db.ContainerID != "" || db.Name != "")
 			client, hasClient := databaseClientFor(db, clients)
 			hasClientCmd := hasClient && a.OpenDBClient != nil && db.Status == "running" && len(databaseClientCommand(db, client, port, user)) > 0
-			if canService || canDockerPower || canDockerOpen || hasClientCmd || (db.Path != "" && db.Source != "docker") {
+			if canService || canRestart || canDockerPower || canDockerOpen || hasClientCmd || (db.Path != "" && db.Source != "docker") {
 				hasMenu = true
 			}
 		}
 		shown := 0
+		filter := strings.ToLower(strings.TrimSpace(a.databaseFilter))
 		for i, db := range servers {
 			if a.databaseTab == 1 && (db.Service == "" || db.Source == "docker") || a.databaseTab == 3 && db.Source != "docker" {
 				continue
 			}
-			if !strings.Contains(strings.ToLower(db.Name+" "+db.Kind+" "+db.Source), strings.ToLower(a.databaseFilter)) {
+			if filter != "" && !strings.Contains(strings.ToLower(strings.Join([]string{
+				db.Name, db.Kind, db.Source, db.Version, db.Service, db.Status,
+				db.Project, filepath.Base(db.Project), db.Path, strings.Join(db.Ports, " "),
+			}, " ")), filter) {
 				continue
 			}
 			shown++
@@ -308,6 +317,9 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					clipped(c, subtitle).FontSize(10.5).TextColor(pal.TextFaint)
 				})
 				ui.Text(c, databaseSource(db.Source)).Width(76).Shrink(0).FontSize(10.5).TextColor(pal.MonoText).SingleLine()
+				if hasProjectCol {
+					a.databaseProjectCell(c, db.Project)
+				}
 				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
 					address := cmp.Or(url, tilde(db.Path, a.Home))
 					if db.Source == "docker" && address == "" {
@@ -340,6 +352,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 					}
 				})
 				plan, canService := a.servicePlan(db)
+				restartPlan, canRestart := a.restartServicePlan(db)
 				dockerAction, dockerTarget, dockerCt, canDockerPower := a.dockerDatabaseAction(db)
 				canDockerOpen := db.Source == "docker" && a.canOpenDockerContainer() && (db.ContainerID != "" || db.Name != "")
 				ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
@@ -357,6 +370,9 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 						iconButton(c.Key("docker-power"), icon, label).OnClick(func() {
 							a.planDockerDatabase(dockerTarget, dockerCt, dockerAction)
 						})
+					}
+					if canRestart {
+						iconButton(c.Key("service-restart"), "refresh-cw", locales.ServiceRestart()).OnClick(func() { a.Propose(restartPlan) })
 					}
 					if len(clientCmd) > 0 {
 						iconButton(c.Key("db-client"), "terminal", locales.DatabaseOpenClient(client.Tool)).OnClick(func() {
@@ -385,7 +401,7 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 							iconSpacer(c)
 						}
 					}
-					rowHasMenu := canService || canDockerPower || canDockerOpen || len(clientCmd) > 0 || (db.Path != "" && db.Source != "docker")
+					rowHasMenu := canService || canRestart || canDockerPower || canDockerOpen || len(clientCmd) > 0 || (db.Path != "" && db.Source != "docker")
 					if hasMenu {
 						if rowHasMenu {
 							iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
@@ -397,6 +413,9 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 									if menu.Item(label).Chosen() {
 										a.Propose(plan)
 									}
+								}
+								if canRestart && menu.Item(locales.ServiceRestart()).Chosen() {
+									a.Propose(restartPlan)
 								}
 								if canDockerPower {
 									label := locales.DatabaseStartContainer()
@@ -429,6 +448,37 @@ func (a *App) databaseTable(c *ui.Context, servers []inventory.Database, clients
 			cardNote(c, locales.DatabaseNone())
 		}
 	})
+}
+
+func (a *App) databaseProjectCell(c *ui.Context, dir string) {
+	pal := Colors(c.Theme())
+	if dir == "" {
+		ui.Text(c, "—").Width(132).Shrink(0).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		return
+	}
+	cleanDir := filepath.ToSlash(filepath.Clean(dir))
+	label := filepath.Base(dir)
+	var matched string
+	for _, p := range a.Projects {
+		if p.Dir != "" && within(cleanDir, filepath.ToSlash(filepath.Clean(p.Dir))) {
+			matched = p.Dir
+			label = filepath.Base(p.Dir)
+			break
+		}
+	}
+	if matched != "" {
+		btn := ui.ButtonBase(c.Key("db-proj:"+matched)).Width(132).Shrink(0).Radius(5).Padding(2, 4).
+			Justify(ui.Start).Label(label).Tooltip(tilde(matched, a.Home)).
+			OnClick(func() { a.router.Push(projectPath(matched)) })
+		if btn.Hovered() {
+			btn.Background(pal.Subtle)
+		}
+		btn.Children(func() {
+			clipped(c, label).FontSize(11.5).TextColor(pal.AccentInk)
+		})
+		return
+	}
+	clipped(c, label).Width(132).Shrink(0).FontSize(11).TextColor(pal.TextFaint).Tooltip(tilde(dir, a.Home))
 }
 
 func (a *App) databaseProjects(c *ui.Context, applyFilter bool) {
@@ -639,6 +689,13 @@ func (a *App) servicePlan(db inventory.Database) (ops.Plan, bool) {
 		return ops.ServicePlan(ops.ServiceStart, db, a.detect("databases"))
 	}
 	return ops.Plan{}, false
+}
+
+func (a *App) restartServicePlan(db inventory.Database) (ops.Plan, bool) {
+	if db.Status != "running" {
+		return ops.Plan{}, false
+	}
+	return ops.ServicePlan(ops.ServiceRestart, db, a.detect("databases"))
 }
 
 // conflictPlan is the plan that stops the service holding is's port: the

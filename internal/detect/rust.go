@@ -190,7 +190,7 @@ func cargoTools(cargoHome string) []inventory.Package {
 		if len(fields) < 2 {
 			continue
 		}
-		p := inventory.Package{Name: fields[0], Version: fields[1]}
+		p := inventory.Package{Name: fields[0], Version: fields[1], Manager: "cargo"}
 		for _, bin := range in.Bins {
 			p.Commands = append(p.Commands, strings.TrimSuffix(bin, ".exe"))
 		}

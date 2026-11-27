@@ -2,12 +2,16 @@ package ui
 
 import (
 	"cmp"
+	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/docker"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
@@ -17,14 +21,16 @@ import (
 )
 
 const (
-	trayPopoverWidth      = 444
-	trayPopoverScrollMaxH = 290
+	trayPopoverWidth            = 444
+	trayPopoverScrollMaxH       = 240
+	trayPopoverQuotasScrollMaxH = 232
 )
 
 // TrayPopoverActions carries live external data and callbacks from the host
 // tray controller into the pure TrayPopoverView.
 type TrayPopoverActions struct {
 	Containers            []docker.Container
+	Quotas                *aiquota.Snapshot
 	HasColima             bool
 	ColimaRunning         bool
 	DockerContext         string
@@ -38,6 +44,7 @@ type TrayPopoverActions struct {
 	OnRefresh             func()
 	OnOpenHearth          func()
 	OnOpenSettings        func()
+	OnOpenQuotas          func()
 	OnCheckAppUpdate      func()
 	OnOpenPorts           func()
 	OnOpenDocker          func()
@@ -84,11 +91,21 @@ func (a *App) TrayPopoverView(c *ui.Context, act TrayPopoverActions) {
 
 	t := c.Theme()
 	pal := Colors(t)
+	now := c.Now()
 
 	services := a.collectPopoverServices(pal, act)
+	quotaSnap := act.Quotas
+	if quotaSnap == nil {
+		quotaSnap = a.Quotas
+	}
+	quotas := a.trayVisibleQuotas(quotaSnap)
 	hasDockerCtx := act.DockerContext != "" || len(act.DockerContexts) > 0
 	hasKubeCtx := act.KubeContext != "" || len(act.KubeContexts) > 0
 	hasContexts := hasDockerCtx || hasKubeCtx
+
+	showServices := !a.isTraySectionHidden(traySectionServices)
+	showQuotas := !a.isTraySectionHidden(traySectionQuotas) && len(quotas) > 0
+	showContexts := !a.isTraySectionHidden(traySectionContexts) && (hasContexts || act.HasColima)
 
 	ui.Column(c.Key("tray-popover")).Width(trayPopoverWidth).
 		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Radius(14).Clip().Children(func() {
@@ -124,7 +141,63 @@ func (a *App) TrayPopoverView(c *ui.Context, act TrayPopoverActions) {
 			}
 		})
 
-		// Unified "Running now" list.
+		// Render enabled sections in the user's configured order.
+		renderedAny := false
+		for _, sec := range a.traySectionOrder() {
+			switch sec {
+			case traySectionServices:
+				if !showServices {
+					continue
+				}
+				a.popoverServicesSection(c, services, showQuotas, renderedAny)
+				renderedAny = true
+			case traySectionQuotas:
+				if !showQuotas {
+					continue
+				}
+				a.popoverQuotasSection(c, quotas, act, showServices, renderedAny, now)
+				renderedAny = true
+			case traySectionContexts:
+				if !showContexts {
+					continue
+				}
+				a.popoverContextsSection(c, act, hasDockerCtx, hasKubeCtx, hasContexts, renderedAny)
+				renderedAny = true
+			}
+		}
+
+		// Bottom navigation & status bar.
+		ui.Row(c.Key("popover-footer-links")).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
+			Padding(10, 16, 12, 16).Gap(8).AlignItems(ui.Center).Children(func() {
+			if act.OnOpenPorts != nil {
+				link := ui.ButtonBase(c.Key("popover-all-services")).Padding(2, 0).Radius(4).
+					Label(locales.TrayPopoverAllServices()).OnClick(act.OnOpenPorts)
+				link.Children(func() {
+					ui.Text(c, locales.TrayPopoverAllServices()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
+				})
+			}
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			if act.AppUpdateAvailable != "" && act.OnCheckAppUpdate != nil {
+				upd := ui.ButtonBase(c.Key("popover-update")).Padding(2, 0).Radius(4).
+					Label(locales.AppUpdateAvailable(act.AppUpdateAvailable)).OnClick(act.OnCheckAppUpdate)
+				upd.Children(func() {
+					ui.Text(c, locales.AppUpdateAvailable(act.AppUpdateAvailable)).FontSize(11.5).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
+				})
+			} else {
+				ui.Text(c, locales.TrayPopoverRightClickHint()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			}
+		})
+	})
+}
+
+func (a *App) popoverServicesSection(c *ui.Context, services []popoverServiceItem, hasQuotas, topDivider bool) {
+	t := c.Theme()
+	pal := Colors(t)
+	col := ui.Column(c.Key("popover-sec-services"))
+	if topDivider {
+		col.BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+	}
+	col.Children(func() {
 		if len(services) > 0 {
 			ui.Row(c).Gap(8).Padding(10, 16, 6, 16).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, strings.ToUpper(locales.TrayPopoverRunningNow())+" · "+strconv.Itoa(len(services))).
@@ -133,80 +206,227 @@ func (a *App) TrayPopoverView(c *ui.Context, act TrayPopoverActions) {
 				ui.Text(c, locales.TrayPopoverRunningHint()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 			})
 
-			ui.Scroll(c.Key("popover-scroll")).MaxHeight(trayPopoverScrollMaxH).Children(func() {
+			maxH := float32(trayPopoverScrollMaxH)
+			if !hasQuotas {
+				maxH = 290
+			}
+			ui.Scroll(c.Key("popover-scroll")).MaxHeight(maxH).Children(func() {
 				ui.Column(c).Children(func() {
 					for _, item := range services {
 						popoverServiceRow(c, item)
 					}
 				})
 			})
-		} else {
-			ui.Column(c.Key("popover-empty")).Padding(28, 24).Center().Gap(6).Children(func() {
-				ui.Icon(c, Icon("layers")).Size(22, 22).TextColor(pal.TextFaint)
-				ui.Text(c, locales.TrayPopoverEmpty()).FontSize(13).FontWeight(500).TextAlign(ui.Center)
-				ui.Text(c, locales.TrayPopoverEmptyBody()).FontSize(11.5).TextColor(t.TextMuted).TextAlign(ui.Center).Wrap()
-			})
+			return
 		}
+		if hasQuotas {
+			ui.Row(c.Key("popover-empty-compact")).Padding(10, 16).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, Icon("layers")).Size(14, 14).TextColor(pal.TextFaint)
+				ui.Text(c, locales.TrayPopoverEmpty()).FontSize(12).TextColor(t.TextMuted).SingleLine()
+			})
+			return
+		}
+		ui.Column(c.Key("popover-empty")).Padding(28, 24).Center().Gap(6).Children(func() {
+			ui.Icon(c, Icon("layers")).Size(22, 22).TextColor(pal.TextFaint)
+			ui.Text(c, locales.TrayPopoverEmpty()).FontSize(13).FontWeight(500).TextAlign(ui.Center)
+			ui.Text(c, locales.TrayPopoverEmptyBody()).FontSize(11.5).TextColor(t.TextMuted).TextAlign(ui.Center).Wrap()
+		})
+	})
+}
 
-		// Footer: Contexts (1 click) + Colima status + two full-width dropdown pills + links.
-		ui.Column(c.Key("popover-footer")).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
-			Padding(12, 16, 14, 16).Gap(10).Children(func() {
-			if hasContexts || act.HasColima {
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-					if hasContexts {
-						ui.Text(c, strings.ToUpper(locales.TrayPopoverContextsOneClick())).
-							FontSize(10).FontWeight(600).TextColor(pal.TextFaint).SingleLine()
-					}
-					ui.Box(c).Grow(1).MinWidth(0).Height(1)
-					if act.HasColima {
-						popoverColimaStatus(c, act)
-					}
+func (a *App) popoverQuotasSection(c *ui.Context, quotas []aiquota.ProviderQuota, act TrayPopoverActions, hasServices, topDivider bool, now time.Time) {
+	pal := Colors(c.Theme())
+	col := ui.Column(c.Key("popover-sec-quotas"))
+	if topDivider {
+		col.BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+	}
+	col.Children(func() {
+		ui.Row(c).Gap(8).Padding(10, 16, 6, 16).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, strings.ToUpper(locales.TrayPopoverQuotasHeader())+" · "+strconv.Itoa(len(quotas))).
+				FontSize(10.5).FontWeight(600).TextColor(pal.TextFaint).SingleLine()
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			if act.OnOpenQuotas != nil {
+				link := ui.ButtonBase(c.Key("popover-all-quotas")).Padding(2, 0).Radius(4).
+					Label(locales.TrayPopoverAllQuotas()).OnClick(act.OnOpenQuotas)
+				link.Children(func() {
+					ui.Text(c, locales.TrayPopoverAllQuotas()).FontSize(11.5).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
 				})
 			}
+		})
 
-			if hasContexts {
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					if hasDockerCtx {
-						canSwitch := len(act.DockerContexts) > 1 && act.OnSwitchDockerContext != nil && act.DockerOverride == "" && !act.Switching
-						popoverContextSelect(
-							c, "pop-ctx-docker", &a.popoverDockerCtxBtn, "Docker",
-							cmp.Or(act.DockerContext, "—"),
-							act.DockerContexts, canSwitch, act.OpenContextPickerKey == "pop-ctx-docker",
-							act.OnOpenContextPicker, act.OnSwitchDockerContext, act.OnOpenDocker,
-						)
-					}
-					if hasKubeCtx {
-						canSwitch := len(act.KubeContexts) > 1 && act.OnSwitchKubeContext != nil && !act.Switching
-						popoverContextSelect(
-							c, "pop-ctx-kube", &a.popoverKubeCtxBtn, "K8s",
-							cmp.Or(act.KubeContext, "—"),
-							act.KubeContexts, canSwitch, act.OpenContextPickerKey == "pop-ctx-kube",
-							act.OnOpenContextPicker, act.OnSwitchKubeContext, act.OnOpenKube,
-						)
-					}
-				})
-			}
-
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				if act.OnOpenPorts != nil {
-					link := ui.ButtonBase(c.Key("popover-all-services")).Padding(2, 0).Radius(4).
-						Label(locales.TrayPopoverAllServices()).OnClick(act.OnOpenPorts)
-					link.Children(func() {
-						ui.Text(c, locales.TrayPopoverAllServices()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
-					})
-				}
-				ui.Box(c).Grow(1).MinWidth(0).Height(1)
-				if act.AppUpdateAvailable != "" && act.OnCheckAppUpdate != nil {
-					upd := ui.ButtonBase(c.Key("popover-update")).Padding(2, 0).Radius(4).
-						Label(locales.AppUpdateAvailable(act.AppUpdateAvailable)).OnClick(act.OnCheckAppUpdate)
-					upd.Children(func() {
-						ui.Text(c, locales.AppUpdateAvailable(act.AppUpdateAvailable)).FontSize(11.5).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
-					})
-				} else {
-					ui.Text(c, locales.TrayPopoverRightClickHint()).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+		maxH := float32(trayPopoverQuotasScrollMaxH)
+		if !hasServices {
+			maxH = 290
+		}
+		ui.Scroll(c.Key("popover-quotas-scroll")).MaxHeight(maxH).Children(func() {
+			ui.Column(c).Children(func() {
+				for _, pq := range quotas {
+					popoverQuotaRow(c, pq, act.OnOpenQuotas, now)
 				}
 			})
 		})
+	})
+}
+
+func popoverQuotaRow(c *ui.Context, pq aiquota.ProviderQuota, onOpen func(), now time.Time) {
+	t := c.Theme()
+	pal := Colors(t)
+	info := aiquota.LookupProvider(pq.Provider)
+	windows := aiquota.NormalizeWindows(pq.Windows)
+
+	row := ui.ButtonBase(c.Key("pop-quota-"+string(pq.Provider))).Row().
+		Padding(10, 16).Gap(10).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).
+		Label(pq.Name)
+	if onOpen != nil {
+		row.OnClick(onOpen)
+	}
+	if row.Hovered() {
+		row.Background(pal.Subtle)
+	}
+
+	// Group windows if provider has 3+ windows (e.g. Antigravity: Gemini 5h/week + Claude 5h/week).
+	type winGroup struct {
+		name    string
+		windows []aiquota.QuotaWindow
+	}
+	var groups []winGroup
+	if len(windows) >= 3 {
+		byName := map[string]int{}
+		for _, w := range windows {
+			gn := w.Group
+			if gn == "" {
+				gn = w.Model
+			}
+			if idx, ok := byName[gn]; ok {
+				groups[idx].windows = append(groups[idx].windows, w)
+			} else {
+				byName[gn] = len(groups)
+				groups = append(groups, winGroup{name: gn, windows: []aiquota.QuotaWindow{w}})
+			}
+		}
+		// If everything landed in 1 group with >2 windows, split in chunks of 2.
+		if len(groups) == 1 && len(groups[0].windows) > 2 {
+			ws := groups[0].windows
+			groups = nil
+			for i := 0; i < len(ws); i += 2 {
+				end := min(i+2, len(ws))
+				groups = append(groups, winGroup{windows: ws[i:end]})
+			}
+		}
+	}
+
+	row.Children(func() {
+		if len(groups) >= 2 {
+			// Compact 2-line layout matching Sketch 158 (Antigravity row).
+			ui.Column(c).Width(104).Shrink(0).Gap(3).Children(func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					quotaProviderLogo(c, pq.Provider, 15)
+					ui.Text(c, info.ShortName).FontSize(12.5).FontWeight(500).SingleLine()
+				})
+				ui.Text(c, locales.QuotasGroupWindowsMeta(len(windows), len(groups))).
+					FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+			})
+			ui.Column(c).Grow(1).MinWidth(0).Gap(9).Children(func() {
+				limit := min(len(groups), 2)
+				for gi := range limit {
+					g := groups[gi]
+					ui.Row(c.Key("g-" + strconv.Itoa(gi))).Gap(12).AlignItems(ui.Center).Children(func() {
+						for wi := 0; wi < min(len(g.windows), 2); wi++ {
+							w := g.windows[wi]
+							lbl := quotaShortWindowLabel(w)
+							if wi == 0 && g.name != "" {
+								lbl = g.name + " " + lbl
+							}
+							popoverQuotaMiniBar(c.Key("mb-"+strconv.Itoa(wi)), lbl, w, now)
+						}
+					})
+				}
+			})
+			return
+		}
+
+		// Standard 1-line compact row (1-2 windows).
+		ui.Row(c).Width(104).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
+			quotaProviderLogo(c, pq.Provider, 15)
+			ui.Text(c, info.ShortName).FontSize(12.5).FontWeight(500).SingleLine()
+		})
+		ui.Row(c).Grow(1).MinWidth(0).Gap(12).AlignItems(ui.Center).Children(func() {
+			limit := min(len(windows), 2)
+			for wi := range limit {
+				w := windows[wi]
+				popoverQuotaMiniBar(c.Key("mb-"+strconv.Itoa(wi)), quotaShortWindowLabel(w), w, now)
+			}
+		})
+	})
+}
+
+func popoverQuotaMiniBar(c *ui.Context, label string, w aiquota.QuotaWindow, now time.Time) {
+	t := c.Theme()
+	pal := Colors(t)
+	left := w.EffectiveLeft(now)
+	barColor, pctColor := quotaBarColors(t, pal, w, now)
+	valText := fmt.Sprintf("%.0f%%", math.Round(left))
+	if w.DollarsUsed != nil && w.DollarsLimit != nil && *w.DollarsLimit > 0 {
+		valText = fmt.Sprintf("$%.0f/$%.0f", *w.DollarsUsed, *w.DollarsLimit)
+	}
+	expectedLeft, hasTick := w.TimeLeft(now)
+	resetAt := formatQuotaResetAt(w.ResetsAt, now)
+
+	ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Grow(1).MinWidth(0).Gap(3).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, label).FontSize(10.5).TextColor(t.TextMuted).SingleLine()
+				if resetAt != "" {
+					ui.Text(c, "· "+resetAt).FontSize(10).TextColor(pal.TextFaint).Shrink(1).MinWidth(0).SingleLine()
+				}
+			})
+			ui.Text(c, valText).Font(FontMono).FontSize(10.5).FontWeight(600).TextColor(pctColor).Shrink(0).SingleLine()
+		})
+		quotaProgressBar(c, left, expectedLeft, hasTick, barColor, 5)
+	})
+}
+
+func (a *App) popoverContextsSection(c *ui.Context, act TrayPopoverActions, hasDockerCtx, hasKubeCtx, hasContexts, topDivider bool) {
+	pal := Colors(c.Theme())
+	col := ui.Column(c.Key("popover-sec-contexts")).Background(pal.Subtle).Padding(12, 16).Gap(10)
+	if topDivider {
+		col.BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
+	}
+	col.Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			if hasContexts {
+				ui.Text(c, strings.ToUpper(locales.TrayPopoverContextsOneClick())).
+					FontSize(10).FontWeight(600).TextColor(pal.TextFaint).SingleLine()
+			}
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			if act.HasColima {
+				popoverColimaStatus(c, act)
+			}
+		})
+
+		if hasContexts {
+			ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+				if hasDockerCtx {
+					canSwitch := len(act.DockerContexts) > 1 && act.OnSwitchDockerContext != nil && act.DockerOverride == "" && !act.Switching
+					popoverContextSelect(
+						c, "pop-ctx-docker", &a.popoverDockerCtxBtn, "Docker",
+						cmp.Or(act.DockerContext, "—"),
+						act.DockerContexts, canSwitch, act.OpenContextPickerKey == "pop-ctx-docker",
+						act.OnOpenContextPicker, act.OnSwitchDockerContext, act.OnOpenDocker,
+					)
+				}
+				if hasKubeCtx {
+					canSwitch := len(act.KubeContexts) > 1 && act.OnSwitchKubeContext != nil && !act.Switching
+					popoverContextSelect(
+						c, "pop-ctx-kube", &a.popoverKubeCtxBtn, "K8s",
+						cmp.Or(act.KubeContext, "—"),
+						act.KubeContexts, canSwitch, act.OpenContextPickerKey == "pop-ctx-kube",
+						act.OnOpenContextPicker, act.OnSwitchKubeContext, act.OnOpenKube,
+					)
+				}
+			})
+		}
 	})
 }
 

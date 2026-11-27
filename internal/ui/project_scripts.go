@@ -335,6 +335,17 @@ func (a *App) projectPrimaryRunning(p projects.Project) (port, caption string, o
 }
 
 func (a *App) projectComposeContainers(p projects.Project) []inventory.DockerPortContainer {
+	all := a.projectAllComposeContainers(p)
+	var out []inventory.DockerPortContainer
+	for _, ct := range all {
+		if ct.Status == "" || ct.Status == "running" {
+			out = append(out, ct)
+		}
+	}
+	return out
+}
+
+func (a *App) projectAllComposeContainers(p projects.Project) []inventory.DockerPortContainer {
 	if a.Snapshot == nil || p.Dir == "" {
 		return nil
 	}
@@ -343,12 +354,13 @@ func (a *App) projectComposeContainers(p projects.Project) []inventory.DockerPor
 		return nil
 	}
 	wantDir := filepath.ToSlash(filepath.Clean(p.Dir))
+	source := st.Docker.ComposeContainers
+	if len(source) == 0 {
+		source = st.Docker.PortContainers
+	}
 	var out []inventory.DockerPortContainer
-	for _, ct := range st.Docker.PortContainers {
+	for _, ct := range source {
 		if ct.ComposeDir == "" {
-			continue
-		}
-		if ct.Status != "" && ct.Status != "running" {
 			continue
 		}
 		if within(filepath.ToSlash(filepath.Clean(ct.ComposeDir)), wantDir) {

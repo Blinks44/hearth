@@ -27,8 +27,11 @@ const (
 )
 
 // fileColumn is the width of the startup tab's column of files, which
-// holds bash_profile.
-const fileColumn = 104
+// holds bash_profile; timeColumn holds the duration, share and waterfall bar.
+const (
+	fileColumn = 104
+	timeColumn = 132
+)
 
 // seconds is d as the page shows it, as 1.42 s.
 func seconds(d time.Duration) string {
@@ -44,13 +47,58 @@ func startupCard(c *ui.Context, s *inventory.ShellStartup) {
 	stateCard(c, c.Theme().Success, locales.StartupLabel(), seconds(s.Took), s.Shell)
 }
 
+func (a *App) startupRemeasureButton(c *ui.Context) {
+	t := c.Theme()
+	label := locales.StartupRemeasure()
+	if a.StartupMeasuring {
+		label = locales.Checking()
+	}
+	ui.Button(c.Key("startup-remeasure"), "").Height(controlHeight).Label(label).
+		Disabled(a.StartupMeasuring || a.Scanning).
+		OnClick(a.MeasureStartup).Children(func() {
+		spinIcon(c, "refresh-cw", 14, t.Text, a.StartupMeasuring)
+		ui.Text(c, label).FontSize(12.5).SingleLine()
+	})
+}
+
+func startupBar(c *ui.Context, part, whole time.Duration, color ui.Color) {
+	pal := Colors(c.Theme())
+	var w float32
+	if whole > 0 && part > 0 {
+		w = float32(part) / float32(whole) * timeColumn
+		if w < 3 {
+			w = 3
+		}
+		if w > timeColumn {
+			w = timeColumn
+		}
+	}
+	ui.Row(c).Width(timeColumn).Height(5).Radius(3).Clip().Background(pal.Muted).Children(func() {
+		if w > 0 {
+			ui.Box(c).Width(w).Height(5).Radius(3).Background(color)
+		}
+	})
+}
+
 // startupLines is the PATH page's tab of the shell's start: the lines of the
 // startup files that take the time, slowest first, and the rest.
 func (a *App) startupLines(c *ui.Context, s *inventory.ShellStartup) {
 	pal := Colors(c.Theme())
+	hasTiming := len(s.Lines) > 0 && s.Lines[0].Took > 0 && s.Took > 0
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).Children(func() {
-			ui.Text(c, locales.StartupTime()).Width(100).SingleLine().FontSize(11.5)
+		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).AlignItems(ui.Center).Children(func() {
+			ui.Column(c).Width(timeColumn).Gap(2).Children(func() {
+				ui.Text(c, locales.StartupTime()).SingleLine().FontSize(11.5)
+				if hasTiming {
+					ui.Row(c).Width(timeColumn).AlignItems(ui.Center).Children(func() {
+						ui.Text(c, "0").Font(FontMono).FontSize(9.5).TextColor(pal.TextFaint).SingleLine()
+						ui.Box(c).Grow(1).Height(1)
+						ui.Text(c, seconds(s.Took/2)).Font(FontMono).FontSize(9.5).TextColor(pal.TextFaint).SingleLine()
+						ui.Box(c).Grow(1).Height(1)
+						ui.Text(c, seconds(s.Took)).Font(FontMono).FontSize(9.5).TextColor(pal.TextFaint).SingleLine()
+					})
+				}
+			})
 			ui.Text(c, locales.StartupFile()).Width(fileColumn).FontSize(11.5)
 			ui.Text(c, locales.StartupLine()).Grow(1).FontSize(11.5)
 		})
@@ -60,12 +108,13 @@ func (a *App) startupLines(c *ui.Context, s *inventory.ShellStartup) {
 			a.startupRow(c, s, i, l)
 		}
 		switch {
-		case len(s.Lines) > 0 && s.Lines[0].Took > 0 && s.Took-listed >= time.Millisecond:
+		case hasTiming && s.Took-listed >= time.Millisecond:
 			rest := s.Took - listed
 			ui.Row(c).Gap(12).Padding(12, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
-				ui.Column(c).Width(100).Gap(2).Children(func() {
+				ui.Column(c).Width(timeColumn).Gap(3).Children(func() {
 					ui.Text(c, seconds(rest)).Font(FontMono).FontSize(12.5).TextColor(pal.TextFaint)
 					ui.Text(c, locales.StartupShare(share(rest, s.Took))).FontSize(11).TextColor(pal.TextFaint)
+					startupBar(c, rest, s.Took, pal.TextFaint)
 				})
 				ui.Text(c, "—").Width(fileColumn).TextColor(pal.TextFaint)
 				ui.Text(c, locales.StartupRest(len(s.Files))).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).Grow(1)
@@ -95,13 +144,24 @@ func startupNote(s *inventory.ShellStartup) string {
 }
 
 func (a *App) startupRow(c *ui.Context, s *inventory.ShellStartup, i int, l inventory.StartupLine) {
-	pal := Colors(c.Theme())
+	t := c.Theme()
+	pal := Colors(t)
 	culprit := sysenv.StartupCulprit(l.Text)
+	barColor := t.Success
+	switch {
+	case l.Took >= slowLine:
+		barColor = t.Warning
+	case l.Took >= fastStart/2:
+		barColor = Accent
+	}
 	ui.Row(c.Key("startup-"+strconv.Itoa(i))).Gap(12).Padding(12, 16).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Width(100).Gap(2).Children(func() {
+		ui.Column(c).Width(timeColumn).Gap(3).Children(func() {
 			if l.Took > 0 {
 				ui.Text(c, seconds(l.Took)).Font(FontMono).FontSize(12.5)
 				ui.Text(c, locales.StartupShare(share(l.Took, s.Took))).FontSize(11).TextColor(pal.TextFaint)
+				if s.Took > 0 {
+					startupBar(c, l.Took, s.Took, barColor)
+				}
 			} else {
 				ui.Text(c, "—").TextColor(pal.TextFaint)
 			}
@@ -112,11 +172,11 @@ func (a *App) startupRow(c *ui.Context, s *inventory.ShellStartup, i int, l inve
 			ui.Row(c).Gap(5).Wrap().Children(func() {
 				chip(c, pal.TextFaint, pal.Muted, pal.MonoText, locales.StartupLineNumber(l.Line))
 				if l.Took >= slowLine || l.Took == 0 && culprit != "" {
-					chip(c, c.Theme().Warning, pal.WarningSoft, pal.WarningText, locales.StartupSlowChip())
+					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.StartupSlowChip())
 				}
 			})
 			if advice := culpritAdvice(culprit); advice != "" {
-				ui.Text(c, advice).FontSize(11.5).TextColor(c.Theme().TextMuted)
+				ui.Text(c, advice).FontSize(11.5).TextColor(t.TextMuted)
 			}
 		})
 		if culprit == sysenv.CulpritNvm && a.BuildPlan != nil {

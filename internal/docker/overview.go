@@ -36,8 +36,8 @@ type OverviewEvents struct {
 }
 
 type Event struct {
-	Action, Name, ExitCode string
-	Count                  int
+	ID, Action, Name, ExitCode string
+	Count                      int
 }
 
 func readOverview(ctx context.Context, r run.Runner, env sysenv.Env, target Target, e Engine, readDetails bool, disk OverviewDisk, events OverviewEvents) (Overview, inventory.DockerHealth) {
@@ -139,7 +139,7 @@ func readOverviewEvents(ctx context.Context, r run.Runner, env sysenv.Env, t Tar
 		if !ok {
 			index = len(events)
 			byKey[k] = index
-			events = append(events, Event{Action: row.Action, Name: name, ExitCode: code})
+			events = append(events, Event{ID: row.Actor.ID, Action: row.Action, Name: name, ExitCode: code})
 		}
 		events[index].Count++
 	}

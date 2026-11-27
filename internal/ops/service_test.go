@@ -37,6 +37,13 @@ func TestServicePlanBrew(t *testing.T) {
 	if _, err := p.Verify(context.Background()); err == nil {
 		t.Error("Verify passed for a service still stopped")
 	}
+	p, ok = ServicePlan(ServiceRestart, pg, found("running"))
+	if !ok || len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, []string{"brew", "services", "restart", "postgresql@17"}) {
+		t.Errorf("restart = %+v, %v", p.Steps, ok)
+	}
+	if _, err := p.Verify(context.Background()); err != nil {
+		t.Errorf("restart Verify: %v", err)
+	}
 }
 
 func TestServicePlanRefuses(t *testing.T) {

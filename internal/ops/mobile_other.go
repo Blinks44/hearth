@@ -14,3 +14,8 @@ import (
 func RemoveSimRuntimePlan(_ context.Context, _ run.Runner, _ inventory.SimRuntime, _ sysenv.Env, _ Detect) (Plan, error) {
 	return Plan{}, ErrNoFix
 }
+
+// SwitchXcodePlan is macOS-only.
+func SwitchXcodePlan(_ inventory.XcodeApp, _ Detect) (Plan, bool) {
+	return Plan{}, false
+}

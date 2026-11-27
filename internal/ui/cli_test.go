@@ -104,8 +104,8 @@ func TestCliPage(t *testing.T) {
 	tt.Advance(time.Second)
 
 	hasTexts(t, tt,
-		"CLI & clouds", "Infrastructure · command line", "of 8 known",
-		"CLOUDS", "INFRASTRUCTURE", "FROM MISE · NO PAGE OF THEIR OWN",
+		"CLI & clouds", "Infrastructure · command line", "of 16 known",
+		"CLOUDS", "INFRASTRUCTURE", "UTILITIES", "FROM MISE · NO PAGE OF THEIR OWN",
 		"Sign-in checked", "0 of 2", "not checked yet",
 		"Projects need", "1", "Terraform ~> 1.10",
 		"brew · profile staging · eu-central-1",

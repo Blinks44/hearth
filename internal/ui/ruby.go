@@ -42,7 +42,7 @@ func (a *App) ruby(c *ui.Context, p page) {
 						a.managerCard(c, st, rows, active, nil)
 						a.rubyBundler(c, st, ins, active)
 						if active >= 0 {
-							globalsCard(c, locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
+							a.managedGlobalsCard(c, "ruby", locales.RubyGems(copyVersion(ins[active])), locales.RubyNoGems(), ins[active].Packages, "gem install")
 						}
 					})
 				case 1:
@@ -104,6 +104,7 @@ func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 				text = locales.VersionsFailed(a.RubyVersionsErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "3.4.1")
 			return
 		}
 		now := c.Now()
@@ -120,6 +121,7 @@ func (a *App) rubyAvailable(c *ui.Context, st inventory.ToolState, rows []int, a
 				a.installButton(c, st, l.Latest, l.Latest)
 			})
 		}
+		a.customVersionRow(c, st, "3.4.1")
 	})
 }
 

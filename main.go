@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -22,6 +24,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/detect"
@@ -110,6 +113,11 @@ func main() {
 	a.SkillRepos = slices.Clone(list.settings.SkillRepos)
 	a.TrayEnabled = !list.settings.TrayDisabled
 	a.ShowInDock = !list.settings.DockHidden || !a.TrayEnabled
+	a.TraySections = slices.Clone(list.settings.TraySections)
+	a.TrayHiddenSections = slices.Clone(list.settings.TrayHiddenSections)
+	a.QuotaOrder = slices.Clone(list.settings.QuotaOrder)
+	a.QuotaTrayHidden = slices.Clone(list.settings.QuotaTrayHidden)
+	a.QuotaNotifyLow = list.settings.QuotaNotifyLow == nil || *list.settings.QuotaNotifyLow
 	a.KubePinned, a.Terminal, a.Editor = list.settings.KubePinned, list.settings.Terminal, list.settings.Editor
 	a.KubeLinks = list.kubeLinks()
 	// The native parts follow it too: the sidebar's material, the window
@@ -119,7 +127,8 @@ func main() {
 	dockerCtx, stopDocker := context.WithCancel(context.Background())
 	scriptCtx, stopScripts := context.WithCancel(context.Background())
 	livePollCtx, stopLivePoll := context.WithCancel(context.Background())
-	var forwards, dockerWorkers, scriptsWG sync.WaitGroup
+	quotaCtx, stopQuotas := context.WithCancel(context.Background())
+	var forwards, dockerWorkers, scriptsWG, quotasWG sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
@@ -174,6 +183,9 @@ func main() {
 		})
 		showMainWindow := func() {
 			syncDockIcon(a.TrayEnabled, a.ShowInDock, true)
+			if win.IsMinimized() {
+				win.Restore()
+			}
 			win.Show()
 			win.Focus()
 		}
@@ -225,6 +237,19 @@ func main() {
 		}
 		radar := newRadarHub()
 		offNotifClick := mygo.App.OnNotificationClick(func(id string) {
+			if strings.HasPrefix(id, "mcp-proposal:") {
+				win.Update(func() {
+					showMainWindow()
+				})
+				return
+			}
+			if strings.HasPrefix(id, "hearth-quota:") {
+				win.Update(func() {
+					a.OpenQuotas()
+					showMainWindow()
+				})
+				return
+			}
 			cwd, ok := radar.targetForNotification(id)
 			if !ok {
 				return
@@ -264,7 +289,25 @@ func main() {
 				}
 				err := a.RequestFix(q)
 				if err == nil {
-					showMainWindow()
+					if (!win.IsVisible() || win.IsMinimized()) && mygo.NotificationsSupported() {
+						title := locales.McpProposalNotifyTitle()
+						body := locales.McpProposalNotifyBody()
+						notifID := fmt.Sprintf("mcp-proposal:%d", time.Now().UnixNano())
+						go func() {
+							n := mygo.NewNotification(mygo.NotificationOptions{
+								ID:    notifID,
+								Title: title,
+								Body:  body,
+								Group: "hearth-proposals",
+							})
+							if nerr := n.Show(); nerr != nil {
+								log.Printf("proposal notification: %v", nerr)
+								win.Update(func() { showMainWindow() })
+							}
+						}()
+					} else {
+						showMainWindow()
+					}
 				}
 				done <- err
 			})
@@ -361,6 +404,94 @@ func main() {
 			go func() {
 				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, argv, env, env.Get("PATH"), "", hint)
 				win.Update(func() { done(err) })
+			}()
+		}
+		a.OpenGitHubLogin = func(done func(error)) {
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, []string{"gh", "auth", "login"}, env, env.Get("PATH"), "", hint)
+				win.Update(func() { done(err) })
+			}()
+		}
+		a.OpenSSHAdd = func(keyPath string, done func(error)) {
+			if a.Home == "" || strings.ContainsFunc(keyPath, func(r rune) bool { return r < 0x20 || r == 0x7f }) {
+				done(errors.New("SSH key must be inside ~/.ssh"))
+				return
+			}
+			sshDir := filepath.Clean(filepath.Join(a.Home, ".ssh"))
+			clean := filepath.Clean(keyPath)
+			rel, err := filepath.Rel(sshDir, clean)
+			if err != nil || rel == "." || !filepath.IsLocal(rel) {
+				done(errors.New("SSH key must be inside ~/.ssh"))
+				return
+			}
+			if realSSH, errSSH := filepath.EvalSymlinks(sshDir); errSSH == nil {
+				if realKey, errKey := filepath.EvalSymlinks(clean); errKey == nil {
+					if realRel, errRel := filepath.Rel(realSSH, realKey); errRel != nil || realRel == "." || !filepath.IsLocal(realRel) {
+						done(errors.New("SSH key must be inside ~/.ssh"))
+						return
+					}
+				}
+			}
+			env, terminal, hint := scanner.Terminal(), a.Terminal, locales.KubeShellCloseHint()
+			argv := ops.SSHAddArgv(clean)
+			go func() {
+				err := run.OpenTerminal(context.Background(), run.Exec{}, terminal, argv, env, env.Get("PATH"), "", hint)
+				win.Update(func() { done(err) })
+			}()
+		}
+		var startupMu sync.Mutex
+		var startupCancel context.CancelFunc
+		var startupSeq uint64
+		var startupClosed bool
+		win.OnClosed(func() {
+			startupMu.Lock()
+			startupClosed = true
+			if startupCancel != nil {
+				startupCancel()
+			}
+			startupMu.Unlock()
+		})
+		a.MeasureStartup = func() {
+			if a.StartupMeasuring || a.Snapshot == nil {
+				return
+			}
+			a.StartupMeasuring = true
+			term := scanner.Terminal()
+			gui := sysenv.GUI()
+			startupMu.Lock()
+			if startupCancel != nil {
+				startupCancel()
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			startupCancel = cancel
+			startupSeq++
+			seq := startupSeq
+			startupMu.Unlock()
+			go func() {
+				defer cancel()
+				measured := sysenv.Startup(ctx, run.Exec{}, term, gui)
+				timedOutOrCanceled := ctx.Err() != nil
+				startupMu.Lock()
+				closed := startupClosed
+				startupMu.Unlock()
+				if closed {
+					return
+				}
+				win.Update(func() {
+					startupMu.Lock()
+					stale := seq != startupSeq
+					startupMu.Unlock()
+					if stale {
+						return
+					}
+					a.StartupMeasuring = false
+					if !timedOutOrCanceled && a.Snapshot != nil && measured != nil {
+						cp := *a.Snapshot
+						cp.Startup = measured
+						a.Snapshot = &cp
+					}
+				})
 			}()
 		}
 		// The cluster view's reads keep their sign-in and connection.
@@ -903,6 +1034,22 @@ func main() {
 				releaseMemory()
 			}()
 		}
+		var installedAgentsMu sync.RWMutex
+		installedAgents := map[aiquota.ProviderID]bool{}
+		updateInstalledAgents := func(s *inventory.Snapshot) {
+			if s == nil {
+				return
+			}
+			m := make(map[aiquota.ProviderID]bool, len(s.Agents))
+			for _, ag := range s.Agents {
+				if len(ag.Installations) > 0 || ag.App != "" || len(ag.Files) > 0 {
+					m[aiquota.ProviderID(ag.ID)] = true
+				}
+			}
+			installedAgentsMu.Lock()
+			installedAgents = m
+			installedAgentsMu.Unlock()
+		}
 		scanned := func(s inventory.Snapshot) {
 			win.Update(func() {
 				// What changed since the check before goes in the history.
@@ -918,6 +1065,7 @@ func main() {
 					}
 				}
 				a.Snapshot, a.Scanning = &s, false
+				updateInstalledAgents(&s)
 				a.ClearCloudAuth()
 				a.RefreshRadarNow()
 				if tray != nil {
@@ -1154,6 +1302,150 @@ func main() {
 				}
 			}
 		}()
+		quotaMonitor := aiquota.NewMonitor(list.dir, func() aiquota.FetchEnv {
+			installedAgentsMu.RLock()
+			inst := maps.Clone(installedAgents)
+			installedAgentsMu.RUnlock()
+			return aiquota.FetchEnv{
+				Home:      a.Home,
+				Env:       slices.Clone(scanner.Terminal()),
+				Runner:    run.Exec{},
+				Installed: inst,
+			}
+		}, func(snap aiquota.Snapshot, events []aiquota.AlertEvent) {
+			if quotaCtx.Err() != nil {
+				return
+			}
+			win.Update(func() {
+				if quotaCtx.Err() != nil {
+					return
+				}
+				s := snap
+				a.Quotas = &s
+				a.QuotasRefreshing = false
+				if tray != nil {
+					tray.refresh()
+				}
+				if a.QuotaNotifyLow && mygo.NotificationsSupported() && len(events) > 0 {
+					now := time.Now()
+					for _, ev := range events {
+						winLabel := hearthui.QuotaWindowDisplayName(ev.Window)
+						notifID := fmt.Sprintf("hearth-quota:%s:%s", ev.Provider, ev.Window.Key())
+						var title, body string
+						if ev.Reset {
+							title = locales.QuotaNotifyResetTitle(ev.Name)
+							body = locales.QuotaNotifyResetBody(winLabel)
+						} else {
+							left := int(math.Round(ev.Window.EffectiveLeft(now)))
+							title = locales.QuotaNotifyLowTitle(ev.Name)
+							body = locales.QuotaNotifyLowBody(winLabel, left)
+						}
+						go func(id, title, body string) {
+							n := mygo.NewNotification(mygo.NotificationOptions{
+								ID:    id,
+								Title: title,
+								Body:  body,
+								Group: "hearth-quotas",
+							})
+							if err := n.Show(); err != nil {
+								log.Printf("quota notification: %v", err)
+							}
+						}(notifID, title, body)
+					}
+				}
+			})
+		})
+		quotaMonitor.OnProgress = func(snap aiquota.Snapshot) {
+			if quotaCtx.Err() != nil {
+				return
+			}
+			win.Update(func() {
+				if quotaCtx.Err() != nil {
+					return
+				}
+				s := snap
+				a.Quotas = &s
+				if tray != nil {
+					tray.refresh()
+				}
+			})
+		}
+		if cachedQuotas := quotaMonitor.Snapshot(); !cachedQuotas.CheckedAt.IsZero() {
+			a.Quotas = &cachedQuotas
+		}
+		runQuotaPoll := func(mode aiquota.PollMode) {
+			if quotaCtx.Err() != nil || a.QuotasRefreshing {
+				return
+			}
+			if mode == aiquota.PollActive {
+				a.QuotasRefreshing = true
+				if tray != nil {
+					tray.invalidatePopover()
+				}
+			}
+			quotasWG.Go(func() {
+				ctx, cancel := context.WithTimeout(quotaCtx, 25*time.Second)
+				defer cancel()
+				quotaMonitor.RefreshMode(ctx, mode)
+			})
+		}
+		a.RefreshQuotas = func(force bool) {
+			_ = force
+			runQuotaPoll(aiquota.PollActive)
+		}
+		// Adaptive AI quota polling:
+		// - Skip startup network poll if persisted cache is fresher than 2 minutes.
+		// - While /ai/quotas or the tray popover is open, poll every 2 minutes.
+		// - In the background, make 0 network requests when QuotaNotifyLow is off;
+		//   when on, run Monitor's per-provider adaptive schedule (5m active ->
+		//   15m idle -> sleep until ResetsAt when exhausted -> 30m for missing).
+		quotasWG.Go(func() {
+			initial := time.NewTimer(2 * time.Second)
+			defer initial.Stop()
+			select {
+			case <-quotaCtx.Done():
+				return
+			case <-initial.C:
+				mygo.RunOnMain(func() {
+					if quotaCtx.Err() != nil {
+						return
+					}
+					if a.Quotas != nil && !a.Quotas.CheckedAt.IsZero() && time.Since(a.Quotas.CheckedAt) < aiquota.ActivePollInterval {
+						return
+					}
+					runQuotaPoll(aiquota.PollActive)
+				})
+			}
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-quotaCtx.Done():
+					return
+				case <-ticker.C:
+					mygo.RunOnMain(func() {
+						if quotaCtx.Err() != nil {
+							return
+						}
+						active := (win.IsVisible() && a.ViewingQuotas()) || (tray != nil && tray.isPopoverOpen())
+						if active {
+							var lastChecked time.Time
+							if a.Quotas != nil {
+								lastChecked = a.Quotas.CheckedAt
+							}
+							if lastChecked.IsZero() || time.Since(lastChecked) >= aiquota.ActivePollInterval {
+								runQuotaPoll(aiquota.PollActive)
+							}
+							return
+						}
+						if !a.QuotaNotifyLow {
+							return
+						}
+						runQuotaPoll(aiquota.PollBackground)
+					})
+				}
+			}
+		})
 		a.CachePath = lists.Dir
 		win.OnClose(func(e *mygo.CloseEvent) {
 			a.ClearSecretClipboard()
@@ -1165,6 +1457,7 @@ func main() {
 		})
 		win.OnClosed(func() {
 			stopLivePoll()
+			stopQuotas()
 			if tray != nil {
 				tray.destroy()
 			}
@@ -1206,6 +1499,12 @@ func main() {
 			list.settings.SkillRepos = slices.Clone(a.SkillRepos)
 			list.settings.TrayDisabled = !a.TrayEnabled
 			list.settings.DockHidden = !a.ShowInDock
+			list.settings.TraySections = slices.Clone(a.TraySections)
+			list.settings.TrayHiddenSections = slices.Clone(a.TrayHiddenSections)
+			list.settings.QuotaOrder = slices.Clone(a.QuotaOrder)
+			list.settings.QuotaTrayHidden = slices.Clone(a.QuotaTrayHidden)
+			notifyLow := a.QuotaNotifyLow
+			list.settings.QuotaNotifyLow = &notifyLow
 			list.settings.KubePinned, list.settings.Terminal, list.settings.Editor = a.KubePinned, a.Terminal, a.Editor
 			mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 			if tray != nil {
@@ -1321,6 +1620,7 @@ func main() {
 					win.Update(func() {
 						if a.Snapshot == nil {
 							a.Snapshot = &s
+							updateInstalledAgents(&s)
 							if tray != nil {
 								tray.refresh()
 								tray.refreshContainers()
@@ -1349,9 +1649,11 @@ func main() {
 	})
 	err := mygo.App.Run()
 	stopLivePoll()
+	stopQuotas()
 	stopScripts()
 	stopForwards()
 	stopDocker()
+	quotasWG.Wait()
 	scriptsWG.Wait()
 	forwards.Wait()
 	dockerWorkers.Wait()

@@ -81,6 +81,10 @@ func (a *App) CancelPreparation() {
 }
 
 func (a *App) prepareProject(dir string) {
+	a.prepareProjectWithOrigin(dir, "")
+}
+
+func (a *App) prepareProjectWithOrigin(dir, origin string) {
 	if a.op.running() {
 		a.op.open = true
 		return
@@ -151,7 +155,11 @@ func (a *App) prepareProject(dir string) {
 		}
 		if err != nil {
 			// Keep the folder and retry actions available even when parsing fails.
-			p = ops.Plan{Title: locales.PrepareTitle(filepath.Base(dir)), Why: locales.PrepareReadErrors()}
+			why := locales.PrepareReadErrors()
+			if origin != "" {
+				why = origin + "\n\n" + why
+			}
+			p = ops.Plan{Title: locales.PrepareTitle(filepath.Base(dir)), Why: why}
 			a.Propose(p)
 			a.op.project = &ops.ProjectPreparation{
 				Project: projects.Project{Dir: dir},
@@ -159,6 +167,13 @@ func (a *App) prepareProject(dir string) {
 				Items:   []ops.ProjectItem{{Title: locales.PrepareReadErrors(), Text: err.Error(), Kind: ops.ProjectUnknown}},
 			}
 			return
+		}
+		if origin != "" {
+			if p.Why != "" {
+				p.Why = origin + "\n\n" + p.Why
+			} else {
+				p.Why = origin
+			}
 		}
 		a.Propose(p)
 		a.op.project = &requestResult

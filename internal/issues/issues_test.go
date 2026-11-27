@@ -183,6 +183,18 @@ func TestFind(t *testing.T) {
 		{name: "missing directory on PATH",
 			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}, {Dir: abs("/opt/gone"), Missing: true}}, GUIPath: []inventory.PathEntry{{Dir: abs("/opt/gone"), Missing: true}}},
 			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{abs("/opt/gone")}}}},
+		{name: "duplicate directory on PATH",
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zprofile", Line: 1}}},
+				{Dir: abs("/usr/bin")},
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zshrc", Line: 4}}},
+			}},
+			want: []Issue{{Kind: PathDuplicate, Severity: Info, Dirs: []string{abs("/opt/homebrew/bin")}}}},
+		{name: "system repeat on PATH ignored",
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zprofile", Line: 1}}},
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/etc/paths.d/homebrew", Line: 1}}},
+			}}},
 		{name: "npm's global prefix before the first global install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: `C:\Users\Ann\AppData\Roaming\npm`, Missing: true}}}},
 		{name: "dotnet's tools before the first tool install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{

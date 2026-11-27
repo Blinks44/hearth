@@ -317,7 +317,13 @@ func (a *App) projectKindRow(c *ui.Context, dir string, r kubeReady) {
 				bg, fg = pal.WarningSoft, pal.WarningText
 			}
 			aiTag(c, kindState(*r.kind), bg, fg)
-			ui.Button(c.Key("kind-open"), locales.SettingsOpen()).Shrink(0).OnClick(func() { a.router.Push(kubePage) })
+			ui.Button(c.Key("kind-open"), locales.SettingsOpen()).Shrink(0).OnClick(func() {
+				if r.ctx != nil && a.WatchCluster != nil {
+					a.openCluster(r.ctx.Name)
+					return
+				}
+				a.router.Push(kubePage)
+			})
 		})
 	case !r.engineUp:
 		listRow(c, locales.KindEngineDown(), false, locales.KindEngineDownCaption(), func() {})
@@ -392,11 +398,22 @@ func (a *App) kubeProjectTable(c *ui.Context) {
 			cliGroupHead(c, locales.KubeLinkedGroup(), len(linked))
 		}
 		for _, p := range linked {
-			link := a.KubeLinks[p.Dir]
+			proj := p
+			link := a.KubeLinks[proj.Dir]
 			r := a.kubeReadiness(link)
-			row(p, locales.KubeLinkName(link.Context, link.Namespace)+" · "+tilde(p.Dir, a.Home), func() {
+			row(proj, locales.KubeLinkName(link.Context, link.Namespace)+" · "+tilde(proj.Dir, a.Home), func() {
 				a.kubeProjectTag(c, r)
-				ui.Button(c.Key("open"), locales.SettingsOpen()).OnClick(func() { a.router.Push(projectPath(p.Dir)) })
+				if r.ctx != nil && a.WatchCluster != nil {
+					ctxName := r.ctx.Name
+					ns := cmp.Or(link.Namespace, namespaceOf(*r.ctx))
+					ui.Button(c.Key("open-cluster"), locales.KubeOpenCluster()).Shrink(0).OnClick(func() {
+						if ns != "" {
+							a.setNamespaces(ctxName, []string{ns})
+						}
+						a.openCluster(ctxName)
+					})
+				}
+				ui.Button(c.Key("open"), locales.SettingsOpen()).Shrink(0).OnClick(func() { a.router.Push(projectPath(proj.Dir)) })
 			})
 		}
 		if len(unlinked) > 0 {

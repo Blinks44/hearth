@@ -30,7 +30,12 @@ func (a *App) cppView(c *ui.Context, p page) {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			if !empty {
 				if plan, ok := a.compilerPlan(); ok {
-					ui.PrimaryButton(c.Key("compiler-install"), plan.Title).OnClick(func() { a.Propose(plan) })
+					ui.PrimaryButton(c.Key("compiler-install"), "").Height(controlHeight).OnClick(func() { a.Propose(plan) }).Children(func() {
+						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+							ui.Icon(c, Icon("plus")).Size(14, 14)
+							ui.Text(c, plan.Title)
+						})
+					})
 				}
 			}
 		}})
@@ -39,7 +44,12 @@ func (a *App) cppView(c *ui.Context, p page) {
 			if plan, ok := a.compilerPlan(); ok {
 				p := plan
 				emptyAction = func() {
-					ui.PrimaryButton(c.Key("compiler-empty-install"), p.Title).OnClick(func() { a.Propose(p) })
+					ui.PrimaryButton(c.Key("compiler-empty-install"), "").Height(controlHeight).OnClick(func() { a.Propose(p) }).Children(func() {
+						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+							ui.Icon(c, Icon("plus")).Size(14, 14)
+							ui.Text(c, p.Title)
+						})
+					})
 				}
 			}
 			a.toolEmptyWith(c, "cpp", "C/C++", emptyAction)

@@ -69,3 +69,33 @@ func TestRemoveSimRuntimePlanDarwin(t *testing.T) {
 		t.Fatal("mounted runtime without ID should fail")
 	}
 }
+
+func TestSwitchXcodePlan(t *testing.T) {
+	app := inventory.XcodeApp{Version: "16.2", Path: "/Applications/Xcode-16.2.app"}
+	detectSwitched := func(context.Context) (inventory.ToolState, error) {
+		return inventory.ToolState{
+			Tool: "mobile",
+			Mobile: &inventory.MobileState{
+				DeveloperDir: "/Applications/Xcode-16.2.app/Contents/Developer",
+				Xcodes:       []inventory.XcodeApp{{Version: "16.2", Path: app.Path, Selected: true}},
+			},
+		}, nil
+	}
+	p, ok := SwitchXcodePlan(app, detectSwitched)
+	if !ok {
+		t.Fatal("expected SwitchXcodePlan")
+	}
+	want := []string{"xcode-select", "-s", "/Applications/Xcode-16.2.app/Contents/Developer"}
+	if len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, want) || !p.Steps[0].Admin {
+		t.Fatalf("steps = %+v, want admin %v", p.Steps, want)
+	}
+	if _, ok := SwitchXcodePlan(inventory.XcodeApp{Path: "/Applications/NotXcode"}, nil); ok {
+		t.Error("non-.app path should be rejected")
+	}
+	if _, ok := SwitchXcodePlan(inventory.XcodeApp{Path: "relative/Xcode.app"}, nil); ok {
+		t.Error("relative path should be rejected")
+	}
+	if _, ok := SwitchXcodePlan(inventory.XcodeApp{Path: "/tmp/Evil.app"}, nil); ok {
+		t.Error("path outside /Applications should be rejected")
+	}
+}

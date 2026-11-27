@@ -100,9 +100,10 @@ func showDockerImage(item docker.Image, filter int, query, arch string) bool {
 	case filter == dockerImagesEmulated && !item.Emulated(arch):
 		return false
 	}
-	return query == "" || strings.Contains(item.ID, query) ||
+	return query == "" || strings.Contains(strings.ToLower(item.ID+" "+item.OS+"/"+item.Architecture), query) ||
 		slices.ContainsFunc(item.RepoTags, func(tag string) bool { return strings.Contains(strings.ToLower(tag), query) }) ||
-		slices.ContainsFunc(item.RepoDigests, func(digest string) bool { return strings.Contains(strings.ToLower(digest), query) })
+		slices.ContainsFunc(item.RepoDigests, func(digest string) bool { return strings.Contains(strings.ToLower(digest), query) }) ||
+		slices.ContainsFunc(item.Users, func(user docker.ImageUser) bool { return strings.Contains(strings.ToLower(user.Name), query) })
 }
 
 func (a *App) dockerImagesView(c *ui.Context) {
@@ -419,10 +420,7 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 				})
 			})
 			a.workloadStatusIssue(c, status, bg, fg, issue)
-			if names == "" {
-				names = "—"
-			}
-			clipped(c, names).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(names)
+			a.dockerUsedByCell(c, a.engine.images.target.Context, item.Users, names)
 			clipped(c, formatBytes(item.Size)).FontSize(11.5)
 			clipped(c, created).FontSize(11.5).Tooltip(createdAt)
 			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
@@ -433,6 +431,35 @@ func (a *App) dockerImageRow(c *ui.Context, item docker.Image, tracks []ui.Track
 				iconButton(c.Key("image-menu"), "ellipsis", locales.MoreActions()).Menu(menu)
 			})
 		})
+	})
+}
+
+func (a *App) dockerUsedByCell(c *ui.Context, contextName string, users []docker.ImageUser, tooltip string) {
+	pal := Colors(c.Theme())
+	if len(users) == 0 {
+		clipped(c, "—").Font(FontMono).FontSize(11.5).MinWidth(0)
+		return
+	}
+	if contextName == "" {
+		clipped(c, tooltip).Font(FontMono).FontSize(11.5).MinWidth(0).Tooltip(tooltip)
+		return
+	}
+	ui.Row(c).Gap(4).AlignItems(ui.Center).MinWidth(0).Clip().Tooltip(tooltip).Children(func() {
+		for i, u := range users {
+			user := u
+			if i > 0 {
+				ui.Text(c, ",").Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+			link := ui.ButtonBase(c.Key("user-"+strconv.Itoa(i)+"-"+user.Name)).Radius(4).Padding(1, 3).
+				Label(user.Name).Tooltip(user.Name).
+				OnClick(func() { a.requestDockerContainer(contextName, user.ID, user.Name, true, false) })
+			if link.Hovered() {
+				link.Background(pal.Subtle)
+			}
+			link.Children(func() {
+				clipped(c, user.Name).Font(FontMono).FontSize(11.5).TextColor(pal.AccentInk)
+			})
+		}
 	})
 }
 

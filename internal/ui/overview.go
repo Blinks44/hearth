@@ -438,6 +438,7 @@ func (a *App) report(found []issues.Issue) string {
 func (a *App) issueLists() issues.Lists {
 	return issues.Lists{
 		Node:   a.NodeVersions,
+		Go:     a.GoVersions,
 		Python: a.PythonVersions,
 		PHP:    a.PHPVersions,
 		Ruby:   a.RubyVersions,

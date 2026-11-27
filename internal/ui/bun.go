@@ -44,7 +44,7 @@ func (a *App) bun(c *ui.Context, p page) {
 						a.managerCard(c, st, rows, active, nil)
 						if active >= 0 {
 							a.bunInstall(c, ins[active])
-							globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
+							a.managedGlobalsCard(c, "bun", locales.GlobalPackages(), locales.NoGlobalPackages(), ins[active].Packages, "bun add -g")
 						}
 					})
 				case 1:
@@ -130,6 +130,7 @@ func (a *App) bunAvailable(c *ui.Context, st inventory.ToolState, rows []int, ac
 				text = locales.VersionsFailed(a.BunLatestErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "1.2.0")
 			return
 		}
 		caption := locales.ChannelStable()
@@ -150,6 +151,7 @@ func (a *App) bunAvailable(c *ui.Context, st inventory.ToolState, rows []int, ac
 			a.installButton(c, st, latest.Version, versionText(latest.Version))
 		})
 		listRow(c, "canary", true, locales.BunCanary(), func() {})
+		a.customVersionRow(c, st, "1.2.0")
 	})
 }
 

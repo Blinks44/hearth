@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -12,6 +13,22 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/locales"
 )
+
+var (
+	versionSpecPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}$`)
+	toolIDPattern      = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
+)
+
+// ValidVersionSpec reports whether s is a safe version or toolchain spec
+// accepted by Hearth's version installers (no whitespace, flags, or shell
+// metacharacters).
+func ValidVersionSpec(s string) bool {
+	return versionSpecPattern.MatchString(s)
+}
+
+func validToolID(s string) bool {
+	return toolIDPattern.MatchString(s)
+}
 
 // VersionAction is what to do with a version of a language.
 type VersionAction int
@@ -65,6 +82,9 @@ type VersionTarget struct {
 // the user would type; ok is false when Hearth cannot do it through that
 // manager.
 func VersionPlan(action VersionAction, t VersionTarget, detect Detect) (p Plan, ok bool) {
+	if !validToolID(t.Tool) || !ValidVersionSpec(t.Version) {
+		return Plan{}, false
+	}
 	if action == VersionInstall && t.Tool == "java" {
 		t.Version = javaSpec(t.Manager, t.Version)
 	}
@@ -160,7 +180,7 @@ var asdfPlugins = map[string]string{"node": "nodejs", "go": "golang", "dotnet": 
 // cannot.
 func versionCommand(action VersionAction, t VersionTarget) []string {
 	manager, tool, v := t.Manager, t.Tool, t.Version
-	if tools, ok := managerTools[manager]; ok && !slices.Contains(tools, tool) || action == VersionDefault && !slices.Contains(knownDefaults[tool], manager) {
+	if tools, ok := managerTools[manager]; ok && !slices.Contains(tools, tool) || action == VersionDefault && manager != "mise" && !slices.Contains(knownDefaults[tool], manager) {
 		return nil
 	}
 	// mise and asdf build PHP from source, which takes libraries a
@@ -247,9 +267,10 @@ func shellFunction(script, name string, install, uninstall, def []string) [3][]s
 
 // javaSpec is how manager names the newest Temurin of a line, as "25":
 // mise by the prefix of its own names, which it installs the newest of.
-// SDKMAN's script finds it in SDKMAN's list.
+// Explicit vendor specs like "temurin-21.0.5+11.0.LTS" or "corretto-21"
+// are kept unchanged. SDKMAN's script finds it in SDKMAN's list.
 func javaSpec(manager, line string) string {
-	if manager == "mise" {
+	if manager == "mise" && len(line) > 0 && line[0] >= '0' && line[0] <= '9' && !strings.Contains(line, "-") {
 		return "temurin-" + line
 	}
 	return line
@@ -270,7 +291,20 @@ func matches(in inventory.Installation, version string) bool {
 // done to t; label is its version as the user sees it.
 func checkVersion(action VersionAction, t VersionTarget, label string, st inventory.ToolState) (string, error) {
 	var found, isDefault bool
-	for _, in := range st.Installations {
+	ins := st.Installations
+	if t.Manager == "mise" && len(st.MiseTools) > 0 {
+		ins = slices.Clone(st.Installations)
+		toolName := t.Tool
+		if t.Root != "" {
+			toolName = filepath.Base(filepath.Dir(t.Root))
+		}
+		for _, mt := range st.MiseTools {
+			if mt.Name == t.Tool || mt.Name == toolName {
+				ins = append(ins, mt.Installations...)
+			}
+		}
+	}
+	for _, in := range ins {
 		if in.Source.Manager == t.Manager && !in.Source.Shim && matches(in, t.Version) {
 			found = true
 			isDefault = isDefault || in.Default

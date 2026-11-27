@@ -113,6 +113,7 @@ func bunGlobals(install string) []inventory.Package {
 		if !ok {
 			p = inventory.Package{Name: name, Version: want}
 		}
+		p.Manager = "bun"
 		pkgs = append(pkgs, p)
 	}
 	slices.SortFunc(pkgs, func(a, b inventory.Package) int { return strings.Compare(a.Name, b.Name) })

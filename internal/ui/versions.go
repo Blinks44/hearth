@@ -92,7 +92,7 @@ func (a *App) installVersion(tool, version string) {
 	}
 	manager := a.installManager(st)
 	label := versionLabel(tool, version)
-	if tool == "java" {
+	if tool == "java" && len(version) > 0 && version[0] >= '0' && version[0] <= '9' && !strings.Contains(version, "-") {
 		label = "Temurin " + version
 	}
 	p, ok := a.versionPlan(ops.VersionInstall, tool, cmp.Or(manager, "mise"), version, label, "")
@@ -224,7 +224,7 @@ func installVersionButton(c *ui.Context, tool, target, tooltip string, disabled 
 	if target != "" {
 		text = locales.InstallNamed(target)
 	}
-	b := ui.PrimaryButton(c.Key(tool+"-install"), "").Disabled(disabled).OnClick(onClick)
+	b := ui.PrimaryButton(c.Key(tool+"-install"), "").Height(controlHeight).Disabled(disabled).OnClick(onClick)
 	if tooltip != "" {
 		b.Tooltip(tooltip)
 	}
@@ -233,6 +233,53 @@ func installVersionButton(c *ui.Context, tool, target, tooltip string, disabled 
 			ui.Icon(c, Icon("plus")).Size(14, 14)
 			ui.Text(c, text)
 		})
+	})
+}
+
+func (a *App) versionInputPtr(tool string) *string {
+	if a.versionInput == nil {
+		a.versionInput = map[string]*string{}
+	}
+	p, ok := a.versionInput[tool]
+	if !ok {
+		p = new(string)
+		a.versionInput[tool] = p
+	}
+	return p
+}
+
+// customVersionRow renders an inline input at the bottom of a language's
+// available versions card so users can install any specific version spec.
+func (a *App) customVersionRow(c *ui.Context, st inventory.ToolState, example string) {
+	manager := a.installManager(st)
+	if manager == "" && a.BuildPlan == nil {
+		return
+	}
+	if _, ok := a.versionPlan(ops.VersionInstall, st.Tool, cmp.Or(manager, "mise"), "0", "", ""); !ok {
+		return
+	}
+	pal := Colors(c.Theme())
+	ptr := a.versionInputPtr(st.Tool)
+	install := func() {
+		v := strings.TrimSpace(*ptr)
+		if !ops.ValidVersionSpec(v) {
+			return
+		}
+		*ptr = ""
+		a.installVersion(st.Tool, v)
+	}
+	ui.Row(c).Gap(8).Padding(8, 12, 10, 14).AlignItems(ui.Center).
+		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+		ui.TextInput(c.Key(st.Tool+"-custom-version-input"), ptr).
+			Placeholder(locales.CustomVersionPlaceholder(example)).Height(28).Grow(1).MinWidth(0).
+			OnChange(c.Invalidate).OnSubmit(install)
+		v := strings.TrimSpace(*ptr)
+		label := locales.InstallVersion()
+		if v != "" {
+			label = locales.InstallNamed(v)
+		}
+		ui.Button(c.Key(st.Tool+"-custom-version-install"), locales.Install()).Label(label).
+			Disabled(!ops.ValidVersionSpec(v)).Shrink(0).OnClick(install)
 	})
 }
 

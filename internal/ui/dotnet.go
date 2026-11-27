@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/egoist/mygo/ui"
+	"golang.org/x/mod/semver"
 
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
@@ -39,14 +40,15 @@ func (a *App) dotnet(c *ui.Context, p page) {
 				switch a.dotnetTab {
 				case 0:
 					columns(c, 12, func() {
+						now := c.Now()
 						a.versionTable(c, ins, rows, active, func(in inventory.Installation) (string, bool) {
+							dl, ok := a.DotnetVersions.Line(in.Version)
+							ended := ok && dl.Ended(now)
 							if in.Tool == "dotnet-runtime" {
-								return in.Dotnet.Runtimes[0].Name, false
+								return in.Dotnet.Runtimes[0].Name, ended
 							}
-							for _, l := range a.dotnetLines() {
-								if strings.HasPrefix(in.Version, dotnetLinePrefix(l.Version)+".") {
-									return strings.ToUpper(l.Support), l.Phase == "eol"
-								}
+							if ok {
+								return strings.ToUpper(dl.Support), ended
 							}
 							return "", false
 						})
@@ -58,15 +60,15 @@ func (a *App) dotnet(c *ui.Context, p page) {
 							}
 						}
 					}, func() {
-						a.dotnetAvailable(c, st)
+						a.dotnetAvailable(c, st, ins, active)
 						a.managerCard(c, st, listed(st.Installations), inventory.TerminalCopy(st.Installations), nil)
 						a.dotnetEnvironment(c, st)
 						if i := inventory.TerminalCopy(st.Installations); i >= 0 {
-							globalsCard(c, locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
+							a.managedGlobalsCard(c, "dotnet", locales.DotnetTools(), locales.DotnetNoTools(), st.Installations[i].Packages, "dotnet tool -g")
 						}
 					})
 				case 1:
-					a.dotnetAvailable(c, st)
+					a.dotnetAvailable(c, st, ins, active)
 				case 2:
 					a.toolProjectsTab(c, "dotnet", st, projs)
 				case 3:
@@ -192,7 +194,9 @@ func (a *App) dotnetLines() []versions.DotnetLine {
 	}
 	return a.DotnetVersions.Lines
 }
-func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState) {
+func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState, ins []inventory.Installation, active int) {
+	pal := Colors(c.Theme())
+	now := c.Now()
 	listCard(c, locales.AvailableTitle(), a.availableAside(st, ""), func() {
 		if a.DotnetVersions == nil {
 			text := locales.VersionsLoading()
@@ -200,6 +204,7 @@ func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState) {
 				text = locales.VersionsFailed(a.DotnetVersionsErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "9.0.100")
 			return
 		}
 		for _, l := range a.DotnetVersions.Lines {
@@ -211,7 +216,8 @@ func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState) {
 					}
 				}
 			}
-			if l.Phase == "eol" && !needed {
+			ended := l.Ended(now)
+			if ended && !needed {
 				continue
 			}
 			caption := strings.ToUpper(l.Support)
@@ -221,12 +227,45 @@ func (a *App) dotnetAvailable(c *ui.Context, st inventory.ToolState) {
 			if l.End != "" {
 				caption += " · " + l.End
 			}
-			if l.Phase == "eol" {
+			if ended {
 				caption += " · " + locales.ChipSupportEnded()
 			}
-			listRow(c, "SDK "+l.Version, true, caption, func() { a.installButton(c, st, l.Version, "SDK "+l.Version) })
+			note, installed, update := dotnetReleaseNote(l.Version, ins, active)
+			if note != "" {
+				caption += " · " + note
+			}
+			listRow(c, "SDK "+l.Version, true, caption, func() {
+				if update {
+					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
+						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
+				}
+				if !installed {
+					a.installButton(c, st, l.Version, "SDK "+l.Version)
+				}
+			})
 		}
+		a.customVersionRow(c, st, "9.0.100")
 	})
+}
+
+func dotnetReleaseNote(v string, ins []inventory.Installation, active int) (note string, installed, update bool) {
+	prefix := dotnetLinePrefix(v) + "."
+	newest := -1
+	for i, in := range ins {
+		if in.Tool != "dotnet" || in.Version == "" {
+			continue
+		}
+		if in.Version == v {
+			return locales.NoteInstalled(), true, false
+		}
+		if strings.HasPrefix(in.Version, prefix) && (newest < 0 || semver.Compare("v"+in.Version, "v"+ins[newest].Version) > 0) {
+			newest = i
+		}
+	}
+	if newest >= 0 && semver.Compare("v"+ins[newest].Version, "v"+v) < 0 {
+		return locales.NoteUpdateFor(ins[newest].Version), false, active >= 0 && ins[active].Version == ins[newest].Version
+	}
+	return "", false, false
 }
 
 func dotnetLinePrefix(v string) string {

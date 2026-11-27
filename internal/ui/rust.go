@@ -65,7 +65,7 @@ func (a *App) rust(c *ui.Context, p page) {
 							a.rustComponents(c, st, tc)
 						}
 						if active >= 0 {
-							globalsCard(c, locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
+							a.managedGlobalsCard(c, "rust", locales.RustCargoTools(), locales.NoCargoTools(), ins[active].Packages, "cargo install")
 						}
 					})
 				case 1:

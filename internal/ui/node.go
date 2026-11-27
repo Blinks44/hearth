@@ -47,7 +47,7 @@ func (a *App) node(c *ui.Context, p page) {
 						a.availableCard(c, st, rows)
 						a.managerCard(c, st, rows, active, corepackRow)
 						if active >= 0 {
-							nodeGlobals(c, st.Installations[active])
+							a.nodeGlobals(c, st.Installations[active])
 						}
 					})
 				case 1:
@@ -104,6 +104,7 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 				text = locales.VersionsFailed(a.NodeVersionsErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "22.14.0")
 			return
 		}
 		now := c.Now()
@@ -125,6 +126,7 @@ func (a *App) availableCard(c *ui.Context, st inventory.ToolState, rows []int) {
 				a.installButton(c, st, r.Version, "v"+r.Version)
 			})
 		}
+		a.customVersionRow(c, st, "22.14.0")
 	})
 }
 
@@ -141,8 +143,8 @@ func corepackRow(c *ui.Context, in inventory.Installation) {
 
 // nodeGlobals lists the packages installed globally with the Node
 // version in use, but those that come with it.
-func nodeGlobals(c *ui.Context, in inventory.Installation) {
-	globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), userPackages(in.Packages, in.Version), "npm -g · "+versionText(in.Version))
+func (a *App) nodeGlobals(c *ui.Context, in inventory.Installation) {
+	a.managedGlobalsCard(c, "node", locales.GlobalPackages(), locales.NoGlobalPackages(), userPackages(in.Packages, in.Version), "npm -g · "+versionText(in.Version))
 }
 
 // userPackages are the global packages but those that come with Node

@@ -6,14 +6,19 @@ import "time"
 // name as the administrator, through UAC. net waits for the service to
 // get there; /y stops the services that depend on it too, which net
 // would otherwise ask about.
-func systemService(action ServiceAction, name string) (Step, bool) {
+func systemService(action ServiceAction, name string) ([]Step, bool) {
+	if action == ServiceRestart {
+		s := runAs("powershell.exe", []string{"-NoProfile", "-NonInteractive", "-Command", "Restart-Service -Name '" + name + "' -Force"})
+		s.Timeout = 2 * time.Minute
+		return []Step{s}, true
+	}
 	args := []string{"start", name}
 	if action == ServiceStop {
 		args = []string{"stop", name, "/y"}
 	}
 	s := runAs("net.exe", args)
 	s.Timeout = 2 * time.Minute
-	return s, true
+	return []Step{s}, true
 }
 
 // systemAutostart is the step that sets the Windows service name to

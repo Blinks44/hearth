@@ -126,6 +126,58 @@ func globalsCard(c *ui.Context, title, empty string, pkgs []inventory.Package, a
 	})
 }
 
+// managedGlobalsCard is globalsCard with an overflow menu for updating or
+// removing packages owned by a supported global package manager.
+func (a *App) managedGlobalsCard(c *ui.Context, tool, title, empty string, pkgs []inventory.Package, aside string) {
+	pal := Colors(c.Theme())
+	det := a.detect(tool)
+	type row struct {
+		pkg        inventory.Package
+		updatePlan ops.Plan
+		canUpdate  bool
+		removePlan ops.Plan
+		canRemove  bool
+	}
+	rows := make([]row, len(pkgs))
+	anyActions := false
+	for i, p := range pkgs {
+		up, canUp := ops.GlobalPackagePlan(ops.GlobalPkgUpdate, p, det)
+		rm, canRm := ops.GlobalPackagePlan(ops.GlobalPkgUninstall, p, det)
+		rows[i] = row{pkg: p, updatePlan: up, canUpdate: canUp, removePlan: rm, canRemove: canRm}
+		if canUp || canRm {
+			anyActions = true
+		}
+	}
+	listCard(c, title, aside, func() {
+		for i, r := range rows {
+			pkg := r.pkg
+			caption := pkg.Module
+			if len(pkg.Commands) > 0 {
+				caption = locales.PackageCommands(strings.Join(pkg.Commands, ", "))
+			}
+			listRow(c, pkg.Name, false, caption, func() {
+				ui.Text(c, pkg.Version).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				switch {
+				case r.canUpdate || r.canRemove:
+					iconButton(c.Key("pkg-menu:"+strconv.Itoa(i)+":"+pkg.Manager+":"+pkg.Name), "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+						if r.canUpdate && m.Item(locales.GlobalPkgUpdateAction()).Chosen() {
+							a.Propose(r.updatePlan)
+						}
+						if r.canRemove && m.Item(locales.RemoveEllipsis()).Chosen() {
+							a.Propose(r.removePlan)
+						}
+					})
+				case anyActions:
+					iconSpacer(c)
+				}
+			})
+		}
+		if len(pkgs) == 0 {
+			cardNote(c, empty)
+		}
+	})
+}
+
 // controlHeight is the standard height for adjacent buttons, search fields,
 // selects, and segmented tracks in toolbars, headers, and dialog footers.
 const controlHeight = 28

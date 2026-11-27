@@ -146,7 +146,7 @@ func showDockerContainer(item docker.Container, filter int, query string) bool {
 	case filter == dockerStopped && item.Active():
 		return false
 	}
-	return query == "" || strings.Contains(strings.ToLower(item.Name+" "+item.Image+" "+item.Ports), query) ||
+	return query == "" || strings.Contains(strings.ToLower(item.Name+" "+item.Image+" "+item.Ports+" "+item.Compose.Name+" "+item.Compose.Dir+" "+item.Kind), query) ||
 		item.ConflictPort() > 0 && strings.Contains(strconv.Itoa(item.ConflictPort()), query)
 }
 
@@ -384,9 +384,9 @@ func (a *App) dockerContainersView(c *ui.Context) {
 
 func dockerContainerTracks(c *ui.Context) []ui.Track {
 	if narrow(c) {
-		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(118), ui.Fixed(72), ui.Fixed(64), ui.Fixed(44), ui.Fixed(56), ui.Fixed(80)}
+		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(118), ui.Fixed(72), ui.Fixed(64), ui.Fixed(44), ui.Fixed(56), ui.Fixed(104)}
 	}
-	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(104), ui.Fixed(82), ui.Fixed(56), ui.Fixed(68), ui.Fixed(108)}
+	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(104), ui.Fixed(82), ui.Fixed(56), ui.Fixed(68), ui.Fixed(136)}
 }
 
 func sortDockerContainers(s tableSort, items []docker.Container) {
@@ -661,9 +661,14 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 	pal := Colors(t)
 	s := &a.engine.containers
 	status, bg, fg := dockerContainerStatus(c, item)
+	openURL, openPort := docker.FirstPublishedURL(item.Ports)
+	canOpenBrowser := item.State.Status == "running" && openURL != "" && !nonHTTPPorts[openPort]
 	menu := func(m *ui.Menu) {
 		if m.Item(locales.Details()).Chosen() {
 			s.selectContainer(item.ID)
+		}
+		if canOpenBrowser && m.Item(locales.PortsOpenBrowser()).Chosen() {
+			c.OpenURL(openURL)
 		}
 		if a.StreamDockerLogs != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
 			s.selectContainer(item.ID)
@@ -764,9 +769,13 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 			for _, value := range []string{uptime, item.CPU, item.Memory} {
 				clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(11.5).MinWidth(0)
 			}
-			// Variable actions (Shell) sit on the left; always-present actions
+			// Variable actions (Browser, Shell) sit on the left; always-present actions
 			// (Start/Stop, Logs, More) stay in fixed right-aligned columns.
 			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				if canOpenBrowser {
+					iconButton(c.Key("container-browser"), "external-link", locales.PortsOpenBrowser()).
+						OnClick(func() { c.OpenURL(openURL) })
+				}
 				if !narrow(c) && a.OpenDockerShell != nil && item.State.Status == "running" {
 					iconButton(c.Key("container-shell"), "terminal", locales.KubeShellAction()).
 						Disabled(s.detail.shellRequest != nil || s.err != nil).
@@ -998,8 +1007,9 @@ func (a *App) planDockerCompose(project docker.ComposeProject, action ops.Docker
 	if issue != "" {
 		return
 	}
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	a.buildDockerPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.PlanDockerCompose(context.Background(), run.Exec{}, env, target, project, action)
+		return ops.PlanDockerCompose(context.Background(), runner, env, target, project, action)
 	})
 }
 
@@ -1028,7 +1038,7 @@ func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
 	pal := Colors(t)
 	answers := a.dockerAnswers()
 	canPlan := a.canPlanDocker() && answers
-	composeCts := a.projectComposeContainers(p)
+	composeCts := a.projectAllComposeContainers(p)
 	var overrides []string
 	for _, f := range p.Files {
 		if projects.IsComposeOverride(f) {
@@ -1038,6 +1048,10 @@ func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
 	var engineLabel string
 	if st, ok := a.toolState("docker"); ok && st.Docker != nil && st.Docker.Selected != "" {
 		engineLabel = st.Docker.Selected
+	}
+	openDockerTarget := "/tools/docker"
+	if answers && engineLabel != "" && a.dockerOpenable(engineLabel) {
+		openDockerTarget = dockerEnginePath(engineLabel)
 	}
 
 	ui.Column(c.Key("project-docker-card")).Radius(12).Clip().Background(t.Background).
@@ -1052,7 +1066,7 @@ func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
 				ui.Text(c, engineLabel).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
 			}
 			link := ui.ButtonBase(c.Key("project-compose-open-docker")).Padding(4, 6).Radius(6).Label(locales.OpenInDocker()).
-				OnClick(func() { a.router.Push("/tools/docker") })
+				OnClick(func() { a.router.Push(openDockerTarget) })
 			if link.Hovered() {
 				link.Background(pal.Subtle)
 			}
@@ -1064,56 +1078,96 @@ func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
 			proj := stack
 			fileName := filepath.Base(proj.Files)
 			stackCts := composeStackContainers(composeCts, proj.Files, len(stacks) == 1 || i == 0)
+			runningCount := 0
+			for _, ct := range stackCts {
+				if ct.Status == "" || ct.Status == "running" {
+					runningCount++
+				}
+			}
 			var subParts []string
 			if i == 0 && len(overrides) > 0 && !projects.IsComposeOverride(fileName) {
 				subParts = append(subParts, "+ "+strings.Join(overrides, ", "))
 			}
-			if answers && len(stackCts) > 0 {
-				names := make([]string, 0, len(stackCts))
-				for _, ct := range stackCts {
-					if ct.Name != "" {
-						names = append(names, ct.Name)
-					}
-				}
-				if len(names) > 0 {
-					subParts = append(subParts, strings.Join(names, ", "))
-				}
-			} else if !answers {
+			if !answers {
 				subParts = append(subParts, locales.ProblemEngineDown("Docker"))
 			}
 
-			ui.Row(c.Key("project-compose-row:"+fileName)).Gap(10).Padding(9, 14).MinHeight(46).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Icon(c, Icon("container")).Size(15, 15).Shrink(0).TextColor(pal.InfoText)
-				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-					clipped(c, fileName).Font(FontMono).FontSize(13).FontWeight(500)
-					if len(subParts) > 0 {
-						clipped(c, strings.Join(subParts, " · ")).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
-					}
-				})
-				stackRunning := answers && len(stackCts) > 0
-				ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
-					if stackRunning {
-						chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ProjectRunningBadge())
-					}
-					if canPlan {
+			ui.Column(c.Key("project-compose-row:"+fileName)).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Row(c).Gap(10).Padding(9, 14).MinHeight(46).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, Icon("container")).Size(15, 15).Shrink(0).TextColor(pal.InfoText)
+					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+						clipped(c, fileName).Font(FontMono).FontSize(13).FontWeight(500)
+						if len(subParts) > 0 {
+							clipped(c, strings.Join(subParts, " · ")).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+						}
+					})
+					stackRunning := answers && runningCount > 0
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
 						if stackRunning {
-							dangerIconButton(c, "project-compose-down:"+fileName, "square", ops.DockerDown.Label()+"…", 26, func() {
-								a.planDockerCompose(proj, ops.DockerDown)
-							})
-						} else {
-							subtleSquareIconButton(c, "project-compose-up:"+fileName, "play", ops.DockerUp.Label()+"…", 26, func() {
-								a.planDockerCompose(proj, ops.DockerUp)
+							chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ProjectRunningBadge())
+						}
+						if canPlan {
+							if stackRunning {
+								dangerIconButton(c, "project-compose-down:"+fileName, "square", ops.DockerDown.Label()+"…", 26, func() {
+									a.planDockerCompose(proj, ops.DockerDown)
+								})
+							} else {
+								subtleSquareIconButton(c, "project-compose-up:"+fileName, "play", ops.DockerUp.Label()+"…", 26, func() {
+									a.planDockerCompose(proj, ops.DockerUp)
+								})
+							}
+						}
+						if a.canOpenFile() {
+							filePath := proj.Files
+							subtleSquareIconButton(c, "project-compose-file:"+fileName, "external-link", locales.OpenInEditor(), 26, func() {
+								a.openFile(c, filePath)
 							})
 						}
-					}
-					if a.canOpenFile() {
-						filePath := proj.Files
-						subtleSquareIconButton(c, "project-compose-file:"+fileName, "external-link", locales.OpenInEditor(), 26, func() {
-							a.openFile(c, filePath)
-						})
-					}
+					})
 				})
+				if answers && len(stackCts) > 0 {
+					ui.Row(c).Gap(6).Padding(0, 14, 10, 39).Wrap().Children(func() {
+						for j, container := range stackCts {
+							ct := container
+							dotColor := pal.TextFaint
+							statusLabel := ct.Status
+							switch ct.Status {
+							case "", "running":
+								dotColor = t.Success
+								statusLabel = locales.DockerContainerRunning()
+							case "restarting":
+								dotColor = t.Warning
+								statusLabel = locales.DockerContainerRestartingLabel()
+							case "paused":
+								dotColor = t.Warning
+								statusLabel = locales.DockerContainerPaused()
+							case "exited", "dead":
+								dotColor = t.Danger
+								statusLabel = locales.DockerContainerStopped()
+							case "created":
+								dotColor = pal.TextFaint
+								statusLabel = locales.DockerContainerCreated()
+							}
+							label := ct.Name
+							if label == "" {
+								label = ct.Image
+							}
+							pill := ui.ButtonBase(c.Key("compose-ct-"+strconv.Itoa(j)+"-"+label)).
+								Padding(3, 8).Radius(6).Gap(6).AlignItems(ui.Center).
+								BorderWidth(1).BorderColor(pal.Line).Label(label).
+								Tooltip(label + " · " + statusLabel).
+								OnClick(func() { a.openDockerContainer(ct.ID, ct.Name) })
+							if pill.Hovered() {
+								pill.Background(pal.Subtle).BorderColor(pal.ControlBorder)
+							}
+							pill.Children(func() {
+								ui.Box(c).Size(6, 6).Radius(3).Background(dotColor).Shrink(0)
+								clipped(c, label).Font(FontMono).FontSize(11)
+								ui.Text(c, statusLabel).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+							})
+						}
+					})
+				}
 			})
 		}
 	})

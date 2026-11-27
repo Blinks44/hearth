@@ -186,3 +186,23 @@ func TestVersionPlanVerifyJava(t *testing.T) {
 		t.Errorf("phase %d, err %q", got.Phase, got.Err)
 	}
 }
+
+func TestValidVersionSpec(t *testing.T) {
+	for _, good := range []string{"22.14.0", "3.13.1", "21", "temurin-21.0.5+11.0.LTS", "corretto-21", "9.0.100", "1.24.0"} {
+		if !ValidVersionSpec(good) {
+			t.Errorf("ValidVersionSpec(%q) = false, want true", good)
+		}
+	}
+	for _, bad := range []string{"", " ", "-rf", "22; rm -rf /", "22 14", "22\n14", "../22"} {
+		if ValidVersionSpec(bad) {
+			t.Errorf("ValidVersionSpec(%q) = true, want false", bad)
+		}
+	}
+	if _, ok := VersionPlan(VersionInstall, VersionTarget{Tool: "node", Title: "Node", Manager: "mise", Version: "22; id"}, nil); ok {
+		t.Error("VersionPlan accepted invalid version spec")
+	}
+	p, ok := VersionPlan(VersionInstall, VersionTarget{Tool: "java", Title: "Java", Manager: "mise", Version: "corretto-21"}, nil)
+	if !ok || len(p.Steps) != 1 || !slices.Equal(p.Steps[0].Argv, []string{"mise", "install", "java@corretto-21"}) {
+		t.Errorf("custom java spec got ok=%v argv=%v", ok, p.Steps)
+	}
+}
