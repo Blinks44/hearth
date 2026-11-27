@@ -165,7 +165,7 @@ func dotnetTools(home string) []inventory.Package {
 		if xml.Unmarshal(data, &settings) != nil {
 			continue
 		}
-		p := inventory.Package{Name: parts[0], Version: parts[1]}
+		p := inventory.Package{Name: parts[0], Version: parts[1], Manager: "dotnet"}
 		for _, cmd := range settings.Commands {
 			if cmd.Name != "" {
 				p.Commands = append(p.Commands, cmd.Name)

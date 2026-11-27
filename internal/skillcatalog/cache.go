@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/Blinks44/hearth/internal/run"
+	"github.com/Blinks44/hearth/internal/sysenv"
 )
 
 // DefaultTTL is how long a cached catalog response is reused before re-fetching.
@@ -36,12 +39,18 @@ type cacheEntry struct {
 }
 
 // Fetch returns cached skills when fresh (unless force is true), otherwise
-// fetches from GitHub and updates the disk cache. When a non-forced refresh
-// fails due to network or rate-limit errors, a stale cached entry is returned
-// as fallback.
+// fetches from GitHub and updates the disk cache.
 func (c *Cache) Fetch(ctx context.Context, client *http.Client, repo Repository, force bool) ([]Skill, error) {
+	return c.FetchWith(ctx, client, nil, nil, repo, force)
+}
+
+// FetchWith returns cached skills when fresh (unless force is true), otherwise
+// fetches from GitHub archive or via local git (GitLab, SSH, private repos) and
+// updates the disk cache. When a non-forced refresh fails due to network or
+// rate-limit errors, a stale cached entry is returned as fallback.
+func (c *Cache) FetchWith(ctx context.Context, client *http.Client, runner run.Runner, env sysenv.Env, repo Repository, force bool) ([]Skill, error) {
 	if c == nil || c.Dir == "" {
-		return Fetch(ctx, client, repo)
+		return FetchWith(ctx, client, runner, env, repo)
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -62,7 +71,7 @@ func (c *Cache) Fetch(ctx context.Context, client *http.Client, repo Repository,
 	if !force && ok && now().Sub(entry.Fetched) < ttl {
 		return entry.Skills, nil
 	}
-	skills, err := Fetch(ctx, client, repo)
+	skills, err := FetchWith(ctx, client, runner, env, repo)
 	if err != nil {
 		if !force && ok && ctx.Err() == nil {
 			return entry.Skills, nil

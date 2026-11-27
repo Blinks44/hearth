@@ -14,6 +14,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/skillcatalog"
+	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -381,7 +382,12 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 					s.urlErr = ""
 					a.openSkillCatalogRepo(customTabIndex(), &repo, wantSkill, false)
 				}
-				ui.Column(c).Gap(4).Children(func() {
+				customActive := s.custom != nil && s.repo == customTabIndex()
+				savedIdx := -1
+				if customActive {
+					savedIdx = a.savedSkillRepoIndex(*s.custom)
+				}
+				ui.Column(c).Gap(6).Children(func() {
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 						ui.TextInput(c.Key("catalog-url"), &s.customURL).
 							Placeholder(locales.SkillCatalogRepoPlaceholder()).
@@ -389,9 +395,64 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 							OnSubmit(loadCustom)
 						ui.Button(c.Key("catalog-load"), locales.SkillCatalogLoad()).
 							Height(controlHeight).Disabled(s.loading).OnClick(loadCustom)
+						if customActive && !s.loading && s.err == "" {
+							if savedIdx < 0 {
+								repoToSave := *s.custom
+								ui.Button(c.Key("catalog-save-source"), locales.SkillCatalogSaveSource()).
+									Height(controlHeight).OnClick(func() { a.saveSkillRepo(repoToSave) })
+							} else {
+								ui.Button(c.Key("catalog-saved-source"), locales.SkillCatalogSavedSource()).
+									Height(controlHeight).Disabled(true)
+							}
+						}
 					})
 					if s.urlErr != "" {
 						ui.Text(c, s.urlErr).FontSize(12).TextColor(pal.WarningText)
+					}
+					if len(a.SkillRepos) > 0 {
+						ui.Row(c).Gap(6).Wrap().AlignItems(ui.Center).Children(func() {
+							ui.Text(c, locales.SkillCatalogSavedLabel()).FontSize(11.5).TextColor(pal.TextFaint)
+							for i, saved := range a.SkillRepos {
+								idx := i
+								sr := saved
+								label := sr.Name
+								if label == "" {
+									label = sr.URL
+								}
+								activeSaved := customActive && savedIdx == idx
+								bg, fg, border := pal.Subtle, t.TextMuted, pal.Line
+								if activeSaved {
+									bg, fg, border = pal.AccentSoft, pal.AccentInk, pal.AccentSoft
+								}
+								ui.Row(c.Key("saved-repo:"+strconv.Itoa(idx)+":"+sr.URL)).AlignItems(ui.Center).Gap(2).
+									Padding(2, 4, 2, 8).Radius(7).Background(bg).BorderWidth(1).BorderColor(border).Children(func() {
+									btn := ui.ButtonBase(c.Key("open-saved-repo:" + strconv.Itoa(idx))).Label(label).
+										Gap(5).AlignItems(ui.Center).OnClick(func() {
+										repo, wantSkill, err := skillcatalog.ParseSource(sr.URL)
+										if err != nil {
+											s.urlErr = err.Error()
+											return
+										}
+										s.customURL = sr.URL
+										s.urlErr = ""
+										a.openSkillCatalogRepo(customTabIndex(), &repo, wantSkill, false)
+									})
+									btn.Children(func() {
+										ui.Icon(c, Icon("git-branch")).Size(12, 12).TextColor(fg)
+										ui.Text(c, label).FontSize(11.5).TextColor(fg).SingleLine()
+									})
+									rm := ui.ButtonBase(c.Key("remove-saved-repo:"+strconv.Itoa(idx))).Size(18, 18).Radius(4).Center().
+										Label(locales.SkillCatalogRemoveSource()).Tooltip(locales.SkillCatalogRemoveSource()).
+										OnClick(func() { a.removeSkillRepo(idx) })
+									if rm.Hovered() {
+										rm.Background(pal.Muted)
+									}
+									rm.Children(func() {
+										ui.Icon(c, Icon("x")).Size(11, 11).TextColor(pal.TextFaint)
+									})
+								})
+							}
+						})
 					}
 				})
 				if s.loading {
@@ -418,7 +479,7 @@ func (a *App) skillCatalogView(c *ui.Context, p page) {
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(14).Children(func() {
 						listFrame(c, func() {
-							groupTitle(c, active.Slug, "GitHub")
+							groupTitle(c, active.Slug, active.SourceLabel())
 							if len(shown) == 0 {
 								cardNote(c, locales.NothingMatches())
 							}
@@ -537,7 +598,11 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 				}
 			})
 			ui.Text(c, sk.Description).FontSize(12.5).TextColor(t.TextMuted).MaxLines(4)
-			pathChip(c, sk.Repository+" · "+sk.Dir, sk.URL())
+			copyURL := sk.URL()
+			if copyURL == "" {
+				copyURL = active.CanonicalURL()
+			}
+			pathChip(c, sk.Repository+" · "+sk.Dir, copyURL)
 		})
 		detailSection(c, locales.SkillCatalogFor())
 		// Optional scope selector when the user has registered projects.
@@ -659,9 +724,56 @@ func (a *App) catalogSkillDetail(c *ui.Context, s *skillCatalogState, active ski
 					}, a.proposeOrSay)
 				})
 			}
-			ui.Button(c.Key("catalog-github"), locales.SkillCatalogGitHub()).Height(controlHeight).OnClick(func() { c.OpenURL(sk.URL()) })
+			if openURL := sk.URL(); openURL != "" {
+				openLabel := locales.SkillCatalogGitHub()
+				if active.Provider != "" && active.Provider != "github" {
+					openLabel = locales.SkillCatalogOpenRepo()
+				}
+				ui.Button(c.Key("catalog-github"), openLabel).Height(controlHeight).OnClick(func() { c.OpenURL(openURL) })
+			}
 		})
 	})
+}
+
+func (a *App) savedSkillRepoIndex(repo skillcatalog.Repository) int {
+	wantKey := repo.Key()
+	wantURL := repo.CanonicalURL()
+	for i, saved := range a.SkillRepos {
+		if saved.URL == wantURL {
+			return i
+		}
+		if parsed, _, err := skillcatalog.ParseSource(saved.URL); err == nil && parsed.Key() == wantKey {
+			return i
+		}
+	}
+	return -1
+}
+
+func (a *App) saveSkillRepo(repo skillcatalog.Repository) {
+	if a.savedSkillRepoIndex(repo) >= 0 {
+		return
+	}
+	name := repo.Slug
+	if repo.Host != "" && repo.Host != "github.com" {
+		name = repo.Host + "/" + repo.Slug
+	}
+	a.SkillRepos = append(a.SkillRepos, store.SkillRepo{
+		Name: name,
+		URL:  repo.CanonicalURL(),
+	})
+	if a.OnSettings != nil {
+		a.OnSettings()
+	}
+}
+
+func (a *App) removeSkillRepo(idx int) {
+	if idx < 0 || idx >= len(a.SkillRepos) {
+		return
+	}
+	a.SkillRepos = slices.Delete(a.SkillRepos, idx, idx+1)
+	if a.OnSettings != nil {
+		a.OnSettings()
+	}
 }
 
 func (a *App) catalogDestinationNote(c *ui.Context, agent, project, agentDir, skillDir string) {

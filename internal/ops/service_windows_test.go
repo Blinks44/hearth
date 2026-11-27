@@ -15,6 +15,10 @@ func TestServicePlanWindows(t *testing.T) {
 	if !ok || len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Shown(), []string{"net.exe", "stop", "MSSQL$SQLEXPRESS", "/y"}) {
 		t.Errorf("plan = %+v, %v", p.Steps, ok)
 	}
+	p, ok = ServicePlan(ServiceRestart, db, nil)
+	if !ok || len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Shown(), []string{"powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "Restart-Service -Name 'MSSQL$SQLEXPRESS' -Force"}) {
+		t.Errorf("restart = %+v, %v", p.Steps, ok)
+	}
 }
 
 func TestAutostartPlanWindows(t *testing.T) {

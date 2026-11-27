@@ -348,6 +348,9 @@ func (a *App) searchIndexAt(now time.Time) []searchResult {
 	if a.ChooseFolder != nil {
 		add(searchResult{id: "action:project", group: locales.SearchActions(), title: locales.AddProjectTitle(), icon: "lucide/folder-open", open: a.ChooseFolder})
 	}
+	if a.BuildPlan != nil {
+		add(searchResult{id: "action:clone-project", group: locales.SearchActions(), title: locales.GitCloneTitle(), detail: locales.GitCloneNote(), words: "git clone repo project", icon: "lucide/git-branch", open: a.openCloneDialog})
+	}
 	add(searchResult{id: "action:versions", group: locales.SearchActions(), title: locales.SearchAvailable(), detail: locales.SearchVersions(), words: "version", icon: "lucide/download", open: func() {
 		a.search.open, a.search.query = true, ""
 		a.searchAvailable(true)

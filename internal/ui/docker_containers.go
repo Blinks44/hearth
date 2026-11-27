@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/docker"
+	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/run"
@@ -145,7 +146,7 @@ func showDockerContainer(item docker.Container, filter int, query string) bool {
 	case filter == dockerStopped && item.Active():
 		return false
 	}
-	return query == "" || strings.Contains(strings.ToLower(item.Name+" "+item.Image+" "+item.Ports), query) ||
+	return query == "" || strings.Contains(strings.ToLower(item.Name+" "+item.Image+" "+item.Ports+" "+item.Compose.Name+" "+item.Compose.Dir+" "+item.Kind), query) ||
 		item.ConflictPort() > 0 && strings.Contains(strconv.Itoa(item.ConflictPort()), query)
 }
 
@@ -229,14 +230,38 @@ func (a *App) dockerGroups(items []docker.Container, filter int, query string) [
 	return result
 }
 
-func composeProject(p projects.Project) (docker.ComposeProject, bool) {
+func composeProjects(p projects.Project) []docker.ComposeProject {
+	var primary, variants, overrides []string
 	for _, f := range p.Files {
-		switch f {
-		case "compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml":
-			return docker.ComposeProject{Dir: p.Dir, Files: filepath.Join(p.Dir, f)}, true
+		if !projects.IsComposeFile(f) {
+			continue
+		}
+		switch {
+		case projects.IsComposeOverride(f):
+			overrides = append(overrides, f)
+		case f == "compose.yaml" || f == "compose.yml" || f == "docker-compose.yaml" || f == "docker-compose.yml":
+			primary = append(primary, f)
+		default:
+			variants = append(variants, f)
 		}
 	}
-	return docker.ComposeProject{}, false
+	files := append(primary, variants...)
+	if len(files) == 0 {
+		files = overrides
+	}
+	out := make([]docker.ComposeProject, 0, len(files))
+	for _, f := range files {
+		out = append(out, docker.ComposeProject{Dir: p.Dir, Files: filepath.Join(p.Dir, f)})
+	}
+	return out
+}
+
+func composeProject(p projects.Project) (docker.ComposeProject, bool) {
+	list := composeProjects(p)
+	if len(list) == 0 {
+		return docker.ComposeProject{}, false
+	}
+	return list[0], true
 }
 
 func (s *dockerContainersState) groupOpen(g dockerGroup) bool {
@@ -359,9 +384,9 @@ func (a *App) dockerContainersView(c *ui.Context) {
 
 func dockerContainerTracks(c *ui.Context) []ui.Track {
 	if narrow(c) {
-		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(118), ui.Fixed(72), ui.Fixed(64), ui.Fixed(44), ui.Fixed(56), ui.Fixed(80)}
+		return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(118), ui.Fixed(72), ui.Fixed(64), ui.Fixed(44), ui.Fixed(56), ui.Fixed(104)}
 	}
-	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(104), ui.Fixed(82), ui.Fixed(56), ui.Fixed(68), ui.Fixed(108)}
+	return []ui.Track{ui.Fixed(18), ui.Fr(1), ui.Fixed(152), ui.Fixed(104), ui.Fixed(82), ui.Fixed(56), ui.Fixed(68), ui.Fixed(136)}
 }
 
 func sortDockerContainers(s tableSort, items []docker.Container) {
@@ -636,9 +661,14 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 	pal := Colors(t)
 	s := &a.engine.containers
 	status, bg, fg := dockerContainerStatus(c, item)
+	openURL, openPort := docker.FirstPublishedURL(item.Ports)
+	canOpenBrowser := item.State.Status == "running" && openURL != "" && !nonHTTPPorts[openPort]
 	menu := func(m *ui.Menu) {
 		if m.Item(locales.Details()).Chosen() {
 			s.selectContainer(item.ID)
+		}
+		if canOpenBrowser && m.Item(locales.PortsOpenBrowser()).Chosen() {
+			c.OpenURL(openURL)
 		}
 		if a.StreamDockerLogs != nil && m.Item(locales.KubeLogsOpen()).Chosen() {
 			s.selectContainer(item.ID)
@@ -739,9 +769,13 @@ func (a *App) dockerContainerRow(c *ui.Context, item docker.Container, tracks []
 			for _, value := range []string{uptime, item.CPU, item.Memory} {
 				clipped(c, cmp.Or(value, "—")).Font(FontMono).FontSize(11.5).MinWidth(0)
 			}
-			// Variable actions (Shell) sit on the left; always-present actions
+			// Variable actions (Browser, Shell) sit on the left; always-present actions
 			// (Start/Stop, Logs, More) stay in fixed right-aligned columns.
 			ui.Row(c).Gap(2).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+				if canOpenBrowser {
+					iconButton(c.Key("container-browser"), "external-link", locales.PortsOpenBrowser()).
+						OnClick(func() { c.OpenURL(openURL) })
+				}
 				if !narrow(c) && a.OpenDockerShell != nil && item.State.Status == "running" {
 					iconButton(c.Key("container-shell"), "terminal", locales.KubeShellAction()).
 						Disabled(s.detail.shellRequest != nil || s.err != nil).
@@ -957,10 +991,6 @@ func (a *App) dockerGroupMenu(m *ui.Menu, g dockerGroup) {
 	}
 }
 
-func (a *App) dockerComposeButton(c *ui.Context, project docker.ComposeProject, action ops.DockerAction) {
-	ui.Button(c, action.Label()+"…").Height(24).OnClick(func() { a.planDockerCompose(project, action) })
-}
-
 func (a *App) planDockerCompose(project docker.ComposeProject, action ops.DockerAction) {
 	if !a.canPlanDocker() || a.engine.containers.planning {
 		return
@@ -977,8 +1007,9 @@ func (a *App) planDockerCompose(project docker.ComposeProject, action ops.Docker
 	if issue != "" {
 		return
 	}
+	runner := cmp.Or[run.Runner](a.Runner, run.Exec{})
 	a.buildDockerPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-		return ops.PlanDockerCompose(context.Background(), run.Exec{}, env, target, project, action)
+		return ops.PlanDockerCompose(context.Background(), runner, env, target, project, action)
 	})
 }
 
@@ -999,14 +1030,169 @@ func (a *App) buildDockerPlan(build func(sysenv.Env, ops.Terminal) (ops.Plan, er
 }
 
 func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
-	project, ok := composeProject(p)
-	if !ok || !a.canPlanDocker() || !a.dockerAnswers() {
+	stacks := composeProjects(p)
+	if len(stacks) == 0 {
 		return
 	}
-	listCard(c, locales.DockerComposeTitle(), "", func() {
-		ui.Row(c).Gap(8).Padding(10, 12).Wrap().Children(func() {
-			a.dockerComposeButton(c.Key("project-compose-up"), project, ops.DockerUp)
-			a.dockerComposeButton(c.Key("project-compose-down"), project, ops.DockerDown)
+	t := c.Theme()
+	pal := Colors(t)
+	answers := a.dockerAnswers()
+	canPlan := a.canPlanDocker() && answers
+	composeCts := a.projectAllComposeContainers(p)
+	var overrides []string
+	for _, f := range p.Files {
+		if projects.IsComposeOverride(f) {
+			overrides = append(overrides, f)
+		}
+	}
+	var engineLabel string
+	if st, ok := a.toolState("docker"); ok && st.Docker != nil && st.Docker.Selected != "" {
+		engineLabel = st.Docker.Selected
+	}
+	openDockerTarget := "/tools/docker"
+	if answers && engineLabel != "" && a.dockerOpenable(engineLabel) {
+		openDockerTarget = dockerEnginePath(engineLabel)
+	}
+
+	ui.Column(c.Key("project-docker-card")).Radius(12).Clip().Background(t.Background).
+		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.DockerComposeTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
+			if len(stacks) > 1 {
+				ui.Text(c, strconv.Itoa(len(stacks))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(0)
+			}
+			if engineLabel != "" {
+				clipped(c, engineLabel).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1)
+			}
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			pageLinkAction(c, "project-compose-open-docker", locales.OpenInDocker(), func() {
+				a.router.Push(openDockerTarget)
+			})
 		})
+		for i, stack := range stacks {
+			proj := stack
+			fileName := filepath.Base(proj.Files)
+			stackCts := composeStackContainers(composeCts, proj.Files, len(stacks) == 1 || i == 0)
+			runningCount := 0
+			for _, ct := range stackCts {
+				if ct.Status == "" || ct.Status == "running" {
+					runningCount++
+				}
+			}
+			var subParts []string
+			if i == 0 && len(overrides) > 0 && !projects.IsComposeOverride(fileName) {
+				subParts = append(subParts, "+ "+strings.Join(overrides, ", "))
+			}
+			if !answers {
+				subParts = append(subParts, locales.ProblemEngineDown("Docker"))
+			}
+
+			ui.Column(c.Key("project-compose-row:"+fileName)).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Row(c).Gap(10).Padding(9, 14).MinHeight(46).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, Icon("container")).Size(15, 15).Shrink(0).TextColor(pal.InfoText)
+					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+						clipped(c, fileName).Font(FontMono).FontSize(13).FontWeight(500)
+						if len(subParts) > 0 {
+							clipped(c, strings.Join(subParts, " · ")).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+						}
+					})
+					stackRunning := answers && runningCount > 0
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+						if stackRunning {
+							chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ProjectRunningBadge())
+						}
+						if canPlan {
+							if stackRunning {
+								dangerIconButton(c, "project-compose-down:"+fileName, "square", ops.DockerDown.Label()+"…", 26, func() {
+									a.planDockerCompose(proj, ops.DockerDown)
+								})
+							} else {
+								subtleSquareIconButton(c, "project-compose-up:"+fileName, "play", ops.DockerUp.Label()+"…", 26, func() {
+									a.planDockerCompose(proj, ops.DockerUp)
+								})
+							}
+						}
+						if a.canOpenFile() {
+							filePath := proj.Files
+							subtleSquareIconButton(c, "project-compose-file:"+fileName, "external-link", locales.OpenInEditor(), 26, func() {
+								a.openFile(c, filePath)
+							})
+						}
+					})
+				})
+				if answers && len(stackCts) > 0 {
+					ui.Row(c).Gap(6).Padding(0, 14, 10, 39).Wrap().Children(func() {
+						for j, container := range stackCts {
+							ct := container
+							dotColor := pal.TextFaint
+							statusLabel := ct.Status
+							switch ct.Status {
+							case "", "running":
+								dotColor = t.Success
+								statusLabel = locales.DockerContainerRunning()
+							case "restarting":
+								dotColor = t.Warning
+								statusLabel = locales.DockerContainerRestartingLabel()
+							case "paused":
+								dotColor = t.Warning
+								statusLabel = locales.DockerContainerPaused()
+							case "exited", "dead":
+								dotColor = t.Danger
+								statusLabel = locales.DockerContainerStopped()
+							case "created":
+								dotColor = pal.TextFaint
+								statusLabel = locales.DockerContainerCreated()
+							}
+							label := ct.Name
+							if label == "" {
+								label = ct.Image
+							}
+							pill := ui.ButtonBase(c.Key("compose-ct-"+strconv.Itoa(j)+"-"+label)).
+								Padding(3, 8).Radius(6).Gap(6).AlignItems(ui.Center).
+								BorderWidth(1).BorderColor(pal.Line).Label(label).
+								Tooltip(label + " · " + statusLabel).
+								OnClick(func() { a.openDockerContainer(ct.ID, ct.Name) })
+							if pill.Hovered() {
+								pill.Background(pal.Subtle).BorderColor(pal.ControlBorder)
+							}
+							pill.Children(func() {
+								ui.Box(c).Size(6, 6).Radius(3).Background(dotColor).Shrink(0)
+								clipped(c, label).Font(FontMono).FontSize(11)
+								ui.Text(c, statusLabel).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+							})
+						}
+					})
+				}
+			})
+		}
 	})
+}
+
+func composeStackContainers(cts []inventory.DockerPortContainer, stackFile string, isDefault bool) []inventory.DockerPortContainer {
+	if len(cts) == 0 {
+		return nil
+	}
+	wantPath := filepath.ToSlash(filepath.Clean(stackFile))
+	wantBase := filepath.Base(wantPath)
+	var out []inventory.DockerPortContainer
+	for _, ct := range cts {
+		if ct.ComposeFiles == "" {
+			if isDefault {
+				out = append(out, ct)
+			}
+			continue
+		}
+		for part := range strings.SplitSeq(ct.ComposeFiles, ",") {
+			trimmed := strings.TrimSpace(part)
+			if trimmed == "" {
+				continue
+			}
+			p := filepath.ToSlash(filepath.Clean(trimmed))
+			if p == wantPath || filepath.Base(p) == wantBase {
+				out = append(out, ct)
+				break
+			}
+		}
+	}
+	return out
 }

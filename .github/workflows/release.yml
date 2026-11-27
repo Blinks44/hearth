@@ -85,11 +85,12 @@ jobs:
         include:
           - name: macOS
             os: macos-latest
-            platform: "darwin/universal"
+            platform: "darwin/arm64,darwin/amd64"
             attest_paths: |
-              build/darwin-universal/*.dmg
-              build/darwin-universal/*.tar.gz
-              build/darwin-universal/install.sh
+              build/darwin-arm64/*.dmg
+              build/darwin-amd64/*.dmg
+              build/darwin-*/*.tar.gz
+              build/darwin-arm64/install.sh
           - name: Windows
             os: ubuntu-latest
             platform: "windows/amd64,windows/arm64"
@@ -125,6 +126,10 @@ jobs:
             exit 1
           fi
           go tool mygo build -platform "${{ matrix.platform }}"
+          if [ "${{ matrix.name }}" = "macOS" ]; then
+            # Keep signed universal updater payload (no DMG) so older universal installs keep auto-updating.
+            go tool mygo build -platform darwin/universal -skip-dmg
+          fi
           mkdir -p dist
           shopt -s nullglob
           for f in build/*/*.dmg build/*/*-setup-*.exe build/*/*.deb build/*/*.rpm build/*/*.tar.gz build/*/*.delta build/*/update-*.json build/*/install.sh build/*/install.ps1; do

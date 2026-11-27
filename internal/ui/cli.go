@@ -31,6 +31,7 @@ var cliGroups = []struct {
 }{
 	{locales.CliGroupClouds, []string{"aws", "gcloud", "az"}},
 	{locales.CliGroupInfra, []string{"terraform", "tofu"}},
+	{locales.CliGroupUtils, []string{"jq", "ripgrep", "fzf", "fd", "bat", "just", "direnv", "k9s"}},
 }
 
 // cloudCommands are the cloud provider CLIs shown in the Clouds group.
@@ -42,11 +43,13 @@ var cliProducts = map[string]string{
 	"kubectl": "Kubernetes", "helm": "Helm", "kind": "kind",
 	"aws": "AWS CLI", "gcloud": "Google Cloud CLI", "az": "Azure CLI",
 	"terraform": "Terraform", "tofu": "OpenTofu",
+	"jq": "jq", "ripgrep": "ripgrep", "fzf": "fzf", "fd": "fd",
+	"bat": "bat", "just": "just", "direnv": "direnv", "k9s": "k9s",
 }
 
 // cliTabs are the page's tabs after All: the groups by cliGroups' index,
 // then mise's (-1).
-var cliTabs = []int{0, 1, -1}
+var cliTabs = []int{0, 1, 2, -1}
 
 // cloudAuthEntry stores an in-memory on-demand provider auth check result.
 type cloudAuthEntry struct {
@@ -264,6 +267,7 @@ func (a *App) cliView(c *ui.Context, p page) {
 	cli := a.cliState()
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			a.refreshScanButton(c, "cli-refresh")
 			a.cliInstallMenu(c, cli)
 		}})
 		a.cloudSwitchView(c)
@@ -743,9 +747,17 @@ func (a *App) cliInfraCard(c *ui.Context, reqs []cliInfraReq) {
 			req := r
 			ui.Row(c.Key("infra-req:"+strconv.Itoa(i)+":"+req.projectDir+":"+req.tool)).Gap(8).MinHeight(46).Padding(8, 12, 8, 14).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
-				ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-					clipped(c, title).FontSize(13).FontWeight(500)
-					clipped(c, caption).FontSize(11.5).TextColor(captionColor)
+				link := ui.ButtonBase(c.Key("infra-proj:"+strconv.Itoa(i))).Grow(1).MinWidth(0).Radius(6).Padding(2, 4).
+					Justify(ui.Start).Label(title).Tooltip(tilde(req.projectDir, a.Home)).
+					OnClick(func() { a.router.Push(projectPath(req.projectDir)) })
+				if link.Hovered() {
+					link.Background(pal.Subtle)
+				}
+				link.Children(func() {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+						clipped(c, title).FontSize(13).FontWeight(500).TextColor(pal.AccentInk)
+						clipped(c, caption).FontSize(11.5).TextColor(captionColor)
+					})
 				})
 				if !req.met && req.err == "" && a.BuildPlan != nil {
 					spec := ops.MiseSpecForConstraint(req.want)
@@ -944,13 +956,17 @@ func (a *App) cliRowWithReqs(c *ui.Context, cli inventory.CliState, cmd string, 
 	}
 	cliTableRowColored(c, cmd, strings.Join(parts, " · "), aboutColor, version, func() {
 		if !found {
-			a.installToolButton(c, cmd)
+			if a.canInstallTool(cmd) {
+				a.installToolIconButton(c, cmd)
+			} else {
+				iconSpacer(c)
+			}
 			return
 		}
-		if m, pkg, ok := a.copyPackage(in); ok {
-			if a.packageCan(m, pkg) {
-				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
-			}
+		if m, pkg, ok := a.copyPackage(in); ok && a.packageCan(m, pkg) {
+			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
+		} else {
+			iconSpacer(c)
 		}
 	})
 }
@@ -1007,5 +1023,69 @@ func (a *App) miseToolRow(c *ui.Context, mt inventory.MiseTool) {
 		}
 		parts = append(parts, locales.CliMoreVersions(n, strings.Join(others, ", ")))
 	}
-	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version, nil)
+	target := ops.VersionTarget{
+		Tool:    mt.Name,
+		Title:   mt.Name,
+		Manager: "mise",
+		Version: cmp.Or(in.Source.Version, in.Version),
+		Label:   in.Version,
+		Root:    in.Source.Root,
+	}
+	detectFn := a.detectMiseTool(mt.Name)
+	var upgradePlan ops.Plan
+	var upgradeVersion string
+	var canUpgrade bool
+	if out, ok := a.miseOutdated(mt.Name); ok {
+		if out.InRange != "" && out.InRange != in.Version {
+			upgradeVersion = out.InRange
+			upgradePlan, canUpgrade = ops.VersionUpdatePlan(ops.VersionUpdate{
+				From: target,
+				To:   ops.VersionTarget{Version: out.InRange},
+				Mise: mt.Name,
+			}, detectFn)
+		} else if out.Latest != "" && out.Latest != in.Version {
+			upgradeVersion = out.Latest
+			upgradePlan, canUpgrade = ops.VersionPlan(ops.VersionInstall, ops.VersionTarget{
+				Tool:    mt.Name,
+				Title:   mt.Name,
+				Manager: "mise",
+				Version: out.Latest,
+			}, detectFn)
+		}
+	}
+	defPlan, canDefault := ops.VersionPlan(ops.VersionDefault, target, detectFn)
+	if in.Default {
+		canDefault = false
+	}
+	removePlan, canRemove := ops.VersionPlan(ops.VersionUninstall, target, detectFn)
+	hasActions := canUpgrade || canDefault || canRemove || in.Path != ""
+	var actions func()
+	if hasActions {
+		actions = func() {
+			iconButton(c.Key("mise-menu"), "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+				if canUpgrade && m.Item(locales.PkgUpgradeTo(upgradeVersion)).Chosen() {
+					a.Propose(upgradePlan)
+				}
+				if canDefault && m.Item(locales.MakeDefault()).Chosen() {
+					a.Propose(defPlan)
+				}
+				if canRemove && m.Item(locales.RemoveEllipsis()).Chosen() {
+					a.Propose(removePlan)
+				}
+				if in.Path != "" {
+					if canUpgrade || canDefault || canRemove {
+						m.Separator()
+					}
+					if m.Item(locales.CopyPath()).Chosen() {
+						c.WriteClipboard(in.Path)
+						c.Toast(locales.PathCopied())
+					}
+					if a.Shell != nil && m.Item(showInFolder()).Chosen() {
+						a.Shell.ShowItemInFolder(in.Path)
+					}
+				}
+			})
+		}
+	}
+	cliTableRow(c, mt.Name, strings.Join(parts, " · "), in.Version, actions)
 }

@@ -126,9 +126,65 @@ func globalsCard(c *ui.Context, title, empty string, pkgs []inventory.Package, a
 	})
 }
 
+// managedGlobalsCard is globalsCard with an overflow menu for updating or
+// removing packages owned by a supported global package manager.
+func (a *App) managedGlobalsCard(c *ui.Context, tool, title, empty string, pkgs []inventory.Package, aside string) {
+	pal := Colors(c.Theme())
+	det := a.detect(tool)
+	type row struct {
+		pkg        inventory.Package
+		updatePlan ops.Plan
+		canUpdate  bool
+		removePlan ops.Plan
+		canRemove  bool
+	}
+	rows := make([]row, len(pkgs))
+	anyActions := false
+	for i, p := range pkgs {
+		up, canUp := ops.GlobalPackagePlan(ops.GlobalPkgUpdate, p, det)
+		rm, canRm := ops.GlobalPackagePlan(ops.GlobalPkgUninstall, p, det)
+		rows[i] = row{pkg: p, updatePlan: up, canUpdate: canUp, removePlan: rm, canRemove: canRm}
+		if canUp || canRm {
+			anyActions = true
+		}
+	}
+	listCard(c, title, aside, func() {
+		for i, r := range rows {
+			pkg := r.pkg
+			caption := pkg.Module
+			if len(pkg.Commands) > 0 {
+				caption = locales.PackageCommands(strings.Join(pkg.Commands, ", "))
+			}
+			listRow(c, pkg.Name, false, caption, func() {
+				ui.Text(c, pkg.Version).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				switch {
+				case r.canUpdate || r.canRemove:
+					iconButton(c.Key("pkg-menu:"+strconv.Itoa(i)+":"+pkg.Manager+":"+pkg.Name), "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {
+						if r.canUpdate && m.Item(locales.GlobalPkgUpdateAction()).Chosen() {
+							a.Propose(r.updatePlan)
+						}
+						if r.canRemove && m.Item(locales.RemoveEllipsis()).Chosen() {
+							a.Propose(r.removePlan)
+						}
+					})
+				case anyActions:
+					iconSpacer(c)
+				}
+			})
+		}
+		if len(pkgs) == 0 {
+			cardNote(c, empty)
+		}
+	})
+}
+
 // controlHeight is the standard height for adjacent buttons, search fields,
 // selects, and segmented tracks in toolbars, headers, and dialog footers.
 const controlHeight = 28
+
+// rowControlHeight is the height for compact action buttons inside table/list
+// rows so they align cleanly with adjacent 24x24 iconButtons.
+const rowControlHeight = 24
 
 // stateCard is one of the header's cards: a dot and a label, a value and
 // a caption.
@@ -748,7 +804,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				}
 				entry := ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center)
 				color, tag, tagBg, tagText := t.TextMuted, locales.TagShadowed(), pal.Muted, t.TextMuted
-				if n == 0 {
+				if n == 0 || i == active {
 					entry.Background(t.Background)
 					color, tag, tagBg, tagText = t.Text, locales.TagUsed(), pal.SuccessSoft, pal.SuccessText
 				}
@@ -771,7 +827,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 		if active >= 0 && inventory.GUICopy(ins) < 0 {
 			toolNote(c, locales.GuiNotFound(command))
 		}
-		for _, warning := range []string{guiWarning(ins, active), shadowWarning(ins, entries, home), stubWarning(ins, entries, home)} {
+		for _, warning := range []string{guiWarning(ins, active), shadowWarning(ins, entries, active, home), stubWarning(ins, entries, home)} {
 			if warning == "" {
 				continue
 			}
@@ -792,6 +848,25 @@ func warningWith(c *ui.Context, text string, action func()) {
 	ui.Row(c).Gap(10).Padding(10, 10, 10, 12).Radius(9).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
 		ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
 		ui.Text(c, text).FontSize(12).TextColor(pal.WarningText).Grow(1).MinWidth(0)
+		if action != nil {
+			action()
+		}
+	})
+}
+
+// warningBanner is a two-line warning banner with a semibold title, concise
+// metadata underneath, and an optional trailing action.
+func warningBanner(c *ui.Context, title, meta string, action func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c).Gap(12).Padding(11, 14).Radius(10).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
+		ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(t.Warning)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			ui.Text(c, title).FontSize(12.5).FontWeight(600).TextColor(pal.WarningText)
+			if meta != "" {
+				ui.Text(c, meta).FontSize(11.5).TextColor(pal.WarningText.Alpha(0.78))
+			}
+		})
 		if action != nil {
 			action()
 		}
@@ -829,15 +904,16 @@ func guiWarning(ins []inventory.Installation, active int) string {
 
 // shadowWarning tells of a copy in the terminal's PATH, entries in its
 // order, that lies unused behind the first; "" for none. A shim first
-// stands for its manager's copies, which are not unused.
-func shadowWarning(ins []inventory.Installation, entries []int, home string) string {
+// stands for its manager's copies, or delegates to active in system mode,
+// neither of which is unused.
+func shadowWarning(ins []inventory.Installation, entries []int, active int, home string) string {
 	if len(entries) < 2 {
 		return ""
 	}
 	first := ins[entries[0]]
 	for _, i := range entries[1:] {
 		in := ins[i]
-		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || first.Source.Shim && in.Source.Manager == first.Source.Manager {
+		if i == active || in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || first.Source.Shim && in.Source.Manager == first.Source.Manager {
 			continue
 		}
 		return locales.CopyShadowed(sourceName(in.Source), copyVersion(in), tilde(filepath.Dir(first.Path), home))

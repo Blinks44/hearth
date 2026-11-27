@@ -46,8 +46,8 @@ func TestBunScriptAndNpm(t *testing.T) {
 	r.Stdout("1.2.5\n", script, "--version")
 
 	globals := []inventory.Package{
-		{Name: "@biomejs/biome", Version: "1.9.4"},
-		{Name: "vercel", Version: "41.4.1", Commands: []string{"vercel"}},
+		{Name: "@biomejs/biome", Version: "1.9.4", Manager: "bun"},
+		{Name: "vercel", Version: "41.4.1", Manager: "bun", Commands: []string{"vercel"}},
 	}
 	got, err := Bun(t.Context(), r, term, sysenv.Env{"PATH="})
 	if err != nil {

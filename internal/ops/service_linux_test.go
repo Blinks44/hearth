@@ -13,6 +13,10 @@ func TestServicePlanSystemd(t *testing.T) {
 	if !ok || len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Argv, []string{"systemctl", "stop", "postgresql@16-main.service"}) {
 		t.Errorf("plan = %+v, %v", p.Steps, ok)
 	}
+	p, ok = ServicePlan(ServiceRestart, db, nil)
+	if !ok || len(p.Steps) != 1 || !p.Steps[0].Admin || !slices.Equal(p.Steps[0].Argv, []string{"systemctl", "restart", "postgresql@16-main.service"}) {
+		t.Errorf("restart = %+v, %v", p.Steps, ok)
+	}
 }
 
 // A Debian cluster starts with the system through postgresql.service.

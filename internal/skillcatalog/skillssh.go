@@ -91,13 +91,13 @@ func searchSkillsShAt(ctx context.Context, client *http.Client, endpoint, query 
 	return out, nil
 }
 
-// ParseSource parses a GitHub URL, owner/repo, skills.sh URL, or
-// "npx skills add <source> [--skill <name>]" command. It returns the
-// GitHub repository and an optional skill name/slug to preselect.
+// ParseSource parses a GitHub/GitLab/Git repository URL, owner/repo, skills.sh
+// URL, or "npx skills add <source> [--skill <name>]" command. It returns the
+// repository and an optional skill name/slug to preselect.
 func ParseSource(raw string) (Repository, string, error) {
 	s := strings.TrimSpace(raw)
 	if s == "" {
-		return Repository{}, "", errors.New("enter a GitHub URL, skills.sh URL, or npx skills add command")
+		return Repository{}, "", errors.New("enter a GitHub, GitLab, SSH, skills.sh URL, or npx skills add command")
 	}
 	if repo, skill, matched, err := parseSkillsCLI(s); matched {
 		return repo, skill, err
@@ -105,7 +105,7 @@ func ParseSource(raw string) (Repository, string, error) {
 	if repo, skill, matched, err := parseSkillsShURL(s); matched {
 		return repo, skill, err
 	}
-	repo, err := ParseGitHubURL(s)
+	repo, err := ParseRepoURL(s)
 	return repo, "", err
 }
 
@@ -189,7 +189,7 @@ func parseSkillsCLI(raw string) (Repository, string, bool, error) {
 		}
 		return repo, skill, true, nil
 	}
-	repo, err := ParseGitHubURL(source)
+	repo, err := ParseRepoURL(source)
 	if err != nil {
 		return Repository{}, "", true, err
 	}

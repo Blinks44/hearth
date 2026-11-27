@@ -57,15 +57,9 @@ func PathProblems(entries []inventory.PathEntry) []PathProblem {
 	return out
 }
 
-// SystemRepeat reports that the system declares e and adds it again:
-// macOS's path_helper, from /etc/paths or /etc/paths.d, after a startup
-// file put it first, as Homebrew's brew shellenv does, and Ubuntu's
-// profile.d, for the /snap/bin of /etc/environment. The later entry is
-// never used, harmless.
+// SystemRepeat reports that the system declares e and adds it again.
 func SystemRepeat(e inventory.PathEntry) bool {
-	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool {
-		return s.File == "/etc/paths" || s.File == "/etc/environment" || strings.HasPrefix(s.File, "/etc/paths.d/")
-	})
+	return issues.SystemRepeat(e)
 }
 
 // wanted returns the problems of entries among dirs; all of them when

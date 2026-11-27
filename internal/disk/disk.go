@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -80,18 +81,37 @@ func Measure(ctx context.Context, root string) (inventory.Usage, error) {
 	return u, nil
 }
 
+// CountOptions configures disk measurement, including extra home exclusions and
+// tracked project directories that may live outside home.
+type CountOptions struct {
+	Exclude  []string
+	Projects []string
+}
+
+const (
+	measureWorkers  = 4
+	publishInterval = 150 * time.Millisecond
+)
+
 // Count publishes independent snapshots as caches, Docker, tools and project
 // dependencies are counted. Docker usage runs concurrently with cache walks so
 // slow filesystem caches never delay the Docker page. Project discovery runs
 // last, so a home-directory walk never delays cleanup results. Cancellation
 // prevents further progress and returns the partial result.
 func Count(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs []string, progress func(inventory.Sizes)) (inventory.Sizes, error) {
-	return CountWithExclude(ctx, r, env, snap, installs, nil, progress)
+	return CountWithOptions(ctx, r, env, snap, installs, CountOptions{}, progress)
 }
 
 // CountWithExclude is Count with extra directories skipped when scanning home
 // for project dependency folders.
 func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs, exclude []string, progress func(inventory.Sizes)) (inventory.Sizes, error) {
+	return CountWithOptions(ctx, r, env, snap, installs, CountOptions{Exclude: exclude}, progress)
+}
+
+// CountWithOptions is Count with exclusions and tracked project directories
+// (including projects outside home). Path measurements run in a bounded worker
+// pool and progress callbacks are throttled between phase boundaries.
+func CountWithOptions(ctx context.Context, r run.Runner, env sysenv.Env, snap *inventory.Snapshot, installs []string, opts CountOptions, progress func(inventory.Sizes)) (inventory.Sizes, error) {
 	var mu, progressMu sync.Mutex
 	s := inventory.Sizes{Paths: map[string]inventory.Usage{}, Caches: activeCaches(ctx, r, env, snap)}
 	cloneLocked := func() inventory.Sizes {
@@ -101,7 +121,9 @@ func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *i
 		next.Installs = slices.Clone(s.Installs)
 		return next
 	}
-	publish := func() {
+	var lastPublish time.Time
+	var dirty bool
+	publishNow := func() {
 		if ctx.Err() != nil || progress == nil {
 			return
 		}
@@ -112,10 +134,53 @@ func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *i
 		}
 		mu.Lock()
 		next := cloneLocked()
+		dirty = false
 		mu.Unlock()
+		lastPublish = time.Now()
 		progress(next)
 	}
-	publish()
+	publishThrottled := func() {
+		if ctx.Err() != nil || progress == nil {
+			return
+		}
+		progressMu.Lock()
+		defer progressMu.Unlock()
+		if ctx.Err() != nil {
+			return
+		}
+		mu.Lock()
+		dirty = true
+		if !lastPublish.IsZero() && time.Since(lastPublish) < publishInterval {
+			mu.Unlock()
+			return
+		}
+		next := cloneLocked()
+		dirty = false
+		mu.Unlock()
+		lastPublish = time.Now()
+		progress(next)
+	}
+	publishFlush := func() {
+		if ctx.Err() != nil || progress == nil {
+			return
+		}
+		progressMu.Lock()
+		defer progressMu.Unlock()
+		if ctx.Err() != nil {
+			return
+		}
+		mu.Lock()
+		if !dirty {
+			mu.Unlock()
+			return
+		}
+		next := cloneLocked()
+		dirty = false
+		mu.Unlock()
+		lastPublish = time.Now()
+		progress(next)
+	}
+	publishNow()
 
 	var dockerWG sync.WaitGroup
 	dockerWG.Go(func() {
@@ -134,48 +199,80 @@ func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *i
 		}
 		mu.Unlock()
 		if changed {
-			publish()
+			publishNow()
 		}
 	})
 	defer dockerWG.Wait()
 
 	seen := map[string]bool{}
-	measure := func(path string) {
-		if seen[path] || ctx.Err() != nil {
+	measureBatch := func(paths []string) {
+		if ctx.Err() != nil {
 			return
 		}
-		seen[path] = true
-		u, err := Measure(ctx, path)
-		if err == nil {
-			mu.Lock()
-			s.Paths[path] = u
-			mu.Unlock()
+		todo := make([]string, 0, len(paths))
+		for _, p := range paths {
+			if p == "" || seen[p] {
+				continue
+			}
+			seen[p] = true
+			todo = append(todo, p)
 		}
-		publish()
+		if len(todo) == 0 {
+			return
+		}
+		var idx atomic.Int64
+		var wg sync.WaitGroup
+		for range min(measureWorkers, len(todo)) {
+			wg.Go(func() {
+				for {
+					if ctx.Err() != nil {
+						return
+					}
+					i := int(idx.Add(1) - 1)
+					if i >= len(todo) {
+						return
+					}
+					path := todo[i]
+					u, err := Measure(ctx, path)
+					if err == nil {
+						mu.Lock()
+						s.Paths[path] = u
+						mu.Unlock()
+						publishThrottled()
+					}
+				}
+			})
+		}
+		wg.Wait()
+		publishFlush()
 	}
+
+	var cachePaths []string
 	for _, cache := range s.Caches {
-		for _, path := range cache.AllPaths() {
-			measure(path)
-		}
+		cachePaths = append(cachePaths, cache.AllPaths()...)
 	}
+	measureBatch(cachePaths)
 	if ctx.Err() != nil {
 		dockerWG.Wait()
 		mu.Lock()
 		defer mu.Unlock()
 		return cloneLocked(), ctx.Err()
 	}
-	for _, path := range append(slices.Clone(installs), Targets(snap, nil)...) {
-		measure(path)
-	}
+
+	measureBatch(append(slices.Clone(installs), Targets(snap, nil)...))
 	if ctx.Err() != nil {
 		dockerWG.Wait()
 		mu.Lock()
 		defer mu.Unlock()
 		return cloneLocked(), ctx.Err()
 	}
+
 	home := sources.ManagerDirs(env).Home
-	if home != "" {
-		foundInstalls, err := projects.InstallsWithExclude(ctx, home, exclude)
+	if home != "" || len(opts.Projects) > 0 {
+		foundInstalls, err := projects.InstallsWithOptions(ctx, home, projects.InstallsOptions{
+			Exclude:       opts.Exclude,
+			ExtraProjects: opts.Projects,
+		})
 		if err != nil {
 			dockerWG.Wait()
 			mu.Lock()
@@ -185,10 +282,12 @@ func CountWithExclude(ctx context.Context, r run.Runner, env sysenv.Env, snap *i
 		mu.Lock()
 		s.Installs = foundInstalls
 		mu.Unlock()
-		publish()
+		publishNow()
+		installPaths := make([]string, 0, len(foundInstalls))
 		for _, in := range foundInstalls {
-			measure(filepath.Join(in.Project, in.Name))
+			installPaths = append(installPaths, filepath.Join(in.Project, in.Name))
 		}
+		measureBatch(installPaths)
 	}
 	dockerWG.Wait()
 	mu.Lock()

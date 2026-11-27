@@ -176,7 +176,7 @@ func (a *App) editorsView(c *ui.Context, p page) {
 					})
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
-						ui.Text(c, locales.EditorsLead()).FontSize(12).TextColor(t.TextMuted)
+						ui.Text(c, locales.EditorsLead()).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
 					})
 				}, func() {
 					stateCard(c, pal.TextFaint, locales.EditorsFound(), strconv.Itoa(len(eds)), locales.EditorsFoundCaption())
@@ -202,7 +202,7 @@ func (a *App) editorsView(c *ui.Context, p page) {
 						{locales.EditorsCommands(), strconv.Itoa(len(eds))},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
+					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.EditorsFilterPlaceholder()).Height(controlHeight).Width(264)
 				})
 				columns(c, 12, func() {
 					switch {
@@ -231,14 +231,24 @@ func (a *App) editorsView(c *ui.Context, p page) {
 }
 
 // editorsTable is an editor's group each, its rows of the chosen tab,
-// filtered by the editor's name.
+// filtered by the editor's name, command, or installed extension IDs.
 func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 	pal := Colors(c.Theme())
-	filter := strings.ToLower(a.editorsFilter)
+	filter := strings.ToLower(strings.TrimSpace(a.editorsFilter))
+	cands := a.candidates(c)
 	shown := 0
 	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		for _, e := range eds {
-			if !strings.Contains(strings.ToLower(e.Name+" "+e.Command), filter) {
+			editorMatch := filter == "" || strings.Contains(strings.ToLower(e.Name+" "+e.Command), filter)
+			var extMatches []string
+			if filter != "" {
+				for _, id := range e.Installed {
+					if strings.Contains(strings.ToLower(id), filter) {
+						extMatches = append(extMatches, id)
+					}
+				}
+			}
+			if !editorMatch && len(extMatches) == 0 {
 				continue
 			}
 			rows := slices.DeleteFunc(a.editorRows(e, eds), func(r editorRow) bool {
@@ -279,7 +289,22 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 				} else if len(r.paths) > 0 {
 					expandKey = "old:" + e.ID
 				}
-				expanded := expandKey != "" && a.editorsExpanded[expandKey]
+				autoExpand := len(r.installed) > 0 && !editorMatch && len(extMatches) > 0
+				expanded := autoExpand || (expandKey != "" && a.editorsExpanded[expandKey])
+				var cleanCand *cleanup.Candidate
+				if a.BuildPlan != nil {
+					for i := range cands {
+						cd := cands[i]
+						if len(r.paths) > 0 && cd.Kind == cleanup.OldExtensions && slices.Equal(cd.Paths, r.paths) && ops.Cleans(cd, a.Snapshot) {
+							cleanCand = &cands[i]
+							break
+						}
+						if r.path != "" && r.path == e.Caches && cd.Kind == cleanup.Cache && len(cd.Paths) == 1 && cd.Paths[0] == r.path && ops.Cleans(cd, a.Snapshot) {
+							cleanCand = &cands[i]
+							break
+						}
+					}
+				}
 				ui.Row(c.Key(rowKey)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 						clipped(c, r.name).FontSize(13)
@@ -289,7 +314,17 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 						ed := *r.addPath
 						ui.Button(c.Key("add-path:"+e.ID), locales.EditorsAddToPath()).Shrink(0).OnClick(func() { a.addEditorToPath(ed) })
 					} else {
-						if expandKey != "" {
+						if cleanCand != nil {
+							cand := *cleanCand
+							title := a.candidateTitle(cand)
+							ui.Button(c.Key("clean:"+rowKey), locales.RemoveEllipsis()).Height(rowControlHeight).Shrink(0).OnClick(func() {
+								snap, target := a.Snapshot, a.dockerTarget()
+								a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
+									return ops.CleanupPlan([]cleanup.Candidate{cand}, []string{title}, snap, env, target, nil)
+								}, a.proposeOrSay)
+							})
+						}
+						if expandKey != "" && !autoExpand {
 							k := expandKey
 							icon, label := "chevron-down", locales.EditorsShowList()
 							if expanded {
@@ -308,6 +343,9 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 				})
 				if expanded && len(r.installed) > 0 {
 					list := slices.Clone(r.installed)
+					if !editorMatch && len(extMatches) > 0 {
+						list = extMatches
+					}
 					ui.Column(c.Key("ext-list:"+e.ID)).Gap(6).Padding(8, 16, 10, 28).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 						ui.Row(c).AlignItems(ui.Center).Gap(8).Children(func() {
 							ui.Text(c, r.name).FontSize(11).TextColor(pal.TextFaint).Grow(1)

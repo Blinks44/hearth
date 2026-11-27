@@ -74,7 +74,7 @@ func TestCleanupPage(t *testing.T) {
 		"nvm", "nvm is not set up in the shell · 2 versions of Node.js inside · no project asks for it", "1.0 GB",
 		"DOCKER", "Build Cache", "docker builder prune · rebuilt when needed", "Images without containers", "4 images · pulled again when needed",
 		"Stopped containers", "6 containers · not running",
-		"PROJECT DEPENDENCIES", "old-landing: node_modules",
+		"PROJECT DEPENDENCIES", "old-landing", "node_modules",
 		"Found", "22.1 GB", "9 candidates", "Selected", "18.1 GB", "5 candidates", "5 min ago",
 		"Docker volumes", "come back by themselves · 17.2 GB")
 	if tt.HasText("Local Volumes") {
@@ -347,4 +347,165 @@ func TestCleanupMultiPathAndOptInWorktrees(t *testing.T) {
 	if len(sh.revealed) != 1 || sh.revealed[0] != p2 {
 		t.Fatalf("revealed = %q, want [%q]", sh.revealed, p2)
 	}
+}
+
+func TestCleanup2BreakdownAgeSortAndGrouping(t *testing.T) {
+	a := NewApp()
+	a.Home = home
+	a.Snapshot = calmSnapshot()
+	now := time.Now()
+	fresh := now.AddDate(0, 0, -5)
+	mid := now.AddDate(0, -2, 0) // ~60d (>30d, <90d)
+	old := now.AddDate(0, -7, 0) // ~210d (>180d)
+
+	webDir := home + "/dev/web-app"
+	monoDir := home + "/dev/moduix"
+	monoSolid := filepath.Join(monoDir, "packages", "solid")
+	monoVue := filepath.Join(monoDir, "packages", "vue")
+	apiDir := home + "/dev/api-svc"
+	legacyDir := home + "/dev/legacy"
+
+	a.Sizes = &inventory.Sizes{
+		Taken: now.Add(-2 * time.Minute),
+		Paths: map[string]inventory.Usage{
+			home + "/.bun/install/cache":             {Bytes: 2_000_000_000},
+			filepath.Join(webDir, "node_modules"):    {Bytes: 900_000_000},
+			filepath.Join(webDir, ".next"):           {Bytes: 400_000_000},
+			filepath.Join(monoSolid, "node_modules"): {Bytes: 500_000_000},
+			filepath.Join(monoSolid, "dist"):         {Bytes: 100_000_000},
+			filepath.Join(monoVue, "node_modules"):   {Bytes: 400_000_000},
+			filepath.Join(apiDir, "target"):          {Bytes: 600_000_000},
+			filepath.Join(legacyDir, "node_modules"): {Bytes: 300_000_000},
+		},
+		Caches: []inventory.Cache{
+			{ID: "bun", Path: home + "/.bun/install/cache"},
+		},
+		Installs: []inventory.ProjectInstall{
+			{Project: webDir, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: fresh},
+			{Project: webDir, Name: ".next", Role: inventory.InstallRoleBuild, Changed: fresh},
+			{Project: monoSolid, Root: monoDir, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: fresh},
+			{Project: monoSolid, Root: monoDir, Name: "dist", Role: inventory.InstallRoleBuild, Changed: fresh},
+			{Project: monoVue, Root: monoDir, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: fresh},
+			{Project: apiDir, Name: "target", Role: inventory.InstallRoleBuild, Changed: mid},
+			{Project: legacyDir, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: old},
+		},
+	}
+
+	a.router.Push(cleanupPage)
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+
+	// Stacked breakdown bar legend shows Caches (2.0 GB), Dependencies (2.1 GB), Build (1.1 GB).
+	hasTexts(t, tt,
+		"Caches", "2.0 GB",
+		"Dependencies", "2.1 GB",
+		"Build", "1.1 GB",
+		// 2-folder project starts expanded with folder count badge.
+		"web-app", "1.3 GB", locales.EditorsFolders(2), "node_modules", ".next",
+		locales.CleanupLastActive(fresh),
+		// 3-folder monorepo renders one parent header with folder count badge.
+		"moduix", "1.0 GB", locales.EditorsFolders(3),
+		// Single-folder projects also render with a uniform project header + indented folder row.
+		"api-svc", "target", locales.CleanupLastActive(mid),
+		"legacy",
+		// Age filter and sort controls.
+		locales.CleanupAgeAll(), locales.CleanupAge30(), locales.CleanupAge90(), locales.CleanupAge180(),
+		locales.CleanupSortLargest(), locales.CleanupSortOldest(),
+	)
+
+	// Project header chevron slot and indented child checkboxes share the same X column.
+	toggleRect, okT := tt.Find("web-app")
+	childCheckRect, okC := tt.Find("web-app: node_modules")
+	if !okT || !okC {
+		t.Fatalf("expected web-app toggle (%v) and child checkbox (%v)", okT, okC)
+	}
+	if toggleRect.X != childCheckRect.X {
+		t.Errorf("chevron slot X (%.1f) != child checkbox X (%.1f)", toggleRect.X, childCheckRect.X)
+	}
+
+	// Monorepo with 3+ folders starts collapsed by default.
+	if tt.HasText("packages/solid/node_modules") {
+		t.Errorf("3-folder monorepo should start collapsed: %q", tt.Texts())
+	}
+
+	// Project-level checkbox selects both web-app folders (1.3 GB + 2.0 GB bun + 300 MB legacy = 3.6 GB).
+	if err := tt.Click(locales.CleanupSelectGroup("web-app")); err != nil {
+		t.Fatalf("click web-app group checkbox: %v", err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "3.6 GB")
+
+	// Project-level checkbox selects all collapsed monorepo folders (+1.0 GB = 4.6 GB) without expanding.
+	if err := tt.Click(locales.CleanupSelectGroup("moduix")); err != nil {
+		t.Fatalf("click moduix group checkbox: %v", err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "4.6 GB")
+	if tt.HasText("packages/solid/node_modules") {
+		t.Errorf("clicking project checkbox should not expand collapsed monorepo")
+	}
+
+	// Clicking the project header toggles expansion and reveals relative subpackage paths.
+	if err := tt.Click("moduix"); err != nil {
+		t.Fatalf("expand moduix: %v", err)
+	}
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "packages/solid/node_modules", "packages/solid/dist", "packages/vue/node_modules")
+
+	// Clicking again collapses it back, and searching auto-expands matching rows.
+	if err := tt.Click("moduix"); err != nil {
+		t.Fatalf("collapse moduix: %v", err)
+	}
+	tt.Advance(time.Second)
+	if tt.HasText("packages/solid/node_modules") {
+		t.Errorf("moduix should be collapsed after second click")
+	}
+	a.cleanupFilter = "solid"
+	tt.Frame()
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "moduix", "packages/solid/node_modules", "packages/solid/dist")
+	a.cleanupFilter = ""
+
+	// Age filter >30d hides caches and 5-day-old web-app/moduix, keeping 60d api-svc and 210d legacy.
+	a.cleanupAge = 1 // >30d
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("Bun cache") || tt.HasText("web-app") || tt.HasText("moduix") {
+		t.Errorf(">30d filter should hide Bun cache and fresh projects: %q", tt.Texts())
+	}
+	hasTexts(t, tt, "api-svc", "target", "legacy", "node_modules")
+
+	// Age filter >180d keeps only legacy.
+	a.cleanupAge = 3 // >180d
+	tt.Frame()
+	tt.Advance(time.Second)
+	if tt.HasText("api-svc") || !tt.HasText("legacy") {
+		t.Errorf(">180d filter mismatch: %q", tt.Texts())
+	}
+
+	// Sort Oldest puts legacy (210d) above api-svc (60d) when >30d is active.
+	a.cleanupAge = 1
+	a.cleanupSort = 1
+	tt.Frame()
+	tt.Advance(time.Second)
+	texts := tt.Texts()
+	legacyIdx, apiIdx := -1, -1
+	for i, s := range texts {
+		if s == "legacy" && legacyIdx < 0 {
+			legacyIdx = i
+		}
+		if s == "api-svc" && apiIdx < 0 {
+			apiIdx = i
+		}
+	}
+	if legacyIdx < 0 || apiIdx < 0 || legacyIdx >= apiIdx {
+		t.Errorf("Oldest sort order wrong: legacyIdx=%d apiIdx=%d texts=%q", legacyIdx, apiIdx, texts)
+	}
+
+	// Verify narrow window renders cleanly with all controls.
+	a.cleanupAge = 0
+	a.cleanupSort = 0
+	ttNarrow := ui.NewTester(a.View, 1000, 680)
+	ttNarrow.Advance(time.Second)
+	hasTexts(t, ttNarrow, "web-app", "1.3 GB", "moduix", locales.EditorsFolders(3), locales.CleanupAge180(), locales.CleanupSortOldest())
 }

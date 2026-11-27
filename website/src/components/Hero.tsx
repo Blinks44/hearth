@@ -30,7 +30,7 @@ export function Hero({ release, platform, theme, onToggleTheme }: HeroProps) {
     }
     return {
       label: m.heroDownloadMac(),
-      href: release.macosDmg,
+      href: platform.arch === "amd64" ? release.macosAmd64 : release.macosArm64,
     };
   })();
 

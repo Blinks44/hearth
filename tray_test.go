@@ -11,19 +11,19 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-func TestTrayFirstPort(t *testing.T) {
+func TestFirstPublishedPort(t *testing.T) {
 	cases := []struct {
 		raw  string
 		want string
 	}{
 		{"", ""},
 		{"5432/tcp", ""},
-		{"0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp", ":5432"},
-		{"127.0.0.1:8080->80/tcp, 0.0.0.0:8443->443/tcp", ":8080"},
+		{"0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp", "5432"},
+		{"127.0.0.1:8080->80/tcp, 0.0.0.0:8443->443/tcp", "8080"},
 	}
 	for _, tc := range cases {
-		if got := trayFirstPort(tc.raw); got != tc.want {
-			t.Errorf("trayFirstPort(%q) = %q, want %q", tc.raw, got, tc.want)
+		if got := docker.FirstPublishedPort(tc.raw); got != tc.want {
+			t.Errorf("docker.FirstPublishedPort(%q) = %q, want %q", tc.raw, got, tc.want)
 		}
 	}
 }

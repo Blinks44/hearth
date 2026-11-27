@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -50,12 +51,87 @@ func within(dir, parent string) bool {
 	return err == nil && rel != "." && !filepath.IsAbs(rel) && rel[0] != '.'
 }
 
-// changed is when the project last changed, as its files and git's index
-// say: a folder's own time changes only as entries come and go.
+// changed is when the project last changed, as its files and enclosing git
+// repository (including monorepo roots and git worktrees) say: a folder's own
+// time changes only as entries come and go.
 func changed(p Project) time.Time {
 	var last time.Time
-	for _, f := range append(slices.Clone(p.Files), filepath.Join(".git", "index")) {
-		if fi, err := os.Stat(filepath.Join(p.Dir, f)); err == nil && fi.ModTime().After(last) {
+	consider := func(path string) {
+		if fi, err := os.Stat(path); err == nil && fi.ModTime().After(last) {
+			last = fi.ModTime()
+		}
+	}
+	for _, f := range p.Files {
+		if strings.ContainsAny(f, "*?[") {
+			matches, err := filepath.Glob(filepath.Join(p.Dir, f))
+			if err != nil {
+				continue
+			}
+			for _, m := range matches {
+				consider(m)
+			}
+			continue
+		}
+		consider(filepath.Join(p.Dir, f))
+	}
+	if gitTime := gitChangedTime(p.Dir); gitTime.After(last) {
+		last = gitTime
+	}
+	return last
+}
+
+// gitChangedTime walks up from dir (up to 8 levels) to find the nearest .git
+// directory or worktree/submodule .git file and returns the newest mtime among
+// its index, HEAD, and logs/HEAD files.
+func gitChangedTime(dir string) time.Time {
+	cur := filepath.Clean(dir)
+	for range 8 {
+		gitPath := filepath.Join(cur, ".git")
+		fi, err := os.Stat(gitPath)
+		if err == nil {
+			gitDir := gitPath
+			if !fi.IsDir() {
+				gitDir = resolveGitDirFile(gitPath)
+			}
+			if gitDir == "" {
+				return time.Time{}
+			}
+			return newestGitMeta(gitDir)
+		}
+		parent := filepath.Dir(cur)
+		if parent == cur {
+			break
+		}
+		cur = parent
+	}
+	return time.Time{}
+}
+
+func resolveGitDirFile(gitFile string) string {
+	data, err := os.ReadFile(gitFile)
+	if err != nil {
+		return ""
+	}
+	line, _, _ := strings.Cut(string(data), "\n")
+	line = strings.TrimSpace(line)
+	const prefix = "gitdir:"
+	if !strings.HasPrefix(strings.ToLower(line), prefix) {
+		return ""
+	}
+	target := strings.TrimSpace(line[len(prefix):])
+	if target == "" {
+		return ""
+	}
+	if !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(gitFile), target)
+	}
+	return filepath.Clean(target)
+}
+
+func newestGitMeta(gitDir string) time.Time {
+	var last time.Time
+	for _, rel := range []string{"index", "HEAD", filepath.Join("logs", "HEAD")} {
+		if fi, err := os.Stat(filepath.Join(gitDir, rel)); err == nil && fi.ModTime().After(last) {
 			last = fi.ModTime()
 		}
 	}

@@ -6,7 +6,8 @@ export interface ReleaseAssets {
   tag: string;
   releaseUrl: string;
   checksumsUrl: string;
-  macosDmg: string;
+  macosArm64: string;
+  macosAmd64: string;
   windowsAmd64: string;
   windowsArm64: string;
   linuxDebAmd64: string;
@@ -39,7 +40,8 @@ export function fallbackReleaseAssets(): ReleaseAssets {
     tag: `v${site.defaultVersion}`,
     releaseUrl: url,
     checksumsUrl: url,
-    macosDmg: url,
+    macosArm64: url,
+    macosAmd64: url,
     windowsAmd64: url,
     windowsArm64: url,
     linuxDebAmd64: url,
@@ -56,19 +58,25 @@ export function parseGitHubRelease(payload: GitHubReleasePayload): ReleaseAssets
   const releaseUrl = payload.html_url?.trim() || site.latestRelease;
   const assets = Array.isArray(payload.assets) ? payload.assets : [];
 
-  const findAsset = (predicate: (name: string) => boolean): string => {
+  const findAsset = (predicate: (name: string) => boolean, fallback = releaseUrl): string => {
     const match = assets.find(
       (item) => item.name && item.browser_download_url && predicate(item.name.toLowerCase()),
     );
-    return match?.browser_download_url ?? releaseUrl;
+    return match?.browser_download_url ?? fallback;
   };
+
+  const legacyMacDmg = findAsset((name) => name.endsWith(".dmg"));
 
   return {
     version,
     tag: rawTag,
     releaseUrl,
     checksumsUrl: findAsset((name) => name === "sha256sums.txt" || name === "sha256sums"),
-    macosDmg: findAsset((name) => name.endsWith(".dmg")),
+    macosArm64: findAsset((name) => name.endsWith(".dmg") && name.includes("arm64"), legacyMacDmg),
+    macosAmd64: findAsset(
+      (name) => name.endsWith(".dmg") && (name.includes("amd64") || name.includes("x64")),
+      legacyMacDmg,
+    ),
     windowsAmd64: findAsset(
       (name) => name.endsWith(".exe") && (name.includes("amd64") || name.includes("x64")),
     ),
@@ -90,6 +98,46 @@ export function parseGitHubRelease(payload: GitHubReleasePayload): ReleaseAssets
   };
 }
 
+export function extractTagFromLocation(location: string | null | undefined): string | null {
+  if (!location) {
+    return null;
+  }
+  const match = location.match(/\/releases\/tag\/([^/?#]+)/);
+  if (!match?.[1]) {
+    return null;
+  }
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+export function releaseAssetsForTag(rawTag: string): ReleaseAssets {
+  const tag = rawTag.trim();
+  const version = tag.replace(/^v/i, "") || site.defaultVersion;
+  const normalizedTag = tag || `v${version}`;
+  const encodedTag = encodeURIComponent(normalizedTag);
+  const base = `${site.releases}/download/${encodedTag}`;
+  const hasSplitMacDmg = !version.startsWith("1.0.");
+
+  return {
+    version,
+    tag: normalizedTag,
+    releaseUrl: `${site.releases}/tag/${encodedTag}`,
+    checksumsUrl: `${base}/SHA256SUMS.txt`,
+    macosArm64: hasSplitMacDmg ? `${base}/hearth-${version}-arm64.dmg` : `${base}/hearth-${version}.dmg`,
+    macosAmd64: hasSplitMacDmg ? `${base}/hearth-${version}-amd64.dmg` : `${base}/hearth-${version}.dmg`,
+    windowsAmd64: `${base}/hearth-setup-${version}-amd64.exe`,
+    windowsArm64: `${base}/hearth-setup-${version}-arm64.exe`,
+    linuxDebAmd64: `${base}/hearth_${version}_amd64.deb`,
+    linuxDebArm64: `${base}/hearth_${version}_arm64.deb`,
+    linuxTarAmd64: `${base}/hearth-${version}-linux-amd64.tar.gz`,
+    linuxTarArm64: `${base}/hearth-${version}-linux-arm64.tar.gz`,
+    isFallback: false,
+  };
+}
+
 export async function fetchLatestRelease(
   fetcher: typeof fetch = fetch,
   now = Date.now(),
@@ -102,6 +150,25 @@ export async function fetchLatestRelease(
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
+    // Prefer the unthrottled /releases/latest redirect so shared Cloudflare
+    // Workers egress IPs never trip api.github.com's 60 req/hr limit.
+    const redirectResponse = await fetcher(site.latestRelease, {
+      method: "HEAD",
+      redirect: "manual",
+      headers: {
+        "User-Agent": "hearth-website",
+      },
+      signal: controller.signal,
+    });
+    const redirectedTag =
+      extractTagFromLocation(redirectResponse.headers.get("location")) ??
+      extractTagFromLocation(redirectResponse.url);
+    if (redirectedTag) {
+      const resolved = releaseAssetsForTag(redirectedTag);
+      cached = { value: resolved, expiresAt: now + CACHE_TTL_MS };
+      return resolved;
+    }
+
     const response = await fetcher(
       `https://api.github.com/repos/${site.repoOwner}/${site.repoName}/releases/latest`,
       {

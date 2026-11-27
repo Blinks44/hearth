@@ -119,6 +119,10 @@ type Installation struct {
 // Package is a package by name and version.
 type Package struct {
 	Name, Version string
+	// Manager is the package manager that owns this global package
+	// ("npm", "pnpm", "yarn", "bun", "uv", "pipx", "cargo", "gem",
+	// "dotnet", "composer", "go"); empty when unmanaged.
+	Manager string `json:",omitempty"`
 	// Commands are the ones it puts on PATH, like tsc for typescript.
 	Commands []string `json:",omitempty"`
 	// Module is the Go module a command go install built is from, as

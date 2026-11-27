@@ -198,3 +198,255 @@ func TestInstallsWithExclude(t *testing.T) {
 		t.Fatalf("InstallsWithExclude = %+v, want only keep", got)
 	}
 }
+
+func TestInstallsExpandedSpecsRolesAndExtraProjects(t *testing.T) {
+	home := t.TempDir()
+	outside := t.TempDir()
+
+	mkFile := func(root, rel string) {
+		t.Helper()
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	mkDir := func(root, rel string) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Join(root, filepath.FromSlash(rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Next.js + Turbo + dist + parcel + svelte-kit + nuxt
+	mkFile(home, "web/package.json")
+	mkFile(home, "web/next.config.mjs")
+	mkDir(home, "web/node_modules")
+	mkDir(home, "web/.next")
+	mkDir(home, "web/.turbo")
+	mkDir(home, "web/.parcel-cache")
+	mkDir(home, "web/dist")
+	mkFile(home, "nuxtapp/nuxt.config.ts")
+	mkDir(home, "nuxtapp/.nuxt")
+	mkFile(home, "svelteapp/svelte.config.js")
+	mkDir(home, "svelteapp/.svelte-kit")
+
+	// Gradle + iOS Pods + Python venv / caches
+	mkFile(home, "android/build.gradle.kts")
+	mkDir(home, "android/build")
+	mkDir(home, "android/.gradle")
+	mkFile(home, "ios/Podfile")
+	mkDir(home, "ios/Pods")
+	mkFile(home, "py/pyproject.toml")
+	mkDir(home, "py/venv")
+	mkDir(home, "py/__pycache__")
+	mkDir(home, "py/.pytest_cache")
+
+	// .NET glob manifests (*.csproj) for bin/ and obj/
+	mkFile(home, "dotnet/App.csproj")
+	mkDir(home, "dotnet/bin")
+	mkDir(home, "dotnet/obj")
+
+	// False-positive guards: Go repo with build/ and bin/, loose dist/obj without manifests
+	mkFile(home, "goapp/go.mod")
+	mkDir(home, "goapp/build")
+	mkDir(home, "goapp/bin")
+	mkDir(home, "loose/dist")
+	mkDir(home, "loose/obj")
+	mkDir(home, "loose/Pods")
+
+	// Tracked project outside $HOME
+	extProj := filepath.Join(outside, "external-app")
+	mkFile(outside, "external-app/package.json")
+	mkDir(outside, "external-app/node_modules")
+	mkDir(outside, "external-app/.next")
+
+	got, err := InstallsWithOptions(context.Background(), home, InstallsOptions{
+		ExtraProjects: []string{extProj},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	roles := map[string]string{}
+	for _, in := range got {
+		key := filepath.Base(in.Project) + "/" + in.Name
+		roles[key] = in.Role
+	}
+	wantRoles := map[string]string{
+		"web/node_modules":          "deps",
+		"web/.next":                 "build",
+		"web/.turbo":                "build",
+		"web/.parcel-cache":         "build",
+		"web/dist":                  "build",
+		"nuxtapp/.nuxt":             "build",
+		"svelteapp/.svelte-kit":     "build",
+		"android/build":             "build",
+		"android/.gradle":           "build",
+		"ios/Pods":                  "deps",
+		"py/venv":                   "deps",
+		"py/__pycache__":            "build",
+		"py/.pytest_cache":          "build",
+		"dotnet/bin":                "build",
+		"dotnet/obj":                "build",
+		"external-app/node_modules": "deps",
+		"external-app/.next":        "build",
+	}
+	for k, want := range wantRoles {
+		if roles[k] != want {
+			t.Errorf("%s role = %q, want %q", k, roles[k], want)
+		}
+	}
+	for _, forbidden := range []string{"goapp/build", "goapp/bin", "loose/dist", "loose/obj", "loose/Pods"} {
+		if _, ok := roles[forbidden]; ok {
+			t.Errorf("unexpected false positive %q", forbidden)
+		}
+	}
+}
+
+func TestChangedMonorepoAndWorktree(t *testing.T) {
+	root := t.TempDir()
+	old := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	recent := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+
+	// 1. Monorepo subpackage inherits parent .git/index mtime.
+	mono := filepath.Join(root, "mono")
+	sub := filepath.Join(mono, "packages", "web")
+	if err := os.MkdirAll(filepath.Join(mono, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	pkg := filepath.Join(sub, "package.json")
+	if err := os.WriteFile(pkg, []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(pkg, old, old); err != nil {
+		t.Fatal(err)
+	}
+	idx := filepath.Join(mono, ".git", "index")
+	if err := os.WriteFile(idx, []byte("idx"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(idx, recent, recent); err != nil {
+		t.Fatal(err)
+	}
+	if got := changed(Project{Dir: sub, Files: []string{"package.json"}}); !got.Equal(recent) {
+		t.Errorf("monorepo subpackage changed = %v, want %v", got, recent)
+	}
+
+	// 2. Git worktree (.git file pointing to worktree gitdir).
+	wt := filepath.Join(root, "wt-feature")
+	wtGitDir := filepath.Join(mono, ".git", "worktrees", "wt-feature")
+	if err := os.MkdirAll(wt, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(wtGitDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	wtPkg := filepath.Join(wt, "package.json")
+	if err := os.WriteFile(wtPkg, []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(wtPkg, old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(wt, ".git"), []byte("gitdir: "+wtGitDir+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	wtHead := filepath.Join(wtGitDir, "HEAD")
+	if err := os.WriteFile(wtHead, []byte("ref: refs/heads/feat\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(wtHead, recent, recent); err != nil {
+		t.Fatal(err)
+	}
+	if got := changed(Project{Dir: wt, Files: []string{"package.json"}}); !got.Equal(recent) {
+		t.Errorf("worktree changed = %v, want %v", got, recent)
+	}
+}
+
+func TestInstallsEnclosingProjectRoot(t *testing.T) {
+	home := t.TempDir()
+	mkFile := func(rel string) {
+		t.Helper()
+		p := filepath.Join(home, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("{}"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	mkDir := func(rel string) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Join(home, filepath.FromSlash(rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Dotfiles repo at $HOME/.git must never swallow standalone projects under $HOME.
+	mkDir(".git")
+
+	// 1. Git monorepo with root node_modules and nested subpackages.
+	mkDir("dev/moduix/.git")
+	mkFile("dev/moduix/package.json")
+	mkDir("dev/moduix/node_modules")
+	mkFile("dev/moduix/packages/solid/package.json")
+	mkDir("dev/moduix/packages/solid/node_modules")
+	mkDir("dev/moduix/packages/solid/dist")
+	mkFile("dev/moduix/playgrounds/vue/package.json")
+	mkDir("dev/moduix/playgrounds/vue/node_modules")
+
+	// 2. Repo with nested website subpackage.
+	mkDir("dev/hearth/.git")
+	mkFile("dev/hearth/website/package.json")
+	mkDir("dev/hearth/website/node_modules")
+
+	// 3. Non-git workspace using pnpm-workspace.yaml.
+	mkFile("dev/ws/pnpm-workspace.yaml")
+	mkFile("dev/ws/apps/admin/package.json")
+	mkDir("dev/ws/apps/admin/node_modules")
+
+	// 4. Standalone project without .git (only $HOME/.git above it).
+	mkFile("dev/standalone/package.json")
+	mkDir("dev/standalone/node_modules")
+
+	got, err := InstallsWithOptions(context.Background(), home, InstallsOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	roots := map[string]string{}
+	for _, in := range got {
+		relProj, _ := filepath.Rel(home, in.Project)
+		key := filepath.ToSlash(relProj) + "/" + in.Name
+		relRoot := ""
+		if in.Root != "" {
+			r, _ := filepath.Rel(home, in.Root)
+			relRoot = filepath.ToSlash(r)
+		}
+		roots[key] = relRoot
+	}
+
+	want := map[string]string{
+		"dev/moduix/node_modules":                 "",
+		"dev/moduix/packages/solid/node_modules":  "dev/moduix",
+		"dev/moduix/packages/solid/dist":          "dev/moduix",
+		"dev/moduix/playgrounds/vue/node_modules": "dev/moduix",
+		"dev/hearth/website/node_modules":         "dev/hearth",
+		"dev/ws/apps/admin/node_modules":          "dev/ws",
+		"dev/standalone/node_modules":             "",
+	}
+	for k, wantRoot := range want {
+		gotRoot, ok := roots[k]
+		if !ok {
+			t.Errorf("missing install %q (found: %v)", k, roots)
+			continue
+		}
+		if gotRoot != wantRoot {
+			t.Errorf("%s Root = %q, want %q", k, gotRoot, wantRoot)
+		}
+	}
+}

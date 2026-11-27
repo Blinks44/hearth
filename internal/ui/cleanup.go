@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
+	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/locales"
@@ -19,6 +22,14 @@ import (
 
 // cleanupPage is the Cleanup page's path.
 const cleanupPage = "/cleanup"
+
+// cleanupAgeThresholds maps a.cleanupAge tab index to minimum age.
+var cleanupAgeThresholds = []time.Duration{
+	0,
+	30 * 24 * time.Hour,
+	90 * 24 * time.Hour,
+	180 * 24 * time.Hour,
+}
 
 // caches name the tools' caches by ID.
 var caches = map[string]string{
@@ -111,8 +122,12 @@ type cleanupGroupRows struct {
 	rows  []cleanup.Candidate
 }
 
-func (a *App) visibleCleanupGroups(cands []cleanup.Candidate) (groups []cleanupGroupRows, visible []cleanup.Candidate) {
+func (a *App) visibleCleanupGroups(cands []cleanup.Candidate, now time.Time) (groups []cleanupGroupRows, visible []cleanup.Candidate) {
 	filter := strings.ToLower(strings.TrimSpace(a.cleanupFilter))
+	var minAge time.Duration
+	if a.cleanupAge > 0 && a.cleanupAge < len(cleanupAgeThresholds) {
+		minAge = cleanupAgeThresholds[a.cleanupAge]
+	}
 	for _, g := range cleanupGroups {
 		if a.cleanupTab > 0 && cleanupGroups[a.cleanupTab-1] != g {
 			continue
@@ -122,24 +137,135 @@ func (a *App) visibleCleanupGroups(cands []cleanup.Candidate) (groups []cleanupG
 			if cand.Kind.Group() != g {
 				continue
 			}
-			if filter == "" || strings.Contains(strings.ToLower(a.candidateTitle(cand)+" "+a.candidateCaption(cand)), filter) {
-				rows = append(rows, cand)
-				visible = append(visible, cand)
+			if minAge > 0 && (cand.Changed.IsZero() || now.Sub(cand.Changed) < minAge) {
+				continue
 			}
+			if filter != "" {
+				haystack := strings.ToLower(a.candidateTitle(cand) + " " + a.candidateCaption(cand) + " " + candidateRoleLabel(cand))
+				if !strings.Contains(haystack, filter) {
+					continue
+				}
+			}
+			rows = append(rows, cand)
 		}
 		if len(rows) > 0 {
+			sortCleanupRows(rows, a.cleanupSort == 1)
 			groups = append(groups, cleanupGroupRows{group: g, rows: rows})
+			visible = append(visible, rows...)
 		}
 	}
 	return groups, visible
+}
+
+func sortCleanupRows(rows []cleanup.Candidate, oldestFirst bool) {
+	if !oldestFirst {
+		slices.SortStableFunc(rows, func(a, b cleanup.Candidate) int {
+			return cmp.Compare(b.Frees(), a.Frees())
+		})
+		return
+	}
+	slices.SortStableFunc(rows, func(a, b cleanup.Candidate) int {
+		aKnown, bKnown := !a.Changed.IsZero(), !b.Changed.IsZero()
+		if aKnown != bKnown {
+			if aKnown {
+				return -1
+			}
+			return 1
+		}
+		if aKnown && bKnown {
+			if c := a.Changed.Compare(b.Changed); c != 0 {
+				return c
+			}
+		}
+		return cmp.Compare(b.Frees(), a.Frees())
+	})
+}
+
+type cleanupProjectBucket struct {
+	project string
+	rows    []cleanup.Candidate
+	total   int64
+	changed time.Time
+}
+
+func groupProjectCandidates(rows []cleanup.Candidate, oldestFirst bool) []cleanupProjectBucket {
+	index := map[string]int{}
+	var buckets []cleanupProjectBucket
+	for _, cand := range rows {
+		i, ok := index[cand.Project]
+		if !ok {
+			i = len(buckets)
+			index[cand.Project] = i
+			buckets = append(buckets, cleanupProjectBucket{project: cand.Project})
+		}
+		b := &buckets[i]
+		b.rows = append(b.rows, cand)
+		b.total += cand.Frees()
+		if cand.Changed.After(b.changed) {
+			b.changed = cand.Changed
+		}
+	}
+	for i := range buckets {
+		sortCleanupRows(buckets[i].rows, false)
+	}
+	slices.SortStableFunc(buckets, func(a, b cleanupProjectBucket) int {
+		if oldestFirst {
+			aKnown, bKnown := !a.changed.IsZero(), !b.changed.IsZero()
+			if aKnown != bKnown {
+				if aKnown {
+					return -1
+				}
+				return 1
+			}
+			if aKnown && bKnown {
+				if c := a.changed.Compare(b.changed); c != 0 {
+					return c
+				}
+			}
+		}
+		return cmp.Compare(b.total, a.total)
+	})
+	return buckets
+}
+
+func maxCandidateFrees(cands []cleanup.Candidate) int64 {
+	var best int64
+	for _, cand := range cands {
+		if cand.Known && cand.Frees() > best {
+			best = cand.Frees()
+		}
+	}
+	return best
+}
+
+func candidateRole(cand cleanup.Candidate) string {
+	if cand.Kind != cleanup.ProjectInstalls {
+		return ""
+	}
+	if cand.Role != "" {
+		return cand.Role
+	}
+	return projects.InstallRole(filepath.Base(cand.ID))
+}
+
+func candidateRoleLabel(cand cleanup.Candidate) string {
+	switch candidateRole(cand) {
+	case inventory.InstallRoleDeps:
+		return locales.CleanupRoleDeps()
+	case inventory.InstallRoleBuild:
+		return locales.CleanupRoleBuild()
+	}
+	return ""
 }
 
 func (a *App) cleanupView(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		t := c.Theme()
 		pal := Colors(t)
+		now := c.Now()
 		cands := a.candidates(c)
-		visibleGroups, visibleCands := a.visibleCleanupGroups(cands)
+		visibleGroups, visibleCands := a.visibleCleanupGroups(cands, now)
+		maxBytes := maxCandidateFrees(visibleCands)
 		var selected []cleanup.Candidate
 		for _, cand := range visibleCands {
 			if a.chosen(cand) {
@@ -151,7 +277,7 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 			a.cleanupButton(c, selected)
 		}})
 		ui.Scroll(c).Grow(1).Children(func() {
-			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
+			ui.Column(c).Gap(16).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
 					ui.Box(c).Size(48, 48).Radius(12).Background(pal.AccentSoft).Center().Children(func() {
 						ui.Icon(c, Icon("brush-cleaning")).Size(26, 26).TextColor(Accent)
@@ -177,6 +303,9 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 						stateCard(c, t.Success, locales.CleanupCounted(), counted, caption)
 					}
 				})
+				if a.Sizes != nil && freeable(cands) > 0 {
+					a.cleanupBreakdownBar(c, cands)
+				}
 				count := func(g cleanup.Group) string {
 					n := 0
 					for _, cand := range cands {
@@ -203,6 +332,30 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("cleanup-filter"), &a.cleanupFilter).Bind(&a.filterField).Placeholder(locales.CleanupFilter()).Height(controlHeight).Width(200)
 				})
+				if a.Sizes != nil && len(cands) > 0 {
+					ageCount := func(d time.Duration) string {
+						n := 0
+						for _, cand := range cands {
+							if !cand.Changed.IsZero() && now.Sub(cand.Changed) >= d {
+								n++
+							}
+						}
+						return strconv.Itoa(n)
+					}
+					ui.Row(c).Gap(10).AlignItems(ui.Center).Wrap().Children(func() {
+						segments(c, "cleanup-age", &a.cleanupAge, []segment{
+							{locales.CleanupAgeAll(), ""},
+							{locales.CleanupAge30(), ageCount(30 * 24 * time.Hour)},
+							{locales.CleanupAge90(), ageCount(90 * 24 * time.Hour)},
+							{locales.CleanupAge180(), ageCount(180 * 24 * time.Hour)},
+						})
+						ui.Box(c).Grow(1).Height(1)
+						segments(c, "cleanup-sort", &a.cleanupSort, []segment{
+							{locales.CleanupSortLargest(), ""},
+							{locales.CleanupSortOldest(), ""},
+						})
+					})
+				}
 				columns(c, 12, func() {
 					if a.Sizes != nil && a.Sizes.DockerErr != "" {
 						warningRow(c, locales.CleanupDockerErr(a.Sizes.DockerErr))
@@ -226,9 +379,23 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 									ui.Box(c).Size(24, 24).Shrink(0)
 								}
 							})
+							if g.group == cleanup.Projects {
+								for _, bucket := range groupProjectCandidates(g.rows, a.cleanupSort == 1) {
+									open := a.cleanupProjectExpanded(bucket)
+									a.projectGroupHeader(c, bucket, open)
+									shown += len(bucket.rows)
+									if !open {
+										continue
+									}
+									for _, cand := range bucket.rows {
+										a.candidateRow(c, cand, maxBytes, true)
+									}
+								}
+								continue
+							}
 							for _, cand := range g.rows {
 								shown++
-								a.candidateRow(c, cand)
+								a.candidateRow(c, cand, maxBytes, false)
 							}
 						}
 						if shown == 0 {
@@ -277,6 +444,136 @@ func (a *App) cleanupView(c *ui.Context, p page) {
 				})
 			})
 		})
+	})
+}
+
+// cleanupBreakdownBar renders a stacked horizontal breakdown of reclaimable
+// disk space across Caches, Dependencies, Build artifacts, Docker, and Other.
+func (a *App) cleanupBreakdownBar(c *ui.Context, cands []cleanup.Candidate) {
+	t := c.Theme()
+	pal := Colors(t)
+	var cachesBytes, depsBytes, buildBytes, dockerBytes, otherBytes int64
+	for _, cand := range cands {
+		n := cand.Frees()
+		if n <= 0 {
+			continue
+		}
+		switch cand.Kind.Group() {
+		case cleanup.Caches:
+			cachesBytes += n
+		case cleanup.Docker:
+			dockerBytes += n
+		case cleanup.Projects:
+			if candidateRole(cand) == inventory.InstallRoleBuild {
+				buildBytes += n
+			} else {
+				depsBytes += n
+			}
+		default:
+			otherBytes += n
+		}
+	}
+	type segmentBar struct {
+		key   string
+		label string
+		bytes int64
+		color ui.Color
+	}
+	all := []segmentBar{
+		{"caches", locales.CleanupCaches(), cachesBytes, Accent},
+		{"deps", locales.CleanupRoleDeps(), depsBytes, pal.Info},
+		{"build", locales.CleanupRoleBuild(), buildBytes, t.Warning},
+		{"docker", "Docker", dockerBytes, t.Success},
+		{"other", locales.CleanupBreakdownOther(), otherBytes, pal.TextFaint},
+	}
+	var active []segmentBar
+	for _, seg := range all {
+		if seg.bytes > 0 {
+			active = append(active, seg)
+		}
+	}
+	if len(active) == 0 {
+		return
+	}
+	ui.Column(c.Key("cleanup-breakdown")).Gap(8).Padding(10, 14).Radius(10).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
+		ui.Row(c).Gap(2).Height(8).Radius(4).Clip().Background(pal.Muted).Children(func() {
+			for _, seg := range active {
+				ui.Box(c.Key(seg.key)).Height(8).Grow(float32(seg.bytes)).MinWidth(6).Background(seg.color)
+			}
+		})
+		ui.Row(c).Gap(14).Wrap().AlignItems(ui.Center).Children(func() {
+			for _, seg := range active {
+				ui.Row(c.Key("legend-" + seg.key)).Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Box(c).Size(7, 7).Radius(3.5).Background(seg.color).Shrink(0)
+					ui.Text(c, seg.label).FontSize(11).TextColor(t.TextMuted).SingleLine()
+					ui.Text(c, formatBytes(seg.bytes)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+				})
+			}
+		})
+	})
+}
+
+// cleanupProjectExpanded reports whether a project bucket in Cleanup shows its
+// child dependency/build rows: matches during search always expand, explicit
+// user toggles win, and otherwise 1-2 folders start open while 3+ start
+// collapsed so large monorepos stay scannable.
+func (a *App) cleanupProjectExpanded(bucket cleanupProjectBucket) bool {
+	if strings.TrimSpace(a.cleanupFilter) != "" {
+		return true
+	}
+	if a.cleanupProjectOpen != nil {
+		if open, ok := a.cleanupProjectOpen[bucket.project]; ok {
+			return open
+		}
+	}
+	return len(bucket.rows) <= 2
+}
+
+func (a *App) toggleCleanupProject(project string, open bool) {
+	if a.cleanupProjectOpen == nil {
+		a.cleanupProjectOpen = map[string]bool{}
+	}
+	a.cleanupProjectOpen[project] = !open
+}
+
+// projectGroupHeader renders a collapsible project sub-header in Cleanup.
+func (a *App) projectGroupHeader(c *ui.Context, bucket cleanupProjectBucket, open bool) {
+	t := c.Theme()
+	pal := Colors(t)
+	name := filepath.Base(bucket.project)
+	caption := tilde(bucket.project, a.Home)
+	if !bucket.changed.IsZero() {
+		caption += " · " + locales.CleanupLastActive(bucket.changed)
+	}
+	chev := "chevron-down"
+	if !open {
+		chev = "chevron-right"
+	}
+	ui.Row(c.Key("proj-"+bucket.project)).Transition(rowMotion).Gap(12).Padding(6, 16).MinHeight(40).AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+		a.groupCheckbox(c, name, bucket.rows)
+		ui.ButtonBase(c.Key("toggle")).Row().Grow(1).MinWidth(0).Gap(8).Justify(ui.Start).AlignItems(ui.Center).Label(name).OnClick(func() {
+			a.toggleCleanupProject(bucket.project, open)
+		}).Children(func() {
+			checkSize := t.Space(4)
+			ui.Box(c).Size(checkSize, checkSize).Center().Shrink(0).Children(func() {
+				ui.Icon(c, Icon(chev)).Size(13, 13).TextColor(pal.TextFaint)
+			})
+			ui.Icon(c, Icon("folder-git-2")).Size(15, 15).TextColor(pal.TextFaint).Shrink(0)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					clipped(c, name).FontSize(12.5).FontWeight(600).TextColor(t.Text)
+					if len(bucket.rows) > 1 {
+						ui.Text(c, locales.EditorsFolders(len(bucket.rows))).FontSize(10).FontWeight(500).TextColor(t.TextMuted).SingleLine().Shrink(0).Padding(1, 6).Radius(4).Background(pal.Muted)
+					}
+				})
+				clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint)
+			})
+			ui.Text(c, cleanupAmount(bucket.rows)).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).Shrink(0).SingleLine()
+		})
+		if a.Shell != nil {
+			proj := bucket.project
+			iconButton(c, "folder-open", showInFolder()).OnClick(func() { a.Shell.ShowItemInFolder(proj) })
+		}
 	})
 }
 
@@ -372,14 +669,38 @@ func (a *App) groupCheckbox(c *ui.Context, title string, rows []cleanup.Candidat
 	}
 }
 
+func candidateBarColor(t *ui.Theme, pal Palette, cand cleanup.Candidate) ui.Color {
+	switch cand.Kind.Group() {
+	case cleanup.Caches:
+		return Accent
+	case cleanup.Docker:
+		return t.Success
+	case cleanup.Projects:
+		if candidateRole(cand) == inventory.InstallRoleBuild {
+			return t.Warning
+		}
+		return pal.Info
+	}
+	return pal.TextFaint
+}
+
 // candidateRow is a candidate in the table: its check box, what it is and
-// why Hearth offers it, and the space it frees.
-func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
-	pal := Colors(c.Theme())
+// why Hearth offers it, and the space it frees with a relative bar.
+func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate, maxBytes int64, grouped bool) {
+	t := c.Theme()
+	pal := Colors(t)
 	key := candidateKey(cand)
-	ui.Row(c.Key(key)).Transition(rowMotion).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+	leftPad := float32(16)
+	if grouped {
+		leftPad = 16 + t.Space(4) + 12
+	}
+	ui.Row(c.Key(key)).Transition(rowMotion).Gap(12).Padding(6, 16, 6, leftPad).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
 		on := a.chosen(cand)
 		title := a.candidateTitle(cand)
+		displayTitle := title
+		if grouped && cand.Kind == cleanup.ProjectInstalls {
+			displayTitle = cand.ID
+		}
 		if ui.Checkbox(c.Key("check"), &on, "").Label(title).Disabled(!ops.Cleans(cand, a.Snapshot)).Changed() {
 			if a.cleanupChoice == nil {
 				a.cleanupChoice = map[string]bool{}
@@ -387,14 +708,41 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 			a.cleanupChoice[key] = on
 		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			clipped(c, title).FontSize(13)
-			clipped(c, a.candidateCaption(cand)).FontSize(10.5).TextColor(pal.TextFaint)
+			if role := candidateRole(cand); role != "" {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					clipped(c, displayTitle).FontSize(13)
+					bg, fg := pal.InfoSoft, pal.InfoText
+					label := locales.CleanupRoleDeps()
+					if role == inventory.InstallRoleBuild {
+						bg, fg, label = pal.WarningSoft, pal.WarningText, locales.CleanupRoleBuild()
+					}
+					ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(fg).SingleLine().Shrink(0).Padding(1, 6).Radius(4).Background(bg)
+				})
+			} else {
+				clipped(c, displayTitle).FontSize(13)
+			}
+			caption := a.candidateCaption(cand)
+			if grouped && cand.Kind == cleanup.ProjectInstalls {
+				caption = a.groupedInstallCaption(cand)
+			}
+			if caption != "" {
+				clipped(c, caption).FontSize(10.5).TextColor(pal.TextFaint)
+			}
 		})
 		size := "—"
 		if cand.Known {
 			size = formatUsage(inventory.Usage{Bytes: cand.Frees(), Partial: cand.Usage.Partial})
 		}
-		ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
+		ui.Column(c).AlignItems(ui.End).Gap(4).Shrink(0).Children(func() {
+			ui.Text(c, size).Font(FontMono).FontSize(12).SingleLine()
+			if cand.Known && cand.Frees() > 0 && maxBytes > 0 {
+				const barW = float32(56)
+				fill := max(3, float32(cand.Frees())/float32(maxBytes)*barW)
+				ui.Box(c).Size(barW, 4).Radius(2).Clip().Background(pal.Muted).Children(func() {
+					ui.Box(c).Size(fill, 4).Radius(2).Background(candidateBarColor(t, pal, cand))
+				})
+			}
+		})
 		if a.Shell != nil {
 			switch len(cand.Paths) {
 			case 0:
@@ -423,6 +771,19 @@ func (a *App) candidateRow(c *ui.Context, cand cleanup.Candidate) {
 			}
 		}
 	})
+}
+
+func (a *App) groupedInstallCaption(cand cleanup.Candidate) string {
+	var parts []string
+	for _, r := range cand.Reasons {
+		switch r {
+		case cleanup.Unchanged:
+			parts = append(parts, locales.ReasonUnchanged(cand.Changed))
+		case cleanup.Reinstalled:
+			parts = append(parts, locales.ReasonReinstalled())
+		}
+	}
+	return strings.Join(parts, " · ")
 }
 
 // candidateTitle says what a candidate is: "Bun cache", "Node.js 23.6.0 ·
@@ -482,6 +843,9 @@ func (a *App) candidateCaption(cand cleanup.Candidate) string {
 		parts = append(parts, locales.CleanupContainerCount(cand.Count))
 	case cleanup.ProjectInstalls:
 		parts = append(parts, tilde(cand.Project, a.Home))
+		if !cand.Changed.IsZero() && !slices.Contains(cand.Reasons, cleanup.Unchanged) {
+			parts = append(parts, locales.CleanupLastActive(cand.Changed))
+		}
 	case cleanup.OldExtensions:
 		parts = append(parts, locales.EditorsFolders(cand.Count))
 	case cleanup.AgentHistory:

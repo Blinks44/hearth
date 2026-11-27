@@ -34,7 +34,7 @@ func (a *App) goPage(c *ui.Context, p page) {
 				switch a.goTab {
 				case 0:
 					columns(c, 12, func() {
-						a.versionTable(c, ins, rows, active, goChannel)
+						a.versionTable(c, ins, rows, active, a.goChannel)
 						if slices.ContainsFunc(rows, func(i int) bool { return ins[i].Source.Manager == detect.GoToolchain }) {
 							toolNote(c, locales.GoToolchainNote(st.Vars["GOTOOLCHAIN"]))
 						}
@@ -44,7 +44,7 @@ func (a *App) goPage(c *ui.Context, p page) {
 						a.managerCard(c, st, rows, active, nil)
 						a.goEnvironment(c, st)
 						if active >= 0 {
-							globalsCard(c, locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
+							a.managedGlobalsCard(c, "go", locales.GoTools(), locales.NoGoTools(), ins[active].Packages, "GOPATH/bin")
 						}
 					})
 				case 1:
@@ -81,13 +81,14 @@ func (a *App) goHeader(c *ui.Context, ins []inventory.Installation, rows []int, 
 	})
 }
 
-// goChannel tells how a Go copy came: a toolchain Go downloaded itself is
-// marked; Go's lines have no named channels.
-func goChannel(in inventory.Installation) (string, bool) {
+// goChannel tells how a Go copy came and whether its minor line has ended
+// support according to go.dev.
+func (a *App) goChannel(in inventory.Installation) (string, bool) {
+	ended := a.GoVersions.Ended(in.Version)
 	if in.Source.Manager == detect.GoToolchain {
-		return locales.GoDownloaded(), false
+		return locales.GoDownloaded(), ended
 	}
-	return "", false
+	return "", ended
 }
 
 // goAvailable lists the newest release of each supported Go line, as
@@ -107,6 +108,7 @@ func (a *App) goAvailable(c *ui.Context, st inventory.ToolState, rows []int, act
 				text = locales.VersionsFailed(a.GoVersionsErr)
 			}
 			cardNote(c, text)
+			a.customVersionRow(c, st, "1.24.0")
 			return
 		}
 		for _, v := range gv.Releases {
@@ -119,6 +121,7 @@ func (a *App) goAvailable(c *ui.Context, st inventory.ToolState, rows []int, act
 				a.installButton(c, st, v, "go"+v)
 			})
 		}
+		a.customVersionRow(c, st, "1.24.0")
 	})
 }
 

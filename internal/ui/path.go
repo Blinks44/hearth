@@ -53,7 +53,7 @@ func (a *App) paths(c *ui.Context, p page) {
 					if problems > 0 {
 						probDot = c.Theme().Warning
 					}
-					stateCard(c, probDot, locales.EnvPathProblems(), strconv.Itoa(problems), "")
+					stateCard(c, probDot, locales.EnvPathProblems(), strconv.Itoa(problems), locales.EnvPathEntries())
 					if st != nil {
 						startupCard(c, st)
 					}
@@ -76,6 +76,8 @@ func (a *App) paths(c *ui.Context, p page) {
 					ui.Box(c).Grow(1).Height(1)
 					if a.pathTab != startupTab {
 						ui.SearchField(c.Key("path-filter"), &a.pathFilter).Bind(&a.filterField).Placeholder(locales.EnvPathFilter()).Height(controlHeight).Width(200)
+					} else if a.MeasureStartup != nil {
+						a.startupRemeasureButton(c)
 					}
 				})
 				if a.pathTab == startupTab {

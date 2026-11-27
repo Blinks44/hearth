@@ -135,7 +135,7 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 				var stats []aiStat
 				if len(globalAgents) > 0 || len(a.Projects) > 0 {
 					if len(globalAgents) > 0 {
-						stats = append(stats, aiStat{strconv.Itoa(len(globalAgents)), locales.InstructionsGlobal()})
+						stats = append(stats, aiStat{strconv.Itoa(len(globalAgents)), strings.ToLower(locales.InstructionsGlobal())})
 					}
 					if len(a.Projects) > 0 {
 						stats = append(stats, aiStat{strconv.Itoa(len(a.Projects)), locales.StatProjects()})
@@ -190,6 +190,29 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 						chosenAgent = &shownGlobal[0]
 					}
 				}
+				// When not searching, keep installed agents and any agent with
+				// existing global instructions upfront, and collapse the rest so
+				// the Projects section stays visible without scrolling.
+				visibleGlobal := shownGlobal
+				hiddenGlobalCount := 0
+				if query == "" && !a.instructionsShowAllGlobal {
+					var primary, other []inventory.Agent
+					chosenInOther := false
+					for _, ag := range shownGlobal {
+						if ag.Found() || ag.Instructions.State != "missing" {
+							primary = append(primary, ag)
+						} else {
+							if chosenAgent != nil && chosenAgent.ID == ag.ID {
+								chosenInOther = true
+							}
+							other = append(other, ag)
+						}
+					}
+					if len(other) > 0 && !chosenInOther && (len(primary) > 0 || len(shownProjects) > 0) {
+						visibleGlobal = primary
+						hiddenGlobalCount = len(other)
+					}
+				}
 				pal := Colors(c.Theme())
 				ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
 					ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() {
@@ -200,12 +223,12 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 							if query != "" && len(shownGlobal) == 0 && len(shownProjects) == 0 {
 								cardNote(c, locales.NothingMatches())
 							}
-							if len(shownGlobal) > 0 {
+							if len(visibleGlobal) > 0 || hiddenGlobalCount > 0 {
 								ui.Row(c).Padding(6, 14).Background(pal.Subtle).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 									ui.Text(c, strings.ToUpper(locales.InstructionsGlobal())).FontSize(10.5).FontWeight(500).TextColor(pal.TextFaint).SingleLine()
 								})
-								for i := range shownGlobal {
-									ag := shownGlobal[i]
+								for i := range visibleGlobal {
+									ag := visibleGlobal[i]
 									selected := chosenAgent != nil && chosenAgent.ID == ag.ID
 									title := agentTitle(ag.ID)
 									path := ag.Instructions.Native.Path
@@ -228,6 +251,20 @@ func (a *App) instructionsView(c *ui.Context, p page) {
 									if e.Clicked() {
 										a.instructionsChosen = "agent:" + ag.ID
 									}
+								}
+								if hiddenGlobalCount > 0 {
+									moreLabel := locales.PkgShowMore(hiddenGlobalCount)
+									more := ui.ButtonBase(c.Key("instructions:more-global")).Padding(8, 14).Gap(6).AlignItems(ui.Center).
+										BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Label(moreLabel).OnClick(func() {
+										a.instructionsShowAllGlobal = true
+									})
+									if more.Hovered() {
+										more.Background(pal.Subtle)
+									}
+									more.Children(func() {
+										ui.Text(c, moreLabel).FontSize(12).TextColor(c.Theme().TextMuted).Grow(1).SingleLine()
+										ui.Icon(c, Icon("chevron-down")).Size(13, 13).TextColor(pal.TextFaint)
+									})
 								}
 							}
 							if len(globalAgents) > 0 && (len(shownProjects) > 0 || (len(a.Projects) == 0 && query == "")) {

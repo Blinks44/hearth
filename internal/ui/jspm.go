@@ -215,7 +215,7 @@ func (a *App) jsTable(c *ui.Context) {
 		}
 		for _, id := range []string{"pnpm", "yarn"} {
 			if a.canInstallTool(id) {
-				listRowWithTile(c.Key("missing:"+id), "brand/"+id, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolButton(c, id) })
+				listRowWithTile(c.Key("missing:"+id), "brand/"+id, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolIconButton(c, id) })
 			}
 		}
 	})
@@ -273,7 +273,7 @@ func (a *App) jsGlobals(c *ui.Context) {
 		}
 		pkgs, empty = userPackages(st.Installations[i].Packages, version), locales.NoGlobalPackages()
 	}
-	globalsCard(c, locales.GlobalPackages(), empty, pkgs, "npm -g")
+	a.managedGlobalsCard(c, "npm", locales.GlobalPackages(), empty, pkgs, "npm -g")
 
 	for _, mgr := range []struct{ id, aside string }{{"pnpm", "pnpm -g"}, {"yarn", "yarn global"}} {
 		mst, _ := a.Snapshot.Tool(mgr.id)
@@ -289,7 +289,7 @@ func (a *App) jsGlobals(c *ui.Context) {
 			}
 		}
 		if len(mst.Installations) > 0 || len(mpkgs) > 0 {
-			globalsCard(c, locales.GlobalPackages(), locales.NoGlobalPackages(), mpkgs, mgr.aside)
+			a.managedGlobalsCard(c, mgr.id, locales.GlobalPackages(), locales.NoGlobalPackages(), mpkgs, mgr.aside)
 		}
 	}
 }

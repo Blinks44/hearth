@@ -1,6 +1,9 @@
 package inventory
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // Database is an installed server or an existing Docker container. Port
 // bindings are observed listeners/published ports, never assumed defaults.
@@ -38,9 +41,23 @@ type DatabaseListener struct {
 	Address, Port, Process, PID string
 	// Path is the process' program; Dirs the folders it works in: its
 	// working folder, or on Windows, which does not tell it, the absolute
-	// paths in its command line. Its other arguments are not kept.
+	// paths in its command line.
 	Path string   `json:",omitempty"`
 	Dirs []string `json:",omitempty"`
+	// Args holds secret-redacted command-line arguments when observable.
+	Args []string `json:",omitempty"`
+	// PPID is the parent process ID when observable.
+	PPID string `json:",omitempty"`
+	// PGID is the Unix process group ID when observable.
+	PGID string `json:",omitempty"`
+	// Ancestors lists higher ancestor PIDs when observable (e.g. Windows parent chain).
+	Ancestors []string `json:",omitempty"`
+	// CPUPercent is instantaneous CPU usage percentage when observable.
+	CPUPercent float64 `json:",omitempty"`
+	// MemoryBytes is resident memory in bytes when observable.
+	MemoryBytes int64 `json:",omitempty"`
+	// StartedAt is the approximate process start time when observable.
+	StartedAt time.Time `json:",omitzero"`
 	// Own reports that the process runs as this user.
 	Own bool `json:",omitempty"`
 }

@@ -376,3 +376,73 @@ func TestFindWithOptions(t *testing.T) {
 		t.Fatalf("30d custom 45d known project = (%+v, %v), want present & selected", c, ok)
 	}
 }
+
+func TestProjectInstallsMinFreesAndRole(t *testing.T) {
+	sizes := &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			filepath.Join("/p/tiny", "node_modules"): {Bytes: 50_000},
+			filepath.Join("/p/big", "node_modules"):  {Bytes: 5_000_000},
+			filepath.Join("/p/big", ".next"):         {Bytes: 12_000_000},
+		},
+		Installs: []inventory.ProjectInstall{
+			{Project: "/p/tiny", Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: now.AddDate(-1, 0, 0)},
+			{Project: "/p/big", Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: now.AddDate(0, -1, 0)},
+			{Project: "/p/big", Name: ".next", Role: inventory.InstallRoleBuild, Changed: now.AddDate(0, -1, 0)},
+		},
+	}
+	got := Find(&inventory.Snapshot{}, sizes, nil, nil, now)
+	byPath := map[string]Candidate{}
+	for _, c := range got {
+		if c.Kind == ProjectInstalls && len(c.Paths) > 0 {
+			byPath[c.Paths[0]] = c
+		}
+	}
+	if _, ok := byPath[filepath.Join("/p/tiny", "node_modules")]; ok {
+		t.Error("measured ProjectInstalls below default 1 MB minFrees should be filtered out")
+	}
+	if c, ok := byPath[filepath.Join("/p/big", "node_modules")]; !ok || c.Role != inventory.InstallRoleDeps {
+		t.Errorf("node_modules candidate = (%+v, %v), want role=deps", c, ok)
+	}
+	if c, ok := byPath[filepath.Join("/p/big", ".next")]; !ok || c.Role != inventory.InstallRoleBuild {
+		t.Errorf(".next candidate = (%+v, %v), want role=build", c, ok)
+	}
+}
+
+func TestProjectInstallsMonorepoRootGrouping(t *testing.T) {
+	root := filepath.Join("/dev", "moduix")
+	solid := filepath.Join(root, "packages", "solid")
+	solidNM := filepath.Join(solid, "node_modules")
+	solidDist := filepath.Join(solid, "dist")
+	rootNM := filepath.Join(root, "node_modules")
+
+	sizes := &inventory.Sizes{
+		Paths: map[string]inventory.Usage{
+			rootNM:    {Bytes: 500_000_000},
+			solidNM:   {Bytes: 200_000_000},
+			solidDist: {Bytes: 15_000_000},
+		},
+		Installs: []inventory.ProjectInstall{
+			{Project: root, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: now.AddDate(0, 0, -5)},
+			{Project: solid, Root: root, Name: "node_modules", Role: inventory.InstallRoleDeps, Changed: now.AddDate(0, 0, -5)},
+			{Project: solid, Root: root, Name: "dist", Role: inventory.InstallRoleBuild, Changed: now.AddDate(0, 0, -5)},
+		},
+	}
+
+	got := Find(&inventory.Snapshot{}, sizes, nil, nil, now)
+	byPath := map[string]Candidate{}
+	for _, c := range got {
+		if c.Kind == ProjectInstalls && len(c.Paths) > 0 {
+			byPath[c.Paths[0]] = c
+		}
+	}
+
+	if c, ok := byPath[rootNM]; !ok || c.Project != root || c.ID != "node_modules" {
+		t.Errorf("root node_modules = (%+v, %v), want Project=%q ID=node_modules", c, ok, root)
+	}
+	if c, ok := byPath[solidNM]; !ok || c.Project != root || c.ID != "packages/solid/node_modules" || !slices.Equal(c.Paths, []string{solidNM}) {
+		t.Errorf("solid node_modules = (%+v, %v), want Project=%q ID=packages/solid/node_modules Path=%q", c, ok, root, solidNM)
+	}
+	if c, ok := byPath[solidDist]; !ok || c.Project != root || c.ID != "packages/solid/dist" || c.Role != inventory.InstallRoleBuild {
+		t.Errorf("solid dist = (%+v, %v), want Project=%q ID=packages/solid/dist role=build", c, ok, root)
+	}
+}

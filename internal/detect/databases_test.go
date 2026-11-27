@@ -73,8 +73,8 @@ func TestDockerDatabases(t *testing.T) {
 func TestRefreshPortsDocker(t *testing.T) {
 	r := &run.Fake{}
 	webID := strings.Repeat("c", 64)
-	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}}}`
-	r.Stdout(`{"ID":"`+webID+`","Name":"api","Image":"my/api:latest","State":"running","Ports":"127.0.0.1:8081->8080/tcp"}`,
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"ConfigFiles":{{json (.Label "com.docker.compose.project.config_files")}}}`
+	r.Stdout(`{"ID":"`+webID+`","Name":"api","Image":"my/api:latest","State":"running","Ports":"127.0.0.1:8081->8080/tcp","Project":"/dev/api","ConfigFiles":"/dev/api/compose.yaml"}`,
 		"/usr/local/bin/docker", "--host", "unix:///local", "ps", "--no-trunc", "--format", format)
 	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{
 		Tool:          "docker",
@@ -85,7 +85,7 @@ func TestRefreshPortsDocker(t *testing.T) {
 		},
 	}}}
 	got := RefreshPorts(t.Context(), r, sysenv.Env{"DOCKER_CONTEXT=remote"}, snap)
-	if !got.HasDocker || len(got.Containers) != 1 || got.Containers[0].ID != webID || got.Containers[0].Name != "api" || !slices.Equal(got.Containers[0].Ports, []string{"8081"}) {
+	if !got.HasDocker || len(got.Containers) != 1 || got.Containers[0].ID != webID || got.Containers[0].Name != "api" || got.Containers[0].ComposeDir != "/dev/api" || got.Containers[0].ComposeFiles != "/dev/api/compose.yaml" || !slices.Equal(got.Containers[0].Ports, []string{"8081"}) {
 		t.Fatalf("RefreshPorts %+v", got)
 	}
 }

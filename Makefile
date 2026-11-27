@@ -8,8 +8,8 @@ dev: ## run the app with live reload
 build: ## package the app for this machine into build/
 	go tool mygo build
 
-build-release: ## package every release target into build/: macOS universal, Windows and Linux on amd64 and arm64
-	go tool mygo build -platform darwin/universal,windows/amd64,windows/arm64,linux/amd64,linux/arm64
+build-release: ## package every release target into build/: macOS, Windows and Linux on amd64 and arm64
+	go tool mygo build -platform darwin/arm64,darwin/amd64,windows/amd64,windows/arm64,linux/amd64,linux/arm64
 
 # arm64 targets for local VM testing
 build-macos: ## package for macOS arm64 into build/darwin-arm64

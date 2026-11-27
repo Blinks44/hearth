@@ -13,7 +13,7 @@ export const frSeoContent: SeoContentBundle = {
       heroSubtitle:
         "Utilisez Colima open source sur macOS ou Docker Engine natif sur Linux. Inspectez piles Compose, conteneurs, images, volumes et logs en direct dans une app Go native sans Electron.",
       metrics: [
-        { value: "~20 Mo téléch.", label: "Go natif & UI mygo · démarrage <80 ms · zéro Electron" },
+        { value: "~13–19 Mo téléch.", label: "Go natif & UI mygo · démarrage <80 ms · zéro Electron" },
         { value: "MIT Gratuit", label: "Sans licences payantes, sans compte, zéro télémétrie" },
         {
           value: "Colima + Linux",
@@ -30,7 +30,7 @@ export const frSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Empreinte & vitesse",
-          hearth: "Binaire Go natif unique (mygo), ~20 Mo à télécharger",
+          hearth: "Binaire Go natif unique (mygo), ~13–19 Mo à télécharger",
           other: "Interface Electron, souvent 1 Go+ de RAM au repos",
         },
         {
@@ -76,7 +76,7 @@ export const frSeoContent: SeoContentBundle = {
         {
           step: "Étape 01",
           title: "Installez Hearth (sans changements silencieux)",
-          desc: "Téléchargez Hearth (~20 Mo ; ~28 Mo DMG universel) via DMG, Homebrew ou .deb. Le premier scan est 100 % en lecture seule.",
+          desc: "Téléchargez Hearth (~13–19 Mo par architecture) via DMG, Homebrew ou .deb. Le premier scan est 100 % en lecture seule.",
         },
         {
           step: "Étape 02",

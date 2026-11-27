@@ -19,6 +19,8 @@ func explain(kind issues.Kind) string {
 		return "An empty or relative PATH entry makes command resolution depend on the current directory."
 	case issues.PathMissing:
 		return "A PATH entry refers to a directory that does not exist."
+	case issues.PathDuplicate:
+		return "A PATH entry appears more than once."
 	case issues.SkillCopies:
 		return "Identical skill folders are copied to multiple locations; later edits can diverge."
 	case issues.SkillDiffers:

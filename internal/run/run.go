@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"sync"
 	"time"
 )
 
@@ -48,6 +49,13 @@ type Cmd struct {
 	// Leave false for ordinary short-lived commands: disclaiming also stops
 	// the child from inheriting Hearth's macOS folder (TCC) permissions.
 	Disclaim bool
+	// OnStart, when set, is called with the child process ID right after
+	// cmd.Start succeeds in Lines/CombinedLines.
+	OnStart func(pid int)
+	// KillGroup, when set on Lines/CombinedLines, terminates the child's
+	// entire process group (graceful SIGTERM then SIGKILL on Unix; process
+	// tree on Windows) when ctx is cancelled.
+	KillGroup bool
 }
 
 // Result is what a command that ran left. A non-zero ExitCode is a result,
@@ -157,8 +165,11 @@ func readLines(ctx context.Context, c Cmd, line func(string), combined bool) err
 	cmd := exec.CommandContext(ctx, c.Args[0], c.Args[1:]...)
 	cmd.Env = c.Env
 	cmd.Dir = c.Dir
-	cmd.WaitDelay = time.Second
+	cmd.WaitDelay = 2 * time.Second
 	detach(cmd)
+	if c.KillGroup {
+		setCancelGroup(cmd)
+	}
 	cmd.Stderr = c.Output
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -170,9 +181,48 @@ func readLines(ctx context.Context, c Cmd, line func(string), combined bool) err
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], err)
 	}
+	pid := 0
+	if cmd.Process != nil {
+		pid = cmd.Process.Pid
+		if c.OnStart != nil {
+			c.OnStart(pid)
+		}
+	}
+	var (
+		reapMu    sync.Mutex
+		reaped    bool
+		hardTimer *time.Timer
+	)
+	markReaped := func() {
+		reapMu.Lock()
+		reaped = true
+		if hardTimer != nil {
+			hardTimer.Stop()
+		}
+		reapMu.Unlock()
+	}
 	// A child of the command may still hold the write end after
-	// CommandContext stops the command. Unblock the read on cancellation.
-	stopRead := context.AfterFunc(ctx, func() { _ = stdout.Close() })
+	// CommandContext stops the command. Unblock the read on cancellation,
+	// and escalate to SIGKILL for the process group only while the leader
+	// has not been reaped yet (preventing PID reuse races).
+	stopRead := context.AfterFunc(ctx, func() {
+		_ = stdout.Close()
+		if !c.KillGroup || pid <= 0 {
+			return
+		}
+		reapMu.Lock()
+		if !reaped {
+			hardTimer = time.AfterFunc(1500*time.Millisecond, func() {
+				reapMu.Lock()
+				stillAlive := !reaped
+				reapMu.Unlock()
+				if stillAlive {
+					killGroupHard(pid)
+				}
+			})
+		}
+		reapMu.Unlock()
+	})
 	defer stopRead()
 	sc := bufio.NewScanner(stdout)
 	sc.Buffer(nil, limit)
@@ -182,9 +232,11 @@ func readLines(ctx context.Context, c Cmd, line func(string), combined bool) err
 	if err := sc.Err(); err != nil && ctx.Err() == nil {
 		cancel()
 		_ = cmd.Wait() // killed: the line is the error
+		markReaped()
 		return fmt.Errorf("run %s: %w", c.Args[0], err)
 	}
 	err = cmd.Wait()
+	markReaped()
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return fmt.Errorf("run %s: %w", c.Args[0], ctxErr)
 	}

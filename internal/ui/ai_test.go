@@ -18,6 +18,7 @@ import (
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // aiSnapshot has Claude Code from Homebrew and Codex from npm; the others
@@ -412,7 +413,7 @@ func TestAgentOperations(t *testing.T) {
 	tt := openAI(t, a, "/ai/agents")
 	screenshot(t, tt, "agents-actions")
 	hasTexts(t, tt, "2.1.322 available")
-	if err := tt.Click("Install…"); err != nil {
+	if err := tt.Click(locales.InstallNamed(setupTitle("copilot"))); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

@@ -58,10 +58,7 @@ func (a *App) projectHeaderActions(c *ui.Context, p projects.Project) {
 }
 
 func (a *App) projectServicesCount(p projects.Project) int {
-	n := len(p.Databases)
-	if _, ok := composeProject(p); ok && a.canPlanDocker() && a.dockerAnswers() {
-		n++
-	}
+	n := len(p.Databases) + a.projectRunningCounts(p) + len(a.projectComposeContainers(p)) + len(composeProjects(p))
 	if _, linked := a.KubeLinks[p.Dir]; linked || len(p.Kube) > 0 {
 		n++
 	}
@@ -84,62 +81,23 @@ func (a *App) projectTabs(c *ui.Context, p projects.Project) {
 		}
 		return strconv.Itoa(n)
 	}
-	segments(c, "project-detail-tabs", &a.projectTab, []segment{
-		{locales.ProjectTabOverview(), ""},
-		{locales.ProjectTabServices(), countStr(servicesN)},
-		{"AI", countStr(aiN)},
-		{locales.ProjectTabFiles(), countStr(len(p.Files))},
-	})
-}
-
-// projectGitCard displays a compact read-only Git summary strip (branch,
-// clean/dirty state, remote browser link, and last commit).
-func (a *App) projectGitCard(c *ui.Context, p projects.Project) {
-	g := p.Git
-	if g == nil {
-		return
+	pal := Colors(c.Theme())
+	row := ui.Row(c).Gap(12).AlignItems(ui.Center)
+	if narrow(c) {
+		row.Wrap()
 	}
-	t := c.Theme()
-	pal := Colors(t)
-	ui.Row(c.Key("project-git-card")).Gap(10).Padding(10, 14).Radius(12).AlignItems(ui.Center).Wrap().
-		Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		if g.Branch != "" {
-			ui.Row(c).Gap(6).Padding(3, 9).Radius(6).AlignItems(ui.Center).Shrink(0).
-				Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Children(func() {
-				ui.Icon(c, Icon("git-branch")).Size(13, 13).TextColor(pal.MonoText)
-				ui.Text(c, g.Branch).Font(FontMono).FontSize(12).TextColor(pal.MonoText).SingleLine()
-				if g.Detached {
-					ui.Text(c, locales.ProjectGitDetached()).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
-				}
-			})
-		}
-		if g.Dirty {
-			chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ProjectGitModified(g.Modified))
-		} else {
-			chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.ProjectGitClean())
-		}
-		if g.Remote != "" {
-			if g.RemoteURL != "" {
-				remoteURL := g.RemoteURL
-				btn := ui.ButtonBase(c.Key("project-git-remote")).Row().Gap(5).Padding(3, 7).Radius(6).
-					AlignItems(ui.Center).Shrink(0).Label(g.Remote).Tooltip(locales.ProjectGitOpenRemote()).
-					OnClick(func() { c.OpenURL(remoteURL) })
-				if btn.Hovered() {
-					btn.Background(pal.Subtle)
-				}
-				btn.Children(func() {
-					ui.Icon(c, Icon("external-link")).Size(12, 12).TextColor(pal.TextFaint)
-					ui.Text(c, g.Remote).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
-				})
-			} else {
-				ui.Text(c, g.Remote).Font(FontMono).FontSize(11.5).TextColor(t.TextMuted).SingleLine()
-			}
-		}
-		if g.LastCommit != "" {
+	row.Children(func() {
+		segments(c, "project-detail-tabs", &a.projectTab, []segment{
+			{locales.ProjectTabOverview(), ""},
+			{locales.ProjectTabRunServices(), countStr(servicesN)},
+			{"AI", countStr(aiN)},
+			{locales.ProjectTabFiles(), countStr(len(p.Files))},
+		})
+		if g := p.Git; g != nil && g.LastCommit != "" {
 			ui.Box(c).Grow(1).MinWidth(8).Height(1)
 			commit := g.LastCommit
 			if !g.LastCommitAt.IsZero() {
-				commit = ago(c, g.LastCommitAt) + " · " + commit
+				commit = locales.ProjectCommitAgo(ago(c, g.LastCommitAt), g.LastCommit)
 			}
 			clipped(c, commit).FontSize(11.5).TextColor(pal.TextFaint).Shrink(1)
 		}
@@ -147,40 +105,64 @@ func (a *App) projectGitCard(c *ui.Context, p projects.Project) {
 }
 
 // projectDiskCard shows reinstallable dependency folders (node_modules, .venv,
-// etc.), their measured sizes, and a shortcut to Cleanup.
+// etc.) with proportional usage bars, total size, and a link to Cleanup.
 func (a *App) projectDiskCard(c *ui.Context, p projects.Project) {
 	if len(p.Installs) == 0 {
 		return
 	}
 	t := c.Theme()
 	pal := Colors(t)
-	var total int64
+	var total, maxSize int64
 	sizedAny := false
-	for _, d := range p.Installs {
+	sizes := make([]int64, len(p.Installs))
+	hasSize := make([]bool, len(p.Installs))
+	for i, d := range p.Installs {
 		if sz, ok := a.pathSize(filepath.Join(p.Dir, d)); ok {
+			sizes[i] = sz
+			hasSize[i] = true
 			total += sz
+			if sz > maxSize {
+				maxSize = sz
+			}
 			sizedAny = true
 		}
 	}
 	ui.Column(c.Key("project-disk-card")).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.ProjectDiskTitle()).FontSize(13.5).FontWeight(600).SingleLine()
-			ui.Text(c, locales.ProjectDiskSubtitle()).FontSize(11.5).TextColor(pal.TextFaint).Grow(1).MinWidth(0).SingleLine()
+			ui.Text(c, locales.ProjectDiskTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
 			if sizedAny {
-				ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(12.5).FontWeight(500).TextColor(t.Text).SingleLine()
+				ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine().Shrink(0)
 			}
-			ui.Button(c.Key("project-disk-cleanup"), locales.ProjectDiskOpenCleanup()).Height(controlHeight).OnClick(func() {
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			pageLinkAction(c, "project-disk-cleanup", locales.ProjectDiskOpenCleanup(), func() {
 				a.router.Push(cleanupPage)
 			})
 		})
-		for _, d := range p.Installs {
+		for i, d := range p.Installs {
 			full := filepath.Join(p.Dir, d)
 			szText := "…"
-			if sz, ok := a.pathSize(full); ok {
-				szText = formatBytes(sz)
+			var ratio float32
+			if hasSize[i] {
+				szText = formatBytes(sizes[i])
+				if maxSize > 0 {
+					ratio = float32(sizes[i]) / float32(maxSize)
+					if ratio < 0.06 && sizes[i] > 0 {
+						ratio = 0.06
+					}
+				}
 			}
-			listRow(c, d, true, tilde(full, a.Home), func() {
-				ui.Text(c, szText).Font(FontMono).FontSize(12).TextColor(t.TextMuted).SingleLine()
+			ui.Row(c.Key("project-disk-row:"+d)).Gap(10).Padding(9, 14).MinHeight(40).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				clipped(c, d).Font(FontMono).FontSize(12.5).Grow(1).MinWidth(0)
+				if sizedAny && !narrow(c) {
+					const barTrackW = float32(64)
+					ui.Box(c).Width(barTrackW).Height(4).Radius(2).Background(pal.Muted).Clip().Shrink(0).Children(func() {
+						if ratio > 0 {
+							ui.Box(c).Width(barTrackW * ratio).Height(4).Radius(2).Background(Accent)
+						}
+					})
+				}
+				ui.Text(c, szText).Font(FontMono).FontSize(12).TextColor(t.TextMuted).Width(60).TextAlign(ui.End).SingleLine().Shrink(0)
 				if a.Shell != nil {
 					iconButton(c.Key("project-disk-open:"+d), "folder-open", showInFolder()).OnClick(func() {
 						a.Shell.ShowItemInFolder(full)
@@ -192,18 +174,18 @@ func (a *App) projectDiskCard(c *ui.Context, p projects.Project) {
 }
 
 func (a *App) projectServicesTab(c *ui.Context, p projects.Project) {
-	hasCompose := false
-	if _, ok := composeProject(p); ok && a.canPlanDocker() && a.dockerAnswers() {
-		hasCompose = true
-	}
+	hasCompose := len(composeProjects(p)) > 0
 	_, kubeLinked := a.KubeLinks[p.Dir]
-	hasAny := hasCompose || len(p.Databases) > 0 || kubeLinked || len(p.Kube) > 0
+	hasRunning := a.projectRunningCounts(p) > 0 || len(a.projectComposeContainers(p)) > 0
+	hasAny := hasRunning || len(p.Scripts) > 0 || hasCompose || len(p.Databases) > 0 || kubeLinked || len(p.Kube) > 0
 	if !hasAny {
-		listCard(c, locales.ProjectTabServices(), "", func() {
+		listCard(c, locales.ProjectTabRunServices(), "", func() {
 			cardNote(c, locales.ProjectServicesEmpty())
 		})
 		return
 	}
+	a.projectRunningCard(c, p)
+	a.projectScriptsCard(c, p)
 	a.projectDockerCard(c, p)
 	a.projectDatabasesCard(c, p)
 	a.projectKubeCard(c, p)
@@ -232,12 +214,12 @@ func (a *App) projectSkillsCard(c *ui.Context, p projects.Project) {
 					a.openSkillCreate(p.Dir)
 				})
 				if a.LoadCatalog != nil || a.SearchSkillsSh != nil {
-					ui.PrimaryButton(c.Key("project-skill-install"), locales.ProjectSkillsInstall()).Height(controlHeight).OnClick(func() {
+					ui.Button(c.Key("project-skill-install"), locales.ProjectSkillsInstall()).Height(controlHeight).OnClick(func() {
 						a.openSkillCatalogForProject(p.Dir)
 					})
 				}
 			}
-			ui.Button(c.Key("project-skills-all"), locales.ProjectSkillsOpenAll()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-skills-all", locales.ProjectSkillsOpenAll(), func() {
 				a.skillScope = 2
 				a.skillProject = p.Dir
 				a.router.Push("/ai/skills")
@@ -335,9 +317,7 @@ func (a *App) projectMCPCard(c *ui.Context, p projects.Project) {
 				ui.Text(c, strconv.Itoa(len(p.MCP))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			}
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			ui.Button(c.Key("project-mcp-all"), locales.ProjectMcpOpenAll()).Height(controlHeight).OnClick(func() {
-				a.router.Push("/ai/mcp")
-			})
+			a.pageLink(c, "project-mcp-all", locales.ProjectMcpOpenAll(), "/ai/mcp")
 		})
 		if len(p.MCP) == 0 {
 			cardNote(c, locales.ProjectMcpEmpty())
@@ -402,7 +382,7 @@ func (a *App) projectInstructionsCard(c *ui.Context, p projects.Project) {
 					a.connectInstructions(p.Dir)
 				})
 			}
-			ui.Button(c.Key("project-instr-open"), locales.ProjectInstructionsOpen()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-instr-open", locales.ProjectInstructionsOpen(), func() {
 				a.instructionsChosen = p.Dir
 				a.router.Push(instructionsPage)
 			})
@@ -512,9 +492,7 @@ func (a *App) projectAccessCard(c *ui.Context, p projects.Project) {
 			ui.Text(c, locales.ProjectRulesTitle()).FontSize(13.5).FontWeight(600).SingleLine()
 			ui.Text(c, strconv.Itoa(len(p.Rules)+len(p.Hooks))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			ui.Button(c.Key("project-access-open"), locales.ProjectAgentsOpen()).Height(controlHeight).OnClick(func() {
-				a.router.Push(targetRoute)
-			})
+			a.pageLink(c, "project-access-open", locales.ProjectAgentsOpen(), targetRoute)
 		})
 		for i, g := range ruleGroups {
 			title := locales.ProjectRulesTitle()

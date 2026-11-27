@@ -80,6 +80,13 @@ func (a *App) startForward(d *forwardForm, remote int) {
 	target := d.target
 	target.Local, target.Remote = local, remote
 	d.open = false
+	a.launchForward(target)
+}
+
+func (a *App) launchForward(target ops.Forward) {
+	if a.RunForward == nil || a.forwardBusy(target.Local) {
+		return
+	}
 	a.forwards = slices.DeleteFunc(a.forwards, func(f *portForward) bool { return f.target == target && f.ended })
 	f := &portForward{target: target}
 	a.forwards = append(a.forwards, f)
@@ -89,6 +96,13 @@ func (a *App) startForward(d *forwardForm, remote int) {
 			a.dismissForward(f)
 		}
 	})
+}
+
+func (a *App) reconnectForward(f *portForward) {
+	if f == nil || !f.ended || a.RunForward == nil || a.forwardBusy(f.target.Local) {
+		return
+	}
+	a.launchForward(f.target)
 }
 
 func (a *App) dismissForward(f *portForward) {
@@ -302,9 +316,15 @@ func (a *App) forwardRow(c *ui.Context, f *portForward, onPorts bool) {
 			}
 			aiTag(c, label, bg, fg)
 			if f.ended {
+				if a.RunForward != nil && !a.forwardBusy(target.Local) {
+					iconButton(c.Key("forward-reconnect"), "refresh-cw", locales.KubeForwardReconnect()).OnClick(func() { a.reconnectForward(f) })
+				}
 				iconButton(c, "x", locales.KubeForwardDismiss()).OnClick(func() { a.dismissForward(f) })
 			} else {
 				if f.pod.Name != "" && !f.stopping {
+					if !nonHTTPPorts[strconv.Itoa(target.Local)] && !nonHTTPPorts[strconv.Itoa(target.Remote)] {
+						iconButton(c.Key("forward-browser"), "external-link", locales.PortsOpenBrowser()).OnClick(func() { c.OpenURL("http://" + target.Address()) })
+					}
 					iconButton(c, "copy", locales.KubeForwardCopy()).OnClick(func() { c.WriteClipboard(target.Address()) })
 				}
 				ui.Button(c.Key("forward-stop"), locales.KubeForwardStop()).Disabled(f.stopping).OnClick(func() {

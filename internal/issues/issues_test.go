@@ -183,6 +183,18 @@ func TestFind(t *testing.T) {
 		{name: "missing directory on PATH",
 			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{{Dir: abs("/usr/bin")}, {Dir: abs("/opt/gone"), Missing: true}}, GUIPath: []inventory.PathEntry{{Dir: abs("/opt/gone"), Missing: true}}},
 			want: []Issue{{Kind: PathMissing, Severity: Info, Dirs: []string{abs("/opt/gone")}}}},
+		{name: "duplicate directory on PATH",
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zprofile", Line: 1}}},
+				{Dir: abs("/usr/bin")},
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zshrc", Line: 4}}},
+			}},
+			want: []Issue{{Kind: PathDuplicate, Severity: Info, Dirs: []string{abs("/opt/homebrew/bin")}}}},
+		{name: "system repeat on PATH ignored",
+			snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/h/.zprofile", Line: 1}}},
+				{Dir: abs("/opt/homebrew/bin"), Sources: []inventory.PathSource{{File: "/etc/paths.d/homebrew", Line: 1}}},
+			}}},
 		{name: "npm's global prefix before the first global install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
 			{Dir: `C:\Users\Ann\AppData\Roaming\npm`, Missing: true}}}},
 		{name: "dotnet's tools before the first tool install", snap: &inventory.Snapshot{TerminalPath: []inventory.PathEntry{
@@ -424,6 +436,7 @@ func TestUnsupportedLanguages(t *testing.T) {
 		}},
 		Rust: &versions.Rust{Lines: []versions.Cycle{
 			{Cycle: "1.90", Latest: "1.90.0", End: time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)},
+			{Cycle: "1.89", Latest: "1.89.1", End: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)},
 			{Cycle: "1.75", Latest: "1.75.0", EOL: true},
 		}},
 		Dotnet: &versions.Dotnet{Lines: []versions.DotnetLine{
@@ -453,6 +466,7 @@ func TestUnsupportedLanguages(t *testing.T) {
 		}, false},
 		{"java 1.8 eol", "java", vm("java", "1.8.0_392", "/mise/java/8/bin/java"), true},
 		{"java 21 supported", "java", vm("java", "21.0.9", "/mise/java/21/bin/java"), false},
+		{"rust previous minor skipped", "rust", vm("rust", "1.89.1", "/rustup/1.89/bin/rustc"), false},
 		{"rust stable eol", "rust", vm("rust", "1.75.0", "/rustup/1.75/bin/rustc"), true},
 		{"rust nightly skipped", "rust", inventory.Installation{
 			Tool: "rust", Version: "1.75.0-nightly", Path: "/rustup/nightly/bin/rustc", OnPath: 1, InGUI: 1,
@@ -474,5 +488,35 @@ func TestUnsupportedLanguages(t *testing.T) {
 				t.Errorf("Unsupported found=%v, want %v", found, tc.want)
 			}
 		})
+	}
+}
+
+func TestDuplicateFallsToSystem(t *testing.T) {
+	// pyenv shim in system mode delegates to Homebrew's python3: not a duplicate.
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool: "python",
+		Installations: []inventory.Installation{
+			{Tool: "python", Path: "/Users/dev/.pyenv/shims/python3", OnPath: 1, Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "pyenv", Shim: true}},
+			{Tool: "python", Version: "3.14.2", Path: "/opt/homebrew/bin/python3", OnPath: 2, InGUI: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}},
+		},
+	}}}
+	for _, is := range Find(snap, nil, nil, time.Now()) {
+		if is.Kind == Duplicate {
+			t.Fatalf("unexpected Duplicate issue for pyenv system shim: %+v", is)
+		}
+	}
+	// When pyenv has a global default set, the shim shadows Homebrew's copy: still a duplicate.
+	snap.Tools[0].Installations = append(snap.Tools[0].Installations, inventory.Installation{
+		Tool: "python", Version: "3.12.9", Path: "/Users/dev/.pyenv/versions/3.12.9/bin/python3", Default: true,
+		Source: inventory.Source{Kind: inventory.KindVersionManager, Manager: "pyenv"},
+	})
+	var dup bool
+	for _, is := range Find(snap, nil, nil, time.Now()) {
+		if is.Kind == Duplicate {
+			dup = true
+		}
+	}
+	if !dup {
+		t.Fatal("expected Duplicate issue when pyenv has a default version shadowing brew")
 	}
 }

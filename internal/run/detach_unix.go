@@ -21,3 +21,22 @@ func detach(cmd *exec.Cmd) {
 func detachGUI(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 }
+
+// setCancelGroup configures cmd.Cancel to signal the child's entire process
+// group (created by detach's Setsid: true) with SIGTERM so child workers
+// (such as Vite/Next/Air) exit cleanly rather than staying orphaned.
+func setCancelGroup(cmd *exec.Cmd) {
+	cmd.Cancel = func() error {
+		if cmd.Process == nil {
+			return nil
+		}
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil && err != syscall.ESRCH {
+			return cmd.Process.Kill()
+		}
+		return nil
+	}
+}
+
+func killGroupHard(pid int) {
+	_ = syscall.Kill(-pid, syscall.SIGKILL)
+}

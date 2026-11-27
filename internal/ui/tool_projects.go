@@ -116,7 +116,7 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 				label, runInstall, canInstall := a.projectInstallAction(pst, a.proposeOrSay)
 				switch {
 				case canInstall:
-					ui.Button(c.Key("tool-proj-install:"+dir), "").Height(controlHeight).Label(label).OnClick(runInstall).Children(func() {
+					ui.Button(c.Key("tool-proj-install:"+dir), "").Height(rowControlHeight).Label(label).OnClick(runInstall).Children(func() {
 						ui.Icon(c, Icon("download")).Size(13, 13).TextColor(t.TextMuted)
 						ui.Text(c, locales.Install()).SingleLine()
 					})
@@ -134,7 +134,8 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 			if pst.Checked {
 				if prob := statusProblem(pst); prob != "" {
 					ui.Box(c).Padding(0, 12, 10, 12).Children(func() {
-						warningRow(c, problemBanner([]projects.Status{pst}))
+						b := problemBanner([]projects.Status{pst})
+						warningBanner(c, b.Title, b.Meta, nil)
 					})
 				}
 			}

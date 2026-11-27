@@ -4,6 +4,28 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-27
+
+### Added
+
+- **AI Quotas & Limits:** Read-only subscription and rate-limit tracking across 18 AI coding providers (Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, JetBrains AI, Grok, Windsurf, Cline, Kimi, OpenCode Go, Kiro, Kilo, Amp, Augment, CodeRabbit, HuggingFace) with canonical window ordering (`5h` before `Weekly`), burn-pace markers, inline reset times, adaptive polling, per-provider tray toggles and ordering, and optional low-quota (`<10%`) / reset desktop notifications.
+- **Live tray control-center popover:** Native menu bar / system tray popover showing running dev servers, Docker containers, local databases, Kubernetes port-forwards, compact AI subscription quotas, Colima toggle, and 1-click Docker/Kubernetes context switching, with configurable section visibility and order.
+- **Managed project script runner & dev-server inspector:** Launch and stop scripts from `package.json`, `Makefile`, `Taskfile.yml`, `justfile`, `mise.toml`, and `composer.json` directly inside Hearth with live streaming logs and clean process-group teardown; inspect listening ports with CPU/RAM metrics, framework classification, and browser-open checks.
+- **AI Agent Radar:** Live passive detection of running coding agents plus opt-in lifecycle hooks (`hearth notify`) with desktop notifications when an agent finishes or waits for input.
+- **Git clone, private Git skill catalogs & Cleanup 2.0:** Clone repositories directly from Hearth, connect private Git repositories as custom skill catalogs, and reclaim additional disk caches with clearer grouping and explanations.
+- **Expanded MCP server (`hearth mcp`) & environment tools:** Added new read tools (`get_ai_quotas`, `get_instructions`, `get_models`, `get_usage`, etc.), MCP resources (`hearth://summary`, `hearth://projects`, `hearth://issues`, `hearth://ports`), diagnostic prompts, human-in-the-loop proposal tools (`propose_*`), plus global package management, allowlisted environment variable plans (`ANDROID_HOME`, `JAVA_HOME`), and Git credential/SSH helpers.
+
+### Changed
+
+- **Split macOS builds & smaller installed footprint:** Switched macOS releases from a universal DMG (~94 MB installed) to separate Apple Silicon (`arm64`) and Intel (`amd64`) DMGs (~44-48 MB installed), compressed embedded fonts, dropped duplicated resources, and kept a signed universal updater payload so existing installations auto-update smoothly.
+- **Cleaner Project Overview & aligned tables:** Arranged secondary project cards (`Docker Compose`, `Databases`, `Kubernetes`, `Disk space`, `AI`, `Files`) into a height-balanced 2-column grid with unified card headers, removed the duplicate `Prepare environment` button from the warning banner, aligned Services & Ports into dedicated `CPU`, `RAM`, and fixed-slot action columns, moved Databases project links into inline chips to prevent URL truncation, synced inline button heights, and softened the Quotas sidebar badge.
+- **Broader `Prepare environment` plans:** Added automatic installation of versioned PHP lines (`brew`/`winget`) together with Composer and local `mise.toml` installation for unversioned `mise`-backed project tools without altering global defaults.
+
+### Fixed
+
+- **Colima, Docker & runtime detection:** Improved Colima/Docker detection and setup reliability, fixed Windows SQLite file URI formatting in `aiquota`, stopped flagging pass-through `pyenv`/`rbenv` shims as duplicate installations, and stopped marking the immediately previous Rust stable minor as end-of-life.
+- **Website release downloads:** Resolved `/releases/latest` via redirect header before falling back to the GitHub API to avoid unauthenticated rate limits on Cloudflare Workers, and added Apple Silicon / Intel macOS DMG download links.
+
 ## [1.0.5] - 2026-11-26
 
 ### Added

@@ -49,3 +49,39 @@ func (r *Rust) Train() (RustTrain, error) {
 	}
 	return t, nil
 }
+
+// RustEnded reports whether a stable Rust version should be flagged as
+// end-of-life. Rust ships a new minor every six weeks and endoflife.date
+// marks the previous minor EOL immediately, so the single minor right behind
+// the current stable release is treated as a normal update rather than EOL.
+func RustEnded(r *Rust, version string, now time.Time) bool {
+	if r == nil || len(r.Lines) == 0 {
+		return false
+	}
+	c, ok := r.Line(version)
+	if !ok || !c.Ended(now) {
+		return false
+	}
+	cur := r.Lines[0]
+	if !cur.Ended(now) {
+		curMaj, curMin, ok1 := parseMajorMinor(cur.Cycle)
+		verMaj, verMin, ok2 := parseMajorMinor(c.Cycle)
+		if ok1 && ok2 && verMaj == curMaj && verMin >= curMin-1 {
+			return false
+		}
+	}
+	return true
+}
+
+func parseMajorMinor(cycle string) (int, int, bool) {
+	majorStr, minorStr, ok := strings.Cut(cycle, ".")
+	if !ok {
+		return 0, 0, false
+	}
+	major, err1 := strconv.Atoi(majorStr)
+	minor, err2 := strconv.Atoi(minorStr)
+	if err1 != nil || err2 != nil {
+		return 0, 0, false
+	}
+	return major, minor, true
+}

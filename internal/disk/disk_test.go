@@ -441,3 +441,42 @@ func isSubpath(target, base string) bool {
 	rel, err := filepath.Rel(base, target)
 	return err == nil && rel != ".." && len(rel) > 0 && rel[0] != '.'
 }
+
+func TestCountWithOptionsWorkerPoolAndThrottle(t *testing.T) {
+	home := t.TempDir()
+	outside := t.TempDir()
+	extProj := filepath.Join(outside, "ext-web")
+	write(t, filepath.Join(extProj, "package.json"), 2)
+	write(t, filepath.Join(extProj, "node_modules", "pkg", "index.js"), 2<<20)
+	write(t, filepath.Join(extProj, ".next", "cache.bin"), 1<<20)
+
+	// Create 12 small projects under home so throttling collapses per-folder progress callbacks.
+	for i := range 12 {
+		dir := filepath.Join(home, "p"+string(rune('a'+i)))
+		write(t, filepath.Join(dir, "package.json"), 2)
+		write(t, filepath.Join(dir, "node_modules", "a.js"), 16<<10)
+	}
+
+	env := sysenv.Env{"HOME=" + home, "USERPROFILE=" + home}
+	callbacks := 0
+	got, err := CountWithOptions(t.Context(), &run.Fake{}, env, &inventory.Snapshot{}, nil, CountOptions{
+		Projects: []string{extProj},
+	}, func(inventory.Sizes) {
+		callbacks++
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Installs) != 14 {
+		t.Fatalf("Installs count = %d, want 14 (12 home + 2 external)", len(got.Installs))
+	}
+	if got.Paths[filepath.Join(extProj, "node_modules")].Bytes < 2<<20 {
+		t.Errorf("external node_modules not measured: %+v", got.Paths[filepath.Join(extProj, "node_modules")])
+	}
+	if got.Paths[filepath.Join(extProj, ".next")].Bytes < 1<<20 {
+		t.Errorf("external .next not measured: %+v", got.Paths[filepath.Join(extProj, ".next")])
+	}
+	if callbacks >= 10 {
+		t.Errorf("progress callbacks = %d, expected throttling to coalesce rapid folder measurements", callbacks)
+	}
+}

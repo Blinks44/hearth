@@ -81,6 +81,10 @@ func (a *App) CancelPreparation() {
 }
 
 func (a *App) prepareProject(dir string) {
+	a.prepareProjectWithOrigin(dir, "")
+}
+
+func (a *App) prepareProjectWithOrigin(dir, origin string) {
 	if a.op.running() {
 		a.op.open = true
 		return
@@ -151,7 +155,11 @@ func (a *App) prepareProject(dir string) {
 		}
 		if err != nil {
 			// Keep the folder and retry actions available even when parsing fails.
-			p = ops.Plan{Title: locales.PrepareTitle(filepath.Base(dir)), Why: locales.PrepareReadErrors()}
+			why := locales.PrepareReadErrors()
+			if origin != "" {
+				why = origin + "\n\n" + why
+			}
+			p = ops.Plan{Title: locales.PrepareTitle(filepath.Base(dir)), Why: why}
 			a.Propose(p)
 			a.op.project = &ops.ProjectPreparation{
 				Project: projects.Project{Dir: dir},
@@ -159,6 +167,13 @@ func (a *App) prepareProject(dir string) {
 				Items:   []ops.ProjectItem{{Title: locales.PrepareReadErrors(), Text: err.Error(), Kind: ops.ProjectUnknown}},
 			}
 			return
+		}
+		if origin != "" {
+			if p.Why != "" {
+				p.Why = origin + "\n\n" + p.Why
+			} else {
+				p.Why = origin
+			}
 		}
 		a.Propose(p)
 		a.op.project = &requestResult
@@ -384,13 +399,26 @@ func (a *App) preparationView(c *ui.Context) {
 	if request == nil {
 		return
 	}
+	t := c.Theme()
+	pal := Colors(t)
 	dialogBase(c.Key("preparing"), &request.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.25))
-		panel.Width(640).Radius(12).Background(c.Theme().Background)
-		ui.Column(c).Padding(20).Gap(12).Children(func() {
-			ui.Text(c, locales.PrepareTitle(filepath.Base(request.dir))).FontSize(18).FontWeight(600)
-			ui.Text(c, locales.PrepareChecking()).FontSize(12).TextColor(c.Theme().TextMuted)
-			ui.Button(c.Key("prepare-cancel"), locales.Cancel()).OnClick(func() { request.open = false; a.CancelPreparation() })
+		panel.Width(440).Radius(12).Clip().Background(t.Background).
+			BorderWidth(1).BorderColor(pal.Divider).
+			Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.18))
+		ui.Column(c).Children(func() {
+			ui.Column(c).Padding(20, 20, 16, 20).Gap(10).Children(func() {
+				ui.Text(c, locales.PrepareTitle(filepath.Base(request.dir))).FontSize(16).FontWeight(600).Wrap()
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+					spinIcon(c, "refresh-cw", 14, t.Accent, true)
+					ui.Text(c, locales.PrepareChecking()).FontSize(12.5).TextColor(t.TextMuted).Grow(1).MinWidth(0).Wrap()
+				})
+			})
+			ui.Row(c).Padding(12, 20).Justify(ui.End).Background(pal.Subtle).
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				ui.Button(c.Key("prepare-cancel"), locales.Cancel()).Height(controlHeight).
+					OnClick(func() { request.open = false; a.CancelPreparation() })
+			})
 		})
 	})
 	if !request.open {

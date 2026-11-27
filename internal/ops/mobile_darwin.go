@@ -97,3 +97,47 @@ func findSimRuntimeID(ctx context.Context, r run.Runner, rt inventory.SimRuntime
 	}
 	return ""
 }
+
+// SwitchXcodePlan returns a plan that switches the active Xcode developer
+// directory via xcode-select -s.
+func SwitchXcodePlan(app inventory.XcodeApp, detect Detect) (Plan, bool) {
+	if app.Path == "" || strings.Contains(app.Path, "..") || hasControlChars(app.Path) {
+		return Plan{}, false
+	}
+	clean := filepath.Clean(app.Path)
+	base := filepath.Base(clean)
+	if filepath.Dir(clean) != "/Applications" || !strings.HasSuffix(base, ".app") || base == ".app" {
+		return Plan{}, false
+	}
+	devDir := filepath.Join(clean, "Contents", "Developer")
+	ver := app.Version
+	if ver == "" {
+		ver = filepath.Base(clean)
+	}
+	p := Plan{
+		Title:   locales.MobileXcodeSwitchTitle(ver),
+		Changes: []string{locales.MobileXcodeSwitchChange(devDir)},
+		Steps:   []Step{{Argv: []string{"xcode-select", "-s", devDir}, Admin: true}},
+		Notes:   []Note{AdminNote()},
+	}
+	if detect != nil {
+		p.Verify = func(ctx context.Context) (string, error) {
+			st, err := detect(ctx)
+			if err != nil {
+				return "", err
+			}
+			if st.Mobile != nil {
+				if st.Mobile.DeveloperDir == devDir {
+					return locales.MobileXcodeSwitchChange(devDir), nil
+				}
+				for _, x := range st.Mobile.Xcodes {
+					if x.Selected && filepath.Clean(x.Path) == clean {
+						return locales.MobileXcodeSwitchChange(devDir), nil
+					}
+				}
+			}
+			return "", errors.New("xcode-select did not switch to " + devDir)
+		}
+	}
+	return p, true
+}

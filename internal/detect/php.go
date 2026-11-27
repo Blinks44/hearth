@@ -215,7 +215,7 @@ func composerPackages(home string) []inventory.Package {
 		if _, ok := manifest.Require[p.Name]; !ok {
 			continue
 		}
-		pkg := inventory.Package{Name: p.Name, Version: strings.TrimPrefix(p.Version, "v")}
+		pkg := inventory.Package{Name: p.Name, Version: strings.TrimPrefix(p.Version, "v"), Manager: "composer"}
 		for _, bin := range p.Bin {
 			pkg.Commands = append(pkg.Commands, filepath.Base(bin))
 		}

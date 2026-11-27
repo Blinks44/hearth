@@ -245,12 +245,14 @@ func globalPackages(dir string) []inventory.Package {
 			scoped, _ := os.ReadDir(filepath.Join(dir, name))
 			for _, s := range scoped {
 				if p, ok := readPackage(filepath.Join(dir, name, s.Name())); ok {
+					p.Manager = "npm"
 					pkgs = append(pkgs, p)
 				}
 			}
 			continue
 		}
 		if p, ok := readPackage(filepath.Join(dir, name)); ok {
+			p.Manager = "npm"
 			pkgs = append(pkgs, p)
 		}
 	}

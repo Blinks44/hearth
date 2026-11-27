@@ -5,9 +5,10 @@ package resources
 
 import "embed"
 
-// Fonts holds Inter and JetBrains Mono (both SIL OFL 1.1), as fonts/*.ttf.
+// Fonts holds gzip-compressed Inter and JetBrains Mono (both SIL OFL 1.1),
+// as fonts/*.ttf.gz.
 //
-//go:embed fonts/*.ttf
+//go:embed fonts/*.ttf.gz
 var Fonts embed.FS
 
 // Icons holds Lucide icons as icons/lucide/<name>.svg, tool logos in one

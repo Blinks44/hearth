@@ -71,8 +71,8 @@ func TestJavaIndependentBuilders(t *testing.T) {
 	}
 	tt := openJava(a)
 	screenshot(t, tt, "java-builders")
-	hasTexts(t, tt, "gradle", "/opt/homebrew/bin/gradle", "Maven", "Install…")
-	if err := tt.Click("Install…"); err != nil {
+	hasTexts(t, tt, "gradle", "/opt/homebrew/bin/gradle", "Maven", "Install Maven")
+	if err := tt.Click("Install Maven"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
@@ -99,5 +99,32 @@ func TestJavaEmptyAndStub(t *testing.T) {
 		} else if !tt.HasText("Java is not installed") {
 			t.Fatalf("texts %q", tt.Texts())
 		}
+	}
+}
+
+func TestJavaPatchUpdateShowsInstallButton(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = javaSnapshot()
+	// Installed default is 21.0.5; newer patch 21.0.13.1+2 should offer an install button
+	// and compare numerically (13 > 5, not lexicographically).
+	a.JavaVersions = &versions.Java{Lines: []versions.Cycle{
+		{Cycle: "21", Latest: "21.0.13.1+2"},
+		{Cycle: "17", Latest: "17.0.13+11"},
+	}}
+	tt := openJava(a)
+	if !tt.HasText("Temurin 21.0.13.1+2") || !tt.HasText("JDK 21 · update for 21.0.5") {
+		t.Fatalf("missing patch update row: %q", tt.Texts())
+	}
+	if !tt.HasText("Install Temurin 21.0.13.1+2") {
+		t.Fatalf("expected patch update install button for 21.0.13.1+2: %q", tt.Texts())
+	}
+	if tt.HasText("Install Temurin 17.0.13+11") {
+		t.Fatalf("did not expect install button for already-installed 17.0.13: %q", tt.Texts())
+	}
+	if compareJavaVersion("21.0.13.1+2", "21.0.5") <= 0 {
+		t.Fatalf("expected 21.0.13.1+2 > 21.0.5")
+	}
+	if compareJavaVersion("17.0.13+11", "17.0.13") != 0 {
+		t.Fatalf("expected 17.0.13+11 == 17.0.13")
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Blinks44/hearth/internal/catalog"
 	"github.com/Blinks44/hearth/internal/cleanup"
@@ -40,6 +41,18 @@ func (a *App) docker(c *ui.Context, p page) {
 		}
 		d := st.Docker
 		active := inventory.TerminalCopy(st.Installations)
+		if a.RefreshDocker != nil && active >= 0 {
+			for _, ctx := range d.Contexts {
+				if ctx.Name == d.Selected && ctx.Local && !ctx.Denied && ctx.Status == "unavailable" {
+					now := time.Now()
+					if a.dockerLastCheck.IsZero() || now.Sub(a.dockerLastCheck) >= 5*time.Second {
+						a.dockerLastCheck = now
+						a.RefreshDocker()
+					}
+					break
+				}
+			}
+		}
 		if !a.dockerTabsReady {
 			a.dockerTabsReady = true
 			if active < 0 {
@@ -81,9 +94,7 @@ func (a *App) docker(c *ui.Context, p page) {
 						{"PATH", ""},
 					})
 					ui.Box(c).Grow(1)
-					if a.dockerTab == 0 {
-						ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Height(controlHeight).Width(200).MinWidth(140).Shrink(1)
-					}
+					ui.SearchField(c.Key("docker-filter"), &a.dockerFilter).Bind(&a.filterField).Placeholder(locales.DockerFilter()).Height(controlHeight).Width(200).MinWidth(140).Shrink(1)
 				})
 				columns(c, 12, func() {
 					switch a.dockerTab {
@@ -100,9 +111,21 @@ func (a *App) docker(c *ui.Context, p page) {
 					case 2:
 						a.dockerProjectList(c)
 					case 3:
-						globalsCard(c, locales.DockerPlugins(), locales.DockerNoPlugins(), d.Plugins, tilde(d.PluginDir, a.Home))
+						plugins := filterDockerPlugins(d.Plugins, a.dockerFilter)
+						emptyMsg := locales.DockerNoPlugins()
+						if strings.TrimSpace(a.dockerFilter) != "" && len(d.Plugins) > 0 {
+							emptyMsg = locales.DockerNoMatches()
+						}
+						globalsCard(c, locales.DockerPlugins(), emptyMsg, plugins, tilde(d.PluginDir, a.Home))
 					case 4:
-						pathCard(c, "docker", st.Installations, active, a.Home)
+						insts, filteredActive := filterDockerInstalls(st.Installations, active, a.dockerFilter)
+						if len(insts) == 0 && strings.TrimSpace(a.dockerFilter) != "" && len(st.Installations) > 0 {
+							listCard(c, "PATH", "", func() {
+								cardNote(c, locales.DockerNoMatches())
+							})
+						} else {
+							pathCard(c, "docker", insts, filteredActive, a.Home)
+						}
 					}
 				}, func() {
 					a.dockerHealthCard(c, st, d.Selected, d.Health, false)
@@ -298,18 +321,24 @@ func dockerEngineIcon(name string) string {
 
 func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 	pal := Colors(c.Theme())
+	query := strings.ToLower(strings.TrimSpace(a.dockerFilter))
 	engines := st.Docker.Engines
 	cli := inventory.TerminalCopy(st.Installations) >= 0
-	heroShown := a.dockerHearthHeroCard(c, st)
+	heroShown := query == "" && a.dockerHearthHeroCard(c, st)
 	title := locales.DockerEngineOptions()
 	if heroShown {
 		title = locales.DockerHearthOtherEngines()
 	}
 	listCard(c, title, dockerPlatform(), func() {
+		shown := 0
 		for _, engine := range engines {
 			if heroShown && engine.Name == recommendedDockerEngine {
 				continue
 			}
+			if query != "" && !strings.Contains(strings.ToLower(engine.Name+" "+engine.Path+" "+dockerManagementLabel(engine.Name)), query) {
+				continue
+			}
+			shown++
 			caption := locales.DockerOpenSource()
 			switch engine.Name {
 			case "OrbStack":
@@ -355,6 +384,9 @@ func (a *App) dockerEngines(c *ui.Context, st inventory.ToolState) {
 					iconButton(c.Key("site:"+engine.Name), "external-link", locales.DockerEngineSite(site)).OnClick(func() { c.OpenURL(m.Package) })
 				}
 			})
+		}
+		if shown == 0 {
+			cardNote(c, locales.DockerNoMatches())
 		}
 		ui.Row(c).Gap(8).Padding(10, 14).Children(func() {
 			for _, engine := range engines {
@@ -482,17 +514,59 @@ func (a *App) dockerProjects() []int {
 func (a *App) dockerProjectList(c *ui.Context) {
 	listCard(c, locales.ProjectsTitle(), "", func() {
 		rows := a.dockerProjects()
+		query := strings.ToLower(strings.TrimSpace(a.dockerFilter))
+		shown := 0
 		for _, i := range rows {
 			p := a.Projects[i]
 			dir := p.Dir
+			if query != "" && !strings.Contains(strings.ToLower(dir+" "+tilde(dir, a.Home)), query) {
+				continue
+			}
+			shown++
 			navListRow(c, "docker-proj:"+dir, tilde(dir, a.Home), "", locales.Details(), func() {
 				a.router.Push(projectPath(dir))
 			})
 		}
-		if len(rows) == 0 {
+		switch {
+		case len(rows) == 0:
 			cardNote(c, locales.DockerNoProjects())
+		case shown == 0:
+			cardNote(c, locales.DockerNoMatches())
 		}
 	})
+}
+
+func filterDockerPlugins(plugins []inventory.Package, filter string) []inventory.Package {
+	query := strings.ToLower(strings.TrimSpace(filter))
+	if query == "" {
+		return plugins
+	}
+	var out []inventory.Package
+	for _, p := range plugins {
+		if strings.Contains(strings.ToLower(p.Name+" "+p.Version+" "+strings.Join(p.Commands, " ")), query) {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func filterDockerInstalls(insts []inventory.Installation, active int, filter string) ([]inventory.Installation, int) {
+	query := strings.ToLower(strings.TrimSpace(filter))
+	if query == "" {
+		return insts, active
+	}
+	var out []inventory.Installation
+	filteredActive := -1
+	for i, in := range insts {
+		if !strings.Contains(strings.ToLower(in.Path+" "+in.Version+" "+sourceName(in.Source)), query) {
+			continue
+		}
+		if i == active {
+			filteredActive = len(out)
+		}
+		out = append(out, in)
+	}
+	return out, filteredActive
 }
 
 // engineStartPlan is the plan that starts the engine of the selected

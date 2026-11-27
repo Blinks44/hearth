@@ -38,7 +38,9 @@ export function detectPlatform(): DetectedPlatform {
   }
 
   let arch: PlatformArch = "amd64";
-  if (
+  if (archHint.includes("x86") || ua.includes("x86_64") || ua.includes("x64")) {
+    arch = "amd64";
+  } else if (
     archHint.includes("arm") ||
     ua.includes("arm64") ||
     ua.includes("aarch64") ||

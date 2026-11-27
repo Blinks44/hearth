@@ -265,7 +265,8 @@ The icon files are dedicated to the public domain under CC0 1.0 Universal
 Logos are trademarks of their owners. Hearth shows them only to name the
 tool it describes; this does not imply any affiliation with or endorsement
 by the owners. The Cursor mark is a trademark of Anysphere, Inc.; the
-Colima mark is from colima.run (MIT); the Kiri mark is from runkiri.com.
+Colima mark is from colima.run (MIT); the Kiri mark is from runkiri.com;
+the mise mark is from mise.jdx.dev (MIT).
 
 
 ================================================================

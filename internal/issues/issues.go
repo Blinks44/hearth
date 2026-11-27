@@ -11,6 +11,7 @@ import (
 	"github.com/Blinks44/hearth/internal/cleanup"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/internal/versions"
 )
 
@@ -44,6 +45,9 @@ const (
 	PathCurrentDir Kind = "path-current-dir"
 	// PathMissing is a PATH entry naming a directory that is not there.
 	PathMissing Kind = "path-missing"
+	// PathDuplicate is a PATH entry listed more than once (excluding harmless
+	// system repeats such as macOS path_helper or /etc/environment).
+	PathDuplicate Kind = "path-duplicate"
 	// SkillCopies is a skill copied to several folders of the user's or of
 	// one project, the same files in each: an edit to one misses the others.
 	SkillCopies Kind = "skill-copies"
@@ -127,6 +131,7 @@ type Issue struct {
 // means that tool's support dates are unknown.
 type Lists struct {
 	Node                          *versions.Node
+	Go                            *versions.Go
 	Python, PHP, Ruby, Java, Rust *versions.Cycles
 	Dotnet                        *versions.Dotnet
 }
@@ -249,17 +254,49 @@ func extraVersions(s *inventory.Snapshot, ps []projects.Project, lines map[int]v
 	return out
 }
 
+// SystemRepeat reports that the system declares e and adds it again:
+// macOS's path_helper, from /etc/paths or /etc/paths.d, after a startup
+// file put it first, as Homebrew's brew shellenv does, and Ubuntu's
+// profile.d, for the /snap/bin of /etc/environment. The later entry is
+// never used, harmless.
+func SystemRepeat(e inventory.PathEntry) bool {
+	return slices.ContainsFunc(e.Sources, func(s inventory.PathSource) bool {
+		return s.File == "/etc/paths" || s.File == "/etc/environment" || strings.HasPrefix(s.File, "/etc/paths.d/")
+	})
+}
+
 // pathIssues are the terminal's and the apps' PATH entries that mean the
-// working directory, and those naming no directory.
+// working directory, repeat an earlier entry, or name no directory.
 func pathIssues(s *inventory.Snapshot) []Issue {
-	var current, missing []string
-	for _, e := range slices.Concat(s.TerminalPath, s.GUIPath) {
-		switch {
-		case OSDir(e.Dir):
-		case !filepath.IsAbs(e.Dir) && !slices.Contains(current, e.Dir):
-			current = append(current, e.Dir)
-		case e.Missing && !slices.Contains(missing, e.Dir):
-			missing = append(missing, e.Dir)
+	var current, duplicates, missing []string
+	containsPath := func(list []string, dir string) bool {
+		return slices.ContainsFunc(list, func(d string) bool { return sysenv.SamePath(d, dir) })
+	}
+	for _, entries := range [][]inventory.PathEntry{s.TerminalPath, s.GUIPath} {
+		for i, e := range entries {
+			if OSDir(e.Dir) {
+				if slices.ContainsFunc(entries[:i], func(o inventory.PathEntry) bool { return sysenv.SamePath(o.Dir, e.Dir) }) &&
+					!SystemRepeat(e) && !containsPath(duplicates, e.Dir) {
+					duplicates = append(duplicates, e.Dir)
+				}
+				continue
+			}
+			if !filepath.IsAbs(e.Dir) {
+				if !slices.Contains(current, e.Dir) {
+					current = append(current, e.Dir)
+				}
+				continue
+			}
+			if e.Missing {
+				if !containsPath(missing, e.Dir) {
+					missing = append(missing, e.Dir)
+				}
+				continue
+			}
+			if slices.ContainsFunc(entries[:i], func(o inventory.PathEntry) bool { return sysenv.SamePath(o.Dir, e.Dir) }) &&
+				!SystemRepeat(e) && !containsPath(duplicates, e.Dir) {
+				duplicates = append(duplicates, e.Dir)
+			}
 		}
 	}
 	var out []Issue
@@ -268,6 +305,9 @@ func pathIssues(s *inventory.Snapshot) []Issue {
 	}
 	if len(current) > 0 {
 		out = append(out, Issue{Kind: PathCurrentDir, Severity: Warning, Dirs: current})
+	}
+	if len(duplicates) > 0 {
+		out = append(out, Issue{Kind: PathDuplicate, Severity: Info, Dirs: duplicates})
 	}
 	if len(missing) > 0 {
 		out = append(out, Issue{Kind: PathMissing, Severity: Info, Dirs: missing})
@@ -286,10 +326,23 @@ func duplicate(ts inventory.ToolState) []Issue {
 	}
 	// A manager's shim runs that manager's copies, as its own install
 	// directory beside it on PATH does under mise activate: one copy.
+	// Shims like pyenv/rbenv with no manager default pass through to the
+	// next copy on PATH (system mode), so they are not a second copy either.
 	on = slices.DeleteFunc(on, func(in inventory.Installation) bool {
-		return in.Source.Shim && slices.ContainsFunc(on, func(o inventory.Installation) bool {
+		if !in.Source.Shim {
+			return false
+		}
+		if slices.ContainsFunc(on, func(o inventory.Installation) bool {
 			return !o.Source.Shim && o.Source.Manager != "" && o.Source.Manager == in.Source.Manager
-		})
+		}) {
+			return true
+		}
+		if inventory.FallsToSystem(in.Source.Manager) && !slices.ContainsFunc(ts.Installations, func(o inventory.Installation) bool {
+			return o.Default && !o.Source.Shim && o.Source.Manager == in.Source.Manager
+		}) {
+			return true
+		}
+		return false
 	})
 	if len(on) < 2 {
 		return nil
@@ -416,10 +469,17 @@ func versionEnded(tool string, in inventory.Installation, l Lists, now time.Time
 		}
 		line, ok := l.Node.Lines[versions.Major(in.Version)]
 		return ok && line.Ended(now)
+	case "go":
+		return l.Go.Ended(in.Version)
 	case "dotnet":
 		dl, ok := l.Dotnet.Line(in.Version)
 		return ok && dl.Ended(now)
-	case "python", "php", "ruby", "java", "rust":
+	case "rust":
+		if strings.Contains(in.Version, "-") || in.Rust != nil && (strings.HasPrefix(in.Rust.Name, "nightly") || strings.HasPrefix(in.Rust.Name, "beta")) {
+			return false
+		}
+		return versions.RustEnded(l.Rust, in.Version, now)
+	case "python", "php", "ruby", "java":
 		var cycles *versions.Cycles
 		switch tool {
 		case "python":
@@ -430,11 +490,6 @@ func versionEnded(tool string, in inventory.Installation, l Lists, now time.Time
 			cycles = l.Ruby
 		case "java":
 			cycles = l.Java
-		case "rust":
-			if strings.Contains(in.Version, "-") || in.Rust != nil && (strings.HasPrefix(in.Rust.Name, "nightly") || strings.HasPrefix(in.Rust.Name, "beta")) {
-				return false
-			}
-			cycles = l.Rust
 		}
 		if cycles == nil {
 			return false

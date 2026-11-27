@@ -377,3 +377,159 @@ func TestPrepareProjectCorepackWithMiseNode(t *testing.T) {
 		t.Fatalf("expected step %q, got %+v", want, got.Plan.Steps)
 	}
 }
+
+func TestPrepareProjectComposerAndPHP(t *testing.T) {
+	t.Run("missing PHP and Composer install together via brew without mise.toml", func(t *testing.T) {
+		in, env := projectFixture(t)
+		in.Project.Requirements = []projects.Requirement{
+			{Tool: "php", Want: "~8.3.36", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+		}
+		in.Releases = map[string][]string{"php": {"8.3.36", "8.4.5"}}
+		in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "php"},
+			{Tool: "composer"},
+		}}
+		in.Setup = Setup{
+			GOOS:     "darwin",
+			Managers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}},
+			Have:     map[string]bool{"homebrew": true},
+			Title:    func(s string) string { return s },
+		}
+		assessed := AssessProject(in)
+		for _, it := range assessed.Items {
+			if it.Tool == "composer" && it.Kind != ProjectManual {
+				t.Fatalf("AssessProject composer kind = %v text=%q, want ProjectManual", it.Kind, it.Text)
+			}
+		}
+
+		got, err := PrepareProject(in, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		byTool := map[string]ProjectItem{}
+		for _, it := range got.Items {
+			byTool[it.Tool] = it
+		}
+		if php := byTool["php"]; php.Kind != ProjectInstall || php.Manager != "brew" {
+			t.Fatalf("php item = %+v, want ProjectInstall via brew", php)
+		}
+		if comp := byTool["composer"]; comp.Kind != ProjectInstall || comp.Manager != "brew" {
+			t.Fatalf("composer item = %+v, want ProjectInstall via brew", comp)
+		}
+		wantPHP := []string{"/opt/homebrew/bin/brew", "install", "--formula", "php@8.3"}
+		wantComposer := []string{"/opt/homebrew/bin/brew", "install", "--formula", "composer"}
+		if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool { return slices.Equal(s.Argv, wantPHP) }) {
+			t.Fatalf("expected php@8.3 step %q, got %+v", wantPHP, got.Plan.Steps)
+		}
+		if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool { return slices.Equal(s.Argv, wantComposer) }) {
+			t.Fatalf("expected composer step %q, got %+v", wantComposer, got.Plan.Steps)
+		}
+		for _, step := range got.Plan.Steps {
+			if step.Edit != nil {
+				t.Fatalf("unexpected file edit for brew PHP+Composer plan: %+v", step.Edit)
+			}
+		}
+	})
+
+	t.Run("missing PHP without versioned system manager stays manual without ErrNoCommonVersion", func(t *testing.T) {
+		in, env := projectFixture(t)
+		in.Project.Requirements = []projects.Requirement{
+			{Tool: "php", Want: "~8.3.36", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+		}
+		in.Releases = map[string][]string{"php": {"8.3.36", "8.4.5"}}
+		in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "php"},
+			{Tool: "composer"},
+		}}
+		in.Setup = Setup{
+			GOOS:     "linux",
+			Managers: []inventory.PackageManager{{ID: "apt", Name: "APT", Path: "/usr/bin/apt-get"}},
+			Have:     map[string]bool{},
+			Title:    func(s string) string { return s },
+		}
+		got, err := PrepareProject(in, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got.Plan.Steps) != 0 {
+			t.Fatalf("unexpected plan steps when Linux apt cannot select PHP line: %+v", got.Plan.Steps)
+		}
+		byTool := map[string]ProjectItem{}
+		for _, it := range got.Items {
+			byTool[it.Tool] = it
+		}
+		if php := byTool["php"]; php.Kind != ProjectManual {
+			t.Fatalf("php item = %+v, want ProjectManual", php)
+		}
+		if comp := byTool["composer"]; comp.Kind != ProjectManual || strings.Contains(comp.Text, "no common version") {
+			t.Fatalf("composer item = %+v, want ProjectManual without ErrNoCommonVersion", comp)
+		}
+	})
+
+	t.Run("installed PHP allows Composer install via system package manager", func(t *testing.T) {
+		in, env := projectFixture(t)
+		in.Project.Requirements = []projects.Requirement{
+			{Tool: "php", Want: "~8.3.0", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+		}
+		in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "php", Installations: []inventory.Installation{{Version: "8.3.15", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}}},
+			{Tool: "composer"},
+		}}
+		in.Setup = Setup{
+			GOOS:     "darwin",
+			Managers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}},
+			Have:     map[string]bool{"homebrew": true, "php": true},
+			Title:    func(s string) string { return s },
+		}
+		got, err := PrepareProject(in, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got.Plan.Steps) == 0 {
+			t.Fatalf("expected brew install composer step, got empty plan: %+v", got)
+		}
+		if !slices.ContainsFunc(got.Items, func(it ProjectItem) bool { return it.Tool == "composer" && it.Kind == ProjectInstall }) {
+			t.Fatalf("expected composer ProjectInstall, got %+v", got.Items)
+		}
+	})
+}
+
+func TestPrepareProjectUnversionedMiseTools(t *testing.T) {
+	in, env := projectFixture(t)
+	in.Project.Requirements = []projects.Requirement{
+		{Tool: "uv", File: "uv.lock"},
+		{Tool: "pnpm", File: "pnpm-lock.yaml"},
+	}
+	in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "uv", Managers: []inventory.Manager{{Name: "mise", SwitchOnCD: true}}},
+		{Tool: "pnpm", Managers: []inventory.Manager{{Name: "mise", SwitchOnCD: true}}},
+	}}
+	in.Setup = Setup{
+		GOOS:  "darwin",
+		Have:  map[string]bool{"node": true},
+		Title: func(s string) string { return s },
+	}
+	got, err := PrepareProject(in, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tool := range []string{"uv", "pnpm"} {
+		if !slices.ContainsFunc(got.Items, func(it ProjectItem) bool { return it.Tool == tool && it.Kind == ProjectInstall }) {
+			t.Fatalf("expected %s to plan install, got %+v", tool, got.Items)
+		}
+	}
+	if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool { return slices.Equal(s.Argv, []string{"mise", "install", "uv@latest"}) }) {
+		t.Fatalf("missing uv@latest step: %+v", got.Plan.Steps)
+	}
+	if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool { return slices.Equal(s.Argv, []string{"mise", "install", "pnpm@latest"}) }) {
+		t.Fatalf("missing pnpm@latest step: %+v", got.Plan.Steps)
+	}
+	if !slices.ContainsFunc(got.Plan.Steps, func(s Step) bool {
+		return s.Edit != nil && strings.Contains(s.Edit.After, `uv = "latest"`) && strings.Contains(s.Edit.After, `pnpm = "latest"`)
+	}) {
+		t.Fatalf("expected local mise.toml pin without global default change: %+v", got.Plan.Steps)
+	}
+}

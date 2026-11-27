@@ -13,7 +13,7 @@ export const zhHansSeoContent: SeoContentBundle = {
       heroSubtitle:
         "在 macOS 上运行开源 Colima，或在 Linux 上直连原生 Docker Engine。在一个原生 Go 应用中管理 Compose 栈、容器、镜像、卷与实时日志。",
       metrics: [
-        { value: "~20 MB 安装包", label: "原生 Go 与 mygo 界面 · <80 ms 冷启动 · 零 Electron" },
+        { value: "~13–19 MB 安装包", label: "原生 Go 与 mygo 界面 · <80 ms 冷启动 · 零 Electron" },
         { value: "MIT 免费开源", label: "无商业席位限制，无需登录账号，零遥测" },
         {
           value: "Colima + Linux",
@@ -30,7 +30,7 @@ export const zhHansSeoContent: SeoContentBundle = {
         },
         {
           criterion: "体积与启动速度",
-          hearth: "单一原生 Go 二进制（mygo），约 20 MB 下载包",
+          hearth: "单一原生 Go 二进制（mygo），约 13–19 MB 下载包",
           other: "Electron 桌面界面，空载内存常超过 1 GB",
         },
         {
@@ -76,7 +76,7 @@ export const zhHansSeoContent: SeoContentBundle = {
         {
           step: "步骤 01",
           title: "安装 Hearth（零后台修改）",
-          desc: "通过 DMG、Homebrew 或 .deb 下载 Hearth（约 20 MB；macOS Universal DMG 约 28 MB）。首次扫描完全只读，不会改动现有容器。",
+          desc: "通过 DMG、Homebrew 或 .deb 下载 Hearth（各架构约 13–19 MB）。首次扫描完全只读，不会改动现有容器。",
         },
         {
           step: "步骤 02",

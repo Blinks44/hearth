@@ -15,8 +15,8 @@ import (
 )
 
 type ImageUser struct {
-	Name   string
-	Active bool
+	ID, Name string
+	Active   bool
 }
 
 type Image struct {
@@ -112,7 +112,7 @@ func ImageUsers(ctx context.Context, r run.Runner, env sysenv.Env, t Target) (ma
 	}
 	users := make(map[string][]ImageUser)
 	for _, item := range items {
-		users[item.ImageID] = append(users[item.ImageID], ImageUser{Name: item.Name, Active: item.Active()})
+		users[item.ImageID] = append(users[item.ImageID], ImageUser{ID: item.ID, Name: item.Name, Active: item.Active()})
 	}
 	return users, nil
 }

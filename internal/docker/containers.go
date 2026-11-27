@@ -54,6 +54,61 @@ func (c Container) Active() bool {
 	}
 }
 
+// FirstPublishedPort extracts the first host-published port number (without
+// leading colon) from Docker's formatted Ports string, e.g. "0.0.0.0:8080->80/tcp".
+func FirstPublishedPort(raw string) string {
+	for item := range strings.SplitSeq(raw, ",") {
+		host, _, ok := strings.Cut(strings.TrimSpace(item), "->")
+		if !ok {
+			continue
+		}
+		if _, port, ok := strings.CutLast(host, ":"); ok {
+			port = strings.TrimSpace(port)
+			if port != "" {
+				return port
+			}
+		}
+	}
+	return ""
+}
+
+// FirstPublishedURL extracts the first host-published TCP port as an HTTP URL
+// (mapping wildcard hosts 0.0.0.0 and :: to 127.0.0.1) along with its port number.
+func FirstPublishedURL(raw string) (url, port string) {
+	for item := range strings.SplitSeq(raw, ",") {
+		hostPart, target, ok := strings.Cut(strings.TrimSpace(item), "->")
+		if !ok {
+			continue
+		}
+		if !strings.HasSuffix(strings.ToLower(strings.TrimSpace(target)), "/tcp") {
+			continue
+		}
+		host, p, ok := strings.CutLast(strings.TrimSpace(hostPart), ":")
+		if !ok {
+			continue
+		}
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		n, err := strconv.Atoi(p)
+		if err != nil || n < 1 || n > 65535 {
+			continue
+		}
+		host = strings.Trim(strings.TrimSpace(host), "[]")
+		switch host {
+		case "", "0.0.0.0", "::", "*":
+			host = "127.0.0.1"
+		default:
+			if strings.Contains(host, ":") {
+				host = "[" + host + "]"
+			}
+		}
+		return "http://" + host + ":" + p, p
+	}
+	return "", ""
+}
+
 // ExitedError reports whether a non-zero exit code reflects a failure rather
 // than a normal stop (SIGTERM 143, SIGINT 130, or non-OOM SIGKILL 137).
 func (c Container) ExitedError() bool {

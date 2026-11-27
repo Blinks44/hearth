@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -115,8 +116,15 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 		}
 	})
 	listCard(c, locales.GitCredentials(), "credential.helper", func() {
-		for _, h := range g.Helpers {
-			listRow(c, gitHelperName(h), false, gitHelperCaption(h), func() {})
+		for i, h := range g.Helpers {
+			helper := h
+			listRow(c, gitHelperName(helper), false, gitHelperCaption(helper), func() {
+				if helper == "store" {
+					if plan, ok := ops.GitCredentialHelperPlan(a.detect("git")); ok {
+						ui.Button(c.Key("git-cred-fix:"+strconv.Itoa(i)), locales.GitCredFixButton()).Shrink(0).OnClick(func() { a.Propose(plan) })
+					}
+				}
+			})
 		}
 		if len(g.Helpers) == 0 {
 			cardNote(c, locales.GitNoHelper())
@@ -130,9 +138,19 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 			if len(hosts) > 0 {
 				caption = locales.GitHubSignedIn(strings.Join(hosts, ", "))
 			}
-			listRow(c, "GitHub CLI "+gh.Version, false, caption, func() {})
+			listRow(c, "GitHub CLI "+gh.Version, false, caption, func() {
+				if len(gh.Hosts) == 0 && a.OpenGitHubLogin != nil {
+					ui.Button(c.Key("gh-sign-in"), locales.GitHubSignIn()).Shrink(0).OnClick(func() {
+						a.OpenGitHubLogin(func(err error) {
+							if err != nil {
+								a.planErr = err.Error()
+							}
+						})
+					})
+				}
+			})
 		} else if a.canInstallTool("gh") {
-			listRow(c, "GitHub CLI", false, locales.GitNoGitHub(), func() { a.installToolButton(c, "gh") })
+			listRow(c, "GitHub CLI", false, locales.GitNoGitHub(), func() { a.installToolIconButton(c, "gh") })
 		}
 	})
 	sshAside := func() {
@@ -147,26 +165,37 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 	}
 	listCardHeader(c, locales.GitSSHKeys(), sshAside, func() {
 		for _, k := range g.Keys {
+			key := k
 			var caption []string
-			if len(k.Hosts) > 0 {
-				caption = append(caption, locales.GitSSHFor(strings.Join(k.Hosts, ", ")))
+			if len(key.Hosts) > 0 {
+				caption = append(caption, locales.GitSSHFor(strings.Join(key.Hosts, ", ")))
 			}
-			if k.InAgent {
+			if key.InAgent {
 				caption = append(caption, locales.GitSSHInAgent())
 			}
 			if len(caption) == 0 {
 				caption = append(caption, locales.GitSSHUnused())
 			}
-			kind := k.Type
-			if k.Bits > 0 {
-				kind += " " + strconv.Itoa(k.Bits)
+			kind := key.Type
+			if key.Bits > 0 {
+				kind += " " + strconv.Itoa(key.Bits)
 			}
-			pub := k.PublicKey
-			listRow(c, k.Name, true, strings.Join(caption, " · "), func() {
+			pub := key.PublicKey
+			listRow(c, key.Name, true, strings.Join(caption, " · "), func() {
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 					ui.Text(c, kind).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
+					if !key.InAgent && a.OpenSSHAdd != nil && a.Home != "" {
+						keyPath := filepath.Join(a.Home, ".ssh", key.Name)
+						ui.Button(c.Key("ssh-add:"+key.Name), locales.GitSSHAdd()).Height(rowControlHeight).Shrink(0).OnClick(func() {
+							a.OpenSSHAdd(keyPath, func(err error) {
+								if err != nil {
+									a.planErr = err.Error()
+								}
+							})
+						})
+					}
 					if pub != "" {
-						iconButton(c.Key("copy-pub:"+k.Name), "copy", locales.GitCopyPublicKey()).OnClick(func() {
+						iconButton(c.Key("copy-pub:"+key.Name), "copy", locales.GitCopyPublicKey()).OnClick(func() {
 							c.WriteClipboard(pub)
 							c.Toast(locales.GitPublicKeyCopied())
 						})

@@ -48,7 +48,7 @@ func (a *App) dockerOverviewView(c *ui.Context, name string, e docker.Engine) {
 	st, _ := a.Snapshot.Tool("docker")
 	columns(c, 14, func() {
 		a.dockerOverviewDisk(c, st.Docker, target, o.Disk, total, bytes)
-		dockerOverviewEvents(c, o.Events)
+		a.dockerOverviewEvents(c, name, o.Events)
 	}, func() {
 		a.dockerHealthCard(c, st, name, e.Health, true)
 		if profile, ok := dockerColimaProfile(st.Docker, name); ok {
@@ -133,6 +133,11 @@ func (a *App) canOpenDockerContainer() bool {
 	}
 	_, ok := a.selectedDockerTarget()
 	return ok
+}
+
+// OpenDockerContainer navigates to the selected Docker context's container detail view.
+func (a *App) OpenDockerContainer(id, name string) {
+	a.openDockerContainer(id, name)
 }
 
 func (a *App) openDockerContainer(id, name string) {
@@ -223,7 +228,7 @@ func (a *App) dockerVMDisk(c *ui.Context, d *inventory.DockerState, target docke
 	})
 }
 
-func dockerOverviewEvents(c *ui.Context, events docker.OverviewEvents) {
+func (a *App) dockerOverviewEvents(c *ui.Context, contextName string, events docker.OverviewEvents) {
 	total := 0
 	for _, event := range events.Items {
 		total += event.Count
@@ -236,15 +241,31 @@ func dockerOverviewEvents(c *ui.Context, events docker.OverviewEvents) {
 			overviewMessage(c, locales.DockerOverviewNoEvents())
 		}
 		pal := Colors(c.Theme())
-		for _, event := range events.Items {
-			ui.Row(c).Gap(8).Padding(5, 13).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, event.Action).Font(FontMono).FontSize(10.5).TextColor(pal.WarningText)
-				name := event.Name
-				if code, err := strconv.Atoi(event.ExitCode); err == nil {
-					name += " · " + locales.DockerContainerExit(code)
-				}
-				ui.Text(c, name).Font(FontMono).FontSize(11).Grow(1).Wrap()
-				overviewCaption(c, "×"+strconv.Itoa(event.Count), pal.TextFaint)
+		for i, event := range events.Items {
+			ev := event
+			name := ev.Name
+			if code, err := strconv.Atoi(ev.ExitCode); err == nil {
+				name += " · " + locales.DockerContainerExit(code)
+			}
+			canOpen := contextName != "" && (ev.ID != "" || ev.Name != "")
+			if !canOpen {
+				ui.Row(c).Gap(8).Padding(5, 13).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, ev.Action).Font(FontMono).FontSize(10.5).TextColor(pal.WarningText)
+					ui.Text(c, name).Font(FontMono).FontSize(11).Grow(1).Wrap()
+					overviewCaption(c, "×"+strconv.Itoa(ev.Count), pal.TextFaint)
+				})
+				continue
+			}
+			btn := ui.ButtonBase(c.Key("event-"+strconv.Itoa(i)+"-"+ev.Name)).
+				Gap(8).Padding(5, 13).AlignItems(ui.Center).Label(name).
+				OnClick(func() { a.requestDockerContainer(contextName, ev.ID, ev.Name, true, false) })
+			if btn.Hovered() {
+				btn.Background(pal.Subtle)
+			}
+			btn.Children(func() {
+				ui.Text(c, ev.Action).Font(FontMono).FontSize(10.5).TextColor(pal.WarningText)
+				ui.Text(c, name).Font(FontMono).FontSize(11).TextColor(pal.AccentInk).Grow(1).Wrap()
+				overviewCaption(c, "×"+strconv.Itoa(ev.Count), pal.TextFaint)
 			})
 		}
 	})

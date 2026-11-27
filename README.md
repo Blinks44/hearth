@@ -41,7 +41,7 @@ Modern local setups sprawl across `mise`, `fnm`, `nvm`, `uv`, `pyenv`, `rustup`,
 
 Hearth brings all of it into one native desktop app:
 
-- **Native & lightweight:** Single native Go binary built with [mygo](https://mygo.egoist.dev) (~20 MB download; ~28 MB macOS Universal DMG): no Electron, no WebView, and no background daemon hogging RAM.
+- **Native & lightweight:** Single native Go binary built with [mygo](https://mygo.egoist.dev) (~13–19 MB download, ~44–48 MB installed): no Electron, no WebView, and no background daemon hogging RAM.
 - **Read-only by default:** Scanning never changes your machine. Every install, upgrade, fix, or cleanup shows the exact commands, file diffs, and consequences before you confirm.
 - **Respects your existing setup:** Detects your current managers (`mise`, `fnm`, `nvm`, `volta`, `uv`, `pyenv`, `rbenv`, `rustup`, `brew`, `winget`, `scoop`, `apt`, `dnf`, `pacman`, etc.) and works through them. Shell rc edits stay inside `# >>> hearth >>>` markers with automatic backups.
 - **100% local, zero telemetry:** No account, no analytics, no data uploaded anywhere.
@@ -114,7 +114,7 @@ Or configure any MCP client manually:
 
 ## Installation
 
-Prebuilt binaries are available for **macOS (Universal: Apple Silicon & Intel)**, **Windows (x64 & ARM64)**, and **Linux (x64 & ARM64)** on the [Releases page](https://github.com/Blinks44/hearth/releases/latest). All releases include `SHA256SUMS.txt` and signed auto-updates.
+Prebuilt binaries are available for **macOS (Apple Silicon & Intel)**, **Windows (x64 & ARM64)**, and **Linux (x64 & ARM64)** on the [Releases page](https://github.com/Blinks44/hearth/releases/latest). All releases include `SHA256SUMS.txt` and signed auto-updates.
 
 ### macOS
 
@@ -124,9 +124,9 @@ Install via Homebrew:
 brew install --cask blinks44/tap/hearth
 ```
 
-Or download `hearth-<version>.dmg` from [Releases](https://github.com/Blinks44/hearth/releases/latest) and drag Hearth to **Applications**.
+Or download `hearth-<version>-arm64.dmg` (Apple Silicon) or `hearth-<version>-amd64.dmg` (Intel) from [Releases](https://github.com/Blinks44/hearth/releases/latest) and drag Hearth to **Applications**.
 
-> **First-launch note:** Hearth is free open-source software and currently ad-hoc signed (not yet notarized with a paid Apple Developer ID). On first launch, macOS Gatekeeper may warn about an unverified developer: open **System Settings -> Privacy & Security**, scroll to the Hearth notice, and click **Open Anyway**.
+> **First-launch note:** Hearth is free open-source software and currently ad-hoc signed (not yet notarized with a paid Apple Developer ID). Installing via Homebrew clears the macOS quarantine attribute automatically. If you install manually from the `.dmg` and macOS Gatekeeper warns about an unverified developer, open **System Settings -> Privacy & Security**, scroll to the Hearth notice, and click **Open Anyway** (or run `xattr -dr com.apple.quarantine /Applications/Hearth.app`).
 
 ### Windows
 

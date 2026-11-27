@@ -230,6 +230,7 @@ func goTools(dir string) []inventory.Package {
 		tools = append(tools, inventory.Package{
 			Name:    strings.TrimSuffix(e.Name(), ".exe"),
 			Version: strings.TrimPrefix(info.Main.Version, "v"),
+			Manager: "go",
 			Module:  info.Main.Path,
 		})
 	}

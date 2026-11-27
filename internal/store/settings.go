@@ -52,6 +52,27 @@ type Settings struct {
 	// CleanupExclude are extra folders under $HOME (or absolute paths) skipped
 	// when walking for project dependency folders.
 	CleanupExclude []string `json:"cleanupExclude,omitempty"`
+	// SkillRepos are user-saved custom or corporate Git skill repositories shown
+	// alongside the built-in catalog sources.
+	SkillRepos []SkillRepo `json:"skillRepos,omitempty"`
+	// TraySections sets the order of sections inside the tray popover
+	// ("services", "quotas", "contexts"). Empty uses the default order.
+	TraySections []string `json:"traySections,omitempty"`
+	// TrayHiddenSections lists tray popover section IDs hidden by the user.
+	TrayHiddenSections []string `json:"trayHiddenSections,omitempty"`
+	// QuotaOrder lists AI quota provider IDs in the user's preferred order.
+	QuotaOrder []string `json:"quotaOrder,omitempty"`
+	// QuotaTrayHidden lists AI quota provider IDs hidden from the tray popover.
+	QuotaTrayHidden []string `json:"quotaTrayHidden,omitempty"`
+	// QuotaNotifyLow controls OS notifications when an active AI quota window
+	// drops below 10% remaining (nil defaults to true).
+	QuotaNotifyLow *bool `json:"quotaNotifyLow,omitempty"`
+}
+
+// SkillRepo is a saved custom or corporate Git skill repository URL.
+type SkillRepo struct {
+	Name string `json:"name,omitempty"`
+	URL  string `json:"url"`
 }
 
 // Project is a folder the user added to Hearth.

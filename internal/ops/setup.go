@@ -3,6 +3,7 @@ package ops
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -28,6 +29,9 @@ type Setup struct {
 	// Packages overrides the default package for tools that offer multiple
 	// versioned packages (validated against catalog.PackageVersions).
 	Packages map[string]string
+	// Versions overrides the version spec installed through mise (validated
+	// with ValidVersionSpec), keyed by catalog tool ID.
+	Versions map[string]string
 	// GOOS is the system, as runtime.GOOS names it; Managers are its
 	// package managers found.
 	GOOS     string
@@ -231,7 +235,17 @@ func SetupPlan(s Setup, env sysenv.Env) (Plan, []SetupPart, error) {
 				part.With = "homebrew"
 			}
 		case m.Manager == "mise":
-			steps = []Step{{Argv: []string{"mise", "use", "--global", m.Package + "@" + cmp.Or(miseVersions[part.Tool], "latest")}}}
+			ver := cmp.Or(miseVersions[part.Tool], "latest")
+			if v := strings.TrimSpace(s.Versions[part.Tool]); v != "" {
+				if !ValidVersionSpec(v) {
+					return Plan{}, nil, fmt.Errorf("invalid version %q for %s", v, title)
+				}
+				ver = v
+				if part.Tool == "java" {
+					ver = javaSpec("mise", ver)
+				}
+			}
+			steps = []Step{{Argv: []string{"mise", "use", "--global", m.Package + "@" + ver}}}
 		case m.Manager == "npm":
 			steps = []Step{{Argv: append(slices.Clone(viaMise), "npm", "install", "--global", m.Package)}}
 		case m.Manager == "corepack":

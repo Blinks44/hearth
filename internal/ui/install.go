@@ -112,12 +112,26 @@ func (a *App) installToolButton(c *ui.Context, id string) {
 	}
 }
 
+// installToolIconButton is a compact download icon button that installs the
+// catalog's tool id, keeping list rows clean and consistent with language
+// available-version rows.
+func (a *App) installToolIconButton(c *ui.Context, id string) {
+	if a.canInstallTool(id) {
+		iconButton(c.Key("install:"+id), "download", locales.InstallNamed(setupTitle(id))).OnClick(func() { a.installTool(id) })
+	}
+}
+
 // installPrimary is the prominent button of an empty state that installs
 // the catalog's tool id, shown when Hearth can.
 func (a *App) installPrimary(c *ui.Context, id string) {
 	if id != "" && a.canInstallTool(id) {
 		ui.Row(c).Padding(6, 0, 0, 0).Children(func() {
-			ui.PrimaryButton(c.Key("install:"+id), locales.InstallNamed(setupTitle(id))).OnClick(func() { a.installTool(id) })
+			ui.PrimaryButton(c.Key("install:"+id), "").Height(controlHeight).OnClick(func() { a.installTool(id) }).Children(func() {
+				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, Icon("plus")).Size(14, 14)
+					ui.Text(c, locales.InstallNamed(setupTitle(id)))
+				})
+			})
 		})
 	}
 }

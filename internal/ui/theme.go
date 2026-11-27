@@ -2,7 +2,9 @@
 package ui
 
 import (
+	"compress/gzip"
 	"fmt"
+	"io"
 
 	"github.com/egoist/mygo/ui"
 
@@ -22,10 +24,10 @@ var Accent = ui.Hex("#E5582B")
 // before the first window opens.
 func RegisterFonts() error {
 	for file, family := range map[string]string{
-		"fonts/Inter.ttf":         FontSans,
-		"fonts/JetBrainsMono.ttf": FontMono,
+		"fonts/Inter.ttf.gz":         FontSans,
+		"fonts/JetBrainsMono.ttf.gz": FontMono,
 	} {
-		data, err := resources.Fonts.ReadFile(file)
+		data, err := readGzipFont(file)
 		if err != nil {
 			return fmt.Errorf("read font %s: %w", file, err)
 		}
@@ -34,6 +36,20 @@ func RegisterFonts() error {
 		}
 	}
 	return nil
+}
+
+func readGzipFont(name string) ([]byte, error) {
+	f, err := resources.Fonts.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	gz, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = gz.Close() }()
+	return io.ReadAll(gz)
 }
 
 // Palette holds the design tokens that ui.Theme has no field for.

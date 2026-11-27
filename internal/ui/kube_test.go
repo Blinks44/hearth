@@ -277,9 +277,9 @@ func TestKubeInstall(t *testing.T) {
 	a.kubeTab = 1
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "kind", "not found · kind", locales.AgentInstall())
+	hasTexts(t, tt, "kind", "not found · kind", locales.InstallNamed("kind"))
 	screenshot(t, tt, "kube-tools")
-	if err := tt.Click(locales.AgentInstall()); err != nil {
+	if err := tt.Click(locales.InstallNamed("kind")); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
 	tt.Advance(time.Second)

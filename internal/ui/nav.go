@@ -5,9 +5,6 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/text/collate"
-	lang "golang.org/x/text/language"
-
 	"github.com/Blinks44/hearth/locales"
 )
 
@@ -23,19 +20,65 @@ type page struct {
 // words, Russian's before Latin ones in Russian, regardless of case: the
 // sidebar's languages, the tools, servers and skills in their lists.
 func (a *App) byTitle(x, y string) int {
-	if a.collator == nil || a.collatorLocale != a.Locale {
-		a.collator, a.collatorLocale = collate.New(lang.Make(a.Locale), collate.IgnoreCase), a.Locale
-	}
-	if a.Locale == "ru" {
+	return compareTitles(a.Locale, x, y)
+}
+
+func compareTitles(locale, x, y string) int {
+	if locale == "ru" || strings.HasPrefix(locale, "ru-") {
 		if c := cmp.Compare(latin(x), latin(y)); c != 0 {
 			return c
 		}
 	}
-	return a.collator.CompareString(x, y)
+	if c := cmp.Compare(foldTitle(x), foldTitle(y)); c != 0 {
+		return c
+	}
+	if c := cmp.Compare(strings.ToLower(x), strings.ToLower(y)); c != 0 {
+		return c
+	}
+	return cmp.Compare(x, y)
+}
+
+// foldTitle normalizes case and common Latin/Cyrillic diacritics for
+// sorting without pulling golang.org/x/text/collate's CLDR tables (~1.8 MB).
+func foldTitle(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		r = unicode.ToLower(r)
+		switch r {
+		case 'ё':
+			b.WriteRune('е')
+		case 'ß':
+			b.WriteString("ss")
+		case 'æ':
+			b.WriteString("ae")
+		case 'œ':
+			b.WriteString("oe")
+		case 'á', 'à', 'â', 'ä', 'ã', 'å':
+			b.WriteRune('a')
+		case 'ç':
+			b.WriteRune('c')
+		case 'é', 'è', 'ê', 'ë':
+			b.WriteRune('e')
+		case 'í', 'ì', 'î', 'ï':
+			b.WriteRune('i')
+		case 'ñ':
+			b.WriteRune('n')
+		case 'ó', 'ò', 'ô', 'ö', 'õ', 'ø':
+			b.WriteRune('o')
+		case 'ú', 'ù', 'û', 'ü':
+			b.WriteRune('u')
+		case 'ý', 'ÿ':
+			b.WriteRune('y')
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 // latin is 1 for a title whose first letter is not Cyrillic, 0 for one
-// whose is: x/text's collation knows no script order.
+// whose is: Cyrillic titles appear before Latin ones in Russian.
 func latin(s string) int {
 	for _, r := range s {
 		if unicode.IsLetter(r) {
@@ -97,7 +140,7 @@ var (
 			{"/tools/docker", "brand/docker", name("Docker"), locales.SectionToolsContainers},
 			{kubePage, "brand/kubernetes", name("Kubernetes"), locales.KubeSubtitle},
 			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionInfrastructure},
-			{portsPage, "lucide/ethernet-port", locales.PortsTitle, locales.PortsSubtitle},
+			{portsPage, "lucide/ethernet-port", locales.ServicesPortsTitle, locales.ServicesPortsSubtitle},
 			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
 		}},
 		{locales.SectionTools, []page{
@@ -113,6 +156,7 @@ var (
 			{instructionsPage, "lucide/file-text", locales.InstructionsTitle, locales.InstructionsSubtitle},
 			{modelsPage, "lucide/brain", locales.ModelsTitle, locales.ModelsSubtitle},
 			{usagePage, "lucide/chart-column", locales.UsageTitle, locales.UsageSubtitle},
+			{quotasPage, "lucide/gauge", locales.QuotasTitle, locales.QuotasSubtitle},
 		}},
 		{locales.SectionSystem, []page{
 			{pathPage, "lucide/terminal", locales.PathTitle, locales.SectionSystem},

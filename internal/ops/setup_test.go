@@ -239,3 +239,40 @@ func TestSetupPlanLinuxDnfPacmanDatabases(t *testing.T) {
 		t.Errorf("expected Linux DB note for pacman, got notes %+v", p.Notes)
 	}
 }
+
+func TestSetupPlanCustomVersions(t *testing.T) {
+	brew := []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}}
+	s := Setup{
+		GOOS:     "darwin",
+		Tools:    []string{"node", "java", "postgresql"},
+		Have:     map[string]bool{"homebrew": true, "mise": true},
+		Managers: brew,
+		Versions: map[string]string{"node": "20", "java": "temurin-21"},
+		Packages: map[string]string{"postgresql": "postgresql@16"},
+		Title:    func(id string) string { return id },
+	}
+	p, _, err := SetupPlan(s, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{
+		{"mise", "use", "--global", "node@20"},
+		{"mise", "use", "--global", "java@temurin-21"},
+		{"/opt/homebrew/bin/brew", "install", "--formula", "postgresql@16"},
+		{"/opt/homebrew/bin/brew", "services", "start", "postgresql@16"},
+	}
+	if len(p.Steps) != len(want) {
+		t.Fatalf("got %d steps, want %d: %+v", len(p.Steps), len(want), p.Steps)
+	}
+	for i, step := range p.Steps {
+		if !slices.Equal(step.Argv, want[i]) {
+			t.Errorf("step %d: %q, want %q", i, step.Argv, want[i])
+		}
+	}
+
+	bad := s
+	bad.Versions = map[string]string{"node": "20;rm -rf /"}
+	if _, _, err := SetupPlan(bad, sysenv.Env{"HOME=" + t.TempDir(), "SHELL=/bin/zsh"}); err == nil {
+		t.Error("expected error for invalid mise version spec")
+	}
+}

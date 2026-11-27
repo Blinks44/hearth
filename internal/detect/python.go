@@ -243,7 +243,7 @@ func uvTools(dir string) []inventory.Package {
 		if _, err := toml.DecodeFile(filepath.Join(dir, e.Name(), "uv-receipt.toml"), &receipt); err != nil {
 			continue
 		}
-		p := inventory.Package{Name: e.Name(), Version: distVersion(filepath.Join(dir, e.Name()), e.Name())}
+		p := inventory.Package{Name: e.Name(), Version: distVersion(filepath.Join(dir, e.Name()), e.Name()), Manager: "uv"}
 		for _, ep := range receipt.Tool.Entrypoints {
 			p.Commands = append(p.Commands, strings.TrimSuffix(ep.Name, ".exe"))
 		}
@@ -312,7 +312,7 @@ func pipxTools(home string) []inventory.Package {
 		if json.Unmarshal([]byte(readFile(filepath.Join(venvs, e.Name(), "pipx_metadata.json"))), &meta) != nil {
 			continue
 		}
-		p := inventory.Package{Name: meta.MainPackage.Package, Version: meta.MainPackage.PackageVersion}
+		p := inventory.Package{Name: meta.MainPackage.Package, Version: meta.MainPackage.PackageVersion, Manager: "pipx"}
 		if p.Name == "" {
 			p.Name = e.Name()
 		}

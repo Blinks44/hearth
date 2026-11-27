@@ -459,7 +459,7 @@ func TestAlphabeticalOrder(t *testing.T) {
 	for _, order := range [][]string{
 		{"Bun", "Go", "Node.js", "Python"},
 		{"Overview", "Projects", "Maintenance", "Issues", "Updates", "Cleanup", "Install", "Languages & runtimes"},
-		{"Infrastructure", "Ports", "AI", "Agents", "Skills", "MCP", "Instructions", "Usage", "System", "PATH & variables", "Package managers", "Not found"},
+		{"Infrastructure", "Services & Ports", "AI", "Agents", "Skills", "MCP", "Instructions", "Usage", "System", "PATH & variables", "Package managers", "Not found"},
 	} {
 		for i := 1; i < len(order); i++ {
 			if at(order[i-1]) > at(order[i]) {

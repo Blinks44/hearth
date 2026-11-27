@@ -56,7 +56,7 @@ func TestGlobalPackages(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(dir, "empty"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	want := []inventory.Package{{Name: "@angular/cli", Version: "19.0.0"}, {Name: "npm", Version: "10.9.0"}}
+	want := []inventory.Package{{Name: "@angular/cli", Version: "19.0.0", Manager: "npm"}, {Name: "npm", Version: "10.9.0", Manager: "npm"}}
 	if got := globalPackages(dir); !reflect.DeepEqual(got, want) {
 		t.Errorf("globalPackages = %+v, want %+v", got, want)
 	}

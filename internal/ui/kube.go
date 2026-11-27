@@ -118,11 +118,11 @@ func (a *App) kubeView(c *ui.Context, p page) {
 			}
 			if current != nil && a.kubeContext(current.Name) != nil && a.WatchCluster != nil {
 				name := current.Name
-				ui.Button(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
-				ui.PrimaryButton(c.Key("kube-open-context"), locales.DockerOpenContext(name)).OnClick(func() { a.openCluster(name) })
+				ui.Button(c.Key("kind-create"), locales.KindCreateButton()).Height(controlHeight).OnClick(a.openKindDialog)
+				ui.PrimaryButton(c.Key("kube-open-context"), locales.DockerOpenContext(name)).Height(controlHeight).OnClick(func() { a.openCluster(name) })
 				return
 			}
-			ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).OnClick(a.openKindDialog)
+			ui.PrimaryButton(c.Key("kind-create"), locales.KindCreateButton()).Height(controlHeight).OnClick(a.openKindDialog)
 		}})
 		a.kubeNamespaceDialog(c)
 		a.kubeConfigCreateDialog(c)
@@ -418,7 +418,7 @@ func (a *App) kubeMissingCard(c *ui.Context, cli inventory.CliState) {
 	}
 	listCard(c, locales.KubeMissingTitle(), "", func() {
 		for _, cmd := range tools {
-			listRow(c, locales.ToolNotInstalled(setupTitle(cmd)), false, kubeToolNeed(cmd), func() { a.installToolButton(c, cmd) })
+			listRow(c, locales.ToolNotInstalled(setupTitle(cmd)), false, kubeToolNeed(cmd), func() { a.installToolIconButton(c, cmd) })
 		}
 		for _, program := range programs {
 			listRow(c, locales.KubeProgramMissing(filepath.Base(program)), false, locales.KubeProgramMissingCaption(), func() {})
@@ -774,13 +774,17 @@ func (a *App) kindClustersCard(c *ui.Context, cli inventory.CliState, current *i
 			}
 			parts = append(parts, locales.KindNodes(k.Nodes), kindState(k))
 			kc := c.Key("kind:" + k.Name)
+			ctxName := "kind-" + k.Name
 			listRow(kc, k.Name, false, strings.Join(parts, " · "), func() {
+				if a.WatchCluster != nil && a.kubeContext(ctxName) != nil {
+					ui.Button(kc.Key("open"), locales.SettingsOpen()).Shrink(0).OnClick(func() { a.openCluster(ctxName) })
+				}
 				if !found || a.BuildPlan == nil {
 					return
 				}
 				ui.Button(kc.Key("delete"), locales.KindDelete()).Shrink(0).OnClick(func() {
 					a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
-						return ops.KindDeletePlan(in.Path, k.Name, cur, a.kubeProjectsOf("kind-"+k.Name), env, run.Exec{})
+						return ops.KindDeletePlan(in.Path, k.Name, cur, a.kubeProjectsOf(ctxName), env, run.Exec{})
 					}, a.proposeOrSay)
 				})
 			})

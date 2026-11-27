@@ -11,9 +11,9 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
-	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/ai"
+	"github.com/Blinks44/hearth/internal/aiquota"
 	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/detect"
 	"github.com/Blinks44/hearth/internal/docker"
@@ -44,10 +44,6 @@ type App struct {
 	ThemeMode string
 	// Locale is the interface language, a catalog of locales/ as "en".
 	Locale string
-	// collator sorts titles in collatorLocale, made again when Locale
-	// changes.
-	collator       *collate.Collator
-	collatorLocale string
 	// VersionLists allows version lists and package-manager availability queries; without
 	// it, only the kept copies show.
 	VersionLists bool
@@ -85,6 +81,21 @@ type App struct {
 	TrayEnabled bool
 	// ShowInDock controls whether Hearth shows a macOS Dock icon (only configurable while TrayEnabled is true).
 	ShowInDock bool
+	// TraySections and TrayHiddenSections control the order and visibility of
+	// sections inside the tray popover ("services", "quotas", "contexts").
+	TraySections       []string
+	TrayHiddenSections []string
+	// QuotaOrder and QuotaTrayHidden control provider ordering and tray visibility.
+	QuotaOrder      []string
+	QuotaTrayHidden []string
+	// QuotaNotifyLow controls OS notifications when an active quota window drops below 10%.
+	QuotaNotifyLow bool
+	// Quotas holds the latest AI subscription quota snapshot published by the host monitor.
+	Quotas *aiquota.Snapshot
+	// QuotasRefreshing is true while a quota refresh pass is in flight.
+	QuotasRefreshing bool
+	// RefreshQuotas triggers an asynchronous quota refresh on the host monitor.
+	RefreshQuotas func(force bool)
 	// OpenAtLogin reflects the OS login-item setting for launching Hearth automatically at sign-in.
 	OpenAtLogin bool
 	// OnOpenAtLogin updates the OS login-item registration off the UI thread or via mygo.App.SetOpenAtLogin.
@@ -114,6 +125,8 @@ type App struct {
 	CleanupStaleDays int
 	CleanupMinMB     int
 	CleanupExclude   []string
+	// SkillRepos are saved custom/corporate skill catalog repositories.
+	SkillRepos []store.SkillRepo
 	// SettingsError says why settings could not be saved or the cache
 	// cleared; SettingsNotice confirms the cache was cleared.
 	SettingsError  string
@@ -204,6 +217,9 @@ type App struct {
 	// RefreshPorts re-reads active TCP listeners and port-publishing Docker
 	// containers without running a full system scan.
 	RefreshPorts func(done func(detect.PortsSnapshot))
+	// MeasureStartup re-measures shell startup timing without a full scan.
+	MeasureStartup   func()
+	StartupMeasuring bool
 	// OpenDBClient opens the user's terminal running a database CLI command.
 	OpenDBClient func(argv []string, done func(error))
 	// Projects are the folders the user added, as last read.
@@ -259,6 +275,10 @@ type App struct {
 	// OpenCloudLogin opens a terminal running a cloud CLI command (such as
 	// aws configure sso) when interactive setup is needed.
 	OpenCloudLogin func(argv []string, done func(error))
+	// OpenGitHubLogin opens a terminal running gh auth login.
+	OpenGitHubLogin func(done func(error))
+	// OpenSSHAdd opens a terminal running ssh-add for an SSH key inside ~/.ssh.
+	OpenSSHAdd func(keyPath string, done func(error))
 	// WatchCluster reads the target's cluster now and again, giving each
 	// read to got on the UI thread, until stop is called. ListNamespaces
 	// asks the cluster for its namespaces once. Nil hides the cluster.
@@ -267,6 +287,7 @@ type App struct {
 	// read to got on the UI thread, until stop is called; nil hides the
 	// engine view.
 	WatchDocker           func(t docker.Target, overview bool, got func(docker.Engine, error)) (stop func())
+	RefreshDocker         func()
 	WatchDockerContainers func(t docker.Target, got func([]docker.Container, error, error)) (stop func())
 	WatchDockerResources  func(docker.Target, docker.ResourceKind, func([]docker.Resource, error, error)) (stop func())
 	WatchDockerImages     func(t docker.Target, got func([]docker.Image, error)) (stop func())
@@ -302,6 +323,20 @@ type App struct {
 
 	CheckForwardPort func(port int, done func(int, error))
 	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
+	// RunScript starts a project script in the background, streaming output
+	// lines via Window.Update, and returns a stop function that kills the
+	// process group cleanly.
+	RunScript func(spec ops.ScriptSpec, onStart func(pid int), onLines func([]containerlog.LogLine), done func(error)) (stop func())
+	// RadarSessions holds the latest merged active AI agent sessions.
+	RadarSessions       []inventory.ActiveAgentSession
+	RadarHooksInstalled map[string]bool
+	RadarRefreshing     bool
+	radarRefreshPending bool
+	popoverDockerCtxBtn ui.Handle
+	popoverKubeCtxBtn   ui.Handle
+	// RefreshRadar scans live AI agent processes and merges them with hook
+	// events and recent usage sessions off the UI thread.
+	RefreshRadar func(done func([]inventory.ActiveAgentSession))
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -378,104 +413,120 @@ type App struct {
 	packageLimitKey   string              // resets packageLimit when manager/tab/sort/filter changes
 	// packageChosen are the packages checked for bulk actions, by manager path
 	// and packageKey.
-	packageChosen       map[string]bool
-	pkg                 packageManagerState
-	terminalCustomOpen  bool   // whether the custom terminal path input is expanded in Settings
-	terminalCustomInput string // custom terminal path being edited in Settings
-	editorCustomOpen    bool   // whether the custom editor path input is expanded in Settings
-	editorCustomInput   string // custom editor path being edited in Settings
-	gitTab              int    // the Git page's tab: installed, settings, PATH
-	cppTab              int    // the C/C++ page's tab: installed, PATH
-	modelsTab           int    // the local models page's tab: all, then an app each
-	modelsFilter        string // the local models table's filter
-	modelPull           string // the name of the Ollama model to download
-	modelPullOpen       bool   // the dialog to download an Ollama model is open
-	cliTab              int    // the CLI & clouds page's tab
-	cliFilter           string // the CLI & clouds table's filter
-	cloudAuth           map[string]cloudAuthEntry
-	cloudSwitch         cloudSwitchDialog
-	cloudLogin          cloudLoginDialog
-	kubeTab             int    // the Kubernetes page's tab
-	kubeFilter          string // the Kubernetes page's filter
-	kubeNS              kubeNamespaceDialog
-	kubeChecks          map[string]kubeCheck
-	cluster             kubeClusterState
-	engine              dockerEngineState // the Docker engine page's
-	issuePopover        string            // key of the open row issue popover; "" when none
-	issuePopoverOn      bool
-	kind                kindCreateDialog
-	kubeLink            kubeLinkDialog
-	kubeConfig          kubeConfigDialog
-	kubeApply           *kubeApplyDialog
-	forwards            []*portForward
-	portsTab            int    // the Ports page's quick filter: all, projects, network, docker
-	portsFilter         string // the Ports table's filter
-	portsFilterQuery    string // last ?filter= query applied to Ports
-	portsRefreshing     bool
-	portsRefreshSeq     int
-	portsBusy           bool   // a Docker container stop plan is being built on Ports
-	portsErr            string // last Docker container stop error on Ports
-	projectTab          int    // the project detail page's tab: overview, services, ai, files
-	projectTabDir       string // project dir the current projectTab belongs to
-	instructionsQuery   string // the Instructions page's filter
-	instructionsChosen  string // the project shown on the Instructions page
-	usageTab            int    // the Usage page's period, by usagePeriods
-	usageMetric         int    // the Usage page's metric: 0 cost, 1 tokens
-	usageAgent          string // the Usage page's agent filter, "" for all
-	usageAgentLabel     string
-	usageProject        string // the Usage page's project filter, "" for all
-	usageProjectLabel   string
-	usageModel          string // the Usage page's model filter, "" for all
-	usageCache          []usageSummaryCacheEntry
-	mobileTab           int    // the mobile page's tab: all, then a group each
-	mobileFilter        string // the mobile table's filter
-	editorsTab          int    // the editors page's tab: all, extensions, commands
-	editorsFilter       string // the editors table's filter
-	changesTab          int    // the What changed page's tab: all, added, updated, removed
-	changesFilter       string // the What changed table's filter
-	problemsTab         int    // the Issues page's tab: all, then an area each
-	problemsSeverity    int    // the Issues page's severity filter: 0 all, 1 important, 2 info
-	problemsFilter      string // the Issues table's filter
-	problemsShowHidden  bool   // whether the hidden issues list is expanded on the Issues page
-	cleanupExcludeInput string // new $HOME exclusion path being typed in Settings
-	shownSettingsNotice string // last SettingsNotice emitted as a toast
-	shownSettingsError  string // last SettingsError emitted as a toast
-	cleanupTab          int    // the Cleanup page's tab: all, then a group each
-	cleanupFilter       string // the Cleanup table's filter
+	packageChosen             map[string]bool
+	pkg                       packageManagerState
+	terminalCustomOpen        bool   // whether the custom terminal path input is expanded in Settings
+	terminalCustomInput       string // custom terminal path being edited in Settings
+	editorCustomOpen          bool   // whether the custom editor path input is expanded in Settings
+	editorCustomInput         string // custom editor path being edited in Settings
+	gitTab                    int    // the Git page's tab: installed, settings, PATH
+	cppTab                    int    // the C/C++ page's tab: installed, PATH
+	modelsTab                 int    // the local models page's tab: all, then an app each
+	modelsFilter              string // the local models table's filter
+	modelPull                 string // the name of the Ollama model to download
+	modelPullOpen             bool   // the dialog to download an Ollama model is open
+	cliTab                    int    // the CLI & clouds page's tab
+	cliFilter                 string // the CLI & clouds table's filter
+	cloudAuth                 map[string]cloudAuthEntry
+	cloudSwitch               cloudSwitchDialog
+	cloudLogin                cloudLoginDialog
+	kubeTab                   int    // the Kubernetes page's tab
+	kubeFilter                string // the Kubernetes page's filter
+	kubeNS                    kubeNamespaceDialog
+	kubeChecks                map[string]kubeCheck
+	cluster                   kubeClusterState
+	engine                    dockerEngineState // the Docker engine page's
+	issuePopover              string            // key of the open row issue popover; "" when none
+	issuePopoverOn            bool
+	kind                      kindCreateDialog
+	kubeLink                  kubeLinkDialog
+	kubeConfig                kubeConfigDialog
+	kubeApply                 *kubeApplyDialog
+	forwards                  []*portForward
+	scriptRuns                []*scriptRun
+	scriptLogsKey             string          // active project script log panel key; "" when closed
+	scriptsExpanded           map[string]bool // project dirs with full script list expanded
+	scriptFilter              string          // search filter in project's Scripts card
+	scriptSourceFilter        string          // source file filter in project's Scripts card ("" = all)
+	scriptFilterDir           string          // project dir scriptFilter belongs to
+	portsTab                  int             // the Services & Ports page's quick filter: all, dev servers, docker, db, k8s
+	portsFilter               string          // the Ports table's filter
+	portsFilterQuery          string          // last ?filter= query applied to Ports
+	portsRefreshing           bool
+	portsRefreshSeq           int
+	portsLastRefresh          time.Time
+	portsBusy                 bool   // a Docker container stop plan is being built on Ports
+	portsErr                  string // last Docker container stop error on Ports
+	projectTab                int    // the project detail page's tab: overview, services, ai, files
+	projectTabDir             string // project dir the current projectTab belongs to
+	instructionsQuery         string // the Instructions page's filter
+	instructionsChosen        string // the project shown on the Instructions page
+	instructionsShowAllGlobal bool   // show uninstalled agents without global instructions
+	usageTab                  int    // the Usage page's period, by usagePeriods
+	usageMetric               int    // the Usage page's metric: 0 cost, 1 tokens
+	usageAgent                string // the Usage page's agent filter, "" for all
+	usageAgentLabel           string
+	usageProject              string // the Usage page's project filter, "" for all
+	usageProjectLabel         string
+	usageModel                string // the Usage page's model filter, "" for all
+	usageCache                []usageSummaryCacheEntry
+	mobileTab                 int    // the mobile page's tab: all, then a group each
+	mobileFilter              string // the mobile table's filter
+	editorsTab                int    // the editors page's tab: all, extensions, commands
+	editorsFilter             string // the editors table's filter
+	changesTab                int    // the What changed page's tab: all, added, updated, removed
+	changesFilter             string // the What changed table's filter
+	problemsTab               int    // the Issues page's tab: all, then an area each
+	problemsSeverity          int    // the Issues page's severity filter: 0 all, 1 important, 2 info
+	problemsFilter            string // the Issues table's filter
+	problemsShowHidden        bool   // whether the hidden issues list is expanded on the Issues page
+	cleanupExcludeInput       string // new $HOME exclusion path being typed in Settings
+	shownSettingsNotice       string // last SettingsNotice emitted as a toast
+	shownSettingsError        string // last SettingsError emitted as a toast
+	cleanupTab                int    // the Cleanup page's tab: all, then a group each
+	cleanupAge                int    // age filter: 0 any, 1 >30d, 2 >90d, 3 >180d
+	cleanupSort               int    // sort order: 0 largest first, 1 oldest first
+	cleanupFilter             string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice map[string]bool
-	updatesTab    int    // the Updates page's tab: all, versions, packages
-	updatesFilter string // the Updates table's filter
+	// cleanupProjectOpen records explicit expand/collapse state for project
+	// buckets on the Cleanup page, keyed by project root directory.
+	cleanupProjectOpen map[string]bool
+	updatesTab         int    // the Updates page's tab: all, versions, packages
+	updatesFilter      string // the Updates table's filter
 	// updateChoice is what the user checked or unchecked on the Updates
 	// page, by updateRow.key; the others are as Hearth offers them.
 	updateChoice       map[string]bool
-	databaseTab        int             // the tab of the databases page shown
-	databaseFilter     string          // the databases table's filter
-	databaseErr        string          // last terminal launch error on the Databases page
-	databaseBusy       bool            // a Docker database start/stop plan is being built
-	dockerTab          int             // the tab of the Docker page shown
-	dockerFilter       string          // the Docker contexts table's filter
-	bunTab             int             // the tab of the Bun page shown
-	goTab              int             // the tab of the Go page shown
-	phpTab             int             // the tab of the PHP page shown
-	pythonTab          int             // the tab of the Python page shown
-	dotnetTab          int             // the tab of the .NET page shown
-	rubyTab            int             // the tab of the Ruby page shown
-	javaTab            int             // the tab of the Java page shown
-	rustTab            int             // the tab of the Rust page shown
-	rustToolchain      string          // selected rustup toolchain for Targets/Components
-	rustToolchainLabel string          // ui.Select label binding for rustToolchain
-	rustToolchainInput string          // custom toolchain name or version to install via rustup
-	rustTargetInput    string          // custom target triple to add via rustup target add
-	editorsExpanded    map[string]bool // expanded extension/superseded lists on Editors page
-	projectsTab        int             // all projects, or the ones needing attention
-	projectFilter      string          // the projects page's filter
-	adding             *adding         // the folder the add dialog shows; nil when closed
+	databaseTab        int                // the tab of the databases page shown
+	databaseFilter     string             // the databases table's filter
+	databaseErr        string             // last terminal launch error on the Databases page
+	databaseBusy       bool               // a Docker database start/stop plan is being built
+	dockerTab          int                // the tab of the Docker page shown
+	dockerFilter       string             // the Docker contexts table's filter
+	bunTab             int                // the tab of the Bun page shown
+	goTab              int                // the tab of the Go page shown
+	phpTab             int                // the tab of the PHP page shown
+	pythonTab          int                // the tab of the Python page shown
+	dotnetTab          int                // the tab of the .NET page shown
+	rubyTab            int                // the tab of the Ruby page shown
+	javaTab            int                // the tab of the Java page shown
+	rustTab            int                // the tab of the Rust page shown
+	rustToolchain      string             // selected rustup toolchain for Targets/Components
+	rustToolchainLabel string             // ui.Select label binding for rustToolchain
+	rustToolchainInput string             // custom toolchain name or version to install via rustup
+	rustTargetInput    string             // custom target triple to add via rustup target add
+	versionInput       map[string]*string // custom version spec input per language page
+	editorsExpanded    map[string]bool    // expanded extension/superseded lists on Editors page
+	projectsTab        int                // all projects, or the ones needing attention
+	projectFilter      string             // the projects page's filter
+	adding             *adding            // the folder the add dialog shows; nil when closed
 	addOpen            bool
-	licensesOpen       bool // the licenses dialog from Settings
+	cloneForm          *cloneProjectState // open Clone from Git dialog; nil when closed
+	licensesOpen       bool               // the licenses dialog from Settings
 
 	dockerTabsReady bool
+	dockerLastCheck time.Time
 	colimaResize    colimaResizeForm
 
 	// The skills and MCP pages: the agent filtered by, "" for all; the
@@ -491,13 +542,16 @@ type App struct {
 	mcpChecks              map[string]mcpCheck // last check of each MCP server declaration
 	mcpCheckDecl           map[string]int      // chosen declaration index per MCP item key
 	mcpForm                *mcpFormState       // open add/edit MCP server dialog; nil when none
+	quotasTab              int                 // 0 all, 1 in tray, 2 running low
+	quotasSort             int                 // 0 custom, 1 least remaining, 2 soonest reset
+	quotasSortLabel        string              // ui.Select label binding for quotasSort
 	markdown               markdown.Options
 }
 
 // NewApp returns the app showing the overview.
 func NewApp() *App {
 	return &App{
-		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, Locale: "en", usageTab: 1,
+		router: ui.NewRouter(overview.path), ThemeMode: "system", VersionLists: true, ShowInDock: true, QuotaNotifyLow: true, Locale: "en", usageTab: 1,
 		engine: dockerEngineState{view: dockerContainers},
 		pkg:    packageManagerState{view: pkgViewPackages},
 	}
@@ -672,6 +726,8 @@ func (a *App) View(c *ui.Context) {
 						a.instructionsView(c, p)
 					case usagePage:
 						a.usageView(c, p)
+					case quotasPage:
+						a.quotasView(c, p)
 					case mobilePage:
 						a.mobileView(c, p)
 					case editorsPage:
@@ -725,6 +781,7 @@ func (a *App) View(c *ui.Context) {
 		}).Grow(1).MinWidth(0).Background(t.Background)
 	})
 	a.addDialog(c)
+	a.cloneDialog(c)
 	a.searchDialog(c)
 	a.preparationView(c)
 	a.colimaResizeDialog(c)
@@ -900,6 +957,15 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		n = len(a.Projects)
 	case mcpPage:
 		n = len(a.configuredMCPItems())
+	case quotasPage:
+		if a.Quotas != nil {
+			if low := a.Quotas.LowCount(c.Now()); low > 0 {
+				return func() {
+					ui.Text(c, strconv.Itoa(low)).FontSize(11).FontWeight(500).TextColor(Colors(c.Theme()).DangerText).SingleLine()
+				}
+			}
+			n = a.Quotas.ConnectedCount()
+		}
 	case "/tools/docker", "/tools/databases":
 		for _, is := range a.visibleRawIssues(a.issues(c)) {
 			if issuePage(is) == p.path {
@@ -1202,6 +1268,9 @@ func (a *App) item(c *ui.Context, p page, end func()) {
 	})
 	if e.Clicked() && !chosen {
 		a.router.Push(a.entryPath(p.path))
+		if p.path == quotasPage {
+			a.maybeRefreshQuotasOnOpen()
+		}
 	}
 }
 
@@ -1273,4 +1342,140 @@ func (a *App) TriggerColima(start bool) {
 	if start && len(st.Docker.Colima.Profiles) == 0 && st.Docker.Colima.Path != "" && !st.Docker.Colima.Unreadable {
 		a.changeColima(*st.Docker.Colima, inventory.ColimaProfile{Name: "default"}, ops.ColimaStart, ops.ColimaLimits{})
 	}
+}
+
+// OpenAgents navigates the main window to the AI Agents page.
+func (a *App) OpenAgents() { a.router.Push("/ai/agents") }
+
+// OpenPorts navigates the main window to the Ports page.
+func (a *App) OpenPorts() { a.router.Push(portsPage) }
+
+// OpenProject navigates the main window to a project's page.
+func (a *App) OpenProject(dir string) {
+	a.scriptLogsKey = ""
+	if dir == "" {
+		a.router.Push("/projects")
+		return
+	}
+	a.router.Push(projectPath(dir))
+}
+
+// OpenProjectServices navigates directly to a project's Services tab.
+func (a *App) OpenProjectServices(dir string) {
+	a.scriptLogsKey = ""
+	if dir == "" {
+		a.router.Push("/projects")
+		return
+	}
+	a.projectTabDir = dir
+	a.projectTab = 1
+	a.router.Push(projectPath(dir))
+}
+
+// OpenProjectScriptLogs navigates to a project's Services tab with the given
+// script's log viewer expanded.
+func (a *App) OpenProjectScriptLogs(dir, source, name string) {
+	a.OpenProjectServices(dir)
+	a.scriptLogsKey = scriptRunKey(dir, source, name)
+}
+
+// OpenKube navigates the main window to the Kubernetes page.
+func (a *App) OpenKube() { a.router.Push(kubePage) }
+
+// OpenQuotas navigates the main window to the AI Quotas & limits page.
+func (a *App) OpenQuotas() {
+	a.router.Push(quotasPage)
+	a.maybeRefreshQuotasOnOpen()
+}
+
+func (a *App) maybeRefreshQuotasOnOpen() {
+	if a.RefreshQuotas == nil || a.QuotasRefreshing {
+		return
+	}
+	if a.Quotas == nil || a.Quotas.CheckedAt.IsZero() || time.Since(a.Quotas.CheckedAt) >= aiquota.ActivePollInterval {
+		a.RefreshQuotas(false)
+	}
+}
+
+// ViewingQuotas reports whether the AI Quotas & limits page is currently open.
+func (a *App) ViewingQuotas() bool { return a.router != nil && a.router.Path() == quotasPage }
+
+// NeedsLivePoll reports whether the currently visible page benefits from
+// lightweight background polling (ports, dev servers, or AI agent radar).
+func (a *App) NeedsLivePoll() bool {
+	if a.router == nil {
+		return false
+	}
+	switch a.router.Path() {
+	case portsPage, "/ai/agents":
+		return true
+	case projectPage:
+		return a.projectTab == 0 || a.projectTab == 1
+	default:
+		return false
+	}
+}
+
+// TodayUsageCostUSD returns today's estimated API cost across all AI coding
+// agents from cached local session usage (zero I/O).
+func (a *App) TodayUsageCostUSD() float64 {
+	if a.Snapshot == nil || len(a.Snapshot.Sessions) == 0 {
+		return 0
+	}
+	return a.usageSummary(time.Now(), 7).today.cost
+}
+
+// WaitingAgentsCount returns how many active AI sessions currently wait for
+// user approval or input.
+func (a *App) WaitingAgentsCount() int {
+	n := 0
+	for _, s := range a.RadarSessions {
+		if s.Status == inventory.AgentStatusWaiting {
+			n++
+		}
+	}
+	return n
+}
+
+// RefreshPortsNow triggers an asynchronous lightweight refresh of listening
+// ports and port-publishing Docker containers.
+func (a *App) RefreshPortsNow() { a.refreshPortsNow() }
+
+// PortsRefreshing reports whether a lightweight ports refresh is in flight.
+func (a *App) PortsRefreshing() bool { return a.portsRefreshing }
+
+// ClearPortsRefreshing clears the ports refresh spinner when a background
+// refresh is canceled or times out before delivering a result.
+func (a *App) ClearPortsRefreshing() {
+	a.portsRefreshing = false
+}
+
+// ClearRadarRefreshing clears the radar refresh spinner when a background
+// refresh is canceled or times out, and drains any coalesced pending refresh.
+func (a *App) ClearRadarRefreshing() {
+	a.RadarRefreshing = false
+	if a.radarRefreshPending {
+		a.radarRefreshPending = false
+		a.RefreshRadarNow()
+	}
+}
+
+// RefreshRadarNow triggers an asynchronous refresh of live AI agent sessions.
+func (a *App) RefreshRadarNow() {
+	if a.RefreshRadar == nil {
+		return
+	}
+	if a.RadarRefreshing {
+		a.radarRefreshPending = true
+		return
+	}
+	a.RadarRefreshing = true
+	a.RefreshRadar(func(sessions []inventory.ActiveAgentSession) {
+		a.RadarRefreshing = false
+		a.RadarSessions = sessions
+		if a.radarRefreshPending {
+			a.radarRefreshPending = false
+			a.RefreshRadarNow()
+		}
+	})
 }

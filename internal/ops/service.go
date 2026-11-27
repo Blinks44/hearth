@@ -17,6 +17,7 @@ type ServiceAction int
 const (
 	ServiceStart ServiceAction = iota
 	ServiceStop
+	ServiceRestart
 )
 
 // serviceName is what a service's name may hold: Homebrew's formulas,
@@ -31,11 +32,11 @@ func ServicePlan(action ServiceAction, db inventory.Database, detect Detect) (p 
 	if name == "" || db.Source == "docker" || !serviceName.MatchString(name) {
 		return Plan{}, false
 	}
-	verb := [...]string{"start", "stop"}[action]
-	var step Step
+	verb := [...]string{"start", "stop", "restart"}[action]
+	var steps []Step
 	switch db.Source {
 	case "brew":
-		step = Step{Argv: []string{"brew", "services", verb, name}, Timeout: 2 * time.Minute}
+		steps = []Step{{Argv: []string{"brew", "services", verb, name}, Timeout: 2 * time.Minute}}
 		p.Why = locales.ServiceWhyBrew()
 		if action == ServiceStop {
 			p.Notes = []Note{{Title: locales.ServiceBrewLogin(), Text: locales.ServiceBrewLoginText(), Tag: "brew services"}}
@@ -43,17 +44,21 @@ func ServicePlan(action ServiceAction, db inventory.Database, detect Detect) (p 
 	default:
 		// Any other service is the system's, also of a server found as
 		// an installer's copy, as EDB's PostgreSQL on Windows.
-		if step, ok = systemService(action, name); !ok {
+		if steps, ok = systemService(action, name); !ok {
 			return Plan{}, false
 		}
 		p.Why = locales.ServiceWhySystem()
 		p.Notes = []Note{AdminNote()}
 	}
-	p.Steps = []Step{step}
-	if action == ServiceStart {
+	p.Steps = steps
+	switch action {
+	case ServiceStart:
 		p.Title = locales.ServiceStartTitle(name)
 		p.Changes = []string{locales.ServiceStartChange(name)}
-	} else {
+	case ServiceRestart:
+		p.Title = locales.ServiceRestartTitle(name)
+		p.Changes = []string{locales.ServiceRestartChange(name)}
+	default:
 		p.Title = locales.ServiceStopTitle(name)
 		p.Changes = []string{locales.ServiceStopChange(name)}
 	}
@@ -72,21 +77,21 @@ func ServicePlan(action ServiceAction, db inventory.Database, detect Detect) (p 
 // checkService says whether st, the databases found after the plan ran,
 // show action done to db's service.
 func checkService(action ServiceAction, db inventory.Database, st inventory.ToolState) (string, error) {
-	want := [...]string{"running", "stopped"}[action]
+	want := [...]string{"running", "stopped", "running"}[action]
 	if st.Databases != nil {
 		for _, s := range st.Databases.Servers {
 			if s.Service == db.Service && s.Source == db.Source && s.Status == want {
-				if action == ServiceStart {
-					return locales.ServiceCheckRunning(db.Service), nil
+				if action == ServiceStop {
+					return locales.ServiceCheckStopped(db.Service), nil
 				}
-				return locales.ServiceCheckStopped(db.Service), nil
+				return locales.ServiceCheckRunning(db.Service), nil
 			}
 		}
 	}
-	if action == ServiceStart {
-		return "", errors.New(locales.ServiceCheckNotRunning(db.Service))
+	if action == ServiceStop {
+		return "", errors.New(locales.ServiceCheckNotStopped(db.Service))
 	}
-	return "", errors.New(locales.ServiceCheckNotStopped(db.Service))
+	return "", errors.New(locales.ServiceCheckNotRunning(db.Service))
 }
 
 // AutostartPlan returns the plan that makes db's service start with the

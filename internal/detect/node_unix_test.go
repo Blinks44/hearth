@@ -63,7 +63,7 @@ func TestNodeFnmAndBrew(t *testing.T) {
 			Source:   inventory.Source{Kind: vm, Manager: "fnm", Root: v22, Version: "22.11.0"},
 			OnPath:   1,
 			Default:  true,
-			Packages: []inventory.Package{{Name: "npm", Version: "10.9.0"}},
+			Packages: []inventory.Package{{Name: "npm", Version: "10.9.0", Manager: "npm"}},
 		},
 		{
 			Tool: "node", Version: "23.3.0",
@@ -71,7 +71,7 @@ func TestNodeFnmAndBrew(t *testing.T) {
 			Source: inventory.Source{Kind: pm, Manager: "brew", Root: keg, Version: "23.3.0_1"},
 			OnPath: 2, InGUI: 1,
 			// brew's npm installs globals into the prefix, not the keg.
-			Packages: []inventory.Package{{Name: "@angular/cli", Version: "19.0.0"}, {Name: "npm", Version: "10.9.1"}},
+			Packages: []inventory.Package{{Name: "@angular/cli", Version: "19.0.0", Manager: "npm"}, {Name: "npm", Version: "10.9.1", Manager: "npm"}},
 		},
 		{
 			Tool: "node", Version: "20.18.0",

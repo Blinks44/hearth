@@ -43,7 +43,7 @@ func TestOverviewReadsIndependentSources(t *testing.T) {
 	if o.Disk.Err != nil || len(o.Disk.Usage) != 4 || o.Disk.Usage[2].Reclaimable != 1_200_000_000 {
 		t.Fatalf("disk = %+v", o.Disk)
 	}
-	if o.Events.Err != nil || len(o.Events.Items) != 2 || o.Events.Items[0].Action != "oom" || o.Events.Items[1] != (Event{Action: "die", Name: "worker", ExitCode: "7", Count: 2}) {
+	if o.Events.Err != nil || len(o.Events.Items) != 2 || o.Events.Items[0].Action != "oom" || o.Events.Items[1] != (Event{ID: "one", Action: "die", Name: "worker", ExitCode: "7", Count: 2}) {
 		t.Fatalf("events = %+v", o.Events)
 	}
 	r.Stdout(`{"Type":"Images","TotalCount":"1","Active":"1","Size":"12XB","Reclaimable":"0B"}`, colima.Command(nil, "system", "df", "--format", "{{json .}}").Args...)

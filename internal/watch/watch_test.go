@@ -2,6 +2,7 @@ package watch
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -207,12 +208,80 @@ func TestDocker(t *testing.T) {
 	if ctx.Err() != nil {
 		t.Fatal("restarted for the same engine")
 	}
+	// Temporary unavailability keeps the watcher running so a restart is noticed.
 	snap.Tools[0].Docker.Contexts[0].Status = "unavailable"
+	s.Docker(snap, nil)
+	if ctx.Err() != nil {
+		t.Fatal("stopped watching a temporarily unavailable local engine")
+	}
+	// Permission denied or remote context stops the watcher.
+	snap.Tools[0].Docker.Contexts[0].Denied = true
 	s.Docker(snap, nil)
 	select {
 	case <-ctx.Done():
 	case <-time.After(5 * time.Second):
-		t.Fatal("still following a stopped engine")
+		t.Fatal("still following a permission-denied engine")
+	}
+}
+
+func TestDockerWatcherRecoversAfterStop(t *testing.T) {
+	origGrace, origRetry, origMax := dockerUpGrace, dockerRetry, dockerMaxWait
+	dockerUpGrace = 25 * time.Millisecond
+	dockerRetry = 20 * time.Millisecond
+	dockerMaxWait = 40 * time.Millisecond
+	defer func() {
+		dockerUpGrace, dockerRetry, dockerMaxWait = origGrace, origRetry, origMax
+	}()
+
+	var mu sync.Mutex
+	engineUp := false
+	attempts := 0
+	changes := make(chan struct{}, 8)
+	s := &Service{
+		Lines: func(ctx context.Context, _ run.Cmd, _ func(string)) error {
+			mu.Lock()
+			attempts++
+			up := engineUp
+			mu.Unlock()
+			if !up {
+				return errors.New("Cannot connect to the Docker daemon")
+			}
+			<-ctx.Done()
+			return ctx.Err()
+		},
+		Containers: func() { changes <- struct{}{} },
+	}
+	defer s.Close()
+
+	snap := &inventory.Snapshot{Tools: []inventory.ToolState{{
+		Tool:          "docker",
+		Installations: []inventory.Installation{{Path: "/bin/docker", OnPath: 1}},
+		Docker: &inventory.DockerState{
+			Selected: "colima",
+			Contexts: []inventory.DockerContext{{Name: "colima", Endpoint: "unix:///colima.sock", Local: true, Status: "unavailable"}},
+		},
+	}}}
+	s.Docker(snap, nil)
+
+	// While engine stays down, failed retries must not spam Containers refreshes.
+	select {
+	case <-changes:
+		t.Fatal("refreshed while engine stayed unavailable")
+	case <-time.After(90 * time.Millisecond):
+	}
+	mu.Lock()
+	gotAttempts := attempts
+	engineUp = true
+	mu.Unlock()
+	if gotAttempts < 2 {
+		t.Fatalf("attempts while down = %d, want >= 2", gotAttempts)
+	}
+
+	// Once the engine starts answering, Containers fires automatically.
+	select {
+	case <-changes:
+	case <-time.After(2 * time.Second):
+		t.Fatal("did not refresh when engine came back up")
 	}
 }
 

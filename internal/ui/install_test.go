@@ -14,6 +14,7 @@ import (
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/sysenv"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // cleanApp is a computer with nothing installed but its system's package
@@ -41,8 +42,8 @@ func TestInstallOnACleanComputer(t *testing.T) {
 		name, page, button string
 		changes            []string
 	}{
-		{"agent", "/ai/agents", "Install…", []string{"+ Codex"}},
-		{"pnpm", "/tools/jspm", "Install…", []string{"+ mise", "+ Node.js LTS", "+ pnpm"}},
+		{"agent", "/ai/agents", "Install Codex", []string{"+ Codex"}},
+		{"pnpm", "/tools/jspm", "Install pnpm", []string{"+ mise", "+ Node.js LTS", "+ pnpm"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -114,7 +115,7 @@ func TestInstallLanguageTools(t *testing.T) {
 			if !tt.HasText(tc.row) {
 				t.Fatalf("no %q: %q", tc.row, tt.Texts())
 			}
-			if !tt.HasText("Install…") {
+			if !tt.HasText(locales.InstallNamed(setupTitle(tc.tool))) {
 				t.Fatalf("no button: %q", tt.Texts())
 			}
 			a.installTool(tc.tool)

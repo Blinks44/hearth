@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -95,6 +96,7 @@ func (a *App) projectList(c *ui.Context, p page) {
 	ui.Column(c).Fill().Children(func() {
 		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				a.cloneProjectButton(c)
 				a.findProjectsButton(c)
 				a.addButton(c)
 			})
@@ -141,6 +143,7 @@ func (a *App) projectsEmpty(c *ui.Context) {
 		ui.Text(c, locales.NoProjectsYet()).TextColor(c.Theme().TextMuted).TextAlign(ui.Center)
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			a.addButton(c)
+			a.cloneProjectButton(c)
 			a.findProjectsButton(c)
 		})
 	})
@@ -303,11 +306,16 @@ func (a *App) project(c *ui.Context, dir string) {
 	if a.projectTabDir != dir {
 		a.projectTab = 0
 		a.projectTabDir = dir
+		a.scriptLogsKey = ""
 	}
 	i := slices.IndexFunc(a.Projects, func(p projects.Project) bool { return p.Dir == dir })
 	var statuses []projects.Status
 	needsPrepare := false
 	if i >= 0 {
+		if run := a.activeProjectScriptLogs(dir); run != nil {
+			a.projectScriptLogsView(c, a.Projects[i], run)
+			return
+		}
 		statuses = projects.Resolve(a.Projects[i], a.Snapshot, a.nodeLines())
 		needsPrepare = projectNeedsPrepare(a.Projects[i], statuses)
 	}
@@ -351,22 +359,28 @@ func (a *App) project(c *ui.Context, dir string) {
 				case 3:
 					a.projectFilesTab(c, p)
 				default:
-					a.projectGitCard(c, p)
-					if text := problemBanner(statuses); text != "" {
-						ui.Row(c).Gap(10).Padding(10, 12).Radius(10).AlignItems(ui.Center).
-							Background(Colors(c.Theme()).WarningSoft).Children(func() {
-							ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(c.Theme().Warning)
-							ui.Text(c, text).FontSize(12).TextColor(Colors(c.Theme()).WarningText).Grow(1).MinWidth(0)
+					if banner := problemBanner(statuses); banner.Title != "" {
+						warningBanner(c, banner.Title, banner.Meta, func() {
+							unmetCount := 0
+							var firstUnmet projects.Status
+							var firstCheck projects.Check
 							for _, st := range statuses {
 								if ch, ok := st.Unmet(); ok {
-									if _, run, ok := a.projectInstallAction(st, a.proposeOrSay); ok {
-										// Dark, as in the design: the page's one accent
-										// stays for the header's action.
-										ui.Button(c.Key("banner-install"), locales.InstallEllipsis(toolTitle(st.Tool)+withSpace(ch.Want))).
-											Background(c.Theme().Text).TextColor(c.Theme().Background).BorderColor(c.Theme().Text).
-											OnClick(run)
+									if unmetCount == 0 {
+										firstUnmet, firstCheck = st, ch
 									}
-									break
+									unmetCount++
+								} else if st.EngineDown {
+									unmetCount++
+								}
+							}
+							if unmetCount == 1 && firstUnmet.Tool != "" {
+								if _, run, ok := a.projectInstallAction(firstUnmet, a.proposeOrSay); ok {
+									// Dark, as in the design: the page's one accent
+									// stays for the header's action.
+									ui.Button(c.Key("banner-install"), locales.InstallEllipsis(toolTitle(firstUnmet.Tool)+withSpace(firstCheck.Want))).
+										Background(c.Theme().Text).TextColor(c.Theme().Background).BorderColor(c.Theme().Text).
+										OnClick(run)
 								}
 							}
 						})
@@ -374,19 +388,8 @@ func (a *App) project(c *ui.Context, dir string) {
 					if len(statuses) > 0 {
 						a.requirementTable(c, statuses)
 					}
-					a.projectDockerCard(c, p)
-					a.projectDatabasesCard(c, p)
-					a.projectKubeCard(c, p)
-					a.projectDiskCard(c, p)
-					if narrow(c) {
-						a.aiCard(c, p)
-						a.filesCard(c, p)
-					} else {
-						ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-							ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.aiCard(c, p) })
-							ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.filesCard(c, p) })
-						})
-					}
+					a.projectServicesSummaryCard(c, p)
+					a.projectOverviewCards(c, p)
 				}
 			})
 		})
@@ -435,6 +438,110 @@ func projectMatches(p projects.Project, statuses []projects.Status, q string) bo
 	return false
 }
 
+type projectCardSlot struct {
+	weight int
+	render func()
+}
+
+// projectOverviewCards arranges the project's secondary cards (Docker Compose,
+// databases, Kubernetes, disk, AI, files) into a height-balanced 2-column grid
+// on standard windows and a single column on narrow windows.
+func (a *App) projectOverviewCards(c *ui.Context, p projects.Project) {
+	const cardOverhead = 64 // header (44px) + vertical gap between cards
+	var cards []projectCardSlot
+	if stacks := composeProjects(p); len(stacks) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(stacks)*48, render: func() { a.projectDockerCard(c, p) }})
+	}
+	if len(p.Databases) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(p.Databases)*54, render: func() { a.projectDatabasesCard(c, p) }})
+	}
+	if _, linked := a.KubeLinks[p.Dir]; linked || len(p.Kube) > 0 {
+		rows := 1
+		if len(p.Kube) > 0 {
+			rows++
+		}
+		if linked {
+			rows++
+		}
+		cards = append(cards, projectCardSlot{weight: cardOverhead + rows*54, render: func() { a.projectKubeCard(c, p) }})
+	}
+	if len(p.Installs) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(p.Installs)*42, render: func() { a.projectDiskCard(c, p) }})
+	}
+	cards = append(cards, projectCardSlot{weight: cardOverhead + max(1, len(p.AI))*52, render: func() { a.aiCard(c, p) }})
+	fileRows := len(p.Files) + len(p.Errs)
+	filesH := cardOverhead + 44
+	if fileRows > 0 {
+		filesH = cardOverhead + fileRows*66
+	}
+	cards = append(cards, projectCardSlot{weight: filesH, render: func() { a.filesCard(c, p) }})
+
+	if narrow(c) || len(cards) <= 1 {
+		for _, card := range cards {
+			card.render()
+		}
+		return
+	}
+	left, right := balanceProjectCards(cards)
+	ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
+		ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(18).Children(func() {
+			for _, card := range left {
+				card.render()
+			}
+		})
+		ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(18).Children(func() {
+			for _, card := range right {
+				card.render()
+			}
+		})
+	})
+}
+
+// balanceProjectCards splits up to 6 cards into two non-empty columns while
+// preserving relative order in each column and minimizing column weight skew.
+func balanceProjectCards(cards []projectCardSlot) (left, right []projectCardSlot) {
+	n := len(cards)
+	if n <= 1 {
+		return cards, nil
+	}
+	bestMask := 1
+	bestDiff := int(^uint(0) >> 1)
+	bestLeftCount := 0
+	// Fix card 0 in the left column (bit 0 = 1) to avoid mirror duplicates.
+	limit := 1 << n
+	for mask := 1; mask < limit; mask += 2 {
+		if mask == limit-1 {
+			continue
+		}
+		lw, rw, lc := 0, 0, 0
+		for i, card := range cards {
+			if mask&(1<<i) != 0 {
+				lw += card.weight
+				lc++
+			} else {
+				rw += card.weight
+			}
+		}
+		diff := lw - rw
+		if diff < 0 {
+			diff = -diff
+		}
+		if diff < bestDiff || (diff == bestDiff && lc > bestLeftCount) {
+			bestDiff = diff
+			bestMask = mask
+			bestLeftCount = lc
+		}
+	}
+	for i, card := range cards {
+		if bestMask&(1<<i) != 0 {
+			left = append(left, card)
+		} else {
+			right = append(right, card)
+		}
+	}
+	return left, right
+}
+
 // projectDatabasesCard shows the local databases referenced by Compose and .env
 // for project p, matched against observed servers, listeners, and port conflicts.
 func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
@@ -456,7 +563,16 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 			}
 		}
 	}
-	listCard(c, locales.ProjectDatabasesTitle(), "compose · .env", func() {
+	ui.Column(c.Key("project-databases-card")).Radius(12).Clip().Background(t.Background).
+		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.ProjectDatabasesTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
+			clipped(c, "compose · .env").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1)
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			pageLinkAction(c, "project-db-open-all", locales.OpenDatabases(), func() {
+				a.router.Push("/tools/databases")
+			})
+		})
 		for i, ref := range p.Databases {
 			title := ref.Kind
 			if ref.Service != "" {
@@ -484,7 +600,7 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 				case busyPort != "":
 					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ProjectDatabasePortBusy(busyPort))
 					port := busyPort
-					ui.Button(c.Key("project-db-port:"+key), locales.ProjectDatabaseViewPort(port)).Height(controlHeight).OnClick(func() {
+					ui.Button(c.Key("project-db-port:"+key), locales.ProjectDatabaseViewPort(port)).Height(rowControlHeight).OnClick(func() {
 						a.router.Push(portsPathWithFilter(port))
 					})
 				case running:
@@ -492,14 +608,11 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 				case knownStopped:
 					chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.DatabaseStopped())
 					if plan, canStart := a.projectDatabaseStartPlan(ref, servers); canStart {
-						ui.Button(c.Key("project-db-start:"+key), locales.ServiceStart()).Height(controlHeight).OnClick(func() {
+						ui.Button(c.Key("project-db-start:"+key), locales.ServiceStart()).Height(rowControlHeight).OnClick(func() {
 							a.Propose(plan)
 						})
 					}
 				}
-				ui.Button(c.Key("project-db-open:"+key), locales.OpenDatabases()).Height(controlHeight).OnClick(func() {
-					a.router.Push("/tools/databases")
-				})
 			})
 		}
 	})
@@ -718,8 +831,8 @@ func (a *App) projectInstallAction(st projects.Status, done func(ops.Plan, error
 	}, true
 }
 
-// projectHero is the folder, its name and what it needs, and on the right
-// the cards of where it stands: needed, ready, AI.
+// projectHero is the folder, its name with inline Git branch pill and what it
+// needs, and on the right the cards of where it stands: needed, status, AI.
 func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects.Status) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -736,32 +849,79 @@ func (a *App) projectHero(c *ui.Context, p projects.Project, statuses []projects
 			files = append(files, f)
 		}
 	}
-	caption := tilde(p.Dir, a.Home)
-	if len(needs) > 0 {
-		caption += " · " + strings.Join(needs, ", ")
-	}
 	headRow(c, func() {
 		folderTile(c, 48)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-			ui.Text(c, filepath.Base(p.Dir)).FontSize(22).FontWeight(600).SingleLine()
-			ui.Text(c, caption).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
+		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Wrap().Children(func() {
+				ui.Text(c, filepath.Base(p.Dir)).FontSize(22).FontWeight(600).SingleLine()
+				if g := p.Git; g != nil && g.Branch != "" {
+					bg, border, fg := pal.Subtle, pal.Line, pal.MonoText
+					statusText := locales.ProjectGitClean()
+					if g.Dirty {
+						bg, border, fg = pal.WarningSoft, t.Warning.Alpha(0.30), pal.WarningText
+						statusText = locales.ProjectGitModified(g.Modified)
+					}
+					ui.Row(c.Key("project-hero-git")).Gap(5).Padding(3, 8).Radius(6).AlignItems(ui.Center).Shrink(0).
+						Background(bg).BorderWidth(1).BorderColor(border).Children(func() {
+						ui.Icon(c, Icon("git-branch")).Size(12, 12).TextColor(fg)
+						ui.Text(c, g.Branch).Font(FontMono).FontSize(11.5).FontWeight(500).TextColor(fg).SingleLine()
+						ui.Text(c, "·").FontSize(11).TextColor(fg).SingleLine()
+						ui.Text(c, statusText).FontSize(11).TextColor(fg).SingleLine()
+					})
+				}
+			})
+			ui.Column(c).Gap(2).AlignItems(ui.Start).Children(func() {
+				if g := p.Git; g != nil && g.Remote != "" {
+					if g.RemoteURL != "" {
+						remoteURL := g.RemoteURL
+						btn := ui.ButtonBase(c.Key("project-git-remote")).Row().Gap(4).Padding(1, 0).Radius(5).
+							AlignItems(ui.Center).Shrink(0).Label(g.Remote).Tooltip(locales.ProjectGitOpenRemote()).
+							OnClick(func() { c.OpenURL(remoteURL) })
+						if btn.Hovered() {
+							btn.Background(pal.Subtle)
+						}
+						btn.Children(func() {
+							ui.Text(c, g.Remote).Font(FontMono).FontSize(12).TextColor(t.TextMuted).SingleLine()
+							ui.Icon(c, Icon("external-link")).Size(11, 11).TextColor(pal.TextFaint)
+						})
+					} else {
+						ui.Text(c, g.Remote).Font(FontMono).FontSize(12).TextColor(t.TextMuted).SingleLine()
+					}
+				} else {
+					ui.Text(c, tilde(p.Dir, a.Home)).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
+				}
+				if len(needs) > 0 {
+					ui.Text(c, strings.Join(needs, " · ")).FontSize(12).TextColor(pal.TextFaint).Wrap()
+				}
+			})
 		})
 	}, func() {
 		stateCard(c, pal.TextFaint, locales.Needed(), locales.ToolsCount(len(statuses)), strings.Join(files, " · "))
 		problem := projectProblem(statuses)
-		dot, readyCaption := t.Success, locales.ChipReady()
-		if problem != "" {
-			dot, readyCaption = t.Warning, problem
+		if runPort, runCaption, running := a.projectPrimaryRunning(p); running && problem == "" {
+			val := locales.ProjectStatusRunningNoPort()
+			if runPort != "" {
+				val = locales.ProjectStatusRunning(runPort)
+			}
+			stateCard(c, t.Success, locales.ProjectStatus(), val, runCaption)
+		} else {
+			dot, readyCaption := t.Success, locales.ChipReady()
+			if problem != "" {
+				dot, readyCaption = t.Warning, problem
+			}
+			stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
 		}
-		stateCard(c, dot, locales.Ready(), locales.ReadyOf(ready, len(statuses)), readyCaption)
 		var names []string
 		for _, id := range projectAgents(p) {
 			names = append(names, agentTitle(id))
 		}
 		value, aiCaption := "—", locales.NoAISettings()
-		if len(names) > 0 {
+		switch {
+		case len(names) > 0:
 			value = locales.ProjectAgentsCount(len(names))
 			aiCaption = strings.Join(names, ", ")
+		case len(p.Skills) > 0:
+			value = locales.ProjectSkillsCount(len(p.Skills))
 		}
 		stateCard(c, Accent, "AI", value, aiCaption)
 	})
@@ -897,7 +1057,7 @@ func (a *App) aiCard(c *ui.Context, p projects.Project) {
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.ProjectAI()).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
-			ui.Button(c.Key("project-ai-manage"), locales.ProjectAiManage()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-ai-manage", locales.ProjectAiManage(), func() {
 				a.projectTab = 2
 			})
 		})
@@ -1149,7 +1309,6 @@ func filePinPill(c *ui.Context, text string) {
 func fileRow(c *ui.Context, p projects.Project, file string, open func()) {
 	pal := Colors(c.Theme())
 	keys, pills := fileRequirementSummary(p, file)
-	inlinePill := len(pills) == 1 && len(keys) == 0 && len(pills[0]) <= 20
 	ui.Column(c).Gap(6).MinHeight(46).Padding(9, 12, 9, 14).Justify(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -1160,14 +1319,11 @@ func fileRow(c *ui.Context, p projects.Project, file string, open func()) {
 					ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Tooltip(caption)
 				}
 			})
-			if inlinePill {
-				filePinPill(c, pills[0])
-			}
 			if open != nil {
 				iconButton(c.Key("file-open:"+file), "external-link", locales.OpenInEditor()).OnClick(open)
 			}
 		})
-		if len(pills) > 0 && !inlinePill {
+		if len(pills) > 0 {
 			ui.Row(c).Gap(6).Wrap().Children(func() {
 				for _, pill := range pills {
 					filePinPill(c, pill)
@@ -1254,50 +1410,110 @@ func projectProblem(statuses []projects.Status) string {
 	return ""
 }
 
-// problemBanner explains the project's first problem: what it needs and
-// from which file, what is installed and what the terminal runs, noting how
-// many additional problems exist when there are more than one.
-func problemBanner(statuses []projects.Status) string {
-	var first string
-	problems := 0
+type projectProblemBanner struct {
+	Title string
+	Meta  string
+}
+
+// problemBanner summarizes a project's environment issues as a clear heading
+// and concise metadata line: single issues state what is missing or mismatched
+// and where it is declared; multiple issues list the affected tools directly.
+func problemBanner(statuses []projects.Status) projectProblemBanner {
+	type problemDetail struct {
+		title string
+		meta  string
+		short string
+	}
+	var items []problemDetail
 	for _, st := range statuses {
 		ch, ok := st.Unmet()
 		if !ok {
 			if st.EngineDown {
-				problems++
-				if first == "" {
-					file := "Docker"
-					if len(st.Checks) > 0 && st.Checks[0].File != "" {
-						file = st.Checks[0].File
-					}
-					first = locales.ProblemEngineDownBanner(file)
+				var file string
+				if len(st.Checks) > 0 {
+					file = st.Checks[0].File
 				}
+				meta := locales.ProblemEngineDownMeta()
+				if file != "" {
+					meta = locales.ProblemEngineDownForFile(file)
+				}
+				items = append(items, problemDetail{
+					title: locales.ProblemEngineDownTitle(),
+					meta:  meta,
+					short: locales.ProblemItemEngineDown(),
+				})
 			}
 			continue
 		}
-		problems++
-		if first != "" {
-			continue
-		}
+
+		tool := toolTitle(st.Tool)
+		need := tool + withSpace(ch.Want)
 		vs := installedVersions(st)
-		installed := locales.NothingInstalled()
-		if len(vs) > 0 {
-			installed = strings.Join(vs, ", ")
+
+		var title, meta, short string
+		switch {
+		case len(vs) == 0:
+			title = locales.ProblemNotInstalledTitle(need)
+			if ch.File != "" {
+				meta = locales.ProblemRequiredBy(ch.File)
+			} else {
+				meta = locales.ProblemNotInstalledMeta()
+			}
+			short = locales.ProblemItemNotInstalled(need)
+
+		case ch.Installed != nil:
+			want := cmp.Or(ch.Want, copyVersion(*ch.Installed))
+			if st.Terminal != nil {
+				runVer := copyVersion(*st.Terminal)
+				title = locales.ProblemWrongActiveTitle(tool, runVer, want)
+				short = locales.ProblemItemWrongVersion(need, runVer)
+			} else {
+				title = locales.ProblemNotInPathTitle(need)
+				short = locales.ProblemItemNotInPath(need)
+			}
+			meta = locales.ProblemAlreadyInstalledMeta(want)
+			if ch.File != "" {
+				meta = locales.ProblemRequiredBy(ch.File) + " · " + meta
+			}
+
+		default:
+			title = locales.ProblemMissingVersionTitle(need)
+			var stateMeta string
+			if st.Terminal != nil {
+				stateMeta = locales.ProblemInstalledMeta(strings.Join(vs, ", "), copyVersion(*st.Terminal))
+			} else {
+				stateMeta = locales.ProblemInstalledNotInPathMeta(strings.Join(vs, ", "))
+			}
+			if ch.File != "" {
+				meta = locales.ProblemRequiredBy(ch.File) + " · " + stateMeta
+			} else {
+				meta = stateMeta
+			}
+			short = locales.ProblemItemMissing(need)
 		}
-		run := "—"
-		if st.Terminal != nil {
-			run = copyVersion(*st.Terminal)
-		}
-		want := ch.Want
-		if want == "" {
-			want = locales.AnyVersion()
-		}
-		first = locales.ProblemBanner(toolTitle(st.Tool), want, ch.File, installed, run)
+
+		items = append(items, problemDetail{title: title, meta: meta, short: short})
 	}
-	if first != "" && problems > 1 {
-		return first + " · " + locales.AttentionMore(problems-1)
+
+	if len(items) == 0 {
+		return projectProblemBanner{}
 	}
-	return first
+	if len(items) == 1 {
+		return projectProblemBanner{Title: items[0].title, Meta: items[0].meta}
+	}
+
+	const maxListed = 3
+	listed := make([]string, 0, min(len(items), maxListed)+1)
+	for i := range min(len(items), maxListed) {
+		listed = append(listed, items[i].short)
+	}
+	if len(items) > maxListed {
+		listed = append(listed, locales.AttentionMore(len(items)-maxListed))
+	}
+	return projectProblemBanner{
+		Title: locales.ProblemMultiTitle(len(items)),
+		Meta:  strings.Join(listed, " · "),
+	}
 }
 
 // anyChecked reports that the scan checked a tool of the project: until
@@ -1399,7 +1615,7 @@ func toolIcon(id string) string {
 		}
 	}
 	switch id {
-	case "npm", "pnpm", "docker", "git":
+	case "npm", "pnpm", "docker", "git", "mise":
 		return "brand/" + id
 	case "kubectl", "kind":
 		return "brand/kubernetes"

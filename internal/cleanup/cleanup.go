@@ -134,9 +134,10 @@ type Candidate struct {
 	// Copies are the copies of a tool that would go, for ExtraCopy and
 	// Leftover.
 	Copies []inventory.Installation
-	// Project is the folder of the project, for ProjectInstalls; Changed
-	// when it last changed.
+	// Project is the folder of the project, for ProjectInstalls; Role classifies
+	// it as "deps" or "build"; Changed is when it last changed.
 	Project string
+	Role    string `json:",omitempty"`
 	Changed time.Time
 	// Count is how many of Docker's images or containers, of the folders
 	// of OldExtensions, or of the sessions of AgentHistory.
@@ -253,37 +254,61 @@ func FindWithOptions(s *inventory.Snapshot, sizes *inventory.Sizes, ps []project
 // chosen at once only when its project has not changed for long.
 func installs(sizes *inventory.Sizes, ps []projects.Project, usage func(...string) (inventory.Usage, bool), now time.Time, opts Options) []Candidate {
 	var out []Candidate
-	add := func(project, name string, changed time.Time) {
+	add := func(project, root, name, role string, changed time.Time) {
 		path := filepath.Join(project, name)
 		if slices.ContainsFunc(out, func(c Candidate) bool { return c.Paths[0] == path }) {
 			return
 		}
 		u, ok := usage(path)
-		if ok && opts.MinFrees > minFrees && u.Bytes-u.Shared < opts.MinFrees {
+		if ok && u.Bytes-u.Shared < opts.MinFrees {
 			return
+		}
+		if role == "" {
+			role = projects.InstallRole(name)
+		}
+		groupDir := project
+		id := name
+		if root != "" && root != project {
+			if rel, err := filepath.Rel(root, path); err == nil && rel != "" && rel != "." && rel != ".." && !hasParentPrefix(rel) {
+				groupDir = root
+				id = filepath.ToSlash(rel)
+			}
 		}
 		stale := !changed.IsZero() && now.Sub(changed) >= opts.StaleAfter
 		reasons := []Reason{Reinstalled}
 		if stale {
 			reasons = []Reason{Unchanged, Reinstalled}
 		}
-		out = append(out, Candidate{Kind: ProjectInstalls, ID: name, Paths: []string{path}, Project: project, Changed: changed,
+		out = append(out, Candidate{Kind: ProjectInstalls, ID: id, Paths: []string{path}, Project: groupDir, Role: role, Changed: changed,
 			Usage: u, Known: ok, Selected: stale, Reasons: reasons})
+	}
+	rootsByPath := map[string]string{}
+	if sizes != nil {
+		for _, in := range sizes.Installs {
+			if in.Root != "" {
+				rootsByPath[filepath.Join(in.Project, in.Name)] = in.Root
+			}
+		}
 	}
 	for _, p := range ps {
 		if p.Changed.IsZero() || now.Sub(p.Changed) < opts.StaleAfter {
 			continue
 		}
 		for _, name := range p.Installs {
-			add(p.Dir, name, p.Changed)
+			root := rootsByPath[filepath.Join(p.Dir, name)]
+			add(p.Dir, root, name, projects.InstallRole(name), p.Changed)
 		}
 	}
 	if sizes != nil {
 		for _, in := range sizes.Installs {
-			add(in.Project, in.Name, in.Changed)
+			add(in.Project, in.Root, in.Name, in.Role, in.Changed)
 		}
 	}
 	return out
+}
+
+func hasParentPrefix(rel string) bool {
+	return len(rel) >= 3 && rel[0] == '.' && rel[1] == '.' && (rel[2] == '/' || rel[2] == filepath.Separator)
 }
 
 // docker offers what pruning frees: the build cache, images without
@@ -536,6 +561,9 @@ func history(sessions []inventory.AgentSession, now time.Time, opts Options) []C
 		c.Paths = append(c.Paths, s.Files...)
 		c.Count++
 		c.Usage.Bytes += s.Size
+		if s.Modified.After(c.Changed) {
+			c.Changed = s.Modified
+		}
 	}
 	return slices.DeleteFunc(out, func(c Candidate) bool { return c.Usage.Bytes < opts.MinFrees })
 }

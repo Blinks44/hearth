@@ -2,7 +2,7 @@
 
 Key architectural and product decisions behind Hearth v1.0.
 
-- **Native Go UI (`mygo`) without WebView or cgo:** Hearth ships as a single native binary (~20 MB compressed download per arch; ~28 MB macOS Universal DMG) across macOS, Windows, and Linux with native vibrancy/Mica, tray support, and deterministic UI testing via `ui.NewTester` (rejected: Electron/WebView - heavy memory footprint and separate JS toolchain).
+- **Native Go UI (`mygo`) without WebView or cgo:** Hearth ships as a single native binary (~13–19 MB compressed download per arch, ~44–48 MB installed) across macOS (separate Apple Silicon and Intel DMGs, plus a universal updater archive for older installs), Windows, and Linux with native vibrancy/Mica, tray support, and deterministic UI testing via `ui.NewTester` (rejected: Electron/WebView - heavy memory footprint and separate JS toolchain).
 - **Separate `tools/go.mod` for `golangci-lint`:** Pins linter version in the repo as a Go tool without polluting the application's `go.mod` / `go.sum` dependency graph.
 - **Capture terminal environment instead of trusting GUI `PATH`:** On Unix, Hearth runs `$SHELL -ilc` in a detached session (`Setsid`) and parses `/usr/bin/env -0` between random markers; on Windows, it reads a fresh session block via `CreateEnvironmentBlock` and resolves junctions via `GetFinalPathNameByHandle` (rejected: inheriting GUI process env - misses Homebrew, `fnm`, `mise`, etc.).
 - **Read-only scanning, confirmed operations:** Discovery never mutates the machine and never calls `mise ls --json` or remote clusters during a scan. Every system change goes through `ops.Plan` with exact commands, diffs, backups, and post-operation verification in a fresh terminal.

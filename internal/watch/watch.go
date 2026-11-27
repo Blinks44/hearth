@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -40,7 +41,7 @@ type Service struct {
 	// Lines runs docker events; main passes run.Lines.
 	Lines func(ctx context.Context, c run.Cmd, line func(string)) error
 	// Containers is called a moment after the Docker engine's containers
-	// changed, or after it stopped answering.
+	// changed, or after it stopped or started answering.
 	Containers func()
 	// Err is told of a watch that could not start or stopped; nil drops
 	// it.
@@ -48,12 +49,13 @@ type Service struct {
 	// Env returns the terminal environment used when re-reading projects.
 	Env func() sysenv.Env
 
-	mu             sync.Mutex
-	closed         bool
-	watches        map[string]context.CancelFunc // by kind and path
-	startupPaths   []string
-	startupTargets map[string][]string // watched dir -> full startup file paths
-	wg             sync.WaitGroup
+	mu              sync.Mutex
+	closed          bool
+	watches         map[string]context.CancelFunc // by kind and path
+	startupPaths    []string
+	startupTargets  map[string][]string // watched dir -> full startup file paths
+	dockerAvailable atomic.Bool
+	wg              sync.WaitGroup
 }
 
 // Projects watches the project folders dirs, not the folders in them, and
@@ -174,21 +176,26 @@ func matchesStartupRel(eventPath, rel string) bool {
 }
 
 // How long docker events stays quiet before Containers is called, so that
-// compose up starting several containers refreshes once; and the first
-// wait before following the engine again after the stream ended.
-const (
-	dockerSettle = 300 * time.Millisecond
-	dockerRetry  = 5 * time.Second
+// compose up starting several containers refreshes once; how long a live
+// stream must stay open to consider a previously unavailable engine recovered;
+// and the reconnect backoff bounds.
+var (
+	dockerSettle  = 300 * time.Millisecond
+	dockerUpGrace = time.Second
+	dockerRetry   = 5 * time.Second
+	dockerMaxWait = 30 * time.Second
 )
 
-// Docker follows the containers of the selected local Docker engine snap
-// found answering, by docker events in the terminal's environment env;
-// with no such engine it stops following. When the stream ends, as the
-// engine stops, Containers is called, and the engine followed again after
-// a wait that grows while it keeps failing.
+// Docker follows the selected local Docker engine by docker events in the
+// terminal's environment env; with no local (and permitted) engine it stops
+// following. When the engine is unavailable, the watcher stays alive with
+// bounded backoff (up to 30s) and triggers Containers only on real state
+// transitions (engine goes down or comes back up) or container events.
 func (s *Service) Docker(snap *inventory.Snapshot, env sysenv.Env) {
 	var keys []string
-	if exe, endpoint := dockerEngine(snap); exe != "" {
+	exe, endpoint, available := dockerEngine(snap)
+	s.dockerAvailable.Store(available)
+	if exe != "" {
 		keys = []string{exe + "\n" + endpoint}
 	}
 	s.set("docker:", keys, func(ctx context.Context, key string) {
@@ -200,28 +207,54 @@ func (s *Service) Docker(snap *inventory.Snapshot, env sysenv.Env) {
 		retry := dockerRetry
 		for {
 			start := time.Now()
+			var settleMu sync.Mutex
 			var settle *time.Timer
+			var upTimer *time.Timer
+			if !s.dockerAvailable.Load() {
+				upTimer = time.AfterFunc(dockerUpGrace, func() {
+					if ctx.Err() != nil {
+						return
+					}
+					if s.dockerAvailable.CompareAndSwap(false, true) {
+						s.Containers()
+					}
+				})
+			}
 			err := s.Lines(ctx, cmd, func(string) {
+				s.dockerAvailable.Store(true)
+				settleMu.Lock()
+				if upTimer != nil {
+					upTimer.Stop()
+				}
 				if settle == nil {
 					settle = time.AfterFunc(dockerSettle, s.Containers)
 				} else {
 					settle.Reset(dockerSettle)
 				}
+				settleMu.Unlock()
 			})
+			settleMu.Lock()
+			if upTimer != nil {
+				upTimer.Stop()
+			}
 			if settle != nil {
 				settle.Stop()
 			}
+			settleMu.Unlock()
 			if ctx.Err() != nil {
 				return
 			}
-			if err != nil {
-				s.report(err)
-			}
-			s.Containers()
-			if time.Since(start) > retry {
+			wasUp := s.dockerAvailable.Swap(false)
+			if wasUp {
+				if err != nil {
+					s.report(err)
+				}
+				s.Containers()
+				retry = dockerRetry
+			} else if time.Since(start) > retry {
 				retry = dockerRetry
 			} else {
-				retry = min(2*retry, 5*time.Minute)
+				retry = min(2*retry, dockerMaxWait)
 			}
 			select {
 			case <-ctx.Done():
@@ -232,26 +265,26 @@ func (s *Service) Docker(snap *inventory.Snapshot, env sysenv.Env) {
 	})
 }
 
-// dockerEngine returns the Docker CLI and the address of the selected
-// local engine, as the scan probed them, or "" when it did not answer.
-func dockerEngine(snap *inventory.Snapshot) (exe, endpoint string) {
+// dockerEngine returns the Docker CLI, endpoint, and current availability of
+// the selected local engine (skipping remote or permission-denied contexts).
+func dockerEngine(snap *inventory.Snapshot) (exe, endpoint string, available bool) {
 	if snap == nil {
-		return "", ""
+		return "", "", false
 	}
 	st, ok := snap.Tool("docker")
 	if !ok || st.Docker == nil {
-		return "", ""
+		return "", "", false
 	}
 	active := inventory.TerminalCopy(st.Installations)
 	if active < 0 {
-		return "", ""
+		return "", "", false
 	}
 	for _, c := range st.Docker.Contexts {
-		if c.Name == st.Docker.Selected && c.Local && c.Status == "available" {
-			return st.Installations[active].Path, c.Endpoint
+		if c.Name == st.Docker.Selected && c.Local && !c.Denied && c.Endpoint != "" {
+			return st.Installations[active].Path, c.Endpoint, c.Status == "available"
 		}
 	}
-	return "", ""
+	return "", "", false
 }
 
 // Close stops every watch and waits for them.

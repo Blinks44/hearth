@@ -29,6 +29,7 @@ type mobileRow struct {
 	path        string
 	size        int64
 	sized       bool
+	xcode       *inventory.XcodeApp
 }
 
 // mobileGroup is a section of the table, a tab each.
@@ -138,14 +139,17 @@ func (a *App) mobileGroups(m inventory.MobileState) []mobileGroup {
 
 	var ios []mobileRow
 	for _, x := range m.Xcodes {
+		app := x
 		parts := []string{locales.SourceInstaller()}
-		if x.AppStore {
+		if app.AppStore {
 			parts[0] = "App Store"
 		}
-		if x.Selected {
+		if app.Selected {
 			parts = append(parts, locales.MobileSelected())
 		}
-		ios = append(ios, row("Xcode "+x.Version, strings.Join(parts, " · "), x.Path))
+		r := row("Xcode "+app.Version, strings.Join(parts, " · "), app.Path)
+		r.xcode = &app
+		ios = append(ios, r)
 	}
 	newest := newestRuntimes(m.Runtimes)
 	runtimes := slices.Clone(m.Runtimes)
@@ -258,7 +262,7 @@ func (a *App) mobileView(c *ui.Context, p page) {
 					})
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
-						ui.Text(c, locales.MobileLead()).FontSize(12).TextColor(t.TextMuted)
+						ui.Text(c, locales.MobileLead()).FontSize(12.5).TextColor(t.TextMuted).SingleLine()
 					})
 				}, func() {
 					if len(m.Xcodes) > 0 {
@@ -409,6 +413,13 @@ func (a *App) mobileTable(c *ui.Context, groups []mobileGroup) {
 						clipped(c, r.name).FontSize(13)
 						clipped(c, r.about).FontSize(10.5).TextColor(pal.TextFaint)
 					})
+					if r.xcode != nil && !r.xcode.Selected {
+						if plan, ok := ops.SwitchXcodePlan(*r.xcode, a.detect("mobile")); ok {
+							ui.Button(c.Key("xcode-use:"+r.xcode.Path), locales.MobileXcodeUse()).Shrink(0).OnClick(func() {
+								a.Propose(plan)
+							})
+						}
+					}
 					ui.Text(c, size).Font(FontMono).FontSize(12).Shrink(0).SingleLine()
 					a.pathActions(c, rowKey, r.path)
 				})
@@ -466,9 +477,16 @@ func (a *App) mobileEnv(c *ui.Context, m inventory.MobileState) {
 				})
 			} else {
 				listRow(c, "ANDROID_HOME", true, locales.MobileUnset()+" · "+tilde(root, a.Home), func() {
-					if root != "" {
-						a.pathActions(c, "mobile-android", root)
-					}
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+						if !sdk.Missing && root != "" && a.BuildPlan != nil {
+							ui.Button(c.Key("mobile-android-set"), locales.EnvVarSetButton()).Shrink(0).OnClick(func() {
+								a.setEnvVar("ANDROID_HOME", root)
+							})
+						}
+						if root != "" {
+							a.pathActions(c, "mobile-android", root)
+						}
+					})
 				})
 			}
 		}
@@ -482,10 +500,24 @@ func (a *App) mobileEnv(c *ui.Context, m inventory.MobileState) {
 				}
 			}
 		}
+		activeJava := a.activeJavaHome()
 		listRow(c, locales.MobileJavaHome(), false, javaHome, func() {
-			if javaRaw != "" {
-				a.pathActions(c, "mobile-javahome", javaRaw)
-			}
+			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+				if activeJava != "" && a.BuildPlan != nil {
+					if javaRaw == "" {
+						ui.Button(c.Key("mobile-javahome-set"), locales.EnvVarSetButton()).Shrink(0).OnClick(func() {
+							a.setEnvVar("JAVA_HOME", activeJava)
+						})
+					} else if activeJava != a.javaHome() {
+						ui.Button(c.Key("mobile-javahome-fix"), locales.EnvVarFixButton()).Shrink(0).OnClick(func() {
+							a.setEnvVar("JAVA_HOME", activeJava)
+						})
+					}
+				}
+				if javaRaw != "" {
+					a.pathActions(c, "mobile-javahome", javaRaw)
+				}
+			})
 		})
 		devDir := m.DeveloperDir
 		if devDir == "" && a.Snapshot != nil {

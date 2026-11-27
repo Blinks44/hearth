@@ -59,10 +59,19 @@ func (c Cache) AllPaths() []string {
 	return nil
 }
 
-// ProjectInstall is a project's folder of dependencies, Project/Name, with
-// when the project last changed.
+// InstallRole values classify project artifact directories in Cleanup.
+const (
+	InstallRoleDeps  = "deps"
+	InstallRoleBuild = "build"
+)
+
+// ProjectInstall is a project's folder of dependencies or build artifacts,
+// Project/Name, with its role, optional enclosing repository/workspace Root
+// when Project is a nested package, and when the project last changed.
 type ProjectInstall struct {
 	Project, Name string
+	Root          string `json:",omitempty"`
+	Role          string `json:",omitempty"`
 	Changed       time.Time
 }
 

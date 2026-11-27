@@ -97,6 +97,12 @@ func issueText(is issues.Issue, home string) (title, explain string) {
 			dirs[i] = tilde(d, home)
 		}
 		return locales.IssuePathMissingTitle(), locales.IssuePathMissingExplain(strings.Join(dirs, ", "))
+	case issues.PathDuplicate:
+		dirs := make([]string, len(is.Dirs))
+		for i, d := range is.Dirs {
+			dirs[i] = tilde(d, home)
+		}
+		return locales.IssuePathDuplicateTitle(), locales.IssuePathDuplicateExplain(strings.Join(dirs, ", "))
 	case issues.SlowStartup:
 		st := is.Startup
 		title = locales.IssueSlowStartupTitle(seconds(st.Took))
@@ -230,11 +236,13 @@ func (a *App) issueFix(is issues.Issue, found []issues.Issue) func() {
 
 func (a *App) issueFixPlan(is issues.Issue, found []issues.Issue, done func(ops.Plan, error)) func() {
 	switch is.Kind {
-	case issues.PathMissing:
+	case issues.PathMissing, issues.PathDuplicate:
 		term := a.Snapshot.TerminalPath
 		var dirs []string
 		for i, e := range term {
-			if slices.Contains(is.Dirs, e.Dir) && !slices.Contains(dirs, e.Dir) && a.fixable(term, i) {
+			inIssue := slices.ContainsFunc(is.Dirs, func(d string) bool { return sysenv.SamePath(d, e.Dir) })
+			already := slices.ContainsFunc(dirs, func(d string) bool { return sysenv.SamePath(d, e.Dir) })
+			if inIssue && !already && a.fixable(term, i) {
 				dirs = append(dirs, e.Dir)
 			}
 		}

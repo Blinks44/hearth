@@ -6,9 +6,11 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/Blinks44/hearth/internal/containerlog"
 	"github.com/Blinks44/hearth/internal/inventory"
 	"github.com/Blinks44/hearth/internal/ops"
 	"github.com/Blinks44/hearth/internal/projects"
+	"github.com/Blinks44/hearth/internal/store"
 	"github.com/Blinks44/hearth/internal/sysenv"
 	"github.com/Blinks44/hearth/locales"
 )
@@ -125,19 +127,15 @@ func TestRowActionsAlignment(t *testing.T) {
 		for _, sz := range sizes {
 			tt.SetSize(sz[0], sz[1])
 			tt.Advance(time.Second)
-			var copyRects []ui.Rect
-			for _, port := range []string{"631", "3000", "5432"} {
-				copyRects = append(copyRects, accessButtonsByName(tt, locales.PortsCopyAddress(port))...)
-			}
-			copyX := assertAlignedColumn(t, "port copy", copyRects, 3)
 			moreX := assertAlignedColumn(t, "port more", accessButtonsByName(tt, locales.MoreActions()), 3)
-			if !(copyX < moreX) {
-				t.Fatalf("size %v: copy=%v more=%v, want copy < more", sz, copyX, moreX)
+			stopX := assertAlignedColumn(t, "port stop", accessButtonsByName(tt, locales.PortsStop()), 2)
+			if !(stopX < moreX) {
+				t.Fatalf("size %v: stopX=%v should sit left of moreX=%v", sz, stopX, moreX)
 			}
-			for _, label := range []string{locales.PortsOpenBrowser(), locales.OpenProject(), locales.PortsStop()} {
+			for _, label := range []string{locales.PortsOpenBrowser(), locales.OpenProject()} {
 				for _, r := range accessButtonsByName(tt, label) {
-					if r.X >= copyX {
-						t.Fatalf("size %v: contextual %q at X=%v should sit left of copy X=%v", sz, label, r.X, copyX)
+					if r.X >= stopX {
+						t.Fatalf("size %v: contextual %q at X=%v should sit left of stop X=%v", sz, label, r.X, stopX)
 					}
 				}
 			}
@@ -148,10 +146,12 @@ func TestRowActionsAlignment(t *testing.T) {
 		a := NewApp()
 		a.Home = home
 		a.Shell = &fakeShell{}
+		shop := home + "/dev/shop"
+		a.Projects = []projects.Project{{Dir: shop}}
 		a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{
 			Servers: []inventory.Database{
 				{Kind: "PostgreSQL", Name: "PostgreSQL", Version: "17.2", Source: "brew", Status: "running", Service: "postgresql@17", Path: "/opt/homebrew/Cellar/postgresql@17/17.2"},
-				{Kind: "Redis", Name: "cache", Version: "redis:7", Source: "docker", Status: "running", Ports: []string{"6379"}},
+				{Kind: "Redis", Name: "cache", Version: "redis:7", Source: "docker", Status: "running", Ports: []string{"6379"}, Project: shop},
 			},
 			Listeners: []inventory.DatabaseListener{
 				{Address: "127.0.0.1", Port: "5432", Process: "postgres", PID: "812", Path: "/opt/homebrew/Cellar/postgresql@17/17.2/bin/postgres", Own: true},
@@ -163,11 +163,9 @@ func TestRowActionsAlignment(t *testing.T) {
 		for _, sz := range sizes {
 			tt.SetSize(sz[0], sz[1])
 			tt.Advance(time.Second)
-			copyX := assertAlignedColumn(t, "db copy", accessButtonsByName(tt, locales.DatabaseCopyURL()), 2)
-			folderX := assertAlignedColumn(t, "db folder", accessButtonsByName(tt, showInFolder()), 1)
-			moreX := assertAlignedColumn(t, "db more", accessButtonsByName(tt, locales.MoreActions()), 1)
-			if !(copyX < folderX && folderX < moreX) {
-				t.Fatalf("size %v: order copy=%v folder=%v more=%v, want copy < folder < more", sz, copyX, folderX, moreX)
+			assertAlignedColumn(t, "db more", accessButtonsByName(tt, locales.MoreActions()), 2)
+			if !tt.HasText("shop") {
+				t.Fatalf("size %v: expected inline project chip for docker database", sz)
 			}
 		}
 	})
@@ -198,4 +196,184 @@ func TestRowActionsAlignment(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestProjectOverviewServicesCardUniform(t *testing.T) {
+	makeApp := func(p projects.Project) *App {
+		a := NewApp()
+		a.Home = home
+		a.Projects = []projects.Project{p}
+		a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{{Tool: "databases", Databases: &inventory.DatabaseState{
+			Servers: []inventory.Database{
+				{Kind: "MariaDB", Name: "MariaDB", Version: "11.4", Source: "docker", Status: "running", Project: p.Dir},
+				{Kind: "Redis", Name: "Redis", Version: "7.2", Source: "docker", Status: "stopped", Project: p.Dir},
+			},
+		}}}}
+		a.RunScript = func(ops.ScriptSpec, func(int), func([]containerlog.LogLine), func(error)) func() { return func() {} }
+		a.router.Push(projectPath(p.Dir))
+		return a
+	}
+
+	moduix := projects.Project{
+		Dir: home + "/dev/moduix",
+		Scripts: []projects.Script{
+			{Name: "dev:docs", Source: "package.json", Command: "pnpm --filter docs dev"},
+			{Name: "dev:playground:react", Source: "package.json", Command: "pnpm --filter react dev"},
+			{Name: "dev:playground:react-tailwind", Source: "package.json", Command: "pnpm --filter react-tw dev"},
+			{Name: "dev:playground:solid", Source: "package.json", Command: "pnpm --filter solid dev"},
+			{Name: "build", Source: "package.json", Command: "pnpm build"},
+		},
+	}
+	planeta := projects.Project{
+		Dir: home + "/dev/planeta",
+		Scripts: []projects.Script{
+			{Name: "dev", Source: "Makefile", Command: "make dev"},
+			{Name: "dev", Source: "package.json", Command: "npm run dev"},
+			{Name: "start", Source: "package.json", Command: "npm start"},
+			{Name: "storybook", Source: "package.json", Command: "npm run storybook"},
+			{Name: "test", Source: "Makefile", Command: "make test"},
+		},
+		Databases: []projects.DatabaseReference{
+			{Kind: "MariaDB", File: "compose.yaml"},
+			{Kind: "Redis", File: "compose.yaml"},
+		},
+	}
+
+	var moduixLinkY, moduixScriptY float32
+	for _, tc := range []struct {
+		name string
+		proj projects.Project
+	}{
+		{name: "moduix", proj: moduix},
+		{name: "planeta", proj: planeta},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := makeApp(tc.proj)
+			tt := ui.NewTester(a.View, 1280, 820)
+			tt.Advance(time.Second)
+			screenshot(t, tt, "proj-ov-"+tc.name)
+
+			allLinkLabel := locales.ProjectScriptsAll() + " · 5"
+			linkBox, okLink := tt.Find(allLinkLabel)
+			if !okLink {
+				t.Fatalf("missing header link %q", allLinkLabel)
+			}
+			firstScript, okFirst := tt.Find(tc.proj.Scripts[0].Name)
+			if !okFirst {
+				t.Fatalf("missing first quick script %q", tc.proj.Scripts[0].Name)
+			}
+			if firstScript.Y <= linkBox.Y {
+				t.Errorf("quick scripts (Y=%.1f) should sit below header link (Y=%.1f)", firstScript.Y, linkBox.Y)
+			}
+			if tc.name == "moduix" {
+				moduixLinkY, moduixScriptY = linkBox.Y, firstScript.Y
+			} else {
+				if linkBox.Y != moduixLinkY || firstScript.Y != moduixScriptY {
+					t.Errorf("Run & services geometry differs between projects: planeta=(link=%.1f,script=%.1f) moduix=(link=%.1f,script=%.1f)",
+						linkBox.Y, firstScript.Y, moduixLinkY, moduixScriptY)
+				}
+			}
+		})
+	}
+}
+
+func TestBalanceProjectCards(t *testing.T) {
+	makeSlots := func(ws ...int) []projectCardSlot {
+		out := make([]projectCardSlot, len(ws))
+		for i, w := range ws {
+			out[i] = projectCardSlot{weight: w}
+		}
+		return out
+	}
+	sum := func(slots []projectCardSlot) int {
+		total := 0
+		for _, s := range slots {
+			total += s.weight
+		}
+		return total
+	}
+	for _, tc := range []struct {
+		name    string
+		weights []int
+		maxDiff int
+	}{
+		{"full stack (6 cards)", []int{2, 3, 3, 4, 3, 7}, 0},
+		{"medium stack (4 cards)", []int{3, 4, 3, 7}, 3},
+		{"no infra (3 cards)", []int{4, 3, 7}, 0},
+		{"minimal (2 cards)", []int{2, 4}, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			left, right := balanceProjectCards(makeSlots(tc.weights...))
+			if len(left) == 0 || len(right) == 0 {
+				t.Fatalf("both columns must be non-empty: left=%d right=%d", len(left), len(right))
+			}
+			diff := sum(left) - sum(right)
+			if diff < 0 {
+				diff = -diff
+			}
+			if diff > tc.maxDiff {
+				t.Fatalf("weight diff = %d (left=%d right=%d), want <= %d", diff, sum(left), sum(right), tc.maxDiff)
+			}
+		})
+	}
+}
+
+func TestProjectOverviewGridAndSinglePrepareButton(t *testing.T) {
+	dir := home + "/dev/planeta"
+	a := NewApp()
+	a.Home = home
+	a.Shell = &fakeShell{}
+	a.LinkKube = func(string, *store.KubeLink) {}
+	a.BuildPlan = func(build func(sysenv.Env, ops.Terminal) (ops.Plan, error), done func(ops.Plan, error)) {}
+	a.RunScript = func(ops.ScriptSpec, func(int), func([]containerlog.LogLine), func(error)) func() { return func() {} }
+	a.Projects = []projects.Project{{
+		Dir: dir,
+		Requirements: []projects.Requirement{
+			{Tool: "php", Want: "~8.3.36", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+			{Tool: "docker", File: "compose.yaml"},
+		},
+		Scripts: []projects.Script{
+			{Name: "dev", Source: "Makefile", Command: "make dev"},
+			{Name: "start", Source: "package.json", Command: "npm start"},
+			{Name: "storybook", Source: "package.json", Command: "npm run storybook"},
+		},
+		Files:     []string{"compose.yaml", "package.json", "composer.json"},
+		Databases: []projects.DatabaseReference{{Kind: "MariaDB", Service: "db", File: "compose.yaml"}, {Kind: "Redis", Service: "redis", File: "compose.yaml"}},
+		Kube:      []string{"deploy/"},
+		Installs:  []string{"node_modules", "vendor", "build"},
+		AI:        []string{"AGENTS.md", ".agents"},
+	}}
+	a.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+		{Tool: "php"},
+		{Tool: "composer"},
+		{Tool: "docker", Installations: []inventory.Installation{{Tool: "docker", Version: "29.10.0", OnPath: 1}}, Docker: &inventory.DockerState{
+			Selected: "colima",
+			Contexts: []inventory.DockerContext{{Name: "colima", Local: true, Status: "available", Engine: "Colima"}},
+		}},
+		{Tool: "cli", Cli: &inventory.CliState{KubeContexts: []inventory.KubeContext{{Name: "dev-cluster"}}}},
+	}}
+	a.router.Push(projectPath(dir))
+
+	tt := ui.NewTester(a.View, 1280, 1180)
+	tt.Advance(time.Second)
+	screenshot(t, tt, "proj-ov-full-grid")
+
+	prepareBtns := accessButtonsByName(tt, locales.PrepareButton())
+	if len(prepareBtns) != 1 {
+		t.Fatalf("Prepare button count = %d (%v), want exactly 1 (header only, no duplicate in warning banner)", len(prepareBtns), prepareBtns)
+	}
+	// Secondary cards must be arranged across two columns (different X origins).
+	dockerBox, okDocker := tt.Find(locales.OpenInDocker())
+	filesBox, okFiles := tt.Find(locales.ProjectFiles())
+	if !okDocker || !okFiles {
+		t.Fatalf("expected Docker (%v) and Files (%v) cards on overview", okDocker, okFiles)
+	}
+	if dockerBox.X == filesBox.X {
+		t.Fatalf("expected 2-column grid on wide window, got identical X=%.1f", dockerBox.X)
+	}
+	// Manifests folder action uses an icon button rather than a wide text button.
+	if btns := accessButtonsByName(tt, locales.PrepareOpenFolder()); len(btns) != 1 || btns[0].W > 32 {
+		t.Fatalf("expected compact iconButton for Kube manifests folder, got %+v", btns)
+	}
 }
