@@ -4,6 +4,14 @@ All notable changes to Hearth are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-27
+
+### Fixed
+
+- **Self-updated Homebrew casks:** Read the installed `.app`'s `bundle_short_version` from `brew info --json=v2 --installed` so casks that updated themselves in place show their actual on-disk version and never surface stale-tap downgrades or already-installed versions as available updates.
+- **Hearth self-update deduplication:** Hide Hearth's own Homebrew cask row from the Updates page (and its badges) while the built-in app updater is enabled, preventing duplicate update prompts and accidental `brew upgrade --cask hearth` runs against a running app.
+- **Homebrew cask template:** Added `auto_updates true`, migrated deprecated `postflight` to `postflight_steps` for Homebrew 7+, and placed `caveats` in canonical stanza order after `zap`.
+
 ## [1.1.0] - 2026-11-27
 
 ### Added
