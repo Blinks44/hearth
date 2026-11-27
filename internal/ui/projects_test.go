@@ -1004,6 +1004,9 @@ func TestProjectsCloneDialog(t *testing.T) {
 
 	// Close the completed operation dialog, switch to macOS stub Git, and verify
 	// that stub Git is treated as missing and builds a composite install+clone plan.
+	origGOOS := goos
+	goos = "darwin"
+	t.Cleanup(func() { goos = origGOOS })
 	if err := tt.Click(locales.OpDone()); err != nil {
 		t.Fatal(err)
 	}
