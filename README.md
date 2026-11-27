@@ -27,9 +27,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="website/public/screenshots/overview-dark.webp" />
-    <source media="(prefers-color-scheme: light)" srcset="website/public/screenshots/overview-light.webp" />
-    <img src="website/public/screenshots/overview-light.webp" alt="Hearth Overview screenshot" width="960" />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/overview-dark.webp" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/overview-light.webp" />
+    <img src="docs/screenshots/overview-light.webp" alt="Hearth Overview screenshot" width="960" />
   </picture>
 </p>
 
@@ -78,11 +78,11 @@ Set up a fresh machine with a guided catalog (defaulting to `mise` for languages
 
 | Docker | Kubernetes |
 | --- | --- |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="website/public/screenshots/docker-dark.webp" /><img src="website/public/screenshots/docker-light.webp" alt="Hearth Docker view" /></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="website/public/screenshots/kubernetes-dark.webp" /><img src="website/public/screenshots/kubernetes-light.webp" alt="Hearth Kubernetes view" /></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/docker-dark.webp" /><img src="docs/screenshots/docker-light.webp" alt="Hearth Docker view" /></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/kubernetes-dark.webp" /><img src="docs/screenshots/kubernetes-light.webp" alt="Hearth Kubernetes view" /></picture> |
 
 | AI &amp; MCP | Safe Plan &amp; Diff |
 | --- | --- |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="website/public/screenshots/ai-mcp-dark.webp" /><img src="website/public/screenshots/ai-mcp-light.webp" alt="Hearth AI MCP view" /></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="website/public/screenshots/plan-diff-dark.webp" /><img src="website/public/screenshots/plan-diff-light.webp" alt="Hearth operation diff preview" /></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/ai-mcp-dark.webp" /><img src="docs/screenshots/ai-mcp-light.webp" alt="Hearth AI MCP view" /></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/plan-diff-dark.webp" /><img src="docs/screenshots/plan-diff-light.webp" alt="Hearth operation diff preview" /></picture> |
 
 </details>
 
