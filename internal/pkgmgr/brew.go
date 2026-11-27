@@ -34,11 +34,12 @@ type brewInfo struct {
 		Dependencies []string
 	}
 	Casks []struct {
-		Token     string
-		Tap       string `json:"tap"`
-		Desc      string `json:"desc"`
-		Homepage  string `json:"homepage"`
-		Installed json.RawMessage
+		Token              string
+		Tap                string `json:"tap"`
+		Desc               string `json:"desc"`
+		Homepage           string `json:"homepage"`
+		Installed          json.RawMessage
+		BundleShortVersion string `json:"bundle_short_version"`
 		// Artifacts are of many shapes; an app's names where it went.
 		Artifacts []json.RawMessage
 	}
@@ -49,9 +50,10 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 		m.Prefix = strings.TrimSpace(string(data))
 	}
 	var linked map[string]string
+	var selfUpdated map[string]bool
 	data, err := probe("info", "--json=v2", "--installed")
 	if err == nil {
-		m.Packages, linked, err = parseBrew(data, m.Prefix)
+		m.Packages, linked, selfUpdated, err = parseBrew(data, m.Prefix)
 		m.ReasonsKnown = err == nil
 	}
 	if err != nil {
@@ -59,7 +61,7 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	}
 	data, err = probe("outdated", "--json=v2")
 	if err == nil {
-		err = brewUpdates(m, data, linked)
+		err = brewUpdates(m, data, linked, selfUpdated)
 	}
 	if err != nil {
 		m.Warnings = append(m.Warnings, err.Error())
@@ -73,16 +75,17 @@ func brew(m *inventory.PackageManager, probe func(...string) ([]byte, error)) {
 	}
 }
 
-func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[string]string, error) {
+func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[string]string, map[string]bool, error) {
 	var info brewInfo
 	if err := json.Unmarshal(data, &info); err != nil {
-		return nil, nil, fmt.Errorf("brew installed: %w", err)
+		return nil, nil, nil, fmt.Errorf("brew installed: %w", err)
 	}
 	if info.Formulae == nil && info.Casks == nil {
-		return nil, nil, fmt.Errorf("brew installed: missing package lists")
+		return nil, nil, nil, fmt.Errorf("brew installed: missing package lists")
 	}
 	var out []inventory.SystemPackage
 	linked := map[string]string{}
+	selfUpdated := map[string]bool{}
 	for _, f := range info.Formulae {
 		// A tap's formula keeps its full name, as brew outdated reports it.
 		name := f.FullName
@@ -123,9 +126,15 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[strin
 		if err := json.Unmarshal(c.Installed, &version); err != nil {
 			var versions []string
 			if err := json.Unmarshal(c.Installed, &versions); err != nil {
-				return out, linked, fmt.Errorf("brew cask %s installed: %w", c.Token, err)
+				return out, linked, selfUpdated, fmt.Errorf("brew cask %s installed: %w", c.Token, err)
 			}
 			version = strings.Join(versions, ", ")
+		}
+		if bv := strings.TrimSpace(c.BundleShortVersion); bv != "" {
+			if cmp, ok := compareDotVersion(bv, version); ok && cmp > 0 {
+				version = bv
+				selfUpdated[c.Token] = true
+			}
 		}
 		path := ""
 		if prefix != "" {
@@ -142,7 +151,7 @@ func parseBrew(data []byte, prefix string) ([]inventory.SystemPackage, map[strin
 			Tap:         c.Tap,
 		})
 	}
-	return out, linked, nil
+	return out, linked, selfUpdated, nil
 }
 
 // caskApps are where a cask's apps went, as /Applications/OrbStack.app;
@@ -162,7 +171,7 @@ func caskApps(artifacts []json.RawMessage) []string {
 	return out
 }
 
-func brewUpdates(m *inventory.PackageManager, data []byte, linked map[string]string) error {
+func brewUpdates(m *inventory.PackageManager, data []byte, linked map[string]string, selfUpdated map[string]bool) error {
 	// Both lists name a package by "name": a formula's full name and a
 	// cask's token.
 	type outdated struct {
@@ -193,8 +202,14 @@ func brewUpdates(m *inventory.PackageManager, data []byte, linked map[string]str
 	for i, p := range m.Packages {
 		m.Packages[i].Available = ""
 		key := [2]string{p.Kind, p.Name}
-		if updates[key] == "" || matchedLinked[key] {
+		avail := updates[key]
+		if avail == "" || matchedLinked[key] {
 			continue
+		}
+		if p.Kind == "cask" {
+			if cmp, ok := compareDotVersion(p.Version, avail); ok && (cmp > 0 || (cmp == 0 && selfUpdated[p.Name])) {
+				continue
+			}
 		}
 		target[key] = i
 		if p.Kind == "formula" && linked[p.Name] != "" && p.Version == linked[p.Name] {
@@ -205,4 +220,65 @@ func brewUpdates(m *inventory.PackageManager, data []byte, linked map[string]str
 		m.Packages[idx].Available = updates[key]
 	}
 	return nil
+}
+
+// compareDotVersion compares two dotted numeric versions (ignoring Homebrew's
+// ",build" suffix and an optional leading "v"). Returns ok=false if either
+// string contains non-numeric parts so unusual version schemes fall back to
+// Homebrew's own outdated comparison.
+func compareDotVersion(a, b string) (int, bool) {
+	pa, ok := parseDotVersion(a)
+	if !ok {
+		return 0, false
+	}
+	pb, ok := parseDotVersion(b)
+	if !ok {
+		return 0, false
+	}
+	n := max(len(pa), len(pb))
+	for i := range n {
+		var va, vb int
+		if i < len(pa) {
+			va = pa[i]
+		}
+		if i < len(pb) {
+			vb = pb[i]
+		}
+		if va < vb {
+			return -1, true
+		}
+		if va > vb {
+			return 1, true
+		}
+	}
+	return 0, true
+}
+
+func parseDotVersion(s string) ([]int, bool) {
+	s = strings.TrimSpace(s)
+	s, _, _ = strings.Cut(s, ",")
+	s = strings.TrimPrefix(strings.TrimPrefix(s, "v"), "V")
+	if s == "" {
+		return nil, false
+	}
+	parts := strings.Split(s, ".")
+	out := make([]int, len(parts))
+	for i, part := range parts {
+		if part == "" {
+			return nil, false
+		}
+		n := 0
+		for j := range len(part) {
+			ch := part[j]
+			if ch < '0' || ch > '9' {
+				return nil, false
+			}
+			n = n*10 + int(ch-'0')
+			if n < 0 {
+				return nil, false
+			}
+		}
+		out[i] = n
+	}
+	return out, true
 }

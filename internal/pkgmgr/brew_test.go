@@ -130,3 +130,59 @@ func TestBrewMultipleKegs(t *testing.T) {
 		}
 	}
 }
+
+// Self-updated casks report their newer on-disk bundle_short_version and never
+// surface stale-tap downgrades or already-installed versions as updates.
+func TestBrewCaskSelfUpdated(t *testing.T) {
+	t.Parallel()
+	f := &run.Fake{}
+	f.Stdout("/opt/homebrew\n", "brew", "--prefix")
+	f.Stdout(`{
+		"formulae": [],
+		"casks": [
+			{"token":"hearth","tap":"blinks44/tap","installed":"1.0.0","bundle_short_version":"1.0.5"},
+			{"token":"cap","tap":"homebrew/cask","installed":"0.6.0,abc","bundle_short_version":"0.6.3"},
+			{"token":"figma","tap":"homebrew/cask","installed":"126.9.13","bundle_short_version":"126.11.9"},
+			{"token":"chrome","tap":"homebrew/cask","installed":"155.0.8059.85","bundle_short_version":"158.0.8127.37"},
+			{"token":"buildbump","tap":"homebrew/cask","installed":"1.0.0,100","bundle_short_version":"1.0.0"},
+			{"token":"warp","tap":"homebrew/cask","installed":"0.2026.10.14.08.27.stable_01","bundle_short_version":"0.2026.11.18.08.17.01"}
+		]
+	}`, "brew", "info", "--json=v2", "--installed")
+	f.Stdout(`{
+		"formulae": [],
+		"casks": [
+			{"name":"hearth","installed_versions":["1.0.0"],"current_version":"1.0.1"},
+			{"name":"cap","installed_versions":["0.6.0,abc"],"current_version":"0.6.3,def"},
+			{"name":"figma","installed_versions":["126.9.13"],"current_version":"126.11.11"},
+			{"name":"chrome","installed_versions":["155.0.8059.85"],"current_version":"158.0.8127.89"},
+			{"name":"buildbump","installed_versions":["1.0.0,100"],"current_version":"1.0.0,101"},
+			{"name":"warp","installed_versions":["0.2026.10.14.08.27.stable_01"],"current_version":"0.2026.11.18.08.17.stable_06"}
+		]
+	}`, "brew", "outdated", "--json=v2")
+	f.Stdout("", "brew", "tap")
+	probe := func(args ...string) ([]byte, error) {
+		res, err := f.Run(context.Background(), run.Cmd{Args: append([]string{"brew"}, args...)})
+		return res.Stdout, err
+	}
+	m := inventory.PackageManager{}
+	brew(&m, probe)
+	if len(m.Warnings) != 0 || !m.UpdatesKnown {
+		t.Fatalf("%+v", m)
+	}
+	want := []struct{ name, version, available string }{
+		{"hearth", "1.0.5", ""},
+		{"cap", "0.6.3", ""},
+		{"figma", "126.11.9", "126.11.11"},
+		{"chrome", "158.0.8127.37", "158.0.8127.89"},
+		{"buildbump", "1.0.0,100", "1.0.0,101"},
+		{"warp", "0.2026.10.14.08.27.stable_01", "0.2026.11.18.08.17.stable_06"},
+	}
+	if len(m.Packages) != len(want) {
+		t.Fatalf("got %d packages: %+v", len(m.Packages), m.Packages)
+	}
+	for i, w := range want {
+		if p := m.Packages[i]; p.Name != w.name || p.Version != w.version || p.Available != w.available {
+			t.Errorf("%d: got %s %s (available %q), want %s %s (available %q)", i, p.Name, p.Version, p.Available, w.name, w.version, w.available)
+		}
+	}
+}

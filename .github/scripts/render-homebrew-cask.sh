@@ -46,19 +46,15 @@ cask "hearth" do
     strategy :github_latest
   end
 
+  auto_updates true
   depends_on macos: :monterey
 
   app "Hearth.app"
 
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Hearth.app"]
+  postflight_steps do
+    run "/usr/bin/xattr",
+        args: ["-dr", "com.apple.quarantine", "{{appdir}}/Hearth.app"]
   end
-
-  caveats <<~EOS
-    Hearth is currently signed ad hoc without Apple notarization.
-    This cask removes the macOS quarantine attribute during installation so Hearth launches without Gatekeeper prompts.
-  EOS
 
   zap trash: [
     "~/Library/Application Support/Hearth",
@@ -68,5 +64,10 @@ cask "hearth" do
     "~/Library/Logs/Hearth",
     "~/Library/Preferences/io.github.blinks44.hearth.plist",
   ]
+
+  caveats <<~EOS
+    Hearth is currently signed ad hoc without Apple notarization.
+    This cask removes the macOS quarantine attribute during installation so Hearth launches without Gatekeeper prompts.
+  EOS
 end
 EOF
