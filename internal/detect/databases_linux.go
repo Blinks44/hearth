@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -147,14 +148,7 @@ func readProcMeta(proc string, l *inventory.DatabaseListener) {
 			if cur == "" || cur == "0" || cur == "1" || cur == l.PID {
 				break
 			}
-			seen := false
-			for _, prev := range l.Ancestors {
-				if prev == cur {
-					seen = true
-					break
-				}
-			}
-			if seen {
+			if slices.Contains(l.Ancestors, cur) {
 				break
 			}
 			l.Ancestors = append(l.Ancestors, cur)

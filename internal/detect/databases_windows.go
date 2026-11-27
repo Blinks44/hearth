@@ -259,7 +259,7 @@ var processInfo = func(pid uint32) (process, bool) {
 	if err != nil {
 		return process{}, false
 	}
-	defer windows.CloseHandle(h)
+	defer func() { _ = windows.CloseHandle(h) }()
 	buf := make([]uint16, windows.MAX_LONG_PATH)
 	n := uint32(len(buf))
 	if windows.QueryFullProcessImageName(h, 0, &buf[0], &n) != nil {
@@ -271,7 +271,7 @@ var processInfo = func(pid uint32) (process, bool) {
 		user, err := token.GetTokenUser()
 		me, err2 := windows.GetCurrentProcessToken().GetTokenUser()
 		p.own = err == nil && err2 == nil && user.User.Sid.Equals(me.User.Sid)
-		token.Close()
+		_ = token.Close()
 	}
 	var pbi windows.PROCESS_BASIC_INFORMATION
 	var retLen uint32
