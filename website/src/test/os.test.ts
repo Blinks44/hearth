@@ -1,6 +1,29 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { site } from "@/config/site";
-import { getInstallCommand } from "@/lib/os";
+import { detectPlatform, getInstallCommand } from "@/lib/os";
+
+describe("detectPlatform", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("detects Intel macOS when userAgentData reports x86", () => {
+    vi.stubGlobal("navigator", {
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      platform: "MacIntel",
+      userAgentData: { platform: "macOS", architecture: "x86" },
+    });
+    expect(detectPlatform()).toEqual({ os: "macos", arch: "amd64" });
+  });
+
+  it("defaults macOS to arm64 without an explicit x86 architecture hint", () => {
+    vi.stubGlobal("navigator", {
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      platform: "MacIntel",
+    });
+    expect(detectPlatform()).toEqual({ os: "macos", arch: "arm64" });
+  });
+});
 
 describe("getInstallCommand", () => {
   it("returns brew cask command with $ prompt for macOS", () => {

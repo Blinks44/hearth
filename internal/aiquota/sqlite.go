@@ -130,6 +130,9 @@ func trimSQLiteToken(s string) string {
 
 func sqliteReadOnlyURI(dbPath string) (string, error) {
 	slashed := filepath.ToSlash(dbPath)
+	if !strings.HasPrefix(slashed, "/") {
+		slashed = "/" + slashed
+	}
 	u := &url.URL{
 		Scheme: "file",
 		Path:   slashed,

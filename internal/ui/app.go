@@ -11,7 +11,6 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
-	"golang.org/x/text/collate"
 
 	"github.com/Blinks44/hearth/internal/ai"
 	"github.com/Blinks44/hearth/internal/aiquota"
@@ -45,10 +44,6 @@ type App struct {
 	ThemeMode string
 	// Locale is the interface language, a catalog of locales/ as "en".
 	Locale string
-	// collator sorts titles in collatorLocale, made again when Locale
-	// changes.
-	collator       *collate.Collator
-	collatorLocale string
 	// VersionLists allows version lists and package-manager availability queries; without
 	// it, only the kept copies show.
 	VersionLists bool

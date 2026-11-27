@@ -14,7 +14,7 @@ export const enSeoContent: SeoContentBundle = {
         "Run open-source Colima on macOS or native Docker Engine on Linux. Inspect Compose stacks, containers, images, volumes, and live logs in one native Go app with zero Electron bloat.",
       metrics: [
         {
-          value: "~20 MB download",
+          value: "~13–19 MB download",
           label: "Native Go & mygo UI · <80 ms cold start · zero Electron",
         },
         {
@@ -36,7 +36,7 @@ export const enSeoContent: SeoContentBundle = {
         },
         {
           criterion: "UI footprint & speed",
-          hearth: "Single native Go binary (mygo), ~20 MB download",
+          hearth: "Single native Go binary (mygo), ~13–19 MB download",
           other: "Electron desktop UI, often 1 GB+ idle memory",
         },
         {
@@ -82,7 +82,7 @@ export const enSeoContent: SeoContentBundle = {
         {
           step: "Step 01",
           title: "Install Hearth (zero background changes)",
-          desc: "Download Hearth (~20 MB download; ~28 MB universal DMG) via DMG, Homebrew, or .deb. First scan is 100% read-only and never touches your containers.",
+          desc: "Download Hearth (~13–19 MB download per architecture) via DMG, Homebrew, or .deb. First scan is 100% read-only and never touches your containers.",
         },
         {
           step: "Step 02",

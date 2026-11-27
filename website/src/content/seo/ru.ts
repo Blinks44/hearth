@@ -14,7 +14,7 @@ export const ruSeoContent: SeoContentBundle = {
         "Запускайте открытый Colima на macOS или нативный Docker Engine на Linux. Управляйте Compose-стеками, контейнерами, образами, томами и логами в одном нативном Go-приложении без Electron.",
       metrics: [
         {
-          value: "~20 МБ загрузка",
+          value: "~13–19 МБ загрузка",
           label: "Нативный Go и mygo UI · старт <80 мс · без Electron",
         },
         {
@@ -36,7 +36,7 @@ export const ruSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Размер и скорость UI",
-          hearth: "Единый нативный Go-бинарник (mygo), ~20 МБ загрузка",
+          hearth: "Единый нативный Go-бинарник (mygo), ~13–19 МБ загрузка",
           other: "Electron UI, часто 1 ГБ+ памяти в простое",
         },
         {
@@ -82,7 +82,7 @@ export const ruSeoContent: SeoContentBundle = {
         {
           step: "Шаг 01",
           title: "Установите Hearth (без фоновых правок)",
-          desc: "Скачайте Hearth (~20 МБ загрузка; ~28 МБ universal DMG) через DMG, Homebrew или .deb. Первое сканирование полностью read-only и не трогает контейнеры.",
+          desc: "Скачайте Hearth (~13–19 МБ загрузка для каждой архитектуры) через DMG, Homebrew или .deb. Первое сканирование полностью read-only и не трогает контейнеры.",
         },
         {
           step: "Шаг 02",

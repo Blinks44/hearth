@@ -14,7 +14,7 @@ export const esSeoContent: SeoContentBundle = {
         "Ejecuta Colima open source en macOS o Docker Engine nativo en Linux. Inspecciona pilas Compose, contenedores, imágenes, volúmenes y logs en vivo en una app Go nativa sin Electron.",
       metrics: [
         {
-          value: "~20 MB descarga",
+          value: "~13–19 MB descarga",
           label: "Go nativo y UI mygo · <80 ms de arranque · sin Electron",
         },
         { value: "MIT Gratis", label: "Sin licencias de pago, sin cuentas, cero telemetría" },
@@ -33,7 +33,7 @@ export const esSeoContent: SeoContentBundle = {
         },
         {
           criterion: "Peso y velocidad",
-          hearth: "Binario Go nativo único (mygo), ~20 MB de descarga",
+          hearth: "Binario Go nativo único (mygo), ~13–19 MB de descarga",
           other: "Interfaz Electron, suele consumir 1 GB+ de RAM en reposo",
         },
         {
@@ -79,7 +79,7 @@ export const esSeoContent: SeoContentBundle = {
         {
           step: "Paso 01",
           title: "Instala Hearth (sin cambios ocultos)",
-          desc: "Descarga Hearth (~20 MB; ~28 MB DMG universal) por DMG, Homebrew o .deb. El primer escaneo es 100 % de solo lectura.",
+          desc: "Descarga Hearth (~13–19 MB por arquitectura) por DMG, Homebrew o .deb. El primer escaneo es 100 % de solo lectura.",
         },
         {
           step: "Paso 02",

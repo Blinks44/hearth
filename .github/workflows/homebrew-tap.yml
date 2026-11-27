@@ -37,21 +37,29 @@ jobs:
             exit 1
           fi
           version="${tag#v}"
-          dmg="hearth-${version}.dmg"
+          dmg_arm64="hearth-${version}-arm64.dmg"
+          dmg_amd64="hearth-${version}-amd64.dmg"
           mkdir -p release-sums
           gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "SHA256SUMS" --dir release-sums
-          sha256="$(awk -v f="$dmg" '$2 == f { print $1; exit }' release-sums/SHA256SUMS)"
-          if [ -z "$sha256" ]; then
-            echo "::error::Missing $dmg in SHA256SUMS for $tag"
+          sha256_arm64="$(awk -v f="$dmg_arm64" '$2 == f { print $1; exit }' release-sums/SHA256SUMS)"
+          sha256_amd64="$(awk -v f="$dmg_amd64" '$2 == f { print $1; exit }' release-sums/SHA256SUMS)"
+          if [ -z "$sha256_arm64" ]; then
+            echo "::error::Missing $dmg_arm64 in SHA256SUMS for $tag"
+            exit 1
+          fi
+          if [ -z "$sha256_amd64" ]; then
+            echo "::error::Missing $dmg_amd64 in SHA256SUMS for $tag"
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          echo "sha256_arm64=$sha256_arm64" >> "$GITHUB_OUTPUT"
+          echo "sha256_amd64=$sha256_amd64" >> "$GITHUB_OUTPUT"
       - name: Commit and push Casks/hearth.rb to Blinks44/homebrew-tap
         env:
           HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
           VERSION: ${{ steps.release.outputs.version }}
-          SHA256: ${{ steps.release.outputs.sha256 }}
+          SHA256_ARM64: ${{ steps.release.outputs.sha256_arm64 }}
+          SHA256_AMD64: ${{ steps.release.outputs.sha256_amd64 }}
         run: |
           if [ -z "$HOMEBREW_TAP_DEPLOY_KEY" ]; then
             echo "::warning::HOMEBREW_TAP_DEPLOY_KEY secret is not set; skipping Blinks44/homebrew-tap update"
@@ -66,7 +74,7 @@ jobs:
           export GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts"
           git clone git@github.com:Blinks44/homebrew-tap.git tap
           mkdir -p tap/Casks
-          bash .github/scripts/render-homebrew-cask.sh "$VERSION" "$SHA256" > tap/Casks/hearth.rb
+          bash .github/scripts/render-homebrew-cask.sh "$VERSION" "$SHA256_ARM64" "$SHA256_AMD64" > tap/Casks/hearth.rb
           cd tap
           if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
             echo "Casks/hearth.rb is already up to date."

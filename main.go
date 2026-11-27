@@ -46,6 +46,7 @@ import (
 	"github.com/Blinks44/hearth/internal/versions"
 	"github.com/Blinks44/hearth/internal/watch"
 	"github.com/Blinks44/hearth/locales"
+	"github.com/Blinks44/hearth/resources"
 )
 
 var releasingMemory atomic.Bool
@@ -80,7 +81,7 @@ func main() {
 		debug.SetGCPercent(50)
 	}
 	// Native UI updater window: needs no webview (no WebKitGTK / WebView2).
-	mygo.Use(native.Plugin)
+	mygo.Use(native.New(updater.Options{Icon: resources.Logo}))
 	if err := hearthui.RegisterFonts(); err != nil {
 		log.Fatal(err)
 	}

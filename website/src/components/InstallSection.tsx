@@ -17,10 +17,13 @@ export function InstallSection({ release, platform }: InstallSectionProps) {
       title: m.installMacTitle(),
       sub: m.installMacSub(),
       btnLabel: m.installMacBtn(),
-      href: release.macosDmg,
+      href: platform.arch === "amd64" ? release.macosAmd64 : release.macosArm64,
       cmd: site.brewCommand,
       meta: m.installMacMeta(),
-      alts: [] as Array<{ label: string; href: string }>,
+      alts: [
+        { label: m.installAltAppleSilicon(), href: release.macosArm64 },
+        { label: m.installAltIntel(), href: release.macosAmd64 },
+      ],
     },
     {
       os: "windows" as const,
