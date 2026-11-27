@@ -346,6 +346,7 @@ func (a *App) agentsPage(c *ui.Context, p page) {
 					{strconv.Itoa(len(servers)), "MCP"},
 				})
 				if len(found) > 0 {
+					a.agentRadarCard(c)
 					a.sharedInstructionsBanner(c)
 					a.agentTable(c, found)
 				} else {
@@ -885,6 +886,23 @@ func (a *App) agentHooksCard(c *ui.Context, ag inventory.Agent) {
 			}
 			listRow(c, h.Command, true, caption, func() {
 				ui.Text(c, h.Event).Font(FontMono).FontSize(11).TextColor(Colors(c.Theme()).TextFaint).SingleLine()
+			})
+		}
+		if slices.Contains(ops.SupportedHookAgents, ag.ID) && a.BuildPlan != nil {
+			agentID := ag.ID
+			installed := a.hasHearthHooks(agentID)
+			listRow(c, locales.RadarHooksBannerTitle(), false, locales.RadarHooksBannerBody(), func() {
+				if installed {
+					pal := Colors(c.Theme())
+					aiTag(c, locales.RadarHooksInstalled(), pal.SuccessSoft, pal.SuccessText)
+					ui.Button(c.Key("agent-hook-rm:"+agentID), locales.RadarHooksRemove()).Height(controlHeight).OnClick(func() {
+						a.planAgentHooks(agentID, false)
+					})
+				} else {
+					ui.Button(c.Key("agent-hook-add:"+agentID), locales.RadarHooksInstall()).Height(controlHeight).OnClick(func() {
+						a.planAgentHooks(agentID, true)
+					})
+				}
 			})
 		}
 	})

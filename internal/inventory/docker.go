@@ -43,6 +43,8 @@ type DockerPortBinding struct {
 // DockerPortContainer is a running Docker container that publishes host TCP ports.
 type DockerPortContainer struct {
 	ID, Name, Image, Status string
+	ComposeDir              string `json:",omitempty"`
+	ComposeFiles            string `json:",omitempty"`
 	Ports                   []string
 	Bindings                []DockerPortBinding `json:",omitempty"`
 }

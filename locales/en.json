@@ -18006,5 +18006,442 @@
         "example": "2026-10-15"
       }
     }
+  },
+  "projectRunningTitle": "Running in this project",
+  "projectScriptsTitle": "Scripts",
+  "projectScriptsSubtitle": "from project files",
+  "projectScriptsRun": "Run",
+  "projectScriptsStop": "Stop",
+  "projectScriptsRestart": "Restart",
+  "projectScriptsLogs": "Logs",
+  "projectScriptsRunning": "Running",
+  "projectScriptsExited": "Exited",
+  "projectScriptsFailed": "Failed",
+  "projectScriptsShowMore": "Show {count} more",
+  "@projectScriptsShowMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectScriptsShowLess": "Show less",
+  "projectScriptsLogsTitle": "{name} logs",
+  "@projectScriptsLogsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectScriptsLogsEmpty": "Waiting for output…",
+  "projectScriptsCloseLogs": "Close logs",
+  "portsTabDevServers": "Dev servers",
+  "portsManagedByHearth": "Started in Hearth",
+  "portsOpenLogs": "Open logs",
+  "radarTitle": "Live sessions",
+  "radarEmpty": "No active AI agent sessions detected.",
+  "radarStatusWorking": "Working",
+  "radarStatusQuiet": "Quiet >30s",
+  "radarStatusWaiting": "Waiting for approval",
+  "radarStatusFinished": "Finished",
+  "radarPassiveHint": "Passive detection",
+  "radarExactHint": "Live hooks",
+  "radarHooksBannerTitle": "Get exact agent status & desktop notifications",
+  "radarHooksBannerBody": "Optional lifecycle hooks send only status and folder (never prompts or chat text) to Hearth.",
+  "radarHooksInstall": "Enable hooks…",
+  "radarHooksRemove": "Disable hooks…",
+  "radarHooksInstalled": "Hooks active",
+  "radarHooksInstallTitle": "Enable Hearth status hooks for {agent}",
+  "@radarHooksInstallTitle": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "radarHooksInstallChange": "Add Hearth status hooks to {file}",
+  "@radarHooksInstallChange": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "radarHooksInstallWhy": "Notifies Hearth when the agent starts working, waits for approval, or finishes. Sends only agent name, status, session ID, and working folder — never prompts or chat text.",
+  "radarHooksRemoveTitle": "Disable Hearth status hooks for {agent}",
+  "@radarHooksRemoveTitle": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "radarHooksRemoveChange": "Remove Hearth status hooks from {file}",
+  "@radarHooksRemoveChange": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "radarHooksRemoveWhy": "Removes Hearth notification entries while keeping your own hooks and settings.",
+  "radarNotifWaitingTitle": "{agent} is waiting for approval",
+  "@radarNotifWaitingTitle": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "radarNotifFinishedTitle": "{agent} finished",
+  "@radarNotifFinishedTitle": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "radarNotifBody": "In {project}",
+  "@radarNotifBody": {
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "radarNotifBodyNoProject": "Click to open Hearth",
+  "radarRefresh": "Refresh",
+  "trayPopoverControlCenter": "Open control center",
+  "trayPopoverEmpty": "Nothing active right now",
+  "trayPopoverEmptyBody": "Running dev servers, containers, local databases, and AI sessions will appear here.",
+  "trayPopoverDevServers": "Dev servers",
+  "trayPopoverAgents": "AI sessions",
+  "trayPopoverContainers": "Containers",
+  "trayPopoverDatabases": "Databases",
+  "trayPopoverForwards": "Port forwards",
+  "trayPopoverOpenAll": "Open Hearth",
+  "trayPopoverWaitingBadge": "{count} waiting",
+  "@trayPopoverWaitingBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "servicesPortsTitle": "Services & Ports",
+  "servicesPortsSubtitle": "Dev servers, containers, databases and k8s port-forwards",
+  "servicesPortsLead": "Local dev servers, Docker, databases and k8s forwards. Managed items stop in 1 click.",
+  "portsStatRunning": "Running",
+  "portsStatLoad": "Load",
+  "portsStatLoadRAM": "{mem} RAM",
+  "@portsStatLoadRAM": {
+    "placeholders": {
+      "mem": {
+        "type": "String"
+      }
+    }
+  },
+  "portsTabDatabases": "DB",
+  "portsTabK8s": "k8s",
+  "portsColService": "Service & project",
+  "portsColMetricsActions": "CPU / RAM · Actions",
+  "portsQuickTitle": "Quick control",
+  "portsQuickActions": "Fast actions",
+  "portsQuickActionsBody": "Project scripts and k8s forwards stop in 1 click; external and Docker use a plan",
+  "portsQuickProtect": "System protection",
+  "portsQuickProtectBody": "Only your processes; system services are never touched",
+  "portsQuickTray": "Always in tray",
+  "portsQuickTrayBody": "The same live list in the menu bar",
+  "portsUpdatedAgo": "Updated · {ago}",
+  "@portsUpdatedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "portsDbTag": "DB",
+  "portsLocalService": "local service",
+  "projectTabRunServices": "Run & services",
+  "projectStatus": "Status",
+  "projectStatusRunning": "Running :{port}",
+  "@projectStatusRunning": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "projectStatusRunningNoPort": "Running",
+  "projectCommitAgo": "commit {ago} · {message}",
+  "@projectCommitAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "projectScriptsSearch": "Search scripts…",
+  "projectScriptsAndDbs": "Scripts & databases",
+  "projectScriptsAll": "All scripts →",
+  "projectSkillsCount": "{count, plural, one {# skill} other {# skills}}",
+  "@projectSkillsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "projectDiskCleanLink": "Clean up →",
+  "projectStartedAgo": "started {ago}",
+  "@projectStartedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "projectOpen": "Open",
+  "projectRunningBadge": "running",
+  "projectScriptsCountShort": "{count, plural, one {# script} other {# scripts}}",
+  "@projectScriptsCountShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trayPopoverServicesCount": "{count, plural, one {# service} other {# services}}",
+  "@trayPopoverServicesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trayPopoverOpenShort": "Open",
+  "trayPopoverAgentsSection": "Agents",
+  "trayPopoverWaitingChip": "{count} waiting",
+  "@trayPopoverWaitingChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trayPopoverTodayCost": "{cost} today",
+  "@trayPopoverTodayCost": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "trayPopoverRunningNow": "Running now",
+  "trayPopoverRunningHint": "Managed in 1 click",
+  "trayPopoverContextsOneClick": "Contexts · 1 click",
+  "trayPopoverColimaRunningShort": "Colima running",
+  "trayPopoverColimaStoppedShort": "Colima stopped",
+  "trayPopoverAllServices": "All services & ports →",
+  "trayPopoverRightClickHint": "Right click — system menu",
+  "trayPopoverGo": "Open",
+  "radarCardTitle": "Active sessions radar",
+  "radarSessionsCount": "{count, plural, one {# session} other {# sessions}}",
+  "@radarSessionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "radarActionGo": "Open",
+  "radarActionDetails": "Details",
+  "radarHooksConnect": "Connect hooks…",
+  "radarHooksPrivacyLine": "Hearth reads only session status and folder — never prompts or chat content",
+  "problemNotInstalledTitle": "{tool} is not installed",
+  "@problemNotInstalledTitle": {
+    "description": "Two-line project warning banner heading when a required tool is not installed at all.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "PHP ~8.3.36"
+      }
+    }
+  },
+  "problemMissingVersionTitle": "{tool} is missing",
+  "@problemMissingVersionTitle": {
+    "description": "Two-line project warning banner heading when other versions of a tool are installed but the required version is missing.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemWrongActiveTitle": "Terminal runs {tool} {run} instead of {want}",
+  "@problemWrongActiveTitle": {
+    "description": "Two-line project warning banner heading when the required version is installed but another version runs in the project folder.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node"
+      },
+      "run": {
+        "type": "String",
+        "example": "v22.12.0"
+      },
+      "want": {
+        "type": "String",
+        "example": "18"
+      }
+    }
+  },
+  "problemNotInPathTitle": "{tool} is not on terminal PATH",
+  "@problemNotInPathTitle": {
+    "description": "Two-line project warning banner heading when a matching version is installed but not on terminal PATH.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemRequiredBy": "Required by {file}",
+  "@problemRequiredBy": {
+    "description": "Project warning banner metadata naming the file that requires the tool.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "composer.json"
+      }
+    }
+  },
+  "problemAlreadyInstalledMeta": "{version} is already installed",
+  "@problemAlreadyInstalledMeta": {
+    "description": "Project warning banner metadata noting that the needed version is already installed.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "18"
+      }
+    }
+  },
+  "problemNotInstalledMeta": "Not installed on this computer",
+  "@problemNotInstalledMeta": {
+    "description": "Fallback project warning banner metadata when no source file is known and no copy is installed."
+  },
+  "problemInstalledMeta": "installed {installed} · terminal runs {run}",
+  "@problemInstalledMeta": {
+    "description": "Project warning banner metadata showing installed versions and what runs in this folder.",
+    "placeholders": {
+      "installed": {
+        "type": "String",
+        "example": "20.18.1, 22.12.0"
+      },
+      "run": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "problemInstalledNotInPathMeta": "installed {installed} · not on terminal PATH",
+  "@problemInstalledNotInPathMeta": {
+    "description": "Project warning banner metadata when copies are installed but not active on PATH.",
+    "placeholders": {
+      "installed": {
+        "type": "String",
+        "example": "22.12.0"
+      }
+    }
+  },
+  "problemEngineDownTitle": "Docker is not running",
+  "@problemEngineDownTitle": {
+    "description": "Two-line project warning banner heading when the selected Docker context engine does not answer."
+  },
+  "problemEngineDownForFile": "Needed for {file}",
+  "@problemEngineDownForFile": {
+    "description": "Project warning banner metadata when Docker is stopped and a Compose file requires it.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "compose.yaml"
+      }
+    }
+  },
+  "problemEngineDownMeta": "Start it with “Prepare environment” or on the Docker page",
+  "@problemEngineDownMeta": {
+    "description": "Fallback project warning banner metadata when the Docker engine is down."
+  },
+  "problemMultiTitle": "Environment not ready · {count, plural, one {# issue} other {# issues}}",
+  "@problemMultiTitle": {
+    "description": "Two-line project warning banner heading when multiple environment issues exist.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "problemItemNotInstalled": "{tool} not installed",
+  "@problemItemNotInstalled": {
+    "description": "Short item in multi-issue project warning banner when a tool is not installed.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "PHP ~8.3.36"
+      }
+    }
+  },
+  "problemItemMissing": "{tool} missing",
+  "@problemItemMissing": {
+    "description": "Short item in multi-issue project warning banner when another version is installed but the required one is missing.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemItemWrongVersion": "{tool} (runs {run})",
+  "@problemItemWrongVersion": {
+    "description": "Short item in multi-issue project warning banner when the wrong version is active in the folder.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      },
+      "run": {
+        "type": "String",
+        "example": "v22.12.0"
+      }
+    }
+  },
+  "problemItemNotInPath": "{tool} (not on PATH)",
+  "@problemItemNotInPath": {
+    "description": "Short item in multi-issue project warning banner when a matching copy is installed but not on PATH.",
+    "placeholders": {
+      "tool": {
+        "type": "String",
+        "example": "Node 18"
+      }
+    }
+  },
+  "problemItemEngineDown": "Docker not running",
+  "@problemItemEngineDown": {
+    "description": "Short item in multi-issue project warning banner when the Docker engine is stopped."
+  },
+  "portsStatDev": "{count} dev",
+  "@portsStatDev": {
+    "description": "Compact stat chip on Services & Ports showing the number of running dev servers.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   }
 }

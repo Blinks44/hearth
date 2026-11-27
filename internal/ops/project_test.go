@@ -377,3 +377,76 @@ func TestPrepareProjectCorepackWithMiseNode(t *testing.T) {
 		t.Fatalf("expected step %q, got %+v", want, got.Plan.Steps)
 	}
 }
+
+func TestPrepareProjectComposerAndPHP(t *testing.T) {
+	t.Run("missing PHP and Composer both classify as manual without ErrNoCommonVersion or mise.toml", func(t *testing.T) {
+		in, env := projectFixture(t)
+		in.Project.Requirements = []projects.Requirement{
+			{Tool: "php", Want: "~8.3.36", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+		}
+		in.Releases = map[string][]string{"php": {"8.3.36", "8.4.5"}}
+		in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "php"},
+			{Tool: "composer"},
+		}}
+		in.Setup = Setup{
+			GOOS:     "darwin",
+			Managers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}},
+			Have:     map[string]bool{"homebrew": true},
+			Title:    func(s string) string { return s },
+		}
+		assessed := AssessProject(in)
+		for _, it := range assessed.Items {
+			if it.Tool == "composer" && it.Kind != ProjectManual {
+				t.Fatalf("AssessProject composer kind = %v text=%q, want ProjectManual", it.Kind, it.Text)
+			}
+		}
+
+		got, err := PrepareProject(in, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got.Plan.Steps) != 0 {
+			t.Fatalf("unexpected plan steps when PHP cannot be installed by mise: %+v", got.Plan.Steps)
+		}
+		byTool := map[string]ProjectItem{}
+		for _, it := range got.Items {
+			byTool[it.Tool] = it
+		}
+		if php := byTool["php"]; php.Kind != ProjectManual {
+			t.Fatalf("php item = %+v, want ProjectManual", php)
+		}
+		if comp := byTool["composer"]; comp.Kind != ProjectManual || strings.Contains(comp.Text, "no common version") {
+			t.Fatalf("composer item = %+v, want ProjectManual without ErrNoCommonVersion", comp)
+		}
+	})
+
+	t.Run("installed PHP allows Composer install via system package manager", func(t *testing.T) {
+		in, env := projectFixture(t)
+		in.Project.Requirements = []projects.Requirement{
+			{Tool: "php", Want: "~8.3.0", File: "composer.json", Key: "require.php"},
+			{Tool: "composer", File: "composer.json"},
+		}
+		in.Snapshot = &inventory.Snapshot{Tools: []inventory.ToolState{
+			{Tool: "php", Installations: []inventory.Installation{{Version: "8.3.15", OnPath: 1, Source: inventory.Source{Kind: inventory.KindPackageManager, Manager: "brew"}}}},
+			{Tool: "composer"},
+		}}
+		in.Setup = Setup{
+			GOOS:     "darwin",
+			Managers: []inventory.PackageManager{{ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew"}},
+			Have:     map[string]bool{"homebrew": true, "php": true},
+			Title:    func(s string) string { return s },
+		}
+		got, err := PrepareProject(in, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(got.Plan.Steps) == 0 {
+			t.Fatalf("expected brew install composer step, got empty plan: %+v", got)
+		}
+		if !slices.ContainsFunc(got.Items, func(it ProjectItem) bool { return it.Tool == "composer" && it.Kind == ProjectInstall }) {
+			t.Fatalf("expected composer ProjectInstall, got %+v", got.Items)
+		}
+	})
+}

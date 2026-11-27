@@ -54,30 +54,27 @@ func TestPorts(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "ports")
-	hasTexts(t, tt, "Ports", "Port", "Process", "Address", "Access",
-		"3000", "node", "127.0.0.1", "*, [::]", "0.0.0.0", "service postgresql@17", "another user's or the system's process", "network", "localhost")
-	hAddr, okH := tt.Find("Address")
-	a1, ok1 := tt.Find("0.0.0.0")
-	a2, ok2 := tt.Find("127.0.0.1")
-	a3, ok3 := tt.Find("*")
-	if !okH || !ok1 || !ok2 || !ok3 || hAddr.X != a1.X || a1.X != a2.X || a2.X != a3.X {
-		t.Fatalf("bind address column misaligned: header=%+v 0.0.0.0=%+v 127.0.0.1=%+v *=%+v", hAddr, a1, a2, a3)
-	}
+	hasTexts(t, tt,
+		locales.ServicesPortsTitle(),
+		locales.PortsColPort(),
+		locales.PortsColService(),
+		locales.PortsColMetricsActions(),
+		locales.PortsQuickTitle(),
+		":3000", "Node", "shop", "127.0.0.1", "*, [::]", "0.0.0.0",
+		"service postgresql@17", "another user's or the system's process", "network",
+	)
 	tt.SetSize(1000, 680)
 	tt.Advance(time.Second)
 	screenshot(t, tt, "ports-1000")
 	tt.SetSize(1280, 820)
 	tt.Advance(time.Second)
-	// Narrow to Projects tab so port 3000 is the sole row.
-	allTab, okAll := tt.Find(locales.TabAll())
-	netTab, okNet := tt.Find(locales.PortsTabNetwork())
-	if !okAll || !okNet {
-		t.Fatalf("missing All (%v) or Network (%v) tab", okAll, okNet)
+	// Narrow to Dev servers tab so port 3000 is the sole row.
+	if err := tt.Click(locales.PortsTabDevServers()); err != nil {
+		t.Fatalf("click Dev servers tab: %v", err)
 	}
-	tt.ClickAt((allTab.X+allTab.W+netTab.X)/2, allTab.Y+allTab.H/2)
 	tt.Advance(time.Second)
-	if tt.HasText("5432") || !tt.HasText("3000") {
-		t.Fatalf("Projects tab did not filter rows: %q", tt.Texts())
+	if tt.HasText("5432") || !tt.HasText(":3000") {
+		t.Fatalf("Dev servers tab did not filter rows: %q", tt.Texts())
 	}
 	if err := tt.Click(locales.MoreActions()); err != nil {
 		t.Fatal(err)
@@ -270,13 +267,13 @@ func TestPortsDockerStopAndQuickFilters(t *testing.T) {
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
 	// Switch to Docker quick filter tab.
-	netTab, okNet := tt.Find(locales.PortsTabNetwork())
-	if !okNet {
-		t.Fatalf("missing Network tab")
+	devTab, okDev := tt.Find(locales.PortsTabDevServers())
+	if !okDev {
+		t.Fatalf("missing Dev servers tab")
 	}
-	tt.ClickAt(netTab.X+netTab.W+48, netTab.Y+netTab.H/2)
+	tt.ClickAt(devTab.X+devTab.W+48, devTab.Y+devTab.H/2)
 	tt.Advance(time.Second)
-	if tt.HasText("5432") || !tt.HasText("8080") {
+	if tt.HasText("5432") || !tt.HasText(":8080") {
 		t.Fatalf("Docker tab did not filter rows: %q", tt.Texts())
 	}
 	// Stop container directly from Ports row.

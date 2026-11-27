@@ -63,6 +63,9 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "mcp" {
 		os.Exit(serveMCP(os.Args[2:], os.Stderr))
 	}
+	if len(os.Args) > 1 && os.Args[1] == "notify" {
+		os.Exit(runNotify(os.Args[2:], os.Stdin))
+	}
 	// sudo runs Hearth as its askpass program, for a plan's step, with
 	// its prompt as the one argument.
 	if self, _ := os.Executable(); len(os.Args) == 2 && self != "" && os.Getenv("SUDO_ASKPASS") == self {
@@ -114,7 +117,9 @@ func main() {
 	mygo.Theme.SetSource(mygo.ThemeSource(a.ThemeMode))
 	forwardCtx, stopForwards := context.WithCancel(context.Background())
 	dockerCtx, stopDocker := context.WithCancel(context.Background())
-	var forwards, dockerWorkers sync.WaitGroup
+	scriptCtx, stopScripts := context.WithCancel(context.Background())
+	livePollCtx, stopLivePoll := context.WithCancel(context.Background())
+	var forwards, dockerWorkers, scriptsWG sync.WaitGroup
 	mygo.App.WhenReady(func() {
 		a.Locale = mygo.App.Locale()
 		a.AppVersion = mygo.App.Version()
@@ -218,8 +223,39 @@ func main() {
 			}()
 			return cancel
 		}
+		radar := newRadarHub()
+		offNotifClick := mygo.App.OnNotificationClick(func(id string) {
+			cwd, ok := radar.targetForNotification(id)
+			if !ok {
+				return
+			}
+			win.Update(func() {
+				if cwd != "" {
+					cleanCwd := filepath.ToSlash(filepath.Clean(cwd))
+					matched := ""
+					for _, p := range a.Projects {
+						cleanProj := filepath.ToSlash(filepath.Clean(p.Dir))
+						if cleanCwd == cleanProj || strings.HasPrefix(cleanCwd, cleanProj+"/") {
+							if len(p.Dir) > len(matched) {
+								matched = p.Dir
+							}
+						}
+					}
+					if matched != "" {
+						a.OpenProject(matched)
+					} else {
+						a.OpenAgents()
+					}
+				} else {
+					a.OpenAgents()
+				}
+				showMainWindow()
+			})
+		})
+		win.OnClosed(offNotifClick)
 		// IPC is a request to select a plan, never an execution endpoint.
-		stopProposals, err := proposals.Listen(list.dir, func(ctx context.Context, q proposals.Request) error {
+		// Agent lifecycle events carry only status metadata (never prompts).
+		stopProposals, err := proposals.ListenWithEvents(list.dir, func(ctx context.Context, q proposals.Request) error {
 			done := make(chan error, 1)
 			win.Update(func() {
 				if ctx.Err() != nil {
@@ -238,6 +274,24 @@ func main() {
 			case <-ctx.Done():
 				return errors.New("hearth window did not respond; retry in the desktop")
 			}
+		}, func(ev proposals.AgentEvent) {
+			notify, notifID, title, body := radar.record(time.Now(), ev)
+			if notify && mygo.NotificationsSupported() {
+				go func() {
+					n := mygo.NewNotification(mygo.NotificationOptions{
+						ID:    notifID,
+						Title: title,
+						Body:  body,
+						Group: "hearth-agents",
+					})
+					if err := n.Show(); err != nil {
+						log.Printf("agent notification: %v", err)
+					}
+				}()
+			}
+			win.Update(func() {
+				a.RefreshRadarNow()
+			})
 		})
 		if err != nil {
 			log.Print(err)
@@ -596,10 +650,50 @@ func main() {
 			forwards.Go(func() {
 				defer cancel()
 				err := ops.RunForward(ctx, run.Exec{}, run.Lines, env, f, func(pod kube.ForwardPod) {
-					win.Update(func() { ready(pod) })
+					win.Update(func() {
+						ready(pod)
+						if tray != nil {
+							tray.invalidatePopover()
+						}
+					})
 				})
 				if forwardCtx.Err() == nil {
-					win.Update(func() { done(err) })
+					win.Update(func() {
+						done(err)
+						if tray != nil {
+							tray.invalidatePopover()
+						}
+					})
+				}
+			})
+			return cancel
+		}
+		a.RunScript = func(spec ops.ScriptSpec, onStart func(pid int), onLines func([]containerlog.LogLine), done func(error)) func() {
+			env := slices.Clone(scanner.Terminal())
+			ctx, cancel := context.WithCancel(scriptCtx)
+			scriptsWG.Go(func() {
+				defer cancel()
+				err := ops.RunScript(ctx, run.CombinedLines, env, spec, func(pid int) {
+					if scriptCtx.Err() == nil {
+						win.Update(func() {
+							onStart(pid)
+							if tray != nil {
+								tray.invalidatePopover()
+							}
+						})
+					}
+				}, func(lines []containerlog.LogLine) {
+					if scriptCtx.Err() == nil {
+						win.Update(func() { onLines(lines) })
+					}
+				})
+				if scriptCtx.Err() == nil {
+					win.Update(func() {
+						done(err)
+						if tray != nil {
+							tray.invalidatePopover()
+						}
+					})
 				}
 			})
 			return cancel
@@ -707,6 +801,10 @@ func main() {
 					s := scan.Replace(*a.Snapshot, states)
 					a.Snapshot = &s
 					list.watch.Docker(&s, scanner.Terminal())
+					if tray != nil {
+						tray.refresh()
+						tray.refreshContainers()
+					}
 				})
 			})
 		}
@@ -821,6 +919,7 @@ func main() {
 				}
 				a.Snapshot, a.Scanning = &s, false
 				a.ClearCloudAuth()
+				a.RefreshRadarNow()
 				if tray != nil {
 					tray.refresh()
 					tray.refreshContainers()
@@ -963,10 +1062,13 @@ func main() {
 			}
 		}
 		var cancelPorts context.CancelFunc
+		var portsSeq int
 		a.RefreshPorts = func(done func(detect.PortsSnapshot)) {
 			if cancelPorts != nil {
 				cancelPorts()
 			}
+			portsSeq++
+			seq := portsSeq
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			cancelPorts = cancel
 			env := scanner.Terminal()
@@ -975,11 +1077,83 @@ func main() {
 				defer cancel()
 				res := detect.RefreshPorts(ctx, run.Exec{}, env, snap)
 				if ctx.Err() != nil {
+					win.Update(func() {
+						if seq == portsSeq {
+							a.ClearPortsRefreshing()
+							if tray != nil {
+								tray.refresh()
+							}
+						}
+					})
 					return
 				}
-				win.Update(func() { done(res) })
+				win.Update(func() {
+					done(res)
+					if tray != nil {
+						tray.refresh()
+					}
+				})
 			}()
 		}
+		var cancelRadar context.CancelFunc
+		var radarSeq int
+		a.RefreshRadar = func(done func([]inventory.ActiveAgentSession)) {
+			if cancelRadar != nil {
+				cancelRadar()
+			}
+			radarSeq++
+			seq := radarSeq
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			cancelRadar = cancel
+			env := scanner.Terminal()
+			home := a.Home
+			var recent []inventory.AgentSession
+			if a.Snapshot != nil {
+				recent = slices.Clone(a.Snapshot.Sessions)
+			}
+			go func() {
+				defer cancel()
+				sessions, hooks := radar.refresh(ctx, run.Exec{}, env, home, recent)
+				if ctx.Err() != nil {
+					win.Update(func() {
+						if seq == radarSeq {
+							a.ClearRadarRefreshing()
+						}
+					})
+					return
+				}
+				win.Update(func() {
+					a.RadarHooksInstalled = hooks
+					done(sessions)
+				})
+			}()
+		}
+		// Lightweight live polling runs only while the Tray Popover is open or
+		// the main window is visible on Ports, Agents, or a project's Services tab.
+		go func() {
+			ticker := time.NewTicker(5 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-livePollCtx.Done():
+					return
+				case <-ticker.C:
+					mygo.RunOnMain(func() {
+						if livePollCtx.Err() != nil {
+							return
+						}
+						if tray != nil && tray.isPopoverOpen() {
+							tray.refreshAllLive(false)
+							return
+						}
+						if win.IsVisible() && a.NeedsLivePoll() {
+							a.RefreshPortsNow()
+							a.RefreshRadarNow()
+						}
+					})
+				}
+			}
+		}()
 		a.CachePath = lists.Dir
 		win.OnClose(func(e *mygo.CloseEvent) {
 			a.ClearSecretClipboard()
@@ -990,9 +1164,12 @@ func main() {
 			}
 		})
 		win.OnClosed(func() {
+			stopLivePoll()
 			if tray != nil {
 				tray.destroy()
 			}
+			a.StopAllScripts()
+			stopScripts()
 			a.CancelPreparation()
 			a.StopCluster()
 			a.StopDocker()
@@ -1000,6 +1177,9 @@ func main() {
 			stopCatalog()
 			if cancelPorts != nil {
 				cancelPorts()
+			}
+			if cancelRadar != nil {
+				cancelRadar()
 			}
 			if cancelVersions != nil {
 				cancelVersions()
@@ -1168,8 +1348,11 @@ func main() {
 		fetchVersions(false)
 	})
 	err := mygo.App.Run()
+	stopLivePoll()
+	stopScripts()
 	stopForwards()
 	stopDocker()
+	scriptsWG.Wait()
 	forwards.Wait()
 	dockerWorkers.Wait()
 	if err != nil {

@@ -97,7 +97,7 @@ var (
 			{"/tools/docker", "brand/docker", name("Docker"), locales.SectionToolsContainers},
 			{kubePage, "brand/kubernetes", name("Kubernetes"), locales.KubeSubtitle},
 			{"/tools/databases", "lucide/database", locales.DatabasesTitle, locales.SectionInfrastructure},
-			{portsPage, "lucide/ethernet-port", locales.PortsTitle, locales.PortsSubtitle},
+			{portsPage, "lucide/ethernet-port", locales.ServicesPortsTitle, locales.ServicesPortsSubtitle},
 			{cliPage, "lucide/square-terminal", locales.CliTitle, locales.SectionToolsCli},
 		}},
 		{locales.SectionTools, []page{

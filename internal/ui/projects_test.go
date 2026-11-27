@@ -108,7 +108,8 @@ func TestProjectPage(t *testing.T) {
 	}
 	hasTexts(t, tt, "Projects · ~/work/legacy-admin",
 		"2 tools", "0 of 2", "Claude Code",
-		"The project needs Node 18 (.nvmrc). Installed: 20.18.1, 22.12.0, 23.6.0. In this folder the terminal runs v22.12.0.",
+		"Node 18 is missing",
+		"Required by .nvmrc · installed 20.18.1, 22.12.0, 23.6.0 · terminal runs v22.12.0",
 		"Node", "18", ".nvmrc", "20.18.1 · 22.12.0 · 23.6.0", "18 is not installed", "v22.12.0", "fnm",
 		"Yarn", "1.22.22", "package.json · packageManager", "Hearth does not check Yarn yet",
 		"Project AI settings", "instructions · Claude Code", "project MCP servers",
@@ -362,9 +363,13 @@ func TestProjectDockerEngineDown(t *testing.T) {
 	if got := statusProblem(st); got != "Docker not answering" {
 		t.Errorf("problem %q", got)
 	}
-	want := "The project needs a running Docker engine (compose.yaml), but the engine of the selected context does not answer. Start it with “Prepare environment” or on the Docker page."
-	if got := problemBanner([]projects.Status{st}); got != want {
-		t.Errorf("banner %q", got)
+	got := problemBanner([]projects.Status{st})
+	if got.Title != "Docker is not running" {
+		t.Errorf("banner title %q", got.Title)
+	}
+	wantMeta := "Needed for compose.yaml"
+	if got.Meta != wantMeta {
+		t.Errorf("banner meta %q, want %q", got.Meta, wantMeta)
 	}
 }
 
@@ -711,7 +716,10 @@ func TestProjectFileRowLayoutAndDeduplication(t *testing.T) {
 	tt.Advance(time.Second)
 
 	hasTexts(t, tt, "package.json", "node >=24 · ^24.0.0", "pnpm >=12.14.0 · 12.14.0", "Copilot CLI")
-	// package.json must keep full readable width and never collapse to "p...".
+	// Scroll filesCard into view on the narrow 1000x680 viewport; package.json
+	// must keep full readable width and never collapse to "p...".
+	tt.Scroll(500, 400, 0, 260)
+	tt.Frame()
 	pkg, ok := tt.Find("package.json")
 	if !ok {
 		t.Fatalf("package.json not found in %q", tt.Texts())
@@ -727,16 +735,35 @@ func TestProjectFileRowLayoutAndDeduplication(t *testing.T) {
 func TestProblemBannerCountAndEmptyChecks(t *testing.T) {
 	// EngineDown with no checks must not panic.
 	banner := problemBanner([]projects.Status{{Tool: "docker", Checked: true, EngineDown: true}})
-	if !strings.Contains(banner, "Docker") {
-		t.Errorf("engine down banner = %q", banner)
+	if banner.Title != "Docker is not running" || banner.Meta == "" {
+		t.Errorf("engine down banner = %+v", banner)
 	}
-	// Multiple unmet statuses report additional problem count.
+	// Multiple unmet statuses summarize count in Title and list concrete tools in Meta.
 	multi := problemBanner([]projects.Status{
 		{Tool: "node", Checked: true, Checks: []projects.Check{{Tool: "node", Want: "18", File: ".nvmrc"}}},
 		{Tool: "python", Checked: true, Checks: []projects.Check{{Tool: "python", Want: "3.12", File: ".python-version"}}},
 	})
-	if !strings.Contains(multi, "And 1 more") {
-		t.Errorf("multi-problem banner = %q, want additional count", multi)
+	if multi.Title != "Environment not ready · 2 issues" {
+		t.Errorf("multi-problem banner title = %q", multi.Title)
+	}
+	if !strings.Contains(multi.Meta, "Node 18 not installed") || !strings.Contains(multi.Meta, "Python 3.12 not installed") {
+		t.Errorf("multi-problem banner meta = %q", multi.Meta)
+	}
+	// Installed matching version with wrong active terminal copy states what runs vs what is needed.
+	installed := inventory.Installation{Version: "18.20.0"}
+	terminal := inventory.Installation{Version: "22.12.0"}
+	wrong := problemBanner([]projects.Status{{
+		Tool:          "node",
+		Checked:       true,
+		Installations: []inventory.Installation{installed, terminal},
+		Terminal:      &terminal,
+		Checks:        []projects.Check{{Tool: "node", Want: "18", File: ".nvmrc", Installed: &installed}},
+	}})
+	if wrong.Title != "Terminal runs Node v22.12.0 instead of 18" {
+		t.Errorf("wrong-active banner title = %q", wrong.Title)
+	}
+	if wrong.Meta != "Required by .nvmrc · 18 is already installed" {
+		t.Errorf("wrong-active banner meta = %q", wrong.Meta)
 	}
 }
 

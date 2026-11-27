@@ -70,7 +70,7 @@ func TestKubeForward(t *testing.T) {
 	hasTexts(t, tt, "127.0.0.1:18080", "Active")
 	click("Ports ›")
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Port forwards", "Active", "kind-dev ›")
+	hasTexts(t, tt, ":18080", "k8s", "kind-dev · checkout-api", "kubectl port-forward → :80")
 	if stopped {
 		t.Fatal("navigating away stopped the forward")
 	}

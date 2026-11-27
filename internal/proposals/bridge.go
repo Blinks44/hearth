@@ -44,6 +44,12 @@ type reply struct {
 // Listen publishes an authenticated loopback endpoint in the user's config dir.
 // Closing the window cancels handlers, closes sockets and removes its own record.
 func Listen(dir string, handle func(context.Context, Request) error) (func(), error) {
+	return ListenWithEvents(dir, handle, nil)
+}
+
+// ListenWithEvents publishes the authenticated loopback endpoint for both
+// proposal requests (/propose) and strict-schema agent lifecycle events (/agent-event).
+func ListenWithEvents(dir string, handle func(context.Context, Request) error, onEvent func(AgentEvent)) (func(), error) {
 	if dir == "" {
 		return nil, errors.New("proposal config directory is unavailable")
 	}
@@ -55,25 +61,50 @@ func Listen(dir string, handle func(context.Context, Request) error) (func(), er
 	ctx, cancel := context.WithCancel(context.Background())
 	server := &http.Server{ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 15 * time.Second, BaseContext: func(net.Listener) context.Context { return ctx }}
 	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || r.URL.Path != "/propose" || subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte("Bearer "+ep.Token)) != 1 {
+		if r.Method != http.MethodPost || subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte("Bearer "+ep.Token)) != 1 {
 			http.Error(w, "refused", http.StatusForbidden)
 			return
 		}
-		var q Request
-		d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024))
-		d.DisallowUnknownFields()
-		if err := d.Decode(&q); err != nil || !q.Valid() || d.Decode(new(any)) != io.EOF {
-			http.Error(w, "invalid issue ID", http.StatusBadRequest)
-			return
+		switch r.URL.Path {
+		case "/propose":
+			var q Request
+			d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024))
+			d.DisallowUnknownFields()
+			if err := d.Decode(&q); err != nil || !q.Valid() || d.Decode(new(any)) != io.EOF {
+				http.Error(w, "invalid issue ID", http.StatusBadRequest)
+				return
+			}
+			callCtx, stop := context.WithTimeout(r.Context(), 10*time.Second)
+			defer stop()
+			result := reply{}
+			if handle != nil {
+				if err := handle(callCtx, q); err != nil {
+					result.Error = err.Error()
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(result)
+		case "/agent-event":
+			if onEvent == nil {
+				http.Error(w, "unavailable", http.StatusNotFound)
+				return
+			}
+			var ev AgentEvent
+			d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2048))
+			d.DisallowUnknownFields()
+			if err := d.Decode(&ev); err != nil || !ev.Valid() || d.Decode(new(any)) != io.EOF {
+				http.Error(w, "invalid agent event", http.StatusBadRequest)
+				return
+			}
+			if ev.Timestamp == 0 {
+				ev.Timestamp = time.Now().Unix()
+			}
+			onEvent(ev)
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(reply{})
+		default:
+			http.Error(w, "refused", http.StatusForbidden)
 		}
-		callCtx, stop := context.WithTimeout(r.Context(), 10*time.Second)
-		defer stop()
-		result := reply{}
-		if err := handle(callCtx, q); err != nil {
-			result.Error = err.Error()
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(result)
 	})
 	path := filepath.Join(dir, "mcp-bridge.json")
 	data, _ := json.Marshal(ep)
@@ -105,33 +136,52 @@ func Listen(dir string, handle func(context.Context, Request) error) (func(), er
 	}, nil
 }
 
+func postBridge(ctx context.Context, dir, route string, timeout time.Duration, payload any) (*http.Response, error) {
+	if dir == "" {
+		return nil, ErrNoWindow
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "mcp-bridge.json"))
+	if err != nil {
+		return nil, ErrNoWindow
+	}
+	var ep endpoint
+	if json.Unmarshal(data, &ep) != nil || ep.Token == "" {
+		return nil, ErrNoWindow
+	}
+	host, port, err := net.SplitHostPort(ep.Address)
+	if err != nil || host != "127.0.0.1" || port == "" {
+		return nil, ErrNoWindow
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+ep.Address+route, strings.NewReader(string(body)))
+	if err != nil {
+		return nil, ErrNoWindow
+	}
+	req.Header.Set("Authorization", "Bearer "+ep.Token)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{
+		Timeout:       timeout,
+		Transport:     &http.Transport{Proxy: nil, DisableKeepAlives: true},
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, ErrNoWindow
+	}
+	return res, nil
+}
+
 // Send never opens a window or starts an operation. Only the desktop can plan.
 func Send(ctx context.Context, dir string, q Request) error {
 	if !q.Valid() {
 		return errors.New("invalid issue ID; call get_issues again")
 	}
-	data, err := os.ReadFile(filepath.Join(dir, "mcp-bridge.json"))
+	res, err := postBridge(ctx, dir, "/propose", 12*time.Second, q)
 	if err != nil {
-		return ErrNoWindow
-	}
-	var ep endpoint
-	if json.Unmarshal(data, &ep) != nil || ep.Token == "" {
-		return ErrNoWindow
-	}
-	host, port, err := net.SplitHostPort(ep.Address)
-	if err != nil || host != "127.0.0.1" || port == "" {
-		return ErrNoWindow
-	}
-	body, _ := json.Marshal(q)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+ep.Address+"/propose", strings.NewReader(string(body)))
-	if err != nil {
-		return ErrNoWindow
-	}
-	req.Header.Set("Authorization", "Bearer "+ep.Token)
-	client := &http.Client{Timeout: 12 * time.Second, Transport: &http.Transport{Proxy: nil, DisableKeepAlives: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	res, err := client.Do(req)
-	if err != nil {
-		return ErrNoWindow
+		return err
 	}
 	defer func() { _ = res.Body.Close() }()
 	var out reply

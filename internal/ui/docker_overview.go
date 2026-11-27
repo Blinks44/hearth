@@ -135,6 +135,11 @@ func (a *App) canOpenDockerContainer() bool {
 	return ok
 }
 
+// OpenDockerContainer navigates to the selected Docker context's container detail view.
+func (a *App) OpenDockerContainer(id, name string) {
+	a.openDockerContainer(id, name)
+}
+
 func (a *App) openDockerContainer(id, name string) {
 	st, ok := a.Snapshot.Tool("docker")
 	if !ok || st.Docker == nil || st.Docker.Selected == "" {

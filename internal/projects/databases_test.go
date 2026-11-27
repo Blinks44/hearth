@@ -104,3 +104,42 @@ func TestReadDatabasesIgnoresEmptyEnvAndDirs(t *testing.T) {
 		}
 	})
 }
+
+func TestReadExtraComposeFiles(t *testing.T) {
+	dir := t.TempDir()
+	base := "services:\n  db:\n    image: postgres:16\n    ports: [\"5432:5432\"]\n"
+	dev := "services:\n  cache:\n    image: redis:7\n    ports: [\"6379:6379\"]\n"
+	if err := os.WriteFile(filepath.Join(dir, "compose.yaml"), []byte(base), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "compose.dev.yaml"), []byte(dev), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "compose.override.yaml"), []byte("services: {}\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "random.yaml"), []byte("foo: bar\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	p := Read(dir)
+	if len(p.Errs) != 0 {
+		t.Fatalf("unexpected errs: %v", p.Errs)
+	}
+	for _, want := range []string{"compose.yaml", "compose.dev.yaml", "compose.override.yaml"} {
+		if !strings.Contains(strings.Join(p.Files, ","), want) {
+			t.Errorf("missing %q in Files=%v", want, p.Files)
+		}
+	}
+	if strings.Contains(strings.Join(p.Files, ","), "random.yaml") {
+		t.Errorf("random.yaml should not be treated as compose file: %v", p.Files)
+	}
+	if len(p.Databases) != 2 {
+		t.Fatalf("expected 2 databases across compose.yaml and compose.dev.yaml, got %+v", p.Databases)
+	}
+	if !IsComposeFile("docker-compose.prod.yml") || IsComposeFile("notes.yml") {
+		t.Fatalf("IsComposeFile mismatch")
+	}
+	if !IsComposeOverride("compose.override.yaml") || IsComposeOverride("compose.dev.yaml") {
+		t.Fatalf("IsComposeOverride mismatch")
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -127,9 +128,70 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 				st, ok := fi.Sys().(*syscall.Stat_t)
 				l.Own = ok && int(st.Uid) == os.Getuid()
 			}
+			readProcMeta(proc, &l)
 		}
 		d.Listeners = append(d.Listeners, l)
 	}
+}
+
+func readProcMeta(proc string, l *inventory.DatabaseListener) {
+	if raw, err := os.ReadFile(filepath.Join(proc, "cmdline")); err == nil && len(raw) > 0 {
+		parts := strings.Split(strings.TrimRight(string(raw), "\x00"), "\x00")
+		l.Args = inventory.RedactArgs(parts)
+	}
+	if ppid, pgid := readProcStatPPIDPGID(filepath.Join(proc, "stat")); ppid != "" || pgid != "" {
+		l.PPID = ppid
+		l.PGID = pgid
+		cur := ppid
+		for range 12 {
+			if cur == "" || cur == "0" || cur == "1" || cur == l.PID {
+				break
+			}
+			seen := false
+			for _, prev := range l.Ancestors {
+				if prev == cur {
+					seen = true
+					break
+				}
+			}
+			if seen {
+				break
+			}
+			l.Ancestors = append(l.Ancestors, cur)
+			next, _ := readProcStatPPIDPGID(filepath.Join(procDir, cur, "stat"))
+			if next == "" || next == cur {
+				break
+			}
+			cur = next
+		}
+	}
+	if raw, err := os.ReadFile(filepath.Join(proc, "statm")); err == nil {
+		fields := strings.Fields(string(raw))
+		if len(fields) > 1 {
+			if rssPages, err := strconv.ParseInt(fields[1], 10, 64); err == nil && rssPages > 0 {
+				l.MemoryBytes = rssPages * int64(os.Getpagesize())
+			}
+		}
+	}
+}
+
+func readProcStatPPIDPGID(statPath string) (ppid, pgid string) {
+	raw, err := os.ReadFile(statPath)
+	if err != nil {
+		return "", ""
+	}
+	idx := strings.LastIndex(string(raw), ")")
+	if idx < 0 || idx+2 >= len(raw) {
+		return "", ""
+	}
+	fields := strings.Fields(string(raw[idx+2:]))
+	if len(fields) > 1 {
+		ppid = fields[1]
+	}
+	if len(fields) > 2 {
+		pgid = fields[2]
+	}
+	return ppid, pgid
 }
 
 // ssUser is the first process of ss' users:(("node",pid=4312,fd=21)).

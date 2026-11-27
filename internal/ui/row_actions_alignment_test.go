@@ -125,19 +125,11 @@ func TestRowActionsAlignment(t *testing.T) {
 		for _, sz := range sizes {
 			tt.SetSize(sz[0], sz[1])
 			tt.Advance(time.Second)
-			var copyRects []ui.Rect
-			for _, port := range []string{"631", "3000", "5432"} {
-				copyRects = append(copyRects, accessButtonsByName(tt, locales.PortsCopyAddress(port))...)
-			}
-			copyX := assertAlignedColumn(t, "port copy", copyRects, 3)
 			moreX := assertAlignedColumn(t, "port more", accessButtonsByName(tt, locales.MoreActions()), 3)
-			if !(copyX < moreX) {
-				t.Fatalf("size %v: copy=%v more=%v, want copy < more", sz, copyX, moreX)
-			}
 			for _, label := range []string{locales.PortsOpenBrowser(), locales.OpenProject(), locales.PortsStop()} {
 				for _, r := range accessButtonsByName(tt, label) {
-					if r.X >= copyX {
-						t.Fatalf("size %v: contextual %q at X=%v should sit left of copy X=%v", sz, label, r.X, copyX)
+					if r.X >= moreX {
+						t.Fatalf("size %v: contextual %q at X=%v should sit left of more X=%v", sz, label, r.X, moreX)
 					}
 				}
 			}

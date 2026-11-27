@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ func trayRunningIcon() *mygo.MenuIcon {
 }
 
 type trayActions struct {
+	openPopover     func()
 	openHearth      func()
 	openContainers  func()
 	openDocker      func()
@@ -55,14 +57,19 @@ type trayActions struct {
 }
 
 type trayController struct {
-	win        *mygo.Window
-	app        *hearthui.App
-	env        func() sysenv.Env
-	onQuit     func()
-	tray       *mygo.Tray
-	containers []docker.Container
-	cancelRead context.CancelFunc
-	switching  bool
+	win              *mygo.Window
+	app              *hearthui.App
+	env              func() sysenv.Env
+	onQuit           func()
+	tray             *mygo.Tray
+	popover          *mygo.Window
+	popoverOpen      bool
+	contextPicker    *mygo.Window
+	contextPickerKey string
+	manualRefresh    bool
+	containers       []docker.Container
+	cancelRead       context.CancelFunc
+	switching        bool
 }
 
 func newTrayController(win *mygo.Window, a *hearthui.App, env func() sysenv.Env, onQuit func()) *trayController {
@@ -98,16 +105,14 @@ func (t *trayController) sync(enabled bool) {
 			Icon:           icon,
 			IconIsTemplate: template,
 			ToolTip:        "Hearth",
-			Menu:           t.buildMenu(),
+			Menu:           t.initialTrayMenu(),
 		})
 		if err != nil {
 			log.Printf("create tray: %v", err)
 			return
 		}
-		tr.OnClick(func() {
-			t.refreshContainers()
-		})
 		t.tray = tr
+		t.bindTrayClicks()
 	}
 	t.refresh()
 	t.refreshContainers()
@@ -118,6 +123,7 @@ func (t *trayController) destroy() {
 		t.cancelRead()
 		t.cancelRead = nil
 	}
+	t.hidePopover()
 	if t.tray != nil {
 		t.tray.Destroy()
 		t.tray = nil
@@ -125,57 +131,340 @@ func (t *trayController) destroy() {
 }
 
 func (t *trayController) refresh() {
+	if !t.app.PortsRefreshing() {
+		t.manualRefresh = false
+	}
 	if t.tray == nil {
 		return
 	}
-	t.tray.SetMenu(t.buildMenu())
+	t.syncTrayMenu()
+	t.invalidatePopover()
 }
 
-func (t *trayController) showWindow() {
-	syncDockIcon(t.app.TrayEnabled, t.app.ShowInDock, true)
-	t.win.Show()
-	t.win.Focus()
+func (t *trayController) isPopoverOpen() bool {
+	return t.popover != nil && t.popoverOpen
 }
 
-func (t *trayController) buildMenu() *mygo.Menu {
-	items := buildTrayMenuItems(t.app.Snapshot, t.containers, t.switching, t.app.AppUpdateAvailable, trayActions{
-		openHearth: func() {
+func (t *trayController) setPopoverOpen(open bool) {
+	t.popoverOpen = open
+}
+
+func (t *trayController) invalidatePopover() {
+	if t.popover != nil && t.popoverOpen {
+		t.popover.Invalidate()
+	}
+}
+
+func (t *trayController) showPopover() {
+	if t.tray == nil || t.popover != nil {
+		return
+	}
+	pop := mygo.NewFlyout(mygo.FlyoutOptions{
+		Tray:         t.tray,
+		Placement:    mygo.PlacementBottom,
+		Gap:          6,
+		Popover:      false,
+		FitContent:   true,
+		Focusable:    true,
+		Shadow:       true,
+		CornerRadius: 14,
+		Width:        444,
+		MinWidth:     444,
+		MaxWidth:     444,
+		MaxHeight:    620,
+		Content: ui.View(func(c *ui.Context) {
+			t.app.TrayPopoverView(c, t.popoverActions())
+		}),
+	})
+	t.popover = pop
+	pop.OnClosed(func() {
+		t.closeContextPicker()
+		if t.popover == pop {
+			t.popover = nil
+		}
+		t.manualRefresh = false
+		t.setPopoverOpen(false)
+	})
+	t.setPopoverOpen(true)
+	t.refreshAllLive(false)
+}
+
+func (t *trayController) hidePopover() {
+	t.closeContextPicker()
+	if t.popover != nil {
+		pop := t.popover
+		t.popover = nil
+		pop.Close()
+	}
+	t.manualRefresh = false
+	t.setPopoverOpen(false)
+}
+
+func (t *trayController) closeContextPicker() {
+	t.contextPickerKey = ""
+	if t.contextPicker != nil {
+		p := t.contextPicker
+		t.contextPicker = nil
+		p.Close()
+	}
+	t.invalidatePopover()
+}
+
+func (t *trayController) openContextPicker(key string, anchor ui.Rect, current string, items []string, onSelect func(string)) {
+	if t.popover == nil || len(items) == 0 {
+		return
+	}
+	wasSame := t.contextPicker != nil && t.contextPickerKey == key
+	t.closeContextPicker()
+	if wasSame {
+		return
+	}
+	w := int(math.Round(float64(anchor.W)))
+	if w < 160 {
+		w = 200
+	}
+	h := int(math.Round(float64(anchor.H)))
+	if h <= 0 {
+		h = 34
+	}
+	picker := mygo.NewFlyout(mygo.FlyoutOptions{
+		Parent: t.popover,
+		Anchor: mygo.Rectangle{
+			X:      int(math.Round(float64(anchor.X))),
+			Y:      int(math.Round(float64(anchor.Y))),
+			Width:  w,
+			Height: h,
+		},
+		Placement:    mygo.PlacementBottomStart,
+		Gap:          4,
+		FitContent:   true,
+		Focusable:    true,
+		Shadow:       true,
+		CornerRadius: 10,
+		Width:        w,
+		MinWidth:     w,
+		MaxWidth:     w,
+		MaxHeight:    260,
+		Content: ui.View(func(c *ui.Context) {
+			hearthui.TrayContextPickerView(c, current, items, func(choice string) {
+				if t.popover != nil {
+					t.popover.Focus()
+				}
+				t.closeContextPicker()
+				if choice != current && onSelect != nil {
+					onSelect(choice)
+				}
+			})
+		}),
+	})
+	t.contextPicker = picker
+	t.contextPickerKey = key
+	picker.OnClosed(func() {
+		if t.contextPicker == picker {
+			t.contextPicker = nil
+			t.contextPickerKey = ""
+			t.invalidatePopover()
+		}
+	})
+	t.invalidatePopover()
+}
+
+func (t *trayController) togglePopover() {
+	if t.popover != nil {
+		t.hidePopover()
+		return
+	}
+	t.showPopover()
+}
+
+func (t *trayController) refreshAllLive(manual bool) {
+	if manual {
+		t.manualRefresh = true
+	}
+	t.refreshContainers()
+	t.app.RefreshPortsNow()
+	if manual && !t.app.PortsRefreshing() {
+		t.manualRefresh = false
+	}
+	t.invalidatePopover()
+}
+
+func (t *trayController) popoverActions() hearthui.TrayPopoverActions {
+	var hasColima, colimaRunning bool
+	var dockerCtx, dockerOverride, kubeCtx string
+	var dockerContexts, kubeContexts []string
+	if snap := t.app.Snapshot; snap != nil {
+		if st, ok := snap.Tool("docker"); ok && st.Docker != nil {
+			dockerHasCLI := inventory.TerminalCopy(st.Installations) >= 0
+			dockerCtx = st.Docker.Selected
+			dockerOverride = st.Docker.Override
+			if dockerHasCLI {
+				for _, k := range st.Docker.Contexts {
+					if k.Name != "" {
+						dockerContexts = append(dockerContexts, k.Name)
+					}
+				}
+			}
+			if p, ok := trayColimaProfile(st.Docker); ok {
+				hasColima = true
+				colimaRunning = p.Status == "running"
+			}
+		}
+		if st, ok := snap.Tool("cli"); ok && st.Cli != nil {
+			kubeCtx = trayKubeCurrent(*st.Cli)
+			if trayKubectlPath(*st.Cli) != "" {
+				kubeContexts = trayKubeContexts(*st.Cli)
+			}
+		}
+	}
+	return hearthui.TrayPopoverActions{
+		Containers:         t.containers,
+		HasColima:          hasColima,
+		ColimaRunning:      colimaRunning,
+		DockerContext:      dockerCtx,
+		DockerContexts:     dockerContexts,
+		DockerOverride:     dockerOverride,
+		KubeContext:        kubeCtx,
+		KubeContexts:       kubeContexts,
+		Switching:          t.switching,
+		AppUpdateAvailable: t.app.AppUpdateAvailable,
+		Refreshing:         t.manualRefresh && t.app.PortsRefreshing(),
+		OnRefresh: func() {
+			t.refreshAllLive(true)
+		},
+		OnOpenHearth: func() {
+			t.hidePopover()
 			t.showWindow()
 		},
-		openContainers: func() {
-			t.app.OpenDockerContainers()
+		OnOpenSettings: func() {
+			t.hidePopover()
+			t.app.OpenSettings()
 			t.showWindow()
 		},
-		openDocker: func() {
-			t.app.OpenDocker()
-			t.showWindow()
-		},
-		startColima: func() {
-			t.app.TriggerColima(true)
-			t.showWindow()
-		},
-		stopColima: func() {
-			t.app.TriggerColima(false)
-			t.showWindow()
-		},
-		switchDockerCtx: t.switchDockerContext,
-		switchKubeCtx:   t.switchKubeContext,
-		checkAppUpdate: func() {
+		OnCheckAppUpdate: func() {
+			t.hidePopover()
 			if t.app.CheckAppUpdate != nil {
 				t.app.CheckAppUpdate()
 			}
 		},
-		openSettings: func() {
-			t.app.OpenSettings()
+		OnOpenPorts: func() {
+			t.hidePopover()
+			t.app.OpenPorts()
 			t.showWindow()
 		},
-		quit: func() {
-			if t.onQuit != nil {
-				t.onQuit()
+		OnOpenDocker: func() {
+			t.hidePopover()
+			t.app.OpenDocker()
+			t.showWindow()
+		},
+		OnOpenContainer: func(id, name string) {
+			t.hidePopover()
+			t.app.OpenDockerContainer(id, name)
+			t.showWindow()
+		},
+		OnOpenContainers: func() {
+			t.hidePopover()
+			t.app.OpenDockerContainers()
+			t.showWindow()
+		},
+		OnOpenKube: func() {
+			t.hidePopover()
+			t.app.OpenKube()
+			t.showWindow()
+		},
+		OnOpenLogs: func(dir, source, name string) {
+			t.hidePopover()
+			t.app.OpenProjectScriptLogs(dir, source, name)
+			t.showWindow()
+		},
+		OnStopContainer: func(ct docker.Container) {
+			t.hidePopover()
+			t.app.ProposeDockerContainer(ct, ops.DockerStop)
+			t.showWindow()
+		},
+		OnRestartContainer: func(ct docker.Container) {
+			t.hidePopover()
+			t.app.ProposeDockerContainer(ct, ops.DockerRestart)
+			t.showWindow()
+		},
+		OnStopDatabase: func(db inventory.Database) {
+			if t.app.ProposeStopDatabase(db) {
+				t.hidePopover()
+				t.showWindow()
 			}
 		},
+		OnStopProcess: func(l inventory.DatabaseListener) {
+			if t.app.ProposeStopProcess(l) {
+				t.hidePopover()
+				t.showWindow()
+			}
+		},
+		OnToggleColima: func(start bool) {
+			t.hidePopover()
+			t.app.TriggerColima(start)
+			t.showWindow()
+		},
+		OnSwitchDockerContext: t.switchDockerContext,
+		OnSwitchKubeContext:   t.switchKubeContext,
+		OpenContextPickerKey:  t.contextPickerKey,
+		OnOpenContextPicker:   t.openContextPicker,
+	}
+}
+
+func (t *trayController) showWindow() {
+	syncDockIcon(t.app.TrayEnabled, t.app.ShowInDock, true)
+	t.win.Invalidate()
+	t.win.Show()
+	t.win.Focus()
+}
+
+// buildCompactSystemMenu builds the concise macOS right-click system menu
+// (Open Hearth, Check for updates, Settings, Quit) so all live controls stay
+// in the left-click flyout without duplicating complex menus.
+func (t *trayController) buildCompactSystemMenu() *mygo.Menu {
+	appUpdateLabel := locales.TrayCheckUpdates()
+	if t.app.AppUpdateAvailable != "" {
+		appUpdateLabel = locales.AppUpdateAvailable(t.app.AppUpdateAvailable)
+	}
+	return mygo.NewMenu([]*mygo.MenuItem{
+		{
+			ID:          "open",
+			Label:       locales.TrayOpenHearth(),
+			Accelerator: "CmdOrCtrl+O",
+			Click: func(*mygo.MenuItem, *mygo.Window) {
+				t.showWindow()
+			},
+		},
+		{
+			ID:    "app-update",
+			Label: appUpdateLabel,
+			Click: func(*mygo.MenuItem, *mygo.Window) {
+				if t.app.CheckAppUpdate != nil {
+					t.app.CheckAppUpdate()
+				}
+			},
+		},
+		{
+			ID:          "settings",
+			Label:       locales.TraySettings(),
+			Accelerator: "CmdOrCtrl+,",
+			Click: func(*mygo.MenuItem, *mygo.Window) {
+				t.app.OpenSettings()
+				t.showWindow()
+			},
+		},
+		mygo.Separator(),
+		{
+			ID:          "quit",
+			Label:       locales.TrayQuit(),
+			Accelerator: "CmdOrCtrl+Q",
+			Click: func(*mygo.MenuItem, *mygo.Window) {
+				if t.onQuit != nil {
+					t.onQuit()
+				}
+			},
+		},
 	})
-	return mygo.NewMenu(items)
 }
 
 func (t *trayController) refreshContainers() {
@@ -289,18 +578,26 @@ func (t *trayController) runQuickSwitch(argv []string) {
 }
 
 func buildTrayMenuItems(snap *inventory.Snapshot, containers []docker.Container, switching bool, appUpdateAvailable string, act trayActions) []*mygo.MenuItem {
-	items := []*mygo.MenuItem{
-		{
-			ID:          "open",
-			Label:       locales.TrayOpenHearth(),
-			Accelerator: "CmdOrCtrl+O",
+	var items []*mygo.MenuItem
+	if act.openPopover != nil {
+		items = append(items, &mygo.MenuItem{
+			ID:    "control-center",
+			Label: locales.TrayPopoverControlCenter(),
 			Click: func(*mygo.MenuItem, *mygo.Window) {
-				if act.openHearth != nil {
-					act.openHearth()
-				}
+				act.openPopover()
 			},
-		},
+		})
 	}
+	items = append(items, &mygo.MenuItem{
+		ID:          "open",
+		Label:       locales.TrayOpenHearth(),
+		Accelerator: "CmdOrCtrl+O",
+		Click: func(*mygo.MenuItem, *mygo.Window) {
+			if act.openHearth != nil {
+				act.openHearth()
+			}
+		},
+	})
 
 	// Containers section (when Docker CLI or contexts are present).
 	var dockerState *inventory.DockerState
@@ -337,11 +634,15 @@ func buildTrayMenuItems(snap *inventory.Snapshot, containers []docker.Container,
 				if label == "" {
 					label = c.ID
 				}
+				var portBadge string
+				if p := docker.FirstPublishedPort(c.Ports); p != "" {
+					portBadge = ":" + p
+				}
 				items = append(items, &mygo.MenuItem{
 					ID:    "container-" + c.ID,
 					Label: label,
 					Icon:  dot,
-					Badge: trayFirstPort(c.Ports),
+					Badge: portBadge,
 					Click: func(*mygo.MenuItem, *mygo.Window) {
 						if act.openContainers != nil {
 							act.openContainers()
@@ -556,20 +857,4 @@ func trayKubeContexts(cli inventory.CliState) []string {
 		}
 	}
 	return out
-}
-
-func trayFirstPort(raw string) string {
-	for item := range strings.SplitSeq(raw, ",") {
-		host, _, ok := strings.Cut(strings.TrimSpace(item), "->")
-		if !ok {
-			continue
-		}
-		if _, port, ok := strings.CutLast(host, ":"); ok {
-			port = strings.TrimSpace(port)
-			if port != "" {
-				return ":" + port
-			}
-		}
-	}
-	return ""
 }

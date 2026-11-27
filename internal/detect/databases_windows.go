@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -166,6 +167,21 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 		d.Warnings = append(d.Warnings, "netstat")
 		return
 	}
+	procCache := map[uint32]struct {
+		p  process
+		ok bool
+	}{}
+	lookupProc := func(pid uint32) (process, bool) {
+		if cached, ok := procCache[pid]; ok {
+			return cached.p, cached.ok
+		}
+		p, ok := processInfo(pid)
+		procCache[pid] = struct {
+			p  process
+			ok bool
+		}{p: p, ok: ok}
+		return p, ok
+	}
 	for line := range strings.Lines(string(data)) {
 		// The state is translated on localized Windows; a listener is the
 		// only TCP row without a foreign port.
@@ -179,13 +195,29 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 		}
 		l := inventory.DatabaseListener{Address: f[1][:i], Port: f[1][i+1:], PID: f[4]}
 		if pid, err := strconv.ParseUint(l.PID, 10, 32); err == nil && pid > 4 { // 0 and 4 are the system's
-			if p, ok := processInfo(uint32(pid)); ok {
+			if p, ok := lookupProc(uint32(pid)); ok {
 				l.Path, l.Own = p.path, p.own
+				l.PPID = p.ppid
+				l.MemoryBytes = p.mem
 				l.Process = strings.TrimSuffix(filepath.Base(p.path), filepath.Ext(p.path))
+				l.Args = inventory.RedactArgs(p.args)
 				for _, arg := range p.args {
 					if filepath.IsAbs(arg) && !strings.EqualFold(arg, p.path) {
 						l.Dirs = append(l.Dirs, arg)
 					}
+				}
+				cur := p.ppid
+				for range 6 {
+					parentPID, err := strconv.ParseUint(cur, 10, 32)
+					if err != nil || parentPID <= 4 {
+						break
+					}
+					parent, ok := lookupProc(uint32(parentPID))
+					if !ok || parent.ppid == "" || parent.ppid == cur || parent.ppid == l.PID || slices.Contains(l.Ancestors, parent.ppid) {
+						break
+					}
+					l.Ancestors = append(l.Ancestors, parent.ppid)
+					cur = parent.ppid
 				}
 			}
 		}
@@ -195,8 +227,28 @@ func databaseListeners(ctx context.Context, r run.Runner, env sysenv.Env, d *inv
 
 type process struct {
 	path string
+	ppid string
+	mem  int64
 	args []string
 	own  bool
+}
+
+var (
+	kernel32DLL              = windows.NewLazySystemDLL("kernel32.dll")
+	procK32GetProcessMemInfo = kernel32DLL.NewProc("K32GetProcessMemoryInfo")
+)
+
+type processMemoryCounters struct {
+	CB                         uint32
+	PageFaultCount             uint32
+	PeakWorkingSetSize         uintptr
+	WorkingSetSize             uintptr
+	QuotaPeakPagedPoolUsage    uintptr
+	QuotaPagedPoolUsage        uintptr
+	QuotaPeakNonPagedPoolUsage uintptr
+	QuotaNonPagedPoolUsage     uintptr
+	PagefileUsage              uintptr
+	PeakPagefileUsage          uintptr
 }
 
 // processInfo reads a process' program, command line and whether it
@@ -220,6 +272,16 @@ var processInfo = func(pid uint32) (process, bool) {
 		me, err2 := windows.GetCurrentProcessToken().GetTokenUser()
 		p.own = err == nil && err2 == nil && user.User.Sid.Equals(me.User.Sid)
 		token.Close()
+	}
+	var pbi windows.PROCESS_BASIC_INFORMATION
+	var retLen uint32
+	if windows.NtQueryInformationProcess(h, windows.ProcessBasicInformation, unsafe.Pointer(&pbi), uint32(unsafe.Sizeof(pbi)), &retLen) == nil && pbi.InheritedFromUniqueProcessId > 0 {
+		p.ppid = strconv.FormatUint(uint64(pbi.InheritedFromUniqueProcessId), 10)
+	}
+	var pmc processMemoryCounters
+	pmc.CB = uint32(unsafe.Sizeof(pmc))
+	if r1, _, _ := procK32GetProcessMemInfo.Call(uintptr(h), uintptr(unsafe.Pointer(&pmc)), uintptr(pmc.CB)); r1 != 0 {
+		p.mem = int64(pmc.WorkingSetSize)
 	}
 	// The command line comes as a UNICODE_STRING and the text after it.
 	var size uint32

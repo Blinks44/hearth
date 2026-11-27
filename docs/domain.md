@@ -17,6 +17,8 @@ Non-negotiable product rules backed by automated tests. Every change must preser
 - Hearth's built-in MCP server (`hearth mcp`) never mutates state on read tools and excludes env values, MCP commands/args/URLs, instruction/hook bodies, raw errors, and session content - test: `internal/mcpserver/server_test.go`, `internal/mcpserver/source_test.go`
 - MCP `propose_fix` accepts only an `issue_id`, rejects requests when the window is closed or busy, and never executes without human confirmation in the dialog - test: `internal/proposals/bridge_test.go`, `internal/mcpserver/proposal_test.go`, `internal/ui/mcp_proposal_test.go`
 - Usage analytics read only session metadata (folder, model, timestamp, token counts) and never store conversation text - test: `internal/ai/usage_test.go`
+- Agent Radar and `hearth notify` accept only strict lifecycle metadata (`agent`, `event`, `cwd`, `session_id`, `pid`, `timestamp`), never read, transmit, or store prompts or chat transcripts, and install/remove agent lifecycle hooks only via confirmed `FileEdit` plans with backup - test: `internal/proposals/events_test.go`, `notify_test.go`, `internal/ops/agent_hooks_test.go`, `internal/ai/radar_test.go`, `internal/ui/stage3_test.go`
+- Listening process command-line arguments pass through secret redaction before entering snapshots or UI classification - test: `internal/inventory/devserver_test.go`, `internal/detect/databases_test.go`
 
 ## Environment, PATH & Projects
 - `PATH` fix banners hide "Fix..." when no safe automatic plan exists (`ErrNoFix`) - test: `internal/ui/path_test.go` (`TestPathBannerHidesFixOnErrNoFix`)
@@ -26,6 +28,7 @@ Non-negotiable product rules backed by automated tests. Every change must preser
 - Parent `global.json` applies only to directories containing a `.NET` project/solution file, avoiding false alerts in sibling language directories - test: `internal/projects/dotnet_test.go`
 - Corepack `packageManager` versions not yet cached resolve as downloadable rather than missing-tool errors - test: `internal/projects/resolve_test.go` (`TestResolveCorepack`)
 - Hearth stops only non-system processes owned by the current user, using PIDs captured from the scan and after plan confirmation - test: `internal/ops/process_test.go`, `internal/ui/ports_test.go`
+- Managed project scripts run via explicit `argv` (no shell interpolation), stream bounded logs, and tear down their full process group on stop or app exit - test: `internal/projects/scripts_test.go`, `internal/ops/runner_test.go`, `internal/ui/stage3_test.go`
 
 ## Docker & Databases
 - Docker discovery and live views pin the selected local socket via `--host` with empty `DOCKER_CONTEXT`, poll only while open, and never connect to remote contexts - test: `internal/docker/docker_test.go`, `internal/ui/docker_engine_test.go`
@@ -40,7 +43,7 @@ Non-negotiable product rules backed by automated tests. Every change must preser
 
 ## Kubernetes
 - Scanning and opening the Kubernetes page never contact remote clusters; access checks and live cluster polling run only on explicit user action and stop when leaving the view - test: `internal/ui/kube_test.go`, `internal/ui/kube_cluster_test.go`, `internal/kube/kube_test.go`
-- Switching context/namespace inside the cluster viewer never mutates `kubectl` or `kubeconfig`; changing the active `kubectl` context requires a confirmed plan - test: `internal/ui/kube_cluster_test.go`, `internal/ops/kube_test.go`
+- Switching context/namespace inside the cluster viewer never mutates `kubectl` or `kubeconfig`; changing the active `kubectl` or Docker context in the main window requires a confirmed plan, while the system tray menu and flyout expose explicit 1-click context switches using the same validated plan commands - test: `internal/ui/kube_cluster_test.go`, `internal/ops/kube_test.go`, `tray_test.go`
 - Kubernetes Secrets fetch metadata and key sizes only; revealing a single value fetches by UID and hides after 30 s; Secret objects cannot be opened in the YAML editor - test: `internal/kube/secrets_test.go`, `internal/ui/kube_secrets_test.go`, `internal/ops/kube_resource_test.go`
 - Kubernetes writes (edit, delete, scale, restart, pause, rollback, drain, apply, namespace delete, Helm rollback/delete) run server-side dry-run and enforce UID / `resourceVersion` preconditions - test: `internal/ops/kube_resource_test.go`, `internal/ops/kube_scale_test.go`, `internal/ops/kube_node_test.go`, `internal/ops/kube_apply_test.go`, `internal/ops/kube_helm_test.go`
 - Port-forwarding binds strictly to `127.0.0.1`, tracks pod UID, and terminates on window close or app exit - test: `internal/kube/forward_test.go`, `internal/ops/forward_test.go`

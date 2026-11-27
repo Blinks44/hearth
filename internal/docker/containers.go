@@ -54,6 +54,24 @@ func (c Container) Active() bool {
 	}
 }
 
+// FirstPublishedPort extracts the first host-published port number (without
+// leading colon) from Docker's formatted Ports string, e.g. "0.0.0.0:8080->80/tcp".
+func FirstPublishedPort(raw string) string {
+	for item := range strings.SplitSeq(raw, ",") {
+		host, _, ok := strings.Cut(strings.TrimSpace(item), "->")
+		if !ok {
+			continue
+		}
+		if _, port, ok := strings.CutLast(host, ":"); ok {
+			port = strings.TrimSpace(port)
+			if port != "" {
+				return port
+			}
+		}
+	}
+	return ""
+}
+
 // ExitedError reports whether a non-zero exit code reflects a failure rather
 // than a normal stop (SIGTERM 143, SIGINT 130, or non-OOM SIGKILL 137).
 func (c Container) ExitedError() bool {

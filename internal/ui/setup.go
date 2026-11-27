@@ -728,7 +728,7 @@ func setupToolIcon(id string) string {
 	case "homebrew":
 		return "brand/homebrew"
 	case "mise":
-		return "lucide/layers"
+		return "brand/mise"
 	case "node":
 		return "brand/nodedotjs"
 	case "python":

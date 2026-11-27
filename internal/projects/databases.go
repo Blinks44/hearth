@@ -25,7 +25,19 @@ type DatabaseReference struct {
 }
 
 func readDatabases(p *Project) {
+	seen := map[string]bool{}
+	var composeFiles []string
 	for _, file := range []string{"compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"} {
+		seen[file] = true
+		composeFiles = append(composeFiles, file)
+	}
+	for _, file := range p.Files {
+		if IsComposeFile(file) && !seen[file] {
+			seen[file] = true
+			composeFiles = append(composeFiles, file)
+		}
+	}
+	for _, file := range composeFiles {
 		full := filepath.Join(p.Dir, file)
 		info, err := os.Stat(full)
 		if os.IsNotExist(err) || (err == nil && info.IsDir()) {

@@ -103,6 +103,9 @@ func AssessProject(in ProjectInput) ProjectPreparation {
 		default:
 			selection, err := projects.SelectVersion(st, in.Releases[st.Tool], in.Lines)
 			switch {
+			case err != nil && isUnversionedMissing(st):
+				item.Kind = ProjectManual
+				item.Text = locales.PrepareManual(item.Title)
 			case err != nil:
 				item.Kind = classifySelectError(st, err)
 				item.Text = locales.PrepareNoVersion(item.Title, err.Error())
@@ -181,6 +184,21 @@ func classifySelectError(st projects.Status, err error) ProjectItemKind {
 	return ProjectUnknown
 }
 
+// isUnversionedMissing reports a checked tool that has no installations and
+// whose project requirements only state that the tool is needed (no version
+// constraint and no parse errors), such as Composer in composer.json.
+func isUnversionedMissing(st projects.Status) bool {
+	if !st.Checked || len(st.Installations) > 0 || len(st.Checks) == 0 {
+		return false
+	}
+	for _, ch := range st.Checks {
+		if strings.TrimSpace(ch.Want) != "" || ch.Err != "" || ch.SDK != nil {
+			return false
+		}
+	}
+	return true
+}
+
 func hasRequirementConflict(st projects.Status) bool {
 	var nonEmpty []projects.Check
 	files := map[string]bool{}
@@ -250,6 +268,9 @@ func dockerReadyEngine(st inventory.ToolState) (string, bool) {
 // global defaults, project scripts and dependency installations are excluded.
 func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error) {
 	out := ProjectPreparation{Project: in.Project}
+	if in.Title == nil {
+		in.Title = func(s string) string { return s }
+	}
 	var plans []Plan
 	needsMise := false
 	localMise := map[string]string{}
@@ -297,6 +318,9 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		default:
 			selection, err := projects.SelectVersion(st, in.Releases[st.Tool], in.Lines)
 			switch {
+			case err != nil && isUnversionedMissing(st):
+				item.Kind = ProjectManual
+				item.Text = locales.PrepareManual(item.Title)
 			case err != nil:
 				item.Kind = classifySelectError(st, err)
 				item.Text = locales.PrepareNoVersion(item.Title, err.Error())
@@ -312,6 +336,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 			default:
 				item.Version = selection.Version
 				manager := projectManager(state)
+				useMise := false
 				if selection.Installed != nil {
 					manager = selection.Installed.Source.Manager
 					item.Manager = manager
@@ -322,15 +347,15 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 						item.Ready = true
 						item.Text = locales.PreparePythonAvailable(selection.Version)
 					}
+					useMise = manager == "mise"
 				} else {
-					if manager == "" {
-						manager = "mise"
-						needsMise = true
+					candidate := manager
+					if candidate == "" {
+						candidate = "mise"
 					}
-					item.Manager = manager
-					target := VersionTarget{Tool: st.Tool, Title: item.Title, Manager: manager, Version: selection.Version, AsdfSet: true}
+					target := VersionTarget{Tool: st.Tool, Title: item.Title, Manager: candidate, Version: selection.Version, AsdfSet: true}
 					for _, m := range state.Managers {
-						if m.Name == manager {
+						if m.Name == candidate {
 							target.Admin = m.Admin
 							target.AsdfSet = AsdfSet(m.Version)
 						}
@@ -341,6 +366,11 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 					}
 					p, ok := VersionPlan(VersionInstall, target, detect)
 					if ok {
+						if manager == "" {
+							needsMise = true
+						}
+						manager = candidate
+						item.Manager = manager
 						if manager == "corepack" {
 							argv := []string{"corepack", "prepare", st.Tool + "@" + selection.Version}
 							if nodeVer := localMise["node"]; nodeVer != "" {
@@ -351,12 +381,13 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 						plans = append(plans, p)
 						item.Kind = ProjectInstall
 						item.Text = locales.PrepareInstall(item.Title, selection.Version, manager)
+						useMise = manager == "mise"
 					} else {
 						item.Kind = ProjectManual
 						item.Text = locales.PrepareManual(item.Title)
 					}
 				}
-				if manager == "mise" {
+				if useMise {
 					if !slices.ContainsFunc(state.Managers, func(m inventory.Manager) bool { return m.Name == "mise" && (m.Activated || m.Shims || m.SwitchOnCD) }) {
 						needsMise = true
 					}
@@ -389,8 +420,15 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		out.Items = append(out.Items, item)
 	}
 	// Unversioned tools, such as Git or Composer, use the existing catalog.
-	// Only include entries whose dependencies already exist; installing a
-	// language's arbitrary global default would contradict project requirements.
+	// Only include entries whose dependencies already exist or are installed
+	// earlier in this plan; installing a language's arbitrary global default
+	// would contradict project requirements.
+	plannedHave := cloneHave(in.Setup.Have)
+	for _, it := range out.Items {
+		if it.Kind == ProjectInstall {
+			plannedHave[it.Tool] = true
+		}
+	}
 	for i := range out.Items {
 		item := &out.Items[i]
 		st, _ := in.Snapshot.Tool(item.Tool)
@@ -402,7 +440,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 			continue
 		}
 		setup := in.Setup
-		setup.Have = cloneHave(in.Setup.Have)
+		setup.Have = cloneHave(plannedHave)
 		setup.Tools = []string{item.Tool}
 		parts := setup.Parts()
 		if len(parts) != 1 || parts[0].Tool != item.Tool || parts[0].Method.Manager == "mise" {
@@ -411,6 +449,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		p, _, err := SetupPlan(setup, env)
 		if err == nil {
 			plans = append(plans, p)
+			plannedHave[item.Tool] = true
 			item.Kind = ProjectInstall
 			item.Manager = parts[0].Method.Manager
 			item.Text = locales.PrepareInstall(item.Title, "", parts[0].Method.Manager)
@@ -444,17 +483,7 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		if _, ok := localMise[item.Tool]; !ok {
 			continue
 		}
-		file := "mise.toml"
-		if _, ok := in.Project.Texts[".mise.toml"]; ok {
-			file = ".mise.toml"
-		}
-		if _, ok := in.Project.Texts[file]; ok {
-			item.Config = fmt.Sprintf("%s = %q", item.Tool, localMise[item.Tool])
-			item.Text += " " + locales.PrepareMiseSetting(file)
-			if !slices.Contains(item.Files, file) {
-				item.Files = append(item.Files, file)
-			}
-		}
+		attachExistingMiseConfig(item, in.Project, item.Tool, item.Version)
 	}
 	p, _ := UpdatePlan(plans)
 	if needsMise && len(p.Steps) > 0 {

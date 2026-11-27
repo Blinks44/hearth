@@ -41,10 +41,10 @@ type logView struct {
 	lines   []kube.LogLine
 	dropped int
 	err     error
-	// ended is true once kubectl ended without an error: a previous run
-	// read, or the run followed stopped.
-	ended bool
-	run   uint64
+	// ended is true once the stream ended without an error.
+	ended     bool
+	endedNote string
+	run       uint64
 	// found caches the rows matching the query for the current revision.
 	found struct {
 		query    string
@@ -471,6 +471,8 @@ func (l *logView) logLines(c *ui.Context, rows []int) {
 		end = locales.KubeLogsPreviousEnd()
 	case l.owner.UID != "" && l.ended && l.err == nil:
 		end = locales.KubeLogsOwnerEnded()
+	case l.ended && l.err == nil && l.endedNote != "":
+		end = l.endedNote
 	case l.ended && l.err == nil:
 		end = locales.KubeLogsStreamEnded()
 	}

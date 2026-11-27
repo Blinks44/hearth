@@ -17,6 +17,7 @@ import (
 type ForwardPod struct {
 	Name, UID string
 	Port      int
+	PID       int
 }
 
 // ResolveForwardPod reads the approved resource again. For a Service,

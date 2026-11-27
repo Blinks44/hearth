@@ -48379,3 +48379,1393 @@ func CleanupLastActive(date time.Time) string { return In(i18n.Locale()).Cleanup
 func (msgs Messages) CleanupLastActive(date time.Time) string {
 	return Catalog.Format(msgs.locale, "cleanupLastActive", map[string]any{"date": date})
 }
+
+// ProjectRunningTitle says "Running in this project"
+// in the language the app shows.
+func ProjectRunningTitle() string { return In(i18n.Locale()).ProjectRunningTitle() }
+
+// ProjectRunningTitle says "Running in this project"
+// in the language of msgs.
+func (msgs Messages) ProjectRunningTitle() string {
+	return Catalog.Format(msgs.locale, "projectRunningTitle", nil)
+}
+
+// ProjectScriptsTitle says "Scripts"
+// in the language the app shows.
+func ProjectScriptsTitle() string { return In(i18n.Locale()).ProjectScriptsTitle() }
+
+// ProjectScriptsTitle says "Scripts"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsTitle() string {
+	return Catalog.Format(msgs.locale, "projectScriptsTitle", nil)
+}
+
+// ProjectScriptsSubtitle says "from project files"
+// in the language the app shows.
+func ProjectScriptsSubtitle() string { return In(i18n.Locale()).ProjectScriptsSubtitle() }
+
+// ProjectScriptsSubtitle says "from project files"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsSubtitle() string {
+	return Catalog.Format(msgs.locale, "projectScriptsSubtitle", nil)
+}
+
+// ProjectScriptsRun says "Run"
+// in the language the app shows.
+func ProjectScriptsRun() string { return In(i18n.Locale()).ProjectScriptsRun() }
+
+// ProjectScriptsRun says "Run"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsRun() string {
+	return Catalog.Format(msgs.locale, "projectScriptsRun", nil)
+}
+
+// ProjectScriptsStop says "Stop"
+// in the language the app shows.
+func ProjectScriptsStop() string { return In(i18n.Locale()).ProjectScriptsStop() }
+
+// ProjectScriptsStop says "Stop"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsStop() string {
+	return Catalog.Format(msgs.locale, "projectScriptsStop", nil)
+}
+
+// ProjectScriptsRestart says "Restart"
+// in the language the app shows.
+func ProjectScriptsRestart() string { return In(i18n.Locale()).ProjectScriptsRestart() }
+
+// ProjectScriptsRestart says "Restart"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsRestart() string {
+	return Catalog.Format(msgs.locale, "projectScriptsRestart", nil)
+}
+
+// ProjectScriptsLogs says "Logs"
+// in the language the app shows.
+func ProjectScriptsLogs() string { return In(i18n.Locale()).ProjectScriptsLogs() }
+
+// ProjectScriptsLogs says "Logs"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsLogs() string {
+	return Catalog.Format(msgs.locale, "projectScriptsLogs", nil)
+}
+
+// ProjectScriptsRunning says "Running"
+// in the language the app shows.
+func ProjectScriptsRunning() string { return In(i18n.Locale()).ProjectScriptsRunning() }
+
+// ProjectScriptsRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsRunning() string {
+	return Catalog.Format(msgs.locale, "projectScriptsRunning", nil)
+}
+
+// ProjectScriptsExited says "Exited"
+// in the language the app shows.
+func ProjectScriptsExited() string { return In(i18n.Locale()).ProjectScriptsExited() }
+
+// ProjectScriptsExited says "Exited"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsExited() string {
+	return Catalog.Format(msgs.locale, "projectScriptsExited", nil)
+}
+
+// ProjectScriptsFailed says "Failed"
+// in the language the app shows.
+func ProjectScriptsFailed() string { return In(i18n.Locale()).ProjectScriptsFailed() }
+
+// ProjectScriptsFailed says "Failed"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsFailed() string {
+	return Catalog.Format(msgs.locale, "projectScriptsFailed", nil)
+}
+
+// ProjectScriptsShowMore says "Show {count} more"
+// in the language the app shows.
+func ProjectScriptsShowMore(count int) string { return In(i18n.Locale()).ProjectScriptsShowMore(count) }
+
+// ProjectScriptsShowMore says "Show {count} more"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsShowMore(count int) string {
+	return Catalog.Format(msgs.locale, "projectScriptsShowMore", map[string]any{"count": count})
+}
+
+// ProjectScriptsShowLess says "Show less"
+// in the language the app shows.
+func ProjectScriptsShowLess() string { return In(i18n.Locale()).ProjectScriptsShowLess() }
+
+// ProjectScriptsShowLess says "Show less"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsShowLess() string {
+	return Catalog.Format(msgs.locale, "projectScriptsShowLess", nil)
+}
+
+// ProjectScriptsLogsTitle says "{name} logs"
+// in the language the app shows.
+func ProjectScriptsLogsTitle(name string) string {
+	return In(i18n.Locale()).ProjectScriptsLogsTitle(name)
+}
+
+// ProjectScriptsLogsTitle says "{name} logs"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsLogsTitle(name string) string {
+	return Catalog.Format(msgs.locale, "projectScriptsLogsTitle", map[string]any{"name": name})
+}
+
+// ProjectScriptsLogsEmpty says "Waiting for output…"
+// in the language the app shows.
+func ProjectScriptsLogsEmpty() string { return In(i18n.Locale()).ProjectScriptsLogsEmpty() }
+
+// ProjectScriptsLogsEmpty says "Waiting for output…"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsLogsEmpty() string {
+	return Catalog.Format(msgs.locale, "projectScriptsLogsEmpty", nil)
+}
+
+// ProjectScriptsCloseLogs says "Close logs"
+// in the language the app shows.
+func ProjectScriptsCloseLogs() string { return In(i18n.Locale()).ProjectScriptsCloseLogs() }
+
+// ProjectScriptsCloseLogs says "Close logs"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsCloseLogs() string {
+	return Catalog.Format(msgs.locale, "projectScriptsCloseLogs", nil)
+}
+
+// PortsTabDevServers says "Dev servers"
+// in the language the app shows.
+func PortsTabDevServers() string { return In(i18n.Locale()).PortsTabDevServers() }
+
+// PortsTabDevServers says "Dev servers"
+// in the language of msgs.
+func (msgs Messages) PortsTabDevServers() string {
+	return Catalog.Format(msgs.locale, "portsTabDevServers", nil)
+}
+
+// PortsManagedByHearth says "Started in Hearth"
+// in the language the app shows.
+func PortsManagedByHearth() string { return In(i18n.Locale()).PortsManagedByHearth() }
+
+// PortsManagedByHearth says "Started in Hearth"
+// in the language of msgs.
+func (msgs Messages) PortsManagedByHearth() string {
+	return Catalog.Format(msgs.locale, "portsManagedByHearth", nil)
+}
+
+// PortsOpenLogs says "Open logs"
+// in the language the app shows.
+func PortsOpenLogs() string { return In(i18n.Locale()).PortsOpenLogs() }
+
+// PortsOpenLogs says "Open logs"
+// in the language of msgs.
+func (msgs Messages) PortsOpenLogs() string {
+	return Catalog.Format(msgs.locale, "portsOpenLogs", nil)
+}
+
+// RadarTitle says "Live sessions"
+// in the language the app shows.
+func RadarTitle() string { return In(i18n.Locale()).RadarTitle() }
+
+// RadarTitle says "Live sessions"
+// in the language of msgs.
+func (msgs Messages) RadarTitle() string {
+	return Catalog.Format(msgs.locale, "radarTitle", nil)
+}
+
+// RadarEmpty says "No active AI agent sessions detected."
+// in the language the app shows.
+func RadarEmpty() string { return In(i18n.Locale()).RadarEmpty() }
+
+// RadarEmpty says "No active AI agent sessions detected."
+// in the language of msgs.
+func (msgs Messages) RadarEmpty() string {
+	return Catalog.Format(msgs.locale, "radarEmpty", nil)
+}
+
+// RadarStatusWorking says "Working"
+// in the language the app shows.
+func RadarStatusWorking() string { return In(i18n.Locale()).RadarStatusWorking() }
+
+// RadarStatusWorking says "Working"
+// in the language of msgs.
+func (msgs Messages) RadarStatusWorking() string {
+	return Catalog.Format(msgs.locale, "radarStatusWorking", nil)
+}
+
+// RadarStatusQuiet says "Quiet >30s"
+// in the language the app shows.
+func RadarStatusQuiet() string { return In(i18n.Locale()).RadarStatusQuiet() }
+
+// RadarStatusQuiet says "Quiet >30s"
+// in the language of msgs.
+func (msgs Messages) RadarStatusQuiet() string {
+	return Catalog.Format(msgs.locale, "radarStatusQuiet", nil)
+}
+
+// RadarStatusWaiting says "Waiting for approval"
+// in the language the app shows.
+func RadarStatusWaiting() string { return In(i18n.Locale()).RadarStatusWaiting() }
+
+// RadarStatusWaiting says "Waiting for approval"
+// in the language of msgs.
+func (msgs Messages) RadarStatusWaiting() string {
+	return Catalog.Format(msgs.locale, "radarStatusWaiting", nil)
+}
+
+// RadarStatusFinished says "Finished"
+// in the language the app shows.
+func RadarStatusFinished() string { return In(i18n.Locale()).RadarStatusFinished() }
+
+// RadarStatusFinished says "Finished"
+// in the language of msgs.
+func (msgs Messages) RadarStatusFinished() string {
+	return Catalog.Format(msgs.locale, "radarStatusFinished", nil)
+}
+
+// RadarPassiveHint says "Passive detection"
+// in the language the app shows.
+func RadarPassiveHint() string { return In(i18n.Locale()).RadarPassiveHint() }
+
+// RadarPassiveHint says "Passive detection"
+// in the language of msgs.
+func (msgs Messages) RadarPassiveHint() string {
+	return Catalog.Format(msgs.locale, "radarPassiveHint", nil)
+}
+
+// RadarExactHint says "Live hooks"
+// in the language the app shows.
+func RadarExactHint() string { return In(i18n.Locale()).RadarExactHint() }
+
+// RadarExactHint says "Live hooks"
+// in the language of msgs.
+func (msgs Messages) RadarExactHint() string {
+	return Catalog.Format(msgs.locale, "radarExactHint", nil)
+}
+
+// RadarHooksBannerTitle says "Get exact agent status & desktop notifications"
+// in the language the app shows.
+func RadarHooksBannerTitle() string { return In(i18n.Locale()).RadarHooksBannerTitle() }
+
+// RadarHooksBannerTitle says "Get exact agent status & desktop notifications"
+// in the language of msgs.
+func (msgs Messages) RadarHooksBannerTitle() string {
+	return Catalog.Format(msgs.locale, "radarHooksBannerTitle", nil)
+}
+
+// RadarHooksBannerBody says "Optional lifecycle hooks send only status and folder (never prompts or chat text) to Hearth."
+// in the language the app shows.
+func RadarHooksBannerBody() string { return In(i18n.Locale()).RadarHooksBannerBody() }
+
+// RadarHooksBannerBody says "Optional lifecycle hooks send only status and folder (never prompts or chat text) to Hearth."
+// in the language of msgs.
+func (msgs Messages) RadarHooksBannerBody() string {
+	return Catalog.Format(msgs.locale, "radarHooksBannerBody", nil)
+}
+
+// RadarHooksInstall says "Enable hooks…"
+// in the language the app shows.
+func RadarHooksInstall() string { return In(i18n.Locale()).RadarHooksInstall() }
+
+// RadarHooksInstall says "Enable hooks…"
+// in the language of msgs.
+func (msgs Messages) RadarHooksInstall() string {
+	return Catalog.Format(msgs.locale, "radarHooksInstall", nil)
+}
+
+// RadarHooksRemove says "Disable hooks…"
+// in the language the app shows.
+func RadarHooksRemove() string { return In(i18n.Locale()).RadarHooksRemove() }
+
+// RadarHooksRemove says "Disable hooks…"
+// in the language of msgs.
+func (msgs Messages) RadarHooksRemove() string {
+	return Catalog.Format(msgs.locale, "radarHooksRemove", nil)
+}
+
+// RadarHooksInstalled says "Hooks active"
+// in the language the app shows.
+func RadarHooksInstalled() string { return In(i18n.Locale()).RadarHooksInstalled() }
+
+// RadarHooksInstalled says "Hooks active"
+// in the language of msgs.
+func (msgs Messages) RadarHooksInstalled() string {
+	return Catalog.Format(msgs.locale, "radarHooksInstalled", nil)
+}
+
+// RadarHooksInstallTitle says "Enable Hearth status hooks for {agent}"
+// in the language the app shows.
+func RadarHooksInstallTitle(agent string) string {
+	return In(i18n.Locale()).RadarHooksInstallTitle(agent)
+}
+
+// RadarHooksInstallTitle says "Enable Hearth status hooks for {agent}"
+// in the language of msgs.
+func (msgs Messages) RadarHooksInstallTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "radarHooksInstallTitle", map[string]any{"agent": agent})
+}
+
+// RadarHooksInstallChange says "Add Hearth status hooks to {file}"
+// in the language the app shows.
+func RadarHooksInstallChange(file string) string {
+	return In(i18n.Locale()).RadarHooksInstallChange(file)
+}
+
+// RadarHooksInstallChange says "Add Hearth status hooks to {file}"
+// in the language of msgs.
+func (msgs Messages) RadarHooksInstallChange(file string) string {
+	return Catalog.Format(msgs.locale, "radarHooksInstallChange", map[string]any{"file": file})
+}
+
+// RadarHooksInstallWhy says "Notifies Hearth when the agent starts working, waits for approval, or finishes. Sends only agent name, status, sessio…"
+// in the language the app shows.
+func RadarHooksInstallWhy() string { return In(i18n.Locale()).RadarHooksInstallWhy() }
+
+// RadarHooksInstallWhy says "Notifies Hearth when the agent starts working, waits for approval, or finishes. Sends only agent name, status, sessio…"
+// in the language of msgs.
+func (msgs Messages) RadarHooksInstallWhy() string {
+	return Catalog.Format(msgs.locale, "radarHooksInstallWhy", nil)
+}
+
+// RadarHooksRemoveTitle says "Disable Hearth status hooks for {agent}"
+// in the language the app shows.
+func RadarHooksRemoveTitle(agent string) string {
+	return In(i18n.Locale()).RadarHooksRemoveTitle(agent)
+}
+
+// RadarHooksRemoveTitle says "Disable Hearth status hooks for {agent}"
+// in the language of msgs.
+func (msgs Messages) RadarHooksRemoveTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "radarHooksRemoveTitle", map[string]any{"agent": agent})
+}
+
+// RadarHooksRemoveChange says "Remove Hearth status hooks from {file}"
+// in the language the app shows.
+func RadarHooksRemoveChange(file string) string {
+	return In(i18n.Locale()).RadarHooksRemoveChange(file)
+}
+
+// RadarHooksRemoveChange says "Remove Hearth status hooks from {file}"
+// in the language of msgs.
+func (msgs Messages) RadarHooksRemoveChange(file string) string {
+	return Catalog.Format(msgs.locale, "radarHooksRemoveChange", map[string]any{"file": file})
+}
+
+// RadarHooksRemoveWhy says "Removes Hearth notification entries while keeping your own hooks and settings."
+// in the language the app shows.
+func RadarHooksRemoveWhy() string { return In(i18n.Locale()).RadarHooksRemoveWhy() }
+
+// RadarHooksRemoveWhy says "Removes Hearth notification entries while keeping your own hooks and settings."
+// in the language of msgs.
+func (msgs Messages) RadarHooksRemoveWhy() string {
+	return Catalog.Format(msgs.locale, "radarHooksRemoveWhy", nil)
+}
+
+// RadarNotifWaitingTitle says "{agent} is waiting for approval"
+// in the language the app shows.
+func RadarNotifWaitingTitle(agent string) string {
+	return In(i18n.Locale()).RadarNotifWaitingTitle(agent)
+}
+
+// RadarNotifWaitingTitle says "{agent} is waiting for approval"
+// in the language of msgs.
+func (msgs Messages) RadarNotifWaitingTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "radarNotifWaitingTitle", map[string]any{"agent": agent})
+}
+
+// RadarNotifFinishedTitle says "{agent} finished"
+// in the language the app shows.
+func RadarNotifFinishedTitle(agent string) string {
+	return In(i18n.Locale()).RadarNotifFinishedTitle(agent)
+}
+
+// RadarNotifFinishedTitle says "{agent} finished"
+// in the language of msgs.
+func (msgs Messages) RadarNotifFinishedTitle(agent string) string {
+	return Catalog.Format(msgs.locale, "radarNotifFinishedTitle", map[string]any{"agent": agent})
+}
+
+// RadarNotifBody says "In {project}"
+// in the language the app shows.
+func RadarNotifBody(project string) string { return In(i18n.Locale()).RadarNotifBody(project) }
+
+// RadarNotifBody says "In {project}"
+// in the language of msgs.
+func (msgs Messages) RadarNotifBody(project string) string {
+	return Catalog.Format(msgs.locale, "radarNotifBody", map[string]any{"project": project})
+}
+
+// RadarNotifBodyNoProject says "Click to open Hearth"
+// in the language the app shows.
+func RadarNotifBodyNoProject() string { return In(i18n.Locale()).RadarNotifBodyNoProject() }
+
+// RadarNotifBodyNoProject says "Click to open Hearth"
+// in the language of msgs.
+func (msgs Messages) RadarNotifBodyNoProject() string {
+	return Catalog.Format(msgs.locale, "radarNotifBodyNoProject", nil)
+}
+
+// RadarRefresh says "Refresh"
+// in the language the app shows.
+func RadarRefresh() string { return In(i18n.Locale()).RadarRefresh() }
+
+// RadarRefresh says "Refresh"
+// in the language of msgs.
+func (msgs Messages) RadarRefresh() string {
+	return Catalog.Format(msgs.locale, "radarRefresh", nil)
+}
+
+// TrayPopoverControlCenter says "Open control center"
+// in the language the app shows.
+func TrayPopoverControlCenter() string { return In(i18n.Locale()).TrayPopoverControlCenter() }
+
+// TrayPopoverControlCenter says "Open control center"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverControlCenter() string {
+	return Catalog.Format(msgs.locale, "trayPopoverControlCenter", nil)
+}
+
+// TrayPopoverEmpty says "Nothing active right now"
+// in the language the app shows.
+func TrayPopoverEmpty() string { return In(i18n.Locale()).TrayPopoverEmpty() }
+
+// TrayPopoverEmpty says "Nothing active right now"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverEmpty() string {
+	return Catalog.Format(msgs.locale, "trayPopoverEmpty", nil)
+}
+
+// TrayPopoverEmptyBody says "Running dev servers, containers, local databases, and AI sessions will appear here."
+// in the language the app shows.
+func TrayPopoverEmptyBody() string { return In(i18n.Locale()).TrayPopoverEmptyBody() }
+
+// TrayPopoverEmptyBody says "Running dev servers, containers, local databases, and AI sessions will appear here."
+// in the language of msgs.
+func (msgs Messages) TrayPopoverEmptyBody() string {
+	return Catalog.Format(msgs.locale, "trayPopoverEmptyBody", nil)
+}
+
+// TrayPopoverDevServers says "Dev servers"
+// in the language the app shows.
+func TrayPopoverDevServers() string { return In(i18n.Locale()).TrayPopoverDevServers() }
+
+// TrayPopoverDevServers says "Dev servers"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverDevServers() string {
+	return Catalog.Format(msgs.locale, "trayPopoverDevServers", nil)
+}
+
+// TrayPopoverAgents says "AI sessions"
+// in the language the app shows.
+func TrayPopoverAgents() string { return In(i18n.Locale()).TrayPopoverAgents() }
+
+// TrayPopoverAgents says "AI sessions"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverAgents() string {
+	return Catalog.Format(msgs.locale, "trayPopoverAgents", nil)
+}
+
+// TrayPopoverContainers says "Containers"
+// in the language the app shows.
+func TrayPopoverContainers() string { return In(i18n.Locale()).TrayPopoverContainers() }
+
+// TrayPopoverContainers says "Containers"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverContainers() string {
+	return Catalog.Format(msgs.locale, "trayPopoverContainers", nil)
+}
+
+// TrayPopoverDatabases says "Databases"
+// in the language the app shows.
+func TrayPopoverDatabases() string { return In(i18n.Locale()).TrayPopoverDatabases() }
+
+// TrayPopoverDatabases says "Databases"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverDatabases() string {
+	return Catalog.Format(msgs.locale, "trayPopoverDatabases", nil)
+}
+
+// TrayPopoverForwards says "Port forwards"
+// in the language the app shows.
+func TrayPopoverForwards() string { return In(i18n.Locale()).TrayPopoverForwards() }
+
+// TrayPopoverForwards says "Port forwards"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverForwards() string {
+	return Catalog.Format(msgs.locale, "trayPopoverForwards", nil)
+}
+
+// TrayPopoverOpenAll says "Open Hearth"
+// in the language the app shows.
+func TrayPopoverOpenAll() string { return In(i18n.Locale()).TrayPopoverOpenAll() }
+
+// TrayPopoverOpenAll says "Open Hearth"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverOpenAll() string {
+	return Catalog.Format(msgs.locale, "trayPopoverOpenAll", nil)
+}
+
+// TrayPopoverWaitingBadge says "{count} waiting"
+// in the language the app shows.
+func TrayPopoverWaitingBadge(count int) string {
+	return In(i18n.Locale()).TrayPopoverWaitingBadge(count)
+}
+
+// TrayPopoverWaitingBadge says "{count} waiting"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverWaitingBadge(count int) string {
+	return Catalog.Format(msgs.locale, "trayPopoverWaitingBadge", map[string]any{"count": count})
+}
+
+// ServicesPortsTitle says "Services & Ports"
+// in the language the app shows.
+func ServicesPortsTitle() string { return In(i18n.Locale()).ServicesPortsTitle() }
+
+// ServicesPortsTitle says "Services & Ports"
+// in the language of msgs.
+func (msgs Messages) ServicesPortsTitle() string {
+	return Catalog.Format(msgs.locale, "servicesPortsTitle", nil)
+}
+
+// ServicesPortsSubtitle says "Dev servers, containers, databases and k8s port-forwards"
+// in the language the app shows.
+func ServicesPortsSubtitle() string { return In(i18n.Locale()).ServicesPortsSubtitle() }
+
+// ServicesPortsSubtitle says "Dev servers, containers, databases and k8s port-forwards"
+// in the language of msgs.
+func (msgs Messages) ServicesPortsSubtitle() string {
+	return Catalog.Format(msgs.locale, "servicesPortsSubtitle", nil)
+}
+
+// ServicesPortsLead says "Local dev servers, Docker, databases and k8s forwards. Managed items stop in 1 click."
+// in the language the app shows.
+func ServicesPortsLead() string { return In(i18n.Locale()).ServicesPortsLead() }
+
+// ServicesPortsLead says "Local dev servers, Docker, databases and k8s forwards. Managed items stop in 1 click."
+// in the language of msgs.
+func (msgs Messages) ServicesPortsLead() string {
+	return Catalog.Format(msgs.locale, "servicesPortsLead", nil)
+}
+
+// PortsStatRunning says "Running"
+// in the language the app shows.
+func PortsStatRunning() string { return In(i18n.Locale()).PortsStatRunning() }
+
+// PortsStatRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) PortsStatRunning() string {
+	return Catalog.Format(msgs.locale, "portsStatRunning", nil)
+}
+
+// PortsStatLoad says "Load"
+// in the language the app shows.
+func PortsStatLoad() string { return In(i18n.Locale()).PortsStatLoad() }
+
+// PortsStatLoad says "Load"
+// in the language of msgs.
+func (msgs Messages) PortsStatLoad() string {
+	return Catalog.Format(msgs.locale, "portsStatLoad", nil)
+}
+
+// PortsStatLoadRAM says "{mem} RAM"
+// in the language the app shows.
+func PortsStatLoadRAM(mem string) string { return In(i18n.Locale()).PortsStatLoadRAM(mem) }
+
+// PortsStatLoadRAM says "{mem} RAM"
+// in the language of msgs.
+func (msgs Messages) PortsStatLoadRAM(mem string) string {
+	return Catalog.Format(msgs.locale, "portsStatLoadRAM", map[string]any{"mem": mem})
+}
+
+// PortsTabDatabases says "DB"
+// in the language the app shows.
+func PortsTabDatabases() string { return In(i18n.Locale()).PortsTabDatabases() }
+
+// PortsTabDatabases says "DB"
+// in the language of msgs.
+func (msgs Messages) PortsTabDatabases() string {
+	return Catalog.Format(msgs.locale, "portsTabDatabases", nil)
+}
+
+// PortsTabK8s says "k8s"
+// in the language the app shows.
+func PortsTabK8s() string { return In(i18n.Locale()).PortsTabK8s() }
+
+// PortsTabK8s says "k8s"
+// in the language of msgs.
+func (msgs Messages) PortsTabK8s() string {
+	return Catalog.Format(msgs.locale, "portsTabK8s", nil)
+}
+
+// PortsColService says "Service & project"
+// in the language the app shows.
+func PortsColService() string { return In(i18n.Locale()).PortsColService() }
+
+// PortsColService says "Service & project"
+// in the language of msgs.
+func (msgs Messages) PortsColService() string {
+	return Catalog.Format(msgs.locale, "portsColService", nil)
+}
+
+// PortsColMetricsActions says "CPU / RAM · Actions"
+// in the language the app shows.
+func PortsColMetricsActions() string { return In(i18n.Locale()).PortsColMetricsActions() }
+
+// PortsColMetricsActions says "CPU / RAM · Actions"
+// in the language of msgs.
+func (msgs Messages) PortsColMetricsActions() string {
+	return Catalog.Format(msgs.locale, "portsColMetricsActions", nil)
+}
+
+// PortsQuickTitle says "Quick control"
+// in the language the app shows.
+func PortsQuickTitle() string { return In(i18n.Locale()).PortsQuickTitle() }
+
+// PortsQuickTitle says "Quick control"
+// in the language of msgs.
+func (msgs Messages) PortsQuickTitle() string {
+	return Catalog.Format(msgs.locale, "portsQuickTitle", nil)
+}
+
+// PortsQuickActions says "Fast actions"
+// in the language the app shows.
+func PortsQuickActions() string { return In(i18n.Locale()).PortsQuickActions() }
+
+// PortsQuickActions says "Fast actions"
+// in the language of msgs.
+func (msgs Messages) PortsQuickActions() string {
+	return Catalog.Format(msgs.locale, "portsQuickActions", nil)
+}
+
+// PortsQuickActionsBody says "Project scripts and k8s forwards stop in 1 click; external and Docker use a plan"
+// in the language the app shows.
+func PortsQuickActionsBody() string { return In(i18n.Locale()).PortsQuickActionsBody() }
+
+// PortsQuickActionsBody says "Project scripts and k8s forwards stop in 1 click; external and Docker use a plan"
+// in the language of msgs.
+func (msgs Messages) PortsQuickActionsBody() string {
+	return Catalog.Format(msgs.locale, "portsQuickActionsBody", nil)
+}
+
+// PortsQuickProtect says "System protection"
+// in the language the app shows.
+func PortsQuickProtect() string { return In(i18n.Locale()).PortsQuickProtect() }
+
+// PortsQuickProtect says "System protection"
+// in the language of msgs.
+func (msgs Messages) PortsQuickProtect() string {
+	return Catalog.Format(msgs.locale, "portsQuickProtect", nil)
+}
+
+// PortsQuickProtectBody says "Only your processes; system services are never touched"
+// in the language the app shows.
+func PortsQuickProtectBody() string { return In(i18n.Locale()).PortsQuickProtectBody() }
+
+// PortsQuickProtectBody says "Only your processes; system services are never touched"
+// in the language of msgs.
+func (msgs Messages) PortsQuickProtectBody() string {
+	return Catalog.Format(msgs.locale, "portsQuickProtectBody", nil)
+}
+
+// PortsQuickTray says "Always in tray"
+// in the language the app shows.
+func PortsQuickTray() string { return In(i18n.Locale()).PortsQuickTray() }
+
+// PortsQuickTray says "Always in tray"
+// in the language of msgs.
+func (msgs Messages) PortsQuickTray() string {
+	return Catalog.Format(msgs.locale, "portsQuickTray", nil)
+}
+
+// PortsQuickTrayBody says "The same live list in the menu bar"
+// in the language the app shows.
+func PortsQuickTrayBody() string { return In(i18n.Locale()).PortsQuickTrayBody() }
+
+// PortsQuickTrayBody says "The same live list in the menu bar"
+// in the language of msgs.
+func (msgs Messages) PortsQuickTrayBody() string {
+	return Catalog.Format(msgs.locale, "portsQuickTrayBody", nil)
+}
+
+// PortsUpdatedAgo says "Updated · {ago}"
+// in the language the app shows.
+func PortsUpdatedAgo(ago string) string { return In(i18n.Locale()).PortsUpdatedAgo(ago) }
+
+// PortsUpdatedAgo says "Updated · {ago}"
+// in the language of msgs.
+func (msgs Messages) PortsUpdatedAgo(ago string) string {
+	return Catalog.Format(msgs.locale, "portsUpdatedAgo", map[string]any{"ago": ago})
+}
+
+// PortsDbTag says "DB"
+// in the language the app shows.
+func PortsDbTag() string { return In(i18n.Locale()).PortsDbTag() }
+
+// PortsDbTag says "DB"
+// in the language of msgs.
+func (msgs Messages) PortsDbTag() string {
+	return Catalog.Format(msgs.locale, "portsDbTag", nil)
+}
+
+// PortsLocalService says "local service"
+// in the language the app shows.
+func PortsLocalService() string { return In(i18n.Locale()).PortsLocalService() }
+
+// PortsLocalService says "local service"
+// in the language of msgs.
+func (msgs Messages) PortsLocalService() string {
+	return Catalog.Format(msgs.locale, "portsLocalService", nil)
+}
+
+// ProjectTabRunServices says "Run & services"
+// in the language the app shows.
+func ProjectTabRunServices() string { return In(i18n.Locale()).ProjectTabRunServices() }
+
+// ProjectTabRunServices says "Run & services"
+// in the language of msgs.
+func (msgs Messages) ProjectTabRunServices() string {
+	return Catalog.Format(msgs.locale, "projectTabRunServices", nil)
+}
+
+// ProjectStatus says "Status"
+// in the language the app shows.
+func ProjectStatus() string { return In(i18n.Locale()).ProjectStatus() }
+
+// ProjectStatus says "Status"
+// in the language of msgs.
+func (msgs Messages) ProjectStatus() string {
+	return Catalog.Format(msgs.locale, "projectStatus", nil)
+}
+
+// ProjectStatusRunning says "Running :{port}"
+// in the language the app shows.
+func ProjectStatusRunning(port string) string { return In(i18n.Locale()).ProjectStatusRunning(port) }
+
+// ProjectStatusRunning says "Running :{port}"
+// in the language of msgs.
+func (msgs Messages) ProjectStatusRunning(port string) string {
+	return Catalog.Format(msgs.locale, "projectStatusRunning", map[string]any{"port": port})
+}
+
+// ProjectStatusRunningNoPort says "Running"
+// in the language the app shows.
+func ProjectStatusRunningNoPort() string { return In(i18n.Locale()).ProjectStatusRunningNoPort() }
+
+// ProjectStatusRunningNoPort says "Running"
+// in the language of msgs.
+func (msgs Messages) ProjectStatusRunningNoPort() string {
+	return Catalog.Format(msgs.locale, "projectStatusRunningNoPort", nil)
+}
+
+// ProjectCommitAgo says "commit {ago} · {message}"
+// in the language the app shows.
+func ProjectCommitAgo(ago string, message string) string {
+	return In(i18n.Locale()).ProjectCommitAgo(ago, message)
+}
+
+// ProjectCommitAgo says "commit {ago} · {message}"
+// in the language of msgs.
+func (msgs Messages) ProjectCommitAgo(ago string, message string) string {
+	return Catalog.Format(msgs.locale, "projectCommitAgo", map[string]any{"ago": ago, "message": message})
+}
+
+// ProjectScriptsSearch says "Search scripts…"
+// in the language the app shows.
+func ProjectScriptsSearch() string { return In(i18n.Locale()).ProjectScriptsSearch() }
+
+// ProjectScriptsSearch says "Search scripts…"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsSearch() string {
+	return Catalog.Format(msgs.locale, "projectScriptsSearch", nil)
+}
+
+// ProjectScriptsAndDbs says "Scripts & databases"
+// in the language the app shows.
+func ProjectScriptsAndDbs() string { return In(i18n.Locale()).ProjectScriptsAndDbs() }
+
+// ProjectScriptsAndDbs says "Scripts & databases"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsAndDbs() string {
+	return Catalog.Format(msgs.locale, "projectScriptsAndDbs", nil)
+}
+
+// ProjectScriptsAll says "All scripts →"
+// in the language the app shows.
+func ProjectScriptsAll() string { return In(i18n.Locale()).ProjectScriptsAll() }
+
+// ProjectScriptsAll says "All scripts →"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsAll() string {
+	return Catalog.Format(msgs.locale, "projectScriptsAll", nil)
+}
+
+// ProjectSkillsCount says "{count, plural, one {# skill} other {# skills}}"
+// in the language the app shows.
+func ProjectSkillsCount(count int) string { return In(i18n.Locale()).ProjectSkillsCount(count) }
+
+// ProjectSkillsCount says "{count, plural, one {# skill} other {# skills}}"
+// in the language of msgs.
+func (msgs Messages) ProjectSkillsCount(count int) string {
+	return Catalog.Format(msgs.locale, "projectSkillsCount", map[string]any{"count": count})
+}
+
+// ProjectDiskCleanLink says "Clean up →"
+// in the language the app shows.
+func ProjectDiskCleanLink() string { return In(i18n.Locale()).ProjectDiskCleanLink() }
+
+// ProjectDiskCleanLink says "Clean up →"
+// in the language of msgs.
+func (msgs Messages) ProjectDiskCleanLink() string {
+	return Catalog.Format(msgs.locale, "projectDiskCleanLink", nil)
+}
+
+// ProjectStartedAgo says "started {ago}"
+// in the language the app shows.
+func ProjectStartedAgo(ago string) string { return In(i18n.Locale()).ProjectStartedAgo(ago) }
+
+// ProjectStartedAgo says "started {ago}"
+// in the language of msgs.
+func (msgs Messages) ProjectStartedAgo(ago string) string {
+	return Catalog.Format(msgs.locale, "projectStartedAgo", map[string]any{"ago": ago})
+}
+
+// ProjectOpen says "Open"
+// in the language the app shows.
+func ProjectOpen() string { return In(i18n.Locale()).ProjectOpen() }
+
+// ProjectOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) ProjectOpen() string {
+	return Catalog.Format(msgs.locale, "projectOpen", nil)
+}
+
+// ProjectRunningBadge says "running"
+// in the language the app shows.
+func ProjectRunningBadge() string { return In(i18n.Locale()).ProjectRunningBadge() }
+
+// ProjectRunningBadge says "running"
+// in the language of msgs.
+func (msgs Messages) ProjectRunningBadge() string {
+	return Catalog.Format(msgs.locale, "projectRunningBadge", nil)
+}
+
+// ProjectScriptsCountShort says "{count, plural, one {# script} other {# scripts}}"
+// in the language the app shows.
+func ProjectScriptsCountShort(count int) string {
+	return In(i18n.Locale()).ProjectScriptsCountShort(count)
+}
+
+// ProjectScriptsCountShort says "{count, plural, one {# script} other {# scripts}}"
+// in the language of msgs.
+func (msgs Messages) ProjectScriptsCountShort(count int) string {
+	return Catalog.Format(msgs.locale, "projectScriptsCountShort", map[string]any{"count": count})
+}
+
+// TrayPopoverServicesCount says "{count, plural, one {# service} other {# services}}"
+// in the language the app shows.
+func TrayPopoverServicesCount(count int) string {
+	return In(i18n.Locale()).TrayPopoverServicesCount(count)
+}
+
+// TrayPopoverServicesCount says "{count, plural, one {# service} other {# services}}"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverServicesCount(count int) string {
+	return Catalog.Format(msgs.locale, "trayPopoverServicesCount", map[string]any{"count": count})
+}
+
+// TrayPopoverOpenShort says "Open"
+// in the language the app shows.
+func TrayPopoverOpenShort() string { return In(i18n.Locale()).TrayPopoverOpenShort() }
+
+// TrayPopoverOpenShort says "Open"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverOpenShort() string {
+	return Catalog.Format(msgs.locale, "trayPopoverOpenShort", nil)
+}
+
+// TrayPopoverAgentsSection says "Agents"
+// in the language the app shows.
+func TrayPopoverAgentsSection() string { return In(i18n.Locale()).TrayPopoverAgentsSection() }
+
+// TrayPopoverAgentsSection says "Agents"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverAgentsSection() string {
+	return Catalog.Format(msgs.locale, "trayPopoverAgentsSection", nil)
+}
+
+// TrayPopoverWaitingChip says "{count} waiting"
+// in the language the app shows.
+func TrayPopoverWaitingChip(count int) string { return In(i18n.Locale()).TrayPopoverWaitingChip(count) }
+
+// TrayPopoverWaitingChip says "{count} waiting"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverWaitingChip(count int) string {
+	return Catalog.Format(msgs.locale, "trayPopoverWaitingChip", map[string]any{"count": count})
+}
+
+// TrayPopoverTodayCost says "{cost} today"
+// in the language the app shows.
+func TrayPopoverTodayCost(cost string) string { return In(i18n.Locale()).TrayPopoverTodayCost(cost) }
+
+// TrayPopoverTodayCost says "{cost} today"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverTodayCost(cost string) string {
+	return Catalog.Format(msgs.locale, "trayPopoverTodayCost", map[string]any{"cost": cost})
+}
+
+// TrayPopoverRunningNow says "Running now"
+// in the language the app shows.
+func TrayPopoverRunningNow() string { return In(i18n.Locale()).TrayPopoverRunningNow() }
+
+// TrayPopoverRunningNow says "Running now"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverRunningNow() string {
+	return Catalog.Format(msgs.locale, "trayPopoverRunningNow", nil)
+}
+
+// TrayPopoverRunningHint says "Managed in 1 click"
+// in the language the app shows.
+func TrayPopoverRunningHint() string { return In(i18n.Locale()).TrayPopoverRunningHint() }
+
+// TrayPopoverRunningHint says "Managed in 1 click"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverRunningHint() string {
+	return Catalog.Format(msgs.locale, "trayPopoverRunningHint", nil)
+}
+
+// TrayPopoverContextsOneClick says "Contexts · 1 click"
+// in the language the app shows.
+func TrayPopoverContextsOneClick() string { return In(i18n.Locale()).TrayPopoverContextsOneClick() }
+
+// TrayPopoverContextsOneClick says "Contexts · 1 click"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverContextsOneClick() string {
+	return Catalog.Format(msgs.locale, "trayPopoverContextsOneClick", nil)
+}
+
+// TrayPopoverColimaRunningShort says "Colima running"
+// in the language the app shows.
+func TrayPopoverColimaRunningShort() string { return In(i18n.Locale()).TrayPopoverColimaRunningShort() }
+
+// TrayPopoverColimaRunningShort says "Colima running"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverColimaRunningShort() string {
+	return Catalog.Format(msgs.locale, "trayPopoverColimaRunningShort", nil)
+}
+
+// TrayPopoverColimaStoppedShort says "Colima stopped"
+// in the language the app shows.
+func TrayPopoverColimaStoppedShort() string { return In(i18n.Locale()).TrayPopoverColimaStoppedShort() }
+
+// TrayPopoverColimaStoppedShort says "Colima stopped"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverColimaStoppedShort() string {
+	return Catalog.Format(msgs.locale, "trayPopoverColimaStoppedShort", nil)
+}
+
+// TrayPopoverAllServices says "All services & ports →"
+// in the language the app shows.
+func TrayPopoverAllServices() string { return In(i18n.Locale()).TrayPopoverAllServices() }
+
+// TrayPopoverAllServices says "All services & ports →"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverAllServices() string {
+	return Catalog.Format(msgs.locale, "trayPopoverAllServices", nil)
+}
+
+// TrayPopoverRightClickHint says "Right click — system menu"
+// in the language the app shows.
+func TrayPopoverRightClickHint() string { return In(i18n.Locale()).TrayPopoverRightClickHint() }
+
+// TrayPopoverRightClickHint says "Right click — system menu"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverRightClickHint() string {
+	return Catalog.Format(msgs.locale, "trayPopoverRightClickHint", nil)
+}
+
+// TrayPopoverGo says "Open"
+// in the language the app shows.
+func TrayPopoverGo() string { return In(i18n.Locale()).TrayPopoverGo() }
+
+// TrayPopoverGo says "Open"
+// in the language of msgs.
+func (msgs Messages) TrayPopoverGo() string {
+	return Catalog.Format(msgs.locale, "trayPopoverGo", nil)
+}
+
+// RadarCardTitle says "Active sessions radar"
+// in the language the app shows.
+func RadarCardTitle() string { return In(i18n.Locale()).RadarCardTitle() }
+
+// RadarCardTitle says "Active sessions radar"
+// in the language of msgs.
+func (msgs Messages) RadarCardTitle() string {
+	return Catalog.Format(msgs.locale, "radarCardTitle", nil)
+}
+
+// RadarSessionsCount says "{count, plural, one {# session} other {# sessions}}"
+// in the language the app shows.
+func RadarSessionsCount(count int) string { return In(i18n.Locale()).RadarSessionsCount(count) }
+
+// RadarSessionsCount says "{count, plural, one {# session} other {# sessions}}"
+// in the language of msgs.
+func (msgs Messages) RadarSessionsCount(count int) string {
+	return Catalog.Format(msgs.locale, "radarSessionsCount", map[string]any{"count": count})
+}
+
+// RadarActionGo says "Open"
+// in the language the app shows.
+func RadarActionGo() string { return In(i18n.Locale()).RadarActionGo() }
+
+// RadarActionGo says "Open"
+// in the language of msgs.
+func (msgs Messages) RadarActionGo() string {
+	return Catalog.Format(msgs.locale, "radarActionGo", nil)
+}
+
+// RadarActionDetails says "Details"
+// in the language the app shows.
+func RadarActionDetails() string { return In(i18n.Locale()).RadarActionDetails() }
+
+// RadarActionDetails says "Details"
+// in the language of msgs.
+func (msgs Messages) RadarActionDetails() string {
+	return Catalog.Format(msgs.locale, "radarActionDetails", nil)
+}
+
+// RadarHooksConnect says "Connect hooks…"
+// in the language the app shows.
+func RadarHooksConnect() string { return In(i18n.Locale()).RadarHooksConnect() }
+
+// RadarHooksConnect says "Connect hooks…"
+// in the language of msgs.
+func (msgs Messages) RadarHooksConnect() string {
+	return Catalog.Format(msgs.locale, "radarHooksConnect", nil)
+}
+
+// RadarHooksPrivacyLine says "Hearth reads only session status and folder — never prompts or chat content"
+// in the language the app shows.
+func RadarHooksPrivacyLine() string { return In(i18n.Locale()).RadarHooksPrivacyLine() }
+
+// RadarHooksPrivacyLine says "Hearth reads only session status and folder — never prompts or chat content"
+// in the language of msgs.
+func (msgs Messages) RadarHooksPrivacyLine() string {
+	return Catalog.Format(msgs.locale, "radarHooksPrivacyLine", nil)
+}
+
+// ProblemNotInstalledTitle says "{tool} is not installed"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when a required tool is not
+// installed at all.
+func ProblemNotInstalledTitle(tool string) string {
+	return In(i18n.Locale()).ProblemNotInstalledTitle(tool)
+}
+
+// ProblemNotInstalledTitle says "{tool} is not installed"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when a required tool is not
+// installed at all.
+func (msgs Messages) ProblemNotInstalledTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "problemNotInstalledTitle", map[string]any{"tool": tool})
+}
+
+// ProblemMissingVersionTitle says "{tool} is missing"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when other versions of a tool are
+// installed but the required version is missing.
+func ProblemMissingVersionTitle(tool string) string {
+	return In(i18n.Locale()).ProblemMissingVersionTitle(tool)
+}
+
+// ProblemMissingVersionTitle says "{tool} is missing"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when other versions of a tool are
+// installed but the required version is missing.
+func (msgs Messages) ProblemMissingVersionTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "problemMissingVersionTitle", map[string]any{"tool": tool})
+}
+
+// ProblemWrongActiveTitle says "Terminal runs {tool} {run} instead of {want}"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when the required version is
+// installed but another version runs in the project folder.
+func ProblemWrongActiveTitle(tool string, run string, want string) string {
+	return In(i18n.Locale()).ProblemWrongActiveTitle(tool, run, want)
+}
+
+// ProblemWrongActiveTitle says "Terminal runs {tool} {run} instead of {want}"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when the required version is
+// installed but another version runs in the project folder.
+func (msgs Messages) ProblemWrongActiveTitle(tool string, run string, want string) string {
+	return Catalog.Format(msgs.locale, "problemWrongActiveTitle", map[string]any{"tool": tool, "run": run, "want": want})
+}
+
+// ProblemNotInPathTitle says "{tool} is not on terminal PATH"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when a matching version is
+// installed but not on terminal PATH.
+func ProblemNotInPathTitle(tool string) string { return In(i18n.Locale()).ProblemNotInPathTitle(tool) }
+
+// ProblemNotInPathTitle says "{tool} is not on terminal PATH"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when a matching version is
+// installed but not on terminal PATH.
+func (msgs Messages) ProblemNotInPathTitle(tool string) string {
+	return Catalog.Format(msgs.locale, "problemNotInPathTitle", map[string]any{"tool": tool})
+}
+
+// ProblemRequiredBy says "Required by {file}"
+// in the language the app shows.
+//
+// Project warning banner metadata naming the file that requires the tool.
+func ProblemRequiredBy(file string) string { return In(i18n.Locale()).ProblemRequiredBy(file) }
+
+// ProblemRequiredBy says "Required by {file}"
+// in the language of msgs.
+//
+// Project warning banner metadata naming the file that requires the tool.
+func (msgs Messages) ProblemRequiredBy(file string) string {
+	return Catalog.Format(msgs.locale, "problemRequiredBy", map[string]any{"file": file})
+}
+
+// ProblemAlreadyInstalledMeta says "{version} is already installed"
+// in the language the app shows.
+//
+// Project warning banner metadata noting that the needed version is already
+// installed.
+func ProblemAlreadyInstalledMeta(version string) string {
+	return In(i18n.Locale()).ProblemAlreadyInstalledMeta(version)
+}
+
+// ProblemAlreadyInstalledMeta says "{version} is already installed"
+// in the language of msgs.
+//
+// Project warning banner metadata noting that the needed version is already
+// installed.
+func (msgs Messages) ProblemAlreadyInstalledMeta(version string) string {
+	return Catalog.Format(msgs.locale, "problemAlreadyInstalledMeta", map[string]any{"version": version})
+}
+
+// ProblemNotInstalledMeta says "Not installed on this computer"
+// in the language the app shows.
+//
+// Fallback project warning banner metadata when no source file is known and
+// no copy is installed.
+func ProblemNotInstalledMeta() string { return In(i18n.Locale()).ProblemNotInstalledMeta() }
+
+// ProblemNotInstalledMeta says "Not installed on this computer"
+// in the language of msgs.
+//
+// Fallback project warning banner metadata when no source file is known and
+// no copy is installed.
+func (msgs Messages) ProblemNotInstalledMeta() string {
+	return Catalog.Format(msgs.locale, "problemNotInstalledMeta", nil)
+}
+
+// ProblemInstalledMeta says "installed {installed} · terminal runs {run}"
+// in the language the app shows.
+//
+// Project warning banner metadata showing installed versions and what runs
+// in this folder.
+func ProblemInstalledMeta(installed string, run string) string {
+	return In(i18n.Locale()).ProblemInstalledMeta(installed, run)
+}
+
+// ProblemInstalledMeta says "installed {installed} · terminal runs {run}"
+// in the language of msgs.
+//
+// Project warning banner metadata showing installed versions and what runs
+// in this folder.
+func (msgs Messages) ProblemInstalledMeta(installed string, run string) string {
+	return Catalog.Format(msgs.locale, "problemInstalledMeta", map[string]any{"installed": installed, "run": run})
+}
+
+// ProblemInstalledNotInPathMeta says "installed {installed} · not on terminal PATH"
+// in the language the app shows.
+//
+// Project warning banner metadata when copies are installed but not active
+// on PATH.
+func ProblemInstalledNotInPathMeta(installed string) string {
+	return In(i18n.Locale()).ProblemInstalledNotInPathMeta(installed)
+}
+
+// ProblemInstalledNotInPathMeta says "installed {installed} · not on terminal PATH"
+// in the language of msgs.
+//
+// Project warning banner metadata when copies are installed but not active
+// on PATH.
+func (msgs Messages) ProblemInstalledNotInPathMeta(installed string) string {
+	return Catalog.Format(msgs.locale, "problemInstalledNotInPathMeta", map[string]any{"installed": installed})
+}
+
+// ProblemEngineDownTitle says "Docker is not running"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when the selected Docker context
+// engine does not answer.
+func ProblemEngineDownTitle() string { return In(i18n.Locale()).ProblemEngineDownTitle() }
+
+// ProblemEngineDownTitle says "Docker is not running"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when the selected Docker context
+// engine does not answer.
+func (msgs Messages) ProblemEngineDownTitle() string {
+	return Catalog.Format(msgs.locale, "problemEngineDownTitle", nil)
+}
+
+// ProblemEngineDownForFile says "Needed for {file}"
+// in the language the app shows.
+//
+// Project warning banner metadata when Docker is stopped and a Compose file
+// requires it.
+func ProblemEngineDownForFile(file string) string {
+	return In(i18n.Locale()).ProblemEngineDownForFile(file)
+}
+
+// ProblemEngineDownForFile says "Needed for {file}"
+// in the language of msgs.
+//
+// Project warning banner metadata when Docker is stopped and a Compose file
+// requires it.
+func (msgs Messages) ProblemEngineDownForFile(file string) string {
+	return Catalog.Format(msgs.locale, "problemEngineDownForFile", map[string]any{"file": file})
+}
+
+// ProblemEngineDownMeta says "Start it with “Prepare environment” or on the Docker page"
+// in the language the app shows.
+//
+// Fallback project warning banner metadata when the Docker engine is down.
+func ProblemEngineDownMeta() string { return In(i18n.Locale()).ProblemEngineDownMeta() }
+
+// ProblemEngineDownMeta says "Start it with “Prepare environment” or on the Docker page"
+// in the language of msgs.
+//
+// Fallback project warning banner metadata when the Docker engine is down.
+func (msgs Messages) ProblemEngineDownMeta() string {
+	return Catalog.Format(msgs.locale, "problemEngineDownMeta", nil)
+}
+
+// ProblemMultiTitle says "Environment not ready · {count, plural, one {# issue} other {# issues}}"
+// in the language the app shows.
+//
+// Two-line project warning banner heading when multiple environment issues
+// exist.
+func ProblemMultiTitle(count int) string { return In(i18n.Locale()).ProblemMultiTitle(count) }
+
+// ProblemMultiTitle says "Environment not ready · {count, plural, one {# issue} other {# issues}}"
+// in the language of msgs.
+//
+// Two-line project warning banner heading when multiple environment issues
+// exist.
+func (msgs Messages) ProblemMultiTitle(count int) string {
+	return Catalog.Format(msgs.locale, "problemMultiTitle", map[string]any{"count": count})
+}
+
+// ProblemItemNotInstalled says "{tool} not installed"
+// in the language the app shows.
+//
+// Short item in multi-issue project warning banner when a tool is not
+// installed.
+func ProblemItemNotInstalled(tool string) string {
+	return In(i18n.Locale()).ProblemItemNotInstalled(tool)
+}
+
+// ProblemItemNotInstalled says "{tool} not installed"
+// in the language of msgs.
+//
+// Short item in multi-issue project warning banner when a tool is not
+// installed.
+func (msgs Messages) ProblemItemNotInstalled(tool string) string {
+	return Catalog.Format(msgs.locale, "problemItemNotInstalled", map[string]any{"tool": tool})
+}
+
+// ProblemItemMissing says "{tool} missing"
+// in the language the app shows.
+//
+// Short item in multi-issue project warning banner when another version is
+// installed but the required one is missing.
+func ProblemItemMissing(tool string) string { return In(i18n.Locale()).ProblemItemMissing(tool) }
+
+// ProblemItemMissing says "{tool} missing"
+// in the language of msgs.
+//
+// Short item in multi-issue project warning banner when another version is
+// installed but the required one is missing.
+func (msgs Messages) ProblemItemMissing(tool string) string {
+	return Catalog.Format(msgs.locale, "problemItemMissing", map[string]any{"tool": tool})
+}
+
+// ProblemItemWrongVersion says "{tool} (runs {run})"
+// in the language the app shows.
+//
+// Short item in multi-issue project warning banner when the wrong version
+// is active in the folder.
+func ProblemItemWrongVersion(tool string, run string) string {
+	return In(i18n.Locale()).ProblemItemWrongVersion(tool, run)
+}
+
+// ProblemItemWrongVersion says "{tool} (runs {run})"
+// in the language of msgs.
+//
+// Short item in multi-issue project warning banner when the wrong version
+// is active in the folder.
+func (msgs Messages) ProblemItemWrongVersion(tool string, run string) string {
+	return Catalog.Format(msgs.locale, "problemItemWrongVersion", map[string]any{"tool": tool, "run": run})
+}
+
+// ProblemItemNotInPath says "{tool} (not on PATH)"
+// in the language the app shows.
+//
+// Short item in multi-issue project warning banner when a matching copy is
+// installed but not on PATH.
+func ProblemItemNotInPath(tool string) string { return In(i18n.Locale()).ProblemItemNotInPath(tool) }
+
+// ProblemItemNotInPath says "{tool} (not on PATH)"
+// in the language of msgs.
+//
+// Short item in multi-issue project warning banner when a matching copy is
+// installed but not on PATH.
+func (msgs Messages) ProblemItemNotInPath(tool string) string {
+	return Catalog.Format(msgs.locale, "problemItemNotInPath", map[string]any{"tool": tool})
+}
+
+// ProblemItemEngineDown says "Docker not running"
+// in the language the app shows.
+//
+// Short item in multi-issue project warning banner when the Docker engine
+// is stopped.
+func ProblemItemEngineDown() string { return In(i18n.Locale()).ProblemItemEngineDown() }
+
+// ProblemItemEngineDown says "Docker not running"
+// in the language of msgs.
+//
+// Short item in multi-issue project warning banner when the Docker engine
+// is stopped.
+func (msgs Messages) ProblemItemEngineDown() string {
+	return Catalog.Format(msgs.locale, "problemItemEngineDown", nil)
+}
+
+// PortsStatDev says "{count} dev"
+// in the language the app shows.
+//
+// Compact stat chip on Services & Ports showing the number of running dev
+// servers.
+func PortsStatDev(count int) string { return In(i18n.Locale()).PortsStatDev(count) }
+
+// PortsStatDev says "{count} dev"
+// in the language of msgs.
+//
+// Compact stat chip on Services & Ports showing the number of running dev
+// servers.
+func (msgs Messages) PortsStatDev(count int) string {
+	return Catalog.Format(msgs.locale, "portsStatDev", map[string]any{"count": count})
+}

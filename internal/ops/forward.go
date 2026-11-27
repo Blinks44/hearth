@@ -90,9 +90,14 @@ func RunForward(ctx context.Context, r run.Runner, lines kube.LinesFunc, env sys
 		}
 	})
 	started := false
-	err = runForward(watchCtx, lines, env, f, pod, func() {
+	var kubectlPID int
+	err = runForwardWithPID(watchCtx, lines, env, f, pod, func(pid int) {
+		kubectlPID = pid
+	}, func() {
 		started = true
-		ready(pod)
+		readyPod := pod
+		readyPod.PID = kubectlPID
+		ready(readyPod)
 	})
 	cancel(nil)
 	watch.Wait()
@@ -108,6 +113,10 @@ func RunForward(ctx context.Context, r run.Runner, lines kube.LinesFunc, env sys
 }
 
 func runForward(ctx context.Context, lines kube.LinesFunc, env sysenv.Env, f Forward, pod kube.ForwardPod, ready func()) error {
+	return runForwardWithPID(ctx, lines, env, f, pod, nil, ready)
+}
+
+func runForwardWithPID(ctx context.Context, lines kube.LinesFunc, env sysenv.Env, f Forward, pod kube.ForwardPod, onStart func(int), ready func()) error {
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
 	startup := time.AfterFunc(30*time.Second, func() { cancel(ErrForwardTimeout) })
@@ -115,7 +124,12 @@ func runForward(ctx context.Context, lines kube.LinesFunc, env sysenv.Env, f For
 
 	var stderr forwardOutput
 	prefix := "Forwarding from " + f.Address() + " -> "
-	err := lines(ctx, run.Cmd{Args: f.argv(pod), Env: env, Output: &stderr}, func(line string) {
+	err := lines(ctx, run.Cmd{
+		Args:    f.argv(pod),
+		Env:     env,
+		Output:  &stderr,
+		OnStart: onStart,
+	}, func(line string) {
 		if strings.HasPrefix(line, prefix) && startup.Stop() {
 			ready()
 		}

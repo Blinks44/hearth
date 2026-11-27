@@ -83,6 +83,9 @@ type Project struct {
 	// Git holds read-only repository status (branch, dirty count, remote,
 	// last commit) when Dir is inside a Git repository.
 	Git *GitInfo
+	// Scripts are runnable dev/build/task commands statically parsed from
+	// package.json, Makefile, justfile, Taskfile, mise.toml, etc.
+	Scripts []Script
 	// Texts are the version files Hearth may write, by name, as Read
 	// found them: an edit starts from them.
 	Texts map[string]string
@@ -202,6 +205,7 @@ func ReadWithEnv(dir string, env sysenv.Env) Project {
 			p.Requirements = append(p.Requirements, req)
 		}
 	}
+	readExtraComposeFiles(&p)
 	p.Instructions = ReadInstructions(dir)
 	readDatabases(&p)
 	readKube(&p)
@@ -225,6 +229,7 @@ func ReadWithEnv(dir string, env sysenv.Env) Project {
 	}
 	p.Readme = findReadme(dir)
 	p.Git = readGitInfo(dir, env)
+	readScripts(&p)
 	p.Changed = changed(p)
 	p.Skills = ai.ProjectSkills(dir)
 	mcp, errs := ai.ProjectMCP(dir, env)
@@ -243,6 +248,53 @@ func findReadme(dir string) string {
 		}
 	}
 	return ""
+}
+
+// IsComposeFile reports whether name is a standard Docker Compose file
+// (compose.yaml, docker-compose.yml, compose.dev.yaml, docker-compose.prod.yml, etc.).
+func IsComposeFile(name string) bool {
+	if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
+		return false
+	}
+	base := strings.TrimSuffix(strings.TrimSuffix(name, ".yaml"), ".yml")
+	return base == "compose" || base == "docker-compose" ||
+		strings.HasPrefix(base, "compose.") || strings.HasPrefix(base, "docker-compose.")
+}
+
+// IsComposeOverride reports whether name is a Compose override overlay file
+// automatically merged by Docker Compose with the primary compose file.
+func IsComposeOverride(name string) bool {
+	switch name {
+	case "compose.override.yaml", "compose.override.yml",
+		"docker-compose.override.yaml", "docker-compose.override.yml":
+		return true
+	}
+	return false
+}
+
+// readExtraComposeFiles discovers additional compose.*.yaml/yml and
+// docker-compose.*.yaml/yml files in the project root beyond the four
+// canonical names in readers.
+func readExtraComposeFiles(p *Project) {
+	entries, err := os.ReadDir(p.Dir)
+	if err != nil {
+		return
+	}
+	hasDockerReq := slices.ContainsFunc(p.Requirements, func(r Requirement) bool { return r.Tool == "docker" })
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !IsComposeFile(name) || slices.Contains(p.Files, name) {
+			continue
+		}
+		p.Files = append(p.Files, name)
+		if !hasDockerReq {
+			p.Requirements = append(p.Requirements, Requirement{Tool: "docker", File: name})
+			hasDockerReq = true
+		}
+	}
 }
 
 // Names are the names of the files and folders in a project folder that

@@ -305,6 +305,20 @@ type App struct {
 
 	CheckForwardPort func(port int, done func(int, error))
 	RunForward       func(f ops.Forward, ready func(kube.ForwardPod), done func(error)) (stop func())
+	// RunScript starts a project script in the background, streaming output
+	// lines via Window.Update, and returns a stop function that kills the
+	// process group cleanly.
+	RunScript func(spec ops.ScriptSpec, onStart func(pid int), onLines func([]containerlog.LogLine), done func(error)) (stop func())
+	// RadarSessions holds the latest merged active AI agent sessions.
+	RadarSessions       []inventory.ActiveAgentSession
+	RadarHooksInstalled map[string]bool
+	RadarRefreshing     bool
+	radarRefreshPending bool
+	popoverDockerCtxBtn ui.Handle
+	popoverKubeCtxBtn   ui.Handle
+	// RefreshRadar scans live AI agent processes and merges them with hook
+	// events and recent usage sessions off the UI thread.
+	RefreshRadar func(done func([]inventory.ActiveAgentSession))
 
 	// PlanPath makes, in the background, the plan that fixes dirs of
 	// entries, the terminal's PATH, all its problems when dirs is nil, and
@@ -411,11 +425,18 @@ type App struct {
 	kubeConfig          kubeConfigDialog
 	kubeApply           *kubeApplyDialog
 	forwards            []*portForward
-	portsTab            int    // the Ports page's quick filter: all, projects, network, docker
-	portsFilter         string // the Ports table's filter
-	portsFilterQuery    string // last ?filter= query applied to Ports
+	scriptRuns          []*scriptRun
+	scriptLogsKey       string          // active project script log panel key; "" when closed
+	scriptsExpanded     map[string]bool // project dirs with full script list expanded
+	scriptFilter        string          // search filter in project's Scripts card
+	scriptSourceFilter  string          // source file filter in project's Scripts card ("" = all)
+	scriptFilterDir     string          // project dir scriptFilter belongs to
+	portsTab            int             // the Services & Ports page's quick filter: all, dev servers, docker, db, k8s
+	portsFilter         string          // the Ports table's filter
+	portsFilterQuery    string          // last ?filter= query applied to Ports
 	portsRefreshing     bool
 	portsRefreshSeq     int
+	portsLastRefresh    time.Time
 	portsBusy           bool   // a Docker container stop plan is being built on Ports
 	portsErr            string // last Docker container stop error on Ports
 	projectTab          int    // the project detail page's tab: overview, services, ai, files
@@ -1284,4 +1305,122 @@ func (a *App) TriggerColima(start bool) {
 	if start && len(st.Docker.Colima.Profiles) == 0 && st.Docker.Colima.Path != "" && !st.Docker.Colima.Unreadable {
 		a.changeColima(*st.Docker.Colima, inventory.ColimaProfile{Name: "default"}, ops.ColimaStart, ops.ColimaLimits{})
 	}
+}
+
+// OpenAgents navigates the main window to the AI Agents page.
+func (a *App) OpenAgents() { a.router.Push("/ai/agents") }
+
+// OpenPorts navigates the main window to the Ports page.
+func (a *App) OpenPorts() { a.router.Push(portsPage) }
+
+// OpenProject navigates the main window to a project's page.
+func (a *App) OpenProject(dir string) {
+	a.scriptLogsKey = ""
+	if dir == "" {
+		a.router.Push("/projects")
+		return
+	}
+	a.router.Push(projectPath(dir))
+}
+
+// OpenProjectServices navigates directly to a project's Services tab.
+func (a *App) OpenProjectServices(dir string) {
+	a.scriptLogsKey = ""
+	if dir == "" {
+		a.router.Push("/projects")
+		return
+	}
+	a.projectTabDir = dir
+	a.projectTab = 1
+	a.router.Push(projectPath(dir))
+}
+
+// OpenProjectScriptLogs navigates to a project's Services tab with the given
+// script's log viewer expanded.
+func (a *App) OpenProjectScriptLogs(dir, source, name string) {
+	a.OpenProjectServices(dir)
+	a.scriptLogsKey = scriptRunKey(dir, source, name)
+}
+
+// OpenKube navigates the main window to the Kubernetes page.
+func (a *App) OpenKube() { a.router.Push(kubePage) }
+
+// NeedsLivePoll reports whether the currently visible page benefits from
+// lightweight background polling (ports, dev servers, or AI agent radar).
+func (a *App) NeedsLivePoll() bool {
+	if a.router == nil {
+		return false
+	}
+	switch a.router.Path() {
+	case portsPage, "/ai/agents":
+		return true
+	case projectPage:
+		return a.projectTab == 0 || a.projectTab == 1
+	default:
+		return false
+	}
+}
+
+// TodayUsageCostUSD returns today's estimated API cost across all AI coding
+// agents from cached local session usage (zero I/O).
+func (a *App) TodayUsageCostUSD() float64 {
+	if a.Snapshot == nil || len(a.Snapshot.Sessions) == 0 {
+		return 0
+	}
+	return a.usageSummary(time.Now(), 7).today.cost
+}
+
+// WaitingAgentsCount returns how many active AI sessions currently wait for
+// user approval or input.
+func (a *App) WaitingAgentsCount() int {
+	n := 0
+	for _, s := range a.RadarSessions {
+		if s.Status == inventory.AgentStatusWaiting {
+			n++
+		}
+	}
+	return n
+}
+
+// RefreshPortsNow triggers an asynchronous lightweight refresh of listening
+// ports and port-publishing Docker containers.
+func (a *App) RefreshPortsNow() { a.refreshPortsNow() }
+
+// PortsRefreshing reports whether a lightweight ports refresh is in flight.
+func (a *App) PortsRefreshing() bool { return a.portsRefreshing }
+
+// ClearPortsRefreshing clears the ports refresh spinner when a background
+// refresh is canceled or times out before delivering a result.
+func (a *App) ClearPortsRefreshing() {
+	a.portsRefreshing = false
+}
+
+// ClearRadarRefreshing clears the radar refresh spinner when a background
+// refresh is canceled or times out, and drains any coalesced pending refresh.
+func (a *App) ClearRadarRefreshing() {
+	a.RadarRefreshing = false
+	if a.radarRefreshPending {
+		a.radarRefreshPending = false
+		a.RefreshRadarNow()
+	}
+}
+
+// RefreshRadarNow triggers an asynchronous refresh of live AI agent sessions.
+func (a *App) RefreshRadarNow() {
+	if a.RefreshRadar == nil {
+		return
+	}
+	if a.RadarRefreshing {
+		a.radarRefreshPending = true
+		return
+	}
+	a.RadarRefreshing = true
+	a.RefreshRadar(func(sessions []inventory.ActiveAgentSession) {
+		a.RadarRefreshing = false
+		a.RadarSessions = sessions
+		if a.radarRefreshPending {
+			a.radarRefreshPending = false
+			a.RefreshRadarNow()
+		}
+	})
 }

@@ -798,6 +798,25 @@ func warningWith(c *ui.Context, text string, action func()) {
 	})
 }
 
+// warningBanner is a two-line warning banner with a semibold title, concise
+// metadata underneath, and an optional trailing action.
+func warningBanner(c *ui.Context, title, meta string, action func()) {
+	t := c.Theme()
+	pal := Colors(t)
+	ui.Row(c).Gap(12).Padding(11, 14).Radius(10).AlignItems(ui.Center).Background(pal.WarningSoft).Children(func() {
+		ui.Icon(c, Icon("triangle-alert")).Size(16, 16).Shrink(0).TextColor(t.Warning)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			ui.Text(c, title).FontSize(12.5).FontWeight(600).TextColor(pal.WarningText)
+			if meta != "" {
+				ui.Text(c, meta).FontSize(11.5).TextColor(pal.WarningText.Alpha(0.78))
+			}
+		})
+		if action != nil {
+			action()
+		}
+	})
+}
+
 // pathOrder returns the installations in the terminal's PATH, by index,
 // in its order.
 func pathOrder(ins []inventory.Installation) []int {

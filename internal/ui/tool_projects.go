@@ -134,7 +134,8 @@ func (a *App) toolProjectsTab(c *ui.Context, tool string, st inventory.ToolState
 			if pst.Checked {
 				if prob := statusProblem(pst); prob != "" {
 					ui.Box(c).Padding(0, 12, 10, 12).Children(func() {
-						warningRow(c, problemBanner([]projects.Status{pst}))
+						b := problemBanner([]projects.Status{pst})
+						warningBanner(c, b.Title, b.Meta, nil)
 					})
 				}
 			}

@@ -52,3 +52,33 @@ func TestDatabaseNoListenersDarwin(t *testing.T) {
 		t.Fatal(d)
 	}
 }
+
+func TestParseDarwinPSPGID(t *testing.T) {
+	raw := "  4769  4760  4678  1.4  145408  05:12 /opt/homebrew/bin/node /repo/node_modules/.bin/rsbuild dev\n"
+	meta := parseDarwinPS(raw)
+	m, ok := meta["4769"]
+	if !ok {
+		t.Fatalf("missing pid 4769 in %+v", meta)
+	}
+	if m.ppid != "4760" || m.pgid != "4678" || m.cpu != 1.4 || m.mem != 145408*1024 {
+		t.Fatalf("unexpected psMeta: %+v", m)
+	}
+	if len(m.args) < 2 || !strings.HasSuffix(m.args[1], "rsbuild") {
+		t.Fatalf("unexpected args: %+v", m.args)
+	}
+}
+
+func TestParseDarwinParentMapAndAncestors(t *testing.T) {
+	raw := "    1     0\n 27716     1\n 27740 27716\n 27780 27740\n 27803 27780\n"
+	parents := parseDarwinParentMap(raw)
+	got := walkAncestorPIDs("27803", parents, 12)
+	want := []string{"27780", "27740", "27716"}
+	if len(got) != len(want) {
+		t.Fatalf("walkAncestorPIDs got %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("walkAncestorPIDs[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}

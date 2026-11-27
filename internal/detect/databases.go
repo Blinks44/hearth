@@ -201,14 +201,14 @@ func kindNode(d *inventory.DockerState, cluster, role, image string, running boo
 // dockerDatabases asks only for selected non-secret container fields: it
 // finds the database containers, port-publishing containers, and kind's node containers.
 func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, endpoint string, d *inventory.DockerState) {
-	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"Service":{{json (.Label "com.docker.compose.service")}},"Kind":{{json (.Label "io.x-k8s.kind.cluster")}},"Role":{{json (.Label "io.x-k8s.kind.role")}}}`
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"ConfigFiles":{{json (.Label "com.docker.compose.project.config_files")}},"Service":{{json (.Label "com.docker.compose.service")}},"Kind":{{json (.Label "io.x-k8s.kind.cluster")}},"Role":{{json (.Label "io.x-k8s.kind.role")}}}`
 	res, err := r.Run(ctx, run.Cmd{Args: []string{exe, "--host", endpoint, "ps", "--all", "--no-trunc", "--format", format}, Timeout: 3 * time.Second, Env: append(slices.Clone(env), "DOCKER_CONTEXT=")})
 	if err != nil || res.ExitCode != 0 || res.Truncated {
 		d.DatabaseErr = true
 		return
 	}
 	for line := range strings.Lines(string(res.Stdout)) {
-		var row struct{ ID, Name, Image, State, Ports, Project, Service, Kind, Role string }
+		var row struct{ ID, Name, Image, State, Ports, Project, ConfigFiles, Service, Kind, Role string }
 		if json.Unmarshal([]byte(line), &row) != nil {
 			d.DatabaseErr = true
 			continue
@@ -216,12 +216,14 @@ func dockerDatabases(ctx context.Context, r run.Runner, env sysenv.Env, exe, end
 		ports, bindings := publishedTCPBindings(row.Ports)
 		if row.State == "running" && len(ports) > 0 {
 			d.PortContainers = append(d.PortContainers, inventory.DockerPortContainer{
-				ID:       row.ID,
-				Name:     row.Name,
-				Image:    row.Image,
-				Status:   row.State,
-				Ports:    ports,
-				Bindings: bindings,
+				ID:           row.ID,
+				Name:         row.Name,
+				Image:        row.Image,
+				Status:       row.State,
+				ComposeDir:   row.Project,
+				ComposeFiles: row.ConfigFiles,
+				Ports:        ports,
+				Bindings:     bindings,
 			})
 		}
 		if row.Kind != "" {
@@ -301,7 +303,7 @@ func RefreshPorts(ctx context.Context, r run.Runner, env sysenv.Env, snap *inven
 	if endpoint == "" {
 		return out
 	}
-	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}}}`
+	format := `{"ID":{{json .ID}},"Name":{{json .Names}},"Image":{{json .Image}},"State":{{json .State}},"Ports":{{json .Ports}},"Project":{{json (.Label "com.docker.compose.project.working_dir")}},"ConfigFiles":{{json (.Label "com.docker.compose.project.config_files")}}}`
 	res, err := r.Run(ctx, run.Cmd{
 		Args:    []string{st.Installations[active].Path, "--host", endpoint, "ps", "--no-trunc", "--format", format},
 		Timeout: 3 * time.Second,
@@ -313,7 +315,7 @@ func RefreshPorts(ctx context.Context, r run.Runner, env sysenv.Env, snap *inven
 	out.HasDocker = true
 	out.DockerSelected = st.Docker.Selected
 	for line := range strings.Lines(string(res.Stdout)) {
-		var row struct{ ID, Name, Image, State, Ports string }
+		var row struct{ ID, Name, Image, State, Ports, Project, ConfigFiles string }
 		if json.Unmarshal([]byte(line), &row) != nil {
 			continue
 		}
@@ -322,12 +324,14 @@ func RefreshPorts(ctx context.Context, r run.Runner, env sysenv.Env, snap *inven
 			continue
 		}
 		out.Containers = append(out.Containers, inventory.DockerPortContainer{
-			ID:       row.ID,
-			Name:     row.Name,
-			Image:    row.Image,
-			Status:   row.State,
-			Ports:    ports,
-			Bindings: bindings,
+			ID:           row.ID,
+			Name:         row.Name,
+			Image:        row.Image,
+			Status:       row.State,
+			ComposeDir:   row.Project,
+			ComposeFiles: row.ConfigFiles,
+			Ports:        ports,
+			Bindings:     bindings,
 		})
 	}
 	return out

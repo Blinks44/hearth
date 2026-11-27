@@ -2,10 +2,13 @@ package ui
 
 import (
 	"cmp"
+	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -17,7 +20,8 @@ import (
 	"github.com/Blinks44/hearth/locales"
 )
 
-// portsPage is "Ports": who listens on the computer's TCP ports.
+// portsPage is "Services & Ports": dev servers, containers, local databases,
+// k8s port-forwards, and listening TCP ports.
 const portsPage = "/system/ports"
 
 // portRow is a row of the page: a port and the process listening at it,
@@ -34,10 +38,10 @@ type portRow struct {
 }
 
 // dockerProcesses forward ports to containers: Docker Desktop's, OrbStack's,
-// Colima's, Podman's and WSL's.
+// Colima's, Kiri's, Podman's and WSL's.
 var dockerProcesses = []string{
 	"com.docker.backend", "com.docker.vpnkit", "vpnkit-bridge", "docker-proxy",
-	"OrbStack Helper", "OrbStack", "limactl", "gvproxy", "wslrelay",
+	"OrbStack Helper", "OrbStack", "limactl", "gvproxy", "wslrelay", "kiri",
 	"vfkit", "krunkit", "colima", "rootlesskit", "slirp4netns", "pasta", "podman",
 }
 
@@ -58,6 +62,24 @@ var serverProcesses = map[string]string{"postgres": "PostgreSQL", "mysqld": "MyS
 // serverPorts are the ports the servers listen on unless set otherwise.
 var serverPorts = map[string]string{"5432": "PostgreSQL", "3306": "MySQL", "6379": "Redis", "27017": "MongoDB", "1433": "SQL Server"}
 
+// isManagedForwardListener reports whether l belongs to an active
+// Hearth-managed kubectl port-forward already shown in the table.
+func (a *App) isManagedForwardListener(l inventory.DatabaseListener) bool {
+	proc := strings.ToLower(strings.TrimSuffix(l.Process, ".exe"))
+	for _, f := range a.forwards {
+		if f.ended {
+			continue
+		}
+		if f.pod.PID > 0 && l.PID == strconv.Itoa(f.pod.PID) {
+			return true
+		}
+		if proc == "kubectl" && strconv.Itoa(f.target.Local) == l.Port {
+			return true
+		}
+	}
+	return false
+}
+
 // portRows are the listeners of the last scan, one row for each port and
 // process, by port.
 func (a *App) portRows() []portRow {
@@ -65,8 +87,12 @@ func (a *App) portRows() []portRow {
 	if st.Databases == nil {
 		return nil
 	}
+	selfPID := strconv.Itoa(os.Getpid())
 	var rows []portRow
 	for _, l := range st.Databases.Listeners {
+		if (l.PID != "" && l.PID == selfPID) || a.isManagedForwardListener(l) {
+			continue
+		}
 		i := slices.IndexFunc(rows, func(r portRow) bool { return r.Port == l.Port && r.PID == l.PID })
 		if i < 0 {
 			rows = append(rows, portRow{DatabaseListener: l, Project: a.portProject(l.Dirs)})
@@ -274,6 +300,7 @@ func (a *App) applyPortsRefresh(res detect.PortsSnapshot) {
 	if a.Snapshot == nil {
 		return
 	}
+	a.portsLastRefresh = time.Now()
 	next := *a.Snapshot
 	next.Tools = slices.Clone(a.Snapshot.Tools)
 	updatedDB := false
@@ -349,6 +376,23 @@ func (a *App) isPortDocker(r portRow) bool {
 	return isDockerProcess(r.Process)
 }
 
+func (a *App) isPortDatabase(r portRow) bool {
+	if _, ok := a.portService(r); ok {
+		return true
+	}
+	return serverProcesses[strings.TrimSuffix(r.Process, ".exe")] != ""
+}
+
+func (a *App) activeForwards() []*portForward {
+	var out []*portForward
+	for _, f := range a.forwards {
+		if !f.ended {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
 func (a *App) planDockerPortStop(target docker.Target, ct inventory.DockerPortContainer) {
 	if a.BuildPlan == nil || a.op.running() || a.portsBusy {
 		return
@@ -373,23 +417,71 @@ func (a *App) planDockerPortStop(target docker.Target, ct inventory.DockerPortCo
 }
 
 func (a *App) portsView(c *ui.Context, p page) {
+	t := c.Theme()
+	pal := Colors(t)
 	ui.Column(c).Fill().Children(func() {
-		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() { a.portsRefreshButton(c) }})
-		t := c.Theme()
-		pal := Colors(t)
+		a.headerWith(c, p.title(), p.subtitle(), headerExtras{after: func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				if !a.portsLastRefresh.IsZero() && !narrow(c) {
+					chip(c, t.Success, pal.SuccessSoft, pal.SuccessText, locales.PortsUpdatedAgo(ago(c, a.portsLastRefresh)))
+				}
+				a.portsRefreshButton(c)
+			})
+		}})
+
 		rows := a.portRows()
-		projects, network, dockerCount := 0, 0, 0
+		forwards := a.activeForwards()
+		devCount, dockerCount, dbCount, networkCount := 0, 0, 0, 0
+		var totalCPU float64
+		var totalMem int64
+		seenPID := make(map[string]struct{}, len(rows))
 		for _, r := range rows {
-			if r.Project != "" {
-				projects++
-			}
 			if r.Network {
-				network++
+				networkCount++
 			}
-			if a.isPortDocker(r) {
+			if r.PID == "" {
+				totalCPU += r.CPUPercent
+				totalMem += r.MemoryBytes
+			} else if _, dup := seenPID[r.PID]; !dup {
+				seenPID[r.PID] = struct{}{}
+				totalCPU += r.CPUPercent
+				totalMem += r.MemoryBytes
+			}
+			switch {
+			case a.isPortDocker(r):
 				dockerCount++
+			case a.isPortDatabase(r):
+				dbCount++
+			case inventory.ClassifyDevServer(r.DatabaseListener).Role == inventory.RoleDevServer || a.scriptRunForListener(r.DatabaseListener) != nil:
+				devCount++
 			}
 		}
+		totalCount := len(rows) + len(forwards)
+
+		var breakdown []string
+		if devCount > 0 {
+			breakdown = append(breakdown, locales.PortsStatDev(devCount))
+		}
+		if dockerCount > 0 {
+			breakdown = append(breakdown, strconv.Itoa(dockerCount)+" Docker")
+		}
+		if dbCount > 0 {
+			breakdown = append(breakdown, strconv.Itoa(dbCount)+" "+locales.PortsTabDatabases())
+		}
+		if len(forwards) > 0 {
+			breakdown = append(breakdown, strconv.Itoa(len(forwards))+" "+locales.PortsTabK8s())
+		}
+		runningCaption := strings.Join(breakdown, " · ")
+		if runningCaption == "" {
+			runningCaption = locales.PortsListeningCaption()
+		}
+
+		loadVal := fmt.Sprintf("%.1f%% CPU", totalCPU)
+		loadCaption := locales.PortsStatLoadRAM("0 B")
+		if totalMem > 0 {
+			loadCaption = locales.PortsStatLoadRAM(formatBytes(totalMem))
+		}
+
 		ui.Scroll(c).Grow(1).Children(func() {
 			ui.Column(c).Gap(18).Padding(22, 28, 24, 28).Children(func() {
 				headRow(c, func() {
@@ -398,45 +490,54 @@ func (a *App) portsView(c *ui.Context, p page) {
 					})
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, p.title()).FontSize(22).FontWeight(600)
-						ui.Text(c, locales.PortsLead()).FontSize(12).TextColor(t.TextMuted)
+						ui.Text(c, locales.ServicesPortsLead()).FontSize(12).TextColor(t.TextMuted)
 					})
 				}, func() {
-					stateCard(c, pal.TextFaint, locales.PortsListening(), strconv.Itoa(len(rows)), locales.PortsListeningCaption())
-					stateCard(c, t.Success, locales.PortsInProjects(), strconv.Itoa(projects), locales.PortsInProjectsCaption())
-					stateCard(c, pal.Info, locales.PortsNetwork(), strconv.Itoa(network), locales.PortsNetworkCaption())
+					stateCard(c, pal.TextFaint, locales.PortsStatRunning(), strconv.Itoa(totalCount), runningCaption)
+					stateCard(c, t.Success, locales.PortsStatLoad(), loadVal, loadCaption)
+					stateCard(c, pal.Info, locales.PortsNetwork(), strconv.Itoa(networkCount), locales.PortsNetworkCaption())
 				})
+
 				if a.portsErr != "" {
 					warningRow(c, a.portsErr)
 				}
-				a.forwardList(c, "")
+
 				toolbar := ui.Row(c).Gap(10).AlignItems(ui.Center)
 				if narrow(c) {
 					toolbar.Wrap()
 				}
 				toolbar.Children(func() {
 					segments(c, "ports-tabs", &a.portsTab, []segment{
-						{locales.TabAll(), strconv.Itoa(len(rows))},
-						{locales.ProjectsTitle(), strconv.Itoa(projects)},
-						{locales.PortsTabNetwork(), strconv.Itoa(network)},
+						{locales.TabAll(), strconv.Itoa(totalCount)},
+						{locales.PortsTabDevServers(), strconv.Itoa(devCount)},
 						{"Docker", strconv.Itoa(dockerCount)},
+						{locales.PortsTabDatabases(), strconv.Itoa(dbCount)},
+						{locales.PortsTabK8s(), strconv.Itoa(len(forwards))},
 					})
 					ui.Box(c).Grow(1).Height(1)
 					ui.SearchField(c.Key("ports-filter"), &a.portsFilter).Bind(&a.filterField).Placeholder(locales.PortsFilter()).Height(controlHeight).Width(200)
 				})
+
 				columns(c, 12, func() {
 					if a.Snapshot == nil {
 						toolNote(c, locales.CleanupWaiting())
 						return
 					}
-					if st, _ := a.Snapshot.Tool("databases"); st.Databases != nil && len(st.Databases.Warnings) > 0 && len(rows) == 0 {
+					if st, _ := a.Snapshot.Tool("databases"); st.Databases != nil && len(st.Databases.Warnings) > 0 && totalCount == 0 {
 						warningRow(c, locales.DatabaseProbeFailed(strings.Join(st.Databases.Warnings, ", ")))
 					}
-					a.portsTable(c, rows)
+					a.portsTable(c, rows, forwards)
 				}, func() {
-					listCard(c, locales.PortsHow(), "", func() {
-						listRow(c, locales.PortsHowRead(), false, locales.PortsHowReadCaption(), func() {})
-						listRow(c, locales.PortsHowStop(), false, locales.PortsHowStopCaption(), func() {})
-						listRow(c, locales.PortsHowOthers(), false, locales.PortsHowOthersCaption(), func() {})
+					listCard(c, locales.PortsQuickTitle(), "", func() {
+						quickRow := func(title, body string) {
+							ui.Column(c).Gap(2).Padding(10, 14).BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+								ui.Text(c, title).FontSize(13).FontWeight(500).SingleLine()
+								ui.Text(c, body).FontSize(11.5).TextColor(pal.TextFaint).Wrap()
+							})
+						}
+						quickRow(locales.PortsQuickActions(), locales.PortsQuickActionsBody())
+						quickRow(locales.PortsQuickProtect(), locales.PortsQuickProtectBody())
+						quickRow(locales.PortsQuickTray(), locales.PortsQuickTrayBody())
 					})
 				})
 			})
@@ -444,134 +545,278 @@ func (a *App) portsView(c *ui.Context, p page) {
 	})
 }
 
-// portsTable lists the rows the filter keeps: the port, who listens and
-// where, the bind address, whether the network reaches it, and the actions.
-func (a *App) portsTable(c *ui.Context, rows []portRow) {
-	pal := Colors(c.Theme())
+// portsTable renders the unified Services & Ports table matching Sketch frame 56:
+// Port | Category tag + Service/Project + Subtitle | Metrics / Access + Actions.
+func (a *App) portsTable(c *ui.Context, rows []portRow, forwards []*portForward) {
+	t := c.Theme()
+	pal := Colors(t)
 	filter := strings.ToLower(strings.TrimSpace(a.portsFilter))
-	addrWidth := float32(108)
-	actionsWidth := float32(154)
 	isNarrow := narrow(c)
-	if isNarrow {
-		addrWidth = 88
-		actionsWidth = 104
-	}
 	target, hasDockerTarget := a.selectedDockerTarget()
 	shown := 0
-	ui.Column(c).Radius(12).Clip().BorderWidth(1).BorderColor(pal.Divider).Children(func() {
+
+	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.PortsColPort()).Width(56).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			ui.Text(c, locales.PortsColProcess()).Grow(1).MinWidth(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			ui.Text(c, locales.PortsColAddress()).Width(addrWidth).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			ui.Text(c, locales.PortsColAccess()).Width(86).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			ui.Box(c).Width(actionsWidth).Shrink(0).Height(1)
+			ui.Text(c, locales.PortsColPort()).Width(60).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.PortsColService()).Grow(1).MinWidth(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.PortsColMetricsActions()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
 		})
+
 		for _, r := range rows {
 			ct, hasContainer := a.portContainerFor(r)
+			dbSvc, hasDB := a.portService(r)
+			info := inventory.ClassifyDevServer(r.DatabaseListener)
+			managedRun := a.scriptRunForListener(r.DatabaseListener)
+			isDocker := hasContainer || isDockerProcess(r.Process)
+			isDB := !isDocker && (hasDB || serverProcesses[strings.TrimSuffix(r.Process, ".exe")] != "")
+			isDev := !isDocker && !isDB && (info.Role == inventory.RoleDevServer || managedRun != nil)
+
 			switch a.portsTab {
 			case 1:
-				if r.Project == "" {
+				if !isDev {
 					continue
 				}
 			case 2:
-				if !r.Network {
+				if !isDocker {
 					continue
 				}
 			case 3:
-				if !hasContainer && !isDockerProcess(r.Process) {
+				if !isDB {
 					continue
 				}
+			case 4:
+				continue // k8s tab shows port-forwards below
 			}
+
 			about, plan, stoppable := a.portAbout(r)
 			canDocker := hasContainer && a.canOpenDockerContainer()
 			canStopDocker := hasContainer && hasDockerTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running() && !a.portsBusy
 			addrsFull := strings.Join(r.Addresses, ", ")
-			if filter != "" && !strings.Contains(strings.ToLower(r.Port+" "+r.Process+" "+about+" "+addrsFull+" "+ct.Image), filter) {
+			searchBlob := strings.ToLower(r.Port + " " + r.Process + " " + info.Kind + " " + about + " " + addrsFull + " " + ct.Name + " " + ct.Image + " " + dbSvc.Kind + " " + dbSvc.Service)
+			if managedRun != nil {
+				searchBlob += " " + strings.ToLower(managedRun.script.Name+" "+filepath.Base(managedRun.dir))
+			}
+			if filter != "" && !strings.Contains(searchBlob, filter) {
 				continue
 			}
+
 			shown++
 			port := r.Port
 			hostAddr := "localhost:" + port
-			scheme := "http://"
-			if port == "443" || port == "8443" {
-				scheme = "https://"
-			}
-			httpURL := scheme + hostAddr
-			ui.Row(c.Key("port:"+r.Port+":"+r.PID)).Gap(12).Padding(6, 16).MinHeight(44).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-				ui.Text(c, r.Port).Font(FontMono).FontSize(13).Width(56).Shrink(0).SingleLine()
-				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-					clipped(c, cmp.Or(r.Process, "—")).FontSize(13)
-					clipped(c, about).FontSize(10.5).TextColor(pal.TextFaint)
-				})
-				addrEl := clipped(c, portBindAddress(r.Addresses)).Font(FontMono).FontSize(11).TextColor(pal.MonoText).Width(addrWidth).Shrink(0)
-				if addrsFull != "" {
-					addrEl.Tooltip(addrsFull)
+			httpURL := listenerURL(port)
+			httpOpenable := (info.HTTPOpenable || managedRun != nil) && !nonHTTPPorts[port]
+
+			// Determine colored category tag & primary display title matching Sketch 56.
+			var tagText string
+			var tagBg, tagFg ui.Color
+			title := cmp.Or(r.Process, "—")
+			switch {
+			case isDocker:
+				tagText, tagBg, tagFg = "Docker", pal.InfoSoft, pal.InfoText
+				if hasContainer && ct.Name != "" {
+					title = strings.TrimPrefix(ct.Name, "/")
 				}
-				ui.Row(c).Width(86).Shrink(0).AlignItems(ui.Center).Children(func() {
-					if r.Network {
-						chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip())
-					} else {
-						chip(c, pal.TextFaint, pal.Muted, pal.MonoText, "localhost")
+			case isDB:
+				tagText, tagBg, tagFg = locales.PortsDbTag(), pal.SuccessSoft, pal.SuccessText
+				if hasDB && dbSvc.Kind != "" {
+					title = dbSvc.Kind
+					if dbSvc.Version != "" {
+						major, _, _ := strings.Cut(dbSvc.Version, ".")
+						if major != "" {
+							title += " " + major
+						}
 					}
-				})
-				// Contextual actions sit on the left; always-present Copy and
-				// More actions stay in fixed right-aligned columns.
-				ui.Row(c).Width(actionsWidth).Gap(2).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
-					if !isNarrow && !nonHTTPPorts[port] {
-						iconButton(c.Key("port-open"), "external-link", locales.PortsOpenBrowser()).OnClick(func() {
-							c.OpenURL(httpURL)
+				} else if kind := serverProcesses[strings.TrimSuffix(r.Process, ".exe")]; kind != "" {
+					title = kind
+				}
+			case isDev:
+				tagText, tagBg, tagFg = cmp.Or(info.Kind, "Dev"), pal.AccentSoft, pal.AccentInk
+				if managedRun != nil {
+					title = filepath.Base(managedRun.dir)
+					if managedRun.script.Name != "" && !strings.EqualFold(managedRun.script.Name, "dev") {
+						title += " · " + managedRun.script.Name
+					}
+				} else if r.Project != "" {
+					title = filepath.Base(r.Project)
+				}
+			}
+
+			// Subtitle: keep informative context (bind addr, project/command/container/service).
+			bindStr := portBindAddress(r.Addresses)
+			sub := about
+			if bindStr != "" && bindStr != "—" && !strings.Contains(sub, bindStr) {
+				sub = sub + " · " + bindStr
+			}
+
+			metrics := formatCPUAndMem(r.CPUPercent, r.MemoryBytes)
+			portText := ":" + port
+
+			ui.Row(c.Key("port:"+r.Port+":"+r.PID)).Gap(12).Padding(8, 16).MinHeight(50).AlignItems(ui.Center).
+				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, portText).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
+
+				ui.Row(c).Grow(1).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
+					if tagText != "" {
+						ui.Box(c).Width(62).Shrink(0).Padding(3, 6).Radius(6).Center().Background(tagBg).Children(func() {
+							clipped(c, tagText).FontSize(11).FontWeight(500).TextColor(tagFg)
 						})
 					}
-					if canDocker {
-						iconButton(c.Key("port-docker"), "container", locales.OpenInDocker()).OnClick(func() {
-							a.openDockerContainer(ct.ID, ct.Name)
+					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+							clipped(c, title).MinWidth(0).FontSize(13).FontWeight(500)
+							if managedRun != nil {
+								aiTag(c, locales.PortsManagedByHearth(), pal.SuccessSoft, pal.SuccessText).Shrink(0)
+							}
 						})
-					}
-					if !isNarrow && r.Project != "" {
-						iconButton(c.Key("port-project"), "folder-open", locales.OpenProject()).OnClick(func() {
-							a.router.Push(projectPath(r.Project))
-						})
-					}
-					if canStopDocker {
-						ctCopy := ct
-						iconButton(c.Key("port-stop-docker"), "square", locales.DatabaseStopContainer()).OnClick(func() {
-							a.planDockerPortStop(target, ctCopy)
-						})
-					} else if stoppable {
-						iconButton(c.Key("port-stop"), "square", locales.PortsStop()).OnClick(func() {
-							a.Propose(plan)
-						})
-					}
-					iconButton(c.Key("port-copy"), "copy", locales.PortsCopyAddress(port)).OnClick(func() {
-						c.WriteClipboard(hostAddr)
-						c.Toast(locales.PortsAddressCopied(port))
+						subTip := sub
+						if len(r.Addresses) > 2 && addrsFull != "" {
+							subTip = about + " · " + addrsFull
+						}
+						ui.Text(c, sub).SingleLine().FontSize(11).TextColor(pal.TextFaint).Tooltip(subTip)
 					})
-					iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) {
-						if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
-							c.WriteClipboard(hostAddr)
-							c.Toast(locales.PortsAddressCopied(port))
+				})
+
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
+					if !isNarrow && metrics != "" {
+						ui.Text(c, metrics).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
+					}
+					if r.Network {
+						if !stoppable && !canStopDocker && managedRun == nil && metrics == "" && bindStr != "" && bindStr != "—" {
+							ui.Text(c, bindStr).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
 						}
-						if menu.Item(locales.PortsOpenBrowser()).Chosen() {
-							c.OpenURL(httpURL)
+						if !isNarrow || (!stoppable && !canStopDocker && managedRun == nil) {
+							chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip())
 						}
-						if canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
-							a.openDockerContainer(ct.ID, ct.Name)
+					}
+
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+						if !isNarrow && managedRun != nil {
+							runCopy := managedRun
+							subtleSquareIconButton(c, "port-logs", "scroll-text", locales.PortsOpenLogs(), 26, func() {
+								a.OpenProjectScriptLogs(runCopy.dir, runCopy.script.Source, runCopy.script.Name)
+							})
+							subtleSquareIconButton(c, "port-restart", "refresh-cw", locales.ProjectScriptsRestart(), 26, func() {
+								a.restartScript(runCopy)
+							})
 						}
-						if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
-							a.router.Push(projectPath(r.Project))
+						if !isNarrow && httpOpenable && (r.Own || isDocker || managedRun != nil) {
+							subtleSquareIconButton(c, "port-open", "external-link", locales.PortsOpenBrowser(), 26, func() {
+								c.OpenURL(httpURL)
+							})
 						}
-						if canStopDocker && menu.Item(locales.DatabaseStopContainer()).Chosen() {
-							a.planDockerPortStop(target, ct)
+						if canDocker {
+							subtleSquareIconButton(c, "port-docker", "container", locales.OpenInDocker(), 26, func() {
+								a.openDockerContainer(ct.ID, ct.Name)
+							})
 						}
-						if stoppable && menu.Item(locales.PortsStop()).Chosen() {
-							a.Propose(plan)
+						if !isNarrow && managedRun == nil && r.Project != "" {
+							subtleSquareIconButton(c, "port-project", "folder-open", locales.OpenProject(), 26, func() {
+								a.router.Push(projectPath(r.Project))
+							})
 						}
+						switch {
+						case managedRun != nil:
+							runCopy := managedRun
+							dangerIconButton(c, "port-stop-managed", "square", locales.ProjectScriptsStop(), 26, func() {
+								a.stopScript(runCopy)
+							})
+						case canStopDocker:
+							ctCopy := ct
+							dangerIconButton(c, "port-stop-docker", "square", locales.DatabaseStopContainer(), 26, func() {
+								a.planDockerPortStop(target, ctCopy)
+							})
+						case stoppable:
+							dangerIconButton(c, "port-stop", "square", locales.PortsStop(), 26, func() {
+								a.Propose(plan)
+							})
+						}
+						iconButton(c, "ellipsis", locales.MoreActions()).Size(26, 26).Menu(func(menu *ui.Menu) {
+							if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
+								c.WriteClipboard(hostAddr)
+								c.Toast(locales.PortsAddressCopied(port))
+							}
+							if menu.Item(locales.PortsOpenBrowser()).Chosen() {
+								c.OpenURL(httpURL)
+							}
+							if managedRun != nil {
+								if menu.Item(locales.PortsOpenLogs()).Chosen() {
+									a.OpenProjectScriptLogs(managedRun.dir, managedRun.script.Source, managedRun.script.Name)
+								}
+								if menu.Item(locales.ProjectScriptsRestart()).Chosen() {
+									a.restartScript(managedRun)
+								}
+								if menu.Item(locales.ProjectScriptsStop()).Chosen() {
+									a.stopScript(managedRun)
+								}
+							}
+							if canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
+								a.openDockerContainer(ct.ID, ct.Name)
+							}
+							if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
+								a.router.Push(projectPath(r.Project))
+							}
+							if canStopDocker && menu.Item(locales.DatabaseStopContainer()).Chosen() {
+								a.planDockerPortStop(target, ct)
+							}
+							if managedRun == nil && stoppable && menu.Item(locales.PortsStop()).Chosen() {
+								a.Propose(plan)
+							}
+						})
 					})
 				})
 			})
 		}
+
+		// Active Kubernetes port-forwards (inline in table under All and k8s tabs).
+		if a.portsTab == 0 || a.portsTab == 4 {
+			for _, fwd := range forwards {
+				f := fwd
+				portStr := strconv.Itoa(f.target.Local)
+				title := f.target.Name
+				if f.target.Context != "" {
+					title = f.target.Context + " · " + f.target.Name
+				}
+				sub := "kubectl port-forward → :" + strconv.Itoa(f.target.Remote)
+				if filter != "" && !strings.Contains(strings.ToLower(portStr+" k8s "+title+" "+sub), filter) {
+					continue
+				}
+				shown++
+				httpURL := listenerURL(portStr)
+				ui.Row(c.Key("port-fwd:"+portStr)).Gap(12).Padding(8, 16).MinHeight(50).AlignItems(ui.Center).
+					BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+					ui.Text(c, ":"+portStr).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
+					ui.Row(c).Grow(1).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
+						ui.Box(c).Width(62).Shrink(0).Padding(3, 6).Radius(6).Center().Background(pal.WarningSoft).Children(func() {
+							ui.Text(c, "k8s").FontSize(11).FontWeight(500).TextColor(pal.WarningText).SingleLine()
+						})
+						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+							clipped(c, title).FontSize(13).FontWeight(500)
+							clipped(c, sub).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+						})
+					})
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
+						if f.stopping {
+							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.KubeForwardStopping())
+						} else {
+							if !nonHTTPPorts[portStr] {
+								subtleSquareIconButton(c, "fwd-open:"+portStr, "external-link", locales.PortsOpenBrowser(), 26, func() {
+									c.OpenURL(httpURL)
+								})
+							}
+							if f.stop != nil {
+								dangerIconButton(c, "fwd-stop:"+portStr, "square", locales.ProjectScriptsStop(), 26, func() {
+									f.stopping = true
+									f.stop()
+								})
+							}
+						}
+					})
+				})
+			}
+		}
+
 		switch {
-		case len(rows) == 0:
+		case len(rows) == 0 && len(forwards) == 0:
 			cardNote(c, locales.PortsNone())
 		case shown == 0:
 			cardNote(c, locales.NothingMatches())
