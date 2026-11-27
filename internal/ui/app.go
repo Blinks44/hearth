@@ -889,7 +889,7 @@ var (
 func (a *App) sidebar(c *ui.Context, vibrant bool) {
 	t := c.Theme()
 	pal := Colors(t)
-	side := ui.Column(c).Width(244).Shrink(0).Padding(0, 10, 12, 10)
+	side := ui.Column(c).Width(244).Shrink(0).Padding(0, 14, 12, 10)
 	if !vibrant {
 		side.Background(pal.Sidebar)
 	}
@@ -903,7 +903,7 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 		}
 		brand(c, a.Machine)
 		a.searchButton(c)
-		ui.Scroll(c).Grow(1).Margin(0, -8, 0, 0).Children(func() {
+		ui.Scroll(c).Grow(1).Margin(0, -14, 0, 0).Children(func() {
 			ui.Column(c).Gap(1).Padding(0, 14, 0, 0).Children(func() {
 				a.item(c, overview, nil)
 				a.item(c, projectsPage, func() {
