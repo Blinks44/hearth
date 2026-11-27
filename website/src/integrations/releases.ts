@@ -90,6 +90,44 @@ export function parseGitHubRelease(payload: GitHubReleasePayload): ReleaseAssets
   };
 }
 
+export function extractTagFromLocation(location: string | null | undefined): string | null {
+  if (!location) {
+    return null;
+  }
+  const match = location.match(/\/releases\/tag\/([^/?#]+)/);
+  if (!match?.[1]) {
+    return null;
+  }
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+export function releaseAssetsForTag(rawTag: string): ReleaseAssets {
+  const tag = rawTag.trim();
+  const version = tag.replace(/^v/i, "") || site.defaultVersion;
+  const normalizedTag = tag || `v${version}`;
+  const encodedTag = encodeURIComponent(normalizedTag);
+  const base = `${site.releases}/download/${encodedTag}`;
+
+  return {
+    version,
+    tag: normalizedTag,
+    releaseUrl: `${site.releases}/tag/${encodedTag}`,
+    checksumsUrl: `${base}/SHA256SUMS.txt`,
+    macosDmg: `${base}/hearth-${version}.dmg`,
+    windowsAmd64: `${base}/hearth-setup-${version}-amd64.exe`,
+    windowsArm64: `${base}/hearth-setup-${version}-arm64.exe`,
+    linuxDebAmd64: `${base}/hearth_${version}_amd64.deb`,
+    linuxDebArm64: `${base}/hearth_${version}_arm64.deb`,
+    linuxTarAmd64: `${base}/hearth-${version}-linux-amd64.tar.gz`,
+    linuxTarArm64: `${base}/hearth-${version}-linux-arm64.tar.gz`,
+    isFallback: false,
+  };
+}
+
 export async function fetchLatestRelease(
   fetcher: typeof fetch = fetch,
   now = Date.now(),
@@ -102,6 +140,25 @@ export async function fetchLatestRelease(
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
+    // Prefer the unthrottled /releases/latest redirect so shared Cloudflare
+    // Workers egress IPs never trip api.github.com's 60 req/hr limit.
+    const redirectResponse = await fetcher(site.latestRelease, {
+      method: "HEAD",
+      redirect: "manual",
+      headers: {
+        "User-Agent": "hearth-website",
+      },
+      signal: controller.signal,
+    });
+    const redirectedTag =
+      extractTagFromLocation(redirectResponse.headers.get("location")) ??
+      extractTagFromLocation(redirectResponse.url);
+    if (redirectedTag) {
+      const resolved = releaseAssetsForTag(redirectedTag);
+      cached = { value: resolved, expiresAt: now + CACHE_TTL_MS };
+      return resolved;
+    }
+
     const response = await fetcher(
       `https://api.github.com/repos/${site.repoOwner}/${site.repoName}/releases/latest`,
       {

@@ -54,6 +54,38 @@ describe("releases loader", () => {
     expect(parsed.checksumsUrl).toBe("https://dl/SHA256SUMS.txt");
   });
 
+  it("resolves latest release directly from /releases/latest redirect without hitting GitHub API", async () => {
+    let calls = 0;
+    const fakeFetch = async (input: string | URL | Request) => {
+      calls++;
+      expect(String(input)).toBe(site.latestRelease);
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "https://github.com/Blinks44/hearth/releases/tag/v1.0.5" },
+      });
+    };
+
+    const first = await fetchLatestRelease(fakeFetch as typeof fetch, 10_000);
+    const second = await fetchLatestRelease(fakeFetch as typeof fetch, 10_000 + 60_000);
+
+    expect(calls).toBe(1);
+    expect(first.version).toBe("1.0.5");
+    expect(first.isFallback).toBe(false);
+    expect(first.macosDmg).toBe(
+      "https://github.com/Blinks44/hearth/releases/download/v1.0.5/hearth-1.0.5.dmg",
+    );
+    expect(first.windowsAmd64).toBe(
+      "https://github.com/Blinks44/hearth/releases/download/v1.0.5/hearth-setup-1.0.5-amd64.exe",
+    );
+    expect(first.linuxDebArm64).toBe(
+      "https://github.com/Blinks44/hearth/releases/download/v1.0.5/hearth_1.0.5_arm64.deb",
+    );
+    expect(first.checksumsUrl).toBe(
+      "https://github.com/Blinks44/hearth/releases/download/v1.0.5/SHA256SUMS.txt",
+    );
+    expect(second).toEqual(first);
+  });
+
   it("falls back cleanly to /releases/latest on HTTP 404 or 403", async () => {
     const fakeFetch = async () => new Response("Not Found", { status: 404 });
     const res = await fetchLatestRelease(fakeFetch as typeof fetch, 1000);
@@ -63,15 +95,18 @@ describe("releases loader", () => {
     expect(res.isFallback).toBe(true);
   });
 
-  it("caches successful responses within TTL without re-fetching", async () => {
+  it("falls back to GitHub API when redirect header is missing and caches result", async () => {
     let calls = 0;
-    const fakeFetch = async () => {
+    const fakeFetch = async (input: string | URL | Request) => {
       calls++;
+      if (String(input) === site.latestRelease) {
+        return new Response(null, { status: 200 });
+      }
       return new Response(
         JSON.stringify({
-          tag_name: "v1.0.0",
-          html_url: "https://github.com/Blinks44/hearth/releases/tag/v1.0.0",
-          assets: [{ name: "hearth-1.0.0.dmg", browser_download_url: "https://dl/hearth.dmg" }],
+          tag_name: "v1.0.5",
+          html_url: "https://github.com/Blinks44/hearth/releases/tag/v1.0.5",
+          assets: [{ name: "hearth-1.0.5.dmg", browser_download_url: "https://dl/hearth.dmg" }],
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
@@ -79,7 +114,7 @@ describe("releases loader", () => {
 
     const first = await fetchLatestRelease(fakeFetch as typeof fetch, 10_000);
     const second = await fetchLatestRelease(fakeFetch as typeof fetch, 10_000 + 60_000);
-    expect(calls).toBe(1);
+    expect(calls).toBe(2);
     expect(first.macosDmg).toBe("https://dl/hearth.dmg");
     expect(second.macosDmg).toBe("https://dl/hearth.dmg");
   });
