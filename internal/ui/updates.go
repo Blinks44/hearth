@@ -128,6 +128,9 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 			if pkg.Available == "" {
 				continue
 			}
+			if a.AppUpdateEnabled && m.ID == "brew" && pkg.Kind == "cask" && isHearthCask(pkg) {
+				continue
+			}
 			r := updateRow{key: m.Path + "\x00" + packageKey(pkg), title: pkg.Name, from: flatpakBuild(m.ID, pkg.Version), to: flatpakBuild(m.ID, pkg.Available), m: m, pkg: pkg}
 			r.choosable = ops.PackageManaged(m.ID)
 			// Only what the user asked for: others need the dependencies at
@@ -160,6 +163,15 @@ func (a *App) updateGroups(c *ui.Context) []updateGroup {
 		}
 	}
 	return out
+}
+
+func isHearthCask(pkg inventory.SystemPackage) bool {
+	if strings.EqualFold(pkg.Tap, "blinks44/tap") && strings.EqualFold(pkg.Name, "hearth") {
+		return true
+	}
+	return slices.ContainsFunc(pkg.Artifacts, func(p string) bool {
+		return strings.EqualFold(filepath.Base(p), "Hearth.app")
+	})
 }
 
 // updateChosen reports that r is checked: as the user set it, or as

@@ -551,3 +551,35 @@ func TestUpdatesCheckingPlaceholderAndAppUpdateCount(t *testing.T) {
 		t.Fatalf("sidebar Updates badge with app update = %q, want 1", texts)
 	}
 }
+
+func TestUpdatesHidesSelfCaskWhenUpdaterEnabled(t *testing.T) {
+	a := NewApp()
+	a.Snapshot = &inventory.Snapshot{
+		Tools: []inventory.ToolState{{
+			Tool: "packages",
+			PackageManagers: []inventory.PackageManager{{
+				ID: "brew", Name: "Homebrew", Path: "/opt/homebrew/bin/brew",
+				UpdatesKnown: true, ReasonsKnown: true,
+				Packages: []inventory.SystemPackage{
+					{Name: "hearth", Tap: "blinks44/tap", Kind: "cask", Version: "1.0.5", Available: "1.1.0", Artifacts: []string{"/Applications/Hearth.app"}},
+					{Name: "orbstack", Tap: "homebrew/cask", Kind: "cask", Version: "1.0.0", Available: "1.1.0", Artifacts: []string{"/Applications/OrbStack.app"}},
+				},
+			}},
+		}},
+	}
+	a.VersionLists = true
+	a.AppUpdateEnabled = true
+	a.router.Push(updatesPage)
+
+	tt := ui.NewTester(a.View, 1280, 820)
+	tt.Advance(time.Second)
+	hasTexts(t, tt, "orbstack")
+	if tt.HasText("hearth") {
+		t.Fatalf("Hearth's own Homebrew cask should be hidden on Updates when AppUpdateEnabled is true: %q", tt.Texts())
+	}
+
+	// Without the built-in updater, the cask update remains available.
+	a.AppUpdateEnabled = false
+	tt.Frame()
+	hasTexts(t, tt, "hearth", "orbstack")
+}

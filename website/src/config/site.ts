@@ -18,7 +18,7 @@ export const site = {
     "curl -fsSL https://github.com/Blinks44/hearth/releases/latest/download/install.sh | sh",
   windowsInstallCommand:
     "irm https://github.com/Blinks44/hearth/releases/latest/download/install.ps1 | iex",
-  defaultVersion: "1.1.0",
+  defaultVersion: "1.1.1",
   author: {
     name: "Sergey V.",
     x: "https://x.com/TheBlinks182",
