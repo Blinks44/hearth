@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/Blinks44/hearth/internal/inventory"
+	"github.com/Blinks44/hearth/locales"
 )
 
 // Every sidebar item opens its page, whose header shows its title; the
@@ -235,4 +236,55 @@ func TestSidebarNotFound(t *testing.T) {
 		t.Errorf("Rust is not in Languages while shown")
 	}
 	screenshot(t, tt, "sidebar-not-found-closed")
+}
+
+// The sidebar search button, scrolled navigation items, and footer Settings
+// item share the same left and right edges while keeping right clearance for
+// the scroll bar across locales and window sizes.
+func TestSidebarAlignment(t *testing.T) {
+	for _, locale := range []string{"en", "ru"} {
+		t.Run(locale, func(t *testing.T) {
+			i18n.SetLocaleFunc(func() string { return locale })
+			t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+
+			a := NewApp()
+			a.Locale = locale
+			a.Snapshot = found("node", "bun", "python", "php")
+			tt := ui.NewTester(a.View, 1280, 820)
+
+			for _, sz := range [][2]int{{1280, 820}, {1000, 680}} {
+				tt.SetSize(sz[0], sz[1])
+				tt.Frame()
+
+				findSidebarButton := func(name string) ui.Rect {
+					t.Helper()
+					for _, info := range tt.AccessAll() {
+						if info.Role == ui.RoleButton && info.Name == name && info.Bounds.X < 244 {
+							return info.Bounds
+						}
+					}
+					t.Fatalf("locale %s size %v: sidebar button %q not found", locale, sz, name)
+					return ui.Rect{}
+				}
+
+				searchRect := findSidebarButton(locales.SearchPlaceholder())
+				overviewRect := findSidebarButton(locales.OverviewTitle())
+				projectsRect := findSidebarButton(locales.ProjectsTitle())
+				settingsRect := findSidebarButton(locales.SettingsTitle())
+
+				for name, r := range map[string]ui.Rect{
+					"overview": overviewRect,
+					"projects": projectsRect,
+					"settings": settingsRect,
+				} {
+					if r.X != searchRect.X || r.W != searchRect.W {
+						t.Errorf("locale %s size %v: %s bounds %+v != search bounds %+v", locale, sz, name, r, searchRect)
+					}
+				}
+				if right := searchRect.X + searchRect.W; right > 232 {
+					t.Errorf("locale %s size %v: sidebar right edge = %v, leaves insufficient scrollbar clearance inside 244px sidebar", locale, sz, right)
+				}
+			}
+		})
+	}
 }
