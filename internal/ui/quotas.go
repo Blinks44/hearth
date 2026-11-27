@@ -447,6 +447,10 @@ func (a *App) quotasProviderGrid(c *ui.Context, providers []aiquota.ProviderQuot
 	t := c.Theme()
 	pal := Colors(t)
 	if len(providers) == 0 {
+		if a.quotasTab == 0 {
+			a.quotasEmptyState(c)
+			return
+		}
 		ui.Column(c.Key("quotas-filter-empty")).Padding(28, 20).Radius(12).
 			Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).Center().Gap(6).Children(func() {
 			ui.Icon(c, Icon("gauge")).Size(22, 22).TextColor(pal.TextFaint)

@@ -374,12 +374,7 @@ func (a *App) project(c *ui.Context, dir string) {
 									unmetCount++
 								}
 							}
-							if unmetCount > 1 && a.Snapshot != nil && a.BuildPlan != nil {
-								ui.Button(c.Key("banner-prepare"), locales.PrepareButton()).
-									Background(c.Theme().Text).TextColor(c.Theme().Background).BorderColor(c.Theme().Text).
-									Disabled(a.preparing != nil).
-									OnClick(func() { a.prepareProject(dir) })
-							} else if unmetCount == 1 && firstUnmet.Tool != "" {
+							if unmetCount == 1 && firstUnmet.Tool != "" {
 								if _, run, ok := a.projectInstallAction(firstUnmet, a.proposeOrSay); ok {
 									// Dark, as in the design: the page's one accent
 									// stays for the header's action.
@@ -394,19 +389,7 @@ func (a *App) project(c *ui.Context, dir string) {
 						a.requirementTable(c, statuses)
 					}
 					a.projectServicesSummaryCard(c, p)
-					a.projectDockerCard(c, p)
-					a.projectDatabasesCard(c, p)
-					a.projectKubeCard(c, p)
-					a.projectDiskCard(c, p)
-					if narrow(c) {
-						a.aiCard(c, p)
-						a.filesCard(c, p)
-					} else {
-						ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
-							ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.aiCard(c, p) })
-							ui.Column(c).Grow(1).Basis(0).MinWidth(0).Children(func() { a.filesCard(c, p) })
-						})
-					}
+					a.projectOverviewCards(c, p)
 				}
 			})
 		})
@@ -455,6 +438,110 @@ func projectMatches(p projects.Project, statuses []projects.Status, q string) bo
 	return false
 }
 
+type projectCardSlot struct {
+	weight int
+	render func()
+}
+
+// projectOverviewCards arranges the project's secondary cards (Docker Compose,
+// databases, Kubernetes, disk, AI, files) into a height-balanced 2-column grid
+// on standard windows and a single column on narrow windows.
+func (a *App) projectOverviewCards(c *ui.Context, p projects.Project) {
+	const cardOverhead = 64 // header (44px) + vertical gap between cards
+	var cards []projectCardSlot
+	if stacks := composeProjects(p); len(stacks) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(stacks)*48, render: func() { a.projectDockerCard(c, p) }})
+	}
+	if len(p.Databases) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(p.Databases)*54, render: func() { a.projectDatabasesCard(c, p) }})
+	}
+	if _, linked := a.KubeLinks[p.Dir]; linked || len(p.Kube) > 0 {
+		rows := 1
+		if len(p.Kube) > 0 {
+			rows++
+		}
+		if linked {
+			rows++
+		}
+		cards = append(cards, projectCardSlot{weight: cardOverhead + rows*54, render: func() { a.projectKubeCard(c, p) }})
+	}
+	if len(p.Installs) > 0 {
+		cards = append(cards, projectCardSlot{weight: cardOverhead + len(p.Installs)*42, render: func() { a.projectDiskCard(c, p) }})
+	}
+	cards = append(cards, projectCardSlot{weight: cardOverhead + max(1, len(p.AI))*52, render: func() { a.aiCard(c, p) }})
+	fileRows := len(p.Files) + len(p.Errs)
+	filesH := cardOverhead + 44
+	if fileRows > 0 {
+		filesH = cardOverhead + fileRows*66
+	}
+	cards = append(cards, projectCardSlot{weight: filesH, render: func() { a.filesCard(c, p) }})
+
+	if narrow(c) || len(cards) <= 1 {
+		for _, card := range cards {
+			card.render()
+		}
+		return
+	}
+	left, right := balanceProjectCards(cards)
+	ui.Row(c).Gap(18).AlignItems(ui.Start).Children(func() {
+		ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(18).Children(func() {
+			for _, card := range left {
+				card.render()
+			}
+		})
+		ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(18).Children(func() {
+			for _, card := range right {
+				card.render()
+			}
+		})
+	})
+}
+
+// balanceProjectCards splits up to 6 cards into two non-empty columns while
+// preserving relative order in each column and minimizing column weight skew.
+func balanceProjectCards(cards []projectCardSlot) (left, right []projectCardSlot) {
+	n := len(cards)
+	if n <= 1 {
+		return cards, nil
+	}
+	bestMask := 1
+	bestDiff := int(^uint(0) >> 1)
+	bestLeftCount := 0
+	// Fix card 0 in the left column (bit 0 = 1) to avoid mirror duplicates.
+	limit := 1 << n
+	for mask := 1; mask < limit; mask += 2 {
+		if mask == limit-1 {
+			continue
+		}
+		lw, rw, lc := 0, 0, 0
+		for i, card := range cards {
+			if mask&(1<<i) != 0 {
+				lw += card.weight
+				lc++
+			} else {
+				rw += card.weight
+			}
+		}
+		diff := lw - rw
+		if diff < 0 {
+			diff = -diff
+		}
+		if diff < bestDiff || (diff == bestDiff && lc > bestLeftCount) {
+			bestDiff = diff
+			bestMask = mask
+			bestLeftCount = lc
+		}
+	}
+	for i, card := range cards {
+		if bestMask&(1<<i) != 0 {
+			left = append(left, card)
+		} else {
+			right = append(right, card)
+		}
+	}
+	return left, right
+}
+
 // projectDatabasesCard shows the local databases referenced by Compose and .env
 // for project p, matched against observed servers, listeners, and port conflicts.
 func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
@@ -479,16 +566,11 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 	ui.Column(c.Key("project-databases-card")).Radius(12).Clip().Background(t.Background).
 		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.ProjectDatabasesTitle()).FontSize(13.5).FontWeight(600).SingleLine()
-			ui.Text(c, "compose · .env").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, locales.ProjectDatabasesTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
+			clipped(c, "compose · .env").Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1)
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			link := ui.ButtonBase(c.Key("project-db-open-all")).Padding(4, 6).Radius(6).Label(locales.OpenDatabases()).
-				OnClick(func() { a.router.Push("/tools/databases") })
-			if link.Hovered() {
-				link.Background(pal.Subtle)
-			}
-			link.Children(func() {
-				ui.Text(c, locales.OpenDatabases()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
+			pageLinkAction(c, "project-db-open-all", locales.OpenDatabases(), func() {
+				a.router.Push("/tools/databases")
 			})
 		})
 		for i, ref := range p.Databases {
@@ -518,7 +600,7 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 				case busyPort != "":
 					chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.ProjectDatabasePortBusy(busyPort))
 					port := busyPort
-					ui.Button(c.Key("project-db-port:"+key), locales.ProjectDatabaseViewPort(port)).Height(28).OnClick(func() {
+					ui.Button(c.Key("project-db-port:"+key), locales.ProjectDatabaseViewPort(port)).Height(rowControlHeight).OnClick(func() {
 						a.router.Push(portsPathWithFilter(port))
 					})
 				case running:
@@ -526,7 +608,7 @@ func (a *App) projectDatabasesCard(c *ui.Context, p projects.Project) {
 				case knownStopped:
 					chip(c, pal.TextFaint, pal.Muted, t.TextMuted, locales.DatabaseStopped())
 					if plan, canStart := a.projectDatabaseStartPlan(ref, servers); canStart {
-						ui.Button(c.Key("project-db-start:"+key), locales.ServiceStart()).Height(28).OnClick(func() {
+						ui.Button(c.Key("project-db-start:"+key), locales.ServiceStart()).Height(rowControlHeight).OnClick(func() {
 							a.Propose(plan)
 						})
 					}
@@ -975,7 +1057,7 @@ func (a *App) aiCard(c *ui.Context, p projects.Project) {
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.ProjectAI()).FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
-			ui.Button(c.Key("project-ai-manage"), locales.ProjectAiManage()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-ai-manage", locales.ProjectAiManage(), func() {
 				a.projectTab = 2
 			})
 		})
@@ -1227,7 +1309,6 @@ func filePinPill(c *ui.Context, text string) {
 func fileRow(c *ui.Context, p projects.Project, file string, open func()) {
 	pal := Colors(c.Theme())
 	keys, pills := fileRequirementSummary(p, file)
-	inlinePill := len(pills) == 1 && len(keys) == 0 && len(pills[0]) <= 20
 	ui.Column(c).Gap(6).MinHeight(46).Padding(9, 12, 9, 14).Justify(ui.Center).
 		BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -1238,14 +1319,11 @@ func fileRow(c *ui.Context, p projects.Project, file string, open func()) {
 					ui.Text(c, caption).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Tooltip(caption)
 				}
 			})
-			if inlinePill {
-				filePinPill(c, pills[0])
-			}
 			if open != nil {
 				iconButton(c.Key("file-open:"+file), "external-link", locales.OpenInEditor()).OnClick(open)
 			}
 		})
-		if len(pills) > 0 && !inlinePill {
+		if len(pills) > 0 {
 			ui.Row(c).Gap(6).Wrap().Children(func() {
 				for _, pill := range pills {
 					filePinPill(c, pill)

@@ -211,20 +211,20 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 	kubectl, hasKubectl := cliCopy(cli, "kubectl")
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Kubernetes").FontSize(13.5).FontWeight(600).Grow(1).SingleLine()
-			ui.Text(c, locales.KubeCardAside()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
+			ui.Text(c, "Kubernetes").FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
+			clipped(c, locales.KubeCardAside()).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Grow(1).MinWidth(0)
 			switch {
 			case !linked || a.LinkKube == nil:
 			case r.ctx == nil:
-				ui.Button(c.Key("kube-unlink"), locales.KubeUnlink()).OnClick(func() { a.LinkKube(p.Dir, nil) })
+				ui.Button(c.Key("kube-unlink"), locales.KubeUnlink()).Height(rowControlHeight).OnClick(func() { a.LinkKube(p.Dir, nil) })
 			default:
-				ui.Button(c.Key("kube-link"), locales.KubeLinkChange()).OnClick(func() { a.openKubeLink(p.Dir) })
+				ui.Button(c.Key("kube-link"), locales.KubeLinkChange()).Height(rowControlHeight).OnClick(func() { a.openKubeLink(p.Dir) })
 			}
 		})
 		if !linked {
 			listRow(c, locales.KubeNotLinked(), false, locales.KubeNotLinkedCaption(), func() {
 				if a.LinkKube != nil && len(kubeContextNames(cli)) > 0 {
-					ui.Button(c.Key("kube-link"), locales.KubeLinkButton()).Shrink(0).OnClick(func() { a.openKubeLink(p.Dir) })
+					ui.Button(c.Key("kube-link"), locales.KubeLinkButton()).Height(rowControlHeight).Shrink(0).OnClick(func() { a.openKubeLink(p.Dir) })
 				}
 			})
 		} else {
@@ -233,7 +233,7 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 				listRow(c, title, false, locales.KubeContextGone(), func() {
 					aiTag(c, locales.KubeContextMissing(), pal.DangerSoft, pal.DangerText)
 					if a.LinkKube != nil && len(kubeContextNames(cli)) > 0 {
-						ui.Button(c.Key("kube-other"), locales.KubeChooseOther()).Shrink(0).OnClick(func() { a.openKubeLink(p.Dir) })
+						ui.Button(c.Key("kube-other"), locales.KubeChooseOther()).Height(rowControlHeight).Shrink(0).OnClick(func() { a.openKubeLink(p.Dir) })
 					}
 				})
 			} else {
@@ -243,10 +243,10 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 						a.kubeAccessTag(c, k, check)
 					}
 					if hasKubectl && a.CheckKube != nil {
-						ui.Button(c.Key("kube-check"), locales.KubeCheck()).Shrink(0).Disabled(a.kubeChecks[k.Name].running).OnClick(func() { a.checkKube(kubectl.Path, k) })
+						ui.Button(c.Key("kube-check"), locales.KubeCheck()).Height(rowControlHeight).Shrink(0).Disabled(a.kubeChecks[k.Name].running).OnClick(func() { a.checkKube(kubectl.Path, k) })
 					}
 					if a.WatchCluster != nil {
-						ui.Button(c.Key("kube-open"), locales.KubeClusterOpen()).Shrink(0).OnClick(func() {
+						ui.Button(c.Key("kube-open"), locales.KubeClusterOpen()).Height(rowControlHeight).Shrink(0).OnClick(func() {
 							a.setNamespaces(k.Name, []string{cmp.Or(link.Namespace, namespaceOf(k))})
 							a.cluster.kind = kindServices
 							a.openCluster(k.Name)
@@ -266,7 +266,7 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 					}
 					if hasKubectl && a.BuildPlan != nil {
 						from, to := r.current, link.Context
-						ui.Button(c.Key("kube-use"), locales.KubeUseFor(to)).Shrink(0).OnClick(func() {
+						ui.Button(c.Key("kube-use"), locales.KubeUseFor(to)).Height(rowControlHeight).Shrink(0).OnClick(func() {
 							a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 								return ops.KubeContextPlan(kubectl.Path, from, to, env, run.Exec{})
 							}, a.proposeOrSay)
@@ -284,10 +284,10 @@ func (a *App) projectKubeCard(c *ui.Context, p projects.Project) {
 			listRow(c, label, false, caption, func() {
 				if a.Shell != nil && len(p.Kube) > 0 {
 					first := filepath.Join(p.Dir, strings.TrimSuffix(p.Kube[0], "/"))
-					ui.Button(c.Key("kube-manifests"), locales.PrepareOpenFolder()).Shrink(0).OnClick(func() { a.Shell.ShowItemInFolder(first) })
+					iconButton(c.Key("kube-manifests"), "folder-open", locales.PrepareOpenFolder()).OnClick(func() { a.Shell.ShowItemInFolder(first) })
 				}
 				if canApply {
-					ui.Button(c.Key("kube-apply"), locales.KubeApplyOpen()).Shrink(0).OnClick(func() {
+					ui.Button(c.Key("kube-apply"), locales.KubeApplyOpen()).Height(rowControlHeight).Shrink(0).OnClick(func() {
 						a.openProjectApply(p, kubectl.Path, link.Context, cmp.Or(link.Namespace, namespaceOf(*r.ctx)))
 					})
 				}

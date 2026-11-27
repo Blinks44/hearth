@@ -180,7 +180,7 @@ func (a *App) startupRow(c *ui.Context, s *inventory.ShellStartup, i int, l inve
 			}
 		})
 		if culprit == sysenv.CulpritNvm && a.BuildPlan != nil {
-			ui.Button(c.Key("startup-nvm:"+strconv.Itoa(i)), locales.MoveToMise()).OnClick(func() { a.nvmMove(l) })
+			ui.Button(c.Key("startup-nvm:"+strconv.Itoa(i)), locales.MoveToMise()).Height(rowControlHeight).OnClick(func() { a.nvmMove(l) })
 		}
 		if a.canOpenFile() || a.Shell != nil {
 			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(m *ui.Menu) {

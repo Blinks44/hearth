@@ -28,6 +28,10 @@ func (a *App) php(c *ui.Context, p page) {
 			newest := a.PHPVersions.Newest(c.Now())
 			if plan, can := a.phpInstall("", newest); can {
 				installVersionButton(c, "php", newest, plan.Title, false, func() { a.Propose(plan) })
+			} else if newest != "" && !hasVersion(st.Installations, "", newest) {
+				if plan, can := a.phpUpgrade(newest, newest); can {
+					updateVersionButton(c, "php", newest, plan.Title, func() { a.Propose(plan) })
+				}
 			}
 		}})
 		if !ok {
@@ -125,6 +129,7 @@ func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 			return
 		}
 		now := c.Now()
+		newest := a.PHPVersions.Newest(now)
 		for _, l := range a.PHPVersions.Lines {
 			if l.Latest == "" || l.Ended(now) || !l.Release.IsZero() && now.Before(l.Release) {
 				continue
@@ -135,8 +140,12 @@ func (a *App) phpAvailable(c *ui.Context, ins []inventory.Installation, rows []i
 					ui.Text(c, locales.TagRecommended()).FontSize(10.5).FontWeight(500).TextColor(pal.AccentInk).
 						Padding(1, 6).Radius(5).Background(pal.AccentSoft).SingleLine()
 				}
-				if plan, ok := a.phpInstall(l.Latest, a.PHPVersions.Newest(now)); ok {
+				if plan, ok := a.phpInstall(l.Latest, newest); ok {
 					iconButton(c.Key("install:"+l.Latest), "download", locales.InstallNamed(l.Latest)).OnClick(func() { a.Propose(plan) })
+				} else if !hasVersion(ins, "", l.Latest) {
+					if plan, ok := a.phpUpgrade(l.Latest, newest); ok {
+						iconButton(c.Key("upgrade:"+l.Latest), "refresh-cw", locales.PkgUpgradeTo(l.Latest)).OnClick(func() { a.Propose(plan) })
+					}
 				}
 			})
 		}
@@ -174,7 +183,7 @@ func (a *App) composerCard(c *ui.Context) {
 	active := inventory.TerminalCopy(st.Installations)
 	if !ok || active < 0 {
 		listCard(c, "Composer", "", func() {
-			listRow(c, locales.ToolNotInstalled("Composer"), false, "", func() { a.installToolButton(c, "composer") })
+			listRow(c, locales.ToolNotInstalled("Composer"), false, "", func() { a.installToolIconButton(c, "composer") })
 		})
 		return
 	}
@@ -220,23 +229,7 @@ func (a *App) phpManager() (inventory.PackageManager, bool) {
 // have the system's one PHP, its command line alone, installed when
 // release is "", as the header does. "" when manager has none.
 func phpPackage(manager, release, newest string) string {
-	l := phpLine(cmp.Or(release, newest))
-	switch manager {
-	case "brew":
-		if l == "" || l == phpLine(newest) {
-			return "php"
-		}
-		return "php@" + l
-	case "winget":
-		if l == "" {
-			return ""
-		}
-		return "PHP.PHP." + l
-	}
-	if release != "" {
-		return ""
-	}
-	return map[string]string{"apt": "php-cli", "dnf": "php-cli", "pacman": "php", "zypper": "php8"}[manager]
+	return ops.PHPPackage(manager, release, newest)
 }
 
 // phpLine is the line of a PHP version, as 8.4 of 8.4.3; "" when it has
@@ -271,6 +264,34 @@ func (a *App) phpInstall(release, newest string) (ops.Plan, bool) {
 	// A package of a line is named by the release, as PHP 8.4.3.
 	if v := cmp.Or(release, newest); ok && phpPackage(m.ID, "8.4.0", "8.4.0") != "" && v != "" {
 		p.Title = locales.VersionInstallTitle("PHP", v)
+	}
+	return p, ok
+}
+
+// phpUpgrade is the plan that upgrades an already-installed PHP package of
+// release's line through the system's package manager.
+func (a *App) phpUpgrade(release, newest string) (ops.Plan, bool) {
+	m, ok := a.phpManager()
+	if !ok {
+		return ops.Plan{}, false
+	}
+	name := phpPackage(m.ID, release, newest)
+	if name == "" {
+		return ops.Plan{}, false
+	}
+	idx := slices.IndexFunc(m.Packages, func(p inventory.SystemPackage) bool { return strings.EqualFold(p.Name, name) })
+	if idx < 0 && m.ID == "brew" && name != "php" {
+		idx = slices.IndexFunc(m.Packages, func(p inventory.SystemPackage) bool {
+			return strings.EqualFold(p.Name, "php") && phpLine(p.Version) == phpLine(release)
+		})
+	}
+	if idx < 0 {
+		return ops.Plan{}, false
+	}
+	pkg := m.Packages[idx]
+	p, ok := a.packagePlan(ops.PackageUpgrade, m, []inventory.SystemPackage{pkg})
+	if ok && release != "" {
+		p.Title = locales.PkgUpgradeTo("PHP " + release)
 	}
 	return p, ok
 }

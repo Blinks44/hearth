@@ -486,9 +486,9 @@ func (a *App) agentsNotFound(c *ui.Context) {
 				caption = locales.SettingsLeft(tilde(ag.Dir, a.Home))
 			}
 			listRow(c, agentTitle(ag.ID), false, caption, func() {
-				a.installToolButton(c, ag.ID)
+				a.installToolIconButton(c, ag.ID)
 				if ag.ID == "antigravity" && !a.canInstallTool(ag.ID) {
-					ui.Button(c.Key("antigravity-download"), locales.AntigravityDownload()).OnClick(func() {
+					iconButton(c.Key("antigravity-download"), "external-link", locales.AntigravityDownload()).OnClick(func() {
 						c.OpenURL("https://antigravity.google/download")
 					})
 				}

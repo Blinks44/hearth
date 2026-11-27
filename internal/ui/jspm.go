@@ -215,7 +215,7 @@ func (a *App) jsTable(c *ui.Context) {
 		}
 		for _, id := range []string{"pnpm", "yarn"} {
 			if a.canInstallTool(id) {
-				listRowWithTile(c.Key("missing:"+id), "brand/"+id, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolButton(c, id) })
+				listRowWithTile(c.Key("missing:"+id), "brand/"+id, locales.ToolNotInstalled(setupTitle(id)), false, "", func() { a.installToolIconButton(c, id) })
 			}
 		}
 	})

@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/Blinks44/hearth/internal/inventory"
@@ -382,6 +384,17 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 						item.Kind = ProjectInstall
 						item.Text = locales.PrepareInstall(item.Title, selection.Version, manager)
 						useMise = manager == "mise"
+					} else if st.Tool == "php" {
+						if pm, pkgPlan, ok := projectPHPInstall(state, in.Setup, selection.Version, in.Releases["php"]); ok {
+							manager = pm
+							item.Manager = pm
+							plans = append(plans, pkgPlan)
+							item.Kind = ProjectInstall
+							item.Text = locales.PrepareInstall(item.Title, selection.Version, pm)
+						} else {
+							item.Kind = ProjectManual
+							item.Text = locales.PrepareManual(item.Title)
+						}
 					} else {
 						item.Kind = ProjectManual
 						item.Text = locales.PrepareManual(item.Title)
@@ -441,9 +454,42 @@ func PrepareProject(in ProjectInput, env sysenv.Env) (ProjectPreparation, error)
 		}
 		setup := in.Setup
 		setup.Have = cloneHave(plannedHave)
+		if item.Tool != "mise" {
+			setup.Have["mise"] = true
+		}
 		setup.Tools = []string{item.Tool}
 		parts := setup.Parts()
-		if len(parts) != 1 || parts[0].Tool != item.Tool || parts[0].Method.Manager == "mise" {
+		if len(parts) != 1 || parts[0].Tool != item.Tool {
+			continue
+		}
+		targetPart := parts[0]
+		if targetPart.Method.Manager == "mise" {
+			pkg := cmp.Or(targetPart.Method.Package, item.Tool)
+			spec := cmp.Or(miseVersions[item.Tool], "latest")
+			var detect Detect
+			if in.Detect != nil {
+				tool := item.Tool
+				detect = func(ctx context.Context) (inventory.ToolState, error) { return in.Detect(ctx, tool) }
+			}
+			p, ok := VersionPlan(VersionInstall, VersionTarget{Tool: item.Tool, Title: item.Title, Manager: "mise", Version: spec}, detect)
+			if !ok {
+				p = Plan{
+					Title: locales.VersionInstallTitle(item.Title, spec),
+					Steps: []Step{{Argv: []string{"mise", "install", pkg + "@" + spec}}},
+				}
+			} else if pkg != item.Tool {
+				p.Steps = []Step{{Argv: []string{"mise", "install", pkg + "@" + spec}}}
+			}
+			plans = append(plans, p)
+			plannedHave[item.Tool] = true
+			if !slices.ContainsFunc(st.Managers, func(m inventory.Manager) bool { return m.Name == "mise" && (m.Activated || m.Shims || m.SwitchOnCD) }) {
+				needsMise = true
+			}
+			localMise[pkg] = spec
+			item.Kind = ProjectInstall
+			item.Manager = "mise"
+			item.Version = spec
+			item.Text = locales.PrepareInstall(item.Title, spec, "mise")
 			continue
 		}
 		p, _, err := SetupPlan(setup, env)
@@ -622,4 +668,98 @@ func cloneHave(have map[string]bool) map[string]bool {
 	out := make(map[string]bool, len(have))
 	maps.Copy(out, have)
 	return out
+}
+
+// PHPPackage returns the system package name for installing the PHP line of
+// release (or the newest/system PHP when release is "") through manager.
+func PHPPackage(manager, release, newest string) string {
+	l := phpLine(cmp.Or(release, newest))
+	switch manager {
+	case "brew":
+		if l == "" || l == phpLine(newest) {
+			return "php"
+		}
+		return "php@" + l
+	case "winget":
+		if l == "" {
+			return ""
+		}
+		return "PHP.PHP." + l
+	}
+	if release != "" {
+		return ""
+	}
+	return map[string]string{"apt": "php-cli", "dnf": "php-cli", "pacman": "php", "zypper": "php8"}[manager]
+}
+
+func phpLine(v string) string {
+	parts := strings.SplitN(v, ".", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[0] + "." + parts[1]
+}
+
+func newestPHPRelease(releases []string) string {
+	var best string
+	var bestMaj, bestMin int
+	for _, v := range releases {
+		parts := strings.SplitN(v, ".", 3)
+		if len(parts) < 2 {
+			continue
+		}
+		maj, err1 := strconv.Atoi(parts[0])
+		min, err2 := strconv.Atoi(parts[1])
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		if best == "" || maj > bestMaj || (maj == bestMaj && min > bestMin) {
+			best, bestMaj, bestMin = v, maj, min
+		}
+	}
+	return best
+}
+
+func projectPHPInstall(state inventory.ToolState, setup Setup, version string, releases []string) (string, Plan, bool) {
+	ids := []string{"brew", "winget"}
+	if i := inventory.TerminalCopy(state.Installations); i >= 0 {
+		if m := state.Installations[i].Source.Manager; m == "brew" || m == "winget" {
+			ids = append([]string{m}, ids...)
+		}
+	}
+	var pm inventory.PackageManager
+	found := false
+	for _, id := range ids {
+		for _, m := range setup.Managers {
+			if m.ID == id && m.Path != "" {
+				pm, found = m, true
+				break
+			}
+		}
+		if found {
+			break
+		}
+	}
+	if !found {
+		return "", Plan{}, false
+	}
+	newest := newestPHPRelease(releases)
+	name := PHPPackage(pm.ID, version, newest)
+	if name == "" {
+		return "", Plan{}, false
+	}
+	if idx := slices.IndexFunc(pm.Packages, func(p inventory.SystemPackage) bool { return strings.EqualFold(p.Name, name) }); idx >= 0 {
+		plan, ok := PackagePlan(PackageUpgrade, pm, []inventory.SystemPackage{pm.Packages[idx]}, nil)
+		return pm.ID, plan, ok
+	}
+	if pm.ID == "brew" && name != "php" {
+		if idx := slices.IndexFunc(pm.Packages, func(p inventory.SystemPackage) bool {
+			return strings.EqualFold(p.Name, "php") && phpLine(p.Version) == phpLine(version)
+		}); idx >= 0 {
+			plan, ok := PackagePlan(PackageUpgrade, pm, []inventory.SystemPackage{pm.Packages[idx]}, nil)
+			return pm.ID, plan, ok
+		}
+	}
+	plan, ok := PackagePlan(PackageInstall, pm, []inventory.SystemPackage{{Name: name}}, nil)
+	return pm.ID, plan, ok
 }

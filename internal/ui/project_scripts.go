@@ -442,7 +442,8 @@ func scriptShortSource(source string) string {
 
 // projectServicesSummaryCard renders the compact "Запуск и сервисы" card on
 // the Project Overview tab (Sketch frame 05): active running rows with 1-click
-// Open/Logs/Restart/Stop plus a quick-run scripts & DB summary strip.
+// Open/Logs/Restart/Stop, a full-width quick-run scripts strip, and a clean
+// databases status row when the project declares databases.
 func (a *App) projectServicesSummaryCard(c *ui.Context, p projects.Project) {
 	allPorts := a.portRows()
 	var managed []*scriptRun
@@ -459,22 +460,37 @@ func (a *App) projectServicesSummaryCard(c *ui.Context, p projects.Project) {
 		external = append(external, row)
 	}
 	hasRunning := len(managed) > 0 || len(external) > 0
-	if !hasRunning && len(p.Scripts) == 0 && len(p.Databases) == 0 {
+	if !hasRunning && len(p.Scripts) == 0 {
 		return
 	}
 
 	t := c.Theme()
 	pal := Colors(t)
-	compact := narrow(c)
+
+	var quick []projects.Script
+	for _, sc := range p.Scripts {
+		if run := a.scriptRunFor(p.Dir, sc); run != nil && run.running {
+			continue
+		}
+		quick = append(quick, sc)
+		if len(quick) >= overviewQuickRunScripts {
+			break
+		}
+	}
 
 	ui.Column(c.Key("project-overview-services")).Radius(12).Clip().Background(t.Background).
 		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
-		ui.Row(c).Gap(8).Padding(11, 16).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.ProjectTabRunServices()).FontSize(13.5).FontWeight(600).SingleLine()
-			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+		ui.Row(c).Gap(10).Padding(11, 16).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.ProjectTabRunServices()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
 			if src := a.projectServiceSourcesLabel(p); src != "" {
-				clipped(c, src).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+				clipped(c, src).MinWidth(0).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			}
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			linkLabel := locales.Details()
+			if len(p.Scripts) > 0 {
+				linkLabel = fmt.Sprintf("%s · %d", locales.ProjectScriptsAll(), len(p.Scripts))
+			}
+			pageLinkAction(c, "ov-all-scripts", linkLabel, func() { a.projectTab = 1 })
 		})
 
 		for _, run := range managed {
@@ -554,82 +570,39 @@ func (a *App) projectServicesSummaryCard(c *ui.Context, p projects.Project) {
 			})
 		}
 
-		// Quick-run scripts & databases strip.
-		if len(p.Scripts) > 0 || len(p.Databases) > 0 {
-			var quick []projects.Script
+		if len(quick) > 0 && a.RunScript != nil {
+			nameCount := map[string]int{}
 			for _, sc := range p.Scripts {
-				if run := a.scriptRunFor(p.Dir, sc); run != nil && run.running {
-					continue
-				}
-				quick = append(quick, sc)
-				if len(quick) >= overviewQuickRunScripts {
-					break
-				}
+				nameCount[sc.Name]++
 			}
-			var subParts []string
-			if len(p.Databases) > 0 {
-				var kinds []string
-				for _, db := range p.Databases {
-					if !slices.Contains(kinds, db.Kind) {
-						kinds = append(kinds, db.Kind)
+			ui.Row(c.Key("ov-quick-strip")).Gap(6).Padding(10, 16).AlignItems(ui.Center).Wrap().
+				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
+				for _, sc := range quick {
+					script := sc
+					key := scriptRunKey(p.Dir, script.Source, script.Name)
+					tip := script.Source
+					if script.Command != "" {
+						tip += ": " + script.Command
 					}
-				}
-				subParts = append(subParts, strings.Join(kinds, " · "))
-			}
-			if len(p.Scripts) > 0 {
-				subParts = append(subParts, locales.ProjectScriptsCountShort(len(p.Scripts)))
-			}
-			row := ui.Row(c.Key("ov-quick-strip")).Gap(10).Padding(10, 16).MinHeight(50).AlignItems(ui.Center).
-				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line)
-			if compact {
-				row.Wrap()
-			}
-			row.Children(func() {
-				ui.Column(c).Grow(1).MinWidth(140).Gap(2).Children(func() {
-					ui.Text(c, locales.ProjectScriptsAndDbs()).FontSize(13).FontWeight(500).SingleLine()
-					if len(subParts) > 0 {
-						clipped(c, strings.Join(subParts, " · ")).FontSize(11).TextColor(pal.TextFaint)
+					btnLabel := locales.ProjectScriptsRun() + " " + script.Name
+					if nameCount[script.Name] > 1 {
+						btnLabel += " (" + script.Source + ")"
 					}
-				})
-				ui.Row(c).Gap(6).AlignItems(ui.Center).Wrap().Children(func() {
-					if a.RunScript != nil {
-						nameCount := map[string]int{}
-						for _, sc := range p.Scripts {
-							nameCount[sc.Name]++
+					btn := ui.ButtonBase(c.Key("ov-quick:"+key)).Height(26).Padding(0, 10).Gap(6).Radius(7).
+						AlignItems(ui.Center).Background(pal.Subtle).BorderWidth(1).BorderColor(pal.Line).
+						Label(btnLabel).Tooltip(tip).OnClick(func() { a.startScript(p.Dir, script) })
+					if btn.Hovered() {
+						btn.Background(pal.Muted)
+					}
+					btn.Children(func() {
+						ui.Icon(c, Icon("play")).Size(11, 11).TextColor(t.TextMuted).Shrink(0)
+						ui.Text(c, script.Name).Font(FontMono).FontSize(12).SingleLine()
+						if nameCount[script.Name] > 1 {
+							ui.Text(c, scriptShortSource(script.Source)).Font(FontMono).FontSize(10.5).
+								TextColor(pal.TextFaint).SingleLine()
 						}
-						for _, sc := range quick {
-							script := sc
-							key := scriptRunKey(p.Dir, script.Source, script.Name)
-							tip := script.Source
-							if script.Command != "" {
-								tip += ": " + script.Command
-							}
-							btnLabel := locales.ProjectScriptsRun() + " " + script.Name
-							if nameCount[script.Name] > 1 {
-								btnLabel += " (" + script.Source + ")"
-							}
-							ui.Button(c.Key("ov-quick:"+key), "").Height(28).Label(btnLabel).Tooltip(tip).
-								OnClick(func() { a.startScript(p.Dir, script) }).Children(func() {
-								ui.Icon(c, Icon("play")).Size(11, 11).TextColor(t.TextMuted)
-								ui.Text(c, script.Name).Font(FontMono).FontSize(12).SingleLine()
-								if nameCount[script.Name] > 1 {
-									ui.Text(c, scriptShortSource(script.Source)).Font(FontMono).FontSize(10.5).
-										TextColor(pal.TextFaint).SingleLine()
-								}
-							})
-						}
-					}
-					if len(p.Scripts) > len(quick) || len(p.Databases) > 0 {
-						link := ui.ButtonBase(c.Key("ov-all-scripts")).Padding(4, 6).Radius(6).Label(locales.ProjectScriptsAll()).
-							OnClick(func() { a.projectTab = 1 })
-						if link.Hovered() {
-							link.Background(pal.Subtle)
-						}
-						link.Children(func() {
-							ui.Text(c, locales.ProjectScriptsAll()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
-						})
-					}
-				})
+					})
+				}
 			})
 		}
 	})

@@ -94,16 +94,20 @@ func (a *App) rustInstallHeader(c *ui.Context) {
 			break
 		}
 	}
-	upToDate := false
 	if stableIdx >= 0 {
-		upToDate = true
+		target := ""
 		if a.RustVersions != nil {
 			if train, err := a.RustVersions.Train(); err == nil && rustVersionOlder(st.Installations[stableIdx].Version, train.Stable) {
-				upToDate = false
+				target = train.Stable
 			}
 		}
+		if target == "" {
+			return
+		}
+		updateVersionButton(c, "rust", target, locales.Through("rustup"), func() { a.installRustToolchain("stable") })
+		return
 	}
-	installVersionButton(c, "rust", "stable", locales.InstallVersionVia("stable", "rustup"), upToDate, func() { a.installRustToolchain("stable") })
+	installVersionButton(c, "rust", "stable", locales.InstallVersionVia("stable", "rustup"), false, func() { a.installRustToolchain("stable") })
 }
 
 // rustVersionOlder reports whether installed version have is strictly older

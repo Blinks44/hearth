@@ -1046,8 +1046,13 @@ func (a *App) attention(c *ui.Context, found []attentionItem) {
 // pageLink is a card header's link to the page at path: its label and a
 // chevron.
 func (a *App) pageLink(c *ui.Context, key, label, path string) {
+	pageLinkAction(c, key, label, func() { a.router.Push(path) })
+}
+
+// pageLinkAction is a subtle card-header text link with a trailing chevron.
+func pageLinkAction(c *ui.Context, key, label string, onClick func()) {
 	t := c.Theme()
-	b := ui.ButtonBase(c.Key(key)).Gap(4).AlignItems(ui.Center).Label(label).OnClick(func() { a.router.Push(path) })
+	b := ui.ButtonBase(c.Key(key)).Gap(4).AlignItems(ui.Center).Label(label).OnClick(onClick)
 	color := t.TextMuted
 	if b.Hovered() {
 		color = t.Text
@@ -1079,8 +1084,8 @@ func attentionNote(c *ui.Context, icon string, ok bool, title, text string) {
 }
 
 // issueRow is an issue: its level, what it is and why it matters, a
-// button to its fix when an operation makes one, and to the page it lives
-// on.
+// button to its fix when an operation makes one, and compact icon buttons
+// to hide or open the page it lives on.
 func (a *App) issueRow(c *ui.Context, it attentionItem) {
 	t := c.Theme()
 	pal := Colors(t)
@@ -1096,23 +1101,21 @@ func (a *App) issueRow(c *ui.Context, it attentionItem) {
 			ui.Text(c, it.title).FontSize(13.5).FontWeight(500)
 			// The page tells the rest; the card stays short.
 			ui.Text(c, it.explain).FontSize(11.5).TextColor(t.TextMuted).MaxLines(2).Tooltip(it.explain)
-			ui.Row(c).Gap(6).Padding(5, 0, 0, 0).Wrap().Children(func() {
-				if it.fix != nil {
+			if it.fix != nil {
+				ui.Row(c).Gap(6).Padding(5, 0, 0, 0).Wrap().Children(func() {
 					// Dark, as in the design.
 					ui.Button(c.Key("fix:"+it.key), "").Height(24).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
 						Label(locales.IssueFix()).OnClick(it.fix).Children(func() {
 						ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
 					})
-				}
-				ui.Button(c.Key("hide:"+it.key), "").Height(24).Padding(0, 10).
-					Label(locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).OnClick(func() { a.hideIssue(it.key) }).Children(func() {
-					ui.Text(c, locales.ProblemHide()).FontSize(12).SingleLine()
 				})
-				ui.Button(c.Key("details:"+it.key), "").Height(24).Padding(0, 10).
-					Label(locales.Details()).OnClick(func() { a.router.Push(it.page) }).Children(func() {
-					ui.Text(c, locales.Details()).FontSize(12).SingleLine()
-				})
-			})
+			}
+		})
+		ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+			iconButton(c.Key("hide:"+it.key), "eye-off", locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
+				OnClick(func() { a.hideIssue(it.key) })
+			iconButton(c.Key("details:"+it.key), "arrow-up-right", locales.Details()).
+				OnClick(func() { a.router.Push(it.page) })
 		})
 	})
 }

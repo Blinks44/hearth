@@ -50,7 +50,7 @@ func (a *App) javaPage(c *ui.Context, p page) {
 									})
 									shown++
 								} else if a.canInstallTool(b.id) {
-									listRow(c, setupTitle(b.id), false, "", func() { a.installToolButton(c, b.id) })
+									listRow(c, setupTitle(b.id), false, "", func() { a.installToolIconButton(c, b.id) })
 									shown++
 								}
 							}

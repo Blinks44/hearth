@@ -145,7 +145,7 @@ func (a *App) rubyBundler(c *ui.Context, st inventory.ToolState, ins []inventory
 			return
 		}
 		if a.canInstallTool("bundler") {
-			listRow(c, "Bundler", false, locales.NotInPath(), func() { a.installToolButton(c, "bundler") })
+			listRow(c, "Bundler", false, locales.NotInPath(), func() { a.installToolIconButton(c, "bundler") })
 			return
 		}
 		cardNote(c, locales.RubyNoBundler())

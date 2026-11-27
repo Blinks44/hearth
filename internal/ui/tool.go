@@ -182,6 +182,10 @@ func (a *App) managedGlobalsCard(c *ui.Context, tool, title, empty string, pkgs 
 // selects, and segmented tracks in toolbars, headers, and dialog footers.
 const controlHeight = 28
 
+// rowControlHeight is the height for compact action buttons inside table/list
+// rows so they align cleanly with adjacent 24x24 iconButtons.
+const rowControlHeight = 24
+
 // stateCard is one of the header's cards: a dot and a label, a value and
 // a caption.
 func stateCard(c *ui.Context, dot ui.Color, label, value, caption string) {
@@ -800,7 +804,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 				}
 				entry := ui.Row(c).Gap(10).Padding(7, 10).Radius(6).AlignItems(ui.Center)
 				color, tag, tagBg, tagText := t.TextMuted, locales.TagShadowed(), pal.Muted, t.TextMuted
-				if n == 0 {
+				if n == 0 || i == active {
 					entry.Background(t.Background)
 					color, tag, tagBg, tagText = t.Text, locales.TagUsed(), pal.SuccessSoft, pal.SuccessText
 				}
@@ -823,7 +827,7 @@ func pathCard(c *ui.Context, command string, ins []inventory.Installation, activ
 		if active >= 0 && inventory.GUICopy(ins) < 0 {
 			toolNote(c, locales.GuiNotFound(command))
 		}
-		for _, warning := range []string{guiWarning(ins, active), shadowWarning(ins, entries, home), stubWarning(ins, entries, home)} {
+		for _, warning := range []string{guiWarning(ins, active), shadowWarning(ins, entries, active, home), stubWarning(ins, entries, home)} {
 			if warning == "" {
 				continue
 			}
@@ -900,15 +904,16 @@ func guiWarning(ins []inventory.Installation, active int) string {
 
 // shadowWarning tells of a copy in the terminal's PATH, entries in its
 // order, that lies unused behind the first; "" for none. A shim first
-// stands for its manager's copies, which are not unused.
-func shadowWarning(ins []inventory.Installation, entries []int, home string) string {
+// stands for its manager's copies, or delegates to active in system mode,
+// neither of which is unused.
+func shadowWarning(ins []inventory.Installation, entries []int, active int, home string) string {
 	if len(entries) < 2 {
 		return ""
 	}
 	first := ins[entries[0]]
 	for _, i := range entries[1:] {
 		in := ins[i]
-		if in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || first.Source.Shim && in.Source.Manager == first.Source.Manager {
+		if i == active || in.Source.Shim || in.Stub || inventory.NeededBySystem(in) || first.Source.Shim && in.Source.Manager == first.Source.Manager {
 			continue
 		}
 		return locales.CopyShadowed(sourceName(in.Source), copyVersion(in), tilde(filepath.Dir(first.Path), home))

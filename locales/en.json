@@ -2470,7 +2470,7 @@
   "@columnProject": {
     "description": "Projects table column."
   },
-  "columnProjectTools": "Tools and versions from project files",
+  "columnProjectTools": "Tools and versions",
   "@columnProjectTools": {
     "description": "Projects table column."
   },
@@ -18213,7 +18213,7 @@
   },
   "projectScriptsSearch": "Search scripts…",
   "projectScriptsAndDbs": "Scripts & databases",
-  "projectScriptsAll": "All scripts →",
+  "projectScriptsAll": "All scripts",
   "projectSkillsCount": "{count, plural, one {# skill} other {# skills}}",
   "@projectSkillsCount": {
     "placeholders": {

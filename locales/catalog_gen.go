@@ -8268,13 +8268,13 @@ func (msgs Messages) ColumnProject() string {
 	return Catalog.Format(msgs.locale, "columnProject", nil)
 }
 
-// ColumnProjectTools says "Tools and versions from project files"
+// ColumnProjectTools says "Tools and versions"
 // in the language the app shows.
 //
 // Projects table column.
 func ColumnProjectTools() string { return In(i18n.Locale()).ColumnProjectTools() }
 
-// ColumnProjectTools says "Tools and versions from project files"
+// ColumnProjectTools says "Tools and versions"
 // in the language of msgs.
 //
 // Projects table column.
@@ -49250,11 +49250,11 @@ func (msgs Messages) ProjectScriptsAndDbs() string {
 	return Catalog.Format(msgs.locale, "projectScriptsAndDbs", nil)
 }
 
-// ProjectScriptsAll says "All scripts →"
+// ProjectScriptsAll says "All scripts"
 // in the language the app shows.
 func ProjectScriptsAll() string { return In(i18n.Locale()).ProjectScriptsAll() }
 
-// ProjectScriptsAll says "All scripts →"
+// ProjectScriptsAll says "All scripts"
 // in the language of msgs.
 func (msgs Messages) ProjectScriptsAll() string {
 	return Catalog.Format(msgs.locale, "projectScriptsAll", nil)

@@ -956,13 +956,17 @@ func (a *App) cliRowWithReqs(c *ui.Context, cli inventory.CliState, cmd string, 
 	}
 	cliTableRowColored(c, cmd, strings.Join(parts, " · "), aboutColor, version, func() {
 		if !found {
-			a.installToolButton(c, cmd)
+			if a.canInstallTool(cmd) {
+				a.installToolIconButton(c, cmd)
+			} else {
+				iconSpacer(c)
+			}
 			return
 		}
-		if m, pkg, ok := a.copyPackage(in); ok {
-			if a.packageCan(m, pkg) {
-				iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
-			}
+		if m, pkg, ok := a.copyPackage(in); ok && a.packageCan(m, pkg) {
+			iconButton(c, "ellipsis", locales.MoreActions()).Menu(func(menu *ui.Menu) { a.packageItems(menu, m, pkg) })
+		} else {
+			iconSpacer(c)
 		}
 	})
 }

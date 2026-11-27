@@ -208,7 +208,7 @@ func TestInstructionsGlobalStatsAndMarkdownPreview(t *testing.T) {
 
 	// With 0 projects and 1 global instruction agent, header stats must still appear and show Global preview.
 	tt := openAI(t, a, instructionsPage)
-	hasTexts(t, tt, "Global", "connected", "issues", "Global Rules", "Use plain Markdown.")
+	hasTexts(t, tt, "global", "connected", "issues", "Global Rules", "Use plain Markdown.")
 
 	// Adding a project with Markdown content renders rendered Markdown (headings/text without raw '#').
 	a.Projects = []projects.Project{{
@@ -222,7 +222,7 @@ func TestInstructionsGlobalStatsAndMarkdownPreview(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)
-	hasTexts(t, tt, "Global", "projects", "Project Guide", "Run make check.")
+	hasTexts(t, tt, "global", "projects", "Project Guide", "Run make check.")
 	if tt.HasText("# Project Guide") {
 		t.Fatalf("project instructions rendered raw markdown instead of formatted view: %q", tt.Texts())
 	}

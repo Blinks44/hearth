@@ -85,7 +85,7 @@ func TestRustManagement(t *testing.T) {
 	screenshot(t, ttNarrow, "rust-narrow")
 
 	// Header button proposes updating stable when outdated.
-	if err := tt.Click("Install stable"); err != nil {
+	if err := tt.Click("Update to 1.85.0"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

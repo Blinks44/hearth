@@ -71,8 +71,8 @@ func TestJavaIndependentBuilders(t *testing.T) {
 	}
 	tt := openJava(a)
 	screenshot(t, tt, "java-builders")
-	hasTexts(t, tt, "gradle", "/opt/homebrew/bin/gradle", "Maven", "Install…")
-	if err := tt.Click("Install…"); err != nil {
+	hasTexts(t, tt, "gradle", "/opt/homebrew/bin/gradle", "Maven", "Install Maven")
+	if err := tt.Click("Install Maven"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

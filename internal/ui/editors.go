@@ -202,7 +202,7 @@ func (a *App) editorsView(c *ui.Context, p page) {
 						{locales.EditorsCommands(), strconv.Itoa(len(eds))},
 					})
 					ui.Box(c).Grow(1).Height(1)
-					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.EditorsFilterPlaceholder()).Height(controlHeight).Width(200)
+					ui.SearchField(c.Key("editors-filter"), &a.editorsFilter).Bind(&a.filterField).Placeholder(locales.EditorsFilterPlaceholder()).Height(controlHeight).Width(264)
 				})
 				columns(c, 12, func() {
 					switch {
@@ -317,7 +317,7 @@ func (a *App) editorsTable(c *ui.Context, eds []inventory.Editor) {
 						if cleanCand != nil {
 							cand := *cleanCand
 							title := a.candidateTitle(cand)
-							ui.Button(c.Key("clean:"+rowKey), locales.RemoveEllipsis()).Shrink(0).OnClick(func() {
+							ui.Button(c.Key("clean:"+rowKey), locales.RemoveEllipsis()).Height(rowControlHeight).Shrink(0).OnClick(func() {
 								snap, target := a.Snapshot, a.dockerTarget()
 								a.BuildPlan(func(env sysenv.Env, _ ops.Terminal) (ops.Plan, error) {
 									return ops.CleanupPlan([]cleanup.Candidate{cand}, []string{title}, snap, env, target, nil)

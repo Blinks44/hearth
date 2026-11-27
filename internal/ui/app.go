@@ -413,79 +413,80 @@ type App struct {
 	packageLimitKey   string              // resets packageLimit when manager/tab/sort/filter changes
 	// packageChosen are the packages checked for bulk actions, by manager path
 	// and packageKey.
-	packageChosen       map[string]bool
-	pkg                 packageManagerState
-	terminalCustomOpen  bool   // whether the custom terminal path input is expanded in Settings
-	terminalCustomInput string // custom terminal path being edited in Settings
-	editorCustomOpen    bool   // whether the custom editor path input is expanded in Settings
-	editorCustomInput   string // custom editor path being edited in Settings
-	gitTab              int    // the Git page's tab: installed, settings, PATH
-	cppTab              int    // the C/C++ page's tab: installed, PATH
-	modelsTab           int    // the local models page's tab: all, then an app each
-	modelsFilter        string // the local models table's filter
-	modelPull           string // the name of the Ollama model to download
-	modelPullOpen       bool   // the dialog to download an Ollama model is open
-	cliTab              int    // the CLI & clouds page's tab
-	cliFilter           string // the CLI & clouds table's filter
-	cloudAuth           map[string]cloudAuthEntry
-	cloudSwitch         cloudSwitchDialog
-	cloudLogin          cloudLoginDialog
-	kubeTab             int    // the Kubernetes page's tab
-	kubeFilter          string // the Kubernetes page's filter
-	kubeNS              kubeNamespaceDialog
-	kubeChecks          map[string]kubeCheck
-	cluster             kubeClusterState
-	engine              dockerEngineState // the Docker engine page's
-	issuePopover        string            // key of the open row issue popover; "" when none
-	issuePopoverOn      bool
-	kind                kindCreateDialog
-	kubeLink            kubeLinkDialog
-	kubeConfig          kubeConfigDialog
-	kubeApply           *kubeApplyDialog
-	forwards            []*portForward
-	scriptRuns          []*scriptRun
-	scriptLogsKey       string          // active project script log panel key; "" when closed
-	scriptsExpanded     map[string]bool // project dirs with full script list expanded
-	scriptFilter        string          // search filter in project's Scripts card
-	scriptSourceFilter  string          // source file filter in project's Scripts card ("" = all)
-	scriptFilterDir     string          // project dir scriptFilter belongs to
-	portsTab            int             // the Services & Ports page's quick filter: all, dev servers, docker, db, k8s
-	portsFilter         string          // the Ports table's filter
-	portsFilterQuery    string          // last ?filter= query applied to Ports
-	portsRefreshing     bool
-	portsRefreshSeq     int
-	portsLastRefresh    time.Time
-	portsBusy           bool   // a Docker container stop plan is being built on Ports
-	portsErr            string // last Docker container stop error on Ports
-	projectTab          int    // the project detail page's tab: overview, services, ai, files
-	projectTabDir       string // project dir the current projectTab belongs to
-	instructionsQuery   string // the Instructions page's filter
-	instructionsChosen  string // the project shown on the Instructions page
-	usageTab            int    // the Usage page's period, by usagePeriods
-	usageMetric         int    // the Usage page's metric: 0 cost, 1 tokens
-	usageAgent          string // the Usage page's agent filter, "" for all
-	usageAgentLabel     string
-	usageProject        string // the Usage page's project filter, "" for all
-	usageProjectLabel   string
-	usageModel          string // the Usage page's model filter, "" for all
-	usageCache          []usageSummaryCacheEntry
-	mobileTab           int    // the mobile page's tab: all, then a group each
-	mobileFilter        string // the mobile table's filter
-	editorsTab          int    // the editors page's tab: all, extensions, commands
-	editorsFilter       string // the editors table's filter
-	changesTab          int    // the What changed page's tab: all, added, updated, removed
-	changesFilter       string // the What changed table's filter
-	problemsTab         int    // the Issues page's tab: all, then an area each
-	problemsSeverity    int    // the Issues page's severity filter: 0 all, 1 important, 2 info
-	problemsFilter      string // the Issues table's filter
-	problemsShowHidden  bool   // whether the hidden issues list is expanded on the Issues page
-	cleanupExcludeInput string // new $HOME exclusion path being typed in Settings
-	shownSettingsNotice string // last SettingsNotice emitted as a toast
-	shownSettingsError  string // last SettingsError emitted as a toast
-	cleanupTab          int    // the Cleanup page's tab: all, then a group each
-	cleanupAge          int    // age filter: 0 any, 1 >30d, 2 >90d, 3 >180d
-	cleanupSort         int    // sort order: 0 largest first, 1 oldest first
-	cleanupFilter       string // the Cleanup table's filter
+	packageChosen             map[string]bool
+	pkg                       packageManagerState
+	terminalCustomOpen        bool   // whether the custom terminal path input is expanded in Settings
+	terminalCustomInput       string // custom terminal path being edited in Settings
+	editorCustomOpen          bool   // whether the custom editor path input is expanded in Settings
+	editorCustomInput         string // custom editor path being edited in Settings
+	gitTab                    int    // the Git page's tab: installed, settings, PATH
+	cppTab                    int    // the C/C++ page's tab: installed, PATH
+	modelsTab                 int    // the local models page's tab: all, then an app each
+	modelsFilter              string // the local models table's filter
+	modelPull                 string // the name of the Ollama model to download
+	modelPullOpen             bool   // the dialog to download an Ollama model is open
+	cliTab                    int    // the CLI & clouds page's tab
+	cliFilter                 string // the CLI & clouds table's filter
+	cloudAuth                 map[string]cloudAuthEntry
+	cloudSwitch               cloudSwitchDialog
+	cloudLogin                cloudLoginDialog
+	kubeTab                   int    // the Kubernetes page's tab
+	kubeFilter                string // the Kubernetes page's filter
+	kubeNS                    kubeNamespaceDialog
+	kubeChecks                map[string]kubeCheck
+	cluster                   kubeClusterState
+	engine                    dockerEngineState // the Docker engine page's
+	issuePopover              string            // key of the open row issue popover; "" when none
+	issuePopoverOn            bool
+	kind                      kindCreateDialog
+	kubeLink                  kubeLinkDialog
+	kubeConfig                kubeConfigDialog
+	kubeApply                 *kubeApplyDialog
+	forwards                  []*portForward
+	scriptRuns                []*scriptRun
+	scriptLogsKey             string          // active project script log panel key; "" when closed
+	scriptsExpanded           map[string]bool // project dirs with full script list expanded
+	scriptFilter              string          // search filter in project's Scripts card
+	scriptSourceFilter        string          // source file filter in project's Scripts card ("" = all)
+	scriptFilterDir           string          // project dir scriptFilter belongs to
+	portsTab                  int             // the Services & Ports page's quick filter: all, dev servers, docker, db, k8s
+	portsFilter               string          // the Ports table's filter
+	portsFilterQuery          string          // last ?filter= query applied to Ports
+	portsRefreshing           bool
+	portsRefreshSeq           int
+	portsLastRefresh          time.Time
+	portsBusy                 bool   // a Docker container stop plan is being built on Ports
+	portsErr                  string // last Docker container stop error on Ports
+	projectTab                int    // the project detail page's tab: overview, services, ai, files
+	projectTabDir             string // project dir the current projectTab belongs to
+	instructionsQuery         string // the Instructions page's filter
+	instructionsChosen        string // the project shown on the Instructions page
+	instructionsShowAllGlobal bool   // show uninstalled agents without global instructions
+	usageTab                  int    // the Usage page's period, by usagePeriods
+	usageMetric               int    // the Usage page's metric: 0 cost, 1 tokens
+	usageAgent                string // the Usage page's agent filter, "" for all
+	usageAgentLabel           string
+	usageProject              string // the Usage page's project filter, "" for all
+	usageProjectLabel         string
+	usageModel                string // the Usage page's model filter, "" for all
+	usageCache                []usageSummaryCacheEntry
+	mobileTab                 int    // the mobile page's tab: all, then a group each
+	mobileFilter              string // the mobile table's filter
+	editorsTab                int    // the editors page's tab: all, extensions, commands
+	editorsFilter             string // the editors table's filter
+	changesTab                int    // the What changed page's tab: all, added, updated, removed
+	changesFilter             string // the What changed table's filter
+	problemsTab               int    // the Issues page's tab: all, then an area each
+	problemsSeverity          int    // the Issues page's severity filter: 0 all, 1 important, 2 info
+	problemsFilter            string // the Issues table's filter
+	problemsShowHidden        bool   // whether the hidden issues list is expanded on the Issues page
+	cleanupExcludeInput       string // new $HOME exclusion path being typed in Settings
+	shownSettingsNotice       string // last SettingsNotice emitted as a toast
+	shownSettingsError        string // last SettingsError emitted as a toast
+	cleanupTab                int    // the Cleanup page's tab: all, then a group each
+	cleanupAge                int    // age filter: 0 any, 1 >30d, 2 >90d, 3 >180d
+	cleanupSort               int    // sort order: 0 largest first, 1 oldest first
+	cleanupFilter             string // the Cleanup table's filter
 	// cleanupChoice is what the user checked or unchecked on the Cleanup
 	// page, by candidateKey; the others are as Hearth offers them.
 	cleanupChoice map[string]bool
@@ -960,10 +961,7 @@ func (a *App) pageEnd(c *ui.Context, p page) func() {
 		if a.Quotas != nil {
 			if low := a.Quotas.LowCount(c.Now()); low > 0 {
 				return func() {
-					pal := Colors(c.Theme())
-					ui.Box(c).Padding(1, 6).Radius(999).Background(pal.DangerSoft).Children(func() {
-						ui.Text(c, strconv.Itoa(low)).FontSize(10.5).FontWeight(600).TextColor(pal.DangerText).SingleLine()
-					})
+					ui.Text(c, strconv.Itoa(low)).FontSize(11).FontWeight(500).TextColor(Colors(c.Theme()).DangerText).SingleLine()
 				}
 			}
 			n = a.Quotas.ConnectedCount()

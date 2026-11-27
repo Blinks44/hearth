@@ -129,20 +129,13 @@ func (a *App) projectDiskCard(c *ui.Context, p projects.Project) {
 	}
 	ui.Column(c.Key("project-disk-card")).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.ProjectDiskTitle()).FontSize(13.5).FontWeight(600).SingleLine()
-			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			ui.Text(c, locales.ProjectDiskTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
 			if sizedAny {
-				ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(12.5).FontWeight(500).TextColor(t.Text).SingleLine()
+				ui.Text(c, formatBytes(total)).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine().Shrink(0)
 			}
-			link := ui.ButtonBase(c.Key("project-disk-cleanup")).Padding(4, 6).Radius(6).
-				Label(locales.ProjectDiskOpenCleanup()).OnClick(func() {
+			ui.Box(c).Grow(1).MinWidth(0).Height(1)
+			pageLinkAction(c, "project-disk-cleanup", locales.ProjectDiskOpenCleanup(), func() {
 				a.router.Push(cleanupPage)
-			})
-			if link.Hovered() {
-				link.Background(pal.Subtle)
-			}
-			link.Children(func() {
-				ui.Text(c, locales.ProjectDiskCleanLink()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
 			})
 		})
 		for i, d := range p.Installs {
@@ -158,18 +151,18 @@ func (a *App) projectDiskCard(c *ui.Context, p projects.Project) {
 					}
 				}
 			}
-			ui.Row(c.Key("project-disk-row:"+d)).Gap(12).Padding(9, 14).MinHeight(40).AlignItems(ui.Center).
+			ui.Row(c.Key("project-disk-row:"+d)).Gap(10).Padding(9, 14).MinHeight(40).AlignItems(ui.Center).
 				BorderWidth(1, 0, 0, 0).BorderColor(pal.Line).Children(func() {
 				clipped(c, d).Font(FontMono).FontSize(12.5).Grow(1).MinWidth(0)
 				if sizedAny && !narrow(c) {
-					const barTrackW = float32(108)
+					const barTrackW = float32(64)
 					ui.Box(c).Width(barTrackW).Height(4).Radius(2).Background(pal.Muted).Clip().Shrink(0).Children(func() {
 						if ratio > 0 {
 							ui.Box(c).Width(barTrackW * ratio).Height(4).Radius(2).Background(Accent)
 						}
 					})
 				}
-				ui.Text(c, szText).Font(FontMono).FontSize(12).TextColor(t.TextMuted).Width(68).TextAlign(ui.End).SingleLine().Shrink(0)
+				ui.Text(c, szText).Font(FontMono).FontSize(12).TextColor(t.TextMuted).Width(60).TextAlign(ui.End).SingleLine().Shrink(0)
 				if a.Shell != nil {
 					iconButton(c.Key("project-disk-open:"+d), "folder-open", showInFolder()).OnClick(func() {
 						a.Shell.ShowItemInFolder(full)
@@ -221,12 +214,12 @@ func (a *App) projectSkillsCard(c *ui.Context, p projects.Project) {
 					a.openSkillCreate(p.Dir)
 				})
 				if a.LoadCatalog != nil || a.SearchSkillsSh != nil {
-					ui.PrimaryButton(c.Key("project-skill-install"), locales.ProjectSkillsInstall()).Height(controlHeight).OnClick(func() {
+					ui.Button(c.Key("project-skill-install"), locales.ProjectSkillsInstall()).Height(controlHeight).OnClick(func() {
 						a.openSkillCatalogForProject(p.Dir)
 					})
 				}
 			}
-			ui.Button(c.Key("project-skills-all"), locales.ProjectSkillsOpenAll()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-skills-all", locales.ProjectSkillsOpenAll(), func() {
 				a.skillScope = 2
 				a.skillProject = p.Dir
 				a.router.Push("/ai/skills")
@@ -324,9 +317,7 @@ func (a *App) projectMCPCard(c *ui.Context, p projects.Project) {
 				ui.Text(c, strconv.Itoa(len(p.MCP))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			}
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			ui.Button(c.Key("project-mcp-all"), locales.ProjectMcpOpenAll()).Height(controlHeight).OnClick(func() {
-				a.router.Push("/ai/mcp")
-			})
+			a.pageLink(c, "project-mcp-all", locales.ProjectMcpOpenAll(), "/ai/mcp")
 		})
 		if len(p.MCP) == 0 {
 			cardNote(c, locales.ProjectMcpEmpty())
@@ -391,7 +382,7 @@ func (a *App) projectInstructionsCard(c *ui.Context, p projects.Project) {
 					a.connectInstructions(p.Dir)
 				})
 			}
-			ui.Button(c.Key("project-instr-open"), locales.ProjectInstructionsOpen()).Height(controlHeight).OnClick(func() {
+			pageLinkAction(c, "project-instr-open", locales.ProjectInstructionsOpen(), func() {
 				a.instructionsChosen = p.Dir
 				a.router.Push(instructionsPage)
 			})
@@ -501,9 +492,7 @@ func (a *App) projectAccessCard(c *ui.Context, p projects.Project) {
 			ui.Text(c, locales.ProjectRulesTitle()).FontSize(13.5).FontWeight(600).SingleLine()
 			ui.Text(c, strconv.Itoa(len(p.Rules)+len(p.Hooks))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			ui.Button(c.Key("project-access-open"), locales.ProjectAgentsOpen()).Height(controlHeight).OnClick(func() {
-				a.router.Push(targetRoute)
-			})
+			a.pageLink(c, "project-access-open", locales.ProjectAgentsOpen(), targetRoute)
 		})
 		for i, g := range ruleGroups {
 			title := locales.ProjectRulesTitle()

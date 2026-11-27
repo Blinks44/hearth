@@ -74,8 +74,8 @@ func TestRubyBundler(t *testing.T) {
 	}
 	tt2 := openRuby(a2)
 	screenshot(t, tt2, "ruby-bundler-missing")
-	hasTexts(t, tt2, "Bundler", locales.NotInPath(), "Install…")
-	if err := tt2.Click("Install…"); err != nil {
+	hasTexts(t, tt2, "Bundler", locales.NotInPath(), "Install Bundler")
+	if err := tt2.Click("Install Bundler"); err != nil {
 		t.Fatal(err)
 	}
 	tt2.Advance(time.Second)

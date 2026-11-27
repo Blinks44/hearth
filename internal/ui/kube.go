@@ -418,7 +418,7 @@ func (a *App) kubeMissingCard(c *ui.Context, cli inventory.CliState) {
 	}
 	listCard(c, locales.KubeMissingTitle(), "", func() {
 		for _, cmd := range tools {
-			listRow(c, locales.ToolNotInstalled(setupTitle(cmd)), false, kubeToolNeed(cmd), func() { a.installToolButton(c, cmd) })
+			listRow(c, locales.ToolNotInstalled(setupTitle(cmd)), false, kubeToolNeed(cmd), func() { a.installToolIconButton(c, cmd) })
 		}
 		for _, program := range programs {
 			listRow(c, locales.KubeProgramMissing(filepath.Base(program)), false, locales.KubeProgramMissingCaption(), func() {})

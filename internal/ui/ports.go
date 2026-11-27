@@ -545,274 +545,417 @@ func (a *App) portsView(c *ui.Context, p page) {
 	})
 }
 
+func formatPortCPU(cpu float64, memBytes int64) string {
+	if cpu >= 0.05 || (memBytes > 0 && cpu >= 0) {
+		return fmt.Sprintf("%.1f%%", cpu)
+	}
+	return "—"
+}
+
+func formatPortMem(memBytes int64) string {
+	if memBytes > 0 {
+		return formatBytes(memBytes)
+	}
+	return "—"
+}
+
 // portsTable renders the unified Services & Ports table matching Sketch frame 56:
-// Port | Category tag + Service/Project + Subtitle | Metrics / Access + Actions.
+// Port | Service & project (with inline tags) | CPU | RAM | Fixed-slot Actions.
 func (a *App) portsTable(c *ui.Context, rows []portRow, forwards []*portForward) {
 	t := c.Theme()
 	pal := Colors(t)
 	filter := strings.ToLower(strings.TrimSpace(a.portsFilter))
 	isNarrow := narrow(c)
 	target, hasDockerTarget := a.selectedDockerTarget()
-	shown := 0
+
+	type portTableItem struct {
+		row           portRow
+		ct            inventory.DockerPortContainer
+		hasContainer  bool
+		managedRun    *scriptRun
+		about         string
+		plan          ops.Plan
+		stoppable     bool
+		canDocker     bool
+		canStopDocker bool
+		canOpenHTTP   bool
+		canOpenProj   bool
+		addrsFull     string
+		tagText       string
+		tagBg, tagFg  ui.Color
+		title         string
+		sub           string
+		httpURL       string
+	}
+
+	var visibleRows []portTableItem
+	var visibleForwards []*portForward
+	hasManaged := false
+	maxContext := 0
+	hasStop := false
+
+	for _, r := range rows {
+		ct, hasContainer := a.portContainerFor(r)
+		dbSvc, hasDB := a.portService(r)
+		info := inventory.ClassifyDevServer(r.DatabaseListener)
+		managedRun := a.scriptRunForListener(r.DatabaseListener)
+		isDocker := hasContainer || isDockerProcess(r.Process)
+		isDB := !isDocker && (hasDB || serverProcesses[strings.TrimSuffix(r.Process, ".exe")] != "")
+		isDev := !isDocker && !isDB && (info.Role == inventory.RoleDevServer || managedRun != nil)
+
+		switch a.portsTab {
+		case 1:
+			if !isDev {
+				continue
+			}
+		case 2:
+			if !isDocker {
+				continue
+			}
+		case 3:
+			if !isDB {
+				continue
+			}
+		case 4:
+			continue // k8s tab shows port-forwards below
+		}
+
+		about, plan, stoppable := a.portAbout(r)
+		canDocker := hasContainer && a.canOpenDockerContainer()
+		canStopDocker := hasContainer && hasDockerTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running() && !a.portsBusy
+		addrsFull := strings.Join(r.Addresses, ", ")
+		searchBlob := strings.ToLower(r.Port + " " + r.Process + " " + info.Kind + " " + about + " " + addrsFull + " " + ct.Name + " " + ct.Image + " " + dbSvc.Kind + " " + dbSvc.Service)
+		if managedRun != nil {
+			searchBlob += " " + strings.ToLower(managedRun.script.Name+" "+filepath.Base(managedRun.dir))
+		}
+		if filter != "" && !strings.Contains(searchBlob, filter) {
+			continue
+		}
+
+		port := r.Port
+		httpURL := listenerURL(port)
+		httpOpenable := (info.HTTPOpenable || managedRun != nil) && !nonHTTPPorts[port]
+		canOpenHTTP := !isNarrow && httpOpenable && (r.Own || isDocker || managedRun != nil)
+		canOpenProj := !isNarrow && managedRun == nil && r.Project != ""
+
+		var tagText string
+		var tagBg, tagFg ui.Color
+		title := cmp.Or(r.Process, "—")
+		switch {
+		case isDocker:
+			tagText, tagBg, tagFg = "Docker", pal.InfoSoft, pal.InfoText
+			if hasContainer && ct.Name != "" {
+				title = strings.TrimPrefix(ct.Name, "/")
+			}
+		case isDB:
+			tagText, tagBg, tagFg = locales.PortsDbTag(), pal.SuccessSoft, pal.SuccessText
+			if hasDB && dbSvc.Kind != "" {
+				title = dbSvc.Kind
+				if dbSvc.Version != "" {
+					major, _, _ := strings.Cut(dbSvc.Version, ".")
+					if major != "" {
+						title += " " + major
+					}
+				}
+			} else if kind := serverProcesses[strings.TrimSuffix(r.Process, ".exe")]; kind != "" {
+				title = kind
+			}
+		case isDev:
+			tagText, tagBg, tagFg = cmp.Or(info.Kind, "Dev"), pal.AccentSoft, pal.AccentInk
+			if managedRun != nil {
+				title = filepath.Base(managedRun.dir)
+				if managedRun.script.Name != "" && !strings.EqualFold(managedRun.script.Name, "dev") {
+					title += " · " + managedRun.script.Name
+				}
+			} else if r.Project != "" {
+				title = filepath.Base(r.Project)
+			}
+		}
+
+		bindStr := portBindAddress(r.Addresses)
+		sub := about
+		if bindStr != "" && bindStr != "—" && !strings.Contains(sub, bindStr) {
+			sub = sub + " · " + bindStr
+		}
+
+		if !isNarrow && managedRun != nil {
+			hasManaged = true
+		}
+		ctxCount := 0
+		if canOpenHTTP {
+			ctxCount++
+		}
+		if canDocker {
+			ctxCount++
+		}
+		if canOpenProj {
+			ctxCount++
+		}
+		if ctxCount > maxContext {
+			maxContext = ctxCount
+		}
+		if managedRun != nil || canStopDocker || stoppable {
+			hasStop = true
+		}
+
+		visibleRows = append(visibleRows, portTableItem{
+			row:           r,
+			ct:            ct,
+			hasContainer:  hasContainer,
+			managedRun:    managedRun,
+			about:         about,
+			plan:          plan,
+			stoppable:     stoppable,
+			canDocker:     canDocker,
+			canStopDocker: canStopDocker,
+			canOpenHTTP:   canOpenHTTP,
+			canOpenProj:   canOpenProj,
+			addrsFull:     addrsFull,
+			tagText:       tagText,
+			tagBg:         tagBg,
+			tagFg:         tagFg,
+			title:         title,
+			sub:           sub,
+			httpURL:       httpURL,
+		})
+	}
+
+	if a.portsTab == 0 || a.portsTab == 4 {
+		for _, fwd := range forwards {
+			portStr := strconv.Itoa(fwd.target.Local)
+			title := fwd.target.Name
+			if fwd.target.Context != "" {
+				title = fwd.target.Context + " · " + fwd.target.Name
+			}
+			sub := "kubectl port-forward → :" + strconv.Itoa(fwd.target.Remote)
+			if filter != "" && !strings.Contains(strings.ToLower(portStr+" k8s "+title+" "+sub), filter) {
+				continue
+			}
+			visibleForwards = append(visibleForwards, fwd)
+			if !fwd.stopping {
+				if !nonHTTPPorts[portStr] && maxContext < 1 {
+					maxContext = 1
+				}
+				if fwd.stop != nil {
+					hasStop = true
+				}
+			}
+		}
+	}
+
+	const slotSize float32 = 26
+	const slotGap float32 = 4
+	slotSlots := 1 // ellipsis slot
+	if hasManaged {
+		slotSlots += 2
+	}
+	slotSlots += maxContext
+	if hasStop {
+		slotSlots++
+	}
+	actionsW := float32(slotSlots)*slotSize + float32(slotSlots-1)*slotGap
+	if actionsW < 62 {
+		actionsW = 62
+	}
+	contextW := float32(0)
+	if maxContext > 0 {
+		contextW = float32(maxContext)*slotSize + float32(maxContext-1)*slotGap
+	}
+	shown := len(visibleRows) + len(visibleForwards)
 
 	ui.Column(c).Radius(12).Clip().Background(t.Background).BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(12).Padding(8, 16).Background(pal.Subtle).BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, locales.PortsColPort()).Width(60).Shrink(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 			ui.Text(c, locales.PortsColService()).Grow(1).MinWidth(0).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
-			ui.Text(c, locales.PortsColMetricsActions()).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
+			if !isNarrow {
+				ui.Text(c, "CPU").Width(54).Shrink(0).TextAlign(ui.End).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				ui.Text(c, "RAM").Width(68).Shrink(0).TextAlign(ui.End).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+			}
+			ui.Text(c, locales.SearchActions()).Width(actionsW).Shrink(0).TextAlign(ui.End).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
 		})
 
-		for _, r := range rows {
-			ct, hasContainer := a.portContainerFor(r)
-			dbSvc, hasDB := a.portService(r)
-			info := inventory.ClassifyDevServer(r.DatabaseListener)
-			managedRun := a.scriptRunForListener(r.DatabaseListener)
-			isDocker := hasContainer || isDockerProcess(r.Process)
-			isDB := !isDocker && (hasDB || serverProcesses[strings.TrimSuffix(r.Process, ".exe")] != "")
-			isDev := !isDocker && !isDB && (info.Role == inventory.RoleDevServer || managedRun != nil)
-
-			switch a.portsTab {
-			case 1:
-				if !isDev {
-					continue
-				}
-			case 2:
-				if !isDocker {
-					continue
-				}
-			case 3:
-				if !isDB {
-					continue
-				}
-			case 4:
-				continue // k8s tab shows port-forwards below
-			}
-
-			about, plan, stoppable := a.portAbout(r)
-			canDocker := hasContainer && a.canOpenDockerContainer()
-			canStopDocker := hasContainer && hasDockerTarget && docker.ContainerID(ct.ID) && a.BuildPlan != nil && !a.op.running() && !a.portsBusy
-			addrsFull := strings.Join(r.Addresses, ", ")
-			searchBlob := strings.ToLower(r.Port + " " + r.Process + " " + info.Kind + " " + about + " " + addrsFull + " " + ct.Name + " " + ct.Image + " " + dbSvc.Kind + " " + dbSvc.Service)
-			if managedRun != nil {
-				searchBlob += " " + strings.ToLower(managedRun.script.Name+" "+filepath.Base(managedRun.dir))
-			}
-			if filter != "" && !strings.Contains(searchBlob, filter) {
-				continue
-			}
-
-			shown++
+		for _, item := range visibleRows {
+			it := item
+			r := it.row
 			port := r.Port
 			hostAddr := "localhost:" + port
-			httpURL := listenerURL(port)
-			httpOpenable := (info.HTTPOpenable || managedRun != nil) && !nonHTTPPorts[port]
-
-			// Determine colored category tag & primary display title matching Sketch 56.
-			var tagText string
-			var tagBg, tagFg ui.Color
-			title := cmp.Or(r.Process, "—")
-			switch {
-			case isDocker:
-				tagText, tagBg, tagFg = "Docker", pal.InfoSoft, pal.InfoText
-				if hasContainer && ct.Name != "" {
-					title = strings.TrimPrefix(ct.Name, "/")
-				}
-			case isDB:
-				tagText, tagBg, tagFg = locales.PortsDbTag(), pal.SuccessSoft, pal.SuccessText
-				if hasDB && dbSvc.Kind != "" {
-					title = dbSvc.Kind
-					if dbSvc.Version != "" {
-						major, _, _ := strings.Cut(dbSvc.Version, ".")
-						if major != "" {
-							title += " " + major
-						}
-					}
-				} else if kind := serverProcesses[strings.TrimSuffix(r.Process, ".exe")]; kind != "" {
-					title = kind
-				}
-			case isDev:
-				tagText, tagBg, tagFg = cmp.Or(info.Kind, "Dev"), pal.AccentSoft, pal.AccentInk
-				if managedRun != nil {
-					title = filepath.Base(managedRun.dir)
-					if managedRun.script.Name != "" && !strings.EqualFold(managedRun.script.Name, "dev") {
-						title += " · " + managedRun.script.Name
-					}
-				} else if r.Project != "" {
-					title = filepath.Base(r.Project)
-				}
-			}
-
-			// Subtitle: keep informative context (bind addr, project/command/container/service).
-			bindStr := portBindAddress(r.Addresses)
-			sub := about
-			if bindStr != "" && bindStr != "—" && !strings.Contains(sub, bindStr) {
-				sub = sub + " · " + bindStr
-			}
-
-			metrics := formatCPUAndMem(r.CPUPercent, r.MemoryBytes)
-			portText := ":" + port
+			cpuStr := formatPortCPU(r.CPUPercent, r.MemoryBytes)
+			memStr := formatPortMem(r.MemoryBytes)
 
 			ui.Row(c.Key("port:"+r.Port+":"+r.PID)).Gap(12).Padding(8, 16).MinHeight(50).AlignItems(ui.Center).
 				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-				ui.Text(c, portText).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
+				ui.Text(c, ":"+port).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
 
-				ui.Row(c).Grow(1).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
-					if tagText != "" {
-						ui.Box(c).Width(62).Shrink(0).Padding(3, 6).Radius(6).Center().Background(tagBg).Children(func() {
-							clipped(c, tagText).FontSize(11).FontWeight(500).TextColor(tagFg)
-						})
-					}
-					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-							clipped(c, title).MinWidth(0).FontSize(13).FontWeight(500)
-							if managedRun != nil {
-								aiTag(c, locales.PortsManagedByHearth(), pal.SuccessSoft, pal.SuccessText).Shrink(0)
-							}
-						})
-						subTip := sub
-						if len(r.Addresses) > 2 && addrsFull != "" {
-							subTip = about + " · " + addrsFull
+				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+						clipped(c, it.title).MinWidth(0).FontSize(13).FontWeight(500)
+						if it.tagText != "" {
+							aiTag(c, it.tagText, it.tagBg, it.tagFg).Shrink(0)
 						}
-						ui.Text(c, sub).SingleLine().FontSize(11).TextColor(pal.TextFaint).Tooltip(subTip)
+						if it.managedRun != nil {
+							aiTag(c, locales.PortsManagedByHearth(), pal.SuccessSoft, pal.SuccessText).Shrink(0)
+						}
+						if r.Network {
+							chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip()).Shrink(0)
+						}
 					})
+					subTip := it.sub
+					if len(r.Addresses) > 2 && it.addrsFull != "" {
+						subTip = it.about + " · " + it.addrsFull
+					}
+					clipped(c, it.sub).FontSize(11).TextColor(pal.TextFaint).Tooltip(subTip)
 				})
 
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
-					if !isNarrow && metrics != "" {
-						ui.Text(c, metrics).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
-					}
-					if r.Network {
-						if !stoppable && !canStopDocker && managedRun == nil && metrics == "" && bindStr != "" && bindStr != "—" {
-							ui.Text(c, bindStr).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine().Shrink(0)
-						}
-						if !isNarrow || (!stoppable && !canStopDocker && managedRun == nil) {
-							chip(c, pal.Info, pal.InfoSoft, pal.InfoText, locales.PortsNetworkChip())
-						}
-					}
+				if !isNarrow {
+					ui.Text(c, cpuStr).Width(54).Shrink(0).TextAlign(ui.End).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+					ui.Text(c, memStr).Width(68).Shrink(0).TextAlign(ui.End).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				}
 
-					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
-						if !isNarrow && managedRun != nil {
-							runCopy := managedRun
-							subtleSquareIconButton(c, "port-logs", "scroll-text", locales.PortsOpenLogs(), 26, func() {
+				ui.Row(c).Width(actionsW).Shrink(0).Gap(slotGap).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+					if hasManaged {
+						if it.managedRun != nil {
+							runCopy := it.managedRun
+							subtleSquareIconButton(c, "port-logs", "scroll-text", locales.PortsOpenLogs(), slotSize, func() {
 								a.OpenProjectScriptLogs(runCopy.dir, runCopy.script.Source, runCopy.script.Name)
 							})
-							subtleSquareIconButton(c, "port-restart", "refresh-cw", locales.ProjectScriptsRestart(), 26, func() {
+							subtleSquareIconButton(c, "port-restart", "refresh-cw", locales.ProjectScriptsRestart(), slotSize, func() {
 								a.restartScript(runCopy)
 							})
+						} else {
+							ui.Box(c).Size(slotSize, slotSize).Shrink(0)
+							ui.Box(c).Size(slotSize, slotSize).Shrink(0)
 						}
-						if !isNarrow && httpOpenable && (r.Own || isDocker || managedRun != nil) {
-							subtleSquareIconButton(c, "port-open", "external-link", locales.PortsOpenBrowser(), 26, func() {
-								c.OpenURL(httpURL)
-							})
-						}
-						if canDocker {
-							subtleSquareIconButton(c, "port-docker", "container", locales.OpenInDocker(), 26, func() {
-								a.openDockerContainer(ct.ID, ct.Name)
-							})
-						}
-						if !isNarrow && managedRun == nil && r.Project != "" {
-							subtleSquareIconButton(c, "port-project", "folder-open", locales.OpenProject(), 26, func() {
-								a.router.Push(projectPath(r.Project))
-							})
-						}
-						switch {
-						case managedRun != nil:
-							runCopy := managedRun
-							dangerIconButton(c, "port-stop-managed", "square", locales.ProjectScriptsStop(), 26, func() {
-								a.stopScript(runCopy)
-							})
-						case canStopDocker:
-							ctCopy := ct
-							dangerIconButton(c, "port-stop-docker", "square", locales.DatabaseStopContainer(), 26, func() {
-								a.planDockerPortStop(target, ctCopy)
-							})
-						case stoppable:
-							dangerIconButton(c, "port-stop", "square", locales.PortsStop(), 26, func() {
-								a.Propose(plan)
-							})
-						}
-						iconButton(c, "ellipsis", locales.MoreActions()).Size(26, 26).Menu(func(menu *ui.Menu) {
-							if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
-								c.WriteClipboard(hostAddr)
-								c.Toast(locales.PortsAddressCopied(port))
+					}
+					if contextW > 0 {
+						ui.Row(c).Width(contextW).Shrink(0).Gap(slotGap).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+							if it.canOpenHTTP {
+								subtleSquareIconButton(c, "port-open", "external-link", locales.PortsOpenBrowser(), slotSize, func() {
+									c.OpenURL(it.httpURL)
+								})
 							}
-							if menu.Item(locales.PortsOpenBrowser()).Chosen() {
-								c.OpenURL(httpURL)
+							if it.canDocker {
+								subtleSquareIconButton(c, "port-docker", "container", locales.OpenInDocker(), slotSize, func() {
+									a.openDockerContainer(it.ct.ID, it.ct.Name)
+								})
 							}
-							if managedRun != nil {
-								if menu.Item(locales.PortsOpenLogs()).Chosen() {
-									a.OpenProjectScriptLogs(managedRun.dir, managedRun.script.Source, managedRun.script.Name)
-								}
-								if menu.Item(locales.ProjectScriptsRestart()).Chosen() {
-									a.restartScript(managedRun)
-								}
-								if menu.Item(locales.ProjectScriptsStop()).Chosen() {
-									a.stopScript(managedRun)
-								}
-							}
-							if canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
-								a.openDockerContainer(ct.ID, ct.Name)
-							}
-							if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
-								a.router.Push(projectPath(r.Project))
-							}
-							if canStopDocker && menu.Item(locales.DatabaseStopContainer()).Chosen() {
-								a.planDockerPortStop(target, ct)
-							}
-							if managedRun == nil && stoppable && menu.Item(locales.PortsStop()).Chosen() {
-								a.Propose(plan)
+							if it.canOpenProj {
+								subtleSquareIconButton(c, "port-project", "folder-open", locales.OpenProject(), slotSize, func() {
+									a.router.Push(projectPath(r.Project))
+								})
 							}
 						})
+					}
+					if hasStop {
+						switch {
+						case it.managedRun != nil:
+							runCopy := it.managedRun
+							dangerIconButton(c, "port-stop-managed", "square", locales.ProjectScriptsStop(), slotSize, func() {
+								a.stopScript(runCopy)
+							})
+						case it.canStopDocker:
+							ctCopy := it.ct
+							dangerIconButton(c, "port-stop-docker", "square", locales.DatabaseStopContainer(), slotSize, func() {
+								a.planDockerPortStop(target, ctCopy)
+							})
+						case it.stoppable:
+							dangerIconButton(c, "port-stop", "square", locales.PortsStop(), slotSize, func() {
+								a.Propose(it.plan)
+							})
+						default:
+							ui.Box(c).Size(slotSize, slotSize).Shrink(0)
+						}
+					}
+					iconButton(c, "ellipsis", locales.MoreActions()).Size(slotSize, slotSize).Menu(func(menu *ui.Menu) {
+						if menu.Item(locales.PortsCopyAddress(port)).Chosen() {
+							c.WriteClipboard(hostAddr)
+							c.Toast(locales.PortsAddressCopied(port))
+						}
+						if menu.Item(locales.PortsOpenBrowser()).Chosen() {
+							c.OpenURL(it.httpURL)
+						}
+						if it.managedRun != nil {
+							if menu.Item(locales.PortsOpenLogs()).Chosen() {
+								a.OpenProjectScriptLogs(it.managedRun.dir, it.managedRun.script.Source, it.managedRun.script.Name)
+							}
+							if menu.Item(locales.ProjectScriptsRestart()).Chosen() {
+								a.restartScript(it.managedRun)
+							}
+							if menu.Item(locales.ProjectScriptsStop()).Chosen() {
+								a.stopScript(it.managedRun)
+							}
+						}
+						if it.canDocker && menu.Item(locales.OpenInDocker()).Chosen() {
+							a.openDockerContainer(it.ct.ID, it.ct.Name)
+						}
+						if r.Project != "" && menu.Item(locales.OpenProject()).Chosen() {
+							a.router.Push(projectPath(r.Project))
+						}
+						if it.canStopDocker && menu.Item(locales.DatabaseStopContainer()).Chosen() {
+							a.planDockerPortStop(target, it.ct)
+						}
+						if it.managedRun == nil && it.stoppable && menu.Item(locales.PortsStop()).Chosen() {
+							a.Propose(it.plan)
+						}
 					})
 				})
 			})
 		}
 
 		// Active Kubernetes port-forwards (inline in table under All and k8s tabs).
-		if a.portsTab == 0 || a.portsTab == 4 {
-			for _, fwd := range forwards {
-				f := fwd
-				portStr := strconv.Itoa(f.target.Local)
-				title := f.target.Name
-				if f.target.Context != "" {
-					title = f.target.Context + " · " + f.target.Name
-				}
-				sub := "kubectl port-forward → :" + strconv.Itoa(f.target.Remote)
-				if filter != "" && !strings.Contains(strings.ToLower(portStr+" k8s "+title+" "+sub), filter) {
-					continue
-				}
-				shown++
-				httpURL := listenerURL(portStr)
-				ui.Row(c.Key("port-fwd:"+portStr)).Gap(12).Padding(8, 16).MinHeight(50).AlignItems(ui.Center).
-					BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
-					ui.Text(c, ":"+portStr).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
-					ui.Row(c).Grow(1).MinWidth(0).Gap(10).AlignItems(ui.Center).Children(func() {
-						ui.Box(c).Width(62).Shrink(0).Padding(3, 6).Radius(6).Center().Background(pal.WarningSoft).Children(func() {
-							ui.Text(c, "k8s").FontSize(11).FontWeight(500).TextColor(pal.WarningText).SingleLine()
-						})
-						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-							clipped(c, title).FontSize(13).FontWeight(500)
-							clipped(c, sub).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
-						})
+		for _, fwd := range visibleForwards {
+			f := fwd
+			portStr := strconv.Itoa(f.target.Local)
+			title := f.target.Name
+			if f.target.Context != "" {
+				title = f.target.Context + " · " + f.target.Name
+			}
+			sub := "kubectl port-forward → :" + strconv.Itoa(f.target.Remote)
+			httpURL := listenerURL(portStr)
+			ui.Row(c.Key("port-fwd:"+portStr)).Gap(12).Padding(8, 16).MinHeight(50).AlignItems(ui.Center).
+				BorderWidth(0, 0, 1, 0).BorderColor(pal.Line).Children(func() {
+				ui.Text(c, ":"+portStr).Font(FontMono).FontSize(13).Width(60).Shrink(0).SingleLine()
+				ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+						clipped(c, title).MinWidth(0).FontSize(13).FontWeight(500)
+						aiTag(c, "k8s", pal.WarningSoft, pal.WarningText).Shrink(0)
 					})
-					ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(func() {
-						if f.stopping {
-							chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.KubeForwardStopping())
-						} else {
-							if !nonHTTPPorts[portStr] {
-								subtleSquareIconButton(c, "fwd-open:"+portStr, "external-link", locales.PortsOpenBrowser(), 26, func() {
-									c.OpenURL(httpURL)
-								})
-							}
+					clipped(c, sub).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+				})
+				if !isNarrow {
+					ui.Text(c, "—").Width(54).Shrink(0).TextAlign(ui.End).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+					ui.Text(c, "—").Width(68).Shrink(0).TextAlign(ui.End).Font(FontMono).FontSize(11.5).TextColor(pal.TextFaint).SingleLine()
+				}
+				ui.Row(c).Width(actionsW).Shrink(0).Gap(slotGap).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+					if f.stopping {
+						chip(c, t.Warning, pal.WarningSoft, pal.WarningText, locales.KubeForwardStopping())
+					} else {
+						if hasManaged {
+							ui.Box(c).Size(slotSize, slotSize).Shrink(0)
+							ui.Box(c).Size(slotSize, slotSize).Shrink(0)
+						}
+						if contextW > 0 {
+							ui.Row(c).Width(contextW).Shrink(0).Gap(slotGap).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+								if !nonHTTPPorts[portStr] {
+									subtleSquareIconButton(c, "fwd-open:"+portStr, "external-link", locales.PortsOpenBrowser(), slotSize, func() {
+										c.OpenURL(httpURL)
+									})
+								}
+							})
+						}
+						if hasStop {
 							if f.stop != nil {
-								dangerIconButton(c, "fwd-stop:"+portStr, "square", locales.ProjectScriptsStop(), 26, func() {
+								dangerIconButton(c, "fwd-stop:"+portStr, "square", locales.ProjectScriptsStop(), slotSize, func() {
 									f.stopping = true
 									f.stop()
 								})
+							} else {
+								ui.Box(c).Size(slotSize, slotSize).Shrink(0)
 							}
 						}
-					})
+						ui.Box(c).Size(slotSize, slotSize).Shrink(0)
+					}
 				})
-			}
+			})
 		}
 
 		switch {

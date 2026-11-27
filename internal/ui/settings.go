@@ -413,7 +413,7 @@ func (a *App) cleanupSettingsCard(c *ui.Context) {
 				addExclude(a.cleanupExcludeInput)
 			}
 			if a.PickPath != nil {
-				iconButton(c.Key("browse"), "folder-open", locales.SettingsCleanupExcludePick()).OnClick(func() {
+				iconButton(c.Key("browse"), "folder-open", locales.SettingsCleanupExcludePick()).Size(controlHeight, controlHeight).OnClick(func() {
 					a.PickPath(locales.SettingsCleanupExcludePick(), true, func(path string, err error) {
 						if err != nil {
 							a.SettingsError = err.Error()

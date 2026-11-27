@@ -275,6 +275,7 @@ func TestS14ProblemsUniformButtonsAndNarrow(t *testing.T) {
 	a.Snapshot = calmSnapshot()
 	a.Projects = []projects.Project{testProjects()[1]}
 	a.Home = home
+	a.BuildPlan = func(func(sysenv.Env, ops.Terminal) (ops.Plan, error), func(ops.Plan, error)) {}
 	a.router.Push(problemsPage)
 	tt := ui.NewTester(a.View, 1280, 820)
 	tt.Advance(time.Second)
@@ -287,6 +288,11 @@ func TestS14ProblemsUniformButtonsAndNarrow(t *testing.T) {
 	}
 	if hideBox.H != openBox.H || hideBox.Y != openBox.Y {
 		t.Errorf("problem action buttons misaligned: hide=(Y=%.1f,H=%.1f) open=(Y=%.1f,H=%.1f)", hideBox.Y, hideBox.H, openBox.Y, openBox.H)
+	}
+	if fixBox, okFix := tt.Find(locales.IssueFix()); okFix {
+		if fixBox.H != hideBox.H || fixBox.Y != hideBox.Y {
+			t.Errorf("problem Fix button height/Y mismatch: fix=(Y=%.1f,H=%.1f) hide=(Y=%.1f,H=%.1f)", fixBox.Y, fixBox.H, hideBox.Y, hideBox.H)
+		}
 	}
 	tt.SetSize(1000, 680)
 	tt.Advance(time.Second)

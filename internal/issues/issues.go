@@ -326,10 +326,23 @@ func duplicate(ts inventory.ToolState) []Issue {
 	}
 	// A manager's shim runs that manager's copies, as its own install
 	// directory beside it on PATH does under mise activate: one copy.
+	// Shims like pyenv/rbenv with no manager default pass through to the
+	// next copy on PATH (system mode), so they are not a second copy either.
 	on = slices.DeleteFunc(on, func(in inventory.Installation) bool {
-		return in.Source.Shim && slices.ContainsFunc(on, func(o inventory.Installation) bool {
+		if !in.Source.Shim {
+			return false
+		}
+		if slices.ContainsFunc(on, func(o inventory.Installation) bool {
 			return !o.Source.Shim && o.Source.Manager != "" && o.Source.Manager == in.Source.Manager
-		})
+		}) {
+			return true
+		}
+		if inventory.FallsToSystem(in.Source.Manager) && !slices.ContainsFunc(ts.Installations, func(o inventory.Installation) bool {
+			return o.Default && !o.Source.Shim && o.Source.Manager == in.Source.Manager
+		}) {
+			return true
+		}
+		return false
 	})
 	if len(on) < 2 {
 		return nil
@@ -461,7 +474,12 @@ func versionEnded(tool string, in inventory.Installation, l Lists, now time.Time
 	case "dotnet":
 		dl, ok := l.Dotnet.Line(in.Version)
 		return ok && dl.Ended(now)
-	case "python", "php", "ruby", "java", "rust":
+	case "rust":
+		if strings.Contains(in.Version, "-") || in.Rust != nil && (strings.HasPrefix(in.Rust.Name, "nightly") || strings.HasPrefix(in.Rust.Name, "beta")) {
+			return false
+		}
+		return versions.RustEnded(l.Rust, in.Version, now)
+	case "python", "php", "ruby", "java":
 		var cycles *versions.Cycles
 		switch tool {
 		case "python":
@@ -472,11 +490,6 @@ func versionEnded(tool string, in inventory.Installation, l Lists, now time.Time
 			cycles = l.Ruby
 		case "java":
 			cycles = l.Java
-		case "rust":
-			if strings.Contains(in.Version, "-") || in.Rust != nil && (strings.HasPrefix(in.Rust.Name, "nightly") || strings.HasPrefix(in.Rust.Name, "beta")) {
-				return false
-			}
-			cycles = l.Rust
 		}
 		if cycles == nil {
 			return false

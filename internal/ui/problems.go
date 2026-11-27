@@ -288,9 +288,9 @@ func (a *App) hiddenProblemRow(c *ui.Context, it attentionItem) {
 	}
 	restoreKey := cmp.Or(it.hiddenKey, it.key)
 	actions := func() {
-		ui.Row(c).Gap(6).Shrink(0).Wrap().Children(func() {
-			ui.Button(c.Key("restore"), locales.ProblemsRestore()).Height(controlHeight).OnClick(func() { a.unhideIssue(restoreKey) })
-			ui.Button(c.Key("open"), locales.IssueOpen()).Height(controlHeight).OnClick(func() { a.router.Push(it.page) })
+		ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+			iconButton(c.Key("restore"), "eye", locales.ProblemsRestore()).OnClick(func() { a.unhideIssue(restoreKey) })
+			iconButton(c.Key("open"), "arrow-up-right", locales.IssueOpen()).OnClick(func() { a.router.Push(it.page) })
 		})
 	}
 	align := ui.Center
@@ -325,17 +325,19 @@ func (a *App) problemRow(c *ui.Context, it attentionItem) {
 		icon, bg, color = "info", pal.Muted, t.TextMuted
 	}
 	actions := func() {
-		ui.Row(c).Gap(6).Shrink(0).Wrap().Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Wrap().Children(func() {
 			if it.fix != nil {
-				ui.Button(c.Key("fix"), "").Height(controlHeight).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
+				ui.Button(c.Key("fix"), "").Height(rowControlHeight).Padding(0, 10).Background(t.Text).BorderColor(t.Text).
 					Label(locales.IssueFix()).OnClick(it.fix).Children(func() {
 					ui.Text(c, locales.IssueFix()).FontSize(12).TextColor(t.Background).SingleLine()
 				})
 			}
-			ui.Button(c.Key("hide"), locales.ProblemHide()).Height(controlHeight).Tooltip(locales.ProblemHideHint()).
-				OnClick(func() { a.hideIssue(it.key) })
-			ui.Button(c.Key("open"), locales.IssueOpen()).Height(controlHeight).
-				OnClick(func() { a.router.Push(it.page) })
+			ui.Row(c).Gap(2).AlignItems(ui.Center).Shrink(0).Children(func() {
+				iconButton(c.Key("hide"), "eye-off", locales.ProblemHide()).Tooltip(locales.ProblemHideHint()).
+					OnClick(func() { a.hideIssue(it.key) })
+				iconButton(c.Key("open"), "arrow-up-right", locales.IssueOpen()).
+					OnClick(func() { a.router.Push(it.page) })
+			})
 		})
 	}
 	align := ui.Center

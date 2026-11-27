@@ -150,7 +150,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 				}
 			})
 		} else if a.canInstallTool("gh") {
-			listRow(c, "GitHub CLI", false, locales.GitNoGitHub(), func() { a.installToolButton(c, "gh") })
+			listRow(c, "GitHub CLI", false, locales.GitNoGitHub(), func() { a.installToolIconButton(c, "gh") })
 		}
 	})
 	sshAside := func() {
@@ -186,7 +186,7 @@ func (a *App) gitCards(c *ui.Context, g *inventory.GitState) {
 					ui.Text(c, kind).Font(FontMono).FontSize(10.5).TextColor(pal.TextFaint).SingleLine()
 					if !key.InAgent && a.OpenSSHAdd != nil && a.Home != "" {
 						keyPath := filepath.Join(a.Home, ".ssh", key.Name)
-						ui.Button(c.Key("ssh-add:"+key.Name), locales.GitSSHAdd()).Shrink(0).OnClick(func() {
+						ui.Button(c.Key("ssh-add:"+key.Name), locales.GitSSHAdd()).Height(rowControlHeight).Shrink(0).OnClick(func() {
 							a.OpenSSHAdd(keyPath, func(err error) {
 								if err != nil {
 									a.planErr = err.Error()

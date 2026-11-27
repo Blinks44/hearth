@@ -213,9 +213,12 @@ func (a *App) installHeader(c *ui.Context, tool, version string) {
 	if _, ok := a.versionPlan(ops.VersionInstall, tool, manager, version, "", ""); !ok {
 		return
 	}
+	if hasVersion(st.Installations, "", version) {
+		return
+	}
 	label := versionLabel(tool, version)
 	tip := locales.InstallVersionVia(label, manager)
-	installVersionButton(c, tool, label, tip, hasVersion(st.Installations, "", version), func() { a.installVersion(tool, version) })
+	installVersionButton(c, tool, label, tip, false, func() { a.installVersion(tool, version) })
 }
 
 // installVersionButton is the header's "Install version" button.
@@ -232,6 +235,20 @@ func installVersionButton(c *ui.Context, tool, target, tooltip string, disabled 
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, Icon("plus")).Size(14, 14)
 			ui.Text(c, text)
+		})
+	})
+}
+
+// updateVersionButton is the header's "Update to version" primary button.
+func updateVersionButton(c *ui.Context, tool, target, tooltip string, onClick func()) {
+	b := ui.PrimaryButton(c.Key(tool+"-update"), "").Height(controlHeight).OnClick(onClick)
+	if tooltip != "" {
+		b.Tooltip(tooltip)
+	}
+	b.Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, Icon("refresh-cw")).Size(14, 14)
+			ui.Text(c, locales.PkgUpgradeTo(target))
 		})
 	})
 }

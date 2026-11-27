@@ -102,8 +102,8 @@ func TestGitActionsAndInstallGH(t *testing.T) {
 		t.Errorf("clipboard = %q, want %q", got, pub)
 	}
 
-	hasTexts(t, tt, "GitHub CLI", locales.GitNoGitHub(), "Install…")
-	if err := tt.Click("Install…"); err != nil {
+	hasTexts(t, tt, "GitHub CLI", locales.GitNoGitHub(), locales.InstallNamed(setupTitle("gh")))
+	if err := tt.Click(locales.InstallNamed(setupTitle("gh"))); err != nil {
 		t.Fatal(err)
 	}
 	tt.Advance(time.Second)

@@ -1057,21 +1057,16 @@ func (a *App) projectDockerCard(c *ui.Context, p projects.Project) {
 	ui.Column(c.Key("project-docker-card")).Radius(12).Clip().Background(t.Background).
 		BorderWidth(1).BorderColor(pal.Divider).Children(func() {
 		ui.Row(c).Gap(8).Padding(10, 14, 8, 14).MinHeight(44).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, locales.DockerComposeTitle()).FontSize(13.5).FontWeight(600).SingleLine()
+			ui.Text(c, locales.DockerComposeTitle()).FontSize(13.5).FontWeight(600).SingleLine().Shrink(0)
 			if len(stacks) > 1 {
-				ui.Text(c, strconv.Itoa(len(stacks))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint)
+				ui.Text(c, strconv.Itoa(len(stacks))).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(0)
+			}
+			if engineLabel != "" {
+				clipped(c, engineLabel).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).Shrink(1)
 			}
 			ui.Box(c).Grow(1).MinWidth(0).Height(1)
-			if engineLabel != "" {
-				ui.Text(c, engineLabel).Font(FontMono).FontSize(11).TextColor(pal.TextFaint).SingleLine()
-			}
-			link := ui.ButtonBase(c.Key("project-compose-open-docker")).Padding(4, 6).Radius(6).Label(locales.OpenInDocker()).
-				OnClick(func() { a.router.Push(openDockerTarget) })
-			if link.Hovered() {
-				link.Background(pal.Subtle)
-			}
-			link.Children(func() {
-				ui.Text(c, locales.OpenInDocker()).FontSize(12).FontWeight(500).TextColor(pal.AccentInk).SingleLine()
+			pageLinkAction(c, "project-compose-open-docker", locales.OpenInDocker(), func() {
+				a.router.Push(openDockerTarget)
 			})
 		})
 		for i, stack := range stacks {
